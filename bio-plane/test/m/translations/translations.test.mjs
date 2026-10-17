@@ -1,9 +1,10 @@
-/* The group's translation of the interface (R67–R75; T37-30; N669; DEC-127, DEC-157, DEC-179; K2200, K2201, K2216) at
-   the module's interface: the module over the real record-core, over the REAL membership and credentials (credentials'
-   own test world: the founder `admin`, a second administrator `second`, members `ruth`, `sam` and `tom`) and the real
+/* The group's translation of the interface (R1–R9; T37-30; N669; DEC-127, DEC-157, DEC-179; K2200, K2201, K2216) at the
+   module's interface: the module over the real record-core, over the REAL membership and ai-accounts (the ai-accounts
+   test world: the founder `admin`, a second administrator `second`, members `ruth`, `sam` and `tom`) and the real
    jurisdictions (the test profile active, for its local names), its routes through the frame control-plane joins them
-   to. The door (store-door R10, control-plane R57) comes after this module; these tests drive the map and the services
-   directly, playing the door's part: `translationdraft`, then agent-worker's answer handed to `translationdraftrecord`. */
+   to. The member's own language is a registered stand-in read (R11). The door (store-door R10, control-plane R57) comes
+   after this module; these tests drive the map and the services directly, playing the door's part: `translationdraft`,
+   then agent-worker's answer handed to `translationdraftrecord`. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -11,16 +12,16 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { boot, frame } from "./fixture.mjs";
-import { world as credentialsWorld } from "../credentials/fixture.mjs";
-import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
+import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
 import { list as jList, get as jGet, combine as jCombine } from "../../../../jurisdictions/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 import { noSuchMember } from "../../../src/membership/index.mjs";
-import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, INTERFACE_WORDS,
-         TRANSLATION_DRAFT_MAX } from "../../../src/setup.mjs";
+import { word as wordOf } from "../../../src/setup-words/index.mjs";
+import { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, INTERFACE_WORDS,
+         TRANSLATION_DRAFT_MAX } from "../../../src/translations/index.mjs";
+import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 
-const TABLES = ["translation_grants", "translation_drafts", "translation_adoptions", "translation_confirmations",
-                "translation_undos", "translation_marks", "translation_readings"];
+const TABLES = [...TRANSLATION_TABLES];
 const word = (k) => INTERFACE_WORDS.find((w) => w.key === k);
 const ORDINARY = INTERFACE_WORDS.find((w) => !w.protected && !/\{/.test(w.en));
 const PROTECTED = INTERFACE_WORDS.find((w) => w.protected && !/\{/.test(w.en));
@@ -30,7 +31,7 @@ const sha = (t) => createHash("sha256").update(t).digest("hex");
 const es = (w) => `ES ${w.en}`;
 
 async function world({ local = null } = {}) {
-  const c = credentialsWorld();
+  const c = aiAccountsWorld();
   await c.group("ruth", "sam", "tom");
   let t = Date.parse("2026-10-08T10:00:00Z");
   const jurisdictions = { list: jList, get: jGet, combine: (ids) => {
@@ -38,7 +39,11 @@ async function world({ local = null } = {}) {
     if (local && r.ok) r.view.local_names = [...(r.view.local_names || []), ...local];
     return r;
   } };
-  const w = await boot({ now: () => (t += 1000), more: { membership: c.m, credentials: c.c, aiAccounts: aiAccountsOf(c.ctx), jurisdictions } });
+  const w = boot({ now: () => (t += 1000), more: { membership: c.m, aiAccounts: c.a, jurisdictions } });
+  /* R11: the member's own language, as `instance-setup` R64 would answer it, a map the test sets */
+  const chosen = new Map();
+  assert.deepEqual(w.m.registerMemberLanguageRead(({ viewer } = {}) => ({ ok: true, language: chosen.get(viewer) ?? null, set_at: null })), { ok: true });
+  w.say = (member, language) => { chosen.set(member, language); };
   w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
   return { ...w, c };
 }
@@ -58,7 +63,7 @@ async function draft(w, { by, language = "es", keys, answer = (x) => es(x), drop
   return { asked, rec };
 }
 
-test("R69 translationGrant: refusals in order, each writing nothing (MACHINE_CANNOT_TRANSLATE, NOT_AN_ADMIN, LANGUAGE_MALFORMED, NO_SUCH_MEMBER, the last answered through membership's noSuchMember, R121, C-96.47, with member the id asked, for an absent member, a machine identity or one not active); a grant recorded with the administrator and instant, names by value; a second grant or revocation answers existed: true with the first; a revocation appended, never a deletion; translationGranted live only while not revoked and the member active", async () => {
+test("R3 translationGrant: refusals in order, each writing nothing (MACHINE_CANNOT_TRANSLATE, NOT_AN_ADMIN, LANGUAGE_MALFORMED, NO_SUCH_MEMBER, the last answered through membership's noSuchMember, R121, C-96.47, with member the id asked, for an absent member, a machine identity or one not active); a grant recorded with the administrator and instant, names by value; a second grant or revocation answers existed: true with the first; a revocation appended, never a deletion; translationGranted live only while not revoked and the member active", async () => {
   const w = await world();
   const before = counts(w);
   for (const [args, code] of [
@@ -73,7 +78,7 @@ test("R69 translationGrant: refusals in order, each writing nothing (MACHINE_CAN
     const r = w.m.translationGrant(args);
     assert.deepEqual([r.ok, r.reason], [false, code], JSON.stringify(args));
     if (code === "NO_SUCH_MEMBER") assert.deepEqual(r, noSuchMember(args.member ?? null), JSON.stringify(args));
-    else assert.equal(r.check, code === "NOT_AN_ADMIN" ? "C-96.1" : INSTANCE_SETUP_CHECKS[code].check, code);
+    else assert.equal(r.check, code === "NOT_AN_ADMIN" ? "C-96.1" : TRANSLATIONS_CHECKS[code].check, code);
   }
   /* T38 (N793): a member not active is refused the same way, through membership's one site */
   assert.equal(w.c.m.memberSet({ memberId: "tom", status: "revoked", by: "admin" }).ok, true);
@@ -112,7 +117,7 @@ test("R69 translationGrant: refusals in order, each writing nothing (MACHINE_CAN
   assert.equal(own.result.granted, true);
 });
 
-test("R67 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION_UNKNOWN, LANGUAGE_MALFORMED, MACHINE_CANNOT_TRANSLATE, TRANSLATION_NOT_GRANTED, TRANSLATION_KEYS_MALFORMED, NO_SUCH_WORD, TRANSLATION_NOT_MISSING), each writing nothing; then the gate (AI_KEPT_AWAY under keep-away); past them the first 100 missing words in the list's order, each {key, en, note, means, protected}, or the keys asked; it writes nothing", async () => {
+test("R1 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION_UNKNOWN, LANGUAGE_MALFORMED, MACHINE_CANNOT_TRANSLATE, TRANSLATION_NOT_GRANTED, TRANSLATION_KEYS_MALFORMED, NO_SUCH_WORD, TRANSLATION_NOT_MISSING), each writing nothing; then the gate (AI_KEPT_AWAY under keep-away); past them the first 100 missing words in the list's order, each {key, en, note, means, protected}, or the keys asked; it writes nothing", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   const before = counts(w);
@@ -131,7 +136,7 @@ test("R67 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION
     [{ language: "es", direction: "to_language", keys: [ORDINARY.key, "no.such.key"], by: "ruth" }, "NO_SUCH_WORD"],
   ]) {
     const r = w.m.translationDraft(args);
-    assert.deepEqual([r.ok, r.reason, r.check], [false, code, INSTANCE_SETUP_CHECKS[code].check], JSON.stringify(args).slice(0, 120));
+    assert.deepEqual([r.ok, r.reason, r.check], [false, code, TRANSLATIONS_CHECKS[code].check], JSON.stringify(args).slice(0, 120));
   }
   assert.equal(counts(w), before);
   /* the first 100 missing, in the list's order, each with its meaning note */
@@ -154,13 +159,13 @@ test("R67 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION
   assert.deepEqual(two.words.map((x) => x.key), [other.key, PLACEHOLDER.key]);
   assert.equal(two.words[0].protected, true);
   /* the gate: under keep-away, ai-accounts' refusal, after the module's own */
-  aiAccountsOf(w.c.ctx).aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
+  w.c.a.aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
   assert.equal(w.m.translationDraft({ language: "es", direction: "to_language", by: "sam" }).reason, "TRANSLATION_NOT_GRANTED");
   const kept = w.m.translationDraft({ language: "es", direction: "to_language", by: "ruth" });
   assert.deepEqual([kept.reason, kept.keep_away.reason], ["AI_KEPT_AWAY", "Our material stays here, every word of it."]);
 });
 
-test("R67 (K2238) translationDraftRefusal answers null or R67's first refusal, the same code translationDraft answers for the same request, writing nothing; it reads no gate (the door asks it before its own)", async () => {
+test("R1 (K2238) translationDraftRefusal answers null or R1's first refusal, the same code translationDraft answers for the same request, writing nothing; it reads no gate (the door asks it before its own)", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "Algo", by: "ruth" });
@@ -178,12 +183,12 @@ test("R67 (K2238) translationDraftRefusal answers null or R67's first refusal, t
     assert.equal(r.reason, w.m.translationDraft(args).reason, JSON.stringify(args));
   }
   assert.equal(w.m.translationDraftRefusal({ language: "es", direction: "to_language", by: "ruth" }), null);
-  aiAccountsOf(w.c.ctx).aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
+  w.c.a.aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
   assert.equal(w.m.translationDraftRefusal({ language: "es", direction: "to_language", by: "ruth" }), null, "no gate read here");
   assert.equal(counts(w), before);
 });
 
-test("R67 (DEC-157 (6)) an official name or translation the active profiles hold (jurisdictions' local names) is offered in place of a draft and never sent; when nothing is left to send, TRANSLATION_NOTHING_TO_DRAFT carries what was offered", async () => {
+test("R1 (DEC-157 (6)) an official name or translation the active profiles hold (jurisdictions' local names) is offered in place of a draft and never sent; when nothing is left to send, TRANSLATION_NOTHING_TO_DRAFT carries what was offered", async () => {
   const w = await world({ local: [{ name: ORDINARY.en, kind: "program", translations: [{ locale: "es", text: "Nombre oficial", source: "https://example.org/es" }], basis: "UNMEASURED" }] });
   const r = w.m.translationDraft({ language: "es", direction: "to_language", keys: [ORDINARY.key, PROTECTED.key], by: "admin" });
   assert.deepEqual(r.words.map((x) => x.key), [PROTECTED.key], "the official name is not sent");
@@ -198,7 +203,7 @@ test("R67 (DEC-157 (6)) an official name or translation the active profiles hold
   assert.equal(all.words.some((x) => x.key === ORDINARY.key), false);
 });
 
-test("R67 translationdraftrecord to_language: each word answered is stored as a draft labelled machine work through record-grammar's proposalLabel(<the assistant>, 'translation'), with who asked and when; a draft whose placeholders differ from its English's, or that is not one line, is not stored and is named; a key not asked is never stored; an unanswered key is named; the first refusals are asked again; no member outside the workspace sees a draft", async () => {
+test("R1 translationdraftrecord to_language: each word answered is stored as a draft labeled machine work through record-grammar's proposalLabel(<the assistant>, 'translation'), with who asked and when; a draft whose placeholders differ from its English's, or that is not one line, is not stored and is named; a key not asked is never stored; an unanswered key is named; the first refusals are asked again; no member outside the workspace sees a draft", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   const keys = [ORDINARY.key, PROTECTED.key, PLACEHOLDER.key];
@@ -228,7 +233,7 @@ test("R67 translationdraftrecord to_language: each word answered is stored as a 
   const empty = await w.m.translationDraftRecord({ language: "es", direction: "to_language", keys, by: "admin", draft: null });
   assert.equal(empty.reason, "ASSISTANT_DRAFT_UNAVAILABLE");
   /* a draft is no state of the word: members read the English, and only the workspace lists it */
-  w.m.memberLanguageSet({ language: "es", by: "tom" });
+  w.say("tom", "es");
   const seen = w.m.interfaceWords({ viewer: "tom" }).words.find((x) => x.key === ORDINARY.key);
   assert.deepEqual([seen.text, seen.fallback], [ORDINARY.en, true]);
   assert.equal(w.m.translations({ language: "es", viewer: "tom" }).reason, "TRANSLATION_NOT_GRANTED");
@@ -236,7 +241,7 @@ test("R67 translationdraftrecord to_language: each word answered is stored as a 
   assert.deepEqual([ws.state, ws.drafts.length, ws.drafts[0].text, ws.drafts[0].label.machine_work], ["missing", 1, es(ORDINARY), true]);
 });
 
-test("R67 to_english (K2201, K2216): an administrator only (NOT_AN_ADMIN to a granted member), one protected word awaiting confirmation (TRANSLATION_NOT_AWAITING otherwise); the door is sent {key, en, text, protected}; the reading answers {ok, key, language, english, label: machine, asked_by} and records its fact, no text: key, language, the kept text's SHA-256, the administrator, the instant; it adopts and confirms nothing", async () => {
+test("R1 to_english (K2201, K2216): an administrator only (NOT_AN_ADMIN to a granted member), one protected word awaiting confirmation (TRANSLATION_NOT_AWAITING otherwise); the door is sent {key, en, text, protected}; the reading answers {ok, key, language, english, label: machine, asked_by} and records its fact, no text: key, language, the kept text's SHA-256, the administrator, the instant; it adopts and confirms nothing", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   const typed = "ES typed by hand";
@@ -272,7 +277,7 @@ test("R67 to_english (K2201, K2216): an administrator only (NOT_AN_ADMIN to a gr
   assert.equal(count(w, "translation_readings"), 1);
 });
 
-test("R70 translationAdopt: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, TRANSLATION_NOT_GRANTED, NO_SUCH_WORD, NO_SUCH_DRAFT, TRANSLATION_TEXT_REFUSED), each writing nothing; an ordinary word shown at once; a protected word shown only when kept exactly as its stored draft, else awaiting with members seeing the English; recorded {language, key, text, en, by, at, replaced, draft}", async () => {
+test("R4 translationAdopt: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, TRANSLATION_NOT_GRANTED, NO_SUCH_WORD, NO_SUCH_DRAFT, TRANSLATION_TEXT_REFUSED), each writing nothing; an ordinary word shown at once; a protected word shown only when kept exactly as its stored draft, else awaiting with members seeing the English; recorded {language, key, text, en, by, at, replaced, draft}", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   const { rec } = await draft(w, { by: "ruth", keys: [ORDINARY.key, PROTECTED.key, PLACEHOLDER.key] });
@@ -298,7 +303,7 @@ test("R70 translationAdopt: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAG
   /* ordinary: shown at once, to every member reading es */
   const o = w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "Algo", by: "ruth" });
   assert.deepEqual([o.ok, o.state, o.replaced], [true, "shown", null]);
-  w.m.memberLanguageSet({ language: "es", by: "tom" });
+  w.say("tom", "es");
   const shown = (k) => w.m.interfaceWords({ viewer: "tom" }).words.find((x) => x.key === k);
   assert.deepEqual(shown(ORDINARY.key), { key: ORDINARY.key, text: "Algo", en: ORDINARY.en, fallback: false });
   const row = w.st.db.prepare(`SELECT * FROM translation_adoptions WHERE key = ?`).get(ORDINARY.key);
@@ -320,7 +325,7 @@ test("R70 translationAdopt: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAG
   assert.equal(w.m.translationAdopt({ language: "es", key: PLACEHOLDER.key, text: es(PLACEHOLDER), by: "ruth" }).ok, true);
 });
 
-test("R71 translationConfirm: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, TRANSLATION_NOT_GRANTED, NO_SUCH_WORD, TRANSLATION_NOT_AWAITING, TRANSLATION_CONFIRM_SELF, TRANSLATION_NOT_READ_BACK); a second granted speaker confirms with no reading; an administrator only with their own reading of the word's current kept text (K2216); the confirmation recorded beside the adoption, then shown", async () => {
+test("R5 translationConfirm: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, TRANSLATION_NOT_GRANTED, NO_SUCH_WORD, TRANSLATION_NOT_AWAITING, TRANSLATION_CONFIRM_SELF, TRANSLATION_NOT_READ_BACK); a second granted speaker confirms with no reading; an administrator only with their own reading of the word's current kept text (K2216); the confirmation recorded beside the adoption, then shown", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   w.m.translationGrant({ member: "sam", language: "es", by: "admin" });
@@ -372,7 +377,7 @@ test("R71 translationConfirm: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGU
   assert.equal((await w.m.translationConfirm({ language: "es", key: PROTECTED.key, by: "second" })).ok, true);
 });
 
-test("R72 translationRevert: refusals in order (MACHINE_CANNOT_TRANSLATE, NOT_AN_ADMIN, LANGUAGE_MALFORMED, NO_SUCH_WORD, TRANSLATION_NOTHING_TO_UNDO); one act undoes the latest adoption (back to the text it replaced, with the state it had, or the English, missing) or the latest undo; appended, naming what it undoes; no row changed or deleted", async () => {
+test("R6 translationRevert: refusals in order (MACHINE_CANNOT_TRANSLATE, NOT_AN_ADMIN, LANGUAGE_MALFORMED, NO_SUCH_WORD, TRANSLATION_NOTHING_TO_UNDO); one act undoes the latest adoption (back to the text it replaced, with the state it had, or the English, missing) or the latest undo; appended, naming what it undoes; no row changed or deleted", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   w.m.translationGrant({ member: "sam", language: "es", by: "admin" });
@@ -411,7 +416,7 @@ test("R72 translationRevert: refusals in order (MACHINE_CANNOT_TRANSLATE, NOT_AN
   assert.ok(snapshot().startsWith(kept.slice(0, kept.indexOf("Dos"))));
 });
 
-test("R73 translationMark: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, NO_SUCH_WORD, TRANSLATION_NOT_SHOWN, then NO_SUCH_MEMBER for a by who is not an active member, answered through membership's noSuchMember, R121, C-96.47), and a note over 500 characters TRANSLATION_NOTE_REFUSED; any active member marks a shown word, with who and when; a member's second open mark answers existed: true; open until the word's next adoption or undo; listed to granted speakers and administrators only", async () => {
+test("R7 translationMark: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, NO_SUCH_WORD, TRANSLATION_NOT_SHOWN, then NO_SUCH_MEMBER for a by who is not an active member, answered through membership's noSuchMember, R121, C-96.47), and a note over 500 characters TRANSLATION_NOTE_REFUSED; any active member marks a shown word, with who and when; a member's second open mark answers existed: true; open until the word's next adoption or undo; listed to granted speakers and administrators only", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   w.m.translationAdopt({ language: "es", key: PROTECTED.key, text: "Espera", by: "ruth" });   // awaiting
@@ -453,7 +458,7 @@ test("R73 translationMark: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE
   assert.equal(count(w, "translation_marks"), before, "nothing recorded");
 });
 
-test("R74 translations: to a granted speaker of the language (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, TRANSLATION_NOT_GRANTED otherwise): every word in the list's order with en, note, means, protected, state, its shown or awaiting text with who adopted it and when, english_changed, its drafts, its acts newest first and its open marks; and the active profiles' local names with their explanation and official translation in the language and source, offered first; it writes nothing", async () => {
+test("R8 translations: to a granted speaker of the language (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, TRANSLATION_NOT_GRANTED otherwise): every word in the list's order with en, note, means, protected, state, its shown or awaiting text with who adopted it and when, english_changed, its drafts, its acts newest first and its open marks; and the active profiles' local names with their explanation and official translation in the language and source, offered first; it writes nothing", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   for (const [viewer, language, code] of [["class:ai", "es", "MACHINE_CANNOT_TRANSLATE"], ["tom", "not a tag", "LANGUAGE_MALFORMED"], ["tom", "es", "TRANSLATION_NOT_GRANTED"]])
@@ -491,7 +496,7 @@ test("R74 translations: to a granted speaker of the language (MACHINE_CANNOT_TRA
   assert.equal(route.result.reason, "TRANSLATION_NOT_GRANTED");
 });
 
-test("R74 interfaceWords: for the language asked, by default the viewer's own (R64), every key with text (the group's shown translation, else the English, fallback: true), never blank, en beside it; an awaiting word answers the English; with no language set or held every word is the English; a malformed tag LANGUAGE_MALFORMED; it writes nothing", async () => {
+test("R8 interfaceWords: for the language asked, by default the viewer's own (`instance-setup` R64, read through the registration of R11), every key with text (the team's shown translation, else the English, fallback: true), never blank, en beside it; an awaiting word answers the English; with no language set or held every word is the English; a malformed tag LANGUAGE_MALFORMED; it writes nothing", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "pt-BR", by: "admin" });
   w.m.translationAdopt({ language: "pt-br", key: ORDINARY.key, text: "Algo", by: "ruth" });
@@ -501,7 +506,7 @@ test("R74 interfaceWords: for the language asked, by default the viewer's own (R
   assert.equal(none.language, null);
   assert.ok(none.words.every((x) => x.fallback && x.text === x.en && x.text));
   assert.deepEqual(none.words.map((x) => x.key), INTERFACE_WORDS.map((x) => x.key));
-  w.m.memberLanguageSet({ language: "pt-BR", by: "tom" });
+  w.say("tom", "pt-BR");
   const own = w.m.interfaceWords({ viewer: "tom" });
   assert.equal(own.language, "pt-BR");
   assert.deepEqual(own.words.find((x) => x.key === ORDINARY.key), { key: ORDINARY.key, text: "Algo", en: ORDINARY.en, fallback: false });
@@ -515,14 +520,14 @@ test("R74 interfaceWords: for the language asked, by default the viewer's own (R
   assert.equal(route.result.words.find((x) => x.key === ORDINARY.key).text, "Algo");
 });
 
-test("R75 the translation tables are this module's own, declared to record-core exempt from purge (the group's settings' class) and never exported, append-only: no statement updates or deletes a row; every name held by value beside the member id; a purge leaves them", async () => {
+test("R9 the translation tables are this module's own, declared to record-core exempt from purge (the group's settings' class) and never exported, append-only: no statement updates or deletes a row; every name held by value beside the member id; a purge leaves them", async () => {
   const w = await world();
   for (const t of TABLES) {
-    assert.ok(INSTANCE_SETUP_TABLES.includes(t), t);
-    const d = INSTANCE_SETUP_TABLE_DECLARATIONS.find((x) => x.name === t);
+    const d = TRANSLATION_TABLE_DECLARATIONS.find((x) => x.name === t);
+    assert.ok(d, t);
     assert.deepEqual([d.purge, d.export, d.version_chain], ["exempt", "never", true], t);
   }
-  const declared = w.record.declaredTables().filter((d) => d.module === "instance-setup").map((d) => d.name);
+  const declared = w.record.declaredTables().filter((d) => d.module === "translations").map((d) => d.name);
   for (const t of TABLES) assert.ok(declared.includes(t), t);
   const mark = w.st.statements.length;
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
@@ -549,9 +554,9 @@ test("R75 the translation tables are this module's own, declared to record-core 
   assert.equal(counts(w), n, "a purge leaves them");
 });
 
-test("R75 (T38; N793) this module holds no NO_SUCH_MEMBER row: C-64.18 is dropped and held by no row, and every refusal of a member it cannot find is membership's C-96.47 (R121), never a copy of the code", async () => {
-  assert.equal(Object.hasOwn(INSTANCE_SETUP_CHECKS, "NO_SUCH_MEMBER"), false);
-  assert.equal(Object.values(INSTANCE_SETUP_CHECKS).some((r) => r.check === "C-64.18"), false);
+test("R9 (T38; N793) this module holds no NO_SUCH_MEMBER row: C-64.18 is dropped and held by no row, and every refusal of a member it cannot find is membership's C-96.47 (R121), never a copy of the code", async () => {
+  assert.equal(Object.hasOwn(TRANSLATIONS_CHECKS, "NO_SUCH_MEMBER"), false);
+  assert.equal(Object.values(TRANSLATIONS_CHECKS).some((r) => r.check === "C-64.18"), false);
   const w = await world();
   w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "Algo", by: "admin" });
   for (const r of [w.m.translationGrant({ member: "nobody", language: "es", by: "admin" }),
@@ -559,8 +564,8 @@ test("R75 (T38; N793) this module holds no NO_SUCH_MEMBER row: C-64.18 is droppe
     assert.deepEqual([r.reason, r.code, r.check, r.translation], ["NO_SUCH_MEMBER", "NO_SUCH_MEMBER", "C-96.47", noSuchMember("x").translation]);
 });
 
-test("R30 every row of this module's table names, in its where, the function that holds its region, and the region inside it (the new C-64.11–C-64.26 rows among them, C-64.18 dropped, R75; T45's C-64.27, R77); no number is held twice and C-119.5 is held by none", () => {
-  const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../src/setup.mjs"), "utf8").split("\n");
+test("R13 every row of this module's table names, in its where, the function that holds its region, and the region inside it (C-64.11–C-64.17, C-64.19–C-64.26 and C-64.31, C-64.18 dropped, R9, and C-119.12 LANGUAGE_MALFORMED, 17 rows); no number is held twice; C-119.5 and C-64.18 are held by none; each translation is the word refusal.<CODE> read by key, never a copy", () => {
+  const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../src/translations/index.mjs"), "utf8").split("\n");
   const body = (fn) => {
     const name = fn.replace(/[$#]/g, "\\$&");
     const def = new RegExp(`^(\\s*)(?:export\\s+)?(?:async\\s+)?(?:function\\s+|static\\s+)?${name}\\s*\\(`);
@@ -572,18 +577,32 @@ test("R30 every row of this module's table names, in its where, the function tha
     }
     return null;
   };
-  for (const [code, row] of Object.entries(INSTANCE_SETUP_CHECKS)) {
-    const m = /^src\/setup\.mjs (\S+) > (\S+)$/.exec(row.where);
+  const rows = Object.entries(TRANSLATIONS_CHECKS);
+  assert.equal(rows.length, 17);
+  for (const [code, row] of rows) {
+    const m = /^src\/translations\/index\.mjs (\S+) > (\S+)$/.exec(row.where);
     assert.ok(m, `${code}: ${row.where}`);
     const b = body(m[1]);
     assert.ok(b, `${code}: no function ${m[1]}`);
-    const open = b.findIndex((l) => l.includes(`/* DEC-49 REGION ${m[2]} */`));
-    const end = b.findIndex((l) => l.includes(`/* END DEC-49 REGION ${m[2]} */`));
-    assert.ok(open >= 0 && end > open, `${code}: ${m[1]} holds no region ${m[2]}`);
+    /* every region of that name in the function (a function may hold several of one name) */
+    const inside = [];
+    let opened = false, regions = 0;
+    for (const l of b) {
+      if (l.includes(`/* END DEC-49 REGION ${m[2]} */`)) { opened = false; continue; }
+      if (l.includes(`/* DEC-49 REGION ${m[2]} */`)) { opened = true; regions += 1; continue; }
+      if (opened) inside.push(l);
+    }
+    assert.ok(regions >= 1 && !opened, `${code}: ${m[1]} holds no closed region ${m[2]}`);
+    /* the code is raised inside its region, by its own name */
+    assert.ok(inside.some((l) => l.includes(`"${code}"`)), `${code}: not raised inside ${m[2]}`);
+    assert.equal(row.translation, wordOf(`refusal.${code}`, code === "TRANSLATION_TEXT_REFUSED" ? { name: "{name}" } : {}), code);
   }
-  const numbers = Object.values(INSTANCE_SETUP_CHECKS).map((r) => r.check);
+  const numbers = rows.map(([, r]) => r.check);
   assert.equal(new Set(numbers).size, numbers.length);
+  assert.deepEqual(numbers.filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 15);
+  assert.deepEqual(numbers.filter((n) => /^C-64\./.test(n)).concat(numbers.filter((n) => !/^C-64\./.test(n))).sort(),
+    ["C-64.11", "C-64.12", "C-64.13", "C-64.14", "C-64.15", "C-64.16", "C-64.17", "C-64.19", "C-64.20", "C-64.21", "C-64.22",
+     "C-64.23", "C-64.24", "C-64.25", "C-64.26", "C-64.31", "C-119.12"].sort());
   assert.equal(numbers.includes("C-119.5"), false);
-  assert.deepEqual(numbers.filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 18);
   assert.equal(numbers.includes("C-64.18"), false);
 });

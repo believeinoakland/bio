@@ -138,6 +138,16 @@ import { RUNG_LADDER, IRREVERSIBLE_CORRECTION_KEY, RUNG_ABSENCE_GROUNDS, CONSEQU
          IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf, OP_ALIASES } from "./op-grades/index.mjs";
 /* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
 import { composedVocabularies } from "./affordances/words.mjs";
+/* R62, R64 (K3366; DEC-253): this module holds no member-facing English; every label, prompt and sentence is a key read through `word`. */
+import { word, hasWord } from "./setup-words/index.mjs";
+
+/* R64: an act's name is `act.<id>.name` (`act.<id>.name.selected` for a set act, which names the act over a selection), read
+ * through `word`. An act with no such key fails the load by its id, so the plane never publishes an act it cannot name. */
+export const actName = (id, selected = false) => {
+  const key = `act.${id}.name${selected ? ".selected" : ""}`;
+  if (!hasWord(key)) throw new Error(`NO_ACT_NAME: act ${id} has no word ${key}`);
+  return word(key);
+};
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -243,12 +253,7 @@ import { STAGE_REQUIREDNESS } from "./progressions/index.mjs";
  * refuses to lose a leg, which is why division cannot do severance's work at a
  * discount); that THE OTHER QUESTION STAYS ON THE RECORD; and that A PUBLISHED
  * CHILD NAMES ITS PARENT AND ITS SIBLINGS to its readers. */
-export const DIVIDE_PROMPT =
-  "Dividing does not remove anything. Every leg this question rests on gets a home on one of the "
-  + "children — including any leg that cuts against you — and this question stays on the record as the "
-  + "divided parent, recording where each leg went. Each child names this parent and every sibling, and "
-  + "when a child is published it names them to its readers. If you mean to drop material rather than "
-  + "re-home it, sever it with a reason instead.";
+export const DIVIDE_PROMPT = word("prompt.inquirydivide");
 
 /* REC-45 / DEC-29(b), on REC-16's mechanism exactly: THE GROUPING PROMPT.
  *
@@ -292,14 +297,7 @@ export const DIVIDE_PROMPT =
  * not the word `ground` itself — including in this act's own label. The wire
  * name is `inquiryground` because a wire name is not a surface; the sentence a
  * member reads says GROUP. */
-export const GROUND_PROMPT =
-  "Grouping says these reasons are enough on their own to carry your answer. Your answer's strength is "
-  + "then taken from the strongest group rather than from its weakest single reason, so your name and the "
-  + "time go on each group you make and stay there until that group's reasons change. Nothing is hidden: "
-  + "every reason stays visible under the group you put it in, and a published case carries each group and "
-  + "what it reached inside the signed bytes, so a reader can check whether they really were enough on "
-  + "their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the "
-  + "weakest one.";
+export const GROUND_PROMPT = word("prompt.inquiryground");
 
 /* REC-43 / DEC-39, on REC-16's mechanism exactly: THE CO-ATTESTATION HONESTY
  * FENCE. Third prompt, and the first whose WORDS ARE NOT THIS FILE'S.
@@ -360,14 +358,7 @@ export const attestFence = (ceiling, unreachable) => {
   if (!ceiling || !unreachable)
     throw new Error("the co-attestation fence states a ceiling AND the grade above it (DEC-39); "
                   + "with no grade above the ceiling the sentence cannot be composed truthfully");
-  return "What co-attestation answers: when did these bytes exist? It asks an independent timestamp "
-       + "authority to record that this capture's exact bytes existed no later than a fixed instant. "
-       + "What it does not answer: whether the document is TRUE, whether its source is authoritative, "
-       + "or how close it stands to the fact you are citing it for. A secondhand report that is "
-       + "co-attested is still a secondhand report. "
-       + `What it is worth: it strengthens a Grade ${ceiling} capture toward evidentiary weight. It `
-       + `never reaches Grade ${unreachable} — that needs a chain-of-custody web archive this surface `
-       + "cannot produce.";
+  return word("prompt.attest.fence", { ceiling, unreachable });
 };
 
 export const ATTEST_FENCE = attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
@@ -678,7 +669,7 @@ export const CAPTURE_ACTS = [
      accompany it, so the sentence cannot appear in one client and not another.
      The words are Bob's and the grade letters are the enforced rule's — the
      reasoning is on ATTEST_FENCE itself, where both consumers read it. */
-  { id: "attest", label: "Co-attest this capture", prompt: ATTEST_FENCE },
+  { id: "attest", label: actName("attest"), prompt: ATTEST_FENCE },
   /* op=monitor. One tick: re-fetch the source's locator and compare what it
      serves NOW against the bytes the provenance register says were captured
      from it. The label names the comparison rather than promising a watch — a
@@ -689,7 +680,7 @@ export const CAPTURE_ACTS = [
      reverse; an observation is corrected by observing again. The sentence this
      replaces said "no document assigns one, and RUNGS carries only the sourced
      seven", which was true and is no longer the reason. */
-  { id: "monitor", label: "Check this source against what was captured" },
+  { id: "monitor", label: actName("monitor") },
   /* op=attesttext (CPDF-10). Capture-directed for `attest`'s reason exactly —
      the subject is a CAPTURE SHA and an extent within it, not a bundle in a
      state — so it lands here rather than splitting the class, which is the
@@ -704,7 +695,7 @@ export const CAPTURE_ACTS = [
      required (content R43, ATTEST_NO_NOTE). It was `undetermined` until then, and
      `attested` was tried first and REFUSED (CPDF-10): it requires no authority the
      group does not hold alone. No rung is guessed anywhere in this file. */
-  { id: "attesttext", label: "Attest that this text matches the page image" },
+  { id: "attesttext", label: actName("attesttext") },
 ];
 
 /* One legal-edge lookup, over the IMPORTED table, THROUGH the catalog's own
@@ -768,12 +759,12 @@ const anyVersionEdgeTo = (f, to) =>
 export const ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
-  { id: "release", label: "Release (verify)", weight: "refuse", types: ["information"],
+  { id: "release", label: actName("release"), weight: "refuse", types: ["information"],
     applies: (f, ty) => ty === "information" && edgesFrom(f).includes("verified") },
   /* S-11 step 4. verified -> retired, AND nothing with a live cites edge: the
      same predicate the store's CITED refusal runs (#citesInto). A severed edge
      is a recorded decision to stop relying, so it does not block. */
-  { id: "retire", label: "Retire", weight: "refuse", types: ["information"],
+  { id: "retire", label: actName("retire"), weight: "refuse", types: ["information"],
     applies: (f, ty) => ty === "information" && edgesFrom(f).includes("retired")
                      && !(countOf(f.cites_in?.confirmed) > 0) },
   /* S-11 step 3. An inquiry (né focus/problem — the type reaches here through
@@ -798,7 +789,7 @@ export const ACTS = [
      which DOES carry the disposition edges, so the rule had to become a
      condition. The store refuses PUBLISHED_CANNOT_BE_SET_DOWN by name, and this
      clause is what keeps the pre-flight from offering what that refuses. */
-  { id: "dispose", label: "Dispose (defer or dismiss)", weight: "refuse", types: ["inquiry"],
+  { id: "dispose", label: actName("dispose"), weight: "refuse", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && !f.case_member
                      && DISPOSITIONS.some((d) => edgesFrom(f).includes(d)) },
   /* REC-13. An inquiry whose machine offers the `concluded` edge — `open`, and
@@ -852,7 +843,7 @@ export const ACTS = [
   /* N345 (R8): NOT ON A CONTRADICTION INQUIRY. Its conclusion must carry the kind the conflict turned out to be
      (inquiry R47: RESOLUTION_MISSING at every door), which `conclude` does not ask, so it is withheld there and
      `contradictionresolve` below is offered instead. `=== true`: a null (a hand-built facts object) narrows nothing. */
-  { id: "conclude", label: "Conclude", weight: "single", types: ["inquiry"],
+  { id: "conclude", label: actName("conclude"), weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && f.contradiction_inquiry !== true
                      && (edgesFrom(f).includes("concluded")
                          || (f.current_state === "concluded" && f.concludes_for_project === true)) },
@@ -866,7 +857,7 @@ export const ACTS = [
      viewer who cannot see every bundle each side of the linked candidate lives in (contradiction R36, C-93.27), and
      `contradiction_sides_seen` is that very check (its R56). `!== false`: a null (a hand-built facts object) narrows
      nothing (R10). */
-  { id: "contradictionresolve", label: "Resolve this contradiction (conclude with what it turned out to be)",
+  { id: "contradictionresolve", label: actName("contradictionresolve"),
     weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && f.contradiction_inquiry === true && edgesFrom(f).includes("concluded")
                      && f.contradiction_sides_seen !== false },
@@ -906,7 +897,7 @@ export const ACTS = [
      `published` with the state, and `edgesFrom` alone would offer this act on
      EVERY concluded finding, which the store refuses NOT_SET_DOWN with REC-31's
      own reason. */
-  { id: "reopen", label: "Reopen", weight: "single", types: ["inquiry"],
+  { id: "reopen", label: actName("reopen"), weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry"
                      && (REOPENABLE_FROM.includes(f.current_state) || !!f.case_member)
                      && edgesFrom(f).includes("open") },
@@ -1027,7 +1018,7 @@ export const ACTS = [
   /* R5, R28 (N364; DEC-81 item 3): THE SELF-ATTESTED PROMPT RIDES THE ACT, DIVIDE_PROMPT's mechanism. A case may rest on
      a load-bearing capture whose co-attestation failed, published by the owner's acknowledgement and marked
      "self-attested only"; every surface that offers publication receives the reader sentence that mark carries. */
-  { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
+  { id: "publish", label: actName("publish"), weight: "single", types: ["inquiry"],
     prompt: SELF_ATTESTED_PROMPT,
     applies: (f, ty) => ty === "inquiry"
                      && (f.current_state === "concluded" || f.concluded_for_project === true)
@@ -1078,7 +1069,7 @@ export const ACTS = [
      published case and the store then refuses it, which is DEC-8's headline
      failure and was caught by `divide.test.mjs`'s own DEC-8 arm rather than
      reasoned about in advance. */
-  { id: "inquirydivide", label: "Divide (split this question)", weight: "single", types: ["inquiry"],
+  { id: "inquirydivide", label: actName("inquirydivide"), weight: "single", types: ["inquiry"],
     prompt: DIVIDE_PROMPT,
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("divided")
                      && !f.case_member
@@ -1126,7 +1117,7 @@ export const ACTS = [
      reason on a RESTRUCTURE, a partition that is total, a label with an
      attributed row — the release precedent: publishing the act says the record
      permits the move, not that this caller's parameters will pass. */
-  { id: "inquiryground", label: "Group what this rests on", weight: "single", types: ["inquiry"],
+  { id: "inquiryground", label: actName("inquiryground"), weight: "single", types: ["inquiry"],
     prompt: GROUND_PROMPT,
     /* CASE-4 / DEC-72: `f.current_state !== "published"` became
        `!f.case_member`. The exclusion is unchanged in meaning — a member of a
@@ -1185,7 +1176,7 @@ export const ACTS = [
      requirement. The same sentence, read against the two rules, gives opposite
      answers — which is why the rule change is written down rather than the
      conclusion alone. */
-  { id: "actionmove", label: "Move this action", weight: "single", types: ["action"],
+  { id: "actionmove", label: actName("actionmove"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && edgesFrom(f).length > 0 },
   /* REC-24 (d). Recording what was sent, what came back, or that nothing did.
      Published for an action in ANY state, and the breadth is deliberate: the
@@ -1196,16 +1187,16 @@ export const ACTS = [
      planned one can record a first approach.
      Weight `single`: the ledger is append-only, one entry at a time. RUNG
      `reasoned` (DEC-88), backed by its grounds (K1025, R19): the bytes or the member's account (actions R15–R16). */
-  { id: "actioncorrespond", label: "Record correspondence", weight: "single", types: ["action"],
+  { id: "actioncorrespond", label: actName("actioncorrespond"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
   /* D-149. Stating which laws govern the request, on an action in ANY state, for actioncorrespond's reason:
      the store's own guard is the object's TYPE and nothing else. Weight `single`: one list, one act. */
-  { id: "actionlaws", label: "State governing laws", weight: "single", types: ["action"],
+  { id: "actionlaws", label: actName("actionlaws"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
   /* REC-214. Revising the risk tier, on an action in ANY state, for actioncorrespond's reason: the store's own
      guard is the object's TYPE and nothing else — a member may re-assess the legal exposure of a resolved action
      as much as a planned one. Weight `single`: one revision, one act, appended. RUNG `reasoned` (R27, K211). */
-  { id: "actionrisktier", label: "Revise risk tier", weight: "single", types: ["action"],
+  { id: "actionrisktier", label: actName("actionrisktier"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
   /* ===== R51 (T45; v0.2 rule 1, S1 §D 12; DEC-8): EVERY ACT DIRECTED AT AN ACTION THAT T45'S OWNERS SERVE ==========
      Each is offered on an `action` target exactly where its own refusal would admit this caller (R18), read off R14's
@@ -1223,89 +1214,89 @@ export const ACTS = [
      refusal turns on WHICH of several things it names (`clockadopt`'s proposal, stage 7's purpose) carries them, read
      off the facts (`expand`, below `deriveActs`), so its own refusal of a wrong one is never the only way to learn. */
   /* action-holds R2: a hold is placed on the whole action, or on one of its entries; sight is its only gate on place. */
-  { id: "actionhold", label: "Place a litigation hold (with a reason)", weight: "single", types: ["action"],
+  { id: "actionhold", label: actName("actionhold"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && !!f.action },
   /* action-holds R5: released only where a hold is in place (HOLD_ALREADY_RELEASED). */
-  { id: "actionholdrelease", label: "Release a litigation hold (with a reason)", weight: "single", types: ["action"],
+  { id: "actionholdrelease", label: actName("actionholdrelease"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.holds_in_place) > 0 },
   /* action-holds R1: pressure is marked on a received entry not yet marked (PRESSURE_NOT_RECEIVED, PRESSURE_MARKED). */
-  { id: "actionpressure", label: "Mark a reply as pressure on the group", weight: "single", types: ["action"],
+  { id: "actionpressure", label: actName("actionpressure"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.entries?.received_unmarked) > 0 },
   /* action-holds R11 and filings' hold notice: prepared and recorded sent only where a hold is in place (HOLD_NOT_IN_PLACE). */
-  { id: "holdnoticeprepare", label: "Prepare the hold notice for members", weight: "single", types: ["action"],
+  { id: "holdnoticeprepare", label: actName("holdnoticeprepare"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.holds_in_place) > 0 },
-  { id: "holdnoticesent", label: "Record that the hold notice was sent", weight: "single", types: ["action"],
+  { id: "holdnoticesent", label: actName("holdnoticesent"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.holds_in_place) > 0 },
   /* actions R80: a receipt is recorded on a sent entry (RECEIPT_NOT_ON_SENT). */
-  { id: "actionreceipt", label: "Record that a sending was received", weight: "single", types: ["action"],
+  { id: "actionreceipt", label: actName("actionreceipt"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.entries?.sent) > 0 },
   /* actions' scope (confidential set or removed, with a reason) and promise notes: sight only; which direction, and
      whether a promise stands to end, are parameters. */
-  { id: "actionscope", label: "Keep this action confidential, or no longer (with a reason)", weight: "single",
+  { id: "actionscope", label: actName("actionscope"), weight: "single",
     types: ["action"], applies: (f, ty) => ty === "action" && !!f.action },
-  { id: "actionpromise", label: "Note a promise the group made", weight: "single", types: ["action"],
+  { id: "actionpromise", label: actName("actionpromise"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && !!f.action },
   /* action-replies R1, R2: a reply laid out claim by claim on a request for comment's received entry (BEARING_NOT_RFC);
      a response's arising matter linked from any received entry (AROSE_FROM_NOT_A_RESPONSE). */
-  { id: "actionreplybearing", label: "Record what a reply says to each claim", weight: "single", types: ["action"],
+  { id: "actionreplybearing", label: actName("actionreplybearing"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.request_for_comment === true
                      && countOf(f.action?.entries?.received) > 0 },
-  { id: "actionbearingpropose", label: "Propose what a reply says to each claim", weight: "single", types: ["action"],
+  { id: "actionbearingpropose", label: actName("actionbearingpropose"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.request_for_comment === true
                      && countOf(f.action?.entries?.received) > 0 },
   /* R58 (action-replies R10): a received reply of a request for comment may be recorded as asking not to be quoted, or the
      record withdrawn (QUOTING_NOT_RFC otherwise): the same facts as the layout, read through `bearingsOf`; a machine is
      refused it (MACHINE_CANNOT_RECORD_QUOTING, `MACHINE_REFUSALS`, `op-grades` R38). Which entry, which words are parameters. */
-  { id: "actionreplyquoting", label: "Record that a reply asks not to be quoted", weight: "single", types: ["action"],
+  { id: "actionreplyquoting", label: actName("actionreplyquoting"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.request_for_comment === true
                      && countOf(f.action?.entries?.received) > 0 },
-  { id: "arosefrom", label: "Link a matter that arose from this reply", weight: "single", types: ["action"],
+  { id: "arosefrom", label: actName("arosefrom"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.entries?.received) > 0 },
   /* escalation R1, R9 (join on override, R23): opened on the determination this action rests on, and the action
      attached to an escalation at a stage that takes one (escalation's `#pursuable` and `escalationAttach`). */
-  { id: "escalationopen", label: "Open an escalation of the determination this rests on (with a reason)",
+  { id: "escalationopen", label: actName("escalationopen"),
     weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.escalation?.openable === true },
   /* R52 (escalation R34): at stage 7 the purposes R9 would admit for the action's addressee are carried as `purposes`
      (never one it refuses), so the purpose is chosen from what the act will accept; at stages 2 and 5 none is asked. */
-  { id: "escalationattach", label: "Attach this action to its escalation (with a reason)", weight: "single",
+  { id: "escalationattach", label: actName("escalationattach"), weight: "single",
     types: ["action"], applies: (f, ty) => ty === "action" && f.action?.escalation?.attachable === true,
     expand: (f) => [Array.isArray(f.action?.escalation?.attach_purposes) ? { purposes: f.action.escalation.attach_purposes } : {}] },
   /* R52 (escalation R31, R33): the group stops pursuing an escalation open or suspended (NOT_OPEN otherwise), and reopens
      one stopped (NOT_STOPPED otherwise), each with a member's reason; a machine is refused both (MACHINE_CANNOT_STOP). */
-  { id: "escalationstoppursuing", label: "Stop pursuing this escalation (with a reason)", weight: "single",
+  { id: "escalationstoppursuing", label: actName("escalationstoppursuing"), weight: "single",
     types: ["action"], applies: (f, ty) => ty === "action" && f.action?.escalation?.stoppable === true },
-  { id: "escalationreopen", label: "Reopen an escalation the group stopped pursuing (with a reason)", weight: "single",
+  { id: "escalationreopen", label: actName("escalationreopen"), weight: "single",
     types: ["action"], applies: (f, ty) => ty === "action" && f.action?.escalation?.reopenable === true },
   /* filings R5, R23: prepared on an action not closed (ACTION_CLOSED); a filing only at a governing tier of 1 or 2
      (FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET). */
-  { id: "filingprepare", label: "Prepare a filing", weight: "single", types: ["action"],
+  { id: "filingprepare", label: actName("filingprepare"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.closed === false && f.action?.preparable === true },
-  { id: "communicationprepare", label: "Prepare a communication", weight: "single", types: ["action"],
+  { id: "communicationprepare", label: actName("communicationprepare"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.closed === false },
   /* R52 (action-clocks R13, R20): a standing proposal adopted onto the action's clock, one act per proposal with a
      date, each naming the key `clockadopt` takes as `proposal`; none stands, none is offered. */
-  { id: "clockadopt", label: "Put a proposed deadline on this action's clock", weight: "single", types: ["action"],
+  { id: "clockadopt", label: actName("clockadopt"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.clock?.proposals) > 0,
     expand: (f) => f.action.clock.proposals.map((proposal) => ({ proposal })) },
   /* filings R6 (with R34, R43: the release of a contradicted sentence and each pointed-out sentence's resolution are its
      parameters, the plan's reconciliation R1): a draft of the group's voice not yet approved; R7: approved, not sent. */
-  { id: "filingapprove", label: "Approve a prepared draft", weight: "single", types: ["action"],
+  { id: "filingapprove", label: actName("filingapprove"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.drafts?.unapproved) > 0 },
   /* R52 (filings R50): `approved_unsent` counts only drafts answered `second_needed: false` (SECOND_APPROVAL_NEEDED). */
-  { id: "filingsent", label: "Record that an approved draft was sent", weight: "single", types: ["action"],
+  { id: "filingsent", label: actName("filingsent"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.drafts?.approved_unsent) > 0 },
   /* filings R11 (claim or defence; T45: no determination needed): sight only, counsel being its parameter. */
-  { id: "counselpacket", label: "Brief counsel (with a reason)", weight: "single", types: ["action"],
+  { id: "counselpacket", label: actName("counselpacket"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && !!f.action },
   /* action-clocks R18: the group's own deadline stated (sight only); R4: a reminder on a dated entry, while the
      action's standing reminders are under the bound (REMINDER_REFUSED, arms `entry`, `bound`). */
-  { id: "clockstate", label: "State a deadline and its basis", weight: "single", types: ["action"],
+  { id: "clockstate", label: actName("clockstate"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && !!f.action },
-  { id: "reminderset", label: "Set a reminder for a date", weight: "single", types: ["action"],
+  { id: "reminderset", label: actName("reminderset"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.clock?.dated) > 0 && f.action?.clock?.reminders_room === true },
   /* plan-work R11: a member takes up a clock entry or a hold of this action (NO_SUCH_ITEM). */
-  { id: "itemtakeup", label: "Take this up myself", weight: "single", types: ["action"],
+  { id: "itemtakeup", label: actName("itemtakeup"), weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && (countOf(f.action?.clock?.entries) > 0 || countOf(f.action?.holds_in_place) > 0) },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
@@ -1357,13 +1348,13 @@ export const ACTS = [
    * acceptance before make-current, a project that draws on the question. The
    * release precedent — publishing the act says the machine permits the move,
    * not that this caller's parameters will pass. */
-  { id: "versionaccept", label: "Accept a reading of the evidence", weight: "single", types: ["inquiry"],
+  { id: "versionaccept", label: actName("versionaccept"), weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && anyVersionEdgeTo(f, "accepted") },
-  { id: "versionreject", label: "Turn down a reading (with a reason)", weight: "single", types: ["inquiry"],
+  { id: "versionreject", label: actName("versionreject"), weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && anyVersionEdgeTo(f, "rejected") },
-  { id: "versionconsider", label: "Set a reading aside for now (with a reason)", weight: "single", types: ["inquiry"],
+  { id: "versionconsider", label: actName("versionconsider"), weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && anyVersionEdgeTo(f, "considering") },
-  { id: "versionrevert", label: "Put a reading back to where nobody had acted on it", weight: "single",
+  { id: "versionrevert", label: actName("versionrevert"), weight: "single",
     types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && anyVersionEdgeTo(f, "suggested") },
   /* MAKE-CURRENT is offered when the question holds a reading a member has
@@ -1371,7 +1362,7 @@ export const ACTS = [
      accepted, §6 rule 5). Which PROJECT stands on it is the act's parameter and
      the store refuses an unnamed one — the dispose precedent, where the target
      state is a parameter rather than a second act. */
-  { id: "versioncurrent", label: "Stand this project on a reading", weight: "single", types: ["inquiry"],
+  { id: "versioncurrent", label: actName("versioncurrent"), weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && (f.basis_version_states ?? []).includes("accepted") },
   /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: a PROJECT withdraws its
      conclusion, and the withdrawal APPENDS — the conclusion stays in the record.
@@ -1381,7 +1372,7 @@ export const ACTS = [
      the store refuses one that stands on no conclusion (NOTHING_TO_WITHDRAW) —
      the release precedent: publishing the act says the machine permits the
      move, not that this caller's parameters will pass. */
-  { id: "withdrawconclusion", label: "Withdraw this project's conclusion (it stays in the record)",
+  { id: "withdrawconclusion", label: actName("withdrawconclusion"),
     weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && (f.basis_version_states ?? []).includes("accepted") },
   /* HIDE is offered wherever a reading exists AT ALL, in any state, and that
@@ -1391,7 +1382,7 @@ export const ACTS = [
      may want out of the way. The store gates on nothing but the version
      existing, so narrowing here would be this file inventing a rule the plane
      does not enforce — the cite precedent. */
-  { id: "versionhide", label: "Hide a reading from the display (it stays in the record)", weight: "single",
+  { id: "versionhide", label: actName("versionhide"), weight: "single",
     types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && countOf(f.basis_versions) >= 1 },
   /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
@@ -1404,7 +1395,7 @@ export const ACTS = [
      reason exactly: the fact is three-valued and a caller with no roster position (a `class:*`
      credential) reads null and is byte-unchanged. The information and question arms are not
      narrowed — citing FROM them is not an act on a project. */
-  { id: "cite", label: "Cite material into a case or a question", weight: "report",
+  { id: "cite", label: actName("cite"), weight: "report",
     types: ["information", "project", "inquiry"],
     /* D-168 (2026-09-23, State Rules §4.1, BOB #30): a RETIRED Information bundle is not
        citable and the store refuses RETIRED_NOT_CITABLE for every caller, so the act is not
@@ -1454,7 +1445,7 @@ export const ACTS = [
      question as its citing object and no joined project asked, so on an information target it is offered where a question
      the caller may see holds a live leg on it (`legs_in.live`, R14), as reinstate is where one holds a severed leg. Counts
      only, through `countOf`: an absent fact offers nothing (R10). */
-  { id: "sever", label: "Sever a citation", weight: "refuse",
+  { id: "sever", label: actName("sever"), weight: "refuse",
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && countOf(f.cited_by_case?.confirmed) > 0)
                      || (ty === "information" && countOf(f.legs_in?.live) > 0)
@@ -1478,7 +1469,7 @@ export const ACTS = [
      and cost a case the one recorded way to take a citation back up. `countOf` for the posture every
      fact added since REC-16 takes: absent reads as ZERO, the safe direction, because `deriveActs`
      is exported and two suites call it with hand-built facts. */
-  { id: "reinstate", label: "Reinstate a severed citation", weight: "refuse",
+  { id: "reinstate", label: actName("reinstate"), weight: "refuse",
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry")
                          && (countOf(f.cited_by_case?.severed) > 0 || (ty === "information" && countOf(f.legs_in?.severed) > 0))
@@ -1523,23 +1514,23 @@ export const ACTS = [
      `class:ai/<tokenId>`, N874), which holds no position, so its `f.roster` is null (R15) and a machine credential is
      offered none of the seven — each of which its class is refused.
      Weight `single`, conclude's precedent: one project's roster at a time, no set to apply. */
-  { id: "projectinvite", label: "Invite a member to this project", weight: "single", types: ["project"],
+  { id: "projectinvite", label: actName("projectinvite"), weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true },
-  { id: "projectjoin", label: "Join this project", weight: "single", types: ["project"],
+  { id: "projectjoin", label: actName("projectjoin"), weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && typeof f.roster?.state === "string" && f.roster.state !== "joined" },
   /* N45 (R18): an owner is offered leave only while ANOTHER owner stays committed (has not asked to leave), which is
      when membership R35 accepts it (LAST_COMMITTED_OWNER otherwise). The owner floor alone counted leaving owners too,
      so two owners could each be offered leave and the second refused. */
-  { id: "projectleave", label: "Ask to leave this project", weight: "single", types: ["project"],
+  { id: "projectleave", label: actName("projectleave"), weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.state === "joined"
                      && (f.roster?.owner !== true || f.roster?.other_owner_committed === true) },
-  { id: "projectremove", label: "Remove a participant", weight: "single", types: ["project"],
+  { id: "projectremove", label: actName("projectremove"), weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true },
-  { id: "projectowneradd", label: "Add an owner", weight: "single", types: ["project"],
+  { id: "projectowneradd", label: actName("projectowneradd"), weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true },
-  { id: "projectownerremove", label: "Remove an owner (with a reason)", weight: "single", types: ["project"],
+  { id: "projectownerremove", label: actName("projectownerremove"), weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true && f.roster?.owner_floor_clear === true },
-  { id: "projectownerrescue", label: "Add an owner to a project whose owners are all inactive (with a reason)",
+  { id: "projectownerrescue", label: actName("projectownerrescue"),
     weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.rescue_open === true },
   /* REC-149 (Membership v2 §7.14): WHETHER THIS PROJECT CAN BE FOUND — an OWNER's recorded act on the project
@@ -1549,7 +1540,7 @@ export const ACTS = [
      offered on `=== true` ONLY: the store refuses every other caller, a machine credential included (C-70.2),
      so a null (no roster position) must not publish it — this is a NEW act, so no existing act set moves.
      Weight `single`: one project, one setting. */
-  { id: "projectvisibilityset", label: "Choose whether this project can be found", weight: "single",
+  { id: "projectvisibilityset", label: actName("projectvisibilityset"), weight: "single",
     types: ["project"],
     applies: (f, ty) => ty === "project" && f.project_target_owner === true },
   /* N364 (R5, R29; K530): A MEMBER RECORDS A SOURCE'S CONSENT, with its evidence, for one disclosure and one audience
@@ -1562,7 +1553,7 @@ export const ACTS = [
      history. Weight `single`: one entry, one audience, one act. NOT in MACHINE_REFUSALS: `recordConsent` answers a
      machine NO_SUCH_SOURCE (a machine names no member who may read a source), never a MACHINE_* code (R20). RUNG
      `reasoned` (R2). */
-  { id: "sourceconsent", label: "Record a source's consent to publish (with its evidence)", weight: "single",
+  { id: "sourceconsent", label: actName("sourceconsent"), weight: "single",
     types: ["source"], prompt: CONSENT_PROMPT,
     applies: () => false },
 ];
@@ -1593,17 +1584,17 @@ export const PER_ITEM_ACTS = [
      taken it as a shared field since REC-211 — a set over one progression names the version once — and
      it was published in neither list, so a surface holding only this table could not complete an
      instance-scoped item in a set. It is an identity of nothing, so it is shared and never narrowed. */
-  { id: "proposedispose", label: "Defer or dismiss the selected findings", weight: "per-item",
+  { id: "proposedispose", label: actName("proposedispose", true), weight: "per-item",
     set_key: "items", item_keys: [["key"], ["progressionKey", "stageKey"], ["project", "finding"]],
     shared_keys: ["to", "reason", "kind", "definitionVersion"] },
-  { id: "taskresolve", label: "Resolve the selected obligations", weight: "per-item",
+  { id: "taskresolve", label: actName("taskresolve", true), weight: "per-item",
     set_key: "items", item_keys: [["id"]], shared_keys: [] },
-  { id: "taskforward", label: "Forward the selected obligations", weight: "per-item",
+  { id: "taskforward", label: actName("taskforward", true), weight: "per-item",
     set_key: "items", item_keys: [["id"]], shared_keys: ["to"] },
   /* D-291 (BIO_Interaction_Constructs §S, BOB #32 2026-09-23 23:30Z): a member's selection of captured
      documents resolved in ONE call — each document's references run through the recogniser exactly as the
      single act runs them, each document applied or retained with that act's own reason. */
-  { id: "resolve", label: "Resolve the selected documents' references", weight: "per-item",
+  { id: "resolve", label: actName("resolve", true), weight: "per-item",
     set_key: "items", item_keys: [["captureSha"], ["captureSha", "ref"]], shared_keys: ["ref"] },
 ];
 
@@ -1650,10 +1641,8 @@ export function decorate(act, gate) {
  * re-worded here — beside the op's rung, absence ground, prompt and weight (R11), and, with a target's facts (R13–R14,
  * asked by the caller of the instance method in ./affordances/facts.mjs), the acts R17 would answer for this caller on it
  * now: `deriveActs` over the facts, nothing performed. So the explanation states what the caller may do instead. A code
- * no row holds answers `translation: null` with NOT_CATALOGUED in `detail`, the one sentence this composes (R21). Writes
+ * no row holds answers `translation: null` with `refusal.uncatalogued` in `detail`, read through `word` (R64, R21). Writes
  * nothing (R22) and never throws. `acts` is null with no target, and [] for a target the caller cannot see. */
-export const NOT_CATALOGUED = "This refusal is not in the catalogue of refusals, so no explanation of it is published; "
-  + "its code is shown as the act gave it.";
 const ALL_PUBLISHED = () => [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS];
 export function explainRefusal(arg) {
   const { op = null, code = null, facts = null, gate = null, rowOf = null } = arg && typeof arg === "object" ? arg : {};
@@ -1672,7 +1661,7 @@ export function explainRefusal(arg) {
   return { op: id, code: c,
            translation: catalogued ? row.translation : null,
            check: catalogued && typeof row.check === "string" ? row.check : null,
-           detail: catalogued ? null : NOT_CATALOGUED,
+           detail: catalogued ? null : word("refusal.uncatalogued"),
            rung: d.rung, rung_absence: d.rung_absence, prompt: d.prompt, weight: d.weight, acts };
 }
 

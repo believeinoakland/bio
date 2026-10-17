@@ -12,7 +12,7 @@
  *
  * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's, T45's, T46's, T47's and T48's ops are graded in `./t33.mjs`,
  * `./t34.mjs`, `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs`, `./t45.mjs`, `./t46.mjs`,
- * `./t47.mjs`, `./t48.mjs` and `./t49.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
+ * `./t47.mjs`, `./t48.mjs`, `./t49.mjs` and `./t50.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -41,6 +41,8 @@ import { T47_RUNGS, T47_RUNG_ABSENT, T47_NON_ACTS } from "./t47.mjs";
 import { T48_RUNGS, T48_RUNG_ABSENT, T48_NON_ACTS, T48_MACHINE_REFUSALS } from "./t48.mjs";
 /* R43 (T49; N1072, N1091): `founderhandleset` and `projectownervotes`, graded from their owners. */
 import { T49_RUNG_ABSENT, T49_NON_ACTS } from "./t49.mjs";
+/* R45, R47 (T50; DEC-300 (5)): T50's new ops, graded from their owners, and the four acts DEC-300 (5) weighs Reversible. */
+import { T50_RUNGS, T50_RUNG_ABSENT, T50_NON_ACTS } from "./t50.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 /* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
 export { MARKS, MARK_SOURCES } from "./marks.mjs";
@@ -627,6 +629,7 @@ export const RUNGS = {
   ...T46_RUNGS,
   ...T47_RUNGS,
   ...T48_RUNGS,
+  ...T50_RUNGS,
 };
 
 
@@ -751,7 +754,7 @@ export const RUNG_ABSENT = {
      proposes, and it is machine work. The opt-in and the response (DEC-85) ask no authored reason (their words are
      optional, a response's text is what is relayed, not an account of a decision), and no published act takes either
      back: an opt-in is never withdrawn, and a response is relayed as written. */
-  contradictionrecommend: { ground: "undetermined", is: "a run RECOMMENDS in which respects the sides of a shown contradiction may differ — never which side is wrong or a kind — labelled machine work and standing only while the candidate is open (contradiction R37)" },
+  contradictionrecommend: { ground: "undetermined", is: "a run RECOMMENDS in which respects the sides of a shown contradiction may differ — never which side is wrong or a kind — labeled machine work and standing only while the candidate is open (contradiction R37)" },
   contradictionoptin:   { ground: "undetermined", is: "a project, through one of its joined participants, asks to resolve a conflict with a record its members cannot see; never withdrawn, and when every project holding a side has asked, the projects are named to each other (contradiction R51, R52)" },
   contradictionrespond: { ground: "undetermined", is: "a member of an opted-in project responds to a conflict's notice, disclosing only what they choose; relayed as written to the other opted-in projects once they are named to each other (contradiction R53, R54)" },
   /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are `credential`: their whole subject is WHO MAY
@@ -766,16 +769,16 @@ export const RUNG_ABSENT = {
      (a pressure mark's note describes what was received, and `PRESSURE_REFUSED` is a malformed mark, not a missing
      account), and no published act takes any of them back. `actioncreate` is a member's chosen act, not `promote`'s
      substrate, though it rides the same write. DEC-88 left all four `undetermined` (R3). */
-  communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it (filings R23)" },
+  communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labeled as its preparer's; never sent until a member approves it (filings R23)" },
   templatesave:         { ground: "undetermined", is: "a member starts a template draft (or a draft of a new version of a named template) from an approved filing draft, handed to the template library's draft act; no machine writes one (filings R32)" },
   actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
   actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (action-holds R1, was actions R48)" },
   /* K727 (T18), on R3's rule: action-plans' acts that ask no authored reason and that no published act takes back —
      opening a plan, adding, proposing and adopting an option, a checkpoint's judgement (its note optional, never
      re-judged) and starting an option as an action (`actioncreate`'s ground). DEC-88 left all six `undetermined`. */
-  planopen:             { ground: "undetermined", is: "a member opens a plan for a project over named subjects, a suspected inquiry or a determined outcome (action-plans R1)" },
+  /* R47 (T50): `planopen` left this ground for `reversible` (RUNGS, ./t50.mjs): planclose ends the plan (action-plans R20). */
   optionadd:            { ground: "undetermined", is: "a member adds an option to a plan — what could be done, its category, the subjects it serves (action-plans R9); revised forward with a reason, never deleted" },
-  optionpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES an option with its why, stored apart and labelled; never an option until a member adopts it (action-plans R11)" },
+  optionpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES an option with its why, stored apart and labeled; never an option until a member adopts it (action-plans R11)" },
   optionadopt:          { ground: "undetermined", is: "a member adopts a proposal as an option, the option naming the proposal, at most once (action-plans R11)" },
   checkpointrecord:     { ground: "undetermined", is: "a member records whether a phase's condition was met at its checkpoint, with an optional note; judged once, never re-judged (action-plans R16)" },
   optionstart:          { ground: "undetermined", is: "a member starts a chosen option as an action composed from it and promoted, `actioncreate`'s ground (action-plans R18)" },
@@ -793,14 +796,14 @@ export const RUNG_ABSENT = {
   templategrantrevoke:  { ground: "credential", is: "withdraws a template review grant; the secret then answers as one never issued (filing-templates R8)" },
   templatedraft:        { ground: "undetermined", is: "a member creates a template and its first draft, or a draft of a new version of one, from their own words, a version they may see or a proposal; never offered until reviewed and approved (filing-templates R3)" },
   templaterevise:       { ground: "undetermined", is: "a member revises a draft's text, every earlier revision kept with its author and time, or adopts a proposal's text (filing-templates R4)" },
-  templatepropose:      { ground: "undetermined", is: "a machine or a member PROPOSES wording for a template or a kind with its why, stored apart and labelled; a template's text only when a member takes it up (filing-templates R6)" },
+  templatepropose:      { ground: "undetermined", is: "a machine or a member PROPOSES wording for a template or a kind with its why, stored apart and labeled; a template's text only when a member takes it up (filing-templates R6)" },
   templatesubmit:       { ground: "undetermined", is: "a member moves a draft to review, fixing its text, and names the members asked to review it (filing-templates R7)" },
   templatereview:       { ground: "undetermined", is: "a member, or a professional through a live grant, records one review of a version's present text: no concerns, concerns, or changes requested; a later review of the same text stands in its place, the earlier kept (filing-templates R9)" },
-  templatecomment:      { ground: "undetermined", is: "a member, a grant's recipient or a labelled run comments on a version, or a member adds a note; attributed, never edited (filing-templates R12, R13)" },
+  templatecomment:      { ground: "undetermined", is: "a member, a grant's recipient or a labeled run comments on a version, or a member adds a note; attributed, never edited (filing-templates R12, R13)" },
   templateapprove:      { ground: "undetermined", is: "an approver who is not the version's sole author approves a reviewed version, the earlier approved version marked updated and still offered; or an administrator widens an approved template to the group (filing-templates R10)" },
   /* R7 (N485: K1025, K1035), on R3's rule, as `templatepropose`: a draft of a new edition's statement, machine or
      member, append-only; it asks no authored reason and no published act takes it back. */
-  whatchangedpropose:   { ground: "undetermined", is: "a machine or a member PROPOSES a draft of a published case's next edition statement, labelled machine work when a machine proposed it and kept append-only; never a statement until a member adopts or rewrites it (case-authoring R39)" },
+  whatchangedpropose:   { ground: "undetermined", is: "a machine or a member PROPOSES a draft of a published case's next edition statement, labeled machine work when a machine proposed it and kept append-only; never a statement until a member adopts or rewrites it (case-authoring R39)" },
   /* R9 (DEC-116, N520), on R3's rule, as `actionpressure`: a pressure mark's note describes what was received (a
      malformed mark is PRESSURE_REFUSED, not a missing account), and no published act takes a mark back. */
   docketpressure:       { ground: "undetermined", is: "a member marks a docket record entry as a threat — legal, retaliation, discrediting or other — with an optional note; appended, never rewriting the entry, and an entry is marked once (docket R2)" },
@@ -814,9 +817,9 @@ export const RUNG_ABSENT = {
      stands, and no published act takes one back (a later version updates, never undoes). The editor grant and its
      revocation are `credential`: their subject is WHO MAY write a blank start or add steps. A progress call is an
      unattributed tally of what happened, `observational`. */
-  wizarddraft:          { ground: "undetermined", is: "a member creates a wizard script and its first draft from a recording of screens and acts (never values), a proposal or an approved version, or a new draft version of one (wizard-scripts R3)" },
+  /* R47 (T50): `wizarddraft` left this ground for `reversible` (RUNGS, ./t50.mjs): wizardretire takes the script back (wizard-scripts R9). */
   wizardrevise:         { ground: "undetermined", is: "the draft's author replaces its steps by a new revision, every earlier revision kept with its author and time, or adopts a proposal's steps (wizard-scripts R4)" },
-  wizardpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES steps for a project or a script with its why, stored apart and labelled; a draft only when a member takes it up (wizard-scripts R5)" },
+  wizardpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES steps for a project or a script with its why, stored apart and labeled; a draft only when a member takes it up (wizard-scripts R5)" },
   wizardsubmit:         { ground: "undetermined", is: "the author moves a draft to submitted, fixing its steps and digest, once it passes the checks against the registered screens (wizard-scripts R6)" },
   wizardapprove:        { ground: "undetermined", is: "a project owner who is not the version's sole author approves a submitted version, the earlier approved version marked updated; or an administrator widens an approved script to the group (wizard-scripts R7)" },
   wizardeditorgrant:    { ground: "credential", is: "an administrator grants a member the advanced editor: a blank start and adding steps (wizard-scripts R8)" },
@@ -837,6 +840,7 @@ export const RUNG_ABSENT = {
   ...T47_RUNG_ABSENT,
   ...T48_RUNG_ABSENT,
   ...T49_RUNG_ABSENT,
+  ...T50_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -960,7 +964,7 @@ export const NON_ACTS = {
      leg display (UI's, DELEGATED), which is where the leg is in hand. */
   narrow: "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
   /* REC-86: the candidate list is a READ, on `extractproposals`' reasoning below. */
-  narrowcandidates: "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labelled machine work and writes nothing",
+  narrowcandidates: "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labeled machine work and writes nothing",
   /* REC-122 / IC-232. NOT an object-directed act, for `narrow`'s reason: its subject is ONE END
      of ONE CONNECTION — (capture, other capture, entity) — and `affordanceFacts` carries no
      connections, so an applies() over those facts would offer it on every document. The surface
@@ -987,7 +991,7 @@ export const NON_ACTS = {
   resolutiondefect: "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
   contradictioncandidates: "read: the contradictions shown on an inquiry, a passage, an entity, a bundle, a project or one candidate, each with its sides, label, weight and state; writes nothing",
   contradictiontensions: "read: the marks a contradiction leaves on each side the viewer can see — in tension, softened, stale, qualified, held irreconcilable; writes nothing",
-  contradictionfacts: "read: the facts the record holds that bear on each respect in which a candidate's sides may differ, each labelled the record's; writes nothing",
+  contradictionfacts: "read: the facts the record holds that bear on each respect in which a candidate's sides may differ, each labeled the record's; writes nothing",
   /* DEC-85: the conflict with a side the member cannot see. The opt-in and the response are the project's and the
      member's acts on a CONFLICT, keyed by the candidate and the member's own project, and a notice is where they are
      offered; no bundle state could say when to offer them. */
@@ -1041,7 +1045,7 @@ export const NON_ACTS = {
      unless a member states the list themselves with `actionlaws` (which IS an ACTS row). Publishing it as an
      act would put "propose the governing laws" beside "state the governing laws" on one object, which is the
      record offering a member the machine's half of a ruling that exists to keep the two apart. */
-  actionlawspropose: "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labelled machine work and never the action's own list",
+  actionlawspropose: "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labeled machine work and never the action's own list",
   /* R20 (N6): no place is named here — the spaces, the systems and their floors are the active jurisdiction
      profiles' data (layers.md, "No jurisdiction in the product"). */
   idmatch: "read: one identifier recognised in one of the identifier spaces the active profiles declare — its form, its normalised value, its reach against its publishing system's coverage floor, its standing — or a PAIR judged under Framework §8.3: counts only in two independent systems read from each capture's own addresses, with the referent agreeing; writes nothing",
@@ -1471,7 +1475,7 @@ export const NON_ACTS = {
      reads answer with no credential (its R10, R20, R21), registered through public-read (its R18). */
   whatchangedpropose: "case-directed: keyed by a published case, reached from its next edition; a draft, never a statement until a member adopts it",
   noticepost: "project-directed: keyed by a project, reached from the project; an owner's signed notice",
-  escalationreasondraft: "read: an escalation's opening reason pre-assembled from a live noncompliant determination's record, keyed by determination, each sentence naming the record it came from and labelled machine work; never a reason until a member sends it, and writes nothing",
+  escalationreasondraft: "read: an escalation's opening reason pre-assembled from a live noncompliant determination's record, keyed by determination, each sentence naming the record it came from and labeled machine work; never a reason until a member sends it, and writes nothing",
   whatchangeddrafts: "read: a published case's drafts of its next edition statement, keyed by case, oldest first, each with its label; writes nothing",
   sweeps: "read: the link sweeps the viewer may see, each with its definition as quoted data, its ratification, its schedule and its last runs; writes nothing",
   noticeprepare: "read: a working-on notice's next revision composed for its owner to sign, keyed by project, with its statement and digest; stores nothing and writes nothing",
@@ -1503,7 +1507,7 @@ export const NON_ACTS = {
   importflag: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
   importflagclear: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
   importedcases: "read: every case this copy has imported, with its source group, case, lens and editions, and when each was imported; writes nothing",
-  importedcase: "read: one imported case's editions, each finding's recreation and its standing against this group's own bar, the source's bar labelled as the source's, and the acceptance in force and the open flags; writes nothing",
+  importedcase: "read: one imported case's editions, each finding's recreation and its standing against this group's own bar, the source's bar labeled as the source's, and the acceptance in force and the open flags; writes nothing",
   casechecker: "read: public, no credential",
   casefilespec: "read: public, no credential",
   /* R12 (DEC-101 (3); N534): the watch of an imported case's docket is keyed by the import, as R10's acts are. */
@@ -1536,8 +1540,8 @@ export const NON_ACTS = {
   publishatcancel: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
   publishschedule: "read: the case editions signed to publish at a set time, waiting, published, stopped or cancelled, each with its set time and who set it; writes nothing",
   /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung. */
-  groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
-  writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
+  groupdescriptiondraft: "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
+  writinghelp: "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
      T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs, T42's in ./t42.mjs, T45's in
      ./t45.mjs, T46's in ./t46.mjs and T47's in ./t47.mjs. */
@@ -1554,6 +1558,7 @@ export const NON_ACTS = {
   ...T47_NON_ACTS,
   ...T48_NON_ACTS,
   ...T49_NON_ACTS,
+  ...T50_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its

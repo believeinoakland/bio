@@ -51,13 +51,14 @@ import { biasOf } from "../bias/index.mjs";
 import { schedulerOf, viewZone } from "../scheduler/index.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
 import { affordancesOf, deriveActs, decorate, PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, catalogueIdOf, classOfKind, MUTE_REFUSAL_DETAIL,
          PERSONALLY_MUTABLE_CLASSES, itemClassOf, mutedAsItem, serializeMutedKinds, parseMutedKinds,
-         suppressedBy } from "../queuestate.mjs";
+         parseMutedAt, serializeMutedAt, suppressedBy } from "../queuestate.mjs";
 import { QUEUE_SCHEMA, QUEUE_TABLES, queueOwns } from "./schema.mjs";
 import { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS, queueRefusal } from "./checks.mjs";
 
@@ -67,7 +68,8 @@ export { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS } from "./checks.mjs";
 /* R48 (N301, K356; DEC-107, DEC-110, DEC-131; K1038, K1536): how each class is shown to members. The codes are
    unchanged; the words are these, and no member-facing sentence this module answers calls a to-do an "obligation", or a
    status item a "condition" or a "signal" ("obligation" names only a public body's duty, DEC-107). */
-export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Status" });
+export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: word("mark.kind.todo.name"), FINDING: word("mark.kind.noticed.name"),
+                                                  CONDITION: word("mark.kind.status.name") });
 
 /* R54 (T48; N1047; DEC-226 (1); K3189): the sections a surface files kinds under instead of under a case, section id to
    its kinds. The words `queue.update.section` and `queue.update.section_says` are the interface's. Frozen through. */
@@ -96,6 +98,10 @@ export class Queue {
   migrate() {
     for (const stmt of QUEUE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
       if (stmt.trim()) this.sql.exec(stmt);
+    /* R55: a store made before the instants of a case's muted kinds were kept lacks their column; it is added, and the
+       kinds muted before it answer no instant (`at: null`), never back-filled. */
+    const have = this.#rows(`PRAGMA table_info(queue_state)`).map((c) => c.name);
+    if (have.length && !have.includes("muted_at")) this.sql.exec(`ALTER TABLE queue_state ADD COLUMN muted_at TEXT`);
   }
 
   /* ------------------------------------------------------------------ the providers (Uses), reached lazily */
@@ -341,7 +347,7 @@ export class Queue {
   static QUEUE_RESOLVED_WINDOW_DAYS = 30;
   static QUEUE_RESOLVED_MAX = 64;
   /** R18: the lead's set-aside, added at the mint where its disposition is known (its take-up is queue-producers R9's). */
-  static LEAD_SET_ASIDE = Object.freeze({ id: "proposedispose", label: "Set it aside for your project",
+  static LEAD_SET_ASIDE = Object.freeze({ id: "proposedispose", label: word("queue.label.set_aside_project"),
                                           weight: "per-item" });
 
   /** One step UP the graph from a node: the edges an ancestor is reached by.
@@ -619,6 +625,9 @@ export class Queue {
     /* R54 (N1047; DEC-226 (1)): a release ready to install is put aside until a date; updating or skipping it are the
        screen's, "See what changes" being the screen's too (machinery-producers R11). */
     "update-ready": "updatelater",
+    /* R57 (T50; N1091, N1204; queue-producers R41, R42): an invitation is answered by joining the project (leaving it is the
+       other answer, a member's own on the project), a request by the owners' answer. */
+    "project-invitation": "projectjoin", "project-request": "projectrequestanswer",
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
@@ -706,6 +715,11 @@ export class Queue {
       + "administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them "
       + "updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that "
       + "release or newer. A newer release replaces it.",
+    /* R57 (queue-producers R41, R42; membership's project acts). */
+    "project-invitation": " This one is an invitation to a project, keyed by the invitation and by you rather than by a task: "
+      + "it leaves when you join the project (op=projectjoin) or leave it, or when the invitation is withdrawn.",
+    "project-request": " This one is a member's request to join a project you own, keyed by the request rather than by a task: "
+      + "it leaves when an owner grants or declines it (op=projectrequestanswer), or when it is withdrawn.",
     /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
        member's own; taking it and recording the check are its other ways out. */
     "check-requested": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a "
@@ -829,6 +843,14 @@ export class Queue {
                      + "holds it and there is no team for a disposition to speak for. Quiet it for yourself "
                      + "(op=queuemute, naming this item) once you have read it; your question keeps running and a "
                      + "later run's new finds are told to you as a new item." };
+    /* R57 (T50; N1204; DEC-304; notice-producers R24): a watched item's change is told to its watcher alone, as a standing
+       question's answer is: no team's list holds it, so its watcher quiets it for themselves (R30). */
+    if (item.kind === "watched-changed")
+      return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
+               reason: "a_watched_change_is_told_to_you_alone_and_quieted", instead: "queuemute",
+               detail: "something you watch changed, and you alone are told: no team's list holds it and there is no team "
+                     + "for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you "
+                     + "have read it; the watch goes on and a later change is told as a new item." };
     /* R12 (T40; N812): an explore ask, a limit reached and a suspended project account are facts about an account,
        told to its owners or the member it served; no team decides them. */
     if (Object.prototype.hasOwnProperty.call(Queue.ACCOUNT_DOORS, item.kind)) {
@@ -1020,7 +1042,11 @@ export class Queue {
    *  columns and the contract carries both: `subject` is what the item is
    *  about, `case` is where it is filed. Collapsing them is how a queue
    *  invents a home. */
-  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null } = {}) {
+  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null, muted = false } = {}) {
+    /* R55 (N1094; DEC-240 (D3)): the muted list, in place of the feed: asked for by `muted: true` (or the query's "true" or
+       "1"), it answers what this member has muted and takes neither `sort` nor `limit`. */
+    if (muted === true || muted === "true" || muted === "1")
+      return this.#mutedList(typeof member === "string" && member.trim() ? member.trim() : null, viewer);
     /* R49 (DEC-110 (1)): the order asked for is checked FIRST, before anything is read, so a refusal costs no read and
        a caller learns the four orders this feed keeps. Absent or blank is DEC-110 (3)'s default. */
     const order = typeof sort === "string" ? sort.trim() : (sort === null || sort === undefined ? "" : null);
@@ -1041,6 +1067,19 @@ export class Queue {
        the fallback to its viewer, byte-unchanged. */
     const identity = me ? `member:${me}` : null;
     const items = [];
+    /* R56 (N1123): the title of the bundle a subject names, when the viewer may see it, else null; asked once per id, through
+       the one gate (D-15), and never of a bundle this viewer may not see (R33). */
+    const titleGate = viewerPredicate(viewer);
+    const titles = new Map();
+    const titleOf = (id) => {
+      if (typeof id !== "string" || !id.trim()) return null;
+      const key = id.trim();
+      if (!titles.has(key)) {
+        const row = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${titleGate.sql})`, key, ...titleGate.args);
+        titles.set(key, row && typeof row.title === "string" && row.title.trim() ? row.title : null);
+      }
+      return titles.get(key);
+    };
 
     /* ---------------------------------------------------- OBLIGATION · tasks
        REC-30: the CASE set was gated from birth (#queueAncestors) but the
@@ -1077,7 +1116,7 @@ export class Queue {
         class: "OBLIGATION",
         kind: row.kind,
         case: homes,
-        subject: { kind: "bundle", id: subject },
+        subject: { kind: "bundle", id: subject, title: titleOf(subject) },
         summary: row.subject ? row.subject.text : null,
         detail: row.subject && row.subject.description !== undefined ? row.subject.description : null,
         basis: { source: "tasks", refers_to: subject, routed_role: row.assignee_role,
@@ -1210,6 +1249,10 @@ export class Queue {
          is the same argument `suppressedBy` makes one block down. A producer
          computing its own answer would be six copies of the act's key. */
       it.disposition = this.#dispositionOf(it);
+      /* R56 (N1123): the subject names its title, `null` where it names no bundle the viewer may see or the bundle states none,
+         never missing; asked here for every item whatever its producer, so no producer carries a copy. */
+      if (it.subject && typeof it.subject === "object" && !Array.isArray(it.subject))
+        it.subject = { ...it.subject, title: titleOf(it.subject.id) };
       /* R2, R8 (N363): the catalogue id is stamped here, where the catalogue is, and sits after `kind` as its producer
          once placed it. */
       const cid = catalogueIdOf(it.kind);
@@ -1712,6 +1755,38 @@ export class Queue {
                && Object.prototype.hasOwnProperty.call(spec.edges, row.current_state)) };
   }
 
+  /** R55 (T50; N1094; DEC-240 (D3); amends R14, R19, R20): what this member has muted and nobody else's, one row per kind
+   *  muted in a case (`{kind, case: {id, title}, at}`) and one per muted item (`{item, class, at}`), newest first. `at` is
+   *  the instant the mute was made; a kind muted before its instant was kept answers `at: null`, never back-filled, and such
+   *  a row follows every dated one. A case the viewer may no longer see names nothing (R33): its rows are left out, and
+   *  not counted. A caller with no member has none to list. Reads only; never throws on stored text. */
+  #mutedList(member, viewer) {
+    if (!member) return { ok: true, muted: [], count: 0 };
+    const gate = viewerPredicate(viewer);
+    const rows = [];
+    for (const r of this.#rows(`SELECT case_id, muted_kinds, muted_at FROM queue_state WHERE member_id=?`, member)) {
+      const kinds = parseMutedKinds(r.muted_kinds);
+      if (kinds.length === 0) continue;
+      const c = this.#one(`SELECT b.bundle_id, b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, r.case_id, ...gate.args);
+      if (!c) continue;
+      const ats = parseMutedAt(r.muted_at);
+      for (const kind of kinds)
+        rows.push({ kind, case: { id: c.bundle_id, title: typeof c.title === "string" && c.title.trim() ? c.title : null },
+                    at: ats[kind] ?? null });
+    }
+    for (const r of this.#rows(`SELECT item_id, item_class, muted_at FROM queue_item_mutes WHERE member_id=?`, member))
+      rows.push({ item: r.item_id, class: r.item_class, at: r.muted_at ?? null });
+    /* newest first by the instant (as a time, not as text), the undated after them; ties in a fixed order. */
+    const ms = (x) => { const t = x.at === null ? NaN : Date.parse(x.at); return Number.isFinite(t) ? t : null; };
+    const tie = (x) => (x.item !== undefined ? `1\u0000${x.item}` : `0\u0000${x.case.id}\u0000${x.kind}`);
+    rows.sort((a, b) => {
+      const ma = ms(a), mb = ms(b);
+      if (ma !== mb) return ma === null ? 1 : mb === null ? -1 : mb - ma;
+      return tie(a) < tie(b) ? -1 : tie(a) > tie(b) ? 1 : 0;
+    });
+    return { ok: true, muted: rows, count: rows.length };
+  }
+
   /** op=queuemute — a member's PERSONAL mute, in one of two forms (D-125, DEC-10).
    *
    *  THE CASE FORM, `{ case, kinds }` — DEC-10's (c): stop notifying ME about these
@@ -1830,7 +1905,7 @@ export class Queue {
       };
     }
     const row = this.#one(
-      `SELECT muted_kinds, snoozed_until FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
+      `SELECT muted_kinds, snoozed_until, muted_at FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
     const had = parseMutedKinds(row ? row.muted_kinds : "");
     /* UNION on repeat, DIFFERENCE on unmute. Union rather than replace because
        a second mute is a member muting MORE, not restating everything they ever
@@ -1839,12 +1914,17 @@ export class Queue {
     const next = unmute ? had.filter((k) => !named.includes(k))
                         : [...new Set([...had, ...named])];
     const text = serializeMutedKinds(next);
+    /* R20, R55: the instant a kind was muted is kept when it is added to the set; a kind already in the set keeps the one it
+       has (or none), and an unmuted kind's goes with it. */
+    const ats = parseMutedAt(row ? row.muted_at : null);
+    const keptAt = Object.fromEntries(next.map((k) => [k, ats[k] ?? (had.includes(k) ? undefined : stamp)])
+      .filter(([, v]) => v !== undefined));
     this.sql.exec(
-      `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen, muted_at)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(member_id, case_id) DO UPDATE SET muted_kinds=excluded.muted_kinds,
-                                                     last_seen=excluded.last_seen`,
-      me, c.id, text, row ? row.snoozed_until ?? null : null, stamp);
+                                                     last_seen=excluded.last_seen, muted_at=excluded.muted_at`,
+      me, c.id, text, row ? row.snoozed_until ?? null : null, stamp, serializeMutedAt(keptAt));
     return {
       ok: true, member: me, case: c.id, case_type: c.type, case_title: c.title,
       muted_kinds: parseMutedKinds(text), added: unmute ? [] : named.filter((k) => !had.includes(k)),
@@ -2307,7 +2387,8 @@ export function queueOps(q, url, body) {
   const s = (k) => url.searchParams.get(k);
   return {
     /* R53 (N983): judged at this module's clock; a `now` in the query or the body is never read. */
-    queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), limit: s("limit"), sort: s("sort") }),
+    queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), limit: s("limit"), sort: s("sort"),
+                              muted: s("muted") }),
     queuemute: () => q.queueMute({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     queuesnooze: () => q.queueSnooze({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     proposedispose: () => q.proposeDispose({ ...(body || {}), viewer: s("viewer"), identity: s("identity") }),
@@ -2321,6 +2402,8 @@ export function queueOps(q, url, body) {
  *  the app reads them there (K1717, K1863). Pure; never throws on a well-formed answer. */
 export function queueAnswer(r, { gate } = {}) {
   if (!r || r.ok !== true) return { status: 400, refusal: r };
+  /* R55: the muted list is the answer in place of the feed: it has no items to decorate. */
+  if (Array.isArray(r.muted)) return { status: 200, result: r };
   return { status: 200, result: {
     ...r,
     items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) })),

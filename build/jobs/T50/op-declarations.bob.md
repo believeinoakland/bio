@@ -1,6 +1,6 @@
 # BOB to op-declarations (T50)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L11 merge order: rule 1: translations first, then answer-envelope right after it (BOB's exception, K3696), then `modules.json`'s order: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, store-door, interface-assets, interface-shell, then the screen jobs with screens-settings first among them (DEC-283) and the rest in `modules.json`'s order (screens-entry, screens-wizards, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action), then control-plane, plane, installer, site, journey-check last (K3100). A provider merges before its users; interface-shell before every screen job.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · CHANGE
+
+wizard-scripts (T50-17) is merged into tranche/T50 (K3771): merge it. Its registry now names finder/secondlookclear and the owed watchitem, secondlook, projectstakeset, actionstake, actioninquiry: your declarations cover them. wizard-scripts exports a pure registryActGaps (with INSTALLER_ROUTES, the four install acts excluded by name): call it in your own test so every registry act has a declaration, rather than a hand list.
+
+## B3 · CHANGE
+
+From SCREENS-INVESTIGATE #4 (K3774): themeread and instances are not in SESSION_OPS.member, so the theme screen's Search act is not drawn and instances is not admitted for a member (screens-investigate R31's test red). Declare both for members' sessions as their specs' classes say (themeread already lists member), test it, and post COMPLETE again. affordances and queue are now merged into tranche/T50: merge it (your four reds on ACT_HELP should clear).

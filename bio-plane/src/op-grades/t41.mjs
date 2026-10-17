@@ -94,11 +94,11 @@ export const T41_RUNG_ABSENT = {
   proposalaccept:      { ground: "undetermined", is: "a member accepts a proposed passage or connection, as proposed, edited or her own instead, so a leg may cite it as hers (run-productions R22)" },
   bearingnote:         { ground: "undetermined", is: "stores a note on what a document says about a question, each sentence tied byte-exact to a quote; shown beside the source, never evidence (run-productions R23)" },
   guidedraft:          { ground: "undetermined", is: "a member drafts a reading guide for a document kind, usable by its author at once (reading-guides R2)" },
-  guideoffer:          { ground: "undetermined", is: "a member offers a guide's canonical bytes and digest, labelled with the group, for another group (reading-guides R6)" },
+  guideoffer:          { ground: "undetermined", is: "a member offers a guide's canonical bytes and digest, labeled with the group, for another group (reading-guides R6)" },
   guideadopt:          { ground: "undetermined", is: "a member imports another group's offered guide as adopted, usable only after review (reading-guides R6)" },
   /* (K2583) as guideoffer */
   guideproposetocivicsmith: { ground: "undetermined", is: "a member exports a guide many groups use, marked as a proposal for Civicsmith's library; Civicsmith's adoption is a release's (reading-guides R6)" },
-  accountpropose:      { ground: "undetermined", is: "stores the system's draft of a case's account or its check flags, labelled machine work; the published account is a member's (case-account R1, R2)" },
+  accountpropose:      { ground: "undetermined", is: "stores the system's draft of a case's account or its check flags, labeled machine work; the published account is a member's (case-account R1, R2)" },
   caseapprove:         { ground: "undetermined", is: "a named approver approves one case edition's document by its digest, an optional reason kept; a later document needs a new approval (review R31)" },
   grouptestset:        { ground: "undetermined", is: "a member adds a group's own test investigation for an assistant part, its answers written by people; it never opens or closes a gate (ai-runs R75)" },
   captureupload:       { ground: "undetermined", is: "a member uploads bytes as a capture in her own name, with its receipt (capture R86)" },
@@ -157,7 +157,7 @@ export const T41_NON_ACTS = {
   stepsrunai: STEP("keyed by a project's questions; several assistant steps started at once, each a system step"),
   stepslike: R("the steps the viewer may see whose work matches, open and ended alike, at most 50"),
   steps: R("one step, or the steps on a question, in a project or of the group, as the viewer may see them"),
-  stepproposals: R("the proposed steps the viewer may accept, each labelled the system's"),
+  stepproposals: R("the proposed steps the viewer may accept, each labeled the system's"),
   costmessages: R("the cost messages relayed to the viewer"),
   questionfollowstate: R("whether the viewer follows a question"),
   stepproducts: R("a step's products and looks the viewer may see, the rest left out uncounted"),
@@ -183,7 +183,7 @@ export const T41_NON_ACTS = {
   reports: R("a project's kept status reports, to its participants"),
   interviewkeep: WORKING("keyed by a project, reached from its intake interview; the member's checked answers kept as her "
     + "own narrative"),
-  interview: R("a project's kept intake interviews, each labelled the member's own account"),
+  interview: R("a project's kept intake interviews, each labeled the member's own account"),
   interviewform: R("the intake interview's six questions as one page"),
   narrativeclaim: WORKING("keyed by a project and a quoted span of a member's narrative; a claim as recalled, never what "
     + "the body said until found"),
@@ -192,7 +192,7 @@ export const T41_NON_ACTS = {
   claims: R("a project's narrative claims, each as recalled or found, with its look"),
   planaccept: "proposal-directed: keyed by a planning proposal; a member's one accepting act, a question by her own "
     + "promotion or a step by steps' acceptance",
-  investigationproposals: R("the planning proposals a member may accept, each labelled the system's"),
+  investigationproposals: R("the planning proposals a member may accept, each labeled the system's"),
   projectwatch: WORKING("keyed by a quiet project, reached from its prompt; keeps watching its sources and reopens the "
     + "work when something arrives"),
   projectclosewithgaps: "project-directed: keyed by a quiet project, reached from its prompt; closes it with its reason, "
@@ -205,7 +205,7 @@ export const T41_NON_ACTS = {
     + "the system",
   hypothesissetaside: "proposal-directed: keyed by a proposed hypothesis; a member sets it aside with her reason, kept",
   noteshare: "note-directed: keyed by (note, project); the author shares her note's words with a project she has joined, "
-    + "labelled hers and as narrative; never evidence; moves no bundle",
+    + "labeled hers and as narrative; never evidence; moves no bundle",
   noteunshare: "share-directed: keyed by share; its author withdraws it, its words leaving every answer and the dates "
     + "kept; moves no bundle",
   shares: R("a project's standing shared notes, newest first, to its participants"),
@@ -230,17 +230,17 @@ export const T41_NON_ACTS = {
   guideretire: GUIDE("keyed by guide; retired with the reason, still readable"),
   guides: R("the reading guides the viewer may see, at most 200"),
   /* (K2583) */
-  guidepropose: "run-directed: a run's draft of a reading guide, keyed by (run, document kind); stored apart and labelled "
+  guidepropose: "run-directed: a run's draft of a reading guide, keyed by (run, document kind); stored apart and labeled "
     + "machine work, never a guide until a member drafts from it",
   guideproposetocivicsmith: GUIDE("keyed by guide; exported marked as a proposal for Civicsmith's library"),
   guidefor: R("the reading guide in force for a document kind, the viewer's own, the group's or Civicsmith's, with its "
     + "origin"),
   guide: R("one reading guide the viewer may see, with its items, state and history"),
-  guideproposals: R("the machine drafts of reading guides, each labelled the system's"),
+  guideproposals: R("the machine drafts of reading guides, each labeled the system's"),
   /* case-account (T42; N839), review (R43) */
-  accountpropose: "case-directed: keyed by a case, reached from its account; the system's draft of the account, labelled "
+  accountpropose: "case-directed: keyed by a case, reached from its account; the system's draft of the account, labeled "
     + "machine work, never the published account until a member writes it",
-  accountdrafts: R("a case's drafts of its account, each labelled machine work"),
+  accountdrafts: R("a case's drafts of its account, each labeled machine work"),
   approvalruleset: "setting: the members whose approval a case needs before it is signed, or none; an administrator's "
     + "act, appended; moves no bundle",
   caseapprove: "case-directed: keyed by a case edition and its document's digest, reached from the case; a named "
@@ -252,7 +252,7 @@ export const T41_NON_ACTS = {
   grouptestresults: R("an assistant part's results on the group's own tests, with its false-alarm rate, to its members"),
   /* actions (actions R73), as actionlawspropose */
   actionseekspropose: "action-directed: a machine (or a member) proposes what an action seeks, keyed by (action, "
-    + "proposer); labelled machine work and never the action's own",
+    + "proposer); labeled machine work and never the action's own",
   /* capture (R45) */
   captureupload: "upload-directed: a member's bytes held as a capture under their digest, in her own name, with "
     + "its receipt; reached from the upload, never beside a bundle",

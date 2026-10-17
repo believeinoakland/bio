@@ -5,7 +5,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { INSTANCE_SETUP_CHECKS } from "../../../src/setup.mjs";
+import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import { HOSTING_CONTROL } from "../../../src/setup-fleet.mjs";
 
 /* The words DEC-149 retires for the group's own Civicsmith. "copy" keeps its other meanings, none of which this
@@ -19,14 +21,13 @@ const world = async () => {
   return w;
 };
 
-test("R63 the check rows' translations (T34-87: setup.mjs :1701, :1731, :1742, :1755; and C-119.4) say your group's Civicsmith, and no translation of this module's rows says copy, instance, plane or server", () => {
-  const T = (k) => INSTANCE_SETUP_CHECKS[k].translation;
-  assert.match(T("GROUP_ALREADY_RECORDED"), /^Your group's Civicsmith has its group recorded already, and it is recorded once/);   // :1701
-  assert.match(T("PROFILES_NOT_ADMIN"), /profiles your group's Civicsmith reads its local facts from\. Nothing was changed\.$/);  // :1731
-  assert.match(T("UNKNOWN_PROFILE"), /^Your group's Civicsmith holds no jurisdiction profile by that name/);                       // :1742
+test("R63 (T50; N1116, N1160) every check row's translation is its word by key, `refusal.<CODE>` of setup-words, never a copy held here, and no row says copy, instance, plane or server for the group's own Civicsmith", () => {
   assert.equal("ASSISTANT_OFF" in INSTANCE_SETUP_CHECKS, false, "T37 (N765): C-119.5 retired; the gate answers ai-accounts' row");
-  assert.match(T("PROFILE_IS_TEST"), /so no group's Civicsmith reads local facts from it\./);
-  for (const [code, row] of Object.entries(INSTANCE_SETUP_CHECKS)) assert.doesNotMatch(row.translation, RETIRED, code);
+  /* the rows still carried for `answer-envelope` (R94) are `translations`' own R15's: swept there */
+  for (const [code, row] of Object.entries(INSTANCE_SETUP_CHECKS).filter(([code]) => !(code in TRANSLATIONS_CHECKS) || code === "LANGUAGE_MALFORMED")) {
+    assert.equal(row.translation, word(`refusal.${code}`), code);
+    assert.doesNotMatch(row.translation, RETIRED, code);
+  }
 });
 
 test("R63 R47 the hosting block's words (T34-87: setup-fleet.mjs :22, :24, :25, :31) say your group's Civicsmith, never the copy", () => {

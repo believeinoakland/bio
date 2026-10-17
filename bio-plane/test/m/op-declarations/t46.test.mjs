@@ -323,13 +323,18 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
   /* T49 (K3321 (B); PR #36's registry): `owed:founderhandleset K3265` is declared by R71 (membership's founder-only op, the
      founder's set alone); the five owed acts T49 leaves out (N933, DEC-238, DEC-239) have no op yet. */
   const OWED_T49 = ["founderhandleset"];
-  const LEFT_OUT = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem"];
-  assert.deepEqual([...owed].sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...LEFT_OUT].sort());   // T48 (R65, R66): DEC-226's three, declared by R66
+  /* T50 (R73, R75; K3674, K3471): the five owed acts T49 left out are declared by R73 and the registry's `aliaswithdraw`
+     (owed, K3674) is the op declared since T5-11, each read as served with no alias; the installer's four own routes are
+     owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
+  const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
+  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
+  assert.deepEqual([...owed].sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT].sort());   // T48 (R65, R66): DEC-226's three, declared by R66
   for (const op of OWED) assert.ok(regActs.some((a) => a.op === op && a.status === "declared"), `${op} is not a declared act`);
   for (const op of [...OWED, ...owed].filter((o) => !OWED_T49.includes(o) && !LEFT_OUT.includes(o)))
     assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.member.has(op), op);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
+  for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);
   const account = registry.screens.find((s) => s.id === "account");
   assert.ok(account, "no account screen");
   assert.ok(!account.acts.some((a) => a.op === "handlechange" || a.op.startsWith("owed:handlechange")));
