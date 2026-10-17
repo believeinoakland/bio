@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12752 words, 892 protected; SHA-256
-   8dac4daa0f8ca3ae626b1614372cd48be47be9d9efbd5a47a335847c054e75ea), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12756 words, 892 protected; SHA-256
+   e771d1075d4ed43759e54b82190be9b7b5bb19305b28b81ba76f4227bef1020a), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "8dac4daa0f";
+export const WORDS_COMMIT = "e771d1075d";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -4685,7 +4685,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.install.cf.asks","What Cloudflare will ask you to allow",null,null,true],
   ["screen.install.cf.programs","Putting your team's Civicsmith's programs in your account, and its storage for documents and evidence.",null,null,true],
   ["screen.install.cf.plan","Reading which plan your account is on.",null,null,true],
-  ["screen.install.cf.containers","Running its containers: the built-in file scanner, the safe view for risky files, and signing in with a Claude subscription. Without them, files are kept and shown but not scanned, and a high-risk file can't be opened.",null,null,true],
+  ["screen.install.cf.containers","Running its containers: the built-in file scanner and the safe view for risky files. Without them, files are kept and shown but not scanned, and a high-risk file can't be opened.",null,null,true],
   ["screen.install.cf.join","Joining its parts together inside your account.",null,null,true],
   ["screen.install.hold.head","Whoever can sign in to this Cloudflare account controls your team's Civicsmith","says who can see and control everything",null,true],
   ["screen.install.hold.what","They can read everything and lock everyone out, and no vote of administrators can stop them. Use a team account, and add at least one other trusted person to it. It is also the way back in if every administrator is locked out.",null,null,true],
@@ -4698,15 +4698,17 @@ export const WORD_ROWS = Object.freeze([
   ["screen.install.progress.placing","Putting your team's Civicsmith in place…",null,null,false],
   ["screen.install.progress.scanner","Starting the file scanner and safe view",null,null,false],
   ["screen.install.progress.address","Giving it its address",null,null,false],
+  ["screen.install.progress.assistant","Checking the assistant's connection answers this release",null,null,false],
   ["screen.install.progress.answers","Checking it answers, and that nothing keeps a log of who opens which file",null,null,false],
   ["screen.install.stopped.exists","This account already holds a Civicsmith, so nothing was created or changed.","DEC-282: reworded (K3471); the page that follows is screen.install.exists.*",null,false],
   ["screen.install.stopped.plan","Stopped: this account is on Cloudflare's free plan.","DEC-282",null,false],
   ["screen.install.stopped.plan.do","Nothing was created. Switch it to Workers Paid in Cloudflare's dashboard, then start again.","DEC-282",null,false],
-  ["screen.install.stopped.others","Other steps stop the same way and say what to do: no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file. A stop before setup has begun creates nothing.",null,null,false],
+  ["screen.install.stopped.others","Other steps stop the same way and say what to do: no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file; the assistant's connection answering an older release. A stop before setup has begun creates nothing.",null,null,false],
   ["screen.install.ready.sub","It answered its own checks. One step is left: you become its first administrator.",null,null,false],
   ["screen.install.ready.answers","It answers at its address",null,null,false],
   ["screen.install.ready.scanner","File scanner and safe view running",null,null,false],
   ["screen.install.ready.nolog","No log records who opens which file",null,null,false],
+  ["screen.install.ready.assistant","The assistant's connection answers this release",null,null,false],
   ["screen.install.ready.note","These checks ran as part of the installation; the installer keeps nothing of your team's Civicsmith once it hands over.",null,null,false],
   ["screen.install.otp.head","Your one-time password: save it now",null,null,true],
   ["screen.install.otp.what","This makes you your team's first administrator, in the next step. It is shown once, here, and is spent when you claim. Keep it to yourself: don't share, print or send it, because whoever has it before you claim can claim in your place. Save it somewhere safe, such as a password manager. Continuing below fills it in for you.","DEC-282: reworded (install situation S10)",null,true],
@@ -5687,6 +5689,8 @@ export const WORD_ROWS = Object.freeze([
   ["capture.chrome.basis.one_page","in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is not known until another page of the site carries it","DEC-305: capture R28: a link not yet classified, its basis",null,false],
   ["capture.chrome.ref.containment","in a chrome region: {regions}","DEC-305: capture R29: one page's chrome observation, its basis",null,false],
   ["capture.chrome.ref.unrecorded","the chrome region was not recorded","DEC-305: capture R29: one page's chrome observation with no region named",null,false],
+  ["refusal.SIGNIN_EXPIRED","The Claude sign-in your team's assistant uses has expired, so the assistant can't work until it is connected again. An administrator can connect again under Settings, The assistant. Nothing was sent.","DEC-307: screens-settings R41, agent-worker R84",null,false],
+  ["refusal.PUBLISH_AT_NO_ZONE","Your team's time zone isn't set, and a publishing time is counted in it, so only \"Sign and publish now\" is offered. An administrator can set it under Settings, Your team.","DEC-307: ratification R44, publish-schedule R1: only \"Publish now\" is offered",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
@@ -9548,7 +9552,7 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.PROJECT_SEEN_NOT_A_PARTICIPANT","You can see that this project exists, but you are not one of its participants, so you cannot do that in it or see what is inside it. Nothing was changed. You can ask its owners to add you.","membership, refusal by its code",null,false],
   ["refusal.PROJECT_VISIBILITY_UNKNOWN_SETTING","A project is either discoverable or hidden, and nothing else. Nothing was changed. Choose one of the two.","membership, refusal by its code",null,false],
   ["refusal.CASE_SIGNER_NOT_AN_OWNER","A case and each finding in it are published in the project's name, so each has to be signed by an owner of that project. This signature belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review it and sign it.","membership, refusal by its code",null,false],
-  ["membership.says.member_enrolled_under","a member is enrolled under the reserved id '{id}' (role {role}, status {status}). Every check that asks whether someone administers by name reads it as the founding administrator. It was enrolled before the id was reserved and has NOT been renamed: an administrator should decide what it is and re-enrol the person under another id","membership, says",null,false],
+  ["membership.says.member_enrolled_under","a member is enrolled under the reserved id '{id}' (role {role}, status {status}). Every check that asks whether someone administers by name reads it as the founding administrator. It was enrolled before the id was reserved and has not been renamed: an administrator should decide what it is and re-enroll the person under another id","membership, says",null,false],
   ["membership.says.member_holds_reserved","no member holds the reserved id '{id}'","membership, says",null,false],
   ["membership.remedy.active_administrator_group","An active administrator of this team can add the owner; while any owner of the project is active, its owners add one instead.","membership, remedy",null,false],
   ["membership.remedy.active_administrator_group_confirm","An active administrator of this team can confirm it, for any member, another administrator included.","membership, remedy",null,false],
@@ -12451,7 +12455,7 @@ export const WORD_ROWS = Object.freeze([
   ["wizard.WIZ-c887066cc553dd41.step1.why","Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up.",null,null,false],
   ["wizard.WIZ-c887066cc553dd41.step2.what","Choose your team's short name, then install. It is not the team's name: you choose that next, and can change it.",null,null,false],
   ["wizard.WIZ-c887066cc553dd41.step2.why","The short name is the fixed label in your addresses and beside every signature, and can never change. A team that wants to stay unnamed picks one that reveals nothing.",null,null,false],
-  ["wizard.WIZ-c887066cc553dd41.step3.what","Your team's Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run the assistant's container if you are asked.",null,null,false],
+  ["wizard.WIZ-c887066cc553dd41.step3.what","Your team's Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run its file scanner if you are asked.",null,null,false],
   ["wizard.WIZ-c887066cc553dd41.step3.why","The test proves it works before anyone relies on it. The installer keeps nothing once it hands over, so the checks are run then, not later.",null,null,false],
   ["wizard.WIZ-c887066cc553dd41.step4.what","Save the one-time password somewhere safe, such as a password manager, then continue.",null,null,false],
   ["wizard.WIZ-c887066cc553dd41.step4.why","It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one.",null,null,false],
