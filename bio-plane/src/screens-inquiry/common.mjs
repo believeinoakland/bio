@@ -86,5 +86,10 @@ export function who(cs, x, founder) {
   return s === "admin" ? String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) : s;
 }
 
+/** R60: a project she cannot see, drawn as the shell's "unavailable" state b ("You can't open this"), with nothing beneath. */
+export function unavailable(cs) {
+  return `<p class="cs-state" data-state="empty" data-unavailable="notyours"><b>${cs.w("shell.unavailable.notyours.title")}</b> ${cs.w("shell.unavailable.notyours.says")}</p>`;
+}
+
 /** The parts every screen of the module carries. */
-export const COMMON = Object.freeze({ front, later, plain, who });
+export const COMMON = Object.freeze({ front, later, plain, who, unavailable });

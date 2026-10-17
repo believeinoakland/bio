@@ -81,16 +81,20 @@ test("R43 a new project's first question: state b asks it, opens it and lists it
   assert.ok(section(again, "screen.project.questions.head").querySelector(`a[href="/app/question/${drawn[0].inquiry}"]`), "listed");
 });
 
-test("R10 the project's own bar as strengthbarof answers it: a declared axis by its letter, an undeclared one in words, no bar as absent", async () => {
+test("R10 R52 the project's own bar as strengthbarof answers it, read in words in the one of four cases that is true; no bar as absent, never as zero", async () => {
   const bar = (b) => ok({ ok: true, project: P, bar: b });
-  const one = await open(at(), { plane: { strengthbarof: bar({ declared: true, source: "project", capture: "B", connection: null }) } });
-  const s1 = section(one, "screen.project.bar.head");
-  assert.deepEqual(s1.querySelectorAll("p .cs-grade").map((g) => g.getAttribute("data-scale")), ["capture"]);
-  assert.ok(says(s1.querySelector('[data-axis-none="connection"]'), "screen.project.bar.axisnone", { axis: word("mark.scale.connection.name") }));
-  const none = await open(at(), { plane: { strengthbarof: bar({ declared: false, source: "none", capture: null, connection: null }) } });
-  const s0 = section(none, "screen.project.bar.head");
-  assert.equal(s0.querySelectorAll("p .cs-grade").length, 0, "no bar is never drawn as a grade");
-  assert.ok(says(s0, "screen.project.bar.none"));
+  const said = async (b) => section(await open(at(), { plane: { strengthbarof: bar(b) } }), "screen.project.bar.head");
+  const both = await said({ declared: true, source: "project", capture: "B", connection: "C" });
+  assert.ok(says(both, "project.bar.both", { source: "B", connection: "C" }));
+  const one = await said({ declared: true, source: "project", capture: "B", connection: null });
+  assert.ok(says(one, "project.bar.source_only", { source: "B" }));
+  const other = await said({ declared: true, source: "project", capture: null, connection: "A" });
+  assert.ok(says(other, "project.bar.connection_only", { connection: "A" }));
+  const none = await said({ declared: false, source: "none", capture: null, connection: null });
+  assert.ok(says(none, "project.bar.none"));
+  assert.equal(none.querySelectorAll(".cs-grade").length, 0, "no bar is never drawn as a grade");
+  for (const s of [both, one, other, none]) assert.equal(s.querySelectorAll("[data-bar]").length, 1, "the one that is true, not the other three side by side");
+  assert.ok(!says(both, "project.bar.others.summary"));
 });
 
 test("R10 R16 Set this project's bar sends projectbarset with both axes, either or neither, and her reason; never strengthbarset", async () => {
@@ -168,8 +172,9 @@ test("R27 R36 This project's work: its plans by name and the calculations, stand
   assert.ok(kinds.includes("Pothole options"), "the plan by name");
   assert.ok(s.textContent.includes(word("screen.calculation.name")) && s.textContent.includes(word("screen.standard.name")));
   assert.ok(s.querySelector("h2").getAttribute("data-tip").includes(word("project.work.help")));
+  /* R52 (1): a kind it has none of is still listed, so the first one can be made (R27's "not listed" is retired) */
   const none = await open(at());
-  assert.equal(section(none, "project.work.title"), undefined, "a kind it has none of is not listed, and the section not drawn");
+  assert.ok(section(none, "project.work.title").textContent.includes(word("screen.plan.name")), "no plan: the plan kind is still listed");
   /* R36: a plan opened here is listed by name at once */
   const o = await open(at(), { plane: { planopen: ok({ ok: true, id: "PLAN-2026-0004", title: "Ask the committee" }) } });
   fill(o, { "project-plan": "Ask the committee", "project-plan-about": Q });
@@ -201,7 +206,7 @@ test("R28 who can find it: the setting, its history newest first ending with how
 });
 
 test("R29 R40 members: one row each with role, the founder unnamed by key, never admin; an owner's acts on each row", async () => {
-  const parts = ok({ ok: true, projectId: P, participants: [{ founder: true, handle: null, state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 1, since: "2026-10-02T09:00:00Z" },
+  const parts = ok({ ok: true, projectId: P, participants: [{ founder: true, handle: null, state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 1, owner_since: "2026-10-02T09:00:00Z" },
     { handle: "ana", state: "joined", owner: 0, joined_at: "2026-10-03T09:00:00Z" }] });
   const p = await open(at(), { plane: { projectparticipants: parts, projectowneradd: ok({ ok: true }), projectremove: ok({ ok: true }), projectownerremove: ok({ ok: true }) } });
   const s = section(p, "screen.project.members.head");
@@ -222,6 +227,10 @@ test("R29 R40 members: one row each with role, the founder unnamed by key, never
   assert.deepEqual([p.byOp("projectownerremove")[0].query.handle, p.byOp("projectownerremove")[0].query.reason], ["mai", "I step back"]);
   /* control: with a handle, the handle */
   assert.ok(rows[1].textContent.includes("mai"));
+  /* R54: a null date draws no date, never "since null" */
+  const nul = await open(at(), { plane: { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: 1, owner_since: null },
+    { handle: "ana", state: "joined", owner: 0, joined_at: null }] }) } });
+  assert.ok(!/null|undefined/.test(section(nul, "screen.project.members.head").textContent), "no date is said");
 });
 
 test("R29 three owners with one change agreed by one draw waiting for the other two; an owner who has not agreed agrees by the same act", async () => {
@@ -255,13 +264,18 @@ test("R29 beneath the rows: invite (an owner), leave, and start a project from t
 test("R30 state c: an administrator at a hidden project's existence, its owners inactive: the rescue and nothing else", async () => {
   const p = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null), projectparticipants: refusedIn("NO_SUCH_PROJECT"),
     affordances: ok({ ok: true, roster: { rescue_open: true, owner: false } }), projectownerrescue: ok({ ok: true }) } }), whoami: ok(ADMIN) } } });
-  const s = section(p, "project.rescue.title", { date: "" });
+  const s = section(p, "project.rescue.title.nodate");
   assert.ok(says(s, "project.rescue.says", { owners: "dev" }) && says(s, "project.rescue.own"));
   assert.deepEqual(actsIn(main(p)), ["projectownerrescue"], "nothing else of the project");
   fill(p, { "project-rescue-why": "its work must go on" });
   await press(p, "projectownerrescue");
   const q = p.byOp("projectownerrescue")[0].query;
   assert.deepEqual([q.projectId, q.handle, q.reason], [P, "rosa", "its work must go on"]);
+  /* R54: the date of the title is `projectownersgone`'s `since` */
+  const dated = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null), projectparticipants: refusedIn("NO_SUCH_PROJECT"),
+    affordances: ok({ ok: true, roster: { rescue_open: true } }), projectownersgone: ok({ ok: true, projectId: P, gone: true, since: "2026-09-30T09:00:00Z" }) } }), whoami: ok(ADMIN) } } });
+  assert.equal(dated.byOp("projectownersgone")[0].query.projectId, P);
+  assert.ok(section(dated, "project.rescue.title", { date: "30 September 2026" }));
   /* control: refused by its words (a project kept for its owner alone) */
   const r = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null),
     affordances: ok({ ok: true, roster: { rescue_open: true } }), projectownerrescue: refusedIn("PROJECT_SCOPE_OWN", "A project kept for one member alone is never taken over.") } }), whoami: ok(ADMIN) } } });
@@ -269,16 +283,27 @@ test("R30 state c: an administrator at a hidden project's existence, its owners 
   assert.ok((await press(r, "projectownerrescue")).textContent.length > 0);
 });
 
-test("R1 a member who has not joined sees that the project exists, and the Join act alone", async () => {
-  for (const o of [{ plane: { projectdirectory: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs" }] }) } },
-                   { plane: { image: SEEN, projectstage: seenWith, projectparticipants: SEEN, strengthbarof: SEEN, projectaccountstate: refusedIn("NO_SUCH_PROJECT") } }]) {
-    const p = await open(at(), o);
-    assert.deepEqual(actsIn(main(p)), ["projectjoin"]);
-    assert.ok(says(main(p), "screen.project.notjoined"));
-    assert.equal(main(p).querySelector("h1").textContent, "Pothole repairs", "R39: its name, never its id");
-    await press(p, "projectjoin");
-    assert.equal(p.byOp("projectjoin")[0].query.projectId, P);
-  }
+test("R1 R60 a member who has not joined: a findable project shows its name with Ask to join; a hidden one is unavailable, with no form", async () => {
+  const findable = await open(at(), { plane: { projectdirectory: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", request: null }] }) } });
+  assert.deepEqual(actsIn(main(findable)), ["projectrequest"]);
+  assert.ok(says(main(findable), "screen.project.notjoined"));
+  assert.equal(main(findable).querySelector("h1").textContent, "Pothole repairs", "R39: its name, never its id");
+  await press(findable, "projectrequest");
+  assert.equal(findable.byOp("projectrequest")[0].query.projectId, P);
+  /* her open request is said, with Withdraw */
+  const asked = await open(at(), { plane: { projectdirectory: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", request: { state: "open", asked: "2026-10-05T09:00:00Z", closed: null } }] }) } });
+  assert.deepEqual(actsIn(main(asked)), ["projectrequestwithdraw"]);
+  assert.ok(says(main(asked), "projects.request.asked", { date: "5 October 2026" }));
+  await press(asked, "projectrequestwithdraw");
+  assert.equal(asked.byOp("projectrequestwithdraw")[0].query.projectId, P);
+  /* a hidden project she is not in: unavailable (state b), nothing else of it */
+  const hidden = await open(at(), { plane: { image: SEEN, projectstage: seenWith, projectparticipants: SEEN, strengthbarof: SEEN, projectaccountstate: refusedIn("NO_SUCH_PROJECT") } });
+  assert.deepEqual(actsIn(main(hidden)), [], "no form");
+  assert.ok(says(main(hidden), "shell.unavailable.notyours.says"));
+  assert.equal(main(hidden).querySelectorAll("section").length, 0, "nothing else of the project");
+  /* control: a participant is drawn the screen whole */
+  const whole = await open(at());
+  assert.ok(section(whole, "screen.project.stage.head"));
 });
 
 test("R1 R37 a member invited and not yet joined sees the not-joined state with Join, never a failed read; after joining, the page reads as a participant's", async () => {
