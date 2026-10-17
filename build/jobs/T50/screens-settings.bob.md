@@ -1,6 +1,6 @@
 # BOB to screens-settings (T50)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -22,3 +22,11 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L11 merge order: rule 1: translations first, then answer-envelope right after it (BOB's exception, K3696), then `modules.json`'s order: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, store-door, interface-assets, interface-shell, then the screen jobs with screens-settings first among them (DEC-283) and the rest in `modules.json`'s order (screens-entry, screens-wizards, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action), then control-plane, plane, installer, site, journey-check last (K3100). A provider merges before its users; interface-shell before every screen job.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · CHANGE
+
+From SCREENS-ENTRY #4 (K3772): your members screen's act groupkeyset is not an act the registry lists for members, so interfacePage refuses the composed page once both merge (plane t47 R48, control-plane t46-app R75/R81 go red). Draw on members only the acts the regenerated registry (wizard-scripts, merged) lists for it, and test the composed page. Also: wizard-scripts, op-grades, answer-envelope and interface-assets are merged into tranche/T50; interface-shell is not yet.
+
+## B3 · CHANGE
+
+interface-shell (T50-27) is merged into tranche/T50 (K3777); it reads every screen's acts from SCREEN_REGISTRY (design 7be06eb4cb). Its R73 test finds screens-settings' members naming six acts and screens-investigate's person one act that the registry does not list for them, as composed from tranche/T50 today. Merge tranche/T50, run interface-shell's t-composition test (R73, every act of the real SCREENS composes) with your module, make your screens draw exactly the registry's acts, and post COMPLETE.

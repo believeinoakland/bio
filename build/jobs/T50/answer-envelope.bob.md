@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T50)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -29,3 +29,11 @@ Not Bob's: this waits on me, so your state is WAITING ON BOB, not NEEDS BOB. Do 
 ## B3 · CHANGE
 
 translations (T50-22) is merged into tranche/T50 (K3768). Merge tranche/T50, then add import * as TRANSLATIONS from "../translations/checks.mjs" and ["src/translations/checks.mjs", TRANSLATIONS] before ["src/setup.mjs", ...] in families.mjs (translations exports TRANSLATIONS_CHECKS from checks.mjs only, so the totality walk finds one file). Your families.test.mjs unreached-walk failures should clear; re-run, finish items 3-5 and post COMPLETE.
+
+## B4 · CHANGE
+
+queue (T50-21) is merged into tranche/T50 (K3774): its C-33.27 KIND_NOT_PERSONAL and C-33.50 NO_PROJECT_SCOPE now read refusal.KIND_NOT_PERSONAL and refusal.NO_PROJECT_SCOPE, and four of your catalogue-end and families tests go red (R7/R2/R10/R13, R13, R7 N1128, R15). Merge tranche/T50, re-pin those rows to their keys as you did the 73 others, re-run and post COMPLETE.
+
+## B5 · CHANGE
+
+instance-setup (T50-23) is merged into tranche/T50 (K3777): its seven rows C-64.2, C-64.3, C-64.5, C-64.6, C-119.1, C-119.3, C-119.4 now read refusal.<CODE> from words.json ('team'), and four of your tests go red. Merge tranche/T50, re-pin those seven by key as before, re-run and post COMPLETE.

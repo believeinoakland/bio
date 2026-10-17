@@ -244,12 +244,12 @@ export async function registryOver(schemes) {
   };
   const entities = {
     ents, idents,
-    createEntity({ kind, label, note, declaredBy, sector } = {}) {
+    createEntity({ kind, label, note, declaredBy, sector, forum_kind } = {}) {
       if (!ENTITY_KINDS.includes(kind)) return { ok: false, reason: "UNKNOWN_KIND" };
       if (typeof label !== "string" || !label.trim()) return { ok: false, reason: "ENTITY_NO_LABEL" };
       if (typeof note !== "string" || !note.trim()) return { ok: false, reason: "ENTITY_NO_NOTE" };
       const entity_id = `ENT-2026-${String(++n).padStart(4, "0")}`;
-      ents.set(entity_id, { kind, label, note, declared_by: declaredBy, sector: sector ?? null });
+      ents.set(entity_id, { kind, label, note, declared_by: declaredBy, sector: sector ?? null, forum_kind: forum_kind ?? null });
       return { ok: true, entity_id, kind, label };
     },
     has: (id) => ents.has(id),

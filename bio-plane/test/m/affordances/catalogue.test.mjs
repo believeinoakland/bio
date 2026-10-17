@@ -12,6 +12,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 /* The grammars the catalogue reads (T19): the record's (states, grades) and the action document's (kinds and the action
    vocabularies), each the module whose refusals run on it. */
 import { STATES, BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../../src/record-grammar/index.mjs";
@@ -446,6 +447,8 @@ const T46_L9_OPS = new Set(Object.values(T46_L9).flatMap((o) => [...o.writes, ..
 /* T48's layer 9 reads (op-grades R41; `standards` R57, `filings` R59; K3207), graded as reads by op-grades and driven, with the rest of
    T48's ops, in t48.test.mjs. */
 const T48_L9_OPS = new Set(["standardproposals", "filingread"]);
+/* T50's layer 9 write (`filings`' `stakeatpreparation`, action-records R-stake; graded by op-grades T50-18, whose own tests hold its grade). */
+const T50_L9_OPS = new Set(["stakeatpreparation"]);
 /* K2049 (B4) and K2121: standards' T35 and T36 ops, graded in op-grades' `t35.mjs` and `t36.mjs`, set aside as T33's are. */
 const STANDARDS_LATER = ["standardforce", "standardforcepropose", "standardforcewithdraw", "standardrelease",
   "standardadoption", "standardimpose", "standardbenchmark", "forcesof", "overridesof", "editioninforce", "bindsat",
@@ -475,7 +478,7 @@ test("R1 R12: layer 9's op maps hold exactly its 41 writes, 19 ungated reads and
     ...m.actionClocks, ...["actioncreate", "action", "actions"].filter((op) => m.actions.includes(op)),
     ...["actionhold", "actionpressure"].filter((op) => m.actionHolds.includes(op))]
     .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_LATER.includes(op)
-      && !T45_L9_OPS.has(op) && !T46_L9_OPS.has(op) && !T48_L9_OPS.has(op) && !["escalationstatus", "declinetoescalate", "escalationreasondraft"].includes(op));
+      && !T45_L9_OPS.has(op) && !T46_L9_OPS.has(op) && !T48_L9_OPS.has(op) && !T50_L9_OPS.has(op) && !["escalationstatus", "declinetoescalate", "escalationreasondraft"].includes(op));
   assert.equal(LAYER9_WRITES.length, 41);
   assert.equal(LAYER9_READS.length, 19);
   assert.deepEqual([...ops].sort(), [...LAYER9_WRITES, ...LAYER9_READS, ...LAYER9_GATED_READS].sort());
@@ -847,7 +850,7 @@ test("R1 R5 R12 (N512): provenance-routes' op map holds its three ops and attest
   assert.equal(typeof attestOp, "function");
   const WRITES = ["provenancechain", "provenanceroute"];
   for (const op of WRITES) assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op), op);
-  assert.deepEqual(CAPTURE_ACTS.find((a) => a.id === "attest"), { id: "attest", label: "Co-attest this capture", prompt: A.ATTEST_FENCE });
+  assert.deepEqual(CAPTURE_ACTS.find((a) => a.id === "attest"), { id: "attest", label: word("act.attest.name"), prompt: A.ATTEST_FENCE });
   assert.ok(!ACTS.some((a) => a.id === "attest"));
   /* the control plane's rows: the two writes and `attest` mutating and gated, the read neither */
   const table = [...WRITES, "attest"].map((op) => ({ op, mutating: true, gated: true }))
@@ -981,4 +984,44 @@ test("R1 R4 R12 R19 R24: case-import's ops — its op map holds exactly them, IM
     assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   const left = A.unaccounted([...table, { op: "importunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["importunnamed"], ["importunnamed"]]);
+});
+
+/* ---- R64 (T50; N1108, N1125; DEC-253; K3366): the acts' names and the prompts, read by key --------------------------------- */
+test("R64: each act's label is word(act.<id>.name) over the 57 ACTS and the 3 CAPTURE_ACTS, and a set act's word(act.<id>.name.selected) "
+   + "over the 4 PER_ITEM_ACTS; the four ids DEC-309 added are keyed; no label is held here as English", () => {
+  assert.equal(ACTS.length, 57);
+  assert.equal(CAPTURE_ACTS.length, 3);
+  assert.equal(PER_ITEM_ACTS.length, 4);
+  for (const a of [...ACTS, ...CAPTURE_ACTS]) assert.equal(a.label, word(`act.${a.id}.name`), a.id);
+  for (const a of PER_ITEM_ACTS) assert.equal(a.label, word(`act.${a.id}.name.selected`), a.id);
+  for (const id of ["retire", "conclude", "reopen", "projectleave"]) assert.equal(ACTS.find((a) => a.id === id).label, word(`act.${id}.name`), id);
+  /* the decorated act (R11) and the catalogue answer carry the same words */
+  const { catalog, capture_acts, set_acts } = A.affordancesAnswer({ kinds: null, gate: null });
+  for (const d of [...catalog, ...capture_acts]) assert.equal(d.label, word(`act.${d.id}.name`), d.id);
+  for (const d of set_acts) assert.equal(d.label, word(`act.${d.id}.name.selected`), d.id);
+  /* control: an act with no `act.<id>.name` word fails by its id, so the plane never publishes an act it cannot name */
+  assert.throws(() => A.actName("noact"), /NO_ACT_NAME: act noact/);
+  assert.throws(() => A.actName("release", true), /NO_ACT_NAME: act release/, "the .selected word is a set act's only");
+});
+
+test("R64 R5: the prompts are read by key — prompt.inquirydivide, prompt.inquiryground and prompt.attest.fence (its {ceiling} and "
+   + "{unreachable} the two grade letters, R5) — while SELF_ATTESTED_PROMPT and CONSENT_PROMPT stay their owners' sentences", () => {
+  assert.equal(A.DIVIDE_PROMPT, word("prompt.inquirydivide"));
+  assert.equal(A.GROUND_PROMPT, word("prompt.inquiryground"));
+  assert.equal(A.ATTEST_FENCE, word("prompt.attest.fence", { ceiling: EARNED_CAPTURE_CEILING, unreachable: UNREACHABLE_CAPTURE_GRADE }));
+  assert.equal(A.attestFence("C", "B"), word("prompt.attest.fence", { ceiling: "C", unreachable: "B" }));
+  assert.equal(A.SELF_ATTESTED_PROMPT, caseAuthoring.SELF_ATTESTED_SENTENCE);
+  assert.equal(A.CONSENT_PROMPT, `${sources.CONSENT_STATEMENT} ${sources.WITHDRAWAL_STATEMENT}`);
+  /* control: the fence refuses to compose without both letters, as before */
+  assert.throws(() => A.attestFence("B", null));
+});
+
+test("R64 R41: the sentence explainRefusal gives for a code no catalogue row holds is the word refusal.uncatalogued, and the module no longer "
+   + "composes one (NOT_CATALOGUED is gone)", () => {
+  const e = A.explainRefusal({ op: "conclude", code: "SOMETHING_NEW", rowOf: () => null });
+  assert.deepEqual([e.translation, e.check, e.detail], [null, null, word("refusal.uncatalogued")]);
+  assert.equal(A.NOT_CATALOGUED, undefined);
+  /* control: a catalogued code answers its row and no detail */
+  const c = A.explainRefusal({ op: "conclude", code: "NO_CONCLUSION", rowOf: () => ({ translation: "x", check: "C-1" }) });
+  assert.deepEqual([c.translation, c.check, c.detail], ["x", "C-1", null]);
 });

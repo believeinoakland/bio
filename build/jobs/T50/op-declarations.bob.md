@@ -1,6 +1,6 @@
 # BOB to op-declarations (T50)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 wizard-scripts (T50-17) is merged into tranche/T50 (K3771): merge it. Its registry now names finder/secondlookclear and the owed watchitem, secondlook, projectstakeset, actionstake, actioninquiry: your declarations cover them. wizard-scripts exports a pure registryActGaps (with INSTALLER_ROUTES, the four install acts excluded by name): call it in your own test so every registry act has a declaration, rather than a hand list.
+
+## B3 · CHANGE
+
+From SCREENS-INVESTIGATE #4 (K3774): themeread and instances are not in SESSION_OPS.member, so the theme screen's Search act is not drawn and instances is not admitted for a member (screens-investigate R31's test red). Declare both for members' sessions as their specs' classes say (themeread already lists member), test it, and post COMPLETE again. affordances and queue are now merged into tranche/T50: merge it (your four reds on ACT_HELP should clear).
