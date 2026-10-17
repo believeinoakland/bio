@@ -25,3 +25,7 @@
 - `checks/run.mjs` over the product: architecture 3486 product files, 0 failures; coverage 5702 of 5853 (25 failures, none machinery-producers: other modules' not-yet-met ids).
 
 Size (session_01C2Z4QagtjAtuUyAsUGoELa): test runs 3, module lines 1234
+
+## J1 · COMPLETE
+
+T50-52 complete. R15 met: a completed capture request is told by key (member by handle, a run's member through runPrincipalOf, unnamed forms otherwise, title or screen.held.untitled; grade note by key once per distinct note). Plan rule 6 applied to every sentence a key holds. Module tests 35/35; format, architecture, coverage (15 of 15) and ownership 0 failures. Sentences no key holds are listed in my record as REPORT for the design lane; new reads listed there for words-reads.json. Record: build/jobs/T50/machinery-producers.md on job/T50/machinery-producers.
