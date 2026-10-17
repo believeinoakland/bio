@@ -19,10 +19,10 @@
   "connection": 34,
   "guide": 7,
   "prepared": 2,
-  "label": 192,
+  "label": 200,
   "project": 52,
   "grouprule": 1,
-  "refusal": 1963,
+  "refusal": 1964,
   "signing": 17,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3876,
+  "screen": 3888,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -107,7 +107,7 @@
   "unavailable": 2,
   "page": 2,
   "person": 1,
-  "findin": 7,
+  "findin": 8,
   "money": 35,
   "passage": 2,
   "period": 1,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13008,
+  "total": 13030,
   "protected": 902
  },
  "words": [
@@ -13150,17 +13150,17 @@
   },
   {
    "key": "screen.find-in.term.help",
-   "en": "Matched as Find matches words: as written, in every passage.",
+   "en": "Only passages with this name or term are shown, when you fill it in.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.find-in.question",
-   "en": "For which question (optional)",
+   "en": "For which question",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.find-in.question.help",
@@ -40947,6 +40947,160 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-315: case-account R4"
+  },
+  {
+   "key": "screen.find-in.valid",
+   "en": "When it is true",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: screens-daily R47: the person fact's validity bounds"
+  },
+  {
+   "key": "screen.find-in.valid.help",
+   "en": "Leave a bound empty when the passage does not state it: it is recorded as not stated, never guessed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R47: a bound not stated is null"
+  },
+  {
+   "key": "screen.find-in.valid.from",
+   "en": "True from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R47 valid.from"
+  },
+  {
+   "key": "screen.find-in.valid.to",
+   "en": "True until",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R47 valid.to"
+  },
+  {
+   "key": "screen.find-in.valid.precision",
+   "en": "How exact the dates are",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R47 valid.precision"
+  },
+  {
+   "key": "label.timeprecisions.day",
+   "en": "To the day",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: civil-time PRECISIONS"
+  },
+  {
+   "key": "label.timeprecisions.minute",
+   "en": "To the minute",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: civil-time PRECISIONS"
+  },
+  {
+   "key": "label.timeprecisions.second",
+   "en": "To the second",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: civil-time PRECISIONS"
+  },
+  {
+   "key": "label.timeprecisions.edtf",
+   "en": "Partly known: a month, a year, or about",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: civil-time PRECISIONS: an EDTF date"
+  },
+  {
+   "key": "screen.find-in.valid.zone",
+   "en": "Counted in your team's time zone: {zone}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R47: the zone is the team's, civil-time R23"
+  },
+  {
+   "key": "label.personfactkinds.office",
+   "en": "Holds an office",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: people: a person fact of office (the line kind)"
+  },
+  {
+   "key": "label.personfactkinds.name",
+   "en": "Name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: people PERSON_FACT_KINDS"
+  },
+  {
+   "key": "label.personfactkinds.birth",
+   "en": "Birth",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: people PERSON_FACT_KINDS"
+  },
+  {
+   "key": "label.personfactkinds.death",
+   "en": "Death",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: people PERSON_FACT_KINDS"
+  },
+  {
+   "key": "refusal.BAD_VALIDITY",
+   "en": "Those dates can't be recorded: a bound is a date, or left empty when the passage does not state it. Nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R47: recordpersonfact refuses BAD_VALIDITY"
+  },
+  {
+   "key": "screen.find-in.flow.help",
+   "en": "Asked for an actual payment, before it is recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R48 (3): the flow step's fields"
+  },
+  {
+   "key": "findin.fieldneeded",
+   "en": "Fill in {field} first: it is needed to record this. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R48's control, in capture.fieldneeded's form"
+  },
+  {
+   "key": "screen.find-in.field.payee.short",
+   "en": "who received it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: findin.fieldneeded {field} for the payee"
+  },
+  {
+   "key": "screen.find-in.sheet",
+   "en": "A match in a sheet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R48 (8)"
+  },
+  {
+   "key": "screen.find-in.bounds.summary",
+   "en": "If the bounds can't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R47: the refusal fold"
+  },
+  {
+   "key": "screen.find-in.empty.summary",
+   "en": "A required field left empty",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: R48's control: the refusal fold"
+  },
+  {
+   "key": "screen.find-in.recorded.office",
+   "en": "{name} holds the office of {office}, from {from}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-318: findin.recorded {fact} for an office fact"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -80494,7 +80648,7 @@
   },
   {
    "key": "screen.docket-public.purpose",
-   "en": "A published case's docket as anyone reads it, with no account: each new edition, correction, withdrawal and court order after publishing, dated and signed.",
+   "en": "Lets anyone check what happened to a published case after it was published, without an account. Your team files and posts its entries on its own Docket.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
