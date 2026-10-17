@@ -17,6 +17,33 @@ export const RINGS = Object.freeze([1, 2]);
 /** The id's kind as the id grammar reads it: its prefix, for a record id (R21). @param {string} id */
 const idKindOf = (id) => (isRecordId(id) ? id.split('-')[0] : null);
 
+/** The most entity ids one `entities.labelsOf` read takes (entities R56); the nodes are read in reads of this size. */
+const LABELS_PER_READ = 500;
+
+/**
+ * Each node's `label` and `entity_kind` (R25): an `ENT-` node's canonical label and kind as `entities` answers them,
+ * `null` for any other node and for an entity the record holds no name for. A node's label is never its id.
+ * @param {any} ctx @param {{id: string, ring: number, id_kind: string | null}[]} nodes @param {any} viewer
+ */
+function named(ctx, nodes, viewer) {
+  const ents = nodes.filter((n) => n.id_kind === 'ENT').map((n) => n.id);
+  const known = new Map();
+  const reader = typeof ctx.entities === 'function' ? ctx.entities() : ctx.entities;
+  if (reader && typeof reader.labelsOf === 'function') {
+    for (let i = 0; i < ents.length; i += LABELS_PER_READ) {
+      const ids = ents.slice(i, i + LABELS_PER_READ);
+      const got = reader.labelsOf({ ids, viewer });
+      const byId = got && typeof got === 'object' ? (got.labels ?? got) : {};
+      for (const id of ids) if (isObj(byId[id])) known.set(id, byId[id]);
+    }
+  }
+  return nodes.map((n) => {
+    const e = known.get(n.id);
+    const label = typeof e?.label === 'string' && e.label !== '' && e.label !== n.id ? e.label : null;
+    return { ...n, label, entity_kind: n.id_kind === 'ENT' ? (e?.kind ?? null) : null };
+  });
+}
+
 /**
  * One step as the graph answers it (R21, R6): the members' word, the class, the grade and the citation as the owner
  * answered them; a declared step at the lowest grade, a hunch with none.
@@ -31,13 +58,15 @@ function stepOf(registry, h) {
     ...(cls === 'declared' ? { label: DECLARED_MARK } : cls === 'hunch' ? { label: HUNCH_MARK } : {}),
     ...(cls === 'derived' ? { derived: h.derived } : {}),
     ...(h.backs !== undefined ? { backs: h.backs } : {}),
+    ...(h.attached_by !== undefined ? { attached_by: h.attached_by } : {}),
+    ...(h.at !== undefined ? { at: h.at } : {}),
     ...(isObj(h.undetermined) ? { undetermined: h.undetermined } : {}),
   };
 }
 
 /**
  * neighbourhood({centre, at, rings?, kinds?, scope?, viewer}) (`op=exploregraph`).
- * @param {{registry: any, now: () => number, budget_ms: number}} ctx @param {any} arg
+ * @param {{registry: any, now: () => number, budget_ms: number, entities?: any}} ctx @param {any} arg
  */
 export function neighbourhood(ctx, arg) {
   const a = isObj(arg) ? arg : {};
@@ -69,7 +98,7 @@ export function neighbourhood(ctx, arg) {
     ...(s.stop ? [{ node: s.stop_node, why: s.stop }] : []),
   ];
   return {
-    ok: true, centre, at: a.at, rings, kinds: k.kinds, scope: a.scope ?? null, nodes, steps, stopped,
+    ok: true, centre, at: a.at, rings, kinds: k.kinds, scope: a.scope ?? null, nodes: named(ctx, nodes, a.viewer), steps, stopped,
     ...(stopped.length ? { stopped_sentence: STOPPED_SENTENCE } : {}),
     ...depthStop(t.atDepth), owner_refusals: s.refusals,
     visited: t.visited, budget_ms: ctx.budget_ms, elapsed_ms, owner_calls: s.calls, complete: t.r.complete(), note: NOT_ASSERTED,
