@@ -54,7 +54,6 @@ Terms. A **query** `q` is a string. A **plan** is `compile`'s answer: `{ast, war
 
 ### Uses
 
-- `setup-words`: `word(key, vars)`, every member-facing sentence by key (plan T50 rule 6; K3668).
 - `membership`: `viewerPredicate`, `GATE_MARK` (R9).
 - `civil-time`: local-day bounds and calendar validation (R27; T33-39).
 - `money`: `kinds()`, `phases()`, `stages()`, `bases()`, the closed words of R28's money fields (T33-39). The other T33 fields have no closed words and reach their owners' tables only through the relations `retrieval` names (R29; K1563).
