@@ -574,6 +574,16 @@ export class Membership {
     return m ? { cover: m.cover, handle: m.handle ?? null, role: m.role, status: m.status } : null;
   }
 
+  /** R152 (T50; N1124, K3624): the instant `memberId`'s status last changed, an ISO string, or null when none is recorded
+   *  (a status set before this was recorded is never back-filled) and for an id naming no member. Every status-changing
+   *  write sets it and no other write moves it. Writes nothing; never throws. */
+  memberStatusSince(memberId) {
+    try {
+      if (typeof memberId !== "string" || !memberId) return null;
+      return this.#one(`SELECT status_at FROM members WHERE member_id=?`, memberId)?.status_at ?? null;
+    } catch { return null; }
+  }
+
   /* R69: the member ids of the project's participants who have joined (not leaving, not invited) and are active. */
   activeParticipants(projectId) {
     return this.#rows(`SELECT p.member_id FROM project_participants p JOIN members m ON m.member_id = p.member_id
@@ -1968,8 +1978,8 @@ export class Membership {
     const expires = Membership.#expiresAt(now, days);
     /* D-610 (BOB #35, 2026-09-25): the transition is the act of the administrator whose vote COMPLETED
        the consensus, so `status_by` names `by` — not the proposer the row carried from `memberAdd`. */
-    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, invite_expires=?, status_by=?, updated=? WHERE member_id=?`,
-      hash, expires, by, now, memberId);
+    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, invite_expires=?, status_by=?, status_at=?, updated=? WHERE member_id=?`,
+      hash, expires, by, now, now, memberId);
     return { ok: true, memberId, invite, expires, endorsedBy: have.sort() };
   }
 
@@ -2031,7 +2041,7 @@ export class Membership {
        revocation does: R79's listeners are told in this act, and `credentials`' (its R16) ends the sessions and
        revokes the keys, naming the same actor. */
     /* D-610 (BOB #35, 2026-09-25): the removal is recorded under the administrator whose vote CARRIED it. */
-    this.sql.exec(`UPDATE members SET status='revoked', status_by=?, updated=? WHERE member_id=?`, by, now, memberId);
+    this.sql.exec(`UPDATE members SET status='revoked', status_by=?, status_at=?, updated=? WHERE member_id=?`, by, now, now, memberId);
     if (m.status !== "revoked") this.#announceRevoked(memberId, by, now);   /* N123, R8 */
     return { ok: true, memberId, removed: true, ...math,
              deciders: votes.map((v) => v.voter).sort(), reasons: votes.map((v) => v.reason).filter(Boolean),
@@ -2217,8 +2227,8 @@ export class Membership {
        afterwards and a leaked or archived link is inert. */
     /* D-610 (BOB #35, 2026-09-25): enrolment is the MEMBER'S own act, so `status_by` names them and no
        longer carries the inviter's stamp onto a status the inviter did not set. */
-    this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, updated=? WHERE member_id=?`,
-      h, m.member_id, new Date().toISOString(), m.member_id);
+    this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, status_at=?, updated=? WHERE member_id=?`,
+      h, m.member_id, new Date().toISOString(), new Date().toISOString(), m.member_id);
     /* R108 (DEC-136 (1)): while the group chose to tell its members, the joining statement, given here once (an
        enrolment succeeds once per member); otherwise the key is absent. */
     return { ok: true, memberId: m.member_id, handle: h,
@@ -2550,11 +2560,14 @@ export class Membership {
     const demoted = status === "active" && m.role === "admin" && m.status !== "active";
     const now = new Date().toISOString();
     const actor = by || null;   /* REC-159: `status_by`, NULL (read `not recorded`) when nothing was stamped */
+    /* R152: the instant is moved only by a write that changes the status */
+    const at = m.status !== status ? now : null;
     if (demoted)
-      this.sql.exec(`UPDATE members SET status=?, role='member', status_by=?, updated=? WHERE member_id=?`,
-        status, actor, now, memberId);
+      this.sql.exec(`UPDATE members SET status=?, role='member', status_by=?, status_at=COALESCE(?, status_at), updated=? WHERE member_id=?`,
+        status, actor, at, now, memberId);
     else
-      this.sql.exec(`UPDATE members SET status=?, status_by=?, updated=? WHERE member_id=?`, status, actor, now, memberId);
+      this.sql.exec(`UPDATE members SET status=?, status_by=?, status_at=COALESCE(?, status_at), updated=? WHERE member_id=?`,
+        status, actor, at, now, memberId);
     /* Revocation is immediate: R79's listeners are told in this act, and `credentials`' (its R16) ends the
        member's live sessions and revokes their keys, naming this act's actor (REC-159). */
     if (status === "revoked" && m.status !== "revoked") this.#announceRevoked(memberId, actor, now);   /* N123, R20 */
@@ -2651,8 +2664,8 @@ export class Membership {
     /* END DEC-49 REGION is-invitation-unused */
     const now = new Date().toISOString();
     /* Dead at once (the hash goes, so R15 answers NO_SUCH_INVITATION), and the member is revoked, told as R20 tells. */
-    this.sql.exec(`UPDATE members SET status='revoked', invite_hash=NULL, invite_withdrawn=?, status_by=?, updated=?
-                    WHERE member_id=?`, now, by, now, memberId);
+    this.sql.exec(`UPDATE members SET status='revoked', invite_hash=NULL, invite_withdrawn=?, status_by=?, status_at=?, updated=?
+                    WHERE member_id=?`, now, by, now, now, memberId);
     this.#announceRevoked(memberId, by, now);
     return { ok: true, memberId, status: "revoked", invitation: "withdrawn", by, at: now };
   }
