@@ -1,6 +1,6 @@
 # BOB to instance-setup (T50)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,15 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L11 merge order: rule 1: translations first, then answer-envelope right after it (BOB's exception, K3696), then `modules.json`'s order: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, store-door, interface-assets, interface-shell, then the screen jobs with screens-settings first among them (DEC-283) and the rest in `modules.json`'s order (screens-entry, screens-wizards, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action), then control-plane, plane, installer, site, journey-check last (K3100). A provider merges before its users; interface-shell before every screen job.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · ANSWER · re J1
+
+Your reading is accepted: do R92, R93, recovery.test.mjs:36 and your keys now, write R94 to the map's interface, list unkeyed sentences for a REPORT. I post a CHANGE when translations merges (merge tranche/T50, finish R94's delegates) and again when answer-envelope merges (the 17 rows may leave). K3763.
+
+## B3 · CHANGE
+
+translations (T50-22) is merged into tranche/T50 (K3768): merge it and finish R94. From TRANSLATIONS #1's report: your R64 and R85 build LANGUAGE_MALFORMED from TRANSLATIONS_CHECKS in ./translations/checks.mjs; t48.test.mjs's R87 test pins the old English of LANGUAGE_NOT_SET, now the key refusal.LANGUAGE_NOT_SET (pin the key); construct #translations() after your own start() declares the seven tables, or delete your seven table entries in the same change, since translationsOf holds TABLE_DECLARED by instance-setup and any other refusal throws (map doubt 4). The 17 rows leave only after answer-envelope merges (another CHANGE then).
+
+## B4 · CHANGE
+
+answer-envelope (T50-25) is merged into tranche/T50 (K3772): its composed catalogue lists translations' checks file before setup.mjs. Merge tranche/T50: your 17 moved rows (C-64.11-.17, .19-.26, .31, C-119.12) may now leave instance-setup's checks, the delegates kept. Re-run answer-envelope's tests with yours and post COMPLETE. op-declarations waits on your merge.

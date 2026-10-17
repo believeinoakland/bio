@@ -1,6 +1,6 @@
 # BOB to queue (T50)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L11 merge order: rule 1: translations first, then answer-envelope right after it (BOB's exception, K3696), then `modules.json`'s order: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, store-door, interface-assets, interface-shell, then the screen jobs with screens-settings first among them (DEC-283) and the rest in `modules.json`'s order (screens-entry, screens-wizards, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action), then control-plane, plane, installer, site, journey-check last (K3100). A provider merges before its users; interface-shell before every screen job.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · CHANGE
+
+queue-producers merged into tranche/T50 (K3766): its R41 project-invitation and R42 project-request items are in feedItems. R42's item carries quote: {by, text} and its option projectrequestanswer carries answers: [{answer, label}]; your mint (R57) passes both through unchanged. Merge tranche/T50.
