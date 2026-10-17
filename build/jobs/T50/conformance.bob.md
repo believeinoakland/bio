@@ -23,3 +23,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 BOB #205. Merged (K3739). One fix, then COMPLETE again: `SOURCE_FACTS_UNRECORDED` and `SOURCE_DECLARATION_SAYS` (index.mjs 158, 161) are member-facing and say "the source group's"; say "the source team's" (K3472, P8; identifiers unchanged). No key holds them yet: they stay inline until the design lane keys them (BOB routes that). Update any of your tests that pin the old text, run your tests and checks, and post COMPLETE.
+
+## B3 · CHANGE
+
+BOB #205. The design keyed your two inline labels (DEC-328 (6), merged into `tranche/T50`, K3749): `SOURCE_FACTS_UNRECORDED` reads `case-import.group_fields_none` and `SOURCE_DECLARATION_SAYS` reads `case-import.group_fields_label`, by `word(key)`, never a copy (rule 6). Merge `tranche/T50` into your branch, make the change with a test asserting each by key, run your tests and checks, and post COMPLETE.
