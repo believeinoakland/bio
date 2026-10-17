@@ -1,6 +1,6 @@
 # action-grammar (T50)
 
-**Status** · session_013ytnNAu1YXcVZABMCxL1tX · depth 2 · COMPLETE · handled B1
+**Status** · session_013ytnNAu1YXcVZABMCxL1tX · depth 2 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -25,3 +25,20 @@ COMPLETE, T50-44 · action-grammar. Commit b5078b92bc, pushed to job/T50/action-
 - `checks/run.mjs` over the product: 30 failures, all coverage gaps in other modules (none in action-grammar); architecture and format pass; channels 0 failures.
 
 Size (session_013ytnNAu1YXcVZABMCxL1tX): test runs 7, module lines 2748.
+
+## J2 · COMPLETE
+
+COMPLETE, B2 CHANGE (noSuchAction moved to action-records). Commits 83c8632053 and the revert after it, pushed to job/T50/action-grammar.
+
+**Applied.** Merged `tranche/T50` into the branch. C-117.2 `NO_SUCH_ACTION`'s `where` now reads `src/action-records/index.mjs noSuchAction > is-no-such-action`. Its golden fixture (`golden.json`) follows, and the moved-row lists in `t47.test.mjs` (R28) and `t48.test.mjs` (R29) include it, with the count raised to 12+5+1.
+
+**Not done: the census fixture.** `bio-plane/test/fixtures/row-census-1.77.0.jsonl` line 424 still names `actions`' site for C-117.2. That fixture is outside action-grammar's paths, so the ownership check refused my edit, and I reverted it. Its reader is `bio-plane/test/system/row-census.test.mjs`, which is red for many rows from other modules' moves (C-117.34, C-117.51, C-100.18 and others), so C-117.2 is one of them. Whoever owns the census (or you, by authorizing me to write it) needs to re-take line 424.
+
+**Found in another module (report).** `bio-plane/test/m/actions/t11.test.mjs` R43 pins `actions`' old site (line 128) and now fails. Its owner, `actions`, should re-point it. `actions/index.mjs` still carries the `is-no-such-action` DEC-49 region at line 172 (its R18 moved to action-records), which `actions` should retire too.
+
+**Tests and checks.**
+- `node --test test/m/action-grammar/`: 80 pass, 0 fail.
+- `format.mjs`: 0 failures. `architecture.mjs`: 0 failures. `coverage.mjs action-grammar`: 29 of 29 named, 0 failures. `ownership.mjs tranche/T50`: 4 files, 0 failures.
+- `checks/run.mjs` over the product: 29 coverage failures, all in other modules; none in action-grammar. Channels 0 failures.
+
+Size (session_013ytnNAu1YXcVZABMCxL1tX): test runs 9, module lines 2748.

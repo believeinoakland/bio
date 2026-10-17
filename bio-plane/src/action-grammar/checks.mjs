@@ -1725,7 +1725,7 @@ export const ACTION_CATALOGUE_CHECKS = {
      C-115.2 and escalation's C-116.11 give way to it. */
   NO_SUCH_ACTION: {
     check: 'C-117.2',
-    where: 'src/actions/index.mjs noSuchAction > is-no-such-action',
+    where: 'src/action-records/index.mjs noSuchAction > is-no-such-action',
     translation: 'No action answers to that here. An action you may not see is answered exactly as one that does not '
       + 'exist, so this is not a hint either way.',
   },

@@ -57,7 +57,7 @@ test("R29: no other row moves: the rows naming action-records are R28's twelve a
   const rows = allRows();
   const naming = rows.filter((r) => r.row.where.startsWith(`${RECORDS_FILE} `)).map((r) => r.code);
   for (const code of Object.keys(MOVED)) assert.ok(naming.includes(code), code);
-  assert.equal(naming.length, 12 + 5);
+  assert.equal(naming.length, 12 + 5 + 1, "R28's twelve, R29's five and T50's NO_SUCH_ACTION");
   const others = rows.filter((r) => !naming.includes(r.code));
   for (const { code, row } of others) assert.match(row.where, /^src\/(actions\/index|action-grammar\/checks)\.mjs /, code);
   for (const code of ["MACHINE_CANNOT_SET_LAWS", "MACHINE_CANNOT_SET_RISK_TIER"]) assert.match(rowOf(code).row.where, /^src\/actions\/index\.mjs /, code);
