@@ -12,3 +12,27 @@ Read-set done: requirements (whole), layer contract, my 13 source files, interfa
 3. wizard-scripts (T50-17): SCREEN_REGISTRY not regenerated, so `contract.test.mjs` still reads the old registry/RE_POINTS; the shell's R73 removes RE_POINTS.
 4. queue (R55 `muted` read; project-request items): not merged, so R50 (1)'s muted list and R42's owner items can be drawn only against fixtures.
 My plan: build R40–R43, R46–R49, R51 now against what exists; write R44, R45, R50, R52, R53 to the stated contracts with fixtures and wire their acts the moment the providers are on tranche/T50. Please tell me when op-declarations, interface-shell, wizard-scripts and queue are merged (CHANGE with "merge tranche/T50"). No answer needed otherwise.
+
+## J2 · REPORT
+
+REPORT (status, and findings in other modules). Pushed job/T50/screens-daily @ d42a736e89.
+
+DONE in my module: R40–R53 are built and tested (module tests 138/138 pass; coverage 51 of 51 ids named; format, architecture, ownership 0 failures), against tranche/T50 as merged through B4 (queue-producers, wizard-scripts) PLUS local, uncommitted stand-ins for what is not merged yet (below). I applied B2's spelling (act `onEvent(event, view, cs)`) and B3 (`quote`, `answers`, `subject.requester`).
+
+NOT green on the bare branch until these merge (my code names ops/keys they provide; nothing of theirs is edited by me):
+- op-declarations: OPS and SESSION_OPS.member lack `browse`, `lookedat`, `watchitem`, `secondlook`, `secondlookclear`, and SESSION_OPS lacks `themeread` (so Theme "Filter" is not drawn). With them added locally my 138 tests pass; without them `interfacePage` throws on finder.
+- interface-shell R78 (`onEvent`): my R52/R53 progress rows are tested by running the act's own `onEvent` over a stand-in kit; the page-level progress test waits for R78. R81's `theme` kind: Themes rows are cards until it merges (the href test waits).
+- queue R55 (`queue` with `muted`), used by R50 (1): tested against fixtures.
+
+FINDINGS in other modules (against their requirements):
+1. interface-shell: (a) `cs.strip` readings carry no explanation, so R50 (3)'s `home.strip.ours_passed.opens` is not drawn; (b) `cs.field` takes no placeholder, so `find.query.placeholder` is drawn as the field's help.
+2. op-grades: `watchitem`, `secondlook`, `secondlookclear`, `themeread`, `browse`, `lookedat` have no grade, so the shell draws them Reasoned (asks a reason). R45 intends Watch and Clear to run on press.
+3. queue R55: a muted item row is `{item, class, at}` with no title; `queue.muted.item` therefore draws the item's id as given (DEC-299 (8) wants a title).
+4. wizard-scripts R23 `startfrom` takes no door argument; R40's "sends startfrom for the door" sends `startfrom?door=<k>` (ignored) and the offer is drawn from the answer already read.
+5. queue-producers R42: `options[].answers[].label` carries English words (`word(...)`), not keys; I key the buttons by `answer` (`screen.home.request.grant`/`.decline`).
+6. standards R47: I send `text: [{capture_sha, extent}]` for an uncited passage (an array, as a content id list is); say if `text` should be the bare extent.
+7. retrieval R83: the match's sheet row is read from `it.row` else parsed from the extent strings; ask retrieval to state the field.
+
+MY READINGS (tell me if wrong): "our own passed date" (R50 (3)) is an item of kind `action-clock-overdue.ours`; a person fact's zone is the `time_zone` fact of `factstatus` (`governs.value`); the browse's Show and Only are link chips on the route (`/app/finder/~kind~only`), the Theme filter a choice with the registry's `themeread` button; with the words box empty, Search returns to the browse.
+
+Waiting on BOB (J2): merge of op-declarations, interface-shell, queue; then CHANGE.
