@@ -179,7 +179,7 @@ function people() {
 test("R55 aliasesOf answers the standing aliases of the entities of the given kinds as {entity_id, kind, label, alias}, in entity id then alias order; the canonical label is one; another kind is not answered", () => {
   const w = people();
   const r = w.e.aliasesOf({ kinds: ["person", "office"], viewer: VIEWER });
-  assert.deepEqual([r.ok, r.kinds, r.count, r.limit, r.truncated, r.next], [true, ["person", "office"], 7, ALIASES_LIMIT_DEFAULT, false, null]);
+  assert.deepEqual([r.ok, r.aliases.length, r.limit, r.truncated, r.next], [true, 7, ALIASES_LIMIT_DEFAULT, false, null]);
   assert.deepEqual(r.aliases.map((a) => Object.keys(a)), Array(7).fill(["entity_id", "kind", "label", "alias"]));
   assert.deepEqual(r.aliases.map((a) => [a.entity_id, a.kind, a.label, a.alias]), [
     [w.pat, "person", "Pat Quill", "P. Quill"], [w.pat, "person", "Pat Quill", "Pat Quill"], [w.pat, "person", "Pat Quill", "Patricia Quill"],
@@ -193,9 +193,8 @@ test("R55 order is entity id, then the alias's fold; a kind asked once as a stri
   const w = people();
   const one = w.e.aliasesOf({ kinds: "office", viewer: VIEWER });
   assert.deepEqual(one.aliases.map((a) => [a.entity_id, a.alias]), [[w.clerk, "Harbour Clerk"], [w.clerk, "The Clerk"]]);
-  assert.deepEqual(one.kinds, ["office"]);
   const both = w.e.aliasesOf({ kinds: ["person", "office", "person", " OFFICE "], viewer: VIEWER });
-  assert.deepEqual(both.kinds, ["person", "office"]);
+  assert.deepEqual(Object.keys(both).sort(), ["aliases", "limit", "next", "ok", "truncated"]);
   const ids = both.aliases.map((a) => a.entity_id);
   assert.deepEqual(ids, [...ids].sort(), "entity id order");
   const norm = (s) => s.toLowerCase();
@@ -228,14 +227,14 @@ test("R55 paging across limit: limit 1-5,000 (default 1,000) published, truncate
   const ids = [];
   for (let i = 0; i < 4; i++) ids.push(w.e.createEntity({ kind: "person", label: `Person ${i}`, note: NOTE, aliases: [`alias ${i}a`, `alias ${i}b`] }).entity_id);
   const full = w.e.aliasesOf({ kinds: ["person"], viewer: VIEWER });
-  assert.equal(full.count, 12);
+  assert.equal(full.aliases.length, 12);
   for (const limit of [1, 2, 3, 5, 11, 12]) {
     const seen = [];
     let after = null, pages = 0;
     for (;;) {
       const r = w.e.aliasesOf({ kinds: ["person"], viewer: VIEWER, limit, ...(after ? { after } : {}) });
       assert.equal(r.limit, limit);
-      assert.ok(r.count <= limit);
+      assert.ok(r.aliases.length <= limit);
       seen.push(...r.aliases);
       pages++;
       assert.equal(r.truncated, r.next !== null, "next only when one more follows");
@@ -254,7 +253,7 @@ test("R55 paging across limit: limit 1-5,000 (default 1,000) published, truncate
   assert.deepEqual([ALIASES_LIMIT_DEFAULT, ALIASES_LIMIT_MAX], [1000, 5000]);
   const rest = w.e.aliasesOf({ kinds: ["person"], viewer: VIEWER, after: ids[1] }).aliases;
   assert.deepEqual(rest.map((a) => a.entity_id), full.aliases.filter((a) => a.entity_id > ids[1]).map((a) => a.entity_id));
-  assert.equal(w.e.aliasesOf({ kinds: ["person"], viewer: VIEWER, after: ids[3] }).count, 0);
+  assert.equal(w.e.aliasesOf({ kinds: ["person"], viewer: VIEWER, after: ids[3] }).aliases.length, 0);
 });
 
 test("R55 control: a viewer membership does not recognise (or none) gets none; a kind named wrongly is refused as R51 refuses it; it writes nothing and never throws", () => {
@@ -262,10 +261,10 @@ test("R55 control: a viewer membership does not recognise (or none) gets none; a
   const tables = ["entities", "entity_aliases", "entity_relations", "resolutions"].map((t) => count(w, t));
   for (const viewer of ["stranger", "", null, undefined, "member:", 7]) {
     const r = w.e.aliasesOf({ kinds: ["person", "office"], viewer });
-    assert.deepEqual([r.ok, r.aliases, r.count, r.truncated, r.next], [true, [], 0, false, null], String(viewer));
+    assert.deepEqual([r.ok, r.aliases, r.truncated, r.next], [true, [], false, null], String(viewer));
   }
-  assert.equal(w.e.aliasesOf({ kinds: ["person"], viewer: MACHINE }).count, 5, "a machine viewer is recognised");
-  assert.equal(w.e.aliasesOf({ kinds: ["person"], viewer: "admin" }).count, 5);
+  assert.equal(w.e.aliasesOf({ kinds: ["person"], viewer: MACHINE }).aliases.length, 5, "a machine viewer is recognised");
+  assert.equal(w.e.aliasesOf({ kinds: ["person"], viewer: "admin" }).aliases.length, 5);
   for (const [kinds, reason] of [[undefined, "NO_KIND"], [[], "NO_KIND"], [[""], "NO_KIND"], [["person", " "], "NO_KIND"], [null, "NO_KIND"],
                                  [["theme"], "UNKNOWN_KIND"], [["person", "theme"], "UNKNOWN_KIND"], ["Nope", "UNKNOWN_KIND"], [[7], "NO_KIND"]]) {
     const r = w.e.aliasesOf({ kinds, viewer: VIEWER });

@@ -699,7 +699,7 @@ export class Entities {
       const n = Number(limit);
       const cap = limit == null || limit === "" || !Number.isFinite(n) ? ALIASES_LIMIT_DEFAULT
         : Math.max(1, Math.min(Math.trunc(n), ALIASES_LIMIT_MAX));
-      const empty = { ok: true, kinds: want, aliases: [], count: 0, limit: cap, truncated: false, next: null };
+      const empty = { ok: true, aliases: [], limit: cap, truncated: false, next: null };
       if (viewerPredicate(viewer).scope === "DENY") return empty;
       const cursor = typeof after === "string" ? after : "";
       const bar = cursor.indexOf("|");
@@ -714,7 +714,7 @@ export class Entities {
       const page = truncated ? rows.slice(0, cap) : rows;
       const last = page[page.length - 1];
       return { ...empty, aliases: page.map((r) => ({ entity_id: r.entity_id, kind: r.kind, label: r.label, alias: r.alias })),
-               count: page.length, truncated, next: truncated ? `${last.entity_id}|${last.alias_norm}` : null };
+               truncated, next: truncated ? `${last.entity_id}|${last.alias_norm}` : null };
     } catch (err) {
       return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
     }
