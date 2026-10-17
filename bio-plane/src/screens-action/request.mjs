@@ -34,8 +34,9 @@ export const request = Object.freeze({
       // R21: the matter's stake (`filings` R60, R62) and the team's name; the question is `start-send`'s alone
       r.stake = { op: "stakeatpreparation", query: { action: s }, empty: function () { return false; } };
       r.identity = { op: "groupidentity", empty: function () { return false; } };
-    } else {
-      // R20: the offices the record holds for such records, read on load, so that none known is said before any act is drawn
+    } else if (s) {
+      // R20: the offices the record holds for such records, read on load, so that none known is said before any act is drawn;
+      // asked only with a subject (an entity or a record the request rests on): with none the op refuses NO_SUBJECT
       r.offices = { op: "addresseesuggest", query: { subject: s }, empty: function () { return false; } };
     }
     return r;
@@ -48,6 +49,7 @@ export const request = Object.freeze({
     // null while the read has not answered (or failed).
     officesOf: function (view) {
       if (Array.isArray(view.ui.offices)) return view.ui.offices;
+      if (!String(view.subject || "")) return [];
       const r = view.data.offices;
       return r && r.state === "ok" && r.value && Array.isArray(r.value.offices) ? r.value.offices : null;
     },
