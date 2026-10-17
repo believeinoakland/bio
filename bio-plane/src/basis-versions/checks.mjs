@@ -13,6 +13,7 @@
  * re-pointed (rule 1) and was deleted with `legacy-checks`; this module reads only its own. */
 
 import { isMachineIdentity } from "../record-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /* The site every row the grammar raises names (R1–R3, R6, R43). */
 const GRAMMAR_WHERE = "src/basis-versions/grammar.mjs basisVersionFindings, reached from op=promote through the step "
@@ -209,6 +210,14 @@ export const BASIS_VERSION_CHECKS = {
     translation: 'Two versions of this inquiry have the same name. '
       + 'Names are how versions are compared and how one records what it was derived from, '
       + 'so within one inquiry a name means exactly one version.',
+  },
+  /* R54 (T50; N1136; K3402): a name outside the form (1 to 64 permitted characters, `VERSION_NAME_RE`) is not a
+     duplicate, and a member told "two versions share a name" for a name that fits nowhere is told the wrong fact. Its
+     words are the list's, read by key. */
+  VERSION_NAME_MALFORMED: {
+    check: 'C-25.36',
+    where: GRAMMAR_WHERE,
+    translation: word('refusal.VERSION_NAME_MALFORMED'),
   },
   /* §3 / SWEEP C5. See the block comment above for why this is a field. */
   VERSION_NO_RELATIONSHIP: {
@@ -815,10 +824,8 @@ export const CONCLUDE_ACT_CHECKS = {
   NO_CLAIM: {
     check: 'C-33.34',
     where: 'src/basis-versions/index.mjs conclude > is-conclude-claim',
-    translation: 'Concluding adopts the claim of an accepted reading, and that claim is what the group '
-      + 'concluded. There is no claim to adopt here. For a project, the reading is the one the project '
-      + 'stands on; with no project, name the reading. State the claim on a reading first — a claim '
-      + 'nothing supports yet is allowed — and conclude again.',
+    /* R51 (DEC-254): its words are the list's, which names the member's own reading since the decision */
+    translation: word('refusal.NO_CLAIM'),
   },
   /* REC-124 / §7.1 item 2. A free conclusion text beside a project could say
      what no claim said; the member is told the door rather than having their

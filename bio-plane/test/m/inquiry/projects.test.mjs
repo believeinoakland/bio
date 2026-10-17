@@ -6,6 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const Q = "INQ-2026-6001-q", R = "INQ-2026-6002-r";
 
@@ -51,7 +52,7 @@ test("R60 negative controls: a read that answers no question to a member carries
   w.k.legEarning.projectsShownOn = () => { throw new Error("boom"); };
   for (const [read, projects] of Object.entries(await reads(w, Q, V("alice")))) assert.equal(projects, null, read);
   assert.match(w.k.stateHistory(Q, V("alice")).projects_undetermined, /could not be read/);
-  assert.deepEqual(w.k.projectsOf(Q, V("alice")), { projects: null, projects_undetermined: "which projects draw on this question could not be read" });
+  assert.deepEqual(w.k.projectsOf(Q, V("alice")), { projects: null, projects_undetermined: word("inquiry.projects_undetermined") });
 });
 
 /* R60 (T42; N830; retrieval R78): the question's row in a `search` page, through the decoration this module registers

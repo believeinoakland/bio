@@ -6,6 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 const Q1 = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-r", C1 = "INQ-2026-0003-c", C2 = "INQ-2026-0004-d";
@@ -89,5 +90,5 @@ test("R42 N422 a listener answering only the dependents, or nothing registered: 
   assert.equal("listeners_failed" in r.reevaluation, false);
   const w2 = world(); w2.inquiry(Q1); w2.select("h", [Q1]);
   const t = w2.k.dispose({ handle: "h", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: V("alice") });
-  assert.equal(t.reevaluation, undefined); assert.match(t.reevaluation_absent, /no module is registered/);
+  assert.equal(t.reevaluation, undefined); assert.equal(t.reevaluation_absent, word("inquiry.reevaluation_absent"));
 });

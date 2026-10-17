@@ -9,23 +9,24 @@
  * DEC-149 (T34-86; K1784): a translation a member reads names the group's Civicsmith as "your group's Civicsmith", never
  * "this instance", "the copy" or "the plane" (C-33.29, C-109.1; C-109.9 until its retirement, R20). */
 
+import { word } from "../setup-words/index.mjs";
+
 /* R31 (T46; DEC-194; N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's
- * rows answer, each `en` verbatim, read by key as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are;
- * a row's `translation` is the word itself, never a copy. `refusal.AI_RUN_ORIGIN_UNKNOWN` is not held: its sentence speaks
+ * rows answer, each read by key through `setup-words`' `word(key)` (plan rule 6; K3632) as `membership`'s `HANDLE_WORDS` and
+ * `extraction`'s `TRANSCRIBE_WORDS` are; a row's `translation` is the word itself, never a copy of the sentence (T50 corrects
+ * the copies this table held, which had stayed "the group's account" after DEC-304 made it "the team's"). `refusal.AI_RUN_ORIGIN_UNKNOWN` is not held: its sentence speaks
  * only of a planning run, while `originAllowed` mints the code in every mode, so C-22.25 keeps its own sentence until the
  * design stream's covers both (R31). R32 (T47; N992; DEC-198): `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`, which DEC-198 added,
- * is C-22.30's translation, read the same way. Frozen. */
-export const RUN_RULES_WORDS = Object.freeze({
-  'refusal.AI_RUN_REEXAM_NEEDS_RESPONSE': 'Nothing was started: a fresh look at the plan after a reply needs to know which '
-    + 'reply. Record the reply first, then ask from it.',
-  'refusal.AI_RUN_REEXAM_OPEN': 'Nothing was started: a fresh look at this plan after this reply is already under way. '
-    + 'Wait for it, then read what it proposes.',
-  'refusal.MEMBER_RUN_MODE_NOT_ADMITTED': 'A run on your own Claude sign-in can check or plan, and this one asks for more. '
-    + 'Nothing was sent. A project\'s or the group\'s account can run it, where one serves you.',
-});
+ * is C-22.30's translation, read the same way. R35 (T50; N1169): `refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE` is C-22.31's. Frozen. */
+export const RUN_RULES_WORDS = Object.freeze(Object.fromEntries([
+  'refusal.AI_RUN_REEXAM_NEEDS_RESPONSE',
+  'refusal.AI_RUN_REEXAM_OPEN',
+  'refusal.MEMBER_RUN_MODE_NOT_ADMITTED',
+  'refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE',
+].map((key) => [key, word(key)])));
 
 /* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, T33's .19 (R18), .20 (R19) and .21 (R17), T41's .22 (R19's test
- * bar), .23 (R26) and .24 (R23), and T46's .29 (R30) and .30 (R32, minted by `ai-runs`). The family's history and its reason for being one row per code are in
+ * bar), .23 (R26) and .24 (R23), and T46's .29 (R30) and .30 (R32, minted by `ai-runs`), and T50's .31 (R35). The family's history and its reason for being one row per code are in
  * observation-log's `AI_RUN_CHECKS` header (`../observation-log/checks.mjs`), which holds the log's rows. C-22.7 (`checkSkillVersion`'s, R8) is
  * held here beside its one minting site, `./skill-version.mjs` (R8, R11; K333, N289); `skills` names it by key through
  * this module (its R25). */
@@ -346,6 +347,16 @@ export const AI_RUN_OWN_CHECKS = {
     check: 'C-22.30',
     where: 'src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch',
     translation: RUN_RULES_WORDS['refusal.MEMBER_RUN_MODE_NOT_ADMITTED'],
+  },
+  /* R35 (T50; N1169; K3501 (C2); `agent-harness` R18): A `level-empty` FINDING OVER A SCOPE WITH NO DOCUMENT IN IT. A level that
+     had no document in scope was not looked at, so no absence is written for it: `levelEmptyHolds` is the rule's one
+     statement, `agent-harness` asks it before it composes a candidate, and the row is what it answers when the finding does
+     not hold. C-22.31, the next free number after R32's C-22.30. Its translation is `words.json`'s
+     `refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE`, read by key (RUN_RULES_WORDS above). */
+  LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE: {
+    check: 'C-22.31',
+    where: 'src/run-rules/rules.mjs levelEmptyHolds, called from agent-harness before it composes a level-empty candidate',
+    translation: RUN_RULES_WORDS['refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE'],
   },
 };
 

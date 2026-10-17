@@ -169,7 +169,7 @@ test("R3 per_member: a group or project account's per-member limit is counted ov
   w.count("group", "bob", "ask", { calls: 2 });
   const r = check(w, "group", "bob", "ask");
   assert.deepEqual([r.code, r.scope, r.whose], ["AI_LIMIT_REACHED", "per_member", "group"]);
-  assert.equal(r.translation, "The assistant stopped here: you have used the daily amount each member may use of your group's account. "
+  assert.equal(r.translation, "The assistant stopped here: you have used the daily amount each member may use of your team's account. "
     + "It works again tomorrow. Everything else works as usual.");
   assert.equal(check(w, "group", "cy", "ask"), null, "another member's use of the account is theirs");
   /* negative control: bob's use paid by his project is not the group account's */

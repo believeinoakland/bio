@@ -16,6 +16,11 @@ import { world } from "./fixture.mjs";
 
 const VARIANTS = Object.keys(REGISTRY_VARIANTS);
 const fresh = () => recordOf({});
+/* R54 (T50) amends R1 and R3: the finding for a name outside the name form has a code of its own (C-25.36). The golden
+   (inquiry-grammar's, recorded from the catalogue before the move) predates it and keeps the old code for that one
+   finding, so each golden list is read through this single change. */
+const amended = (list) => list.map((x) => (x.code === "VERSION_NAME_NOT_UNIQUE" && /is not a version name:/.test(x.message)
+  ? { ...x, check: "C-25.36", code: "VERSION_NAME_MALFORMED" } : x));
 const slots = (record) => record.grammars().map((g) => [g.module, [...g.ids]]);
 
 test("R43: one registration, `basis-versions`, claiming the C-2.8 slot whole after inquiry-grammar's, answered {ok: true}; reaching it again registers nothing more; a record with no seam is left alone", () => {
@@ -48,12 +53,12 @@ test("R43: for every bundle of the corpus under every registry variant, checkBun
   registerBasisVersionGrammar(record);
   let versions = 0, bundles = 0, direct = 0;
   for (const id of Object.keys(BUNDLE_CASES)) {
-    const want = GOLDEN.bundles[id].versions;
+    const want = amended(GOLDEN.bundles[id].versions);
     const md = bundleFiles(id).get("bundle.md");
     const fm = parseFrontmatter(typeof md === "string" ? md : new TextDecoder().decode(md)).data;
     for (const v of VARIANTS) {
       const got = await judge(id, v, record.grammars());
-      assert.deepEqual(got, GOLDEN.bundles[id][v], `${id} (${v})`);
+      assert.deepEqual(got, amended(GOLDEN.bundles[id][v]), `${id} (${v})`);
       for (const x of want) assert.ok(got.some((y) => JSON.stringify(y) === JSON.stringify(x)), `${id}: ${x.message}`);
       bundles++;
     }

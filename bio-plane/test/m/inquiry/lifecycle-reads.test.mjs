@@ -19,6 +19,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
 import { checkInquiryEntry, deriveInquiryTitle, inquiryQuestionOf, INQUIRY_TABLES } from "../../../src/inquiry/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 
@@ -171,10 +172,10 @@ test("R12 R49 a creation admitted as a migration replay records its capture and 
   assert.equal(w.count("inquiry_migration_replays"), 1, "one migration-replay row");
   const m = w.k.migratedSurfacing(M);
   assert.deepEqual([m.recorded, m.stated, m.run, m.lens, m.migrated.capture, m.migrated.promotion, m.migrated.at],
-    [false, "not recorded (migrated from the Drive era)", null, null, CAP, "20260707T010000Z_rec17300", x.migration_replay.at]);
+    [false, word("inquiry.stated.recorded_migrated_drive"), null, null, CAP, "20260707T010000Z_rec17300", x.migration_replay.at]);
   const p = await w.retrieval.projection({ bundleId: M, viewer: "admin" });
   assert.deepEqual([p.surfaced_in.recorded, p.surfaced_in.stated, p.surfaced_in.run, p.surfaced_in.lens, p.surfaced_in.migrated.capture],
-    [false, "not recorded (migrated from the Drive era)", null, null, CAP], "the read says it in words and names the capture");
+    [false, word("inquiry.stated.recorded_migrated_drive"), null, null, CAP], "the read says it in words and names the capture");
   /* a replay whose promotion key is absent still records the capture, the key null */
   const K = "PROB-2026-9173-no-key";
   assert.equal(w.promote(K, inquiryMd(K), null, { replay: true, migrationReplay: { capture: "d".repeat(64) } }).migration_replay.promotion, null);
