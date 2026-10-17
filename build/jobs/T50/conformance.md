@@ -21,3 +21,7 @@
 - `checks/format.mjs`: 171 modules, 170 requirements files; 0 failures. `checks/architecture.mjs conformance`: 18 product files, 77 relative imports; 0 failures. `checks/coverage.mjs conformance`: 41 of 41 live requirement ids named by a test; 0 failures. `checks/ownership.mjs conformance tranche/T50`: 0 failures.
 
 Size (session_01A6uUMNWkd555swANVn8caL): test runs 6, module lines 2769
+
+## J1 · COMPLETE
+
+T50-76 conformance complete. R40: C-113.6 reads refusal.NO_FINDINGS by key; R38's six rows also now read by key via setup-words word() (their copies said 'group', words.json says 'team', so t46 was red at the baseline). R41: accepted basis answers matter_stake (null / 'undetermined' as specified). t36:55 asserts key standard.inforce.known. Module tests 119/119; format, architecture, coverage (41/41), ownership 0 failures; checks/run.mjs shows no conformance failure (30 coverage failures are other modules'). Found elsewhere, red at base too: consequences R25 (2), escalation R30/R31/R33 (3), filings R51/R52 (3), action-plans R47 (2): the same words.json drift in their own tables. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs. REPORT-worthy: SOURCE_DECLARATION_SAYS and SOURCE_FACTS_UNRECORDED are inline English saying 'group' with no key. Details in build/jobs/T50/conformance.md.
