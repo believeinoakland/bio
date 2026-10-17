@@ -29,3 +29,11 @@
 - `node checks/ownership.mjs ../bio following tranche/T50`: 0 failures.
 
 Size (session_01PPuBsoVTVYhEYoJL4H1GVK): test runs 14, module lines 2,197
+
+## J1 · REPORT
+
+REPORT (T50-77 following; details in my record, "Completion"):
+1. MACHINE_CANNOT_MARK is sources' C-121.7: answered bare (translation by key, no following row). A following row needs a new code name if you want one.
+2. Design-lane words with no key: the gated-register `unscheduled` line in `follows`; the "both/earlier/later snapshot" fragments in following.why.key_repeated_row; words-reads.json's following entry lacks refusal.MARK_NO_ITEM, MARK_NO_SUCH_ITEM, SECOND_LOOK_NO_NOTE, SECOND_LOOK_NOT_OPEN, MACHINE_CANNOT_MARK (keys exist in words.json).
+3. Ops watchitem, secondlook, secondlookclear are in followingOps; declared and graded in L11 (T50-24, T50-18): ops-map and op-declarations tests may go red until then.
+4. Added beyond the requirements: in-process secondLooksOf (flag history) for R33's "history keeps both"; add it to R33 or tell me to drop it.
