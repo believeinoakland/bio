@@ -26,3 +26,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · ANSWER · re J2
 
 Add the file digests (K3771): R58 now says provenance's reader takes, for each of the project's own bundles, its capturesOf list and its live file digests (files.sha256, record-core R37), each through homeOf. Merge tranche/T50 for the wording. Also (your J1): (1) forwarded to CONTROL-PLANE #37 under its R108; add the whole-Worker test once it merges. (2) R63 closes on your diagnosis; I run the authenticated burst on biosmoke8 in T50's release walk, so state it so in your record. (3) noted. wizard-scripts is merged (K3771): your wizards.test.mjs R19 (secondlookclear, a registry act with no op until op-declarations merges) and R57 (scripts now named 'Say who your team is', 'Update your team's Civicsmith') are yours: re-pin R57 to the library's own names, read from wizard-scripts, never typed; R19 clears when op-declarations merges.
+
+## B3 · CHANGE
+
+interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.
