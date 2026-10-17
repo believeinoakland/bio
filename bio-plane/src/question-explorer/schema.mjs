@@ -6,7 +6,7 @@ export const QUESTION_EXPLORER_SCHEMA = `
 -- R1, R3, R8, R12: each exploring run this module opened, one row a run. owner is the paying account (ai-use R1's
 -- spelling); step the system step it serves (steps R1); day the group's local day it was opened on (one run a
 -- question a day); seen the count of captures resolving to the question's subject entity at the open (R2's test);
--- estimate and actual (R12) answered only to the paying account's owners; ended and reason R8's.
+-- estimate and actual (R12) answered only to the paying account's owners; ended and reason R8's; close_refused R17's.
 CREATE TABLE IF NOT EXISTS explore_runs (
   run        TEXT PRIMARY KEY,
   question   TEXT NOT NULL,
@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS explore_runs (
   ended      TEXT,              -- null while running, then 'ended' or 'set_aside'
   reason     TEXT,
   closed_at  TEXT,
-  actual     TEXT
+  actual     TEXT,
+  close_refused TEXT           -- null, or the plane's code when ai-runs did not accept the run close (R17)
 );
 CREATE INDEX IF NOT EXISTS explore_runs_question ON explore_runs(question, opened_at);
 
@@ -111,4 +112,7 @@ export function migrateQuestionExplorer(sql) {
   /* R16 (T46): a store made before the column gains it. */
   const cols = [...sql.exec(`PRAGMA table_info(explore_finds)`)].map((c) => c.name);
   if (!cols.includes("untested")) sql.exec(`ALTER TABLE explore_finds ADD COLUMN untested TEXT`);
+  /* R17 (T50): a store made before the column gains it. */
+  const runCols = [...sql.exec(`PRAGMA table_info(explore_runs)`)].map((c) => c.name);
+  if (!runCols.includes("close_refused")) sql.exec(`ALTER TABLE explore_runs ADD COLUMN close_refused TEXT`);
 }

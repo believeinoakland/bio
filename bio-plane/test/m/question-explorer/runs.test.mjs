@@ -50,7 +50,7 @@ test("R3: it asks to capture only through capture-requests, each request carryin
 test("R8: a run stopped by a limit ends its step set_aside with the reason; only its enabling owner is told; no place is named", async () => {
   const w = await world().standard();
   const o = await w.openRun("group");
-  const e = w.p.end({ run: o.run, end: "set_aside", reason: "fetches", bound: "fetches", caller: CALLER });
+  const e = await w.p.end({ run: o.run, end: "set_aside", reason: "fetches", bound: "fetches", caller: CALLER });
   assert.deepEqual([e.ok, e.end, e.reason], [true, "set_aside", "fetches"]);
   assert.deepEqual(w.calledAs("stepEnd").map((a) => [a.step, a.end, a.reason]), [[o.step, "set_aside", "fetches"]]);
   assert.equal(w.calledAs("close")[0].bound, "fetches");
@@ -60,12 +60,12 @@ test("R8: a run stopped by a limit ends its step set_aside with the reason; only
   for (const s of [...told.map((x) => x.says), ...Object.values(EXPLORE_CHECKS).map((r) => r.translation)])
     assert.doesNotMatch(s, /\b(Oakland|California|county|city of|jurisdiction)\b/i, "no place named");
   /* An ended run answers as it ended; acts under it are refused. */
-  assert.equal(w.p.end({ run: o.run, caller: CALLER }).already, true);
+  assert.equal((await w.p.end({ run: o.run, caller: CALLER })).already, true);
   assert.equal(w.p.find({ run: o.run, kind: "capture", ref: CAP, bearing: "unclear", how: "x", caller: CALLER }).code, "EXPLORE_RUN_ENDED");
   /* A normal end: ended, every outcome undetermined (none recorded by the machine). */
   const w2 = await world().standard();
   const o2 = await w2.openRun("group");
-  w2.p.end({ run: o2.run, caller: CALLER });
+  await w2.p.end({ run: o2.run, caller: CALLER });
   const [se] = w2.calledAs("stepEnd");
   assert.deepEqual([se.end, se.outcomes, se.reason], ["ended", undefined, undefined]);
   assert.equal(w2.p.stopsFor({ viewer: "member:dana" }).stops.length, 0, "an ended run is no stop");
@@ -78,18 +78,18 @@ test("R9: a look aimed at a person no member tied to the question is refused EXP
   w.entity(ENT, "body");
   w.question(Q, { subject: PERSON, surfacedBy: "human", recipients: ["alice"] });
   const o = await w.openRun("group");
-  assert.deepEqual(w.p.look({ run: o.run, entity: PERSON, aim: "search the minutes", caller: CALLER }).person, true, "the subject a member raised");
-  const no = w.p.look({ run: o.run, entity: PERSON2, aim: "search a name", caller: CALLER });
+  assert.deepEqual((await w.p.look({ run: o.run, entity: PERSON, aim: "search the minutes", caller: CALLER })).person, true, "the subject a member raised");
+  const no = await w.p.look({ run: o.run, entity: PERSON2, aim: "search a name", caller: CALLER });
   assert.deepEqual([no.ok, no.code, no.goes_on], [false, "EXPLORE_PERSON_NOT_TIED", true]);
   assert.deepEqual(w.p.refusalsOn(o.run).map((r) => [r.code, r.entity]), [["EXPLORE_PERSON_NOT_TIED", PERSON2]]);
-  assert.equal(w.p.look({ run: o.run, entity: ENT, caller: CALLER }).ok, true, "not a person: no tie needed");
+  assert.equal((await w.p.look({ run: o.run, entity: ENT, caller: CALLER })).ok, true, "not a person: no tie needed");
   assert.equal(w.p.find({ run: o.run, kind: "capture", ref: CAP, bearing: "unclear", how: "x", caller: CALLER }).ok, true, "the run goes on");
   /* A member ties PERSON2 by connecting the question to a document resolving to that person (connections R53). */
   w.resolve(CAP2, DOC2, PERSON2);
   w.asserted[Q] = [{ a_bundle_id: DOC2, b_bundle_id: Q, asserted_by: "member", author: "member:alice" }];
-  assert.equal(w.p.look({ run: o.run, entity: PERSON2, caller: CALLER }).person, true);
+  assert.equal((await w.p.look({ run: o.run, entity: PERSON2, caller: CALLER })).person, true);
   /* An entity the registry cannot place is read as a person (fail closed). */
-  assert.equal(w.p.look({ run: o.run, entity: "ENT-2026-19999", caller: CALLER }).code, "EXPLORE_PERSON_NOT_TIED");
+  assert.equal((await w.p.look({ run: o.run, entity: "ENT-2026-19999", caller: CALLER })).code, "EXPLORE_PERSON_NOT_TIED");
 });
 
 test("R10: an exploring run gathers about at most 20 distinct persons; a look past the cap is refused EXPLORE_PERSON_CAP_REACHED and the run ends its step set_aside with that reason", async () => {
@@ -99,12 +99,12 @@ test("R10: an exploring run gathers about at most 20 distinct persons; a look pa
   for (const [i, p] of people.entries()) { w.entity(p, "person"); w.resolve(sha64(i), DOC2, p); }
   w.asserted[Q] = [{ a_bundle_id: DOC2, b_bundle_id: Q, asserted_by: "member", author: "member:alice" }];
   const o = await w.openRun("group");
-  for (const p of people.slice(0, 20)) assert.equal(w.p.look({ run: o.run, entity: p, caller: CALLER }).ok, true);
-  assert.equal(w.p.look({ run: o.run, entity: people[3], caller: CALLER }).ok, true, "negative control: a person already gathered about is no new one");
-  const past = w.p.look({ run: o.run, entity: people[20], caller: CALLER });
+  for (const p of people.slice(0, 20)) assert.equal((await w.p.look({ run: o.run, entity: p, caller: CALLER })).ok, true);
+  assert.equal((await w.p.look({ run: o.run, entity: people[3], caller: CALLER })).ok, true, "negative control: a person already gathered about is no new one");
+  const past = await w.p.look({ run: o.run, entity: people[20], caller: CALLER });
   assert.deepEqual([past.code, past.cap, past.ended.end, past.ended.reason], ["EXPLORE_PERSON_CAP_REACHED", 20, "set_aside", "EXPLORE_PERSON_CAP_REACHED"]);
   assert.deepEqual(w.calledAs("stepEnd").map((a) => [a.end, a.reason]), [["set_aside", "EXPLORE_PERSON_CAP_REACHED"]]);
-  assert.equal(w.p.look({ run: o.run, entity: people[0], caller: CALLER }).code, "EXPLORE_RUN_ENDED");
+  assert.equal((await w.p.look({ run: o.run, entity: people[0], caller: CALLER })).code, "EXPLORE_RUN_ENDED");
 });
 
 const sha64 = (i) => String(i).padStart(64, "0");
@@ -115,7 +115,7 @@ test("R12: at its close each run carries ai-runs R76's actual cost, answered to 
   w.draw(Q, PROJ);
   await w.setExplore("group", "no");
   const o = await w.openRun(`project:${PROJ}`);
-  w.p.end({ run: o.run, caller: CALLER });
+  await w.p.end({ run: o.run, caller: CALLER });
   assert.deepEqual(w.p.runCost({ run: o.run, viewer: "member:alice" }).actual, { usd: 0.42 });
   assert.equal(w.p.runCost({ run: o.run, viewer: "member:bob" }), null, "a participant, not an owner");
   assert.equal(w.p.runCost({ run: o.run, viewer: "member:dana" }), null, "an administrator, not this account's owner");
@@ -165,7 +165,7 @@ test("R13: what an exploring run proposes while reading is run-productions R21's
   const o = await w.openRun("group");
   const at0 = { kind: "pdf-page", page: 0, ref: "page 1" };
   const doc = { to_kind: "document", to: DOC2, how: "name", name: "page", quote: "text of page 1", source: at0 };
-  const r = w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", connections: [doc], caller: CALLER });
+  const r = await w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", connections: [doc], caller: CALLER });
   assert.equal(r.ok, true);
   assert.deepEqual(r.connections.map((c) => [c.to_kind, c.to, c.earned, c.verified_quote]), [["document", DOC2, "C", true]]);
   assert.equal(w.rows(`SELECT step FROM proposed_connections`)[0].step, o.step, "carrying the step it serves");
@@ -173,10 +173,10 @@ test("R13: what an exploring run proposes while reading is run-productions R21's
   /* A person a member tied (the question's subject, raised by a member) may be proposed, in a public role. */
   const tied = { to_kind: "person", to: PERSON, role: "the clerk", how: "name", name: "page", quote: "text of page 2",
                  source: { kind: "pdf-page", page: 1, ref: "page 2" } };
-  assert.equal(w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", connections: [tied], caller: CALLER }).ok, true);
+  assert.equal((await w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", connections: [tied], caller: CALLER })).ok, true);
   /* Negative control: a person no member tied is refused before anything is proposed, recorded on the run. */
   const before = w.count("proposed_connections");
-  const no = w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", caller: CALLER,
+  const no = await w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", caller: CALLER,
                            connections: [{ ...tied, to: PERSON2, quote: "text of page 3", source: { kind: "pdf-page", page: 2, ref: "page 3" } }] });
   assert.deepEqual([no.code, no.nothing_proposed], ["EXPLORE_PERSON_NOT_TIED", true]);
   assert.equal(w.count("proposed_connections"), before);
@@ -189,7 +189,7 @@ test("R13: what an exploring run proposes while reading is run-productions R21's
   await w2.setExplore("group", "no");
   const o2 = await w2.openRun(`project:${PROJ}`);
   assert.equal(w2.aiAccounts.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["explore"], reason: "kept", by: "member:alice" }).ok, true);
-  assert.equal(w2.p.propose({ run: o2.run, bundleId: HDOC, fn: "propose-reading", version: "0.1.0", connections: [doc], caller: CALLER }).code,
+  assert.equal((await w2.p.propose({ run: o2.run, bundleId: HDOC, fn: "propose-reading", version: "0.1.0", connections: [doc], caller: CALLER })).code,
                "EXPLORE_READ_KEPT_AWAY");
 });
 
@@ -212,6 +212,6 @@ test("R13: the material limit is read from ai-accounts (its R22's aiKeptAway, as
   const consumed = w.bounds.get(`${o.run}|pages`).consumed;
   const r = w.p.read({ run: o.run, bundleId: HDOC, caller: CALLER });
   assert.deepEqual([r.code, r.kept_away.code, r.kept_away.use], ["EXPLORE_READ_KEPT_AWAY", KEPT_AWAY_UNREADABLE.code, "explore"]);
-  assert.equal(w.p.propose({ run: o.run, bundleId: HDOC, fn: "propose-reading", version: "0.1.0", caller: CALLER }).code, "EXPLORE_READ_KEPT_AWAY");
+  assert.equal((await w.p.propose({ run: o.run, bundleId: HDOC, fn: "propose-reading", version: "0.1.0", caller: CALLER })).code, "EXPLORE_READ_KEPT_AWAY");
   assert.equal(w.bounds.get(`${o.run}|pages`).consumed, consumed, "nothing read");
 });
