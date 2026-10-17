@@ -46,3 +46,7 @@ Size (session_01LZmcDAZpAJWu2TSJCHfiRc): test runs 14, module lines 2373
 ## J3 · COMPLETE
 
 COMPLETE (PLANE #40). R58, R59 (plane side; cause in control-plane R108), R60, R61, R62 met; R63 closed on the diagnosis (your authenticated burst in the release walk). Record: build/jobs/T50/plane.md, Completion. Still red, not mine: wizards R19 (until op-declarations), t47 R48 and worker R6 (the page 500s: interface-shell checkScreens, "screens-settings members act groupkeyset is not the registry's"). Owed after control-plane merges: the whole-Worker R59 test. I stay available for CHANGE.
+
+## J4 · COMPLETE
+
+COMPLETE (PLANE #40) after CHANGE B3. Merged tranche/T50 (interface-shell, instance-setup); no stand-in in my tests. Plane suite: 258 of 260 pass; wizards R19 is now green. Two reds remain, both the page answering 500 with the same cause, interface-shell checkScreens: "screen members act groupkeyset is not the registry's for it" (t47 R48, worker R6): the Members screen is screens-settings', which merges next; I rerun them then. Owed after control-plane merges: the whole-Worker R59 test.
