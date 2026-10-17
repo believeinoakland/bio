@@ -1383,7 +1383,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        then there is nothing to verify or to copy under any hash. */
     if (!probe.present && probe.heldInParts)
       errors.push({ check: "PLANE_HELD_IN_PARTS",
-                    detail: `registered capture is held only in parts: the acquisition receipt of your group's Civicsmith `
+                    detail: `registered capture is held only in parts: the acquisition receipt of your team's Civicsmith `
                           + `names the whole hash, and the working bucket stores the document as its parts, each under `
                           + `its own hash, but the record's data/provenance.json names no parts for it. `
                           + `Publication copies the parts the record names, so name them there, or register `
