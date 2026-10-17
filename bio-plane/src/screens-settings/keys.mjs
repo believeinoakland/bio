@@ -538,6 +538,8 @@ export const KEYS = Object.freeze([
   "screen.connect.part.before",
   "screen.connect.part.before.why",
   "screen.connect.part.limit",
+  "screen.connect.part.limit.why.apikey",
+  "screen.connect.part.limit.why.subscription",
   "screen.connect.part.notice.why",
   "screen.connect.part.use",
   "screen.connect.part.use.why",

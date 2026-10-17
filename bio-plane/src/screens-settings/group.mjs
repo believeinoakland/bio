@@ -65,7 +65,7 @@ export const group = {
       else if (saved) h += `<p data-state="namesaved">${W(S + "name.saved", { name: saved.name })}</p>`;
       const hist = Array.isArray(v.display_name_history) ? v.display_name_history : [];
       if (v.display_name && hist.length) h += lineOf(hist[hist.length - 1].set_by);
-      if (v.group) h += `<p class="mk-small">${W(S + "name.help", { short: v.group })}</p>`;
+      if (v.group && v.display_name) h += `<p class="mk-small">${W(S + "name.help", { short: v.group })}</p>`;
       if (v.logo === true) h += `<p data-state="logo">${W(S + "logo.set")}</p>`;
       const nm = A("groupnameset");
       if (nm) h += `${cs.field("gr-name", S + "name.field", { max: 120, value: v.display_name || "", autocomplete: "off" })}${nm}`;
@@ -120,7 +120,7 @@ export const group = {
       const distinct = new Set(zf.map((f) => f.governs.value));
       const tzOptions = (cur) => [...ZONES, ...(cur && ZONES.indexOf(cur) < 0 ? [cur] : [])].map((z) => ({ value: z, text: zoneName(z) }));
       // one correction: the zone chosen by name, how and where it was checked (both required by the owner), sent on this fact's own path
-      const form = (i, f, cur) => `${cs.choice("gr-tz" + i, S + "timezone", tzOptions(cur), { value: cur || ZONES[0] })}${cs.field("gr-tz-how" + i, S + "timezone.how", { help: S + "timezone.how.help", autocomplete: "off" })}${cs.field("gr-tz-src" + i, S + "timezone.source", { help: S + "timezone.source.help", autocomplete: "off" })}${A("factconfirm", { data: { path: f ? f.path : "", slot: String(i) } })}`;
+      const form = (i, f, cur) => !admin ? "" : `${cs.choice("gr-tz" + i, S + "timezone", tzOptions(cur), { value: cur || ZONES[0] })}${cs.field("gr-tz-how" + i, S + "timezone.how", { help: S + "timezone.how.help", autocomplete: "off" })}${cs.field("gr-tz-src" + i, S + "timezone.source", { help: S + "timezone.source.help", autocomplete: "off" })}${A("factconfirm", { data: { path: f ? f.path : "", slot: String(i) } })}`;
       let h = `<p class="mk-note">${W(S + "timezone.help")}</p>`;
       if (ui.tzSaved) h += `<p data-state="tzsaved">${W(S + "timezone.saved", { zone: ui.tzSaved })}</p>`;
       if (zf.length === 0) {
@@ -154,8 +154,10 @@ export const group = {
     section(S + "hosting.heading", cs.state(data.hosting, (v) => {
       const cur = v.current || null;
       // R44: its defined term carries the card on the heading, and the section opens with what it is, said once
-      let h = `<p class="mk-note">${W(S + "hosting.says")}</p>` + (cur ? `<p data-state="hosting">${W(S + "hosting.now", { by: byOf(cur.recorded_by), date: D(cur.at) })} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "");
       const hs = A("hostingaccessset");
+      // a section that holds nothing is not drawn (R28): the sentence that opens it needs something held, or the form
+      if (!cur && !hs) return "";
+      let h = `<p class="mk-note">${W(S + "hosting.says")}</p>` + (cur ? `<p data-state="hosting">${W(S + "hosting.now", { by: byOf(cur.recorded_by), date: D(cur.at) })} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "");
       if (hs) h += `${cs.field("gr-holders", S + "hosting.field", { rec: true, max: 500, value: cur ? cur.holders : "", autocomplete: "off" })}${cs.field("gr-hnote", S + "hosting.note", { rec: true, max: 280, value: cur && cur.note ? cur.note : "", autocomplete: "off" })}${hs}`;
       return h;
     }), "term.hostingaccount.means");

@@ -8,10 +8,11 @@ const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].so
 
 test("R15 security: an administrator's screen; any other member is told only that it is administrators', and nothing is read", async () => {
   const m = await open("security", { me: MEMBER, table: securityTable() });
-  has(m, "screen.security.admins");
+  has(m, "screen.security.admins", { admins: `${said("member.founder.unnamed")}, rosa, lu` });
   const OWN = Object.values(SCREENS.find((s) => s.id === "security").reads({ me: ADMIN })).map((r) => r.op);
   assert.ok(OWN.length >= 6 && OWN.includes("securitymap"), "the reads the screen asks an administrator");
   assert.deepEqual(m.p.requests.filter((r) => OWN.includes(r.op)), [], "nothing of the screen's own is read");
+  assert.deepEqual(m.p.requests.map((r) => r.op).filter((op) => !["assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"].includes(op)), ["memberlist"], "only the roster, for who the administrators are");
   assert.deepEqual(ops(m), []);
 });
 
@@ -29,7 +30,9 @@ test("R15 the level for the period chosen, by kind against its usual, naming no 
 
 test("R15 what is built in is said only as part_scanner and part_safe_view answer it", async () => {
   const on = await open("security", { me: ADMIN, table: securityTable() });
-  has(on, "instance.part.scanner.present");
+  // a scanner that is built in is said once, by the lead's sentence, never twice
+  has(on, "screen.security.files.on");
+  lacks(on, "instance.part.scanner.present");
   lacks(on, "instance.scanner.absent.step");
   const off = await open("security", { me: ADMIN, table: securityTable({ bootstrap: { ok: true, part_signin: true, part_scanner: false, part_safe_view: false } }) });
   has(off, "instance.part.scanner.absent");

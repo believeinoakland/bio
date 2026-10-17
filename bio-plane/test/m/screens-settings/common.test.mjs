@@ -3,8 +3,8 @@
    the browser's storage, an address or a later request), driven over every act of every screen. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { all, ancestor, day, has, lacks, open, panelOf, rowOf, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, membersTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, env } from "./fixtures.mjs";
+import { all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
+import { ADMIN, MEMBER, membersTable, teamaiTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, env } from "./fixtures.mjs";
 
 const SECRET = "SENTINEL-SECRET-0123456789";
 
@@ -19,12 +19,12 @@ const PRESSES = [
   ["members", "invitewithdraw", { data: { member: "mai-k" } }],
   ["members", "websitekeycreate", { values: { "mw-cap": "4" } }],
   ["members", "joinlinkenable", { values: { "mw-cap": "4" } }],
-  ["members", "groupkeyset", { values: { "mk-key0": SECRET } }],
-  ["members", "groupkeyswitch", { data: { on: "off" } }],
-  ["members", "groupkeyremove", {}],
-  ["members", "accountusesset", { data: { sw: "ask", to: "off" } }],
-  ["members", "ailimitset", { data: { remove: "" }, values: { "aig-scope": "overall", "aig-amount": "9", "aig-unit": "calls", "aig-period": "day" } }],
-  ["members", "aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": "why" } }],
+  ["teamai", "groupkeyset", { values: { "mk-key0": SECRET } }],
+  ["teamai", "groupkeyswitch", { data: { on: "off" } }],
+  ["teamai", "groupkeyremove", {}],
+  ["teamai", "accountusesset", { data: { sw: "ask", to: "off" } }],
+  ["teamai", "ailimitset", { data: { remove: "" }, values: { "aig-scope": "overall", "aig-amount": "9", "aig-unit": "calls", "aig-period": "day" } }],
+  ["teamai", "aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": "why" } }],
   ["account", "memberlanguageset", { values: { "ma-lang": "es" } }],
   ["account", "infolevelset", { values: { "ma-level": "pause" } }],
   ["account", "signout", {}],
@@ -37,7 +37,7 @@ const PRESSES = [
   ["connect", "disclosureshown", { data: { version: "D311-1" } }, "none", { disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: false, shown_at: null }) }],
   ["connect", "subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": SECRET } }, "none"],
   ["connect", "accountreferenceset", { choose: { "mc-way": "apikey" }, values: { "mc-key0": SECRET } }, "none"],
-  ["connect", "accountusesset", { data: { sw: "ask", to: "off" } }, "own"],
+  ["connect", "accountusesset", { data: { own: "1" }, values: { "mu-ask": false } }, "own"],
   ["connect", "ailimitset", { data: { remove: "" }, values: { "aio-scope": "overall", "aio-amount": "9", "aio-unit": "calls", "aio-period": "day" } }, "own"],
   ["connect", "accountreferenceremove", {}, "own"],
   ["connect", "subscriptiondisconnect", {}, "subscription"],
@@ -58,7 +58,8 @@ const PRESSES = [
   ["places", "profilesset", { values: { "pl-p-us-ca": true } }],
   ["places", "placewanted", { values: { "pl-want": "Berkeley" } }],
   ["places", "officesseed", {}],
-  ["places", "entitycreate", { values: { "pl-label": "L", "pl-note": "N" } }],
+  ["places", "entitycreate", { data: { court: null }, values: { "pl-label": "L", "pl-note": "N" } }],
+  ["places", "entitycreate", { data: { court: "1" }, values: { "pl-court": "Alameda County Superior Court" } }],
   ["recovery", "recoverycodesissue", {}],
   ["group-identity", "groupdescriptionset", { values: { "gi-k-issue": true } }],
   ["group-identity", "groupdescriptiondraft", { values: { "gi-q-what": "w" } }],
@@ -72,7 +73,7 @@ const PRESSES = [
   ["translations", "translationgrant", { data: { revoke: "" }, values: { "tr-member": "ana" } }],
   ["translations", "translationdraft", { data: { key: "mark.outward.means", direction: "to_english" }, reason: "r" }],
 ];
-const TABLES = { members: membersTable, account: () => accountTable(ADMIN), notes: () => notesTable(ADMIN), group: groupTable, places: placesTable, recovery: recoveryTable,
+const TABLES = { members: membersTable, teamai: teamaiTable, account: () => accountTable(ADMIN), notes: () => notesTable(ADMIN), group: groupTable, places: placesTable, recovery: recoveryTable,
   "group-identity": identityTable, security: securityTable, translations: translationsTable };
 const tableOf = (screen, situation, over, extra = {}) => (screen === "connect" ? connectTable(MEMBER, situation || "group", { ...extra, ...over }) : { ...TABLES[screen](), ...extra, ...over });
 const meOf = (screen) => (screen === "connect" ? MEMBER : ADMIN);
@@ -115,7 +116,9 @@ test("R8 nothing is drawn as done before the answer: while an act has not answer
     await o.press(op, { ...press, choose: {} });
     o.redraw();
     assert.ok(o.p.all.some((r) => r.op === op), `${screen} ${op} sent`);
-    assert.equal(o.text, before, `${screen} ${op}`);
+    // R50: a code being exchanged is drawn as working beside the act, never as connected
+    if (op === "subscriptionsignin") { assert.ok(o.text.includes(said("shell.working")), "R50 the exchange is said to be working"); assert.equal(o.text.split(said("shell.working")).join(""), before, `${screen} ${op}`); }
+    else assert.equal(o.text, before, `${screen} ${op}`);
   }
 });
 

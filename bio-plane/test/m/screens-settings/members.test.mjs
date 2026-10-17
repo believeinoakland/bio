@@ -17,7 +17,7 @@ test("R1 the reads: the roster for every member; the recovery step and the signi
   for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory", "aiuseovertime"]) assert.ok(!a.p.requests.some((r) => r.op === op), `${op} is teamai's (R47)`);
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   const mo = m.p.requests.map((r) => r.op);
-  assert.deepEqual(mo.filter((op) => !["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "bootstrap"].includes(op)), ["memberlist"]);
+  assert.deepEqual(mo.filter((op) => !["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "bootstrap", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"].includes(op)), ["memberlist"]);
   // what the owners refuse a member: the reads the screen asks of an administrator beyond those it asks of a member (N1073)
   const members = SCREENS.find((s) => s.id === "members");
   const adminOnly = Object.values(members.reads({ me: ADMIN, subject: "ana" })).map((r) => r.op).filter((op) => !Object.values(members.reads({ me: MEMBER })).some((r) => r.op === op));

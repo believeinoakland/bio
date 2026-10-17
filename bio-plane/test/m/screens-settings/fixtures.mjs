@@ -195,12 +195,19 @@ export function notesTable(me, over = {}) {
 
 // ---- T47: the new screens (R14–R20) ----
 
+/** One `time_zone` fact as `factstatus` lists it (local-facts R2): the path is the fact's own, `governs` the value in force. */
+export const tzFact = (profile, zone, origin = "profile") => ({ path: `${profile}/time_zone`, fact: { fact: "time_zone", profile }, status: origin === "corrected" ? "corrected" : "unconfirmed",
+  profile: { value: zone, status: "verified", basis: "x" }, governs: origin === "corrected" ? { value: zone, origin, source: "the county site", says: "corrected locally by rosa, 2026-10-10" } : { value: zone, origin } });
 /** group, read by `me` (instance-setup R10, R11, R84, R85; membership R107; strength's bar). */
 export function groupTable(over = {}) {
   return {
     groupidentity: env({ group: "eastoak", declared_stake: { stake: "Several of our members rent from landlords the city regulates.", set_by: "member:rosa", set_at: "2026-10-04T00:00:00Z" }, declared_stake_history: [{ stake: null, set_by: "member:rosa", set_at: "2026-10-01T00:00:00Z" }, { stake: "Several of our members rent from landlords the city regulates.", set_by: "member:rosa", set_at: "2026-10-04T00:00:00Z" }], display_name: "East Oakland Watch", domain: "eastoak.example", domain_verified_at: "2026-10-03T00:00:00Z", logo: false,
       display_name_recorded: "East Oakland Watch", display_name_history: [], domain_claim: { domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest: { domain: "eastoak.example", verdict: "verified", checked_at: "2026-10-03T00:00:00Z" } }, domain_history: [], domain_checks: [] }),
     grouplanguages: env({ ok: true, languages: ["en", "es"] }),
+    // R45: the facts of the active profiles and the places' names
+    factstatus: env({ ok: true, facts: [tzFact("us-ca-oakland", "America/Los_Angeles")] }),
+    profiles: env({ ok: true, profiles: [{ id: "us-ca-oakland", name: "Oakland, California", covers: ["Oakland"] }], conflicts: [], choices: [], view: "main" }),
+    factconfirm: (q, b) => env({ ok: true, path: b.path, status: "corrected", governs: { value: b.value, origin: "corrected" } }),
     memberlanguage: env({ ok: true, language: null }),
     declaredstakeset: (q, b) => env({ ok: true, stake: b.stake, set_by: "member:rosa", set_at: "2026-10-12T00:00:00Z" }),
     writinghelp: () => env({ ok: true, text: "The group's members rent in East Oakland.", label: { kind: "machine", asked_by: "member:rosa" }, withheld: [], note: "" }),
@@ -220,12 +227,18 @@ export function groupTable(over = {}) {
 
 const OFFICES = ["", "Office of the City Clerk", "Department of Public Works", "Office of the City Auditor"];
 const office = (i, by = "class:daemon") => ({ entity_id: "ENT-" + String(i).padStart(4, "0"), kind: "office", label: OFFICES[i], note: "n", declared_by: by, at: "2026-10-01T00:00:00Z" });
+/** The courts held (`entitieskind` of kind body, forum_kind court): one the place's rules seeded, one a member added (R46). */
+export const COURTS = [
+  { entity_id: "ENT-0101", kind: "body", forum_kind: "court", label: "Alameda County Superior Court", note: "n", declared_by: "class:daemon", at: "2026-10-01T00:00:00Z" },
+  { entity_id: "ENT-0102", kind: "body", forum_kind: "court", label: "Oakland Small Claims", note: "Oakland Small Claims", declared_by: "member:lu", at: "2026-10-09T00:00:00Z" },
+];
 /** places: two pages of offices, the second answered only when asked `after` the first's last. */
 export function placesTable(over = {}) {
   return {
     profiles: env({ ok: true, profiles: [{ id: "us-ca-oakland", name: "Oakland, California", covers: ["Oakland"] }], conflicts: [], choices: [{ id: "us-ca-oakland", name: "Oakland, California", covers: ["Oakland"] }, { id: "us-ca", name: "California", covers: ["California"] }], view: "main" }),
     placewantedstate: env({ ok: true, name: "Alameda County", set_by: "rosa", set_at: "2026-10-04T00:00:00Z", matches: [] }),
-    entitieskind: (q) => q.after === "ENT-0002" ? env({ ok: true, kind: "office", entities: [office(3, "lu")], count: 1, limit: 500, truncated: false, next: null })
+    entitieskind: (q) => q.kind === "body" ? env({ ok: true, kind: "body", entities: COURTS, count: COURTS.length, limit: 500, truncated: false, next: null })
+      : q.after === "ENT-0002" ? env({ ok: true, kind: "office", entities: [office(3, "lu")], count: 1, limit: 500, truncated: false, next: null })
       : env({ ok: true, kind: "office", entities: [office(1), office(2)], count: 2, limit: 500, truncated: true, next: "ENT-0002" }),
     // wizard-scripts R37: the routes, the `elsewhere` one carrying the places' pointers (three listed)
     startfrom: env({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }], routes: [{ route: "blank" }, { route: "elsewhere", pointer: { places: ["Oakland, California"], pointers: [{ kind: "legal-help" }, { kind: "courts-self-help" }, { kind: "city-line" }] } }], blank: true, matches: [] }),
@@ -270,6 +283,7 @@ export const OWN_ENTRY = { ...CATALOGUE_ENTRY, provider_id: "own-scan", vendor: 
 /** security (credentials R45; file-safety R5, R27–R31; instance-setup R82). */
 export function securityTable(over = {}) {
   return {
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER_MEMBER] }),
     securitymap: (q) => env({ ok: true, from: q.from, to: q.to, step: "day", level: "Raised", levelAt: q.to, note: "",
       buckets: [{ start: q.from, counts: { signin: 4, credential: 1, rate: 2, handover: 0, through: 3, total: 10 }, usual: { signin: 1, credential: 0, rate: 1, handover: 0, through: 1, total: 3 } }],
       totals: { count: 10, usual: 3, busiest: q.from }, countries: [{ country: "XX-SENTINEL-COUNTRY", count: 9 }], unplaced: 1 }),
@@ -320,6 +334,8 @@ export const UPDATE = Object.freeze({ ok: true,
   holder: { holders: "Rosa Medina", note: null, recorded_by: "rosa", at: "2026-10-04T00:00:00Z" }, viewer_holds: true });
 export function updatesTable(notice = {}, over = {}) {
   return {
+    // a member who does not administer is told whose screen it is: the administrators, from the roster (R43, R37)
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER_MEMBER] }),
     updatenotice: env({ ...UPDATE, ...notice }),
     updatestart: (q, b) => env({ ok: true, version: b.version, address: "https://civicsmith.org/update?release=" + b.version }),
     updatelater: (q, b) => env({ ok: true, version: b.version, kind: "later" }),

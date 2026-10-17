@@ -142,8 +142,9 @@ export async function open(id, { me, table, subject = null, reachable = false, w
         el.checked = v;
       } else el.value = v;
     }
-    const want = Object.entries(data).map(([k, v]) => ["data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()), String(v)]);
-    const btn = main().querySelectorAll(`button[data-act="${op}"]`).find((e) => want.every(([a, v]) => e.getAttribute(a) === v));
+    // a `data` value of null asks for the button that does not carry that attribute (two buttons of one act on a screen)
+    const want = Object.entries(data).map(([k, v]) => ["data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()), v === null ? null : String(v)]);
+    const btn = main().querySelectorAll(`button[data-act="${op}"]`).find((e) => want.every(([a, v]) => (v === null ? e.getAttribute(a) == null : e.getAttribute(a) === v)));
     if (!btn) throw new Error(`${id}: no ${op} button drawn for ${JSON.stringify(data)}`);
     const ai = btn.getAttribute("data-ai");
     const before = b.requests.length;
