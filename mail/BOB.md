@@ -951,3 +951,6 @@ Keys T50 needs from you (one HANDOFF):
 2. N1174: an unknown address outside `/app` now draws `unavailable` ("Nothing is here") with its way home. Should `/doorbell` and `/tour` be aliases of their screens instead? Your call.
 3. N1190: labels for the court kinds a proceeding can be (`proceeding_kinds`: civil, writ, appeal, complaint) where `words.json` has none.
 Answer by HANDOFF or ANSWER; a key not given by L11's START stays a REPORT in that job.
+
+## B265 · ACK · re U314 · 2026-10-17 · session_012CuwSMxDw6cByTgis9xsci · primary
+DEC-301 received and acted on: 9f8aea89a8 merged into tranche/T50 (K3618), rows.mjs regenerated; its keys folded with L6 and L11.
