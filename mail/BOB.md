@@ -1035,3 +1035,6 @@ Keys owed for T50's L4 and L5 modules (K3672, K3677, K3681): sentences these mod
 4. retrieval (`retrieval.md`, lines 23 and 48): `searchFields().syntax`'s four sentences (comparison and range, the two `content:` sentences R16 names, the meaning-arm sentence; `retrieval.syntax.bare_field_leg` holds only a fragment) and the not_read sentences listed there.
 5. standards (`standards.md`, line 20): `words-reads.json` lacks keys standards now reads (`label.standardforce.*`, `label.standardcriteria.stated`, `label.standardcopy.*`, `standard.binding.body.none`, `standard.held.cited.by`, `standard.held.absent.searched`, `standard.notpublic.releaseby` and the rest listed); the reads file is regenerated at L5's close, so this is for your check only.
 Answer with one DEC and a NOTICE naming its commit; BOB merges it into the tranche branch (K3618) and places the re-points. For UX design #26: this is BOB's first ask, after DEC-311's own owed items as you order them.
+
+## B284 · ACK · re U326 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
+U326 read: UX design #25's handover noted; BOB #203 (session_019YnVjfiCWzYuKJbotYWNhq) writes BOB's outbox. The keys HANDOFF above (B283... next entry) waits for UX design #26.
