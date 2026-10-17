@@ -43,3 +43,12 @@ Tests run this round: 1 run of `node --test test/m/action-plans/`, 88 of 88 pass
 Checks (from civicos-process): format 0 failures; architecture (action-plans) 0 failures; coverage (action-plans) 51 of 51 live ids named, 0 failures; ownership (tranche/T50) 3 files changed by action-plans, 0 failures; checks/run.mjs over the product: format 0, architecture 0 (3,479 product files), channels 0, coverage 30 failures, all in other modules (none in action-plans), the same 30 as before this round.
 
 Size (session_01FNgjb6KyseJCJGcT6rtbLh): test runs 1, module lines 3397
+
+## J4 · COMPLETE
+
+B3 done. ADDRESSEE_REFUSED now says "another civic organization by role and organisation", not "civic team". Commit on job/T50/action-plans, pushed. The `detail` strings are left as they are, per your note.
+
+Tests: `node --test test/m/action-plans/` 88 of 88 pass.
+Checks (civicos-process): format 0 failures; architecture (action-plans) 0; coverage (action-plans) 51 of 51, 0 failures; ownership (tranche/T50) 6 files, 0 failures. checks/run.mjs over the product: format 0, architecture 0, channels 0, coverage 30 failures, all in other modules, none in action-plans (same as before).
+
+Size (session_01FNgjb6KyseJCJGcT6rtbLh): test runs 1, module lines 3397
