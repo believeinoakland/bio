@@ -22,6 +22,7 @@
 import { bounds, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
+import { factPath } from "../local-facts/paths.mjs";
 import { rowOf } from "./checks.mjs";
 
 /** R4: the page of `scheduledEditions`, its default and its ceiling. */
@@ -40,12 +41,31 @@ const one = (p, q, ...a) => { for (const r of p.sql.exec(q, ...a)) return r; ret
 const ms = (t) => { const n = Date.parse(String(t ?? "")); return Number.isFinite(n) ? n : NaN; };
 const clock = (p) => { const w = p.now(); return typeof w === "string" && w ? w : new Date().toISOString(); };
 
-/** R1: the group's time zone, the active profiles' `time_zone` (`jurisdictions` R41) through `jurisdictions.combine`
- *  over record-core's `jurisdiction_profiles` setting, or null when none is held (never UTC by default). */
+/** R1: the group's time zone, read as `retrieval` R69 reads it: the zone that governs here for each active profile's
+ *  `time_zone` (`local-facts` R2, a member's correction first), when every profile that governs one agrees; else the
+ *  active profiles' own `time_zone` (`jurisdictions` R41, through `jurisdictions.combine` over record-core's
+ *  `jurisdiction_profiles` setting); else null, never UTC. Two profiles governing different zones govern none. */
 export function groupZone(p) {
+  let list = null;
+  try { list = typeof p.record.getSetting === "function" ? p.record.getSetting("jurisdiction_profiles") : null; }
+  catch { list = null; }
+  if (!Array.isArray(list) || !list.length) return null;
   try {
-    const list = typeof p.record.getSetting === "function" ? p.record.getSetting("jurisdiction_profiles") : null;
-    const r = combineProfiles(Array.isArray(list) ? list : []);
+    const lf = p.localFacts();
+    if (lf && typeof lf.factStatus === "function") {
+      const zones = new Set();
+      for (const id of list) {
+        const path = typeof id === "string" ? factPath({ profile: id, fact: "time_zone" }) : null;
+        const r = path ? lf.factStatus({ path }) : null;
+        const z = r && r.ok !== false && r.governs ? str(r.governs.value) : "";
+        if (z) zones.add(z);
+      }
+      if (zones.size === 1) return [...zones][0];
+      if (zones.size > 1) return null;
+    }
+  } catch { /* the profiles answer */ }
+  try {
+    const r = combineProfiles(list);
     const z = r && r.ok && r.view && r.view.time_zone ? r.view.time_zone.value : null;
     return str(z) || null;
   } catch { return null; }
