@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { IDSPACE_CHECKS } from "../../../src/entities/index.mjs";
 import { spaces as idSpaces } from "../../../src/idspaces.mjs";
 
@@ -26,8 +27,7 @@ test("R20 the spaces and forms are id-spaces', over the view jurisdictions.combi
   assert.deepEqual(u.spaces, idSpaces(w.e.view()).map((s) => s.space));
   assert.ok(u.spaces.length > 0 && u.spaces.includes("project"));
   /* K1572: no fixed list of spaces in the sentence; DEC-149 (T34-78): the group's own profiles, never "this instance" */
-  assert.equal(u.translation, "That is not an identifier space the record knows how to judge. The answer lists the spaces it knows, "
-    + "each with its forms as your group's jurisdiction profiles give them. Nothing was judged.");
+  assert.equal(u.translation, word("refusal.IDSPACE_UNKNOWN"));
   assert.equal(w.e.idMatch({ space: "apn", a: "1/2" }).reason, "IDSPACE_UNKNOWN", "the old names are gone (N6)");
   assert.equal(w.e.idMatch({}).reason, "IDSPACE_UNKNOWN");
   const r = w.e.idMatch({ space: " Project ", a: "wo 0001" });
@@ -84,7 +84,7 @@ test("R22 each end's capture must be held and visible (an invisible one answers 
   const many = w.held("INFO-6", sha("many"), Array.from({ length: 33 }, (_, i) => `https://minutes.port-ellery.example/p/${String(i).padStart(2, "0")}`));
   const m = w.e.idMatch({ ...q, aCapture: many });
   assert.deepEqual([m.a_truncated, m.a.system.origin, m.verdict], [true, null, "SYSTEM_UNDETERMINED"]);
-  assert.match(m.a.system.why, /more than 32 addresses/);
+  assert.equal(m.a.system.why, word("entities.why.record_holds_addresses", { idmatch_address_limit: 32 }));
   const ok32 = w.held("INFO-7", sha("32"), Array.from({ length: 32 }, (_, i) => `https://minutes.port-ellery.example/q/${String(i).padStart(2, "0")}`));
   assert.deepEqual([w.e.idMatch({ ...q, aCapture: ok32 }).a_truncated, w.e.idMatch({ ...q, aCapture: ok32 }).a.system.origin], [false, "ellery.minutes"]);
   /* a mixed host names no system */

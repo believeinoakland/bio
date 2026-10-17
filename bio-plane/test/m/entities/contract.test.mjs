@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { noSuchEntity, noEntity, NO_ENTITY_DETAIL, ENTITY_CHECKS, isEstablished } from "../../../src/entities/index.mjs";
 import { noSha, NO_SHA_DETAIL, EXTRACTION_CHECKS } from "../../../src/extraction/index.mjs";
 
@@ -94,8 +95,7 @@ test("R36 every act of this module answering the condition answers through noSuc
 test("R37 noEntity answers the one refusal: reason and code NO_ENTITY, its own row (C-91.5) with the required translation, the caller's detail or a fixed default; writes nothing, never throws", () => {
   const row = ENTITY_CHECKS.NO_ENTITY;
   assert.deepEqual([row.check, row.where], ["C-91.5", "src/entities/index.mjs noEntity > is-entity-named"]);
-  assert.equal(row.translation, "This request is about one registered subject, named by its id, and it names none. "
-    + "Name the subject by its id. Nothing was written.");
+  assert.equal(row.translation, word("refusal.NO_ENTITY"));
   assert.ok(!/oakland|alameda|legistar/i.test(row.translation), "R31");
   const a = noEntity("what the id was for");
   assert.deepEqual(Object.keys(a).sort(), ["check", "code", "detail", "ok", "reason", "translation"]);

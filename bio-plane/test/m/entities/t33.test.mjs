@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { entitiesOf, SECTORS, ORGANISATION_KINDS, CONNECTION_KINDS, CONNECTION_DECLARES, OWNER_REGISTRATION,
          TABLE_DECLARATIONS, ENTITIES_TABLES } from "../../../src/entities/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -438,7 +439,7 @@ test("R47 neighbours answers the relations, not withdrawn, with the node at one 
   entitiesOf(host2, { record: w2.record, membership: w2.membership, provenance: w2.prov });
   const amb = registryNeighbours(q);
   assert.equal(amb.refused, "OWNER_HOST_AMBIGUOUS");
-  assert.match(amb.why, /more than one/);
+  assert.match(amb.why, new RegExp(word("entities.symbol.text")));
   assert.deepEqual(registryNeighbours({ ...q, host }), all, "a named host is answered from its own instance");
   assert.deepEqual(registryNeighbours({ ...q, node: w2.a, host: host2 }).items.map((i) => i.id), [w2.r1, w2.r2]);
 });
@@ -511,7 +512,7 @@ test("R48 both ends are indexed: one indexed read per end, at most the fan-out p
   const extra = w.e.declareRelation({ relation: "overlaps", fromEntity: hub, toEntity: x, justification: "j", citation: "c" }).relation_id;
   const h = w.e.neighbours({ node: hub, at: AT, viewer: "member:ann" });
   assert.deepEqual([h.items, h.hub.set_size], [[], BOUNDS.hub + 1]);
-  assert.match(h.hub.why, /named, never expanded/);
+  assert.equal(h.hub.why, word("entities.why.subject_end_declared", { size: BOUNDS.hub + 1, hub: BOUNDS.hub }));
   /* asking one kind counts that kind's set only; a withdrawal takes it back under the bound */
   assert.equal(w.e.neighbours({ node: hub, kinds: ["overlaps"], at: AT, viewer: "member:ann" }).items.length, 1);
   w.e.withdrawRelation({ relationId: extra, reason: "r" });
