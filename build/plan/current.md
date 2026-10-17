@@ -1,6 +1,6 @@
 # Plan R085
 
-**Status** · OPEN · BOB #196 · session_01GpDjTHdYbmAoPw19EKBmRb · depth 1
+**Status** · OPEN · BOB #197 · session_012CuwSMxDw6cByTgis9xsci · depth 1
 
 **Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; observation-log: OBSERVATION-LOG #13 session_01SJrWSUDWk4ygPEnF4edtGH; ai-runs: AI-RUNS #24 session_014E6HztL3Ehb1nLBpG9td7t; machinery-producers: MACHINERY-PRODUCERS #4 session_01WdZWF2N7iamL2RKVC1vFPM; control-plane: CONTROL-PLANE #36 session_01WToWb3ATJirHryNuLb8h8A; retrieval: RETRIEVAL #18 session_016iwYPX2R9kqxoX6SNy7Nsc; query-language: QUERY-LANGUAGE #9 session_01CA3rwpqVLSJhjtGHPcvhZb; agent-model: AGENT-MODEL #11 session_01GcrjrR5bc9rU73FFW7djXc; capture: CAPTURE #34 session_01QG6bQ8xzeWQzwTQkGBvb2w; screens-intake: SCREENS-INTAKE #6 session_015Mf3ce3jZhcJKnA4udwzC2; wizard-scripts: WIZARD-SCRIPTS #11 session_01Hmwn13nBZEaJhdPFdzbyVK; plane: PLANE #39 session_012UeeSfNFsJWJBvbPHcGVSs; screens-daily: SCREENS-DAILY #6 session_012EfgYKhaee27SGrH6j3qUB; skills: SKILLS #1 session_01G9udrj9rd72VGwvKq7aJUu; agent-harness: AGENT-HARNESS #9 session_01WowT7fuUBypvb1g4kD9noF; agent-worker: AGENT-WORKER #30 session_01J4yAYV8SoXMA6MqDDAMcYQ; screens-inquiry: SCREENS-INQUIRY #9 session_01ExZBMDC8vZvzf4gpdgPENS; run-rules: RUN-RULES #1 session_01H9xmUp8jSyFLmjnVeXCqNU; agent-runner: AGENT-RUNNER #11 session_01NnHjFKMJsmWxn14TZTS5uy
 
