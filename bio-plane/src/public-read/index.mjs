@@ -29,6 +29,8 @@
  *                  `docketOf(host)`).
  *   record         `record-core`, for its strict `getSetting` (its R25, R83) of the one setting `declared_stake`, for R34 (default:
  *                  `recordOf(host)`, reached at the read, so a world without it reads the stake undetermined).
+ *   roster         `project-roster`, for its `projectStake` (its R32), read at the call, for R36's `matter_stake` (default:
+ *                  `projectRosterOf(host)`, so a world without it reads the matter stake undetermined).
  *   storage        the Durable Object's storage (default: the host's).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
@@ -37,6 +39,7 @@
 import { publicationOf } from "../publication/index.mjs";
 import { recordOf, SETTING_UNREADABLE } from "../record-core/index.mjs";
 import { docketOf } from "../docket/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
@@ -227,12 +230,14 @@ export class PublicRead {
   #originalsByEdition = new Map(); // R23 (T38): `case NUL edition` -> the originals of the material its signed document states as carried by copy
   #groupIdentity = null; // R34: {identity}, filled once
   #record; // R34: () => record-core, reached at the read
+  #roster; // R36: () => project-roster, reached at the read
 
-  constructor({ storage, publication, docket, record = null } = {}) {
+  constructor({ storage, publication, docket, record = null, roster = null } = {}) {
     this.sql = storage.sql;
     this.publication = publication;
     this.docket = docket;
     this.#record = typeof record === "function" ? record : () => record;
+    this.#roster = typeof roster === "function" ? roster : () => roster;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -293,8 +298,12 @@ export class PublicRead {
    *  display name); with none registered, or one that throws or answers no object, all four are null and `detail` says
    *  the identity is undetermined. `stake` is `record-core`'s setting `declared_stake` as held: null when never set,
    *  `"undetermined"` when it cannot be read, never null then. It reads nothing else (R10), writes nothing and never
-   *  throws. */
-  groupFields() {
+   *  throws.
+   *  R36 (T50; N933): with a `project` given it also answers `matter_stake`, the team's own stake for that matter beside
+   *  its team-wide `stake`, which it never replaces: `project-roster.projectStake(project)` (its R32) as `{stake, set_by,
+   *  set_at, source: "project"}`; null with no project or a project whose latest entry is none; a stake that cannot be
+   *  read is `{stake: "undetermined", ...}`, never null. */
+  groupFields({ project = null } = {}) {
     const said = [];
     /* The identity, copied out of the source's answer inside the guard, so an answer that throws when read is an
        undetermined identity too, never a throw. */
@@ -326,7 +335,22 @@ export class PublicRead {
     }
     return { group: id ? id.group : null, name: id ? id.name : null, domain: id ? id.domain : null,
              domain_verified_at: id ? id.domain_verified_at : null, stake,
-             detail: said.length ? said.join("; ") : GROUP_FIELDS_SENTENCE };
+             detail: said.length ? said.join("; ") : GROUP_FIELDS_SENTENCE, matter_stake: this.#matterStake(project) };
+  }
+
+  /* R36: the matter stake of one project, read through `project-roster`'s `projectStake` (its R32); never throws. */
+  #matterStake(project) {
+    if (typeof project !== "string" || !project) return null;
+    const unread = { stake: "undetermined", set_by: null, set_at: null, source: "project" };
+    try {
+      const roster = this.#roster();
+      if (!roster || typeof roster.projectStake !== "function") return unread;
+      const s = roster.projectStake(project);
+      if (!s || typeof s !== "object") return unread;
+      if (s.stake === null || s.stake === undefined) return null;
+      if (s.stake === "undetermined") return unread;
+      return { stake: s.stake, set_by: s.set_by ?? null, set_at: s.set_at ?? null, source: "project" };
+    } catch { return unread; }
   }
 
   /* ---------------------------------------------------------------- R18: the registered public reads */
@@ -1240,7 +1264,7 @@ export class PublicRead {
              latest_edition: editions.length ? editions[editions.length - 1].edition : ed,
              /* R34: the group's identity and declared stake as they stand now, labeled current; never read from or
                 written into the signed document or the case file (R23). */
-             group_fields: { ...this.groupFields(), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
+             group_fields: { ...this.groupFields({ project: state.project ?? null }), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
              case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
                         + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
                         + "the case carries the scope that brought them together, the completeness "
@@ -1821,7 +1845,9 @@ export function publicReadOf(host, deps) {
     const docket = d.docket || docketOf(host);
     /* R34: record-core, reached at the read (a throw there reads the stake undetermined). */
     const record = d.record || (() => recordOf(host));
-    r = new PublicRead({ storage, publication, docket, record });
+    /* R36: project-roster, reached at the read (a throw there reads the matter stake undetermined). */
+    const roster = d.roster || (() => projectRosterOf(host));
+    r = new PublicRead({ storage, publication, docket, record, roster });
     instances.set(host, r);
   }
   return r;

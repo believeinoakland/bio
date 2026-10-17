@@ -7,6 +7,7 @@
    from. */
 import { planeWorld, world as bareWorld, caseDoc, V, NOW } from "../publication/fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { caseDocumentRequiresMaterials } from "../../../src/case-grammar/index.mjs";
 
@@ -155,6 +156,9 @@ function withRead(w, opts = {}) {
   withReceipts(w);
   signAsOfItsFormat(w);
   w.docket = opts.docket || docketOn();
+  /* R36: project-roster's tables, as the host's boot makes them, so a project's matter stake reads. */
+  w.roster = projectRosterOf(w.host);
+  w.roster.migrate();
   w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket });
   w.stamps = stampsOn(w);
   w.read = (name, query = {}) => {

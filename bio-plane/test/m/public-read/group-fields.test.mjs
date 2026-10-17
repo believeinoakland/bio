@@ -11,7 +11,7 @@ import { PublicRead, DECLARED_STAKE_SETTING, GROUP_FIELDS_SENTENCE, GROUP_IDENTI
 import { inbandQuartet, canonicalBytes } from "../../../src/inband.mjs";
 import { SETTING_UNREADABLE } from "../../../src/record-core/index.mjs";
 
-const KEYS = ["group", "name", "domain", "domain_verified_at", "stake", "detail"];
+const KEYS = ["group", "name", "domain", "domain_verified_at", "stake", "detail", "matter_stake"];
 /* instance-setup R10's public answer, as its `groupIdentityPublic` spells it */
 const IDENTITY = { ok: true, group: "parks-group", display_name: "Friends of the Parks", domain: "parks.example",
                    domain_verified_at: "2026-10-01T00:00:00Z" };
@@ -50,7 +50,7 @@ test("R34 groupFields answers {group, name, domain, domain_verified_at, stake, d
   assert.deepEqual(Object.keys(g), KEYS);
   assert.deepEqual(g, { group: "parks-group", name: "Friends of the Parks", domain: "parks.example",
                         domain_verified_at: "2026-10-01T00:00:00Z", stake: "We maintain two of the parks we report on.",
-                        detail: GROUP_FIELDS_SENTENCE });
+                        detail: GROUP_FIELDS_SENTENCE, matter_stake: null });
   /* a source with an unverified domain answers its nulls, and they are served as answered, never filled */
   const u = bare(recordOn());
   u.registerGroupIdentity({ identity: () => ({ ...IDENTITY, domain: null, domain_verified_at: null }) });
