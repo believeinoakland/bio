@@ -7,6 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { biasNotInForce, INQUIRY_BIAS_CHECKS } from "../../../src/inquiry/index.mjs";
 import { flattenBiasApplied } from "../../../src/inquiry-grammar/index.mjs";
 
@@ -56,7 +57,7 @@ test("R61 the scope is the inquiry's project, else the instance; the acting memb
   /* the instance holds no lens: s1, a project statement, is not in force there */
   const inst = w.k.biasAppliedFindings({ legs: [leg(["s1"])], project: null, viewer: "member:ruth" });
   assert.deepEqual(inst.map((x) => [x.code, x.statement, x.where]), [["BIAS_APPLICATION_NOT_IN_FORCE", "s1", "basis[0].bias_applied[0]"]]);
-  assert.match(inst[0].detail, /group's lens in force/);
+  assert.ok(inst[0].detail.includes(word("inquiry.text.group_lens_force")), "the instance's lens, by key");
   /* sam is no participant of ruth's hidden project: the lens is not his to read (bias R13), so not in force for him */
   const sam = w.k.biasAppliedFindings({ legs: [leg(["s1"])], project: w.P, viewer: "member:sam" });
   assert.deepEqual(sam.map((x) => x.code), ["BIAS_APPLICATION_NOT_IN_FORCE"]);

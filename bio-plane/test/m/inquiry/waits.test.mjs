@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { WAIT_ENDING_STATES, inquiryOps } from "../../../src/inquiry/index.mjs";
 
 const Q = "INQ-2026-0701-q", R = "INQ-2026-0702-r";
@@ -208,12 +209,11 @@ test("R36 R54 the dated waits carry bundle_id, are declared sight owner, and are
   assert.equal(w.count("inquiry_dated_waits"), 0);
 });
 
-test("R55 T34-86 DEC-149 the undetermined wait's why calls the group's Civicsmith \"your group's Civicsmith\", never \"this instance\"", () => {
+test("R55 T34-86 DEC-149 the undetermined wait's why is the words' key, the team's Civicsmith, never \"this instance\"", () => {
   const w = setup({ view: () => ({}) });
   w.promote(Q, doc(Q, [{ text: "records reply", date: "2026-10-10" }]), null, { author: V("alice") });
   const u = w.k.datedWaits({ member: "alice", asOf: "2026-10-11T00:00:00Z", viewer: V("alice") }).waits[0];
-  assert.equal(u.why, "no time zone is held for your group's Civicsmith, so the local day the wait falls due on cannot be "
-    + "read (it is never read as the UTC day)");
+  assert.equal(u.why, word("inquiry.why.time_zone_held"));
   assert.doesNotMatch(u.why, /\b(instance|copy|plane|server)\b/);
 });
 
