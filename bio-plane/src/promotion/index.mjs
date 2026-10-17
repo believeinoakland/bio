@@ -26,6 +26,7 @@ import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHE
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { MECHANICAL_FIELD_SETS } from "./history.mjs";
+import { word } from "../setup-words/index.mjs";
 import { projectNameKey } from "./names.mjs";
 import { INFO2_GRAMMAR } from "./info2.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences, quotedScalar,
@@ -901,11 +902,9 @@ class Promotion {
       const answer = { ok: true, bundleId, bundleSha: committed.bundleSha, rowVersion: committed.rowVersion, owner,
         ...(!head && promotedType === "project" ? { visibility: membership.visibilityOf(bundleId) } : {}),
         ...(typeCarried ? { type_carried: { object_type: typeCarried, from: "head",
-          says: "neither the document nor the request stated a type, so this revision keeps the type the record "
-              + "already held for it" } } : {}),
+          says: word("promotion.says.document_request_stated") } } : {}),
         ...(Object.keys(carriedFields).length ? { fields_carried: { fields: carriedFields, from: "head",
-          says: "neither the document nor the request stated these, so this revision keeps the values the record "
-              + "already held for it" } } : {}) };
+          says: word("promotion.says.document_request_stated_revision") } } : {}) };
       for (const [k, v] of Object.entries(extras)) if (!(k in answer)) answer[k] = v;
       /* R45: announced once the transaction this promotion committed in has committed. */
       this.#announce({ bundleId, bundleSha: committed.bundleSha, type: promotedType, replay, snapKey,

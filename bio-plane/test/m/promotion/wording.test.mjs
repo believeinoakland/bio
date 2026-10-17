@@ -5,6 +5,7 @@
  * (here, the record, which mints a project's id and writes it into the document). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { makePromotion, doc, infoDoc, create, T0 } from "./fixtures.mjs";
 import { runGate, PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS, checkProjectNameUniqueness } from "../../../src/promotion/index.mjs";
@@ -17,82 +18,88 @@ const pd = (title, extra = {}) => doc({ object_type: "project", title, current_s
 const mk = (title, extra = {}) => ({ base: null, snapKey: `p-${title}`, author: "member:ann", ownerMemberId: "ann",
   files: [{ path: "bundle.md", text: pd(title) }], meta: {}, ...extra });
 
-test("R28 (gate.mjs runGate): PLANE_HELD_IN_PARTS says the acquisition receipt of your group's Civicsmith names the whole hash", async () => {
+test("R28 (gate.mjs runGate): PLANE_HELD_IN_PARTS says the acquisition receipt of your team's Civicsmith names the whole hash", async () => {
   const r = await runGate({ bundleId: "INFO-2026-0001", image: { "bundle.md": infoDoc("INFO-2026-0001") }, knownIds: new Set(),
     registers: [{ path: "data/p.pdf", capture_sha: "a".repeat(64), bytes: 10 }],
     hasCapture: async () => ({ present: false, heldInParts: true }) });
   const f = r.findings.find((x) => x.check === "PLANE_HELD_IN_PARTS");
   assert.ok(f, JSON.stringify(r.findings));
-  assert.match(f.detail, /^registered capture is held only in parts: the acquisition receipt of your group's Civicsmith names the whole hash, /);
+  assert.match(f.detail, /^registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, /);
   assert.doesNotMatch(f.detail, RETIRED);
+  assert.doesNotMatch(f.detail, /\bgroup\b/i);
   assert.equal(r.ok, false);
 });
 
-test("R9 (C-86.3): ENVELOPE_TITLE_DISAGREES's translation says names are held unique across your group's Civicsmith", () => {
+/* N1116 (plan rule 6): a refusal row the design keys carries its words by key, `refusal.<CODE>` through setup-words'
+   `word`, never English of this module's own; the refusal an act answers carries that row's translation. */
+const KEYED = [PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
+               PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS];
+
+test("R9, R13, R19, R39, R40 (N1116): every refusal row this module holds has its translation by key, word(refusal.<CODE>), and says team where it names one", () => {
+  let rows = 0;
+  for (const table of KEYED)
+    for (const [code, row] of Object.entries(table)) {
+      rows += 1;
+      assert.equal(row.translation, word(`refusal.${code}`), code);
+      assert.doesNotMatch(row.translation, /\bgroup\b/i, code);
+    }
+  assert.equal(rows, 38);
+});
+
+test("R9 (C-86.3): ENVELOPE_TITLE_DISAGREES's translation is the word refusal.ENVELOPE_TITLE_DISAGREES, which says names are held unique across the team's Civicsmith", () => {
   const { p } = makePromotion();
   const id = "INFO-2026-0001";
   const r = p.promote(create(id, infoDoc(id), { meta: { title: "Another name" } }));
   assert.deepEqual([r.reason, r.check], ["ENVELOPE_TITLE_DISAGREES", "C-86.3"]);
-  assert.match(r.translation, /names are held unique across your group's Civicsmith, so rather than file it under a name it does not bear/);
+  assert.equal(r.translation, word("refusal.ENVELOPE_TITLE_DISAGREES"));
   assert.equal(r.translation, PROMOTED_TYPE_CHECKS.ENVELOPE_TITLE_DISAGREES.translation);
   assert.doesNotMatch(r.translation, RETIRED);
 });
 
-test("R13 (C-64.1): GROUP_UNDETERMINED's translation says your group's Civicsmith has not recorded its group, and that it records it once", () => {
+test("R13 (C-64.1): GROUP_UNDETERMINED's translation is the word refusal.GROUP_UNDETERMINED", () => {
   const { p } = makePromotion({ group: null });
   const id = "INFO-2026-0001";
   const r = p.promote(create(id, infoDoc(id, { group: undefined })));
   assert.deepEqual([r.reason, r.check], ["GROUP_UNDETERMINED", "C-64.1"]);
-  assert.equal(r.translation, "Your group's Civicsmith has not recorded which group it belongs to, and nothing in this "
-    + "request says, so the record cannot write a document that must name the group that produced it. It records its "
-    + "group once: when it is first installed, or by one act of whoever holds its administrator token in the hosting "
-    + "account. Nothing was written.");
+  assert.equal(r.translation, word("refusal.GROUP_UNDETERMINED"));
   assert.doesNotMatch(r.translation, RETIRED);
 });
 
-test("R40 (C-102.4, C-102.5): FACT_UNAVAILABLE and FACT_FAILED say no part of your group's Civicsmith answers, or the part that does stopped", () => {
+test("R40 (C-102.4, C-102.5): FACT_UNAVAILABLE and FACT_FAILED answer the words refusal.FACT_UNAVAILABLE and refusal.FACT_FAILED", () => {
   const { p } = makePromotion();
   const none = p.fact("nobodyProvides");
   assert.deepEqual([none.reason, none.check], ["FACT_UNAVAILABLE", "C-102.4"]);
-  assert.equal(none.translation, "No part of your group's Civicsmith answers that question yet, so there is no answer here, "
-    + "which is not the same as the answer being no. Nothing was written.");
+  assert.equal(none.translation, word("refusal.FACT_UNAVAILABLE"));
   /* The act that needs an unprovided fact answers the same row. */
   const bare = makePromotion({ facts: false });
   assert.equal(bare.p.promote(create("INFO-2026-0001", infoDoc("INFO-2026-0001"))).translation, none.translation);
   p.registerFact("fragile", "later", () => { throw new Error("down"); });
   const failed = p.fact("fragile");
   assert.deepEqual([failed.reason, failed.check], ["FACT_FAILED", "C-102.5"]);
-  assert.equal(failed.translation, "The part of your group's Civicsmith that answers that question stopped with an error "
-    + "instead of answering, so there is no answer here, which is not the same as the answer being no. Nothing was written.");
+  assert.equal(failed.translation, word("refusal.FACT_FAILED"));
   for (const x of [none, failed]) assert.doesNotMatch(x.translation, RETIRED);
 });
 
-const BUILD_FAULT = "This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.";
-
-test("R40 (C-102.6): FACT_MALFORMED says a part of your group's Civicsmith offered an unnamed answer, a fault in how your group's Civicsmith was built", () => {
+test("R40 (C-102.6): FACT_MALFORMED answers the word refusal.FACT_MALFORMED", () => {
   const { p } = makePromotion();
   const r = p.registerFact("", "later", () => 1);
   assert.deepEqual([r.reason, r.check], ["FACT_MALFORMED", "C-102.6"]);
-  assert.equal(r.translation, "A part of your group's Civicsmith tried to offer an answer to a question without naming the "
-    + `question, itself, or how to answer it, so nothing was registered. ${BUILD_FAULT}`);
+  assert.equal(r.translation, word("refusal.FACT_MALFORMED"));
 });
 
-test("R39 (C-102.7): STEP_MODULE_UNNAMED says a part of your group's Civicsmith added a check without naming itself, a fault in how your group's Civicsmith was built", () => {
+test("R39 (C-102.7): STEP_MODULE_UNNAMED answers the word refusal.STEP_MODULE_UNNAMED", () => {
   const { p } = makePromotion();
   const r = p.registerStep("", {});
   assert.deepEqual([r.reason, r.check], ["STEP_MODULE_UNNAMED", "C-102.7"]);
-  assert.equal(r.translation, "A part of your group's Civicsmith tried to add its own check to every promotion without "
-    + `naming itself, so nothing was registered. ${BUILD_FAULT}`);
+  assert.equal(r.translation, word("refusal.STEP_MODULE_UNNAMED"));
 });
 
-test("R39 (C-102.8): STEP_DECLARED says a part of your group's Civicsmith registered twice, a fault in how your group's Civicsmith was built", () => {
+test("R39 (C-102.8): STEP_DECLARED answers the word refusal.STEP_DECLARED, at a step and at a fact", () => {
   const { p } = makePromotion();
   p.registerStep("later", {});
   for (const r of [p.registerStep("later", {}), p.registerFact("citedBy", "later", () => [])]) {
     assert.deepEqual([r.reason, r.check], ["STEP_DECLARED", "C-102.8"]);
-    assert.equal(r.translation, "A part of your group's Civicsmith tried to register something it had already registered, "
-      + "or that another part already provides, so the second registration was refused and the first still stands. "
-      + BUILD_FAULT);
+    assert.equal(r.translation, word("refusal.STEP_DECLARED"));
   }
 });
 
@@ -145,4 +152,17 @@ test("R9, R13, R39, R40 (DEC-149): no row this module holds calls the group's ow
   for (const table of [PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
                        PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS])
     for (const [code, row] of Object.entries(table)) assert.doesNotMatch(row.translation, RETIRED, code);
+});
+
+test("R11 (N1116): a revision that carries the head's type or fields forward says so in the words promotion.says.document_request_stated and promotion.says.document_request_stated_revision", () => {
+  const { p } = makePromotion();
+  const id = "INFO-2026-0001";
+  const head = p.promote(create(id, infoDoc(id)));
+  assert.equal(head.ok, true, JSON.stringify(head));
+  const rev = p.promote({ bundleId: id, base: head.bundleSha, snapKey: "s-2", author: "member:ann", meta: {},
+    files: [{ path: "bundle.md", text: doc({ id }) }] });
+  assert.equal(rev.ok, true, JSON.stringify(rev));
+  assert.equal(rev.type_carried.says, word("promotion.says.document_request_stated"));
+  assert.equal(rev.fields_carried.says, word("promotion.says.document_request_stated_revision"));
+  for (const x of [rev.type_carried.says, rev.fields_carried.says]) assert.doesNotMatch(x, /\bgroup\b/i);
 });
