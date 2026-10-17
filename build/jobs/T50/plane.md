@@ -42,3 +42,7 @@ What I think the intent is: the captures that a project's bundles hold as FILES 
 **Tests and checks:** plane suite 261 tests (before the last test fixes): 256 pass, 5 fail (the three above, plus `door` R1/R5 and t46 R40, both since fixed: door 6/6, t46 green). format 0 failures; architecture 0 failures; coverage 63 of 63 ids named, 0 failures; ownership 0 failures.
 
 Size (session_01LZmcDAZpAJWu2TSJCHfiRc): test runs 14, module lines 2373
+
+## J3 · COMPLETE
+
+COMPLETE (PLANE #40). R58, R59 (plane side; cause in control-plane R108), R60, R61, R62 met; R63 closed on the diagnosis (your authenticated burst in the release walk). Record: build/jobs/T50/plane.md, Completion. Still red, not mine: wizards R19 (until op-declarations), t47 R48 and worker R6 (the page 500s: interface-shell checkScreens, "screens-settings members act groupkeyset is not the registry's"). Owed after control-plane merges: the whole-Worker R59 test. I stay available for CHANGE.
