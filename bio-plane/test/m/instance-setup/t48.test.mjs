@@ -436,9 +436,10 @@ test("R90 R29 over the routes: updatenotice, updatestart, updatelater and update
   assert.equal((await call(w.m, "updatenotice?viewer=admin")).result.ready, null);
 });
 
-test("R90 C-64.31–C-64.33: the three new rows carry BOB's words, each in this module's regions, and no row of this module names a copy, instance, plane or server", () => {
-  const rows = ["LANGUAGE_NOT_SET", "UPDATE_NOT_READY", "UPDATE_SKIP_NO_REASON"].map((k) => INSTANCE_SETUP_CHECKS[k]);
-  assert.deepEqual(rows.map((r) => r.check), ["C-64.31", "C-64.32", "C-64.33"]);
+test("R90 C-64.32–C-64.33: the two update rows carry their words by key, each in this module's regions, and no row of this module names a copy, instance, plane or server; C-64.31 (LANGUAGE_NOT_SET) is `translations`' and held here by none", () => {
+  const rows = ["UPDATE_NOT_READY", "UPDATE_SKIP_NO_REASON"].map((k) => INSTANCE_SETUP_CHECKS[k]);
+  assert.deepEqual(rows.map((r) => r.check), ["C-64.32", "C-64.33"]);
+  assert.equal("LANGUAGE_NOT_SET" in INSTANCE_SETUP_CHECKS, false);
   for (const r of rows) assert.doesNotMatch(r.translation, /\b(?:copy|copies|instance|plane|server)\b/i);
 });
 

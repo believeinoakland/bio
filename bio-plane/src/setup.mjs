@@ -268,106 +268,6 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     where: 'src/setup.mjs memberLanguageSet > is-member-language',
     translation: word('refusal.MACHINE_CANNOT_SET_LANGUAGE'),
   },
-  LANGUAGE_MALFORMED: {
-    check: 'C-119.12',
-    where: 'src/setup.mjs memberLanguageSet > is-member-language',
-    translation: word('refusal.LANGUAGE_MALFORMED'),
-  },
-  /* R67–R73 (T37-30; N669; DEC-127 (2), (5), DEC-157, DEC-179; K2200, K2201, K2216): the group's translation of the
-     interface. The next free numbers of C-64, awaiting T38's stamp. */
-  TRANSLATION_DIRECTION_UNKNOWN: {
-    check: 'C-64.11',
-    where: 'src/setup.mjs #draftRequest > is-translation-draft',
-    translation: 'The assistant is asked either to draft words your group\'s language lacks, or to read one kept word '
-      + 'back into English, and this request asks for neither. Nothing was sent and nothing was saved.',
-  },
-  MACHINE_CANNOT_TRANSLATE: {
-    check: 'C-64.12',
-    where: 'src/setup.mjs #translationActor > is-translation-actor',
-    translation: 'Translating the screens is done by members, each from their own signed-in session. The assistant and '
-      + 'other machines can draft a translation for a member to check, and can never grant, keep, confirm, undo or mark '
-      + 'one. Nothing was changed.',
-  },
-  TRANSLATION_NOT_GRANTED: {
-    check: 'C-64.13',
-    where: 'src/setup.mjs #translationSpeaker > is-translation-speaker',
-    translation: 'Only the administrators, and members an administrator has asked to translate the screens into this '
-      + 'language, can work on its words. You have not been asked for this language. Nothing was changed.',
-  },
-  NO_SUCH_WORD: {
-    check: 'C-64.14',
-    where: 'src/setup.mjs #translationWord > is-translation-word',
-    translation: 'Each word on the screens is known by its key in the list of the interface\'s words, and that key is '
-      + 'not in the list your group\'s Civicsmith holds. Nothing was changed.',
-  },
-  TRANSLATION_NOT_MISSING: {
-    check: 'C-64.15',
-    where: 'src/setup.mjs #draftRequest > is-translation-draft',
-    translation: 'The assistant drafts only the words your group has not yet translated into this language, and this '
-      + 'word already has a kept translation. Change a kept word by keeping a new one. Nothing was sent.',
-  },
-  TRANSLATION_KEYS_MALFORMED: {
-    check: 'C-64.16',
-    where: 'src/setup.mjs #draftRequest > is-translation-draft',
-    translation: 'The words to draft are named by their keys: a list of at most 100 different keys, or none to draft '
-      + 'the first words still missing. What was sent is not such a list. Nothing was sent.',
-  },
-  TRANSLATION_NOTHING_TO_DRAFT: {
-    check: 'C-64.17',
-    where: 'src/setup.mjs #draftRequest > is-translation-draft',
-    translation: 'There is nothing for the assistant to draft: every word asked for is either translated already or an '
-      + 'official name, which is shown as it is with its official translation where one is published. Nothing was sent.',
-  },
-  /* C-64.18 (`NO_SUCH_MEMBER`) is dropped and never reused (R75; N793, K231, K2275): the code is `membership`'s alone,
-     answered through its `noSuchMember` (its R121, C-96.47). */
-  NO_SUCH_DRAFT: {
-    check: 'C-64.19',
-    where: 'src/setup.mjs translationAdopt > is-translation-adopt',
-    translation: 'The draft named is not one the assistant drafted for this word in this language, so it cannot be '
-      + 'kept from. Keep the word as you typed it, or choose its draft. Nothing was changed.',
-  },
-  TRANSLATION_TEXT_REFUSED: {
-    check: 'C-64.20',
-    where: 'src/setup.mjs translationAdopt > is-translation-adopt',
-    translation: 'A translated word is one line of 1 to 2,000 characters, and it keeps every placeholder in braces, like '
-      + '{name}, exactly as the English has them, so the screen can fill them in. Nothing was changed.',
-  },
-  TRANSLATION_NOT_AWAITING: {
-    check: 'C-64.21',
-    where: 'src/setup.mjs #translationAwaiting > is-translation-awaiting',
-    translation: 'Only a protected word kept with changes, or typed without the assistant\'s draft, waits for a second '
-      + 'check, and this word is not waiting for one. Nothing was changed.',
-  },
-  TRANSLATION_CONFIRM_SELF: {
-    check: 'C-64.22',
-    where: 'src/setup.mjs translationConfirm > is-translation-confirm',
-    translation: 'A protected word is checked a second time by someone other than the member who kept it: another member '
-      + 'asked to translate this language, or an administrator. Nothing was changed.',
-  },
-  TRANSLATION_NOT_READ_BACK: {
-    check: 'C-64.23',
-    where: 'src/setup.mjs translationConfirm > is-translation-confirm',
-    translation: 'This word has not been read back into English for its current text, so an administrator cannot yet '
-      + 'confirm it. Read it back into English first, then confirm. Nothing was changed.',
-  },
-  TRANSLATION_NOTHING_TO_UNDO: {
-    check: 'C-64.24',
-    where: 'src/setup.mjs translationRevert > is-translation-revert',
-    translation: 'This word has never been translated into this language, so there is nothing to undo: members see it in '
-      + 'English. Nothing was changed.',
-  },
-  TRANSLATION_NOT_SHOWN: {
-    check: 'C-64.25',
-    where: 'src/setup.mjs translationMark > is-translation-mark',
-    translation: 'Only a translation members are shown can be marked as looking wrong, and this word shows no '
-      + 'translation in this language yet. Nothing was recorded.',
-  },
-  TRANSLATION_NOTE_REFUSED: {
-    check: 'C-64.26',
-    where: 'src/setup.mjs translationMark > is-translation-mark',
-    translation: 'A note on a translation that looks wrong is optional, and when given it is at most 500 characters. '
-      + 'Nothing was recorded.',
-  },
   /* R79 (T46; DEC-162, DEC-175): how quickly explanations open for a member, the member's own act; the next free C-64
      numbers, awaiting T47's stamp. */
   MACHINE_CANNOT_SET_INFO_LEVEL: {
@@ -386,13 +286,6 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     check: 'C-64.30',
     where: 'src/setup.mjs groupLogoSet > is-group-logo',
     translation: word('refusal.LOGO_REFUSED'),
-  },
-  /* R87 (T48; N670; DEC-127 (3)): the language a passage is read in, when the member has set none and names none; the
-     next free C-64 numbers, BOB's draft words (an ASK to UX-DESIGN), awaiting T49's stamp (plan rule 5 (2)). */
-  LANGUAGE_NOT_SET: {
-    check: 'C-64.31',
-    where: 'src/setup.mjs readingLanguage > is-reading-language',
-    translation: 'Choose the language you read in, in Your account, or name one. Nothing was translated.',
   },
   /* R90 (T48; N1047; DEC-226): the update acts, BOB's drafts, re-wordable by the design stream, awaiting T49's stamp. */
   UPDATE_NOT_READY: {
