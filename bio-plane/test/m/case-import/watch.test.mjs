@@ -15,6 +15,7 @@ import { CASE_IMPORT_CHECKS, CASE_IMPORT_TABLES, DOCKET_ENTRY_FORMATS, DOCKET_UN
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { NS_DOCKET, NS_RATIFY, docketStatement } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const PUB = "https://source.example.org";
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -522,11 +523,11 @@ test("R13 the watch, read and entry tables are declared as the import's own reco
   assert.deepEqual(w.ci.watchedImports({}).watches, []);
 });
 
-test("R14 C-130.15 and C-130.16 carry the translations BOB drafted, each refusal its row", async () => {
+test("R14 C-130.15 and C-130.16 carry the list's words for their keys, each refusal its row", async () => {
   assert.deepEqual(CASE_IMPORT_CHECKS.IMPORT_WATCH_BAD_ADDRESS, { check: "C-130.15", where: CASE_IMPORT_CHECKS.IMPORT_WATCH_BAD_ADDRESS.where,
-    translation: "That is not the public https address of the publishing group's copy. Give the address of their copy, with no query and no fragment. Nothing was written." });
+    translation: word("refusal.IMPORT_WATCH_BAD_ADDRESS") });
   assert.deepEqual(CASE_IMPORT_CHECKS.IMPORT_NOT_WATCHED, { check: "C-130.16", where: CASE_IMPORT_CHECKS.IMPORT_NOT_WATCHED.where,
-    translation: "This imported case is not being watched, so there is no watch to end. Nothing was written." });
+    translation: word("refusal.IMPORT_NOT_WATCHED") });
   const { w, a } = await watched({ watch: false });
   rowOk(w.ci.watchImport({ import: a.import, publisher: "http://x.example.org", by: V("alice"), viewer: V("alice") }), "IMPORT_WATCH_BAD_ADDRESS");
   rowOk(w.ci.unwatchImport({ import: a.import, by: V("alice"), viewer: V("alice") }), "IMPORT_NOT_WATCHED");

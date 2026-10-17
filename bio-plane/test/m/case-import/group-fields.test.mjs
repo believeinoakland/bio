@@ -10,6 +10,8 @@ import { GROUP_FIELDS_NONE, GROUP_FIELDS_LABEL, GROUP_FIELD_KEYS, caseImportOps 
 /* R34's answer as `publishedCase` gives it, read by the caller at `read_at` */
 const FIELDS = { group: SOURCE, name: "The Source Group", domain: "source.example.org", domain_verified_at: "2026-09-30T08:00:00Z",
                  stake: "We campaign for the measure this case examines.", detail: null, read_at: "2026-10-03T11:59:30Z" };
+/* R25: the answer always carries `matter_stake`, `null` for fields given without one */
+const READ = (gf) => ({ matter_stake: null, ...gf });
 const withFields = (w, gf, file = caseFile(), who = "alice") =>
   w.ci.importCaseFile({ parts: file.parts, by: V(who), viewer: V(who), groupFields: gf });
 const editionOf = (w, a, edition) => w.ci.importedCase({ import: a.import, edition, viewer: V("bob") }).edition;
@@ -21,14 +23,14 @@ test("R4 an import given the source's group_fields records them with the edition
   assert.equal(a.existed, false);
   assert.deepEqual(a.group_fields, { recorded: true, read_at: "2026-10-03T11:59:30Z" });
   const e = editionOf(w, a, 1);
-  assert.deepEqual(e.group_fields, FIELDS, "every R34 field, as the caller read it, with read_at");
-  assert.deepEqual(Object.keys(e.group_fields).sort(), [...GROUP_FIELD_KEYS, "read_at"].sort());
+  assert.deepEqual(e.group_fields, READ(FIELDS), "every R34 field, as the caller read it, with read_at and matter_stake null");
+  assert.deepEqual(Object.keys(e.group_fields).sort(), [...GROUP_FIELD_KEYS, "matter_stake", "read_at"].sort());
   assert.equal(e.group_fields_label, GROUP_FIELDS_LABEL);
   assert.equal(e.group_fields_note, undefined);
   /* per edition: the editions list answers it too, in importedCase and importedCases alike */
   const c = w.ci.importedCase({ import: a.import, viewer: V("bob") });
-  assert.deepEqual(c.editions[0].group_fields, FIELDS);
-  assert.deepEqual(w.ci.importedCases({ viewer: V("bob") }).imports[0].editions[0].group_fields, FIELDS);
+  assert.deepEqual(c.editions[0].group_fields, READ(FIELDS));
+  assert.deepEqual(w.ci.importedCases({ viewer: V("bob") }).imports[0].editions[0].group_fields, READ(FIELDS));
   /* a stake that is null (no stake declared) and one undetermined are each kept as given, never conflated */
   for (const stake of [null, "undetermined", { text: "a structured declaration" }]) {
     const w2 = seeded();
@@ -59,7 +61,7 @@ test("R4 the same import without group_fields answers group_fields: null with it
   const w2 = seeded();
   const b = await withFields(w2, FIELDS);
   assert.equal(b.import, a.import, "the same import");
-  assert.deepEqual(editionOf(w2, b, 1).group_fields, FIELDS);
+  assert.deepEqual(editionOf(w2, b, 1).group_fields, READ(FIELDS));
 });
 
 test("R4 fields naming another group, absent, or not in R34's shape are not recorded, and the import is never refused for them", async () => {
@@ -105,7 +107,7 @@ test("R4 a repeat import of the same edition writes nothing, whatever fields it 
   const later = { ...FIELDS, stake: "a later declaration", read_at: "2026-10-09T09:00:00Z" };
   await withFields(w, later, caseFile({ edition: 2 }));
   assert.equal(editionOf(w, first, 1).group_fields, null);
-  assert.deepEqual(editionOf(w, first, 2).group_fields, later);
+  assert.deepEqual(editionOf(w, first, 2).group_fields, READ(later));
   /* and a repeat of an edition recorded with fields keeps the first ones */
   const before2 = w.snapshot();
   assert.equal((await withFields(w, { ...later, stake: "changed again" }, caseFile({ edition: 2 }))).existed, true);
@@ -119,7 +121,7 @@ test("R4 the group_fields arrive through the op's body; a non-member reads absen
   const url = new URL("https://x/?op=caseimport&by=member:alice&viewer=member:alice");
   const r = await caseImportOps(w.ci, url, { parts: f.parts.map((p) => Buffer.from(p).toString("base64")), group_fields: FIELDS }).caseimport();
   assert.equal(r.ok, true);
-  assert.deepEqual(editionOf(w, r, 1).group_fields, FIELDS);
+  assert.deepEqual(editionOf(w, r, 1).group_fields, READ(FIELDS));
   const absent = w.ci.importedCase({ import: r.import, viewer: V("carol") });
   assert.equal(absent.reason, "IMPORT_NO_SUCH_EDITION");
   assert.doesNotMatch(JSON.stringify(absent), /The Source Group|group_fields/);
