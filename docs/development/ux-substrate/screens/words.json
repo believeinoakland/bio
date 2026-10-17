@@ -22,7 +22,7 @@
   "label": 192,
   "project": 50,
   "grouprule": 1,
-  "refusal": 1933,
+  "refusal": 1934,
   "signing": 17,
   "case": 18,
   "docket": 7,
@@ -53,14 +53,14 @@
   "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3799,
+  "screen": 3801,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
   "member": 2,
   "stake": 24,
   "translate": 8,
-  "proceeding": 6,
+  "proceeding": 11,
   "duty": 6,
   "published": 9,
   "shell": 150,
@@ -72,7 +72,7 @@
   "action": 4,
   "review": 29,
   "theme": 32,
-  "connect": 8,
+  "connect": 18,
   "setup": 77,
   "projects": 9,
   "progression": 26,
@@ -220,7 +220,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12669,
+  "total": 12687,
   "protected": 890
  },
  "words": [
@@ -38693,6 +38693,132 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-300: a period named by its first and last day, both included, such as \"1 to 15 October\""
+  },
+  {
+   "key": "refusal.ASSISTANT_REMOTE_NOT_READY",
+   "en": "The assistant isn't working for your team yet: its connection hasn't passed its check. An administrator can run the check under Settings, The assistant. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: agent-worker R110, Bob's K3610"
+  },
+  {
+   "key": "screen.connect.check",
+   "en": "Check the connection",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: screens-settings R41; drawn only once the proof passes (K3615)"
+  },
+  {
+   "key": "screen.connect.check.help",
+   "en": "Runs one short test on your Claude account: signs in, starts a session, asks it one question that uses one of Civicsmith's tools, and ends it. The assistant works for your team only after this passes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301"
+  },
+  {
+   "key": "connect.check.step.signin",
+   "en": "Signed in to your Claude account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301"
+  },
+  {
+   "key": "connect.check.step.create",
+   "en": "Started a test session",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301"
+  },
+  {
+   "key": "connect.check.step.prompt",
+   "en": "Asked it a test question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301"
+  },
+  {
+   "key": "connect.check.step.tool",
+   "en": "It used one of Civicsmith's tools",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301"
+  },
+  {
+   "key": "connect.check.step.answer",
+   "en": "It answered, and Civicsmith checked the answer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301"
+  },
+  {
+   "key": "connect.check.step.end",
+   "en": "Ended the test session",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301"
+  },
+  {
+   "key": "connect.check.step.time",
+   "en": "{step} · {seconds} s",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: each step with its time, as it arrives (DEC-298's ticks)"
+  },
+  {
+   "key": "connect.check.step.waiting",
+   "en": "{step}…",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: the step under way"
+  },
+  {
+   "key": "connect.check.passed",
+   "en": "The connection works. The assistant can now serve your team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301"
+  },
+  {
+   "key": "connect.check.failed",
+   "en": "The check stopped at “{step}”: {why}. Nothing else was tried. Put it right and check again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: {why} the step's own plain reason"
+  },
+  {
+   "key": "proceeding.kind.civil",
+   "en": "Civil case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: proceeding_kinds civil"
+  },
+  {
+   "key": "proceeding.kind.writ",
+   "en": "Petition for a writ",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: proceeding_kinds writ: asking a court to order an official or agency to act"
+  },
+  {
+   "key": "proceeding.kind.appeal",
+   "en": "Appeal",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: proceeding_kinds appeal"
+  },
+  {
+   "key": "proceeding.kind.complaint",
+   "en": "Administrative complaint",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: proceeding_kinds complaint: filed with an agency or board, not a court"
+  },
+  {
+   "key": "proceeding.kind.help",
+   "en": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-301: the choice's explanation"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

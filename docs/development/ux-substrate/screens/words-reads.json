@@ -5877,6 +5877,7 @@
     "shell.assistant.holds",
     "shell.band.working",
     "shell.cancel",
+    "shell.card.action",
     "shell.card.calculation",
     "shell.card.capture",
     "shell.card.case-editor",
@@ -5884,6 +5885,7 @@
     "shell.card.docket",
     "shell.card.document",
     "shell.card.knock",
+    "shell.card.matter",
     "shell.card.member",
     "shell.card.money",
     "shell.card.open",
@@ -5893,6 +5895,7 @@
     "shell.card.proceeding",
     "shell.card.project",
     "shell.card.question",
+    "shell.card.request",
     "shell.card.review-copy",
     "shell.card.standard",
     "shell.card.timeline",
@@ -5981,14 +5984,14 @@
     "tab.more.name"
    ],
    "counts": {
-    "reads": 199,
+    "reads": 202,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 155,
     "inline": 3,
     "inlineKeyed": 0,
     "inlineUnkeyed": 3,
-    "computedKeys": 44
+    "computedKeys": 47
    },
    "unkeyed": [
     {
@@ -7300,6 +7303,7 @@
     "projects.invited.says",
     "queue.capture-completed-unattended.detail",
     "queue.capture-completed-unattended.summary",
+    "queue.done",
     "queue.inquiry-recheck-due.detail",
     "queue.inquiry-recheck-due.summary",
     "queue.member-left-items.detail",
@@ -7571,14 +7575,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 731,
+    "reads": 732,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 296,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 435
+    "computedKeys": 436
    },
    "unkeyed": [
     {
@@ -11297,67 +11301,67 @@
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 238,
+     "line": 239,
      "text": "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 434,
+     "line": 435,
      "text": "knockerconsent is a POST",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 466,
+     "line": 467,
      "text": "the pack could not be rendered",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 760,
+     "line": 765,
      "text": "instance has no bootstrap credential set",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 763,
+     "line": 768,
      "text": "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 766,
+     "line": 771,
      "text": "bootstrap credential does not match",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 987,
+     "line": 992,
      "text": "capabilities are set by an administrator and gate what this account may DO, not what it may see",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 988,
+     "line": 993,
      "text": "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 2012,
+     "line": 2017,
      "text": "this promotion says it is a replay of the record's own past, and a replay is honoured only when the plane can check it: it must name a drive-provenance capture (`provenanceCapture`) that this promotion registers at ${…}, whose bytes the record holds, and whose preserved promotion records name this record and list this revision's bundle.md SHA-256. One of those did not hold. Nothing was written.",
      "why": "a replaying tool's refusal `detail`, never a member's"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3190,
+     "line": 3210,
      "text": "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3210,
+     "line": 3230,
      "text": "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     }
@@ -11600,19 +11604,19 @@
     },
     {
      "file": "plane/wizards.mjs",
-     "line": 49,
+     "line": 52,
      "text": "acts is not a list",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "plane/wizards.mjs",
-     "line": 50,
+     "line": 53,
      "text": "an act repeated",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "plane/wizards.mjs",
-     "line": 51,
+     "line": 54,
      "text": "no op spec",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     }
