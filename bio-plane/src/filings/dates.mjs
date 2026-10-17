@@ -6,9 +6,10 @@
  * so a period of N days ends on the Nth counted day (the rule is stated beside every date it answers). */
 
 import { computeDeadline } from "../action-clocks/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
-export const COUNTED_FROM = "counted from the day after the start event";
+export const COUNTED_FROM = word("filings.counted_day_start");
 
 /** A `YYYY-MM-DD` that names a real calendar day, as that string; else null. */
 export function realDate(v) {
@@ -32,13 +33,13 @@ export function realDate(v) {
 export function deadlineDate({ start = null, days = null, count = null, rule = null, view = null, counterparty = null,
                                kind = null, factOf = null } = {}) {
   const from = realDate(start);
-  if (!from) return { state: "undetermined", why: "no start event is recorded, so no date is computed from it" };
+  if (!from) return { state: "undetermined", why: word("filings.why.start_event_recorded") };
   if (!Number.isInteger(days) || days < 0)
-    return { state: "undetermined", why: "the rule states no whole number of days (the profiles may disagree on it)" };
+    return { state: "undetermined", why: word("filings.why.rule_states_whole") };
   if (count !== "calendar" && count !== "business")
-    return { state: "undetermined", why: "the rule states no count (calendar or business days), so no date is computed" };
+    return { state: "undetermined", why: word("filings.why.rule_states_count") };
   if (count === "business" && days > 2600)
-    return { state: "undetermined", why: "the count runs past ten years" };
+    return { state: "undetermined", why: word("filings.why.count_runs_past") };
   const v = view && typeof view === "object" ? view : {};
   const c = computeDeadline({ ...(rule && typeof rule === "object" ? rule : {}), starts: "filed", days, count },
                             { correspondence: [{ direction: "sent", at: from }], counterparty, action_kind: kind }, v,
@@ -46,10 +47,9 @@ export function deadlineDate({ start = null, days = null, count = null, rule = n
   const calendar = c.calendar ? { calendar: c.calendar } : {};
   if (!c.date)
     return { state: "undetermined",
-             why: count === "business" ? `${c.why.replace(/^the count reaches (\d{4})/, "the business-day count reaches into $1")}`
-                                         + " (or withholds, the active profiles disagreeing), so it is not counted" : c.why,
+             why: count === "business" ? word("filings.why.withholds_active_profiles", { why: c.why }) : c.why,
              ...calendar };
   return { state: "determined", date: c.date,
            counted: count === "calendar" ? `${days} calendar days, ${COUNTED_FROM}`
-             : `${days} business days on the profile's holiday calendar, ${COUNTED_FROM}`, ...calendar };
+             : word("filings.business_days_profile", { days, counted_from: COUNTED_FROM }), ...calendar };
 }

@@ -6,6 +6,7 @@ import { world, V, MACHINE, STRANGER, PROFILE, attributed, templatesOver, WHY } 
 import { FILING_BLANKS, unfilledMarker, Filings } from "../../../src/filings/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const prep = (x, action, over = {}) => x.f.filingPrepare({ action, preparer: V("bo"), viewer: V("bo"), ...over });
 
@@ -67,7 +68,7 @@ test("R1 R28 TEMPLATE_NOT_NAMED (never the retired KIND_NO_TEMPLATE) also when n
   const none = world({ profiles: [] });
   const r = prep(none, none.action());
   assert.equal(r.reason, "TEMPLATE_NOT_NAMED");
-  assert.match(r.detail, /your group's Civicsmith has no active jurisdiction profile/);
+  assert.ok(r.detail.startsWith(word("filings.why.group_civicsmith_active")), r.detail);
   const x0 = world();
   const clash = rekind(x0, "test-filings-clash", { template: attributed("TPL-test-clash", "file", "A different template {{act}}.") });
   assert.equal(validate(clash).ok, true, JSON.stringify(validate(clash).errors));
@@ -150,7 +151,7 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   }
   assert.match(why.counterparty_role, /undetermined/);
   assert.match(why.governing_laws, /undetermined/);
-  assert.match(why.group, /no producing group/);
+  assert.equal(why.group, word("filings.why.producing_group_recorded"));
   assert.match(why.act_date, /placed nowhere.*undetermined/, "an act placed nowhere has no date");
   assert.ok(u.text.includes(unfilledMarker("act_date")));
   /* Not visible: quinn, outside the project, may not see the determination. */
@@ -180,7 +181,7 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
   x.groupRef.value = null;
   const none = group(prep(x, A));
   assert.equal(none.blank, null);
-  assert.match(none.unfilled.why, /no producing group is recorded/);
+  assert.equal(none.unfilled.why, word("filings.why.producing_group_recorded"));
   /* the provider fails (promotion answers FACT_FAILED): undetermined, never unrecorded */
   Object.defineProperty(x.groupRef, "value", { get() { throw new Error("the group's store is unreadable"); }, configurable: true });
   assert.equal(x.promotion.fact("producingGroup").reason, "FACT_FAILED");
@@ -224,7 +225,7 @@ test("R3 the producing group is read through promotion's fact producingGroup (N3
     publication: x.p, provenance: x.prov, content: x.content, profiles: () => [other], now: () => x.clock.now })
     .filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") }));
   assert.deepEqual([handed(() => "handed-group").blank.value, handed(() => "handed-group").blank.source], ["handed-group", "fact:producingGroup"]);
-  assert.match(handed(() => null).unfilled.why, /no producing group is recorded/);
+  assert.equal(handed(() => null).unfilled.why, word("filings.why.producing_group_recorded"));
   assert.match(handed(() => bare.fact("producingGroup")).unfilled.why, /undetermined/);
   assert.equal(handed(() => x.promotion.fact("producingGroup")).blank.value, "test-group");
 });
@@ -319,5 +320,5 @@ test("R20 no place, law, venue or template is named in behaviour or outward text
   assert.equal(prep(none, none.action()).reason, "TEMPLATE_NOT_NAMED");
   const block = none.f.availableActions({ determination: none.D, viewer: V("olive") });
   assert.deepEqual(block.kinds, []);
-  assert.match(block.says, /^your group's Civicsmith has no active jurisdiction profile, so no kind is listed$/);
+  assert.equal(block.says, word("filings.says.kind_listed", { why: word("filings.why.group_civicsmith_active") }));
 });

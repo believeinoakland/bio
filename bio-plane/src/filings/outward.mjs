@@ -6,50 +6,13 @@
  * first (R24, R35), and the keyed sentences whose words are the design stream's (each held here under its key, as
  * `words.json` holds it since T46, R52). */
 
-/** The keyed sentences this module writes into what it prepares, each answered with its key beside the words. R52 (T46;
- *  DEC-194, N913): each is the words `words.json` (`docs/development/ux-substrate/screens/words.json`) holds for its key,
- *  `en` verbatim, read by key (as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are), its
- *  `{placeholders}` as `words.json` names them, filled from the record. The design stream's words: re-worded there, then
- *  re-taken here by key. Kept in T46, each returned to BOB until its sentence and the requirement agree (R52):
- *  `phrasing.no_list` (R43: `words.json`'s names "Civicsmith" bare, DEC-149 "your group's Civicsmith");
- *  `filings.secondapproval.waiting` (R42) is not taken. `rfc.quoting` (R40) is `filing-templates`' since T48 (R57: its
- *  `RFC_QUOTING_SENTENCE`, its R33). `filings.review_copy.*` (R46), which
- *  `words.json` does not hold, keep theirs. */
-export const KEYED = Object.freeze({
-  /* R35 */
-  "prepared.rests.held": "Rests on findings checked for publication on {date}, not yet published.",
-  "prepared.rests.accepted": "Rests on findings of {group} (edition of {date}), accepted by us on {date_accepted}.",
-  /* R10 */
-  "packet.privileged": "Privileged and confidential: prepared for counsel",
-  "packet.privileged.warning": "This packet belongs to a counsel matter. Sharing it outside the group may end its privilege. "
-    + "Share it only with your lawyer.",
-  /* R39 */
-  "filings.election.notice": "This names a pending measure or candidate. {fact} ({citation})",
-  /* R45 */
-  "recognition.staff_public": "This thanks staff by name in public. Check that they are willing to be named.",
-  /* the pointers: R34, R39, R38, R48 */
-  "pointer.record.supported": "Supported by the record: {findings}",
-  "pointer.record.unsupported": "The record doesn't support this sentence. You may still send it.",
-  "pointer.record.contradicted": "The record contradicts this sentence. It is held until you rewrite it, or release it with a reason.",
-  "pointer.position": "Reads as a policy position: remove it, or comment as yourself.",
-  "pointer.selfbenefit": "Asks for something for your group: rewrite it before approving.",
-  "pointer.staff": "Names staff below the official responsible (the assistant's reading).",
-  "pointer.staff.notrun": "Staff names weren't checked: the assistant is off.",
-  /* R44 */
-  "voice.group": "For the group",
-  "voice.group.means": "Approved and sent as your group's act.",
-  "voice.self": "As myself",
-  "voice.self.means": "Your own notes for speaking as yourself. It is not the group's act, and it is never recorded as sent "
-    + "or published.",
-  /* R42 */
-  "filings.secondapproval.given": "Second approval given by {member} on {date}.",
-  /* kept in T46 (R52) */
-  "phrasing.no_list": "Nothing could be pointed out: no phrasing list is held for this language.",
-  "filings.review_copy.no_embargo": "No embargo is stated for this copy.",
-  "filings.review_copy.terms": "Review copy. Embargoed until {embargo}; for release at {release}.",
-});
-/** A keyed sentence with its `{name}`s filled. */
-export const keyed = (key, fill = {}) => KEYED[key].replace(/\{(\w+)\}/g, (_, n) => (fill[n] ?? `{${n}}`));
+import { word } from "../setup-words/index.mjs";
+
+/** A keyed sentence with its `{name}`s filled: the words `words.json` holds for `key`, read through setup-words' `word`
+ *  (layer 1), never a copy (R52; T50, N1116, DEC-259). Every sentence this module writes into what it prepares, or
+ *  answers beside it, is read this way: the pointers (R34, R38, R39, R48), the notices (R39, R45, R49), the voices
+ *  (R44), the second approval (R42), the disclosures (R24, R35), the stake (R61, R63) and the review copy (R46). */
+export const keyed = (key, fill = {}) => word(key, fill);
 
 /** R34, R43: the one split: a sentence ends at `.`, `!` or `?` before white space, or at a line break; each is kept
  *  whole and trimmed, and an empty one is dropped (the rule `wizard-scripts`' writing help reads, its R25). */
@@ -71,7 +34,7 @@ export const VERDICTS = Object.freeze(["supported", "unsupported", "contradicted
 export function verdictsOf(judged, answer, cites) {
   const out = new Map();
   if (!answer || answer.ok !== true || !Array.isArray(answer.departures)) {
-    for (const i of judged) out.set(i, { verdict: "undetermined", why: "the record check could not be run, so this sentence is not judged" });
+    for (const i of judged) out.set(i, { verdict: "undetermined", code: "RECORD_CHECK_UNREAD" });
     return out;
   }
   for (const i of judged) out.set(i, { verdict: "supported", by: cites });
@@ -109,28 +72,51 @@ export function askAllowed(sentence, allowed) {
  *  irreversible act with what and when); null for an override stated before T45, which states none. */
 export function groundWords(g) {
   if (!g || typeof g !== "object") return null;
-  if (g.kind === "legal_deadline") return `a legal deadline, ${g.citation ?? "its citation not stated"}, falling on ${g.date ?? "a date not stated"}`;
-  if (g.kind === "irreversible_act") return `an imminent irreversible act, ${g.what ?? "what is not stated"}, at ${g.when ?? "a time not stated"}`;
+  if (g.kind === "legal_deadline")
+    return word("filings.legal_deadline_falling", { citation: g.citation ?? word("filings.citation_stated"),
+                                                    date: g.date ?? word("filings.date_stated") });
+  if (g.kind === "irreversible_act")
+    return word("filings.imminent_irreversible_act", { what: g.what ?? word("filings.stated"), when: g.when ?? word("filings.time_stated") });
   return null;
 }
 
 /** R24: the words a draft, packet or communication prepared from an action carrying a premise override opens with. */
-export const OVERRIDE_HEAD = "Rests on an unestablished premise:";
+export const OVERRIDE_HEAD = word("filings.rests_unestablished_premise");
 /** R24: the disclosure line, from the override as the action's read answers it (actions R8, R74): its reason, its
  *  ground where one is stated, who stated it and when. */
 export function overrideDisclosure(o) {
   const g = groundWords(o.ground);
-  return `${OVERRIDE_HEAD} ${o.reason}${g ? `; on the ground of ${g}` : ""} (stated by ${o.by ?? "an author the record does not name"} `
-    + `at ${o.at ?? "a time the record does not state"})`;
+  return word("filings.stated_by_at", { override_head: OVERRIDE_HEAD, reason: o.reason,
+                                        grade: g ? word("filings.ground", { grade: g }) : "",
+                                        by: o.by ?? word("filings.author_record_name"), at: o.at ?? word("filings.date_record_state") });
 }
 
-/** R35: a group's public identity and declared stake in words, as the disclosure carries them (`actions` R75, from
- *  conformance R32): undetermined where the import recorded none. */
+/** R61, R63 (T50; N933): a matter stake in words, as `{stake, set_by, set_at, source}` (R60) or the string
+ *  `"undetermined"` (conformance R41): null for none. An unread stake is told as unread, never as none
+ *  (`stake.unreadable`). With `source` true the line names who set it and when (the in-band block, R61); without, only
+ *  the stake (an accepted source's, R63, whose stating group is not ours). */
+export function matterWords(m, { source = false } = {}) {
+  if (m == null) return null;
+  const s = m && typeof m === "object" ? m.stake : m;
+  if (s === null || s === undefined) return null;
+  const head = word("stake.inmatter");
+  if (s === "undetermined") return `${head}: ${word("stake.unreadable")}`;
+  if (!source || !m || typeof m !== "object") return `${head}: ${s}`;
+  const key = m.source === "action" ? "stake.source.action" : "stake.source.project";
+  const date = typeof m.set_at === "string" && m.set_at ? m.set_at.slice(0, 10) : word("filings.date_record_state");
+  return `${head}: ${s} (${word(key, { who: m.set_by || word("filings.author_record_name"), date })})`;
+}
+
+/** R35, R63: a group's public identity and declared stake in words, as the disclosure carries them (`actions` R75, from
+ *  conformance R32): undetermined where the import recorded none; (T50) its stake in the matter after them, when the
+ *  disclosure carries one (`matter_stake`, `actions` R105), and nothing added when it carries none. */
 function identityWords(d) {
   const id = d.identity && typeof d.identity === "object" ? d.identity : null;
   const name = id ? [id.name ?? id.display_name, id.domain].filter(Boolean).join(", ") : "";
   const stake = d.stake == null ? "none declared" : String(d.stake);
-  return `Its public identity: ${name || "undetermined"}. Its declared stake: ${stake}.`;
+  const matter = matterWords(d.matter_stake);
+  const head = word("filings.public_identity_declared", { name: name || "undetermined", stake });
+  return matter ? `${head} ${matter}.` : head;
 }
 
 /** R24, R35: every disclosure an action's read answers (`actions` R75), in its order, as lines printed first on what is
@@ -142,12 +128,13 @@ export function disclosureLines(disclosures, override) {
   if (!list) return override ? [{ key: "filings.override", kind: "override", text: overrideDisclosure(override) }] : [];
   return list.map((d) => {
     if (d.kind === "checked_held")
-      return { key: "prepared.rests.held", kind: d.kind, text: keyed("prepared.rests.held", { date: d.checked_at ?? "a date not stated" }) };
+      return { key: "prepared.rests.held", kind: d.kind, text: word("prepared.rests.held", { date: d.checked_at ?? word("filings.date_stated") }) };
     if (d.kind === "accepted")
       return { key: "prepared.rests.accepted", kind: d.kind,
-               text: `${keyed("prepared.rests.accepted", { group: d.group ?? "a group not named", date: d.edition_date ?? "a date not stated",
-                                                          date_accepted: d.accepted_at ?? "a date not stated" })} ${identityWords(d)}` };
+               text: `${word("prepared.rests.accepted", { group: d.group ?? word("filings.group_named"),
+                                                           date: d.edition_date ?? word("filings.date_stated"),
+                                                           date_accepted: d.accepted_at ?? word("filings.date_stated") })} ${identityWords(d)}` };
     if (d.kind === "override") return { key: "filings.override", kind: d.kind, text: overrideDisclosure({ ...(override || {}), ...d }) };
-    return { key: `filings.disclosure.${d.kind}`, kind: d.kind ?? null, text: `Disclosed: ${JSON.stringify(d)}` };
+    return { key: `filings.disclosure.${d.kind}`, kind: d.kind ?? null, text: word("filings.disclosed", { date: JSON.stringify(d) }) };
   });
 }

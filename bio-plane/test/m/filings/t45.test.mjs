@@ -9,7 +9,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, actionsWith, templatesOver } from "./fixture.mjs";
-import { KEYED, FILINGS_CHECKS, sentencesOf, groupLine, counselMarking } from "../../../src/filings/index.mjs";
+import { FILINGS_CHECKS, sentencesOf, groupLine, counselMarking } from "../../../src/filings/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { RFC_QUOTING_SENTENCE, rfcQuotingRefusal } from "../../../src/filing-templates/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -72,7 +73,7 @@ test("R35 R24 everything prepared from an action resting on held findings says s
                          { kind: "checked_held", checked_at: "2026-11-03" }] },
     [P]: { disclosures: [] },
     [O]: { premise_override: over, disclosures: [{ kind: "override", ...over }] } }) });
-  const held = KEYED["prepared.rests.held"].replace("{date}", "2026-11-03");
+  const held = word("prepared.rests.held", { date: "2026-11-03" });
   const h = prep(f, H);
   assert.ok(h.text.startsWith(`${held}\n\n`), h.text);
   const c = comm(f, C);
@@ -340,7 +341,7 @@ test("R46 a press action's review copy carries the embargo and release times on 
   const s = f.filingRecordSent({ filing: d.id, at: "2026-09-30", account: "emailed to the reporter", author: V("bo"), viewer: V("bo") });
   assert.deepEqual([s.ok, s.review_copy.review_copy], [true, true]);
   assert.match(s.review_copy.says, /review copy/);
-  assert.ok(comm(f, N, { text: "Words." }).text.startsWith(KEYED["filings.review_copy.no_embargo"]));
+  assert.ok(comm(f, N, { text: "Words." }).text.startsWith(word("filings.review_copy.no_embargo")));
   assert.equal(comm(f, x.action(), { text: "Words." }).text, "Words.", "not a press action: no line");
 });
 
@@ -439,7 +440,7 @@ test("R10 a packet for an action of a counsel-matter project carries, beside the
   const A = x.action({ kind: "commitment_claim" });
   const none = x.f.counselPacket({ reason: WHY, action: A, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.equal("privileged" in none, false);
-  assert.equal((await x.f.counselPacketExport({ id: none.id, author: V("olive"), viewer: V("olive") })).bytes.includes(KEYED["packet.privileged"]), false);
+  assert.equal((await x.f.counselPacketExport({ id: none.id, author: V("olive"), viewer: V("olive") })).bytes.includes(word("packet.privileged")), false);
   const roster = projectRosterOf(x.host, { record: x.record });
   roster.migrate();
   const set = roster.projectScopeSet({ projectId: x.proj, scope: "counsel_matter", reason: "counsel is briefed", by: "olive", viewer: V("olive") });
@@ -448,7 +449,7 @@ test("R10 a packet for an action of a counsel-matter project carries, beside the
   assert.deepEqual([p.privileged.key, p.privileged.warning.key, p.head.privileged.key, p.marking], ["packet.privileged", "packet.privileged.warning", "packet.privileged", counselMarking(COUNSEL)]);
   for (const s of Object.values(p.sections)) assert.equal(s.privileged && s.privileged.key, "packet.privileged", s.title);
   const e = await x.f.counselPacketExport({ id: p.id, author: V("olive"), viewer: V("olive") });
-  assert.ok(e.bytes.split("\n").filter((l) => l === KEYED["packet.privileged.warning"]).length >= 8);
+  assert.ok(e.bytes.split("\n").filter((l) => l === word("packet.privileged.warning")).length >= 8);
   assert.equal(x.f.counselPacketRead({ id: p.id, viewer: V("olive") }).privileged.key, "packet.privileged");
 });
 

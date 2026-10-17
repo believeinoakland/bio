@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, CASE, PROFILE, DOC, sha, WHY } from "./fixture.mjs";
 import { counselMarking, deadlineDate, Filings, INBAND_RULE, FILINGS_CHECKS, PACKET_REASON_MAX } from "../../../src/filings/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const MARK = counselMarking(COUNSEL);
@@ -160,7 +161,7 @@ test("R9 the six sections, each item naming its record source: facts, the chrono
   assert.ok(claimRules.length >= 1 && !claimRules.includes("defence_filing"));
   const notice = s.deadlines.items.find((d) => d.rule === "claim_notice");
   assert.deepEqual([notice.days, notice.count, notice.starts, notice.citation, notice.date.state], [90, "calendar", "known", "Test Stat. § 9.20", "undetermined"]);
-  assert.match(notice.start.why, /no date on which the group knew/);
+  assert.equal(notice.start.why, word("filings.why.record_holds_date"));
   /* consequences as recorded, states kept apart */
   const rec = s.consequences.items[0].recorded;
   assert.deepEqual(rec, x.consequences.consequencesOf({ determination: x.D, viewer: V("olive") }), "whole, as recorded");
@@ -237,7 +238,8 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
                "31 Dec, 1 Jan a holiday, Saturday 2 Jan, Sunday 3 Jan the weekend, Monday 4 Jan");
   const past = deadlineDate({ start: "2027-12-30", days: 3, count: "business", view });
   assert.equal(past.state, "undetermined");
-  assert.match(past.why, /reaches into 2028/);
+  assert.match(past.why, /reaches 2028/);
+  assert.equal(past.why.endsWith(" (or withholds, the active profiles disagreeing), so it is not counted"), true, "filings.why.withholds_active_profiles");
   assert.equal(deadlineDate({ start: "2026-01-31", days: 30, count: "calendar" }).date, "2026-03-02");
   assert.equal(deadlineDate({ start: null, days: 3, count: "calendar" }).state, "undetermined");
   assert.equal(deadlineDate({ start: "2026-01-31", days: 3, count: null }).state, "undetermined");
@@ -315,7 +317,7 @@ test("R10 with no counsel named (Tier 1 or 2) every section, the head and every 
   const x = world();
   const A = x.action();
   const p = x.f.counselPacket({ reason: WHY, action: A, author: V("olive"), viewer: V("olive") });
-  const OWN = "Prepared for the group's own review. Not legal advice. Not for filing.";
+  const OWN = word("filings.prepared_group_review");
   assert.deepEqual([p.ok, p.marking, p.head.marking, p.head.counsel, p.fileable], [true, OWN, OWN, null, false]);
   assert.equal(counselMarking(null), OWN);
   for (const s of Object.values(p.sections)) assert.equal(s.marking, OWN, s.title);
@@ -398,7 +400,7 @@ test("R14 any credential may propose a candidate theory and remedy against named
   assert.equal(prop({ why: "x".repeat(1000) }).ok, true, "1,000 characters is allowed");
   const m = prop({ proposer: MACHINE, viewer: MACHINE, packet: null, action: x.A });
   assert.deepEqual([m.ok, m.evidence, m.proposal.label.state, m.proposal.label.machine_work], [true, false, "machine_proposed", true]);
-  assert.match(m.says, /not the group's position/);
+  assert.equal(m.says, word("filings.says.candidate_theory_remedy_stored"));
   assert.equal(x.f.counselPacketRead({ id: v1.id, viewer: V("olive") }).sections.theories.items.length, 0,
                "the version already assembled does not change");
   const v2 = pack(x);
@@ -409,7 +411,7 @@ test("R14 any credential may propose a candidate theory and remedy against named
     assert.deepEqual(t.standards, [x.S1]);
     assert.ok(t.label && t.label.says);
   }
-  assert.match(v2.sections.theories.says, /never the group's position/);
+  assert.equal(v2.sections.theories.says, word("filings.says.candidate_counsel_weigh"));
 });
 
 test("R10 R22 the export's bytes are the rendering of the version read, the marking under every heading, then the in-band block", async () => {
