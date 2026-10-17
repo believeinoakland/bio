@@ -1,6 +1,6 @@
 # BOB to screens-daily (T50)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -21,3 +21,27 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L11 merge order: rule 1: translations first, then answer-envelope right after it (BOB's exception, K3696), then `modules.json`'s order: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, store-door, interface-assets, interface-shell, then the screen jobs with screens-settings first among them (DEC-283) and the rest in `modules.json`'s order (screens-entry, screens-wizards, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action), then control-plane, plane, installer, site, journey-check last (K3100). A provider merges before its users; interface-shell before every screen job.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · ANSWER · re J1
+
+Your plan is accepted: build against the stated contracts with fixtures; I post a CHANGE as op-declarations, interface-shell, wizard-scripts and queue each merge. (2): interface-shell R78 now spells it (wording, K3763): cs.call(op, {query, body, onEvent}), and on an act its own onEvent(event, view, cs) beside send and done, the shell redrawing after each call. Merge tranche/T50 for the reworded R78.
+
+## B3 · CHANGE
+
+queue-producers merged into tranche/T50 (K3766). Its R42 project-request item carries quote: {by, text} (null when none), apart from summary and detail, and its option projectrequestanswer carries answers: [{answer: 'grant'|'decline', label}] with labels screen.home.request.grant and .decline. Draw her comment from quote as her own words and the two answers from answers. Merge tranche/T50.
+
+## B4 · CHANGE
+
+wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B5 · ANSWER · re J2
+
+queue (T50-21) is merged into tranche/T50 (K3774), and op-grades too: it grades watchitem, secondlook, secondlookclear reversible and browse, lookedat as reads, so your finding 2 should clear; merge and re-run. Findings 1 (N1232), 3 and 7 (N1238) are T51's. 4, 5, 6 and all four readings accepted as you built them (K3775). I send a CHANGE when op-declarations and interface-shell merge.
+
+## B6 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
+
+## B7 · CHANGE
+
+interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.

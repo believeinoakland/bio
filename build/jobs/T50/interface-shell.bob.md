@@ -1,6 +1,6 @@
 # BOB to interface-shell (T50)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -22,3 +22,19 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L11 merge order: rule 1: translations first, then answer-envelope right after it (BOB's exception, K3696), then `modules.json`'s order: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, store-door, interface-assets, interface-shell, then the screen jobs with screens-settings first among them (DEC-283) and the rest in `modules.json`'s order (screens-entry, screens-wizards, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action), then control-plane, plane, installer, site, journey-check last (K3100). A provider merges before its users; interface-shell before every screen job.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · CHANGE
+
+Merge tranche/T50: your R78 is worded (no change of meaning, K3763): onEvent is spelled cs.call(op, {query, body, onEvent}) and, on an act, its own onEvent(event, view, cs) beside send and done. screens-daily R52 builds to it.
+
+## B3 · CHANGE
+
+A flaw in your ring, from SCREENS-WIZARDS #2 (P9, K3769): cs.ring finds the control by data-act and opens its row panel, but not a closed <details> around it, so a step that rings an act inside a closed fold (screens-wizards R16's 'own' fold) leaves it hidden. Ringing a control opens every closed <details> enclosing it. Deal with it in your job; a test with a control inside a closed fold.
+
+## B4 · CHANGE
+
+wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B5 · CHANGE
+
+From SCREENS-INQUIRY #10 (P9, K3775): the shell's own registry copy and RE_POINTS lack projectstakeset, projectrequest and projectrequestwithdraw on project and casedraft on question, and REF_SCREENS lacks request, matter, action and published, so screens-inquiry's pages refuse at boot. Read every screen's acts from wizard-scripts' SCREEN_REGISTRY (regenerated from design 7be06eb4cb and merged into tranche/T50, K3771) as your R73 says, never a copy; merge tranche/T50 first. Every screen job but two waits on your merge: post COMPLETE as soon as you can.

@@ -25,7 +25,9 @@ const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "
   /* T45 (action-producers R10, R12; N855, N890) */
   "watch-keep-or-stop", "plan-review-due", "plan-look-again",
   /* T48 (R54; N1047, DEC-226 (1)) */
-  "update-ready"];
+  "update-ready",
+  /* T50 (R57; N1091, N1204; queue-producers R41, R42) */
+  "project-invitation", "project-request"];
 /* R1's twenty-nine, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172), N345's five, the two
    docket kinds (queue-producers R31, DEC-116 items 3, 7) and the released hold (queue-producers R29, DEC-113) among
    them. */
@@ -49,7 +51,9 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   "question-find", "step-later-found", "milestone-overdue", "project-quiet", "step-cost-shared", "step-cost-message",
   "review-comment-left-out",
   /* T45 (action-producers R9; N881) */
-  "member-left-items"];
+  "member-left-items",
+  /* T50 (R57; N1204; notice-producers R24) */
+  "watched-changed"];
 /* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */
@@ -93,31 +97,31 @@ test("R1: every catalogued kind answers its class, anything else null, and every
   // N375: the self-registered key is an OBLIGATION whose sentence says what happened and what may be done
   assert.match(QUEUE_OBLIGATION_KINDS["signer-self-registered"], /registered their own signing key; you may revoke it/);
   // the Action layer's kinds (K608, K611, K614): each sentence says what came and what a member does about it
-  assert.match(QUEUE_OBLIGATION_KINDS["plan-checkpoint-due"], /checkpoint your group set in an action plan has come; a member judges whether its condition was met/);
+  assert.match(QUEUE_OBLIGATION_KINDS["plan-checkpoint-due"], /checkpoint your team set in an action plan has come; a member judges whether its condition was met/);
   assert.match(QUEUE_OBLIGATION_KINDS["escalation-stage-proposed"], /next stage is proposed because its trigger was met; a member advances it or declines with a reason/);
-  assert.match(QUEUE_OBLIGATION_KINDS["action-reminder"], /reminder you asked for on one of the group's action deadlines; answer it with another reminder or none/);
+  assert.match(QUEUE_OBLIGATION_KINDS["action-reminder"], /reminder you asked for on one of the team's action deadlines; answer it with another reminder or none/);
   // K899 (7), DEC-61: the litigation hold says what was marked and what a member records; DEC-113: the release is its own act
-  assert.match(QUEUE_OBLIGATION_KINDS["litigation-hold"], /a reply the group marked as legal pressure: consider whether to place a litigation hold, and record it in place or released with a reason/);
+  assert.match(QUEUE_OBLIGATION_KINDS["litigation-hold"], /a reply the team marked as legal pressure: consider whether to place a litigation hold, and record it in place or released with a reason/);
   assert.match(QUEUE_OBLIGATION_KINDS["litigation-hold"], /op=actionhold to place it, op=actionholdrelease to release it/);
   // T27 (N518, N520): the released hold, the docket's core item and the two edition kinds, each with R1's sentence
   assert.match(QUEUE_FINDING_KINDS["litigation-hold-released"], /a member released a litigation hold: the projects it alone covered may be purged again and their assistant transcripts deleted on schedule/);
   assert.match(QUEUE_OBLIGATION_KINDS["docket-core-due"], /a case you manage has an item its docket must list: a response or statement from its subject or a holder of standing, a newer edition, or a conflict on a load-bearing finding not disclosed; place it, or decline it/);
-  assert.match(QUEUE_FINDING_KINDS["edition-withdrawn"], /something a finding rests on is in a case edition its group has withdrawn/);
-  assert.match(QUEUE_FINDING_KINDS["edition-contested"], /a response the group filed contests a case edition this finding is part of/);
+  assert.match(QUEUE_FINDING_KINDS["edition-withdrawn"], /something a finding rests on is in a case edition its team has withdrawn/);
+  assert.match(QUEUE_FINDING_KINDS["edition-contested"], /a response the team filed contests a case edition this finding is part of/);
   // negative control: near-misses of the T27 kinds are outside the vocabulary
   for (const v of ["litigation-hold-release", "hold-released", "docket-core", "docket-core-due ", "edition-withdrawal",
                    "edition-contest", "EDITION-WITHDRAWN", "FINDING::edition-withdrawn"])
     assert.equal(classOfKind(v), null, v);
   // K921: the review request and the local fact say what is owed, each with its own door
   assert.match(QUEUE_OBLIGATION_KINDS["template-review-requested"], /a member asked you to review a filing template's version/);
-  assert.match(QUEUE_OBLIGATION_KINDS["local-fact-due"], /a holiday calendar or office hours one of the group's deadlines reads is unconfirmed or due for confirmation/);
+  assert.match(QUEUE_OBLIGATION_KINDS["local-fact-due"], /a holiday calendar or office hours one of the team's deadlines reads is unconfirmed or due for confirmation/);
   // DEC-135 (2): the check request says who asked, by what, on what, and the member's two answers
   assert.match(QUEUE_OBLIGATION_KINDS["check-requested"], /a project owner asked for a check, by an expertise you declared or by name, on something you can see; take it \(op=checktake\), or leave it/);
   for (const v of ["check-request", "check-requested ", "CHECK-REQUESTED", "check_requested", "OBLIGATION::check-requested"])
     assert.equal(classOfKind(v), null, v);
   // DEC-102 item 3: the unchosen credit level says what the edition reaches and what the member does
   assert.match(QUEUE_OBLIGATION_KINDS["attribution-unchosen"], /a case edition being prepared reaches an observation you authored and you have chosen no credit level for it; choose one/);
-  assert.match(QUEUE_CONDITION_KINDS["action-clock-overdue"], /deadline on one of the group's actions passed while its entry is still pending/);
+  assert.match(QUEUE_CONDITION_KINDS["action-clock-overdue"], /deadline on one of the team's actions passed while its entry is still pending/);
   // T23 (K1099): the five sweep kinds and the three notice kinds are CONDITIONs, each with observation-log's sentence
   for (const [k, says] of Object.entries(NEW_CONDITION_SAYS)) {
     assert.equal(classOfKind(k), "CONDITION", k);
@@ -131,10 +135,10 @@ test("R1: every catalogued kind answers its class, anything else null, and every
     assert.equal(classOfKind(v), null, v);
   // T36 (notice-producers R12–R15): the four security and policy kinds are FINDINGs, each with R1's sentence, naming no one
   const T36_SAYS = {
-    "security-level-high": /the group's security level became High: an unusual run of refused attempts, or something got through; counts only, naming no one/,
-    "policy-changed-noticed": /a policy the group follows changed at its address without an announced amendment; review it/,
+    "security-level-high": /the team's security level became High: an unusual run of refused attempts, or something got through; counts only, naming no one/,
+    "policy-changed-noticed": /a policy the team follows changed at its address without an announced amendment; review it/,
     "scan-found": /a file you can see was held after a scanner found something in it; its safe view stays open/,
-    "security-tool-off": /one of the group's security tools was switched off because it did not confirm its private mode/,
+    "security-tool-off": /one of the team's security tools was switched off because it did not confirm its private mode/,
   };
   for (const [k, says] of Object.entries(T36_SAYS)) {
     assert.equal(classOfKind(k), "FINDING", k);

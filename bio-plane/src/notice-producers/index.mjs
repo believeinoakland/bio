@@ -1,4 +1,4 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R22).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R24).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
@@ -40,11 +40,13 @@
  *       milestone-overdue        FINDING, investigation.milestonesOverdue (and milestone-reminder, OBLIGATION)
  *       project-quiet            FINDING, investigation.quietPrompts
  *       review-comment-left-out  FINDING, review.reviewCommentsLeftOut
+ *   R24 watched-changed          FINDING, retrieval.browse(only: watched) + following.watchedBy   a watched item changed after the
+ *                                watcher's mark, told to her alone, once per change (T50; N1204, DEC-238)
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
  * lazily when first asked): membership, people, moneyChecks, duties, entities (R20's `{office}`, K3144), answers, inquiry, credentials (R12), aiAccounts (R16's suspended sign-ins, T48), following, standards,
- * fileSafety, provenance, aiUse (R16), steps (with `step`, R17's step work), questionExplorer, investigation, review (R17);
+ * retrieval (R24's watched items), fileSafety, provenance, aiUse (R16), steps (with `step`, R17's step work), questionExplorer, investigation, review (R17);
  * and `view`, the jurisdiction view whose time zone R13's to R17's dates are read in (the profile's, when not given; read
  * once a read of `noticeItems`).
  *
@@ -67,6 +69,7 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { credentialsOf, SECURITY_THRESHOLD, SECURITY_DAYS } from "../credentials/index.mjs";
 import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { followingOf } from "../following/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { fileSafetyOf, findingKind } from "../file-safety/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
@@ -146,11 +149,16 @@ export const NOTICE_KINDS = Object.freeze({
   "step-cost-shared": "FINDING",
   "step-cost-message": "FINDING",
   "review-comment-left-out": "FINDING",
+  /* R24 (queue R57, T50; N1204) */
+  "watched-changed": "FINDING",
 });
 /** R16, R17: the items one read answers from each of their sources (as R13's and R14's bounds); `facts` states the
  *  bound and `truncated` when a source answers more. */
 export const ACCOUNT_ITEMS_MAX = 200;
 export const INVESTIGATION_ITEMS_MAX = 200;
+/** R24: the watched items one read follows (`retrieval.browse`'s `next`, its R85: at most 200 a page). */
+export const WATCHED_ITEMS_MAX = 1000;
+export const WATCHED_PAGE = 200;
 /** R16: the periods a limit counts over (ai-use R2), each with its `ai.period.*` and `ai.when.*` words. */
 export const LIMIT_PERIODS = Object.freeze(["day", "month"]);
 /** R16: the "Ask" item's label (an Ask, DEC-69's form), beside R16's two "Noticed" items' `noticed`. */
@@ -217,6 +225,7 @@ export class NoticeProducers {
   get #inquiry() { return this.#dep("inquiry", () => inquiryOf(this.#host)); }
   get #credentials() { return this.#dep("credentials", () => credentialsOf(this.#host)); }
   get #aiAccounts() { return this.#dep("aiAccounts", () => aiAccountsOf(this.#host)); }
+  get #retrieval() { return this.#dep("retrieval", () => retrievalOf(this.#host)); }
   get #following() { return this.#dep("following", () => followingOf(this.#host)); }
   get #standards() { return this.#dep("standards", () => standardsOf(this.#host)); }
   get #fileSafety() { return this.#dep("fileSafety", () => fileSafetyOf(this.#host)); }
@@ -264,6 +273,7 @@ export class NoticeProducers {
       milestone: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
       project_quiet: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
       review_left_out: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+      watched_changed: { bound: WATCHED_ITEMS_MAX, truncated: false },
       failed,
     };
     const run = (provider, fn) => {
@@ -295,6 +305,7 @@ export class NoticeProducers {
       run("investigation", () => ({ fact: "milestone", ...this.#milestones(me, viewer, at) }));
       run("investigation", () => ({ fact: "project_quiet", ...this.#quietPrompts(me, viewer, at) }));
       run("review", () => ({ fact: "review_left_out", ...this.#reviewLeftOut(me, viewer, at) }));
+      run("retrieval", () => ({ fact: "watched_changed", ...this.#watchedChanged(me, viewer, at) }));
       return { items, facts };
     } catch {
       return { items: [], facts: { ...facts, failed: [...new Set([...failed, "notice-producers"])] } };
@@ -1330,6 +1341,59 @@ export class NoticeProducers {
       this.#works.set(step, s && s.ok !== false && filled(s.work) ? s.work : step);
     }
     return this.#works.get(step);
+  }
+
+  /* ================================================================== R24 · a watched item that changed
+   * (retrieval R85; following R32, R35; queue R57; N1204, DEC-238 (S23 "A"), K3635). The items `retrieval.browse` lists as the
+   * viewer's own watches (`only: "watched"`), following `next` to at most WATCHED_ITEMS_MAX; for each, the instant this member's
+   * mark was last set is her entry in `following.watchedBy(item)`, and the item is told only when its `last_changed` is later.
+   * Keyed by the item and that change, so the same change read again is the same item (queue mints it once). It goes to this
+   * member alone: no other member's mark is read for her, and it says nothing of what changed. An entity's `last_changed` is its
+   * creation instant, never later than a mark set on it, so none is told. A browse or watchedBy that throws, or answers
+   * `undetermined`, is its provider's failure (R1). */
+  #watchedChanged(me, viewer, now) {
+    const watched = [];
+    let after = null, truncated = false;
+    for (;;) {
+      if (watched.length >= WATCHED_ITEMS_MAX) { truncated = true; break; }
+      let r;
+      try { r = this.#retrieval.browse({ only: "watched", viewer, limit: Math.min(WATCHED_PAGE, WATCHED_ITEMS_MAX - watched.length), ...(after ? { after } : {}) }); }
+      catch { throw failure("retrieval"); }
+      if (!r || r.ok !== true || r.undetermined || !Array.isArray(r.items)) throw failure("retrieval");
+      watched.push(...r.items);
+      if (r.truncated !== true || !r.next || r.next === after) break;
+      after = r.next;
+    }
+    const zone = this.#zone(), today = NoticeProducers.#localDay(now, zone);
+    const items = [];
+    for (const w of watched) {
+      if (!w || !filled(w.id) || !filled(w.last_changed)) continue;
+      const changed = INSTANT.test(w.last_changed) ? Date.parse(w.last_changed) : NaN;
+      if (!Number.isFinite(changed)) continue;
+      let who;
+      try { who = this.#following.watchedBy(w.id); } catch { throw failure("following"); }
+      if (!who || who.ok !== true || who.undetermined || !Array.isArray(who.watchers)) throw failure("following");
+      const mark = who.watchers.find((x) => x && bare(x.member) === me);
+      const set = mark && typeof mark.at === "string" && INSTANT.test(mark.at) ? Date.parse(mark.at) : NaN;
+      if (!Number.isFinite(set) || !(changed > set)) continue;
+      const fills = { what: filled(w.title) ? w.title : w.id, date: dayInSentence(NoticeProducers.#localDate(w.last_changed, zone), today) };
+      const summaryKey = "queue.watched-changed.summary", detailKey = "queue.watched-changed.detail";
+      items.push({
+        id: `FINDING::watched-changed::${w.id}::${w.last_changed}`, class: "FINDING", kind: "watched-changed",
+        label: NOTICED_LABEL, by: "the machine's",
+        case: this.#homesAt([w.id], viewer),
+        subject: { kind: w.kind ?? null, id: w.id, title: w.title ?? null, last_changed: w.last_changed },
+        summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
+        basis: { source: "retrieval.browse", item: w.id, last_changed: w.last_changed, marked_at: mark.at, zone,
+                 detail: "a watched item's last change is retrieval's (its R85), later than the instant this member's own watch "
+                       + "mark was set (following R35); told once per change, to her alone, and it says nothing of what changed." },
+        age: ageFrom(w.last_changed, now, "no_change_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: this.#optionsOf([w.id]),
+      });
+    }
+    return { items, facts: { truncated } };
   }
 
   /** R14: whether this member is active (membership's member facts); a membership that throws is its failure. */

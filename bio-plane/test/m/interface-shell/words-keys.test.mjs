@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import * as shellModule from "../../../src/interface-shell/index.mjs";
 import { wordsOf } from "../../../src/interface-shell/index.mjs";
 import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
-import { boot, ok, refused, textNodes } from "./harness.mjs";
+import { boot, ok, refused, httpError, textNodes } from "./harness.mjs";
 import { ALL, FIXTURE_WORDS } from "./screens.fixture.mjs";
 
 /* the keys the module reads (words-reads.json's list for it at fa3c8b7e8e, with R65–R69's: refusal.reference for shell.trace,
@@ -97,8 +97,8 @@ test("R70 over fixtures, what the page draws for a sample of its keys equals wor
   const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), groupidentity: ok({ ok: true, group: "g", display_name: null }), queue: ok({ items: [{ id: "q1", class: "OBLIGATION" }, { id: "q2", class: "OBLIGATION" }] }) } });
   const seen = drawn(p);
   const has = (key, vars) => assert.ok(seen.has(word(key, vars)), key);
-  for (const k of ["shell.sections", "shell.path", "shell.search", "shell.signout", "shell.appearance", "shell.appearance.device", "shell.appearance.light", "shell.appearance.dark",
-    "shell.width", "level.prompt.name", "tab.more.name", "mark.path.working.name", "shell.band.working", "shell.mark"]) has(k);
+  for (const k of ["shell.sections", "shell.path", "shell.search", "shell.menu.signout", "shell.appearance", "shell.appearance.device", "shell.appearance.light", "shell.appearance.dark",
+    "shell.width", "shell.level.button.prompt", "tab.more.name", "mark.path.working.name", "shell.band.working", "shell.mark"]) has(k);
   for (const k of RAIL) has("rail." + k + ".name");
   has("shell.todo", { n: 2 });
   has("shell.you", { handle: "mai" });
@@ -129,5 +129,8 @@ test("R70 over fixtures: a list's picks, sort and row controls, the lock and the
 test("R70 a refusal's reference and a failure without words are drawn by their keys (refusal.reference with the trace's first 8 characters, shell.unread)", async () => {
   const p = await boot({ screens: ALL, path: "/app/held", plane: { heldcaptures: refused("ZZ_NO_WORDS", null, 400, { trace: "0123456789abcdef" }) } });
   const text = p.root().querySelector('#cs-main [data-state="failed"]').textContent;
-  assert.equal(text, word("shell.unread") + " " + word("refusal.reference", { ref: "01234567" }));
+  /* R83: a coded refusal with neither word nor translation is refusal.uncatalogued, its code and the reference; a failure with no code is shell.unread */
+  assert.equal(text, word("refusal.uncatalogued") + " ZZ_NO_WORDS " + word("refusal.reference", { ref: "01234567" }));
+  const q = await boot({ screens: ALL, path: "/app/held", plane: { heldcaptures: httpError(500) } });
+  assert.equal(q.root().querySelector('#cs-main [data-state="failed"]').textContent, word("shell.unread"));
 });

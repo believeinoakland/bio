@@ -1,7 +1,11 @@
 /* The producing group (R1–R4) and the invariants over it (R26, R28–R30, R41), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { boot, stubOver, doAnswer } from "./fixture.mjs";
+import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import { GROUP_SLUG_RE, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, NO_GROUP_RECORDED, instanceSetupOps } from "../../../src/setup.mjs";
 
 const post = async (m, path, body) => doAnswer(stubOver(m).fetch(new Request(`http://do/${path}`,
@@ -136,12 +140,12 @@ test("R29 by, author and origin are the control plane's stamps: a body naming it
 test("R30 C-64.2, C-64.3, C-64.5, C-64.6 and C-64.7 are this module's rows, each raised here with its check and translation, beside T34's C-64.8 (R60) and C-64.9, C-64.10 (R65), and T37's C-64.11–C-64.26 (R67–R73) but C-64.18, dropped and never reused (R75; T38, N793), T45's C-64.27 (R77), and T46's C-64.28, C-64.29 (R79; K2996), and T47's C-64.30 (R84), and T48's C-64.31–C-64.33 (R87, R90)", async () => {
   const rows = Object.values(INSTANCE_SETUP_CHECKS).filter((r) => r.check.startsWith("C-64."));
   assert.deepEqual(rows.map((r) => r.check).sort(), ["C-64.10", "C-64.2", "C-64.3", "C-64.5", "C-64.6", "C-64.7", "C-64.8", "C-64.9",
-    ...Array.from({ length: 23 }, (_, i) => `C-64.${11 + i}`).filter((n) => n !== "C-64.18")].sort());
+    "C-64.27", "C-64.28", "C-64.29", "C-64.30", "C-64.32", "C-64.33"].sort());
   for (const r of rows) {
     assert.match(r.where, /^src\/setup\.mjs /);
     /* BOB's drafts for T48's three rows (R87, R90) are shorter sentences; each still says what was not done */
-    assert.ok(r.translation.split(/\s+/).length >= (/^C-64\.3[123]$/.test(r.check) ? 10 : 20), r.check);
-    if (/^C-64\.3[123]$/.test(r.check)) assert.match(r.translation, /Nothing was (?:translated|recorded)\.$/, r.check);
+    assert.ok(r.translation.split(/\s+/).length >= (/^C-64\.3[23]$/.test(r.check) ? 10 : 20), r.check);
+    if (/^C-64\.3[23]$/.test(r.check)) assert.match(r.translation, /Nothing was recorded\.$/, r.check);
   }
   const w = await boot({ env: {} });
   w.prov.admins = new Set(["admin"]);
@@ -161,4 +165,35 @@ test("Terms: the slug grammar is 3 to 40 of a-z, 0-9 and '-', beginning and endi
   const bad = ["ab", "a".repeat(41), "-ab", "ab-", "Abc", "a_b", "a b", "ab\n"];
   for (const s of ok) assert.ok(GROUP_SLUG_RE.test(s), s);
   for (const s of bad) assert.ok(!GROUP_SLUG_RE.test(s), JSON.stringify(s));
+});
+
+test("R30 every row of this module's table that stays names, in its where, the function that holds its region, and the region inside it; no number is held twice and C-119.5 is held by none (T50: the translation workspace's rows are `translations`', R94)", () => {
+  const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../src/setup.mjs"), "utf8").split("\n");
+  const body = (fn) => {
+    const name = fn.replace(/[$#]/g, "\\$&");
+    const def = new RegExp(`^(\\s*)(?:export\\s+)?(?:async\\s+)?(?:function\\s+|static\\s+)?${name}\\s*\\(`);
+    for (let i = 0; i < src.length; i++) {
+      const m = def.exec(src[i]);
+      if (!m || /^\s*(?:return|if|for|while|const|let)\b/.test(src[i])) continue;
+      const close = src.findIndex((l, j) => j > i && l.startsWith(`${m[1]}}`));
+      return close < 0 ? null : src.slice(i, close + 1);
+    }
+    return null;
+  };
+  /* the rows the workspace moved are `translations`' (R94, answer-envelope's catalogue lists its file) */
+  const mine = Object.entries(INSTANCE_SETUP_CHECKS).filter(([code]) => !(code in TRANSLATIONS_CHECKS));
+  for (const [code, row] of mine) {
+    const m = /^src\/setup\.mjs (\S+) > (\S+)$/.exec(row.where);
+    assert.ok(m, `${code}: ${row.where}`);
+    const b = body(m[1]);
+    assert.ok(b, `${code}: no function ${m[1]}`);
+    const open = b.findIndex((l) => l.includes(`/* DEC-49 REGION ${m[2]} */`));
+    const end = b.findIndex((l) => l.includes(`/* END DEC-49 REGION ${m[2]} */`));
+    assert.ok(open >= 0 && end > open, `${code}: ${m[1]} holds no region ${m[2]}`);
+  }
+  const numbers = Object.values(INSTANCE_SETUP_CHECKS).map((r) => r.check);
+  assert.equal(new Set(numbers).size, numbers.length);
+  assert.equal(numbers.includes("C-119.5"), false);
+  assert.equal(mine.map(([, r]) => r.check).filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 3, "C-64.27, .28 and .29 stay");
+  assert.equal(numbers.includes("C-64.18"), false);
 });

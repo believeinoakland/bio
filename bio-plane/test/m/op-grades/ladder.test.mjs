@@ -87,7 +87,7 @@ test("R2: RUNG_ABSENT names each op with one ground of RUNG_ABSENCE_GROUNDS (sub
   const R2 = { contradictionrecommend: "undetermined", contradictionoptin: "undetermined",
     contradictionrespond: "undetermined", signerregister: "credential", signerrevoke: "credential",
     knockerconsent: "credential", communicationprepare: "undetermined",
-    templatesave: "undetermined", actioncreate: "undetermined", actionpressure: "undetermined", planopen: "undetermined",
+    templatesave: "undetermined", actioncreate: "undetermined", actionpressure: "undetermined",
     optionadd: "undetermined", optionpropose: "undetermined", optionadopt: "undetermined", checkpointrecord: "undetermined",
     optionstart: "undetermined", reminderset: "caller-owned", reminderanswer: "caller-owned" };
   for (const [op, ground] of Object.entries(R2)) assert.equal(RUNG_ABSENT[op]?.ground, ground, op);
@@ -98,15 +98,16 @@ test("R2: RUNG_ABSENT names each op with one ground of RUNG_ABSENCE_GROUNDS (sub
   assert.ok(!Object.hasOwn(RUNG_ABSENT, "inboxpull"));
 });
 
-test("R3 R35: no rung is added for an act corrected forward: DEC-88 left 21 `undetermined`, R35 (T47) moves inboxpull "
-   + "out, leaving 20, and with R7's, R9's and R10's the count reads 24 — each named here `undetermined`, and the ladder "
-   + "has no other rung", () => {
+test("R3 R35 R47: no rung is added for an act corrected forward: DEC-88 left 21 `undetermined`, R35 (T47) moves inboxpull "
+   + "out, leaving 20, R47 (T50) moves planopen out, leaving 19, and with R7's, R9's and R10's the count reads 23 — each named "
+   + "here `undetermined`, and the ladder has no other rung", () => {
   const R3 = words(`contradictionrecommend contradictionoptin contradictionrespond communicationprepare
-    templatesave actioncreate actionpressure planopen optionadd optionpropose optionadopt checkpointrecord optionstart
+    templatesave actioncreate actionpressure optionadd optionpropose optionadopt checkpointrecord optionstart
     templatedraft templaterevise templatepropose templatesubmit templatereview templatecomment templateapprove`);
-  assert.equal(R3.length, 20);
-  const R24 = [...R3, "whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument"];
-  for (const op of R24) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
+  assert.equal(R3.length, 19);
+  const R23 = [...R3, "whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument"];
+  for (const op of R23) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
+  assert.equal(gradeOf("planopen"), "reversible", "R47: planopen left the ground");
   assert.notEqual(gradeOf("inboxpull"), "undetermined", "R35: inboxpull left the ground");
   assert.equal(RUNG_LADDER.length, 5);
   /* `undetermined` holds only where neither rule holds: no op graded undetermined also asks a reason in R1's lists */
