@@ -49,3 +49,7 @@ Every screen job, plane and your branch are merged into tranche/T50 (K3778). Two
 ## B8 · CHANGE
 
 Merged (K3780). On tranche/T50, t47-e2e.test.mjs:131 (Home's busy project row, /2 questions/) passes when the file runs alone (3/3, twice) but fails inside the whole suite (node --test bio-plane/test/m/control-plane/*.test.mjs): actual 'Last change 17 October 2026: The dark streets' at 17.9 s, the count not yet drawn. Make the test wait on the condition (the row's count drawn, with a generous bound), never a fixed delay, prove it green inside the full suite twice, and post COMPLETE. K3781.
+
+## B9 · CHANGE
+
+Adds to B8 (K3781): chase both. (a) t47-e2e R81's Home row: wait on the drawn count. (b) t46-e2e R75's repeat upload answering existed:false: decide first whether it is the test or the product. If the second upload is sent only after the first has answered, and capture still says existed:false, that is a race in the product (capture's or acquisition's held check not seeing a row the first call already answered): REPORT it with the module and lines, and do not change the test to hide it. If the test sends the second before the first has finished, make it wait on the first's answer. Prove 5 full-suite runs green, then COMPLETE.
