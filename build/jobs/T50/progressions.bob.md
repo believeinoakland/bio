@@ -19,3 +19,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L5 merge order: `modules.json`'s (entities, events, local-facts, standards, progressions, explore, query-language, retrieval).
+
+## B2 · CHANGE
+
+Bob's ruling K3678: a job that reads a document of its reading set only in part stops and the document is pruned so it can be read whole. Your J2 says you read `build/layers.md` and `build/plan/current.md` in part. `layers.md` is now pruned to 23 KB (K3679); `current.md` is 43 KB. Merge `tranche/T50`, read both whole, and confirm your work against them or correct it. If your context is past half its window, post BLOCKED (cause `context`) instead and I restart you. Then post COMPLETE. Your three readings (says shape, next_deadline including past deadlines, limit clamped) stand unless your re-reading changes them. Entities, events and standards are merged.
