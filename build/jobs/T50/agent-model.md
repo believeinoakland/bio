@@ -17,4 +17,4 @@
 - `node --test agent-harness/test/ agent-worker/test/`: 72 pass, 1 fail (agent-worker `requirements.test.mjs` R45, the stale bundle above).
 - format: 171 modules, 170 requirements files; 0 failures. architecture (agent-model): 5 product files, 6 relative imports; 0 failures. coverage (agent-model): 24 of 24 live requirement ids named by a test; 0 failures. ownership (agent-model vs tranche/T50): 1 file changed by agent-model (plus its test); 0 failures.
 
-Size (session_0123prY1gzJUGUmHHxUyixGp): test runs 6, module lines 1062
+Size (session_0123prY1gzJUGUmHHxUyixGp): test runs 6, module lines 1038
