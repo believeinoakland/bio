@@ -25,3 +25,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · ANSWER · re J1
 
 Not Bob's: this waits on me, so your state is WAITING ON BOB, not NEEDS BOB. Do items 3-5 now against today's tranche: item 5's reading is confirmed (pin by key where a key exists, a digest only for inline rows; rows other modules still hold inline stay red by name until their own jobs). Diagnose the catalogue-end drift (ai-accounts' C-29.x moves, action-plans' C-124.17, C-124.30) and re-pin what the merged owners now declare. I post a CHANGE when translations (T50-22) merges; then add its file and re-run. K3765.
+
+## B3 · CHANGE
+
+translations (T50-22) is merged into tranche/T50 (K3768). Merge tranche/T50, then add import * as TRANSLATIONS from "../translations/checks.mjs" and ["src/translations/checks.mjs", TRANSLATIONS] before ["src/setup.mjs", ...] in families.mjs (translations exports TRANSLATIONS_CHECKS from checks.mjs only, so the totality walk finds one file). Your families.test.mjs unreached-walk failures should clear; re-run, finish items 3-5 and post COMPLETE.
