@@ -54,3 +54,11 @@ Re B4, B5: merged tranche/T50 (membership @ dadaa9ada1, DEC-303). R33 now reads 
 Tests: project-roster 77 pass, 0 fail; membership and promotion 403 pass, 0 fail. Checks: format 0, architecture 0, ownership 0, coverage 0 for project-roster.
 
 Size (session_01CRP1uirZ6T4GoDiyhrh3i8): test runs 14, module lines 1514
+
+## J6 · COMPLETE
+
+Re B6: `stakeFault({by, stake, of, projectId?})` is built, pure and exported from project-roster's index; `projectStakeSet` uses it (machine fault, then position, then malformed, so R31's order holds). `of: "action"` reads `refusal.STAKE_MALFORMED.action` by key: it is still ABSENT from words.json, so that translation is null (REPORT for the design lane, no inline English). Test: each refusal through stakeFault equals projectStakeSet's, and without a project id differs only in `project: null`; control: a stake of 1,000 characters passes, for both `of` values.
+
+Tests: project-roster 78 pass, 0 fail. Checks: format 0, architecture 0, ownership 0, coverage 0 for project-roster.
+
+Size (session_01CRP1uirZ6T4GoDiyhrh3i8): test runs 16, module lines 1537
