@@ -19,13 +19,13 @@
  },
  {
   "key": "refusal.RENDER_QUEUE_UNREADABLE",
-  "en": "Your group's Civicsmith couldn't read its list of files waiting for a safe view, so none was made just now. Try again in a moment; if it keeps happening, tell an administrator.",
+  "en": "Your team's Civicsmith couldn't read its list of files waiting for a safe view, so none was made just now. Try again in a moment; if it keeps happening, tell an administrator.",
   "protected": false,
   "note": "C-140.43; a safe view is installed but its queue could not be read"
  },
  {
   "key": "refusal.SIGNINTRACE_NOT_TEST",
-  "en": "This group's Civicsmith keeps a trace of sign-ins only while it runs as a test instance, and this one does not. Nothing was read or changed.",
+  "en": "This team's Civicsmith keeps a trace of sign-ins only while it runs as a test instance, and this one does not. Nothing was read or changed.",
   "protected": false,
   "note": "C-69.7; BOB's B174 (3)"
  },
@@ -91,7 +91,7 @@
  },
  {
   "key": "refusal.ALREADY_CLAIMED",
-  "en": "Your group's Civicsmith already has its first administrator, so this one-time password no longer works. If that was you, sign in instead.",
+  "en": "Your team's Civicsmith already has its first administrator, so this one-time password no longer works. If that was you, sign in instead.",
   "protected": false,
   "note": "credentials R1"
  },
@@ -103,25 +103,25 @@
  },
  {
   "key": "refusal.NO_SUCH_JOIN_LINK",
-  "en": "This join link doesn't work: it may have been replaced or turned off. Ask the group for its current link.",
+  "en": "This join link doesn't work: it may have been replaced or turned off. Ask the team for its current link.",
   "protected": false,
   "note": "membership R104; one answer for each arm"
  },
  {
   "key": "refusal.JOIN_LINK_DAILY_CAP",
-  "en": "The group's join link has let in as many people as it allows today. Try again tomorrow.",
+  "en": "The team's join link has let in as many people as it allows today. Try again tomorrow.",
   "protected": false,
   "note": ""
  },
  {
   "key": "refusal.NO_COVER",
-  "en": "Say the name the group will know you by. Only its administrators see it. Nothing was changed.",
+  "en": "Say the name the team will know you by. Only its administrators see it. Nothing was changed.",
   "protected": false,
   "note": ""
  },
  {
   "key": "session.signedout",
-  "en": "You are signed out on this device. Your work is saved in your group's Civicsmith, not here.",
+  "en": "You are signed out on this device. Your work is saved in your team's Civicsmith, not here.",
   "protected": false,
   "note": "the front door after signing out"
  },
@@ -157,7 +157,7 @@
  },
  {
   "key": "signing.ceremony.who",
-  "en": "You sign as {signer}, an owner of {project}. The public page will read “Published by {group} · signed by {signer}”. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed.",
+  "en": "You sign as {signer}, an owner of {project}. The public page will read “Published by {group} · signed by {signer}”. Once public, anyone can read it and check your signature without asking the team; it can be corrected by a new edition, never removed.",
   "protected": true,
   "note": "the sign step"
  },
@@ -181,7 +181,7 @@
  },
  {
   "key": "signing.ceremony.signednow",
-  "en": "Signed and published. Edition {edition} is public now: anyone can read it and check your signature without the group.",
+  "en": "Signed and published. Edition {edition} is public now: anyone can read it and check your signature without the team.",
   "protected": true,
   "note": "caseratify done"
  },

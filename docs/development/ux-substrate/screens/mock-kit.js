@@ -8,11 +8,11 @@ const WNAME = ['', 'Reversible', 'Reasoned', 'Terminal', 'Signed', 'Irreversible
 const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' class="on"' : ''}></i>`).join('')}</span>`;
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
-  cite:1, sever:1, reinstate:1, select:1, search:1, queuesnooze:1, queuemute:1, owed_updatestart:1, owed_founderhandleset:2, owed_projectstakeset:2, owed_actionstake:2, planask:1, entityalias:2, relationdeclare:2, resolve:1, resolvetestify:2, connect:1, stepsource:2, stepsourcewithdraw:2, actionreplyquoting:2, readtranslate:1, owed_updatelater:1, owed_updateskip:2, taskforward:1, addparticipant:1, relate:1, followregister:1,
+  cite:1, sever:1, reinstate:1, select:1, search:1, queuesnooze:1, queuemute:1, owed_updatestart:1, owed_installupdate:1, owed_installalongside:2, owed_installremove:1, owed_installremoveconfirm:5, owed_founderhandleset:2, owed_projectstakeset:2, owed_actionstake:2, planask:1, entityalias:2, relationdeclare:2, resolve:1, resolvetestify:2, connect:1, stepsource:2, stepsourcewithdraw:2, actionreplyquoting:2, readtranslate:1, owed_updatelater:1, owed_updateskip:2, taskforward:1, addparticipant:1, relate:1, followregister:1,
   importwatch:1, standingquestionset:1, standingquestionend:1, keepversion:1, explore:1, explorepreset:1, connectionchoose:1,
   calculationdraw:1, clockpropose:1, obscuremark:2, handlecheck:1, handlechange:2, accountusesset:2, pagetranscribe:2, escalationstoppursuing:3, escalationreopen:2, monitorset:1, recoverycodesissue:1, login:1, unlock:1, recover:2, signout:1, signouteverywhere:2, joinlinkinvite:1, owed_passwordresetlink:2, projectbarset:2, drawquestion:2, spotcheckvisit:2, projectquestions:1, projectlist:1, statusreportassist:1, airundispatch:2, actionscope:3, outcomecarry:3, filingsecondapprove:3, jointsignatory:3, holdnoticesent:2, casecheck:1, dutiesarising:1, procedureguides:1, openitemswith:1, textcheck:1, infractiondraft:1, bearingdraft:1, ruleoffer:1, advocacycheck:1, actionbearingpropose:1, transcribe:2, ailimitset:2, projectkeyset:2, projectsigninset:2, projectaccountswitch:2, projectaccountremove:3, projectkeynoticeseen:1, projectaikeepaway:2, exploreapprove:2, obscuremarkwithdraw:2, selectionrelease:1, frontier:1, countask:1, bind:1, createset:1, monitor:1, reminderset:1, ruleanswer:1, suggest:1,
   airunopen:2, airunclose:1, wizards:1, person:1, heldcaptures:1, gradenote:1, invitelook:1, publishedcase:1, verify:1, disclosureshown:1,
-  projectjoin:1, startfrom:1, deadlinecompute:1, optionstartpreview:1, publishpreflight:1, publishtensions:1, exploreverify:1,
+  projectjoin:1, projectrequest:1, projectrequestwithdraw:1, projectrequestanswer:2, startfrom:1, deadlinecompute:1, optionstartpreview:1, publishpreflight:1, publishtensions:1, exploreverify:1,
   addresseesuggest:1, tabledeclare:1, addworkbook:1, recordline:2, registerproceeding:2, declare:2, courtlink:2,
   conclude:2, narrow:2, promote:2, optiondispose:2, optionadd:2, optionadopt:2, optionpropose:1, scenarioset:2, checkpointrecord:2, plansubjectadd:2,
   proposedispose:2, heldsetaside:2, heldrestore:2, clockadopt:2, recordpersonfact:2, claimidentity:2, withdrawidentityclaim:2, createevent:2, recordfact:2,
@@ -33,13 +33,14 @@ const WEIGHT = {
 };
 const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'publishat', 'owed_websitekeymint', 'owed_joinlinkset']);
 const key = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0] : op;
-/* a button carrying its act and weight. o: {tone, icon, out, quiet, id, help} */
+/* a button carrying its act and weight. o: {tone, icon, out, quiet, id, help}. S26, Bob's A (DEC-295): only an act heavier than
+   Reversible shows its mark; a button without one does something you can undo. */
 function btn(op, label, o = {}) {
   const w = o.w || WEIGHT[key(op)] || 2;
   const out = o.out ?? OUTWARD.has(key(op));
   const help = typeof ACT_HELP !== 'undefined' && ACT_HELP[key(op)];
   const say = o.help || help;  // o.help: what this button does here, when the act's general explanation would be vague in context
-  return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${say ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(say)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}<span class="w">${pips(w)}${WNAME[w]}</span></button>`;
+  return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${say ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(say)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}${w >= 2 ? `<span class="w">${pips(w)}${WNAME[w]}</span>` : ''}</button>`;  // S26 (DEC-295): no mark on a reversible act
 }
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet">${icon ? I(icon) : ''}${esc(label)}</a>`;
@@ -60,7 +61,7 @@ const ladder = (k, steps, on, pend = []) => `<div class="cs-ladder" data-ladder=
 // DEC-153: wherever a member writes in their own words (a `rec` field), the assistant can help when it is reachable;
 // never in a field stating a member's reason for an act (`reason`, K1841), never on an act the assistant is refused
 // (affordances R7) or a signed or irreversible one (weight 4 or 5: publishing, at once or at a set time, signing, attesting),
-// never where a labeled draft already fills the field, and not on the group's own description, which has its own guided
+// never where a labeled draft already fills the field, and not on the team's own description, which has its own guided
 // draft (DEC-152). With the member's suggestions switch off it works only from what they typed (K1841 (2)).
 const WRITE_ACT = 'writinghelp';
 const WRITE_REFUSED = new Set(['release', 'conclude', 'withdrawconclusion', 'reopen', 'publish', 'inquirydivide', 'inquiryground',
@@ -75,7 +76,7 @@ function field(id, label, value = '', o = {}) {
   return writeHelp(o) ? fieldHtml(id, label, value, o, tag, cls, v) + writeHelp(o) : fieldHtml(id, label, value, o, tag, cls, v);
 }
 function fieldHtml(id, label, value, o, tag, cls, v) {
-  return `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<${tag} id="${id}" class="${cls}"${o.area ? '' : ' type="text"'}${o.area && o.rows ? ` rows="${o.rows}"` : ''}${v}${o.draft ? `<span class="cs-draftlabel">${I(o.draft === 'machine' ? 'machine' : 'wizard')}${o.draft === 'machine' ? 'Draft by the assistant, at your request · edit it until it is yours' : o.draft === 'template' ? 'Draft from your group\'s template · edit it until it is yours' : 'Draft from the wizard · edit it until it is yours'}</span>` : ''}</div>`;
+  return `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<${tag} id="${id}" class="${cls}"${o.area ? '' : ' type="text"'}${o.area && o.rows ? ` rows="${o.rows}"` : ''}${v}${o.draft ? `<span class="cs-draftlabel">${I(o.draft === 'machine' ? 'machine' : 'wizard')}${o.draft === 'machine' ? 'Draft by the assistant, at your request · edit it until it is yours' : o.draft === 'template' ? 'Draft from your team\'s template · edit it until it is yours' : 'Draft from the wizard · edit it until it is yours'}</span>` : ''}</div>`;
 }
 const choice = (id, label, opts, sel, o = {}) => `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<select id="${id}" class="cs-input"${o.onchange ? ` onchange="${o.onchange}"` : ''}>${opts.map((x, i) => `<option${o.data === true || i >= o.data ? ' class="mk-data"' : ''}${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
 const checks = (name, opts, o = {}) => `<fieldset class="mk-checks"${o.act ? ` data-act="${esc(o.act)}"` : ''}${o.onchange ? ` onchange="${o.onchange}"` : ''}><legend>${esc(name)}</legend>${opts.map(([t, on], i) => `<label><input type="${o.radio ? 'radio' : 'checkbox'}" name="${esc(o.group || name)}"${on ? ' checked' : ''}> ${t}</label>`).join('')}</fieldset>`;
@@ -87,5 +88,5 @@ const row = (a, b, c = '', meta = '') => `<div class="cs-row">${a}<span>${b}</sp
 const note = t => `<p class="mk-note">${t}</p>`;
 const acts = (...b) => `<div class="mk-acts">${b.join('')}</div>`;
 const machine = (who, inner) => `<div class="cs-machinework">${inner}<span class="by">${I('machine')}Machine work · the assistant, at ${who === 'you' ? 'your request' : esc(who) + '\'s request'}</span></div>`;
-const wizmark = (n, names) => `<button type="button" class="cs-wizmark" title="${esc(names)}">${I('wizard')}${n} wizard${n > 1 ? 's start' : ' starts'} here</button>`;
+const wizmark = (n, names) => `<button type="button" class="cs-wizmark" title="${esc(names)}">${I('wizard')}Show me how${n > 1 ? ` (${n})` : ''}</button>`;
 const crumbs = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map(esc).join(' <i>›</i> ')}</nav>`;

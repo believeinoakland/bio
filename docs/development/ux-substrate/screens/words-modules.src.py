@@ -26,6 +26,9 @@ US = [(r'\blabelled\b', 'labeled'), (r'\blabelling\b', 'labeling'), (r'\bauthori
 def us(s):
     for a, b in US: s = re.sub(a, b, s)
     return s
+# DEC-281 (K3472): "team" where a row names the people of one Civicsmith (team_words.py)
+sys.path.insert(0, HERE)
+from team_words import team
 adopted, differs = [], []
 for mod, r in dump.items():
     for x in r.get('rows', []):
@@ -33,7 +36,7 @@ for mod, r in dump.items():
         if k in design:
             if design[k] != x['en']: differs.append(dict(module=mod, key=k, module_en=x['en'], design_en=design[k]))
             continue
-        adopted.append(dict(key=k, en=us(x['en']), protected=bool(x.get('prot')), module=mod))
+        adopted.append(dict(key=k, en=team(us(x['en']), k), protected=bool(x.get('prot')), module=mod))
 json.dump(dict(adopted=adopted, differs=differs), open(p, 'w'), indent=1, ensure_ascii=False)
 by = {}
 for x in adopted: by[x['module']] = by.get(x['module'], 0) + 1

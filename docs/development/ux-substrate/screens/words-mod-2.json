@@ -8,7 +8,7 @@
   },
   {
    "key": "refusal.ACCEPTED_WORK_NOT_IN_FORCE",
-   "en": "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
+   "en": "A finding in this case rests on another team's finding, and this team's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
    "protected": false,
    "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
@@ -86,7 +86,7 @@
   },
   {
    "key": "refusal.ACTION_KIND_UNKNOWN",
-   "en": "An action is one of the kinds your group's Civicsmith offers: a records request, a request for comment, \"other\", and the kinds the group's jurisdiction profile lists. This write named another kind, so nothing was written. Choose one of the listed kinds, or \"other\".",
+   "en": "An action is one of the kinds your team's Civicsmith offers: a records request, a request for comment, \"other\", and the kinds the team's jurisdiction profile lists. This write named another kind, so nothing was written. Choose one of the listed kinds, or \"other\".",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -98,7 +98,7 @@
   },
   {
    "key": "refusal.ACTION_NO_DETERMINATION",
-   "en": "An action taken for a breach rests on the group's recorded determination that the government acted out of conformance, and this one names no such determination that you can see, so nothing was written. Name the determination it rests on.",
+   "en": "An action taken for a breach rests on the team's recorded determination that the government acted out of conformance, and this one names no such determination that you can see, so nothing was written. Name the determination it rests on.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -110,7 +110,7 @@
   },
   {
    "key": "refusal.ACTION_RESOLUTION_REFUSED",
-   "en": "A resolved action says how it ended: complied, denied, escalated, withdrawn, or completed when the group carried it out and no answer was awaited. This write marked the action resolved without one of those, so nothing was written.",
+   "en": "A resolved action says how it ended: complied, denied, escalated, withdrawn, or completed when the team carried it out and no answer was awaited. This write marked the action resolved without one of those, so nothing was written.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -164,7 +164,7 @@
   },
   {
    "key": "refusal.ADDRESS_WOULD_LEAVE",
-   "en": "This address check would send the addresses your group captures to someone else. Your group's Civicsmith only uses checks that keep them. Nothing was added.",
+   "en": "This address check would send the addresses your team captures to someone else. Your team's Civicsmith only uses checks that keep them. Nothing was added.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -338,7 +338,7 @@
   },
   {
    "key": "refusal.BAD_SCOPE",
-   "en": "An aspiration belongs to the group, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written.",
+   "en": "An aspiration belongs to the team, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written.",
    "protected": false,
    "note": "DEC-260: intent's translation, keyed by its code"
   },
@@ -404,7 +404,7 @@
   },
   {
    "key": "refusal.CAPTURE_AND_TESTIMONY",
-   "en": "An entry holds either the captured material or a named person who can speak to the exchange, and never both. A summary sitting beside the real thing is what a reader would quote instead of the thing the group can actually defend.",
+   "en": "An entry holds either the captured material or a named person who can speak to the exchange, and never both. A summary sitting beside the real thing is what a reader would quote instead of the thing the team can actually defend.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -416,7 +416,7 @@
   },
   {
    "key": "refusal.CASE_DOCUMENT_UNSERVABLE",
-   "en": "This case document is published and signed, but this group's Civicsmith could not produce its exact contents just now, so it hands over nothing rather than something different. The fingerprint is genuine and can still be checked. Nothing was changed. Whoever runs this group's Civicsmith can repair it.",
+   "en": "This case document is published and signed, but this team's Civicsmith could not produce its exact contents just now, so it hands over nothing rather than something different. The fingerprint is genuine and can still be checked. Nothing was changed. Whoever runs this team's Civicsmith can repair it.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
@@ -494,7 +494,7 @@
   },
   {
    "key": "refusal.CHECK_NO_REASON",
-   "en": "A concern needs its reason, so the owner and the group can see what to look at. Nothing was written. Say what concerns you and record it again.",
+   "en": "A concern needs its reason, so the owner and the team can see what to look at. Nothing was written. Say what concerns you and record it again.",
    "protected": false,
    "note": "DEC-260: tasks' translation, keyed by its code"
   },
@@ -518,7 +518,7 @@
   },
   {
    "key": "refusal.CLOCK_ENTRY_REFUSED",
-   "en": "A deadline needs its words, a date written year-month-day, what it rests on and who owes it (the group, the body, or not stated), and any time of day falls on that date. This one did not meet one of those, so nothing was written.",
+   "en": "A deadline needs its words, a date written year-month-day, what it rests on and who owes it (the team, the body, or not stated), and any time of day falls on that date. This one did not meet one of those, so nothing was written.",
    "protected": false,
    "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
@@ -638,13 +638,13 @@
   },
   {
    "key": "refusal.CONSEQUENCES_UNDETERMINED",
-   "en": "Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is undetermined or unproven. If the group judges the breach had no consequence, record that as an assessed consequence and address it. Nothing was written.",
+   "en": "Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is undetermined or unproven. If the team judges the breach had no consequence, record that as an assessed consequence and address it. Nothing was written.",
    "protected": false,
    "note": "DEC-260: escalation's translation, keyed by its code"
   },
   {
    "key": "refusal.CONTACT_NOT_A_MEMBER",
-   "en": "The contact for an action is a member of this group, named by their member id, and the id given names no member here. Nothing was written.",
+   "en": "The contact for an action is a member of this team, named by their member id, and the id given names no member here. Nothing was written.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -674,7 +674,7 @@
   },
   {
    "key": "refusal.COUNTERPARTY_REFUSED",
-   "en": "An action says who it is addressed to: an office by its official role and the body it belongs to; a reporter, an organization or another group by a role and the organization; an audience described in words; or an undetermined addressee with a few words on what is known and what would settle it. This write carried a placeholder, a bare name outside those shapes, a person, or an addressee that said two things at once, so nothing was written. Leaving the addressee out is allowed while the action is a draft.",
+   "en": "An action says who it is addressed to: an office by its official role and the body it belongs to; a reporter, an organization or another team by a role and the organization; an audience described in words; or an undetermined addressee with a few words on what is known and what would settle it. This write carried a placeholder, a bare name outside those shapes, a person, or an addressee that said two things at once, so nothing was written. Leaving the addressee out is allowed while the action is a draft.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -704,13 +704,13 @@
   },
   {
    "key": "refusal.DEEPER_CHECKS_UNREADABLE",
-   "en": "The deeper checks your group asked for could not be read just now, so none was started or asked about. They are read again on the next round.",
+   "en": "The deeper checks your team asked for could not be read just now, so none was started or asked about. They are read again on the next round.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
   {
    "key": "refusal.DEEPER_CHECK_BUDGET_SPENT",
-   "en": "Every outside tool your group uses for deeper checks has used its allowance for this month, so no check was asked for. The allowance starts again on the first of the month.",
+   "en": "Every outside tool your team uses for deeper checks has used its allowance for this month, so no check was asked for. The allowance starts again on the first of the month.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -782,7 +782,7 @@
   },
   {
    "key": "refusal.DUPLICATE_PATH",
-   "en": "The list of this case file's contents puts two documents under the same name, so one download could be read two ways. This group's Civicsmith will not hand over a case file that says two things about one name. Each document can still be asked for on its own. Nothing was changed.",
+   "en": "The list of this case file's contents puts two documents under the same name, so one download could be read two ways. This team's Civicsmith will not hand over a case file that says two things about one name. Each document can still be asked for on its own. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
@@ -806,7 +806,7 @@
   },
   {
    "key": "refusal.ENVELOPE_TITLE_DISAGREES",
-   "en": "The document being filed gives itself one name, and the request that carried it gives another. The record goes by the document, and names are held unique across your group's Civicsmith, so rather than file it under a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request naming the document's title, or naming none, or change the document first.",
+   "en": "The document being filed gives itself one name, and the request that carried it gives another. The record goes by the document, and names are held unique across your team's Civicsmith, so rather than file it under a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request naming the document's title, or naming none, or change the document first.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
@@ -866,19 +866,19 @@
   },
   {
    "key": "refusal.FACT_FAILED",
-   "en": "The part of your group's Civicsmith that answers that question stopped with an error instead of answering, so there is no answer here, which is not the same as the answer being no. Nothing was written.",
+   "en": "The part of your team's Civicsmith that answers that question stopped with an error instead of answering, so there is no answer here, which is not the same as the answer being no. Nothing was written.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
   {
    "key": "refusal.FACT_MALFORMED",
-   "en": "A part of your group's Civicsmith tried to offer an answer to a question without naming the question, itself, or how to answer it, so nothing was registered. This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.",
+   "en": "A part of your team's Civicsmith tried to offer an answer to a question without naming the question, itself, or how to answer it, so nothing was registered. This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
   {
    "key": "refusal.FACT_UNAVAILABLE",
-   "en": "No part of your group's Civicsmith answers that question yet, so there is no answer here, which is not the same as the answer being no. Nothing was written.",
+   "en": "No part of your team's Civicsmith answers that question yet, so there is no answer here, which is not the same as the answer being no. Nothing was written.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
@@ -902,13 +902,13 @@
   },
   {
    "key": "refusal.FILE_NOT_HELD",
-   "en": "Your group's Civicsmith holds no captured file under that digest, so there is nothing to check or open.",
+   "en": "Your team's Civicsmith holds no captured file under that digest, so there is nothing to check or open.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
   {
    "key": "refusal.FILING_MARK_REFUSED",
-   "en": "Something you marked about this text (whose voice it is, its audience, its language, the sentences about the group's own doing, or what it names) is not in a form that can be recorded. Nothing was prepared.",
+   "en": "Something you marked about this text (whose voice it is, its audience, its language, the sentences about the team's own doing, or what it names) is not in a form that can be recorded. Nothing was prepared.",
    "protected": false,
    "note": "DEC-260: filings' translation, keyed by its code"
   },
@@ -944,7 +944,7 @@
   },
   {
    "key": "refusal.FLAGS_UNDETERMINED",
-   "en": "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
+   "en": "The flags on another team's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
    "protected": false,
    "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
@@ -956,7 +956,7 @@
   },
   {
    "key": "refusal.FLAG_NOT_DISCLOSED",
-   "en": "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
+   "en": "Another team's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
    "protected": false,
    "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
@@ -992,7 +992,7 @@
   },
   {
    "key": "refusal.GROUP_UNDETERMINED",
-   "en": "Your group's Civicsmith has not recorded which group it belongs to, and nothing in this request says, so the record cannot write a document that must name the group that produced it. It records its group once: when it is first installed, or by one act of whoever holds its administrator token in the hosting account. Nothing was written.",
+   "en": "Your team's Civicsmith has not recorded which team it belongs to, and nothing in this request says, so the record cannot write a document that must name the team that produced it. It records its team once: when it is first installed, or by one act of whoever holds its administrator token in the hosting account. Nothing was written.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
@@ -1004,7 +1004,7 @@
   },
   {
    "key": "refusal.HANDLING_NOT_STATED",
-   "en": "This tool does not state whether it shares the files it is sent, so your group's Civicsmith will not send it any. Nothing was added.",
+   "en": "This tool does not state whether it shares the files it is sent, so your team's Civicsmith will not send it any. Nothing was added.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -1190,7 +1190,7 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_CHOOSE_THE_QUESTION",
-   "en": "Setting an assistant to work on a project's objective is a member's act: the objective is the group's, and so is the choice to pursue it. Sign in as a member. No run was opened.",
+   "en": "Setting an assistant to work on a project's objective is a member's act: the objective is the team's, and so is the choice to pursue it. Sign in as a member. No run was opened.",
    "protected": false,
    "note": "DEC-260: intent's translation, keyed by its code"
   },
@@ -1202,13 +1202,13 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_DECLARE_ASPIRATION",
-   "en": "What the group holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written.",
+   "en": "What the team holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written.",
    "protected": false,
    "note": "DEC-260: intent's translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_DECLARE_GOAL",
-   "en": "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the group pursues. Sign in as a member. Nothing was written.",
+   "en": "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the team pursues. Sign in as a member. Nothing was written.",
    "protected": false,
    "note": "DEC-260: intent's translation, keyed by its code"
   },
@@ -1220,7 +1220,7 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_DECLINE_TO_ESCALATE",
-   "en": "Recording that the group is not pursuing a breach is a member's act, in the member's own words. An assistant may point out a breach; it may not decline it. Nothing was written.",
+   "en": "Recording that the team is not pursuing a breach is a member's act, in the member's own words. An assistant may point out a breach; it may not decline it. Nothing was written.",
    "protected": false,
    "note": "DEC-260: escalation's translation, keyed by its code"
   },
@@ -1250,7 +1250,7 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_FILE",
-   "en": "Only a named member can record that a filing was sent. Your group's Civicsmith sends nothing itself.",
+   "en": "Only a named member can record that a filing was sent. Your team's Civicsmith sends nothing itself.",
    "protected": false,
    "note": "DEC-260: filings' translation, keyed by its code"
   },
@@ -1286,7 +1286,7 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_NAME_COUNSEL",
-   "en": "Only a named member can name the group's counsel and assemble a packet for them.",
+   "en": "Only a named member can name the team's counsel and assemble a packet for them.",
    "protected": false,
    "note": "DEC-260: filings' translation, keyed by its code"
   },
@@ -1304,13 +1304,13 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_OVERRIDE",
-   "en": "Acting on a breach the group has not determined is a member's open decision, made with a reason and answered for. The credential that asked here is an automated one, so it cannot state or change that override. Sign in to state it yourself.",
+   "en": "Acting on a breach the team has not determined is a member's open decision, made with a reason and answered for. The credential that asked here is an automated one, so it cannot state or change that override. Sign in to state it yourself.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_POST_NOTICE",
-   "en": "Only a member, signed in as themselves, prepares or posts a notice that the group is working on something. A machine, the assistant or an operator token cannot. Nothing was published.",
+   "en": "Only a member, signed in as themselves, prepares or posts a notice that the team is working on something. A machine, the assistant or an operator token cannot. Nothing was published.",
    "protected": false,
    "note": "DEC-260: network-notices' translation, keyed by its code"
   },
@@ -1334,7 +1334,7 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_REOPEN",
-   "en": "Reopening overturns something the group decided to set down, and that judgment belongs to a person who will be named beside it. The credential that asked here is an automated one: it may raise a question and work one, and may not undo the group's own disposition. Sign in to reopen it.",
+   "en": "Reopening overturns something the team decided to set down, and that judgment belongs to a person who will be named beside it. The credential that asked here is an automated one: it may raise a question and work one, and may not undo the team's own disposition. Sign in to reopen it.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
@@ -1352,7 +1352,7 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_SET_CONTACT",
-   "en": "Who the group's contact for an action is, is a member's choice. The credential that asked here is an automated one, so it cannot set or change it. Sign in to set it yourself.",
+   "en": "Who the team's contact for an action is, is a member's choice. The credential that asked here is an automated one, so it cannot set or change it. Sign in to set it yourself.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -1430,7 +1430,7 @@
   },
   {
    "key": "refusal.MANIFEST_UNREADABLE",
-   "en": "This case file is published, but this group's Civicsmith cannot read the list of its contents, so it cannot put the case file together as one download. Nothing was changed. Whoever runs this group's Civicsmith can repair it.",
+   "en": "This case file is published, but this team's Civicsmith cannot read the list of its contents, so it cannot put the case file together as one download. Nothing was changed. Whoever runs this team's Civicsmith can repair it.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
@@ -1484,7 +1484,7 @@
   },
   {
    "key": "refusal.NONE_EXISTS_READER_DECLARED",
-   "en": "The reader of records requests answered that no such record exists is already registered. It registers once, when your group's Civicsmith starts.",
+   "en": "The reader of records requests answered that no such record exists is already registered. It registers once, when your team's Civicsmith starts.",
    "protected": false,
    "note": "DEC-260: intent's translation, keyed by its code"
   },
@@ -1538,19 +1538,19 @@
   },
   {
    "key": "refusal.NOTICE_NOT_THE_OWNER",
-   "en": "Only an owner of the project tells the network the group is working on it. Nothing was published.",
+   "en": "Only an owner of the project tells the network the team is working on it. Nothing was published.",
    "protected": false,
    "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_NO_GROUP_SLUG",
-   "en": "Your group has no name recorded yet, and a notice is never anonymous. Record the group's name first. Nothing was published.",
+   "en": "Your team has no name recorded yet, and a notice is never anonymous. Record the team's name first. Nothing was published.",
    "protected": false,
    "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_NO_INSTANCE_KEY",
-   "en": "Your group's Civicsmith holds no signing key of its own, so it cannot sign the activity level a notice is always published with. The operator binds one. Nothing was published.",
+   "en": "Your team's Civicsmith holds no signing key of its own, so it cannot sign the activity level a notice is always published with. The operator binds one. Nothing was published.",
    "protected": false,
    "note": "DEC-260: network-notices' translation, keyed by its code"
   },
@@ -1592,7 +1592,7 @@
   },
   {
    "key": "refusal.NOTICE_STALE",
-   "en": "Your group's Civicsmith holds no prepared notice from you with this fingerprint, or it was prepared more than an hour ago. Prepare it again and sign what it shows. Nothing was published.",
+   "en": "Your team's Civicsmith holds no prepared notice from you with this fingerprint, or it was prepared more than an hour ago. Prepare it again and sign what it shows. Nothing was published.",
    "protected": false,
    "note": "DEC-260: network-notices' translation, keyed by its code"
   },
@@ -1610,7 +1610,7 @@
   },
   {
    "key": "refusal.NOTICE_WORDING_MALFORMED",
-   "en": "Say what the group is working on in one line of at most 280 characters. A subject or a body named with it is one line of at most 120 characters, and a hand-off note one line of at most 280, given only when stopping. Nothing was published.",
+   "en": "Say what the team is working on in one line of at most 280 characters. A subject or a body named with it is one line of at most 120 characters, and a hand-off note one line of at most 280, given only when stopping. Nothing was published.",
    "protected": false,
    "note": "DEC-260: network-notices' translation, keyed by its code"
   },
@@ -1688,7 +1688,7 @@
   },
   {
    "key": "refusal.NOT_PUBLISHED",
-   "en": "Nothing this group's Civicsmith has published answers to what you asked for. A case that was never published, an edition that does not exist and a name that never existed all get this same answer, so it says nothing about anything unpublished. Nothing was changed.",
+   "en": "Nothing this team's Civicsmith has published answers to what you asked for. A case that was never published, an edition that does not exist and a name that never existed all get this same answer, so it says nothing about anything unpublished. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
@@ -1712,7 +1712,7 @@
   },
   {
    "key": "refusal.NOT_THE_GROUPS_ACT",
-   "en": "These are your own notes, prepared as yourself: they are not the group's act, so they are never approved or recorded as sent by the group.",
+   "en": "These are your own notes, prepared as yourself: they are not the team's act, so they are never approved or recorded as sent by the team.",
    "protected": false,
    "note": "DEC-260: filings' translation, keyed by its code"
   },
@@ -1784,7 +1784,7 @@
   },
   {
    "key": "refusal.NO_LESSON",
-   "en": "Retiring an aspiration records what pursuing it taught the group, and nothing was written there. Say what was learned. Nothing was retired.",
+   "en": "Retiring an aspiration records what pursuing it taught the team, and nothing was written there. Say what was learned. Nothing was retired.",
    "protected": false,
    "note": "DEC-260: intent's translation, keyed by its code"
   },
@@ -1808,7 +1808,7 @@
   },
   {
    "key": "refusal.NO_OUTSIDE_TOOL",
-   "en": "A deeper check needs an outside scanner or sandbox, and your group has none turned on. An administrator can add one in Settings, under Security.",
+   "en": "A deeper check needs an outside scanner or sandbox, and your team has none turned on. An administrator can add one in Settings, under Security.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -1844,19 +1844,19 @@
   },
   {
    "key": "refusal.NO_PUBLISHED_PART",
-   "en": "Nothing this group's Civicsmith has published matches that fingerprint. Something that was never published and something that never existed get this same answer, so it says nothing about anything unpublished. Check that the fingerprint was copied whole. Nothing was changed.",
+   "en": "Nothing this team's Civicsmith has published matches that fingerprint. Something that was never published and something that never existed get this same answer, so it says nothing about anything unpublished. Check that the fingerprint was copied whole. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
   {
    "key": "refusal.NO_PUBLISHED_STORE",
-   "en": "This group's Civicsmith was set up without the storage it keeps its published documents in, so it cannot hand over the published document's contents. The document is published; this is a fact about how this group's Civicsmith was set up, not about the document or this request, and nothing was changed. Whoever runs this group's Civicsmith can connect that storage.",
+   "en": "This team's Civicsmith was set up without the storage it keeps its published documents in, so it cannot hand over the published document's contents. The document is published; this is a fact about how this team's Civicsmith was set up, not about the document or this request, and nothing was changed. Whoever runs this team's Civicsmith can connect that storage.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
   {
    "key": "refusal.NO_RESOLUTION",
-   "en": "An action that has ended says how it ended, and this move does not: complied, denied, escalated, withdrawn, or completed when the group carried it out and no answer was awaited. The record keeps a closed set of endings so that a reader later can tell what actually happened rather than only that something stopped.",
+   "en": "An action that has ended says how it ended, and this move does not: complied, denied, escalated, withdrawn, or completed when the team carried it out and no answer was awaited. The record keeps a closed set of endings so that a reader later can tell what actually happened rather than only that something stopped.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -1874,13 +1874,13 @@
   },
   {
    "key": "refusal.NO_SAFE_COPY",
-   "en": "A safe copy is made by an outside tool that rebuilds files, and your group has none turned on. The safe view is still there.",
+   "en": "A safe copy is made by an outside tool that rebuilds files, and your team has none turned on. The safe view is still there.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SAFE_VIEW",
-   "en": "Your group's Civicsmith makes safe views of documents, presentations and spreadsheets, and this file is none of them, so it has no safe view.",
+   "en": "Your team's Civicsmith makes safe views of documents, presentations and spreadsheets, and this file is none of them, so it has no safe view.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -1922,7 +1922,7 @@
   },
   {
    "key": "refusal.NO_SUCH_CHECK_TARGET",
-   "en": "There is nothing here you can ask a check on: the item is not in the group's record, or it is not one you can see. Nothing was written.",
+   "en": "There is nothing here you can ask a check on: the item is not in the team's record, or it is not one you can see. Nothing was written.",
    "protected": false,
    "note": "DEC-260: tasks' translation, keyed by its code"
   },
@@ -2018,7 +2018,7 @@
   },
   {
    "key": "refusal.NO_SUCH_QUESTION",
-   "en": "There is no question by that name that you can see, so this citation cannot be kept with it. A question the group has not asked and one you have not been shown are answered alike. Cite without naming a question, or name one you can open.",
+   "en": "There is no question by that name that you can see, so this citation cannot be kept with it. A question the team has not asked and one you have not been shown are answered alike. Cite without naming a question, or name one you can open.",
    "protected": false,
    "note": "DEC-260: citation's translation, keyed by its code"
   },
@@ -2066,7 +2066,7 @@
   },
   {
    "key": "refusal.NO_SUCH_TOOL",
-   "en": "Your group has no security tool under that name, or it was removed. Nothing was changed.",
+   "en": "Your team has no security tool under that name, or it was removed. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -2096,7 +2096,7 @@
   },
   {
    "key": "refusal.OBJECT_MISSING",
-   "en": "This document is published, but this group's Civicsmith cannot find its contents in its storage, so it cannot hand them over. The document and its fingerprint are unaffected, and nothing was changed. Whoever runs this group's Civicsmith can restore the missing contents.",
+   "en": "This document is published, but this team's Civicsmith cannot find its contents in its storage, so it cannot hand them over. The document and its fingerprint are unaffected, and nothing was changed. Whoever runs this team's Civicsmith can restore the missing contents.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
@@ -2132,7 +2132,7 @@
   },
   {
    "key": "refusal.PART_MISSING",
-   "en": "This case file is published, but this group's Civicsmith cannot find one of the documents it lists, and it will not hand over a case file with a piece missing. The reply names the missing document; the others can still be asked for one at a time. Nothing was changed. Whoever runs this group's Civicsmith can restore it.",
+   "en": "This case file is published, but this team's Civicsmith cannot find one of the documents it lists, and it will not hand over a case file with a piece missing. The reply names the missing document; the others can still be asked for one at a time. Nothing was changed. Whoever runs this team's Civicsmith can restore it.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
@@ -2174,7 +2174,7 @@
   },
   {
    "key": "refusal.PREMISE_OVERRIDE_REFUSED",
-   "en": "The reason the group acts without a determination is written in up to 500 characters with no quotation mark, backslash or line break. This reason was not, so nothing was written. The ground it rests on is checked on its own.",
+   "en": "The reason the team acts without a determination is written in up to 500 characters with no quotation mark, backslash or line break. This reason was not, so nothing was written. The ground it rests on is checked on its own.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -2186,7 +2186,7 @@
   },
   {
    "key": "refusal.PRESSURE_NOT_RECEIVED",
-   "en": "Pressure is marked on something the group received. The entry named records something sent, or a reply that never came, so nothing was written.",
+   "en": "Pressure is marked on something the team received. The entry named records something sent, or a reply that never came, so nothing was written.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
@@ -2330,31 +2330,31 @@
   },
   {
    "key": "refusal.PROVIDER_REFUSED",
-   "en": "Your group's Civicsmith does not offer this service, for the reason stated beside it. Nothing was added.",
+   "en": "Your team's Civicsmith does not offer this service, for the reason stated beside it. Nothing was added.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
   {
    "key": "refusal.PROVIDER_SHARES_SAMPLES",
-   "en": "This tool would share the files it is sent with others, so your group's Civicsmith will not send it any. Nothing was added.",
+   "en": "This tool would share the files it is sent with others, so your team's Civicsmith will not send it any. Nothing was added.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
   {
    "key": "refusal.PROVIDER_UNAVAILABLE",
-   "en": "Part of the record this answer depends on cannot be read by your group's Civicsmith yet, so nothing is answered in its place. Nothing was written.",
+   "en": "Part of the record this answer depends on cannot be read by your team's Civicsmith yet, so nothing is answered in its place. Nothing was written.",
    "protected": false,
    "note": "DEC-260: escalation's translation, keyed by its code"
   },
   {
    "key": "refusal.PROVIDER_UNKNOWN",
-   "en": "Your group's Civicsmith knows no security service by that name, or the service needs an address that was not given. Nothing was added.",
+   "en": "Your team's Civicsmith knows no security service by that name, or the service needs an address that was not given. Nothing was added.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
   {
    "key": "refusal.PUBLIC_READ_NOT_REGISTERED",
-   "en": "This group's Civicsmith offers no public read by that name. Nothing was changed.",
+   "en": "This team's Civicsmith offers no public read by that name. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
@@ -2462,7 +2462,7 @@
   },
   {
    "key": "refusal.RELIED_ON_NOT_PRESENTABLE",
-   "en": "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
+   "en": "A finding this case relies on rests on material your team's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
    "protected": false,
    "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
@@ -2492,7 +2492,7 @@
   },
   {
    "key": "refusal.RETIRED_NOT_CITABLE",
-   "en": "The group has retired this material, recording that it is superseded or no longer stands, so a citation made now would read to everyone after you as live support nobody will look at again. Cite whatever superseded it, or collect the source again as a new item and cite that. A document its publisher withdrew or changed is a different thing and can still be cited.",
+   "en": "The team has retired this material, recording that it is superseded or no longer stands, so a citation made now would read to everyone after you as live support nobody will look at again. Cite whatever superseded it, or collect the source again as a new item and cite that. A document its publisher withdrew or changed is a different thing and can still be cited.",
    "protected": false,
    "note": "DEC-260: citation's translation, keyed by its code"
   },
@@ -2504,7 +2504,7 @@
   },
   {
    "key": "refusal.REVISION_REGROUPS_BUNDLE",
-   "en": "This change says the item was produced by a different group than the record holds. A change can alter what a document says, but not whose it is: the record keeps who produced each thing so it can be held to account, and letting a later change move that would let anyone re-attribute it. Nothing was written. Send it again with the group the record holds, or with none.",
+   "en": "This change says the item was produced by a different team than the record holds. A change can alter what a document says, but not whose it is: the record keeps who produced each thing so it can be held to account, and letting a later change move that would let anyone re-attribute it. Nothing was written. Send it again with the team the record holds, or with none.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
@@ -2558,7 +2558,7 @@
   },
   {
    "key": "refusal.RULE_SERVICES_OFF",
-   "en": "The record's rule services are switched off in your group's Civicsmith until the assistant's measured bar is met. Nothing was read.",
+   "en": "The record's rule services are switched off in your team's Civicsmith until the assistant's measured bar is met. Nothing was read.",
    "protected": false,
    "note": "DEC-260: answers' translation, keyed by its code"
   },
@@ -2570,7 +2570,7 @@
   },
   {
    "key": "refusal.RULE_SERVICE_UNKNOWN",
-   "en": "No rule service of that name is held in your group's Civicsmith. Nothing was read.",
+   "en": "No rule service of that name is held in your team's Civicsmith. Nothing was read.",
    "protected": false,
    "note": "DEC-260: answers' translation, keyed by its code"
   },
@@ -2624,7 +2624,7 @@
   },
   {
    "key": "refusal.SCANNER_UNREACHABLE",
-   "en": "The file scanner your group's Civicsmith uses did not answer, so nothing was scanned and no note was written. It is asked again on its next round.",
+   "en": "The file scanner your team's Civicsmith uses did not answer, so nothing was scanned and no note was written. It is asked again on its next round.",
    "protected": false,
    "note": "DEC-260: file-safety's translation, keyed by its code"
   },
@@ -2696,7 +2696,7 @@
   },
   {
    "key": "refusal.SOURCE_DECLARED",
-   "en": "This source of proposals is already registered. A source registers once, when your group's Civicsmith starts.",
+   "en": "This source of proposals is already registered. A source registers once, when your team's Civicsmith starts.",
    "protected": false,
    "note": "DEC-260: intent's translation, keyed by its code"
   },
@@ -2732,7 +2732,7 @@
   },
   {
    "key": "refusal.STANDARD_SIDE_UNNAMED",
-   "en": "Name which side of the question states what the standard requires, a or b. Your group's Civicsmith never chooses it. Nothing was written.",
+   "en": "Name which side of the question states what the standard requires, a or b. Your team's Civicsmith never chooses it. Nothing was written.",
    "protected": false,
    "note": "DEC-260: conformance's translation, keyed by its code"
   },
@@ -2798,7 +2798,7 @@
   },
   {
    "key": "refusal.STEP_BAD_PLACE",
-   "en": "A step is taken on one or more questions, in one project, or for the whole group: exactly one of these, and a step is never placed inside another step. Nothing was written.",
+   "en": "A step is taken on one or more questions, in one project, or for the whole team: exactly one of these, and a step is never placed inside another step. Nothing was written.",
    "protected": false,
    "note": "DEC-260: steps' translation, keyed by its code"
   },
@@ -2828,7 +2828,7 @@
   },
   {
    "key": "refusal.STEP_DECLARED",
-   "en": "A part of your group's Civicsmith tried to register something it had already registered, or that another part already provides, so the second registration was refused and the first still stands. This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.",
+   "en": "A part of your team's Civicsmith tried to register something it had already registered, or that another part already provides, so the second registration was refused and the first still stands. This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
@@ -2846,7 +2846,7 @@
   },
   {
    "key": "refusal.STEP_MODULE_UNNAMED",
-   "en": "A part of your group's Civicsmith tried to add its own check to every promotion without naming itself, so nothing was registered. This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.",
+   "en": "A part of your team's Civicsmith tried to add its own check to every promotion without naming itself, so nothing was registered. This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.",
    "protected": false,
    "note": "DEC-260: promotion's translation, keyed by its code"
   },
@@ -3092,7 +3092,7 @@
   },
   {
    "key": "refusal.TEMPLATE_USE_FILE",
-   "en": "The template named is wording the group files in its own name: a counsel packet's briefing takes a brief template.",
+   "en": "The template named is wording the team files in its own name: a counsel packet's briefing takes a brief template.",
    "protected": false,
    "note": "DEC-260: filings' translation, keyed by its code"
   },
@@ -3140,7 +3140,7 @@
   },
   {
    "key": "refusal.TIER3_COUNSEL_PACKET",
-   "en": "This action's governing tier is 3: no filing is prepared for it. The group names counsel, and a counsel packet is assembled for counsel's review instead.",
+   "en": "This action's governing tier is 3: no filing is prepared for it. The team names counsel, and a counsel packet is assembled for counsel's review instead.",
    "protected": false,
    "note": "DEC-260: filings' translation, keyed by its code"
   },
@@ -3278,7 +3278,7 @@
   },
   {
    "key": "refusal.WITHHELD_BY_COURT_ORDER",
-   "en": "A court order this group complied with keeps these contents from being handed over. The order and the record entry that names it are public, and nothing was deleted. Nothing was changed.",
+   "en": "A court order this team complied with keeps these contents from being handed over. The order and the record entry that names it are public, and nothing was deleted. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: public-read's translation, keyed by its code"
   },
@@ -3332,7 +3332,7 @@
   },
   {
    "key": "filings.prepared_group_review",
-   "en": "Prepared for the group's own review. Not legal advice. Not for filing.",
+   "en": "Prepared for the team's own review. Not legal advice. Not for filing.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -3362,7 +3362,7 @@
   },
   {
    "key": "filings.group_declared_stake",
-   "en": "Group: {who}. Declared stake: {stake}.",
+   "en": "Team: {who}. Declared stake: {stake}.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -3374,7 +3374,7 @@
   },
   {
    "key": "filings.action_requires_competent",
-   "en": "Such an action requires competent counsel: no template is offered for it, and the group names counsel to evaluate it.",
+   "en": "Such an action requires competent counsel: no template is offered for it, and the team names counsel to evaluate it.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -3392,7 +3392,7 @@
   },
   {
    "key": "filings.tier_requires_competent",
-   "en": "Tier 3: requires competent counsel; no template is offered, and a counsel packet is prepared for counsel the group names.",
+   "en": "Tier 3: requires competent counsel; no template is offered, and a counsel packet is prepared for counsel the team names.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -3410,7 +3410,7 @@
   },
   {
    "key": "filings.why.group_civicsmith_active",
-   "en": "your group's Civicsmith has no active jurisdiction profile",
+   "en": "your team's Civicsmith has no active jurisdiction profile",
    "protected": false,
    "note": "DEC-260"
   },
@@ -3644,19 +3644,19 @@
   },
   {
    "key": "filings.why.promotion_module_reachable",
-   "en": "no promotion module is reachable here to answer the fact producingGroup, so the producing group is undetermined",
+   "en": "no promotion module is reachable here to answer the fact producingGroup, so the producing team is undetermined",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "filings.why.producing_group_read",
-   "en": "the producing group could not be read (its reader failed), so it is undetermined",
+   "en": "the producing team could not be read (its reader failed), so it is undetermined",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "filings.why.module_answers_fact",
-   "en": "no module answers the fact producingGroup ({reason}), so the producing group is undetermined",
+   "en": "no module answers the fact producingGroup ({reason}), so the producing team is undetermined",
    "protected": false,
    "note": "DEC-260"
   },
@@ -3674,7 +3674,7 @@
   },
   {
    "key": "filings.why.producing_group_recorded",
-   "en": "no producing group is recorded",
+   "en": "no producing team is recorded",
    "protected": false,
    "note": "DEC-260"
   },
@@ -3986,7 +3986,7 @@
   },
   {
    "key": "filings.says.approved_member_named",
-   "en": "approved by the member named: the text is theirs. Your group's Civicsmith transmits nothing; a member files it by the venue's own means and records that it was sent",
+   "en": "approved by the member named: the text is theirs. Your team's Civicsmith transmits nothing; a member files it by the venue's own means and records that it was sent",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4130,7 +4130,7 @@
   },
   {
    "key": "filings.says.group_templates_read",
-   "en": "the group's templates could not be read here, so none is offered",
+   "en": "the team's templates could not be read here, so none is offered",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4310,7 +4310,7 @@
   },
   {
    "key": "filings.why.record_holds_date",
-   "en": "the record holds no date on which the group knew of the act",
+   "en": "the record holds no date on which the team knew of the act",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4382,7 +4382,7 @@
   },
   {
    "key": "filings.says.world_events_group",
-   "en": "what they did (the world's events) and what we did (the group's own acts, each source apart) are answered apart, each in its own order, never interleaved into one list",
+   "en": "what they did (the world's events) and what we did (the team's own acts, each source apart) are answered apart, each in its own order, never interleaved into one list",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4502,7 +4502,7 @@
   },
   {
    "key": "filings.says.candidate_counsel_weigh",
-   "en": "each is a candidate for counsel to weigh, never the group's position or a conclusion",
+   "en": "each is a candidate for counsel to weigh, never the team's position or a conclusion",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4586,7 +4586,7 @@
   },
   {
    "key": "filings.says.statement_group_challenged",
-   "en": "each statement of the group that is challenged, as a member names it, with the findings and sources it rests on",
+   "en": "each statement of the team that is challenged, as a member names it, with the findings and sources it rests on",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4634,7 +4634,7 @@
   },
   {
    "key": "filings.says.group_briefing_counsel",
-   "en": "the group's briefing to counsel, filled from the record from a brief template; it is not a filing and cannot be filed as it stands",
+   "en": "the team's briefing to counsel, filled from the record from a brief template; it is not a filing and cannot be filed as it stands",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4652,7 +4652,7 @@
   },
   {
    "key": "filings.says.group_review_counsel",
-   "en": "for the group's own review, no counsel named",
+   "en": "for the team's own review, no counsel named",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4712,7 +4712,7 @@
   },
   {
    "key": "filings.says.candidate_theory_remedy_stored",
-   "en": "a candidate theory and remedy, stored apart: it is not the group's position, and it enters the next counsel packet version as a candidate",
+   "en": "a candidate theory and remedy, stored apart: it is not the team's position, and it enters the next counsel packet version as a candidate",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4742,7 +4742,7 @@
   },
   {
    "key": "filings.says.kinds_group_pursue",
-   "en": "the kinds a group may pursue against these offices, from the jurisdiction profile; a Tier 3 kind requires competent counsel, and no template or legal strategy is part of this block",
+   "en": "the kinds a team may pursue against these offices, from the jurisdiction profile; a Tier 3 kind requires competent counsel, and no template or legal strategy is part of this block",
    "protected": false,
    "note": "DEC-260"
   },
@@ -4808,7 +4808,7 @@
   },
   {
    "key": "filings.group_named",
-   "en": "a group not named",
+   "en": "a team not named",
    "protected": false,
    "note": "DEC-260"
   },
@@ -5150,7 +5150,7 @@
   },
   {
    "key": "escalation.says.stopped_pursuing_group",
-   "en": "stopped pursuing: the group decided to stop pursuing this escalation. It proposes nothing, it is not ended and it is not a success; a member may reopen it at this stage",
+   "en": "stopped pursuing: the team decided to stop pursuing this escalation. It proposes nothing, it is not ended and it is not a success; a member may reopen it at this stage",
    "protected": false,
    "note": "DEC-260"
   },
@@ -5270,7 +5270,7 @@
   },
   {
    "key": "escalation.says.recorded_group_decline",
-   "en": "recorded as the group's decline to escalate now; a later decline or an escalation opened later supersedes it, and it stays readable",
+   "en": "recorded as the team's decline to escalate now; a later decline or an escalation opened later supersedes it, and it stays readable",
    "protected": false,
    "note": "DEC-260"
   },
@@ -5450,7 +5450,7 @@
   },
   {
    "key": "escalation.escalation_group_stopped",
-   "en": "Escalation {id}: the group stopped pursuing it at {from}",
+   "en": "Escalation {id}: the team stopped pursuing it at {from}",
    "protected": false,
    "note": "DEC-260"
   },
@@ -5468,7 +5468,7 @@
   },
   {
    "key": "case-disclosures.rests_group_work",
-   "en": "Rests on another group's work that carries an open flag, disclosed with this case:",
+   "en": "Rests on another team's work that carries an open flag, disclosed with this case:",
    "protected": false,
    "note": "DEC-260"
   },
@@ -5570,19 +5570,19 @@
   },
   {
    "key": "case-disclosures.sources_material_given",
-   "en": "## Sources Of Material Given To The Group",
+   "en": "## Sources Of Material Given To The Team",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "case-disclosures.said_whoever_gave",
-   "en": "What may be said of whoever gave the group a document this case rests on: only what the source consented to, or what is already public elsewhere. Nothing else is stated, and no identifier links this source to any other case.",
+   "en": "What may be said of whoever gave the team a document this case rests on: only what the source consented to, or what is already public elsewhere. Nothing else is stated, and no identifier links this source to any other case.",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "case-disclosures.document_case_rests",
-   "en": "No document this case rests on was given to the group by a source: each was fetched, or brought in by a member.",
+   "en": "No document this case rests on was given to the team by a source: each was fetched, or brought in by a member.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -5648,7 +5648,7 @@
   },
   {
    "key": "case-disclosures.travels_case_copy",
-   "en": "travels with this case as its copy, fingerprint {copy}, the original kept by the group{label}",
+   "en": "travels with this case as its copy, fingerprint {copy}, the original kept by the team{label}",
    "protected": false,
    "note": "DEC-260"
   },
@@ -5708,13 +5708,13 @@
   },
   {
    "key": "case-disclosures.group_work_case",
-   "en": "## Another Group's Work This Case Rests On",
+   "en": "## Another Team's Work This Case Rests On",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "case-disclosures.finding_case_rests",
-   "en": "A finding of this case rests on a finding of another group's published case, which this group accepted. That work, and everything it rests on, is the other group's, in its own case file: check it there.",
+   "en": "A finding of this case rests on a finding of another team's published case, which this team accepted. That work, and everything it rests on, is the other team's, in its own case file: check it there.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -5762,7 +5762,7 @@
   },
   {
    "key": "case-disclosures.held_irreconcilable_group",
-   "en": "Held irreconcilable by the group:",
+   "en": "Held irreconcilable by the team:",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6134,7 +6134,7 @@
   },
   {
    "key": "action-grammar.says.entry_dated_recorded",
-   "en": "Each entry is dated as recorded and names the entry it follows. Your group's Civicsmith derives only the days between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no judgment about the body.",
+   "en": "Each entry is dated as recorded and names the entry it follows. Your team's Civicsmith derives only the days between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no judgment about the body.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6218,19 +6218,19 @@
   },
   {
    "key": "conformance.group_finding_accepted",
-   "en": "Another group's finding, accepted by this group at the edition named: read-only, never stronger than that edition.",
+   "en": "Another team's finding, accepted by this team at the edition named: read-only, never stronger than that edition.",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "conformance.source_group_public",
-   "en": "the source group's public identity and declared stake were not recorded when this edition was imported, so they read undetermined",
+   "en": "the source team's public identity and declared stake were not recorded when this edition was imported, so they read undetermined",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "conformance.source_group_public_identity",
-   "en": "the source group's public identity and declared stake as it declared them when they were read at import, current then, never as of the edition's signing",
+   "en": "the source team's public identity and declared stake as it declared them when they were read at import, current then, never as of the edition's signing",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6368,13 +6368,13 @@
   },
   {
    "key": "conformance.source_group_moves",
-   "en": "the source group's moves could not be read",
+   "en": "the source team's moves could not be read",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "conformance.source_group_withdrew",
-   "en": "the source group withdrew the edition this determination rests on",
+   "en": "the source team withdrew the edition this determination rests on",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6386,7 +6386,7 @@
   },
   {
    "key": "conformance.source_group_published",
-   "en": "the source group published a newer edition, not accepted here",
+   "en": "the source team published a newer edition, not accepted here",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6488,7 +6488,7 @@
   },
   {
    "key": "file-safety.handed_fetched_group",
-   "en": "Handed in, not fetched by your group's Civicsmith from where it is published.",
+   "en": "Handed in, not fetched by your team's Civicsmith from where it is published.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6506,7 +6506,7 @@
   },
   {
    "key": "file-safety.group_civicsmith_cannot",
-   "en": "Your group's Civicsmith cannot check what a file of this kind does when it is opened.",
+   "en": "Your team's Civicsmith cannot check what a file of this kind does when it is opened.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6530,7 +6530,7 @@
   },
   {
    "key": "file-safety.archive_group_civicsmith",
-   "en": "An archive your group's Civicsmith could not open safely.",
+   "en": "An archive your team's Civicsmith could not open safely.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6650,13 +6650,13 @@
   },
   {
    "key": "file-safety.provider_reason.address_would_leave",
-   "en": "It would send the addresses your group captures to someone else.",
+   "en": "It would send the addresses your team captures to someone else.",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "file-safety.provider_reason.not_offered",
-   "en": "It does something your group's Civicsmith does not do with your files or addresses.",
+   "en": "It does something your team's Civicsmith does not do with your files or addresses.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -6704,7 +6704,7 @@
   },
   {
    "key": "intent.ask_active_administrator",
-   "en": "Ask an active administrator: they declare, revise or retire an aspiration the whole group holds in their own name, and the act carries their name and date.",
+   "en": "Ask an active administrator: they declare, revise or retire an aspiration the whole team holds in their own name, and the act carries their name and date.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7142,7 +7142,7 @@
   },
   {
    "key": "action-clocks.says.whether_group_confirmed",
-   "en": "whether your group has confirmed the calendar was not read",
+   "en": "whether your team has confirmed the calendar was not read",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7196,13 +7196,13 @@
   },
   {
    "key": "action-clocks.why.service_group_papers",
-   "en": "no service of the group's papers on that party is recorded on this action, the event this rule starts from",
+   "en": "no service of the team's papers on that party is recorded on this action, the event this rule starts from",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "action-clocks.why.action_ledger_holds",
-   "en": "the action's ledger holds no sent entry: the counterparty's receipt of the group's request is counted from it",
+   "en": "the action's ledger holds no sent entry: the counterparty's receipt of the team's request is counted from it",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7364,7 +7364,7 @@
   },
   {
    "key": "action-clocks.why.entry_names_basis",
-   "en": "the entry names no basis kind and no owed_by, so whether it is the group's own is not stated",
+   "en": "the entry names no basis kind and no owed_by, so whether it is the team's own is not stated",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7388,7 +7388,7 @@
   },
   {
    "key": "action-clocks.says.index_group_deadlines",
-   "en": "an index over the group's own deadlines (what the group owes, its dependencies and its own windows): never a finding about anyone else's conduct.",
+   "en": "an index over the team's own deadlines (what the team owes, its dependencies and its own windows): never a finding about anyone else's conduct.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7436,7 +7436,7 @@
   },
   {
    "key": "action-clocks.basis_group_window",
-   "en": "Basis: the group's own window{cite}",
+   "en": "Basis: the team's own window{cite}",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7580,7 +7580,7 @@
   },
   {
    "key": "signpage.copy_record_current",
-   "en": "Copy the record id and its current hash from its page in your group's Civicsmith. The signature covers both, so it authorizes publishing that exact revision and no other.",
+   "en": "Copy the record id and its current hash from its page in your team's Civicsmith. The signature covers both, so it authorizes publishing that exact revision and no other.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7610,7 +7610,7 @@
   },
   {
    "key": "signpage.copy_notice_revision",
-   "en": "Copy the notice id, its revision number and its hash from its page in your group's Civicsmith. The signature covers all three, so it puts your name to that exact revision of the notice and no other. It is signed with your ratification key.",
+   "en": "Copy the notice id, its revision number and its hash from its page in your team's Civicsmith. The signature covers all three, so it puts your name to that exact revision of the notice and no other. It is signed with your ratification key.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7634,7 +7634,7 @@
   },
   {
    "key": "signpage.copy_case_entry",
-   "en": "Copy the case id, the entry number and the entry hash from its page in your group's Civicsmith. The signature covers all three, so it puts your name to that exact entry on that case's public docket and no other. It is signed with your ratification key.",
+   "en": "Copy the case id, the entry number and the entry hash from its page in your team's Civicsmith. The signature covers all three, so it puts your name to that exact entry on that case's public docket and no other. It is signed with your ratification key.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7700,7 +7700,7 @@
   },
   {
    "key": "signpage.development_keys_passphrase",
-   "en": "These are development keys with no passphrase. When Civicsmith goes to real groups, generate fresh keys and protect them. Nothing here carries over.",
+   "en": "These are development keys with no passphrase. When Civicsmith goes to real teams, generate fresh keys and protect them. Nothing here carries over.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7748,13 +7748,13 @@
   },
   {
    "key": "signpage.ratify.signed",
-   "en": "Authorizes publishing {id} at exactly that hash. If the record changes before you submit it, your group's Civicsmith refuses this signature and you sign the new hash.",
+   "en": "Authorizes publishing {id} at exactly that hash. If the record changes before you submit it, your team's Civicsmith refuses this signature and you sign the new hash.",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "signpage.paste_notice_group",
-   "en": "Paste the notice id, as your group's Civicsmith shows it.",
+   "en": "Paste the notice id, as your team's Civicsmith shows it.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7772,13 +7772,13 @@
   },
   {
    "key": "signpage.notice.signed",
-   "en": "Signs revision {rev} of {id} at exactly that hash. If the notice changes before you post it, your group's Civicsmith refuses this signature and you sign the new hash.",
+   "en": "Signs revision {rev} of {id} at exactly that hash. If the notice changes before you post it, your team's Civicsmith refuses this signature and you sign the new hash.",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "signpage.paste_case_group",
-   "en": "Paste the case id, as your group's Civicsmith shows it.",
+   "en": "Paste the case id, as your team's Civicsmith shows it.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7796,7 +7796,7 @@
   },
   {
    "key": "signpage.docket.signed",
-   "en": "Signs entry {seq} on the docket of {id} at exactly that hash. If the entry changes before you post it, your group's Civicsmith refuses this signature and you prepare and sign it again.",
+   "en": "Signs entry {seq} on the docket of {id} at exactly that hash. If the entry changes before you post it, your team's Civicsmith refuses this signature and you prepare and sign it again.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8042,7 +8042,7 @@
   },
   {
    "key": "reevaluation.module_holding_group",
-   "en": "no module holding another group's work is registered, so no acceptance withdrawal or publisher move was read and no acceptance or cited_case_moved cause could be derived; that is not the same as none",
+   "en": "no module holding another team's work is registered, so no acceptance withdrawal or publisher move was read and no acceptance or cited_case_moved cause could be derived; that is not the same as none",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8054,7 +8054,7 @@
   },
   {
    "key": "reevaluation.module_holding_group_work",
-   "en": "the module holding another group's work keeps no publisher moves here, so no new edition or withdrawal of a cited case was read and no cited_case_moved cause could be derived; that is not the same as none",
+   "en": "the module holding another team's work keeps no publisher moves here, so no new edition or withdrawal of a cited case was read and no cited_case_moved cause could be derived; that is not the same as none",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8084,7 +8084,7 @@
   },
   {
    "key": "reevaluation.leg_rests_group",
-   "en": "this leg rests on another group's finding {ref} at edition {n}{kase}{group}, and its publisher {what} (docket entry {seq}{date}{words}).{key_listed}{taken_back} The finding keeps answering as that edition published it and the leg is unchanged; whether this finding still stands is the members' to decide.",
+   "en": "this leg rests on another team's finding {ref} at edition {n}{kase}{group}, and its publisher {what} (docket entry {seq}{date}{words}).{key_listed}{taken_back} The finding keeps answering as that edition published it and the leg is unchanged; whether this finding still stands is the members' to decide.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8150,7 +8150,7 @@
   },
   {
    "key": "reevaluation.says.finding_listed_rests_group",
-   "en": "each finding listed rests on another group's finding at an edition its publisher has since replaced or withdrawn; nothing was moved or regraded, the finding keeps answering as that edition published it, and a recorded re-evaluation closes the cause",
+   "en": "each finding listed rests on another team's finding at an edition its publisher has since replaced or withdrawn; nothing was moved or regraded, the finding keeps answering as that edition published it, and a recorded re-evaluation closes the cause",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8246,13 +8246,13 @@
   },
   {
    "key": "public-read.court_order_group",
-   "en": "a court order this group complied with keeps these contents from being served here; the order and the record entry that names it are public (court_orders), and nothing was deleted",
+   "en": "a court order this team complied with keeps these contents from being served here; the order and the record entry that names it are public (court_orders), and nothing was deleted",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "public-read.free_software_groups",
-   "en": "Free software for groups that check whether government keeps its own rules and promises.",
+   "en": "Free software for teams that check whether government keeps its own rules and promises.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8324,31 +8324,31 @@
   },
   {
    "key": "public-read.group_public_identity",
-   "en": "the group's public identity and the stake it declares, as its own administrators set them",
+   "en": "the team's public identity and the stake it declares, as its own administrators set them",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "public-read.group_public_identity_undetermined",
-   "en": "the group's public identity is undetermined: no source of it answered at this read, so nothing here names the group, and that is not a statement that it has no name",
+   "en": "the team's public identity is undetermined: no source of it answered at this read, so nothing here names the team, and that is not a statement that it has no name",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "public-read.group_declared_stake",
-   "en": "the group has declared no stake: its administrators have set none",
+   "en": "the team has declared no stake: its administrators have set none",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "public-read.group_declared_stake_read",
-   "en": "the group's declared stake could not be read, so it is undetermined, which is not a statement that the group declared none",
+   "en": "the team's declared stake could not be read, so it is undetermined, which is not a statement that the team declared none",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "public-read.group_public_identity_declared",
-   "en": "the group's public identity and declared stake as they stand at this read, labeled current: they are not read from this edition's signed document or its case file, and a later declaration changes nothing published",
+   "en": "the team's public identity and declared stake as they stand at this read, labeled current: they are not read from this edition's signed document or its case file, and a later declaration changes nothing published",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8408,13 +8408,13 @@
   },
   {
    "key": "civil-time.counted_correction_governs",
-   "en": "counted on a correction that governs in your group's Civicsmith, now {status}{says} ({year})",
+   "en": "counted on a correction that governs in your team's Civicsmith, now {status}{says} ({year})",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "civil-time.counted_calendar_corrected",
-   "en": "counted on a calendar corrected in your group's Civicsmith{corrected_by}{corrected_at} ({year})",
+   "en": "counted on a calendar corrected in your team's Civicsmith{corrected_by}{corrected_at} ({year})",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8474,7 +8474,7 @@
   },
   {
    "key": "civil-time.says.group_date",
-   "en": "the group's own date",
+   "en": "the team's own date",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8576,7 +8576,7 @@
   },
   {
    "key": "steps.why.time_zone_held",
-   "en": "no time zone is held for your group's Civicsmith, so the local day is not known",
+   "en": "no time zone is held for your team's Civicsmith, so the local day is not known",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8600,7 +8600,7 @@
   },
   {
    "key": "steps.why.time_zone_held_group",
-   "en": "no time zone is held for your group's Civicsmith, or no instant was given",
+   "en": "no time zone is held for your team's Civicsmith, or no instant was given",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8762,7 +8762,7 @@
   },
   {
    "key": "network-notices.group_civicsmith_key",
-   "en": "this group's Civicsmith key",
+   "en": "this team's Civicsmith key",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8960,7 +8960,7 @@
   },
   {
    "key": "workbooks.agreement_between_file",
-   "en": "agreement between the file's engine and the engine your group's Civicsmith runs, never accuracy",
+   "en": "agreement between the file's engine and the engine your team's Civicsmith runs, never accuracy",
    "protected": false,
    "note": "DEC-260"
   },
@@ -9026,7 +9026,7 @@
   },
   {
    "key": "workbooks.recomputed_engine_group",
-   "en": "recomputed by the engine your group's Civicsmith runs ({engine} {engine_version}); open it in any spreadsheet program",
+   "en": "recomputed by the engine your team's Civicsmith runs ({engine} {engine_version}); open it in any spreadsheet program",
    "protected": false,
    "note": "DEC-260"
   },
@@ -9068,7 +9068,7 @@
   },
   {
    "key": "tasks.why.project_manager_group",
-   "en": "no project manager, so a group administrator",
+   "en": "no project manager, so a team administrator",
    "protected": false,
    "note": "DEC-260"
   },
@@ -9242,7 +9242,7 @@
   },
   {
    "key": "drive.why.drive_host_path",
-   "en": "this is a Drive host ({host}) with a path shape this recognizer does not read, so it is named rather than harvested. A Drive address whose shape is unread is not a document your group's Civicsmith can promise to have captured.",
+   "en": "this is a Drive host ({host}) with a path shape this recognizer does not read, so it is named rather than harvested. A Drive address whose shape is unread is not a document your team's Civicsmith can promise to have captured.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -9290,43 +9290,43 @@
   },
   {
    "key": "drive.why.group_civicsmith_recorded",
-   "en": "your group's Civicsmith recorded fetching the export address, but {said}; the two disagree and neither is taken over the other",
+   "en": "your team's Civicsmith recorded fetching the export address, but {said}; the two disagree and neither is taken over the other",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "drive.why.group_civicsmith_recorded_fetching",
-   "en": "your group's Civicsmith recorded fetching {fetched_address}, not the export, but {said}; the two disagree and neither is taken over the other",
+   "en": "your team's Civicsmith recorded fetching {fetched_address}, not the export, but {said}; the two disagree and neither is taken over the other",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "drive.why.group_civicsmith_recorded_fetching_export",
-   "en": "your group's Civicsmith recorded fetching {fetched_address}, not the export address — Google serves the application there, not the document — and {said}",
+   "en": "your team's Civicsmith recorded fetching {fetched_address}, not the export address — Google serves the application there, not the document — and {said}",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "drive.why.group_civicsmith_recorded_bytes",
-   "en": "your group's Civicsmith recorded these bytes from BOTH the export and {fetched_address}; which one the baseline is cannot be told",
+   "en": "your team's Civicsmith recorded these bytes from BOTH the export and {fetched_address}; which one the baseline is cannot be told",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "drive.why.register_row_names",
-   "en": "the register row names the export address and {said}; your group's Civicsmith holds no retrieval record for these bytes",
+   "en": "the register row names the export address and {said}; your team's Civicsmith holds no retrieval record for these bytes",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "drive.why.row_document_address",
-   "en": "{said} for a row at the document address; your group's Civicsmith holds no retrieval record for these bytes, so this rests on the register alone",
+   "en": "{said} for a row at the document address; your team's Civicsmith holds no retrieval record for these bytes, so this rests on the register alone",
    "protected": false,
    "note": "DEC-260"
   },
   {
    "key": "drive.why.group_civicsmith_holds",
-   "en": "your group's Civicsmith holds no direct retrieval record for these bytes and {said}",
+   "en": "your team's Civicsmith holds no direct retrieval record for these bytes and {said}",
    "protected": false,
    "note": "DEC-260"
   },
@@ -9392,7 +9392,7 @@
   },
   {
    "key": "calibration.probe_per_calibratable",
-   "en": "one probe per calibratable engine every {days} day(s), which your group's Civicsmith runs on its own account",
+   "en": "one probe per calibratable engine every {days} day(s), which your team's Civicsmith runs on its own account",
    "protected": false,
    "note": "DEC-260"
   },
