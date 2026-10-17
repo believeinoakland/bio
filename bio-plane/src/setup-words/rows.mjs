@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12669 words, 890 protected; SHA-256
-   689ca8e252793e649aef14c4ac64e57e2e2f3fd3c50351e6ef87434fe4dd50fd), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12687 words, 890 protected; SHA-256
+   6a70897f088a641cf1f6ceccb0789144f8d68c0c06a1e475019775f7236bbfa7), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "689ca8e252";
+export const WORDS_COMMIT = "6a70897f08";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5604,6 +5604,24 @@ export const WORD_ROWS = Object.freeze([
   ["findin.term.help","Only passages with this name or term are shown, when you fill it in.","DEC-300: no tick box: the field applies when filled",null,false],
   ["findin.question.choose","For which question","DEC-300: a choice of the project's questions; \"Open a question first\" only when it has none",null,false],
   ["period.days","{first} to {last}","DEC-300: a period named by its first and last day, both included, such as \"1 to 15 October\"",null,false],
+  ["refusal.ASSISTANT_REMOTE_NOT_READY","The assistant isn't working for your team yet: its connection hasn't passed its check. An administrator can run the check under Settings, The assistant. Nothing was sent.","DEC-301: agent-worker R110, Bob's K3610",null,false],
+  ["screen.connect.check","Check the connection","DEC-301: screens-settings R41; drawn only once the proof passes (K3615)",null,false],
+  ["screen.connect.check.help","Runs one short test on your Claude account: signs in, starts a session, asks it one question that uses one of Civicsmith's tools, and ends it. The assistant works for your team only after this passes.","DEC-301",null,false],
+  ["connect.check.step.signin","Signed in to your Claude account","DEC-301",null,false],
+  ["connect.check.step.create","Started a test session","DEC-301",null,false],
+  ["connect.check.step.prompt","Asked it a test question","DEC-301",null,false],
+  ["connect.check.step.tool","It used one of Civicsmith's tools","DEC-301",null,false],
+  ["connect.check.step.answer","It answered, and Civicsmith checked the answer","DEC-301",null,false],
+  ["connect.check.step.end","Ended the test session","DEC-301",null,false],
+  ["connect.check.step.time","{step} · {seconds} s","DEC-301: each step with its time, as it arrives (DEC-298's ticks)",null,false],
+  ["connect.check.step.waiting","{step}…","DEC-301: the step under way",null,false],
+  ["connect.check.passed","The connection works. The assistant can now serve your team.","DEC-301",null,false],
+  ["connect.check.failed","The check stopped at “{step}”: {why}. Nothing else was tried. Put it right and check again.","DEC-301: {why} the step's own plain reason",null,false],
+  ["proceeding.kind.civil","Civil case","DEC-301: proceeding_kinds civil",null,false],
+  ["proceeding.kind.writ","Petition for a writ","DEC-301: proceeding_kinds writ: asking a court to order an official or agency to act",null,false],
+  ["proceeding.kind.appeal","Appeal","DEC-301: proceeding_kinds appeal",null,false],
+  ["proceeding.kind.complaint","Administrative complaint","DEC-301: proceeding_kinds complaint: filed with an agency or board, not a court",null,false],
+  ["proceeding.kind.help","What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.","DEC-301: the choice's explanation",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],

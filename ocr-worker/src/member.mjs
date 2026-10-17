@@ -40,7 +40,8 @@
  */
 import { renderPageToPixels, REFUSALS as RENDER_REFUSALS } from "../../pdf-worker/src/pagepixels.mjs";
 import { pngToSamples, samplesToRgba } from "./pngsamples.mjs";
-import { CAP, MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES, REFUSALS, chooseChunk, frameBytesOf } from "./contract.mjs";
+import { renderPictureToPixels } from "../../pdf-worker/src/picturepixels.mjs";
+import { CAP, MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES, PICTURE_MAX_EDGE, REFUSALS, chooseChunk, frameBytesOf, isPicture } from "./contract.mjs";
 
 /* The namespace set (R16) and the plane ops this member calls (none) are declared in `contract.mjs`, which imports
    no engine, so the plane's control-plane can pin both against its own gate and op table. */
@@ -69,11 +70,12 @@ export function floorFrom(env) {
  *
  * `engine` is `{ name, version, model, check() -> null | reason, transcribeFrame(rgba, w, h, {psm}) ->
  * {ok:true, regions:[{text, rect:[l,t,r,b], confidence}], grain, boxCount} | {ok:false, error, name} }`.
- * `render` is `renderPageToPixels`'s signature; it defaults to that function.
+ * `render` is `renderPageToPixels`'s signature; it defaults to that function. `renderPicture` is
+ * `renderPictureToPixels`'s (R23), the renderer of a JPEG or PNG capture; it defaults to that function.
  *
  * Returns `{ fetch, transcribeRequest, transcribeOnePage }`.
  */
-export function makeMember(engine, { render = renderPageToPixels } = {}) {
+export function makeMember(engine, { render = renderPageToPixels, renderPicture = renderPictureToPixels } = {}) {
 
   /** Transcribe ONE page of one capture: a pure function of the bytes, the page and the options. */
   async function transcribeOnePage(bytes, page, { psm = null, confidenceFloor = null } = {}) {
@@ -85,7 +87,15 @@ export function makeMember(engine, { render = renderPageToPixels } = {}) {
        decodable, and its refusals are passed through VERBATIM — a text layer, a vector page, a mosaic and a JBIG2
        stream are four different findings and this member collapses none of them. `decodeDct` (D-320): a DCT page is
        DECODED to pixels, upright, so `pixels_sha256` is one an independent decoder reproduces. */
-    const rendered = await render(bytes, page, { decodeDct: true });
+    /* R23: a capture that is a JPEG or PNG picture is a ONE-PAGE document, rendered by the picture renderer
+       (pdf-pixels R42) and taken through every step below exactly as a PDF page is. Any page but 0 does not exist,
+       and is named so before a pixel is made. Bytes that are neither are the page renderer's to refuse, as before. */
+    const picture = isPicture(bytes);
+    if (picture && page !== 0)
+      return { ok: false, reason: "NO_SUCH_PAGE", detail: REFUSALS.NO_SUCH_PAGE, page, page_count: 1 };
+    const rendered = picture
+      ? await renderPicture(bytes, page, { maxEdge: PICTURE_MAX_EDGE, grey: true })
+      : await render(bytes, page, { decodeDct: true });
     if (!rendered || !rendered.ok)
       return { ok: false, reason: "PAGE_NOT_RENDERABLE", detail: REFUSALS.PAGE_NOT_RENDERABLE,
                page, render: rendered ? { reason: rendered.reason, why: RENDER_REFUSALS[rendered.reason] || null,
@@ -159,7 +169,7 @@ export function makeMember(engine, { render = renderPageToPixels } = {}) {
         text,
         source: { kind: "pdf-page", ref, page, rect: [l, t0, r, b], space: "image-px",
                   image: { width: samples.width, height: samples.height, route: rendered.route,
-                           upright: rendered.upright, rotate_deg: rendered.rotate_deg,
+                           upright: rendered.upright, rotate_deg: rendered.rotate_deg ?? null,
                            pixels_sha256: rendered.pixels_sha256 || null } },
         confidence: rated ? { value: c, basis: "engine" } : "none",
       });
@@ -178,7 +188,7 @@ export function makeMember(engine, { render = renderPageToPixels } = {}) {
       ok: true, page,
       regions, unanchored, blank, unrated, grain: out.grain,
       image: { width: samples.width, height: samples.height, frame_bytes: frame,
-               route: rendered.route, upright: rendered.upright, rotate_deg: rendered.rotate_deg,
+               route: rendered.route, upright: rendered.upright, rotate_deg: rendered.rotate_deg ?? null,
                dpi: rendered.page_geometry ? rendered.page_geometry.dpi : null,
                pixels_sha256: rendered.pixels_sha256 || null },
       confidence_floor: confidenceFloor,
