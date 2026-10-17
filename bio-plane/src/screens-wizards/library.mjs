@@ -4,15 +4,22 @@
    projects a recording or a copy is made in). Each script's version is a row (interface-shell R19) whose panel holds its
    acts; a Civicsmith script offers only the copy (wizard-scripts R9: `WIZARD_NOT_THE_GROUPS`). Every refusal is drawn by
    the shell (interface-shell R13); a check's refusal names its step. Recording a new wizard hands over to the guide in
-   the dock (`cs.wizard`, interface-shell R31; R3) and sends nothing from here.
+   the dock (`cs.wizard`, interface-shell R31; R3) and sends nothing from here. The wizards in use and the states to list
+   come first; writing, revising, approving and retiring sit in one fold (R16). Choosing a state reads it at once (R15).
 
    Every function is self-contained (interface-shell R21): it uses only its parameters, `cs` and the language's globals. */
 
 /* The codes of `wizard-scripts`' step checks (its R2, R12): each answer names the step it refuses, drawn "Step <n>: …". */
 const STEP_CODES = ["WIZARD_STEP_REFUSED", "WIZARD_NO_STEPS", "WIZARD_SCREEN_UNKNOWN", "WIZARD_ACT_UNKNOWN", "WIZARD_STEP_NO_WHY",
   "WIZARD_DRAFT_REFUSED", "WIZARD_VIA_REFUSED", "WIZARD_STEP_CONCLUDES", "WIZARD_RECORDING_CARRIES_VALUES"];
+/* R14: the refusal's words are its key `refusal.<CODE>` (interface-shell R70, R83), the step it names in `{step}`; a code with
+   no key is drawn as R83 draws one (the answer's own translation, else `refusal.uncatalogued` and the code) */
 function stepRefusal(r, cs) {
-  const words = r && typeof r.translation === "string" && r.translation ? cs.esc(r.translation) : cs.esc((r && (r.detail || r.code)) || "");
+  const key = "refusal." + (r && r.code);
+  const held = cs.w(key, r || {});
+  const words = held !== cs.esc(key) ? held
+    : r && typeof r.translation === "string" && r.translation ? cs.esc(r.translation)
+      : cs.w("refusal.uncatalogued") + " " + cs.esc((r && r.code) || "");
   return r && r.step !== null && r.step !== undefined && r.step !== ""
     ? cs.w("screen.wizards.refusal.step", { step: String(r.step), words: { html: words } }) : words;
 }
@@ -25,8 +32,11 @@ export const library = {
   id: "wizards",
 
   reads(view) {
-    const ui = (view && view.ui) || {};
-    const state = ui.state && ui.state !== "offered" ? ui.state : null;
+    // the state shown: the one chosen on the screen, else the one the address names (the guide opens Drafts after saving a
+    // recording, R15), else the offered ones
+    const STATES = ["offered", "draft", "submitted", "withdrawn", "retired", "broken", "proposed"], ui = (view && view.ui) || {};
+    const shown = STATES.includes(ui.state) ? ui.state : STATES.includes(view && view.subject) ? view.subject : "offered";
+    const state = shown !== "offered" ? shown : null;
     const out = {
       list: { op: "wizards", query: state ? { state } : undefined,
         empty: (v) => (v && v.state === "proposed" ? !(v.proposals || []).length : !(v && (v.scripts || []).length)) },
@@ -42,7 +52,7 @@ export const library = {
     const W = cs.w, E = cs.esc, S = "screen.wizards.";
     const ui = view.ui || {}, data = view.data || {}, me = view.me || {};
     const STATES = ["offered", "draft", "submitted", "withdrawn", "retired", "broken", "proposed"];
-    const state = STATES.includes(ui.state) ? ui.state : "offered";
+    const state = STATES.includes(ui.state) ? ui.state : STATES.includes(view.subject) ? view.subject : "offered";
     const idOf = (v) => String(v).replace(/[^A-Za-z0-9_-]/g, "_");
     // a word by key, or null when the page holds none (the shell draws an unknown key as the key itself, R5)
     const said = (key, fills) => { const t = W(key, fills); return t === E(key) ? null : t; };
@@ -58,17 +68,13 @@ export const library = {
     const updates = data.updates && data.updates.state === "ok" ? (data.updates.value.entries || []) : [];
     const out = [cs.title(), `<p>${W("screen.wizards.purpose")}</p>`];
 
-    // which wizards are listed: offered by default, or a state the member chooses (`wizards`)
-    const see = cs.act("wizards", { label: S + "act.seeall", data: { see: "1" } });
-    if (see) out.push(`<div class="mk-acts">${cs.choice("wz-state", S + "state.field", STATES.map((k) => [k, S + "state." + k]), { value: state })}${see}</div>`);
-
-    // a recording, made on the real screens in the dock's guide (R3)
-    const record = cs.act("wizarddraft", { data: { mode: "record" } });
-    if (record) out.push(cs.sec(S + "record.head", `<p>${W(S + "record.intro")}</p>${projectField("wz-project")}${record}`));
+    // R15: choosing a state reads it at once, one press; "See the whole library" is the list again
+    const choice = STATES.map((k) => cs.act("wizards", { label: k === "offered" ? S + "act.seeall" : S + "state." + k, data: { state: k }, tone: k === state ? "primary" : "quiet" })).join("");
+    if (choice) out.push(`<div class="mk-acts" role="group" aria-label="${W(S + "state.field")}">${choice}</div>`);
 
     // one version's steps, opened from its row (`wizardread`)
     const opened = (vid) => (ui.opened && ui.opened.id === vid ? ui.opened : null);
-    const stepsOf = (s, o, own) => cs.state(o.read, (a) => {
+    const stepsList = (s, o) => cs.state(o.read, (a) => {
       const steps = (a && a.version && a.version.steps) || [];
       const lines = steps.map((st, i) => {
         const n = i + 1;
@@ -81,22 +87,24 @@ export const library = {
           + (st.via ? " · " + W(S + "steps.via", { name: { html: said("wizard." + st.via + ".name") || E(st.via) } }) : "")
           + (kind && ["text", "template", "machine"].includes(kind) ? " · " + W(S + "steps.draft." + kind) : "") + "</span></li>";
       });
-      let edit = "";
-      const save = own ? cs.act("wizardrevise", { label: S + "act.save", data: { mode: "edit", version: o.id } }) : "";
-      if (save) {
-        const k = idOf(o.id);
-        edit = cs.sec(S + "edit.head", steps.map((st, i) => {
-          const n = String(i + 1);
-          return `<fieldset class="cs-field"><legend>${W(S + "edit.what", { n })}</legend>`
-            + cs.field(`wz-w-${k}-${i}`, S + "edit.what", { area: true, value: st.what || "", fills: { n } })
-            + cs.field(`wz-y-${k}-${i}`, S + "edit.why", { area: true, value: st.why || "", fills: { n } })
-            + cs.field(`wz-p-${k}-${i}`, S + "edit.place", { type: "number", value: n, fills: { n } })
-            + `<label><input type="checkbox" id="wz-x-${k}-${i}"> ${W(S + "edit.remove", { n })}</label></fieldset>`;
-        }).join("") + `<fieldset class="cs-field"><legend>${W(S + "edit.add")}</legend>`
-          + cs.field(`wz-as-${k}`, S + "edit.addscreen") + cs.field(`wz-aa-${k}`, S + "edit.addact")
-          + cs.field(`wz-aw-${k}`, S + "edit.addwhat", { area: true }) + cs.field(`wz-ay-${k}`, S + "edit.addwhy", { area: true }) + `</fieldset>` + save);
-      }
-      return cs.sec(S + "steps.head", `<ol class="mk-list">${lines.join("")}</ol>`) + edit;
+      return cs.sec(S + "steps.head", `<ol class="mk-list">${lines.join("")}</ol>`);
+    });
+    // the author's draft, reworded, reordered or pruned in place (`wizardrevise`)
+    const editOf = (o) => cs.state(o.read, (a) => {
+      const steps = (a && a.version && a.version.steps) || [];
+      const save = cs.act("wizardrevise", { label: S + "act.save", data: { mode: "edit", version: o.id } });
+      if (!save) return "";
+      const k = idOf(o.id);
+      return cs.sec(S + "edit.head", steps.map((st, i) => {
+        const n = String(i + 1);
+        return `<fieldset class="cs-field"><legend>${W(S + "edit.what", { n })}</legend>`
+          + cs.field(`wz-w-${k}-${i}`, S + "edit.what", { area: true, value: st.what || "", fills: { n } })
+          + cs.field(`wz-y-${k}-${i}`, S + "edit.why", { area: true, value: st.why || "", fills: { n } })
+          + cs.field(`wz-p-${k}-${i}`, S + "edit.place", { type: "number", value: n, fills: { n } })
+          + `<label><input type="checkbox" id="wz-x-${k}-${i}"> ${W(S + "edit.remove", { n })}</label></fieldset>`;
+      }).join("") + `<fieldset class="cs-field"><legend>${W(S + "edit.add")}</legend>`
+        + cs.field(`wz-as-${k}`, S + "edit.addscreen") + cs.field(`wz-aa-${k}`, S + "edit.addact")
+        + cs.field(`wz-aw-${k}`, S + "edit.addwhat", { area: true }) + cs.field(`wz-ay-${k}`, S + "edit.addwhy", { area: true }) + `</fieldset>` + save);
     });
 
     // what changed in a copy's original (`baseupdates`; DEC-158 (4)), with the act that brings it across (R1)
@@ -112,20 +120,29 @@ export const library = {
         + `<h3>${W(S + "changes.base")}</h3>${list(u.steps && u.steps.base, true)}${across}`, { fills: { name: { html: said("wizard." + u.base + ".name") || E(u.base_name || "") } } });
     });
 
-    // a version's panel: its steps, and the acts its state and its owner allow (R1)
-    const panel = (s, v) => {
+    // R1: a version's reading panel: its steps, for whoever may see the wizard
+    const readPanel = (s, v) => {
+      const p = [cs.act("wizards", { label: S + "act.steps", data: { open: v.id } })];
+      if (opened(v.id)) p.push(stepsList(s, opened(v.id)));
+      return p.join("");
+    };
+    // R1, R16: a version's authoring panel: the acts its state and its owner allow; "" when none is drawn
+    const authoring = (s, v) => {
       const p = [];
       const k = idOf(v.id);
-      p.push(cs.act("wizards", { label: S + "act.steps", data: { open: v.id } }));
       const own = v.state === "draft" && v.author && v.author.id && v.author.id === me.member;
-      if (opened(v.id)) p.push(stepsOf(s, opened(v.id), own));
+      if (own) {
+        const open = cs.act("wizards", { label: S + "act.steps", data: { open: v.id } });
+        if (open) p.push(open);
+        if (opened(v.id)) p.push(editOf(opened(v.id)));
+      }
       const reason = (id) => cs.field(id, S + "reason.field", { area: true });
       const live = !s.retired && v.state === "approved";
       if (live) {
         const copy = cs.act("wizarddraft", { label: S + "act.copy", data: { mode: "copy", version: v.id, name: s.name || "" } });
         if (copy) p.push(`<div class="mk-acts"><p>${W(S + "copy.note")}</p>${projectField("wz-cp-" + k)}${cs.field("wz-cn-" + k, S + "name.field", { value: s.name || "" })}${copy}</div>`);
       }
-      if (s.origin === "civicsmith") { p.push(`<p class="mk-note">${W(S + "civicsmith.only")}</p>`); return p.join(""); }
+      if (s.origin === "civicsmith") { if (p.length) p.push(`<p class="mk-note">${W(S + "civicsmith.only")}</p>`); return p.join(""); }
       if (v.state === "draft") p.push(cs.act("wizardsubmit", { data: { version: v.id } }));
       if (v.state === "submitted") p.push(cs.act("wizardapprove", { data: { version: v.id } }));
       if (live && !s.widened && s.scope && typeof s.scope === "object") p.push(cs.act("wizardapprove", { label: S + "act.widen", data: { version: v.id, widen: "1" } }));
@@ -138,15 +155,17 @@ export const library = {
       return p.join("");
     };
 
-    const rowsOf = (v) => {
+    // the rows of the listed state: the reading table (own = false), or the authoring table inside the fold (own = true)
+    const rowsOf = (v, own) => {
       if (v.state === "proposed") {
         const drafts = data.drafts && data.drafts.state === "ok" ? (data.drafts.value.scripts || []).flatMap((s) => (s.versions || [])
           .filter((x) => x.state === "draft" && x.author && x.author.id === me.member).map((x) => ({ id: x.id, name: s.name }))) : [];
         return cs.rows({
-          id: "proposals", cols: [S + "col.name", S + "col.base"], items: v.proposals || [], key: (p) => String(p.id),
+          id: own ? "ownproposals" : "proposals", cols: [S + "col.name", S + "col.base"], items: v.proposals || [], key: (p) => String(p.id),
           name: (p) => String(p.why || p.id).slice(0, 60),
           cells: (p) => [W(S + "proposal.by", { why: p.why || "" }), p.script ? E(p.script) : W(S + "nobase")],
           acts: (p) => {
+            if (!own) return "";
             const k = idOf(p.id);
             const from = cs.act("wizarddraft", { label: S + "act.fromproposal", data: { mode: "from", from: p.id, field: "wz-pn-" + k } });
             const adopt = drafts.length ? cs.act("wizardrevise", { label: S + "act.adopt", data: { mode: "adopt", adopt: p.id, field: "wz-pd-" + k } }) : "";
@@ -155,7 +174,14 @@ export const library = {
           },
         });
       }
-      const items = (v.scripts || []).flatMap((s) => (s.versions || []).map((x) => ({ s, v: x })));
+      let items = (v.scripts || []).flatMap((s) => (s.versions || []).map((x) => ({ s, v: x })));
+      if (own) {
+        const panels = new Map(items.map((it) => [String(it.v.id), authoring(it.s, it.v)]));
+        items = items.filter((it) => panels.get(String(it.v.id)));
+        return cs.rows({ id: "own", cols: [S + "col.name"], items, key: (it) => String(it.v.id), name: (it) => String(it.s.name || it.s.id),
+          cells: (it) => [`<b>${nameOf(it.s)}</b> <span class="meta">${W(S + "version", { n: String(it.v.version) })}</span>`],
+          acts: (it) => panels.get(String(it.v.id)) });
+      }
       return cs.rows({
         id: "library", cols: [S + "col.name", S + "col.whose", S + "col.base", S + "col.approver", S + "col.finished"], items, key: (it) => String(it.v.id),
         name: (it) => String(it.s.name || it.s.id),
@@ -175,15 +201,24 @@ export const library = {
             (x.use && x.use.finish > 0) ? W(S + "finished", { n: String(x.use.finish) }) : "",
           ];
         },
-        acts: (it) => panel(it.s, it.v),
+        acts: (it) => readPanel(it.s, it.v),
       });
     };
-    out.push(cs.sec(S + "showing", cs.state(data.list, rowsOf, { empty: S + "empty" }), { fills: { state: { html: W(S + "state." + state) } } }));
+
+    // the wizards in use, first (R16)
+    out.push(cs.sec(S + "showing", cs.state(data.list, (v) => rowsOf(v, false), { empty: S + "empty" }), { fills: { state: { html: W(S + "state." + state) } } }));
+
+    // R16: writing, revising, approving and retiring fold together, closed, `own.says` first; R3: a recording is made on the real screens
+    const record = cs.act("wizarddraft", { data: { mode: "record" } });
+    const own = [];
+    if (record) own.push(cs.sec(S + "record.head", `<p>${W(S + "record.intro")}</p>${projectField("wz-project")}${record}`));
+    if (data.list && data.list.state === "ok") own.push(rowsOf(data.list.value, true));
+    if (own.join("").trim()) out.push(`<details class="mk-details" data-wizards-own><summary>${W(S + "own.fold")}</summary><p class="mk-note">${W(S + "own.says")}</p>${own.join("")}</details>`);
     return out.join("");
   },
 
   acts: [
-    // `wizards`, a read: the list again with a state chosen; or one version's steps opened beneath its row (`wizardread`)
+    // `wizards`, a read: the list in the state pressed (R15); or one version's steps opened beneath its row (`wizardread`)
     { op: "wizards", rereads: ["list", "drafts"],
       async send(view, el, cs) {
         const ui = view.ui;
@@ -200,9 +235,9 @@ export const library = {
           if (ui.opened && ui.opened.id === open) cs.set("opened", { id: open, read });
           return null;
         }
-        const chosen = cs.value("wz-state");
-        const states = ["offered", "draft", "submitted", "withdrawn", "retired", "broken", "proposed"];
-        ui.state = states.includes(chosen) ? chosen : "offered";
+        // R15: the state is the button pressed; the list is read in it at once
+        const chosen = el && el.dataset ? el.dataset.state : null;
+        ui.state = ["offered", "draft", "submitted", "withdrawn", "retired", "broken", "proposed"].includes(chosen) ? chosen : "offered";
         ui.opened = null;
         return { query: ui.state === "offered" ? {} : { state: ui.state } };
       } },
@@ -222,7 +257,8 @@ export const library = {
         if (d.mode === "copy") {
           const project = cs.value("wz-cp-" + k);
           if (!project) return { refuse: "screen.wizards.project.none" };
-          const name = String(cs.value("wz-cn-" + k) || "").trim();
+          // with no name typed (the act no longer asks a reason, op-grades), the copy keeps its original's name
+          const name = String(cs.value("wz-cn-" + k) || "").trim() || String(d.name || "");
           return { body: { copy: d.version, project, name } };
         }
         if (d.mode === "from") {
