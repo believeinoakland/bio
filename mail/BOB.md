@@ -1053,3 +1053,6 @@ DEC-314 @ c2085d1553 merged into tranche/T50, rows.mjs checked (K3706); folded: 
 
 ## B289 · ACK · re U330 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
 DEC-315 @ 222ab9803f merged into tranche/T50, rows.mjs checked (K3707); folded: screens-publish R35, case-account's refusals by key in T50-43.
+
+## B290 · ACK · re U331 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
+DEC-316 @ cb802afa6d merged into tranche/T50 (K3709); folded as interface-shell R89.
