@@ -22,7 +22,7 @@
   "label": 192,
   "project": 50,
   "grouprule": 1,
-  "refusal": 1934,
+  "refusal": 1935,
   "signing": 17,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3801,
+  "screen": 3805,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -220,7 +220,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12687,
+  "total": 12692,
   "protected": 890
  },
  "words": [
@@ -8521,10 +8521,10 @@
   },
   {
    "key": "refusal.ACCOUNT_MEMBER_NOT_ACTIVE",
-   "en": "The run can't start: your membership isn't active in your team's Civicsmith just now. Nothing was sent. An administrator can tell you why.",
+   "en": "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
    "protected": false,
    "source": "DEC-248",
-   "note": "DEC-248: R13"
+   "note": "DEC-248: R13; DEC-259: reworded"
   },
   {
    "key": "refusal.AI_RUN_NOT_PRINCIPAL",
@@ -17642,7 +17642,7 @@
   },
   {
    "key": "screen.archive.alreadyheld",
-   "en": "Already held · the same file {name} captured directly on {date}; this copy is kept as a second sighting of it",
+   "en": "Already held · the same file {name} captured on {date}; this copy is kept as a second sighting of it",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-intake's own rows; DEC-259: reworded"
@@ -38821,6 +38821,41 @@
    "note": "DEC-301: the choice's explanation"
   },
   {
+   "key": "refusal.BAD_FOR",
+   "en": "Say which question this capture is for: choose one of the project's questions. Nothing was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-302: acquisition R47: acquire's for is not a question"
+  },
+  {
+   "key": "screen.inbox.alreadyheld",
+   "en": "Already held: {holder} brought in the same file. Marked as brought in; nothing new was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-302: doorbell R13"
+  },
+  {
+   "key": "screen.inbox.alreadyheld.other",
+   "en": "Already held: the same file is already in your team's records. Marked as brought in; nothing new was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-302: doorbell R13: the holder is not one the viewer may see"
+  },
+  {
+   "key": "screen.open-file.safetext",
+   "en": "Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-302: file-safety R45"
+  },
+  {
+   "key": "screen.open-file.safetext.cut",
+   "en": "The file is longer than this view shows; the rest is in the original file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-302: file-safety R45"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -49742,10 +49777,10 @@
   },
   {
    "key": "refusal.NO_SAFE_VIEW",
-   "en": "Your team's Civicsmith makes safe views of documents, presentations and spreadsheets, and this file is none of them, so it has no safe view.",
+   "en": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
    "protected": false,
    "source": "DEC-260",
-   "note": "file-safety's translation, keyed by its code"
+   "note": "file-safety's translation, keyed by its code; DEC-259: reworded"
   },
   {
    "key": "refusal.NO_STANDARDS",
