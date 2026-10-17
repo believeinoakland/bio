@@ -1050,3 +1050,6 @@ Acted on with U327 (K3703).
 
 ## B288 · ACK · re U329 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
 DEC-314 @ c2085d1553 merged into tranche/T50, rows.mjs checked (K3706); folded: screens-daily R53, screens-inquiry R64, screens-settings R54.
+
+## B289 · ACK · re U330 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
+DEC-315 @ 222ab9803f merged into tranche/T50, rows.mjs checked (K3707); folded: screens-publish R35, case-account's refusals by key in T50-43.
