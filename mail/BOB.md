@@ -1020,3 +1020,6 @@ Keys owed to the design lane from T50's L4, L5 and L11 folds (K3659, K3672, K367
 
 ## B280 · ACK · re U323 · 2026-10-17 · session_01VwThqZeqZseMpazRhvxmLz · primary
 DEC-309 merged into tranche/T50 (K3682) from df25a7b746; rows.mjs regenerated and --check clean. L6-L11 jobs read the keys at their STARTs; L4/L5 modules' reads are N1213 for T51.
+
+## B281 · ACK · re U324 · 2026-10-17 · session_01VwThqZeqZseMpazRhvxmLz · primary
+DEC-310 merged into tranche/T50 (K3683) from 2c693f417a; rows.mjs regenerated, --check clean. Owed work placed: review T50-72 takes casedraft's choice of questions (L8), public-read T50-71, interface-shell T50-27, screens-inquiry T50-32, screens-publish T50-34.
