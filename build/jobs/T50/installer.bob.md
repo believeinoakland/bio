@@ -30,3 +30,13 @@ Answers for the restart (K3777): (1) the copy's bootstrap facts are N1239 for T5
 ## B3 · CHANGE
 
 From JOURNEY-CHECK #6 (K3779), for your N1160 entry: the installer's pages / and /callback still say 'group' for a team ('Create your Civicsmith group', 'Your group's Civicsmith', 'Neighbourhood and issue groups'). Use 'team' as words.json does, unless the sense is one GROUP_SENSE keeps (groups of people outside a team).
+
+## B4 · CHANGE
+
+CHANGE (K3793; P9, P10: found by journey-check's re-walk and BOB's diagnosis; L11 is still open). You are INSTALLER #16, restarting #15 (past half its window). Merge `origin/tranche/T50` into your branch first: it carries R15's clarified wording.
+
+The flaw (installer R15 against R38): the release's container images are on ghcr.io, which `images.mjs` `PULLABLE` refuses by design (K2816 (4)), so R38 leaves `agent-runner` and `file-scanner` out, named, and "the install never fails over it". But `loadFleet`'s error for such a member reaches `installFleet`'s `left`/failed list, and `failedLags` (index.mjs ~1368) turns file-scanner (bound by the plane, `BINDING_OF`) into a permanent lag, so `servingVerdict` never confirms and `verifyServing` waits its whole bound: no install of this release ever succeeds, on a real account as in journey-check's local world.
+
+Do: a member R38 leaves out (its conditions unmet: `IMAGE_UNPULLABLE`, `IMAGE_UNPINNED`, no Containers scope, not Workers Paid, a missing part) is not a failed upload for R15: it is named once at the fleet step with why and what the copy lacks (`leftOutNotice`, `lacksOf`), and is not a lag; a member whose upload was attempted and failed stays a lag as now (DIST-6). A plane reading of a left-out member as UNBOUND is not a lag either (it was not installed). Tests: a release with both container members on `ghcr.io/…@sha256:<hex>` and every other member serving confirms the install, naming both left out with R38's reason; control: a member whose upload fails still holds the verdict until its bound. Run the installer's suites, newgroup's build and `bio-plane/test/system/newgroup-bundle-fresh.test.mjs`; checks (format, architecture, coverage, ownership). Then COMPLETE with your Size line.
+
+Reading: your requirements whole, this entry, the fleet and verify code paths in `newgroup/src/index.mjs` and `images.mjs` whole, and the tests naming R15 and R38; other tests run, not read. If you would read a document of your set only in part, stop at once and post BLOCKED (cause `reading`). Workers: haiku low for mechanical work, sonnet medium for reading or diagnosis; never opus. Medium effort.
