@@ -34,3 +34,7 @@ A flaw in your ring, from SCREENS-WIZARDS #2 (P9, K3769): cs.ring finds the cont
 ## B4 · CHANGE
 
 wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B5 · CHANGE
+
+From SCREENS-INQUIRY #10 (P9, K3775): the shell's own registry copy and RE_POINTS lack projectstakeset, projectrequest and projectrequestwithdraw on project and casedraft on question, and REF_SCREENS lacks request, matter, action and published, so screens-inquiry's pages refuse at boot. Read every screen's acts from wizard-scripts' SCREEN_REGISTRY (regenerated from design 7be06eb4cb and merged into tranche/T50, K3771) as your R73 says, never a copy; merge tranche/T50 first. Every screen job but two waits on your merge: post COMPLETE as soon as you can.

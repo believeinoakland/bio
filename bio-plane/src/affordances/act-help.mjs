@@ -15,8 +15,13 @@
  *   - `owed_<op>` is held under `<op>` once `<op>` is declared or spelled `op=` (R61): the six DEC-248 cleared
  *     (`readtranslate`, `projectfork`, `versionconsider`, `versionreject`, `versionrevert`, `versioncurrent`), `updatestart`,
  *     `updatelater`, `updateskip`, `passwordresetlink`, and `founderhandleset`, which `op-declarations` R71 declares in T49
- *     (K2999's rule: R34's partition holds at both merges). `projectstakeset`, `actionstake`, `watchitem`, `secondlook` and
- *     `actioninquiry` stay under their `owed_` keys, their ops not being declared in T49;
+ *     (K2999's rule: R34's partition holds at both merges). T50 (R65): `projectstakeset`, `actionstake`, `watchitem`, `secondlook`
+ *     and `actioninquiry` are held under their ops, read from `act.owed_<op>.does` as the word list holds them (their ops
+ *     are declared, `op-declarations` R73), so no held key starts `owed_`; `secondlookclear` is held under its own
+ *     `act.secondlookclear.does`;
+ *   - T50 (R64, R66; DEC-264, DEC-309 (5)): `reauth` (`act.reauth.does`) and `aliaswithdraw` (`act.owed_aliaswithdraw.does`),
+ *     `factconfirm`, `projectrequest`, `projectrequestwithdraw` and `projectrequestanswer` (each `act.<op>.does`) are held
+ *     under their ops, and so leave `op-declarations`' `ACT_HELP_ABSENT` (its R75);
  *   - `handlechange`: the design's text still describes a change of handle, which `membership` R129 refuses whatever is asked
  *     (DEC-197), so it is not read; the help states the refusal, `membership`'s own `HANDLE_FIXED` row read by reference (R53);
  *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61).
@@ -45,10 +50,10 @@ export const ACT_HELP_OPS = Object.freeze([
   "archivelist", "openoriginal", "openwithwarning", "safeview", "deepercheck", "releasescanhold", "cite",
   "entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "planask", "stepsource",
   "stepsourcewithdraw", "actionreplyquoting", "readtranslate", "proceedingdates", "updatenotice", "aiuseovertime",
-  "exploregraph", "standardproposals", "filingread", "pressurefor", "lookedsince", "owed_projectstakeset",
-  "owed_actionstake", "founderhandleset", "projectvisibilityset", "projectowneradd", "projectownerremove",
-  "projectremove", "projectleave", "projectfork", "projectownerrescue", "owed_watchitem", "owed_secondlook",
-  "actionrisktier", "actionlawspropose", "owed_actioninquiry", "inquiryground", "versionaccept", "versionhide",
+  "exploregraph", "standardproposals", "filingread", "pressurefor", "lookedsince", "projectstakeset",
+  "actionstake", "founderhandleset", "projectvisibilityset", "projectowneradd", "projectownerremove",
+  "projectremove", "projectleave", "projectfork", "projectownerrescue", "watchitem", "secondlook",
+  "actionrisktier", "actionlawspropose", "actioninquiry", "inquiryground", "versionaccept", "versionhide",
   "versionconsider", "versionreject", "versionrevert", "versioncurrent", "connectionchoose", "retire", "attest",
   "identityclaim", "standingset", "personfact", "datedfact", "clockpropose", "accountusesset", "ailimitset",
   "projectkeyset", "projectsigninset", "projectaccountswitch", "projectaccountremove", "projectkeynoticeseen",
@@ -78,6 +83,7 @@ export const ACT_HELP_OPS = Object.freeze([
   "attribute", "reviewgrant", "reviewrevoke", "reviewcomment", "publishpreflight", "publishtensions", "caseratify",
   "publish", "publishatmove", "publishatcancel", "publishat", "verify", "publishedcase", "caseimport", "importaccept",
   "importflag", "importwatch", "docketfile", "docketpost", "inboxpull", "inboxresolve", "sourcelink", "knock",
+  "secondlookclear", "reauth", "aliaswithdraw", "factconfirm", "projectrequest", "projectrequestwithdraw", "projectrequestanswer",
 ]);
 
 /* Where the design keys a text by something other than `act.<op>.does`: an alias's own name, or an `owed_` tag not yet cleared. */
@@ -114,6 +120,12 @@ const KEY_EXCEPTIONS = Object.freeze({
   linerecord: "act.recordline.does",
   dutydeclare: "act.declare.does",
   filingsent: "act.filingrecordsent.does",
+  projectstakeset: "act.owed_projectstakeset.does",
+  actionstake: "act.owed_actionstake.does",
+  watchitem: "act.owed_watchitem.does",
+  secondlook: "act.owed_secondlook.does",
+  actioninquiry: "act.owed_actioninquiry.does",
+  aliaswithdraw: "act.owed_aliaswithdraw.does",
 });
 
 /** R62: each held op's word key, `act.<op>.does` unless the design keys it otherwise; `handlechange` has none (R53). */
