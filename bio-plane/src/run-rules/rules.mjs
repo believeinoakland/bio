@@ -789,6 +789,23 @@ export function checkPagesRead(asked) {
       + "whatever its reading bound allows (R26). Nothing was read");
 }
 
+/** R35 (T50; N1169; K3501 (C2)) — DOES A `level-empty` FINDING HOLD OVER THIS SCOPE? `scope` is the plane's four-level
+ *  statement of the read the finding rests on (`retrieval` R13). `true` exactly when `scope.documents` is a whole number of
+ *  1 or more: a level with a document in scope was looked at. Otherwise `{holds: false, code, check, translation}`, C-22.31's
+ *  row: a level that had no document in scope was not looked at, so no absence is written for it. A scope that is absent,
+ *  not an object, or states no whole `documents` (a string, a fraction, a negative, an infinity, one inherited rather than
+ *  stated) does not hold: fail closed. `agent-harness` R18 asks it before it composes a candidate. Pure; never throws. */
+export function levelEmptyHolds(asked) {
+  const has = (o, k) => o !== null && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
+  let documents = null;
+  try {
+    if (has(asked, "scope") && has(asked.scope, "documents")) documents = asked.scope.documents;
+  } catch { documents = null; }
+  if (typeof documents === "number" && Number.isSafeInteger(documents) && documents >= 1) return true;
+  const row = AI_RUN_CHECKS.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE;
+  return { holds: false, code: "LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE", check: row.check, translation: row.translation };
+}
+
 /* ------------------------------------------------- DEC-63's gate (PL-18)
 
    THE THREE GROUNDS ON WHICH THE PROJECT GATE CAN PERMIT, as a CLOSED

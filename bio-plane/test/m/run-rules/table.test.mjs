@@ -28,6 +28,7 @@ const MINTED_HERE = {
   AI_RUN_ORIGIN_UNKNOWN: ["C-22.25", "src/run-rules/rules.mjs originAllowed"],
   AI_RUN_EXPLORE_NOT_DEPLOYABLE: ["C-22.27", "src/run-rules/rules.mjs originAllowed"],
   AI_PART_NOT_DEPLOYED: ["C-22.29", "src/run-rules/test-bar.mjs partRefusal"],
+  LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE: ["C-22.31", "src/run-rules/rules.mjs levelEmptyHolds"],
 };
 /** The C-22 rows of ai-runs' T41 acts (B3, B4; K2482, K2485), minted by ai-runs (its R73, R75) and read here by key. */
 const AI_RUNS_C22 = { AI_GROUP_TEST_INVALID: "C-22.24", AI_RUN_EXPLORE_NEEDS_STEP: "C-22.26", AI_RUN_STEP_UNKNOWN: "C-22.28",
@@ -91,9 +92,10 @@ test("R11: the table holds exactly the rows the pure rules mint (each where nami
     RR.checkConsume([{ bound: "fetches" }], { list: true }), RR.checkRunState("x".repeat(262144)),
     RR.startAllowed({}), RR.checkVerification(null), RR.checkAskBounds({ turns: 13, bytes: 1, wall_ms: 1, reads: 1 }),
     RR.checkTestBarRecord(null), RR.checkPagesRead({ limits: [{ on: true }] }), RR.originAllowed({}),
-    RR.originAllowed({ origin: "explore" }), RR.partRefusal("ask")];
+    RR.originAllowed({ origin: "explore" }), RR.partRefusal("ask"), RR.levelEmptyHolds({ scope: { documents: 0 } })];
   assert.deepEqual(minted.map((r) => r.code), Object.keys(MINTED_HERE));
-  for (const r of minted) assert.deepEqual([r.ok, r.check, r.translation], [false, AI_RUNS_CHECKS[r.code].check, AI_RUNS_CHECKS[r.code].translation]);
+  /* R35's answer is a verdict, not a refusal: `holds: false` where the others say `ok: false` */
+  for (const r of minted) assert.deepEqual([r.ok ?? r.holds, r.check, r.translation], [false, AI_RUNS_CHECKS[r.code].check, AI_RUNS_CHECKS[r.code].translation]);
 });
 
 test("R11: AI_RUN_CHECKS answers observation-log's C-22 rows and this table's as one map, and translationOf(code) a received code's translation from it, or null", () => {
