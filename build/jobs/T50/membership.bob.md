@@ -21,3 +21,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L2 merge order: membership, project-roster, ai-accounts, credentials, promotion last (the stamp). All five run at once; a job that uses an unmerged one's new service builds against its requirement and merges the tranche branch when BOB's CHANGE says the provider is merged.
+
+## B2 · CHANGE
+
+K3624. (1) `modules.json` now gives membership `setup-words` in its `uses` (for R151). (2) New requirement R152 in your file (merge the tranche branch): `memberStatusSince(memberId)`, the instant a member's status last changed, recorded by every status-changing write and never moved by other writes, `null` when unrecorded (no back-fill). project-roster R33 reads it. Please build it in this job; merge early once complete, since project-roster and credentials wait on you.
