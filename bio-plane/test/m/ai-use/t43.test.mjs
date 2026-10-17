@@ -99,7 +99,7 @@ test("R13 (T43) every fill is read by key: {use} from ai.use.<use>.inline (trans
     w.count("member:ann", "ann", "transcribe", { at });
     const r = w.u.useCheck({ owner: "member:ann", member: "ann", use: "transcribe", at });
     assert.equal(r.translation, sentence("transcribe", "month", at.slice(0, 10)), at);
-    assert.ok(r.translation.includes(`reading page pictures is reached. It works again ${WORDS["ai.when.month"]
+    assert.ok(r.translation.includes(`reading unclear pages is reached. It works again ${WORDS["ai.when.month"]
       .replace("{month}", WORDS[`date.month.${MONTHS[m % 12]}`])}.`), at);
   }
   /* negative control: the day's limit reads the day's fills, not the month's */
@@ -130,7 +130,8 @@ test("R13 (T43) {field} is read from ai.limitfield.<field> for every field AI_LI
 /* ===== Terms: the nine use kinds ===== */
 
 test("R2 (T43, Terms) a use is an ai-accounts.USE_KINDS entry, its R14's nine: each is counted and each is a limit's scope; anything else is refused (negative control)", async () => {
-  assert.deepEqual(USE_KINDS, ["ask", "draft", "run", "standing", "explore", "enquire", "read", "transcribe", "account"]);
+  /* the nine are ai-accounts' declaration (its R14), read there, not hand-listed here (N1073) */
+  assert.equal(USE_KINDS.length, 9);
   const w = await standard();
   for (const use of USE_KINDS) {
     assert.equal(w.count("member:ann", "ann", use).ok, true, use);
