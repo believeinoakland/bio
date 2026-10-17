@@ -45,3 +45,7 @@ op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops
 ## B7 · CHANGE
 
 interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.
+
+## B8 · CHANGE
+
+A flaw in your R8 Home rows, found by CONTROL-PLANE #37 (P9, K3785): under load a project's question count is never drawn although the plane answered it (40-120 ms) and no loading or failed state shows. Likely cause, bio-plane/src/screens-daily/project-rows.mjs ~21-40: count(id) closes over the render's ui and counts and on each result does next = Object.assign({}, ui.counts); next[id] = r; cs.set('counts', next), so two answers close together, or a redraw between them, lose one. Merge each answer into the page's current memory, not the closure's. Add a test that resolves two projects' counts out of order (and one across a redraw) and draws both. Merge tranche/T50, re-run, post COMPLETE.
