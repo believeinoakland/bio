@@ -112,6 +112,9 @@ export function walkFacts(p, fn) {
   /* T48 (R89): the pointers, and a pointer's hours */
   each(p.pointers, "pointers");
   (p.pointers || []).forEach((x, i) => { if (x.hours) fn(x.hours, `pointers[${i}].hours`); });
+  /* T50 (R93, R94): the records-request help block and the forums */
+  if (p.records_help) fn(p.records_help, "records_help");
+  each(p.forums, "forums");
 }
 /** The object at a walkFacts path. */
 walkFacts.at = (p, path) => path.split(/\.|\[|\]\.?/).filter(Boolean)
