@@ -47,3 +47,7 @@ T50-12 is applied: R51 (an own reading accepted and concluded in one act), R52 (
 
 ## Change B2 (K3697)
 R51's reading is 12 to 500 characters (`READING_MIN`, the C-25.1 floor); shorter is `BAD_READING`. Test added in `own-reading.test.mjs` (11 refused, nothing written; 12 accepted). Module tests 175 of 175. `tranche/T50` merged first. Open items (2)-(4) confirmed; (4) is N1215, the golden N1216.
+
+## J3 · COMPLETE
+
+B2 applied: R51 floor is 12 (READING_MIN), test names R51 (11 refused and nothing written, 12 accepted). Module tests 175/175; coverage, architecture, ownership, format 0 failures. tranche/T50 merged.
