@@ -131,22 +131,35 @@ test("R45 control: a PNG, an HTML file, an SVG, a file holding a NUL, bytes that
   assert.equal(w.calls("/render").length, 1);
 });
 
-test("R45: a file longer than the first 4 x SAFE_VIEW_TEXT_MAX bytes is judged by that start when it is plain text (the rest unread), but a PDF, a container or a compound file is read whole as before", async () => {
-  const MAX = SAFE_VIEW_TEXT_MAX;
+test("R45 (B2): a file longer than 4 x SAFE_VIEW_TEXT_MAX bytes whose rest was not read is graded high with the reason unread (its original opens only by the warned path); a file of exactly that many bytes is judged whole; a PDF, a container or a compound file is read whole as before; the safe view still shows its first part within the bound", async () => {
+  const MAX = SAFE_VIEW_TEXT_MAX, LIMIT = 4 * MAX;
   const w = world();
-  const big = await w.capture(enc("plain words here\n".repeat(120_000)));
+  const fill = (n) => enc("plain words here\n".repeat(Math.ceil(n / 17)).slice(0, n));
+  const exact = await w.capture(fill(LIMIT));
+  const over = await w.capture(fill(LIMIT + 1));
   const read = counted(w);
-  const g = await w.fs.threatOf({ captureSha: big });
-  assert.equal(g.format, "text");
-  assert.ok(read.bytes <= 4 * MAX, String(read.bytes));
+  const ge = await w.fs.threatOf({ captureSha: exact });
+  assert.deepEqual([ge.format, ge.threat, ge.reasons.map((r) => r.code)], ["text", "low", []], "judged whole, as a file that ends within the start always was");
+  assert.ok(read.bytes <= LIMIT);
+  read.bytes = 0;
+  const go = await w.fs.threatOf({ captureSha: over });
+  assert.deepEqual([go.format, go.threat, go.reasons.map((r) => r.code)], ["text", "high", ["unread"]]);
+  assert.equal(go.reasons.find((r) => r.code === "unread").translation, word("file-safety.part_file_read"));
+  assert.ok(read.bytes <= LIMIT, String(read.bytes));
+  read.bytes = 0;
+  const v = await w.fs.safeView({ captureSha: over, ...V });
+  assert.deepEqual([v.kind, v.truncated, chars(v.text)], ["text", true, MAX]);
+  assert.ok(read.bytes <= LIMIT, String(read.bytes));
+  assert.equal(v.original.path, "warned", "its original opens only by the warned path");
   /* a long PDF is still a PDF, read whole, its active content found */
-  const longPdf = new Uint8Array([...pdf(true, "long"), ...enc("\n%" + "x".repeat(2 * 4 * MAX) + "\n")]);
+  const longPdf = new Uint8Array([...pdf(true, "long"), ...enc("\n%" + "x".repeat(2 * LIMIT) + "\n")]);
   const lp = await w.capture(longPdf);
-  const before = read.bytes;
+  read.bytes = 0;
   const lg = await w.fs.threatOf({ captureSha: lp });
   assert.equal(lg.format, "pdf");
   assert.ok(lg.reasons.some((x) => x.code.startsWith("active:")));
-  assert.ok(read.bytes - before >= longPdf.length, "read whole");
+  assert.ok(!lg.reasons.some((x) => x.code === "unread"));
+  assert.ok(read.bytes >= longPdf.length, "read whole");
   /* a file within the start is judged as it always was, the whole of it: a bad byte late in it is not text */
   const bad = await w.capture(new Uint8Array([...enc("fine text\n".repeat(1000)), 0xff, 0xfe, 0x0a]));
   assert.equal((await w.fs.threatOf({ captureSha: bad })).format, "unknown");

@@ -634,6 +634,8 @@ export class FileSafety {
         }
       }
     } else if (!PLAIN_FORMATS.includes(format)) add("format_unchecked");
+    /* R45 (B2): a file longer than the start `#look` reads, judged by that start alone, is never graded lower for its unread rest */
+    if (look && !look.whole) add("unread");
     const hold = this.#holdOf(sha);
     if (hold) add("scan_hold");
     const listed = this.#one(`SELECT 1 AS x FROM fs_notes WHERE capture_sha = ? AND kind = 'reputation' AND result = 'listed' LIMIT 1`, sha);
