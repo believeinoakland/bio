@@ -36,3 +36,15 @@ FINDINGS in other modules (against their requirements):
 MY READINGS (tell me if wrong): "our own passed date" (R50 (3)) is an item of kind `action-clock-overdue.ours`; a person fact's zone is the `time_zone` fact of `factstatus` (`governs.value`); the browse's Show and Only are link chips on the route (`/app/finder/~kind~only`), the Theme filter a choice with the registry's `themeread` button; with the words box empty, Search returns to the browse.
 
 Waiting on BOB (J2): merge of op-declarations, interface-shell, queue; then CHANGE.
+
+## J3 · COMPLETE
+
+COMPLETE J3: T50-31 screens-daily done on job/T50/screens-daily (merged tranche/T50 through B7, real shell, no stand-ins).
+
+Entries applied: R40 (new team's first steps via cs.path, doors start directly, no free-text box), R41 (empty queue), R42 (no doors/start form without `create_projects`; "Getting into a project"; Projects' Invited/Findable sections; owner's Grant/Decline), R43 (Themes on Projects; Find's Theme filter), R44 (browse, Show/Only chips, lookedat, Show more), R45 (Watch, Flag, Take off, Clear), R46 (results as people read them), R47/R48 (Find in's person, dated, standard and money forms; zone by name; flow step for actual only; findin.recorded; passage count; sheet cells; question choice; term without tick), R49 (titles), R50 (Muted list with unmute, queue.done, invitation keys, due.ours.passed, act.promote.here.home), R51 (Investigation block link, founder-once count), R52/R53 (progress as it arrives through send's `onEvent` as the shell built R78; check-failed; not-ready with a door to connect). B3 (quote, answers) and B5 readings applied. contract.test.mjs now reads the design's registry (clears rule 5 (9)).
+
+Deferred / findings: see J2 REPORT (answered by B5). Extra: in the shell as built, `onEvent` is returned from an act's `send` ({body, onEvent}), not an act property (B2's spelling); I follow the shell. A question without a title in Find in's choice falls back to its id (projectquestions always carries a title). The composed-page tests control-plane t46-app and t47-e2e fail only on screens-settings' `members` act `groupkeyset` (not mine).
+
+Ran: node --test test/m/screens-daily: pass 138, fail 0. format 0 failures; architecture 0 failures (30 files); coverage 51 of 51 ids named; ownership 0 failures. checks/run.mjs: my module clean (13 coverage failures are other modules').
+
+Size (session_01ATVYHfSMiYKPMhJBm4AUqg): test runs 60, module lines 2557
