@@ -7991,6 +7991,84 @@
    "en": "Reject it",
    "protected": false,
    "note": "DEC-314: basis-versions R4: the button in the fold"
+  },
+  {
+   "key": "screen.case-editor.account",
+   "en": "The account",
+   "protected": false,
+   "note": "DEC-315: the case's account: section and field"
+  },
+  {
+   "key": "screen.case-editor.account.help",
+   "en": "The case's account: what happened, told in your words, each sentence resting on the evidence the case cites.",
+   "protected": false,
+   "note": "DEC-315: the section"
+  },
+  {
+   "key": "screen.case-editor.account.order",
+   "en": "Order it",
+   "protected": false,
+   "note": "DEC-315: case-account R1: the framing"
+  },
+  {
+   "key": "case-account.framing.time_order",
+   "en": "In time order",
+   "protected": false,
+   "note": "DEC-315: case-account R1 ACCOUNT_FRAMINGS"
+  },
+  {
+   "key": "case-account.framing.by_question",
+   "en": "Question by question",
+   "protected": false,
+   "note": "DEC-315: case-account R1"
+  },
+  {
+   "key": "case-account.framing.by_rule",
+   "en": "Rule by rule",
+   "protected": false,
+   "note": "DEC-315: case-account R1"
+  },
+  {
+   "key": "screen.case-editor.account.flagged",
+   "en": "Not supported by what it cites: “{sentence}”",
+   "protected": false,
+   "note": "DEC-315: case-account R2: an account_check's flag; the sentence follows"
+  },
+  {
+   "key": "screen.case-editor.account.use",
+   "en": "Use what you agree with in your own account below; Civicsmith records that it began as the assistant's draft.",
+   "protected": false,
+   "note": "DEC-315: case-account R4, R6: began_as machine_draft"
+  },
+  {
+   "key": "screen.case-editor.account.notasis",
+   "en": "Taking the draft as it stands is not offered: you vouch only for words you wrote.",
+   "protected": false,
+   "note": "DEC-315: case-account R4: ACCEPT_MUST_REAUTHOR, never offered"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT_DRAFT",
+   "en": "The assistant's draft of the account was empty or longer than 8,000 characters, so it was not kept. Ask for it again.",
+   "protected": false,
+   "note": "DEC-315: case-account R1"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT_FRAMING",
+   "en": "An account is ordered in time order, question by question, or rule by rule; that is none of them. Nothing was kept.",
+   "protected": false,
+   "note": "DEC-315: case-account R1"
+  },
+  {
+   "key": "refusal.NO_SUCH_ACCOUNT_DRAFT",
+   "en": "No draft of this case's account that you can see has that name, so nothing was recorded.",
+   "protected": false,
+   "note": "DEC-315: case-account R4"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT",
+   "en": "The account is missing or can't be read, so nothing was recorded. Write it, then save again.",
+   "protected": false,
+   "note": "DEC-315: case-account R4"
   }
  ],
  "rewrite": {

@@ -1741,6 +1741,23 @@ w314('screen.question.reject.reason.help', 'Your reason is kept with the reading
 w314('screen.question.reject.summary', 'Reject this reading', False, 'basis-versions R4: the fold')
 w314('screen.question.reject.go', 'Reject it', False, 'basis-versions R4: the button in the fold')
 # --- end DEC-314
+# --- DEC-315 (K3666, the assisted walk: drafting a case's account with the assistant; case-account R1-R4)
+def w315(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-315' + (': ' + note if note else '')))
+w315('screen.case-editor.account', 'The account', False, "the case's account: section and field")
+w315('screen.case-editor.account.help', "The case's account: what happened, told in your words, each sentence resting on the evidence the case cites.", False, 'the section')
+w315('screen.case-editor.account.order', 'Order it', False, 'case-account R1: the framing')
+w315('case-account.framing.time_order', 'In time order', False, 'case-account R1 ACCOUNT_FRAMINGS')
+w315('case-account.framing.by_question', 'Question by question', False, 'case-account R1')
+w315('case-account.framing.by_rule', 'Rule by rule', False, 'case-account R1')
+w315('screen.case-editor.account.flagged', 'Not supported by what it cites: “{sentence}”', False, "case-account R2: an account_check's flag; the sentence follows")
+w315('screen.case-editor.account.use', "Use what you agree with in your own account below; Civicsmith records that it began as the assistant's draft.", False, "case-account R4, R6: began_as machine_draft")
+w315('screen.case-editor.account.notasis', 'Taking the draft as it stands is not offered: you vouch only for words you wrote.', False, 'case-account R4: ACCEPT_MUST_REAUTHOR, never offered')
+w315('refusal.BAD_ACCOUNT_DRAFT', "The assistant's draft of the account was empty or longer than 8,000 characters, so it was not kept. Ask for it again.", False, 'case-account R1')
+w315('refusal.BAD_ACCOUNT_FRAMING', 'An account is ordered in time order, question by question, or rule by rule; that is none of them. Nothing was kept.', False, 'case-account R1')
+w315('refusal.NO_SUCH_ACCOUNT_DRAFT', "No draft of this case's account that you can see has that name, so nothing was recorded.", False, 'case-account R4')
+w315('refusal.BAD_ACCOUNT', "The account is missing or can't be read, so nothing was recorded. Write it, then save again.", False, 'case-account R4')
+# --- end DEC-315
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
