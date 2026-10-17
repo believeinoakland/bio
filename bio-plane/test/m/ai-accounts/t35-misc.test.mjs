@@ -137,8 +137,8 @@ test("R30 (credentials R48's share): the account sweep rows (DEC-149): each memb
   /* C-29.22 and its detail */
   const bare = await world({ sealSecret: null }).group("ann");
   const unsealed = await bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
-  has(unsealed.translation, "Your group's Civicsmith cannot keep a key sealed right now, because its sealing secret is not set or has changed.");
-  has(unsealed.translation, "Ask whoever hosts your group's Civicsmith to set it.");
+  has(unsealed.translation, "Your team's Civicsmith cannot keep a key sealed right now, because its sealing secret is not set or has changed.");
+  has(unsealed.translation, "Ask whoever hosts your team's Civicsmith to set it.");
   has(unsealed.detail, "your group's Civicsmith has no seal secret set, so a key cannot be kept sealed or read.");
   /* the unknown kind's detail */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
