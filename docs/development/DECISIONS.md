@@ -5054,3 +5054,33 @@ the design: `document.untitled.web` heads a held page with no title ("A page fro
 reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py`.
 walk: the 390 px walk over DEC-318 to DEC-325's 27 screens found one fault, the safe text view's `pre` (DEC-323) stretching its sheet past the column; it now wraps (`white-space: pre-wrap`). 0 others.
 owed: none.
+
+### DEC-326 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01S7xeW38PtVh94Sy8LiatgK; the development process also runs on his primary account since K1428) (the standing tail: T50's requirement lines changed after 16:00 on 17 October, against the screens)
+for: design
+question: A reading worker compared the lines BOB changed after #26's gaps list (interface-shell R81, R89; screens-publish R33 to R35; screens-inquiry R64; the assistant's lines excluded). All agree but two undrawn states.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: the case editor's first case draws `screen.case-editor.noconcluded` in a fold "When no question is concluded yet" (R34); the account draws `refusal.BAD_ACCOUNT` in a fold "When the account can't be saved" (R35). R89's phone rules stand as DEC-316 drew and walked them.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py`.
+owed: none.
+
+### DEC-327 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01S7xeW38PtVh94Sy8LiatgK; the development process also runs on his primary account since K1428) (BOB's HANDOFF B298, K3729, N1223: sentences two L8 jobs found no key for)
+for: design
+question: Keys for case-import's and case-account's sentences that no key held, and whether the signed case document's sentences may change wording.
+why it is Bob's: it is not (P17): member words and key detail.
+provisional: as below.
+alternative: none.
+recommendation: as below.
+reversal cost: low (the signed body's four: none, by design).
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) `words-reads.json` lists `caseimport.stake.unreadable` under case-import (in `words-reads-mod-3.json`, since case-import reads it through `say()`), and both modules list DEC-327's keys. (2) case-import's three departures: `refusal.IMPORT_NOT_A_CASE_FILE.noparts`, `.notbytes` ({n} from 1), `.manifest` ("team", never "group"). (3) case-account: `refusal.BAD_ACCOUNT.list`, `.toomany` ({max}), `.sentence`, `.extra`, `.text` ({n}, {max}), `.cites` ({n}, {max}), `.bias`, the field-level sentences, each saying which part was wrong and ending "Nothing was recorded."; `refusal.BAD_STATEMENT_CITES` with `.nostatement`, `.excluded`, `.citelist` ({part} the section's own name); `ACCOUNT_CHECK_UNDETERMINED` reads the held `refusal.ACCOUNT_CHECK_UNDETERMINED`, and the thrown error's text (`why`) is never shown to a member; `refusal.ACCEPT_MUST_REAUTHOR.account` for the draft's words; `refusal.ACCOUNT_CITES_COUNSEL_MATTER.sentence` per sentence ({n}, {cites} by title); the second sentences of `MACHINE_CANNOT_CHECK_ADVOCACY` and `ADVOCACY_NOT_OWN_PROJECT` are their held rows' own ("Nothing was written."), no new key; `refusal.BAD_REVIEW_COMMENTS` ({max}), `refusal.REVIEW_COMMENTS_UNREAD`, `refusal.REVIEW_COMMENT_NOT_FOUND` (no comment id shown); `NO_SUCH_CASE` and `NO_SUCH_RUN` read their held rows; `MALFORMED` and `REVIEW_COMMENTS_DECLARED` are wiring errors at start that no member reads, so they stay inline and unkeyed. (4) The signed case document: `case-account.document.left_out.one`, `.other` ({n}), `case-account.document.reviewer.unknown` "(a reviewer)", `.date.unknown` "(an unrecorded date)", each protected, its English exactly today's bytes, and frozen (K1333): these keys never change wording; a later wording is a new key read only by documents signed after it.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-327's block), `words-reads-mod-3.json`, `words-reads.json`.
+owed: (BOB, T51) case-import and case-account read DEC-327's keys; the signed body's four never change wording.
