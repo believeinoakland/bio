@@ -22,3 +22,19 @@ Found outside project-roster:
 2. Words: `words.json` holds no `refusal.MACHINE_CANNOT_SET_STAKE` (R31 names it). Its row (C-147.9) reads `translation: null` until the design lane gives it a word; no English is inline. `refusal.STAKE_MALFORMED` exists but is worded for the administrator's group stake (instance-setup R77), not a project's: the design lane may want a project-specific sentence.
 3. New reds that are consequences of the three new ops (declared and graded in L11): plane `test/m/plane/roster.test.mjs` "R5, R9, R45 ... project-roster's whole ops map" (hand-lists the ops; should read the owner's declaration, plan rule 6) and op-declarations `t45.test.mjs` "R49, R6 ... every op ... has a spec" (projectstakeset has no spec). Both clear when T50-24/T50-18 declare `projectstakeset`, `projectstake`, `projectownersgone`. op-grades R42's MARKS test is red in base already.
 4. The plane bundle and `program.mjs` are stale from these changes (project-roster is bundled into the plane): regenerate at layer close.
+
+## J3 · COMPLETE
+
+Entries applied (T50-3), all in project-roster: R1 (`joined_at` from membership R127's `since`; `owner_since` from the latest add/rescue decision, else `joined_at` for a founding owner; both always present, null where not recorded or a non-owner); R8 (`set_by` by handle, founder by `founderHandle()`); R9 (the founder's viewer, bare `admin` or `member:admin`, is answered with the empty list); R18 (`project_stakes` declared keyed by project); R30 (votes ordered by `MIN(created), MIN(rowid)`, and votes/decisions/stake instants now come from the host clock, so a fixed clock gives a stable order); R31 `projectStakeSet` (`op=projectstakeset`), R32 `projectStake` and `projectStakeHistory` (`op=projectstake`), rows C-147.9 MACHINE_CANNOT_SET_STAKE and C-147.10 STAKE_MALFORMED; R33 `projectOwnersGone` (`op=projectownersgone`), `since` = latest `membership.memberStatusSince` over the owners (R152, K3624), null when absent, so it answers `since: null` until membership merges. Rule 6: every refusal row's translation and R8's note read `word(key)` by key; `PROJECT_SCOPE_WORDS` and the tests comparing English are gone.
+
+Deferred: none. Waiting on BOB's CHANGE when membership R152 merges: my R33 test uses a stand-in `memberStatusSince` (over `members.updated`) only while membership lacks the real one; with it merged, run the module's tests again.
+
+Found in other modules: see my REPORT (J2): projectlist has no `participation` (N1118); `refusal.MACHINE_CANNOT_SET_STAKE` not in words.json; the plane roster test and op-declarations t45 go red until L11 declares the three ops; the plane bundle is stale.
+
+Tests and checks (from /home/user/bio; checks from civicos-process):
+- `node --test bio-plane/test/m/project-roster/`: 76 pass, 0 fail (new: stake-gone.test.mjs; R1, R8, R9, R30, R18, R25 extended).
+- Users' tests (membership, promotion, plane, answer-envelope, record-core, action-holds, screens-daily, screens-inquiry, op-declarations, op-grades, admission, control-plane): no failure that tranche/T50 does not already show, except the two named in my REPORT.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage: 0 failures for project-roster (the 8 other modules' failures are theirs).
+- `node checks/ownership.mjs /home/user/bio project-roster tranche/T50`: 0 failures.
+
+Size (session_01CRP1uirZ6T4GoDiyhrh3i8): test runs 8, module lines 1505
