@@ -462,3 +462,61 @@ test("R51 R52 (N756) a held capture is read with its earliest receipt asked of p
   /* the earliest receipt is the capture's instant: the holds lines are dated by it */
   assert.ok(quiet.r.seeded.some((x) => x.what === "holds" && /on 2026-10-06T11:00:00Z$/.test(x.dated)), JSON.stringify(quiet.r.seeded.filter((x) => x.what === "holds")).slice(0, 300));
 });
+
+/* ---- R93 (T50; N1190; jurisdictions R94; entities R54): the forums of the combined view ---- */
+
+const FORUM_SCHEMES = [
+  { scheme: "ellery_court", label: "court number", entity_kinds: ["body"], space: "court", systems: ["ellery.profile"], basis: "TEST" },
+  { scheme: "ellery_docket", label: "docket book", entity_kinds: ["body"], space: "docket", systems: ["ellery.profile"], basis: "TEST" },
+];
+const FORUMS = [
+  { label: "Marlow County Bench (test)", forum_kind: "court", basis: "TEST",
+    ids: [{ scheme: "ellery_court", id: "MC-1" }, { scheme: "ellery_docket", id: "DK-1" }] },
+  { label: "Port Ellery Harbour Commission (test)", forum_kind: "commission", basis: "TEST" },
+];
+async function forumWorld(forums) {
+  const view = profileView();
+  view.identifier_schemes = [...view.identifier_schemes, ...FORUM_SCHEMES];
+  const views = { [PID]: view };
+  const reg = await registryOver(() => view.identifier_schemes);
+  const juris = { ...jurisOver(() => views), combine: () => ({ ok: true, conflicts: [], view: forums === undefined ? {} : { forums } }) };
+  const w = await boot({ prov: providers({ admins: ["admin"] }), now: () => Date.parse("2026-10-06T12:00:00Z"),
+    more: { jurisdictions: juris, entities: reg.entities, lines: reg.lines } });
+  w.record.setSetting("jurisdiction_profiles", [PID], "test");
+  return { ...w, reg };
+}
+const forumsOf = (r) => [...r.seeded, ...r.already, ...r.unseeded].filter((x) => x.what === "forum");
+
+test("R93 officesSeed seeds each forum of the combined view as a body entity carrying its forum_kind, under its identifiers, machine-attributed with the profile entry as basis; seeding twice writes each forum once, the second answering already; a forum with no identifier is listed unseeded with why", async () => {
+  const w = await forumWorld(FORUMS);
+  const first = w.m.officesSeed({ by: "admin" });
+  assert.equal(first.ok, true);
+  const court = first.seeded.find((x) => x.what === "forum");
+  assert.equal(court.label, "Marlow County Bench (test)");
+  const e = w.reg.entities.ents.get(court.entity_id);
+  assert.deepEqual([e.kind, e.forum_kind, e.label, e.declared_by], ["body", "court", "Marlow County Bench (test)", SEED_MACHINE]);
+  assert.match(e.note, /jurisdiction profile t-seeding, forum Marlow County Bench \(test\)/);
+  const idents = w.reg.entities.idents.filter((x) => x.entity_id === court.entity_id);
+  assert.deepEqual(idents.map((x) => [x.scheme, x.id, x.basis.system]), [["ellery_court", "MC-1", "ellery.profile"], ["ellery_docket", "DK-1", "ellery.profile"]]);
+  const none = first.unseeded.find((x) => x.what === "forum");
+  assert.equal(none.label, "Port Ellery Harbour Commission (test)");
+  assert.match(none.why, /no identifier for this forum \(ids\)/);
+  assert.deepEqual(first.forums.map((f) => [f.label, f.state]), [["Marlow County Bench (test)", "seeded"], ["Port Ellery Harbour Commission (test)", "unseeded"]]);
+  const ents = w.reg.entities.ents.size;
+  const again = w.m.officesSeed({ by: "admin" });
+  assert.deepEqual(forumsOf(again).map((x) => x.label + ":" + (again.already.includes(x) ? "already" : again.seeded.includes(x) ? "seeded" : "unseeded")),
+    ["Marlow County Bench (test):already", "Port Ellery Harbour Commission (test):unseeded"]);
+  assert.equal(w.reg.entities.ents.size, ents, "the second seeding wrote no entity");
+  assert.equal(again.forums[0].entity_id, court.entity_id);
+});
+
+test("R93 control: a profile with no forums (the view holds none, or an empty list) writes no forum and lists none", async () => {
+  for (const forums of [undefined, []]) {
+    const w = await forumWorld(forums);
+    const r = w.m.officesSeed({ by: "admin" });
+    assert.equal(r.ok, true);
+    assert.deepEqual(forumsOf(r), []);
+    assert.deepEqual(r.forums, []);
+    assert.equal([...w.reg.entities.ents.values()].some((e) => e.forum_kind), false);
+  }
+});

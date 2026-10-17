@@ -27,7 +27,7 @@ const R27_REASONS = {
   subscriptionsignin: "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login "
     + "held here; moves no bundle",
   translationgrant: "setting: a named member's grant for one language, an administrator's act; moves no bundle",
-  translationdraft: "translation-directed: keyed by a language and interface words; drafts labelled machine work for a "
+  translationdraft: "translation-directed: keyed by a language and interface words; drafts labeled machine work for a "
     + "granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that "
     + "writes nothing (`to_english`); moves no bundle",
   translationadopt: WORD, translationconfirm: WORD, translationrevert: WORD, translationmark: WORD,

@@ -38,7 +38,7 @@ function withPlans(list = Object.values(ITEMS)) {
 test("R1: watch-keep-or-stop, plan-review-due and plan-look-again are OBLIGATIONs and member-left-items a FINDING, each with its sentence; the moved kinds keep theirs", () => {
   const SAYS = {
     "watch-keep-or-stop": [QUEUE_OBLIGATION_KINDS, /a plan that set a watch running has closed, or every promise it watched is met: keep the watch until a date, or stop it/],
-    "plan-review-due": [QUEUE_OBLIGATION_KINDS, /a review day your group set for a plan has come; record a review/],
+    "plan-review-due": [QUEUE_OBLIGATION_KINDS, /a review day your team set for a plan has come; record a review/],
     "plan-look-again": [QUEUE_OBLIGATION_KINDS, /a paused plan's look-again date has come; look again, resume it .* or close it/],
     "member-left-items": [QUEUE_FINDING_KINDS, /a member who left had items of this project routed to them; take up the ones you choose/],
   };
