@@ -12,6 +12,11 @@ import { hasZipMagic } from "../ooxml.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
 
+/* R45 (T50; N1163 M-F2; K3480): the characters of a plain-text file a safe view shows, and the most of the stored object
+   read to decide a file's format and show them: four bytes for each character kept (a UTF-8 character is at most four). */
+export const SAFE_VIEW_TEXT_MAX = 262_144;
+export const HEAD_MAX = 4 * SAFE_VIEW_TEXT_MAX;
+
 /* The office and OpenDocument entries in the order a container is asked to name itself. */
 const CONTAINERS = Object.freeze([["docx", docxEntry], ["xlsx", xlsxEntry], ["pptx", pptxEntry],
                                   ["odt", odtEntry], ["ods", odsEntry], ["odp", odpEntry]]);
@@ -131,4 +136,36 @@ export function structureFlags(read) {
     }
   }
   return { ran: true, flags: [...new Set(flags)] };
+}
+
+/** R45: whether the first bytes of a file say it is one whose format only the whole file can tell (a PDF, a ZIP container
+ *  such as an office or OpenDocument file or an archive, or a compound file), so a file longer than `HEAD_MAX` is read whole. */
+export function needsWholeFile(head) {
+  if (!(head instanceof Uint8Array)) return true;
+  return /%PDF-\d+\.\d+/.test(LATIN1.decode(head.subarray(0, 1024))) || hasZipMagic(head)
+    || startsWith(head, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+}
+
+/** R45: the bytes cut back to the end of their last whole UTF-8 character, for a head that stops mid-character. */
+export function wholeCharacters(bytes) {
+  let i = bytes.length - 1, back = 0;
+  while (i >= 0 && back < 3 && (bytes[i] & 0xc0) === 0x80) { i--; back++; }
+  if (i < 0) return bytes;
+  const lead = bytes[i], need = lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1;
+  return bytes.length - i < need ? bytes.subarray(0, i) : bytes;
+}
+
+/** R45: the file's own characters exactly as it holds them (a byte order mark kept, nothing interpreted), cut at
+ *  `SAFE_VIEW_TEXT_MAX` characters: `{text, truncated}`, `truncated` true when the file goes on past the cut. `more` says
+ *  the bytes are only the start of a longer file. `{ok:false}` when the bytes are not UTF-8. */
+export function textView(bytes, more = false) {
+  try {
+    const all = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
+    let end = all.length, kept = 0;
+    for (let i = 0; i < all.length; kept++) {
+      if (kept === SAFE_VIEW_TEXT_MAX) { end = i; break; }
+      i += all.codePointAt(i) > 0xffff ? 2 : 1;
+    }
+    return { ok: true, text: all.slice(0, end), truncated: end < all.length || more };
+  } catch { return { ok: false }; }
 }

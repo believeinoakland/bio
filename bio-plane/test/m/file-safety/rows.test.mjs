@@ -8,6 +8,8 @@ import { world, pdf, sha, enc } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import * as FS from "../../../src/file-safety/index.mjs";
 import * as CHECKS from "../../../src/file-safety/checks.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { REASON_KEYS, PROVIDER_REASON_KEYS, rowKey } from "../../../src/file-safety/words.mjs";
 
 const { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } = FS;
 const SRC = new URL("../../../src/file-safety/", import.meta.url);
@@ -107,6 +109,14 @@ test("R24: every refusal and every R6 reason is named in this module's own table
     assert.ok(THREAT_REASONS[`active:${kind}`], kind);
   for (const r of Object.values(THREAT_REASONS)) assert.doesNotMatch(r.translation, /\d/);
   for (const w of Object.values(PROVIDER_REASON_WORDS)) assert.ok(w.length > 10);
+  /* T50 (plan rule 6): the member words are those of their keys, and the keys are the module's `reads` in words-reads.json */
+  for (const [code, x] of rows) assert.equal(x.translation, word(rowKey(code)), code);
+  for (const [code, key] of Object.entries(REASON_KEYS)) assert.equal(THREAT_REASONS[code].translation, word(key), code);
+  for (const [code, key] of Object.entries(PROVIDER_REASON_KEYS)) assert.equal(PROVIDER_REASON_WORDS[code], word(key), code);
+  const reads = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["file-safety"].reads;
+  assert.deepEqual([...FS.WORD_KEYS].sort(), [...reads].sort());
+  for (const k of reads) assert.equal(hasWord(k), true, k);
+  assert.equal(hasWord("refusal.NOT_A_FILE_SAFETY_CODE"), false, "control");
   /* the table is the module's one, the same objects its index answers */
   assert.equal(CHECKS.FILE_SAFETY_CHECKS, FILE_SAFETY_CHECKS);
 });
@@ -143,7 +153,7 @@ test("R25: its tables are declared to record-core's purge: a bundle's purge remo
 test("R26: no place is named in its behaviour or outward text: its source, every row, reason and finding kind it holds, and the answers its services build", async () => {
   const PLACES = /\b(oakland|alameda|berkeley|california|san francisco|bay area|emeryville|contra costa)\b/i;
   const files = readdirSync(SRC).filter((f) => f.endsWith(".mjs")).sort();
-  assert.deepEqual(files, ["checks.mjs", "formats.mjs", "index.mjs", "kinds.mjs", "schema.mjs"]);
+  assert.deepEqual(files, ["checks.mjs", "formats.mjs", "index.mjs", "kinds.mjs", "schema.mjs", "words.mjs"]);
   for (const f of files) assert.doesNotMatch(readFileSync(new URL(f, SRC), "utf8"), PLACES, f);
   for (const t of [FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS]) assert.doesNotMatch(JSON.stringify(t), PLACES);
   const w = world();
@@ -159,7 +169,7 @@ test("R38: `findingKind(name)` answers {file_kind, threat_kind, variant, words}:
   for (const kind of ["downloader", "dropper", "trojan", "macro", "exploit", "phishing", "potentially_unwanted", "heuristic"]) {
     const row = FINDING_KINDS.find((k) => k.kind === kind);
     assert.ok(row, kind);
-    assert.match(row.words, /Scanners report what a file resembles, not a certainty\.$/, kind);
+    assert.ok(row.words.endsWith(word("file-safety.scanners_report_file")), kind);
   }
   const words = (n) => findingKind(n).words;
   const of = (kind) => FINDING_KINDS.find((k) => k.kind === kind).words;
@@ -178,7 +188,7 @@ test("R38: `findingKind(name)` answers {file_kind, threat_kind, variant, words}:
   assert.equal(words("Win.Worm.Conficker-1"), of("worm"));
   /* no row */
   assert.deepEqual(findingKind("Foo.Unheard.Bar"), { file_kind: "Foo", threat_kind: "Unheard", variant: "Bar", words: NO_PLAIN_DESCRIPTION });
-  assert.equal(NO_PLAIN_DESCRIPTION, "Civicsmith has no plain description of this name");
+  assert.equal(NO_PLAIN_DESCRIPTION, word("file-safety.civicsmith_plain_description"));
   assert.deepEqual(findingKind("Eicar-Signature"), { file_kind: null, threat_kind: null, variant: "Eicar-Signature", words: NO_PLAIN_DESCRIPTION });
   for (const bad of [null, undefined, "", "   ", 42, {}, [], "x".repeat(100_000), "...", "a/b/c"]) {
     const r = findingKind(bad);
