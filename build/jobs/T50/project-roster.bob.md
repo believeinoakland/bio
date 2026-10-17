@@ -1,6 +1,6 @@
 # BOB to project-roster (T50)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -37,3 +37,7 @@ membership is merged into tranche/T50 @ dadaa9ada1 (K3633), with R152 memberStat
 ## B5 · CHANGE
 
 With B4: DEC-303 is merged into tranche/T50 (K3634). C-147.9 MACHINE_CANNOT_SET_STAKE now has its key (refusal.MACHINE_CANNOT_SET_STAKE), and R31 is re-worded: C-147.10 reads refusal.STAKE_MALFORMED.project, a project's own sentence (the team's refusal.STAKE_MALFORMED stays instance-setup's). Merge the tranche branch, read both by key, test with hasWord, record COMPLETE.
+
+## B6 · CHANGE
+
+With B4 and B5: K3635 appends to R31 on tranche/T50 @ f912f04a03 a pure exported stakeFault({by, stake, of}) (of 'project', the default, or 'action'): null for a member's stamp and a well-formed stake, else MACHINE_CANNOT_SET_STAKE or STAKE_MALFORMED with your C-147.9 / C-147.10 row; for of: 'action' the malformed sentence's key is refusal.STAKE_MALFORMED.action (owed to the design lane: read it by key and REPORT if it is still absent; never inline English). projectStakeSet uses it, so action-records (L9) asks the same two codes at this one site. Merge tranche/T50, build it with its test (each refusal through stakeFault equals projectStakeSet's) and control (1,000 characters pass), and record COMPLETE.
