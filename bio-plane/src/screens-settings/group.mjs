@@ -3,7 +3,10 @@
    R84), the website with the date it was verified (`groupdomainset`), the languages (`grouplanguagesset`, tags among
    those the plane accepts, instance-setup R85), the court notice (`courtnoticeset`), who holds the hosting account
    (`hostingaccessset`) and the group's bar (`strengthbarset`, reasoned). Every member reads it; the acts are drawn only
-   to a session that administers (interface-shell R12). Every function is self-contained (interface-shell R21). */
+   to a session that administers (interface-shell R12). Every function is self-contained (interface-shell R21).
+   T50: defined terms carry their card where they appear (R44); the team's time zone, named and never coded, with its
+   correction (`factconfirm`, R45); a value not set by a member is said as set at setup or by Civicsmith itself, and a saved
+   or unchanged name acknowledged (R52). */
 
 export const group = {
   id: "group",
@@ -17,6 +20,9 @@ export const group = {
       bar: { op: "strengthbarof" },
       // the member's language, in which the languages are named (R31)
       mine: { op: "memberlanguage" },
+      // R45: the zone that governs, from the facts of the active profiles; the places, to name each
+      facts: { op: "factstatus" },
+      profiles: { op: "profiles" },
     };
   },
 
@@ -27,6 +33,7 @@ export const group = {
     const me = view.me || {};
     const admin = me.administer === true;
     const data = view.data || {};
+    const ui = view.ui || {};
     // an administrator's act, drawn only to a session that administers
     const A = (op, o) => (admin ? cs.act(op, o) : "");
     // a language by its name in the member's language, never as a tag (R31)
@@ -34,16 +41,31 @@ export const group = {
     const nameOf = (tag) => {
       try { const n = new Intl.DisplayNames([mineLang || "en"], { type: "language" }).of(String(tag)); return n ? n.charAt(0).toUpperCase() + n.slice(1) : String(tag); } catch (e) { return String(tag); }
     };
-    // a recorded actor: a value recorded at setup or by the system is "set at setup", never a credential's name (R33)
-    const byOf = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === "" || id === "admin" || /^(token|class|daemon|system|seed|bootstrap)/.test(id) ? T("settings.set.setup") : id; };
+    // a recorded actor (R33, R52): a value recorded at setup by the founder's bootstrap is "set at setup"; one set afterwards by a seed or
+    // a machine credential is "set by Civicsmith itself"; never a credential's name; a member by their handle
+    const originOf = (by) => {
+      const id = String(by || "").replace(/^member:/, "");
+      if (id === "" || id === "admin" || id === "bootstrap" || id === "setup") return "setup";
+      if (/^(token|class|daemon|system|seed|session|accelerator|sweep)/.test(id)) return "system";
+      return id;
+    };
+    const byOf = (by) => { const o = originOf(by); return o === "setup" ? T("settings.set.setup") : o === "system" ? T("settings.set.system") : o; };
+    const lineOf = (by) => { const o = originOf(by); return o === "setup" ? `<p class="mk-small" data-state="origin">${W("settings.set.line.setup")}</p>` : o === "system" ? `<p class="mk-small" data-state="origin">${W("settings.set.line.system")}</p>` : ""; };
     const out = [cs.title()];
     if (!admin) out.push(`<p class="mk-note">${W(S + "admins")}</p>`);
     // a section that holds nothing is not drawn (R28)
-    const section = (titleKey, inner) => { if (inner) out.push(cs.sec(titleKey, inner)); };
+    const section = (titleKey, inner, help) => { if (inner) out.push(cs.sec(titleKey, inner, help ? { help } : undefined)); };
 
     // the name and the logo
     section(S + "name.heading", cs.state(data.identity, (v) => {
       let h = v.display_name ? `<p data-state="name">${W(S + "name.now", { name: v.display_name })}</p>` : "";
+      // R52: the name saved, or unchanged (in a fold, open whenever drawn); who set the name, where a member did not
+      const saved = ui.nameSaved || null;
+      if (saved && saved.same) h += `<details class="mk-details" open data-state="namesame"><summary>${W(S + "name.same.summary")}</summary><p>${W(S + "name.same")}</p></details>`;
+      else if (saved) h += `<p data-state="namesaved">${W(S + "name.saved", { name: saved.name })}</p>`;
+      const hist = Array.isArray(v.display_name_history) ? v.display_name_history : [];
+      if (v.display_name && hist.length) h += lineOf(hist[hist.length - 1].set_by);
+      if (v.group) h += `<p class="mk-small">${W(S + "name.help", { short: v.group })}</p>`;
       if (v.logo === true) h += `<p data-state="logo">${W(S + "logo.set")}</p>`;
       const nm = A("groupnameset");
       if (nm) h += `${cs.field("gr-name", S + "name.field", { max: 120, value: v.display_name || "", autocomplete: "off" })}${nm}`;
@@ -78,10 +100,51 @@ export const group = {
       return h;
     }));
 
+
+    // R45 (N1181; DEC-299 (2), DEC-322, DEC-323, DEC-324 (4)): the team's time zone, named and never coded. The zone that governs is read from
+    // `factstatus` for each active profile's own `time_zone` fact (not an office's): the latest correction's, else the profile's. A zone is
+    // shown by its name: the design's key for the seven it names, else the browser's generic name of the zone and its city.
+    const ZONES = ["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"];
+    const zoneName = (id) => {
+      if (ZONES.indexOf(id) >= 0) return T("label.timezones." + id);
+      let generic = "";
+      try { const part = new Intl.DateTimeFormat("en", { timeZone: id, timeZoneName: "longGeneric" }).formatToParts(new Date()).find((x) => x.type === "timeZoneName"); generic = part ? part.value : ""; } catch (e) { generic = ""; }
+      const city = String(id).split("/").pop().replace(/_/g, " ");
+      return generic ? generic + " (" + city + ")" : city;
+    };
+    const factsV = data.facts && data.facts.state === "ok" && data.facts.value && Array.isArray(data.facts.value.facts) ? data.facts.value.facts : null;
+    const profilesV = data.profiles && data.profiles.state === "ok" && data.profiles.value && Array.isArray(data.profiles.value.profiles) ? data.profiles.value.profiles : [];
+    const profileName = (id) => { const p = profilesV.find((x) => x.id === id); return p ? p.name || p.id : id; };
+    section(S + "timezone", cs.state(data.facts, () => {
+      const zf = (factsV || []).filter((f) => f && f.fact && f.fact.fact === "time_zone" && !f.fact.office && f.governs && typeof f.governs.value === "string");
+      const distinct = new Set(zf.map((f) => f.governs.value));
+      const tzOptions = (cur) => [...ZONES, ...(cur && ZONES.indexOf(cur) < 0 ? [cur] : [])].map((z) => ({ value: z, text: zoneName(z) }));
+      // one correction: the zone chosen by name, how and where it was checked (both required by the owner), sent on this fact's own path
+      const form = (i, f, cur) => `${cs.choice("gr-tz" + i, S + "timezone", tzOptions(cur), { value: cur || ZONES[0] })}${cs.field("gr-tz-how" + i, S + "timezone.how", { help: S + "timezone.how.help", autocomplete: "off" })}${cs.field("gr-tz-src" + i, S + "timezone.source", { help: S + "timezone.source.help", autocomplete: "off" })}${A("factconfirm", { data: { path: f ? f.path : "", slot: String(i) } })}`;
+      let h = `<p class="mk-note">${W(S + "timezone.help")}</p>`;
+      if (ui.tzSaved) h += `<p data-state="tzsaved">${W(S + "timezone.saved", { zone: ui.tzSaved })}</p>`;
+      if (zf.length === 0) {
+        // none held: said in a fold open whenever drawn, the choice below it, and no UTC in its place
+        h += `<details class="mk-details" open data-state="tznone"><summary>${W(S + "timezone.none.summary")}</summary><p>${W(S + "timezone.none")}</p></details>`;
+        return h + form(0, null, null);
+      }
+      if (distinct.size > 1) {
+        // two places disagree: each place's zone, none named as the team's, and one correction for each place
+        const rows = zf.map((f) => `<p data-state="tzplace">${W(S + "timezone.governs.profile", { zone: zoneName(f.governs.value), profile: profileName(f.fact.profile) })}</p>`).join("");
+        h += `<details class="mk-details" open data-state="tztwo"><summary>${W(S + "timezone.two.summary")}</summary>${rows}<p>${W(S + "timezone.two")}</p></details>`;
+        return h + zf.map((f, i) => form(i, f, f.governs.value)).join("");
+      }
+      const f = zf[0], z = zoneName(f.governs.value);
+      h += f.governs.origin === "corrected"
+        ? `<p data-state="timezone">${W(S + "timezone.governs.local", { zone: z })}</p>`
+        : `<p data-state="timezone">${W(S + "timezone.governs.profile", { zone: z, profile: profileName(f.fact.profile) })}</p><p class="mk-small" data-state="origin">${W("settings.set.line.setup")}</p>`;
+      return h + zf.map((g, i) => form(i, g, g.governs.value)).join("");
+    }));
+
     // the court notice
     section(S + "court.heading", cs.state(data.court, (v) => {
       const c = v.choice === "tell" || v.choice === "dont" ? v.choice : null;
-      let h = `<p data-state="court">${W(c === "tell" ? S + "court.tell" : S + "court.dont")}</p>`;
+      let h = `<p class="mk-note">${W(S + "court.says")}</p><p data-state="court">${W(c === "tell" ? S + "court.tell" : S + "court.dont")}</p>`;
       const ct = A("courtnoticeset");
       if (ct) h += `<fieldset><legend>${W(S + "court.field")}</legend>${["tell", "dont"].map((x) => `<input type="radio" id="gr-court-${x}" name="gr-court"${(c || "dont") === x ? " checked" : ""}><label for="gr-court-${x}">${W(S + "court.choice." + x)}</label>`).join("")}</fieldset>${ct}`;
       return h;
@@ -90,11 +153,12 @@ export const group = {
     // who holds the hosting account
     section(S + "hosting.heading", cs.state(data.hosting, (v) => {
       const cur = v.current || null;
-      let h = cur ? `<p data-state="hosting">${W(S + "hosting.now", { by: byOf(cur.recorded_by), date: D(cur.at) })} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "";
+      // R44: its defined term carries the card on the heading, and the section opens with what it is, said once
+      let h = `<p class="mk-note">${W(S + "hosting.says")}</p>` + (cur ? `<p data-state="hosting">${W(S + "hosting.now", { by: byOf(cur.recorded_by), date: D(cur.at) })} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "");
       const hs = A("hostingaccessset");
       if (hs) h += `${cs.field("gr-holders", S + "hosting.field", { rec: true, max: 500, value: cur ? cur.holders : "", autocomplete: "off" })}${cs.field("gr-hnote", S + "hosting.note", { rec: true, max: 280, value: cur && cur.note ? cur.note : "", autocomplete: "off" })}${hs}`;
       return h;
-    }));
+    }), "term.hostingaccount.means");
 
     // the group's bar, reasoned
     section(S + "bar.heading", cs.state(data.bar, (v) => {
@@ -106,7 +170,7 @@ export const group = {
         h += `${cs.choice("gr-cap", S + "bar.capture", opts, { value: b && b.capture ? b.capture : "" })}${cs.choice("gr-con", S + "bar.connection", opts, { value: b && b.connection ? b.connection : "" })}${cs.field("gr-why", S + "bar.reason", { area: true, rec: true, max: 2000 })}${bs}`;
       }
       return h;
-    }));
+    }), "term.bar.team.means");
 
     // R40 (DEC-231; instance-setup R11, R77): the group's declared stake, in its own words, who set it and when; an administrator edits it
     // (an emptied field clears it) and may ask the assistant for a draft, kept only by their own save
@@ -129,8 +193,35 @@ export const group = {
   },
 
   acts: [
+    // R52: the name saved is acknowledged, or that it was already the name, so nothing changed
     { op: "groupnameset", rereads: ["identity"],
-      send(view, el, cs) { const name = String(cs.value("gr-name") || "").trim(); return name ? { body: { name } } : { refuse: "screen.group.name.empty" }; } },
+      send(view, el, cs) {
+        const name = String(cs.value("gr-name") || "").trim();
+        if (!name) return { refuse: "screen.group.name.empty" };
+        const id = view.data && view.data.identity && view.data.identity.state === "ok" ? view.data.identity.value : null;
+        cs.set("nameBefore", id ? id.display_name || "" : "");
+        return { body: { name } };
+      },
+      done(view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        if (a && typeof a.display_name === "string") cs.set("nameSaved", { name: a.display_name, same: a.display_name === ((view.ui && view.ui.nameBefore) || "") });
+      } },
+    // R45: the time zone corrected, chosen by name, with how and where it was checked, on the fact's own path as `factstatus` lists it
+    // (the page composes none, local-facts R6); the owner's refusals are drawn in their words
+    { op: "factconfirm", rereads: ["facts"],
+      send(view, el, cs) {
+        const i = el.dataset.slot || "0";
+        const value = String(cs.value("gr-tz" + i) || "").trim();
+        const body = { act: "correct", value, how: String(cs.value("gr-tz-how" + i) || "").trim(), source: String(cs.value("gr-tz-src" + i) || "").trim() };
+        if (el.dataset.path) body.path = el.dataset.path;
+        cs.set("tzValue", value);
+        return { body };
+      },
+      done(view, answer, cs) {
+        const id = (view.ui && view.ui.tzValue) || "";
+        const named = (z) => { const ZN = { "America/Los_Angeles": 1, "America/Denver": 1, "America/Phoenix": 1, "America/Chicago": 1, "America/New_York": 1, "America/Anchorage": 1, "Pacific/Honolulu": 1 }; if (ZN[z]) return cs.w("label.timezones." + z); let g = ""; try { const p = new Intl.DateTimeFormat("en", { timeZone: z, timeZoneName: "longGeneric" }).formatToParts(new Date()).find((x) => x.type === "timeZoneName"); g = p ? p.value : ""; } catch (e) { g = ""; } const c = String(z).split("/").pop().replace(/_/g, " "); return g ? g + " (" + c + ")" : c; };
+        cs.set("tzSaved", String(named(id)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])));
+      } },
     // the image's own bytes as the request's body, a PNG or a JPEG (instance-setup R84)
     { op: "grouplogoset", rereads: ["identity"],
       send(view, el, cs) {

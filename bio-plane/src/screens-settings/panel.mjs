@@ -18,7 +18,9 @@ export const PANEL_KEYS = Object.freeze([...KEYS.filter((k) => k.startsWith("scr
   ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f) => `ai.limitfield.${f}`)]);
 
 /** The panel's HTML. `o`: `{owner, explore, perMember, names}`: whether exploring and a per-member limit apply (group
- *  level), and `names(by)` turning a recorded `by` into the name drawn. A section that holds nothing is not drawn (R28). */
+ *  level), and `names(by)` turning a recorded `by` into the name drawn. A section that holds nothing is not drawn (R28).
+ *  `o.only` (`uses`, `limits`, `usage` or `changes`) draws that one section; with `o.bare` its content alone, for a screen that
+ *  holds it in a part of its own (R48, R49). `o.units` narrows the units a limit may be set in (a subscription's: tokens or calls, R49). */
 export function aiPanel(cs, view, o) {
   const W = cs.w, E = cs.esc, S = "screen.panel.";
   // a word as plain text, for another word's fills (the kit escapes fills, interface-shell R5)
@@ -34,7 +36,11 @@ export function aiPanel(cs, view, o) {
   const D = (iso) => String(cs.date(iso, { year: true })).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
   const data = view.data || {};
   const out = [];
-  const section = (titleKey, inner) => { if (inner) out.push(cs.sec(titleKey, inner)); };
+  const section = (titleKey, inner) => {
+    const which = titleKey === S + "uses.heading" ? "uses" : titleKey === S + "limits.heading" ? "limits" : titleKey === S + "usage.heading" ? "usage" : "changes";
+    if (!inner || (o.only && o.only !== which)) return;
+    out.push(o.bare ? inner : cs.sec(titleKey, inner));
+  };
 
   // what the account pays for: each use switched on its own, exploring chosen at group level
   section(S + "uses.heading", cs.state(data.uses, (v) => {
@@ -56,7 +62,7 @@ export function aiPanel(cs, view, o) {
     const set = cs.act("ailimitset", { data: { remove: "" } });
     if (set) {
       const scopes = ["overall", ...USES.filter((k) => k !== "suggestions"), ...(o.explore ? ["explore"] : []), ...(o.perMember ? ["per_member"] : [])];
-      h += `<div>${cs.choice(p + "-scope", S + "form.scope", scopes.map((s) => [s, scopeKey(s)]))}${cs.field(p + "-amount", S + "form.amount")}${cs.choice(p + "-unit", S + "form.unit", ["usd", "tokens", "calls"].map((u) => [u, S + "unit." + u]))}${cs.choice(p + "-period", S + "form.period", ["day", "month"].map((x) => [x, S + "period." + x]))}
+      h += `<div>${cs.choice(p + "-scope", S + "form.scope", scopes.map((s) => [s, scopeKey(s)]))}${cs.field(p + "-amount", S + "form.amount")}${cs.choice(p + "-unit", S + "form.unit", ["usd", "tokens", "calls"].filter((u) => !o.units || o.units.indexOf(u) >= 0).map((u) => [u, S + "unit." + u]))}${cs.choice(p + "-period", S + "form.period", ["day", "month"].map((x) => [x, S + "period." + x]))}
 <fieldset><legend>${W(S + "form.inclusive")}</legend><input type="radio" id="${p}-within" name="${p}-inclusive" checked><label for="${p}-within">${W(S + "within")}</label><input type="radio" id="${p}-ontop" name="${p}-inclusive"><label for="${p}-ontop">${W(S + "ontop")}</label></fieldset>${set}</div><p class="mk-note">${W(S + "limits.told")}</p>`;
     }
     return h;

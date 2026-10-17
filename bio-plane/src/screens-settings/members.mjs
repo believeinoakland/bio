@@ -1,9 +1,10 @@
-/* screens-settings R1, R2 (and R8, R9): Settings › Members, the registry's 15 acts. The roster, each row's acts in its
-   panel (interface-shell R19, `cs.rows`); the one-administrator note while not met (setup-page R16's meaning); inviting,
-   with the invitation shown once; joining through the group's website; the group's API key; the AI account panel over
-   `owner: "group"`; keeping the group's material away from AI. A member opened by address (`/app/members/<id>`) has
-   their expertise read (`expertiselist`) and their row's panel offers its confirmation. Every function is
-   self-contained (interface-shell R21).
+/* screens-settings R1, R2 (and R8), as R47 leaves them: Settings › Members, the registry's 11 acts. The roster only, each
+   row's acts in its panel (interface-shell R19, `cs.rows`); the one-administrator note while not met (setup-page R16's
+   meaning); inviting, with the invitation shown once; joining through the team's website. To a member who does not
+   administer it is a table of members, what each may do and their expertise (R47). The team's key, its use and keeping
+   material away from AI are `teamai`'s (R48). The founder's row is the roster's (R51). A member opened by address
+   (`/app/members/<id>`) has their expertise read (`expertiselist`) and their row's panel offers its confirmation. Every
+   function is self-contained (interface-shell R21).
    T47: each row's name is the member's reference (R12, `cs.rows`' `name`, interface-shell R27); a row offers "Make a
    reset link" (`passwordresetlink`, the link shown once with the sentence that no email is sent) and "Withdraw
    <handle>'s signing key" (`signerset`) for a lost or stolen device; "More for administrators" links `group`, `places`
@@ -16,22 +17,12 @@ export const members = {
     const admin = !!(view.me && view.me.administer === true);
     const r = {
       roster: { op: "memberlist", empty: (v) => !v.members || v.members.length === 0 },
-      groupkey: { op: "groupkeystate" },
-      keepaway: { op: "aikeepawaystate" },
-      // `claimed` says whether the founder holds the instance: the founder is then an administrator (membership R64, R86), with or without a roster row (R29)
-      boot: { op: "bootstrap" },
     };
     if (view.subject) r.expertise = { op: "expertiselist", query: { memberId: view.subject } };
-    // the owners refuse these to a member who does not administer (instance-setup R66; credentials R60; ai-use R12)
+    // the owners refuse these to a member who does not administer (instance-setup R66; credentials R60)
     if (admin) {
       r.recovery = { op: "adminrecoverystep" };
       r.signers = { op: "signerlist" };
-      r.uses = { op: "accountuses", query: { owner: "group" } };
-      r.limits = { op: "ailimits", query: { owner: "group" } };
-      r.usage = { op: "aiusage", query: { owner: "group" } };
-      r.history = { op: "accounthistory", query: { owner: "group" } };
-      // thirty days of bars and a meter against each limit, summed (R26)
-      r.over = { op: "aiuseovertime", query: { owner: "group" } };
     }
     return r;
   },
@@ -46,60 +37,61 @@ export const members = {
     const admin = me.administer === true;
     const okv = (o) => (o && o.state === "ok" ? o.value : null);
     const roster = okv(data.roster) && Array.isArray(data.roster.value.members) ? data.roster.value.members : [];
-    const byId = {};
-    for (const m of roster) byId[m.member_id] = m;
-    // a recorded `by` (a bare id, `member:<id>` or `admin`) drawn as the member's handle where the roster names it
-    // the founder is named by her handle, else by `member.founder.unnamed`, never by the id `admin` (R35; membership R144): her own session
-    // answers her handle in `whoami`; a roster that answers her row (project-roster R29) carries it too
+    // the founder is named by her handle, else by `member.founder.unnamed`, never by the id `admin` (R35, R51; membership R144, R147): her
+    // own session answers her handle in `whoami`; the roster's row for her carries it too
     const founderRow = roster.find((m) => m.member_id === "admin" || m.founder === true) || null;
     const founderHandle = (founderRow && founderRow.handle) || (me.member === "admin" && me.handle ? me.handle : null);
     const founderName = () => founderHandle || T("member.founder.unnamed");
-    const names = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? founderName() : byId[id] && byId[id].handle ? byId[id].handle : id; };
     const vocabulary = Array.isArray(me.vocabulary) && me.vocabulary.length ? me.vocabulary : ["contribute", "publish", "create_projects"];
     const capName = (c) => vocabulary.indexOf(c) >= 0 || c === "administer" ? T(S + "cap." + c) : c;
     const out = [cs.title()];
     // a member opened by address has their row's panel open (interface-shell R19's `open:<rows>`)
     if (view.subject && view.ui && !view.ui.subjectOpened) { view.ui["open:roster"] = [...(view.ui["open:roster"] || []), String(view.subject)]; view.ui.subjectOpened = true; }
 
-    // the roster (R1): handle, cover, role, capabilities, status; no "formerly" (DEC-197)
+    // the roster (R1): handle, cover, role, capabilities, status; no "formerly" (DEC-197). The founder's row is the roster's own
+    // (R51; membership R147): drawn from `memberlist`'s row for her, first, and counted once with the rest, so the counts agree with
+    // what they name (R29, R35) and the page adds no row of its own
     out.push(cs.state(data.roster, (v) => {
-      // the founder is no roster row (membership R64, R86): her row is made here, whether or not the roster holds one (R35)
-      const list0 = (v.members || []).filter((m) => m.member_id !== "admin" && m.founder !== true);
-      const active = list0.filter((m) => m.status === "active");
+      const list = (Array.isArray(v.members) ? v.members : []).slice().sort((x, y) => (y.founder === true || y.member_id === "admin" ? 1 : 0) - (x.founder === true || x.member_id === "admin" ? 1 : 0));
+      const active = list.filter((m) => m.status === "active");
       const rec = okv(data.recovery);
-      const boot = okv(data.boot);
-      const rosterAdmins = active.filter((m) => m.role === "admin").length;
-      // whether the founder holds the instance: claimed, else a roster that answers her row, else the one-administrator step's count
-      const founderIs = boot && typeof boot.claimed === "boolean" ? boot.claimed || !!founderRow : founderRow ? true : rec && Number.isInteger(rec.administrators) ? rec.administrators > rosterAdmins : null;
-      const founderItem = { member_id: "admin", handle: founderHandle, role: "admin", status: "active", capabilities: [], expertise: [], founder: true };
-      const list = founderIs ? [founderItem, ...list0] : list0;
-      // "Active members" counts the founder among them, so it is never fewer than the administrators it counts (R35)
-      const counted = founderIs === null ? null : rosterAdmins + (founderIs ? 1 : 0);
-      let h = counted === null ? cs.state({ state: "failed" }, () => "") : `<p>${W(S + "count", { members: active.length + (founderIs ? 1 : 0), administrators: counted })}</p>`;
+      let h = `<p>${W(S + "count", { members: active.length, administrators: active.filter((m) => m.role === "admin").length })}</p>`;
       if (admin && rec && rec.met === false) {
         const lead = rec.administrators === 1 ? W(S + "recovery.one") : W(S + "recovery.many", { administrators: rec.administrators });
         h += `<div class="mk-msg" data-note="recovery"><p>${lead}${lead ? " " : ""}${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</p></div>`;
       }
-      const cols = [S + "col.handle", ...(admin ? [S + "col.cover"] : []), S + "col.role", S + "col.caps", S + "col.status", S + "col.expertise"];
+      const isFounder = (m) => m.founder === true || m.member_id === "admin";
       const expOf = (m) => {
         const ex = okv(data.expertise);
         return view.subject === m.member_id && ex ? ex.expertise || [] : m.expertise || [];
       };
+      // the member by handle (their reference); the founder by hers, else `member.founder.unnamed` with its explanation, never by her id (R51)
+      const nameOf = (m) => (isFounder(m) ? E(founderName()) : m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle")));
+      const capsOf = (m) => (m.role === "admin" ? W(S + "cap.all") : E((m.capabilities || []).map(capName).join(", ")));
+      const expText = (m) => {
+        const e = expOf(m).filter((x) => x.state !== "withdrawn");
+        return e.length ? e.map((x) => W(x.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: x.label })).join(" · ") : W(S + "expertise.none");
+      };
+      // to a member who does not administer: the roster as a table, each column explained, and who changes it (R47)
+      if (!admin) {
+        const th = (k) => `<th><span class="k" tabindex="0" data-level="1" data-tip="${W("column.members." + k + ".shows")}">${W("column.members." + k + ".name")}</span></th>`;
+        return h + `<table class="mk-table" data-list="members"><thead><tr>${th("member")}${th("may-do")}${th("expertise")}</tr></thead><tbody>${active.map((m) => `<tr><td>${nameOf(m)}${isFounder(m) && !founderHandle ? `<span class="mk-small">${W("member.founder.unnamed.help")}</span>` : ""}</td><td>${capsOf(m)}</td><td>${expText(m)}</td></tr>`).join("")}</tbody></table><p class="mk-note">${W(S + "member.note")}</p>`;
+      }
+      const cols = [S + "col.handle", S + "col.cover", S + "col.role", S + "col.caps", S + "col.status", S + "col.expertise"];
       return h + cs.rows({
         // the member's handle is their reference (R12); one not joined yet has none
-        // the founder's row is drawn by her handle, else by `member.founder.unnamed` with its explanation (R35), never by her id
-        id: "roster", cols, items: list, key: (m) => m.member_id, name: (m) => (m.founder ? E(founderName()) : m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle"))),
+        id: "roster", cols, items: list, key: (m) => m.member_id, name: (m) => nameOf(m),
         cells: (m) => [
-          m.founder ? E(founderName()) + (founderHandle ? "" : `<span class="mk-small">${W("member.founder.unnamed.help")}</span>`) : m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle")),
-          ...(admin ? [m.cover !== undefined ? E(m.cover) : ""] : []),
+          nameOf(m) + (isFounder(m) && !founderHandle ? `<span class="mk-small">${W("member.founder.unnamed.help")}</span>` : ""),
+          m.cover !== undefined ? E(m.cover) : "",
           W(m.role === "admin" ? S + "role.admin" : S + "role.member"),
-          E((m.capabilities || []).map(capName).join(", ")),
+          capsOf(m),
           W(S + "status." + (["invited", "proposed", "active", "revoked"].indexOf(m.status) >= 0 ? m.status : "other")) + (m.invitation ? " · " + W(S + "invitation." + m.invitation) : ""),
           expOf(m).filter((e) => e.state !== "withdrawn").map((e) => W(e.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: e.label })).join(" · "),
         ],
         // each row's acts, in its panel (R2; interface-shell R19)
         acts: (m) => {
-          const label = m.founder ? founderName() : m.handle || T(S + "nohandle");
+          const label = isFounder(m) ? founderName() : m.handle || T(S + "nohandle");
           const id = m.member_id;
           const p = [];
           if (m.role !== "admin" && m.status === "active") {
@@ -113,14 +105,14 @@ export const members = {
           }
           if (m.role === "admin" && m.status === "proposed") { const c = cs.act("adminendorse", { data: { member: id } }); if (c) p.push(`<p>${W(S + "endorse.what", { handle: label })}</p>${c}`); }
           // the founder cannot be removed (membership R64): no act is drawn on her row
-          if (m.role === "admin" && m.status === "active" && id !== me.member && !m.founder) {
+          if (m.role === "admin" && m.status === "active" && id !== me.member && !isFounder(m)) {
             const c = cs.act("adminremove", { data: { member: id } });
             if (c) p.push(`${cs.field("mr-" + id, S + "remove.reason", { area: true, rec: true, max: 2000 })}${c}`);
           }
           if (m.invitation === "live") p.push(cs.act("invitewithdraw", { data: { member: id } }));
           // a reset link for a member who has joined (credentials R69), shown once; an administrator's act, which the
           // owner refuses anyone else (drawn only to a session that administers, interface-shell R12)
-          if (admin && m.handle && m.status === "active" && id !== me.member && !m.founder) {
+          if (m.handle && m.status === "active" && id !== me.member && !isFounder(m)) {
             // its label is held under the owed act's key in `words.json` (DEC-201 (2))
             const c = cs.act("passwordresetlink", { label: "act.owed_passwordresetlink.label.members", data: { member: id } });
             if (c) p.push(`${ui.reset && ui.reset.member === id ? `<div class="mk-msg" data-shown="reset"><p>${W(S + "reset.shown", { handle: label, expires: D(ui.reset.expires) })}</p><p><code>${E(ui.reset.link)}</code></p><p>${W(S + "reset.noemail")}</p></div>` : ""}${c}`);
@@ -154,30 +146,6 @@ export const members = {
       out.push(cs.sec(S + "website.heading", `<p>${W(S + "website.what")}</p>${shown}${cs.field("mw-cap", S + "website.cap")}${cs.field("mw-days", S + "website.days")}${wk}${jl}`));
     }
 
-    // the group's API key (R2): held and on, never the key; a key typed is sent in the body only, then switched on
-    out.push(cs.sec(S + "key.heading", cs.state(data.groupkey, (g) => {
-      let h = `<p data-state="groupkey">${g.held === undefined ? W(g.on ? S + "key.on" : S + "key.off") : !g.held ? W(S + "key.none") : W(g.on ? S + "key.heldon" : S + "key.heldoff", { by: names(g.by), date: D(g.set_at) })}</p>`;
-      const set = cs.act("groupkeyset");
-      if (set) h += `${cs.field("mk-key" + (ui.keyGen || 0), g.held ? S + "key.replace" : S + "key.field", { type: "password", autocomplete: "off" })}${set}`;
-      if (g.held) h += cs.act("groupkeyswitch", { label: g.on ? S + "key.switchoff" : S + "key.switchon", data: { on: g.on ? "off" : "on" } }) + cs.act("groupkeyremove");
-      return h;
-    }) + `<p class="mk-note">${W("ai.whopays")}</p>`));
-
-    // the AI account panel over the group's key (R9), for those who may read it
-    if (admin && view.parts && view.parts.aiPanel) out.push(view.parts.aiPanel(cs, view, { owner: "group", explore: true, perMember: true, names }));
-
-    // keeping the group's material away from AI (R2): on only with a reason, saying first what it does
-    out.push(cs.sec(S + "keepaway.heading", cs.state(data.keepaway, (v) => {
-      if (v.on !== true && v.on !== false) return `<p data-state="keepaway">${W(S + "keepaway.unread")}</p>`;
-      let h = v.on ? `<p data-state="keepaway">${W(S + "keepaway.on", { by: names(v.set_by), date: D(v.set_at) })} <span class="rec">${E(v.reason || "")}</span></p>` : `<p data-state="keepaway">${W(S + "keepaway.off")}</p>`;
-      const on = cs.act("aikeepaway", { label: v.on ? S + "keepaway.save" : undefined, data: { on: "on" } });
-      if (on) {
-        const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"];
-        const chosen = v.on && Array.isArray(v.uses) && v.uses.length < USES.length ? v.uses : null;
-        h += `<div><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(S + "keepaway.which")}</legend><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}><label for="mk-all">${W(S + "keepaway.all")}</label><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}><label for="mk-some">${W(S + "keepaway.some")}</label></fieldset><fieldset><legend>${W(S + "keepaway.uses")}</legend>${USES.map((u) => `<input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}><label for="mk-use-${u}">${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset>${cs.field("mk-why", S + "keepaway.reason", { area: true, rec: true, max: 2000, value: v.on ? v.reason || "" : "" })}${on}${v.on ? cs.act("aikeepaway", { label: S + "keepaway.turnoff", data: { on: "off" } }) : ""}</div>`;
-      }
-      return h;
-    })));
     return out.join("");
   },
 
@@ -244,34 +212,5 @@ export const members = {
         return { body: days ? { dailyCap, expiresInDays: Number(days) } : { dailyCap } };
       },
       done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.link) cs.set("joinLink", (view.origin || "") + "/#join=" + encodeURIComponent(a.link)); } },
-    // the key in the request's body only, never drawn again; then switched on, as setup-page R18 does
-    { op: "groupkeyset", rereads: ["groupkey", "uses", "history"],
-      send(view, el, cs) { const key = String(cs.value("mk-key" + ((view.ui && view.ui.keyGen) || 0)) || "").trim(); return key ? { body: { key } } : { refuse: "screen.members.key.nokey" }; },
-      // the field drawn anew, empty (the shell keeps a field's value by its id, R10); the shell does not await `done`:
-      // the switch is sent, then the screen opened again, which reads everything anew
-      done(view, answer, cs) { cs.set("keyGen", ((view.ui && view.ui.keyGen) || 0) + 1); cs.call("groupkeyswitch", { body: { on: true } }).then(() => cs.go("members", view.subject)); return { stay: true }; } },
-    { op: "groupkeyswitch", rereads: ["groupkey", "history"],
-      send(view, el) { return { body: { on: el.dataset.on === "on" } }; } },
-    { op: "groupkeyremove", rereads: ["groupkey", "uses", "history"],
-      send() { return { body: {} }; } },
-    { op: "accountusesset", rereads: ["uses", "history"],
-      send(view, el, cs) { return view.parts.aiPanelSend("accountusesset", "group", el, cs); },
-      refusals: { SWITCH_VALUE_INVALID: "ai.refused.switchvalue" } },
-    { op: "ailimitset", rereads: ["limits", "over"],
-      send(view, el, cs) { return view.parts.aiPanelSend("ailimitset", "group", el, cs); },
-      refusals: { AI_LIMIT_INVALID: (r, cs) => cs.w("ai.refused.limitinvalid", { field: String(cs.w("ai.limitfield." + (["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].indexOf(r && r.field) >= 0 ? r.field : "amount"))).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }), LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
-    // on only with a reason of 1 to 2,000 characters in the administrator's own words, its field the act's reason
-    // (interface-shell R11's `reasonField`; credentials R51); off with the reason for turning it off
-    { op: "aikeepaway", rereads: ["keepaway", "history", "uses"], reasonField: "reason",
-      send(view, el, cs) {
-        const reason = String(cs.value("mk-why") || "").trim();
-        if (reason.length < 1 || reason.length > 2000) return { refuse: "screen.members.keepaway.noreason" };
-        // turning it off is reasoned too (op-grades), its reason the same field's
-        if (el.dataset.on === "off") return { body: { on: false, reason } };
-        const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"];
-        if (cs.value("mk-some") !== true) return { body: { on: true, reason } };
-        const uses = USES.filter((u) => cs.value("mk-use-" + u) === true);
-        return uses.length ? { body: { on: true, reason, uses } } : { refuse: "screen.members.keepaway.nouses" };
-      } },
   ],
 };

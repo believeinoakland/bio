@@ -4,7 +4,10 @@
    that is not held yet (`placewantedstate`, `placewanted`, R60); the offices and seats the group deals with
    (`entitieskind` office, read page by page to the end, each marked by origin: seeded from the places' rules, or added
    by the group), filled in again (`officesseed`) or added by an administrator (`entitycreate`). A read that failed is
-   never drawn as none, a later page's included. Every function is self-contained (interface-shell R21). */
+   never drawn as none, a later page's included. Every function is self-contained (interface-shell R21).
+   T50 (R46; N1190; DEC-300 (1), DEC-319 (4)): "Courts", an administrator's section listing the forums of kind `court` the team
+   holds (`entitieskind` of kind `body` with `forum_kind: "court"`), each by its name and where it came from, and "Add a court"
+   (`entitycreate` with `forum_kind: "court"`) beside "Add an office yourself". */
 
 export const places = {
   id: "places",
@@ -16,6 +19,8 @@ export const places = {
       r.place = { op: "placewantedstate" };
       // the list of where else to go is the places' rules' data (wizard-scripts R37): only how many are listed is drawn here (R25)
       r.elsewhere = { op: "startfrom" };
+      // R46: the courts the team holds, seeded by the places' rules or added by a member
+      r.courts = { op: "entitieskind", query: { kind: "body", forum_kind: "court", limit: "500" } };
     }
     return r;
   },
@@ -88,6 +93,18 @@ export const places = {
     }, { empty: S + "offices.none" }));
     // R28: a section that holds nothing is not drawn
     if (officesHtml) out.push(cs.sec(S + "offices.heading", officesHtml));
+    // R46: the courts held, each by its name and where it came from; "Add a court" beside "Add an office yourself". A failed read is
+    // drawn failed, never as none; an administrator's section only
+    if (admin) {
+      const added = ui.courtAdded ? `<p data-shown="court">${W(S + "court.done", { name: ui.courtAdded })}</p>` : "";
+      const list = cs.state(data.courts, (v) => {
+        const items = Array.isArray(v.entities) ? v.entities : [];
+        return items.length ? `<ul class="mk-list" data-list="courts">${items.map((o) => `<li><span class="rec">${E(o.label)}</span> · ${byMember(o) ? W(S + "court.added", { name: String(o.declared_by).replace(/^member:/, ""), date: D(o.at) }) : W(S + "court.seeded")}</li>`).join("")}</ul>` : "";
+      });
+      const add = cs.act("entitycreate", { label: "court.add", data: { court: "1" } });
+      const form = add ? `${cs.field("pl-court", "court.add.name", { help: "court.add.help", rec: true, autocomplete: "off" })}${add}` : "";
+      if (list || added || form) out.push(cs.sec(S + "courts", added + list + form));
+    }
     if (admin) {
       const seed = cs.act("officesseed");
       const add = cs.act("entitycreate");
@@ -117,12 +134,24 @@ export const places = {
         cs.set("seeded", { seeded: (a && a.seeded || []).length, already: (a && a.already || []).length, unseeded: (a && a.unseeded || []).length });
       } },
     // the administrator's own note on the office is its reason (interface-shell R11's `reasonField`; DEC-88)
-    { op: "entitycreate", rereads: ["offices"], reasonField: "note",
+    // a court (R46) is the same act with `forum_kind`; the owner requires a note on every entity, and the court's form asks the name alone,
+    // so the court's own name is its note
+    { op: "entitycreate", rereads: ["offices", "courts"], reasonField: "note",
       send(view, el, cs) {
+        if (el.dataset.court === "1") {
+          const name = String(cs.value("pl-court") || "").trim();
+          if (!name) return { refuse: "court.add.help" };
+          return { body: { kind: "body", forum_kind: "court", label: name, note: name } };
+        }
         const label = String(cs.value("pl-label") || "").trim(), note = String(cs.value("pl-note") || "").trim();
         if (!label || !note) return { refuse: "screen.places.add.incomplete" };
         view.ui.more = []; view.ui.moreNext = undefined; view.ui.moreFailed = false;
         return { body: { kind: "office", label, note } };
+      },
+      // a court added is said after the answer, by its name (R8, R46)
+      done(view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        cs.set("courtAdded", a && a.kind === "body" && typeof a.label === "string" ? a.label : null);
       } },
   ],
 };
