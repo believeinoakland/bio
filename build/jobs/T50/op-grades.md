@@ -19,3 +19,26 @@ Decisions (P17), each made in this job and reported as done:
 - (e) Beyond the R-amended pins: owners' REASON_CODE drops membertie, and TAKEN_BACK_BY gains membertie → membertiewithdraw.
 - (f) No pull request opened (JOB step 1: "Open no pull request").
 - (g) Pre-existing reds, identical on a clean HEAD worktree and not from this job: 14 in affordances, control-plane, wizard-scripts, screens-action, screens-daily and screens-settings; 22 in op-declarations, interface-shell, screens-intake, screens-investigate and plane.
+
+## J2 · COMPLETE
+
+Applied (commit 7afac32d3f on job/T50/op-grades):
+- R45: the fifteen ops graded. `watchitem`, `secondlook`, `secondlookclear`, `projectstakeset` and `actionstake` are reversible; `actioninquiry` is undetermined; the nine reads (`lookedat`, `browse`, `opencaptures`, `capturegrade`, `inquirypartition`, `instances`, `projectstake`, `projectownersgone`, `stakeatpreparation`) are NON_ACTS reads; the six writing ops each take a directed reason. In `./t50.mjs`, spread into the tables.
+- R46: MARKS_KIT_COMMIT is 7be06eb4cb; MARKS holds 130 rows, derived from the registry and kit at that commit against the current grades; notewrite is Reversible from DEC-300 (5).
+- R47: planopen and wizarddraft are reversible (`./t50.mjs`); membertie is reversible in place of reasoned (`./t33.mjs`), and its alias declaretie takes the grade; notewrite stays caller-owned; phoneOf is true for all four; controls wizardrevise and planclose keep their grades.
+
+Deferred in op-grades: none. Nothing found in op-grades' own code needed a fix beyond the above. Findings in other modules and the requirement text are in the REPORT.
+
+Tests (`node --test test/m/op-grades/*.test.mjs`): 123 pass, 0 fail, from 2 failing at the start (the R46 reds in t48, now green). `t50.test.mjs` names R45, R46 and R47 with controls.
+Consumers, run on this branch and on a clean HEAD worktree:
+- affordances, control-plane, wizard-scripts, screens-action, screens-daily, screens-settings: 966 run, 949 pass, 17 fail; clean HEAD 952 pass, 14 fail. The three new failures are REPORT items 1 and 2.
+- op-declarations, interface-shell, screens-intake, screens-investigate, plane: 770 pass, 22 fail, identical to clean HEAD.
+
+Checks (from civicos-process):
+- format.mjs /home/user/bio: 171 modules, 0 failures.
+- architecture.mjs (op-grades): 0 failures.
+- coverage.mjs (op-grades): 47 of 47 live requirement ids named by a test, 0 failures.
+- ownership.mjs (op-grades, tranche/T50, committed): 24 files, all op-grades', 0 failures.
+- run.mjs over the product: architecture 0 failures in 3486 files; coverage 25 failures, all in other modules' not-yet-met ids, none in op-grades.
+
+Size (session_0123Ja8xLuQ1vCztuMojXSJ7): test runs 12, module lines 3381
