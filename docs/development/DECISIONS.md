@@ -4692,3 +4692,18 @@ decided: 2026-10-17 · the design session (P17)
 the design: (1) `refusal.ASSISTANT_REMOTE_NOT_READY`: "The assistant isn't working for your team yet: its connection hasn't passed its check. An administrator can run the check under Settings, The assistant. Nothing was sent." (2) Connect's "Check the connection" (with its explanation) draws its steps as they arrive, each with its time ("{step} · {seconds} s"), as DEC-298's ticks: "Signed in to your Claude account", "Started a test session", "Asked it a test question", "It used one of Civicsmith's tools", "It answered, and Civicsmith checked the answer", "Ended the test session"; then "The connection works. The assistant can now serve your team." or "The check stopped at “{step}”: {why}. Nothing else was tried. Put it right and check again."; drawn only once the proof passes (K3615). (3) `/doorbell` and `/tour` are aliases of the doorbell and tour pages, as DEC-299 (11) said; every other unknown address outside `/app` draws the public "Nothing is here" with "Go to the front page". (4) Court kinds: civil "Civil case", writ "Petition for a writ", appeal "Appeal", complaint "Administrative complaint", with the choice's explanation `proceeding.kind.help`.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-301 block, 19 keys).
 owed: (BOB, T50) agent-worker R110 reads the refusal; screens-settings R41 the check's words; N1174 the aliases; N1190 the kinds' labels.
+
+### DEC-302 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01He2uMKmm4ZtziW18jtY1BD; the development process also runs on his primary account since K1428) (BOB's B266, K3624, K3627: words T50's L2 to L4 need)
+for: design
+question: Six keys: a membership refusal that fits both a run and a connect; acquire's `for` not a question; a knock already held; plain text among the safe views; a member's own plain-text file shown as text; "captured directly" where the capture was not direct.
+why it is Bob's: it is not (P17).
+provisional: BOB's drafts.
+alternative: a second key for the connect (not needed: one sentence fits both).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) `refusal.ACCOUNT_MEMBER_NOT_ACTIVE`, one sentence for a run and a connect: "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why." (2) `refusal.BAD_FOR`: "Say which question this capture is for: choose one of the project's questions. Nothing was captured." (3) `screen.inbox.alreadyheld`: "Already held: {holder} brought in the same file. Marked as brought in; nothing new was written."; `.other`: "Already held: the same file is already in your team's records. Marked as brought in; nothing new was written." (4) `refusal.NO_SAFE_VIEW`: "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view." (5) `screen.open-file.safetext`: "Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file."; `.cut`: "The file is longer than this view shows; the rest is in the original file." (6) `screen.archive.alreadyheld`: "captured on {date}", not "captured directly" (reworded in place; the archive screen redrawn).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-302 block and its REWRITE), `screens/mock-screens.js` (`SCR.archive`).
+owed: (BOB, T50 L11, T50-30 screens-intake) the screens draw these keys; ai-accounts R1, R18, R19 and the run read the one membership refusal.
