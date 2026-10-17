@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12692 words, 890 protected; SHA-256
-   8e634c06356ea862dbf4b84de68a7e530357da173797d98adeda1f7a56a8a98c), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12699 words, 891 protected; SHA-256
+   f44688953867c53d2a8e774af3bc371d4b6ccdd0a8a32d8c5583a8589b86c137), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "8e634c0635";
+export const WORDS_COMMIT = "f446889538";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5627,6 +5627,13 @@ export const WORD_ROWS = Object.freeze([
   ["screen.inbox.alreadyheld.other","Already held: the same file is already in your team's records. Marked as brought in; nothing new was written.","DEC-302: doorbell R13: the holder is not one the viewer may see",null,false],
   ["screen.open-file.safetext","Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.","DEC-302: file-safety R45",null,false],
   ["screen.open-file.safetext.cut","The file is longer than this view shows; the rest is in the original file.","DEC-302: file-safety R45",null,false],
+  ["refusal.MACHINE_CANNOT_SET_STAKE","Only a member sets a project's stake, and this came from the assistant or another automated credential. Sign in to set it. Nothing was written.","DEC-303: project-roster R31, C-147.9",null,true],
+  ["refusal.STAKE_MALFORMED.project","This project's stake says, in your own words, only what this matter adds to your team's usual stake: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written.","DEC-303: project-roster R31: a project's stake; refusal.STAKE_MALFORMED stays the team's",null,false],
+  ["timeline.dated.title","Dated in the documents","DEC-303: events R53: the Timeline's third list",null,false],
+  ["timeline.dated.tip","Dates a document states, such as a deadline it sets or the date a letter bears. They are not events on the timeline until you record one from them.","DEC-303: the list's explanation",null,false],
+  ["findin.cell.uncalculated","{cell}: a formula the file never calculated, so it has no value here. Open the original in a spreadsheet program to see its result.","DEC-303: retrieval R83",null,false],
+  ["findin.match.nameinpassage","Named in this passage","DEC-303: retrieval R84: correspondence name_in_passage",null,false],
+  ["findin.match.sheet","Sheet {sheet}, row {row}","DEC-303: retrieval R83: a sheet match's place",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
