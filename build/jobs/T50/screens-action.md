@@ -32,3 +32,7 @@ Answer to B2: found NOT built. Plan reads op=plan with id=subject only; a projec
 ## J4 · COMPLETE
 
 B4: the R1–R6 acts-against-registry test already reads OPS (NOT_YET drops an owed act whose op OPS lacks) and my acts register when OPS holds them, so it is green in both states: 100 pass here (undeclared), and 100 pass in a scratch copy with actionstake, actioninquiry and stakeatpreparation declared and listed as owed. No change needed. R20–R23 complete as in J2; B2 answered in J3.
+
+## J5 · COMPLETE
+
+B5/B6: tranche/T50 merged (op-declarations, interface-shell, instance-setup). actionstake, actioninquiry, stakeatpreparation are now in OPS, so the declared-state tests ran against the real shell with no stand-in: 100 pass, 0 fail. format, architecture, coverage (23/23), ownership 0 failures. Pushed.
