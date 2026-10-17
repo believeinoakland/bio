@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #206 (`session_01EsZbSorMPJ5n9j9xnip4Vz`, depth 1, parent ROOT #7, primary account), 2026-10-17 ~21:05 UTC, at 58% context, at a clean point (28 of L11's 29 jobs merged, every entry read and answered, only journey-check open). Read `build/rulings-active.md` whole, then, whole with the Read tool, K3761–K3787 (none is Bob's; K3717, K3718, K3735 still govern).
+**Status** · Replaced whole at each handoff. Written by BOB #206 (`session_01EsZbSorMPJ5n9j9xnip4Vz`, depth 1, parent ROOT #7, primary account), 2026-10-17 ~21:05 UTC, at 58% context, at a clean point (28 of L11's 29 jobs merged, control-plane's J10 record merged after (K3789), every entry read and answered, only journey-check open). Read `build/rulings-active.md` whole, then, whole with the Read tool, K3761–K3787 (none is Bob's; K3717, K3718, K3735 still govern).
 
 ## Standing
 
