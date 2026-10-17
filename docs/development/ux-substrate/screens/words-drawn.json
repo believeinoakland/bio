@@ -8132,7 +8132,7 @@
   },
   {
    "key": "label.personfactkinds.office",
-   "en": "Holds an office",
+   "en": "Office",
    "protected": false,
    "note": "DEC-318: people: a person fact of office (the line kind)"
   },
@@ -8162,13 +8162,13 @@
   },
   {
    "key": "screen.find-in.flow.help",
-   "en": "Asked for an actual payment, before it is recorded.",
+   "en": "Asked only for an actual payment: who paid it, who received it, how much and on what day.",
    "protected": false,
    "note": "DEC-318: R48 (3): the flow step's fields"
   },
   {
    "key": "findin.fieldneeded",
-   "en": "Fill in {field} first: it is needed to record this. Nothing was sent.",
+   "en": "Fill in {field} first: it is needed to record this. Nothing was recorded.",
    "protected": false,
    "note": "DEC-318: R48's control, in capture.fieldneeded's form"
   },
@@ -8186,7 +8186,7 @@
   },
   {
    "key": "screen.find-in.bounds.summary",
-   "en": "If the bounds can't be read",
+   "en": "When the bounds can't be read",
    "protected": false,
    "note": "DEC-318: R47: the refusal fold"
   },
@@ -8359,12 +8359,6 @@
    "note": "DEC-320: R61: nothing preselected, the act says to choose"
   },
   {
-   "key": "screen.document.cite.choose",
-   "en": "Choose the question to cite this in first.",
-   "protected": false,
-   "note": "DEC-320: R61: as screen.find-in.questionfirst"
-  },
-  {
    "key": "screen.request.state.offices",
    "en": "offices are known",
    "protected": false,
@@ -8468,7 +8462,7 @@
   },
   {
    "key": "screen.group.timezone.none.summary",
-   "en": "When no time zone is held",
+   "en": "When your team's time zone isn't set",
    "protected": false,
    "note": "DEC-322: R45: no zone, and no UTC drawn"
   },
@@ -8519,6 +8513,54 @@
    "en": "can't be counted",
    "protected": false,
    "note": "DEC-322: R34: undetermined draws only the docket sentence"
+  },
+  {
+   "key": "caseimport.notrecorded.summary",
+   "en": "When they were not recorded",
+   "protected": false,
+   "note": "DEC-323: screens-publish R26: case-import.group_fields_none in a fold"
+  },
+  {
+   "key": "caseimport.unreadable.summary",
+   "en": "When its stake can't be read",
+   "protected": false,
+   "note": "DEC-323: R26: caseimport.stake.unreadable in a fold"
+  },
+  {
+   "key": "caseimport.stake.heading",
+   "en": "Whose stake this states",
+   "protected": false,
+   "note": "DEC-323: R26: the section over case-import.group_fields_label"
+  },
+  {
+   "key": "screen.review-copy.until.nozone.summary",
+   "en": "When your team's time zone isn't set",
+   "protected": false,
+   "note": "DEC-323: R27"
+  },
+  {
+   "key": "screen.security.period.bad.summary",
+   "en": "Dates in the wrong order",
+   "protected": false,
+   "note": "DEC-323: screens-settings R43"
+  },
+  {
+   "key": "screen.group.name.same.summary",
+   "en": "Saving the same name",
+   "protected": false,
+   "note": "DEC-323: screens-settings R52"
+  },
+  {
+   "key": "project.bar.others.summary",
+   "en": "Other bars",
+   "protected": false,
+   "note": "DEC-323: screens-inquiry R52: the bar read in words in each case"
+  },
+  {
+   "key": "home.strip.ours_passed.opens",
+   "en": "Opens your queue at this item.",
+   "protected": false,
+   "note": "DEC-323: screens-daily R50: the strip item"
   }
  ],
  "rewrite": {
