@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, M, BOB, MACHINE, INQ, RFC, REQ, WINDOW, leg } from "./fixture.mjs";
 import { ACTION_REPLY_CHECKS, ACTION_REPLIES_TABLES, actionRepliesOps } from "../../../src/action-replies/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const WORDS = "Please do not quote this reply in any public document.";
 const members = [{ bundle_id: INQ, version_sha: "a".repeat(64) }];
@@ -83,15 +84,12 @@ test("R10 control: every refusal in order, each with its control, writing nothin
   assert.equal(quote(w, { ...ok, quotable: true, words: undefined }).ok, true);
 });
 
-test("R10 the rows C-150.8 to C-150.10 are this module's, in BOB's drafted words; the op reads the control plane's stamps; the act refuses no act of any module", () => {
+test("R10 the rows C-150.8 to C-150.10 are this module's, their words read by key from words.json; the op reads the control plane's stamps; the act refuses no act of any module", () => {
   const { w, got } = answered();
   assert.deepEqual(Object.values(ACTION_REPLY_CHECKS).map((r) => r.check).slice(-3), ["C-150.8", "C-150.9", "C-150.10"]);
-  assert.equal(ACTION_REPLY_CHECKS.MACHINE_CANNOT_RECORD_QUOTING.translation,
-    "Only a member records what a reply says about being quoted. Nothing was written.");
-  assert.equal(ACTION_REPLY_CHECKS.QUOTING_NOT_RFC.translation,
-    "Only a reply received to a request for comment can ask not to be quoted. Nothing was written.");
-  assert.equal(ACTION_REPLY_CHECKS.QUOTING_REFUSED.translation, "Say whether the reply may be quoted, and when it may not, give the "
-    + "reply's own words that say so, on one line of at most 500 characters. Nothing was written.");
+  assert.equal(ACTION_REPLY_CHECKS.MACHINE_CANNOT_RECORD_QUOTING.translation, word("refusal.MACHINE_CANNOT_RECORD_QUOTING"));
+  assert.equal(ACTION_REPLY_CHECKS.QUOTING_NOT_RFC.translation, word("refusal.QUOTING_NOT_RFC"));
+  assert.equal(ACTION_REPLY_CHECKS.QUOTING_REFUSED.translation, word("refusal.QUOTING_REFUSED"));
   const ops = (q, b) => actionRepliesOps(w.r, url(q), b);
   assert.ok("actionreplyquoting" in ops({}, {}));
   /* a body's own author never wins over the stamp */

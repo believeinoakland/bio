@@ -33,10 +33,11 @@ import { actionsOf } from "../actions/index.mjs";
 import { caseInputsOf } from "../case-inputs/index.mjs";
 import { bearingFindings, BEARINGS, counterpartyName } from "../action-grammar/index.mjs";
 import { isMachineIdentity, proposalLabel, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
-import { ACTION_REPLY_CHECKS, fillWords } from "./checks.mjs";
+import { word } from "../setup-words/index.mjs";
+import { ACTION_REPLY_CHECKS } from "./checks.mjs";
 import { ACTION_REPLIES_TABLES, migrateActionReplies } from "./schema.mjs";
 
-export { ACTION_REPLY_CHECKS, ACTION_REPLY_WORDS } from "./checks.mjs";
+export { ACTION_REPLY_CHECKS } from "./checks.mjs";
 export { ACTION_REPLIES_SCHEMA, ACTION_REPLIES_TABLES } from "./schema.mjs";
 
 /** R1: the most standing proposals one entry's read lists (`actions` R28's bound). */
@@ -66,10 +67,11 @@ const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detai
    claim's position in `claims`, counted from 1, with the claim when the entry names one. */
 const CLAIM_SHOWN_MAX = 60;
 function bearingItem(claims, index) {
-  if (index === null) return "The list of claims";
+  if (index === null) return word("action-replies.list_claims");
   const c = Array.isArray(claims) ? claims[index] : undefined;
   const claim = c && typeof c === "object" && !Array.isArray(c) && typeof c.claim === "string" ? c.claim.trim() : "";
-  return claim ? `Claim ${index + 1} (${claim.slice(0, CLAIM_SHOWN_MAX)})` : `Claim ${index + 1}`;
+  return claim ? word("action-replies.claim", { index: index + 1, claim: claim.slice(0, CLAIM_SHOWN_MAX) })
+    : word("action-replies.claim_2", { index: index + 1 });
 }
 
 /* An entry's position: a non-negative integer, given as a number or its digits; null otherwise. */
@@ -195,7 +197,7 @@ export class ActionReplies {
       const item = first.item ?? (named ? Number(named[1]) : null);
       return refuse("BEARING_REFUSED", first.message ?? first.detail ?? null, { target, item,
         /* R9: DEC-199's sentence, read by key, its `{item}` filled; never answered unfilled */
-        translation: fillWords("refusal.BEARING_REFUSED", { item: bearingItem(claims, Number.isInteger(item) ? item : null) }),
+        translation: word("refusal.BEARING_REFUSED", { item: bearingItem(claims, Number.isInteger(item) ? item : null) }),
         findings: errs.map((f) => ({ check: f.check, detail: f.message ?? f.detail ?? null, ...(f.code ? { code: f.code } : {}),
                                      ...(f.repairs ? { repairs: f.repairs } : {}) })) });
     }
@@ -228,7 +230,7 @@ export class ActionReplies {
     });
     if (w && w.ok === false) return w;
     return { ok: true, target, ord: t.ord, claims: s.claims, by: who, at, layout: seq, weight: "single",
-             says: "the reply is laid out claim by claim as this member read it. A later layout appends; this one stays." };
+             says: word("action-replies.says.reply_laid_claim") };
   }
 
   /** R1: a proposed layout, stored apart; any credential may propose, a proposer's restatement replacing its own. */
@@ -255,8 +257,8 @@ export class ActionReplies {
     return { ok: true, target, ord: t.ord, weight: "single",
              proposal: { ...bearingProposalLabel(who), at, claims: s.claims },
              layout: latest, evidence: false,
-             says: "this is a proposed layout of the reply and not the reply's layout; it changed nothing. "
-                 + (latest ? "The layout a member stated stands beside it." : "No member has laid the reply out.") };
+             says: word("action-replies.says.proposed_layout_reply", { value: latest
+               ? word("action-replies.says.layout_member_stated") : word("action-replies.says.member_laid_reply") }) };
   }
 
   /** R10: a member records that the reply at `ord` says it may not be quoted (`quotable: false`, with its own `words`), or
@@ -280,8 +282,7 @@ export class ActionReplies {
     });
     if (w && w.ok === false) return w;
     return { ok: true, target, ord: t.ord, quotable: s.quotable, words: s.words, by: who, at, weight: "single",
-             says: s.quotable ? "the record that this reply asks not to be quoted is withdrawn. Nothing else changed."
-                              : "this reply is recorded as asking not to be quoted, in its own words. Nothing else changed." };
+             says: word(s.quotable ? "action-replies.says.record_reply_asks" : "action-replies.says.reply_recorded_asking") };
   }
   /* R10: an entry's latest quoting record, or null when none is held. */
   #quoting(id, ord) {
@@ -455,7 +456,7 @@ export class ActionReplies {
     const cp = a.counterparty && typeof a.counterparty === "object" ? a.counterparty : {};
     const whom = counterpartyName(cp)
       || (cp.state === "audience" && typeof cp.description === "string" && cp.description.trim() ? cp.description.trim() : null)
-      || "an addressee not yet named";
+      || word("action-replies.addressee_named");
     /* J1 (a): DEC-13's window, the action's dated clock entry. */
     const win = (Array.isArray(a.clock) ? a.clock : []).find((c) => c && typeof c === "object" && c.status !== "waived" && dayOf(c.date));
     const received = ledger.filter((e) => e.direction === "received").map((e) => e.ord);
