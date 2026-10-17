@@ -46,6 +46,7 @@ export function standIn({ plane = {}, me = { member: "mai", handle: "mai" }, rea
     keep(k, v) { store.set(k, String(v)); },
     act(op, o = {}) { const a = GUIDE.acts.find((x) => x.op === op); return a ? `<button type="button" data-act="${op}">${w(o.label || "act." + op + ".label")}</button>` : ""; },
     field(id, labelKey) { return `<label for="${id}">${w(labelKey)}</label><input id="${id}">`; },
+    choice(id, labelKey, options) { return `<label for="${id}">${w(labelKey)}</label><select id="${id}">${options.map((o) => `<option value="${esc(o.value)}">${esc(o.text)}</option>`).join("")}</select>`; },
     ...kit,
   };
   async function enter(screen, subject = null) {

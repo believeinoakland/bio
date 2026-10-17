@@ -1,26 +1,34 @@
-/* The module's words (interface-shell R5): every key its parts name is a word the page carries (R1, R2). */
+/* The module's words (interface-shell R5, R70; R13): it holds keys only, and every key it reads is a word the list holds. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SCREENS, GUIDE, SCREEN_WORDS } from "../../../src/screens-wizards/index.mjs";
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 import { readFileSync } from "node:fs";
 
-const HELD = new Set(WORD_ROWS.map((r) => r[0]));
-const OWN = new Set(SCREEN_WORDS.map((r) => r[0]));
+const listed = new Set([...SCREENS, GUIDE].flatMap((p) => p.words));
+const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["screens-wizards"].reads;
+/* the keys R15–R17 and R14 name beyond the design merge's list */
+const NAMED = ["screen.wizards.own.fold", "screen.wizards.own.says", "wizard.subject.project", "wizard.subject.question", "wizard.subject.document",
+  "wizard.subject.none.project", "wizard.subject.none.summary", "refusal.uncatalogued"];
 
-test("R1 R2 each word the library and the guide draw is a WORD_ROWS key or the module's own row, and every own row is drawn", () => {
-  assert.equal(OWN.size, SCREEN_WORDS.length, "own keys are distinct");
-  for (const r of SCREEN_WORDS) assert.ok(Array.isArray(r) && r.length === 3 && typeof r[1] === "string" && r[1] && typeof r[2] === "boolean", r[0]);
-  for (const part of [...SCREENS, GUIDE]) for (const x of part.words) {
-    const k = Array.isArray(x) ? x[0] : x;
-    assert.ok(HELD.has(k) || OWN.has(k), `${part.id}: ${k}`);
+test("R13 each key the module reads is asserted with hasWord and listed by the part that draws it; it holds no row of its own", () => {
+  assert.deepEqual([...SCREEN_WORDS], []);
+  assert.equal(READS.length, 142, "the design merge's list for it");
+  for (const k of [...READS, ...NAMED]) {
+    assert.ok(hasWord(k), `${k} is a word the list holds`);
+    assert.ok(listed.has(k), `${k} is listed by a part`);
   }
-  // every key the source names literally is listed by its part
-  const listed = new Set([...SCREENS, GUIDE].flatMap((p) => p.words.map((x) => (Array.isArray(x) ? x[0] : x))));
+  for (const part of [...SCREENS, GUIDE]) for (const x of part.words) assert.ok(typeof x === "string" && hasWord(x), `${part.id}: ${x}`);
+  assert.equal(new Set(READS).size, READS.length);
+});
+
+test("R1 R2 R13 every key the source names literally is a held word listed by its part; Civicsmith's step words are carried for every library script", () => {
   for (const f of ["library.mjs", "guide.mjs"]) {
     const src = readFileSync(new URL(`../../../src/screens-wizards/${f}`, import.meta.url), "utf8");
-    for (const m of src.matchAll(/"((?:screen\.(?:wizards|guide)|guide|ai\.label)\.[\w.]+)"/g)) assert.ok(listed.has(m[1]) || m[1].endsWith("."), `${f}: ${m[1]}`);
+    for (const m of src.matchAll(/"((?:screen\.(?:wizards|guide)|guide|ai\.label|wizard\.(?:subject|marks?|guide)|refusal)\.[\w.]+)"/g)) {
+      if (m[1].endsWith(".")) continue;
+      assert.ok(hasWord(m[1]) && listed.has(m[1]), `${f}: ${m[1]}`);
+    }
   }
-  // R2: Civicsmith's step words are carried for every library script
   assert.ok([...listed].some((k) => /^wizard\.WIZ-[0-9a-f]+\.step1\.what$/.test(k)));
 });
