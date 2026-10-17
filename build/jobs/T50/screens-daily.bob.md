@@ -41,3 +41,7 @@ queue (T50-21) is merged into tranche/T50 (K3774), and op-grades too: it grades 
 ## B6 · CHANGE
 
 op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
+
+## B7 · CHANGE
+
+interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.
