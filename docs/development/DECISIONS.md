@@ -4842,3 +4842,33 @@ decided: 2026-10-17 · the design session (P17)
 the design: (1) Connect, connected on a subscription: the six steps of the last check, each with its time (`connect.check.step.<step>`, `connect.check.step.time`), `connect.check.passed`, the button "Check the connection" (`subscriptionsignin {step: "check"}`, `screen.connect.check`, its help) and, folded, "If the check stops" (`screen.connect.check.ifstops`) with `connect.check.failed`. (2) The question's reasons the assistant can't work here now lead with `refusal.ASSISTANT_REMOTE_NOT_READY` and `refusal.SIGNIN_EXPIRED`. Still owed by design (named to BOB): where the check sits for a team on the team's key (likely Settings › The team's assistant); the Ask page's working, checked, check-failed and not-ready states (`ai.progress.reading.ask`, `ASK_CHECK_FAILED`); drafting a case's account with the assistant on Case (case-account R1, its framings, the machine draft, accept, edit or discard); the cancelled ending drawn; a reason field on Decline (basis-versions R4); a Connect state for an expired sign-in.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py`.
 owed: (BOB, T50) screens-settings R41 draws the check as drawn here; the refusals where a member asks. (Design) the items named above, in DEC-312 onward.
+
+### DEC-312 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01BKVRfySv9yw3V8ERtnfgYi; the development process also runs on his primary account since K1428) (BOB's B283: K3672, K3677, K3681)
+for: design
+question: The keys T50's L4 and L5 modules (progressions, entities, events, retrieval, standards) still say in English.
+why it is Bob's: it is not (P17).
+provisional: the modules say these sentences inline.
+alternative: one `refusal.NO_SET` per module (rejected: each is a caller naming no set; one sentence serves all); progressions reads record-core's `refusal.SET_TOO_LARGE` (rejected: that sentence acts on a selection, progressions reads).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) `refusal.NO_SET`, one key for every module's NO_SET (progressions C-100.26 stops borrowing `SET_NO_ITEMS`); progressions C-100.27 reads its own `refusal.SET_TOO_LARGE.read` ({max}, {given}); record-core keeps `refusal.SET_TOO_LARGE`. (2) entities: `entities.considered.name`; R47's kinds `entities.relation.<proxy_for|member_of|overlaps>` (in a sentence: "stands in for", "is a member of", "overlaps with") and `.name` (alone); `refusal.UNKNOWN_FORUM_KIND` ({forum_kinds}), `refusal.FORUM_KIND_NOT_FOR_KIND` ({kind}). (3) events: every sentence the record lists is already keyed (`events.text.reason_given`, `found_unmet`, `conditions_listed`, `expires_on`, `events.outcome.*`, `events.sent.*`, and the role and link words `events.actor` to `events.reverses`); newly `events.grade_why.unplaced`. (4) retrieval: `retrieval.syntax.compare_range`, `content_layer`, `content_not_text`, `meaning_arm` (the whole sentence; `retrieval.syntax.bare_field_leg`, a fragment, is no longer read); `retrieval.notread.*` (nine). (5) standards: every key listed is already in `words.json`; only `words-reads.json` lags, regenerated at L5's close. Not keyed here: events' cache-stale grade_why and retrieval's frontier notes (FRONTIER_INTERNET_NOTE and its per-level notes), whose full text the record does not give: BOB names them in a later HANDOFF.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: (BOB, T50) the modules read the keys named here (N1213, T51).
+
+### DEC-313 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01BKVRfySv9yw3V8ERtnfgYi; the development process also runs on his primary account since K1428) (BOB's B285: interface-shell R81, screens-publish R31, R33, screens-investigate R38, screens-intake R37; DEC-310)
+for: design
+question: Words and drawings the screens still need after DEC-310 and DEC-311's folds (K3698).
+why it is Bob's: it is not (P17). The public docket shows only what `docketpublic` already serves anyone (public-read R21), so who may see what is unchanged.
+provisional: no card words for `published` and `archive`; the corrections line's heading, kinds and count unkeyed; no first-case note without a concluded question; basis labels only as choices; "Open its files" drawn but keyed "Its files"; the docket a working-frame screen, so a reader without an account following "its docket" lands on the front page.
+alternative: (6) accept the redirect (rejected: the public page's promise is that its corrections can be checked by anyone; a door that leads nowhere breaks it).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) `shell.card.published`, `shell.card.archive`. (2) `screen.published.corrections.heading` ("Corrections and orders"); a later entry's kind `screen.published.corrections.kind.<edition|withdrawal|court-order>` ("a new edition", "a withdrawal", "a court order"); with some, `screen.published.corrections.some` ("{count} since it was published. The latest: {kind}, {date}.") or `.some.one` at one, then `screen.published.corrections`; undetermined draws only `screen.published.corrections`, as R33 says. (3) `screen.case-editor.noconcluded`. (4) `screen.person.basis.*` stay the choices on "Same person?"; in the row sentence `screen.person.same.because`'s {basis} reads `screen.person.basis.row.<identifier|corroborated_name|name|testimony>`. (5) "Open its files" is meant: `screen.held.archivefiles` reworded. (6) A new screen `docket-public`, published frame, no session: the docket read only from `docketpublic` (`screen.docket-public.sub`, its entries as the docket draws them, `screen.docket-public.back`); the public page's "its docket" opens it; members keep `docket` (working frame).
+reasoning recorded in: this entry; `screens/registry.src.py`, `mock-screens.js`, `mock-refs.js`, `words-drawn.src.py`.
+owed: (BOB, T50) interface-shell R81's two cards; screens-publish R31, R33 read these keys; screens-investigate R38's labels; `docket-public` placed (interface-shell R30's public frames, R81's door kind), its door from the public page.
