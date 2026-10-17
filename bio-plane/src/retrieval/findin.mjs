@@ -2,7 +2,9 @@
  * one scope, by kind, that records nothing. `Retrieval.findIn` resolves the scope under the viewer's sight (a capture, a
  * selection, an enumerated set, a project's holdings) and hands this file the captures, in capture-sha order; this file
  * reads each capture's readings and text (`extraction`'s and `content`'s read contracts) and answers each kind by a
- * deterministic matcher, never a model.
+ * deterministic matcher, never a model. T50 (N1123, N1177, N1183, N1191, N1193): each match also names its document and its
+ * content row (R80, R81), keeps a passage's line breaks (R82), says where in a sheet it lies (R83), and `people` also
+ * finds a held alias in a passage's words (R84).
  *
  * WHAT IT NEVER DOES: write (no selection, no observation, no fact, no reading: a member's own searching writes
  * nothing, observation-log R24); fold a capture it could not read into "Nothing here" (DEC-98: `nothing` is said only
@@ -261,8 +263,8 @@ export class Finder {
 
   /** R73, R76 (N715; K1941, K2063): who recorded each match. Every read (`r.recordedReads()`: the four recording
    *  modules' `recordedBy`, then each registered one) is called once per capture of `captures`, under `viewer`, with
-   *  `limit` RECORDED_BY_LIMIT; each item whose extent stands to the match's (a table item's `table.extent`) as `same`,
-   *  `narrower` or `wider` (`content.extentRelation`) is in the match's `recorded`, `relation` that answer. A read
+   *  `limit` RECORDED_BY_LIMIT; each item whose extent stands to the match's (a table item's `table.extent`) as `same`
+   *  or `narrower` (`content.extentRelation`; T50: never `wider`, R73) is in the match's `recorded`, `relation` that answer. A read
    *  that throws, rejects, refuses or answers another shape is in `not_read` with why and changes nothing else; a
    *  promise is never awaited (a find is synchronous), and its rejection is caught. Answers `{read, not_read}`. */
   recorded(kinds, captures, viewer) {
