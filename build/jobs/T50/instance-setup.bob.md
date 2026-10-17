@@ -29,3 +29,7 @@ Your reading is accepted: do R92, R93, recovery.test.mjs:36 and your keys now, w
 ## B3 · CHANGE
 
 translations (T50-22) is merged into tranche/T50 (K3768): merge it and finish R94. From TRANSLATIONS #1's report: your R64 and R85 build LANGUAGE_MALFORMED from TRANSLATIONS_CHECKS in ./translations/checks.mjs; t48.test.mjs's R87 test pins the old English of LANGUAGE_NOT_SET, now the key refusal.LANGUAGE_NOT_SET (pin the key); construct #translations() after your own start() declares the seven tables, or delete your seven table entries in the same change, since translationsOf holds TABLE_DECLARED by instance-setup and any other refusal throws (map doubt 4). The 17 rows leave only after answer-envelope merges (another CHANGE then).
+
+## B4 · CHANGE
+
+answer-envelope (T50-25) is merged into tranche/T50 (K3772): its composed catalogue lists translations' checks file before setup.mjs. Merge tranche/T50: your 17 moved rows (C-64.11-.17, .19-.26, .31, C-119.12) may now leave instance-setup's checks, the delegates kept. Re-run answer-envelope's tests with yours and post COMPLETE. op-declarations waits on your merge.
