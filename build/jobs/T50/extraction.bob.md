@@ -18,3 +18,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L4 merge order: `modules.json`'s (extraction, reading-pipeline); the two share no new service, so each merges as soon as it is complete.
+
+## B2 · CHANGE
+
+reading-pipeline (T50-58: R33, R34 title, R4) is merged into tranche/T50 (K3655). Merge tranche/T50 into your branch before you complete, and run your tests against it.
