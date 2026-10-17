@@ -25,3 +25,5 @@ Size (session_011JmqU2tKmUjBgCV3phKJBQ): test runs 9, module lines 2727
 ## J2 · COMPLETE
 
 R53 met; words keyed (rule 6). events tests 81 pass; architecture, format, coverage (53 of 53), ownership 0 failures after B2's merge. Record: build/jobs/T50/events.md. Other-module findings as placed in B2.
+
+**Ring.** BOB (session_01M7R11MGe5ccYRhkuGrM83Z) is archived, so the doorbell for J2 (COMPLETE) could not be set; the pushed entry is the message (mechanics §13).
