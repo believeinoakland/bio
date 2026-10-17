@@ -23,3 +23,7 @@ L2 merge order: membership, project-roster, ai-accounts, credentials, promotion 
 ## B2 · CHANGE
 
 K3624, K3625. (1) ai-accounts is merged into `tranche/T50`: merge it and run R73's refused-sign-in test against the real clause. (2) Your test "R48 the 17 sweep rows" quotes ai-accounts' old English ("your group's Civicsmith"): read those rows by key (plan rule 6), never English. (3) `modules.json` now gives credentials `setup-words` in `uses`. membership (R149) is not merged yet: I send a CHANGE when it is.
+
+## B3 · CHANGE
+
+membership is merged into tranche/T50 @ dadaa9ada1 (K3633), with R149 projectViewer (and R150's reach). Merge tranche/T50 into your branch and run R79 against the real service. Membership's note: a reader applying a project's reach calls the instance's viewerGate / hiddenBundlesFor (the module-level viewerPredicate without the reach gives only the project's own bundles). ai-accounts was merged earlier (B2). Then run your tests and record COMPLETE.

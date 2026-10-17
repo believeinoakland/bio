@@ -22,7 +22,7 @@
   "label": 192,
   "project": 50,
   "grouprule": 1,
-  "refusal": 1935,
+  "refusal": 1937,
   "signing": 17,
   "case": 18,
   "docket": 7,
@@ -107,10 +107,11 @@
   "unavailable": 2,
   "page": 2,
   "person": 1,
-  "findin": 4,
+  "findin": 7,
   "money": 33,
   "passage": 2,
   "period": 1,
+  "timeline": 2,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
@@ -220,8 +221,8 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12692,
-  "protected": 890
+  "total": 12699,
+  "protected": 891
  },
  "words": [
   {
@@ -38854,6 +38855,55 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-302: file-safety R45"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SET_STAKE",
+   "en": "Only a member sets a project's stake, and this came from the assistant or another automated credential. Sign in to set it. Nothing was written.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-303: project-roster R31, C-147.9"
+  },
+  {
+   "key": "refusal.STAKE_MALFORMED.project",
+   "en": "This project's stake says, in your own words, only what this matter adds to your team's usual stake: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-303: project-roster R31: a project's stake; refusal.STAKE_MALFORMED stays the team's"
+  },
+  {
+   "key": "timeline.dated.title",
+   "en": "Dated in the documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-303: events R53: the Timeline's third list"
+  },
+  {
+   "key": "timeline.dated.tip",
+   "en": "Dates a document states, such as a deadline it sets or the date a letter bears. They are not events on the timeline until you record one from them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-303: the list's explanation"
+  },
+  {
+   "key": "findin.cell.uncalculated",
+   "en": "{cell}: a formula the file never calculated, so it has no value here. Open the original in a spreadsheet program to see its result.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-303: retrieval R83"
+  },
+  {
+   "key": "findin.match.nameinpassage",
+   "en": "Named in this passage",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-303: retrieval R84: correspondence name_in_passage"
+  },
+  {
+   "key": "findin.match.sheet",
+   "en": "Sheet {sheet}, row {row}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-303: retrieval R83: a sheet match's place"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

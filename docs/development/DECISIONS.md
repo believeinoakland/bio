@@ -4707,3 +4707,18 @@ decided: 2026-10-17 · the design session (P17)
 the design: (1) `refusal.ACCOUNT_MEMBER_NOT_ACTIVE`, one sentence for a run and a connect: "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why." (2) `refusal.BAD_FOR`: "Say which question this capture is for: choose one of the project's questions. Nothing was captured." (3) `screen.inbox.alreadyheld`: "Already held: {holder} brought in the same file. Marked as brought in; nothing new was written."; `.other`: "Already held: the same file is already in your team's records. Marked as brought in; nothing new was written." (4) `refusal.NO_SAFE_VIEW`: "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view." (5) `screen.open-file.safetext`: "Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file."; `.cut`: "The file is longer than this view shows; the rest is in the original file." (6) `screen.archive.alreadyheld`: "captured on {date}", not "captured directly" (reworded in place; the archive screen redrawn).
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-302 block and its REWRITE), `screens/mock-screens.js` (`SCR.archive`).
 owed: (BOB, T50 L11, T50-30 screens-intake) the screens draw these keys; ai-accounts R1, R18, R19 and the run read the one membership refusal.
+
+### DEC-303 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01He2uMKmm4ZtziW18jtY1BD; the development process also runs on his primary account since K1428) (BOB's B267, K3629, and B268, K3630: keys T50's L2 and L5 fold need for the L11 screens)
+for: design
+question: A machine refused setting a project's stake; whether a project's malformed stake wants its own sentence; the Timeline's list of dates documents state; Find in's uncalculated formula cell, a match by a name in a passage, and a sheet match's place.
+why it is Bob's: it is not (P17).
+provisional: no keys.
+alternative: one sentence for both stakes (rejected: the team's sentence says "carried on everything your team sends", untrue of a project's).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) `refusal.MACHINE_CANNOT_SET_STAKE`: "Only a member sets a project's stake, and this came from the assistant or another automated credential. Sign in to set it. Nothing was written." (2) A project's stake gets its own sentence, `refusal.STAKE_MALFORMED.project`: "This project's stake says, in your own words, only what this matter adds to your team's usual stake: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written."; the team's keeps `refusal.STAKE_MALFORMED`. (3) The Timeline's third list: "Dated in the documents", its explanation "Dates a document states, such as a deadline it sets or the date a letter bears. They are not events on the timeline until you record one from them." (4) Find in: "{cell}: a formula the file never calculated, so it has no value here. Open the original in a spreadsheet program to see its result."; "Named in this passage"; "Sheet {sheet}, row {row}".
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-303 block).
+owed: (BOB, T50) project-roster R31 reads both stake refusals; events R53 and retrieval R83, R84 by these keys in the L11 screens.

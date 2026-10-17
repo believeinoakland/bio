@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V } from "./fixture.mjs";
-import { Membership, MEMBERSHIP_CHECKS, REFUSAL_WORDS, noSuchProject, notAParticipant }
+import { Membership, MEMBERSHIP_CHECKS, noSuchProject, notAParticipant }
   from "../../../src/membership/index.mjs";
 
 const wordsJson = async () =>
@@ -41,11 +41,8 @@ test("R142 (2) R128 PROJECT_GUARD_UNCHECKED (C-56.6) reads words.json's refusal.
   const words = await wordsJson();
   const entry = words.find((x) => x.key === "refusal.PROJECT_GUARD_UNCHECKED");
   assert.ok(entry, "the key exists in words.json");
-  assert.equal(REFUSAL_WORDS["refusal.PROJECT_GUARD_UNCHECKED"], entry.en, "held verbatim");
-  assert.ok(Object.isFrozen(REFUSAL_WORDS));
   const row = MEMBERSHIP_CHECKS.PROJECT_GUARD_UNCHECKED;
-  assert.deepEqual([row.check, row.translation], ["C-56.6", entry.en]);
-  assert.ok(row.translation.includes("Your group's Civicsmith"), "R112's name");
+  assert.deepEqual([row.check, row.translation], ["C-56.6", entry.en], "the key's words, read by key (R151)");
   /* the refusal an act mints when the guard cannot answer */
   const w = await world().group("ann", "bob");
   w.project("PROJ-G");
