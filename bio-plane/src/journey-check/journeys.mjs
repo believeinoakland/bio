@@ -246,7 +246,7 @@ export async function walkFounder(walk, page, { base, founder, whileHandleless =
     await open(walk, p, base, "/app/security", "security");
     await requireWord(p, "screen.security.level.ordinary", { within: "#cs-main" });
   });
-  const invite = await inviteMember(walk, page, base, { id: "mai", cover: "Mai, from flat 4" });
+  const invite = await inviteMember(walk, page, base, { id: "mai", cover: "Mai, from flat 4", startProjects: true });
   return { invite, byHandle };
 }
 
@@ -264,11 +264,18 @@ export async function signInBy(walk, page, base, who, label) {
 }
 
 /* An administrator makes an invitation link for a new member, with the short id and the cover the group knows them by
-   (`memberadd`); the link is shown once. */
-export async function inviteMember(walk, page, base, { id, cover }) {
+   (`memberadd`), and `startProjects` ticks that she may start projects; the link is shown once. */
+export async function inviteMember(walk, page, base, { id, cover, startProjects = false }) {
   let link = null;
   await walk.step(page, `members: an invitation link for ${id}`, async (p) => {
     await open(walk, p, base, "/app/members", "members");
+    /* journey 28: she lets Mai start projects as well as contribute (DEC-286: a member may not by default), so Home offers her "What happened?" */
+    if (startProjects) {
+      const box = p.locator("#mi-cap-create_projects");
+      if (!(await box.count())) throw new Error(`the invitation form has no choice to let her start projects on ${where(p)}`);
+      await reveal(box);
+      await box.check();
+    }
     await act(p, "memberadd", { fields: { "mi-id": id, "mi-cover": cover } });
     await shown(p, '[data-shown="invite"] code', "the invitation link");
     link = walk.keepSecret((await p.locator('[data-shown="invite"] code').first().textContent()).trim());
