@@ -111,10 +111,16 @@ test("R21 R4 (DEC-149): the undetermined ground's sentence, served as vocabulari
   const { answer_checks, act_help, ...own } = A.affordancesAnswer({ kinds: null, gate: null });
   assert.ok(answer_checks && typeof answer_checks === "object");
   assert.equal(act_help, A.ACT_HELP);
-  const served = JSON.stringify(own);
+  /* R64: an act's label is now the design's `act.<id>.name`, where "this copy" is a captured document's copy, as in R48's texts below;
+     the rest of the served answer keeps DEC-149's rule whole */
+  const labels = [...own.catalog, ...own.capture_acts, ...own.set_acts].map((a) => a.label);
+  const served = JSON.stringify({ ...own, catalog: own.catalog.map((a) => ({ ...a, label: "" })),
+    capture_acts: own.capture_acts.map((a) => ({ ...a, label: "" })), set_acts: own.set_acts.map((a) => ({ ...a, label: "" })) });
   const NAMES = /\bthe plane\b|\bthis plane\b|\bthis instance\b|\bthe instance\b|\bthis copy\b|\bserver\b(?!-side)/i;
   assert.equal(NAMES.exec(served), null);
   assert.ok(NAMES.test(served.replace("no refusal establishes", "no refusal in the plane establishes")), "negative control");
+  const NAMES_BUT_COPY_LABELS = /\bthe plane\b|\bthis plane\b|\bthis instance\b|\bthe instance\b|\bserver\b(?!-side)/i;
+  assert.deepEqual(labels.filter((l) => NAMES_BUT_COPY_LABELS.test(l)), []);
   /* R48's texts name no plane, instance or server either; their "this copy" alone is the design's (a document's copy) */
   const NAMES_BUT_COPY = /\bthe plane\b|\bthis plane\b|\bthis instance\b|\bthe instance\b|\bserver\b(?!-side)/i;
   assert.equal(NAMES_BUT_COPY.exec(JSON.stringify(act_help)), null);

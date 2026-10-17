@@ -13,7 +13,7 @@ const DRIVEN = [
   "linewithdraw",
   "moneywithdraw", "moneysetinclude", "moneysetexclude",
   "dutyrevise", "dutywithdraw", "dutymatch", "dutytransition",
-  "identityclaim", "identitywithdraw", "personfactwithdraw", "personexpunge", "membertie", "membertiewithdraw", "sourcepersonlink",
+  "identityclaim", "identitywithdraw", "personfactwithdraw", "personexpunge", "membertiewithdraw", "sourcepersonlink",
   "hypothesisrevise", "hypothesiswithdraw",
   "moneyingest",
   "workbookunbind", "workbooklintexplain", "workbookmethodnote",
@@ -151,7 +151,7 @@ test("R19: duties' dutyrevise, dutywithdraw, dutymatch and dutytransition, grade
 import * as ppFix from "../people/fixture.mjs";
 
 test("R19: people's identityclaim, identitywithdraw, personfactwithdraw, personexpunge, membertie, membertiewithdraw and "
-   + "sourcepersonlink, graded `reasoned` (op-grades R13), are refused without their reason, note or evidence with a code in "
+   + "sourcepersonlink, graded `reasoned` (op-grades R13; membertie is op-grades' R47 `reversible`, read not pinned), are refused without their reason, note or evidence with a code in "
    + "JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const A = ppFix.ANN, doc = ppFix.doc;
   const valid = { from: "2020-01-01", to: "2030-12-31", precision: "day", zone: "America/Los_Angeles" };
@@ -184,10 +184,15 @@ test("R19: people's identityclaim, identitywithdraw, personfactwithdraw, persone
     backed("personexpunge", "NO_REASON", call({}), call({ reason: "held unlawfully" }));
   }
   {
+    /* membertie's grade is op-grades' (R47: `reversible`, its withdrawal takes it back), read here and never pinned; its note is
+       people R20's shape, not a reason, so it is accepted with or without a reason and is taken back by membertiewithdraw */
     const w = ppFix.world();
     const co = w.entity("institution", "Harbour Co");
-    const call = (x) => w.p.declareTie({ entity: co, kind: "employer", attribution: "cover", by: A, ...x });
-    backed("membertie", "NO_NOTE", call({}), call({ note: "I worked there 2019" }));
+    const t = w.p.declareTie({ entity: co, kind: "employer", attribution: "cover", note: "I worked there 2019", by: A });
+    assert.equal(t.ok, true, JSON.stringify(t).slice(0, 300));
+    assert.equal(RUNGS.membertie, T33_RUNGS.membertie);
+    assert.notEqual(RUNGS.membertie, "reasoned");
+    assert.equal(RUNGS.membertiewithdraw, "reasoned");
   }
   {
     const w = ppFix.world();

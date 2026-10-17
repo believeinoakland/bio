@@ -1,6 +1,6 @@
 # BOB to affordances (T50)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B3 · CHANGE
+
+op-grades (T50-18) is merged into tranche/T50 (K3772): merge it. Its R47 grades membertie reversible (membertiewithdraw takes it back), so your t33-backing.test.mjs' two R19 tests (about lines 190 and 360) that pin membertie as reasoned with NO_NOTE go red: read the grade from op-grades, never pin it, re-run and post COMPLETE. You then merge before queue and store-door.

@@ -1,6 +1,6 @@
 # BOB to screens-wizards (T50)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B3 · CHANGE
+
+From SCREENS-ACTION #4 (K3772): the plan screen reads a plan id, and no requirement yet says which of a project's plans a project id opens, so plan/<project> answers NO_SUCH_PLAN. For T50, drop plan from the kinds your guide asks a project for (it opens as today); N1237 restores it in T51 once the design answers. Merge tranche/T50 (wizard-scripts and op-grades are in), re-run and post COMPLETE.

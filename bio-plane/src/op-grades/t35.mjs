@@ -53,8 +53,8 @@ export const T35_RUNG_ABSENT = {
   /* calculations R32: freezes the held uses a filter answers at this instant, as recordset freezes a query's ids */
   usesfreeze:           { ground: "observational", is: "freezes the held uses of powers a member may see, under a filter, as a table input at this instant; a later freeze is another set (calculations R32)" },
   /* standards R35, duties R28: a proposal stored apart and labelled, as lawpropose and dutypropose */
-  standardforcepropose: { ground: "undetermined", is: "a machine or a member PROPOSES the force of one provision with its citation, stored apart and labelled; a force only when a member confirms it (standards R35)" },
-  reviewpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES a policy's own review date as the body's commitment, stored apart and labelled; never tracked until a member adopts it (duties R28)" },
+  standardforcepropose: { ground: "undetermined", is: "a machine or a member PROPOSES the force of one provision with its citation, stored apart and labeled; a force only when a member confirms it (standards R35)" },
+  reviewpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES a policy's own review date as the body's commitment, stored apart and labeled; never tracked until a member adopts it (duties R28)" },
   /* capture-requests R51, R52: a member's act on the record that asks no reason; an answer is recorded once and never
      replaced, and no published act takes either back */
   recordsrequestopen:   { ground: "undetermined", is: "a member records that the group is asking the issuer of a policy held only by citation for its text; one open request per standard (capture-requests R51)" },
@@ -92,7 +92,7 @@ export const T35_NON_ACTS = {
     + "member's confirmed force with its citation, moving no bundle",
   standardforcewithdraw: "standard-directed: keyed by a confirmed force; kept, shown withdrawn with who, when and why",
   standardforcepropose: "standard-directed: keyed by a standard and one of its provisions; a proposal stored apart and "
-    + "labelled, never a force until a member confirms it",
+    + "labeled, never a force until a member confirms it",
   standardrelease: "standard-directed: keyed by a policy held at its source's sight, reached from the policy; its owner "
     + "moves it to the group's sight, recorded and never undone",
   standardadoption: "standard-directed: keyed by a standard and the act that adopted it; writes standards' rows and moves "
@@ -113,7 +113,7 @@ export const T35_NON_ACTS = {
   applicationrecipes: R("the recipes of application a member instantiates over a frozen uses table"),
   uselink: "power-directed: keyed by (power, event); a member's link with its reason, moving no bundle",
   useunlink: "power-directed: keyed by (power, event); keeps the link, shown unlinked with who, when and why",
-  reviewpropose: "duty-directed: keyed by a new proposal; stored apart and labelled, never tracked until a member adopts it",
+  reviewpropose: "duty-directed: keyed by a new proposal; stored apart and labeled, never tracked until a member adopts it",
   poweruses: R("the events that use a power held, each with how it is linked and whether its decider is the obligor"),
   recordsrequestopen: "standard-directed: keyed by a standard held only by citation; writes capture-requests' rows and "
     + "moves no bundle",

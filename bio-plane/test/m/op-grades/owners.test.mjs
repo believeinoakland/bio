@@ -105,10 +105,10 @@ test("R12: importwatch and importunwatch are `reversible`, each taking the other
 });
 
 /* ---- R11 ----------------------------------------------------------------------------------------------------------- */
-test("R11: wizard-scripts' ops — wizardretire `reasoned` (WIZARD_REASON_REFUSED in the family), the five drafting acts "
-   + "`undetermined`, the editor grant and revoke `credential`, wizardprogress `observational`; each with its reason, "
+test("R11 R47: wizard-scripts' ops — wizardretire `reasoned` (WIZARD_REASON_REFUSED in the family), the four drafting acts "
+   + "`undetermined` and the save `wizarddraft` `reversible` (R47), the editor grant and revoke `credential`, wizardprogress `observational`; each with its reason, "
    + "baseupdates and the other reads `read:`, none a machine refusal", () => {
-  const W = { wizardretire: "reasoned", wizarddraft: "undetermined", wizardrevise: "undetermined",
+  const W = { wizardretire: "reasoned", wizarddraft: "reversible", wizardrevise: "undetermined",
     wizardpropose: "undetermined", wizardsubmit: "undetermined", wizardapprove: "undetermined",
     wizardeditorgrant: "credential", wizardeditorrevoke: "credential", wizardprogress: "observational" };
   assert.deepEqual(grades(W), W);
@@ -136,7 +136,7 @@ const T33_WRITES = {
   dutypropose: "undetermined", dutyadopt: "reversible", dutydeclare: "reversible", dutyrevise: "reasoned",
   dutywithdraw: "reasoned", dutymatch: "reasoned", dutytransition: "reasoned",
   identityclaim: "reasoned", identitywithdraw: "reasoned", personfact: "reversible", personfactwithdraw: "reasoned",
-  personexpunge: "reasoned", membertie: "reasoned", membertiewithdraw: "reasoned", sourcepersonlink: "reasoned",
+  personexpunge: "reasoned", membertie: "reversible", membertiewithdraw: "reasoned", sourcepersonlink: "reasoned",
   interestcheckdefine: "undetermined", interestcheckswitch: "reversible", interestcheckgate: "substrate",
   hypothesishold: "reversible", hypothesisrevise: "reasoned", hypothesiswithdraw: "reasoned",
   notewrite: "caller-owned", noteturn: "caller-owned",
@@ -180,6 +180,8 @@ const TAKEN_BACK_BY = {
   /* (T42) the three t33.mjs grades `reversible` that this map did not hold, so the set is now checked whole */
   clockpropose: "clockpropose", capturerequestplatformmark: "capturerequestplatformunmark",
   capturerequestplatformunmark: "capturerequestplatformmark",
+  /* (T50, R47) membertie is reversible: membertiewithdraw takes it back (DEC-300 (5)) */
+  membertie: "membertiewithdraw",
 };
 /* the code each reasoned op is refused with when the member's account is absent (driven in affordances' R19 tests) */
 const REASON_CODE = {
@@ -187,7 +189,7 @@ const REASON_CODE = {
   linewithdraw: "NO_REASON", moneywithdraw: "NO_REASON", moneysetinclude: "NO_REASON", moneysetexclude: "NO_REASON",
   dutyrevise: "DUTY_NO_REASON", dutywithdraw: "DUTY_NO_REASON", dutymatch: "DUTY_NO_REASON", dutytransition: "NO_CAUSE",
   identityclaim: "NO_NOTE", identitywithdraw: "NO_REASON", personfactwithdraw: "NO_REASON", personexpunge: "NO_REASON",
-  membertie: "NO_NOTE", membertiewithdraw: "NO_REASON", sourcepersonlink: "NO_EVIDENCE",
+  membertiewithdraw: "NO_REASON", sourcepersonlink: "NO_EVIDENCE",
   hypothesisrevise: "HYPOTHESIS_NO_REASON", hypothesiswithdraw: "HYPOTHESIS_NO_REASON", moneyingest: "NO_REASON",
   workbookunbind: "NO_REASON", workbooklintexplain: "NO_NOTE", workbookmethodnote: "NO_PURPOSE",
   lawrelate: "STANDARD_NO_REASON", lawwithdraw: "STANDARD_NO_REASON", courtlink: "STANDARD_NO_REASON",
@@ -261,7 +263,7 @@ test("R15: notewrite and noteturn `caller-owned` as reminderset, note-directed, 
 /* ---- R16 ----------------------------------------------------------------------------------------------------------- */
 test("R16 R39: groupdescriptiondraft and writinghelp carry the draft sentence and are no machine refusal; writinghelp takes no "
    + "rung, groupdescriptiondraft the `caller-owned` ground (R39, T48)", () => {
-  const D = "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the "
+  const D = "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the "
     + "member's words only by the member's own act of keeping it";
   for (const op of ["groupdescriptiondraft", "writinghelp"]) assert.equal(NON_ACTS[op], D, op);
   assert.equal(gradeOf("writinghelp"), null);
