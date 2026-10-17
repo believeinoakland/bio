@@ -142,7 +142,7 @@ Every L11 job also draws the DEC-257–DEC-300 items `plan/fold-T50-decs.md` pla
 - **T50-52 · machinery-producers** · (N1140, DEC-274) the capture-request producer by key · Text: fold · claude-sonnet-5-5.
 - **T50-21 · queue** · (N1123) `subject.title`. (N1094) R55: `unmute` and the Muted list · Text: fold · claude-sonnet-5-5.
 - **T50-23 · instance-setup** · (N1084) deletes its copy, retires the moved ids, keeps delegates. (N1113) R88's tick takes the alarm's `now` (clears plane R12). (N1103) `recovery.test.mjs` by the founder's handle. (N1190) R50: `officesSeed` seeds the profile's forums · Text: fold · claude-sonnet-5-5 · after T50-22.
-- **T50-24 · op-declarations** · the specs of T50's new ops (T50-18's list) · Text: fold · claude-sonnet-5-5 · after T50-18.
+- **T50-24 · op-declarations** · the specs of T50's new ops (T50-18's list); (EVENTS #8 J1, K3672) `timeline`'s new `captures` parameter (a comma list in the url, or `captures` in the body for a long list; events R53) · Text: fold · claude-sonnet-5-5 · after T50-18.
 - **T50-79 · admission** · (N1186; credentials R79) the viewer of an `ai` credential carries its project (R16 `readerOf`). (N1179) an administrator's act asked by a member refused `NOT_AN_ADMIN` before any password check. (N1146) R28 re-run against `words-reads.json`'s computed keys · Text: fold · claude-sonnet-5-5.
 - **T50-25 · answer-envelope** · (N1128) its pins by key · Text: none · claude-haiku-5-5.
 - **T50-50 · store-door** · (N1134) R15 by the founder's handle · Text: none · claude-haiku-5-5.
