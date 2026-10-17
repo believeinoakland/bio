@@ -1,6 +1,6 @@
 # BOB to credentials (T50)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L2 merge order: membership, project-roster, ai-accounts, credentials, promotion last (the stamp). All five run at once; a job that uses an unmerged one's new service builds against its requirement and merges the tranche branch when BOB's CHANGE says the provider is merged.
+
+## B2 · CHANGE
+
+K3624, K3625. (1) ai-accounts is merged into `tranche/T50`: merge it and run R73's refused-sign-in test against the real clause. (2) Your test "R48 the 17 sweep rows" quotes ai-accounts' old English ("your group's Civicsmith"): read those rows by key (plan rule 6), never English. (3) `modules.json` now gives credentials `setup-words` in `uses`. membership (R149) is not merged yet: I send a CHANGE when it is.

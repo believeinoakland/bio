@@ -145,8 +145,9 @@ test("R10 R14 R11 R22 R12 (was credentials R54, R55, R56, R57, R58): the six ref
   }
   assert.equal(AI_WORDS["ai.disclosure.projectkey"], WORDS["ai.disclosure.projectkey"]);
   assert.ok(Object.isFrozen(AI_WORDS));
-  /* negative control: a row this entry does not touch keeps its own words */
-  assert.ok(!Object.values(WORDS).includes(AI_ACCOUNT_CHECKS.GROUP_KEY_NOTICE_DUE.translation));
+  /* control (T50: every row now reads a key): a row not among the six reads its own key, refusal.<CODE>, not one of the six */
+  assert.equal(AI_ACCOUNT_CHECKS.GROUP_KEY_NOTICE_DUE.translation, WORDS["refusal.GROUP_KEY_NOTICE_DUE"]);
+  assert.ok(!pairs.GROUP_KEY_NOTICE_DUE);
   /* each refusal, as answered */
   const w = await projectWorld();
   await w.signin("ann");
