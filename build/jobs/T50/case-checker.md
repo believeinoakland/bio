@@ -23,3 +23,7 @@ Size (session_01CXkModrvcDBwzvPBKkbdwD): test runs 7, module lines 2148
 Two things for you, neither blocks me.
 1. case-authoring: its two R61 tests (test/m/case-authoring/standards.test.mjs:96 and :140) deep-equal checkStandardsUse's refusals and now fail, because R26 adds says:{key,vars} to each departure. The fix is its own job's (expect says, read it through word); I touched nothing there.
 2. Plan rule 6 for this module beyond R26: about 60 inline English strings remain in check.mjs, account.mjs, lens.mjs, zip.mjs and index.mjs. words.json holds case-checker.* keys for them (words-reads.json), but no requirement of case-checker.md asks for the conversion (R1, R7, R20, R23 say the words are the UX stream's), the standalone program cannot read a 2 MB word list, and converting changes answer bytes (R16) and the tests that compare sentences. I did R26 only and added no inline English. If you want the rest, it needs a requirement (an R27) saying which sentences, and how the program carries them.
+
+## J2 · COMPLETE
+
+T50-73 case-checker done: R26 met (says on each standards-use departure; the program carries its four keys as data and prints the sentences). Record has entries, deferred, tests and checks. Module tests 85 of 87 pass; the 2 reds are program.test.mjs R13/R25 because program.mjs is stale until you regenerate it (your note 1; accepted red 12). Run program build with: node bio-plane/src/case-checker/build-program.mjs (it also rewrites says-words.mjs). checks: format, architecture, coverage (26/26 for this module), ownership all 0 failures.
