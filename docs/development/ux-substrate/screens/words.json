@@ -13,7 +13,7 @@
   "date": 14,
   "queue": 159,
   "transcribe": 19,
-  "capture": 70,
+  "capture": 71,
   "document": 61,
   "question": 79,
   "connection": 34,
@@ -66,7 +66,7 @@
   "shell": 153,
   "settings": 4,
   "entity": 33,
-  "find": 26,
+  "find": 29,
   "risk": 12,
   "law": 8,
   "action": 4,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13060,
+  "total": 13064,
   "protected": 901
  },
  "words": [
@@ -41320,6 +41320,34 @@
    "note": "DEC-320: R21: stake.ask.undetermined in a fold"
   },
   {
+   "key": "capture.forquestion.refused.summary",
+   "en": "A question that isn't the project's",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-321: screens-intake R29: refusal.BAD_FOR in a fold"
+  },
+  {
+   "key": "find.row.unwatch",
+   "en": "Take off my watch list",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-321: screens-daily R45: watchitem with on: false"
+  },
+  {
+   "key": "find.secondlook.note",
+   "en": "Why look again",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-321: R45: secondlook's required note"
+  },
+  {
+   "key": "find.secondlook.note.help",
+   "en": "Your note is required: it says what the second look should check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-321: R45"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -81123,7 +81151,7 @@
   },
   {
    "key": "act.taskresolve.label.home",
-   "en": "Act on an item",
+   "en": "Open the item",
    "protected": true,
    "source": "registry.json"
   },
@@ -81705,7 +81733,7 @@
   },
   {
    "key": "act.taskresolve.label.queue",
-   "en": "Act on an item",
+   "en": "Open the item",
    "protected": true,
    "source": "registry.json"
   },
@@ -81849,7 +81877,7 @@
   },
   {
    "key": "act.owed_secondlook.label.finder",
-   "en": "Flag for a second look",
+   "en": "Flag for a second look…",
    "protected": true,
    "source": "registry.json"
   },

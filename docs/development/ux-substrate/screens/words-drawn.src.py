@@ -1825,6 +1825,14 @@ w320('screen.request.state.nooffice', 'no office is known yet', False, 'R20: the
 w320('stake.unreadable.summary', "When the stake can't be read", False, 'screens-action R21')
 w320('stake.undetermined.summary', "When the tier can't be told", False, 'R21: stake.ask.undetermined in a fold')
 # --- end DEC-320
+# --- DEC-321 (T50's gaps, batch 4: seven disagreements; screens-intake R29, R32; screens-daily R40, R43, R45, R50 (2), R51)
+def w321(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-321' + (': ' + note if note else '')))
+w321('capture.forquestion.refused.summary', "A question that isn't the project's", False, 'screens-intake R29: refusal.BAD_FOR in a fold')
+w321('find.row.unwatch', 'Take off my watch list', False, 'screens-daily R45: watchitem with on: false')
+w321('find.secondlook.note', 'Why look again', False, "R45: secondlook's required note")
+w321('find.secondlook.note.help', 'Your note is required: it says what the second look should check.', False, 'R45')
+# --- end DEC-321
 REWRITE.update({'screen.find-in.question': 'For which question', 'screen.find-in.term.help': 'Only passages with this name or term are shown, when you fill it in.'})  # DEC-318: R48 (6), (7)
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

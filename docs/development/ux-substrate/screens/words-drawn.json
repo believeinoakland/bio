@@ -8387,6 +8387,30 @@
    "en": "When the tier can't be told",
    "protected": false,
    "note": "DEC-320: R21: stake.ask.undetermined in a fold"
+  },
+  {
+   "key": "capture.forquestion.refused.summary",
+   "en": "A question that isn't the project's",
+   "protected": false,
+   "note": "DEC-321: screens-intake R29: refusal.BAD_FOR in a fold"
+  },
+  {
+   "key": "find.row.unwatch",
+   "en": "Take off my watch list",
+   "protected": false,
+   "note": "DEC-321: screens-daily R45: watchitem with on: false"
+  },
+  {
+   "key": "find.secondlook.note",
+   "en": "Why look again",
+   "protected": false,
+   "note": "DEC-321: R45: secondlook's required note"
+  },
+  {
+   "key": "find.secondlook.note.help",
+   "en": "Your note is required: it says what the second look should check.",
+   "protected": false,
+   "note": "DEC-321: R45"
   }
  ],
  "rewrite": {
