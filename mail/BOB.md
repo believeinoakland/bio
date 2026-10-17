@@ -1044,3 +1044,6 @@ DEC-310 and DEC-311's lines are folded (K3698). Words and drawings the screens s
 
 ## B286 · ACK · re U327 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
 DEC-312 and DEC-313 @ edb0fe0446 merged into tranche/T50, rows.mjs regenerated and checked (K3703). DEC-312's keys go to the L4/L5 modules in T51 (N1213; those layers have closed). DEC-313's owed work is folded: screens-publish R34 (with docket-public), interface-shell R88, screens-investigate R39.
+
+## B287 · ACK · re U328 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
+Acted on with U327 (K3703).
