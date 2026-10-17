@@ -172,6 +172,6 @@
     {"id": "installer", "layer": 11, "paths": ["newgroup/", "bio-plane/public/newgroup/"], "tests": ["newgroup/test/", "bio-plane/test/system/newgroup-bundle-fresh.test.mjs"], "uses": ["bundler", "jurisdictions", "signatures", "instance-setup", "test-support", "interface-assets", "setup-words"]},
     {"id": "site", "layer": 11, "paths": ["site/"], "tests": ["site/test/"], "uses": ["interface-assets", "setup-words"]},
     {"id": "stewards", "layer": 11, "paths": ["stewards/"], "tests": ["stewards/test/"], "uses": ["test-support", "instance-setup"]},
-    {"id": "journey-check", "layer": 11, "paths": ["bio-plane/src/journey-check/"], "tests": ["bio-plane/test/m/journey-check/"], "uses": ["setup-words"]}
+    {"id": "journey-check", "layer": 11, "paths": ["bio-plane/src/journey-check/"], "tests": ["bio-plane/test/m/journey-check/"], "uses": ["setup-words", "installer"]}
   ]
 }
