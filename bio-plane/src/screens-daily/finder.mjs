@@ -67,7 +67,7 @@ export const finder = Object.freeze({
     };
     const head = cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.finder.sub") + "</p>";
     const browsing = !q.trim();
-    const box = '<div class="mk-search">' + cs.field("finder-q", "screen.finder.words", { value: q, placeholder: "find.query.placeholder" })
+    const box = '<div class="mk-search">' + cs.field("finder-q", "screen.finder.words", { value: q, help: "find.query.placeholder" })
       + '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", tone: "primary" }) + "</span></div>";
 
     // R44: the browse's filters are the route's: "Show" (kinds) and "Only" are chips that are links, the Theme choice is R43's.
