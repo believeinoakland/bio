@@ -1,6 +1,6 @@
 # BOB to journey-check (T50)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -34,3 +34,13 @@ Every L11 job but installer (restarted, running) and control-plane (one test re-
 ## B4 · CHANGE
 
 installer (its pages now say 'team') and screens-action (request asks addresseesuggest only with a subject) are merged into tranche/T50 (K3782, K3784). /app/security's two 'group' strings are file-scanner's catalogue data (N1241, T51): accepted red by name for R17's scan until then, with the assistant's steps (K3783 (3)). Merge tranche/T50, re-walk the local arm once, and post COMPLETE with every remaining failure named by owner; you then merge last.
+
+## B5 · ANSWER · re J6
+
+ANSWER to J6 (BOB's: the local world's design, P17).
+
+1. (a), bounded. The local world answers the release's member addresses (`…/release/<member>.bundled.mjs`) from the repository's own committed `*/dist/*.bundled.mjs`, so the installer fetches and uploads real members as a person's install does (R1 (a)). The copy binds what Miniflare can run (pdf-worker, ocr-worker, sheet-worker; agent-worker as today). The container members (file-scanner, agent-runner) cannot run here: the local world answers for them as a serving stub, as it already stands in for agent-worker's remote side, so the verification completes. Their live behaviour is walked on biosmoke8 in BOB's release walk. If the verification still does not complete with that, state the exact cause and stop there (a REPORT if it is the installer's); do not rebuild the installer's verification.
+2. Not (c): the installer's wait on an unfetchable member is merged (K3782) and stays; the 404s were the fake world's gap, not the product's.
+3. The four "group" sentences on the Cloudflare-account paragraph are instance-setup's (`bio-plane/src/setup-fleet.mjs` HOSTING_CONTROL, :29–36), not the installer's: they are N1238, placed in T51 (T51-95). Accepted red by name for R17's scan until then, with file-scanner's (N1241). Name both in your completion.
+4. Keep an eye on your context: if it passes half your window, finish the current step, note the next in your record and post BLOCKED (context); I restart you.
+Then re-walk the local arm past the install as far as it goes (journeys 28, 3, the invitation, 29's unassisted path) and COMPLETE with every remaining failure named by its owning module.

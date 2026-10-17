@@ -146,12 +146,21 @@ test("R81 end to end: Home draws the group's projects from the real `projectlist
   const p = await appAt("/app");
   /* the counts are read one after the list, each paged: wait for both to be drawn (or the time to run out) */
   /* screens-daily R10, R21: a count is drawn in the row's meta, and never at zero, so wait for the busy project's */
-  await until(p, () => /2 questions/.test(text(main(p))));
+  /* the wait is on the busy project's own row, the thing asserted below (not any "2 questions" on the page), bounded generously */
+  /* a project is referenced more than once on Home (a "Last change" line names it too): its ROW is the reference whose
+     container draws the stage ladder, which only a project row does (screens-daily R8) */
+  const containerOf = (a) => a.closest(".cs-row") || a.parentElement.parentElement;
+  const rowOf = (id) => main(p).querySelectorAll("a").find((a) => ((a.getAttribute("href") || "").includes(encodeURIComponent(id)) || (a.getAttribute("href") || "").includes(id))
+    && containerOf(a).querySelector('[data-ladder="stage"]'));
+  const rowTextOf = (id) => { const a = rowOf(id); return a ? text(containerOf(a)) : ""; };
+  assert.ok(await until(p, () => /2 questions/.test(rowTextOf(busy)), 90000), "the busy project's count is drawn in its row: " + rowTextOf(busy)
+    + " | projectquestions asked: " + JSON.stringify(p.byOp("projectquestions").map((r) => [r.query.project, r.status ?? r.answered ?? null, r.after ?? r.query.after ?? null]))
+    + " | requests: " + p.requests.length);
   answered(p, "projectlist");
   const asked = answered(p, "projectquestions");
   assert.deepEqual([...new Set(asked.map((r) => r.query.project))].sort(), [busy, quiet].sort(), "each listed project's count is read");
   const m = main(p);
-  const row = (id) => m.querySelectorAll("a").find((a) => (a.getAttribute("href") || "").includes(encodeURIComponent(id)) || (a.getAttribute("href") || "").includes(id));
+  const row = (id) => rowOf(id) ?? m.querySelectorAll("a").find((a) => (a.getAttribute("href") || "").includes(encodeURIComponent(id)) || (a.getAttribute("href") || "").includes(id));
   for (const [id, title] of [[busy, "The dark streets"], [quiet, "The library hours"]]) {
     const a = row(id);
     assert.ok(a, `${id} is drawn as a reference`);

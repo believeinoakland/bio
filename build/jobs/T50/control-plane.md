@@ -1,6 +1,6 @@
 # control-plane (T50)
 
-**Status** · session_013W39qjn8635aB3vuz3De9S · depth 2 · COMPLETE · handled B7
+**Status** · session_013W39qjn8635aB3vuz3De9S · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -79,3 +79,25 @@ After merging tranche/T50 with every screen job: `node --test test/m/control-pla
 ## J6 · COMPLETE
 
 COMPLETE after B7. Merged tranche/T50: module 302 tests, all pass. Row (1) passes at the merged base with no change of mine; (2) screens-daily is right (R9, R40: a door starts directly, its scripts in the opened offer), so t47-e2e now presses the door first and checks the script press sends no startfrom POST. Record updated.
+
+## J7 · REPORT
+
+Correction to J6 ('all pass'): the module suite is not stable. Over 5 full runs of test/m/control-plane/ at my merge of tranche/T50: 3 runs 302/302, 2 runs failed with t46-e2e 'R75 end to end: capture uploads...' (the repeat upload of the same bytes answers existed:false, expected true, t46-e2e line 171) and, once of those two, t47-e2e 'R81 end to end: Home draws the group's projects' (the row text, your B7 (1)). Each passes alone and in 3 of 5 full runs, and fails only under the whole suite's parallel load, so the cause is a timing race in the Miniflare end-to-end tests (the first upload's capture row seen late, the project row read before its question count lands), not a requirement failing and not something control-plane's code does between those requests. I have not weakened or skipped either; I have not fixed the race either. If you want it chased, send a CHANGE and I will diagnose in the test harness first (run the e2e files alone under load with --test-concurrency).
+
+## J8 · REPORT
+
+B8: not a wait problem, so I could not make the test green in the full suite, and I have not faked it. The test already waited on a condition; I made it wait on the busy project's OWN row (not any '2 questions' on the page, which had let it pass the wait and fail the assertion) with a 90 s bound, and its failure now prints the projectquestions requests. Under load it still fails: 5 of 6 runs of the file started in parallel, about 1 in 4 full-suite runs. Measured in those failures: the plane answers both projectquestions reads 200 in 40-120 ms with the busy project's two items and the quiet one's none, the page asked both (23 requests), and 90 s later the busy row still shows only 'Last change … The dark streets' (no count, and no 'loading' or 'failed' either). So the page has the answers and does not draw them: screens-daily R8/R10/R21. Place to look, unverified: bio-plane/src/screens-daily/project-rows.mjs lines 21-40: count(id) closes over the render's 'ui' and 'counts', and on each project's result does 'next = Object.assign({}, ui.counts); next[id] = r; cs.set("counts", next)'; two projects resolving close together, or a redraw that replaces view.ui between them, can lose one update (a lost update would also explain the order-dependence I saw: the library answered first in one failure). Not screens-daily's test of its own: its suite does not cover two concurrent counts against a delayed answer. Suggest: REPORT to the screens-daily owner (merge the result into the CURRENT page memory, not the closure's), and a screens-daily test that resolves two counts out of order. COMPLETE stays withheld for this one test; everything else in control-plane is green in every run apart from the t46-e2e upload race of J7.
+
+## B8, B9: the two end-to-end flakes (both were the tests)
+
+Both found and fixed in the tests; no product defect. 5 full-suite runs after the fixes: 302 of 302 each time.
+- **t46-e2e R75, the repeat upload answering `existed: false`.** The test sent its repeat as soon as the page's upload request was *sent* (`answered()` waits for the request to appear, not for the plane's answer), so under load the repeat could overtake the first. Now it waits until the plane has answered the page's upload (`finished.captureupload`), then repeats. Six parallel runs of the file: all green.
+- **t47-e2e R81, Home's busy row.** Not a wait and not screens-daily: Home references the busy project twice, in its project row and in a "Last change … : The dark streets" line, and the test took the first anchor with the project's id, which was the "Last change" line when it came first in the DOM. The row is now the reference whose container draws the stage ladder (screens-daily R8), and the wait is on that row's own count (90 s bound). Six parallel runs: all green. J8's guess of a lost update in `project-rows.mjs` was wrong; the plane's answers were drawn.
+
+## J9 · COMPLETE
+
+COMPLETE after B8, B9. Both flakes were the tests; no product race. (b) t46-e2e R75: the repeat upload was sent when the page's request was sent, not when the plane had answered it; it now waits for the answer. (a) t47-e2e R81: Home names the busy project twice (its row, and a 'Last change … : The dark streets' line); the test took the first anchor, the 'Last change' line when it came first; it now takes the reference whose container draws the stage ladder. I withdraw J8's guess about project-rows.mjs: screens-daily is right. 5 full-suite runs: 302 of 302 each; each file also green 6 of 6 in parallel. Pushed.
+
+## J10 · COMPLETE
+
+COMPLETE after B10. Merged tranche/T50 (screens-daily's count-key fix included): 5 full-suite runs of test/m/control-plane/, 302 of 302 each. The t47-e2e R81 test is my J9 version (it finds Home's project row by its stage ladder, since Home names the busy project twice, and waits on that row's own count); t46-e2e R75's repeat upload waits for the plane's answer to the page's upload (J9). Neither shows a failure with or without the count-key fix in my earlier runs, so I cannot say the fix was needed for the test; nothing left to report on either. Pushed.

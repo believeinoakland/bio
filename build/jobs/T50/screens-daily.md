@@ -1,6 +1,6 @@
 # screens-daily (T50)
 
-**Status** · session_01ATVYHfSMiYKPMhJBm4AUqg · depth 2 · COMPLETE · handled B7
+**Status** · session_01ATVYHfSMiYKPMhJBm4AUqg · depth 2 · COMPLETE · handled B8
 
 ## J1 · QUESTION
 
@@ -48,3 +48,13 @@ Deferred / findings: see J2 REPORT (answered by B5). Extra: in the shell as buil
 Ran: node --test test/m/screens-daily: pass 138, fail 0. format 0 failures; architecture 0 failures (30 files); coverage 51 of 51 ids named; ownership 0 failures. checks/run.mjs: my module clean (13 coverage failures are other modules').
 
 Size (session_01ATVYHfSMiYKPMhJBm4AUqg): test runs 60, module lines 2557
+
+## J4 · COMPLETE
+
+COMPLETE J4: B8 applied on job/T50/screens-daily (merged tranche/T50 through B8).
+
+Cause: project-rows.mjs wrote each count as a read-modify-write of one shared `counts` object (copy of the closure's `ui.counts`, set one key, cs.set the whole), so an answer landing against a replaced page memory dropped the others. Each count now lives under its own key (`count:<id>`): an answer is a plain write of its own key; Home's total reads the same keys. Tests: one on the real page resolving the three projects' counts out of order and across a redraw (a door pressed between); one on `projectRows` with a page memory replaced on every write, which FAILS on the old code and passes now.
+
+Ran: node --test test/m/screens-daily: pass 139, fail 0. format, architecture, ownership 0 failures; coverage 51 of 51.
+
+Size (session_01ATVYHfSMiYKPMhJBm4AUqg): test runs 64, module lines 2557
