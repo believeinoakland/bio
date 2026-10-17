@@ -78,6 +78,7 @@ import { caseCheckOf } from "../case-check/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle, idPattern } from "../record-grammar/index.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
 import { CONFORMANCE_TABLES, migrateConformance } from "./schema.mjs";
@@ -154,12 +155,12 @@ const ACT_RE = idPattern("ACT");
 /** R32: an accepted finding's label. */
 export const ACCEPTED_SAYS = "Another group's finding, accepted by this group at the edition named: read-only, never "
   + "stronger than that edition.";
-/** R32 (K2832): what an accepted finding reads while the source's identity and stake are not recorded at import. */
-export const SOURCE_FACTS_UNRECORDED = "the source team's public identity and declared stake were not recorded when this "
-  + "edition was imported, so they read undetermined";
-/** R39 (N951): the label beside an accepted finding's identity and stake read from what case-import recorded at import. */
-export const SOURCE_DECLARATION_SAYS = "the source team's public identity and declared stake as it declared them when they "
-  + "were read at import, current then, never as of the edition's signing";
+/** R32 (K2832; DEC-328 (6)): what an accepted finding reads while the source's identity and stake are not recorded at
+ *  import; the key `case-import.group_fields_none`, read by key (plan rule 6). */
+export const SOURCE_FACTS_UNRECORDED = word("case-import.group_fields_none");
+/** R39 (N951; DEC-328 (6)): the label beside an accepted finding's identity and stake read from what case-import
+ *  recorded at import; the key `case-import.group_fields_label`, read by key. */
+export const SOURCE_DECLARATION_SAYS = word("case-import.group_fields_label");
 /** R33: the sentence beside a void determination. */
 export const VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined "
   + "until a member re-evaluates it by superseding it. The member's recorded outcome is kept beside it.";

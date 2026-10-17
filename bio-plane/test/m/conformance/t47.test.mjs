@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { scene, V } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { SOURCE_FACTS_UNRECORDED, SOURCE_DECLARATION_SAYS, ACCEPTED_SAYS } from "../../../src/conformance/index.mjs";
 
 const IMP = "c".repeat(64);
@@ -30,8 +31,9 @@ test("R39 R32: an edition imported with group_fields answers identity {group, na
                                  domain_verified_at: FIELDS.domain_verified_at, read_at: FIELDS.read_at });
   assert.deepEqual(b.stake, FIELDS.stake, "the stake as answered, never re-read or composed");
   assert.equal(b.identity_label, SOURCE_DECLARATION_SAYS);
-  assert.match(SOURCE_DECLARATION_SAYS, /when they were read at import/);
-  assert.match(SOURCE_DECLARATION_SAYS, /never as of the edition's signing/);
+  assert.equal(SOURCE_DECLARATION_SAYS, word("case-import.group_fields_label"), "read by key (DEC-328 (6))");
+  assert.match(SOURCE_DECLARATION_SAYS, /when they were read/);
+  assert.match(SOURCE_DECLARATION_SAYS, /never your team's/);
   assert.deepEqual(["identity_says" in b, b.says, b.kind], [false, ACCEPTED_SAYS, "accepted"]);
   /* each field as answered: a null field stays null, and `detail` is no part of the identity */
   w.imports.editions.set(`${IMP}|2`, { group_fields: { ...FIELDS, domain: null, domain_verified_at: null } });
@@ -57,7 +59,9 @@ test("R39: group_fields null, an import that cannot be read, a read that throws,
   const { w, basis } = acceptedScene();
   const unrecorded = (b) => assert.deepEqual([b.identity, b.stake, b.identity_says, "identity_label" in b],
                                              [null, "undetermined", SOURCE_FACTS_UNRECORDED, false]);
+  assert.equal(SOURCE_FACTS_UNRECORDED, word("case-import.group_fields_none"), "read by key (DEC-328 (6))");
   assert.match(SOURCE_FACTS_UNRECORDED, /not recorded when this edition was imported/);
+  assert.doesNotMatch(SOURCE_FACTS_UNRECORDED + SOURCE_DECLARATION_SAYS, /\bgroup\b/, "D29: team, never group");
   /* imported before T46, or with none recorded */
   w.imports.editions.set(`${IMP}|2`, { group_fields: null });
   unrecorded(basis());
