@@ -7,6 +7,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import * as records from "../../../src/action-records/index.mjs";
 
 const SIX = ["action_law_proposals", "action_risk_proposals", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises"];
+const SEVEN = [...SIX, "action_stakes"];
 const E1 = "ENT-2026-0001-council";
 /* one row in each of the six tables for `id`, through the acts */
 function fill(w, id) {
@@ -16,31 +17,32 @@ function fill(w, id) {
     w.r.actionSeeksPropose({ target: id, seeks: [{ progression: "meeting", entity: E1, stage: "notice" }], proposer: MACHINE, viewer: MACHINE }),
     w.r.actionReceipt({ target: id, ord: 0, at: "2026-09-03", how: "by hand", account: "handed over", viewer: MACHINE, author: M }),
     w.r.actionScope({ target: id, confidential: true, reason: "r", viewer: MACHINE, author: M }),
-    w.r.actionPromise({ target: id, kind: "other", text: "t", viewer: MACHINE, author: M })];
+    w.r.actionPromise({ target: id, kind: "other", text: "t", viewer: MACHINE, author: M }),
+    w.r.actionStake({ target: id, stake: "we are the school's neighbours", viewer: MACHINE, author: M })];
   for (const r of out) assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
 }
 
-test("R11 the six tables (ACTION_RECORDS_TABLES) are this module's, keyed by bundle_id, declared once to record-core's purge as action-records; a bundle's purge clears its rows and no other's; every act answers an invisible action as an absent one", () => {
-  assert.deepEqual([...records.ACTION_RECORDS_TABLES], SIX);
+test("R11 the seven tables (ACTION_RECORDS_TABLES) are this module's, keyed by bundle_id, declared once to record-core's purge as action-records; a bundle's purge clears its rows and no other's; every act answers an invisible action as an absent one", () => {
+  assert.deepEqual([...records.ACTION_RECORDS_TABLES], SEVEN);
   assert.ok(Object.isFrozen(records.ACTION_RECORDS_TABLES));
   const w = world({ deps: { progressions: progressionsStandIn() } });
-  const mine = w.record.declaredTables().filter((t) => SIX.includes(t.name));
-  assert.deepEqual(mine.map((t) => [t.name, t.module, t.purge, t.sight]), SIX.map((n) => [n, "action-records", "clear", "bundle"]));
-  for (const t of SIX) assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "bundle_id"), `${t} keyed by bundle_id`);
-  for (const t of SIX) assert.equal(records.actionRecordsOwns(t), true, t);
+  const mine = w.record.declaredTables().filter((t) => SEVEN.includes(t.name));
+  assert.deepEqual(mine.map((t) => [t.name, t.module, t.purge, t.sight]), SEVEN.map((n) => [n, "action-records", "clear", "bundle"]));
+  for (const t of SEVEN) assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "bundle_id"), `${t} keyed by bundle_id`);
+  for (const t of SEVEN) assert.equal(records.actionRecordsOwns(t), true, t);
   assert.equal(records.actionRecordsOwns({ name: "action_basis" }), false, "control: actions' own table");
   /* declared once: the same host's second call declares nothing again */
   assert.equal(w.make(), w.r);
-  assert.equal(w.record.declaredTables().filter((t) => SIX.includes(t.name)).length, 6);
+  assert.equal(w.record.declaredTables().filter((t) => SEVEN.includes(t.name)).length, 7);
   w.action(A, ledger("sent")); w.action(B, ledger("sent"));
   fill(w, A); fill(w, B);
   w.record.purge({ bundleId: A });
-  for (const t of SIX) {
+  for (const t of SEVEN) {
     assert.equal(w.row(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, A).n, 0, `${t}: the purged action's rows cleared`);
     assert.equal(w.row(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, B).n, 1, `${t}: another action's rows kept`);
   }
   w.record.purge({});
-  for (const t of SIX) assert.equal(w.row(`SELECT COUNT(*) AS n FROM ${t}`).n, 0, `${t}: the whole-store purge`);
+  for (const t of SEVEN) assert.equal(w.row(`SELECT COUNT(*) AS n FROM ${t}`).n, 0, `${t}: the whole-store purge`);
   /* an invisible action is answered exactly as an absent one, by every act */
   const v = world({ deps: { progressions: progressionsStandIn() } });
   v.hidden(HIDDEN, ledger("sent"));
@@ -51,11 +53,12 @@ test("R11 the six tables (ACTION_RECORDS_TABLES) are this module's, keyed by bun
     v.r.actionSeeksPropose({ target, seeks: [{ progression: "meeting", entity: E1, stage: "notice" }], proposer: M, viewer: M }),
     v.r.actionReceipt({ target, ord: 0, at: "2026-09-03", how: "h", account: "a", viewer: M, author: M }),
     v.r.actionScope({ target, confidential: true, reason: "r", viewer: M, author: M }),
-    v.r.actionPromise({ target, kind: "other", text: "t", viewer: M, author: M })];
+    v.r.actionPromise({ target, kind: "other", text: "t", viewer: M, author: M }),
+    v.r.actionStake({ target, stake: "s", viewer: M, author: M })];
   const hid = asks(HIDDEN), abs = asks(ABSENT);
-  hid.forEach((r, i) => assert.deepEqual({ ...r, target: null }, { ...abs[i], target: null }, `act ${i}: invisible as absent`));
-  for (const r of hid) assert.deepEqual([r.reason, r.target], ["NO_SUCH_BUNDLE", HIDDEN]);
-  for (const t of SIX) assert.equal(v.row(`SELECT COUNT(*) AS n FROM ${t}`).n, 0, t);
+  hid.forEach((r, i) => assert.deepEqual({ ...r, action: null }, { ...abs[i], action: null }, `act ${i}: invisible as absent`));
+  for (const r of hid) assert.deepEqual([r.reason, r.action], ["NO_SUCH_ACTION", HIDDEN]);
+  for (const t of SEVEN) assert.equal(v.row(`SELECT COUNT(*) AS n FROM ${t}`).n, 0, t);
   fill(v, HIDDEN); /* control: a viewer who sees it (a machine credential, membership R43) */
 });
 
@@ -77,7 +80,10 @@ test("R13 no place is named in this module's behaviour or outward text: with the
     w.r.actionScope({ target: A, confidential: false, reason: "r", viewer: M, author: M }),
     w.r.actionScope({ target: A, confidential: false, reason: "r", viewer: M, author: M }),
     w.r.actionPromise({ target: A, kind: "x", text: "t", viewer: M, author: M }),
-    w.r.actionPromise({ target: A, kind: "other", text: "t", viewer: MACHINE, author: MACHINE })];
+    w.r.actionPromise({ target: A, kind: "other", text: "t", viewer: MACHINE, author: MACHINE }),
+    w.r.stakeOf(A), w.r.actionStake({ target: A, stake: "s", viewer: M, author: M }),
+    w.r.actionStake({ target: A, stake: "x".repeat(1001), viewer: M, author: M }),
+    w.r.actionStake({ target: A, stake: "s", viewer: M, author: MACHINE })];
   const text = JSON.stringify(answers);
   for (const place of ["Port Ellery", "Oakland", "Alameda", "California", "Hayward"])
     assert.equal(text.includes(place), false, `no answer names ${place}`);
@@ -85,7 +91,7 @@ test("R13 no place is named in this module's behaviour or outward text: with the
   assert.equal(w.text(A).includes("Port Ellery"), true);
 });
 
-test("R15 actionRecordsOf answers the one instance per host; its deps reached lazily on the host unless given; at creation it creates its six tables with actions' DDL, keeping a running store's rows and adding action_law_proposals' standard column where absent", () => {
+test("R15 actionRecordsOf answers the one instance per host; its deps reached lazily on the host unless given; at creation it creates its seven tables (the six with actions' DDL), keeping a running store's rows and adding action_law_proposals' standard column where absent", () => {
   const w = world();
   assert.equal(records.actionRecordsOf(w.host), w.r, "the same instance, whatever deps a later caller gives");
   assert.equal(records.actionRecordsOf(w.host, { record: null }), w.r);
@@ -136,7 +142,7 @@ test("R15 actionRecordsOps publishes one route arm per act, each answering exact
   w.action(A, ledger("sent"));
   const ops = (qs, body = null) => records.actionRecordsOps(w.r, new URL(`https://x/?${qs}`), body);
   assert.deepEqual(Object.keys(ops("")), ["actionlawspropose", "actionseekspropose", "actionriskpropose", "actionreceipt",
-    "actionscope", "actionpromise"]);
+    "actionscope", "actionpromise", "actionstake", "actioninquiry"]);
   for (const f of Object.values(ops(""))) assert.equal(typeof f, "function");
   /* the stamps are the query's: a body naming another proposer, author or viewer is not read */
   const lp = ops(`target=${A}&viewer=${MACHINE}&proposer=${MACHINE}`, { laws: [{ level: "state", citation: "X" }], proposer: M, viewer: M }).actionlawspropose();
@@ -149,7 +155,7 @@ test("R15 actionRecordsOps publishes one route arm per act, each answering exact
   assert.equal(scNo.reason, "MACHINE_CANNOT_SET_SCOPE", "a body's author never stamps");
   assert.ok(scNo.check && scNo.translation, "with its row");
   /* the query's target wins over the body's */
-  assert.equal(ops(`target=ACTN-2026-0404-x&viewer=${M}&proposer=${M}`, { target: A, tier: 1, basis: "b" }).actionriskpropose().reason, "NO_SUCH_BUNDLE");
+  assert.equal(ops(`target=ACTN-2026-0404-x&viewer=${M}&proposer=${M}`, { target: A, tier: 1, basis: "b" }).actionriskpropose().reason, "NO_SUCH_ACTION");
   /* tier and basis from the query, else the body */
   const rk = ops(`target=${A}&viewer=${M}&proposer=${M}&tier=2`, { tier: 3, basis: "from the body" }).actionriskpropose();
   assert.deepEqual([rk.ok, rk.proposal.tier, rk.proposal.basis], [true, 2, "from the body"]);

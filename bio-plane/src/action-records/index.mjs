@@ -2,7 +2,9 @@
  * (requirements: `build/requirements/action-records.md`; State Rules v1.5 §4.4; Action v0.2 rules 6, 15): the proposals
  * a credential makes of an action's governing laws, risk tier and what a records request seeks, stored apart from the
  * member's value and never it (DEC-24: a machine proposes, a member acts); and the members' side records of an action:
- * that a sent entry was received or served, its confidential scope, and the promises the group made to people.
+ * that a sent entry was received or served, its confidential scope, and the promises the group made to people. T50 adds
+ * the action's own stake (R17), the one answer to an action no one may see, `noSuchAction` (R18, moved here from `actions`,
+ * which re-exports it), and a question opened with an action as its reference (R19).
  *
  * Split from `actions` by copy for size (K617, K624; N961; T47-37; the map `build/extraction/actions-split.md`, its §4
  * adopted, K2982). Each requirement names its `actions` source ("was R<n>"); the copied comments keep `actions`' ids as
@@ -12,13 +14,14 @@
  * nothing of `actions`' (the calls run one way).
  *
  * REACHED as `actionRecordsOf(host, deps)` (R15; K61): one instance per host, created on the first call. At creation it
- * creates its six tables with the DDL `actions` created them by and declares them to record-core's purge (R11).
+ * creates its seven tables (six with the DDL `actions` created them by) and declares them to record-core's purge (R11).
  * `actions`' factory creates it at its own creation, so its tables exist and are declared at every boot.
  * `deps` (each reached on the same host unless given; a test passes its own):
  *   record         `transact`, `readFile`, `declarePurge` (R11) and the store's `sql` through the host's storage.
  *   membership     the instance on the host (sight itself is `viewerPredicate`, a module-level function: every act's
  *                  visibility).
  *   progressions   `readProgression` (its R5): the stages a `seeks` item names (R10).
+ *   promotion      `promote` (its R1 to R20): the question R19 opens.
  *   standards      `standardRead` (its R5): whether a law's `standard` is one the viewer may read (R9).
  *   now            the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env            the instance bindings.
@@ -30,9 +33,12 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
+import { stakeFault } from "../project-roster/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { isCalendarDate } from "../civil-time/index.mjs";
-import { parseFrontmatter, normalizeType, isMachineIdentity, BUNDLE_ID_RE } from "../record-grammar/index.mjs";
+import { parseFrontmatter, normalizeType, isMachineIdentity, deriveInquiryTitle, BUNDLE_ID_RE } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, lawProposalLabel, LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, governingLawsOf,
          seeksOf, seeksFindings, SEEKS_MAX, PROMISE_KINDS, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS,
          QUOTE_CHECKS, LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
@@ -86,6 +92,39 @@ export function withRow(r) {
 const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detail, ...(extra || {}) });
 const findingsOf = (list) => list.filter((x) => x.severity === "error")
   .map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}), ...(x.repairs ? { repairs: x.repairs } : {}) }));
+
+/* R18 (was `actions` R43; N217, K275, N1178). THE ONE ANSWER TO ONE CONDITION: no action the caller may see answers to
+   `actionId` (absent, invisible, or a bundle that is not an action, answered alike). This module is earlier in the order
+   than `actions`, so the one site of `NO_SUCH_ACTION` is here and `actions` re-exports it; every act of R1–R6 and R17
+   answers through it, and so does every later module answering that condition. The detail is one fixed sentence, the same
+   for every caller, so an absent id and a hidden one can never be told apart by it. `extra` adds a caller's own fields
+   beside these and never replaces one of them. Writes nothing and never throws. */
+const NO_SUCH_ACTION_DETAIL = "no action answers to that id here. An action you may not see is answered exactly as one "
+  + "that does not exist, so this is not a hint either way.";
+const NO_SUCH_ACTION_FIXED = new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
+export function noSuchAction(actionId, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_ACTION_FIXED.has(k));
+  } catch { own = []; }
+  let action = null;
+  try { action = actionId === undefined || actionId === null ? null : String(actionId); } catch { action = null; }
+  /* DEC-49 REGION is-no-such-action */
+  const row = ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
+  return { ok: false, reason: "NO_SUCH_ACTION", code: "NO_SUCH_ACTION", check: row.check,
+           translation: row.translation, action, ...Object.fromEntries(own), detail: NO_SUCH_ACTION_DETAIL };
+  /* END DEC-49 REGION is-no-such-action */
+}
+
+/* R17, R19: a refusal this module mints whose row is not yet in action-grammar's list carries its code and its words by
+   key (`refusal.<CODE>`, setup-words), never a sentence written here. */
+const worded = (code, detail, extra) => ({ ok: false, reason: code, code, translation: word(`refusal.${code}`), detail,
+                                           ...(extra || {}) });
+/** R19: a question, 500 characters at most. */
+export const ACTION_QUESTION_MAX = 500;
+const quoted = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'")}"`;
+const rand = (n) => Math.random().toString(36).slice(2, 2 + n).padEnd(n, "0");
 
 /* ================================================================ the correspondence entry's one site (R16; T48-47)
    Five conditions, each minted here and nowhere else: C-32.4 (the machine fence) and C-33.6–C-33.9 (the entry's own shape
@@ -152,11 +191,11 @@ export function correspondEntryRefusal({ at = "", artifactSha = "", account = ""
 export class ActionRecords {
   #deps;
 
-  constructor({ storage, record, host = null, membership = null, progressions = null, standards = null, now = null,
-                env = null } = {}) {
+  constructor({ storage, record, host = null, membership = null, progressions = null, standards = null, promotion = null,
+                now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, progressions, standards };
+    this.#deps = { host, membership, progressions, standards, promotion };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -174,6 +213,8 @@ export class ActionRecords {
   get progressions() { return this.#reach("progressions", (h) => progressionsOf(h)); }
   /* R9: the held standards (`standardRead`, its R5). */
   get standards() { return this.#reach("standards", (h) => standardsOf(h)); }
+  /* R19: the one write path (`promote`, its R1 to R20). */
+  get promotion() { return this.#reach("promotion", (h) => promotionOf(h, { record: this.record, membership: this.membership })); }
 
   /** R16: the correspondence entry's site, reached on the instance `actions` creates (its R101). The two pure judgments are
    *  the module's own functions, answered unchanged; the third reads the register. */
@@ -221,8 +262,13 @@ export class ActionRecords {
   /* R11: an action the viewer may not see is answered as an absent one (membership R43, the one sight rule). */
   #visibleAction(id, viewer) {
     const gate = viewerPredicate(viewer);
-    return this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+    return this.#one(`SELECT b.bundle_id, b.object_type, b.current_state, b.project FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
                      id, ...gate.args);
+  }
+  /* R18: the action the viewer may see, or null for an absent one, an invisible one and a bundle that is no action alike. */
+  #seenAction(id, viewer) {
+    const b = this.#visibleAction(id, viewer);
+    return b && normalizeType(b.object_type) === "action" ? b : null;
   }
 
   /* ================================================================ the single-site judgments (R7–R10) */
@@ -369,11 +415,7 @@ export class ActionRecords {
     if (!read.ok) return read;
     const entries = read.entries;
 
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
-               detail: "governing laws belong to an action: they are the laws its request is made under." };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     /* R64, R19 (R9, R1 here): a proposal may name a held standard with a law; it is one the proposer may read. */
     for (const e of entries) {
       if (!e.standard) continue;
@@ -418,10 +460,7 @@ export class ActionRecords {
       return refuse("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} `
         + "characters with no quote, backslash or line break", { target, max: RISK_PROPOSAL_BASIS_MAX });
     /* END DEC-49 REGION is-risk-propose-basis */
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const at = stampInstant("second", this.#nowMs(null));
     this.sql.exec(`INSERT INTO action_risk_proposals (bundle_id, proposed_by, tier, basis, proposed_at) VALUES (?,?,?,?,?)
       ON CONFLICT(bundle_id, proposed_by) DO UPDATE SET tier=excluded.tier, basis=excluded.basis, proposed_at=excluded.proposed_at`,
@@ -442,10 +481,7 @@ export class ActionRecords {
     const who = String(proposer ?? "").trim();
     if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const held = this.#heldFm(target) || {};
     let list = seeks;
     if (typeof list === "string") { try { list = JSON.parse(list); } catch { /* judged as given: not a list */ } }
@@ -560,9 +596,7 @@ export class ActionRecords {
       if ((need && !v) || v.length > (name === "account" ? NOTE_MAX : RECEIPT_TEXT_MAX))
         return { ok: false, reason: `BAD_${name.toUpperCase()}`, target,
                  detail: `${name} is ${need ? "1" : "0"} to ${name === "account" ? NOTE_MAX : RECEIPT_TEXT_MAX} characters` };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const ledger = (this.#heldFm(target) || {}).correspondence;
     const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
     const entry = Array.isArray(ledger) && Number.isInteger(n) ? ledger[n] : undefined;
@@ -613,9 +647,7 @@ export class ActionRecords {
       + "reason. Nothing was written.", { target });
     if (why.length > NOTE_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON", target, detail: `reason is at most ${NOTE_MAX} characters with no quote, backslash or line break` };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     if (this.confidential(target) === !!want)
       return refuse("SCOPE_UNCHANGED", `this action is already ${want ? "confidential" : "not confidential"}; nothing was `
         + "written.", { target, confidential: !!want });
@@ -661,9 +693,7 @@ export class ActionRecords {
     if (!kinds.includes(k) || !t || t.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))
       return promiseRefused(`a promise is {kind, text, ends?}: kind one of ${kinds.join(", ")}, the text 1 to `
         + `${PROMISE_TEXT_MAX} characters, and ends the position of an earlier promise it ends.`);
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     if (endsAt !== null && !this.promisesOf(target).standing.some((p) => p.seq === endsAt))
       return promiseRefused(`ends names promise ${endsAt}, and no promise standing on this action is at that position.`);
     /* END DEC-49 REGION is-promise */
@@ -685,6 +715,113 @@ export class ActionRecords {
     const notes = all.filter((p) => p.ends === undefined);
     return { standing: notes.filter((p) => !ended.has(p.seq)),
              ended: notes.filter((p) => ended.has(p.seq)).map((p) => ({ ...p, ended_by: ended.get(p.seq) })) };
+  }
+
+  /* ================================================================ the action's own stake (R17) */
+
+  /** R17 (T50; N933; K3230; Action rule 9; v0.2 rule 21; D28 (d); `project-roster` R31, R32): a member who may see the
+   *  action states its own stake, apart from its project's: what this one action adds to the team's and the project's
+   *  stakes, in the member's words. `stake: null` clears it and the action falls back to its project's (`filings` R60).
+   *  Each statement is appended `{stake, by, at}`, never edited. Both stake codes are `project-roster`'s, asked through
+   *  its `stakeFault` and never copied (one code, one site). Refusals in order, each writing nothing. */
+  actionStake({ target, stake, viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    /* `stakeFault` takes a member's id: a machine stamp, an empty one and anything not a member's is no id at all. */
+    const by = !who || isMachineIdentity(who) ? "" : who.replace(/^member:/, "");
+    const fault = stakeFault({ by, stake, of: "action" });
+    const faulted = () => { const { project, ...rest } = fault; return { ...rest, target: target ?? null }; };
+    /* DEC-49 REGION is-action-stake */
+    if (fault && fault.reason === "MACHINE_CANNOT_SET_STAKE") return faulted();
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (fault) return faulted();
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
+    /* END DEC-49 REGION is-action-stake */
+    const text = stake === null ? null : stake.trim();
+    const at = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_stakes WHERE bundle_id=?`, target).n;
+      this.sql.exec(`INSERT INTO action_stakes (bundle_id, seq, stake, by, at) VALUES (?,?,?,?,?)`, target, seq, text, by, at);
+    });
+    return { ok: true, target, ...this.stakeOf(target), weight: "single" };
+  }
+
+  /* R17: a member's handle as a reader sees it, the founder's own as membership names her (its R144); the id itself where
+     membership holds no handle for it, and null for a founder who holds none. */
+  #handleOf(id) {
+    const m = this.membership;
+    try {
+      if (id === "admin") { const h = m && typeof m.founderHandle === "function" ? m.founderHandle() : null; return typeof h === "string" && h ? h : null; }
+      return (m && typeof m.memberFacts === "function" ? m.memberFacts(id)?.handle : null) ?? id;
+    } catch { return id; }
+  }
+  /** R17 (as `project-roster` R32 answers a project's): the action's own stake `{stake, set_by, set_at, history}`, history
+   *  oldest first, each `{stake, set_by, set_at}`, `set_by` a handle (the founder as `membership.founderHandle()`); `stake:
+   *  null` with none; `"undetermined"` for a record that cannot be read, never `null`. Asks no viewer (its callers gate by
+   *  sight, as R5's `scopeOf` does), writes nothing, never throws. */
+  stakeOf(id) {
+    const none = { stake: null, set_by: null, set_at: null, history: [] };
+    try {
+      if (typeof id !== "string" || !id) return none;
+      const rows = this.#rows(`SELECT stake, by, at FROM action_stakes WHERE bundle_id=? ORDER BY seq`, id);
+      if (rows.some((r) => r.stake !== null && typeof r.stake !== "string")) return { ...none, stake: "undetermined" };
+      const history = rows.map((r) => ({ stake: r.stake, set_by: this.#handleOf(r.by), set_at: r.at }));
+      const last = history.at(-1);
+      return last ? { stake: last.stake, set_by: last.set_by, set_at: last.set_at, history } : none;
+    } catch { return { ...none, stake: "undetermined" }; }
+  }
+
+  /* ================================================================ a question opened from an action (R19) */
+
+  /** R19 (T50; N1093; K3317; DEC-239; UX-DESIGN U233; `conformance` R6's way): a member who may see an action opens a
+   *  question in the action's project with the action carried as its reference (`derived_from`, noting who opened it),
+   *  never as a leg: the action is where the question comes from, not evidence in it. The member writes the question;
+   *  nothing is filled from the action, and the action's document, legs and state are untouched. The question is made
+   *  through `promote` (state `open`, titled from the question), so the project's fence and every `promotion` refusal are
+   *  promotion's, answered as its own; a caller who has not joined the project is refused before it, by membership's own
+   *  position check (`projectAuthority`). */
+  actionInquiry({ action, question = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    const asked = typeof question === "string" ? question.trim() : "";
+    /* DEC-49 REGION is-action-inquiry */
+    if (!who || isMachineIdentity(who))
+      return worded("MACHINE_CANNOT_OPEN_FROM_ACTION", "a question is opened from an action by a member; a machine credential "
+        + "may not open one. Nothing was written.", { action: action ?? null });
+    if (!action) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass action=<action id>" };
+    if (!asked || asked.length > ACTION_QUESTION_MAX || /[\r\n\u2028\u2029]/.test(asked))
+      return worded("ACTION_INQUIRY_NO_QUESTION", `the question is 1 to ${ACTION_QUESTION_MAX} characters on one line. `
+        + "Nothing was written.", { action, max: ACTION_QUESTION_MAX });
+    const b = this.#seenAction(action, viewer);
+    if (!b) return noSuchAction(action);
+    const project = typeof b.project === "string" ? b.project.trim() : "";
+    if (!project)
+      return worded("ACTION_NO_PROJECT", "this action belongs to no project, so there is nowhere to open a question from "
+        + "it. Nothing was written.", { action });
+    /* END DEC-49 REGION is-action-inquiry */
+    /* Seeing the project is not working in it (`membership` R122's position): an invited member who has not joined sees
+       the action and opens nothing. The refusal is membership's own row, answered as given, as `conformance` R6 asks it. */
+    const denied = this.membership ? this.membership.projectAuthority(project, who, "joined", "actioninquiry") : null;
+    if (denied) return denied;
+    const at = stampInstant("second", this.#nowMs(null));
+    let id = null;
+    const out = this.record.transact(() => {
+      id = `${this.record.allocId("INQ", at.slice(0, 4)).id}-question`;
+      const title = deriveInquiryTitle(asked) ?? asked.slice(0, 120);
+      const md = ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: ${quoted(title)}`,
+        "current_state: open", "prior_state: null", `created: ${quoted(at)}`, `last_updated: ${quoted(at)}`, `project: ${project}`,
+        "produced_by:", "  mode: human", "  capability_tier: session", "references:", "  - rel: derived_from", `    target: ${action}`,
+        "    status: confirmed", `    note: ${quoted(`opened from this action by ${who}`)}`, "state_history: []",
+        "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+        "surfaced_by: human", 'disposition_reason: ""', "---", "", "## Question", "", asked, "",
+        "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+        `### Session ${at} | Opened | ${who}`,
+        `Changes: opened by ${who} from the action ${action} in the project ${project}.`, "", "## Review Notes", ""].join("\n");
+      return this.promotion.promote({ bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_${rand(4)}`, author: who,
+        files: [{ path: "bundle.md", text: md }],
+        meta: { object_type: "inquiry", current_state: "open", created: at, last_updated: at },
+        actorIdentity: who, actorViewer: viewer });
+    });
+    if (!out || !out.ok) return out || { ok: false, reason: "PROMOTION_FAILED" };
+    return { ok: true, inquiry: out.bundleId ?? id, action, project };
   }
 }
 
@@ -721,7 +858,7 @@ function proposalLabelFor(who, subject) {
 
 const instances = new WeakMap();
 
-/** R15 (K61; the map's §1; `case-account` R12's form): the one instance per host. At its creation it creates its six
+/** R15 (K61; the map's §1; `case-account` R12's form): the one instance per host. At its creation it creates its seven
  *  tables (R11) and declares them to record-core's purge; a refused declaration is thrown and no instance is kept.
  *  `actions`' factory creates it at its own creation, so its tables exist and are declared at every boot. */
 export function actionRecordsOf(host, deps) {
@@ -773,5 +910,11 @@ export function actionRecordsOps(r, url, body) {
       reason: q("reason") ?? b.reason ?? "", viewer: q("viewer"), author: q("author") }),
     actionpromise: () => r.actionPromise({ target: q("target") || b.target, kind: q("kind") ?? b.kind ?? "",
       text: q("text") ?? b.text ?? "", ends: q("ends") ?? b.ends ?? null, viewer: q("viewer"), author: q("author") }),
+    /* R17, R19 (T50): the action's own stake (the exact word `null` in the query, or `null` in the body, clears it; a
+       missing one is malformed), and a question opened from an action; the stamps the control plane's, from the query. */
+    actionstake: () => r.actionStake({ target: q("target") || b.target, viewer: q("viewer"), author: q("author"),
+      stake: url.searchParams.has("stake") ? (q("stake") === "null" ? null : q("stake")) : b.stake }),
+    actioninquiry: () => r.actionInquiry({ action: q("action") || b.action, question: q("question") ?? b.question ?? "",
+      viewer: q("viewer"), author: q("author") }),
   };
 }
