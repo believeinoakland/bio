@@ -60,7 +60,7 @@ Terms. An **action** is a bundle whose type (by its document or its envelope, D-
 - **R28** *(retired: moved to action-records R2)*
 
 **Services later modules use**
-- **R29** `actionRead({id, viewer})` answers R25's block, or `NO_SUCH_BUNDLE` (absent and invisible alike) or `NOT_AN_ACTION`.
+- **R29** `actionRead({id, viewer})` answers R25's block, or `NO_SUCH_ACTION` for an absent, invisible or non-action id alike (R106; before T50, `NO_SUCH_BUNDLE` and `NOT_AN_ACTION`; K3743).
 - **R30** `actionsFor({determination?, counterparty?, state?, kind?, after?, limit?, viewer})` lists visible actions by the filters, at most 200 per page in id order, `truncated` by reading one past; `determination` matches R8's legs.
 - **R31** *(retired: moved to `action-clocks` R1, K617)*
 - **R32** *(retired: moved to `action-clocks` R2, K617)*
