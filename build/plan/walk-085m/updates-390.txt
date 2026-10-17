@@ -1,0 +1,15 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+B
+Working · not public · seen by your group's members
+Settings › Updates
+Updates
+
+Only your group's administrators install updates. If something needs updating, ask one of them.
+
+Home
+Queue
+Add
+Find
+More

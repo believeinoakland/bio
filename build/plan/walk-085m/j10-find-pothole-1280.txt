@@ -1,0 +1,31 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+B
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Find
+Find
+
+Search everything your group holds, then hold a set together to act on it.
+
+Your words
+Search
+Reversible
+
+Nothing your group holds matches “pothole”. Search finds only what has been captured. Try fewer or other words, or capture the record from where it is published.
+
+Capture it
+
+See where nobody looked
+Reversible
+Search: Searches everything your group holds that you may see: documents, passages, questions, people.
+Reversible: you can undo this.

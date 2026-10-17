@@ -1,0 +1,28 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+S
+Working · not public · seen by your group's members
+Queue
+Your queue
+
+Three kinds: To do needs your act; Noticed is something the record found that nobody has judged; Status tells you where something stands. (Shown once.)
+
+Sort by
+time added
+·
+time due
+·
+case
+·
+kind
+
+You are up to date. When something needs your act, a reply arrives, or the record notices something you follow, it appears here, once.
+
+Go to Home
+
+Home
+Queue
+Add
+Find
+More

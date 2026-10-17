@@ -1,0 +1,38 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Find
+Find
+
+Search everything your group holds, then hold a set together to act on it.
+
+Your words
+Search
+Reversible
+
+2 results
+
+How many pothole reports did the city close late in 2025?
+Found by search
+INQ-2026-0001-how-many-[pothole]-reports-did-the-city-cl id INQ-2026-0001-how-many-[pothole]-reports-did-the-city-cl object_type inquiry schema inquiry@1 title How many [pothole] reports did the city close late in 2025? current_state open prior_state created 2026-10-15T23:46:50Z last_updated 2026-10-15T23:46:50Z project PROJ-2026-5304-walk…
+WALK-085 project
+Found by search
+## Session Log ### Session 2026-10-15T23:46:17Z | Formation | interactive Trigger: started from the projects list Changes: created. ### Session 2026-10-15T23:46:51Z | Cited 1 record | admin Trigger: question INQ-2026-0001-how-many-[pothole]-reports-did-the-city-cl drawn into this case Changes: cites edges added to INQ-2026-0001-how-many-[pothole]-reports-did-the-city-cl.
+Hold these together
+Reversible
+See where nobody looked
+Reversible
+Search: Searches everything your group holds that you may see: documents, passages, questions, people.
+Reversible: you can undo this.

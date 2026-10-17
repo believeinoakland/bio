@@ -26,6 +26,7 @@ legacy-ui is the only module marked `legacy` in `modules.json`.
    - `modules.json`: **`translations`** (new, L11, directly before `instance-setup`, empty `paths` and `tests`, K1043). Its `uses` come from the extraction map; `instance-setup` gains `translations`.
    - `layers.md`: L1's and L11's lists and the status line, each move stated.
    - membership's `MODULE_ORDER` entry is T50-2 (N1115).
+   - (K3436) the design branch's `18c2e6fe50` (DEC-278: `words-reads.json` lists computed keys; docs only, no `rows.mjs` regeneration) is merged into `tranche/T50` at its creation, with the release cut (K2273), so N1146's re-run reads it.
    - `build/extraction/instance-setup-split.md` (the translation workspace: R67–R75, R87, its code, tables and ops) is written by a worker before L11's START and reviewed (P18).
    - The requirements fold (P5): N1109's change of meaning, Bob's ("S24: A", K3359), into basis-versions and screens-inquiry; the owed lines of DEC-247 to DEC-256 (N1106, N1108, N1112) once PR #39 is on `main` (T49's close); every "text to write" below.
 5. **Accepted reds at the opening**, each until the entry named (K2704):
@@ -221,3 +222,48 @@ Read whole. Adopted as T50's draft, to become `next.md`'s plan at T49's close, w
 - Rule 5 gains: filing-templates `r33.test.mjs` R33 (K3381) until **T50-39 · filing-templates** (L9; N1130; test only; claude-haiku-5-5): the test and `FILING_TEMPLATES_WORDS` read `refusal.RFC_QUOTING_MISSING` by key from the list. T50-25 also re-pins `catalogue-end.test.mjs`' R7/R13 pins (K3382).
 - Any red still open at T49's close (its archive's outcome) joins rule 5 with its entry at the opening.
 - Doubts 1–13: as recommended. Doubt 2's check of biosmoke8 is a step of T49's close (BOB's live walk). Sizes and N1118 are confirmed at the fold.
+
+## Reviewed by BOB #195 (2026-10-16; BOB's, P17, P18, P19): what R085 and the lanes add
+
+Read whole with `next.md` (N1148–N1189). Folded into the draft above at the opening, with these changes. The plan is fixed at the opening (P10); a lane finding that arrives before then joins here, one after joins a START not yet started (K279) or T51.
+
+**Opening act, added.** `tranche/T50` is created from `main` (T49 closed, PR #40), then `dist/cut-0.85.0` (b29f55bb22 or newer) is merged into it (K2273), then the design branch (`e074feaa46` or newer, U305; DEC-254, DEC-296 among it) as the design stream's MERGE allows (§13.1 (5)). R085's plan, diagnoses and walks (`diag-085-*`, `walk-085*`, `starts-R085/`) move to `build/plan/archive/` (K3559).
+
+**The meter.** The doubt-1 rows left out as "Bob's priority under the meter" were weighed at 71% of a spent week. T50 opens on a fresh week (the reset, K3551), and Bob's K3551 sends "all else" to T50, so under P19 they join T50 unless Bob's reading at the opening is near 80% (K2341): N1102 (a progressions job and screens-investigate's `timeline`), N1086 with N1090's unnamed node (explore), N1085 (standards), N1081 (review), N1093's `actioninquiry` (action-records), N1121 (jurisdictions; screens-action draws it), N847 (jurisdictions, wizard-scripts, screens-daily, a screen for `elsewhere`), N1092 (Find's browse and its owners, placed at the fold), N933 (ten modules, landing whole, K3231). N1074 and N898 stay BOB's between-tranche tooling.
+
+**Entries joining jobs already placed.**
+- T50-1 bundler: N1156 (= N1107) and N1171's `fleetbundles` red; N1170 (the container descriptor carries `instance_type`). Now a behaviour job: claude-sonnet-5-5.
+- T50-2 membership, T50-6 promotion, T50-4 ai-accounts, T50-47 action-plans, T50-42 reading-guides, T50-43 case-account, T50-44 action-grammar, T50-45 action-replies, T50-39 filing-templates, T50-46 filings, T50-16 scheduler, T50-19 affordances, T50-23 instance-setup, T50-25 answer-envelope, T50-50 store-door, T50-28 screens-entry, T50-37 site, T50-38 journey-check, T50-51 screens-wizards: each clears its own base red named in K3543 and K3557 (N1171), diagnosing it in its own module; a job that cannot is §6's three attempts, then BOB.
+- T50-10 retrieval: N1166 (a `passage:` hit carries its passage as snippet), N1177's passage id for a text file's passage, N1183's Find rows.
+- T50-11 inquiry: N1173 (`NO_CLAIM` reads the own-reading words).
+- T50-12 basis-versions, T50-32 screens-inquiry: N1173 = N1109 (DEC-254).
+- T50-13 ai-runs: N1168 (each usage entry records its `effort`).
+- T50-27 interface-shell: N1167 (the dock shows a run's cost, DEC-296), N1180 (doors, once B257 is answered).
+- T50-29 screens-settings: N1154 (Connect while a code is exchanged), N1158 (the assistant's settings page, if the design's DEC is on `main`), N1163 M-F7, N1181 (a settable time zone).
+- T50-30 screens-intake: N1185 (the cite link names the fingerprint), N1163 M-F8.
+- T50-31 screens-daily: N1177 (`valid`; the standard's passage), N1163 M-F1, N1165 (cleared with rule 5 (9)), N1183's states and words, N1166's rows.
+- T50-32 screens-inquiry: N1164 (`ai.run.ending.<bound>`), N1167, N1180, N1183.
+- T50-33 screens-investigate: N1183 (`{handle}`, `{tie}`; fingerprint fields become choices, with N1079), B-18 hidden form.
+- T50-34 screens-publish: N1181 (plain ceremony and draft words).
+- T50-35 control-plane: N1174 with B-14 (unknown addresses draw `unavailable`; owner confirmed, a REPORT if admission's).
+- T50-36 plane: N1171's store R2, R10.
+
+**New jobs** (models per rulings-active §5; the layer's merge order is `modules.json`'s):
+- L3 **file-safety** · N1163 M-F2 (the safe view of a member's own text upload answers) · sonnet. L3 **doorbell** · N1176, only if the fold finds its requirements reserve the inbox to administrators (BOB reads them at the fold; else no job) · haiku.
+- L6 **agent-model** · N1162 (`judge_*` and `report` name `CONDITION_KINDS`), N1188 · sonnet. **question-explorer** · N1164 (conditions in `CONDITION_KINDS`; `close()` awaited) · sonnet. **ai-use** · N1168 · haiku. **run-rules** · N1169 · sonnet. **agent-harness** · N1169, N1187, N1186's share if the diagnosis places it · sonnet. **agent-runner** · N1155's cold start, N1189 · sonnet. **agent-worker** · N1186, N1187, N1188's shares as diagnosed · sonnet.
+- L8 **case-checker** · N1181 (the gates' words for the ceremony, by key) · sonnet.
+- L9 **actions** · N1178 (an unknown action refused in words naming an action), owner confirmed at the fold · haiku.
+- L11 **installer** · N1148 (an account holding a Civicsmith is a supported situation, K3458, K3471: told and offered a way on), N1150, N1157 (the install situations), N1162's `SEGMENTS` binding, N1170, the base red "realsize"; N1151 only once Bob has registered the scope (his act, named at the opening) · sonnet. **admission** · N1179, N1146 (R28) · sonnet. **screens-action** · N1182, N1121's drawing, N1178's words if theirs · sonnet. **stewards** and N923 · only once N1159's route is proven (BOB's acts first, at the opening) · haiku.
+- `not_product` · N1153 (`deploy.mjs`' skip compares bindings; keeps undeclared `plain_text` bindings) · sonnet.
+
+**JOURNEYS V4 (K3598).** N1190–N1194 join T50: N1191 an extraction job (L4; extraction, with ocr-worker for photographs and retrieval for the passage marks), N1192 to T50-31 and T50-27 (the refusal mapping) and T50-32 (R49's preselection), N1193 to T50-10 and T50-33 with the timeline's provider, N1194's parts to their owners at the fold, N1190 a job for its owner once UX-DESIGN answers B258 on adding a court; N1177 gains the Standard screen's passage choice (B-28).
+
+**Bob's K3602 (live progress, answer after its check).** N1195 joins T50: agent-worker's share in its L6 job, the plane's door in T50-36 (or T50-35 if the buffering is control-plane's), the drawing in T50-32 and T50-27; the dock's words answered by UX-DESIGN's DEC-298 (U311, K3605; `ai.progress.*`), whose owed line also names `inquiry`.
+
+**Bob's K3607, K3609 (initial Claude Code remote support).** N1196 joins T50 in its own layers: agent-runner, agent-worker and agent-harness in their L6 jobs, ai-accounts in T50-4, Connect in T50-29, installer in its L11 job; requirements written at the fold; the copy itself creates and drives the session and logs each step (K3608); the local runner is disabled so no path can use it (K3610), proven by a test. **N1197 (K3611), on its own:** the first line of agent-runner's `AgentRunner.fetch` (`worker.mjs`:87) answers 410 `LOCAL_RUNNER_DISABLED` before the container is reached; tests prove the container never starts; it lands in agent-runner's L6 job, merged first, whether or not the remote work lands. Bob takes inventory after T50 closes.
+
+**UX-DESIGN's answers (K3612).** DEC-299 (U312, B257) answers N1180–N1184 item by item, its keys owed by the screens job owning each finding (doors on the project page and Home, the time zone from the team's place and Settings, the ceremony and draft words, acknowledgements, fingerprint-free forms, the not-found page, tab titles and 390 rules); DEC-300 (U313, B258) answers N1190–N1194 ("Add a court", Find in's prefilled forms, a passage's facts count, the flattened table warning, periods). Both on the design branch @ 91dc95c71b, merged at the opening; folded into requirements then. N1190 now has its design: a job for the court's owner (proceedings, screens-action, settings) at the fold.
+
+**Still left out, each with its hard reason.** N1152, N1160, N1184's look rows: the design's DECs first. N1186's fix: a measurement first (one run as a member). N1105: Bob's, closed (K3347).
+
+**For Bob at the opening (his acts).** The meter reading (§5.2 (3)); N1151's OAuth scope registration; K3591's size-change approval if the cells are still owed.

@@ -1,0 +1,1 @@
+{"ok":false,"error":"unknown op","reason":"UNKNOWN_OP","code":"UNKNOWN_OP","check":"C-69.1","translation":"This group's Civicsmith has no operation by that name. A version older or newer than this one can have a different set of operations, and a misspelt name reads the same way. Nothing was changed.","op":"nonexistent-walk"}

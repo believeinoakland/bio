@@ -66,13 +66,13 @@ Bob's UX design work runs under his **primary account**, outside this process an
 
 Bob's design of the investigation engine and the project as an investigation (K1627, K2064, K2075) runs in its own session, **INVESTIGATION-DESIGN** (#2: `session_01WzvEVTg39Jijv4CesGz4Dc`, started by BOB #145, K2398; #1 `session_01MoJa8LUVd6PRJDtgoSdRvj` archived), on branch `design/investigation`, writing only `docs/development/investigation-design/`. It works with Bob directly and records his decisions as D-numbers (the study's D1–D24, new ones from D25), never K or DEC. Its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and at every backstop check; BOB folds each hand-off into requirements (N748) and answers with the K that folds it. Its screens are owed to the UX design stream. A successor (`#n+1`) is started by the BOB of the day when the lane asks.
 
-## Parallel work: the actions design lane (Bob, 2026-10-09; K2433)
+## Parallel work: the assistant-hosting study (Bob, 2026-10-16; K3538)
 
-Bob's research and design of actions (requirements, current capabilities, capabilities needed, design and use cases; N817, his D43) runs in its own session, **ACTIONS-DESIGN** (#2: `session_01RukQneSYmxg4FvfJ9aXccd`, primary account, started by BOB #149 on Bob's direction, K2521; #1 `session_01VDxYUZBV7s4gVx8xWwmCVY` on the secondary account), on branch `design/actions`, writing only `docs/development/actions-design/`. It works as the investigation lane does: Bob's decisions are its own D-numbers ("Actions D<n>"), never K or DEC; its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and every backstop check and folded into requirements with a K; its screens are owed to the UX design stream. A successor is started by the BOB of the day when the lane asks.
+Bob's question of where and how the assistant runs Claude is studied in its own session, **ASSISTANT-HOSTING** (#2, `session_01LRYEjmorgB3AX1wXhH7hjA`, sonnet, started by BOB #194, K3570; #1 archived), writing only `build/plan/study-assistant-hosting/` (its `CHARTER.md` says how). It decides nothing: its findings reach Bob through BOB, and his decision is a K. BOB reads its `HANDOFF.md` (entries `S<n>`) at takeover and at every backstop check.
 
-## Parallel work: the site launch lane (Bob, 2026-10-15; K3385)
+## Parallel work: the journeys walk (Bob, 2026-10-16; K3539)
 
-Bob's launch of civicsmith.org and the stewards' contact address (N923) runs in its own session, **SITE-LAUNCH** (#1: `session_01EJn5bA3WQ4g4R1XeaKrTca`, started by BOB #181), on branch `ops/site-launch`, writing only `docs/development/site-launch/`. It deploys and walks the `site` module, routes it to civicsmith.org and sets up Email Routing for the stewards' address with Bob; each deploy act is Bob's approval in its session (K1715). Its decisions with Bob are "Site D<n>"; its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and every backstop check and folded into a module job with a K. A successor is started by the BOB of the day when the lane asks.
+Every feature and journey that does not need the assistant is walked in its own session, **JOURNEYS** (#3, `session_01RhkG3SUxrZ9ENpSuRHnBQt`, sonnet, started by BOB #194, K3576; #1, #2 archived), writing only `build/plan/lane-journeys/` (its `CHARTER.md`). The assistant's own testing is the assistant-hosting lane's. BOB reads its `HANDOFF.md` (entries `W<n>`) at takeover and at every backstop check, and turns each defect into a plan entry.
 
 ## Starting a session
 
