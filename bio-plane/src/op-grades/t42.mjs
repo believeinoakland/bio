@@ -13,12 +13,12 @@
 export const T42_RUNG_ABSENT = {
   /* on R3's rule, as captureupload (R30): it writes a reading that a later re-read or an attestation corrects forward,
      asks no reason, and no published act takes it back */
-  pagetranscribe: { ground: "undetermined", is: "at a member's act, the AI reads the pages of a capture Civicsmith could not read, on the account that pays and within its limits; the text is kept labelled the AI's reading and undetermined, the earlier reading kept, and a later re-read or an attestation corrects it forward (extraction R71, R72)" },
+  pagetranscribe: { ground: "undetermined", is: "at a member's act, the AI reads the pages of a capture Civicsmith could not read, on the account that pays and within its limits; the text is kept labeled the AI's reading and undetermined, the earlier reading kept, and a later re-read or an attestation corrects it forward (extraction R71, R72)" },
 };
 
 /* ---- its NON_ACTS reason (R5) ---- */
 export const T42_NON_ACTS = {
   pagetranscribe: "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, "
-    + "on the account that pays and within its limits; the text is labelled the AI's reading and undetermined; moves no "
+    + "on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no "
     + "bundle",
 };

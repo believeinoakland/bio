@@ -49,6 +49,6 @@ export const T46_NON_ACTS = {
   clockproposals: R("the standing clock proposals on an action the viewer may see, which clockadopt adopts"),
   /* agent-worker R76 (N917; control-plane R57's door) */
   textcheck: "draft: answers the sentences of a prepared outward text that read as an assertion, a position, an "
-    + "own-benefit ask or a staff member named, as a labelled proposal for the member; never rewrites the text; writes "
+    + "own-benefit ask or a staff member named, as a labeled proposal for the member; never rewrites the text; writes "
     + "nothing of the record",
 };
