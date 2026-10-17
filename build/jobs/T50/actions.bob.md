@@ -19,3 +19,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L9 merge order: `modules.json`'s (conformance, action-grammar, action-records, actions, action-replies, filing-templates, filings, action-plans); action-records before actions; a job that uses no unmerged L9 job merges as soon as it is complete.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, read whole (K3679).
+
+## B2 · CHANGE
+
+BOB #205. action-records is merged into `tranche/T50` (K3746). Merge `tranche/T50` into your branch, re-run against the real `stakeOf` and `noSuchAction`, and post COMPLETE. Also (action-records J1 (3)): your R36 test asserts six moved tables; `ACTION_RECORDS_TABLES` now names seven (`action_stakes`), so bring it in line. Your other findings are placed (K3743).
