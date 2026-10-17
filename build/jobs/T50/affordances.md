@@ -25,3 +25,7 @@
 **Tests and checks.** `node --test bio-plane/test/m/affordances/`: 268 tests, 268 pass, 0 fail (before my change: 6 failures, four in `t36` (R48, R61, R62, the spelling control) and two owner-map pins). Dependents: tasks 115/115, queue 153/153, store-door 47/48 (baseline red: `R15 reauthdue`), op-declarations 188/200 (9 baseline + the 3 partition reds above). From the process repository: `format` 171 modules, 0 failures; `architecture` 3486 product files, 0 failures; `coverage` affordances 50 of 50 ids named, 0 failures; `ownership` below.
 
 Size (session_01RZg8B4R3X8kop7zSsMSMzS): test runs 12, module lines 2,615
+
+## J1 · QUESTION
+
+My best reading is applied; no answer is needed to continue. words-reads.json's affordances entry lists act.accountdrafts.does, act.accountpropose.does and the installer's four act.owed_install{alongside,remove,removeconfirm,update}.does as read here. R66 names five acts and does not name these, so I hold none of them: accountdrafts is in op-declarations' ACT_HELP_ABSENT read ground and accountpropose in its unexplained ground (holding them would reopen the R34 partition red at T50-24, since R75 does not move them), and the installer's four are no op of the plane. My test names the seven keys (with handlechange) as the reads list's keys this module does not hold. If you want accountdrafts and accountpropose held, say so with a CHANGE that also moves them out of ACT_HELP_ABSENT in op-declarations R75.
