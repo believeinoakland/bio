@@ -1,6 +1,6 @@
 # capture (T50)
 
-**Status** · session_01Fvr26rxm22dLhkoGV1L8eD · depth 2 · WORKING · handled B0
+**Status** · session_01Fvr26rxm22dLhkoGV1L8eD · depth 2 · COMPLETE · handled B0
 
 ## Completion record (T50-8)
 
