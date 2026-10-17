@@ -1,0 +1,48 @@
+# op-grades (T50)
+
+**Status** · session_0123Ja8xLuQ1vCztuMojXSJ7 · depth 2 · COMPLETE · handled B1
+
+## J1 · REPORT
+
+Found outside op-grades, and decisions made in this job for `build/rulings.md` (P17; BOB records them).
+
+1. **affordances, `test/m/affordances/t33-backing.test.mjs`** (two R19 tests, around lines 190 and 360) pins `membertie` as `reasoned` with refusal NO_NOTE. R47 (T50) makes it `reversible`, since `membertiewithdraw` takes it back, so both tests fail from this merge. Not edited: the affordances job (T50-19) owns those pins.
+2. **control-plane, `test/m/control-plane/totality.test.mjs` R2, R41**: its `stale` list names T50's fifteen new R45 ops, which the control plane's table does not carry yet. It goes green when op-declarations (T50-24) declares them; the merge order already puts that after op-grades. Not edited.
+3. **Requirement text (yours):** R2 still lists `planopen` among the undetermined RUNG_ABSENT ops (K732); R47 moves it to RUNGS and the test follows R47. R3's undetermined tally is 109 now, down from 110. R3's enumerated "21" is stale in the same way.
+4. **Words by key (R44):** the fifteen new NON_ACTS reasons are source strings, as the module's other NON_ACTS reasons are (unkeyed, none read by a member). None is in `words-reads.json`. If the design wants them keyed, the design lane supplies the keys; I wrote no inline English where a key was asked for.
+
+Decisions (P17), each made in this job and reported as done:
+- (a) R46's MARKS is derived from registry@7be06eb4cb, kit@7be06eb4cb and the grades as they stand. Validated first against fa3c8b7e8e: 128 of 128 matched the module's MARKS. The result is 130 rows, and notewrite is the only one that departs from the kit (DEC-300 (5)).
+- (b) membertie's grade is edited in `./t33.mjs`, its op's own table, not overridden in `./t50.mjs`.
+- (c) planopen and wizarddraft are in `./t50.mjs` RUNGS and removed from index.mjs RUNG_ABSENT.
+- (d) "labelled" is re-spelled "labeled" in every string literal of op-grades and its tests (comments left as written; plan rule 6 (3)).
+- (e) Beyond the R-amended pins: owners' REASON_CODE drops membertie, and TAKEN_BACK_BY gains membertie → membertiewithdraw.
+- (f) No pull request opened (JOB step 1: "Open no pull request").
+- (g) Pre-existing reds, identical on a clean HEAD worktree and not from this job: 14 in affordances, control-plane, wizard-scripts, screens-action, screens-daily and screens-settings; 22 in op-declarations, interface-shell, screens-intake, screens-investigate and plane.
+
+## J2 · COMPLETE
+
+Applied (commit 7afac32d3f on job/T50/op-grades):
+- R45: the fifteen ops graded. `watchitem`, `secondlook`, `secondlookclear`, `projectstakeset` and `actionstake` are reversible; `actioninquiry` is undetermined; the nine reads (`lookedat`, `browse`, `opencaptures`, `capturegrade`, `inquirypartition`, `instances`, `projectstake`, `projectownersgone`, `stakeatpreparation`) are NON_ACTS reads; the six writing ops each take a directed reason. In `./t50.mjs`, spread into the tables.
+- R46: MARKS_KIT_COMMIT is 7be06eb4cb; MARKS holds 130 rows, derived from the registry and kit at that commit against the current grades; notewrite is Reversible from DEC-300 (5).
+- R47: planopen and wizarddraft are reversible (`./t50.mjs`); membertie is reversible in place of reasoned (`./t33.mjs`), and its alias declaretie takes the grade; notewrite stays caller-owned; phoneOf is true for all four; controls wizardrevise and planclose keep their grades.
+
+Deferred in op-grades: none. Nothing found in op-grades' own code needed a fix beyond the above. Findings in other modules and the requirement text are in the REPORT.
+
+Tests (`node --test test/m/op-grades/*.test.mjs`): 123 pass, 0 fail, from 2 failing at the start (the R46 reds in t48, now green). `t50.test.mjs` names R45, R46 and R47 with controls.
+Consumers, run on this branch and on a clean HEAD worktree:
+- affordances, control-plane, wizard-scripts, screens-action, screens-daily, screens-settings: 966 run, 949 pass, 17 fail; clean HEAD 952 pass, 14 fail. The three new failures are REPORT items 1 and 2.
+- op-declarations, interface-shell, screens-intake, screens-investigate, plane: 770 pass, 22 fail, identical to clean HEAD.
+
+Checks (from civicos-process):
+- format.mjs /home/user/bio: 171 modules, 0 failures.
+- architecture.mjs (op-grades): 0 failures.
+- coverage.mjs (op-grades): 47 of 47 live requirement ids named by a test, 0 failures.
+- ownership.mjs (op-grades, tranche/T50, committed): 24 files, all op-grades', 0 failures.
+- run.mjs over the product: architecture 0 failures in 3486 files; coverage 25 failures, all in other modules' not-yet-met ids, none in op-grades.
+
+Size (session_0123Ja8xLuQ1vCztuMojXSJ7): test runs 12, module lines 3381
+
+## J3 · REPORT
+
+Reading-order note, for the record. I read `build/layers.md` after the code change, not before it, which step 2 of the job asks otherwise. I have now read it whole: layer 11 is the interface layer ("Nothing below depends on them"), `op-grades` imports nothing, and the new tables add no dependency, so the change conflicts with nothing in the layer contract. The jurisdiction rule holds too: none of the new reasons names a place.
