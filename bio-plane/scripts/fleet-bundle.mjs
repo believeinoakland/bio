@@ -113,6 +113,7 @@ import { dirname, join, resolve } from "node:path";
    caller of `provenance.mjs`'s one mechanism (bundler R9), never a second
    statement of the rule. */
 import { readGitProvenance, reportProvenance, repoPath } from "./provenance.mjs";
+import { parseJsonc } from "./jsonc.mjs";   /* R11: the module's one reader */
 
 export const REPO_ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), "..", ".."));
 
@@ -384,7 +385,26 @@ export function classPackages(member, cls) {
   return statementPackages(join(member.abs, img.packages), `${member.dir}/${img.packages}`, base);
 }
 
-/** One class's descriptor, or the fields it lacks. */
+/** R33: each class's `instance_type` as the member's own `wrangler.jsonc` `containers` block states it (a size name, or
+ *  the platform's custom size block), keyed by `class_name`: `{types: Map}`, or `{unread}` naming the file when it does
+ *  not parse. A member with no configuration, or a class the block does not list or lists with no `instance_type`, has
+ *  none to carry: the field is left out and the platform's default applies, never a guessed size. */
+export function containerInstanceTypes(member) {
+  const types = new Map();
+  let text;
+  try { text = readFileSync(join(member.abs, "wrangler.jsonc"), "utf8"); }
+  catch (e) { return e.code === "ENOENT" ? { types } : { unread: `${member.dir}/wrangler.jsonc cannot be read` }; }
+  let cfg;
+  try { cfg = parseJsonc(text, `${member.dir}/wrangler.jsonc`); } catch (e) { return { unread: `${member.dir}/wrangler.jsonc does not parse` }; }
+  for (const c of isBlock(cfg) && Array.isArray(cfg.containers) ? cfg.containers : [])
+    if (isBlock(c) && typeof c.class_name === "string" && c.instance_type !== undefined) types.set(c.class_name, c.instance_type);
+  return { types };
+}
+
+const validInstanceType = (t) => (typeof t === "string" && t.trim() !== "") || (isBlock(t) && Object.keys(t).length > 0);
+
+/** One class's descriptor, or the fields it lacks. `cls.instance_type`, where the configuration states one (R33), is
+ *  written after `max_instances`. */
 function classDescriptor(cls, memberNames, packages) {
   const missing = [];
   const img = imageReference(cls.image);
@@ -397,12 +417,14 @@ function classDescriptor(cls, memberNames, packages) {
     b && typeof b === "object" && typeof b.member === "string" && memberNames.includes(b.member)
     && typeof b.binding === "string" && IDENTIFIER.test(b.binding));
   if (!bindOk) missing.push("bind");
+  if (cls.instance_type !== undefined && !validInstanceType(cls.instance_type)) missing.push("instance_type");
   if (missing.length) return { missing };
   const descriptor = {
     class_name: cls.class_name,
     image: img.reference,
     scheduling_policy: "default",
     max_instances: cls.max_instances,
+    ...(cls.instance_type !== undefined ? { instance_type: cls.instance_type } : {}),
     bind: cls.bind.map((b) => ({ member: b.member, binding: b.binding })),
     ...(packages ? { packages: packages.map((p) => ({ name: p.name, version: p.version })) } : {}),
   };
@@ -427,9 +449,15 @@ export function containerDescriptor(member, memberNames = [], { packages = null 
  *  (R25, the class named when there are several), then `{unread}` (R27). Each class's packages are `classPackages`';
  *  `packages: false` leaves them out. */
 export function containerParts(member, memberNames = [], { packages = true } = {}) {
-  const { classes, multi, conflict } = containerClasses(member);
+  const found = containerClasses(member);
+  const { multi, conflict } = found;
   if (!member || !member.bundle) return { missing: ["bundle"] };
   if (conflict) return { missing: [conflict] };
+  /* R33: each class's own size from the member's configuration. A configuration that does not parse is unread, named
+     as a field the descriptor needs, never a size left out in silence. */
+  const sizes = containerInstanceTypes(member);
+  if (sizes.unread) return { missing: [`instance_type (${sizes.unread})`] };
+  const classes = found.classes.map((c) => (sizes.types.has(c.class_name) ? { ...c, instance_type: sizes.types.get(c.class_name) } : c));
   const seen = new Set();
   for (const cls of classes) {
     const d = classDescriptor(cls, memberNames, null);

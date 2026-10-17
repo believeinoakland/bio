@@ -3,7 +3,7 @@
  * every request is appended to `$BUNDLER_STUB_LOG` as one JSON line (the bearer token is recorded only
  * as present or absent). Timers are cut to a millisecond so the commands' retry and rollout waits run fast.
  *
- * Scenario: { subdomain, scripts: { <name>: { body?, settings?, settingsStatus?, scriptStatus? } },
+ * Scenario: { subdomain, scripts: { <name>: { body?, settings? (limits?, bindings?), settingsStatus?, scriptStatus? } },
  *             put: "accept" | "ignore", settingsAfterPut?: object, serving: { <name>: string },
  *             servingAfterPut?: "version" | "never", unreachable?: [<substring>], containers?: <status> }
  * A script with no entry does not exist (404). A PUT the scenario accepts stores the uploaded module as
@@ -67,7 +67,7 @@ globalThis.fetch = async (input, init = {}) => {
       if (S.put === "accept") {
         const s = (S.scripts[name] ||= {});
         s.body = module;
-        s.settings = S.settingsAfterPut ?? { limits: metadata.limits };
+        s.settings = S.settingsAfterPut ?? { limits: metadata.limits, bindings: metadata.bindings };
         const v = metadata.bindings.find((b) => b.name === "VERSION");
         if (S.servingAfterPut !== "never" && v) S.serving[name] = v.text;
       }
