@@ -33,3 +33,7 @@ translations (T50-22) is merged into tranche/T50 (K3768): merge it and finish R9
 ## B4 · CHANGE
 
 answer-envelope (T50-25) is merged into tranche/T50 (K3772): its composed catalogue lists translations' checks file before setup.mjs. Merge tranche/T50: your 17 moved rows (C-64.11-.17, .19-.26, .31, C-119.12) may now leave instance-setup's checks, the delegates kept. Re-run answer-envelope's tests with yours and post COMPLETE. op-declarations waits on your merge.
+
+## B5 · ANSWER · re J2
+
+Your J2 crossed B4: answer-envelope is merged, so delete the 17 rows now, trim group.test's R30 list and t48's R90 test as you planned, re-run and post COMPLETE. setup-fleet.mjs stays free of setup-words' list (K405): leave HOSTING_CONTROL, FORGOT_HELP and HOSTING_RECOVERY_DEPLOYER as they are (N1238, T51). K3775.
