@@ -109,9 +109,9 @@ test("R13 (T46; DEC-194, N913; K2953, K2959, K2960): C-124.30 SCENARIO_OUT_OF_RA
   /* CHECK_FAMILY_FILES unchanged: T46 adds no family, so no file of a module new in T46 is listed */
   for (const id of ["interface-assets", "interface-shell", "screens-settings", "screens-intake", "screens-daily", "screens-inquiry"])
     assert.equal(M.CHECK_FAMILY_FILES.some(([p]) => p.startsWith(`src/${id}/`)), false, id);
-  /* T46 added none; T47 adds case-inputs' file alone (R15) and T48 ai-accounts' alone (R17), so 87, then 88, now 89 */
-  assert.equal(M.CHECK_FAMILY_FILES.length, 89);
-  assert.equal(M.CHECK_FAMILY_FILES.filter(([p]) => p !== "src/case-inputs/checks.mjs" && p !== "src/ai-accounts/checks.mjs").length, 87);
+  /* T46 added none; T47 adds case-inputs' file alone (R15) and T48 ai-accounts' alone (R17), so 87, then 88, now 89, and T50 translations' file makes 90 (answer-envelope J2/B3) */
+  assert.equal(M.CHECK_FAMILY_FILES.length, 90);
+  assert.equal(M.CHECK_FAMILY_FILES.filter(([p]) => p !== "src/case-inputs/checks.mjs" && p !== "src/ai-accounts/checks.mjs" && p !== "src/translations/checks.mjs").length, 87);
   /* control: every other pinned code decorates exactly as pinned */
   for (const [code, pin] of Object.entries(SNAP.rows)) if (code !== "SCENARIO_OUT_OF_RANGE") {
     const got = M.dec49Row(code);
@@ -119,4 +119,20 @@ test("R13 (T46; DEC-194, N913; K2953, K2959, K2960): C-124.30 SCENARIO_OUT_OF_RA
   }
   /* negative control: T45's pin of C-124.30 would read red */
   assert.notDeepEqual([M.dec49Row("SCENARIO_OUT_OF_RANGE").check, digest(M.dec49Row("SCENARIO_OUT_OF_RANGE").translation)], ["C-124.30", "13524823f3e8dd74"]);
+});
+
+test("R7, N1128 (K3765): a row that reads its words by key is pinned by that key's sentence, so a re-word of the words moves the pin with it; a row whose words are still inline keeps its digest (negative control: a row that reads a key, reworded, is seen)", async () => {
+  const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")).words;
+  const en = (code) => WORDS.find((w) => w.key === `refusal.${code}`)?.en;
+  let keyed = 0;
+  for (const code of Object.keys(SNAP.rows)) {
+    const sentence = en(code);
+    if (sentence === undefined || M.dec49Row(code).translation !== sentence) continue;
+    keyed++;
+    assert.deepEqual([M.dec49Row(code).check, digest(sentence)], SNAP.rows[code], `${code} is pinned by its key`);
+  }
+  assert.ok(keyed >= 70, String(keyed));
+  /* negative control: a sentence the row reads from its key, changed, is no longer its pin */
+  const [one] = Object.keys(SNAP.rows).filter((c) => en(c) !== undefined && M.dec49Row(c).translation === en(c));
+  assert.notDeepEqual([M.dec49Row(one).check, digest(en(one) + " ")], SNAP.rows[one]);
 });
