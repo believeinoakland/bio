@@ -1,6 +1,6 @@
 /* T48-60 at queue's interface (R54; N1047, DEC-226 (1), K3189; N1036), over a stubbed `queue-producers.feedItems`
    (machinery-producers R11 is the producer of the item, tested there): the update to-do's kind is classed (R1), minted
-   (R11), sorted among to-dos (R49), filed under "Your group's Civicsmith" by `sections`, given its door (R12, R28) and
+   (R11), sorted among to-dos (R49), filed under "Your team's Civicsmith" by `sections`, given its door (R12, R28) and
    never muted (R19, R31); and N1036's re-test: the feed answers Home's "what needs the group", the items by kind and
    whose move (`assignee` and `assignee_role`). */
 import { test } from "node:test";
@@ -30,7 +30,7 @@ function withUpdate(items = [update()]) {
 test("R54: update-ready is classed OBLIGATION with its one sentence, and an item of it passes the mint", () => {
   assert.equal(classOfKind("update-ready"), "OBLIGATION");
   assert.equal(QUEUE_OBLIGATION_KINDS["update-ready"].split(" — LIVE")[0],
-    "a release of your group's Civicsmith is ready to install; read what changes, then update, put it aside, or skip it with a reason");
+    "a release of your team's Civicsmith is ready to install; read what changes, then update, put it aside, or skip it with a reason");
   const f = withUpdate().feed("alice");
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
   assert.deepEqual(f.items.map((i) => [i.id, i.class, i.kind]), [[UPDATE_ID, "OBLIGATION", "update-ready"]]);
