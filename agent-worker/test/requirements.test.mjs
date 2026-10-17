@@ -539,7 +539,7 @@ section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its en
   t("R11: the published state carries the table's fields and never the run's mode, target, pass limit or budget",
     Object.keys(freshTicks[1].body.state).sort(),
     ["adjusted", "candidates", "composed", "holdings", "pass", "passAdded", "queue", "refusal", "refusedSubmission", "reportsRefused",
-     "reports", "rereads", "step", "submission", "targets", "kept", "wrote"].sort());
+     "reports", "rereads", "step", "submission", "targets", "kept", "wrote", "disagreed", "scope"].sort());
 
   /* Two segments of one run: the first stops at its step bound mid-pass, the second continues where it stopped. */
   const REPORTS = [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1" }];
@@ -691,7 +691,7 @@ section("agent-harness R4 · judgements taken in order, one per judged row; a ju
   t("agent-harness R4: the judged rows are plan, collect, compose, dedup, adjust", judged, ["plan", "collect", "compose", "dedup", "adjust"]);
   t("agent-harness R4: the fields a judgement may set are exactly these, and the ones it may not are exactly these",
     [JUDGEABLE, NOT_JUDGEABLE],
-    [["targets", "reports", "candidates", "queue", "adjusted", "submission", "level", "observed", "governed", "condition"],
+    [["targets", "reports", "candidates", "queue", "adjusted", "submission", "level", "observed", "governed", "condition", "disagreements"],
      ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"]]);
   t("agent-harness R4: every NOT_JUDGEABLE field is refused and named, pure",
     NOT_JUDGEABLE.map((f) => applyJudgement({}, { [f]: 1 }).overreach), NOT_JUDGEABLE.map((f) => [f]));
@@ -852,7 +852,9 @@ section("R21 · collect, holdings: each citation resolved to its document by add
 
 section("R22 · compose: one meaning read; its note never a false zero; level-empty candidates made by the table");
 {
-  await reset(mf, { target: "INQ-R22", meaningRows: [{ ord: 0 }, { ord: 1 }] });
+  /* agent-harness R18 (T50): this run takes its judgements from the body, so the scope its absences need is published state. */
+  await reset(mf, { target: "INQ-R22", meaningRows: [{ ord: 0 }, { ord: 1 }], state: { step: "plan", pass: 0, scope: Object.fromEntries(
+    LEVELS.map((l) => [l, { reads: 1, documents: 3 }])) } });
   const r = await runOp(mf, { ...base, judgements: J([
     { level: "document", state: "LOOKED_ABSENT", observed_at: "log:3", summary: "nothing in the packets" },
     { level: "meaning", state: "LOOKED_INDETERMINATE", observed_at: "log:1" }]) });
