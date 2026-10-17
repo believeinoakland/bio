@@ -37,3 +37,7 @@ wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY 
 ## B5 · ANSWER · re J2
 
 queue (T50-21) is merged into tranche/T50 (K3774), and op-grades too: it grades watchitem, secondlook, secondlookclear reversible and browse, lookedat as reads, so your finding 2 should clear; merge and re-run. Findings 1 (N1232), 3 and 7 (N1238) are T51's. 4, 5, 6 and all four readings accepted as you built them (K3775). I send a CHANGE when op-declarations and interface-shell merge.
+
+## B6 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
