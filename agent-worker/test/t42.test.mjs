@@ -7,6 +7,7 @@ import worker, { SURFACE } from "../src/index.mjs";
 import { TRANSCRIBE_PAGES_MAX, TRANSCRIBE_TURNS, TRANSCRIBE_IMAGE_MAX_BYTES } from "../src/ops.mjs";
 import { MODEL_FOR_MODE } from "../../agent-model/src/model.mjs";
 import { MEMBER } from "./account.mjs";
+import { gated } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -107,7 +108,7 @@ async function watched(fn, modelFetch) {
 async function transcribe(b, { model = {}, env = {}, method = "POST", path = "transcribe", noPlane = false } = {}) {
   const p = planeStub(), r = runnerStub(), m = modelApi(model);
   const keys = new Set();
-  const base = { VERSION: "t42", ...(noPlane ? {} : { PLANE: p.binding }), RUNNER: r.binding, ...env };
+  const base = { VERSION: "t42", ...(noPlane ? {} : { PLANE: p.binding }), REMOTE: gated(r.binding), ...env };
   const envProxy = new Proxy(base, { get: (o, k) => { keys.add(String(k)); return o[k]; } });
   const w = await watched(async () => {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`, { method,
@@ -200,7 +201,7 @@ section("R72 · the refusals, before any model call, in order");
     [codeOf(held), nothingCalled(held)], [[409, "SIGNIN_NOT_HELD"], [0, 0, 0]]);
   const noPlane = await transcribe(body(), { noPlane: true });
   t("R72: no PLANE binding is needed: the pages are transcribed", [noPlane.status, noPlane.out?.pages?.length], [200, 2]);
-  t("R72, R35: the only binding /transcribe reads from env is RUNNER (passed to agent-model as bound)", [...new Set([...ok.keys, ...noPlane.keys])].sort(), ["RUNNER"]);
+  t("R72, R35, R109: the only binding /transcribe reads from env is REMOTE (passed to agent-model as bound)", [...new Set([...ok.keys, ...noPlane.keys])].sort(), ["REMOTE"]);
   t("R72: no plane call is made", [ok.plane.length, eight.plane.length], [0, 0]);
 }
 

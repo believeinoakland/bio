@@ -13,6 +13,7 @@
 import worker from "../src/index.mjs";
 import { CASCADE_ORDER, LEVEL_KINDS, resolveClaudeCascade, cascadeToken } from "../src/cascade.mjs";
 import { MEMBER } from "./account.mjs";
+import { gated } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -130,7 +131,7 @@ async function drive(path, body, { planeCfg = {} } = {}) {
   globalThis.fetch = m.fn;
   try {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`, { method: "POST", body: JSON.stringify(body) }),
-                                   { VERSION: "t41", PLANE: p.binding, RUNNER: r });
+                                   { VERSION: "t41", PLANE: p.binding, REMOTE: gated(r) });
     const text = await res.text();
     const lines = res.headers.get("content-type") === "application/x-ndjson"
       ? text.trim().split("\n").map((l) => JSON.parse(l)) : null;

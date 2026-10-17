@@ -1344,12 +1344,12 @@ section("agent-harness R7 · sub-sessions run, one per level, each under its con
 section("R35 · its only binding is PLANE; the plane is reached by no other route");
 {
   /* R91 (R085): and this member's own segment driver, one object per run, holding nothing of the record. */
-  t("R35, R91: wrangler declares exactly one service binding, PLANE, the runner's Container DO binding cross-script, the "
+  t("R35, R91, R109: wrangler declares exactly one service binding, PLANE, the remote class's DO binding cross-script (REMOTE; no RUNNER), the "
     + "segment driver SEGMENTS (its own SegmentDriver), and no other Durable Object, R2, KV, D1, queue or secret binding",
     [WRANGLER_CFG.services, WRANGLER_CFG.durable_objects, ["r2_buckets", "kv_namespaces", "d1_databases", "queues",
       "secrets_store_secrets", "secrets", "containers"].filter((k) => k in WRANGLER_CFG)],
     [[{ binding: "PLANE", service: "bio-plane" }],
-     { bindings: [{ name: "RUNNER", class_name: "AgentRunner", script_name: "agent-runner" },
+     { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "agent-runner" },
                   { name: "SEGMENTS", class_name: "SegmentDriver" }] }, []]);
   t("R35: its vars hold no token and no plane URL", Object.keys(WRANGLER_CFG.vars), ["VERSION"]);
   await reset(mf, {});

@@ -41,6 +41,7 @@
 import { draftMayRead } from "../../bio-plane/src/run-rules/index.mjs";
 import { READ_FACTS } from "../../agent-model/src/model.mjs";
 import { toolContent } from "./reads.mjs";
+import { remoteOf } from "./remote.mjs";
 
 /** R76 — the four tasks, in `run-rules`' `DRAFT_KINDS` order. */
 export const ACTION_DRAFT_OPS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft", "statusreportdraft"]);
@@ -238,6 +239,9 @@ export async function actionDraft(body, task, env, deps, shared) {
   if (grantSent && !(typeof body.grant === "string" && body.grant))
     return refusal("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
   const grant = grantSent ? body.grant : null;
+  /* R110: past the shape checks and before the pack is read or any model turn. */
+  const blocked = await deps.assistantReady(env, account);
+  if (blocked) return blocked;
 
   /* R77: the `action_drafting` layer, or no model call. */
   const got = await packFor(grant, body, env, deps);
@@ -285,7 +289,7 @@ export async function actionDraft(body, task, env, deps, shared) {
   const meter = segmentMeter({ turnsBound: ASK_DECLARED.turns, bytesBound: DEFAULT_MAX_SEGMENT_BYTES });
   const read = grantReader({ env, grant, meter, deps });
   const conv = await converse({
-    reference, runner: env.RUNNER ?? null, mode: "draft", meter, system, messages, tools, finalTool: "draft",
+    reference, runner: remoteOf(env), mode: "draft", meter, system, messages, tools, finalTool: "draft",
     maxTurns: ASK_DECLARED.turns, onTool: read, ...traced,
   });
   const spent = { usage: conv.usage ?? null, calls: conv.calls === undefined ? null : conv.calls };

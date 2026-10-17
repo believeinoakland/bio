@@ -826,13 +826,19 @@ console.log("\n--- B7 · LOG-ALWAYS holds across FL-5's row, and the observation
      every step TICKS (its spend and lease), and an entry is sent only by a step whose judgement stated a look —
      none here, so the run's log holds none, and not one NEVER_LOOKED. */
   /* R91 (R085): a segment also sends one closing tick, `segment_end`, beside its step ticks; this counts step ticks. */
+  /* R114 (T50) adds a tick of its own for each re-read `collect` makes, sent as it is made; those are counted below. */
+  const rereadTick = (l) => (l.body?.log || []).some((e) => e.subject === "collect -> re-read");
   t("every step still ticked", (out.trace || []).length,
-    st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {}))).length);
+    st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {})) && !rereadTick(l)).length);
+  t("R114: and each citation `collect` re-read was ticked as it was read, `read` carrying its place as data",
+    st.runlog.filter((e) => e.subject === "collect -> re-read").map((e) => [e.read?.n, e.read?.total, e.read?.outcome]),
+    [[1, 2, "answered"], [2, 2, "answered"]]);
   /* R105 (R085) adds the one entry a step may send beside its look: the write of a candidate, logged with its name,
      level and pass. So the log holds exactly that entry for the one candidate written (`level-empty-content`), and
      every other step, having looked at nothing, still sent none. */
   t("and no step that looked at nothing sent an entry; the one candidate written is logged as written (R105)",
-    st.runlog.map((e) => [e.subject, e.state, /^wrote 'level-empty-content' at level content in pass 1$/.test(e.detail)]),
+    st.runlog.filter((e) => e.subject !== "collect -> re-read")
+      .map((e) => [e.subject, e.state, /^wrote 'level-empty-content' at level content in pass 1$/.test(e.detail)]),
     [["submit -> candidate written", "LOOKED_INDETERMINATE", true]]);
   t("and the run actually took some steps", (out.trace || []).length > 5, true);
   const collect = (out.trace || []).find((x) => x.step === "collect");

@@ -21,6 +21,7 @@
 import { MODEL_FOR_MODE, sumUsage } from "../../agent-model/src/model.mjs";
 import { TRANSCRIBE_PAGES_MAX, TRANSCRIBE_TURNS, TRANSCRIBE_IMAGE_MAX_BYTES } from "./ops.mjs";
 import { doorTrace } from "./signin.mjs";
+import { remoteOf } from "./remote.mjs";
 
 /** R72 — the one picture kind the plane sends: a PNG it rendered itself (R63). */
 export const TRANSCRIBE_MEDIA_TYPE = "image/png";
@@ -143,6 +144,9 @@ export async function handleTranscribe(req, env, deps) {
   /* R72 (T46; N852; K2816 (3), (4)): a sign-in transcribes. Its page's conversation runs on the member's own runner
      instance, the picture relayed only inside `read_page`'s result (`agent-model` R15, `agent-runner` R24); a runner
      that cannot take a picture is `agent-model`'s to refuse (`IMAGE_NOT_RELAYED`), and the page then ends `refused`. */
+  /* R110: past the shape checks and before any model turn. */
+  const blocked = await deps.assistantReady(env, account);
+  if (blocked) return blocked;
 
   const reference = (await cascadeToken(account)).reference;
   /* R87: the door's trace and member reference, when sent, reach each page's conversation (`agent-model` R16). */
@@ -154,7 +158,7 @@ export async function handleTranscribe(req, env, deps) {
   for (const page of read.pages) {
     const meter = segmentMeter({ turnsBound: TRANSCRIBE_TURNS, bytesBound: DEFAULT_MAX_SEGMENT_BYTES });
     const got = await converse({
-      reference, runner: env.RUNNER ?? null, mode: "transcribe", meter, system: TRANSCRIBE_SYSTEM,
+      reference, runner: remoteOf(env), mode: "transcribe", meter, system: TRANSCRIBE_SYSTEM,
       messages: pageOpening(page), tools: [READ_PAGE_TOOL, TRANSCRIPTION_TOOL], finalTool: TRANSCRIPTION_TOOL.name,
       maxTurns: TRANSCRIBE_TURNS, ...traced,
       /* R73, R75: the page again if asked; any other call reaches nothing and makes no plane call. */

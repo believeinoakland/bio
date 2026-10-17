@@ -24,10 +24,19 @@
  * (N588; a `calls` it did not state is passed as `null`). Progress is streamed as each step begins, and no
  * progress event carries text the checks have not passed: a step's name, and a read's op, nothing more.
  *
- * THE STREAM (K1601 (5)): NDJSON (`application/x-ndjson`), one object per line, `{event: "step", step}` for
- * `interpreting`, `composing` and `checking`, `{event: "read", op}` before each read, and last exactly one of
- * `{event: "answer", ok: true, answer, withheld, untested?}` (R79: the test-instance label the door sent, unchanged) or `{event: "refused", …refusal}`. A refusal made before any model
- * call (R1, R2, `NO_GRANT`, `NO_ACCOUNT`, the ceiling) is answered as plain JSON with its status, not as a stream.
+ * THE STREAM (K1601 (5); R113, T50; N1195, K3602, DEC-298): NDJSON (`application/x-ndjson`), one object per line, each
+ * written the moment its step begins and held for nothing: `{event: "step", step: "interpreting"}` before the first model
+ * turn; `{event: "read", op, record}` before each read, `record` the id of the record that read names (null when it
+ * names none), so a screen draws "Reading {document}" from a field; `{event: "composing", found, count}` when reading
+ * closes, `count` the passages the reads found and `found` whether there is at least one; `{event: "checking", count}`
+ * before the plane's check is asked, `count` the passages the composed answer cites; one `{event: "checked", passage,
+ * found}` for each cited passage as the check answers, `found` whether the check passed it; and last exactly one of
+ * `{event: "answer", ok: true, answer, withheld, untested?}` (R79: the test-instance label the door sent, unchanged),
+ * `{event: "refused", code: "ASK_CHECK_FAILED", cited, found: 0}` (the answer cites holdings and the check withheld
+ * every one: no `answer` follows, so no word the check did not pass reaches the member) or `{event: "refused",
+ * …refusal}`. No event before the last carries text the model wrote. A refusal made before any model call (R1, R2,
+ * `NO_GRANT`, `NO_ACCOUNT`, `ASSISTANT_REMOTE_NOT_READY`, the ceiling) is answered as plain JSON with its status, not
+ * as a stream.
  *
  * THE BOUNDS are `run-rules`' `ASK_BOUNDS` (its R17), their provisional defaults (M-Q7 measures them): `turns` model
  * turns, `bytes` of the record's answers read into the model, `wall_ms` from start to answer, `reads` of the record. */
@@ -37,6 +46,8 @@ import { ASK_OPS } from "./ops.mjs";
 import { toolContent } from "./reads.mjs";
 import { untestedOf, UNTESTED_BAD } from "./untested.mjs";
 import { doorTrace } from "./signin.mjs";
+import { remoteOf } from "./remote.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 /** The ask's bounds: `ASK_BOUNDS`' defaults, the figure an ask declares when it starts (run-rules R17). */
 export const ASK_DECLARED = Object.freeze(Object.fromEntries(Object.entries(ASK_BOUNDS).map(([k, v]) => [k, v.default])));
@@ -122,11 +133,43 @@ function conversationOf(c) {
   return { turns: c.map((t) => ({ role: t.role, content: t.content })) };
 }
 
+/** R113 — the record a read names, as an id the event may carry: the value of the read's `id`, `record`, `bundle_id`
+ *  or `address` argument, else the id in a `q` of the form `id:<record>`; null when it names none or the value is not
+ *  shaped like an id (a name of at most 200 characters, never a sentence the model wrote). */
+const RECORD_SHAPE = /^[A-Za-z0-9][A-Za-z0-9._:/#¶-]{0,199}$/;
+export function recordOf(query) {
+  const q = query && typeof query === "object" ? query : {};
+  const named = ["id", "record", "bundle_id", "address"].map((k) => q[k]).find((v) => typeof v === "string" && v.trim());
+  const viaQ = typeof q.q === "string" ? /(?:^|\s)id:"?([^"\s]+)"?/.exec(q.q)?.[1] : undefined;
+  const id = (named ?? viaQ ?? "").trim();
+  return RECORD_SHAPE.test(id) ? id : null;
+}
+
+/** R113 — the passages a read's answer found: the elements of its result lists (`hits`, `rows`, `passages`), each
+ *  counted once by its own identity within the ask. `seen` is the ask's set. */
+const PASSAGE_LISTS = ["hits", "rows", "passages"];
+export function newPassages(answer, seen) {
+  const a = answer && typeof answer === "object" ? answer : {};
+  let added = 0;
+  for (const k of PASSAGE_LISTS)
+    for (const e of Array.isArray(a[k]) ? a[k] : []) {
+      const id = JSON.stringify(e ?? null);
+      if (!seen.has(id)) { seen.add(id); added += 1; }
+    }
+  return added;
+}
+
+/** R113 — a cited passage as a `checked` event names it: the holding's address when it is shaped like one, else its
+ *  place in the answer's list (`h1` the first), the plane's own name for it. */
+const passageOf = (holding, i) => (typeof holding?.address === "string" && RECORD_SHAPE.test(holding.address.trim())
+  ? holding.address.trim() : `h${i + 1}`);
+
 /** `POST /ask`. `deps` are the shell's own pieces (index.mjs), so the plane is reached by one route and every refusal
  *  is made by one helper. */
 export async function handleAsk(req, env, deps) {
   const { refusal, json, askPlane, planeAnswer, publishedPack, accountOf, cascadeToken, modelHalf, loadableLayers,
-          loadLayer, converse, segmentMeter, NAMESPACES, DEFAULT_MAX_SEGMENT_BYTES, now = () => Date.now() } = deps;
+          loadLayer, converse, segmentMeter, NAMESPACES, DEFAULT_MAX_SEGMENT_BYTES, assistantReady,
+          now = () => Date.now() } = deps;
   if (typeof env.PLANE?.fetch !== "function")
     return refusal("PLANE_NOT_CONFIGURED",
       "this member reaches the record only through the plane service binding, and the binding is absent, so no "
@@ -165,6 +208,9 @@ export async function handleAsk(req, env, deps) {
     return refusal("BAD_CONVERSATION",
       `conversation, when present, is this ask's earlier turns: at most ${CONVERSATION_MAX}, each {role: user or `
       + "assistant, content: words}.", 400);
+  /* R110: past the shape checks and before any plane call or model turn (the ceiling is asked after). */
+  const blocked = await assistantReady(env, account);
+  if (blocked) return blocked;
 
   /* Every call this ask makes reaches the plane under the GRANT and nothing else. */
   const call = (op, query, post) => askPlane(env, op, grant, store, query, post);
@@ -196,7 +242,7 @@ export async function handleAsk(req, env, deps) {
   /* R87: the door's trace and member reference, when sent, reach both conversations (`agent-model` R16). */
   const traced = doorTrace(req);
   const meter = segmentMeter({ turnsBound: ASK_DECLARED.turns, bytesBound: DEFAULT_MAX_SEGMENT_BYTES });
-  const model = modelHalf({ reference, runner: env.RUNNER ?? null, meter, suggestions: account.suggestions });
+  const model = modelHalf({ reference, runner: remoteOf(env), meter, suggestions: account.suggestions });
   model.pack = pack.pack;
   model.layers = loadableLayers(pack.pack, model.suggestions);
   const tools = askTools(model.layers);
@@ -209,6 +255,7 @@ export async function handleAsk(req, env, deps) {
 
   (async () => {
     const used = { turns: 0, bytes: 0, wall_ms: 0, reads: 0 };
+    const found = { count: 0, seen: new Set() };
     const reached = () => { used.turns = meter.turns; used.wall_ms = Math.max(0, now() - started);
                             return askBoundReached(ASK_DECLARED, used); };
     const report = async (got) => {
@@ -258,11 +305,12 @@ export async function handleAsk(req, env, deps) {
           const admitted = admitRead(input);
           if (admitted.refused) return { content: admitted.refused, error: true };
           used.reads += 1;
-          await emit({ event: "read", op: admitted.op });
+          await emit({ event: "read", op: admitted.op, record: recordOf(admitted.query) });
           const got = await call(admitted.op, admitted.query);
           if (!got.reached) return { content: { code: "PLANE_SILENT", detail: "the plane did not answer this read; "
                                                   + "what it would have answered is not held" }, error: true };
           const a = planeAnswer(got, admitted.op);
+          if (!a.refused) found.count += newPassages(a.result, found.seen);
           /* R63: the model is handed the readers' text and `active` lists only; a field holding bytes is dropped and
              the drop told beside the answer. */
           const { content } = toolContent(a.refused ? (a.refused.plane ?? { code: a.refused.code }) : a.result);
@@ -275,7 +323,7 @@ export async function handleAsk(req, env, deps) {
       if (!reading.answer) return await finish(modelEnded(reading));
 
       /* (4) COMPOSING, reading closed. A clarifying question is still an answer, and still checked. */
-      await emit({ event: "step", step: "composing" });
+      await emit({ event: "composing", found: found.count >= 1, count: found.count });
       const bound = reached();
       if (bound) return await finish(refusedEvent("ASK_BOUND_REACHED",
         `the ask reached its ${bound} bound before it was answered, so nothing is returned.`, { bound }));
@@ -292,7 +340,8 @@ export async function handleAsk(req, env, deps) {
       if (!composed.answer) return await finish(modelEnded(composed));
 
       /* (5) CHECKING: only what answers' checks pass is returned (answers R4). */
-      await emit({ event: "step", step: "checking" });
+      const cited = Array.isArray(composed.answer?.holdings) ? composed.answer.holdings : [];
+      await emit({ event: "checking", count: cited.length });
       const checked = await call("askcheck", null, { question: body.question, answer: composed.answer });
       if (!checked.reached)
         return await finish(refusedEvent("PLANE_SILENT",
@@ -308,6 +357,18 @@ export async function handleAsk(req, env, deps) {
         return await finish(refusedEvent("ASK_UNCHECKED",
           "the record's checks answered without a checked answer, so nothing is returned: an unchecked answer is never "
           + "shown."));
+      /* R113: one `checked` event per cited passage as the check answers, before the last event; the check marks a
+         holding it withheld as null in the answer it returns. */
+      const kept = Array.isArray(r.answer.holdings) ? r.answer.holdings : [];
+      let passed = 0;
+      for (const [i, h] of cited.entries()) {
+        const ok = kept[i] != null;
+        if (ok) passed += 1;
+        await emit({ event: "checked", passage: passageOf(h, i), found: ok });
+      }
+      /* R113: the answer cites holdings and the check withheld every one: nothing it wrote is shown. */
+      if (cited.length && !passed)
+        return await finish(refusedEvent("ASK_CHECK_FAILED", word("ai.progress.check.failed"), { cited: cited.length, found: 0 }));
       await finish({ event: "answer", ok: true, answer: r.answer, withheld: Array.isArray(r.withheld) ? r.withheld : [],
                      ...(untested.label ? { untested: untested.label } : {}) });
     } catch (e) {

@@ -27,6 +27,8 @@
  * to the runner. Every answer carries `trace`, and every refusal this member makes carries a `detail` written for the
  * member in DEC-149's words (R64). */
 
+import { remoteOf } from "./remote.mjs";
+
 /** The steps, and the `agent-runner` route each is sent to (its R17, R18, R19, R20). */
 export const SIGNIN_ROUTES = Object.freeze({
   start: "/signin",
@@ -122,9 +124,9 @@ export async function handleSignin(req, env, deps) {
     written(refusal(code, WORDS[code], status, { trace, ...extra }), { outcome, code, ...lineOf(extra) });
   const lineOf = (extra) => ("runner_text_head" in extra ? { runner_text_head: extra.runner_text_head } : {});
 
-  const runner = env.RUNNER;
-  if (!runner || typeof runner.idFromName !== "function" || typeof runner.get !== "function")
-    return own("RUNNER_NOT_CONFIGURED", 503, {}, "failed");
+  /* R109: the one road to a runner is `REMOTE`. */
+  const runner = remoteOf(env);
+  if (!runner) return own("RUNNER_NOT_CONFIGURED", 503, {}, "failed");
   const body = await req.json().catch(() => null);
   if (!isObject(body)) return own("BAD_BODY", 400);
   const { member, step } = body;

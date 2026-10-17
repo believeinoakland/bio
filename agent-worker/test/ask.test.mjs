@@ -14,6 +14,7 @@ import { ASK_BOUNDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MODEL_ENDPOINT, MODEL_FOR_MODE, USAGE_FIGURES } from "../../agent-model/src/model.mjs";
 import { ESTIMATE } from "../../agent-model/src/outcome.mjs";
 import { MEMBER } from "./account.mjs";
+import { gated } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -174,8 +175,8 @@ section("R54 · interpret, read through the grant, compose, check, and return on
   t("R54: progress is streamed as each step begins: interpreting, each read with its op, composing, checking, then the answer",
     r.lines.map((l) => l.event === "step" ? l.step : l.event === "read" ? `read ${l.op}` : l.event),
     ["interpreting", "read eventsfor", "composing", "checking", "answer"]);
-  t("R54: no progress event carries text the checks have not passed: a step's name or a read's op, nothing more",
-    r.lines.slice(0, -1).map((l) => Object.keys(l).sort().join(",")), ["event,step", "event,op", "event,step", "event,step"]);
+  t("R54, R113: no progress event carries text the checks have not passed: a step's name, a read's op and record, counts, nothing more",
+    r.lines.slice(0, -1).map((l) => Object.keys(l).sort().join(",")), ["event,step", "event,op,record", "count,event,found", "count,event"]);
   const check = r.plane.find((x) => x.op === "askcheck");
   t("R54: the composed answer was handed to the plane's answers checks, with the question",
     [check?.body?.question, check?.body?.answer?.summary, check?.body?.answer?.label], ["Who held the seat in March?", "S1", "machine work"]);
@@ -297,13 +298,13 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
   t("R26, R58 (N588; ai-runs R48): each tick carries the usage of the conversations since the last, each exactly "
     + "{mode, model, usage, calls}",
     [entries.length > 0, [...new Set(entries.map((e) => Object.keys(e).join(",")))], [...new Set(entries.map((e) => e.mode))]],
-    [true, ["mode,model,usage,calls"], ["check"]]);
+    [true, ["mode,model,effort,usage,calls"], ["check"]]);
   t("R26 (N588): `calls` is agent-model R6's, so the calls summed over every entry are the model calls that reached the "
     + "provider (each API-key request one), never a conversation counted as one",
     entries.reduce((n, e) => n + (Number.isInteger(e.calls) ? e.calls : NaN), 0), r.model.length);
   /* R26's other half, on the sign-in path (T38; R6, R32, R33): `agent-model` R6's `calls` there is the turns the runner
      states (`agent-runner` R4's `num_turns`), and `null` where it states none, passed through as `null`, never invented.
-     The runner is driven in this process over its own wire (a fake socket on the Container binding `RUNNER`, a
+     The runner is driven in this process over its own wire (a fake socket on the remote binding `REMOTE`, a
      namespace recording each instance it is asked to name): each conversation answers its final tool, then ends,
      stating `num_turns` or not. */
   const fakeRunner = (numTurns) => {
@@ -337,7 +338,7 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
   const subRun = async (numTurns) => {
     const runner = fakeRunner(numTurns);
     const d = await drive("run", { run_id: "RUN-A", store: "scratch", credential: AIK, account: SIGNIN },
-                          { env: { RUNNER: runner } });
+                          { env: { REMOTE: gated(runner) } });
     TRANSCRIPTS.push(d);
     return { d, runner, entries: d.plane.filter((x) => x.op === "airuntick").flatMap((x) => x.body?.usage || []) };
   };

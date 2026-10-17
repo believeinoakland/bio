@@ -11,6 +11,7 @@ import worker from "../src/index.mjs";
 import { MODES } from "../../agent-harness/src/harness.mjs";
 import { MEMBER } from "./account.mjs";
 import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
+import { gated } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -172,7 +173,7 @@ async function drive(path, body, { planeCfg = {}, method = "POST", noRunner = fa
   try {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`,
       method === "GET" ? { method } : { method, body: typeof body === "string" ? body : JSON.stringify(body) }),
-      { VERSION: "t46", PLANE: p.binding, ...(noRunner ? {} : { RUNNER: r }) });
+      { VERSION: "t46", PLANE: p.binding, ...(noRunner ? {} : { REMOTE: gated(r) }) });
     const text = await res.text();
     const lines = res.headers.get("content-type") === "application/x-ndjson"
       ? text.trim().split("\n").map((l) => JSON.parse(l)) : null;
@@ -219,16 +220,25 @@ section("R6 (T46) · a sign-in carries its own suggestions switch, honoured as a
 
 /* ================================================================================================ R30 */
 
-section("R30 (T46) · GET /version says whether the RUNNER binding is present");
+section("R30, R110 (T50) · GET /version says whether the remote class answers its own version");
 {
-  const withRunner = await drive("version", null, { method: "GET" });
-  t("R30: with a RUNNER binding, runner is true", [withRunner.status, withRunner.out?.runner], [200, true]);
+  const withRemote = await drive("version", null, { method: "GET" });
+  t("R30, R110: with REMOTE answering GET /remote/version, runner is true", [withRemote.status, withRemote.out?.runner], [200, true]);
   t("R30: the answer is {ok, name, version, model_turns, runner}, naming nothing else of the binding",
-    Object.keys(withRunner.out || {}), ["ok", "name", "version", "model_turns", "runner"]);
+    Object.keys(withRemote.out || {}), ["ok", "name", "version", "model_turns", "runner"]);
   const without = await drive("version", null, { method: "GET", noRunner: true });
-  t("R30 (control): with no RUNNER binding, runner is false", [without.status, without.out?.runner], [200, false]);
-  const bare = await worker.fetch(new Request("http://agent-worker/version"), { RUNNER: { get() {} } });
-  t("R30 (control): a RUNNER that cannot name an instance is not the binding: runner is false", (await bare.json()).runner, false);
+  t("R30, R110 (control): with no REMOTE binding, runner is false", [without.status, without.out?.runner], [200, false]);
+  const bare = await worker.fetch(new Request("http://agent-worker/version"), { REMOTE: { get() {} } });
+  t("R30 (control): a REMOTE that cannot name an instance is not the binding: runner is false", (await bare.json()).runner, false);
+  const silent = await worker.fetch(new Request("http://agent-worker/version"),
+    { REMOTE: { idFromName: (n) => n, get: () => ({ fetch: async () => { throw new Error("down"); } }) } });
+  t("R110: a REMOTE whose version answer throws: runner is false", (await silent.json()).runner, false);
+  const refused = await worker.fetch(new Request("http://agent-worker/version"),
+    { REMOTE: { idFromName: (n) => n, get: () => ({ fetch: async () => Response.json({ ok: false }, { status: 410 }) }) } });
+  t("R110: a REMOTE that answers the version with a refusal: runner is false", (await refused.json()).runner, false);
+  const stale = await worker.fetch(new Request("http://agent-worker/version"),
+    { RUNNER: { idFromName: (n) => n, get: () => ({ fetch: async () => Response.json({ ok: true, version: "v" }) }) } });
+  t("R109 (control): a RUNNER binding alone is not a runner: runner is false", (await stale.json()).runner, false);
 }
 
 /* ================================================================================================ R51 */
@@ -369,7 +379,7 @@ async function transcribeOn(runner, account) {
   try {
     const res = await worker.fetch(new Request("http://agent-worker/transcribe", { method: "POST",
       body: JSON.stringify({ capture_sha: "c".repeat(64), pages: [{ page: 0, media_type: "image/png", data: PNG }], account }) }),
-      { PLANE: p.binding, RUNNER: runner });
+      { PLANE: p.binding, REMOTE: gated(runner) });
     const text = await res.text();
     return { status: res.status, text, out: JSON.parse(text), plane: p.calls, modelCalls };
   } finally { globalThis.fetch = saved; }
