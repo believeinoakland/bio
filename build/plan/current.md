@@ -176,6 +176,7 @@ Every L11 job also draws the DEC-257–DEC-300 items `plan/fold-T50-decs.md` pla
 - **At each layer close:** the generated artifacts (§14), `rows.mjs` and the T50-17 registry among them.
 - **The channel:** one HANDOFF to UX-DESIGN at the opening: the keys T50's new refusals need (`ASSISTANT_REMOTE_NOT_READY`, `LOCAL_RUNNER_DISABLED` for logs only, `SIGNIN_EXPIRED` later), the remote check's step words (agent-worker R111, screens-settings R41), N1174's aliases question (`/doorbell`, `/tour`), and N1190's court kinds' labels.
 - **stewards (N1159):** BOB's routing acts on account 20b5…7f72 (the test delivery in the routing log) before the stewards job can be placed; if the route works before L11's START, stewards and N923 join L11.
+- **Bob's route for the remote assistant (K3692):** the proof blocked at R38 step 0; on his answer, BOB folds the route into agent-runner R36–R40 and its users and sends each running job a CHANGE (K3615).
 - **Bob, at the opening:** told that T50 has opened; asked his meter reading; ROOT #7 (ROOT #5 near its 55%).
 
 ## Left out of T50 (one hard reason each)
