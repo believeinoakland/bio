@@ -31,7 +31,8 @@ async function world({ answers = {}, self = true, daemon = "dmn-unpack" } = {}) 
   /* the consumer as the scheduler holds it, asked as `onAlarm` asks it: `due` first, and `tick` only when it is due */
   const c = schedulerOf(x.ctx, x.env).registry(null).find((r) => r.name === ARCHIVE_UNPACK);
   assert.ok(c, "the composition root registered the consumer");
-  const alarm = async (now) => (c.due(now) === null ? {} : await c.tick(now));
+  /* scheduler R27: a registered consumer's due, wake and tick may answer a promise, each awaited */
+  const alarm = async (now) => ((await c.due(now)) === null ? {} : await c.tick(now));
   return { ...x, seen, left, consumer: c, alarm };
 }
 
@@ -39,7 +40,7 @@ test("K2046: on the alarm each archive-unpack event is asked of the Worker as op
   const x = await world({ answers: { [B]: [409, { ok: false, reason: "ARCHIVE_NOT_HELD" }], [C]: [503, { ok: false, reason: "STORE_DID_NOT_ANSWER" }] } });
   assert.ok(schedulerOf(x.ctx).consumers().includes(ARCHIVE_UNPACK), "registered with the scheduler");
   assert.deepEqual([x.consumer.key, x.consumer.module], ["archiveunpack", "plane"]);
-  assert.equal(x.consumer.wake(T0), T0, "an event waiting and never tried wants a wake now");
+  assert.equal(await x.consumer.wake(T0), T0, "an event waiting and never tried wants a wake now");
   const r = await x.alarm(T0);
   assert.deepEqual(x.seen.map((s) => [s.url, s.method, s.auth, s.body.archiveSha]),
     [A, B, C].map((sha) => ["https://self/api/?op=unpack", "POST", "Bearer dmn-unpack", sha]));

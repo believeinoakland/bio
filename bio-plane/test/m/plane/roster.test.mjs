@@ -16,14 +16,6 @@ import { instanceSetupOf } from "../../../src/setup.mjs";
 import { projectRosterOf, projectRosterOps, PROJECT_ROSTER_TABLES } from "../../../src/project-roster/index.mjs";
 
 const PR = [...PROJECT_ROSTER_TABLES];
-const OPS = ["projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibility",
-             /* (T49; N1091; project-roster R30; plane R5 (T49)) the owner changes awaiting agreement */
-             "projectownervotes", "projectdirectory",
-             /* (T47; N972; project-roster's projects with their stage; plane R45's re-pin) */
-             "projectlist",
-             "projectparticipants", "projectrequest", "projectrequestwithdraw", "projectrequestanswer", "projectrequests",
-             /* (T45; K2797, plan rule 4 (9)) project-roster R21, R24: a project's scope and its second-approval setting */
-             "projectscopeset", "projectapprovalset"];
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
 const one = (x, q, ...a) => [...x.ctx.storage.sql.exec(q, ...a)][0];
 
@@ -98,7 +90,9 @@ test("R5, R9, R45 (T38-26; N783; T47 N972): project-roster's whole ops map is ro
   const x = await world(), u = new URL("http://do/");
   const names = MODULE_MAPS.map(([mod]) => mod);
   assert.equal(names.indexOf("project-roster"), names.indexOf("membership") + 1, "directly after membership's map");
-  assert.deepEqual(Object.keys(projectRosterOps(projectRosterOf(x.ctx), u, null, x.env)), OPS);
+  /* R58 (T50; K3268, K3729): the ops are read from project-roster's own map, never hand-listed here; T50's three are in it */
+  const OPS = Object.keys(projectRosterOps(projectRosterOf(x.ctx), u, null, x.env));
+  for (const op of ["projectstakeset", "projectstake", "projectownersgone"]) assert.ok(OPS.includes(op), `${op} is project-roster's`);
   const mem = Object.keys(MODULE_MAPS.find(([mod]) => mod === "membership")[1](x.ctx, u, null, x.env));
   const keys = Object.keys(x.s.routes(u, null));
   for (const op of OPS) assert.equal(mem.includes(op), false, `${op} is no longer membership's`);

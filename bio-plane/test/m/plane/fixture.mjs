@@ -15,7 +15,7 @@ registerHooks({
   },
 });
 
-export const { Store, STEP_ORDER } = await import("../../../src/plane/store.mjs");
+export const { Store, STEP_ORDER, stepOrderFrom } = await import("../../../src/plane/store.mjs");
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {

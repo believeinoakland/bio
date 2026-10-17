@@ -6,7 +6,8 @@ import { registerDoctypes, generic } from "../../../doctypes/index.mjs";
 import { registerLegistar } from "../../../legistar-reader/index.mjs";
 import { registerRosterTypes, ROSTER_TYPES, rosterColumns } from "../../../roster-reader/index.mjs";
 import { readerView } from "../../../docprofile/registry.mjs";
-import { viewerPredicate } from "../membership/index.mjs";
+import { viewerPredicate, Membership } from "../membership/index.mjs";
+import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { parseCsv } from "../calculations/index.mjs";
 import { registerCourtTypes } from "../../../court-doctypes/index.mjs";
 import { registerBudgetTypes } from "../../../budget-doctypes/index.mjs";
@@ -255,5 +256,57 @@ export function frontDoorPointer({ setting }) {
         .filter((n) => n !== null);
       return { places, pointers: Array.isArray(combined.view.pointers) ? combined.view.pointers : [] };
     } catch { return null; }
+  };
+}
+
+/** R58 (T50; N1186, K3557; `membership` R150): the two readers the plane registers with `membership.registerProjectReach`
+ *  for the modules that cannot (`provenance` and `connections` are in closed layers). Each answers `fn({project})`, a list
+ *  of bundle ids and nothing else, over the plane's own instances, handed as getters and asked at each call:
+ *  - `provenance`: the home bundle (`provenance.homeOf`) of each capture (`provenance.capturesOf`, per bundle) that the
+ *    project's own bundles hold (the project's bundle and every bundle `record.listBundles({project})` lists), since a
+ *    capture's digest is no bundle id; a capture with no home adds nothing;
+ *  - `connections`: the records the project's document cites, the targets of its `references[]` entries of rel `cites`
+ *    whose edge is not severed (`connections.edgeSevered`).
+ *  A reader that throws, or reads nothing, adds nothing (membership R150: the reach narrows, never widens). Both are
+ *  bounded by `Membership.PROJECT_REACH_LIMIT`. Neither writes. */
+export function projectReachReaders({ record, provenance, connections }) {
+  const LIMIT = Membership.PROJECT_REACH_LIMIT, PAGE = 200;
+  const own = (project) => {
+    const ids = [project];
+    let after = "";
+    for (;;) {
+      const page = record().listBundles({ project, after, limit: PAGE });
+      const got = page && Array.isArray(page.ids) ? page.ids : [];
+      for (const id of got) if (!ids.includes(id) && ids.length < LIMIT) ids.push(id);
+      if (got.length < PAGE || ids.length >= LIMIT || typeof page.cursor !== "string" || page.cursor === "" || page.cursor === after) break;
+      after = page.cursor;
+    }
+    return ids;
+  };
+  const said = (project) => typeof project === "string" && project !== "";
+  return {
+    provenance: ({ project } = {}) => {
+      if (!said(project)) return [];
+      const out = new Set(), p = provenance();
+      for (const b of own(project)) {
+        for (const { capture_sha } of p.capturesOf(b)) {
+          const home = p.homeOf(capture_sha);
+          if (home && typeof home.bundleId === "string" && home.bundleId !== "" && out.size < LIMIT) out.add(home.bundleId);
+        }
+        if (out.size >= LIMIT) break;
+      }
+      return [...out];
+    },
+    connections: ({ project } = {}) => {
+      if (!said(project)) return [];
+      const md = record().readFile(project, "bundle.md");
+      const refs = md && typeof md.text === "string" ? parseFrontmatter(md.text).data?.references : null;
+      const c = connections(), out = new Set();
+      for (const r of Array.isArray(refs) ? refs : []) {
+        if (!r || r.rel !== "cites" || typeof r.target !== "string" || r.target === "") continue;
+        if (!c.edgeSevered(project, r.target, "cites") && out.size < LIMIT) out.add(r.target);
+      }
+      return [...out];
+    },
   };
 }
