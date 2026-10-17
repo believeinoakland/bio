@@ -1,6 +1,6 @@
 # explore (T50)
 
-**Status** · session_01GeqMMCaEHa6q6oxUuwc2TJ · depth 2 · WORKING · handled B1
+**Status** · session_01GeqMMCaEHa6q6oxUuwc2TJ · depth 2 · COMPLETE · handled B1
 
 ## Completion (T50-63 · explore)
 
