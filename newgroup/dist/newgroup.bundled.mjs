@@ -2631,6 +2631,15 @@ var test_port_ellery_default = {
       basis: "TEST"
     },
     /* N574: an issuer of credentials, held through entities R43 */
+    /* R94: a forum's identifier */
+    {
+      scheme: "marlow_court_no",
+      label: "Marlow County court number",
+      entity_kinds: ["forum"],
+      space: "institution",
+      form: "marlow-registry",
+      basis: "TEST"
+    },
     {
       scheme: "port_ellery_registry",
       label: "Marlow County registry of institutions",
@@ -2890,6 +2899,37 @@ var test_port_ellery_default = {
     }
   ],
   /* R73: official names, never translated as ordinary words (DEC-157 (6)). */
+  /* R93 (T50): every value differs from the first profile's block */
+  records_help: {
+    law: "Freedom of Records Act (test)",
+    days: 7,
+    extra_days: 21,
+    extension_reasons: [
+      { reason: "the records are kept at the harbour depot", citation: "Test Stat. \xA7 1.104(a)" },
+      { reason: "the request covers a great many separate records", citation: "Test Stat. \xA7 1.104(b)" }
+    ],
+    portal: { name: "Port Ellery Records Window", url: "https://records.port-ellery.example/requests" },
+    faster: { ordinance: "Open Government Bylaw", window: "2 working days", request: "quick look", citation: "P.E.B.L. \xA7 4.5" },
+    citations: {
+      answer: "Test Stat. \xA7 1.103",
+      extend: "Test Stat. \xA7 1.104",
+      assist: "Test Stat. \xA7 1.105",
+      segregate: "Test Stat. \xA7 1.106",
+      refuse_in_writing: "Test Stat. \xA7 1.107",
+      electronic: "Test Stat. \xA7 1.108",
+      cost: "Test Stat. \xA7 1.109",
+      cost_electronic: "Test Stat. \xA7 1.110",
+      inspect_photograph: "Test Stat. \xA7 1.111",
+      purpose: "Test Stat. \xA7 1.112"
+    },
+    status: "researched",
+    basis: "TEST"
+  },
+  /* R94 (T50): the courts and forums of the place, with the kinds of proceeding (above) they hold */
+  forums: [
+    { label: "Marlow County Bench (test)", forum_kind: "court", ids: [{ scheme: "marlow_court_no", id: "MC-1" }], basis: "TEST" },
+    { label: "Port Ellery Harbour Commission (test)", forum_kind: "commission", basis: "TEST" }
+  ],
   local_names: [
     {
       name: "Town Clerk",
@@ -3731,7 +3771,10 @@ var SECTIONS = Object.freeze([
   "procedure_guides",
   "phrasings",
   /* T48 (R89) */
-  "pointers"
+  "pointers",
+  /* T50 (R93, R94) */
+  "records_help",
+  "forums"
 ]);
 var SPACES = Object.freeze([
   "enactment",
@@ -3856,6 +3899,18 @@ var TIERS = Object.freeze([1, 2, 3]);
 var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 var POINTER_KINDS = Object.freeze(["legalaid", "selfhelp", "service", "agency", "representative", "tipline"]);
 var POINTER_HOW = Object.freeze([...CONTACT_HOW, "address"]);
+var RECORDS_HELP_CITATIONS = Object.freeze([
+  "answer",
+  "extend",
+  "assist",
+  "segregate",
+  "refuse_in_writing",
+  "electronic",
+  "cost",
+  "cost_electronic",
+  "inspect_photograph",
+  "purpose"
+]);
 var TEMPLATE_FIELDS = Object.freeze([
   "id",
   "version",

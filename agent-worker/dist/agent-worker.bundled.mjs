@@ -25374,6 +25374,15 @@ var test_port_ellery_default = {
       basis: "TEST"
     },
     /* N574: an issuer of credentials, held through entities R43 */
+    /* R94: a forum's identifier */
+    {
+      scheme: "marlow_court_no",
+      label: "Marlow County court number",
+      entity_kinds: ["forum"],
+      space: "institution",
+      form: "marlow-registry",
+      basis: "TEST"
+    },
     {
       scheme: "port_ellery_registry",
       label: "Marlow County registry of institutions",
@@ -25633,6 +25642,37 @@ var test_port_ellery_default = {
     }
   ],
   /* R73: official names, never translated as ordinary words (DEC-157 (6)). */
+  /* R93 (T50): every value differs from the first profile's block */
+  records_help: {
+    law: "Freedom of Records Act (test)",
+    days: 7,
+    extra_days: 21,
+    extension_reasons: [
+      { reason: "the records are kept at the harbour depot", citation: "Test Stat. \xA7 1.104(a)" },
+      { reason: "the request covers a great many separate records", citation: "Test Stat. \xA7 1.104(b)" }
+    ],
+    portal: { name: "Port Ellery Records Window", url: "https://records.port-ellery.example/requests" },
+    faster: { ordinance: "Open Government Bylaw", window: "2 working days", request: "quick look", citation: "P.E.B.L. \xA7 4.5" },
+    citations: {
+      answer: "Test Stat. \xA7 1.103",
+      extend: "Test Stat. \xA7 1.104",
+      assist: "Test Stat. \xA7 1.105",
+      segregate: "Test Stat. \xA7 1.106",
+      refuse_in_writing: "Test Stat. \xA7 1.107",
+      electronic: "Test Stat. \xA7 1.108",
+      cost: "Test Stat. \xA7 1.109",
+      cost_electronic: "Test Stat. \xA7 1.110",
+      inspect_photograph: "Test Stat. \xA7 1.111",
+      purpose: "Test Stat. \xA7 1.112"
+    },
+    status: "researched",
+    basis: "TEST"
+  },
+  /* R94 (T50): the courts and forums of the place, with the kinds of proceeding (above) they hold */
+  forums: [
+    { label: "Marlow County Bench (test)", forum_kind: "court", ids: [{ scheme: "marlow_court_no", id: "MC-1" }], basis: "TEST" },
+    { label: "Port Ellery Harbour Commission (test)", forum_kind: "commission", basis: "TEST" }
+  ],
   local_names: [
     {
       name: "Town Clerk",
@@ -25693,7 +25733,10 @@ var SECTIONS = Object.freeze([
   "procedure_guides",
   "phrasings",
   /* T48 (R89) */
-  "pointers"
+  "pointers",
+  /* T50 (R93, R94) */
+  "records_help",
+  "forums"
 ]);
 var SPACES = Object.freeze([
   "enactment",
@@ -25823,6 +25866,18 @@ var POINTER_KINDS = Object.freeze(["legalaid", "selfhelp", "service", "agency", 
 var POINTER_HOW = Object.freeze([...CONTACT_HOW, "address"]);
 var POINTER_NAME_MAX = 200;
 var POINTER_DOES_MAX = 500;
+var RECORDS_HELP_CITATIONS = Object.freeze([
+  "answer",
+  "extend",
+  "assist",
+  "segregate",
+  "refuse_in_writing",
+  "electronic",
+  "cost",
+  "cost_electronic",
+  "inspect_photograph",
+  "purpose"
+]);
 var EVIDENCE_STANDARD_MAX = 200;
 var VENUE_FACT_MAX = 500;
 var TEMPLATE_NAME_MAX = 120;
@@ -27156,6 +27211,70 @@ function validateInto(p, errors) {
     }))
       err(`${at7}.basis`, "BASIS_INVALID", "a pointer rests on the day its page was read, a dated entry YYYY-MM-DD");
   });
+  if (own4(p, "records_help")) {
+    const h = p.records_help, at7 = "records_help";
+    if (!isObj2(h)) err(at7, "VALUE_INVALID", "records_help is {law, days, extra_days, extension_reasons, portal?, faster?, citations, status, basis}");
+    else {
+      fields(at7, h, ["law", "days", "extra_days", "extension_reasons", "portal", "faster", "citations", "status", "basis"]);
+      str(`${at7}.law`, h.law, "law");
+      if (!isPosInt(h.days)) err(`${at7}.days`, "VALUE_INVALID", "days is a positive integer");
+      if (!isPosInt(h.extra_days)) err(`${at7}.extra_days`, "VALUE_INVALID", "extra_days is a positive integer");
+      if (!Array.isArray(h.extension_reasons) || !h.extension_reasons.length) err(`${at7}.extension_reasons`, "VALUE_INVALID", "extension_reasons is a non-empty list of {reason, citation}");
+      else h.extension_reasons.forEach((r, j) => {
+        const ra = `${at7}.extension_reasons[${j}]`;
+        if (!entry(ra, r)) return;
+        fields(ra, r, ["reason", "citation"]);
+        str(`${ra}.reason`, r.reason, "reason");
+        str(`${ra}.citation`, r.citation, "citation");
+      });
+      if (own4(h, "portal")) {
+        if (!isObj2(h.portal)) err(`${at7}.portal`, "VALUE_INVALID", "portal is {name, url}");
+        else {
+          fields(`${at7}.portal`, h.portal, ["name", "url"]);
+          str(`${at7}.portal.name`, h.portal.name, "name");
+          if (typeof h.portal.url !== "string" || !/^https?:\/\/[^\s/]+\S*$/.test(h.portal.url)) err(`${at7}.portal.url`, "VALUE_INVALID", "url is an http(s) address");
+        }
+      }
+      if (own4(h, "faster")) {
+        if (!isObj2(h.faster)) err(`${at7}.faster`, "VALUE_INVALID", "faster is {ordinance, window, request, citation}");
+        else {
+          fields(`${at7}.faster`, h.faster, ["ordinance", "window", "request", "citation"]);
+          for (const f4 of ["ordinance", "window", "request", "citation"]) str(`${at7}.faster.${f4}`, h.faster[f4], f4);
+        }
+      }
+      if (!isObj2(h.citations)) err(`${at7}.citations`, "VALUE_INVALID", `citations is {${RECORDS_HELP_CITATIONS.join(", ")}}`);
+      else {
+        fields(`${at7}.citations`, h.citations, RECORDS_HELP_CITATIONS);
+        for (const f4 of RECORDS_HELP_CITATIONS) str(`${at7}.citations.${f4}`, h.citations[f4], "the citation");
+      }
+      if (h.status !== "researched") err(`${at7}.status`, "BASIS_INVALID", "records_help is researched: it is read from the statute's own text");
+      if (basis(at7, h) && !(test && h.basis === "TEST") && !basisParts(h.basis).every((b) => {
+        const m = DATED_REF.exec(b);
+        return !!m && isDate(m[1]);
+      }))
+        err(`${at7}.basis`, "BASIS_INVALID", "records_help rests on the day the text was read, a dated entry YYYY-MM-DD");
+    }
+  }
+  if (own4(p, "forums")) {
+    const seen = /* @__PURE__ */ new Set();
+    list3("forums", p.forums).forEach((f4, i) => {
+      const at7 = `forums[${i}]`;
+      if (!entry(at7, f4)) return;
+      fields(at7, f4, ["label", "forum_kind", "ids", "basis"]);
+      str(`${at7}.label`, f4.label, "label");
+      if (!FORUM_KINDS.includes(f4.forum_kind)) err(`${at7}.forum_kind`, "VALUE_INVALID", `forum_kind is one of ${FORUM_KINDS.join(", ")}`);
+      if (isStr(f4.label)) {
+        const k = `${f4.forum_kind}\0${f4.label}`;
+        if (seen.has(k)) err(`${at7}.label`, "VALUE_INVALID", `the forum '${f4.label}' is given twice`);
+        seen.add(k);
+      }
+      if (own4(f4, "ids")) {
+        if (!Array.isArray(f4.ids) || !f4.ids.length) err(`${at7}.ids`, "VALUE_INVALID", "ids is a non-empty list of {scheme, id}");
+        else f4.ids.forEach((x, j) => identifier(`${at7}.ids[${j}]`, x, "forum"));
+      }
+      basis(at7, f4);
+    });
+  }
   if (own4(p, "local_names")) {
     const seen = /* @__PURE__ */ new Set();
     list3("local_names", p.local_names).forEach((n, i) => {
@@ -27484,6 +27603,16 @@ function merge(profiles) {
       for (const p of profiles) union(v, p[sec], p.id);
       view[sec] = strip(v);
     }
+  if (has("records_help")) {
+    const given = profiles.filter((p) => p.records_help).map((p) => ({ profile: p.id, value: p.records_help, basis: p.records_help.basis }));
+    if (agree(given)) view.records_help = keep(given);
+    else conflict("records_help", given, "the active profiles give different records-request help, so none is given: the page has no figure to show");
+  }
+  if (has("forums")) {
+    const v = [];
+    for (const p of profiles) union(v, p.forums, p.id);
+    view.forums = strip(v);
+  }
   if (has("pointers")) {
     const v = [];
     const hoursOf = /* @__PURE__ */ new Map();
