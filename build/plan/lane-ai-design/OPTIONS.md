@@ -34,3 +34,27 @@ Plain version for Bob: today a team connects "Claude." With several AIs, each te
 
 ### What this leaves OPEN (to close with the provider, a human reading in a browser, or counsel)
 OpenAI terms and usage policies; xAI terms and privacy; Groq Services Agreement; Cloudflare Workers AI terms and model licences; per-model tool/JSON flags and response usage fields on Cloudflare; whether any provider permits an app to hold a customer's key. Closing these needs a person for the blocked pages; the lane never works around bot protection.
+
+## Q2b · Plans, sessions and caching, model controls (for AIR2, AIR3, AIR6–AIR9)
+
+Facts: `NOTES.md` §Q2b. Working bar: Bob's provisional agreement to AIR1–AIR10 and the §4 recommendations of `REQUIREMENTS.md` (K3735); revisable.
+
+### What a team can safely choose today, by plan class
+| Plan class | Who may use it for Civicsmith (as read) | Product behaviour proposed |
+|---|---|---|
+| **API pay-as-you-go account owned by the team** (Google paid, Mistral, OpenRouter; others OPEN) | the account holder's application serving its own end users: confirmed text at Google, Mistral, OpenRouter | selectable at team, project and member level; the usual recommended class |
+| **API free tier** | evaluation; data may be used or human-reviewed at Google and Mistral | offered only with a plain warning, off by default for team material; refused where the provider says "do not submit sensitive … information" (policy question A2-3 still with Bob) |
+| **Consumer subscription** (ChatGPT, Gemini AI plans, Le Chat, Grok) | no provider confirms use through an app; Google bars the CLI-OAuth pattern; OpenAI's Sign in with ChatGPT is the one documented route (preview, "selected private apps") | member level only, and only where the provider documents a route; otherwise listed as "not available for use with Civicsmith" with the reason and source |
+| **Business/team seats** (ChatGPT Business, Workspace, Le Chat Team) | shared use by the seat holders; app use OPEN | shown with scope "T, app use unconfirmed"; not offered until confirmed |
+| **Built in via the team's Cloudflare account** | app serving others OPEN in what was read | working case for teams with no outside account (A2 recommendation), terms to be confirmed before it is the default |
+
+### Design consequences (inputs to Q3)
+1. **Plan catalogue as data**: provider → plans → {price basis, included, limits, scope (1/T/APP/OPEN), clause, source URL, date confirmed}. Scope is enforced by the account setter (AIR3).
+2. **Model catalogue as data**: provider → models → {context, max output, price in/cached/out, capabilities, effort values and default, batch/priority options}; filled at build time from providers' models endpoints where they publish prices and effort (xAI, DeepSeek, OpenRouter, Together), otherwise from vetted, dated entries.
+3. **Source of truth for session context is the plane's run record**, sent as append-only history with a provider-neutral `session key`; provider-held state (OpenAI, Gemini, xAI, Mistral) is an optional optimisation per adapter, never used where zero-data-retention is on or the team's keep-away limits forbid retention.
+4. **Neutral usage record**: tokens in/out, cached, reasoning, cost where stated, null where not; derived price from the catalogue when the provider states none (as `agent-model` R13 does today).
+5. **Efficiency levers to expose per adapter**: automatic cache (nothing to do but keep prompts append-only), explicit cache key (Mistral), batch for non-interactive work (50% at six providers; fits explore and extraction, not live asks), priority off by default.
+6. **Signup (AIR9)**: links to the provider's own signup page and, where documented, OAuth (OpenRouter) or Sign in with ChatGPT (OpenAI). No provider documents a referral or special-plan arrangement for Civicsmith; special pricing remains a future arrangement the catalogue can carry once one exists, and nothing is promised before then.
+
+### Still OPEN (need a person, a later retry, or counsel)
+OpenAI terms and usage policies, ChatGPT pricing, SIWC terms and eligibility; xAI consumer/enterprise terms; Cloudflare Galileo page and civic credits; Cloudflare Workers AI terms and per-model licences; Cohere current Subscription Agreement; Vertex AI pricing and terms; Mistral consumer terms; Fireworks and Together data terms and team plans; Groq pricing and Services Agreement; streaming and tool-call-in-stream details for Mistral, xAI, Together, Fireworks, Groq, DeepSeek; Fireworks and Cloudflare reasoning controls; Cohere caching and batch.
