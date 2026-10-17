@@ -219,7 +219,7 @@ const PINNED = {
   docx: "b70fa4e8976d4c6ef3f663145af1b943d204b306eab29f7470dd9ea50038cd25",
 };
 
-test("R2 R15 (over-strictness): a real PDF and an office capture are read through this module byte for byte as before the move: the whole answer, reading and text units, digests to the pin, beside R28's added keys", async () => {
+test("R2 R15 (over-strictness): a real PDF and an office capture are read through this module byte for byte as before the move: the whole answer, reading and text units, digests to the pin, beside R28's and R34's added keys", async () => {
   for (const [name, bytes, format, ct] of [["pdf", PDF, "pdf", "application/pdf"], ["docx", DOCX, "docx", DOCX_CT]]) {
     const b = bucket();
     const d = await hold(b, bytes);
@@ -229,7 +229,10 @@ test("R2 R15 (over-strictness): a real PDF and an office capture are read throug
     assert.ok(out.reading.read_from_text && Array.isArray(out.text_units) && out.text_units.length > 0, `${name}: read, with units`);
     /* R28 (K1556; K2092) adds `metadata` (and a workbook's or a `.docx` document's `cells`) to the reading on purpose;
        every other byte stays pinned. */
-    const { metadata, cells, ...before } = out.reading;
+    const { metadata, cells, title, ...before } = out.reading;
+    /* R34 (T50) adds `title` on purpose, null for a PDF and an office capture (no entry states one); every other byte
+       stays pinned. */
+    assert.equal(title, null, `${name}: R34's title is present and null`);
     assert.ok(metadata === null || (metadata && typeof metadata === "object"), `${name}: R28's metadata is present`);
     if (name === "docx") assert.deepEqual(cells, {}, "docx: a body with no tables reads cells {}");
     else assert.equal(cells, undefined, `${name}: no cells for a document that is neither a workbook nor a .docx`);
