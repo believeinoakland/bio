@@ -47,3 +47,7 @@ Found outside queue (T50-21; details in my record):
 ## J2 · COMPLETE
 
 T50-21 queue complete on job/T50/queue @ 0c6888ed16 (+ mail commits): R55, R56, R57 met, plan rule 6 done in my module. queue tests 164/164 (11 new in t50.test.mjs); format, architecture, coverage (47 of 47), ownership: 0 failures. Four rulings of mine for R55 are in the record (rows for an unseen case left out; list takes no sort or limit; a repeated mute keeps its first instant; the instant is a muted_at column on queue_state, so no new table). Dependents' failures are not queue's (list in the record). queue-producers R41/R42 and notice-producers R24 are not on the branch: the new kinds are tested with stub producers.
+
+## J3 · COMPLETE
+
+CHANGE B2 applied: tranche/T50 merged (queue-producers R41, R42 in). Queue tests 164/164; format, architecture, coverage (47 of 47), ownership: 0 failures. The mint passes quote and answers through untouched (it rebuilds only subject, with title, and disposition).
