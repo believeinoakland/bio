@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01Hvep9zb4SEqxGdEYh4wbyi · primary · since 2026-10-17
-**Read** · handled BOB B279
+**Read** · handled BOB B281
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
