@@ -173,6 +173,6 @@ export function reviewedOf(base = jurisdictions, edit = null) {
   const get = (id) => { const p = base.get(id); if (!p) return p; attributed(p); if (edit) edit(p); return p; };
   return { ...base, get, list: () => base.list(), combine: (l) => base.combine(Array.isArray(l) ? l.map((x) => (typeof x === "string" ? get(x) || x : x)) : l) };
 }
-/** Every template the test profile carries, by id. */
-export const PROFILE_IDS = Object.freeze(["TPL-test-records-request", "TPL-test-bylaw-complaint", "TPL-test-commitment-brief",
-                                          "TPL-test-recognition", "TPL-test-recognition-follow-up"]);
+/** Every template the test profile carries, by id, read from jurisdictions' own declaration (its R40, R81; N1073). */
+export const PROFILE_IDS = Object.freeze(jurisdictions.get(TEST).action_kinds
+  .flatMap((k) => [k.template, ...(k.templates ?? [])]).filter(Boolean).map((t) => t.id));
