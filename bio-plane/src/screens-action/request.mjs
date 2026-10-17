@@ -2,9 +2,11 @@
    Look first; then, in the flow's order: the office (by its role), what is wanted in plain words, the law it goes under
    (the laws the profile names, each with its window), the text with the period, form and cost limit (R8), approving it,
    and recording the sending with the portal's number. The subject is the project (a new request) or the action (one
-   already started), and an action opens at the step it has reached (R10: approved and not sent opens at the send).
+   already started), and an action opens at the step it has reached (R10: approved and not sent opens at the send). With no
+   office known to hold such records the screen says so and points an administrator to where one is added (R20); on every
+   preparation it draws the matter's stake (R21).
    Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
 
 export const request = Object.freeze({
   id: "request",
@@ -29,13 +31,26 @@ export const request = Object.freeze({
       r.action = { op: "action", query: { id: s }, subject: true };
       r.filings = { op: "filingsfor", query: { action: s }, empty: function () { return false; } };
       r.profiles = { op: "profiles", empty: function () { return false; } };
+      // R21: the matter's stake (`filings` R60, R62) and the team's name; the question is `start-send`'s alone
+      r.stake = { op: "stakeatpreparation", query: { action: s }, empty: function () { return false; } };
+      r.identity = { op: "groupidentity", empty: function () { return false; } };
+    } else {
+      // R20: the offices the record holds for such records, read on load, so that none known is said before any act is drawn
+      r.offices = { op: "addresseesuggest", query: { subject: s }, empty: function () { return false; } };
     }
     return r;
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling,
+    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines,
     isRequest: function () { return true; },
+    // R20: the offices known: those the member's last "Choose the office" answered, else those the load read answered;
+    // null while the read has not answered (or failed).
+    officesOf: function (view) {
+      if (Array.isArray(view.ui.offices)) return view.ui.offices;
+      const r = view.data.offices;
+      return r && r.state === "ok" && r.value && Array.isArray(r.value.offices) ? r.value.offices : null;
+    },
     // R4: the laws the profile names for a records request, each with its window (`profiles`' `view.deadlines`).
     laws: function (profiles) {
       const v = profiles && profiles.view ? profiles.view : {};
@@ -51,16 +66,26 @@ export const request = Object.freeze({
     const help = '<a class="cs-ref" href="/app/help-records" data-nav>' + cs.w("screen.help-records.name") + "</a>";
     if (!/^ACTN-/.test(s)) {
       // A new request: the office, then what is wanted; starting it opens the request's own address (its step).
-      const offices = Array.isArray(view.ui.offices) ? view.ui.offices : null;
-      const pick = offices && offices.length
-        ? cs.choice("req-office", "screen.request.office", offices.map(function (o, i) {
-          const a = o.addressee || {};
-          return { value: String(i), text: [a.role, a.body].filter(Boolean).join(", ") };
-        })) + '<p class="mk-note">' + cs.w("screen.request.office.help") + "</p>"
-        : offices ? '<p class="mk-note" role="status">' + cs.w("screen.request.nooffice") + "</p>" : "";
-      return head + cs.sec("screen.request.step.office", pick + '<div class="mk-acts">' + cs.act("addresseesuggest", {}) + "</div>")
-        + cs.sec("screen.request.step.what", cs.field("req-what", "screen.request.what", { help: "screen.request.what.help" })
-          + '<div class="mk-acts">' + cs.act("actioncreate", { tone: "primary" }) + "</div>")
+      const offices = P.officesOf(view);
+      if (!offices) return head + cs.state("offices");
+      // R20: with no office known, the state says so and points an administrator to where one is added; nothing follows it,
+      // so no act answers "choose the office first" to a request that could not have been made.
+      if (!offices.length) {
+        const I = '<svg class="i" aria-hidden="true"><use href="/app/assets/icons.svg#i-group"/></svg>';
+        const places = view.me && view.me.administer === true
+          ? '<div class="mk-links" data-list="places"><a class="cs-ref" href="/app/places" data-nav data-screen="places">' + I + cs.w("screen.places.name")
+            + '</a><span class="mk-small" data-purpose="places">' + cs.w("screen.places.purpose") + "</span></div>" : "";
+        return head + '<p class="mk-note" role="status">' + cs.w("screen.request.nooffice") + "</p>"
+          + '<p class="mk-note">' + cs.w("screen.request.nooffice.admin") + "</p>" + places;
+      }
+      const pick = cs.choice("req-office", "screen.request.office", offices.map(function (o, i) {
+        const a = o.addressee || {};
+        return { value: String(i), text: [a.role, a.body].filter(Boolean).join(", ") };
+      }), { value: String(view.ui.office || 0) }) + '<p class="mk-note">' + cs.w("screen.request.office.help") + "</p>";
+      // "Start the request" is drawn once an office is chosen
+      const what = view.ui.chosen === true ? cs.sec("screen.request.step.what", cs.field("req-what", "screen.request.what", { help: "screen.request.what.help" })
+        + '<div class="mk-acts">' + cs.act("actioncreate", { tone: "primary" }) + "</div>") : "";
+      return head + cs.sec("screen.request.step.office", pick + '<div class="mk-acts">' + cs.act("addresseesuggest", {}) + "</div>") + what
         + '<p class="mk-note">' + help + "</p>";
     }
     return head + cs.state("action", function (a) {
@@ -91,9 +116,15 @@ export const request = Object.freeze({
     {
       // R4: the offices that hold such records, each by its role; a suggestion, chosen by the member.
       op: "addresseesuggest",
-      send: function (view) { return { query: { subject: view.subject } }; },
+      send: function (view, el, cs) { view.ui.pick = Number(cs.value("req-office")) || 0; return { query: { subject: view.subject } }; },
       rereads: [],
-      done: function (view, answer, cs) { cs.set("offices", answer && Array.isArray(answer.offices) ? answer.offices : []); },
+      // "Choose the office": the member's pick among the offices the record holds; what is wanted is asked once one is chosen.
+      done: function (view, answer, cs) {
+        const offices = answer && Array.isArray(answer.offices) ? answer.offices : [];
+        cs.set("offices", offices);
+        cs.set("office", Math.min(Math.max(Number(view.ui.pick) || 0, 0), Math.max(offices.length - 1, 0)));
+        cs.set("chosen", offices.length > 0);
+      },
     },
     {
       // R4: "Start the request": what is wanted, in plain words, to the office chosen, under the project.

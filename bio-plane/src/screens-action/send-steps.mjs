@@ -7,7 +7,12 @@
    text comes from the act that prepared it and, on a load that finds one prepared and not yet approved, from `filingread`
    (filings R59; screens-action R11): the same text, blanks with their sources, unfilled blanks with why, the member's fills,
    the advisory and the offers. It is kept in the screen's page memory (`view.ui.draft`), never in storage; reading
-   prepares nothing. */
+   prepares nothing.
+
+   The matter's stake (R21; N933; `filings` R60 to R62) is drawn on every preparation, above the approval, on both screens:
+   "Sent with" (the team's name and its declared statement) and "In this matter" (the stake `filings` shows, its source, or
+   none, or that it cannot be read). `start-send` alone asks the question, when `stakeatpreparation` answers `higher_stakes`:
+   a prompt that is never a gate, so approving, preparing and recording the sending are drawn whether or not it is answered. */
 
 /** The newest draft not yet recorded sent, and the newest one sent, from `filingsfor`'s answer. */
 export function draftsOf(v) {
@@ -58,6 +63,54 @@ export function readFiling(cs, view, filing) {
     }, function () { settle({ state: "failed", refusal: null }); });
   }
   return L[filing];
+}
+
+/** R21: "Sent with" and "In this matter", from `stakeatpreparation` (`filings` R62: `group_stake`, `matter_stake`) and the
+ *  team's name from `groupidentity`. A stake that cannot be read says so in its fold, open whenever drawn, never none. */
+export function stakeLines(cs, view) {
+  const idn = view.data.identity;
+  const name = idn && idn.state === "ok" && idn.value && typeof idn.value.display_name === "string" ? idn.value.display_name.trim() : "";
+  const unreadable = function () {
+    return '<details class="mk-details" open><summary>' + cs.w("stake.unreadable.summary") + '</summary><p class="mk-small" data-state="stake">'
+      + cs.w("stake.unreadable") + "</p></details>";
+  };
+  return cs.state("stake", function (s) {
+    const group = s.group_stake;
+    const told = typeof group === "string" && group !== "undetermined" && group.trim() ? '<span class="rec">' + cs.esc(group.trim()) + "</span>" : "";
+    const sent = group === "undetermined" ? (name ? cs.esc(name) + " · " : "") + unreadable() : [name ? cs.esc(name) : "", told].filter(Boolean).join(" · ");
+    const m = s.matter_stake;
+    let matter;
+    if (m === null || m === undefined) matter = cs.w("stake.none");
+    else if (typeof m !== "object" || typeof m.stake !== "string" || !m.stake.trim() || m.stake === "undetermined") matter = unreadable();
+    else {
+      const by = String(m.set_by || "").replace(/^member:/, "");
+      const from = m.source === "action" || m.source === "project" ? m.source : "";
+      matter = '<span class="rec">' + cs.esc(m.stake) + "</span>"
+        + (from && by && m.set_at ? ' <span class="muted">· ' + cs.w("stake.source." + from, { who: by, date: { html: cs.date(m.set_at) } }) + "</span>" : "");
+    }
+    return '<dl class="mk-dl">' + (sent ? "<dt>" + cs.w("stake.sentwith") + "</dt><dd>" + sent + "</dd>" : "")
+      + "<dt>" + cs.w("stake.inmatter") + "</dt><dd>" + matter + "</dd></dl>";
+  });
+}
+
+/** R21: on `start-send` alone, the question asked when the action carries higher stakes (`stakeatpreparation`'s
+ *  `higher_stakes`): the team's stake in this action, optional, saved by `actionstake` where the shell draws it. Nothing
+ *  waits on it. The extra sentence is drawn when the tier is undetermined. */
+export function stakeAsk(cs, view) {
+  const r = view.data.stake;
+  if (!r || r.state !== "ok" || !r.value || r.value.higher_stakes !== true) return "";
+  const save = cs.act("actionstake", { label: "stake.action.save" });
+  if (!save) return "";
+  const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : {};
+  const kind = ["records_request", "request_for_comment"].includes(a.kind) ? a.kind : "other";
+  const words = cs.w("screen.start-send.kind." + kind);
+  const m = r.value.matter_stake;
+  const own = m && typeof m === "object" && m.source === "action" && typeof m.stake === "string" && m.stake !== "undetermined" ? m.stake : "";
+  const undetermined = r.value.governing_tier === "undetermined"
+    ? '<details class="mk-details" open><summary>' + cs.w("stake.undetermined.summary") + '</summary><p class="mk-small">' + cs.w("stake.ask.undetermined") + "</p></details>" : "";
+  return cs.sec("stake.ask.title", undetermined + '<p class="mk-note">' + cs.w("stake.ask.says", { kind: words.charAt(0).toUpperCase() + words.slice(1) }) + "</p>"
+    + cs.field("action-stake", "stake.action.label", { rec: true, max: 1000, help: "stake.action.help", value: own })
+    + '<div class="mk-acts">' + save + "</div>", { help: "stake.ask.help" });
 }
 
 /** The steps drawn: `o.request` adds the period, form and cost limit fields (R8) and the portal's warning and number. */
@@ -128,8 +181,10 @@ export function sendSteps(cs, view, filings, o) {
     ? cs.act("communicationprepare", {}) + cs.act("filingprepare", {})
     : cs.act("filingapprove", { tone: "primary", data: { filing: d.open.filing } });
   if (reading) return reading + nosend;
+  // R21: the stake, above the approval; the question on `start-send` alone
+  const stake = (!req && P.stakeAsk ? P.stakeAsk(cs, view) : "") + P.stakeLines(cs, view);
   return fills + (step === "prepare" || draft ? text : "") + blanks + unfilled + advisory + offers
-    + (req && part("screen.request.describe") ? '<p class="mk-note">' + part("screen.request.describe") + "</p>" : "")
+    + (req && part("screen.request.describe") ? '<p class="mk-note">' + part("screen.request.describe") + "</p>" : "") + stake
     + '<div class="mk-acts">' + acts + "</div>" + '<p class="mk-note">' + cs.w("screen.start-send.approvefixes") + "</p>" + nosend;
 }
 
@@ -184,6 +239,22 @@ export const APPROVE = Object.freeze({
     }
     return { body: body };
   },
+});
+
+export const STAKE = Object.freeze({
+  // R21: "Save this action's stake" (`action-records` R17): what this one action adds to the team's and the project's;
+  // empty clears the action's own, and saves nothing where it has none. A prompt, never a gate: no other act waits on it.
+  op: "actionstake", label: "stake.action.save",
+  refusals: { STAKE_MALFORMED: "refusal.STAKE_MALFORMED.action" },
+  send: function (view, el, cs) {
+    const told = String(cs.value("action-stake") || "").trim();
+    const s = view.data.stake && view.data.stake.state === "ok" ? view.data.stake.value : null;
+    const m = s && s.matter_stake;
+    const held = !!m && typeof m === "object" && m.source === "action" && typeof m.stake === "string";
+    if (!told && !held) return null;
+    return { body: { target: view.subject, stake: told || null } };
+  },
+  rereads: ["stake"],
 });
 
 export const SECOND = Object.freeze({

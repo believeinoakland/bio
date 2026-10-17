@@ -2,7 +2,8 @@
    it goes under and its risk. Every sentence is asserted by its key through `setup-words` (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, crumbs, text, ops, press, last, ok, beside, button, refusedIn, W, D, hasWord, DATA_PLANE, ROUTES, ACTION, ACTION_ID, FILINGS, PRESSURE, PROJECT, PROFILES, draft } from "./page.mjs";
+import { SCREENS, open, main, crumbs, text, ops, press, last, ok, beside, button, refusedIn, W, D, hasWord, DATA_PLANE, ROUTES, ACTION, FUTURE_ACTION, ACTION_ID, FILINGS, PRESSURE, PROJECT, PROFILES, draft } from "./page.mjs";
+import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
@@ -221,4 +222,65 @@ test("R17: a machine proposal is drawn only while the assistant is reachable, ap
   assert.ok(onRisk.includes(W("risk.proposal.not")));
   assert.ok(onRisk.includes(W("mark.origin.machine.name")), "labelled machine work (mark.origin.machine)");
   assert.ok(onRisk.includes(W("risk.tier", { tier: "2" })), "the tier is still the member's 2");
+});
+
+/* ---------- R23 (T50; N1093; DEC-239; UX-DESIGN U233; action-records R19): an action opens a question ---------- */
+
+// `actioninquiry` is an owed act (`interface-shell` R73): drawn once `op-declarations` declares it (R12); until then none is, and nothing throws.
+const DECLARED = Object.hasOwn(OPS, "actioninquiry");
+const INQ = "INQ-2026-aaaaaaaaaaaaaaaa";
+const FUTURE = FUTURE_ACTION;
+
+test("R23: where a reply's date has passed with none recorded, 'Open a question from this' is offered at once with a field for the question; 'Open a question' sends actioninquiry and opens the new question", async () => {
+  const p = await open(ROUTES.action, { ...DATA_PLANE, actioninquiry: ok({ ok: true, inquiry: INQ, action: ACTION_ID, project: PROJECT }) });
+  if (!DECLARED) {
+    assert.ok(!ops(p).includes("actioninquiry"), "not declared: not registered, not drawn");
+    assert.ok(!SCREENS.flatMap((x) => x.acts.map((a) => a.op)).includes("actioninquiry"));
+    return;
+  }
+  said(p, "action.noreply.title", { date: D("2026-10-12") });
+  said(p, "action.noreply.says");
+  said(p, "action.noreply.question.help");
+  assert.ok(button(p, "actioninquiry").textContent.includes(W("action.noreply.question")));
+  assert.equal(main(p).querySelector("details"), null, "at once, not behind a fold");
+  const field = p.doc.getElementById("action-question");
+  assert.equal(field.value, "", "control: nothing is filled from the action into the question");
+  assert.equal(field.getAttribute("maxlength"), "500");
+  const reads = p.byOp("action").length;
+  const none = await press(p, "actioninquiry", { reason: "x" });
+  assert.ok(beside(p, none).includes(W("refusal.ACTION_INQUIRY_NO_QUESTION")), "a question is needed");
+  assert.equal(p.byOp("actioninquiry").length, 0);
+  await press(p, "actioninquiry", { values: { "action-question": "  Why has the Clerk not answered the request?  " }, reason: "x" });
+  const sent = last(p, "actioninquiry").body;
+  assert.equal(sent.action, ACTION_ID);
+  assert.equal(sent.question, "Why has the Clerk not answered the request?");
+  assert.deepEqual(Object.keys(sent).filter((k) => !["action", "question", "reason"].includes(k)), [], "control: nothing else is sent, nothing filled from the action");
+  assert.equal(p.location.pathname, `/app/question/${INQ}`, "the new question opens");
+  assert.equal(p.byOp("action").length, reads, "the action page is unchanged: it is not read again");
+});
+
+test("R23: on request on any action: a date not yet passed offers it behind a fold, with no 'no reply recorded' box; control: it is the same act", async () => {
+  const p = await open(ROUTES.action, { ...DATA_PLANE, action: ok(FUTURE), actioninquiry: ok({ ok: true, inquiry: INQ, action: ACTION_ID, project: PROJECT }) });
+  if (!DECLARED) return assert.ok(!ops(p).includes("actioninquiry"));
+  assert.ok(!text(p).includes(W("action.noreply.title", { date: D("2099-10-26") })), "nothing has lapsed");
+  const fold = main(p).querySelector("details.mk-details");
+  assert.ok(fold && fold.querySelector("summary").textContent.includes(W("action.noreply.question")));
+  assert.ok(fold.querySelector('button[data-act="actioninquiry"]'));
+  await press(p, "actioninquiry", { values: { "action-question": "Is the extension lawful?" }, reason: "x" });
+  assert.equal(last(p, "actioninquiry").body.question, "Is the extension lawful?");
+  // an action with no clock at all is offered it too
+  const bare = await open(ROUTES.action, { ...DATA_PLANE, action: ok({ ...ACTION, clock: [] }) });
+  assert.ok(ops(bare).includes("actioninquiry"));
+});
+
+test("R23: ACTION_NO_PROJECT, MACHINE_CANNOT_OPEN_FROM_ACTION and ACTION_INQUIRY_NO_QUESTION are drawn by their words, beside the act; an action in no project opens nothing", async () => {
+  for (const k of ["refusal.ACTION_INQUIRY_NO_QUESTION", "refusal.ACTION_NO_PROJECT", "refusal.MACHINE_CANNOT_OPEN_FROM_ACTION", "action.noreply.question", "action.noreply.question.help"]) assert.ok(hasWord(k), k);
+  if (!DECLARED) return;
+  for (const code of ["ACTION_NO_PROJECT", "MACHINE_CANNOT_OPEN_FROM_ACTION", "ACTION_INQUIRY_NO_QUESTION"]) {
+    const p = await open(ROUTES.action, { ...DATA_PLANE, action: ok({ ...ACTION, project: null }), actioninquiry: refusedIn(code, "the owner's own sentence") });
+    const b = await press(p, "actioninquiry", { values: { "action-question": "A question?" }, reason: "x" });
+    assert.ok(beside(p, b).includes(W("refusal." + code)), code);
+    assert.ok(!beside(p, b).includes("the owner's own sentence"));
+    assert.equal(p.location.pathname, ROUTES.action, "nothing opened");
+  }
 });
