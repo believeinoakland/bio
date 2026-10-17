@@ -839,7 +839,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (steps.length) steps[steps.length - 1].href = null;
     return '<nav class="cs-crumbs mk-crumbs" aria-label="' + w("shell.path") + '">' + steps.map((s, i) => (i === steps.length - 1
       ? '<b aria-current="page">' + s.label + "</b>"
-      : (s.href ? '<a href="' + esc(s.href) + '" data-nav>' + s.label + "</a>" : "<span>" + s.label + "</span>"))).join(' <i aria-hidden="true">›</i> ') + "</nav>";
+      /* R82 (DEC-275): an earlier step says where it goes back to, by `shell.crumb.back` with the step's own name */
+      : (s.href ? '<a href="' + esc(s.href) + '" data-nav' + tipAttr(w("shell.crumb.back", { place: html(s.label) }), 1) + ">" + s.label + "</a>" : "<span>" + s.label + "</span>"))).join(' <i aria-hidden="true">›</i> ') + "</nav>";
   }
 
   /* ---------- drawing ---------- */
@@ -1694,8 +1695,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R74: done; a terminal, signed or irreversible or outward act stays disabled until a read redraws the screen (`gen`), any
        other clears about two seconds later on the page clock */
     const heavy = d.weight === "terminal" || d.weight === "signed" || d.weight === "irreversible" || d.outward;
-    actState(inst, d, heavy ? { done: true, lock: true, gen: inst.gen + 1 } : { done: true });
-    if (!heavy) setTimeout(() => { const now = ACTSTATE.get(d.key); if (now && now.done && !now.lock) { ACTSTATE.delete(d.key); if (live(inst)) draw(); } }, 2000);
+    /* a read (an op that is no act on the record, weight `none`) is busy while it runs and carries no `data-done` */
+    actState(inst, d, d.weight === "none" ? null : heavy ? { done: true, lock: true, gen: inst.gen + 1 } : { done: true });
+    if (!heavy && d.weight !== "none") setTimeout(() => { const now = ACTSTATE.get(d.key); if (now && now.done && !now.lock) { ACTSTATE.delete(d.key); if (live(inst)) draw(); } }, 2000);
     /* R21 (K3009): a `done` that answers a promise is awaited before the re-reads, so a follow-up act does not race them */
     try { after = d.spec.done ? await d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
     if (after && after.stay) return draw();
@@ -2070,7 +2072,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R32: the record read when a screen first needs it (never for a public or published one, R30); `/` with a live
        record opens Home */
     /* R36, R71: the test-instance band, read once; under the page's session when it holds one (so the load is counted in her window), else without */
-    call("bootstrap", (() => { const rec = readRecord(); return rec ? { bearer: rec.t } : { public: true }; })()).then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
+    call("bootstrap", (() => {
+      /* R30, R79: a page of the public or published frame, or an address outside the team's pages, sends no Authorization header */
+      const at = parse(win.location.pathname);
+      const rec = at.outside || (sessionless(at.screen) && !at.root) ? null : readRecord();
+      return rec ? { bearer: rec.t } : { public: true };
+    })()).then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
     await route();
   }
   return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI, LOCKED, S: !!S }), absorb, date, w };

@@ -131,7 +131,7 @@ test("R28 every screen of the new screen modules has its path from mock-shell.js
   /* the design's PATH is in its words of the day; the interface says "team" where it said "group" (setup-words) */
   const team = (x) => x.replace(/\bgroup('s)?\b/g, "team$1");
   for (const id of NEW) assert.deepEqual(PATHS[id].map(step).map(team), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)).map(team), id);
-  for (const id of ["people", "settings", "projects", "group", "places", "recovery"]) assert.deepEqual(PATHS[id].map(step), B[id], id);
+  for (const id of ["people", "settings", "projects", "group", "places", "recovery"]) assert.deepEqual(PATHS[id].map(step).map(team), B[id].map(team), id);
   assert.deepEqual(PATHS.plan.map(step), [word("rail.projects.name"), "@project", word("screen.plan.name")]);
   assert.deepEqual(PATHS.wizards.map(step), [word("rail.settings.name"), word("screen.wizards.name")]);
   assert.deepEqual(PATHS["due-date"].map(step), [word("rail.queue.name"), word("shell.step.due-date")]);

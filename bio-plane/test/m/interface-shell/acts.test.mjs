@@ -349,7 +349,7 @@ test("R11 (K3011) a read (an op OPS declares not mutating) carries no weight mar
   const { SESSION_OPS } = await import("../../../src/op-declarations/index.mjs");
   assert.equal(btn(p, "frontier") === null, !SESSION_OPS.member.has("frontier"), "frontier is gated by R12 alone");
   assert.equal(OPS.cite.mutating, true);
-  const c = { id: "document", reads: () => ({}), acts: [{ op: "cite" }], render: (cs) => cs.act("cite") };
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "release" }], render: (cs) => cs.act("release") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
-  assert.equal(btn(q, "cite").querySelector(".w").textContent, word("weight.reversible.name"), "control: a mutating act keeps its weight");
+  assert.equal(btn(q, "release").querySelector(".w").textContent, word("weight.reasoned.name"), "control: a mutating act keeps its weight");
 });

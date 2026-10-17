@@ -123,7 +123,7 @@ test("R27 R47 R66 REF_SCREENS: a knock opens inbox at that knock; a person, proc
   /* a kind whose screen is not registered carries its card only (R16) */
   const q = await boot({ screens: [s] });
   assert.equal(q.root().querySelectorAll("#cs-main a.cs-ref").length, 0);
-  assert.ok(q.root().querySelectorAll("#cs-main .cs-card").every((c) => !tip(c).includes(word("shell.card.open"))));
+  assert.ok(q.root().querySelectorAll("#cs-main .cs-card").every((c) => !String(tip(c) || "").includes(word("shell.card.open"))));
 });
 
 test("R47 ADMIN_ACTS gains personexpunge: drawn only to a member who administers", async () => {

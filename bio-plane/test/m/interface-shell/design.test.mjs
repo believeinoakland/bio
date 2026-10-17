@@ -139,7 +139,7 @@ test("R57 the working frame is the design's page: at the phone width the masthea
   const q = await boot({ screens: ALL, plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
   const m2 = q.root().querySelector(".cs-mast");
   assert.equal(m2.querySelector(".mk-mastsearch").textContent, word("shell.search"));
-  assert.equal(m2.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("level.prompt.name"));
+  assert.equal(m2.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"));
   assert.equal(m2.querySelector('[data-shell="dock"] .mk-hide-phone').textContent, word("shell.assistant"));
   const css = ASSET_FILES["civicsmith.css"].body;
   assert.ok(/\.cs-tabs\s*\{\s*display:\s*none/.test(css.slice(0, css.indexOf("@media (max-width: 760px)"))));
@@ -199,7 +199,7 @@ test("R60 the masthead never draws a count at zero, never the group's slug (\"Yo
   assert.ok(!p.doc.title.includes("river-town"), "nor the page's title");
   assert.equal(mast.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"), "R76: the button names itself and its setting");
   await p.click('[data-shell="level"]');
-  assert.equal(p.root().querySelector('.cs-mast [data-shell="level"] .mk-hide-phone').textContent, word("level.pause.name"));
+  assert.equal(p.root().querySelector('.cs-mast [data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.pause"));
   /* control: a set name is drawn, and a count above zero */
   const q = await boot({ screens: ALL });
   assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, "River Town");
@@ -323,7 +323,8 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
     assert.equal(p.byOp(op).length, 1, op + " runs on press");
   }
   /* control: a weighed act carries its weight */
-  const c = { id: "document", reads: () => ({}), acts: [{ op: "cite" }], render: (cs) => cs.act("cite") };
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "release" }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
-  assert.equal(btn(q, "cite").querySelector(".w").hasAttribute("data-mark"), false);
+  assert.equal(btn(q, "release").querySelector(".w").hasAttribute("data-mark"), false);
+  assert.equal(btn(q, "cite").querySelector(".w"), null, "R77: a Reversible act draws no weight");
 });
