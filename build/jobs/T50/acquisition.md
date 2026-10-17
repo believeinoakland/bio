@@ -1,6 +1,6 @@
 # acquisition (T50)
 
-**Status** · session_01EqTjCYB9asax5onCUFCEnt · depth 2 · WORKING · handled B2
+**Status** · session_01EqTjCYB9asax5onCUFCEnt · depth 2 · RUNNING until 2026-10-17T13:37:51Z (tests of the modules that use acquisition (instance-setup, op-declarations, answer-envelope, control-plane, plane)) · handled B2
 
 ## J1 · QUESTION
 
