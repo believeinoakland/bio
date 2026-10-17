@@ -839,6 +839,8 @@ export class ProjectRoster {
    *  states), `{member, handle}`, the founder's as R29 names her, or null when that opener is no
    *  longer an active member or names none; nothing else about them.
    *
+   *  R34 (T50): each row's `participation`, the viewer's own state.
+   *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked = {}) {
@@ -863,7 +865,12 @@ export class ProjectRoster {
     const truncated = rows.length > cap;
     const page = truncated ? rows.slice(0, cap) : rows;
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
-    const projects = page.map((r) => ({ id: r.id,
+    /* R34 (T50; N1118): the viewer's own state in each project as membership records it; null for a non-participant. */
+    const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
+    const own = new Map(me && page.length ? this.#rows(
+      `SELECT project_id, state FROM project_participants WHERE member_id=? AND project_id IN (${page.map(() => "?").join(",")})`,
+      me, ...page.map((r) => r.id)).map((x) => [x.project_id, x.state]) : []);
+    const projects = page.map((r) => ({ id: r.id, participation: own.get(r.id) ?? null,
       name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
       owner: r.founder ? this.#person(ROOT_ADMIN, null)
         : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
