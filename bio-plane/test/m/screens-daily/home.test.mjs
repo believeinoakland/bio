@@ -469,3 +469,46 @@ test("R34: every key Home reads is a word of the list, and what it draws for a s
   for (const k of ["screen.home.needsyou", "screen.home.areas", "door.front.head", "door.front.intro", "door.front.elsewhere.name", "door.front.elsewhere.hint"])
     assert.ok(text(p).includes(word(k)), k);
 });
+
+test("R8: counts that answer out of order, or across a redraw, are all drawn: each answer is merged into the page's current memory (CONTROL-PLANE #37)", async () => {
+  const gates = {};
+  const gate = (id) => new Promise((resolve) => { gates[id] = resolve; });
+  const plane = { ...PLANE, startfrom: DOORS,
+    projectquestions: (req) => gate(req.query.project).then(() => ok({ ok: true, project: req.query.project, items: gates[req.query.project + ":n"], cursor: null })) };
+  const p = await open("/app", plane);
+  await settle();
+  const countOf = (name) => { const row = main(p).querySelectorAll(".cs-row").find((r) => r.textContent.includes(name)); return row ? text(p, row) : ""; };
+  assert.ok(gates["PROJ-1"] && gates["PROJ-2"] && gates["PROJ-3"], "each project's count was asked");
+  gates["PROJ-2:n"] = [{ inquiry: "A" }]; gates["PROJ-1:n"] = [{ inquiry: "B" }, { inquiry: "C" }]; gates["PROJ-3:n"] = [{ inquiry: "D" }, { inquiry: "E" }, { inquiry: "F" }];
+  // Out of order, close together: PROJ-2, then PROJ-1.
+  gates["PROJ-2"](); gates["PROJ-1"]();
+  await settle();
+  assert.ok(countOf("Pothole repairs").includes(word("screen.home.questions.one")), "PROJ-2 drawn");
+  assert.ok(countOf("The Coliseum lease").includes(word("screen.home.questions.many", { n: "2" })), "PROJ-1 drawn too");
+  // Across a redraw: a door is pressed between PROJ-3's asking and its answer.
+  await p.click(main(p).querySelector('[data-door="problem"] button'));
+  await settle();
+  gates["PROJ-3"]();
+  await settle();
+  assert.ok(countOf("Odd").includes(word("screen.home.questions.many", { n: "3" })), "PROJ-3 drawn after a redraw");
+  assert.ok(countOf("Pothole repairs").includes(word("screen.home.questions.one")) && countOf("The Coliseum lease").includes(word("screen.home.questions.many", { n: "2" })), "and the earlier two are kept");
+});
+
+test("R8: projectRows keeps each count under its own key: two answers that land out of order against a page memory that is replaced on each write both survive", async () => {
+  const rows = screen("home").parts.projectRows;
+  const gates = {};
+  const view = { ui: {}, me: {}, data: {} };
+  const cs = {
+    // The page's memory is replaced on every write (a copy with the key set), as a shell redrawing from a fresh copy would.
+    set: (k, v) => { view.ui = Object.assign({}, view.ui, { [k]: v }); },
+    call: (op, o) => new Promise((resolve) => { gates[o.query.project] = () => resolve({ result: { ok: true, items: [{ inquiry: "x" }], cursor: null } }); }),
+    w: (k) => k, esc: (x) => String(x), state: (s) => s.state, ref: (k, id, t) => t, row: (a, b) => b, sheet: (x) => x, date: (x) => x,
+  };
+  const draw = () => rows(cs, view, "screen.home", false)({ projects: [{ id: "A", name: "A" }, { id: "B", name: "B" }] });
+  draw();
+  gates.B(); await new Promise((r) => setTimeout(r, 0));
+  gates.A(); await new Promise((r) => setTimeout(r, 0));
+  const out = draw();
+  assert.ok(!/loading/.test(out), "neither count is left loading: " + out);
+  assert.equal((out.match(/screen\.home\.questions\.one/g) || []).length, 2, "both counts drawn");
+});

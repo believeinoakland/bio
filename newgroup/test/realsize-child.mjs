@@ -76,7 +76,7 @@ async function putScript(name, init) {
   await pipeline(Readable.fromWeb(file.stream()), createWriteStream(fileOf(name)));
   scripts.set(name, { bindings: meta.bindings || [], put: true });
   if (name === slug) { uploads++; version = (meta.bindings || []).find((b) => b.name === "VERSION")?.text ?? version; }
-  else members.set(name, (meta.bindings || []).find((b) => b.name === "VERSION")?.text ?? null);
+  else if (name.endsWith("-" + slug)) members.set(name.slice(0, -slug.length - 1), (meta.bindings || []).find((b) => b.name === "VERSION")?.text ?? null);
   return ok({ id: name });
 }
 /* The module as the account hands it back: the multipart body the management API answers with, or the module itself. */
@@ -93,7 +93,20 @@ function readScript(name) {
     ? "multipart/form-data; boundary=bnd9" : "application/javascript+module" } });
 }
 
+/* R61: the built-in release's own members are fetched from its tag; the stand-in serves them from the release's committed files. */
+const TAGGED = /^https:\/\/raw\.githubusercontent\.com\/believeinoakland\/bio\/v[\d.]+\/release\//;
 const rules = [
+  { m: (u) => TAGGED.test(u), f: (u) => {
+    const p = u.replace(TAGGED, "");
+    if (cfg.real && existsSync(join(cfg.real, p)) && statSync(join(cfg.real, p)).isFile()) { const body = readFileSync(join(cfg.real, p)); mockHeld = body.length; return new Response(body); }
+    return new Response("not found", { status: 404 });
+  } },
+  { m: (u, mth) => u.endsWith("/workers/scripts") && mth === "GET", f: () => ok([...scripts.keys()].map((id) => ({ id }))) },
+  { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "GET", f: () => ok({ buckets: [...buckets].map((name) => ({ name })) }) },
+  { m: (u, mth) => u.includes("/workers/durable_objects/namespaces") && mth === "GET", f: () => ok([]) },
+  { m: (u) => u.includes("/containers/applications"), f: () => ok([]) },
+  { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets$/.test(u) && mth === "PUT", f: () => ok({}) },
+  { m: (u, mth) => /\/workers\/scripts\/bio-install-lock$/.test(u) && mth === "DELETE", f: () => { scripts.delete("bio-install-lock"); return ok({}); } },
   { m: (u) => u.startsWith(CFG.RELEASE_LATEST + "/"), f: (u) => {
     const p = u.slice(CFG.RELEASE_LATEST.length + 1);
     if (!cfg.repo) return new Response("not found", { status: 404 });
@@ -154,14 +167,14 @@ const res = await worker.fetch(new Request(ORIGIN + `/callback?code=GOODCODE&sta
 let raw = "";
 for await (const chunk of res.body) raw += Buffer.from(chunk).toString();
 const status = (id) => { const m = [...raw.matchAll(new RegExp(`<script>(ok|no)\\(${JSON.stringify(id).replace(/"/g, '\\"')}`, "g"))]; return m.length ? m.at(-1)[1] : null; };
-const done = (() => { const m = raw.match(/<script>done\((.*)\)<\/script>/s); return m ? JSON.parse(m[1]) : ""; })();
+const done = (() => { const m = raw.match(/<script>done\((.*?)\)<\/script>/s); return m ? JSON.parse(m[1]) : ""; })();
 const failed = (raw.match(/<script>no\(\);fail\((.*?)\)<\/script>/s) || [])[1] || null;
 sample("end");
 console.log(JSON.stringify({
   peakMB: Math.round(peak / MB), baselineMB: Math.round(baseline / MB), maxRssMB: Math.round(process.resourceUsage().maxRSS / 1e3), rssGrowthMB: Math.round((process.resourceUsage().maxRSS - rssPeak0) / 1e3),
   samples, uploads, reads, version, members: [...members.keys()],
   verify: status("verify"), up: status("up"), install: status("install"), failed,
-  running: /<b>Your group's Civicsmith is running\.<\/b>/.test(done),
+  running: /<b>Your team&#39;s Civicsmith is running\.<\/b>|<b>Your team's Civicsmith is running\.<\/b>/.test(done),
   byteLag: /is not the [0-9.]+ release/.test(done), mismatch: /hashes to [0-9a-f]{16}/.test(done), unread: /could not be read back/.test(done),
   lags: [...done.matchAll(/<li>(.*?)<\/li>/g)].map((m) => m[1]).slice(0, 6), fleet: (raw.match(/<script>ok\("fleet",(.*?)\)<\/script>/s) || [])[1] || null,
   page: raw.length,

@@ -2,7 +2,7 @@
  * serves shares, the progress page and the plain pages included (index.mjs).
  *
  * R53 (DEC-122 (3); K3100): every page uses `interface-assets`' stylesheet and faces, carried in this bundle and served by
- * the installer itself at `/app/assets/<name>` (index.mjs, `assetResponse`), the same path the group's Civicsmith serves
+ * the installer itself at `/app/assets/<name>` (index.mjs, `assetResponse`), the same path the team's Civicsmith serves
  * them at, so the stylesheet is used byte for byte; PAGE_CSS adds only the installer's own layout, in the stylesheet's
  * tokens. R35: nothing is named on another origin; the page's icon is an empty `data:` one, so a browser asks no
  * `/favicon.ico` (R1's 404).
@@ -12,9 +12,9 @@
  * then "Before Cloudflare" says in plain words what Cloudflare will be asked to allow, and R34's words (instance-setup's
  * HOSTING_CONTROL); "Continue to Cloudflare" sends `POST /begin`. R37's assistant paragraph and R45's optional Workers VPC
  * field sit there folded, closed by default: on the page, never one of its asks. R52 (DEC-201 (8)): the update page draws
- * the release your group's Civicsmith runs and the one this update installs, and says a stop leaves it running as it was.
+ * the release your team's Civicsmith runs and the one this update installs, and says a stop leaves it running as it was.
  *
- * R22 (N5, K262; DEC-124): every page names the product, Civicsmith (PRODUCT), speaks to "your group", and says the
+ * R22 (N5, K262; DEC-124): every page names the product, Civicsmith (PRODUCT), speaks to "your team", and says the
  * installer is run by the publisher of Civicsmith releases (PUBLISHER). R23: the first page's one block states the
  * prerequisites the install enforces, the Containers permission and what it installs, and (T46) the container parts the
  * carried release cannot install (LEFT_OUT). R41 (DEC-143): the act that chooses the short name carries the Irreversible
@@ -24,11 +24,13 @@
  */
 
 import { list as heldProfiles } from "../../jurisdictions/index.mjs";
+/* R72: every sentence a key holds is read by key (words.mjs); a sentence no key holds stays here, in "team" words, and is reported. */
+import { word } from "./words.mjs";
 /* R23 (T46): the container images the release this installer carries names (recorded by the embed from its signed fleet
    statement), and the one statement of what cannot install yet. */
 import { RELEASE_VERSION, RELEASE_CONTAINERS } from "./release.mjs";
 import { leftOutNotice } from "./images.mjs";
-/* R34, R50 (instance-setup R47, R83): who really controls your group's Civicsmith, in instance-setup's words, held there once. */
+/* R34, R50 (instance-setup R47, R83): who really controls your team's Civicsmith, in instance-setup's words, held there once. */
 import { HOSTING_CONTROL } from "../../bio-plane/src/setup-fleet.mjs";
 
 export const PRODUCT = "Civicsmith";
@@ -59,8 +61,8 @@ export const pageMark = (what = "installer") => `<p class="ng-mark"><span class=
 /* R42 (DEC-146 (1)-(3)): what Civicsmith is, in one line, and the second line for where there is room; the same two lines
    as public-read R30's credit page, held here once rather than imported (an import would add the plane's code to this
    bundle). The invitation page (bio-plane/public/newgroup/index.html) carries the same two lines as static text. */
-export const DESCRIPTION = "Free software for groups that check whether government keeps its own rules and promises.";
-export const WHO = "Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work.";
+export const DESCRIPTION = word("public-read.free_software_groups");
+export const WHO = word("public-read.neighborhood_issue_groups");
 const whatBlock = () => `<p class="what">${DESCRIPTION}</p>
 <p class="small who">${WHO}</p>`;
 
@@ -71,9 +73,7 @@ export const IRREVERSIBLE = `<span class="w"><span class="cs-pips" aria-hidden="
    page's script); its words are the design stream's, with the worker's name added as R41 states it. Its confirming act
    draws "Before Cloudflare" (R50), whose "Continue to Cloudflare" alone sends /begin; "Choose another name", or closing
    the dialog, sends nothing. */
-export const PERMANENCE = "Your short name is in every address of your group's Civicsmith and beside every signature your "
-  + "members make, and it becomes the name of its worker in your Cloudflare account. It can never be changed, by you or "
-  + "anyone, without installing a new Civicsmith and starting again.";
+export const PERMANENCE = word("screen.install.permanent");
 const confirmDialog = () => `<dialog id="confirm" class="cs-dialog" aria-labelledby="confirm-h">
 <h2 id="confirm-h">&ldquo;<span class="id" id="confirm-name"></span>&rdquo; is permanent</h2>
 <p class="ends">${PERMANENCE}</p>
@@ -86,76 +86,71 @@ const confirmDialog = () => `<dialog id="confirm" class="cs-dialog" aria-labelle
    installer's own words name no place (R31). */
 export const PROFILE_CHOICES = Object.freeze(heldProfiles().filter((p) => p.test !== true)
   .map(({ id, name, covers }) => Object.freeze({ id, name, covers: Object.freeze([...covers]) })));
-export const PROFILES_NONE = `Choosing none is allowed. Your group's Civicsmith then reads no jurisdiction's local facts
-(identifier forms, publishing systems, laws and their deadlines): every fact that needs one says it is undetermined
-rather than guessing. An administrator can choose them later, in its settings under Places and offices.`;
+export const PROFILES_NONE = word("screen.install.places.none");
 const placesBlock = () => `<section class="cs-section ng-sec" id="places">
-<h2>Your group's places</h2>
-<p>The places whose rules apply. Each brings its deadlines, holidays, offices and records laws, each with its source.
-Choose the ones that cover where your group works, in the order they should be read. None is chosen for you.</p>
+<h2>Your team's places</h2>
+<p>${escText(word("screen.install.places.help"))}</p>
 <fieldset class="profiles" id="profiles">
 <legend class="muted ng-small">Places this installer holds</legend>
 ${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name="profile" value="${escText(p.id)}">`
   + `<span class="pname">${escText(p.name)}</span> <span class="small pcovers">covers ${p.covers.map(escText).join(", ")}</span></label>`).join("\n")}
+<label class="choice"><input type="checkbox" id="profile-none" name="profile-none" value="none"><span class="pname">${escText(PROFILES_NONE)}</span></label>
 </fieldset>
-<p class="help">${PROFILES_NONE}</p>
 </section>`;
 
-/* R37 (T36; N721, DEC-172; K1957, K2063 (5)): the assistant is optional, and its two settings are made in the group's
+/* R37 (T36; N721, DEC-172; K1957, K2063 (5)): the assistant is optional, and its two settings are made in the team's
    Civicsmith at its setup, separately, nothing preselected (`screens-entry`'s setup): whether the group pays for it (its
    own Anthropic API key, set by an administrator there), and whether the group keeps its material away from AI (off
    unless an administrator turns it on, with a reason). A member may always connect their own account, serving only them,
    unless the group keeps its material away from AI; each member is told what goes to Anthropic before their first use
    (instance-setup R54; credentials R36). The installer takes no choice and binds no Claude credential (R36). */
-export const ASSISTANT_OFFER = `The assistant is optional. Its two settings are made in your group's Civicsmith when it
-is set up, separately, and neither is chosen for you: whether your group pays for it, with its own Anthropic API key,
-which an administrator sets there; and whether your group keeps its material away from AI, which is off unless an
+export const ASSISTANT_OFFER = `The assistant is optional. Its two settings are made in your team's Civicsmith when it
+is set up, separately, and neither is chosen for you: whether your team pays for it, with its own Anthropic API key,
+which an administrator sets there; and whether your team keeps its material away from AI, which is off unless an
 administrator turns it on, giving a reason. A member may always connect their own Claude subscription or API key,
-which serves only them, unless your group keeps its material away from AI. Each member is told what goes to Anthropic
+which serves only them, unless your team keeps its material away from AI. Each member is told what goes to Anthropic
 before their first use. This installer takes and binds no Claude account or key, and makes no choice about the
 assistant.`;
+/* R57 (amends R23, R37, R38): the assistant's prerequisite, stated plainly; no page ties it to a container. */
+export const ASSISTANT_NEEDS = `The assistant, if your team uses it, needs a Claude plan with cloud sessions, which an organization can turn off.`;
 const assistantBlock = () => `<details class="ng-fold" id="about-assistant"><summary>About the assistant</summary>
 <p>${ASSISTANT_OFFER}</p></details>`;
 
 /* R45 (T36; N710; K1946 T4): where the organization's own security tools are added, and that this installer takes none.
    Said on the install page, the final panel and the update's last screen. */
 export const SECURITY_TOOLS = `Your organization's own security tools (file scanners, safe-copy makers, sandboxes, web
-reputation, security log forwarding) are added in your group's Civicsmith by an administrator, at its setup or later.
+reputation, security log forwarding) are added in your team's Civicsmith by an administrator, at its setup or later.
 This installer takes no tool and no tool's key.`;
 /* R45: the optional Workers VPC service a tool reached through a tunnel needs, on the install and the update pages
    alike, folded and closed by default (R50: never one of the first page's asks). Nothing is filled in for the operator. */
-const securityBlock = () => `<details class="ng-fold" id="security-fold"><summary>For an organization with its own security tools (most groups skip this)</summary>
+const securityBlock = () => `<details class="ng-fold" id="security-fold"><summary>For an organization with its own security tools (most teams skip this)</summary>
 <p>${SECURITY_TOOLS}</p>
 <div class="cs-field"><label for="vpc">Workers VPC service for a security tool reached through a tunnel (optional)</label>
 <input id="vpc" class="cs-input id" type="text" autocomplete="off" spellcheck="false" placeholder="leave empty if you have none">
-<p class="help">Only if your organization will add a security tool that your group's Civicsmith reaches through a
+<p class="help">Only if your organization will add a security tool that your team's Civicsmith reaches through a
 Cloudflare Tunnel: the ID of the Workers VPC service for it, as Cloudflare shows it. The file scanner is connected to
-it. Left empty, none is connected, and such a tool answers REACH_NOT_BOUND in your group's Civicsmith until the updater
+it. Left empty, none is connected, and such a tool answers REACH_NOT_BOUND in your team's Civicsmith until the updater
 is run with one.</p></div></details>`;
 
 /* R50 (and R2's five scopes): what Cloudflare will ask you to allow, in plain words, one line per scope, in R2's order. */
 export const ALLOWED = Object.freeze([
-  "Putting your group's Civicsmith's programs in your account.",
-  "Making its storage for documents and evidence.",
-  "Reading which plan your account is on.",
-  "Running its containers: the built-in file scanner and safe view, and the assistant through a member's own Claude "
-    + "subscription. Without them, files are kept and shown but not scanned, and a high-risk file opens only in its safe "
-    + "view once one can be made.",
-  "Joining its parts together inside your account, and to a private network service of your organization's only if you "
-    + "name one below.",
+  word("screen.install.cf.programs"),
+  word("screen.install.cf.plan"),
+  word("screen.install.cf.containers"),
+  word("screen.install.cf.join"),
 ]);
 const allowedBlock = () => `<section class="cs-section ng-sec" id="allowed">
-<h2>What Cloudflare will ask you to allow</h2>
-<ul class="ng-list">${ALLOWED.map((l) => `<li>${l}</li>`).join("")}</ul>
+<h2>${escText(word("screen.install.cf.asks"))}</h2>
+<ul class="ng-list">${ALLOWED.map((l) => `<li>${escText(l)}</li>`).join("")}</ul>
 <p>You approve it on Cloudflare's own page, and you can revoke it at any time from your Cloudflare dashboard. The
 permission passes through this installer for the minutes the setup takes. This installer has no database and nowhere
 to keep it, and it is never stored.</p>
 </section>`;
 
-/* R50 with R34 (DEC-109): who really controls your group's Civicsmith, in instance-setup's words (HOSTING_CONTROL), under
+/* R50 with R34 (DEC-109): who really controls your team's Civicsmith, in instance-setup's words (HOSTING_CONTROL), under
    the design stream's heading for this moment; the guide's sentence is the claim's and the final panel's. Nothing asks
    for or records an acknowledgement of it. */
-export const BEFORE_CLOUDFLARE_CONTROL = "Whoever can sign in to this Cloudflare account controls your group's Civicsmith";
+export const BEFORE_CLOUDFLARE_CONTROL = word("screen.install.hold.head");
 const controlBlock = () => `<section class="cs-sheet ng-block" id="control-before">
 <h2>${BEFORE_CLOUDFLARE_CONTROL}</h2>
 ${HOSTING_CONTROL.sentences.map((s) => `<p>${escText(s)}</p>`).join("\n")}
@@ -215,24 +210,20 @@ dialog.cs-dialog::backdrop{background:rgb(10 20 25 / .45)}
 
 /* R23 (T46; N897 (4)): before the install begins, the install and update pages say, per member, which container part
    the release this installer carries cannot install (its image is not where your Cloudflare account can pull it), and
-   what your group's Civicsmith then lacks. Nothing when every image installs. */
+   what your team's Civicsmith then lacks. Nothing when every image installs. */
 export const LEFT_OUT = leftOutNotice(RELEASE_CONTAINERS, RELEASE_VERSION);
 
-/* R23 (and doubt 7): what is needed, in the first page's one block. */
+/* R23 (and doubt 7): what is needed, in the first page's one block. R57: the assistant's prerequisite is a Claude plan with cloud
+   sessions; nothing here ties it to a container, and the Containers permission is named for what it installs (the file scanner
+   and the safe view, `screen.install.cf.containers`). */
 const needBlock = () => `<section class="cs-section ng-sec" id="need">
 <h2>What you need</h2>
 <ul class="ng-list">
-<li>A Cloudflare account on the <b>Workers Paid plan</b> ($5 a month), with a <b>payment method on the account</b>, belonging
-to your group rather than to one person. Your group's Civicsmith reads documents and assembles evidence, which the free
-plan's processing allowance is too small for, and Cloudflare turns on the file storage it keeps its evidence in only once
-a payment method is there. The installer checks both before it creates anything, and stops, saying which is missing, if
-either is. <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a Cloudflare account</a> first if you have none.</li>
-<li>The <b>Workers Containers permission</b>, which the installer asks for, for two things that run in containers. It
-installs the built-in file scanner and safe view: without it, files are kept and shown but not scanned, and a high-risk
-file opens only in its safe view once one can be made. And it serves the assistant through a member's own Claude
-subscription: without it, the assistant is used only with an API key: a member's own, or your group's. Everything else
-installs either way.</li>
-<li>About twenty minutes, at a computer. No Claude account: the assistant is optional.</li>
+<li>${escText(word("screen.install.need.cloudflare"))} The installer checks both the plan and the payment method before it creates anything, and stops,
+saying which is missing, if either is. <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a Cloudflare account</a> first if you have none.</li>
+<li>${escText(word("screen.install.cf.containers"))}</li>
+<li id="need-claude">${escText(word("screen.install.need.claude"))} ${escText(ASSISTANT_NEEDS)}</li>
+<li>About twenty minutes, at a computer.</li>
 </ul>
 ${LEFT_OUT}
 </section>`;
@@ -245,7 +236,10 @@ const pageScript = (mode, version = null) => `<script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
 const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
-  const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
+  const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);
+  if(b.checked&&$("#profile-none"))$("#profile-none").checked=false;}));
+if($("#profile-none"))$("#profile-none").addEventListener("change",e=>{if(e.target.checked){chosen.length=0;
+  document.querySelectorAll('input[name="profile"]').forEach(b=>{b.checked=false;});}});
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
   try{e.target.setSelectionRange(p,p)}catch{}});
 async function begin(slug,btn,err){
@@ -278,26 +272,23 @@ if(dlg){
 </script>`;
 
 /* `GET /`: R50's two stages in one page (the second hidden until the dialog's confirming act), then the publisher's line. */
-export const INSTALL_TITLE = `Create your ${PRODUCT} group`;
+export const INSTALL_TITLE = word("screen.install.name");
 export const WIZARD_HTML = `${pageHead(INSTALL_TITLE, { description: DESCRIPTION })}
 <body class="cs">
 <main class="cs-frame ng">
 ${pageMark()}
 <div class="ng-stage" id="stage-choose">
-<h1>Create your new ${PRODUCT} group</h1>
+<h1>${escText(INSTALL_TITLE)}</h1>
 ${whatBlock()}
-<p class="lede">Two choices here, then Cloudflare. Your group's Civicsmith will run in your group's own Cloudflare
-account: not an account of ours, yours, under your control from the first second.</p>
+<p class="lede">${escText(word("screen.install.sub"))}</p>
 ${needBlock()}
 <section class="cs-section ng-sec" id="short-name">
-<h2>Your group's short name</h2>
-<p>Your group has two names. Its <b>name</b>, such as &ldquo;Lakeshore Tenants&rdquo;, is what people read; you choose
-it in setup and can change it whenever you like. Its <b>short name</b>, chosen here, is the fixed label in its web
-addresses and beside every signature, and can never change.</p>
+<h2>${escText(word("screen.install.short.heading"))}</h2>
+<p>${escText(word("screen.install.names", { example: "Lakeshore Tenants" }))}</p>
 <div class="cs-field"><label for="slug" id="slug-label">Short name</label>
 <input id="slug" class="cs-input id" type="text" autocomplete="off" spellcheck="false" placeholder="${EXAMPLE_SLUG}">
-<p class="help" id="slug-hint">Lower-case letters, digits and hyphens. It becomes the first part of your group's web
-address and the name of its worker in your Cloudflare account. A group that wants to stay unnamed picks one that reveals
+<p class="help" id="slug-hint">Lower-case letters, digits and hyphens. It becomes the first part of your team's web
+address and the name of its worker in your Cloudflare account. A team that wants to stay unnamed picks one that reveals
 nothing.</p></div>
 </section>
 ${placesBlock()}
@@ -306,22 +297,20 @@ ${placesBlock()}
 </div>
 ${confirmDialog()}
 <div class="ng-stage" id="stage-before" hidden>
-<h1>Let this installer into your Cloudflare account</h1>
-<p class="lede">Next you go to Cloudflare's own page, sign in there, and allow this installer to set up your group's
-Civicsmith in your account, under the short name <b class="id" id="chosen-name"></b>. Civicsmith never sees your
-Cloudflare password.</p>
+<h1>${escText(word("screen.install.cf.title"))}</h1>
+<p class="lede">${escText(word("screen.install.cf.sub"))} Your short name: <b class="id" id="chosen-name"></b>.</p>
 ${allowedBlock()}
 ${controlBlock()}
 ${assistantBlock()}
 ${securityBlock()}
-<div class="ng-acts"><button id="cloudflare" class="cs-btn" data-tone="primary">Continue to Cloudflare</button>
+<div class="ng-acts"><button id="cloudflare" class="cs-btn" data-tone="primary">${escText(word("act.bootstrap.label.install"))}</button>
 <button type="button" id="back" class="cs-btn" data-tone="quiet">Back</button></div>
 <p class="err" id="err2" role="alert"></p>
 <p class="muted ng-small">Prefer to do everything by hand, with nothing passing through this installer at all? The manual
 path is documented and permanently supported. It uses the Cloudflare dashboard directly, and it exists so that your
-group can stand up its Civicsmith even if the publisher of ${PRODUCT} releases disappears.</p>
+team can stand up its Civicsmith even if the publisher of ${PRODUCT} releases disappears.</p>
 </div>
-<p class="muted ng-small">Already running your group's Civicsmith and looking for the current release? That is
+<p class="muted ng-small">Already running your team's Civicsmith and looking for the current release? That is
 <a href="/update">the update page</a>.</p>
 ${publisherFooter()}
 </main>
@@ -339,100 +328,99 @@ export const versionOk = (v) => typeof v === "string" && v.length <= 32 && VERSI
    key's own placeholder. The date of `chosen` is drawn only when the caller has a signed one (the address carries none,
    and the manifest none, so the page draws the line without it; J1). */
 export const UPDATE_WORDS = Object.freeze({
-  running: (version) => `Your group's Civicsmith runs release ${version}`,
-  chosen: (version, date = null) => `This update: release ${version}${date ? `, ${date}` : ""}, the release chosen in your group's Settings › Updates`,
-  only: "this page installs that release and no other",
-  checked: "Signed by Civicsmith; the signature and the release notes checked",
-  progressTitle: "Updating your group's Civicsmith",
-  progressSays: (from, to, account) => `From release ${from} to ${to}, in the Cloudflare account \u201c${account}\u201d. A few minutes; leave this page open. Until the last step, your group's Civicsmith keeps running as it was.`,
-  progressVerified: (to) => `Checked the release is Civicsmith's own, signed and unaltered: ${to}`,
-  progressRead: (from) => `Read the release running: ${from}`,
-  progressPlacing: (to) => `Putting release ${to} in place\u2026`,
-  progressAnswers: "Checking it answers",
-  /* `installer.update.stopped`, in its three parts: the heading names what stopped it, then what is as before, then what to do. */
+  running: (version) => word("installer.update.running", { version }),
+  chosen: (version, date = null) => (date ? word("installer.update.chosen", { version, date }) : word("installer.update.chosen.nodate", { version })),
+  only: word("installer.update.only"),
+  checked: word("installer.update.checked"),
+  progressTitle: word("installer.update.progress.title"),
+  progressSays: (from, to, account) => word("installer.update.progress.says", { from, to, account }),
+  progressVerified: (to) => word("installer.update.progress.verified", { to }),
+  progressRead: (from) => word("installer.update.progress.read", { from }),
+  progressPlacing: (to) => word("installer.update.progress.placing", { to }),
+  progressAnswers: word("installer.update.progress.answers"),
+  /* `installer.update.stopped` holds the stop for one cause (Cloudflare refused the upload); the stops for the others
+     (the release is not found, fails a check) are composed from its parts, for the design to key. */
   stoppedWhy: (why) => `Stopped: ${why}.`,
-  stoppedKept: (version = null) => `Your group's Civicsmith runs ${version ? `release ${version} ` : ""}as before; nothing changed.`,
+  stoppedKept: (version = null) => `Your team's Civicsmith runs ${version ? `release ${version} ` : ""}as before; nothing changed.`,
   stoppedDo: "Try again; if it stops again, the stop names the step and what to do.",
-  tryAgain: "Try again",
-  doneTitle: "Your group's Civicsmith is updated",
-  doneSays: (to, from) => `It runs release ${to}; it ran ${from}. Every record, member and setting is as it was.`,
-  doneAnswers: (to) => `It answers at its address, as release ${to}`,
-  doneKept: "Records, members and settings in place",
-  doneNote: (to) => `The to-do leaves every administrator's queue on its own, and Settings \u203a Updates now shows ${to} running. The installer keeps nothing of your group's Civicsmith.`,
-  back: "Back to your group's Civicsmith",
+  tryAgain: word("installer.update.tryagain"),
+  doneTitle: word("installer.update.done.title"),
+  doneSays: (to, from) => word("installer.update.done.says", { to, from }),
+  doneAnswers: (to) => word("installer.update.done.answers", { to }),
+  doneKept: word("installer.update.done.kept"),
+  doneNote: (to) => word("installer.update.done.note", { to }),
+  back: word("installer.update.back"),
 });
 
-/* `GET /update` (R52): the release your group's Civicsmith runs is not known here (its address is the account's, which
+/* `GET /update` (R52): the release your team's Civicsmith runs is not known here (its address is the account's, which
    only Cloudflare's permission lets the installer read), so this page draws it as the line it becomes; the progress page
    and the last screen draw the version before and after once it is read (index.mjs, runUpdate). */
-export const UPDATE_TITLE = `Update your group's ${PRODUCT}`;
-export const UPDATE_KEEPS = "If a step stops, your group's Civicsmith keeps running as it was.";
+export const UPDATE_TITLE = `Update your team's ${PRODUCT}`;
+export const UPDATE_KEEPS = "If a step stops, your team's Civicsmith keeps running as it was.";
 /* R55: `version` is the release chosen, or anything else for the page that says none was. */
 export const NO_RELEASE_CHOSEN = "No release was chosen.";
-const noReleaseHtml = () => `${pageHead(UPDATE_TITLE, { description: `Install the release your group chose in its Settings.` })}
+const noReleaseHtml = () => `${pageHead(UPDATE_TITLE, { description: `Install the release your team chose in its Settings.` })}
 <body class="cs">
 <main class="cs-frame ng">
 ${pageMark("update")}
 <div class="ng-stage" id="no-release">
 <h1>${UPDATE_TITLE}</h1>
-<p class="lede">${NO_RELEASE_CHOSEN} This page installs the release an administrator chooses in your group's Civicsmith, under
+<p class="lede">${NO_RELEASE_CHOSEN} This page installs the release an administrator chooses in your team's Civicsmith, under
 Settings \u203a Updates, and no other.</p>
-<p>Open your group's Civicsmith, go to Settings \u203a Updates, and choose <b>Update</b> there: it brings you back here with the
+<p>Open your team's Civicsmith, go to Settings \u203a Updates, and choose <b>Update</b> there: it brings you back here with the
 release chosen. Nothing was changed.</p>
-<div class="ng-acts"><a id="back-settings" class="cs-btn" data-tone="primary" href="/" hidden>Back to your group's Civicsmith, Settings \u203a Updates</a></div>
+<div class="ng-acts"><a id="back-settings" class="cs-btn" data-tone="primary" href="/" hidden>Back to your team's Civicsmith, Settings \u203a Updates</a></div>
 </div>
-<p class="muted ng-small">Setting up your group's Civicsmith for the first time instead? That is
+<p class="muted ng-small">Setting up your team's Civicsmith for the first time instead? That is
 <a href="/">the installer's first page</a>.</p>
 ${publisherFooter()}
 </main>
 <script>try{const r=new URL(document.referrer);if(r.protocol==="https:"){const a=document.getElementById("back-settings");a.href=r.origin+"/";a.hidden=false;}}catch(e){}</script>
 </body>
 </html>`;
-/* `GET /update?version=<V>` (R52, R55): the release your group's Civicsmith runs is not known here (its address is the
+/* `GET /update?version=<V>` (R52, R55): the release your team's Civicsmith runs is not known here (its address is the
    account's, which only Cloudflare's permission lets the installer read), so this page draws it as the line it becomes; the
    progress page and the last screen draw the version before and after once it is read (index.mjs, runUpdate). */
-export const updateHtml = (version) => !versionOk(version) ? noReleaseHtml() : `${pageHead(UPDATE_TITLE, { description: `Bring your group's existing ${PRODUCT} up to release ${version}.` })}
+export const updateHtml = (version) => !versionOk(version) ? noReleaseHtml() : `${pageHead(UPDATE_TITLE, { description: `Bring your team's existing ${PRODUCT} up to release ${version}.` })}
 <body class="cs">
 <main class="cs-frame ng">
 ${pageMark("update")}
 <div class="ng-stage">
 <h1>${UPDATE_TITLE}</h1>
-<p class="lede">For whoever holds your group's Cloudflare account. An update keeps every record, member and setting; it
+<p class="lede">For whoever holds your team's Cloudflare account. An update keeps every record, member and setting; it
 changes only Civicsmith's own programs. Your passwords, your credentials and your record are untouched, and that is
 enforced by how the update is applied, not by promise.</p>
 <div class="cs-sheet ng-log" id="versions">
-<div class="cs-row" id="version-before"><span class="mk">Now</span><span>Your group's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it, and shown as the update starts.</span><span></span></div>
+<div class="cs-row" id="version-before"><span class="mk">Now</span><span>Your team's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it, and shown as the update starts.</span><span></span></div>
 <div class="cs-row" id="version-after"><span class="mk">Next</span><span>${escText(UPDATE_WORDS.chosen(version))}; ${UPDATE_WORDS.only}.</span><span></span></div>
 </div>
 <p id="update-checked">${UPDATE_WORDS.checked}.</p>
 <p>You go to Cloudflare's page to allow it, as when it was set up. ${UPDATE_KEEPS}</p>
 <section class="cs-section ng-sec">
 <h2>What Cloudflare will ask you to allow</h2>
-<p>The same permission as when your group's Civicsmith was set up. If it was set up before the containers existed, it
-asks one permission more than before, <b>Workers Containers</b>, for the built-in file scanner and safe view and for the
-assistant through a member's own Claude subscription. Without it, everything else updates: files are kept and shown but
-not scanned, and a high-risk file opens only in its safe view once one can be made; and the assistant is used only with
-an API key: a member's own, or your group's. The permission is gone the moment the update finishes. Nothing is stored
-here.</p>
+<p>The same permission as when your team's Civicsmith was set up. If it was set up before the containers existed, it
+asks one permission more than before, <b>Workers Containers</b>, for the built-in file scanner and safe view. Without it,
+everything else updates: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one
+can be made. The permission is gone the moment the update finishes. Nothing is stored here.</p>
 ${LEFT_OUT}
 </section>
 <section class="cs-section ng-sec">
 <h2>Which installation</h2>
-<div class="cs-field"><label for="slug" id="slug-label">The name your group's Civicsmith was installed under</label>
+<div class="cs-field"><label for="slug" id="slug-label">The name your team's Civicsmith was installed under</label>
 <input id="slug" class="cs-input id" type="text" autocomplete="off" spellcheck="false" placeholder="${EXAMPLE_SLUG}">
 <p class="help" id="slug-hint">Its short name: the first part of its address, before the first dot.</p></div>
 </section>
-<details class="ng-fold" id="ai-fold"><summary>An organisation AI credential (most groups skip this)</summary>
+<details class="ng-fold" id="ai-fold"><summary>An organisation AI credential (most teams skip this)</summary>
 <div class="cs-field"><label for="ai">Organisation AI credential (optional)</label>
 <input id="ai" type="password" class="cs-input" autocomplete="off" spellcheck="false" placeholder="leave empty to keep what it holds">
-<p class="help">Only if a member of your group minted an organisation AI credential inside your group's Civicsmith and
+<p class="help">Only if a member of your team minted an organisation AI credential inside your team's Civicsmith and
 you want it to resume paused assistant runs on its own. It is stored there as a secret and never shown. Left empty,
 the update sends none and keeps any it already holds. This installer never creates one.</p></div></details>
 ${securityBlock()}
 <div class="ng-acts"><button id="go" class="cs-btn" data-tone="primary">Continue to Cloudflare to update</button></div>
 <p class="err" id="err" role="alert"></p>
 </div>
-<p class="muted ng-small">Setting up your group's Civicsmith for the first time instead? That is
+<p class="muted ng-small">Setting up your team's Civicsmith for the first time instead? That is
 <a href="/">the installer's first page</a>.</p>
 ${publisherFooter()}
 </main>
@@ -441,3 +429,60 @@ ${pageScript("update", version)}
 </html>`;
 /* The page `GET /update` draws with no release chosen. */
 export const UPDATE_HTML = updateHtml(null);
+
+/* ------------------------------------------------------------------ R62, R65: an account that already holds a Civicsmith */
+
+const attr = (o) => escText(JSON.stringify(o));
+const copyCard = (c) => `<div class="card" data-slug="${escText(c.slug)}"><p class="exists-whose">${escText(c.whose)}</p>
+<p class="exists-release">${escText(c.release)}</p><p class="exists-holds">${escText(c.holds)}</p>
+${c.unknown.map((u) => `<p class="small exists-unknown">${escText(u)}</p>`).join("")}</div>`;
+
+/* R62 (DEC-282): the page drawn when `fresh` finds a copy, after nothing was created or changed: what is already here
+   (R63), then the three ways on. Each is a new `POST /begin` carrying the choice, after a new consent on Cloudflare's own page
+   (the installer keeps no token). `copies` are describeCopy's answers (account.mjs); `version` the release an update installs. */
+export const existsPanel = ({ copies, version }) => `<section id="exists"><h2>${escText(word("screen.install.exists.title"))}</h2>
+<p>${escText(word("screen.install.exists.sub"))}</p>
+<h2>${escText(word("screen.install.exists.here.heading"))}</h2>
+${copies.map(copyCard).join("\n")}
+<p>${escText(word("screen.install.exists.ask"))}</p>
+<h2>${escText(word("screen.install.exists.choose.heading"))}</h2>
+${copies.filter((c) => c.plane && c.finished).map((c) => `<div class="cs-sheet ng-block exists-update" data-slug="${escText(c.slug)}"><h3>${escText(word("screen.install.exists.update.name"))}</h3>
+<p>${escText(word("screen.install.exists.update.what"))}</p>
+<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-begin="${attr({ mode: "update", slug: c.slug, version })}">${escText(word("act.owed_installupdate.label.install"))}</button></div></div>`).join("\n")}
+<div class="cs-sheet ng-block" id="exists-alongside"><h3>${escText(word("screen.install.exists.alongside.name"))}</h3>
+<p>${escText(word("screen.install.exists.alongside.what"))}</p>
+<div class="cs-field"><label for="alongside-slug">Short name</label>
+<input id="alongside-slug" class="cs-input id" type="text" autocomplete="off" spellcheck="false" placeholder="${EXAMPLE_SLUG}"></div>
+<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" data-slug-from="alongside-slug" data-begin="${attr({ mode: "install", alongside: true })}">${escText(word("act.owed_installalongside.label.install"))}${IRREVERSIBLE}</button></div></div>
+${copies.map((c) => `<div class="cs-sheet ng-block exists-remove" data-slug="${escText(c.slug)}"><h3>${escText(word("screen.install.exists.remove.name"))}</h3>
+<p>${escText(word("screen.install.exists.remove.what"))}</p>
+<div class="ng-acts"><button type="button" class="cs-btn" data-tone="quiet" data-begin="${attr({ mode: "remove", slug: c.slug })}">${escText(word("act.owed_installremove.label.install"))}</button></div></div>`).join("\n")}
+<p class="err" id="begin-err" role="alert"></p>
+<dialog id="alongside-dialog" class="cs-dialog" aria-labelledby="alongside-h"><h2 id="alongside-h">&ldquo;<span class="id" id="alongside-name"></span>&rdquo; is permanent</h2>
+<p class="ends">${escText(PERMANENCE)}</p>
+<div class="ng-acts"><button type="button" class="cs-btn" data-tone="primary" id="alongside-yes">Continue with this short name${IRREVERSIBLE}</button>
+<button type="button" class="cs-btn" data-tone="quiet" id="alongside-no">Choose another name</button></div></dialog>
+</section>`;
+
+/* R65 (DEC-282): what removing the copy would delete, drawn and not done; only the short name typed exactly enables the one act
+   that deletes (`installremoveconfirm`), which is a new consent on Cloudflare's page. */
+export const removePanel = ({ copy, slug }) => `<section id="remove"><h2>${escText(word("screen.install.remove.title"))}</h2>
+<p>${escText(word("screen.install.remove.sub"))}</p>
+<h2>${escText(word("screen.install.remove.lost.heading"))}</h2>
+<ul class="ng-list">
+<li id="lost-records">${escText(word("screen.install.remove.lost.records", { team: copy.team ?? slug, holdings: copy.holdings }))}</li>
+<li id="lost-members">${escText(word("screen.install.remove.lost.members"))}</li>
+<li id="lost-published">${escText(word("screen.install.remove.lost.published"))}</li>
+<li id="lost-address">${escText(word("screen.install.remove.lost.address"))}</li>
+</ul>
+${copy.unknown.map((u) => `<p class="small">${escText(u)}</p>`).join("")}
+<p id="remove-keep">${escText(word("screen.install.remove.keep"))}</p>
+<div class="cs-field"><label for="typed">${escText(word("screen.install.remove.type.label"))}</label>
+<input id="typed" class="cs-input id" type="text" autocomplete="off" spellcheck="false">
+<p class="help">${escText(word("screen.install.remove.type.help", { slug }))}</p></div>
+<div class="ng-acts"><button type="button" id="confirm-remove" class="cs-btn" data-tone="primary" data-slug="${escText(slug)}" data-typed-from="typed" data-begin="${attr({ mode: "removeconfirm", slug })}" disabled>${escText(word("act.owed_installremoveconfirm.label.install"))}</button></div>
+<p class="err" id="begin-err" role="alert"></p>
+</section>`;
+
+/* R65: when the account is clear, the way to a new install (a new consent, R62). */
+export const removedPanel = () => `<div class="ng-acts"><a class="cs-btn" data-tone="primary" id="after-remove" href="/">${escText(word("act.bootstrap.label.install"))}</a></div>`;

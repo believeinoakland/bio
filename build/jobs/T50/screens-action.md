@@ -1,6 +1,6 @@
 # screens-action (T50)
 
-**Status** · session_019CQh3YcQcWZ9phnR8whPQT · depth 2 · COMPLETE · handled B6
+**Status** · session_019CQh3YcQcWZ9phnR8whPQT · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -36,3 +36,7 @@ B4: the R1–R6 acts-against-registry test already reads OPS (NOT_YET drops an o
 ## J5 · COMPLETE
 
 B5/B6: tranche/T50 merged (op-declarations, interface-shell, instance-setup). actionstake, actioninquiry, stakeatpreparation are now in OPS, so the declared-state tests ran against the real shell with no stand-in: 100 pass, 0 fail. format, architecture, coverage (23/23), ownership 0 failures. Pushed.
+
+## J6 · COMPLETE
+
+B7: request asks addresseesuggest only when the screen has a subject; opened with none it draws its no-office state (R20) without the call. Tested both ways (no call and the no-office state for an administrator with the Places reference; control: a subject asks once). tranche/T50 merged; 100 pass; format, architecture, coverage 23/23, ownership clean.

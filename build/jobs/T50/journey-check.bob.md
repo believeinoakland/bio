@@ -1,6 +1,6 @@
 # BOB to journey-check (T50)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -30,3 +30,7 @@ interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50
 ## B3 · CHANGE
 
 Every L11 job but installer (restarted, running) and control-plane (one test re-opened) is merged into tranche/T50 (K3778): all screens, interface-shell, queue, queue-producers, plane. The composed interface builds (interface-shell 166/166). Merge tranche/T50 and re-walk the local arm. For each failure that remains, REPORT it by the module that owns it, with the step and the words or answer seen (in particular: any 'group' still drawn on /app pages, the shell's sign-out key, and queue's NO_SUCH_KIND for project-invitation). Then post COMPLETE; you merge last. K3779.
+
+## B4 · CHANGE
+
+installer (its pages now say 'team') and screens-action (request asks addresseesuggest only with a subject) are merged into tranche/T50 (K3782, K3784). /app/security's two 'group' strings are file-scanner's catalogue data (N1241, T51): accepted red by name for R17's scan until then, with the assistant's steps (K3783 (3)). Merge tranche/T50, re-walk the local arm once, and post COMPLETE with every remaining failure named by owner; you then merge last.

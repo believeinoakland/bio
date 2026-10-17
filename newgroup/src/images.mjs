@@ -21,17 +21,16 @@ export function imageWhy(image) {
   return null;
 }
 
-/* R38 (T36): what your group's Civicsmith lacks while a container member is left out, said beside its reason. */
+/* R38 (T36): what your team's Civicsmith lacks while a container member is left out, said beside its reason. */
 export const CONTAINER_LACKS = Object.freeze({
-  "agent-runner": "your group's Civicsmith offers the assistant only through an API key (a member's own, or your group's) until it is installed",
-  "file-scanner": "your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not "
+  /* R57: the assistant does not run in a container, so the absence of `agent-runner` names nothing the assistant lacks. */
+  "file-scanner": "your team's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not "
     + "scanned, and a high-risk file opens only in its safe view once one can be made",
 });
-export const lacksOf = (member) => CONTAINER_LACKS[member] || "what it provides is missing from your group's Civicsmith until it is installed";
+export const lacksOf = (member) => (member in CONTAINER_LACKS ? CONTAINER_LACKS[member] : (member === "agent-runner" ? "" : "what it provides is missing from your team's Civicsmith until it is installed"));
 
 /* R23 (T46): what each container member provides, as the install page's prerequisites name it. */
 const PROVIDES = Object.freeze({
-  "agent-runner": "The assistant through a member's own Claude subscription",
   "file-scanner": "The built-in file scanner and safe view",
 });
 
@@ -42,7 +41,8 @@ export function partsLeftOut(containers) {
   const out = [];
   for (const c of Array.isArray(containers) ? containers : []) {
     const why = imageWhy(c && c.image);
-    if (why && !out.some((o) => o.member === c.member)) out.push({ member: c.member, why, lacks: lacksOf(c.member) });
+    /* R57: a member whose absence names nothing the assistant lacks is not listed. */
+    if (why && !out.some((o) => o.member === c.member) && lacksOf(c.member)) out.push({ member: c.member, why, lacks: lacksOf(c.member) });
   }
   return out;
 }
