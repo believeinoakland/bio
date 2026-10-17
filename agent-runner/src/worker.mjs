@@ -7,6 +7,11 @@
 // JSON answer when the library cannot start the container or reach its port; R25's hold, which keeps the container
 // awake through a member's sign-in; and R30's lines, one per lifecycle event and per egress call, with R34's per refused call.
 //
+// R35 (N1197; K3611): the local runner is disabled. The class's `fetch`, the only path by which a request reaches the
+// container, answers every request 410 LOCAL_RUNNER_DISABLED as its first statement, with one `runner.local.disabled`
+// line, so the container is never started and no hold is written. The pass-through it replaces is kept, unreached, as
+// `passThrough`, with the hold, R26's answer and R30's lines it makes; the tests that drove it are suspended, not deleted.
+//
 // R10's egress is applied here from the member's own configuration (`fleet-member.json` `egress`): the container has
 // no internet but the listed hosts, and its HTTPS goes through Cloudflare's outbound interception, whose CA the image
 // trusts (`Dockerfile`, NODE_EXTRA_CA_CERTS).
@@ -15,6 +20,7 @@ import member from '../fleet-member.json' with { type: 'json' };
 import { SIGNIN_HOLD_MS, WAITING_HEADER, TRACE_HEADER } from './waits.mjs';
 
 const UNKNOWN = JSON.stringify({ ok: false, code: 'UNKNOWN' });
+const DISABLED = JSON.stringify({ ok: false, code: 'LOCAL_RUNNER_DISABLED' });
 // R25: the one key of the class's own storage, the hold's deadline (ms since the epoch).
 const HOLD_KEY = 'signin_hold_until';
 const LIBRARY_DETAIL_MAX = 120;
@@ -99,10 +105,17 @@ export class AgentRunner extends Container {
     log({ event: 'runner.lifecycle', instance_ref: this.instanceRef, what, ...extra, signin_hold: hold });
   }
 
-  // Every request goes to the image's one port; a caller cannot pick another. R26: an answer that is not the image's
-  // JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a sign-in's answers set and clear the
-  // hold, read from their path, status and the waiting header alone, never a body.
+  // R35: every request, whatever its method, path or upgrade, is answered 410 before the container, its port or the
+  // class's storage is touched; the line names the method and path template only, never a query, header or body.
   async fetch(request) {
+    log({ event: 'runner.local.disabled', method: request.method, path_template: pathTemplate(request.url), status: 410 });
+    return new Response(DISABLED, { status: 410, headers: { 'content-type': 'application/json' } });
+  }
+
+  // Suspended while R35 holds (nothing calls it): every request to the image's one port; a caller cannot pick another.
+  // R26: an answer that is not the image's JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a
+  // sign-in's answers set and clear the hold, read from their path, status and the waiting header alone, never a body.
+  async passThrough(request) {
     let res;
     try { res = await this.containerFetch(request, this.defaultPort); }
     catch (e) { res = new Response(`Failed to reach the container: ${e && e.message ? e.message : e}`, { status: 500 }); }

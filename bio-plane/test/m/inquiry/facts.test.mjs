@@ -3,6 +3,7 @@
    retrieval's single-bundle answer (N405, its R56); and the entry grammar judged with the grammars registered with
    record-core, as promotion's gate judges it (R2, R17). Driven through the real promotion, retrieval and record-core. */
 import test from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, LEGACY_BUNDLE_COLUMNS } from "./fixture.mjs";
 import { INQUIRY_GRAMMARS } from "../../../src/inquiry-grammar/index.mjs";
@@ -129,7 +130,7 @@ test("R49 R12 N405 the migrated arm of surfaced_in: a migration replay's creatio
   w.inquiry(Q);
   const m = w.k.migratedSurfacing(M);
   assert.deepEqual({ ...m, migrated: { ...m.migrated, at: typeof m.migrated.at } },
-    { recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null,
+    { recorded: false, stated: word("inquiry.stated.recorded_migrated_drive"), run: null, lens: null,
       migrated: { capture: "c".repeat(64), promotion: "P-1", at: "string" } });
   assert.equal(w.k.migratedSurfacing(Q), null, "a question created on this plane is not a migration");
   for (const x of [null, "", 7, {}, A, "INQ-2026-0099-x"]) assert.equal(w.k.migratedSurfacing(x), null, String(x));
@@ -184,5 +185,5 @@ test("R11 the entry grammar judged with the grammars registered with record-core
   assert.deepEqual(u.map((x) => x.check), ["C-2.8"]); assert.match(u[0].message, /could not be read/);
   /* a malformed list handed to the face is judged as nothing passed */
   const m = await checkInquiryEntry(good, { grammars: "not a list" });
-  assert.deepEqual(m.map((x) => x.check), ["C-2.8"]); assert.match(m[0].message, /could not be judged/);
+  assert.deepEqual(m.map((x) => x.check), ["C-2.8"]); assert.ok(m[0].message.startsWith(word("inquiry.message.entry_requirements_judged", { message: "" }).trim().replace(/:$/, "")));
 });

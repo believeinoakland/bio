@@ -5,6 +5,7 @@
 
 import { STATES, BASIS_ROLES, INQUIRY_TITLE_MAX, deriveInquiryTitle, inquiryQuestionOf, checkBundle }
   from "../record-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { GROUND_LABEL_RE, checkInquiryBasis, checkLegExtentGrammar, leadLegFindings, supersedesEdgeFindings,
          divisionDisclosureFindings, checkInquiryExtension, INQUIRY_GRAMMAR_CHECKS, INQUIRY_GRAMMARS }
   from "../inquiry-grammar/index.mjs";
@@ -38,6 +39,6 @@ export async function checkInquiryEntry(bundleMd, opts = {}) {
     const all = r && Array.isArray(r.findings) ? r.findings : [];
     return all.filter((x) => x && x.severity === "error");
   } catch (e) {
-    return [{ check: "C-2.8", severity: "error", message: `the entry requirements could not be judged: ${e && e.message}` }];
+    return [{ check: "C-2.8", severity: "error", message: word("inquiry.message.entry_requirements_judged", { message: String(e && e.message) }) }];
   }
 }
