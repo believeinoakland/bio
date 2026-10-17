@@ -1,6 +1,6 @@
 # acquisition (T50)
 
-**Status** · session_01EqTjCYB9asax5onCUFCEnt · depth 2 · WORKING · handled B0
+**Status** · session_01EqTjCYB9asax5onCUFCEnt · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
