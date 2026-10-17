@@ -28,3 +28,9 @@ R18 text: scope documents is 'the least documents the plane's statement answered
 ## J2 · COMPLETE
 
 R18 and R19 built in agent-harness/src/harness.mjs, 55 module tests pass, format, architecture, ownership 0 failures; coverage names only R17 unmet. R17 NOT built: waiting on your CHANGE once agent-runner R38's proof passes. Caveat: R18 imports levelEmptyHolds (run-rules R35), not on tranche/T50 at my start; I tested against an uncommitted local stub, so my module's tests fail at import until run-rules merges. Send a CHANGE (merge tranche/T50) after it does. agent-worker must set scope per level and state each disagreementsToSettle pair. See record.
+
+## Record, after B3 (CHANGE)
+
+Merged `tranche/T50` (K3699: run-rules R35 `levelEmptyHolds` is real). Against it: `node --test agent-harness/test/`: 55 tests, 55 pass, 0 fail. `checks/format.mjs` 0 failures; `checks/architecture.mjs agent-harness` 0 failures; `checks/ownership.mjs agent-harness tranche/T50` 0 failures; `checks/coverage.mjs agent-harness`: R17 only (not yet met, waiting on BOB's CHANGE for agent-runner R38's proof). R18 reading confirmed by BOB's B2 (K3691), no change to the code.
+
+**Users of what I changed (`emptyLevelCandidates`, R18): `agent-worker`'s tests fail, as the change makes inevitable.** `node --test agent-worker/test/`: 25 files, 17 pass, 8 fail (`fanout`, `harness`, `r085`, `r101`, `r103`, `r107`, `requirements`, `wire-vocabulary`). Cause for the ones I read: its shell passes no `scope`, so `emptyLevelCandidates` composes no `level-empty` candidate (r101: no entry, queue empty; wire-vocabulary: no candidate to read). I did not compare each failing file against the tranche before my change. Owner: `agent-worker` (T50-65) must set `state.scope` per level from the plane's four-level statement (retrieval R13) and state each `disagreementsToSettle` pair (R116/R113+), and give its fixtures a `scope`; I cannot edit it.
