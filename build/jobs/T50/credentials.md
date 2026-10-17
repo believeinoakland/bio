@@ -1,6 +1,6 @@
 # credentials (T50)
 
-**Status** · session_01Cw1gQFEGMdYMeQLFcFZmXg · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01Cw1gQFEGMdYMeQLFcFZmXg · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · REPORT
 
