@@ -7,7 +7,9 @@
  * for a period and its store-internal route; and, from T37 (T37-6; DEC-182 (4), N761), a member's own password change
  * and a mint that carries no digest refused; and, from T47 (T47-9, T47-81; N955, K2976, K3060 D4, K3061 D3, K3076), a
  * run segment's credential minted in the plane, sessions by device and inactivity with their lock, the password asked
- * again, sign-in by handle, every member's recovery codes and the administrator's reset link.
+ * again, sign-in by handle, every member's recovery codes and the administrator's reset link; and, from T50 (T50-5;
+ * N1186, K3557), the optional project a grant or a run's credential is minted in, which fences the viewer it makes
+ * (R79: membership R149's `projectViewer`).
  *
  * Which AI account pays for an assistant's act (each member's own reference and sign-in, the group's API key, a
  * project's account, the switches for each kind of use, the material limits, the notices and the disclosure, each
@@ -15,7 +17,7 @@
  * module creates it in its factory with the seal secret and asks it, never a copy (R27, R29, R32, R63, R73), and answers
  * its services, `USE_KINDS`, `ACCOUNT_CHECKS` and its ops through thin delegates until their users re-point (R72).
  *
- * Requirements: build/requirements/credentials.md (R1–R73; R26, and R22–R25, R33–R37, R43, R51, R52, R54–R62, R64, R70
+ * Requirements: build/requirements/credentials.md (R1–R79; R26, and R22–R25, R33–R37, R43, R51, R52, R54–R62, R64, R70
  * moved to `ai-accounts`, retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
@@ -33,7 +35,8 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { Membership, membershipOf, notAnAdmin, noSuchMember } from "../membership/index.mjs";
+import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject } from "../membership/index.mjs";
+import * as MembershipExports from "../membership/index.mjs";
 import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai-accounts/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
@@ -1167,10 +1170,16 @@ export class Credentials {
     if (!/^[0-9a-f]{64}$/.test(sha)) return { found: false, credential: null };
     const row = this.#one(`SELECT * FROM ai_credentials WHERE secret_sha=?`, sha);
     if (!row) return { found: false, credential: null };
+    /* R79 (T50; N1186): a credential minted in a project makes membership R149's viewer for it, so everything read under it
+       is narrowed to that project; one that cannot be made is not found, the gate refusing it as unknown (fail closed) */
+    const principal = Credentials.#viewerOf(row.principal, row.project);
+    if (principal === null) return { found: false, credential: null };
     return { found: true, credential: {
       ...this.#aiCredentialPublic(row),
       /* The gate needs these two as values: the viewer it stamps, and the ops the record declared. */
-      principal: row.principal, writes: this.#aiCredentialWrites(row) } };
+      principal, writes: this.#aiCredentialWrites(row),
+      /* R79: the project it was minted in, null for one minted with none; the gate reads it beside `run` */
+      project: row.project || null } };
   }
 
   /* R15: what the group can see about its own agents, never a value and never a hash (the hash is a verifier, and
@@ -1222,7 +1231,9 @@ export class Credentials {
    * and her sign-in's clearing (`ai-accounts` R18, R27, told through R73) revoke them, changing nothing else. The
    * token has the shape the gate reads (`aik-` and 64 hexadecimal characters, admission's AI_TOKEN_SHAPE) and is
    * answered once, never logged or stored. */
-  aiRunCredentialMint({ member = null, run = null, writes = null } = {}) {
+  /* (T50; R79, N1186) It takes `project?`, the project the run was opened in: kept on the row, and the viewer
+     `aiCredentialLook` answers for it is membership R149's `projectViewer` of the member's own. */
+  aiRunCredentialMint({ member = null, run = null, writes = null, project = null } = {}) {
     const id = Credentials.#memberOf(member);
     /* R78 (T49; K3392, K3398; amends R63, as R76 amends R27): the founder holds no member row; the member who resolves to
        her (`#isFounder`, R76's one test) is admitted as an active member, for her own run only. */
@@ -1230,8 +1241,15 @@ export class Credentials {
         || (id === ROOT ? !this.#isFounder(ROOT) : this.#memberFacts(id)?.status !== "active"))
       return this.accounts.accountMemberNotActive("a run's credential is minted only for an active member's own run. "
         + "Nothing was minted.", { member: id });
-    const malformed = Credentials.#runCredentialFault(run, writes);
+    const malformed = Credentials.#runCredentialFault(run, writes, project);
     if (malformed) return malformed;
+    /* R79 (T50; N1186): a project the run was opened in, one the member sees and has joined, asked after R63's shape and
+       before the keep-away; none present leaves the credential as it was */
+    const named = project !== null && project !== undefined;
+    if (named) {
+      const unfit = this.#runProjectBar(project, id);
+      if (unfit) return unfit;
+    }
     /* `ai-accounts` R7 (K231): the one keep-away read, asked with no use or project (`aiKeptAway()`), as R27 is refused */
     const away = this.accounts.aiKeptAway();
     if (away) return away;
@@ -1245,27 +1263,58 @@ export class Credentials {
       this.#revokeRunCredentials(`run=?`, [run], now, id);   /* the next segment: every earlier one of this run */
       this.sql.exec(
         `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope, scope_writes, scope_note,
-           minted_by, minted_at, confined_to, expires_at, run)
-         VALUES (?, ?, 'member', ?, 'run', ?, ?, ?, ?, NULL, ?, ?)`,
+           minted_by, minted_at, confined_to, expires_at, run, project)
+         VALUES (?, ?, 'member', ?, 'run', ?, ?, ?, ?, NULL, ?, ?, ?)`,
         tokenId, sha256HexSync(token), `member:${id}`, JSON.stringify(declared),
-        "minted by your group's Civicsmith for one segment of your run", id, now, expiresAt, run);
+        "minted by your group's Civicsmith for one segment of your run", id, now, expiresAt, run, named ? project : null);
     });
     return { ok: true, tokenId, token, run, writes: declared, expiresAt };
   }
 
-  /* R63: AI_RUN_CREDENTIAL_MALFORMED, minted here alone, naming what: `run` a non-empty string, `writes` a non-empty
-     list of AI_RUN_WRITES entries. */
-  static #runCredentialFault(run, writes) {
+  /* R63, R79: AI_RUN_CREDENTIAL_MALFORMED, minted here alone, naming what: `run` a non-empty string, `writes` a non-empty
+     list of AI_RUN_WRITES entries, `project` (present) a non-empty string. */
+  static #runCredentialFault(run, writes, project = null) {
     const what = typeof run !== "string" || run.trim() === "" ? "run"
       : !Array.isArray(writes) || !writes.length || !writes.every((w) => typeof w === "string" && AI_RUN_WRITES.includes(w))
-        ? "writes" : null;
+        ? "writes"
+      : project !== null && project !== undefined && (typeof project !== "string" || project.trim() === "") ? "project"
+      : null;
     if (what === null) return null;
     /* DEC-49 REGION is-ai-run-credential-shape */
     return Credentials.#row(AI_CREDENTIAL_CHECKS, "AI_RUN_CREDENTIAL_MALFORMED", what === "run"
       ? "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted."
+      : what === "project"
+        ? "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was "
+          + "neither. Nothing was minted."
       : `a run's credential holds a non-empty list of the runner's writes, each one of ${AI_RUN_WRITES.join(", ")}, and `
         + "this was not one. Nothing was minted.", { what });
     /* END DEC-49 REGION is-ai-run-credential-shape */
+  }
+
+  /* R79 (T50; N1186): the project a run is opened in is one its member sees and has joined, as `ai-accounts` R11 asks it of
+     an ask (the same two reads of membership, R44 and R54): a project they cannot see is answered as absent
+     (`noSuchProject`, or the existence act membership R85 gives an administrator at a hidden project), one they see and
+     have not joined PROJECT_ACT_NOT_A_PARTICIPANT. Null when the run may be minted. Any read that fails is absent. */
+  #runProjectBar(project, id) {
+    const viewer = `member:${id}`;
+    try {
+      const s = this.membership.sight(project, viewer);
+      if (s === Membership.SIGHT_FULL)
+        return this.membership.projectAuthority(project, viewer, "joined", "a run in a project");
+      const absent = noSuchProject(project);
+      return s === Membership.SIGHT_EXISTENCE ? (this.membership.existenceAct(project, viewer) ?? absent) : absent;
+    } catch { return noSuchProject(project); }
+  }
+
+  /* R79: the viewer a member's act carries, `member:<id>` with no project, else membership R149's `projectViewer` of it,
+     the member's own sight narrowed to that project's records. Null when that service cannot be asked, so a grant or a
+     credential is then refused rather than widened (fail closed). */
+  static #viewerOf(principal, project) {
+    if (typeof project !== "string" || project === "") return principal;
+    try {
+      const v = MembershipExports.projectViewer(principal, project);
+      return v === undefined || v === null ? null : v;
+    } catch { return null; }
   }
 
   /* R63: the live run credentials `where` names revoked at `at`, `by` recorded (null when no one's act ends them);
@@ -1334,11 +1383,11 @@ export class Credentials {
     return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  async #mintGrant(id, session, expires, kind) {
+  async #mintGrant(id, session, expires, kind, project = null) {
     const token = Credentials.#rand(32);
     this.sql.exec(`DELETE FROM ai_grants WHERE expires < ?`, Date.now());
-    this.sql.exec(`INSERT INTO ai_grants (grant_sha, member_id, session, expires, kind) VALUES (?,?,?,?,?)`,
-      await Credentials.#sha256(token), id, session, expires, kind);
+    this.sql.exec(`INSERT INTO ai_grants (grant_sha, member_id, session, expires, kind, project) VALUES (?,?,?,?,?,?)`,
+      await Credentials.#sha256(token), id, session, expires, kind, project);
     return { ok: true, token, expires };
   }
 
@@ -1363,7 +1412,12 @@ export class Credentials {
     const sessionSha = s.token_sha;
     const served = this.accounts.accountServing({ member: id, use: "ask", project: project === undefined ? null : project });
     if (served.refusal) return served.refusal;
-    return this.#mintGrant(id, sessionSha, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask");
+    /* R79 (T50; N1186): the project, which the cascade above has just found the member sees and has joined, is kept on the
+       grant's row and fences the viewer it makes (`#liveGrant`); with none the grant is as it was */
+    const named = typeof project === "string" && project !== "" ? project : null;
+    if (named !== null && Credentials.#viewerOf(`member:${id}`, named) === null)
+      return noSuchProject(named);   /* membership R149 cannot be asked: nothing is minted rather than a wider grant */
+    return this.#mintGrant(id, sessionSha, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask", named);
   }
 
   /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session.
@@ -1413,14 +1467,17 @@ export class Credentials {
      a standing question's needs no session (R32). Writes nothing. */
   async #liveGrant(token) {
     const g = typeof token === "string" && token !== ""
-      ? this.#one(`SELECT member_id, session, expires, kind FROM ai_grants WHERE grant_sha=?`, await Credentials.#sha256(token))
+      ? this.#one(`SELECT member_id, session, expires, kind, project FROM ai_grants WHERE grant_sha=?`, await Credentials.#sha256(token))
       : null;
     const now = Date.now();
     if (!g || g.expires < now) return null;
-    if (g.kind === "standing") return g;
+    if (g.kind === "standing") return { ...g, viewer: `member:${g.member_id}` };
     const s = this.#one(`SELECT role, expires, created, device, last_active FROM sessions WHERE token_sha=?`, g.session);   /* R40: the digest */
     /* R65: its session live and not locked */
-    return s && Credentials.#stateOf(s, now) === "live" && this.#ownSession(s.role, g.member_id) ? g : null;
+    if (!(s && Credentials.#stateOf(s, now) === "live" && this.#ownSession(s.role, g.member_id))) return null;
+    /* R79: the viewer the grant makes, narrowed to its project when it has one; none can be made, no grant is held */
+    const viewer = Credentials.#viewerOf(`member:${g.member_id}`, g.project);
+    return viewer === null ? null : { ...g, viewer };
   }
 
   static #grantNotHeld() {
@@ -1430,7 +1487,7 @@ export class Credentials {
     /* END DEC-49 REGION is-grant-held */
   }
 
-  static #held(g) { return { ok: true, member: g.member_id, viewer: `member:${g.member_id}`, expires: g.expires }; }
+  static #held(g) { return { ok: true, member: g.member_id, viewer: g.viewer, expires: g.expires }; }
 
   /* R28: a request under a grant is admitted only for an op on `AI_GRANT_OPS`, only as a read, while the grant lives.
      Answers `{ok, member, viewer, expires}`; writes nothing. */
