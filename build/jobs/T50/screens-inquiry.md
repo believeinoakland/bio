@@ -24,3 +24,7 @@ screens-inquiry T50-32 done on `job/T50/screens-inquiry`: R50–R64 met. Module 
 **Another module (for its owner).** interface-shell: the registry copy (`SCREEN_REGISTRY`) is older than `registry.json`: `projectrequest`, `projectrequestwithdraw`, `casedraft` on question are missing. Generated artifacts: none staled by this module.
 
 Size (session_011bBsB7gZ1dXUffg8ESSjeu): test runs 28, module lines 2687
+
+## J2 · REPORT · re B2
+
+B2 handled: merged tranche/T50 (no conflicts). Re-run: 145 tests, 6 pass, 139 fail, all at boot with 'screen project's act names projectstakeset, which OPS does not hold' (the J1 dependency: op-declarations OPS needs projectstakeset, projectstake, projectownersgone, inquirypartition, capturegrade; interface-shell RE_POINTS needs projectstakeset, projectrequest, projectrequestwithdraw, casedraft). The regenerated registry does not change that. With that overlay 145/145 pass. Nothing further to build here; I wait for those providers to merge.
