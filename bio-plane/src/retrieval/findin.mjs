@@ -527,8 +527,8 @@ export class Finder {
     for (let page = 0; page < ALIAS_PAGES_MAX; page++) {
       let ans = null;
       try { ans = entities.aliasesOf({ kinds: [...FIND_PEOPLE_KINDS], limit: ALIAS_PAGE, after, viewer }); } catch { ans = null; }
-      const list = Array.isArray(ans) ? ans : ans && Array.isArray(ans.aliases) ? ans.aliases : ans && Array.isArray(ans.items) ? ans.items : null;
-      if (!list || (ans && ans.ok === false)) {
+      const list = ans && ans.ok === true && Array.isArray(ans.aliases) ? ans.aliases : null;
+      if (!list) {
         unreadAll(say("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
         return;
       }
