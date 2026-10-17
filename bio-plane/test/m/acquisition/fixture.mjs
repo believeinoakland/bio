@@ -71,11 +71,11 @@ export function governor({ refuse = [], held = [] } = {}) {
    asks, R1). With `sql`, each receipt is also written to `captured_locators` (R48's read contract, which acquisition R39
    reads for an archive's document address). `homes` maps a capture to its home bundle (R4); `named` maps a capture to the
    parts its home's document names (R6). `captureGrade` answers as R24, R25, R26 and R59 state for the vias recorded. */
-export function provenance({ registered = [], acquired = [], sql = null, homes = {}, named = {} } = {}) {
+export function provenance({ registered = [], acquired = [], sql = null, homes = {}, named = {}, heldAt = {} } = {}) {
   const receipts = [], holds = [];
   const vias = (s) => [...new Set(receipts.filter((r) => r.captureSha === s).map((r) => r.via || "direct"))];
   const p = {
-    receipts, holds, homes, named,
+    receipts, holds, homes, named, heldAt,
     recordReceipt(r) {
       receipts.push(r);
       if (sql && r.addressNorm && r.captureSha)
@@ -87,6 +87,11 @@ export function provenance({ registered = [], acquired = [], sql = null, homes =
     registerHolds({ sha: s, bundle = null }) { holds.push(s); return { ok: true, sha: s, asked: true, registered: registered.includes(s),
       acquired: acquired.includes(s) || receipts.some((r) => r.captureSha === s),
       ...(bundle ? { parts: named[s] ? { state: "named", parts: named[s] } : { state: "none" } } : {}) }; },
+    /* R12: the bundle's captures with `held_at` (a test names it in `heldAt`, else the earliest receipt's instant) */
+    capturesOf(bundleId) {
+      return Object.keys(homes).filter((s) => homes[s] === bundleId).sort().map((s) => ({ capture_sha: s,
+        held_at: heldAt[s] ?? receipts.filter((r) => r.captureSha === s).map((r) => r.retrieved).sort()[0] ?? null }));
+    },
     homeOf(s) { return homes[s] ? { bundleId: homes[s], path: "data/x", encoding: "binary", bytes: 0, registered: "T", authored: false } : null; },
     captureGrade(s, depth = 0) {
       const v = vias(s);
@@ -121,7 +126,8 @@ export const pkcs8 = () => generateKeyPairSync("ed25519").privateKey.export({ ty
 export function captureStore({ core, env = {}, gov = null, prov = null, failures = 3 } = {}) {
   const state = { outcomes: [], reach: new Map(), sessions: new Map(), day: null, render: { spent_ms: 0, reserved_ms: 0, renders: 0, deferred: 0 },
                   slots: new Map(), admits: [], spends: [], validators: new Map(), actors: [], events: [], limits: new Map(),
-                  assets: new Map(), siteRecords: [], links: [], emitted: [], sessionSaves: [], sessionDrops: [] };
+                  assets: new Map(), siteRecords: [], links: [], emitted: [], sessionSaves: [], sessionDrops: [],
+                  captured: [], clockMs: null, recordFails: false };
   const today = (at) => (at || stamp()).slice(0, 10);
   const dayOf = (at) => { const d = today(at); if (state.day !== d) { state.day = d; state.render = { spent_ms: 0, reserved_ms: 0, renders: 0, deferred: 0 }; } return state.render; };
   return {
@@ -148,7 +154,25 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
     },
     /* capture R22 */
     saveCaptureSession(s) { state.sessionSaves.push(s); const cur = state.sessions.get(s.session);
-      state.sessions.set(s.session, { ...s, ticks: cur ? cur.ticks + 1 : 1 }); return { session: s.session, saved: true, ticks: cur ? cur.ticks + 1 : 1 }; },
+      const now = state.clockMs ?? Date.now();
+      state.sessions.set(s.session, { ...s, ticks: cur ? cur.ticks + 1 : 1, created: cur ? cur.created : stamp(now), updated: stamp(now),
+                                      expires: stamp(now + (Number(s.ttlMs) || 3600000)) });
+      return { session: s.session, saved: true, ticks: cur ? cur.ticks + 1 : 1 }; },
+    /* capture R46: every session whose expiry is after `now`, in session order */
+    liveCaptureSessions(now) {
+      const at = typeof now === "string" ? now : stamp(Number(now));
+      return [...state.sessions.values()].filter((x) => x.expires > at).sort((a, b) => (a.session < b.session ? -1 : 1)).map((x) => ({
+        session: x.session, locator: x.locator, primarySha: x.primarySha, primaryFile: x.primaryFile, base: x.base, created: x.created,
+        updated: x.updated, expires: x.expires, ticks: x.ticks, state: x.state })); },
+    /* capture R94: once for each (capture, question, member); a malformed ask records nothing */
+    recordCapturedFor({ captureSha, question, by, at = null }) {
+      if (state.recordFails) throw new Error("capture refused");
+      const okAsk = /^[0-9a-f]{64}$/.test(captureSha || "") && typeof question === "string" && question.trim() && question.length <= 200
+        && typeof by === "string" && by.trim() && !/^(class:|daemon|bio-)/.test(by);
+      if (!okAsk) return { recorded: false };
+      if (!state.captured.some((c) => c.captureSha === captureSha && c.question === question && c.by === by)) state.captured.push({ captureSha, question, by, at });
+      return { recorded: true };
+    },
     loadCaptureSession({ session }) { const s = state.sessions.get(session);
       return s ? { session, found: true, locator: s.locator, primarySha: s.primarySha, primaryFile: s.primaryFile, base: s.base, ticks: s.ticks, state: s.state }
                : { session, found: false, note: "no such capture session: it either never existed, was already finished, or expired" }; },

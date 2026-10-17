@@ -4,7 +4,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, text, rendererEnv } from "./fixture.mjs";
-import { readFileSync, readdirSync } from "node:fs";
 import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ARCHIVE_CHECKS, CIVICSMITH_CONTACT_URL,
          civicsmithUserAgent, firstHopWho, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 import * as acquisition from "../../../src/acquisition/index.mjs";
@@ -212,21 +211,5 @@ test("R29 (C-68.1, K850): acquire without evidence storage answers as before, by
   assert.deepEqual({ status: r.status, body: r.body }, evidenceStorageAbsent("acquire", error, { code: false }), "raised through the export");
 });
 
-test("R29 (C-68.1, K850): the module's source holds exactly one is-storage-absent region, inside evidenceStorageAbsent, and the row's where names it", () => {
-  const dir = new URL("../../../src/acquisition/", import.meta.url);
-  const files = readdirSync(dir).filter((f) => f.endsWith(".mjs"));
-  const opens = [], closes = [];
-  for (const f of files) {
-    const src = readFileSync(new URL(f, dir), "utf8");
-    for (const m of src.matchAll(/DEC-49 REGION is-storage-absent\b/g)) opens.push([f, m.index, src]);
-    for (const m of src.matchAll(/END DEC-49 REGION is-storage-absent\b/g)) closes.push([f, m.index]);
-  }
-  /* each END line also matches the opening pattern; one region is one opening and one END */
-  assert.deepEqual([opens.length - closes.length, closes.length], [1, 1], "exactly one is-storage-absent region");
-  const [file, at, src] = opens.find(([f, i]) => !closes.some(([g, j]) => g === f && j + 4 === i));
-  assert.equal(file, "index.mjs");
-  const fn = src.lastIndexOf("export function evidenceStorageAbsent(", at);
-  assert.ok(fn >= 0 && !/\nexport (async )?function /.test(src.slice(fn + 1, at)), "the region is inside evidenceStorageAbsent");
-  assert.ok(closes[0][1] > at && !/\nexport (async )?function /.test(src.slice(at, closes[0][1])), "and closes inside it");
-  assert.equal(C681.where, "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent");
-});
+/* The source-text check that no second site mints C-68.1 is retired (P7, K3627): t50.test.mjs proves at the interface that every path
+   answering it answers what the one raiser answers. */
