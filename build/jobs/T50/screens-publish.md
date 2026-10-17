@@ -57,3 +57,7 @@ For the design lane and others (details in my record): no key for the findings c
 ## J3 · REPORT
 
 Merged tranche/T50 (wizard-scripts registry) and re-ran: 112 tests, 105 pass; the same seven fail, all on interface-shell not yet merged (R88 docket-public in the public frame, R80 cs.checks over record data), as named in my completion record. Nothing else changed.
+
+## Completion addendum (B5)
+
+Merged `tranche/T50` @ interface-shell (T50-27), instance-setup, op-declarations; no stand-in remains. `node --test bio-plane/test/m/screens-publish/`: tests 112, pass 112, fail 0 against the real shell (the seven accepted reds are gone). format, architecture, coverage (36 of 36) and ownership: 0 failures.
