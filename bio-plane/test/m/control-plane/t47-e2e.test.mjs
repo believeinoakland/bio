@@ -146,7 +146,12 @@ test("R81 end to end: Home draws the group's projects from the real `projectlist
   const p = await appAt("/app");
   /* the counts are read one after the list, each paged: wait for both to be drawn (or the time to run out) */
   /* screens-daily R10, R21: a count is drawn in the row's meta, and never at zero, so wait for the busy project's */
-  await until(p, () => /2 questions/.test(text(main(p))));
+  /* the wait is on the busy project's own row, the thing asserted below (not any "2 questions" on the page), bounded generously */
+  const rowOf = (id) => { const m0 = main(p); return m0.querySelectorAll("a").find((a) => (a.getAttribute("href") || "").includes(encodeURIComponent(id)) || (a.getAttribute("href") || "").includes(id)); };
+  const rowTextOf = (id) => { const a = rowOf(id); if (!a) return ""; const r = a.closest(".cs-row") || a.parentElement.parentElement; return text(r); };
+  assert.ok(await until(p, () => /2 questions/.test(rowTextOf(busy)), 90000), "the busy project's count is drawn in its row: " + rowTextOf(busy)
+    + " | projectquestions asked: " + JSON.stringify(p.byOp("projectquestions").map((r) => [r.query.project, r.status ?? r.answered ?? null, r.after ?? r.query.after ?? null]))
+    + " | requests: " + p.requests.length);
   answered(p, "projectlist");
   const asked = answered(p, "projectquestions");
   assert.deepEqual([...new Set(asked.map((r) => r.query.project))].sort(), [busy, quiet].sort(), "each listed project's count is read");
