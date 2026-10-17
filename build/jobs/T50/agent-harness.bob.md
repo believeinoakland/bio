@@ -25,3 +25,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · ANSWER · re J1
 
 Your reading is right. R18 now says the greatest `documents` over a level's reads (any read that found a document in scope makes it 1 or more), on tranche/T50 (K3691). Merge tranche/T50 into your branch for the wording. Your tests need run-rules R35: you will get a CHANGE when run-rules merges; then merge tranche/T50 again, run your tests against the real levelEmptyHolds, and post COMPLETE again.
+
+## B3 · CHANGE
+
+inquiry, basis-versions, run-rules (R35 levelEmptyHolds) and ai-use are merged into tranche/T50 (K3699). Merge tranche/T50 into your branch, re-run your tests against the real modules, and post COMPLETE again (or your next entry).
