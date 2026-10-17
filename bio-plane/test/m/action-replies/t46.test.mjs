@@ -94,8 +94,8 @@ test("R6 aroseFromLink's refusals in order, each writing nothing: machine, no ta
   const unseen = { project: "PROJ-2026-0099-none" };
   assert.equal(code({ author: MACHINE, target: null, ord: 0, arising: "x" }), "MACHINE_CANNOT_LINK");
   assert.equal(code({ target: null, ord: 0, arising: "x" }), "NO_TARGET");
-  assert.equal(code({ target: "ACTN-2026-0099-none", ord: 0, arising: "x" }), "NO_SUCH_BUNDLE");
-  assert.equal(code({ target: INFO, ord: 0, arising: "x" }), "NOT_AN_ACTION");
+  assert.equal(code({ target: "ACTN-2026-0099-none", ord: 0, arising: "x" }), "NO_SUCH_ACTION");
+  assert.equal(code({ target: INFO, ord: 0, arising: "x" }), "NO_SUCH_ACTION");
   assert.equal(code({ ord: 0, arising: "x" }), "AROSE_FROM_NOT_A_RESPONSE");
   /* the malformed arising is refused before any project is looked for */
   for (const arising of ["x", { project: "x" }, { project: PROJ, plan: PLAN }, { plan: "PROJ-2026-0001-roads", matter: "m" },

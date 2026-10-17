@@ -61,11 +61,11 @@ test("R10 control: every refusal in order, each with its control, writing nothin
     assert.deepEqual([r.reason, r.check], ["MACHINE_CANNOT_RECORD_QUOTING", "C-150.8"], String(author));
     assert.equal(r.translation, ACTION_REPLY_CHECKS.MACHINE_CANNOT_RECORD_QUOTING.translation);
   }
-  /* 2 NO_TARGET; 3 NO_SUCH_BUNDLE (absent and unseen alike); 4 NOT_AN_ACTION */
+  /* 2 NO_TARGET; 3 NO_SUCH_ACTION (absent, unseen and non-action alike) */
   assert.equal(quote(w, { ...ok, target: null, quotable: "x" }).reason, "NO_TARGET");
-  assert.equal(quote(w, { ...ok, target: "ACTN-2026-9999-none", quotable: "x" }).reason, "NO_SUCH_BUNDLE");
-  assert.equal(quote(w, { ...ok, viewer: "nobody", quotable: "x" }).reason, "NO_SUCH_BUNDLE");
-  assert.equal(quote(w, { ...ok, target: INQ, quotable: "x" }).reason, "NOT_AN_ACTION");
+  assert.equal(quote(w, { ...ok, target: "ACTN-2026-9999-none", quotable: "x" }).reason, "NO_SUCH_ACTION");
+  assert.equal(quote(w, { ...ok, viewer: "nobody", quotable: "x" }).reason, "NO_SUCH_ACTION");
+  assert.equal(quote(w, { ...ok, target: INQ, quotable: "x" }).reason, "NO_SUCH_ACTION");
   /* 5 QUOTING_NOT_RFC is ahead of 6 */
   assert.equal(quote(w, { ...ok, ord: 99, quotable: "x" }).reason, "QUOTING_NOT_RFC");
   /* 6 QUOTING_REFUSED: a quotable that is not a boolean, words missing with false, malformed words */
@@ -136,6 +136,6 @@ test("R4 control: a machine records no quoting; the table is this module's, decl
   assert.ok(ACTION_REPLIES_TABLES.includes("action_reply_quoting"));
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_reply_quoting`)[0].n, 0);
   quote(w, { target: RFC, ord: got, quotable: false, words: WORDS });
-  assert.equal(w.r.bearingsOf({ target: RFC, viewer: "nobody" }).reason, "NO_SUCH_BUNDLE", "an invisible action reads as an absent one");
+  assert.equal(w.r.bearingsOf({ target: RFC, viewer: "nobody" }).reason, "NO_SUCH_ACTION", "an invisible action reads as an absent one");
   void WINDOW;
 });

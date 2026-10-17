@@ -29,7 +29,7 @@
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
-import { actionsOf } from "../actions/index.mjs";
+import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { caseInputsOf } from "../case-inputs/index.mjs";
 import { bearingFindings, BEARINGS, counterpartyName } from "../action-grammar/index.mjs";
 import { isMachineIdentity, proposalLabel, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
@@ -125,13 +125,12 @@ export class ActionReplies {
   }
   #at() { return stampInstant("second", this.#nowMs()); }
 
-  /* The action as `actions` answers it to `viewer` (its R29): absent and invisible alike `NO_SUCH_BUNDLE` (R4). */
+  /* The action as `actions` answers it to `viewer` (its R29, R106): an absent, invisible or non-action id alike is
+     `NO_SUCH_ACTION` (`actions` R43, `action-records` R18), the same bytes for the three (R4). */
   #action(target, viewer) {
     let a = null;
     try { a = this.actions.actionRead({ id: String(target), viewer }); } catch { a = null; }
-    if (!a) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (a.ok === false) return { ok: false, reason: a.reason === "NOT_AN_ACTION" ? "NOT_AN_ACTION" : "NO_SUCH_BUNDLE", target,
-                                 ...(a.reason === "NOT_AN_ACTION" ? { object_type: a.object_type ?? null } : {}) };
+    if (!a || a.ok === false) return noSuchAction(target);
     return a;
   }
   /* The ledger entry at `ord`, or null. */
@@ -433,7 +432,7 @@ export class ActionReplies {
         if (CLOSED_STATES.includes(it.state)) continue;
         const a = this.actions.actionRead({ id: it.id, viewer });
         if (!a || a.ok === false) {
-          if (a && (a.reason === "NO_SUCH_BUNDLE" || a.reason === "NOT_AN_ACTION")) continue;
+          if (a && a.reason === "NO_SUCH_ACTION") continue;
           throw new Error(`action-replies: the request ${it.id} could not be read`);
         }
         if (CLOSED_STATES.includes(a.current_state)) continue;

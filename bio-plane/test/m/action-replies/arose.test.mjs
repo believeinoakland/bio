@@ -43,9 +43,9 @@ test("R2 R4 refusals in order, each writing nothing: machine, no target, no such
     assert.deepEqual([r.reason, r.check], ["MACHINE_CANNOT_LINK", "C-150.4"], String(author));
   }
   assert.equal(code({ target: null, arising: null }).reason, "NO_TARGET");
-  assert.equal(code({ target: "ACTN-2026-0099-none", arising: null }).reason, "NO_SUCH_BUNDLE");
-  assert.equal(code({ viewer: "nobody", arising: null }).reason, "NO_SUCH_BUNDLE", "an invisible action is absent");
-  assert.equal(code({ target: INFO, arising: null }).reason, "NOT_AN_ACTION");
+  assert.equal(code({ target: "ACTN-2026-0099-none", arising: null }).reason, "NO_SUCH_ACTION");
+  assert.equal(code({ viewer: "nobody", arising: null }).reason, "NO_SUCH_ACTION", "an invisible action is absent");
+  assert.equal(code({ target: INFO, arising: null }).reason, "NO_SUCH_ACTION");
   for (const ord of [0, 5, null]) assert.equal(code({ ord, arising: null }).reason, "AROSE_FROM_NOT_A_RESPONSE", String(ord));
   for (const arising of [null, {}, { project: "INFO-2026-0001-memo" }, { project: PROJ, plan: PLAN, matter: "x" },
                          { plan: PLAN }, { plan: "nope", matter: "x" }, { plan: PLAN, matter: "" },
@@ -79,7 +79,7 @@ test("R2 aroseFrom answers what arose from a response and arisenFrom the respons
   assert.deepEqual(w.r.aroseFrom({ target: REQ, ord: 1, viewer: BOB }).items.map((x) => x.arising), [{ project: PROJ }]);
   assert.deepEqual(w.r.aroseFrom({ target: REQ, viewer: M }).items.length, 3, "every response without ord");
   assert.deepEqual(w.r.aroseFrom({ target: REQ, ord: 0, viewer: M }).items, []);
-  assert.equal(w.r.aroseFrom({ target: REQ, viewer: "nobody" }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(w.r.aroseFrom({ target: REQ, viewer: "nobody" }).reason, "NO_SUCH_ACTION");
   assert.equal(w.r.aroseFrom({ target: null, viewer: M }).reason, "NO_TARGET");
   for (const x of [a]) assert.ok(!("count" in x) && !("depth" in x) && !("chain" in x), "no count of a chain");
   /* arisenFrom, both forms, either call shape */
