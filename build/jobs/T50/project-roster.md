@@ -46,3 +46,11 @@ Re B3: R34 built. `projectList` rows carry `participation` (`joined`/`leaving`/`
 Tests: project-roster 77 pass, 0 fail. screens-daily and op-declarations: only the accepted reds (the T45 owner-map spec test for the three new ops, and the registry/screen-act reds already in base). checks: format 0, architecture 0, ownership 0, coverage 0 for project-roster. C-147.9 translation stays null (HANDOFF B267). R33 still `since: null` until membership R152 merges; waiting for your CHANGE.
 
 Size (session_01CRP1uirZ6T4GoDiyhrh3i8): test runs 11, module lines 1514
+
+## J5 · COMPLETE
+
+Re B4, B5: merged tranche/T50 (membership @ dadaa9ada1, DEC-303). R33 now reads the real `memberStatusSince` (R152); the stand-in is gone, and the test checks the later of two revocations, plus null when one owner's is null or membership offers none. C-147.9 reads `refusal.MACHINE_CANNOT_SET_STAKE` and C-147.10 reads `refusal.STAKE_MALFORMED.project`, both by key with hasWord; the tests check each refusal answers its word. My joins to `members` are LEFT JOINs and R33 uses no join, so a founder row with no members row is tolerated.
+
+Tests: project-roster 77 pass, 0 fail; membership and promotion 403 pass, 0 fail. Checks: format 0, architecture 0, ownership 0, coverage 0 for project-roster.
+
+Size (session_01CRP1uirZ6T4GoDiyhrh3i8): test runs 14, module lines 1514
