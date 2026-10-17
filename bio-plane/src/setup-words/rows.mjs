@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12932 words, 899 protected; SHA-256
-   caac95c2ac6a88afd730c137c0a07820009eed79e126e88aa8f0619da0185bbf), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12938 words, 900 protected; SHA-256
+   039cb02bbc39f8de2b5041122577c35ced032b5943789d3282f0285686d05b17), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "caac95c2ac";
+export const WORDS_COMMIT = "039cb02bbc";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5857,6 +5857,11 @@ export const WORD_ROWS = Object.freeze([
   ["screen.install.stopped.nametaken","The short name {name} is already taken, so nothing was created.","DEC-309: installer R70, F7",null,false],
   ["screen.install.stopped.nametaken.do","{free} is free: use it, or type another.","DEC-309: installer R70, F7",null,false],
   ["screen.install.stopped.running","Another install or update is already running in this account. This one waits until it finishes.","DEC-309: installer R69, F9",null,false],
+  ["screen.case-editor.whatgoesin","Concluded questions, each with its findings","DEC-310: a project's first case: what goes in",null,false],
+  ["screen.case-editor.whatgoesin.note","Only a concluded question can go in a case. Each brings its findings and the evidence they rest on; you choose what it leaves out next.","DEC-310: a project's first case",null,false],
+  ["screen.ceremony.nothing","Nothing is ready to publish: this project has no prepared case yet. Prepare one from its concluded questions.","DEC-310: Publish with no prepared case",null,false],
+  ["screen.published.corrections.none","None since it was published.","DEC-310: the public page's corrections and orders",null,false],
+  ["screen.published.corrections","Every correction, withdrawal and court order on this case is listed on its docket.","DEC-310: the public page's corrections and orders; 'its docket' links to the docket",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
@@ -12071,6 +12076,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.reinstate.label.question","Reinstate",null,"Puts a removed citation back on the question.",true],
   ["act.narrow.label.question","Narrow the question",null,"Narrows the question to what the record can answer, with the reason. The wider question is kept.",true],
   ["act.conclude.label.question","Conclude",null,"Records the team's answer to the question, from what it rests on. It can be withdrawn later, with a reason.",true],
+  ["act.casedraft.label.question","Prepare a case from this",null,"Prepares the case's draft from the team's answers and their sources.",true],
   ["act.withdrawconclusion.label.question","Withdraw the conclusion",null,"Withdraws the question's answer, with a reason, for example after new evidence.",true],
   ["act.hypothesishold.label.question","Keep a hunch",null,"Keeps a hunch beside the question, labeled as yours. A hunch is never evidence and never moves an answer.",true],
   ["act.planopen.label.question","Plan what to do",null,"Opens a plan: what the team could do about what it found, its options and what each would take.",true],
