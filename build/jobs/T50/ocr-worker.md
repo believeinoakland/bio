@@ -30,3 +30,7 @@ Size (session_017dvjrzTYuZd2L9Q8GJ5Cn4): test runs 5, module lines 822
 ## J1 · REPORT
 
 Found in another module: bio-plane/test/system/fleetbundles.test.mjs lines 294-298 (ocr-worker's expected cross-tree inputs) now FAILS one test, 'ocr-worker's build reaches into the RENDERER's tree and the PLANE's...': R23 makes the bundle reach two more renderer sources, ../pdf-worker/src/picturepixels.mjs and ../pdf-worker/src/pngdecode.mjs (want 9, got 11). Fix: add those two paths to the expected list and a line to the comment above it; its owner's change, not mine. Every other ocr-worker arm in that file passes (no staleness, byte-identical fresh build).
+
+## J2 · COMPLETE
+
+T50-55 (R23) applied and pushed on job/T50/ocr-worker: JPEG/PNG captures are transcribed as a one-page document via renderPictureToPixels (page 0; other pages NO_SUCH_PAGE), PDFs unchanged. ocr-worker suite 237 pass 0 fail (real photo JPEG and PNG read back 'The council approved the budget / on Tuesday evening.' under workerd); d606-perpage-ocr 28/0; architecture, coverage, ownership 0 failures. format.mjs has 2 failures in build/rulings.md (K3441, K3597), not mine. Bundle rebuilt (npm run build). One REPORT: fleetbundles.test.mjs expected-input list needs two paths. Details in build/jobs/T50/ocr-worker.md.
