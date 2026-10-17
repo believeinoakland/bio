@@ -182,14 +182,14 @@ test("R51 the progress page draws one plain line per step as it starts and ends;
 
 /* -------------------------------------------------------------------------------------------- R52 the update page */
 
-test("R52 GET /update draws the version before and after and \"Continue to Cloudflare to update\"; a stop says your group's Civicsmith keeps running as it was", async () => {
+test("R52 GET /update draws the version before and after and \"Continue to Cloudflare to update\"; a stop says your team's Civicsmith keeps running as it was", async () => {
   const upd = await text(UPDATE_PATH);
   const versions = section(upd, "versions");
-  assert.match(words(section(versions, "version-before")), /Your group's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it/);
+  assert.match(words(section(versions, "version-before")), /Your team's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it/);
   assert.ok(section(versions, "version-after").includes(`release ${NEXT}, the release chosen in your group&#39;s Settings › Updates`));
   assert.match(upd, /<button id="go" class="cs-btn" data-tone="primary">Continue to Cloudflare to update<\/button>/);
   assert.ok(upd.includes(UPDATE_KEEPS));
-  assert.equal(UPDATE_KEEPS, "If a step stops, your group's Civicsmith keeps running as it was.");
+  assert.equal(UPDATE_KEEPS, "If a step stops, your team's Civicsmith keeps running as it was.");
   /* Once read, the version before and after are drawn: on the progress line and the last screen. */
   const planeBase = (slug, v) => [{ type: "durable_object_namespace", name: "STORE", class_name: "Store" },
     { type: "plain_text", name: "VERSION", text: v }, { type: "secret_text", name: "ADMIN_TOKEN", text: "admin-kept" },
@@ -199,12 +199,12 @@ test("R52 GET /update draws the version before and after and \"Continue to Cloud
   restoreSigners();
   assert.equal(w.page.label("up"), `Putting release ${NEXT} in place…`);
   const v = section(w.page.done, "versions");
-  assert.match(words(v), /Before Your group's Civicsmith ran release 0\.70\.0\./);
+  assert.match(words(v), /Before Your team's Civicsmith ran release 0\.70\.0\./);
   assert.match(words(v), new RegExp(`After This update: release ${NEXT.replace(/\./g, "\\.")}, signed by Civicsmith\\.`));
   assert.match(w.page.done, /it ran 0\.70\.0\./);
   /* Control: a version before that could not be read is said so, never guessed. */
   const blind = await run({ slug: "upd-blind", mode: "update", pre: { "upd-blind": planeBase("upd-blind", "0.70.0") }, subdomain: null });
-  assert.match(words(section(blind.page.done, "versions")), /The release your group's Civicsmith ran before could not be read\./);
+  assert.match(words(section(blind.page.done, "versions")), /The release your team's Civicsmith ran before could not be read\./);
   /* Every stop of an update says it keeps running as it was; the install's stops never say so. */
   for (const opts of [{ tokenFail: true }, { accountsFail: true }, {}, { refuseUpdate: true }]) {
     const slug = "upd-stop-" + (Object.keys(opts).join("").toLowerCase() || "none");

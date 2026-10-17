@@ -55,7 +55,7 @@ test("R33 at the release's real size (~21 MB): the read-back, as a multipart bod
     assert.equal(w.planePuts.length, 2, readBack);
     assert.equal(w.planePuts[0].source, REAL, `${readBack}: the repository release installed, byte for byte`);
     assert.equal(w.page.status("verify"), "ok", readBack);
-    assert.match(w.page.done, /Your group's Civicsmith is running\./, readBack);
+    assert.match(w.page.done, /Your team's Civicsmith is running\./, readBack);
     assert.ok(!/is not the [0-9.]+ release&#39;s own bytes|could not be read back/.test(w.page.done), `${readBack}: no lag named`);
   }
   /* The built-in release (no repository answering): the same, at the size Bob's install met. */
@@ -69,7 +69,7 @@ test("R33 at the release's real size (~21 MB): the read-back, as a multipart bod
   for (const readBack of ["differ", "fail"]) {
     const w = await run({ slug: "rs-bad", rel, readBack });
     assert.match(w.page.done, readBack === "differ" ? MISMATCH : /could not be read back/, readBack);
-    assert.ok(!w.page.done.includes("Your group's Civicsmith is running."), `${readBack}: no success claimed`);
+    assert.ok(!w.page.done.includes("Your team's Civicsmith is running."), `${readBack}: no success claimed`);
     assert.equal(w.page.status("verify"), "no", readBack);
   }
   restoreSigners();

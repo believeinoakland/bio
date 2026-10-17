@@ -12,6 +12,14 @@ import { RELEASE_SOURCE } from "./release-text.mjs";
 /* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { fleetStatement, NS_FLEET, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
+import { readFileSync } from "node:fs";
+
+/* R61: the real built-in release's own files (the repository's `release/` folder), served by a world that keeps them at the
+   release's tag; a name not held answers undefined. */
+function builtInAssets() {
+  return new Proxy({}, { get(_, name) { if (typeof name !== "string") return undefined;
+    try { return readFileSync(new URL("../../release/" + name, import.meta.url)); } catch { return undefined; } } });
+}
 
 export const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";
 export const ORIGIN = "https://newgroup.believeinoakland.workers.dev";
@@ -33,12 +41,15 @@ export async function begin(slug, mode = "install", extra = {}) {
 }
 
 /* A scripted network: rules matched in order, every call recorded. */
-export function script(rules) {
+export function script(rules, pre = null) {
   const calls = [];
   globalThis.fetch = async (input, init = {}) => {
     const u = typeof input === "string" ? input : input.url;
     const method = (init.method || "GET").toUpperCase();
-    calls.push({ u, method, init });
+    /* T50 (R69): the installer's own lock on the account is bookkeeping, not part of the conversation the suites assert; it is kept apart as `calls.lock`. */
+    if (u.includes("/scripts/bio-install-lock")) (calls.lock ||= []).push({ u, method, init }); else calls.push({ u, method, init });
+    const early = pre ? await pre(u, method, init) : undefined;
+    if (early) return early;
     for (const r of rules) if (r.m(u, method)) return r.f(u, init);
     throw new Error(`unscripted fetch: ${method} ${u}`);
   };
@@ -50,6 +61,7 @@ export function script(rules) {
 export function parsePage(raw) {
   const events = [];
   let failed = null, done = null, says = null;
+  const waits = [];
   const scripts = [...raw.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
   const rec = {
     step: (id, label) => events.push({ k: "step", id, label }),
@@ -60,6 +72,8 @@ export function parsePage(raw) {
     done: (html) => { done = html; },
     /* R55: the progress page's one line saying from which release to which, and where. */
     says: (t) => { says = t; },
+    /* R66: the line drawn while a wait goes on. */
+    waiting: (t) => { waits.push(t); },
   };
   for (const s of scripts.slice(1)) new Function(...Object.keys(rec), s)(...Object.values(rec));
   const status = (id) => { let st = null; for (const e of events) if (e.id === id) st = e.k; return st; };
@@ -68,7 +82,7 @@ export function parsePage(raw) {
   /* All the page's words: the shell, every label, the refusal and the panel. */
   const words = [raw.replace(/<script>[\s\S]*?<\/script>/g, ""), ...events.map((e) => e.label || ""),
     failed ? `${failed.h} ${failed.p} ${failed.d}` : "", says || "", done || ""].join("\n");
-  return { raw, events, steps, status, label, failed, done, words, says };
+  return { raw, events, steps, status, label, failed, done, words, says, waits };
 }
 
 export async function callback(qs, cookie) {
@@ -213,7 +227,17 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
   vpc, refuseVpc = false, logpush = [], refuseSchedules = false,
   /* R55 (T48): the release an update is of; by default the one the world serves (the built-in, when the repository does not answer). */
-  version } = {}) {
+  version,
+  /* T50: `alongside` begins an install beside a copy already held (R64); `containersOff` an account with Containers not turned
+     on (R70); `expireAfter` the permission expiring after that many Cloudflare calls (R71); `sourceFlaky` the release repository
+     answering 503 that many times before it answers, `sourceDown` never (R71); `preSources`/`preTags` the plane text and the
+     migration tag a pre-existing script holds; `rolloutKeepsImage` a rollout that answers and changes nothing (R68);
+     `silentAddress` an address that never answers; `wakeAfter` an address that answers only after that many tries (R66);
+     `cfFlaky` Cloudflare answering that status that many times first (R66); `typed` the short name typed to confirm a removal;
+     `choice` the mode a /begin carries (R62). */
+  alongside = false, containersOff = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
+  rolloutKeepsImage = false, silentAddress = false, wakeAfter = 0, cfFlaky = null, typed, objects = {}, refuseDelete = [], lockedBy = null,
+  builtInFleet = false } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
@@ -225,12 +249,17 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   /* What each script was last uploaded with, as the account would hand it back (R33's read-back). `readBack`: "raw" (the
      module itself), "multipart" (the module as the `index.mjs` part), "differ" (other bytes, every time), "differ-once"
      (other bytes on the first read only), "fail" (the read refused). */
-  const sources = new Map();
+  const sources = new Map(Object.entries(preSources));
+  const tags = new Map(Object.entries(preTags));
+  const bucketObjects = new Map(Object.entries(objects).map(([b, keys]) => [b, [...keys]]));
+  const removed = [];
+  let cfCalls = 0, flakyLeft = cfFlaky ? cfFlaky.times : 0, sourceFlakyLeft = sourceFlaky, wakeTries = 0, deployments = new Map();
   const reads = [];
   const classes = new Map(Object.entries(preClasses));
   const apps = preApps.map((a) => ({ ...a }));
   const rollouts = [], deleted = [], schedules = new Map();
-  const refused = [], planePuts = [], enabled = new Set();
+  const refused = [], planePuts = [], enabled = new Set(), secretPuts = [];
+  const tagged_world = builtInFleet ? builtInAssets() : {};
   let prefix = subdomain;
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
   const membersOf = () => {
@@ -239,7 +268,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       const b = pb.find((x) => x.type === "service" && x.name === binding);
       if (!b) return [member, { binding, state: "UNBOUND" }];
       if (!acct.has(b.service)) return [member, { binding, state: "SILENT" }];
-      if (b.service !== member) return [member, { binding, state: "MISNAMED", name: b.service, version: verOf(acct.get(b.service)) }];
+      if (b.service !== member && b.service !== `${member}-${slug}`) return [member, { binding, state: "MISNAMED", name: b.service, version: verOf(acct.get(b.service)) }];
       return [member, { binding, state: "SERVING", version: copy.memberVersion ?? verOf(acct.get(b.service)) }];
     }));
   };
@@ -273,6 +302,18 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if ((classes.get(name) || []).some((c) => meta.migrations.new_sqlite_classes.includes(c)))
         return cferr("migration tag precondition failed", 400, 10079);
       classes.set(name, [...(classes.get(name) || []), ...meta.migrations.new_sqlite_classes]);
+      if (meta.migrations.new_tag) tags.set(name, meta.migrations.new_tag);
+    } else if (meta.migrations?.steps) {
+      /* a multi-step migration: its old tag must be the tag the script holds, and it creates each step's classes in order */
+      if ((meta.migrations.old_tag ?? null) !== (tags.get(name) ?? null)) return cferr("migration tag precondition failed", 400, 10079);
+      for (const st of meta.migrations.steps) classes.set(name, [...(classes.get(name) || []), ...(st.new_sqlite_classes || [])]);
+      tags.set(name, meta.migrations.new_tag);
+    }
+    /* a Durable Object binding names a class the script itself, or the script it names, must hold */
+    for (const b of explicit) if (b.type === "durable_object_namespace" && !b.script_name && b.class_name !== "Store"
+        && !(classes.get(name) || []).includes(b.class_name)) {
+      refused.push(`${name}:${b.name}->${b.class_name}`);
+      return cferr(`Durable Object binding '${b.name}' references class '${b.class_name}', which this script does not hold`, 400, 10061);
     }
     const kept = (acct.get(name) || []).filter((b) => (meta.keep_bindings || []).includes(b.type)
       && !explicit.some((x) => x.name === b.name));
@@ -282,15 +323,27 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     return cfok({ id: name });
   };
   const API = CFG.API;
+  const rolledBack = [];
   const rules = [
-    { m: (u) => u.startsWith(CFG.RELEASE_LATEST + "/"), f: (u) => {
-      if (!rel) return new Response("not found", { status: 404 });
-      const p = u.slice(CFG.RELEASE_LATEST.length + 1);
-      if (p === "RELEASE.json") return jres(rel.manifest);
+    { m: (u) => u.startsWith(CFG.RELEASE_LATEST + "/") || /^https:\/\/raw\.githubusercontent\.com\/believeinoakland\/bio\/v[\d.]+\/release\//.test(u), f: (u) => {
+      const tagged = u.startsWith("https://raw.githubusercontent.com/believeinoakland/bio/v");
+      const p = tagged ? u.replace(/^.*\/release\//, "") : u.slice(CFG.RELEASE_LATEST.length + 1);
+      if (!tagged && p === "RELEASE.json" && rel) return jres(rel.manifest);
+      if (sourceDown && p !== "RELEASE.json") return new Response("unavailable", { status: 503 });
+      if (sourceFlakyLeft > 0 && p !== "RELEASE.json") { sourceFlakyLeft--; return new Response("unavailable", { status: 503 }); }
+      if (tagged && tagged_world[p] !== undefined) return new Response(tagged_world[p]);
+      if (!rel || tagged) return new Response("not found", { status: 404 });
       return p in rel.assets ? new Response(rel.assets[p]) : new Response("gone", { status: 404 });
     } },
     { m: (u) => u === CFG.TOKEN, f: () => tokenFail ? jres({ error: "invalid_grant", error_description: "code spent" }, 400)
       : jres({ access_token: TOK, ...(grantedScope === null ? {} : { scope: grantedScope }) }) },
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets$/.test(u) && mth === "PUT", f: (u, init) => {
+      const name = u.split("/workers/scripts/")[1].split("/")[0];
+      const { name: secret } = JSON.parse(init.body);
+      secretPuts.push(`${name}/${secret}`);
+      acct.set(name, [...(acct.get(name) || []).filter((b) => b.name !== secret), { type: "secret_text", name: secret }]);
+      return cfok({ name: secret });
+    } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets\/[^/]+$/.test(u) && mth === "DELETE", f: (u) => {
       const [name, , secret] = u.split("/workers/scripts/")[1].split("/");
       if (refuseSecretDelete) return cferr("secret removal refused <i>by the fake</i>", 500);
@@ -308,18 +361,62 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       cfok([...classes].flatMap(([script, cs]) => cs.map((c) => ({ id: `ns-${script}-${c}`, script, class: c })))) },
     { m: (u) => u.includes("/containers/applications"), f: (u, init) => {
       const mth = (init.method || "GET").toUpperCase();
+      if (containersOff) return cferr("Containers are not enabled on this account. Enable Containers in the dashboard.", 403, 10000);
       if (containers === "read") return cferr("Authentication error", 403, 10000);
+      const one = /\/containers\/applications\/([^/]+)(\/rollouts)?$/.exec(u);
+      if (mth === "GET" && one && !one[2]) { const a = apps.find((x) => x.id === one[1]); return a ? cfok(a) : cferr("not found", 404); }
       if (mth === "GET") return cfok(apps);
+      if (mth === "DELETE" && one) {
+        const i = apps.findIndex((x) => x.id === one[1]);
+        if (i < 0) return cferr("not found", 404);
+        removed.push("app:" + apps[i].name); apps.splice(i, 1); return cfok({});
+      }
       const body = JSON.parse(init.body);
       if (u.endsWith("/rollouts")) {
         if (containers === "rollout") return cferr("rollout refused", 500);
         const id = u.split("/applications/")[1].split("/")[0];
         rollouts.push({ id, ...body });
+        const a = apps.find((x) => x.id === id);
+        if (a && !rolloutKeepsImage) a.configuration = { ...(a.configuration || {}), ...body.target_configuration };
         return cfok({ id: "r" + rollouts.length });
       }
       if (containers === "create") return cferr("application refused", 500);
       apps.push({ id: "app" + (apps.length + 1), ...body });
       return cfok(apps.at(-1));
+    } },
+    { m: (u, mth) => u.endsWith("/workers/scripts") && mth === "GET", f: () =>
+      cfok([...acct.keys()].map((id) => ({ id, ...(tags.has(id) ? { migration_tag: tags.get(id) } : {}) }))) },
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/deployments$/.test(u), f: (u, init) => {
+      const name = u.split("/workers/scripts/")[1].split("/")[0];
+      if ((init.method || "GET").toUpperCase() === "POST") { const b = JSON.parse(init.body); rolledBack.push({ name, version: b.versions[0].version_id }); return cfok({}); }
+      return cfok({ deployments: [{ id: "d-" + name, versions: [{ version_id: deployments.get(name) || "v-current-" + name, percentage: 100 }] }] });
+    } },
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u.split("?")[0]) && mth === "DELETE" && !u.includes("bio-plan-probe"), f: (u) => {
+      const name = u.split("/workers/scripts/")[1].split("?")[0];
+      if (refuseDelete.includes(name)) return cferr("deletion refused <i>by the fake</i>", 403, 10000);
+      if (!acct.has(name)) return cferr("not found", 404);
+      acct.delete(name); classes.delete(name); sources.delete(name); removed.push(name);
+      return cfok({});
+    } },
+    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => cfok({ buckets: [...buckets].map((name) => ({ name })) }) },
+    { m: (u, mth) => /\/r2\/buckets\/[^/]+\/usage$/.test(u) && mth === "GET", f: (u) => {
+      const b = u.split("/r2/buckets/")[1].split("/")[0];
+      return buckets.has(b) ? cfok({ objectCount: (bucketObjects.get(b) || []).length }) : cferr("The specified bucket does not exist.", 404, 10006);
+    } },
+    { m: (u, mth) => /\/r2\/buckets\/[^/]+\/objects(\?.*)?$/.test(u) && mth === "GET", f: (u) => {
+      const b = u.split("/r2/buckets/")[1].split("/")[0];
+      return cfok((bucketObjects.get(b) || []).map((key) => ({ key })));
+    } },
+    { m: (u, mth) => /\/r2\/buckets\/[^/]+\/objects\/.+$/.test(u) && mth === "DELETE", f: (u) => {
+      const [b, key] = u.split("/r2/buckets/")[1].split("/objects/");
+      bucketObjects.set(b, (bucketObjects.get(b) || []).filter((k) => k !== decodeURIComponent(key)));
+      return cfok({});
+    } },
+    { m: (u, mth) => /\/r2\/buckets\/[^/]+$/.test(u) && mth === "DELETE", f: (u) => {
+      const b = u.split("/r2/buckets/")[1];
+      if (refuseDelete.includes(b)) return cferr("deletion refused <i>by the fake</i>", 403, 10000);
+      if ((bucketObjects.get(b) || []).length) return cferr("The bucket you tried to delete is not empty.", 409, 10008);
+      buckets.delete(b); removed.push("bucket:" + b); return cfok({});
     } },
     { m: (u) => u === `${API}/accounts`, f: () => accountsFail ? cferr("forbidden", 403) : cfok(accounts) },
     { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "PUT", f: async (u, init) => {
@@ -336,7 +433,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       const name = u.split("/workers/scripts/")[1].split("/")[0];
       if (settingsFail || lookupFail.includes(name)) return cferr("upstream trouble", 500);
       /* Settings name each binding, a secret by its name and type only. */
-      return acct.has(name) ? cfok(settingsBlind ? {} : { bindings: (acct.get(name) || []).map(({ text, ...b }) => b) })
+      return acct.has(name) ? cfok(settingsBlind ? {} : { bindings: (acct.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)) })
         : cferr("not found", 404);
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
@@ -379,8 +476,12 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: (u) => {
       const host = new URL(u).host;
       const [name, pre2] = host.split(".");
+      /* R63: a copy already held answers what its facts say (`copy.held[slug]`), or nothing. */
+      if (name !== slug && copy.held?.[name] && pre2 === prefix && new URL(u).searchParams.get("op") === "bootstrap")
+        return jres({ ok: true, version: "0.80.0", ...copy.held[name] });
       if (name !== slug || pre2 !== prefix || !acct.has(slug)) throw new Error("ENOTFOUND " + host);
-      if (copy.silent) throw new Error("ENOTFOUND " + host);
+      if (copy.silent || silentAddress) throw new Error("ENOTFOUND " + host);
+      if (wakeAfter > 0 && (wakeTries++) < wakeAfter) throw new Error("ENOTFOUND " + host);
       const q = new URL(u).searchParams;
       const v = verOf(acct.get(slug)) || "0.0.0";
       if (q.get("op") === "selftest") return copy.selftest ? copy.selftest(q) : jres({ ok: true, bindings: { STORE: true } });
@@ -394,16 +495,25 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       return jres({ ok: false });
     } },
   ];
-  const calls = script(rules);
+  const calls = script(rules, (u, method, init) => {
+    if (!u.startsWith(API)) return undefined;
+    cfCalls++;
+    if (expireAfter !== null && cfCalls > expireAfter) return cferr("Invalid access token", 401, 9109);
+    if (cfFlaky && flakyLeft > 0 && (!cfFlaky.path || u.includes(cfFlaky.path)) && (!cfFlaky.method || method === cfFlaky.method)) {
+      flakyLeft--; return cferr("slow down", cfFlaky.status, 0);
+    }
+    return undefined;
+  });
   let ck = givenCookie, st = givenState;
   if (!ck) ({ cookie: ck, state: st } = await begin(slug, mode, { ...(ai === undefined ? {} : { instanceAi: ai }),
+    ...(alongside ? { alongside: true } : {}), ...(typed === undefined ? {} : { typed }),
     ...(mode === "update" ? { version: version ?? (rel ? rel.version : RELEASE_VERSION) } : {}),
     ...(vpc === undefined ? {} : { securityVpc: vpc }) }));
   let out;
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }
   finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; armWith(...signersBefore); }
   return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf, reads, apps, rollouts,
-    classes, deleted, schedules };
+    classes, deleted, schedules, removed, secretPuts, sources, tags, rolledBack, bucketObjects };
 }
 
 /* The binding a plane PUT carried, by name. */
@@ -438,4 +548,30 @@ export function pageWorld(page) {
   const [js] = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
   new Function("document", "fetch", "location", js)(document, fetch, location);
   return { el: (id) => els.get(id), sent, location };
+}
+
+/* A copy the account already holds, as `run`'s `pre*` options take it: its plane (the class `Store`, its bindings naming its
+   buckets), its fleet members and its two buckets, under its slug's names or the older fixed ones; `finished` carries the mark
+   the installer writes last (R69), and a copy under the fixed names is finished by having been installed before it. */
+export function heldCopy({ slug, scheme = "slug", finished = true, members = ["pdf-worker", "ocr-worker", "agent-worker"], version = "0.80.0" } = {}) {
+  const legacy = scheme === "legacy";
+  const captures = legacy ? "bio-captures" : `bio-captures-${slug}`, published = legacy ? "bio-published" : `bio-published-${slug}`;
+  const memberName = (m) => (legacy ? m : `${m}-${slug}`);
+  const pre = { [slug]: [
+    { type: "durable_object_namespace", name: "STORE", class_name: "Store" }, { type: "plain_text", name: "VERSION", text: version },
+    { type: "plain_text", name: "INSTANCE_NAME", text: slug }, { type: "secret_text", name: "ADMIN_TOKEN" }, { type: "secret_text", name: "PROBE_TOKEN" },
+    { type: "secret_text", name: "DAEMON_TOKEN" }, { type: "secret_text", name: "ACCOUNT_SEAL_SECRET" },
+    { type: "r2_bucket", name: "CAPTURES", bucket_name: captures }, { type: "r2_bucket", name: "PUBLISHED", bucket_name: published },
+    { type: "service", name: "SELF", service: slug }, { type: "browser", name: "BROWSER" },
+    ...FLEET_BINDINGS.filter(([m]) => members.includes(m)).map(([m, name]) => ({ type: "service", name, service: memberName(m) })),
+    ...(finished && !legacy ? [{ type: "secret_text", name: "INSTALL_COMPLETE" }] : []),
+  ] };
+  for (const m of members) pre[memberName(m)] = [{ type: "plain_text", name: "VERSION", text: version }];
+  return { pre, preBuckets: [captures, published], preClasses: { [slug]: ["Store"] } };
+}
+/* Several held copies as one set of `run` options. */
+export function heldCopies(...copies) {
+  const out = { pre: {}, preBuckets: [], preClasses: {} };
+  for (const c of copies.map(heldCopy)) { Object.assign(out.pre, c.pre); out.preBuckets.push(...c.preBuckets); Object.assign(out.preClasses, c.preClasses); }
+  return out;
 }

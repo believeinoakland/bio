@@ -387,7 +387,7 @@ test("R12 `bind`: the plane bound first to the members already present, then the
   assert.equal(puts[0], "bind-fresh"); assert.equal(puts.at(-1), "bind-fresh");
   assert.deepEqual(puts.slice(1, -1).sort(), MEMBERS.slice().sort(), "act 2 between");
   assert.equal(fresh.planePuts[1].meta.migrations, undefined, "the re-upload takes the update's shape");
-  assert.match(fresh.page.label("bind"), /Your group's Civicsmith is connected to/);
+  assert.match(fresh.page.label("bind"), /Your team's Civicsmith is connected to/);
   /* Members already present: under R32 only an update meets them (R17 runs `bind` as here), so the first act is shown there. */
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
   const had = seen(await run({ slug: "bind-had", mode: "update", rel,
@@ -396,7 +396,7 @@ test("R12 `bind`: the plane bound first to the members already present, then the
   assert.deepEqual(targets(had.planePuts[0].bindings), RIGHT, "act 1 binds every member already present");
   const bad = seen(await run({ slug: "bind-refused", rel, refuseRePut: true }));
   assert.equal(bad.page.status("bind"), "no");
-  assert.match(bad.page.label("bind"), /installed, but connecting your group's Civicsmith to them was refused/);
+  assert.match(bad.page.label("bind"), /installed, but connecting your team's Civicsmith to them was refused/);
   for (const m of MEMBERS) assert.ok(bad.acct.has(m), `${m} stays installed`);
   restoreSigners();
 });
@@ -454,32 +454,32 @@ test("R15 `verify`: op=selftest with the probe credential up to ten tries, the c
   const all = seen(await run({ slug: "ver-all", rel }));
   assert.equal(all.page.status("verify"), "ok");
   assert.ok(all.calls.some((c) => c.u.includes("op=bootstrap&members=1")));
-  assert.match(all.page.done, /Your group's Civicsmith is running\./);
+  assert.match(all.page.done, /Your team's Civicsmith is running\./);
   const lags = [
-    [{ storeVersion: "0.1.0" }, "the record store of your group&#39;s Civicsmith still runs 0.1.0"],
+    [{ storeVersion: "0.1.0" }, "the record store of your team&#39;s Civicsmith still runs 0.1.0"],
     [{ memberVersion: "0.1.0" }, "the capability worker pdf-worker still runs 0.1.0"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, memberVersions: s.members }) }, "record store of your group&#39;s Civicsmith has not reported its version"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: null, memberVersions: s.members }) }, "record store of your group&#39;s Civicsmith cannot say which version it runs"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v }) }, "your group&#39;s Civicsmith did not report its capability workers"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: "0.1.0", storeVersion: s.v, memberVersions: s.members }) }, "the address of your group&#39;s Civicsmith answers 0.1.0"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, memberVersions: s.members }) }, "record store of your team&#39;s Civicsmith has not reported its version"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: null, memberVersions: s.members }) }, "record store of your team&#39;s Civicsmith cannot say which version it runs"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v }) }, "your team&#39;s Civicsmith did not report its capability workers"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: "0.1.0", storeVersion: s.v, memberVersions: s.members }) }, "the address of your team&#39;s Civicsmith answers 0.1.0"],
     [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "SILENT" } } }) }, "cannot get an answer from the capability worker ocr-worker, which this step installed"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "MISNAMED", name: "pdf-worker" } } }) }, "the connection of your group&#39;s Civicsmith to ocr-worker reaches a different worker (pdf-worker)"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "UNBOUND" } } }) }, "ocr-worker was installed, but your group&#39;s Civicsmith holds no connection to it"],
-    [{ bootstrap: (q, s) => { const mv = { ...s.members }; delete mv["ocr-worker"]; return jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: mv }); } }, "ocr-worker was installed, but your group&#39;s Civicsmith does not know it"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "MISNAMED", name: "pdf-worker" } } }) }, "the connection of your team&#39;s Civicsmith to ocr-worker reaches a different worker (pdf-worker)"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "UNBOUND" } } }) }, "ocr-worker was installed, but your team&#39;s Civicsmith holds no connection to it"],
+    [{ bootstrap: (q, s) => { const mv = { ...s.members }; delete mv["ocr-worker"]; return jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: mv }); } }, "ocr-worker was installed, but your team&#39;s Civicsmith does not know it"],
   ];
   for (const [copy, named] of lags) {
     const w = seen(await run({ slug: "ver-lag", rel, copy }));
     assert.equal(w.page.status("verify"), "no", named);
     assert.ok(w.page.done.includes(named), named);
-    assert.ok(!w.page.done.includes("Your group's Civicsmith is running."), named);
+    assert.ok(!w.page.done.includes("Your team's Civicsmith is running."), named);
     assert.ok(w.page.done.includes('id="out-boot"'), "the credentials are still handed over");
   }
   const failed = seen(await run({ slug: "ver-failed", rel: await release({ version: NEXT, missing: "ocr-worker" }) }));
-  assert.ok(failed.page.done.includes("ocr-worker could not be installed, so your group&#39;s Civicsmith has no OCR_WORKER connection"));
+  assert.ok(failed.page.done.includes("ocr-worker could not be installed, so your team&#39;s Civicsmith has no OCR_WORKER connection"));
   const pre = await release({ version: NEXT, src: PRE116_SRC });
   const inc = seen(await run({ slug: "ver-pre", rel: pre }));
   assert.equal(inc.page.status("verify"), "ok");
-  assert.match(inc.page.label("verify"), /This release cannot report which version the record store of your group's Civicsmith or its capability workers are running/);
+  assert.match(inc.page.label("verify"), /This release cannot report which version the record store of your team's Civicsmith or its capability workers are running/);
   assert.ok(!inc.calls.some((c) => c.u.includes("op=bootstrap&members=1")), "nothing to read back");
   restoreSigners();
 });
@@ -504,7 +504,7 @@ test("R16 the final panel shows the address, the one-time password and the probe
   assert.ok(w.raw.includes(`location.href=h.dataset.url+"#boot="+encodeURIComponent(document.getElementById("out-boot").textContent)`));
 });
 
-test("R34 the wizard's last screen shows, before the hand-over to your group's Civicsmith where the founder chooses a password, instance-setup R47's block in DEC-109's words (the same export), and asks for and records no acknowledgement; it names what it hands over to as \"your group's Civicsmith\" (R40)", async () => {
+test("R34 the wizard's last screen shows, before the hand-over to your team's Civicsmith where the founder chooses a password, instance-setup R47's block in DEC-109's words (the same export), and asks for and records no acknowledgement; it names what it hands over to as \"your team's Civicsmith\" (R40)", async () => {
   const escd = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   /* DEC-109's five points, each held in the one export both pages read. The words are instance-setup's (R47, which its
      own T34 job re-words for DEC-149), so each point is read by its meaning, not its exact wording. */
@@ -524,8 +524,8 @@ test("R34 the wizard's last screen shows, before the hand-over to your group's C
     const done = w.page.done;
     const at = done.indexOf(block), hand = done.indexOf('<button id="handover"');
     assert.ok(at > 0 && hand > at, "the block, whole, before the hand-over");
-    /* R40: the hand-over names what it hands over to as "your group's Civicsmith". */
-    assert.ok(done.includes(`>Continue to your group&#39;s Civicsmith: become its first administrator</button>`), "the hand-over's words");
+    /* R40: the hand-over names what it hands over to as "your team's Civicsmith". */
+    assert.ok(done.includes(`>Continue to your team&#39;s Civicsmith: become its first administrator</button>`), "the hand-over's words");
     assert.equal(done.split(block).length - 1, 1, "shown once");
     for (const s of [HOSTING_CONTROL.heading, ...S]) assert.ok(done.slice(0, hand).includes(escd(s)), s);
     /* The reassurance-only paragraph it replaces is gone. */
@@ -589,11 +589,11 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   for (const member of MEMBERS) assert.ok(fl.acct.has(member), member);
   assert.deepEqual(fl.planePuts.at(-1).bindings.filter((b) => BINDINGS.includes(b.name)).length, BINDINGS.length);
   assert.equal(fl.page.status("verify"), "ok");
-  assert.match(fl.page.done, /Every part of your group's Civicsmith answers/);
+  assert.match(fl.page.done, /Every part of your team's Civicsmith answers/);
   restoreSigners();
   const same = seen(await run({ slug: "upd-same", mode: "update", pre: { "upd-same": planeBase("upd-same", DEFAULT_VERSION) } }));
   assert.match(same.page.label("up") ?? same.page.events.find((e) => e.id === "up").label, /already runs/);
-  assert.match(same.page.done, /Nothing changed: Your group&#39;s Civicsmith runs release /);
+  assert.match(same.page.done, /Nothing changed: Your team&#39;s Civicsmith runs release /);
   assert.ok(!/<b>Updated (from|to)/.test(same.page.done));
 });
 
@@ -601,7 +601,7 @@ test("R18 an update crossing the first group-recording release (0.71.0) tells th
   const groupCalls = (w) => w.calls.filter((c) => /op=instancegroup/.test(c.u));
   const cross = seen(await run({ slug: "cross", mode: "update", pre: { cross: planeBase("cross", "0.70.0") } }));
   assert.match(cross.page.done, /One thing this update does not do for you/);
-  assert.match(cross.page.done, /Your group&#39;s Civicsmith ran 0\.70\.0 before this update/);
+  assert.match(cross.page.done, /Your team&#39;s Civicsmith ran 0\.70\.0 before this update/);
   assert.match(cross.page.done, /GROUP_UNDETERMINED/);
   assert.match(cross.page.done, /POST https:\/\/cross\.grp\.workers\.dev\/api\/\?op=instancegroupseed<\/span>/);
   /* F1 (K1874): the act is told with the credential in its header, never in the address. */
@@ -609,9 +609,9 @@ test("R18 an update crossing the first group-recording release (0.71.0) tells th
   assert.match(cross.page.done, /Authorization: Bearer &hellip;/);
   assert.ok(!/token=/.test(cross.page.done), "no credential in the address it tells");
   assert.match(cross.page.done, /store=scratch/);
-  assert.match(cross.page.done, /A suggestion, not a default: your group&#39;s Civicsmith was installed under the name <span class="mono">cross<\/span>/);
+  assert.match(cross.page.done, /A suggestion, not a default: your team&#39;s Civicsmith was installed under the name <span class="mono">cross<\/span>/);
   const fog = seen(await run({ slug: "fog", mode: "update", pre: { fog: planeBase("fog", "0.70.0") }, copy: { before: null } }));
-  assert.match(fog.page.done, /could not read which version your group&#39;s Civicsmith ran before this update, so it cannot tell whether this\napplies to you/);
+  assert.match(fog.page.done, /could not read which version your team&#39;s Civicsmith ran before this update, so it cannot tell whether this\napplies to you/);
   const past = seen(await run({ slug: "past", mode: "update", pre: { past: planeBase("past", "0.71.0") } }));
   assert.ok(!past.page.done.includes("op=instancegroupseed"));
   const same = seen(await run({ slug: "same", mode: "update", pre: { same: planeBase("same", DEFAULT_VERSION) } }));
@@ -664,8 +664,8 @@ test("R20 the plane's limits are read from the signed release R8 chose and sent 
     assert.ok(limitsOf(u).every((l) => JSON.stringify(l) === JSON.stringify(want)), stmt);
   }
   /* A verified release stating none, or stating them unreadably, is not used, and the page names why as R8 names a failed one. */
-  const bad = [[UNSTATED_SRC, /states no limits for your group's Civicsmith to run under, so it was NOT used/],
-    [plane("bio-plane-limits/1 subrequests=10000") + ' const b = "bio-plane-limits/1 subrequests=500";', /states the limits your group's Civicsmith runs under unreadably \(it states them 2 different ways\)/],
+  const bad = [[UNSTATED_SRC, /states no limits for your team's Civicsmith to run under, so it was NOT used/],
+    [plane("bio-plane-limits/1 subrequests=10000") + ' const b = "bio-plane-limits/1 subrequests=500";', /states the limits your team's Civicsmith runs under unreadably \(it states them 2 different ways\)/],
     [plane("bio-plane-limits/1 subrequests=10000 cpu_ms=5"), /unreadably .*keys sorted/],
     [plane("bio-plane-limits/1 subrequests=0"), /unreadably/], [plane("bio-plane-limits/1 subrequests=ten"), /unreadably/],
     [plane("bio-plane-limits/1 subrequests=1 subrequests=2"), /unreadably/]];
@@ -681,7 +681,7 @@ test("R20 the plane's limits are read from the signed release R8 chose and sent 
       /* This tree's built-in states none either: the install is refused by name, and nothing exists afterwards. */
       assert.equal(w.page.status("rel"), "no");
       assert.match(w.page.failed.p, /Nothing was created/);
-      assert.match(w.page.failed.p, new RegExp(`built-in release \\(${RELEASE_VERSION.replace(/\./g, "\\.")}\\) states no limits for your group's Civicsmith`));
+      assert.match(w.page.failed.p, new RegExp(`built-in release \\(${RELEASE_VERSION.replace(/\./g, "\\.")}\\) states no limits for your team's Civicsmith`));
       assert.deepEqual([[...w.acct.keys()], [...w.buckets]], [[], []], "no script, no bucket, no probe");
       assert.ok(!w.page.done);
       const u = seen(await run({ slug: "lim-upd", mode: "update", pre: { "lim-upd": planeBase("lim-upd") }, rel }));
@@ -776,7 +776,7 @@ test("R22 every page names Civicsmith and the installing group, by its chosen na
     assert.ok(page.includes("This installer is run by the publisher of Civicsmith releases."), `${where} says the publisher runs it`);
   }
   assert.match(before["/"], /<title>Create your Civicsmith group<\/title>/);
-  assert.match(before["/update"], /<title>Update your group's Civicsmith<\/title>/);
+  assert.match(before["/update"], /<title>Update your team's Civicsmith<\/title>/);
   assert.match(before.invitation, /<title>Start your group's own Civicsmith<\/title>/);
   assert.ok(before.invitation.includes('href="https://newgroup.believeinoakland.workers.dev/"'), "the address stays where it runs");
   for (const path of ["/", "/update"]) assert.ok(before[path].includes(`placeholder="${EXAMPLE_SLUG}"`), path);
@@ -866,7 +866,7 @@ test("R36 neither the install nor the update takes, generates, binds or shows a 
   assert.deepEqual(u.deleted, ["r36-upd/INSTANCE_CLAUDE_TOKEN"]);
   assert.ok(!u.raw.includes("member-kept"));
   assert.equal(u.acct.get("r36-upd").some((x) => x.name === "INSTANCE_CLAUDE_TOKEN"), false, "none left behind");
-  assert.match(u.page.label("keys"), /Claude credential an earlier installer bound into your group's Civicsmith was removed/);
+  assert.match(u.page.label("keys"), /Claude credential an earlier installer bound into your team's Civicsmith was removed/);
   assert.equal(u.raw.includes(CLAUDE), false);
   const clean = seen(await run({ slug: "r36-clean", mode: "update", pre: { "r36-clean": planeBase("r36-clean") } }));
   assert.deepEqual(clean.deleted, []);
@@ -880,12 +880,12 @@ test("R36 neither the install nor the update takes, generates, binds or shows a 
   assert.deepEqual(secretsOf(ai.planePuts[0]).filter((x) => x.name === "INSTANCE_AI_TOKEN").map((x) => x.text), [AI]);
 });
 
-test("R37 the install page states the assistant is optional and that its two settings are made in your group's Civicsmith at its setup, separately, nothing preselected (whether the group pays for it with its own API key, set by an administrator; whether it keeps its material away from AI, off unless an administrator turns it on with a reason); that a member may always connect their own account, serving only them, unless the group keeps its material away; that each member is told what goes to Anthropic first; the install takes no choice and writes no ASSISTANT_ENABLED, and an update never writes one", async () => {
+test("R37 the install page states the assistant is optional and that its two settings are made in your team's Civicsmith at its setup, separately, nothing preselected (whether the group pays for it with its own API key, set by an administrator; whether it keeps its material away from AI, off unless an administrator turns it on with a reason); that a member may always connect their own account, serving only them, unless the group keeps its material away; that each member is told what goes to Anthropic first; the install takes no choice and writes no ASSISTANT_ENABLED, and an update never writes one", async () => {
   const home = await text("/"), upd = await text(UPDATE_PATH);
   assert.ok(home.includes(ASSISTANT_OFFER), "the install page states it");
   const words = ASSISTANT_OFFER.replace(/\s+/g, " ");
   assert.match(words, /^The assistant is optional\./);
-  assert.match(words, /Its two settings are made in your group's Civicsmith when it is set up, separately, and neither is chosen for you/);
+  assert.match(words, /Its two settings are made in your team's Civicsmith when it is set up, separately, and neither is chosen for you/);
   assert.match(words, /whether your group pays for it, with its own Anthropic API key, which an administrator sets there/);
   assert.match(words, /whether your group keeps its material away from AI, which is off unless an administrator turns it on, giving a reason/);
   assert.match(words, /A member may always connect their own Claude subscription or API key, which serves only them, unless your group keeps its material away from AI/);
@@ -934,7 +934,7 @@ test("R38 a container member installs only with the Containers scope granted, Wo
   const upload = (w) => w.calls.filter((c) => c.method === "PUT" && /\/workers\/scripts\/[^/]+$/.test(c.u)).map((c) => c.u.split("/scripts/")[1]);
   assert.ok(upload(ok).indexOf(RUNNER) < upload(ok).indexOf("agent-worker"), "the container before the member bound to it");
   /* Each condition failing: left out, named, the copy serving the assistant by members' own API keys, the rest installed. */
-  const PAID_NOTE = /your group's Civicsmith offers the assistant only through an API key \(a member's own, or your group's\)/;
+  const PAID_NOTE = /your team's Civicsmith offers the assistant only through an API key \(a member's own, or your group's\)/;
   const leftOut = async (why, opts, says) => {
     const w = seen(await run({ slug: "box-" + why, rel, ...opts }));
     assert.equal(w.apps.length, 0, why);
@@ -1006,8 +1006,8 @@ test("R17 (T36) the update writes no MEMBER_TOKEN and no ASSISTANT_ENABLED and l
   const held = w.acct.get("r17-old").map((b) => b.name);
   assert.ok(!held.includes("MEMBER_TOKEN") && !held.includes("ASSISTANT_ENABLED"), "neither left behind: " + held.join(","));
   assert.ok(held.includes("ADMIN_TOKEN") && held.includes("PROBE_TOKEN"), "the other credentials kept");
-  assert.match(w.page.label("keys"), /The shared member key an earlier installer bound into your group's Civicsmith .* was removed/);
-  assert.match(w.page.label("keys"), /The assistant choice an earlier installer bound into your group's Civicsmith .* was removed by this update/);
+  assert.match(w.page.label("keys"), /The shared member key an earlier installer bound into your team's Civicsmith .* was removed/);
+  assert.match(w.page.label("keys"), /The assistant choice an earlier installer bound into your team's Civicsmith .* was removed by this update/);
   assert.equal(w.page.status("keys"), "ok");
   assert.ok(!w.raw.includes("member-kept"), "the held value is never shown");
   const stuck = seen(await run({ slug: "r17-stuck", mode: "update", pre: { "r17-stuck": planeBefore36("r17-stuck") }, refuseSecretDelete: true }));
@@ -1052,7 +1052,7 @@ test("R38 (T36) a container member with two or more classes (file-scanner) is de
   assert.equal(both.apps.length, 3);
   assert.ok(both.apps.some((a) => a.name === RUNNER));
   /* Left out, each with why and what the copy then lacks; every other member installs; the install finishes. */
-  const LACKS = /your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made/;
+  const LACKS = /your team's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made/;
   const out = async (why, relOpts, says, runOpts = {}, mutate = null) => {
     const r = await release({ version: NEXT, scanner: true, ...relOpts });
     if (mutate) mutate(r);
@@ -1086,7 +1086,7 @@ test("R38 (T36) a container member with two or more classes (file-scanner) is de
 const GHCR = (name, c) => `ghcr.io/believeinoakland/${name}@sha256:${c.repeat(64)}`;
 const UNPULLABLE = "this release's image is not yet published where your Cloudflare account can pull it";
 
-test("R38 (T46) a container member left out because its image is not in a registry your Cloudflare account can pull is named with \"this release's image is not yet published where your Cloudflare account can pull it\" beside what your group's Civicsmith then lacks, never \"not a public registry image\"; every other member installs, on the install and the update; control: images pinned by digest on Docker Hub install", async () => {
+test("R38 (T46) a container member left out because its image is not in a registry your Cloudflare account can pull is named with \"this release's image is not yet published where your Cloudflare account can pull it\" beside what your team's Civicsmith then lacks, never \"not a public registry image\"; every other member installs, on the install and the update; control: images pinned by digest on Docker Hub install", async () => {
   armWith(SIGNER.line);
   const rel = await release({ version: NEXT, container: true, descriptor: { ...DESCRIPTOR, image: GHCR("agent-runner", "a") }, scanner: true,
     scannerParts: { "container/FileScanner.json": { ...SCANNER_CLASSES[0], image: GHCR("file-scanner-scanner", "d") },
@@ -1098,8 +1098,8 @@ test("R38 (T46) a container member left out because its image is not in a regist
     assert.ok(!w.acct.has(RUNNER) && !w.acct.has(SCANNER), `${mode}: neither container member installed`);
     assert.equal(w.calls.some((c) => c.u.includes("/containers/")), false, `${mode}: the Containers API untouched`);
     for (const m of MEMBERS.filter((x) => x !== RUNNER && x !== SCANNER)) assert.ok(w.acct.has(m), `${mode}: ${m} installs`);
-    assert.match(said, new RegExp(`${RUNNER} \\(${esc(UNPULLABLE)}; your group's Civicsmith offers the assistant only through an API key \\(a member's own, or your group's\\) until it is installed\\)`), mode);
-    assert.match(said, new RegExp(`${SCANNER} \\(${esc(UNPULLABLE)} \\(class FileScanner\\); your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned`), mode);
+    assert.match(said, new RegExp(`${RUNNER} \\(${esc(UNPULLABLE)}; your team's Civicsmith offers the assistant only through an API key \\(a member's own, or your group's\\) until it is installed\\)`), mode);
+    assert.match(said, new RegExp(`${SCANNER} \\(${esc(UNPULLABLE)} \\(class FileScanner\\); your team's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned`), mode);
     assert.equal(/public registry/i.test(w.page.words), false, mode);
     assert.ok(w.page.done, `${mode}: the act finished`);
     if (mode === "update") assert.equal(w.page.status("up"), "ok");
@@ -1112,15 +1112,15 @@ test("R38 (T46) a container member left out because its image is not in a regist
   restoreSigners();
 });
 
-test("R23 (T46) when the release this installer carries names, for a container member, an image your Cloudflare account cannot pull, the install and update pages say so before the install begins, per member, with what your group's Civicsmith then lacks (R38's words); control: images it can pull are not named", async () => {
+test("R23 (T46) when the release this installer carries names, for a container member, an image your Cloudflare account cannot pull, the install and update pages say so before the install begins, per member, with what your team's Civicsmith then lacks (R38's words); control: images it can pull are not named", async () => {
   const both = [{ member: RUNNER, class_name: "AgentRunner", image: GHCR("agent-runner", "a") },
     { member: SCANNER, class_name: "FileScanner", image: GHCR("file-scanner-scanner", "d") },
     { member: SCANNER, class_name: "SafeViewRenderer", image: GHCR("file-scanner-renderer", "e") }];
   const n = leftOutNotice(both, "9.9.9");
   const w = words(n);
   assert.equal((n.match(/<li\b/g) || []).length, 2, "one line per member, a member of two classes once");
-  assert.match(w, /The assistant through a member's own Claude subscription \(agent-runner\): this release's image is not yet published where your Cloudflare account can pull it, so it is left out, and your group's Civicsmith offers the assistant only through an API key \(a member's own, or your group's\) until it is installed\./);
-  assert.match(w, /The built-in file scanner and safe view \(file-scanner\): this release's image is not yet published where your Cloudflare account can pull it, so it is left out, and your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made\./);
+  assert.match(w, /The assistant through a member's own Claude subscription \(agent-runner\): this release's image is not yet published where your Cloudflare account can pull it, so it is left out, and your team's Civicsmith offers the assistant only through an API key \(a member's own, or your group's\) until it is installed\./);
+  assert.match(w, /The built-in file scanner and safe view \(file-scanner\): this release's image is not yet published where your Cloudflare account can pull it, so it is left out, and your team's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made\./);
   assert.match(w, /the release this installer carries \(9\.9\.9\) cannot install yet/);
   assert.match(w, /Everything else installs/);
   assert.equal(/public registry/i.test(w), false);
@@ -1234,7 +1234,7 @@ test("R44 the install and the update install file-scanner with exactly the bindi
   restoreSigners();
 });
 
-test("R45 the final panel and the update's last screen say the organization's own security tools are added in your group's Civicsmith and the installer takes none; a Workers VPC service the operator names (optional, nothing preselected) binds file-scanner as SECURITY_VPC, none named writes none and the page says a tunnelled tool answers REACH_NOT_BOUND", async () => {
+test("R45 the final panel and the update's last screen say the organization's own security tools are added in your team's Civicsmith and the installer takes none; a Workers VPC service the operator names (optional, nothing preselected) binds file-scanner as SECURITY_VPC, none named writes none and the page says a tunnelled tool answers REACH_NOT_BOUND", async () => {
   const home = await text("/"), upd = await text(UPDATE_PATH);
   for (const page of [home, upd]) {
     const field = page.match(/<input id="vpc"[^>]*>/)?.[0];
@@ -1242,7 +1242,7 @@ test("R45 the final panel and the update's last screen say the organization's ow
     assert.match(words(page), /REACH_NOT_BOUND/);
     assert.ok(page.includes("securityVpc:"), "the page sends it");
   }
-  assert.match(SECURITY_TOOLS.replace(/\s+/g, " "), /added in your group's Civicsmith by an administrator, at its setup or later\. This installer takes no tool and no tool's key\./);
+  assert.match(SECURITY_TOOLS.replace(/\s+/g, " "), /added in your team's Civicsmith by an administrator, at its setup or later\. This installer takes no tool and no tool's key\./);
   /* /begin: a value that is not a service id refused by name; a good one carried in the cookie; none, nothing. */
   for (const bad of ["vpc-1", "0123", "g".repeat(32), "0123456789abcdef0123456789abcdef0"]) {
     const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "vpc-bad", securityVpc: bad }) });
@@ -1260,7 +1260,7 @@ test("R45 the final panel and the update's last screen say the organization's ow
     assert.deepEqual((await metaOf(w, SCANNER)).bindings.filter((b) => b.type === "vpc_service"), [VPC], mode);
     for (const m of MEMBERS.filter((x) => x !== SCANNER)) assert.equal(((await metaOf(w, m))?.bindings || []).some((b) => b.type === "vpc_service"), false, m);
     assert.match(w.page.label("fleet"), /file-scanner is connected to the Workers VPC service you named \(SECURITY_VPC\)/);
-    assert.match(words(w.page.done), /added in your group's Civicsmith by an administrator, at its setup or later\. This installer takes no tool and no tool's key\./, mode);
+    assert.match(words(w.page.done), /added in your team's Civicsmith by an administrator, at its setup or later\. This installer takes no tool and no tool's key\./, mode);
     assert.match(w.page.done, /You named a Workers VPC service/, mode);
   }
   /* None named: no such binding, and the panel and the update's last screen say a tunnelled tool answers REACH_NOT_BOUND. */
@@ -1311,7 +1311,7 @@ test("R46 before verify succeeds, the install and the update list the account's 
       assert.match(w.page.label("logs"), /A Logpush job on your Cloudflare account would keep a log of who opened which file: the Logpush job "trace all" \(id 7\)/);
       assert.equal(w.page.status("verify"), "no", mode);
       assert.ok(w.page.done.includes("the Logpush job &quot;trace all&quot; (id 7)"), mode);
-      assert.ok(!w.page.done.includes("Your group's Civicsmith is running.") && !/<b>Updated (from|to)/.test(w.page.done), `${mode}: no success`);
+      assert.ok(!w.page.done.includes("Your team's Civicsmith is running.") && !/<b>Updated (from|to)/.test(w.page.done), `${mode}: no success`);
     }
     /* Unreadable: undetermined, with the manual check, and never stated as passed. */
     const u = seen(await run({ slug: "lp-u", mode, rel, pre: pre("lp-u"), logpush: "refused" }));
@@ -1338,12 +1338,12 @@ test("R47 the install binds OWN_HOSTS, the copy's own host names (its workers.de
   for (const opts of [{ enableFail: true }, { subdomain: null, subdomainPut: "fail" }]) {
     const n = seen(await run({ slug: "hosts-none", ...opts }));
     assert.ok(n.planePuts.every((p) => hostsOf(p) === null), JSON.stringify(opts));
-    assert.match(n.page.failed.p, /Until it has one, your group's Civicsmith is not told an address of its own/);
+    assert.match(n.page.failed.p, /Until it has one, your team's Civicsmith is not told an address of its own/);
   }
   /* A refused last upload: not written, and said. */
   const ref = seen(await run({ slug: "hosts-ref", refuseRePut: true }));
   assert.equal(ref.acct.get("hosts-ref").some((b) => b.name === "OWN_HOSTS"), false);
-  assert.match(ref.page.label("bind"), /Telling your group's Civicsmith its own address was refused/);
+  assert.match(ref.page.label("bind"), /Telling your team's Civicsmith its own address was refused/);
   /* The update: restated from the address it finds, on every upload; none found, none written, said. */
   const u = seen(await run({ slug: "hosts-upd", mode: "update", pre: { "hosts-upd": planeBase("hosts-upd") } }));
   for (const put of u.planePuts) assert.equal(hostsOf(put).text, "hosts-upd.grp.workers.dev");
@@ -1351,7 +1351,7 @@ test("R47 the install binds OWN_HOSTS, the copy's own host names (its workers.de
   const un = seen(await run({ slug: "hosts-unf", mode: "update", subdomain: null, pre: { "hosts-unf": [...planeBase("hosts-unf"), { type: "plain_text", name: "OWN_HOSTS", text: "stale.example.workers.dev" }] } }));
   for (const put of un.planePuts) assert.equal(hostsOf(put), null);
   assert.equal(un.acct.get("hosts-unf").some((b) => b.name === "OWN_HOSTS"), false, "a stale value is not kept");
-  assert.match(un.page.label("addr"), /No web address was found for your group's Civicsmith, so it was not told one of its own/);
+  assert.match(un.page.label("addr"), /No web address was found for your team's Civicsmith, so it was not told one of its own/);
 });
 
 /* ------------------------------------------------------------------------------------------------ T46: the test-instance exception, the stewards */
@@ -1632,14 +1632,14 @@ test("R33 the install and the update read back the uploaded plane's content and 
     assert.equal(w.planePuts.length, 2, readBack);
     assert.ok(w.reads.filter((n) => n === "rb-ok").length >= 2, `${readBack}: read back after each plane upload`);
     assert.equal(w.page.status("verify"), "ok", readBack);
-    assert.match(w.page.done, /Your group's Civicsmith is running\./, readBack);
+    assert.match(w.page.done, /Your team's Civicsmith is running\./, readBack);
   }
   const reads = [];
   for (const [readBack, named] of [["differ", MISMATCH], ["fail", /could not be read back, so it is not confirmed to be the [0-9.]+ release&#39;s own bytes/]]) {
     const w = seen(await run({ slug: "rb-bad", rel, readBack }));
     reads.push(w.reads.length);
     assert.match(w.page.done, named, readBack);
-    assert.ok(!w.page.done.includes("Your group's Civicsmith is running."), `${readBack}: no success claimed`);
+    assert.ok(!w.page.done.includes("Your team's Civicsmith is running."), `${readBack}: no success claimed`);
     assert.equal(w.page.status("verify"), "no", readBack);
     assert.ok(w.page.done.includes('id="out-boot"'), `${readBack}: the credentials are still handed over`);
     /* With the address silent too, the mismatch is still named. */
@@ -1789,7 +1789,7 @@ const memberWords = (page) => {
   t = t.replace(/(repository's|built-in) copy/g, " ").replace(/someone else's servers/g, " ").replace(/number of instances/g, " ");
   return t.replace(/\b[A-Z][A-Z0-9_]{2,}\b/g, " ").replace(/\S*[-_=/.:]\S*/g, (w) => /[a-z][-_=/.:][a-z]/i.test(w) ? " " : w);
 };
-test("R40 every member- or founder-facing string the installer serves (the install and update pages, every step and refusal, the final panel and last screen, the invitation page) says \"your group's Civicsmith\" or needs no name, never copy, instance, plane or server for it; \"installation\" only where the hosting is the subject", async () => {
+test("R40 every member- or founder-facing string the installer serves (the install and update pages, every step and refusal, the final panel and last screen, the invitation page) says \"your team's Civicsmith\" or needs no name, never copy, instance, plane or server for it; \"installation\" only where the hosting is the subject", async () => {
   /* The reading finds each word it is for, and passes the meanings R40 keeps. */
   for (const bad of ["Your copy is running.", "the plane itself installed", "on this instance", "our servers", "Go to my copy"])
     assert.match(memberWords(`<p>${bad}</p>`), /\b(copy|instance|plane|servers?)\b/i, bad);
@@ -1810,24 +1810,24 @@ test("R40 every member- or founder-facing string the installer serves (the insta
   const home = await text("/"), upd = await text(UPDATE_PATH);
   for (const [page, want] of [[home, "<title>Create your Civicsmith group</title>"], [home, "<h2>Your group's short name</h2>"],
       [home, "<h1>Let this installer into your Cloudflare account</h1>"], [home, `<h2>${BEFORE_CLOUDFLARE_CONTROL}</h2>`],
-      [upd, "<title>Update your group's Civicsmith</title>"], [upd, "The name your group's Civicsmith was installed under"],
+      [upd, "<title>Update your team's Civicsmith</title>"], [upd, "The name your team's Civicsmith was installed under"],
       [INVITATION, "<title>Start your group's own Civicsmith</title>"], [INVITATION, ">Set up my group's Civicsmith</a>"],
-      [await text("/elsewhere"), "Setting up your group&#39;s Civicsmith."]])
+      [await text("/elsewhere"), "Setting up your team&#39;s Civicsmith."]])
     assert.ok(page.includes(want), want);
-  assert.match(ASSISTANT_OFFER.replace(/\s+/g, " "), /made in your group's Civicsmith when it is set up/);
+  assert.match(ASSISTANT_OFFER.replace(/\s+/g, " "), /made in your team's Civicsmith when it is set up/);
   const done = seen(await run({ slug: "r40-words" }));
-  assert.ok(done.page.done.includes(">Continue to your group&#39;s Civicsmith: become its first administrator</button>"));
-  assert.match(done.page.done, /<b>Your group's Civicsmith is running\.<\/b>/);
-  assert.match(done.raw, /<title>Setting up your group&#39;s Civicsmith<\/title>/);
-  assert.equal(done.page.events.find((e) => e.k === "step" && e.id === "fleet").label, "Installing the capability workers beside your group's Civicsmith");
+  assert.ok(done.page.done.includes(">Continue to your team&#39;s Civicsmith: become its first administrator</button>"));
+  assert.match(done.page.done, /<b>Your team's Civicsmith is running\.<\/b>/);
+  assert.match(done.raw, /<title>Setting up your team&#39;s Civicsmith<\/title>/);
+  assert.equal(done.page.events.find((e) => e.k === "step" && e.id === "fleet").label, "Installing the capability workers beside your team's Civicsmith");
   const one = seen(await run({ slug: "r40-one", preBuckets: ["bio-captures"] }));
   assert.equal(one.page.failed.h, "Your Cloudflare account already holds an installation of Civicsmith");
   assert.match(one.page.failed.p, /^One installation of Civicsmith per Cloudflare account is supported for now: /);
   const up = seen(await run({ slug: "r40-up", mode: "update", pre: { "r40-up": planeBase("r40-up") } }));
-  assert.match(up.raw, /<title>Updating your group&#39;s Civicsmith<\/title>/);
-  assert.equal(up.page.events.find((e) => e.k === "step" && e.id === "find").label, `Finding your group's Civicsmith, installed as "r40-up"`);
-  assert.equal(up.page.events.find((e) => e.k === "step" && e.id === "addr").label, "Finding the address of your group's Civicsmith");
-  assert.ok(up.page.done.includes(">Back to your group&#39;s Civicsmith</a>"));
+  assert.match(up.raw, /<title>Updating your team&#39;s Civicsmith<\/title>/);
+  assert.equal(up.page.events.find((e) => e.k === "step" && e.id === "find").label, `Finding your team's Civicsmith, installed as "r40-up"`);
+  assert.equal(up.page.events.find((e) => e.k === "step" && e.id === "addr").label, "Finding the address of your team's Civicsmith");
+  assert.ok(up.page.done.includes(">Back to your team&#39;s Civicsmith</a>"));
   /* "Copy" keeps its other meaning: the release the installer carries is still its built-in copy. */
   armWith(SIGNER.line);
   const tamper = await release({ version: NEXT, fleet: false }); tamper.assets["bio-plane.bundled.mjs"] = "tampered";
@@ -1851,7 +1851,7 @@ test("R41 the install page's act that chooses the short name shows the Irreversi
   const dialog = home.match(/<dialog id="confirm"[\s\S]*?<\/dialog>/)[0];
   const words = dialog.replace(/<[^>]+>/g, " ").replace(/&ldquo;|&rdquo;/g, "\"").replace(/\s+/g, " ");
   assert.match(words, /is permanent/);
-  assert.match(words, /in every address of your group's Civicsmith/);
+  assert.match(words, /in every address of your team's Civicsmith/);
   assert.match(words, /beside every signature/);
   assert.match(words, /becomes the name of its worker in your Cloudflare account/);
   assert.match(words, /can never be changed, by you or anyone, without installing a new Civicsmith and starting again/);
