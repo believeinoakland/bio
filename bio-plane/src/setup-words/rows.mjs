@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12756 words, 892 protected; SHA-256
-   e771d1075d4ed43759e54b82190be9b7b5bb19305b28b81ba76f4227bef1020a), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12757 words, 892 protected; SHA-256
+   54d5d8a94b620c5b278a8542328dfc7926b7239d7df450795085c3ff2a0ff1e9), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "e771d1075d";
+export const WORDS_COMMIT = "54d5d8a94b";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5691,6 +5691,7 @@ export const WORD_ROWS = Object.freeze([
   ["capture.chrome.ref.unrecorded","the chrome region was not recorded","DEC-305: capture R29: one page's chrome observation with no region named",null,false],
   ["refusal.SIGNIN_EXPIRED","The Claude sign-in your team's assistant uses has expired, so the assistant can't work until it is connected again. An administrator can connect again under Settings, The assistant. Nothing was sent.","DEC-307: screens-settings R41, agent-worker R84",null,false],
   ["refusal.PUBLISH_AT_NO_ZONE","Your team's time zone isn't set, and a publishing time is counted in it, so only \"Sign and publish now\" is offered. An administrator can set it under Settings, Your team.","DEC-307: ratification R44, publish-schedule R1: only \"Publish now\" is offered",null,false],
+  ["screen.explore.unnamed.why","named in {n} documents only by an account number","DEC-308: explore R25: why a node is not yet named, beside connection.node.unnamed",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
