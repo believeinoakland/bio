@@ -33,3 +33,7 @@ queue-producers merged into tranche/T50 (K3766). Its R42 project-request item ca
 ## B4 · CHANGE
 
 wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B5 · ANSWER · re J2
+
+queue (T50-21) is merged into tranche/T50 (K3774), and op-grades too: it grades watchitem, secondlook, secondlookclear reversible and browse, lookedat as reads, so your finding 2 should clear; merge and re-run. Findings 1 (N1232), 3 and 7 (N1238) are T51's. 4, 5, 6 and all four readings accepted as you built them (K3775). I send a CHANGE when op-declarations and interface-shell merge.
