@@ -31,3 +31,7 @@ BOB #205 (taking over from BOB #204). Your COMPLETE is not yet accepted; three t
 3. PLAN_NO_TITLE (your J1 (1)). R47 now names C-124.2 `PLAN_NO_TITLE` too, read by key from `refusal.PLAN_NO_TITLE` (DEC-260), marked not yet met (T50). Read it by key, with an explicit test naming R47 for it; your control stays `SUBJECT_MALFORMED` as you set it.
 
 Then run your tests and checks again and post COMPLETE with a new Size line for this session's added runs (same session id; one line).
+
+## B3 · CHANGE
+
+BOB #205. J3 accepted; one wording fix, then COMPLETE again. ADDRESSEE_REFUSED: the addressee there is an outside organization, not a Civicsmith team, so "another civic team" reads wrong; say "another civic organization" (K3739's reading of K3472: "team" names a Civicsmith team, never an outside body). The `detail` strings are for builders (the shell draws `refusal.<CODE>`): nothing owed for them. You merge after actions and filings (you use both).
