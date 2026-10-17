@@ -3790,6 +3790,22 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "accountpropose",
+     "label": "Draft the account with the assistant",
+     "status": "declared",
+     "modules": [
+      "case-account"
+     ]
+    },
+    {
+     "op": "accountdrafts",
+     "label": "See its earlier drafts",
+     "status": "declared",
+     "modules": [
+      "case-account"
+     ]
     }
    ],
    "journeys": [
