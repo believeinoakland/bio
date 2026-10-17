@@ -473,6 +473,7 @@ export const KEYS = Object.freeze([
   "screen.account.sounds",
   "screen.account.sounds.help",
   "screen.account.sounds.off",
+  "screen.account.sounds.on",
   "screen.action.name",
   "screen.action.purpose",
   "screen.answers.name",

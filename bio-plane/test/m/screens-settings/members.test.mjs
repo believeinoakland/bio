@@ -175,7 +175,8 @@ test("R2 a refusal is drawn beside its act and nothing else changes; R8 nothing 
   const was = b.html;
   b.press("memberset", { data: { member: "dev", status: "revoked" } });
   await new Promise((res) => setTimeout(res, 10));
-  assert.equal(b.html, was, "nothing drawn while the act has not answered");
+  // the shell marks the pressed button busy (interface-shell R74); nothing else is drawn
+  assert.equal(b.html.replace(/ aria-busy="true"/g, ""), was, "nothing drawn while the act has not answered");
 });
 
 test("R12 each row's name is the member's reference (cs.ref member, opening members/<id>), its panel opened by its own control", async () => {
