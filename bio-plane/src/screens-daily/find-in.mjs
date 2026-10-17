@@ -78,8 +78,9 @@ export const findIn = Object.freeze({
     // "Look in": the scope, set by where it was opened (not a field: nothing is typed here).
     // R26: the scope by its title, never by its address or digest; a document's title is the answer's, once it has answered.
     const pr = view.data.project;
-    const ptitle = form === "project" && pr && pr.state === "ok" ? view.parts.frontTitle(pr.value) : null;
     const foundScope = ui.found && ui.found.scope && typeof ui.found.scope === "object" ? ui.found.scope : {};
+    // R49: the project by its title as the find answers it (retrieval R80), else as its document states it.
+    const ptitle = form === "project" ? (typeof foundScope.title === "string" && foundScope.title.trim() ? foundScope.title : pr && pr.state === "ok" ? view.parts.frontTitle(pr.value) : null) : null;
     const dtitle = form === "document" ? (typeof foundScope.title === "string" && foundScope.title.trim() ? foundScope.title : null) : null;
     // The scope's sentence: a project by its title and how many documents it holds (once the answer says), a document by its title.
     const ref = function (kind, title) { return { html: cs.ref(kind, s, title, []) }; };
