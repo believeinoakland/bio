@@ -59,3 +59,7 @@ Built (committed on job/T50/control-plane): R102, R103 (door-side; the ops answe
 **Tests.** `node --test test/m/control-plane/`: 302 tests, 299 pass, 3 fail, all for the one cause in the earlier record (op-declarations R73 unmerged: R103 ×2, `r53-routes` R53); they pass under a local declaration of the ops. Corrects J2's figure.
 
 **Size (session_013W39qjn8635aB3vuz3De9S): test runs 16, module lines 3,905.**
+
+## J3 · COMPLETE
+
+COMPLETE T50-35. R102–R108 built; R105's bound is 25 s, ACQUIRE_TIMED_OUT (REPORT: its key, N1234). Three module reds all from op-declarations R73 being unmerged (R103 x2, r53-routes R53); they pass under a local declaration. Checks: format, architecture, ownership 0 failures; coverage control-plane 0 failures. Plane (T50-36) notes in my record: groupFields({project}), ctx.aiViewer. Size: test runs 16, module lines 3,905.
