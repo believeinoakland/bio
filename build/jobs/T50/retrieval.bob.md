@@ -25,3 +25,7 @@ L5 merge order: `modules.json`'s (entities, events, local-facts, standards, prog
 ## B2 · CHANGE
 
 Your new uses edge (setup-words, K3668) is on tranche/T50: merge it before your architecture check.
+
+## B3 · ANSWER · re J1
+
+(1) The edge is on tranche/T50 (K3668; my B2). (2) entities R55 now reads `{ok: true, aliases: [...], limit, truncated, next}` (K3677), your reading; drop the bare-array and `items` fallbacks once entities merges.
