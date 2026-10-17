@@ -41,7 +41,7 @@ RULE_NO_REASON control reads its key. No test was skipped, weakened or re-pinned
 - `node checks/format.mjs /home/user/bio` → format: 171 modules, 169 requirements files; 0 failures
 - `node checks/architecture.mjs /home/user/bio local-facts` → architecture: 17 product files, 54 relative imports (0 naming no tracked file, not judged); 0 failures
 - `node checks/coverage.mjs /home/user/bio local-facts` → coverage: 1 modules, 17 of 17 live requirement ids named by a test; 0 failures
-- `node checks/ownership.mjs /home/user/bio local-facts tranche/T50` → see the line after the commit (recorded below)
+- `node checks/ownership.mjs /home/user/bio local-facts tranche/T50` → ownership: 4 files changed by local-facts between tranche/T50 and HEAD; 0 failures
 - `node checks/run.mjs /home/user/bio` → architecture: 3434 product files, 10587 relative imports, 0 failures; coverage: 169 modules, 5641 of 5762 live requirement ids named by a test, 31 failures (none local-facts, all base reds); channels: 2 participants, 824 outbox commits read, 0 failures
 - `node --test bio-plane/test/m/local-facts/*.test.mjs` → before the change: 4 failing (R16 x2, R17 x2); after: `ℹ tests 63`, `ℹ pass 63`, `ℹ fail 0`
 - consumer tests (affordances, answer-envelope, action-clocks, filings, op-declarations, plane t33/t45/t46, compose) → `ℹ tests 544`, `ℹ pass 533`, `ℹ fail 11` with the change; the same 11 on HEAD
