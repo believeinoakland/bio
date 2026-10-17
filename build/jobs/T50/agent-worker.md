@@ -31,3 +31,21 @@ REPORT (J2) · agent-worker, T50-65. Findings that lie outside my module, and fo
 - The gate (R110) does not hold a `/run` whose caller supplies the judgements: it takes no turn and reaches no runner.
 - Plan rule 6: I read the keyed sentences by key (`refusal.NO_ACCOUNT`, `.SIGNIN_NOT_HELD`, `.NAMESPACE_UNKNOWN`, `.ASSISTANT_REMOTE_NOT_READY`, `ai.progress.check.failed`). Every other refusal sentence this member writes has no key (BAD_BODY, BAD_RUN_ID, BAD_STORE, BAD_TURNS, BAD_TASK, BAD_TOLD, BAD_GRANT, BAD_CONVERSATION, BAD_PAGES, BAD_SHA, BAD_CODE, BAD_MEMBER, BAD_STEP, BAD_ACCOUNT, BAD_CREDENTIAL_SHAPE, NO_CREDENTIAL, NO_GRANT, NO_SUCH_RUN, PLANE_NOT_CONFIGURED, PLANE_SILENT, PLANE_REFUSED, RUNNER_NOT_CONFIGURED, RUNNER_SILENT, RUN_NAMES_A_DIFFERENT_PAYER, SKILL_VERSION_MISMATCH, SEGMENT_*, DRAFT_*, ASK_*, MODEL_SILENT, MODEL_REFUSED, PACK_UNDETERMINED, JUDGEMENT_OVERREACH, the cascade's NO_ACCOUNT detail, and `/signin`'s six own WORDS): REPORT to the design lane, still inline English. Their text says "your group's Civicsmith" (DEC-149, agent-worker R64), which plan rule 6 ("team, never group") contradicts; that is for BOB to settle.
 - M-T50-5 (a plain member's run on biosmoke8) cannot be made while agent-runner's proof is blocked (K3692). R111 is unbuilt, as B2 says.
+
+## J3 · COMPLETE
+
+COMPLETE · agent-worker, T50-65 (R109, R110, R112–R118; R111 unbuilt by B2).
+
+Entries applied
+- R109: every path reaches a runner through `remoteOf(env)` (`src/remote.mjs`), `env.REMOTE` only; no RUNNER binding declared or named (a fresh build holds none). wrangler binds `REMOTE` (`RemoteSession`, agent-runner), `SEGMENTS`, and `CHECKS` (`CheckRecord`, migration v2).
+- R110 (K3693, B2/B6): the member's passed check is kept in this member's own `CheckRecord`; `GET /version` `runner` is true when `REMOTE` answers `GET /remote/version`; a signin call without a passed check at that version is 503 `ASSISTANT_REMOTE_NOT_READY` (word by key). Apikey accounts and a `/run` with caller-supplied judgements are not gated.
+- R112 (effort on usage entries), R113 (ask stream: step/read(record)/composing/checking/checked/answer, `ASK_CHECK_FAILED`), R114 (a tick per re-read with `read` data), R115 (fence: an id-shaped citation the plane does not answer is UNDETERMINED), R116 (disagreement read once, `disagree` data), R117 (condition handed back once), R118 (scope per level: greatest `documents`, left out when none stated).
+- Words by key for NO_ACCOUNT, SIGNIN_NOT_HELD, NAMESPACE_UNKNOWN; the rest in REPORT J2 (N1217).
+
+Deferred: R111 (the `check` step), per B2, until agent-runner's proof stands; `CheckRecord` has its `POST /check` and `recordCheck` ready for it.
+Found in another module: see REPORT J2 (installer binds CHECKS; ai-runs keeping `read`/`disagree` keys; screens-inquiry R58's compose-tick `found`).
+
+Tests and checks
+- `npm test` in agent-worker: every file passes except `requirements.test.mjs`: 302 pass, 2 fail, both R45 (the committed bundle is stale; BOB regenerates at L6's close, accepted red 12). New `t50.test.mjs`: 111 pass, 0 fail. Existing suites updated for REMOTE/CHECKS, R112–R114 shapes, and agent-harness R18/R19 (mock planes carry `scope.documents`; stub-path fixtures publish a scope).
+- format 0 failures; architecture (agent-worker) 0 failures; coverage 108 of 108 ids named, 0 failures; ownership 0 failures.
+Size (session_01ExtfTo6iBGUSsaBuUqEFKD): test runs 16, module lines 4421
