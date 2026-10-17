@@ -13,11 +13,11 @@ const member1 = { cls: "member", session: true, caps: ["contribute"], viewer: "c
 const ONE_MATTER = { id: "t-set", version: 2, matters: [{ id: "m1" }] };
 
 /* The composition root's transcriber (plane R36's shape), deployable, recording every call. */
-function transcriber({ account = null, limit = null,
+function transcriber({ deployable = true, account = null, limit = null,
                        answer = (pages) => ({ ok: true, engine: "claude-test", version: "2026-01", pages: pages.map((p) => ({ page: p, text: `AI text of page ${p}` })) }) } = {}) {
   const calls = { transcribe: [] };
   const t = {
-    deployable: () => ONE_MATTER.matters.length > 0,
+    deployable: () => deployable && ONE_MATTER.matters.length > 0,
     keptAway: () => null,
     transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t43:${at}`,
       accounts: { accountFor: async () => account ?? { ok: true, kind: "apikey", level: "member", key: "k" } },
@@ -58,13 +58,15 @@ const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x4
 
 test("R47 (T43, N862): C-51.7's translation is words.json's transcribe.refused.notdeployed, verbatim; it names no account", async () => {
   assert.equal(REEXTRACT_CHECKS.TRANSCRIBE_NOT_DEPLOYED.translation, WORD("transcribe.refused.notdeployed"));
-  /* (T46; K2919) R75's interim request-fault word is the one held apart, checked in t46.test.mjs */
-  for (const [k, en] of Object.entries(TRANSCRIBE_WORDS))
-    if (k !== "transcribe.reason.requestfault") assert.equal(en, WORD(k), `${k} is the list's word`);
+  for (const [k, en] of Object.entries(TRANSCRIBE_WORDS)) assert.equal(en, WORD(k), `${k} is the list's word`);
   const { w, d } = await heldScan();
   const r = await w.x.pageTranscribe({ captureSha: d, ...member1 });
   assert.deepEqual([r.status, r.body.reason, r.body.check, r.body.translation], [501, "TRANSCRIBE_NOT_DEPLOYED", "C-51.7", WORD("transcribe.refused.notdeployed")]);
   assert.doesNotMatch(JSON.stringify(r.body), /apikey|signin/);
+  /* the stub's false arm (T50; N1066): a transcriber answering deployable false is refused 501 beside one answering true */
+  const off = await heldScan();
+  off.w.x.registerTranscriber("plane", transcriber({ deployable: false }).t);
+  assert.deepEqual([(await off.w.x.pageTranscribe({ captureSha: off.d, ...member1 })).status], [501]);
   /* control: the other rows keep their own words */
   assert.notEqual(REEXTRACT_CHECKS.REEXTRACT_NOT_READ.translation, WORD("transcribe.refused.notdeployed"));
 });
@@ -111,7 +113,7 @@ test("R71 (T43, N853a): an account or limit refusal tier 4 relays as aiRefusal i
     const r = await withEntry(pdfEntry(SCAN, 3), () => w.x.pageTranscribe({ captureSha: d, ...member1 }));
     assert.equal(r.body.ok, false, refusal.code);
     assert.deepEqual([r.body.code, r.body.check, r.body.translation], [refusal.code, refusal.check, refusal.translation]);
-    assert.ok(r.status >= 400 && r.status < 500, "a refusal's status, never 200");
+    assert.equal(r.status, 403, "a refusal that states no status is 403, never 200 (R71)");
     assert.equal("transcription" in r.body, false);
     assert.deepEqual(tr.calls.transcribe, [], "nothing sent");
     assert.equal(writes(w), before, "nothing written");

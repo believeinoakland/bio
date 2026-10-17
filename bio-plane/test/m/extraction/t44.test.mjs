@@ -149,7 +149,7 @@ test("R71 (T44; N869, N876; DEC-192 (1); K2713): a refusal (tier 4's aiRefusal, 
                                        [{ answer: WORKER }, WORKER, true]]) {
     const { r, written, asked } = await act(opts);
     assert.equal(r.body.ok, false, refusal.code);
-    assert.ok(r.status >= 400 && r.status < 500, "a refusal's status, never 200");
+    assert.equal(r.status, 403, "a refusal that states no status is 403, never 200 (R71)");
     assert.deepEqual(r.body, { ...refusal, says: WORD("transcribe.refused").replace("{reason}", refusal.translation) });
     assert.equal("transcription" in r.body, false);
     assert.deepEqual(asked.length > 0, sent);
