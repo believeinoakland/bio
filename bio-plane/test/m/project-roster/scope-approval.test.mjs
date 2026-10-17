@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, snapshot } from "./fixture.mjs";
 import { Membership, noSuchProject } from "../../../src/membership/index.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 import { ProjectRoster, PROJECT_SCOPE_CHECKS } from "../../../src/project-roster/index.mjs";
 
 /* H hidden: ann owns it, bob joined, cal invited. S hidden: dee its owner and only participant. D discoverable: ann. */
@@ -238,13 +239,16 @@ test("R20 the scope rows: each code minted carries its row, frozen, numbered C-1
   assert.deepEqual(Object.fromEntries(Object.entries(PROJECT_SCOPE_CHECKS).map(([k, r]) => [k, r.check])), {
     PROJECT_SCOPE_UNKNOWN: "C-147.1", PROJECT_SCOPE_NEEDS_HIDDEN: "C-147.2", PROJECT_SCOPE_OWN_NOT_SOLE: "C-147.3",
     PROJECT_SCOPE_UNCHANGED: "C-147.4", PROJECT_SCOPE_OWN: "C-147.5", PROJECT_SCOPE_KEEPS_HIDDEN: "C-147.6",
-    APPROVAL_RULE_INVALID: "C-147.7", APPROVAL_KIND_UNKNOWN: "C-147.8" });
+    APPROVAL_RULE_INVALID: "C-147.7", APPROVAL_KIND_UNKNOWN: "C-147.8", MACHINE_CANNOT_SET_STAKE: "C-147.9",
+    STAKE_MALFORMED: "C-147.10" });
   assert.ok(Object.isFrozen(PROJECT_SCOPE_CHECKS));
   for (const [code, row] of Object.entries(PROJECT_SCOPE_CHECKS)) {
     assert.ok(Object.isFrozen(row), code);
     assert.match(row.where, /^src\/project-roster\/index\.mjs [#\w]+ > is-[a-z-]+$/, code);
-    assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
-    assert.doesNotMatch(row.translation, FORBIDDEN, code);
+    /* a code the words list does not yet hold (MACHINE_CANNOT_SET_STAKE, reported to BOB) reads null, never inline English */
+    if (hasWord(code === "STAKE_MALFORMED" ? "refusal.STAKE_MALFORMED.project" : `refusal.${code}`)) assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
+    else assert.equal(row.translation, null, `${code}: no word held yet`);
+    assert.doesNotMatch(row.translation ?? "", FORBIDDEN, code);
   }
   const w = await scopeWorld();
   set(w, "dee", "own", "PROJ-S", "mine");
@@ -258,6 +262,8 @@ test("R20 the scope rows: each code minted carries its row, frozen, numbered C-1
     w.r.projectOwnerRescue({ projectId: "PROJ-S", handle: "eve", by: "second", reason: "r", viewer: V("second") }),
     approve(w, "bob", []), approve(w, "ann", [{ tier: 9 }]), approve(w, "ann", [{ kind: "grand_jury" }]),
     approve(w, "ann", [], "PROJ-H", ""), approve(w, "ann", [{ tier: 2 }]),
+    w.r.projectStakeSet({ projectId: "PROJ-H", stake: "x", by: "class:ai", viewer: "class:ai" }),
+    w.r.projectStakeSet({ projectId: "PROJ-H", stake: "a\nb", by: "ann", viewer: V("ann") }),
   ];
   const seen = new Set();
   for (const [i, a] of answers.entries()) {

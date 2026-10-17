@@ -104,7 +104,7 @@ test("R26 each project is {id, name, stage}: name its title (record-core R34), s
     { id: "PROJ-Z", name: "Zeta", stage: null, owner: null },
   ]);
   for (const p of all.projects) {
-    assert.deepEqual(Object.keys(p).sort(), ["activity", "id", "lastChange", "members", "name", "owner", "stage"], p.id);
+    assert.deepEqual(Object.keys(p).sort(), ["activity", "id", "lastChange", "members", "name", "owner", "participation", "stage"], p.id);
     assert.equal(p.name, w.core.bundleInfo(p.id).title, `${p.id}: R34's title`);
   }
   /* no question count, no request, nothing of the project beyond its id, title, stage, opener (R27), members and
@@ -176,4 +176,22 @@ test("R26 over the real record-core: name its bundleInfo title and stage its bun
   assert.deepEqual(ids(r.projectList({ viewer: V("second") })), ["PROJ-B"], "an administrator: the discoverable one only");
   assert.deepEqual(ids(r.projectList({ viewer: "admin" })), ["PROJ-B"], "the founder: the discoverable one only");
   assert.deepEqual(r.projectList({ viewer: "junk" }), EMPTY);
+});
+
+test("R34 (T50; N1118) each row's participation is the viewer's own state: joined, invited, leaving; null for an administrator or founder who is no participant, and for a machine credential; never another member's", async () => {
+  const w = await world().group("ann", "bob", "cal");
+  w.owned("PROJ-A", "ann", ["bob"], ["cal"]);
+  w.owned("PROJ-B", "ann", [], ["bob"]);
+  w.m.projectVisibilitySet({ projectId: "PROJ-A", setting: "discoverable", by: "ann", viewer: V("ann") });
+  const mine = (viewer) => Object.fromEntries(w.r.projectList({ viewer }).projects.map((p) => [p.id, p.participation]));
+  assert.deepEqual(mine(V("bob")), { "PROJ-A": "joined", "PROJ-B": "invited" }, "joined to one, invited to another");
+  assert.deepEqual(mine(V("cal")), { "PROJ-A": "invited" });
+  w.m.projectLeave({ projectId: "PROJ-A", by: "bob", comment: "busy", viewer: V("bob") });
+  assert.equal(mine(V("bob"))["PROJ-A"], "leaving");
+  assert.deepEqual(mine(V("ann")), { "PROJ-A": "joined", "PROJ-B": "joined" });
+  /* control: an administrator and the founder see the discoverable project and are no participant of it */
+  for (const viewer of [V("second"), "admin", V("admin"), `${MACHINE_CLASS_PREFIX}x`])
+    assert.deepEqual(Object.values(mine(viewer)).filter((x) => x !== null), [], String(viewer));
+  assert.equal(mine(V("second"))["PROJ-A"], null);
+  assert.ok(!JSON.stringify(w.r.projectList({ viewer: V("cal") })).includes('"participation":"leaving"'), "another's state never shown");
 });
