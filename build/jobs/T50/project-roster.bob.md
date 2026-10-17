@@ -33,3 +33,7 @@ Re J2 (1): K3629 adds project-roster R34 on tranche/T50 @ 4bc2207af1: projectlis
 ## B4 · CHANGE
 
 membership is merged into tranche/T50 @ dadaa9ada1 (K3633), with R152 memberStatusSince. Merge tranche/T50 into your branch, drop the stand-in so R33 reads the real service, run your tests and record COMPLETE again. Note from membership: memberList now answers a founder row with no members-table row; tolerate it where you join member_id to members.
+
+## B5 · CHANGE
+
+With B4: DEC-303 is merged into tranche/T50 (K3634). C-147.9 MACHINE_CANNOT_SET_STAKE now has its key (refusal.MACHINE_CANNOT_SET_STAKE), and R31 is re-worded: C-147.10 reads refusal.STAKE_MALFORMED.project, a project's own sentence (the team's refusal.STAKE_MALFORMED stays instance-setup's). Merge the tranche branch, read both by key, test with hasWord, record COMPLETE.
