@@ -211,12 +211,12 @@ export const queue = Object.freeze({
         const snooze = g.c ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
         return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(itemRow).join("")) + "</section>";
       }).join("") + (q.truncated ? '<p class="mk-note">' + (function (m) { return m === 1 ? cs.w("screen.queue.more.one") : cs.w("screen.queue.more", { n: String(m) }); })(Math.max(0, n - items.length)) + "</p>" : "");
-    }, { empty: "screen.queue.uptodate" });
+    }, { empty: "screen.queue.empty" });
 
-    // R12 (DEC-201 (13)): with nothing waiting, the member is up to date, one step from Home.
+    // R41 (U8b; DEC-292 D13): with nothing waiting, the sentence only: no kinds note, no sort controls.
     const q = view.data.queue;
-    const home = q && q.state === "empty" ? '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app">' + cs.w("screen.queue.gohome") + "</a></p>" : "";
-    return cs.title(undefined, {}) + note + sorts + body + home;
+    if (q && q.state === "empty") return cs.title(undefined, {}) + body;
+    return cs.title(undefined, {}) + note + sorts + body;
   },
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).

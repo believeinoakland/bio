@@ -62,7 +62,7 @@ const WORDS_OF = {
     "queue.update.section", "queue.update.section_says", "queue.update.ready", "queue.update.see", "updates.ready.security", "updates.ready.security_says",
     "act.owed_updatelater.label.queue", "act.owed_updatelater.does",
     "screen.queue.count.one", "screen.queue.count.many", "screen.queue.grouped", "screen.queue.sort", ...["added", "due", "case", "kind"].map((s) => `screen.queue.sort.${s}`),
-    "screen.queue.note", "screen.queue.note.once", "screen.queue.nocase", "screen.queue.uptodate", "screen.queue.gohome", "screen.queue.more", "screen.queue.more.one", "screen.queue.open",
+    "screen.queue.note", "screen.queue.note.once", "screen.queue.nocase", "screen.queue.empty", "screen.queue.more", "screen.queue.more.one", "screen.queue.open",
     "screen.queue.hint.how", "screen.queue.hint.matched", "screen.queue.hint.method", "screen.queue.hint.trust", "screen.queue.hint.rate", "screen.queue.hint.rate.none",
     "screen.queue.hint.not", "screen.queue.hint.not.text", "screen.queue.forward.to", "screen.queue.snooze.until", "screen.queue.reminder.on", "screen.queue.fieldfirst",
     "screen.queue.why", "screen.queue.question", "screen.queue.projectkey", "screen.queue.unsent.pickup", "screen.queue.unsent.keep", "screen.queue.unsent.drop"],
