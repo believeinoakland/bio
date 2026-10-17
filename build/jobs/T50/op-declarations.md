@@ -26,3 +26,10 @@
 - `node checks/ownership.mjs ../bio op-declarations tranche/T50`: 0 failures.
 
 Size (session_013AaS71xBPWBv4QrWrZjCWX): test runs 24, module lines 3,225
+
+## J1 · COMPLETE
+
+COMPLETE (T50-24 op-declarations; details in my record, "Completion"):
+- R73: the 15 new ops declared (t50.mjs, two new families action-records and progressions); R74: inboxpull and inboxresolve viewer-stamped (CAPTURE_VIEWER_ACTIONS), the owners' new fields pinned at their maps, no table row; R75: six ops leave ACT_HELP_ABSENT, nine reads enter its read ground.
+- Module tests: 216, 212 pass, 4 red, all waiting on affordances T50-19 merging ACT_HELP's 12 texts (t36 R34 partition, t42 R47/R34, t50 R73/R34 and R75); simulated green with those keys. Baseline was 9 red. Checks: format, architecture, ownership 0 failures; coverage 74 of 74 for this module.
+- REPORT: (1) screens-action's R1-R6 test goes red on this merge: the registry's start-send screen owes actionstake, now declared, and its job's START does not name it. (2) The registry owes the installer's four own routes (installupdate, installalongside, installremove, installremoveconfirm): no plane op, no spec; R21's tests name them. (3) progressions is not in my modules.json uses; my t50 test imports progressionOps (architecture passes); the edge is yours to record. (4) Users' tests (admission, op-grades, affordances, interface-shell, answer-envelope, control-plane, plane, store-door, screens-*): same failures with and without my change but screens-action's.
