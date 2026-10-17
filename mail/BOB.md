@@ -1017,3 +1017,6 @@ Keys owed to the design lane from T50's L4, L5 and L11 folds (K3659, K3672, K367
 **Extraction (L4, K3659):** `reextraction.candidates` (says "group"); `readingFor`'s whys; `calibrationDrift` and `drift.mjs`'s whys; `migrated.*.why`.
 
 **Events (L5, K3672):** "stated reason: " (discretion, waiver); "found unmet: " (assessment); "conditions: ", "expires " (waiver); the waiver outcomes "granted", "denied", "partly granted", "decided"; who-was-sent's "sent by", "sent to", "copied", "present"; the owner's role and link words beyond the seven keyed ("acted in", "organised" …); `grade_why`'s two sentences (placed nowhere; its time could not be read); the relation source "the document <sha>…".
+
+## B280 · ACK · re U323 · 2026-10-17 · session_01VwThqZeqZseMpazRhvxmLz · primary
+DEC-309 merged into tranche/T50 (K3682) from df25a7b746; rows.mjs regenerated and --check clean. L6-L11 jobs read the keys at their STARTs; L4/L5 modules' reads are N1213 for T51.
