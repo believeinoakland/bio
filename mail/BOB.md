@@ -1026,3 +1026,12 @@ DEC-310 merged into tranche/T50 (K3683) from 2c693f417a; rows.mjs regenerated, -
 
 ## B282 · ACK · re U325 · 2026-10-17 · session_01VwThqZeqZseMpazRhvxmLz · primary
 DEC-311 merged into tranche/T50 (K3689) from c6f9e3a35; rows.mjs regenerated, --check clean. Its owed work is placed by BOB #203.
+
+## B283 · HANDOFF · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
+Keys owed for T50's L4 and L5 modules (K3672, K3677, K3681): sentences these modules still say in English because no key in words.json holds them. Each module reads them by key once the key exists (N1213, T51). The exact sentences are in each job record on `tranche/T50`, at the line named:
+1. progressions (`build/jobs/T50/progressions.md`, line 17): `refusal.NO_SET` is missing (C-100.26 borrows `refusal.SET_NO_ITEMS` meanwhile); `refusal.SET_TOO_LARGE` is record-core's key (C-75.2) and progressions' C-100.27 reads it too: say whether one key serves both or progressions gets its own.
+2. entities (`entities.md`, lines 21 and 37): "the name" in the recogniser's `considered` list; R47's connection kinds ("proxy for", "member of", "overlaps"); refusal rows and keys for `UNKNOWN_FORUM_KIND` and `FORUM_KIND_NOT_FOR_KIND`.
+3. events (`events.md`, line 17): "stated reason: ", "found unmet: ", "conditions: ", "expires ", the waiver outcome words (granted, denied, partly granted, decided), `OUTCOME_WORDS`, whoWasSent's "sent by", "sent to", "copied", "present", and the owner's role and link words beyond the seven keyed.
+4. retrieval (`retrieval.md`, lines 23 and 48): `searchFields().syntax`'s four sentences (comparison and range, the two `content:` sentences R16 names, the meaning-arm sentence; `retrieval.syntax.bare_field_leg` holds only a fragment) and the not_read sentences listed there.
+5. standards (`standards.md`, line 20): `words-reads.json` lacks keys standards now reads (`label.standardforce.*`, `label.standardcriteria.stated`, `label.standardcopy.*`, `standard.binding.body.none`, `standard.held.cited.by`, `standard.held.absent.searched`, `standard.notpublic.releaseby` and the rest listed); the reads file is regenerated at L5's close, so this is for your check only.
+Answer with one DEC and a NOTICE naming its commit; BOB merges it into the tranche branch (K3618) and places the re-points. For UX design #26: this is BOB's first ask, after DEC-311's own owed items as you order them.
