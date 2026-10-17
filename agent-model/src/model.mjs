@@ -276,14 +276,26 @@ async function converseRun({ reference, runner, mode, role, meter, system, messa
  * column); `applyJudgement` polices the answer whatever the schema says. `collect` has none: its judgements are
  * the sub-sessions' REPORTS (`agent-harness` R7). */
 const STATE_ENUM = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"];
-const LOOK_FIELDS = (levels) => ({
+/* R23 — `condition` is an enum of the list the caller hands (the record's `CONDITION_KINDS`, read by `agent-harness`); with none
+ * handed it stays a free string. This module lists none by hand. */
+const conditionField = (conditions) => (Array.isArray(conditions) && conditions.length ? { type: "string", enum: conditions } : { type: "string" });
+const LOOK_FIELDS = (levels, conditions) => ({
   level: { type: "string", enum: levels, description: "the level a look at this step was made at, if any" },
   observed: { type: "string", enum: STATE_ENUM, description: "what a look at this step established; omit when nothing was looked at" },
   governed: { type: "boolean" },
-  condition: { type: "string" },
+  condition: conditionField(conditions),
 });
 
-export function judgeTools(levels) {
+/* R24 — judge_compose alone offers the pairs of levels whose reports contradict each other about a record. */
+const DISAGREEMENTS_MAX = 10;
+const disagreementsField = (levels) => ({ type: "array", maxItems: DISAGREEMENTS_MAX,
+  items: { type: "object", properties: { record: { type: "string" },
+    levels: { type: "array", minItems: 2, maxItems: 2, items: { type: "string", enum: levels } } },
+    required: ["record", "levels"], additionalProperties: false },
+  description: "name a record only where two levels' reports contradict each other about it, with those two levels; at most "
+    + DISAGREEMENTS_MAX });
+
+export function judgeTools(levels, conditions) {
   const obj = (properties, description, name) => ({
     name, description, input_schema: { type: "object", properties, additionalProperties: false },
   });
@@ -291,11 +303,11 @@ export function judgeTools(levels) {
     obj({ targets: { type: "array", items: { type: "object", properties: {
             level: { type: "string", enum: levels }, url: { type: "string" }, target: { type: "string" } },
             required: ["level"] } },
-          ...LOOK_FIELDS(levels) },
+          ...LOOK_FIELDS(levels, conditions) },
         "plan: what to search for this pass. An internet target names the https address to request.", "judge_plan"),
     obj({ candidates: { type: "array", items: { type: "object" },
                         description: "candidate versions, each the body of op=suggest (see the acts layer)" },
-          ...LOOK_FIELDS(levels) },
+          ...LOOK_FIELDS(levels, conditions), disagreements: disagreementsField(levels) },
         "compose: what the reports mean, and what each version says.", "judge_compose"),
     obj({ candidates: { type: "array", items: { type: "object" },
                         description: "the candidates that differ in substance from what the record holds" } },

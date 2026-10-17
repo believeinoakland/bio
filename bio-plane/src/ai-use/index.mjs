@@ -1,4 +1,4 @@
-/* ai-use — what each AI account has spent and may spend (requirements: `build/requirements/ai-use.md`, R1–R14). A new
+/* ai-use — what each AI account has spent and may spend (requirements: `build/requirements/ai-use.md`, R1–R15). A new
  * module of layer 6, directly before `ai-runs` (K657, K1043; N812, K2373). Built by copy (K624): the counter, the use
  * figures' checks and the reads come from `ai-runs/index.mjs`:2588–2932 (its R48–R51), re-keyed by the paying account
  * (`owner`) and the kind of use (B8); `ai-runs`' own job deletes its copy and re-points after this module merges. The
@@ -48,6 +48,8 @@ export const NOT_RECORDED = "not recorded";
 export const ESTIMATE_SAMPLE = Object.freeze({ min: 5, of: 20 });
 /** R9: the longest statement of what is worth exploring kept with an ask. */
 export const EXPLORE_WHAT_MAX = 2000;
+/** R15 (T50; N1168): an effort a conversation ran at, a lowercase word of at most 16 letters. */
+const EFFORT_WORD = /^[a-z]{1,16}$/;
 
 /** A member's id from any of the forms a stamp takes (`member:<id>`, `member:<id>/<tokenId>`, `<id>`); null for a
  *  machine identity, an absent value, or a deploy class. (Copied from ai-runs, K624.) */
@@ -283,6 +285,8 @@ export class AiUse {
     if (!e || typeof e !== "object" || Array.isArray(e)) return bad("the use is not an object {mode, usage, calls}.");
     if (typeof e.mode !== "string" || !e.mode.trim() || e.mode.length > 40) return bad("the use names no mode.");
     if (e.model != null && (typeof e.model !== "string" || e.model.length > 120)) return bad("its model is not a model's name.");
+    if (e.effort != null && !(typeof e.effort === "string" && EFFORT_WORD.test(e.effort)))
+      return bad("its effort is not a lowercase word of at most 16 letters, or null where none was stated.");
     const u = e.usage;
     if (!u || typeof u !== "object" || Array.isArray(u)) return bad("its usage is not an object of the call's figures.");
     for (const f of [...USAGE_TOKEN_FIGURES, ...USAGE_COST_FIGURES]) {
@@ -313,12 +317,13 @@ export class AiUse {
     return null;
   }
 
-  /** R1 `countUsage({owner, member, use, mode, model, usage, calls, at, act?})`, in the caller's transaction: adds to
-   *  the counter for that owner, member, local day, use and mode; with `act` (a run's id, or an act's own) also to that
-   *  act's measure (R10, R11; K2480); then notes any limit of the owner this reached (R5). A malformed entry is refused
-   *  `AI_RUN_CONSUME_INVALID`, counting nothing. Never throws. */
-  countUsage({ owner = null, member = null, use = null, mode = null, model = null, usage = null, calls = undefined,
-               at = null, act = null } = {}) {
+  /** R1 `countUsage({owner, member, use, mode, model, effort?, usage, calls, at, act?})`, in the caller's transaction:
+   *  adds to the counter for that owner, member, local day, use and mode; with `act` (a run's id, or an act's own) also
+   *  to that act's measure (R10, R11; K2480) and to the model and effort its conversation ran at (R15); then notes any
+   *  limit of the owner this reached (R5). A malformed entry is refused `AI_RUN_CONSUME_INVALID`, counting nothing.
+   *  Never throws. */
+  countUsage({ owner = null, member = null, use = null, mode = null, model = null, effort = null, usage = null,
+               calls = undefined, at = null, act = null } = {}) {
     try {
       const p = owner === NOT_RECORDED ? { kind: "none", owner: NOT_RECORDED } : parseOwner(owner);
       const bad = (detail) => this.#refuse("AI_RUN_CONSUME_INVALID", `${detail} Nothing was counted.`);
@@ -328,7 +333,7 @@ export class AiUse {
       if (!USE_KINDS.includes(use)) return bad(`the use '${String(use).slice(0, 40)}' is not a kind of use (${USE_KINDS.join(", ")}).`);
       if (act !== null && act !== undefined && (typeof act !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/.test(act)))
         return bad("its act is not a run's or an act's id.");
-      const e = { mode, model, usage, calls };
+      const e = { mode, model, effort, usage, calls };
       const fault = this.#entryRefusal(e);
       if (fault) return fault;
       const ms = AiUse.#ms(at);
@@ -363,6 +368,11 @@ export class AiUse {
              tokens_unstated = tokens_unstated + excluded.tokens_unstated, cost_unstated = cost_unstated + excluded.cost_unstated,
              last_at = excluded.last_at`,
           p.owner, act, use, String(mode).trim(), callCount, tokens, micro, tokensUnstated, costUnstated, now, now);
+        /* R15: the model and effort this conversation ran at, '' where none was stated (read back as null) */
+        this.sql.exec(
+          `INSERT INTO ai_use_act_models (owner, act, model, effort, calls) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(owner, act, model, effort) DO UPDATE SET calls = calls + excluded.calls`,
+          p.owner, act, model == null ? "" : String(model), effort == null ? "" : effort, callCount);
       }
       if (p.kind !== "none") this.#noteReached(p, ms);
       return { ok: true, counted: 1, owner: p.owner, member: id, use, day, calls: callCount, act: act || null };
@@ -375,14 +385,16 @@ export class AiUse {
    *  (no run), counted as `countUsage` counts, its use its mode, in its own transaction. `owner` is the account the
    *  caller's `accountFor` answered; without one the use is kept as "not recorded" and counts toward no limit (K2480).
    *  Any mode but `ask` or `draft` is refused `AI_RUN_CONSUME_INVALID`. */
-  countAskUsage({ member = null, mode = null, usage = null, calls = null, at = null, owner = null, act = null } = {}) {
+  countAskUsage({ member = null, mode = null, model = null, effort = null, usage = null, calls = null, at = null, owner = null,
+                  act = null } = {}) {
     if (!ASK_USAGE_MODES.includes(typeof mode === "string" ? mode.trim() : mode))
       return this.#refuse("AI_RUN_CONSUME_INVALID", `the mode '${String(mode).slice(0, 40)}' is not one an ask's use is `
         + "counted under: an ask counts as 'ask' and a draft as 'draft'; a run's use arrives on its own ticks. Nothing was counted.");
     const m = mode.trim();
     let out = null;
     try {
-      this.#transact(() => { out = this.countUsage({ owner: owner ?? NOT_RECORDED, member, use: m, mode: m, usage, calls, at, act }); return out; });
+      this.#transact(() => { out = this.countUsage({ owner: owner ?? NOT_RECORDED, member, use: m, mode: m, model, effort, usage,
+        calls, at, act }); return out; });
     } catch { /* a refusal rolled back; `out` carries it */ }
     return out ?? this.#refuse("AI_RUN_CONSUME_INVALID", "the use could not be counted. Nothing was counted.");
   }
@@ -847,8 +859,8 @@ export class AiUse {
   }
 
   /** R11 `actualOf({run | act, viewer})`: the actual cost of one run or act after, in R10's units, only to the paying
-   *  account's owners. An act not measured, or not on an account the viewer owns, answers `found: false`. Writes
-   *  nothing. */
+   *  account's owners, with its `by_model` (R15). An act not measured, or not on an account the viewer owns, answers
+   *  `found: false`. Writes nothing. */
   actualOf({ run = null, act = null, viewer = null } = {}) {
     const id = typeof run === "string" && run ? run : typeof act === "string" && act ? act : null;
     if (!id || !memberIdOf(viewer)) return { ok: true, found: false };
@@ -856,10 +868,13 @@ export class AiUse {
       .filter((r) => { const p = parseOwner(r.owner); return p && this.#owns(p, viewer); });
     if (!rows.length) return { ok: true, found: false };
     const r = rows[0];
+    /* R15: the models and efforts its conversations ran at, first seen first, '' read back as null */
+    const by_model = this.#rows(`SELECT model, effort, calls FROM ai_use_act_models WHERE owner = ? AND act = ? ORDER BY seq`,
+      r.owner, id).map((m) => ({ model: m.model === "" ? null : m.model, effort: m.effort === "" ? null : m.effort, calls: Number(m.calls) }));
     return { ok: true, found: true, act: id, owner: r.owner, use: r.use, mode: r.mode, calls: Number(r.calls), tokens: Number(r.tokens),
              tokens_unstated: Number(r.tokens_unstated) > 0,
              cost: Number(r.cost_unstated) === 0 ? { usd: Number(r.cost_micro_usd) / 1e6 } : null,
-             unit: Number(r.cost_unstated) === 0 ? "usd" : "tokens", first_at: r.first_at, last_at: r.last_at };
+             unit: Number(r.cost_unstated) === 0 ? "usd" : "tokens", first_at: r.first_at, last_at: r.last_at, by_model };
   }
 
   /* ===== THE PANEL'S READ (R12; DEC-188) ===== */
