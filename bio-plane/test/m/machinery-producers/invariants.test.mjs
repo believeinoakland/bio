@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { MachineryProducers } from "../../../src/machinery-producers/index.mjs";
 import { MACHINE_AUTHOR_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
@@ -200,13 +201,13 @@ test("R9 (DEC-107, DEC-131; H15, H19): no member-facing sentence of any item say
   assert.deepEqual([...MachineryProducers.SWEEP_CONDITION_KINDS].sort(), [...SWEEP_KINDS].sort());
 });
 
-test("R9 (DEC-149; T34-87): each member-facing sentence that named the copy says 'your group's Civicsmith'; the developer-facing doctrine keeps 'this instance's'", () => {
+test("R9 (DEC-149; T34-87): each member-facing sentence that named the copy says 'your team's Civicsmith'; the developer-facing doctrine keeps 'this instance's'", () => {
   const m = byId(busy().read("olga"));
   const missed = m["CONDITION::notice-attestation-missed::WO-1"].detail;
-  assert.ok(missed.startsWith("no instance key was bound when it fell due, so your group's Civicsmith could not sign the notice's activity level."), missed);
+  assert.ok(missed.startsWith("no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity level."), missed);
   const closed = m["CONDITION::notice-project-closed::WO-3"].detail;
-  assert.ok(closed.startsWith("your group's Civicsmith signed the closing into the notice's public record."), closed);
-  assert.equal(MachineryProducers.ZONE_UNDETERMINED, "no time zone is held for it by your group's Civicsmith, so the local day it is "
+  assert.ok(closed.startsWith("your team's Civicsmith signed the closing into the notice's public record."), closed);
+  assert.equal(MachineryProducers.ZONE_UNDETERMINED, "no time zone is held for it by your team's Civicsmith, so the local day it is "
     + "counted from is undetermined; it is never counted on the UTC day");
   const none = byId(busy({ actions: { place: () => ({ time_zone: null }) } }).read("olga"));
   assert.equal(none["CONDITION::notice-attestation-missed::WO-1"].age.detail, MachineryProducers.ZONE_UNDETERMINED, "the copied sentence, as a member reads it");
@@ -274,4 +275,24 @@ test("R10: with no zone held, the day and the age are undetermined, stated, neve
     assert.deepEqual(why(m["CONDITION::notice-attestation-missed::WO-MISS"]), undetermined);
     assert.ok(!JSON.stringify(Object.values(m).map((i) => i.age)).includes("T00:00:00Z"), "no age is dated at a UTC midnight");
   }
+});
+
+test("R2, R4, R5, R11 (T50; plan rule 6; K3366): each item's summary is read by key through setup-words' word, never composed", () => {
+  const m = byId(busy().read("olga"));
+  const w = (key, vars) => word(`machinery-producers.summary.${key}`, vars);
+  assert.equal(m["CONDITION::governor-holding-host::h.example"].summary, w("pacing_holding_captures", { host: "h.example" }));
+  assert.equal(m["CONDITION::partial-capture-outstanding::S1"].summary, w("capture_did_finish", { locator: "https://x.example/" }));
+  assert.equal(m["CONDITION::render-deferred::CR-R"].summary.startsWith(w("render_waiting", { address: "https://a.example/", words: "" }).trimEnd()), true);
+  assert.equal(m["CONDITION::archive-fallback-eligible::https://gone.example/a"].summary, w("stopped_answering_often", { address: "https://gone.example/a" }));
+  assert.equal(m["CONDITION::monitoring-recheck-due::INF-1"].summary, w("monitored_check_scheduled", { bundle: "INF-1" }));
+  const title = `"Council agendas" (agendas)`;
+  assert.equal(m["CONDITION::sweep-held-backlog::GATH-1#agendas"].summary, w("sweep_held_captures", { title }));
+  assert.equal(m["CONDITION::sweep-yield-anomaly::GATH-1#agendas"].summary, w("sweep_filed_unusual", { title }));
+  assert.equal(m["CONDITION::sweep-seed-unreachable::GATH-1#agendas"].summary, w("listing_page_sweep", { title }));
+  assert.equal(m["CONDITION::sweep-redirect-out-of-scope::GATH-1#agendas"].summary, w("sweep_met_redirect", { title }));
+  assert.equal(m["CONDITION::sweep-silent::GATH-1#agendas"].summary, w("sweep_filed_last", { title, runs: 4 }));
+  assert.equal(m["CONDITION::notice-attestation-missed::WO-1"].summary, w("monthly_attestation_working", { title: "Contracts", month: "2026-08" }));
+  assert.equal(m["CONDITION::notice-lapse-near::WO-1"].summary, w("working_notice_will", { title: "Contracts", lapse_date: "2026-09-05" }));
+  assert.equal(m["CONDITION::notice-project-closed::WO-3"].summary, w("closed_while_working", { title: "Contracts" }));
+  assert.equal(m["CONDITION::notice-project-closed::WO-3"].options[0].label, word("machinery-producers.label.stop_notice_handoff"));
 });
