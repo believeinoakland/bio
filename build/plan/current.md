@@ -80,14 +80,14 @@ N847 is found applied in T48 (jurisdictions R89–R92, wizard-scripts' sixth doo
 - **T50-58 · reading-pipeline** · (N1191 (a), owners §5) a text capture with no blank line is split at its line breaks (measured first on V4's file); (N1191 (c)) R4: a JPEG or PNG with no text is a tier-3 candidate for page 0; (N1139, B-12; owners §8) a reading carries `title` (HTML `<title>`, else the first heading; a document's stated title) · Text: fold · claude-sonnet-5-5 · after T50-55's interface (L1, merged).
 
 ### L5
-- **T50-10 · retrieval** · (N1123) `findIn` answers titles. (N1177) a text file's passage id for "Hold this as a standard". (N1183) Find's rows as people read them. (N1191 (b), (d)) a sheet hit carries its sheet, range and cells, a formula cell with no cached value said so; a fact marks only its own passage. (N1193) `people` also finds a followed person's held alias in passage words. (N1092) `browse` (`op=browse`), by kind, newest first, with `new_since`, `watched`, `flagged` · Text: fold · claude-sonnet-5-5 · START re-measures (3,513 lines).
-- **T50-59 · entities** · (N1190, owners §4) a `body` or `institution` entity carries `forum_kind`; `entitiesOfKind` filters by it; a team-added court is that `entitycreate` · Text: fold · claude-sonnet-5-5.
-- **T50-60 · events** · (N1193) the timeline also answers the dated facts of a set of capture shas, as their own list · Text: fold · claude-sonnet-5-5.
-- **T50-61 · query-language** · (N1166) a `passage:` hit's `snippet` is its passage's words, `snippet_from` named · Text: fold · claude-sonnet-5-5.
-- **T50-62 · progressions** · (N1102, DEC-243) a read of the matters a project follows; `overdue_successor` worded "No document threaded…", never "overdue" · Text: fold · claude-sonnet-5-5.
-- **T50-63 · explore** · (N1086, N1090) `exploregraph`'s step_source hops keep `attached_by` and `at`, each node a `label` · Text: fold · claude-sonnet-5-5.
+- **T50-10 · retrieval** · (N1123) `findIn` answers titles. (N1177) a text file's passage id for "Hold this as a standard". (N1183) Find's rows as people read them. (N1191 (b), (d)) a sheet hit carries its sheet, range and cells, a formula cell with no cached value said so; a fact marks only its own passage. (N1193) `people` also finds a followed person's held alias in passage words. (N1092) `browse` (`op=browse`), by kind, newest first, with `new_since`, `watched`, `flagged`, in its own file `browse.mjs`, its marks by `registerBrowseMarks` (R86) · Text: folded (K3630: R73, R80–R86) · claude-sonnet-5-5 · START re-measures (3,513 lines; with these, about 4,000: past it still runs, its split T51's first entry, P6).
+- **T50-59 · entities** · (N1190, owners §4) a `body` or `institution` entity carries `forum_kind`; `entitiesOfKind` filters by it; a team-added court is that `entitycreate`. (N1193, N1092, N1086) `aliasesOf`, `labelsOf`, the `label` read column, for retrieval and explore · Text: folded (K3630: R54–R56, R35) · claude-sonnet-5-5 · provider for T50-10, T50-63.
+- **T50-60 · events** · (N1193) the timeline also answers the dated facts of a set of capture shas, as their own list · Text: folded (K3630: R53) · claude-sonnet-5-5.
+- **T50-61 · query-language** · (N1166) a `passage:` hit's `snippet` is its passage's words, `snippet_from` named · Text: folded (K3630: R33) · claude-sonnet-5-5.
+- **T50-62 · progressions** · (N1102, DEC-243) a read of the matters a project follows; `overdue_successor` worded "No document threaded…", never "overdue"; each matter's `next_deadline` · Text: folded (K3630: R44, R45) · claude-sonnet-5-5.
+- **T50-63 · explore** · (N1086, N1090) `exploregraph`'s step_source hops keep `attached_by` and `at`, each node a `label` and an `ENT-` node its `entity_kind` · Text: folded (K3630: R25) · claude-sonnet-5-5 · after T50-59.
 - **T50-40 · local-facts** · (N1132) its words check by key · Text: none · claude-haiku-5-5.
-- **T50-41 · standards** · (N1085) `standardproposals` items carry their `project`. (N1132) its words check by key. (N1108's standards part) R45's words by DEC-253's keys · Text: fold · claude-sonnet-5-5.
+- **T50-41 · standards** · (N1085) `standardproposals` items carry their `project`. (N1132) its words check by key. (N1108's standards part) R45's words by DEC-253's keys. (N1177, K3630) a found extent `content` holds no row for is minted on the declaring member's act · Text: folded (K3630: R58–R60) · claude-sonnet-5-5.
 
 **L5 merge order:** `modules.json`'s (entities, events, local-facts, standards, progressions, explore, query-language, retrieval).
 
@@ -128,7 +128,7 @@ N847 is found applied in T48 (jurisdictions R89–R92, wizard-scripts' sixth doo
 
 ### L10
 - **T50-16 · scheduler** · (N1114) a consumer whose wake does not advance is held · Text: fold · claude-sonnet-5-5.
-- **T50-77 · following** · (N1092, DEC-238 S23 "A"; owners §11) the storage of `watchitem` (read back only to its setter) and `secondlook` (seen by every member, who raised it with date and note, cleared by any member with who and when) · Text: fold · claude-sonnet-5-5.
+- **T50-77 · following** · (N1092, DEC-238 S23 "A"; owners §11) the storage of `watchitem` (read back only to its setter) and `secondlook` (seen by every member, who raised it with date and note, cleared by any member with who and when), and registers their read with retrieval's `registerBrowseMarks` (its R86; K3630) · Text: fold · claude-sonnet-5-5.
 
 ### L11
 Every L11 job also draws the DEC-257–DEC-300 items `plan/fold-T50-decs.md` places on it (its U-numbers, named in each START), folded as requirement lines before L11's START.
