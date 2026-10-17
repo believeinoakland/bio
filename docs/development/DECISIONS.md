@@ -4902,3 +4902,18 @@ decided: 2026-10-17 · the design session (P17)
 the design: a section "The account" (`screen.case-editor.account`, its help) on a case's next edition: with the assistant, "Order it" (`screen.case-editor.account.order`; `case-account.framing.time_order|by_question|by_rule`) and "Draft the account with the assistant" (`accountpropose`, assistant-only); the draft drawn as machine work; an account check's flags as `screen.case-editor.account.flagged` ({sentence}) with the flag's reason on its second line; `screen.case-editor.account.use` and `.notasis` say once how a draft is used and why it is never taken as it stands; then the member's own field "The account" (marked as begun from the assistant's draft when it was) and "See its earlier drafts" (`accountdrafts`, with or without the assistant). Saving is "Prepare the draft" (`casedraft`), which records the account's form (`edited` or `own_instead`, R4). Refusals keyed: `refusal.BAD_ACCOUNT_DRAFT`, `BAD_ACCOUNT_FRAMING`, `NO_SUCH_ACCOUNT_DRAFT`, `BAD_ACCOUNT`.
 reasoning recorded in: this entry; `screens/registry.src.py`, `mock-screens.js`, `mock-acts.js`, `check_walk.mjs`, `words-drawn.src.py`.
 owed: (BOB, T50 or later) a screens-publish requirement placing `accountpropose` and `accountdrafts` on the case editor as drawn (no screens requirement names them today); case-account's refusals read by these keys.
+
+### DEC-316 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01BKVRfySv9yw3V8ERtnfgYi; the development process also runs on his primary account since K1428) (Bob's K3666: the third walk, every screen at 1280 and 390 px with every control pressed)
+for: design
+question: What the walk at 390 px found broken, and its fixes.
+why it is Bob's: it is not (P17).
+provisional: 71 screens, with and without the assistant, every mockup state (454 rows at each width), every button, fold and choice pressed: no page overflows at either width; no control throws on the page itself; at 390 px words were squeezed to a word a line in 14 places from four causes: a row's fourth cell fell into the icon's column (document, person, explore); a choice's bold words became their own flex item (connect's limits); a label list kept two columns (queue, front, plan); the plan's scenario tabs did not wrap.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: on a phone a row is `auto minmax(0, 1fr)` and every cell after its words sits under them; a label list (`.mk-dl`) is one column; a choice's words are one block beside its box; tabs wrap whole. After the fixes the walk finds 0 squeezed, 0 overflowing at 390 px. The working app follows the same rules (interface-shell's phone layout).
+reasoning recorded in: this entry; `screens/page.src.html`, `mock-kit.js`.
+owed: (BOB, T50) interface-shell's phone layout keeps a row's later cells under its words and one-column label lists, as drawn.
