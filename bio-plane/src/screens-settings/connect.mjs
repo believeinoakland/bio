@@ -77,6 +77,7 @@ export const connect = {
     if (kept) {
       // the team keeps its material away from AI: one card, who, when, the reason in the administrator's words, and no act
       out.push(`<div class="mk-msg" data-situation="keptaway"><p>${kept.by ? W(S + "keptaway", { by: names(kept.by), date: D(kept.at) }) : W(S + "keptaway.unread")}${kept.reason ? ` <span class="rec">${E(kept.reason)}</span>` : ""}</p><p>${W(S + "keptaway.ask")}</p></div>`);
+      whoPays();
       return out.join("");
     }
     const ref = okv(data.reference), sub = okv(data.signin), gk = okv(data.groupkey);
