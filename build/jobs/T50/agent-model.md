@@ -18,3 +18,7 @@
 - format: 171 modules, 170 requirements files; 0 failures. architecture (agent-model): 5 product files, 6 relative imports; 0 failures. coverage (agent-model): 24 of 24 live requirement ids named by a test; 0 failures. ownership (agent-model vs tranche/T50): 1 file changed by agent-model (plus its test); 0 failures.
 
 Size (session_0123prY1gzJUGUmHHxUyixGp): test runs 6, module lines 1038
+
+## J1 · COMPLETE
+
+T50-67 applied: R23 (judgeTools names the record's conditions) and R24 (judge_compose offers disagreements), tests R23/R24 with controls. Module tests 33/0; format, architecture, coverage (24/24), ownership all 0 failures. REPORT: agent-worker's generated bundle is stale (it inlines agent-model/src/model.mjs); its requirements.test.mjs R45 fails until BOB regenerates it (agent-worker/: npm run build). agent-harness must pass CONDITION_KINDS as judgeTools' second argument. Details in my record.
