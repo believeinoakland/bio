@@ -13,8 +13,10 @@
 
 **Deferred:** R17 (above).
 
+**Reading of R18, posted as a QUESTION (J1):** the text says `scope.documents` is "the least `documents` the statement answered over a level's reads", but its control (one read of `documents: 0` and one of 2 keeps the candidate) needs the greatest. I read `scope[level].documents` as the shell's aggregate, kept when any read had a document, and the harness only tests that figure with R35.
+
 **Found in another module:** `agent-worker` must set `scope` per level from the plane's statement and state each `disagreementsToSettle` pair (its R113+). `emptyLevelCandidates` now composes none for a level with no `scope` entry, so a shell that does not set it writes no `level-empty` candidates. Bundles that input this module's files (`agent-worker`'s) are stale until regenerated at layer close (BOB).
 
 **Tests and checks (with the stub in place for the tests):** `node --test agent-harness/test/`: 55 tests, 55 pass, 0 fail. `checks/format.mjs`: 0 failures. `checks/architecture.mjs agent-harness`: 0 failures. `checks/coverage.mjs agent-harness`: R17 named by no test (expected, not yet met). `checks/ownership.mjs agent-harness tranche/T50`: 0 failures. `checks/run.mjs`: architecture 0 failures; the coverage failures are other modules' (inherited), plus R17.
 
-Size (session_01VB7aNzqCDcGRLaxhz6h5yc): test runs 4, module lines 1,300
+Size (session_01VB7aNzqCDcGRLaxhz6h5yc): test runs 4, module lines 1939
