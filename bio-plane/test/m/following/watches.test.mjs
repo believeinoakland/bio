@@ -590,7 +590,8 @@ test("R26 with the real plan-work and action-plans: where it stands lists the pl
   const f = followingOf(p.host, { record: p.record, membership: p.membership, actionPlans: p.ap, planWork: p.pw, monitoring: stub,
     duties: { readDuty: () => ({ ok: true, found: false }), occurrencesOf: () => ({ ok: false }) },
     answers: { standingQuestionsOf: () => ({ ok: true, questions: [] }) }, standards: { standardsIn: () => ({ ok: true, items: [] }) },
-    view: () => ({ time_zone: { value: "America/Halifax" } }), now: () => Date.parse(p.clock.now) });
+    view: () => ({ time_zone: { value: "America/Halifax" } }), now: () => Date.parse(p.clock.now),
+    retrieval: { registerBrowseMarks: (module) => ({ ok: true, module }) } });
   assert.deepEqual(f.registered, { ok: true, module: "following" });
   const fl = f.followRegister({ address: REG(1), ends: "2027-01-01", ...by("alice") });
   assert.equal(fl.ok, true, JSON.stringify(fl));

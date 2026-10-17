@@ -2,6 +2,7 @@
  * §4.4 TIME L3). Pure over what its caller hands it: the view (recurrences, deadlines, zone), the body's observed
  * meetings from `events`, and "now". Counting and expansion are `civil-time`'s. */
 import { expandRecurrence, evaluateRule, localDay, bounds } from "../civil-time/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R5: how far ahead a body's meetings are looked for (`civil-time` R20's own bound). */
 export const MEETING_HORIZON_MONTHS = 24;
@@ -16,13 +17,13 @@ function addMonths(t, n) { const d = new Date(t); d.setUTCMonth(d.getUTCMonth() 
  *  backward from the meeting (`starts: act` or `hearing`), with a citation and a sourced status (jurisdictions R44).
  *  Answers `{rule}` or `{why}`. */
 export function noticeRule(view, name) {
-  if (typeof name !== "string" || !name) return { why: "the watch names no notice period for its body" };
+  if (typeof name !== "string" || !name) return { why: word("following.why.watch_names_notice") };
   const rule = (Array.isArray(view && view.deadlines) ? view.deadlines : []).find((d) => d && d.rule === name);
-  if (!rule) return { why: `the active profiles hold no notice period named ${name}` };
+  if (!rule) return { why: word("following.why.active_profiles_hold", { name }) };
   if (rule.direction !== "backward" || !["act", "hearing"].includes(rule.starts))
-    return { why: `${name} is not a period counted back from a meeting` };
+    return { why: word("following.why.period_counted_back", { name }) };
   if (!SOURCED.includes(rule.status) || typeof rule.citation !== "string" || !rule.citation)
-    return { why: `the profile does not hold ${name} with a primary source` };
+    return { why: word("following.why.profile_hold_primary", { name }) };
   return { rule };
 }
 
@@ -60,14 +61,14 @@ export function meetingsOf({ view, bodyLabel, observed = [], fromMs, zone }) {
   }
   const meetings = [...byDay.values()].filter(Boolean).sort((a, b) => ms(a.instant) - ms(b.instant));
   return meetings.length ? { meetings }
-    : { meetings, why: `the body has no stated meeting schedule and no observed meeting in the next ${MEETING_HORIZON_MONTHS} months` };
+    : { meetings, why: word("following.why.body_stated_meeting", { meeting_horizon_months: MEETING_HORIZON_MONTHS }) };
 }
 
 /** R4: when the capture before `meeting` is due: its start less the notice period, counted by `civil-time`, as an
  *  instant, or `{why}` when the count is undetermined. */
 export function dueBefore(meeting, rule, view) {
   const r = evaluateRule({ rule, anchor: meeting.start, view });
-  if (!r || r.refused || r.undetermined || !r.due) return { why: `the notice period's count is undetermined: ${(r && r.why) || "no due"}` };
+  if (!r || r.refused || r.undetermined || !r.due) return { why: word("following.why.notice_period_count", { due: (r && r.why) || "no due" }) };
   const due = r.due.candidates ? r.due.candidates[0] : r.due;
-  try { return { at: bounds(due).earliest, trace: r.trace }; } catch { return { why: "the notice period's due is not a date-time" }; }
+  try { return { at: bounds(due).earliest, trace: r.trace }; } catch { return { why: word("following.why.notice_period_due") }; }
 }
