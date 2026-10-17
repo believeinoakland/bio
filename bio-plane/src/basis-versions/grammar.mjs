@@ -142,7 +142,8 @@ export function basisVersionFindings(fm, findings) {
     }
     const name = typeof v.name === 'string' ? v.name.trim() : '';
     if (!name || !VERSION_NAME_RE.test(name)) {
-      push('VERSION_NAME_NOT_UNIQUE', `basis_versions[${i}].name '${String(v.name).slice(0, 60)}' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name`);
+      /* R54: a name outside the form has a code of its own; NOT_UNIQUE is only for a name another version carries */
+      push('VERSION_NAME_MALFORMED', `basis_versions[${i}].name '${String(v.name).slice(0, 60)}' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name`);
       continue;
     }
     if (byName.has(name)) {
