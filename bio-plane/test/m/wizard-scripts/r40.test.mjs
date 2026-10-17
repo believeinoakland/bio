@@ -9,7 +9,7 @@ import { SCREEN_REGISTRY, CIVICSMITH_LIBRARY } from "../../../src/wizard-scripts
 const OPS = [...new Set(SCREEN_REGISTRY.flatMap((s) => [...s.acts, ...(s.owed || []).map((o) => o.op)]))];
 const ADMIN_ACTS = ["groupdescriptionset", "memberadd", "membercaps", "websitekeycreate"];
 const ADMIN_SCREENS = ["updates"];
-const SETUP = ["Say who your group is", "Invite a member", "Update your group's Civicsmith"];
+const SETUP = ["Say who your team is", "Invite a member", "Update your team's Civicsmith"];   /* DEC-281's team pass renamed two (R42) */
 const named = (r) => r.scripts.map((s) => s.name);
 
 function world(extra = { adminActs: ADMIN_ACTS, adminScreens: ADMIN_SCREENS }) {
@@ -18,7 +18,7 @@ function world(extra = { adminActs: ADMIN_ACTS, adminScreens: ADMIN_SCREENS }) {
   return w;
 }
 
-test("R40 a plain member's startFrom omits \"Say who your group is\", \"Invite a member\" and \"Update your group's Civicsmith\"; an administrator's lists them; the plain member still sees the scripts whose acts she may take", () => {
+test("R40 a plain member's startFrom omits \"Say who your team is\", \"Invite a member\" and \"Update your team's Civicsmith\"; an administrator's lists them; the plain member still sees the scripts whose acts she may take", () => {
   const w = world();
   const member = w.wz.startFrom({ viewer: V("frank") });
   const admin = w.wz.startFrom({ viewer: V("erin") });
@@ -46,5 +46,5 @@ test("R40 with no administrator acts registered nothing is withheld, and the reg
   assert.ok(SETUP.every((n) => named(w.wz.startFrom({ viewer: V("frank") })).includes(n)));
   const v = world({ adminActs: ["groupdescriptionset"], adminScreens: [] });
   const r = named(v.wz.startFrom({ viewer: V("frank") }));
-  assert.ok(!r.includes("Say who your group is") && r.includes("Invite a member") && r.includes("Update your group's Civicsmith"));
+  assert.ok(!r.includes("Say who your team is") && r.includes("Invite a member") && r.includes("Update your team's Civicsmith"));
 });

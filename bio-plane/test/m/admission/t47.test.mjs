@@ -128,7 +128,9 @@ test("R25: an act REAUTH_ACTS names, with its argument, is answered 403 with cre
   const caps = ["contribute", "publish", "create_projects"];
   const later = Date.now() + 5 * 60e3, gone = Date.now() - 1;
   const { env } = world({ sessions: {
-    [open]: { ...member("ann", caps), reauthUntil: later }, [shut]: { ...member("ann", caps), reauthUntil: null },
+    /* (R29) administrators: an administrator's own act is asked the password, a member's is refused first */
+    [open]: { ...member("ann", caps), administer: true, reauthUntil: later },
+    [shut]: { ...member("ann", caps), administer: true, reauthUntil: null },
     [fOpen]: { ...founder(caps), reauthUntil: later }, [fShut]: { ...founder(caps), reauthUntil: gone } } });
   const declared = Object.keys(R58).filter((k) => OPS[k]);
   assert.ok(declared.length >= 10, declared.join());
