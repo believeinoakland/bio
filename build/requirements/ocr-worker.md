@@ -106,7 +106,7 @@ engine_loaded, engine_unavailable?}`.
 
 - **R14** Refused `{ok:false, reason:"UNKNOWN"}` with HTTP 404.
 
-- **R23** (T50; N1191 (c); JOURNEYS V4 B-30; pdf-pixels R42) A capture whose bytes are a JPEG or PNG picture, not a PDF, is transcribed as a one-page document: page `0` is rendered with the picture renderer (`pdf-pixels` R42, `renderPictureToPixels`) instead of the page renderer and then taken through R7's refusals and R8 onward exactly as a PDF page is, the same fields answered; any other page number named for a picture is refused `NO_SUCH_PAGE` naming it; a picture the renderer refuses answers `PAGE_NOT_RENDERABLE` with its reason (R7 step 2). A PDF is transcribed as before. Test: a fixture photograph of a printed sentence answers its words for page 0 with R8's fields; page 1 of it is `NO_SUCH_PAGE`; control: a PDF page is unchanged, and bytes that are neither are refused as today. *(not yet met: T50)*
+- **R23** (T50; N1191 (c); JOURNEYS V4 B-30; pdf-pixels R42) A capture whose bytes are a JPEG or PNG picture, not a PDF, is transcribed as a one-page document: page `0` is rendered with the picture renderer (`pdf-pixels` R42, `renderPictureToPixels`) instead of the page renderer and then taken through R7's refusals and R8 onward exactly as a PDF page is, the same fields answered; any other page number named for a picture is refused `NO_SUCH_PAGE` naming it; a picture the renderer refuses answers `PAGE_NOT_RENDERABLE` with its reason (R7 step 2). A PDF is transcribed as before. Test: a fixture photograph of a printed sentence answers its words for page 0 with R8's fields; page 1 of it is `NO_SUCH_PAGE`; control: a PDF page is unchanged, and bytes that are neither are refused as today.
 
 ## Private
 

@@ -1512,6 +1512,12 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
   });
   return { width: W2, height: H2, comps: info.comps, samples: out, source: info.source };
 }
+function decodeBaselineJpegRows(d, { expectComps = null, colorTransform = null, onRows } = {}) {
+  if (typeof onRows !== "function") throw new TypeError("decodeBaselineJpegRows needs an onRows(rows, y0, count) function");
+  return decodeStrips(d, expectComps, colorTransform, (rows, y0, count) => {
+    onRows(rows, y0, count);
+  });
+}
 function decodeStrips(d, expectComps, colorTransform, emit) {
   const h = readJpegHeader(d);
   const { frame, qt, hts, scan } = h;
@@ -5500,6 +5506,492 @@ function samplesToRgba({ width, height, bitDepth, comps, packed, rowBytes }) {
   return rgba;
 }
 
+// ../pdf-worker/src/pngdecode.mjs
+var PngRefusal = class extends Error {
+  constructor(code, detail = {}) {
+    super(`${code}${detail.feature ? `: ${detail.feature}` : detail.note ? `: ${detail.note}` : ""}`);
+    this.code = code;
+    this.detail = detail;
+  }
+};
+var unsupported3 = (feature, extra = {}) => new PngRefusal("UNSUPPORTED", { feature, ...extra });
+var corrupt3 = (note, extra = {}) => new PngRefusal("CORRUPT", { note, ...extra });
+var truncated3 = (note, extra = {}) => new PngRefusal("TRUNCATED", { note, ...extra });
+var PNG_REFUSES = Object.freeze({
+  "interlaced": "the image is stored Adam7-interlaced (IHDR interlace method 1), whose seven passes are not reassembled here",
+  "an unknown critical chunk": "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines",
+  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image"
+});
+var MEMORY_BOUND2 = 613e5;
+var SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+var DEPTHS = { 0: [1, 2, 4, 8, 16], 2: [8, 16], 3: [1, 2, 4, 8], 4: [8, 16], 6: [8, 16] };
+var CHANNELS = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
+var CRC_TABLE2 = (() => {
+  const t = new Int32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
+    t[n] = c;
+  }
+  return t;
+})();
+function crc322(d, start, end) {
+  let c = -1;
+  for (let i = start; i < end; i++) c = CRC_TABLE2[(c ^ d[i]) & 255] ^ c >>> 8;
+  return (c ^ -1) >>> 0;
+}
+var u32 = (d, p) => (d[p] << 24 | d[p + 1] << 16 | d[p + 2] << 8 | d[p + 3]) >>> 0;
+var u16 = (d, p) => d[p] << 8 | d[p + 1];
+var KNOWN_CRITICAL = /* @__PURE__ */ new Set(["IHDR", "PLTE", "IDAT", "IEND"]);
+var USED_ANCILLARY = /* @__PURE__ */ new Set(["tRNS"]);
+function readChunks(d) {
+  let p = 8, ihdr = null, plte = null, trns = null, ended = false;
+  const idat = [];
+  while (!ended) {
+    if (p + 8 > d.length) throw truncated3(`the data ends at byte ${p}, before an IEND chunk`);
+    const len = u32(d, p);
+    const type = String.fromCharCode(d[p + 4], d[p + 5], d[p + 6], d[p + 7]);
+    if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt3(`a chunk type that is not four letters at byte ${p}`, { at: p });
+    if (len > 2147483647) throw corrupt3(`the ${type} chunk declares a length past 2^31 - 1`, { chunk: type });
+    if (p + 12 + len > d.length) throw truncated3(`the ${type} chunk at byte ${p} runs past the data`, { chunk: type });
+    const start = p + 8, end = start + len;
+    const critical = (d[p + 4] & 32) === 0;
+    if (critical || USED_ANCILLARY.has(type)) {
+      if (crc322(d, p + 4, end) !== u32(d, end)) throw corrupt3(`the ${type} chunk's CRC does not match its data`, { chunk: type, at: p });
+    }
+    if (critical && !KNOWN_CRITICAL.has(type)) throw unsupported3("an unknown critical chunk", { chunk: type });
+    if (!ihdr && type !== "IHDR") throw corrupt3(`the first chunk is ${type}, not IHDR`, { chunk: type });
+    switch (type) {
+      case "IHDR":
+        if (ihdr) throw corrupt3("a second IHDR chunk");
+        ihdr = readIhdr(d, start, len);
+        break;
+      case "PLTE":
+        if (!idat.length) plte = d.subarray(start, end);
+        break;
+      case "tRNS":
+        if (!idat.length) trns = d.subarray(start, end);
+        break;
+      case "IDAT":
+        if (len) idat.push(d.subarray(start, end));
+        else if (!idat.length) idat.empty = true;
+        break;
+      case "IEND":
+        ended = true;
+        break;
+      default:
+        break;
+    }
+    p = end + 4;
+  }
+  if (!idat.length) throw corrupt3(idat.empty ? "the IDAT chunks hold no data" : "no IDAT chunk");
+  return { ihdr, plte, trns, idat };
+}
+function readIhdr(d, p, len) {
+  if (len !== 13) throw corrupt3(`an IHDR of ${len} bytes, not 13`);
+  const h = {
+    width: u32(d, p),
+    height: u32(d, p + 4),
+    depth: d[p + 8],
+    colourType: d[p + 9],
+    compression: d[p + 10],
+    filter: d[p + 11],
+    interlace: d[p + 12]
+  };
+  if (!h.width || !h.height || h.width > 2147483647 || h.height > 2147483647)
+    throw corrupt3(`an image of ${h.width}x${h.height}`, { width: h.width, height: h.height });
+  if (!(h.colourType in DEPTHS)) throw corrupt3(`colour type ${h.colourType}`, { colour_type: h.colourType });
+  if (!DEPTHS[h.colourType].includes(h.depth))
+    throw corrupt3(`bit depth ${h.depth} with colour type ${h.colourType}`, { colour_type: h.colourType, bit_depth: h.depth });
+  if (h.compression !== 0) throw corrupt3(`compression method ${h.compression}`);
+  if (h.filter !== 0) throw corrupt3(`filter method ${h.filter}`);
+  if (h.interlace > 1) throw corrupt3(`interlace method ${h.interlace}`);
+  return h;
+}
+function overWhite(c, a) {
+  if (a === 0) return 255;
+  const t = (c * a + 255 * (255 - a)) * 128 + 16384;
+  return (t >> 8) + t >> 8 >> 7;
+}
+var SCALE = { 1: 255, 2: 85, 4: 17, 8: 1 };
+async function decodePng(bytes) {
+  const d = bytes;
+  if (!(d instanceof Uint8Array) || d.length < 8 || SIGNATURE.some((b, i) => d[i] !== b))
+    throw new PngRefusal("NOT_A_PNG", { note: "the bytes do not begin with the PNG signature" });
+  const { ihdr, plte, trns, idat } = readChunks(d);
+  const { width: W2, height: H, depth, colourType } = ihdr;
+  if (ihdr.interlace === 1) throw unsupported3("interlaced", { width: W2, height: H });
+  const ch = CHANNELS[colourType];
+  const comps = colourType === 0 || colourType === 4 ? 1 : 3;
+  const rowBytes = Math.ceil(W2 * ch * depth / 8);
+  const need = W2 * H * comps + 2 * (rowBytes + 1);
+  if (need > MEMORY_BOUND2)
+    throw unsupported3("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND2, width: W2, height: H, components: comps });
+  let palette = null, alphaOf = null, key = null, transparency = colourType === 4 || colourType === 6 ? "alpha channel" : null;
+  if (colourType === 3) {
+    if (!plte) throw corrupt3("a palette image with no PLTE chunk before its image data");
+    if (!plte.length || plte.length % 3 || plte.length > 768) throw corrupt3(`a PLTE of ${plte.length} bytes`);
+    palette = plte;
+    alphaOf = new Uint8Array(256).fill(255);
+    if (trns) {
+      alphaOf.set(trns.subarray(0, Math.min(trns.length, plte.length / 3)));
+      transparency = "tRNS";
+    }
+  } else if (trns && colourType === 0 && trns.length === 2) {
+    key = [u16(trns, 0)];
+    transparency = "tRNS";
+  } else if (trns && colourType === 2 && trns.length === 6) {
+    key = [u16(trns, 0), u16(trns, 2), u16(trns, 4)];
+    transparency = "tRNS";
+  }
+  const entries = palette ? palette.length / 3 : 0;
+  const out = new Uint8Array(W2 * H * comps);
+  const bpp = Math.max(1, ch * depth >> 3);
+  let cur = new Uint8Array(rowBytes + 1), prev = new Uint8Array(rowBytes + 1);
+  let fill = 0, y = 0;
+  const emit = () => {
+    const f = cur[0], r = cur, q = prev, n = rowBytes + 1;
+    if (f === 1) {
+      for (let i = 1 + bpp; i < n; i++) r[i] = r[i] + r[i - bpp] & 255;
+    } else if (f === 2) {
+      for (let i = 1; i < n; i++) r[i] = r[i] + q[i] & 255;
+    } else if (f === 3) {
+      for (let i = 1; i < n; i++) r[i] = r[i] + ((i > bpp ? r[i - bpp] : 0) + q[i] >> 1) & 255;
+    } else if (f === 4) {
+      for (let i = 1; i < n; i++) {
+        const a = i > bpp ? r[i - bpp] : 0, b = q[i], c = i > bpp ? q[i - bpp] : 0;
+        const pa = Math.abs(b - c), pb = Math.abs(a - c), pc = Math.abs(a + b - 2 * c);
+        r[i] = r[i] + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c) & 255;
+      }
+    } else if (f !== 0) throw corrupt3(`filter type ${f} in row ${y}`, { row: y, filter: f });
+    writeRow(r, y);
+    [cur, prev] = [prev, cur];
+    y++;
+  };
+  const writeRow = (r, row) => {
+    let o = row * W2 * comps;
+    if (depth < 8) {
+      const mask = (1 << depth) - 1, scale = SCALE[depth];
+      for (let x = 0; x < W2; x++) {
+        const bit = x * depth, v = r[1 + (bit >> 3)] >> 8 - depth - (bit & 7) & mask;
+        if (colourType === 3) o = paletteOut(v, o);
+        else out[o++] = key && v === key[0] ? 255 : v * scale;
+      }
+      return;
+    }
+    const wide = depth === 16, s = wide ? 2 : 1;
+    for (let x = 0, i = 1; x < W2; x++, i += ch * s) {
+      switch (colourType) {
+        case 0:
+          out[o++] = key && (wide ? u16(r, i) : r[i]) === key[0] ? 255 : r[i];
+          break;
+        case 3:
+          o = paletteOut(r[i], o);
+          break;
+        case 4:
+          out[o++] = overWhite(r[i], r[i + s]);
+          break;
+        case 2:
+          if (key && (wide ? u16(r, i) === key[0] && u16(r, i + 2) === key[1] && u16(r, i + 4) === key[2] : r[i] === key[0] && r[i + 1] === key[1] && r[i + 2] === key[2])) {
+            out[o++] = 255;
+            out[o++] = 255;
+            out[o++] = 255;
+          } else {
+            out[o++] = r[i];
+            out[o++] = r[i + s];
+            out[o++] = r[i + 2 * s];
+          }
+          break;
+        default: {
+          const a = r[i + 3 * s];
+          out[o++] = overWhite(r[i], a);
+          out[o++] = overWhite(r[i + s], a);
+          out[o++] = overWhite(r[i + 2 * s], a);
+        }
+      }
+    }
+  };
+  const paletteOut = (v, o) => {
+    if (v >= entries) throw corrupt3(`palette index ${v} past the palette's ${entries} entries`, { index: v, entries });
+    const a = alphaOf[v], p = 3 * v;
+    out[o] = overWhite(palette[p], a);
+    out[o + 1] = overWhite(palette[p + 1], a);
+    out[o + 2] = overWhite(palette[p + 2], a);
+    return o + 3;
+  };
+  const ds = new DecompressionStream("deflate");
+  const writer = ds.writable.getWriter(), reader = ds.readable.getReader();
+  let extra = 0;
+  const writing = (async () => {
+    for (const part of idat) await writer.write(part);
+    await writer.close();
+  })();
+  writing.catch(() => {
+  });
+  try {
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      let i = 0;
+      while (i < value.length) {
+        if (y === H) {
+          extra += value.length - i;
+          break;
+        }
+        const take = Math.min(value.length - i, rowBytes + 1 - fill);
+        cur.set(value.subarray(i, i + take), fill);
+        fill += take;
+        i += take;
+        if (fill === rowBytes + 1) {
+          fill = 0;
+          emit();
+        }
+      }
+      if (extra) break;
+    }
+  } catch (e) {
+    if (e instanceof PngRefusal) {
+      reader.cancel().catch(() => {
+      });
+      throw e;
+    }
+    const why = String(e && e.message || e && e.code || e);
+    throw corrupt3(
+      y < H ? `the image data does not inflate (row ${y} of ${H})` : "the image data's zlib trailer is damaged or missing",
+      { rows: y, height: H, inflater: why }
+    );
+  }
+  if (extra) {
+    reader.cancel().catch(() => {
+    });
+    throw corrupt3("the image data inflates past the frame", { height: H, row_bytes: rowBytes });
+  }
+  if (y < H) throw truncated3(`the image data ends after ${y} of ${H} rows`, { rows: y, height: H });
+  return { width: W2, height: H, comps, samples: out, detail: { colour_type: colourType, bit_depth: depth, transparency } };
+}
+
+// ../pdf-worker/src/picturepixels.mjs
+var PICTURE_FRAME_MAX = 4096 * 3072 * 3;
+var PICTURE_SOURCE_MAX = 16384 * 12288 * 3;
+var refuse3 = (reason, detail = {}) => {
+  if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
+  return { ok: false, reason, why: REFUSALS[reason], ...detail };
+};
+var PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
+var PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA" };
+var PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+function sniff(b) {
+  if (b.length >= 3 && b[0] === 255 && b[1] === 216 && b[2] === 255) return "jpeg";
+  if (b.length >= 8 && PNG_SIGNATURE.every((v, i) => b[i] === v)) return "png";
+  return null;
+}
+var PNG_CHANNELS = { 0: 1, 2: 3, 3: 3, 4: 2, 6: 4 };
+function pngHeader(b) {
+  if (b.length < 33) return null;
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  if (dv.getUint32(8) !== 13 || String.fromCharCode(b[12], b[13], b[14], b[15]) !== "IHDR") return null;
+  const comps = PNG_CHANNELS[b[25]];
+  return comps ? { width: dv.getUint32(16), height: dv.getUint32(20), comps } : null;
+}
+var TIFF_INT = { 1: 1, 3: 2, 4: 4, 8: 2, 9: 4 };
+function exifOrientation(b) {
+  let p = 2;
+  while (p + 4 <= b.length && b[p] === 255) {
+    const m = b[p + 1];
+    if (m === 216 || m >= 208 && m <= 215 || m === 1) {
+      p += 2;
+      continue;
+    }
+    if (m === 218 || m === 217) break;
+    const len = b[p + 2] << 8 | b[p + 3];
+    const seg = b.subarray(p + 4, Math.min(b.length, p + 2 + len));
+    if (m === 225 && seg.length >= 6 && String.fromCharCode(...seg.subarray(0, 6)) === "Exif\0\0") {
+      return orientationIn(seg.subarray(6));
+    }
+    p += 2 + len;
+  }
+  return 1;
+}
+function orientationIn(t) {
+  if (t.length < 8) return 1;
+  const le = t[0] === 73 && t[1] === 73;
+  if (!le && !(t[0] === 77 && t[1] === 77)) return 1;
+  const dv = new DataView(t.buffer, t.byteOffset, t.byteLength);
+  const u162 = (o) => dv.getUint16(o, le), u322 = (o) => dv.getUint32(o, le);
+  if (u162(2) !== 42) return 1;
+  const ifd = u322(4);
+  if (ifd + 2 > t.length) return 1;
+  const n = u162(ifd);
+  for (let i = 0; i < n; i++) {
+    const e = ifd + 2 + i * 12;
+    if (e + 12 > t.length) return 1;
+    if (u162(e) !== 274) continue;
+    const size = TIFF_INT[u162(e + 2)], count = u322(e + 4);
+    if (!size || count < 1) return 1;
+    const at = size * count <= 4 ? e + 8 : u322(e + 8);
+    if (at + size > t.length) return 1;
+    const v = size === 1 ? t[at] : size === 2 ? u162(at) : u322(at);
+    return v >= 1 && v <= 8 ? v : 1;
+  }
+  return 1;
+}
+var AXES = [
+  null,
+  [true, false, false],
+  [true, true, false],
+  [true, true, true],
+  [true, false, true],
+  [false, false, false],
+  [false, false, true],
+  [false, true, true],
+  [false, true, false]
+];
+var orientedSize = (w, h, o) => AXES[o][0] ? [w, h] : [h, w];
+function boxMap(len, k, reversed) {
+  const m = new Int32Array(len);
+  for (let i = 0; i < len; i++) m[i] = Math.floor((reversed ? len - 1 - i : i) / k);
+  return m;
+}
+var multiplier = (n) => Math.trunc(Math.fround(4294967296 / Math.fround(256 * n)));
+var reductionFor = (width, height, maxEdge) => Math.max(1, Math.ceil(Math.max(width, height) / maxEdge));
+function reducer(w, h, comps, { grey, orientation, k }) {
+  const [xToX, xRev, yRev] = AXES[orientation];
+  const oc = grey && comps === 3 ? 1 : comps;
+  const xBox = boxMap(w, k, xRev), yBox = boxMap(h, k, yRev);
+  const nbx = Math.ceil(w / k), nby = Math.ceil(h / k);
+  const W2 = xToX ? nbx : nby, H = xToX ? nby : nbx;
+  const out = new Uint8Array(W2 * H * oc);
+  const sums = new Float64Array(nbx * oc);
+  const shift = k === 2 ? 2 : k === 4 ? 4 : 0;
+  let band = -1, bandRows = 0, seen = 0;
+  const flush = () => {
+    const bh = bandRows;
+    for (let bx = 0; bx < nbx; bx++) {
+      const bw = Math.min(k, w - bx * k), n = bw * bh, amend = n >> 1;
+      const mul = bw === k && bh === k && shift ? 0 : multiplier(n);
+      const o = (xToX ? band * W2 + bx : bx * W2 + band) * oc;
+      for (let c = 0; c < oc; c++) {
+        const s = sums[bx * oc + c];
+        out[o + c] = mul ? Math.floor((s + amend) * mul / 16777216) : s + amend >>> shift;
+      }
+    }
+    sums.fill(0);
+    bandRows = 0;
+  };
+  const toGrey = oc !== comps;
+  return {
+    rows(strip, y0, count) {
+      if (y0 !== seen) throw new Error(`rows out of order: ${y0} after ${seen}`);
+      const stride = w * comps;
+      for (let r = 0; r < count; r++) {
+        const b = yBox[y0 + r];
+        if (b !== band) {
+          if (band >= 0) flush();
+          band = b;
+        }
+        bandRows++;
+        let i = r * stride;
+        if (toGrey) {
+          for (let x = 0; x < w; x++, i += 3) sums[xBox[x]] += strip[i] * 19595 + strip[i + 1] * 38470 + strip[i + 2] * 7471 + 32768 >>> 16;
+        } else if (oc === 1) {
+          for (let x = 0; x < w; x++) sums[xBox[x]] += strip[i++];
+        } else {
+          for (let x = 0; x < w; x++) {
+            const s = xBox[x] * oc;
+            for (let c = 0; c < oc; c++) sums[s + c] += strip[i++];
+          }
+        }
+      }
+      seen += count;
+    },
+    done() {
+      if (seen !== h) throw new Error(`${seen} of ${h} rows`);
+      flush();
+      return { samples: out, width: W2, height: H, comps: oc };
+    }
+  };
+}
+async function sha256Hex2(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function renderPictureToPixels(bytes, pageIndex, { maxEdge, grey = false } = {}) {
+  if (!Number.isInteger(maxEdge) || maxEdge < 1) throw new TypeError("renderPictureToPixels: maxEdge must be a positive integer");
+  const b = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
+  const format = b && sniff(b);
+  if (!format) return refuse3("NOT_A_PICTURE");
+  if (pageIndex !== 0) return refuse3("NO_SUCH_PAGE", { page: pageIndex, pageCount: 1 });
+  if (format === "jpeg") {
+    let h;
+    try {
+      h = readJpegHeader(b);
+    } catch (e) {
+      return jpegRefusal(e);
+    }
+    const source2 = { format, width: h.frame.width, height: h.frame.height, comps: h.frame.comps.length };
+    const orientation = exifOrientation(b);
+    const k2 = reductionFor(...orientedSize(source2.width, source2.height, orientation), maxEdge);
+    const tooBig2 = overBound(source2, PICTURE_SOURCE_MAX, "PICTURE_SOURCE_MAX") ?? overReduced(source2, k2);
+    if (tooBig2) return tooBig2;
+    const red2 = reducer(source2.width, source2.height, source2.comps, { grey, orientation, k: k2 });
+    try {
+      decodeBaselineJpegRows(b, { onRows: (rows, y0, count) => red2.rows(rows, y0, count) });
+    } catch (e) {
+      return jpegRefusal(e);
+    }
+    return answer(red2.done(), { source: source2, orientation, k: k2 });
+  }
+  const hd = pngHeader(b);
+  const source = { format, width: hd ? hd.width : null, height: hd ? hd.height : null, comps: hd ? hd.comps : null };
+  const tooBig = hd && overBound(source, PICTURE_FRAME_MAX, "PICTURE_FRAME_MAX");
+  if (tooBig) return tooBig;
+  let pic;
+  try {
+    pic = await decodePng(b);
+  } catch (e) {
+    return pngRefusal(e);
+  }
+  if (!hd) Object.assign(source, { width: pic.width, height: pic.height, comps: pic.comps });
+  const k = reductionFor(pic.width, pic.height, maxEdge);
+  const red = reducer(pic.width, pic.height, pic.comps, { grey, orientation: 1, k });
+  red.rows(pic.samples, 0, pic.height);
+  pic.samples = null;
+  return answer(red.done(), { source, orientation: 1, k });
+}
+async function answer(r, { source, orientation, k }) {
+  return {
+    ok: true,
+    page: 0,
+    route: "decoded-picture",
+    mediaType: "image/png",
+    bytes: await encodePng8(r.samples, r.width, r.height, r.comps),
+    width: r.width,
+    height: r.height,
+    upright: true,
+    orientation,
+    reduced_by: k,
+    source,
+    pixels_sha256: await sha256Hex2(r.samples)
+  };
+}
+function overBound({ width, height, comps }, bound, name) {
+  const samples2 = width * height * comps;
+  return samples2 > bound ? refuse3("IMAGE_TOO_LARGE", { page: 0, width, height, comps, samples: samples2, bound, bound_name: name }) : null;
+}
+function overReduced({ width, height, comps }, k) {
+  const samples2 = Math.ceil(width / k) * Math.ceil(height / k) * comps;
+  return samples2 > PICTURE_FRAME_MAX ? refuse3("IMAGE_TOO_LARGE", { page: 0, width, height, comps, reduced_by: k, samples: samples2, bound: PICTURE_FRAME_MAX, bound_name: "PICTURE_FRAME_MAX" }) : null;
+}
+function jpegRefusal(e) {
+  if (!(e instanceof DctRefusal)) return refuse3("DECODE_FAILED", { page: 0, note: String(e && e.message || e) });
+  return refuse3(DCT_TO_REFUSAL[e.code] || "DECODE_FAILED", { page: 0, jpeg: e.code, ...e.detail });
+}
+function pngRefusal(e) {
+  if (!(e instanceof PngRefusal)) return refuse3("DECODE_FAILED", { page: 0, note: String(e && e.message || e) });
+  const reason = e.code === "UNSUPPORTED" ? PNG_FEATURE_REASONS[e.detail?.feature] ?? "UNSUPPORTED_FILTER" : PNG_CODE_REASONS[e.code] || "DECODE_FAILED";
+  return refuse3(reason, { page: 0, png: e.code, ...e.detail });
+}
+
 // src/contract.mjs
 var CAP = "C";
 var MEASURED_BY = "MEASUREMENTS.md 2026-09-10 (CPDF-15) \u2014 tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy \u2014 and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.";
@@ -5522,8 +6014,18 @@ var REFUSALS2 = {
   FRAME_OVER_MEASURED_BOUND: "this page's frame is larger than the largest frame measured to complete",
   PIXELS_UNREADABLE: "the rendered container could not be read back to samples",
   ENGINE_FAILED: "the engine refused or failed on this frame",
-  NOTHING_TRANSCRIBED: "the engine returned no anchorable word for this page"
+  NOTHING_TRANSCRIBED: "the engine returned no anchorable word for this page",
+  /* R23. A picture is a one-page document; this is not the renderer's refusal (R7 step 2) but the member's own,
+     stated before any pixel is made, so the page asked for is named. */
+  NO_SUCH_PAGE: "a picture is a one-page document (page 0); the page asked for does not exist"
 };
+var PICTURE_MAX_EDGE = 4096;
+function isPicture(bytes) {
+  const b = bytes;
+  if (!b || b.length < 4) return false;
+  if (b[0] === 255 && b[1] === 216 && b[2] === 255) return true;
+  return b.length >= 8 && b[0] === 137 && b[1] === 80 && b[2] === 78 && b[3] === 71 && b[4] === 13 && b[5] === 10 && b[6] === 26 && b[7] === 10;
+}
 function chooseChunk(pages) {
   const clean = [];
   for (const p of Array.isArray(pages) ? pages : [])
@@ -5543,12 +6045,15 @@ function floorFrom(env) {
   const n = Number(raw);
   return Number.isFinite(n) && n >= 0 && n <= 1 ? n : null;
 }
-function makeMember(engine, { render = renderPageToPixels } = {}) {
+function makeMember(engine, { render = renderPageToPixels, renderPicture = renderPictureToPixels } = {}) {
   async function transcribeOnePage(bytes, page, { psm = null, confidenceFloor = null } = {}) {
     const engineWhy = engine.check();
     if (engineWhy)
       return { ok: false, reason: "ENGINE_ABSENT", detail: REFUSALS2.ENGINE_ABSENT, why: engineWhy };
-    const rendered = await render(bytes, page, { decodeDct: true });
+    const picture = isPicture(bytes);
+    if (picture && page !== 0)
+      return { ok: false, reason: "NO_SUCH_PAGE", detail: REFUSALS2.NO_SUCH_PAGE, page, page_count: 1 };
+    const rendered = picture ? await renderPicture(bytes, page, { maxEdge: PICTURE_MAX_EDGE, grey: true }) : await render(bytes, page, { decodeDct: true });
     if (!rendered || !rendered.ok)
       return {
         ok: false,
@@ -5643,7 +6148,7 @@ function makeMember(engine, { render = renderPageToPixels } = {}) {
             height: samples2.height,
             route: rendered.route,
             upright: rendered.upright,
-            rotate_deg: rendered.rotate_deg,
+            rotate_deg: rendered.rotate_deg ?? null,
             pixels_sha256: rendered.pixels_sha256 || null
           }
         },
@@ -5676,7 +6181,7 @@ function makeMember(engine, { render = renderPageToPixels } = {}) {
         frame_bytes: frame,
         route: rendered.route,
         upright: rendered.upright,
-        rotate_deg: rendered.rotate_deg,
+        rotate_deg: rendered.rotate_deg ?? null,
         dpi: rendered.page_geometry ? rendered.page_geometry.dpi : null,
         pixels_sha256: rendered.pixels_sha256 || null
       },

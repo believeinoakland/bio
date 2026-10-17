@@ -1420,6 +1420,29 @@ w300('findin.term.help', 'Only passages with this name or term are shown, when y
 w300('findin.question.choose', 'For which question', False, "a choice of the project's questions; \"Open a question first\" only when it has none")
 w300('period.days', '{first} to {last}', False, 'a period named by its first and last day, both included, such as "1 to 15 October"')
 # --- end DEC-300
+# --- DEC-301 (BOB's B264, T50: agent-worker R110, screens-settings R41, N1174, N1190): the remote assistant's not-ready
+#     refusal and its connection check; the court kinds a proceeding can be; /doorbell and /tour as DEC-299 (11)
+def w301(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-301' + (': ' + note if note else '')))
+w301('refusal.ASSISTANT_REMOTE_NOT_READY', "The assistant isn't working for your team yet: its connection hasn't passed its check. An administrator can run the check under Settings, The assistant. Nothing was sent.", False, "agent-worker R110, Bob's K3610")
+w301('screen.connect.check', 'Check the connection', False, 'screens-settings R41; drawn only once the proof passes (K3615)')
+w301('screen.connect.check.help', "Runs one short test on your Claude account: signs in, starts a session, asks it one question that uses one of Civicsmith's tools, and ends it. The assistant works for your team only after this passes.")
+w301('connect.check.step.signin', 'Signed in to your Claude account')
+w301('connect.check.step.create', 'Started a test session')
+w301('connect.check.step.prompt', 'Asked it a test question')
+w301('connect.check.step.tool', "It used one of Civicsmith's tools")
+w301('connect.check.step.answer', 'It answered, and Civicsmith checked the answer')
+w301('connect.check.step.end', 'Ended the test session')
+w301('connect.check.step.time', '{step} · {seconds} s', False, "each step with its time, as it arrives (DEC-298's ticks)")
+w301('connect.check.step.waiting', '{step}…', False, 'the step under way')
+w301('connect.check.passed', 'The connection works. The assistant can now serve your team.')
+w301('connect.check.failed', "The check stopped at “{step}”: {why}. Nothing else was tried. Put it right and check again.", False, '{why} the step\'s own plain reason')
+w301('proceeding.kind.civil', 'Civil case', False, 'proceeding_kinds civil')
+w301('proceeding.kind.writ', 'Petition for a writ', False, 'proceeding_kinds writ: asking a court to order an official or agency to act')
+w301('proceeding.kind.appeal', 'Appeal', False, 'proceeding_kinds appeal')
+w301('proceeding.kind.complaint', 'Administrative complaint', False, 'proceeding_kinds complaint: filed with an agency or board, not a court')
+w301('proceeding.kind.help', 'What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.', False, "the choice's explanation")
+# --- end DEC-301
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
