@@ -34,3 +34,11 @@ So R25's sentence is unmet until the key exists. Everything else of R25 and R26 
 - `node checks/ownership.mjs /home/user/bio case-import tranche/T50`: see the next entry after the final commit.
 
 Size (session_013i42TtrczRChAapYgmx3CQ): test runs 17, module lines 2235
+
+## J2 · COMPLETE
+
+T50-15 is applied: R25 (`matter_stake`; a malformed one is recorded null with `caseimport.stake.unreadable`'s sentence, per your B2) and R26 (`latest_edition`, each edition's `importer` and its findings counted by result, null where none is recorded), plus plan rule 6 for the whole module (words by key through `words.mjs`, refusal rows read `refusal.<CODE>`). I also fixed one flaw of my own: the founder's bare `admin` viewer was read as no member, so she saw no imports.
+
+Module tests 126 of 126; format, architecture, ownership and the module's coverage (26 of 26) 0 failures; the other 38 test files that mention this module fail exactly as before my change (4, inherited). tranche/T50 merged through K3727.
+
+For the design lane: `words-reads.json` for `case-import` does not yet list `caseimport.stake.unreadable` (the module reads it), and `importCaseFile` names three departures of its own (no part given, a part not bytes, a manifest naming no group, case and edition) that no key holds. Details are in my record's completion section.
