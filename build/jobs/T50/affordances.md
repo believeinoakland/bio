@@ -49,3 +49,7 @@ B2 applied: tranche/T50 merged (no conflict), affordances 268/268, format, archi
 B3: `tranche/T50` merged in (op-grades T50-18). `t33-backing.test.mjs` no longer pins `membertie` as `reasoned`: it is out of `DRIVEN` and its test reads op-grades' grade (`reversible`, R47; withdrawal `membertiewithdraw` stays `reasoned`). `t33.test.mjs`' T50 pin now also asserts `watchitem`, `secondlook` and `secondlookclear` are `NON_ACTS` and no act, now that op-grades grades them. `node --test bio-plane/test/m/affordances/`: 268 tests, 268 pass. format, architecture, coverage (50 of 50), ownership: 0 failures.
 
 Size (session_01RZg8B4R3X8kop7zSsMSMzS): test runs 16, module lines 2,615
+
+## J4 · COMPLETE
+
+B3 applied: tranche/T50 merged (op-grades); membertie's grade is read from op-grades, not pinned (t33-backing); T50 watch/second-look ops now asserted NON_ACTS. affordances 268/268; format, architecture, coverage 50/50, ownership 0 failures.
