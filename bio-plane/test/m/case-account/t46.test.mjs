@@ -84,7 +84,7 @@ test("R15 the advocacychecks arm answers exactly R13's advocacyChecksOf({project
 
 /* ---------------------------------------------------------------- R16 */
 
-test("R16 C-153.2 ADVOCACY_NOT_OWN_PROJECT takes its translation from words.json's refusal.ADVOCACY_NOT_OWN_PROJECT, verbatim and read by key; its code, number and where unmoved; the rows words.json does not hold (C-153.1, C-153.3) keep theirs", () => {
+test("R16 C-153.2 ADVOCACY_NOT_OWN_PROJECT takes its translation from words.json's refusal.ADVOCACY_NOT_OWN_PROJECT, verbatim and read by key; its code, number and where unmoved; C-153.1 and C-153.3 read theirs by key too, now that words.json holds them (N1132)", () => {
   const key = "refusal.ADVOCACY_NOT_OWN_PROJECT";
   assert.equal(CASE_ACCOUNT_CHECKS.ADVOCACY_NOT_OWN_PROJECT.translation, WORD(key));
   assert.equal(ADVOCACY_WORDS[key], WORD(key));
@@ -93,16 +93,15 @@ test("R16 C-153.2 ADVOCACY_NOT_OWN_PROJECT takes its translation from words.json
   assert.deepEqual(Object.keys(ADVOCACY_WORDS), [key], "only the codes words.json holds");
   assert.deepEqual([CASE_ACCOUNT_CHECKS.ADVOCACY_NOT_OWN_PROJECT.check, CASE_ACCOUNT_CHECKS.ADVOCACY_NOT_OWN_PROJECT.where],
                    ["C-153.2", "src/case-account/index.mjs advocacyCheck > is-advocacy-own-project"]);
-  /* the rows words.json does not hold keep their words, codes, numbers and wheres */
-  for (const code of ["ACCOUNT_CITES_COUNSEL_MATTER", "MACHINE_CANNOT_CHECK_ADVOCACY"]) assert.equal(HAS(`refusal.${code}`), false, code);
+  /* N1132: words.json holds all three of C-153's codes, so each row's translation is that key's sentence, and no row keeps one of its own */
+  for (const code of ["ACCOUNT_CITES_COUNSEL_MATTER", "ADVOCACY_NOT_OWN_PROJECT", "MACHINE_CANNOT_CHECK_ADVOCACY"]) {
+    assert.equal(HAS(`refusal.${code}`), true, code);
+    assert.equal(CASE_ACCOUNT_CHECKS[code].translation, WORD(`refusal.${code}`), code);
+  }
   assert.deepEqual(Object.entries(CASE_ACCOUNT_CHECKS).map(([k, r]) => [k, r.check, r.where]), [
     ["ACCOUNT_CITES_COUNSEL_MATTER", "C-153.1", "src/case-account/index.mjs #held > is-cite-counsel-matter"],
     ["ADVOCACY_NOT_OWN_PROJECT", "C-153.2", "src/case-account/index.mjs advocacyCheck > is-advocacy-own-project"],
     ["MACHINE_CANNOT_CHECK_ADVOCACY", "C-153.3", "src/case-account/index.mjs advocacyCheck > is-advocacy-member"]]);
-  assert.equal(CASE_ACCOUNT_CHECKS.ACCOUNT_CITES_COUNSEL_MATTER.translation, "This sentence cites something from a counsel "
-    + "matter, which is never used as evidence outside it. Cite something else, or leave it out. Nothing was written.");
-  assert.equal(CASE_ACCOUNT_CHECKS.MACHINE_CANNOT_CHECK_ADVOCACY.translation, "Only members check their own text against the "
-    + "record, and this request named no member. Nothing was written.");
 });
 
 test("R16 the keyed refusal reached at the interface answers words.json's words with its behaviour unmoved (refused in a project not the author's own, nothing written); control: the same act in her own project lands", () => {

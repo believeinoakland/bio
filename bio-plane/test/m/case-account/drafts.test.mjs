@@ -8,6 +8,7 @@ import { CaseAccount, ACCOUNT_FRAMINGS, ACCOUNT_DRAFT_MAX, ACCOUNT_DRAFTS_MAX, A
   from "../../../src/case-account/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
+import { WORD } from "./words.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const RUN = "RUN-2026-0001", CASE = "CASE-2026-0001", PREP = "CASE-2026-0002";
@@ -73,7 +74,9 @@ test("R1: refusals in order — NO_SUCH_CASE, BAD_ACCOUNT_DRAFT (an unknown kind
     const r = propose(w, a);
     assert.deepEqual([r.ok, r.reason], [false, reason], JSON.stringify(a));
     if (field) assert.equal(r.field, field);
-    assert.match(r.detail, /Nothing was written\./);
+    /* DEC-315 (N1132): the two draft refusals' sentences are words.json's, read by key; the others keep theirs */
+    if (reason === "BAD_ACCOUNT_DRAFT" || reason === "BAD_ACCOUNT_FRAMING") assert.equal(r.detail, WORD(`refusal.${reason}`));
+    else assert.match(r.detail, /Nothing was written\./);
   }
   const framing = propose(w, { framing: "chronological" });
   assert.deepEqual(framing.allowed, ACCOUNT_FRAMINGS);

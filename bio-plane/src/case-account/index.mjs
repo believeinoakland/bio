@@ -60,6 +60,8 @@ import { checkAccount } from "../case-checker/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { CASE_ACCOUNT_TABLES, migrateCaseAccount } from "./schema.mjs";
 import { CASE_ACCOUNT_CHECKS } from "./checks.mjs";
+/* DEC-315 (N1132): the four refusals' sentences are read by key from words.json through setup-words' `word`. */
+import { word } from "../setup-words/index.mjs";
 
 export { CASE_ACCOUNT_SCHEMA, CASE_ACCOUNT_TABLES } from "./schema.mjs";
 export { CASE_ACCOUNT_CHECKS, ADVOCACY_WORDS } from "./checks.mjs";
@@ -114,7 +116,8 @@ function citesOf(v) {
  *  code points, and carries no other field (a story has none to hide in, case-authoring R65); its `bias_statement`, when
  *  given, names the printed bias statement whose framing it follows (D58). */
 export function accountShaped(account, statementCites, excludedCount = 0) {
-  const bad = (reason, field, detail) => ({ ok: false, reason, field, detail: `${field}: ${detail} Nothing was written.` });
+  const bad = (reason, field, detail) => ({ ok: false, reason, field,
+    detail: reason === "BAD_ACCOUNT" ? word("refusal.BAD_ACCOUNT") : `${field}: ${detail} Nothing was written.` });
   const sentences = [];
   if (account != null) {
     if (!Array.isArray(account)) return bad("BAD_ACCOUNT", "account", "the account is a list of sentences, each {text, cites, bias_statement?}.");
@@ -255,18 +258,15 @@ export class CaseAccount {
     const named = typeof accountDraft === "string" ? accountDraft
       : accountDraft && typeof accountDraft === "object" && !Array.isArray(accountDraft) ? accountDraft.draft : null;
     const given = accountDraft && typeof accountDraft === "object" ? accountDraft.form ?? null : null;
-    const bad = (field, detail) => ({ ok: false, reason: "BAD_ACCOUNT", field, detail: `${field}: ${detail} Nothing was written.` });
-    if (typeof named !== "string" || !named.trim()) return bad("accountDraft", "names an account draft by its id, or {draft, form}.");
-    if (given !== null && !ACCEPTANCE_FORMS.includes(given))
-      return bad("accountDraft.form", `is one of ${ACCEPTANCE_FORMS.join(", ")}.`);
-    if (!Array.isArray(sentences) || !sentences.length)
-      return bad("accountDraft", "names the draft an account began as, and this act writes no account.");
+    const bad = (field) => ({ ok: false, reason: "BAD_ACCOUNT", field, detail: word("refusal.BAD_ACCOUNT") });
+    if (typeof named !== "string" || !named.trim()) return bad("accountDraft");
+    if (given !== null && !ACCEPTANCE_FORMS.includes(given)) return bad("accountDraft.form");
+    if (!Array.isArray(sentences) || !sentences.length) return bad("accountDraft");
     const d = this.#one(`SELECT draft_id, text, framing FROM account_drafts WHERE draft_id=? AND case_id=? AND kind='case_account'`,
                         named.trim(), caseId);
     if (!d)
       return { ok: false, reason: "NO_SUCH_ACCOUNT_DRAFT", caseId, draft: named.trim(),
-               detail: `no draft of ${caseId}'s account answers to ${named.trim()} (accountDrafts lists them). Name one of them, `
-                     + "or write the account from nothing and publish again. Nothing was written." };
+               detail: word("refusal.NO_SUCH_ACCOUNT_DRAFT") };
     const words = (t) => String(t ?? "").replace(/\s+/g, " ").trim();
     const unchanged = words(d.text) === words(sentences.map((x) => x.text).join(" "));
     const form = given === "own_instead" ? "own_instead" : unchanged ? "as_proposed" : given ?? "edited";
@@ -573,18 +573,12 @@ export class CaseAccount {
         + "participant, and this project is not one. Nothing was written." });
     /* END DEC-49 REGION is-advocacy-own-project */
     const shaped = accountShaped(sentences, null);
-    if (shaped.ok === false) {
-      const field = shaped.field.replace(/^account/, "sentences");
-      return { ...shaped, field, detail: shaped.detail.replace(/^account/, "sentences") };
-    }
+    if (shaped.ok === false) return { ...shaped, field: shaped.field.replace(/^account/, "sentences") };
     const marked = shaped.sentences.findIndex((x) => x.bias_statement != null);
     if (marked >= 0)
-      return { ok: false, reason: "BAD_ACCOUNT", field: `sentences[${marked}].bias_statement`,
-               detail: `sentences[${marked}].bias_statement: a member's own text is checked against what it cites, and no `
-                     + "bias mark is taken here. Nothing was written." };
+      return { ok: false, reason: "BAD_ACCOUNT", field: `sentences[${marked}].bias_statement`, detail: word("refusal.BAD_ACCOUNT") };
     if (!shaped.sentences.length)
-      return { ok: false, reason: "BAD_ACCOUNT", field: "sentences",
-               detail: "sentences: the text to check is a list of one or more sentences, each {text, cites}. Nothing was written." };
+      return { ok: false, reason: "BAD_ACCOUNT", field: "sentences", detail: word("refusal.BAD_ACCOUNT") };
     const rows = shaped.sentences.map((x, i) => ({ ord: i + 1, text: x.text, cites: x.cites, kind: "account", bias_statement: null }));
     const reader = who.startsWith("member:") || who === "admin" ? who : `member:${who}`;
     const judged = this.#advocacyJudged(rows, reader, seen);
@@ -702,29 +696,27 @@ export class CaseAccount {
                    run = null, proposedBy = null, viewer = null } = {}) {
     const seen = this.#caseForDrafts(caseId, viewer);
     if (seen.ok === false) return seen;
-    const bad = (field, detail) => ({ ok: false, reason: "BAD_ACCOUNT_DRAFT", case: seen.caseId, field,
-                                      detail: `${field}: ${detail} Nothing was written.` });
-    if (kind !== "case_account" && kind !== "account_check") return bad("kind", "is case_account or account_check.");
+    const bad = (field) => ({ ok: false, reason: "BAD_ACCOUNT_DRAFT", case: seen.caseId, field,
+                              detail: word("refusal.BAD_ACCOUNT_DRAFT") });
+    if (kind !== "case_account" && kind !== "account_check") return bad("kind");
     let words = null, flagged = null;
     if (kind === "case_account") {
       /* R1's order: the draft's words (BAD_ACCOUNT_DRAFT) before its framing (BAD_ACCOUNT_FRAMING) */
       const length = typeof text === "string" ? [...text].length : null;
-      if (length === null || !text.trim() || length > ACCOUNT_DRAFT_MAX)
-        return bad("text", `a draft of the account is words, at most ${ACCOUNT_DRAFT_MAX} characters.`);
+      if (length === null || !text.trim() || length > ACCOUNT_DRAFT_MAX) return bad("text");
       if (!ACCOUNT_FRAMINGS.includes(framing))
         return { ok: false, reason: "BAD_ACCOUNT_FRAMING", case: seen.caseId, allowed: ACCOUNT_FRAMINGS,
-                 detail: `a draft of the account is written in one framing: ${ACCOUNT_FRAMINGS.join(", ")}. Nothing was written.` };
+                 detail: word("refusal.BAD_ACCOUNT_FRAMING") };
       words = text;
     } else {
-      if (!Array.isArray(flags) || !flags.length || flags.length > ACCOUNT_SENTENCES_MAX)
-        return bad("flags", `is a list of 1 to ${ACCOUNT_SENTENCES_MAX} {ord, text, cites}.`);
+      if (!Array.isArray(flags) || !flags.length || flags.length > ACCOUNT_SENTENCES_MAX) return bad("flags");
       flagged = [];
       for (let i = 0; i < flags.length; i++) {
         const f = flags[i];
         const cites = f && typeof f === "object" ? citesOf(f.cites) : null;
         if (!f || typeof f !== "object" || !Number.isInteger(f.ord) || f.ord < 1 || typeof f.text !== "string" || !f.text.trim()
             || [...f.text].length > COMPLETENESS_MAX || /[\r\n]/.test(f.text) || !cites)
-          return bad(`flags[${i}]`, "is {ord, text, cites}: the sentence's ord, its words on one line, and what it cites.");
+          return bad(`flags[${i}]`);
         flagged.push({ ord: f.ord, text: f.text, cites });
       }
     }
