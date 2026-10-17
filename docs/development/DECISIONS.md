@@ -4827,3 +4827,18 @@ decided: 2026-10-17 · the design session (P17)
 the design: (1) A concluded question offers "Prepare a case from this" (`casedraft`, primary), then "Plan what to do", then "Withdraw the conclusion…"; the registry lists `casedraft` on `question`. (2) Case (`case-editor`) gains "a project's first case": What goes in lists the concluded questions, each with its findings, chosen by tick (`screen.case-editor.whatgoesin`, `.note`), then Scope and "Prepare the draft". (3) Publish (`ceremony`) gains "nothing ready to publish" (`screen.ceremony.nothing`) with a door to the case being prepared. (4) The project page's "This project's work" adds Published cases (`published`) and Docket (`docket`). (5) A held ZIP's row in Held captures opens its files ("Open its files", `archive`). (6) The public page (`published`) says "Corrections and orders": `screen.published.corrections.none` and `screen.published.corrections`, "its docket" a door to the docket.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `registry.src.py`, `words-drawn.src.py` (DEC-310 block).
 owed: (BOB, T50) interface-shell R81's door kinds add `published` and `docket` on the project page and `archive` from a held ZIP; screens-inquiry draws `casedraft` on a concluded question; case-editor's first case chooses concluded questions (whether `casedraft` takes that choice is BOB's to place); the ceremony's nothing-ready state; public-read's corrections line and docket door.
+
+### DEC-311 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01Hvep9zb4SEqxGdEYh4wbyi; the development process also runs on his primary account since K1428) (Bob's K3666: the walk with the assistant; screens-settings R41, agent-worker R110, R111; DEC-301, DEC-307)
+for: design
+question: What the walk with the assistant needs that no screen drew.
+why it is Bob's: it is not (P17).
+provisional: Connect drew no "Check the connection"; the not-ready and expired-sign-in refusals were drawn nowhere a member asks.
+alternative: wait for BOB's sign-in HANDOFF before drawing the check (rejected: K3666 asks for the gap now; the HANDOFF may still change its steps).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) Connect, connected on a subscription: the six steps of the last check, each with its time (`connect.check.step.<step>`, `connect.check.step.time`), `connect.check.passed`, the button "Check the connection" (`subscriptionsignin {step: "check"}`, `screen.connect.check`, its help) and, folded, "If the check stops" (`screen.connect.check.ifstops`) with `connect.check.failed`. (2) The question's reasons the assistant can't work here now lead with `refusal.ASSISTANT_REMOTE_NOT_READY` and `refusal.SIGNIN_EXPIRED`. Still owed by design (named to BOB): where the check sits for a team on the team's key (likely Settings › The team's assistant); the Ask page's working, checked, check-failed and not-ready states (`ai.progress.reading.ask`, `ASK_CHECK_FAILED`); drafting a case's account with the assistant on Case (case-account R1, its framings, the machine draft, accept, edit or discard); the cancelled ending drawn; a reason field on Decline (basis-versions R4); a Connect state for an expired sign-in.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py`.
+owed: (BOB, T50) screens-settings R41 draws the check as drawn here; the refusals where a member asks. (Design) the items named above, in DEC-312 onward.

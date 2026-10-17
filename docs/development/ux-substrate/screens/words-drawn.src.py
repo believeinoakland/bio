@@ -1676,6 +1676,7 @@ w310('screen.case-editor.whatgoesin.note', 'Only a concluded question can go in 
 w310('screen.ceremony.nothing', 'Nothing is ready to publish: this project has no prepared case yet. Prepare one from its concluded questions.', False, 'Publish with no prepared case')
 w310('screen.published.corrections.none', 'None since it was published.', False, "the public page's corrections and orders")
 w310('screen.published.corrections', 'Every correction, withdrawal and court order on this case is listed on its docket.', False, "the public page's corrections and orders; 'its docket' links to the docket")
+w310('screen.connect.check.ifstops', 'If the check stops', False, 'screens-settings R41: the failed check, opened')
 # --- end DEC-310
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
