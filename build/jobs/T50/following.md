@@ -37,3 +37,7 @@ REPORT (T50-77 following; details in my record, "Completion"):
 2. Design-lane words with no key: the gated-register `unscheduled` line in `follows`; the "both/earlier/later snapshot" fragments in following.why.key_repeated_row; words-reads.json's following entry lacks refusal.MARK_NO_ITEM, MARK_NO_SUCH_ITEM, SECOND_LOOK_NO_NOTE, SECOND_LOOK_NOT_OPEN, MACHINE_CANNOT_MARK (keys exist in words.json).
 3. Ops watchitem, secondlook, secondlookclear are in followingOps; declared and graded in L11 (T50-24, T50-18): ops-map and op-declarations tests may go red until then.
 4. Added beyond the requirements: in-process secondLooksOf (flag history) for R33's "history keeps both"; add it to R33 or tell me to drop it.
+
+## J2 · COMPLETE
+
+T50-77 following complete: R32-R35 met, rule 6 words by key. Following tests 112/112; format, architecture, coverage (35/35) and ownership 0 failures; checks/run.mjs shows none for following. Record: build/jobs/T50/following.md.
