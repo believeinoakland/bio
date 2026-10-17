@@ -8,7 +8,12 @@
  * `Kind:Platform/Variant`; and the common `Platform/Variant` and `Kind.Variant` forms of other engines. Pure: the answer
  * depends on the name alone, and it never throws. */
 
-const RESEMBLES = 'Scanners report what a file resembles, not a certainty.';
+import { word } from '../setup-words/index.mjs';
+import { RESEMBLES_KEY, NO_PLAIN_DESCRIPTION_KEY } from './words.mjs';
+
+/* T50 (plan rule 6): the sentence every kind ends with, and R38's fallback, are the words of their keys; each kind's own
+   sentence is `unkeyed` in `words-reads.json` for this module and stays here. */
+const RESEMBLES = word(RESEMBLES_KEY);
 const kind = (id, names, words) => Object.freeze({ kind: id, names: Object.freeze(names), words: `${words} ${RESEMBLES}` });
 
 export const FINDING_KINDS = Object.freeze([
@@ -42,7 +47,7 @@ export const FINDING_KINDS = Object.freeze([
 ]);
 
 /** R38: the words when no row matches the name's kind of threat, exactly. */
-export const NO_PLAIN_DESCRIPTION = 'Civicsmith has no plain description of this name';
+export const NO_PLAIN_DESCRIPTION = word(NO_PLAIN_DESCRIPTION_KEY);
 
 const BY_NAME = new Map(FINDING_KINDS.flatMap((k) => k.names.map((n) => [n, k])));
 /* The names whose first part is the kind of threat, not the file kind (ClamAV's `Heuristics.` and `PUA.`). */
