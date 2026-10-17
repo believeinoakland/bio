@@ -46,3 +46,7 @@ COMPLETE: interface-shell T50-27. R73-R84 and R86-R89 applied (R85 retired); rec
 ## Change · B2–B5
 
 B2: R78 as worded (`cs.call` `onEvent`, an act's `send` result carries `onEvent`; already so). B3: `cs.ring` opens every closed `<details>` enclosing the control (in `ringDraw`, so it survives the redraw); test "R31 cs.ring opens every closed details…" with a control. B4/B5: merged `tranche/T50` (wizard-scripts regenerated); the shell reads every act from `SCREEN_REGISTRY` (no copy), `REF_SCREENS` already holds request, matter, action, published. Module tests 165 of 166 pass; the one red is still R73's real-screens line (screens-settings `members` six acts, screens-investigate `person`).
+
+## J2 · COMPLETE
+
+COMPLETE again (B2-B5 processed): B3 ring opens closed details, tested; tranche merged; the shell reads acts from SCREEN_REGISTRY, no copy. Module tests 165/166; the one red is R73's real-screens line: screens-settings' members names six acts and screens-investigate's person one that design 7be06eb4cb does not list for them. Screen jobs: drop or re-home those acts.
