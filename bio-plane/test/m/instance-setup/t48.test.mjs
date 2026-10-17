@@ -4,6 +4,7 @@
    key handed in as the module's list of release keys; the fetch, the governor and the clock are stand-ins that record
    what they were asked. Every refusal has a control (K874). */
 import test from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { boot, frame, providers } from "./fixture.mjs";
 import { INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, INSTANCE_SETUP_CHECKS, RELEASE_NOTICE_ADDRESS,
@@ -389,7 +390,7 @@ test("R90 updateStart refusals: a member and a machine NOT_AN_ADMIN first, befor
     const r = w.m.updateStart({ version, by: "admin" });
     if (version === "0.85.0 ") { assert.equal(r.ok, true, "the version is trimmed"); continue; }
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "UPDATE_NOT_READY", "UPDATE_NOT_READY", "C-64.32"], String(version));
-    assert.equal(r.translation, "That release is not the one ready to install. Nothing was recorded.");
+    assert.equal(r.translation, word("refusal.UPDATE_NOT_READY"));
   }
   assert.equal(w.count("update_decisions"), before + 1, "only the control wrote");
 });
@@ -436,7 +437,7 @@ test("R90 updateSkip records the administrator's reason with who and when and th
   for (const reason of [undefined, null, "", "   ", "x".repeat(1001), "line one\nline two", 7]) {
     const r = w.m.updateSkip({ version: "0.85.0", reason, by: "admin" });
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "UPDATE_SKIP_NO_REASON", "UPDATE_SKIP_NO_REASON", "C-64.33"], JSON.stringify(reason));
-    assert.equal(r.translation, "Say why your group skips this release: every administrator will see it. Nothing was recorded.");
+    assert.equal(r.translation, word("refusal.UPDATE_SKIP_NO_REASON"));
   }
   assert.equal(w.count("update_decisions"), before);
   assert.equal(w.m.updateSkip({ version: "0.85.0", reason: "We freeze changes until the filing.", by: "ruth" }).reason, "NOT_AN_ADMIN");
@@ -563,4 +564,21 @@ test("R53 R55 (T48; N996) assistantState and assistantGate ask ai-accounts and n
   const bare = await boot({ prov: { ...providers(), aiAccounts: {} } });
   assert.equal(bare.m.assistantState().on, false);
   assert.equal(bare.m.assistantGate().reason, "STORE_DID_NOT_ANSWER");
+});
+
+/* ---- R92 (T50; N1113): the update check is given its clock ---- */
+
+test("R92 the update-check consumer's tick hands the alarm's now to the check: the recorded instant (update_checks.at) and the answered `at` are that now, not the clock's; control: a check run outside an alarm (no now handed) reads the clock as before", async () => {
+  const w = await world();
+  w.serve(feed(notice("0.85.0")));
+  const alarm = T0 + 3 * DAY + 12_345;
+  assert.notEqual(alarm, w.clock.t);
+  const r = await w.consumer().tick(alarm);
+  assert.equal(r.updatecheck.at, new Date(alarm).toISOString());
+  assert.equal(w.lastCheck().at, new Date(alarm).toISOString());
+  /* control: no now handed, the clock is read */
+  w.clock.t = T0 + 5 * DAY;
+  const r2 = await w.m.updateCheckTick();
+  assert.equal(r2.updatecheck.at, new Date(T0 + 5 * DAY).toISOString());
+  assert.equal(w.lastCheck().at, new Date(T0 + 5 * DAY).toISOString());
 });

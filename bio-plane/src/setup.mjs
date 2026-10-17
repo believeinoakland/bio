@@ -33,6 +33,8 @@ import { parse as legistarParse, readPages as legistarPages, readBodyName as leg
 /* R65 (K1837): the no-added-fact check and the one row both assistant drafts answer until the model turn lands are
    wizard-scripts' (its R25, its rows), read there and never copied. */
 import { checkDraft, WIZARD_SCRIPTS_CHECKS } from "./wizard-scripts/index.mjs";
+/* R63 (T50; N1116, K3366): each row's sentence is read by its key from setup-words, never held here. */
+import { word } from "./setup-words/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
@@ -173,61 +175,48 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
   GROUP_SLUG_MALFORMED: {
     check: 'C-64.2',
     where: 'src/setup.mjs instanceGroupSeed > is-instance-group-seed',
-    translation: 'A group is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase '
-      + 'letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.',
+    translation: word('refusal.GROUP_SLUG_MALFORMED'),
   },
   GROUP_ALREADY_RECORDED: {
     check: 'C-64.3',
     where: 'src/setup.mjs instanceGroupSeed > is-instance-group-seed',
-    translation: 'Your group\'s Civicsmith has its group recorded already, and it is recorded once: the name travels inside every '
-      + 'document the record has signed, so a second name would make those documents name a producer they were '
-      + 'not written under. Nothing was changed.',
+    translation: word('refusal.GROUP_ALREADY_RECORDED'),
   },
   GROUP_IDENTITY_NOT_ADMIN: {
     check: 'C-64.5',
     where: 'src/setup.mjs #groupIdentityGate > is-group-identity-admin',
-    translation: 'Only one of the group\'s administrators can set the name it shows the public or the web '
-      + 'address it claims. The person signed in here is not one of its active administrators. Nothing was '
-      + 'changed.',
+    translation: word('refusal.GROUP_IDENTITY_NOT_ADMIN'),
   },
   GROUP_DISPLAY_NAME_MALFORMED: {
     check: 'C-64.6',
     where: 'src/setup.mjs groupNameSet > is-group-display-name',
-    translation: 'A display name is the group\'s own words for itself: some text, at most 120 characters, on '
-      + 'one line. It is always shown beside the group\'s short name and never instead of it. Nothing was '
-      + 'changed.',
+    translation: word('refusal.GROUP_DISPLAY_NAME_MALFORMED'),
   },
   GROUP_DOMAIN_MALFORMED: {
     check: 'C-64.7',
     where: 'src/setup.mjs groupDomainSet > is-group-domain',
-    translation: 'A web address is claimed by its bare domain name, like example.org: no https://, no path and '
-      + 'no port. The claim is then checked by reading a file the domain itself serves, and the public sees '
-      + 'the domain only while that check passes. Nothing was changed.',
+    translation: word('refusal.GROUP_DOMAIN_MALFORMED'),
   },
   /* R14 (N10, K102): the list of jurisdiction profiles this copy reads its local facts from. */
   PROFILES_NOT_ADMIN: {
     check: 'C-119.1',
     where: 'src/setup.mjs profilesSet > is-profiles-admin',
-    translation: 'Only one of the group\'s administrators, signed in as themselves, can choose which jurisdiction '
-      + 'profiles your group\'s Civicsmith reads its local facts from. Nothing was changed.',
+    translation: word('refusal.PROFILES_NOT_ADMIN'),
   },
   NOT_A_LIST: {
     check: 'C-119.2',
     where: 'src/setup.mjs profilesSet > is-profiles-list',
-    translation: 'The profiles are chosen as a list, in the order they are to be read, and an empty list means '
-      + 'none. What was sent is not a list. Nothing was changed.',
+    translation: word('refusal.NOT_A_LIST'),
   },
   UNKNOWN_PROFILE: {
     check: 'C-119.3',
     where: 'src/setup.mjs profilesSet > is-profiles-list',
-    translation: 'Your group\'s Civicsmith holds no jurisdiction profile by that name, so it cannot read local facts from it. '
-      + 'Choose among the profiles it offers. Nothing was changed.',
+    translation: word('refusal.UNKNOWN_PROFILE'),
   },
   PROFILE_IS_TEST: {
     check: 'C-119.4',
     where: 'src/setup.mjs profilesSet > is-profiles-list',
-    translation: 'That profile is made up for testing: its facts describe no real place, so no group\'s Civicsmith '
-      + 'reads local facts from it. Nothing was changed.',
+    translation: word('refusal.PROFILE_IS_TEST'),
   },
   /* R53–R55 (DEC-172; K1957, K2093; D311): the assistant, read from whether the group keeps its material away from AI
      (credentials R52), and each member's disclosure. C-119.6 (`ASSISTANT_SWITCH_MALFORMED`) retired with the switch
@@ -236,60 +225,51 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
   DISCLOSURE_NOT_THE_MEMBERS: {
     check: 'C-119.7',
     where: 'src/setup.mjs disclosureShown > is-disclosure-shown',
-    translation: 'The assistant\'s disclosure is recorded as shown only to the member it was shown to, by their own '
-      + 'act, never by another member or a machine on their behalf. Nothing was recorded.',
+    translation: word('refusal.DISCLOSURE_NOT_THE_MEMBERS'),
   },
   /* R51, R52: the captures a seeding reads. */
   SEED_CAPTURE_UNREADABLE: {
     check: 'C-119.9',
     where: 'src/setup.mjs seatsSeed > is-seed-capture',
-    translation: 'Seats are seeded from captures the record holds of Legistar\'s bodies, persons and office records, '
-      + 'and one of them is not named or cannot be read. Nothing was seeded.',
+    translation: word('refusal.SEED_CAPTURE_UNREADABLE'),
   },
   SEED_CAPTURE_NOT_LEGISTAR: {
     check: 'C-119.10',
     where: 'src/setup.mjs seatsSeed > is-seed-capture',
-    translation: 'Seats are seeded only from Legistar\'s own lists of bodies, persons and office records, each named '
-      + 'where it belongs, and this capture is not the list named. Nothing was seeded.',
+    translation: word('refusal.SEED_CAPTURE_NOT_LEGISTAR'),
   },
   DISCLOSURE_MALFORMED: {
     check: 'C-119.8',
     where: 'src/setup.mjs disclosureShown > is-disclosure-shown',
-    translation: 'A shown disclosure is recorded with the member it was shown to and the version of its words. One '
-      + 'of them is missing. Nothing was recorded.',
+    translation: word('refusal.DISCLOSURE_MALFORMED'),
   },
   /* R60 (DEC-150 (1)): the name of a place the group works in that no held profile covers. */
   PLACE_NAME_MALFORMED: {
     check: 'C-64.8',
     where: 'src/setup.mjs placeWantedSet > is-place-name',
-    translation: 'A place your group works in is named in plain words: some text, at most 200 characters, on one '
-      + 'line. It is kept only in your group\'s Civicsmith and sent nowhere. Nothing was changed.',
+    translation: word('refusal.PLACE_NAME_MALFORMED'),
   },
   /* R65 (DEC-152): the assistant's draft of the group's focus and purpose, from the administrator's answers. */
   GROUP_DRAFT_NO_ANSWERS: {
     check: 'C-64.9',
     where: 'src/setup.mjs groupDescriptionDraft > is-group-draft-answers',
-    translation: 'Tell the assistant a little about your group first: it drafts only from what you tell it and what '
-      + 'your group already holds. Nothing was saved.',
+    translation: word('refusal.GROUP_DRAFT_NO_ANSWERS'),
   },
   GROUP_DRAFT_ANSWERS_MALFORMED: {
     check: 'C-64.10',
     where: 'src/setup.mjs groupDescriptionDraft > is-group-draft-answers',
-    translation: 'The assistant drafts from your answers to its questions: a short list of answers, each at most '
-      + '1,000 characters. Nothing was saved.',
+    translation: word('refusal.GROUP_DRAFT_ANSWERS_MALFORMED'),
   },
   /* R64 (DEC-127 (1)): the language a member chooses for the screens, the member's own act. */
   MACHINE_CANNOT_SET_LANGUAGE: {
     check: 'C-119.11',
     where: 'src/setup.mjs memberLanguageSet > is-member-language',
-    translation: 'The language your screens are shown in is your own choice, made from your own signed-in session, '
-      + 'never by another member or a machine. Nothing was changed.',
+    translation: word('refusal.MACHINE_CANNOT_SET_LANGUAGE'),
   },
   LANGUAGE_MALFORMED: {
     check: 'C-119.12',
     where: 'src/setup.mjs memberLanguageSet > is-member-language',
-    translation: 'A language is chosen by its standard tag, like en, es or zh-Hant, and what was sent is not one. '
-      + 'Nothing was changed.',
+    translation: word('refusal.LANGUAGE_MALFORMED'),
   },
   /* R67–R73 (T37-30; N669; DEC-127 (2), (5), DEC-157, DEC-179; K2200, K2201, K2216): the group's translation of the
      interface. The next free numbers of C-64, awaiting T38's stamp. */
@@ -391,22 +371,19 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
   MACHINE_CANNOT_SET_INFO_LEVEL: {
     check: 'C-64.28',
     where: 'src/setup.mjs infoLevelSet > is-info-level',
-    translation: 'How quickly explanations open on your screens is your own choice, made from your own signed-in session, '
-      + 'never by another member or a machine. Nothing was changed.',
+    translation: word('refusal.MACHINE_CANNOT_SET_INFO_LEVEL'),
   },
   INFO_LEVEL_UNKNOWN: {
     check: 'C-64.29',
     where: 'src/setup.mjs infoLevelSet > is-info-level',
-    translation: 'Explanations open either promptly or on a longer pause, and what was sent is neither. Nothing is ever '
-      + 'hidden at either. Nothing was changed.',
+    translation: word('refusal.INFO_LEVEL_UNKNOWN'),
   },
   /* R84 (T47; DEC-205 (2), DEC-201 (8)): the group's logo, a PNG or a JPEG of at most 200 KB; the next free C-64 number,
      awaiting T48's stamp. */
   LOGO_REFUSED: {
     check: 'C-64.30',
     where: 'src/setup.mjs groupLogoSet > is-group-logo',
-    translation: 'A logo is a PNG or JPEG picture of at most 200 KB, or nothing to remove it. What was sent is not one. '
-      + 'Nothing was changed.',
+    translation: word('refusal.LOGO_REFUSED'),
   },
   /* R87 (T48; N670; DEC-127 (3)): the language a passage is read in, when the member has set none and names none; the
      next free C-64 numbers, BOB's draft words (an ASK to UX-DESIGN), awaiting T49's stamp (plan rule 5 (2)). */
@@ -419,21 +396,19 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
   UPDATE_NOT_READY: {
     check: 'C-64.32',
     where: 'src/setup.mjs #updateReady > is-update-ready',
-    translation: 'That release is not the one ready to install. Nothing was recorded.',
+    translation: word('refusal.UPDATE_NOT_READY'),
   },
   UPDATE_SKIP_NO_REASON: {
     check: 'C-64.33',
     where: 'src/setup.mjs updateSkip > is-update-skip',
-    translation: 'Say why your group skips this release: every administrator will see it. Nothing was recorded.',
+    translation: word('refusal.UPDATE_SKIP_NO_REASON'),
   },
   /* R77 (T45; N892 (d); Actions D28d; v0.2 rule 21): the group's declared stake, the next free C-64 number, awaiting
      T46's stamp. */
   STAKE_MALFORMED: {
     check: 'C-64.27',
     where: 'src/setup.mjs declaredStakeSet > is-declared-stake',
-    translation: 'Your group\'s declared stake says, in its own words, what your group itself has at stake in the matters '
-      + 'it works on: some text, at most 1,000 characters, on one line, or nothing to clear it. It is carried on '
-      + 'everything your group sends or publishes from now on. Nothing was changed.',
+    translation: word('refusal.STAKE_MALFORMED'),
   },
 });
 
@@ -1220,7 +1195,7 @@ export class InstanceSetup {
       due: () => this.groupDomainWake(), wake: () => this.groupDomainWake(), tick: () => this.groupDomainTick() });
     /* R88 (T48): the daily update check, one consumer, due at the group's own minute of the day (scheduler R8). */
     out.updateCheck = this.#scheduler().register("instance-setup", { name: "update-check", key: "updatecheck",
-      due: () => this.updateCheckWake(), wake: () => this.updateCheckWake(), tick: () => this.updateCheckTick() });
+      due: () => this.updateCheckWake(), wake: () => this.updateCheckWake(), tick: (now) => this.updateCheckTick(now) });
     try { out.slot = { minute: this.#checkMinute() }; }   /* the group's minute of the day is drawn at its first start and kept */
     catch (e) { out.slot = { drawn: false, detail: `the minute of the day could not be drawn: ${String(e && e.message || e).slice(0, 200)}` }; }
     try { out.running = this.#recordRunning(); }
@@ -1865,7 +1840,7 @@ export class InstanceSetup {
   /* One entity found or seeded under one identifier: the entity already holding it (a member's, or this module's from
      an earlier run) is `already`; else it is created, machine-declared, and the identifier held on it with the
      system's row as its basis. Answers `{state: seeded | already | unseeded, entity_id?, why?}`. */
-  #seedEntity({ p, ident, kind, label, note, row, source, sector }) {
+  #seedEntity({ p, ident, kind, label, note, row, source, sector, forumKind }) {
     const why = InstanceSetup.#identWhy(p, ident, kind);
     if (why) return { state: "unseeded", why };
     const E = this.#entities();
@@ -1881,7 +1856,8 @@ export class InstanceSetup {
     }
     let entityId = mine ? mine.entity_id : null;
     if (!entityId) {
-      const made = E.createEntity({ kind, label, note, declaredBy: SEED_MACHINE, ...(sector ? { sector } : {}) });
+      const made = E.createEntity({ kind, label, note, declaredBy: SEED_MACHINE, ...(sector ? { sector } : {}),
+                                    ...(forumKind ? { forum_kind: forumKind } : {}) });
       if (!made || made.ok !== true) return { state: "unseeded", why: `the registry refused the entity: ${made && (made.reason || made.detail)}` };
       entityId = made.entity_id;
       this.#ledgerEntity(ident, entityId, kind, label, source);
@@ -1998,8 +1974,55 @@ export class InstanceSetup {
             { what: "part_of", ...where });
       });
     }
+    out.forums = this.#seedForums(active, put);
     out.counts = { seeded: out.seeded.length, already: out.already.length, unseeded: out.unseeded.length };
     return out;
+  }
+
+  /* R93 (T50; N1190; jurisdictions R94; entities R54): each forum the active profiles' combined view holds
+     (`{label, forum_kind, ids?, basis}`) is seeded as a `body` entity carrying `forum_kind`, under its first identifier
+     (a scheme of the profile that declares it, the profile entry as basis) with any further identifiers held on it,
+     machine-attributed as R50's are. A forum already held under the identifier is `already` and writes nothing; one with
+     no identifier, or that the registry refuses, is `unseeded` with why. Answers the forums as listed beside offices. */
+  #seedForums(active, put) {
+    const listed = [];
+    if (!active.length) return listed;
+    let combined = null;
+    try { combined = this.#juris().combine(active.map((a) => a.id)); } catch { combined = null; }
+    const forums = combined && combined.ok === true && combined.view && Array.isArray(combined.view.forums) ? combined.view.forums : [];
+    for (const f of forums) {
+      if (!f || typeof f.label !== "string" || !f.label.trim() || typeof f.forum_kind !== "string") continue;
+      const label = f.label.trim();
+      const where = { what: "forum", label, forum_kind: f.forum_kind };
+      const idents = (Array.isArray(f.ids) ? f.ids : []).map((x) => InstanceSetup.#ident(x)).filter(Boolean);
+      if (!idents.length) {
+        const r = { state: "unseeded", why: "the profile names no identifier for this forum (ids), so it is not seeded: an entity is "
+          + "seeded only under the profile's own identifier, never by its name" };
+        put(r, where); listed.push({ ...where, state: r.state, why: r.why });
+        continue;
+      }
+      const owner = (id) => active.find((a) => InstanceSetup.#scheme(a.p, id.scheme)) ?? active[0];
+      const first = owner(idents[0]);
+      const source = { profile: first.id, forum: label };
+      const row = `${first.id}/forums/${f.forum_kind}/${label}`;
+      const cite = `jurisdiction profile ${first.id}, forum ${label}${f.basis ? ` (basis: ${f.basis})` : ""}`;
+      let r = this.#seedEntity({ p: first.p, ident: idents[0], kind: "body", label, sector: "government", source, row, forumKind: f.forum_kind,
+        note: `The ${f.forum_kind} ${label}, a forum as the active ${cite} names it; seeded at setup.` });
+      for (const more of idents.slice(1)) {
+        if (!r.entity_id || r.state === "unseeded") break;
+        const o = owner(more);
+        const why = InstanceSetup.#identWhy(o.p, more, "body");
+        if (why) { r = { state: "unseeded", entity_id: r.entity_id, why }; break; }
+        const sch = InstanceSetup.#scheme(o.p, more.scheme);
+        const got = this.#entities().addIdentifier({ entityId: r.entity_id, scheme: more.scheme, id: more.id, by: SEED_MACHINE,
+                                                     basis: { system: sch.systems[0], row } });
+        if (!got || got.ok !== true) r = { state: "unseeded", entity_id: r.entity_id, why: `the registry refused the identifier ${more.scheme} ${more.id}: ${got && (got.reason || got.detail)}` };
+        else if (!got.already && r.state === "already") r = { state: "seeded", entity_id: r.entity_id };
+      }
+      put(r, { ...where, ident: idents[0] });
+      listed.push({ ...where, state: r.state, ...(r.entity_id ? { entity_id: r.entity_id } : {}), ...(r.why ? { why: r.why } : {}) });
+    }
+    return listed;
   }
 
   /** K1683: the office a seeded office entity is, as `{role, body}` (with its profile), or null for an entity this
@@ -3258,12 +3281,13 @@ export class InstanceSetup {
     return t;
   }
 
-  /** R88, the consumer's `tick`: one check, answered under the consumer's key. A failed or tampered fetch stores no
-   *  notice and raises no item; the next day's run tries again. */
-  async updateCheckTick() { return { updatecheck: await this.#runUpdateCheck() }; }
+  /** R88, R92 (T50; N1113), the consumer's `tick`: one check at the alarm's `now` (milliseconds), answered under the
+   *  consumer's key. A failed or tampered fetch stores no notice and raises no item; the next day's run tries again. */
+  async updateCheckTick(now) { return { updatecheck: await this.#runUpdateCheck(now) }; }
 
-  async #runUpdateCheck() {
-    const at = this.#iso();
+  /* R92: the check's recorded instant is the alarm's `now` when one is handed in, else a read of the clock. */
+  async #runUpdateCheck(now) {
+    const at = Number.isFinite(now) ? new Date(now).toISOString() : this.#iso();
     let got;
     try { got = await this.#askNotice(); }
     catch (e) { got = { outcome: "unreachable", detail: `the check did not complete (${String(e && e.message || e).slice(0, 160)})` }; }
