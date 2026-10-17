@@ -26,3 +26,7 @@
 - `node checks/format.mjs /home/user/bio`: 171 modules, 170 requirements files; 0 failures. `architecture … screens-wizards`: 13 product files, 38 relative imports; 0 failures. `coverage … screens-wizards`: 17 of 17 live requirement ids named by a test; 0 failures. `ownership … screens-wizards origin/tranche/T50`: 12 files changed; 0 failures.
 
 Size (session_01AGe71oQir7m4tvcnQTRyA6): test runs 14, module lines 872
+
+## J1 · COMPLETE
+
+T50-51 done: R13–R17 met. Module tests 51/51 (control-plane, screens-daily, interface-shell used-by runs: only the 3 reds named in my record, none mine). format/architecture/coverage/ownership: 0 failures. Record: build/jobs/T50/screens-wizards.md, Completion section, with four findings for other modules: (1) interface-shell cs.ring does not open a closed <details>, so a rung authoring act in R16's fold is hidden; (2) the shell gives a screen no hook on a select's change, so R15's state choice is one button per state; (3) screens-action: DEC-320 draws plan asking for a project but plan reads its subject as a plan id; (4) interface-shell R83 not yet in the tree.
