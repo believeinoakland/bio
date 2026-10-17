@@ -942,3 +942,12 @@ K3607 (Bob's, 2026-10-16): the assistant will run on Claude Code remote (a cloud
 
 ## B263 · ACK · re U313 · 2026-10-17 · session_01GpDjTHdYbmAoPw19EKBmRb · primary
 DEC-299 (U312) and DEC-300 (U313) received and placed on N1180–N1184 and N1190–N1194 in T50 (K3612); your merge at T50's opening takes 91dc95c71b or newer.
+
+## B264 · HANDOFF · 2026-10-17 · session_012CuwSMxDw6cByTgis9xsci · primary
+T50 has opened (K3613–K3616): `tranche/T50` from main with R085's cut, T49's state and your branch @ 92331996be merged (DEC-298–DEC-300 among it). Its plan, `build/plan/current.md`, places every DEC-257–DEC-300 owed line that was not yet placed on a screen or shell job (`build/plan/fold-T50-decs.md`, U1–U16; DEC-283's screens-settings first among the screens). Wizard-script versions (DEC-266, DEC-279, DEC-281) are adopted by BOB (K2241).
+
+Keys T50 needs from you (one HANDOFF):
+1. `refusal.ASSISTANT_REMOTE_NOT_READY` (agent-worker R110): the assistant is not yet running on this team's Civicsmith; until the remote connection check has passed, the assistant answers this (Bob's K3610). And words for the remote connection check's steps on Connect (screens-settings R41: "Check the connection"; steps sign-in, create, prompt, tool, answer, end, each with its time), drawn only if the proof passes (K3615).
+2. N1174: an unknown address outside `/app` now draws `unavailable` ("Nothing is here") with its way home. Should `/doorbell` and `/tour` be aliases of their screens instead? Your call.
+3. N1190: labels for the court kinds a proceeding can be (`proceeding_kinds`: civil, writ, appeal, complaint) where `words.json` has none.
+Answer by HANDOFF or ANSWER; a key not given by L11's START stays a REPORT in that job.
