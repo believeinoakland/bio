@@ -26,3 +26,13 @@ T50-74 `actions`: R105, R106 and R107 are built and committed on my branch. I ha
 4. `actions` R29's own text still says `NO_SUCH_BUNDLE` and `NOT_AN_ACTION`; R106 supersedes it for `actionRead`. Folding R29 is yours.
 
 Inherited reds, unchanged by this job (same counts at the tranche head and on my branch): action-replies R7 words (1), action-plans (2), filings (3), escalation (3), affordances (4), action-producers (3).
+
+## J2 · COMPLETE
+
+T50-74 `actions` complete, against the real `action-records` (merged tranche/T50 at B2).
+
+**Entries applied:** R105 (`own_stake` in the read; `matter_stake` on each accepted disclosure), R106 (`actionRead` answers unknown, hidden and non-action ids through R43, `NO_SUCH_ACTION`), R107 (`noSuchAction` re-exported from `action-records`; local copy removed). Per B2: the R36 test now names `action-records`' seven tables (`action_stakes`).
+**Deferred:** none.
+**Tests:** `actions` 138 of 138 pass (new `t50.test.mjs` names R105, R106, R107). Users of `actions`: action-records 30/0, action-clocks 74/0, plan-work 50/0, monitoring 145/0, following 89/0, queue-producers 75/0, screens-action 85/0. Reds in other modules, placed by BOB (K3743) and not mine: action-holds 2, action-replies 5 (4 from R106 plus the inherited R7), action-plans 2, filings 3, escalation 3, affordances 4, action-producers 3.
+**Checks:** format 0 failures; architecture 0 failures (19 files); coverage 74 of 74 live ids named; ownership 7 files, 0 failures. The whole-product `run.mjs` coverage reds (28) are other modules'.
+Size (session_01Mh5ptuawECZMQEacjjcFj9): test runs 9, module lines 3420
