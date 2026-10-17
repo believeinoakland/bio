@@ -300,9 +300,14 @@ test("R54, R60 (K3062; DEC-198–DEC-217): R21 read against the registry at PR #
   /* T49 (K3321 (B); PR #36's registry): `owed:founderhandleset K3265` is declared by R71 (membership's founder-only op, the
      founder's set alone); the five owed acts T49 leaves out (N933, DEC-238, DEC-239) have no op yet. */
   const OWED_T49 = ["founderhandleset"];
-  const LEFT_OUT = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem"];
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...LEFT_OUT].sort());
+  /* T50 (R73, R75; K3674, K3471): the five owed acts T49 left out are declared by R73 and the registry's `aliaswithdraw`
+     (owed, K3674) is the op declared since T5-11, each read as served with no alias; the installer's four own routes are
+     owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
+  const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
+  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
+  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT].sort());
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
+  for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   for (const op of ["updatestart", "updatelater", "updateskip"]) assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op), op);
   assert.ok(Object.hasOwn(OPS, "passwordresetlink") && !Object.hasOwn(OP_ALIASES, "passwordresetlink"));
@@ -337,7 +342,8 @@ test("R54, R60 (wizard-scripts R31, R35, R36): R27 read against the library at P
 
 test("R54, R34 (T47; affordances R54, R56): every member op T47 declares is explained in ACT_HELP or named in ACT_HELP_ABSENT, never both — the reads sourceof, sourcerung, projectlist, projectquestions, peopledirectory and signintrace under the read ground and the acts the design has not yet explained under the last, while ACT_HELP has no text for them; statusreportassist, airundispatch, joindoors and clockproposals named only while ACT_HELP lacks their texts (negative control: an explained op is named under no ground)", () => {
   const READS = ["sourceof", "sourcerung", "projectlist", "projectquestions", "peopledirectory", "signintrace"];
-  const ACTS = ["drawquestion", "projectbarset", "monitorset", "unlock", "reauth", "passwordresetlink", "grouplogoset",
+  /* T50 (R75; affordances R64): `reauth` is explained by `act.reauth.does` and leaves the last ground */
+  const ACTS = ["drawquestion", "projectbarset", "monitorset", "unlock", "passwordresetlink", "grouplogoset",
                 "grouplanguagesset", "signrequest"];
   for (const op of [...READS, ...ACTS, "statusreportassist", "airundispatch", "joindoors", "clockproposals"]) {
     assert.ok(SESSION_OPS.member.has(op), op);
