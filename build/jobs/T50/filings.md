@@ -30,3 +30,12 @@ Tests and checks
 - checks/format 0 failures; architecture filings 0; coverage filings 62 of 62; ownership 0 (14 files); checks/run.mjs: architecture 0 failures, none of the coverage failures in filings.
 
 Size (session_01KMCayDcxgt1R1F5KZRvu7k): test runs 12, module lines 3615
+
+## J2 · COMPLETE
+
+T50-46 filings: complete again after B2 (CHANGE). tranche/T50 merged into the job branch.
+
+- Re-ran against the real actions R105: filings 133 pass, 0 fail. The stand-ins (`actionsWith`) only add fields the real read answers anyway; a new test drives the real `actions.records.actionStake` (set, shown over the project's, cleared falls back) and the stamp's matter_stake from it. Accepted-disclosure `matter_stake` stays a stand-in: no import path in the fixture builds one (conformance R41).
+- checks: format 0, architecture filings 0, coverage filings 62 of 62, ownership 0.
+
+Size (session_01KMCayDcxgt1R1F5KZRvu7k): test runs 15, module lines 3615
