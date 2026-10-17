@@ -1,6 +1,6 @@
 # admission (T50)
 
-**Status** · session_01QHhDyvdY7dW9CPvpQkC1u8 · depth 2 · WORKING · handled B1
+**Status** · session_01QHhDyvdY7dW9CPvpQkC1u8 · depth 2 · COMPLETE · handled B1
 
 ## Completion (ADMISSION #13, T50-79)
 
