@@ -52,3 +52,7 @@ Size (session_01SPnXeuBWixFqDaAKUnfxj4): test runs 23, module lines 1077
 ## J4 · COMPLETE
 
 B3 applied: tranche/T50 merged @ 9a6c50dfc5 (the regenerated SCREEN_REGISTRY); screens-entry 84 pass, 0 fail; format, architecture, coverage 24/24, ownership 0 failures. No code change.
+
+**B4, B5 (CHANGE, K3776, K3777) re-run.** `tranche/T50` merged with op-declarations, interface-shell and instance-setup. screens-entry 84 pass, 0 fail, `page.test.mjs` (the real shell's harness and page, no stand-in) 6 pass, 0 fail; no stand-in of an unmerged module remains (the temporary interface-assets regeneration used before B2 was never committed). The module's other tests drive `SCREENS` through `kit.mjs`, the shell's kit as interface-shell R21 states it, by design. Format, architecture, coverage (24 of 24), ownership 0 failures. The composed page's remaining red (plane t47 R48, control-plane t46-app R75/R81, interface-shell R73) is screens-settings' `members` act `groupkeyset`, which merges first.
+
+Size (session_01SPnXeuBWixFqDaAKUnfxj4): test runs 25, module lines 1077
