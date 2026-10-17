@@ -104,12 +104,13 @@ export const CONTAINER_PACKAGES = [
  *  `bundle: false`, the Worker that hosts its class (a guarded bundle) and a config declaring its container. Any
  *  `marker` key overrides the marker's (`undefined` removes one). Its `package-lock.json` is `lock` (R27), none when
  *  null. */
-export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true, lock = CONTAINER_LOCK } = {}) {
+export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true, lock = CONTAINER_LOCK, instanceType } = {}) {
   const dir = join(root, name);
   if (bundle) {
     addMember(root, name, { services: [] });
     const cfg = parseCfg(join(dir, "wrangler.jsonc"));
-    if (containers) cfg.containers = [{ class_name: "Runner", image: "./Dockerfile", max_instances: 3 }];
+    if (containers) cfg.containers = [{ class_name: "Runner", image: "./Dockerfile", max_instances: 3,
+      ...(instanceType !== undefined ? { instance_type: instanceType } : {}) }];
     put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
   } else {
     put(root, `${name}/src/entry.mjs`, "export const runner = true;\n");
@@ -153,11 +154,12 @@ export function scannerClasses() {
         base: { repository: "docker.io/library/debian", digest: BASE_B }, packages: "images/render.packages.json" } },
   ];
 }
-export function addScannerMember(root, name, { classes = scannerClasses(), statements = SCANNER_STATEMENTS, marker = {} } = {}) {
+export function addScannerMember(root, name, { classes = scannerClasses(), statements = SCANNER_STATEMENTS, marker = {}, instanceTypes = {} } = {}) {
   const dir = join(root, name);
   addMember(root, name, { services: [] });
   const cfg = parseCfg(join(dir, "wrangler.jsonc"));
-  cfg.containers = classes.map((c) => ({ class_name: c.class_name, image: "./Dockerfile", max_instances: c.max_instances ?? 1 }));
+  cfg.containers = classes.map((c) => ({ class_name: c.class_name, image: "./Dockerfile", max_instances: c.max_instances ?? 1,
+    ...(instanceTypes[c.class_name] !== undefined ? { instance_type: instanceTypes[c.class_name] } : {}) }));
   put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
   const prev = JSON.parse(readFileSync(join(dir, "fleet-member.json"), "utf8"));
   const m = { ...prev, kind: "container", containers: classes, bind: [{ member: "alpha-worker", binding: "FILE_SCANNER" }], ...marker };
