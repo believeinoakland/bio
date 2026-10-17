@@ -30,8 +30,9 @@ import { createHash } from "node:crypto";
 import { deflateSync } from "node:zlib";
 import { ocrWorkerDef, WASM, MODEL } from "./memberworker.mjs";
 import { makeMember, NAMESPACES } from "../src/member.mjs";
-import { MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES as CONTRACT_NAMESPACES, PLANE_OPS, REFUSALS } from "../src/contract.mjs";
+import { MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES as CONTRACT_NAMESPACES, PICTURE_MAX_EDGE, PLANE_OPS, REFUSALS } from "../src/contract.mjs";
 import { renderPageToPixels } from "../../pdf-worker/src/pagepixels.mjs";
+import { renderPictureToPixels } from "../../pdf-worker/src/picturepixels.mjs";
 import { checkAnchor, checkConfidence } from "../../bio-plane/src/textchain.mjs";
 import { BASIS_GRADES } from "../../bio-plane/src/record-grammar/index.mjs";
 import { discoverMembers, verifyStatic } from "../../bio-plane/scripts/fleet-bundle.mjs";
@@ -119,6 +120,13 @@ const HUGE = bilevelPagePdf(5000, 5000, () => 0xff);
 const TEXTY = textPagePdf();
 const NOT_PDF = new TextEncoder().encode("this is not a PDF at all, just bytes in the bucket");
 
+/* R23's photographs: a printed sentence photographed (a JPEG) and the same frame as a PNG, generated once with
+   Pillow (a sentence in two lines, lit unevenly, noisy, turned 1.2 degrees, softened); the words are what the
+   test expects the engine to read back, not what it was shown. */
+const PHOTO_JPG = F("./fixtures/photo-printed-sentence.jpg");
+const PHOTO_PNG = F("./fixtures/photo-printed-sentence.png");
+const PHOTO_WORDS = ["council", "approved", "budget", "Tuesday", "evening"];
+
 /* ---- a PNG writer, for the stand-in renderer: every shape the member's reader accepts or refuses ---------- */
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n;
   for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -198,10 +206,12 @@ async function post(member, env, body, path = "/transcribe") {
   return out;
 }
 function world({ engine = stubEngine({ regions: [{ text: "a line", rect: [0, 0, 2, 1], confidence: 0.5 }] }),
-                 render = stubRender(pngPage(GREY4x3, 4, 3)), env = {} } = {}) {
-  const bucket = recordingBucket(new Map([[`scratch/captures/${DOC_SHA}`, DOC], [`bio/captures/${DOC_SHA}`, DOC]]));
-  const member = makeMember(engine, { render });
-  return { engine, render, bucket, member, env: { CAPTURES: bucket.proxy, VERSION: "stub-build", ...env },
+                 render = stubRender(pngPage(GREY4x3, 4, 3)), renderPicture = stubRender(pngPage(GREY4x3, 4, 3, { route: "decoded-picture" })),
+                 doc = DOC, env = {} } = {}) {
+  const sha = hex(doc);
+  const bucket = recordingBucket(new Map([[`scratch/captures/${sha}`, doc], [`bio/captures/${sha}`, doc]]));
+  const member = makeMember(engine, { render, renderPicture });
+  return { engine, render, renderPicture, sha, bucket, member, env: { CAPTURES: bucket.proxy, VERSION: "stub-build", ...env },
            ask: (body, path) => post(member, { CAPTURES: bucket.proxy, VERSION: "stub-build", ...env }, body, path) };
 }
 const good = (over = {}) => ({ capture_sha: DOC_SHA, store: "scratch", pages: [0], ...over });
@@ -589,6 +599,75 @@ console.log("\n--- A9 · R15, R21: what the member touched — only CAPTURES.get
   void b;
 }
 
+console.log("\n--- A10 · R23: a JPEG or PNG capture is a one-page document, taken through the picture renderer ---");
+{
+  const JPG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+  const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 9, 9]);
+  const eng = () => stubEngine({ regions: [{ text: "a printed line", rect: [1, 1, 3, 2], confidence: 0.7 }] });
+  const picRender = () => stubRender(pngPage(GREY4x3, 4, 3, { route: "decoded-picture", upright: true, rotate_deg: 0, page_geometry: undefined }));
+  for (const [label, doc] of [["JPEG", JPG], ["PNG", PNG]]) {
+    const w = world({ engine: eng(), doc, renderPicture: picRender() });
+    const r = await w.ask({ capture_sha: w.sha, store: "scratch", pages: [0] });
+    t(`R23 a ${label} capture, page 0: 200 ok:true, answered by the picture renderer and not the page renderer`,
+      [r.status, r.body.ok, w.renderPicture.calls.length, w.render.calls.length], [200, true, 1, 0]);
+    t(`R23 the picture renderer is asked for page 0, a bounded long edge (${PICTURE_MAX_EDGE}) and grey pixels`,
+      w.renderPicture.calls[0], { page: 0, opts: { maxEdge: PICTURE_MAX_EDGE, grey: true }, bytes: doc.length });
+    t(`R23 ${label}: the same fields R8 names, the frame's route stated, the text anchored to p0`,
+      [keys(r.body), r.body.image.route, r.body.image.dpi, r.body.pages[0].page, r.body.pages[0].regions[0].text,
+       r.body.pages[0].regions[0].source.ref, r.body.pages[0].regions[0].source.kind, r.body.cap],
+      [["cap", "confidence_floor", "deferred", "engine", "grain", "image", "measured_by", "model", "notes", "ok", "pages", "version"],
+       "decoded-picture", null, 0, "a printed line", "p0", "pdf-page", "C"]);
+
+    /* any other page: NO_SUCH_PAGE, naming it, before a pixel is made */
+    for (const pg of [1, 7]) {
+      const x = world({ engine: eng(), doc });
+      const q = await x.ask({ capture_sha: x.sha, store: "scratch", pages: [pg] });
+      t(`R23 ${label} page ${pg}: 200 NO_SUCH_PAGE naming it, nothing rendered, the engine never ran`,
+        [q.status, q.body.ok, q.body.reason, q.body.page, q.body.refusal.page_count, x.renderPicture.calls.length, x.render.calls.length, x.engine.calls.length],
+        [200, false, "NO_SUCH_PAGE", pg, 1, 0, 0, 0]);
+    }
+    const two = world({ engine: eng(), doc });
+    const q2 = await two.ask({ capture_sha: two.sha, store: "scratch", pages: [1, 0] });
+    t(`R23 ${label} pages [1,0]: page 0 is taken (R6) and page 1 stays deferred`,
+      [q2.body.ok, q2.body.pages[0].page, q2.body.deferred], [true, 0, [1]]);
+  }
+
+  /* the renderer's refusal is forwarded as R7 step 2 does */
+  const refusing = world({ doc: JPG, renderPicture: stubRender({ ok: false, reason: "IMAGE_TOO_LARGE", bound_name: "PICTURE_FRAME_MAX" }) });
+  const rr = await refusing.ask({ capture_sha: refusing.sha, store: "scratch", pages: [0] });
+  t("R23 R7.2 a picture the renderer refuses -> 200 PAGE_NOT_RENDERABLE carrying its reason verbatim",
+    [rr.status, rr.body.ok, rr.body.reason, rr.body.refusal.render.reason, rr.body.refusal.render.detail.bound_name],
+    [200, false, "PAGE_NOT_RENDERABLE", "IMAGE_TOO_LARGE", "PICTURE_FRAME_MAX"]);
+
+  /* R7 is unchanged for a picture: engine first, then the bound, then the PNG reader */
+  const noEngine = world({ engine: stubEngine({ check: "no engine" }), doc: JPG });
+  const ne = await noEngine.ask({ capture_sha: noEngine.sha, store: "scratch", pages: [3] });
+  t("R23 R7.1 the engine is checked first: ENGINE_ABSENT even for a page a picture does not have",
+    [ne.body.reason, noEngine.renderPicture.calls.length], ["ENGINE_ABSENT", 0]);
+  const big = world({ doc: JPG, renderPicture: stubRender(pngPage(new Uint8Array([1, 2, 3]), 5000, 3066, { route: "decoded-picture" })) });
+  const bb = await big.ask({ capture_sha: big.sha, store: "scratch", pages: [0] });
+  t("R23 R7.4 a picture frame over the measured bound is refused by its true reason, before its PNG is read",
+    [bb.body.reason, bb.body.refusal.frame_bytes], ["FRAME_OVER_MEASURED_BOUND", 5000 * 3066 * 4]);
+
+  /* controls: a PDF page and bytes that are neither */
+  const pdfW = world();
+  const pr = await pdfW.ask(good());
+  t("R23 control: a PDF page is rendered by the page renderer, asked to decode DCT, and the picture renderer is never asked",
+    [pr.body.ok, pdfW.render.calls.length, pdfW.render.calls[0].opts, pdfW.renderPicture.calls.length], [true, 1, { decodeDct: true }, 0]);
+  const neither = world({ doc: NOT_PDF, render: stubRender({ ok: false, reason: "NOT_A_PDF" }) });
+  const nr = await neither.ask({ capture_sha: neither.sha, store: "scratch", pages: [0] });
+  t("R23 control: bytes that are neither a picture nor a PDF are refused as today, by the page renderer",
+    [nr.body.reason, nr.body.refusal.render.reason, neither.render.calls.length, neither.renderPicture.calls.length],
+    ["PAGE_NOT_RENDERABLE", "NOT_A_PDF", 1, 0]);
+  for (const [label, doc] of [["a lone 0xff 0xd8", new Uint8Array([0xff, 0xd8])], ["a PNG signature cut short", PNG.subarray(0, 7)]]) {
+    const w = world({ doc, render: stubRender({ ok: false, reason: "NOT_A_PDF" }) });
+    const q = await w.ask({ capture_sha: w.sha, store: "scratch", pages: [1] });
+    t(`R23 control: ${label} is not a picture: the page renderer refuses it as today`,
+      [q.body.reason, w.render.calls.length, w.renderPicture.calls.length], ["PAGE_NOT_RENDERABLE", 1, 0]);
+  }
+  t("R23 NO_SUCH_PAGE is a declared refusal of this member", typeof REFUSALS.NO_SUCH_PAGE, "string");
+}
+
 /* ============================================================================================================ *
  * Part B — the COMMITTED BUNDLE under workerd, the real engine, the real renderer
  * ============================================================================================================ */
@@ -608,7 +687,8 @@ const mf = new Miniflare({ workers: [
 ] });
 const bucket = await mf.getR2Bucket("CAPTURES");
 const STORE = "scratch";
-const puts = [["scan", SCAN], ["twopage", TWO_PAGE], ["blank", BLANK], ["noise", NOISE], ["huge", HUGE], ["texty", TEXTY], ["notpdf", NOT_PDF]];
+const puts = [["scan", SCAN], ["twopage", TWO_PAGE], ["blank", BLANK], ["noise", NOISE], ["huge", HUGE], ["texty", TEXTY], ["notpdf", NOT_PDF],
+                ["photojpg", PHOTO_JPG], ["photopng", PHOTO_PNG]];
 const shaOf = new Map();
 for (const [name, bytes] of puts) { shaOf.set(name, hex(bytes)); await bucket.put(`${STORE}/captures/${hex(bytes)}`, bytes); }
 await bucket.put(`bio/captures/${SCAN_SHA}`, SCAN);
@@ -768,6 +848,49 @@ console.log("\n--- B4 · R7: the real renderer's refusals pass through verbatim;
   t("R7.7 each names how many boxes it found and how many were blank or unanchored",
     [blank.body.refusal, noise.body.refusal].map((x) => [typeof x.boxes, typeof x.blank, typeof x.unanchored]),
     [["number", "number", "number"], ["number", "number", "number"]]);
+}
+
+console.log("\n--- B8 · R23: a photograph of a printed sentence, transcribed inside workerd by the real renderer and engine ---");
+{
+  for (const [name, bytes, format] of [["photojpg", PHOTO_JPG, "jpeg"], ["photopng", PHOTO_PNG, "png"]]) {
+    const direct = await renderPictureToPixels(bytes, 0, { maxEdge: PICTURE_MAX_EDGE, grey: true });
+    const { status, body } = await ask(name);
+    t(`R23 ${format}: 200 ok:true, with the fields R8 names`, [status, body.ok, keys(body)],
+      [200, true, ["cap", "confidence_floor", "deferred", "engine", "grain", "image", "measured_by", "model", "notes", "ok", "pages", "version"]]);
+    t(`R23 ${format}: R8's constants hold for a picture as for a page`,
+      [body.engine, body.version, body.model, body.cap, body.grain, body.deferred, body.measured_by === MEASURED_BY],
+      ["tesseract-wasm", "0.11.0", "tessdata_fast/eng", "C", "line", [], true]);
+    t(`R23 ${format}: the image is the picture renderer's own frame, by the renderer's digest`,
+      body.image, { width: direct.width, height: direct.height, frame_bytes: direct.width * direct.height * 4,
+                    route: "decoded-picture", upright: true, rotate_deg: null, dpi: null,
+                    pixels_sha256: direct.pixels_sha256 });
+    const regions = body.pages[0].regions;
+    const text = regions.map((r) => r.text).join("\n");
+    console.log(`        ${regions.length} region(s): ${JSON.stringify(text)}`);
+    t(`R23 ${format}: page 0 answers the sentence's words`, PHOTO_WORDS.filter((w) => !text.includes(w)), []);
+    t(`R23 ${format}: every region is anchored in the frame that was read, to p0, with the engine's own confidence or 'none'`,
+      regions.filter((r) => {
+        const s = r.source, rect = s.rect;
+        return !(checkAnchor(s) == null && s.ref === "p0" && s.page === 0 && s.space === "image-px"
+                 && s.image.pixels_sha256 === direct.pixels_sha256 && rect[0] >= 0 && rect[1] >= 0
+                 && rect[2] <= direct.width && rect[3] <= direct.height && rect[2] > rect[0] && rect[3] > rect[1]
+                 && checkConfidence(r.confidence) == null);
+      }).length, 0);
+    const p1 = await ask(name, [1]);
+    t(`R23 ${format}: page 1 is 200 NO_SUCH_PAGE naming it`,
+      [p1.status, p1.body.ok, p1.body.reason, p1.body.page], [200, false, "NO_SUCH_PAGE", 1]);
+    const both = await ask(name, [0, 2]);
+    t(`R23 ${format}: pages [0, 2] transcribes page 0 and defers 2 (R6)`, [both.body.ok, both.body.pages[0].page, both.body.deferred], [true, 0, [2]]);
+    const again = await ask(name);
+    t(`R23 R21 ${format}: asked again, the identical wire answer`, JSON.stringify(again.body), JSON.stringify(body));
+  }
+  /* controls */
+  const pdfPage = await ask("scan");
+  t("R23 control: a PDF page is transcribed as before (same frame, route and digest)",
+    [pdfPage.body.ok, pdfPage.body.image.route, pdfPage.body.image.pixels_sha256], [true, "decoded-ccitt-g4", IND_UPRIGHT_SHA]);
+  const junk = await ask("notpdf");
+  t("R23 control: bytes that are neither a picture nor a PDF are refused as today",
+    [junk.status, junk.body.reason, junk.body.refusal.render.reason], [200, "PAGE_NOT_RENDERABLE", "NOT_A_PDF"]);
 }
 
 console.log("\n--- B5 · R1–R5 and R14 on the committed bundle ---");
