@@ -1557,6 +1557,7 @@ var TRACE_HEADER = "x-civicsmith-trace";
 
 // src/worker.mjs
 var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
+var DISABLED = JSON.stringify({ ok: false, code: "LOCAL_RUNNER_DISABLED" });
 var HOLD_KEY = "signin_hold_until";
 var LIBRARY_DETAIL_MAX = 120;
 var STARTED_WORDS = "Your group's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.";
@@ -1651,10 +1652,16 @@ var AgentRunner = class extends Container {
     }
     log({ event: "runner.lifecycle", instance_ref: this.instanceRef, what, ...extra, signin_hold: hold });
   }
-  // Every request goes to the image's one port; a caller cannot pick another. R26: an answer that is not the image's
-  // JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a sign-in's answers set and clear the
-  // hold, read from their path, status and the waiting header alone, never a body.
+  // R35: every request, whatever its method, path or upgrade, is answered 410 before the container, its port or the
+  // class's storage is touched; the line names the method and path template only, never a query, header or body.
   async fetch(request) {
+    log({ event: "runner.local.disabled", method: request.method, path_template: pathTemplate(request.url), status: 410 });
+    return new Response(DISABLED, { status: 410, headers: { "content-type": "application/json" } });
+  }
+  // Suspended while R35 holds (nothing calls it): every request to the image's one port; a caller cannot pick another.
+  // R26: an answer that is not the image's JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a
+  // sign-in's answers set and clear the hold, read from their path, status and the waiting header alone, never a body.
+  async passThrough(request) {
     let res;
     try {
       res = await this.containerFetch(request, this.defaultPort);

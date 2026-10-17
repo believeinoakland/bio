@@ -8,43 +8,74 @@
 
 const at = (file, fn, region) => `src/reading-guides/${file} ${fn} > ${region}`;
 
-/* T46 (R14; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
-   answers, each `en` verbatim, read by key, as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are: the
-   translations of C-144.4 and C-144.19 (`refusal.<CODE>`) and the procedure guide's label (R13's
-   `guide.procedure.legalinfo`, protected). The design stream's words: re-worded there, then re-taken here by key; a row
-   never holds a copy of its sentence. The other rows, which `words.json` does not hold, keep their own. T48 (N1053;
-   DEC-221): re-taken in the design's American spelling ("recognize"), and this module's own rows and details follow it
-   ("labeled"). */
+/* T46 (R14; DEC-194, N913), extended T50 (T50-42; N1132): the words of `words.json`
+   (`docs/development/ux-substrate/screens/words.json`) this module answers, each `en` verbatim, read by key, as
+   membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are: every refusal row (`refusal.<CODE>`) and the
+   procedure guide's label (R13's `guide.procedure.legalinfo`, protected). The design stream's words are re-worded
+   there, then re-taken here by key; a row never holds a copy of its sentence. `words.json` holds every row of this
+   module, so each row reads its key. */
 export const READING_GUIDES_WORDS = Object.freeze({
-  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your group's places recognize, and this "
-    + "names another. Nothing was written.",
-  "refusal.GUIDE_ITEM_UNSOURCED": "Each route in a procedure guide cites the law, rule or published procedure it rests "
-    + "on, so members can read the source. This one cites nothing. Add its citation. Nothing was written.",
+  "refusal.GUIDE_CARRIES_CONDUCT": "A reading guide says only what to look for in a document, and where. Each item opens with \"Look "
+    + "for\", \"Note whether\", \"Note where\", \"Check whether\", \"Check that\", \"Watch for\" or \"Compare\", and "
+    + "none tells the assistant what to do, names a tool or an action, or states a rule or a permission. A "
+    + "procedure guide may name the acts and duties of a route, but none of its items speaks to the "
+    + "assistant or tells it what to do. The item named does not keep to this. Reword it. Nothing was "
+    + "written.",
+  "refusal.GUIDE_ITEMS_REFUSED": "A reading guide holds from 1 to 50 items, each a short label (at most 80 characters), what to look "
+    + "for (at most 500 characters) and, if you like, where to look (at most 200 characters), as plain "
+    + "text. A procedure guide holds from 1 to 50 items, each a route (at most 500 characters), if you like "
+    + "the reply to expect (at most 500 characters), and the citation the route rests on (at most 200 "
+    + "characters). The items given are not of that form. Nothing was written.",
+  "refusal.GUIDE_MEMBER_ACT": "Writing, reviewing, offering, adopting or retiring a reading guide is a member's act. An assistant "
+    + "may propose a guide for a member to take up; it may not do any of these. Sign in as an active "
+    + "member. Nothing was written.",
+  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your team's places recognize, and this names another. "
+    + "Nothing was written.",
+  "refusal.NO_SUCH_GUIDE": "No reading guide you can see answers to that id. Nothing was written.",
+  "refusal.GUIDE_READ_ONLY": "This reading guide comes with every copy of Civicsmith and is the same for every team, so no team "
+    + "can review, offer or retire it. Write your team's own guide for this kind instead, based on it if "
+    + "you like. Nothing was written.",
+  "refusal.GUIDE_REVIEW_BY_AUTHOR": "A reading guide is reviewed by a member other than the one who wrote or adopted it. Ask another "
+    + "member to review it. Nothing was written.",
+  "refusal.GUIDE_VERDICT_UNKNOWN": "A review either approves the guide, making it your team's, or refuses it, keeping it its author's. "
+    + "Say which. Nothing was written.",
+  "refusal.GUIDE_REASON_MISSING": "Refusing or retiring a reading guide needs a reason, in at most 500 characters, so its author and "
+    + "the team can see why. None was given, or it is too long. Nothing was written.",
+  "refusal.GUIDE_NOT_REVIEWABLE": "Only a guide not yet your team's can be reviewed: one a member wrote for themselves, or one adopted "
+    + "from another team. This one is already your team's or has been retired. Nothing was written.",
+  "refusal.GUIDE_NOT_OFFERABLE": "Only a guide your team has approved can be offered to another team. Have it reviewed and approved "
+    + "first. Nothing was sent.",
+  "refusal.GUIDE_OFFER_UNREADABLE": "What was given is not a reading guide another team offered, or it was changed after it was offered. "
+    + "Ask the offering team to send it again. Nothing was written.",
+  "refusal.GUIDE_NO_GROUP_SLUG": "An offered guide is labeled with your team's short name, and none is recorded for this team, so "
+    + "nothing can be offered. Whoever runs your team's Civicsmith can set it. Nothing was sent.",
+  "refusal.GUIDE_RETIRE_NOT_APPROVER": "A guide that is its author's alone is retired by its author; a team's guide by a member who could "
+    + "approve it, that is, any active member other than its author. Nothing was written.",
+  "refusal.GUIDE_RETIRED": "This reading guide has been retired. It stays readable, and nothing more can be done to it. Write a "
+    + "new guide based on it if it is still needed. Nothing was written.",
+  "refusal.GUIDE_BASED_ON_UNKNOWN": "A guide may say which guide or proposal it is based on, and the one named is not a guide or proposal "
+    + "you can see. Nothing was written.",
+  "refusal.GUIDE_PROPOSAL_NOT_MACHINE": "A proposed guide is the assistant's work, kept apart for members to take up. A member writes a guide "
+    + "directly instead. Nothing was written.",
+  "refusal.GUIDE_RUN_MISSING": "A proposed guide names the assistant's run that proposed it, so members can see where it came from. "
+    + "None was named. Nothing was written.",
+  "refusal.GUIDE_ITEM_UNSOURCED": "Each route in a procedure guide cites the law, rule or published procedure it rests on, so members "
+    + "can read the source. This one cites nothing. Add its citation. Nothing was written.",
   "guide.procedure.legalinfo": "Legal information, not legal advice",
 });
 
 export const READING_GUIDES_CHECKS = Object.freeze({
   GUIDE_CARRIES_CONDUCT: {
     check: "C-144.1", where: at("check.mjs", "checkGuide", "is-guide-look-for"),
-    translation: "A reading guide says only what to look for in a document, and where. Each item opens with \"Look "
-      + "for\", \"Note whether\", \"Note where\", \"Check whether\", \"Check that\", \"Watch for\" or \"Compare\", and "
-      + "none tells the assistant what to do, names a tool or an action, or states a rule or a permission. A procedure "
-      + "guide may name the acts and duties of a route, but none of its items speaks to the assistant or tells it what "
-      + "to do. The item named does not keep to this. Reword it. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_CARRIES_CONDUCT"],
   },
   GUIDE_ITEMS_REFUSED: {
     check: "C-144.2", where: at("check.mjs", "checkGuide", "is-guide-shape"),
-    translation: "A reading guide holds from 1 to 50 items, each a short label (at most 80 characters), what to look "
-      + "for (at most 500 characters) and, if you like, where to look (at most 200 characters), as plain text. A "
-      + "procedure guide holds from 1 to 50 items, each a route (at most 500 characters), if you like the reply to "
-      + "expect (at most 500 characters), and the citation the route rests on (at most 200 characters). The items "
-      + "given are not of that form. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_ITEMS_REFUSED"],
   },
   GUIDE_MEMBER_ACT: {
     check: "C-144.3", where: at("index.mjs", "memberRefusal", "is-guide-member"),
-    translation: "Writing, reviewing, offering, adopting or retiring a reading guide is a member's act. An assistant "
-      + "may propose a guide for a member to take up; it may not do any of these. Sign in as an active member. "
-      + "Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_MEMBER_ACT"],
   },
   GUIDE_KIND_UNKNOWN: {
     check: "C-144.4", where: at("index.mjs", "kindRefusal", "is-guide-kind"),
@@ -52,73 +83,59 @@ export const READING_GUIDES_CHECKS = Object.freeze({
   },
   NO_SUCH_GUIDE: {
     check: "C-144.5", where: at("index.mjs", "noSuchGuide", "is-guide-held"),
-    translation: "No reading guide you can see answers to that id. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.NO_SUCH_GUIDE"],
   },
   GUIDE_READ_ONLY: {
     check: "C-144.6", where: at("index.mjs", "readOnly", "is-guide-ours"),
-    translation: "This reading guide comes with every copy of Civicsmith and is the same for every group, so no group "
-      + "can review, offer or retire it. Write your group's own guide for this kind instead, based on it if you "
-      + "like. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_READ_ONLY"],
   },
   GUIDE_REVIEW_BY_AUTHOR: {
     check: "C-144.7", where: at("index.mjs", "guideReview", "is-guide-reviewer"),
-    translation: "A reading guide is reviewed by a member other than the one who wrote or adopted it. Ask another "
-      + "member to review it. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_REVIEW_BY_AUTHOR"],
   },
   GUIDE_VERDICT_UNKNOWN: {
     check: "C-144.8", where: at("index.mjs", "guideReview", "is-guide-verdict"),
-    translation: "A review either approves the guide, making it your group's, or refuses it, keeping it its "
-      + "author's. Say which. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_VERDICT_UNKNOWN"],
   },
   GUIDE_REASON_MISSING: {
     check: "C-144.9", where: at("index.mjs", "reasonRefusal", "is-guide-reason"),
-    translation: "Refusing or retiring a reading guide needs a reason, in at most 500 characters, so its author and "
-      + "the group can see why. None was given, or it is too long. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_REASON_MISSING"],
   },
   GUIDE_NOT_REVIEWABLE: {
     check: "C-144.10", where: at("index.mjs", "guideReview", "is-guide-reviewable"),
-    translation: "Only a guide not yet your group's can be reviewed: one a member wrote for themselves, or one "
-      + "adopted from another group. This one is already your group's or has been retired. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_NOT_REVIEWABLE"],
   },
   GUIDE_NOT_OFFERABLE: {
     check: "C-144.11", where: at("index.mjs", "offerable", "is-guide-offerable"),
-    translation: "Only a guide your group has approved can be offered to another group. Have it reviewed and "
-      + "approved first. Nothing was sent.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_NOT_OFFERABLE"],
   },
   GUIDE_OFFER_UNREADABLE: {
     check: "C-144.12", where: at("index.mjs", "guideAdopt", "is-guide-offer"),
-    translation: "What was given is not a reading guide another group offered, or it was changed after it was "
-      + "offered. Ask the offering group to send it again. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_OFFER_UNREADABLE"],
   },
   GUIDE_NO_GROUP_SLUG: {
     check: "C-144.13", where: at("index.mjs", "slugRefusal", "is-guide-slug"),
-    translation: "An offered guide is labeled with your group's short name, and none is recorded for this group, "
-      + "so nothing can be offered. Whoever runs your group's Civicsmith can set it. Nothing was sent.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_NO_GROUP_SLUG"],
   },
   GUIDE_RETIRE_NOT_APPROVER: {
     check: "C-144.14", where: at("index.mjs", "guideRetire", "is-guide-approver"),
-    translation: "A guide that is its author's alone is retired by its author; a group's guide by a member who could "
-      + "approve it, that is, any active member other than its author. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_RETIRE_NOT_APPROVER"],
   },
   GUIDE_RETIRED: {
     check: "C-144.15", where: at("index.mjs", "retiredRefusal", "is-guide-live"),
-    translation: "This reading guide has been retired. It stays readable, and nothing more can be done to it. Write "
-      + "a new guide based on it if it is still needed. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_RETIRED"],
   },
   GUIDE_BASED_ON_UNKNOWN: {
     check: "C-144.16", where: at("index.mjs", "guideDraft", "is-guide-basis"),
-    translation: "A guide may say which guide or proposal it is based on, and the one named is not a guide or "
-      + "proposal you can see. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_BASED_ON_UNKNOWN"],
   },
   GUIDE_PROPOSAL_NOT_MACHINE: {
     check: "C-144.17", where: at("index.mjs", "guidePropose", "is-guide-machine"),
-    translation: "A proposed guide is the assistant's work, kept apart for members to take up. A member writes a "
-      + "guide directly instead. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_PROPOSAL_NOT_MACHINE"],
   },
   GUIDE_RUN_MISSING: {
     check: "C-144.18", where: at("index.mjs", "guidePropose", "is-guide-run"),
-    translation: "A proposed guide names the assistant's run that proposed it, so members can see where it came "
-      + "from. None was named. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_RUN_MISSING"],
   },
   GUIDE_ITEM_UNSOURCED: {
     check: "C-144.19", where: at("check.mjs", "checkGuide", "is-guide-sourced"),
