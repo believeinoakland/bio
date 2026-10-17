@@ -109,6 +109,7 @@ N847 is found applied in T48 (jurisdictions R89–R92, wizard-scripts' sixth doo
 **L6 merge order:** agent-runner first, then `modules.json`'s.
 
 ### L7
+**Held (Bob, K3695):** not started until Bob's route for the remote assistant (K3692) is ruled and folded.
 - **T50-14 · reevaluation** · (N1069) `adoptVersion` names the adopting member as author. (N1070) the relayed refusal named and tested · Text: folded (K3635: R37, R38) · claude-sonnet-5-5.
 
 ### L8
