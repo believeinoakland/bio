@@ -25,3 +25,13 @@
 **Checks** (from the process repository): `checks/format.mjs` 171 modules, 169 requirements files; 0 failures. `checks/architecture.mjs reading-pipeline` 28 product files, 93 relative imports; 0 failures. `checks/coverage.mjs reading-pipeline` 34 of 34 live requirement ids named by a test; 0 failures. `checks/ownership.mjs reading-pipeline tranche/T50` 5 files changed (the module's source, three tests, this record); 0 failures. `checks/run.mjs` over the product: architecture 0 failures for all 3,431 files; coverage 22 failures, none in reading-pipeline (other modules' not-yet-met ids, rule 5's inherited reds).
 
 Size (session_01DB7ELQWnxgiNPnS5DJJeY9): test runs 9, module lines 1795
+
+## J1 · COMPLETE
+
+T50-58 reading-pipeline complete on job/T50/reading-pipeline (pushed). R33 (a text with no blank line split at its line breaks) and R34 (title: HTML <title>, else first heading; a determined entry reading carries its metadata title, else null; absent on a failed reading) are met in code and tests. R4's picture arm needed no code: the jpeg/png entries already make a picture a tier-3 candidate for page 0; its test now also checks the chain pixels -> ocr and the one unit.
+
+M-T50-4 measure: V4's walked file is not in the repository; I rebuilt its words from the V4 screenshot (a title line and four sentence lines). textUnitsOfText before: single-break text 1 unit (\n and \r\n alike), one line 1, a blank line after the title 2. After: single-break text 5 units, one line 1, blank line after the title 2 as before. The shape is what V4's "a single passage" supports, not a re-measurement of the file's bytes.
+
+Readings I took (CHANGE me if wrong): (1) a reading whose reader finds no entities is not "failed" and carries its title (most HTML pages find none; a reader that throws is failed and carries none); (2) a <title> with no glyph falls through to the first heading; (3) the 200-character cleaning applies to metadata.title too.
+
+Tests: reading-pipeline 133 pass (123 before); module's other tests 3 pass; extraction's tests 169 pass, 4 fail, the same 4 without my change. Checks: format, architecture, coverage (34 of 34), ownership 0 failures; checks/run.mjs architecture 0 failures. Report: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product) is stale by this change; regenerate at layer close. Details in build/jobs/T50/reading-pipeline.md.
