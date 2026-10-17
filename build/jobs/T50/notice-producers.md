@@ -15,3 +15,7 @@
 **Ran.** `node --test bio-plane/test/m/notice-producers/`: tests 125, pass 125, fail 0. `node --test bio-plane/test/m/queue/` (uses this module): tests 153, pass 153, fail 0. `format: 171 modules, 170 requirements files; 0 failures`. `architecture: 16 product files, 89 relative imports (0 naming no tracked file, not judged); 0 failures`. `coverage: 1 modules, 24 of 24 live requirement ids named by a test; 0 failures`. `ownership: 5 files changed by notice-producers between tranche/T50 and HEAD; 0 failures`. `checks/run.mjs`: channels 0 failures; coverage 26 failures in other modules only.
 
 Size (session_015nHCChy19TUHi4abRJbcsu): test runs 5, module lines 1499
+
+## J1 · COMPLETE
+
+R24 met: watched-changed items from retrieval.browse(only watched) and following.watchedBy, to the watcher alone, once per change; 7 new tests (R24) with controls; notice-producers tests 125/125, queue 153/153; format, architecture, coverage (24 of 24), ownership all 0 failures. Record: build/jobs/T50/notice-producers.md. For BOB: requirements file still marks R24 'not yet met: T50'.
