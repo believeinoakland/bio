@@ -46,3 +46,7 @@ B3 handled: plan dropped from the kinds asked a project (opens as today; control
 ## B4, B5 handled
 
 Merged `tranche/T50` with op-declarations, interface-shell and instance-setup; module tests 52/52 against the real shell. `standin.mjs` is kept: it is the shell's contract for the guide (J2, J3) driven directly, used by the guide's unit tests; every guide behaviour that crosses the shell (R2, R3, R5, R6, R7, R15, R17) also has a test over the real served page (`page.test.mjs`, `t50.test.mjs`). Say if BOB wants those unit tests moved onto the page.
+
+## J4 · COMPLETE
+
+B4, B5 handled: merged tranche/T50 (op-declarations, interface-shell, instance-setup). Module tests 52/52 against the real shell; format, architecture, coverage 17/17, ownership: 0 failures. standin.mjs kept for the guide's unit tests (the shell contract driven directly); every behaviour that crosses the shell also has a real-page test. Say if you want the unit tests moved onto the page.
