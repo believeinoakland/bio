@@ -51,38 +51,6 @@ const found = async (w, n = notice("0.85.0"), opts) => { w.serve(feed(n, opts));
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
 
-/* ---- R87: the language a member reads in ---- */
-
-test("R87 readingLanguage answers the member's own language when none is named: a member with Spanish set answers es; control: a member with none set and no language named answers LANGUAGE_NOT_SET, nothing written", async () => {
-  const w = await world();
-  w.m.memberLanguageSet({ language: "es", by: "ruth" });
-  assert.deepEqual(w.m.readingLanguage({ member: "ruth" }), { ok: true, language: "es", source: "member" });
-  const before = w.st.statements.length;
-  const none = w.m.readingLanguage({ member: "sam" });
-  assert.deepEqual([none.ok, none.reason, none.code, none.check], [false, "LANGUAGE_NOT_SET", "LANGUAGE_NOT_SET", "C-64.31"]);
-  assert.equal(none.translation, "Choose the language you read in, in Your account, or name one. Nothing was translated.");
-  assert.equal(w.m.readingLanguage({}).reason, "LANGUAGE_NOT_SET", "no member and no language");
-  assert.equal(w.m.readingLanguage().reason, "LANGUAGE_NOT_SET", "no argument at all never throws");
-  /* a member who cleared her choice has none set; a machine has none */
-  w.m.memberLanguageSet({ language: null, by: "ruth" });
-  assert.equal(w.m.readingLanguage({ member: "ruth" }).reason, "LANGUAGE_NOT_SET");
-  assert.equal(w.m.readingLanguage({ member: "class:ai" }).reason, "LANGUAGE_NOT_SET");
-  assert.deepEqual(w.st.statements.slice(before).filter((q) => /^\s*(INSERT|UPDATE|DELETE)/i.test(q)).length, 1 /* the clear above */);
-});
-
-test("R87 readingLanguage answers the language named when jurisdictions.isLocale accepts it, over the member's own, in its canonical form; control: a tag it refuses is LANGUAGE_MALFORMED (R64's rule), and a refused tag is not replaced by the member's own", async () => {
-  const w = await world();
-  w.m.memberLanguageSet({ language: "es", by: "ruth" });
-  assert.deepEqual(w.m.readingLanguage({ member: "ruth", language: "fr" }), { ok: true, language: "fr", source: "named" });
-  assert.equal(w.m.readingLanguage({ member: "ruth", language: "pt-br" }).language, "pt-BR", "canonical form");
-  assert.equal(w.m.readingLanguage({ language: "zh-Hant" }).language, "zh-Hant", "no member needed when one is named");
-  const bad = w.m.readingLanguage({ member: "ruth", language: "es es" });
-  assert.deepEqual([bad.ok, bad.reason, bad.check], [false, "LANGUAGE_MALFORMED", "C-119.12"]);
-  /* a member's stored tag is read in its canonical form too */
-  w.m.memberLanguageSet({ language: "pt-br", by: "tom" });
-  assert.equal(w.m.readingLanguage({ member: "tom" }).language, "pt-BR");
-});
-
 /* ---- R88: the daily check ---- */
 
 test("R88 at start this module registers one scheduler consumer, update-check, under its own key; it draws its minute of the day once and keeps it: a later start records no second draw, and the draw is never computed from the slug (control: many groups of one slug draw different minutes)", async () => {

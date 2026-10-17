@@ -5,7 +5,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { INSTANCE_SETUP_CHECKS } from "../../../src/setup.mjs";
+import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import { HOSTING_CONTROL } from "../../../src/setup-fleet.mjs";
 
 /* The words DEC-149 retires for the group's own Civicsmith. "copy" keeps its other meanings, none of which this
@@ -21,7 +23,8 @@ const world = async () => {
 
 test("R63 (T50; N1116, N1160) every check row's translation is its word by key, `refusal.<CODE>` of setup-words, never a copy held here, and no row says copy, instance, plane or server for the group's own Civicsmith", () => {
   assert.equal("ASSISTANT_OFF" in INSTANCE_SETUP_CHECKS, false, "T37 (N765): C-119.5 retired; the gate answers ai-accounts' row");
-  for (const [code, row] of Object.entries(INSTANCE_SETUP_CHECKS)) {
+  /* the rows still carried for `answer-envelope` (R94) are `translations`' own R15's: swept there */
+  for (const [code, row] of Object.entries(INSTANCE_SETUP_CHECKS).filter(([code]) => !(code in TRANSLATIONS_CHECKS) || code === "LANGUAGE_MALFORMED")) {
     assert.equal(row.translation, word(`refusal.${code}`), code);
     assert.doesNotMatch(row.translation, RETIRED, code);
   }
