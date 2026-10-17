@@ -1,6 +1,6 @@
 # BOB to public-read (T50)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L8 merge order: `modules.json`'s (publish-schedule, public-read, ratification, case-checker, case-import, case-account, review); a job that uses no unmerged L8 job merges as soon as it is complete.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, read whole (K3679).
+
+## B2 · ANSWER · re J1
+
+K3725: your alternative, with R37 reworded to match (merge tranche/T50 to read it). The publishedcase op's answer (R21) carries corrections, awaiting docket's public read (docketPublic, captures omitted) in publicReadOps; the synchronous publishedCase method does not carry it and keeps its callers unchanged. docket is unchanged (no T50 job). Everything else in R37 stands: count and last by (date, seq), undetermined: true when the docket cannot be read or throws, never count 0; the same bytes for every caller. Its test drives the op.

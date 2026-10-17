@@ -22,12 +22,12 @@ const LATER = "2026-10-09T13:30:00.000Z";
 
 /* A /6 case document Alice (the project's owner, holding an attesting key) may sign, stored unsigned; publication's set
    time services (`publish-schedule`) as stand-ins; a hold reader registered unless `reader` is false. `raw` adds front-matter lines. */
-async function setup({ raw = [], reader = true, mutate = (d) => d, worker = null } = {}) {
+async function setup({ raw = [], reader = true, mutate = (d) => d, worker = null, retrieval = null } = {}) {
   const registered = [];
   /* publish-schedule (a stand-in): R2's registration kept; R4 answers nothing waiting unless a test says otherwise */
   const ps = { registerScheduledPublisher: (p) => (registered.push(p), { ok: true }),
                scheduledEditions: () => ({ editions: [], cursor: null }) };
-  const w = world({ schedule: ps, worker });
+  const w = world({ schedule: ps, worker, retrieval });
   const key = await newKey(), other = await newKey();
   w.member("alice", { signer: key }); w.member("bo");
   const P = w.project("Team", "alice", { joined: ["bo"] });
@@ -364,6 +364,19 @@ test("R44: the pre-flight answers publish_at — offered with the group's zone w
   const { publish_at: a, ...restA } = before, { publish_at: b, ...restB } = after;
   assert.deepEqual(restA, restB);
   assert.deepEqual(restA, { ok: true, ready: true, refusals: [] });
+});
+
+test("R44 (T50, N1203): the offered zone is the one retrieval R69 reads — a local correction governs; no zone there offers nothing, even with a profile zone; a retrieval that cannot be read falls back to the profiles", async () => {
+  const offer = (s) => s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") }).publish_at;
+  const corrected = await setup({ retrieval: { zone: () => "America/Chicago" } });
+  corrected.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], V("alice"));
+  assert.deepEqual(offer(corrected), { offered: true, zone: "America/Chicago" }, "the governing (local) zone is offered");
+  const none = await setup({ retrieval: { zone: () => null } });
+  none.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], V("alice"));
+  assert.deepEqual(offer(none), { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" }, "retrieval holds none: nothing is read as UTC or the profile's");
+  const broken = await setup({ retrieval: { zone: () => { throw new Error("unreadable"); } } });
+  broken.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], V("alice"));
+  assert.deepEqual(offer(broken), { offered: true, zone: "America/Halifax" }, "unreadable retrieval: the profiles answer");
 });
 
 test("R45: the hold reader is registered once; a second is refused HOLD_READER_DECLARED, and the first stays the one read", async () => {

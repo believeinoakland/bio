@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (13082 words, 901 protected; SHA-256
-   6e8d64615b60c7d102aee96324244afea8c9c32d2a2f3452e01c52db30a4c7b3), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (13089 words, 901 protected; SHA-256
+   e5d6e0064dceb6ab796cdc1961a90cfd33f856210b90175a90d890c26b70d50d), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "6e8d64615b";
+export const WORDS_COMMIT = "e5d6e0064d";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5936,16 +5936,16 @@ export const WORD_ROWS = Object.freeze([
   ["label.timeprecisions.second","To the second","DEC-318: civil-time PRECISIONS",null,false],
   ["label.timeprecisions.edtf","Partly known: a month, a year, or about","DEC-318: civil-time PRECISIONS: an EDTF date",null,false],
   ["screen.find-in.valid.zone","Counted in your team's time zone: {zone}.","DEC-318: R47: the zone is the team's, civil-time R23",null,false],
-  ["label.personfactkinds.office","Holds an office","DEC-318: people: a person fact of office (the line kind)",null,false],
+  ["label.personfactkinds.office","Office","DEC-318: people: a person fact of office (the line kind)",null,false],
   ["label.personfactkinds.name","Name","DEC-318: people PERSON_FACT_KINDS",null,false],
   ["label.personfactkinds.birth","Birth","DEC-318: people PERSON_FACT_KINDS",null,false],
   ["label.personfactkinds.death","Death","DEC-318: people PERSON_FACT_KINDS",null,false],
   ["refusal.BAD_VALIDITY","Those dates can't be recorded: a bound is a date, or left empty when the passage does not state it. Nothing was recorded.","DEC-318: R47: recordpersonfact refuses BAD_VALIDITY",null,false],
-  ["screen.find-in.flow.help","Asked for an actual payment, before it is recorded.","DEC-318: R48 (3): the flow step's fields",null,false],
-  ["findin.fieldneeded","Fill in {field} first: it is needed to record this. Nothing was sent.","DEC-318: R48's control, in capture.fieldneeded's form",null,false],
+  ["screen.find-in.flow.help","Asked only for an actual payment: who paid it, who received it, how much and on what day.","DEC-318: R48 (3): the flow step's fields",null,false],
+  ["findin.fieldneeded","Fill in {field} first: it is needed to record this. Nothing was recorded.","DEC-318: R48's control, in capture.fieldneeded's form",null,false],
   ["screen.find-in.field.payee.short","who received it","DEC-318: findin.fieldneeded {field} for the payee",null,false],
   ["screen.find-in.sheet","A match in a sheet","DEC-318: R48 (8)",null,false],
-  ["screen.find-in.bounds.summary","If the bounds can't be read","DEC-318: R47: the refusal fold",null,false],
+  ["screen.find-in.bounds.summary","When the bounds can't be read","DEC-318: R47: the refusal fold",null,false],
   ["screen.find-in.empty.summary","A required field left empty","DEC-318: R48's control: the refusal fold",null,false],
   ["screen.find-in.recorded.office","{name} holds the office of {office}, from {from}","DEC-318: findin.recorded {fact} for an office fact",null,false],
   ["screen.person.facts.undetermined","{reason} · from {document}","DEC-319: R32 (2): a fact of undetermined validity, marked mark.gap.undetermined; the reason first",null,false],
@@ -5974,7 +5974,6 @@ export const WORD_ROWS = Object.freeze([
   ["wizard.subject.none.summary","With no project to choose","DEC-320: screens-wizards R17: wizard.subject.none.project in a fold",null,false],
   ["screen.document.cite.question.help","Set to the question this document was captured for; this project's questions come first.","DEC-320: screens-inquiry R61",null,false],
   ["screen.document.cite.none.summary","Captured for no question","DEC-320: R61: nothing preselected, the act says to choose",null,false],
-  ["screen.document.cite.choose","Choose the question to cite this in first.","DEC-320: R61: as screen.find-in.questionfirst",null,false],
   ["screen.request.state.offices","offices are known","DEC-320: screens-action R20: the mockup state",null,false],
   ["screen.request.state.nooffice","no office is known yet","DEC-320: R20: the mockup state",null,false],
   ["stake.unreadable.summary","When the stake can't be read","DEC-320: screens-action R21",null,false],
@@ -5992,7 +5991,7 @@ export const WORD_ROWS = Object.freeze([
   ["label.timezones.Pacific/Honolulu","Hawaii Time (Honolulu)","DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form",null,false],
   ["screen.group.timezone.two.summary","When two places give different zones","DEC-322: R45: two active profiles",null,false],
   ["screen.group.timezone.two","Your places give different time zones, so none is named as your team's. Correct each place's zone on its own.","DEC-322: R45: each profile asked once",null,false],
-  ["screen.group.timezone.none.summary","When no time zone is held","DEC-322: R45: no zone, and no UTC drawn",null,false],
+  ["screen.group.timezone.none.summary","When your team's time zone isn't set","DEC-322: R45: no zone, and no UTC drawn",null,false],
   ["find.browse.more","Your team holds more than is shown here.","DEC-322: screens-daily R44: truncated, paged by next",null,false],
   ["find.browse.showmore","Show more","DEC-322: R44: the next page",null,false],
   ["find.browse.nosince.summary","Before your first visit to Home","DEC-322: R44: since null",null,false],
@@ -6001,6 +6000,14 @@ export const WORD_ROWS = Object.freeze([
   ["screen.published.corrections.state.one","one","DEC-322: R34",null,false],
   ["screen.published.corrections.state.some","several","DEC-322: R34",null,false],
   ["screen.published.corrections.state.undetermined","can't be counted","DEC-322: R34: undetermined draws only the docket sentence",null,false],
+  ["caseimport.notrecorded.summary","When they were not recorded","DEC-323: screens-publish R26: case-import.group_fields_none in a fold",null,false],
+  ["caseimport.unreadable.summary","When its stake can't be read","DEC-323: R26: caseimport.stake.unreadable in a fold",null,false],
+  ["caseimport.stake.heading","Whose stake this states","DEC-323: R26: the section over case-import.group_fields_label",null,false],
+  ["screen.review-copy.until.nozone.summary","When your team's time zone isn't set","DEC-323: R27",null,false],
+  ["screen.security.period.bad.summary","Dates in the wrong order","DEC-323: screens-settings R43",null,false],
+  ["screen.group.name.same.summary","Saving the same name","DEC-323: screens-settings R52",null,false],
+  ["project.bar.others.summary","Other bars","DEC-323: screens-inquiry R52: the bar read in words in each case",null,false],
+  ["home.strip.ours_passed.opens","Opens your queue at this item.","DEC-323: screens-daily R50: the strip item",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],

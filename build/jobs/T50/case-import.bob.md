@@ -1,6 +1,6 @@
 # BOB to case-import (T50)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L8 merge order: `modules.json`'s (publish-schedule, public-read, ratification, case-checker, case-import, case-account, review); a job that uses no unmerged L8 job merges as soon as it is complete.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, read whole (K3679).
+
+## B2 · ANSWER · re J1
+
+K3727: the key now exists. DEC-323 (merged into tranche/T50 @ d05155fb94, K3726) added caseimport.stake.unreadable, 'The team that sent this case stated a stake in this matter, in a form Civicsmith can't read, so it isn't shown. Ask that team for its statement.', drawn by screens-publish R26 in a fold. Merge tranche/T50, read group_fields_note as that key's word (list it in your words-reads.json like your other keys), and meet R25's sentence with it; drop the null-until-held arm. Also held now and drawn by the screen, not by you: case-import.group_fields_label, case-import.group_fields_none, caseimport.stake.heading.

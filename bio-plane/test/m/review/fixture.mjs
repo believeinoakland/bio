@@ -66,7 +66,7 @@ CREATE TABLE case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, te
 `;
 
 /** One world: the store, the controlled providers, and helpers that write what they read. */
-export function world({ now = NOW, injectClock = true } = {}) {
+export function world({ now = NOW, injectClock = true, localFacts, combine = () => null } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of statements(RECORD_SCHEMA)) st.db.exec(t);
@@ -158,16 +158,24 @@ export function world({ now = NOW, injectClock = true } = {}) {
     },
   };
   /* ratification's side: the approval reader this module fills at start (its R50; R32). */
-  const ratification = { readers: [], registerApprovalReader(reader) { this.readers.push(reader); return { ok: true }; } };
+  /* `caseConclusionFor` (its R1): the project's conclusions the test sets, `${project}|${inquiry}` → {at, by}. */
+  const concluded = new Map();
+  const ratification = { readers: [], registerApprovalReader(reader) { this.readers.push(reader); return { ok: true }; },
+    caseConclusionFor(project, inquiry, viewer, state) {
+      const c = concluded.get(`${project}|${inquiry}`);
+      return c && ["open", "surfaced", "concluded"].includes(state)
+        ? { state: "concluded", relationship: "project", project, inquiry, at: c.at, by: c.by }
+        : { state: "not_concluded", relationship: "project", project, inquiry, why: "project_has_never_concluded" };
+    } };
   /* case-grammar's side, its own (pure): the comments a signed document's `review_comments:` block carries (its R25)
      and the approval digest (its R26, K2528). */
   const caseGrammar = { reviewCommentsOf, approvalSubjectSha };
   /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
   const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseTensions, caseAuthoring,
-                             caseInputs, caseAccount, ratification, caseGrammar, ...(injectClock ? { now: () => clock.now } : {}) });
+                             caseInputs, caseAccount, ratification, caseGrammar, localFacts, combine, ...(injectClock ? { now: () => clock.now } : {}) });
   let bundles = 0;
   const w = {
-    st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, providers, ratification, caseAuthoring,
+    st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, concluded, providers, ratification, caseAuthoring,
     caseInputs, caseAccount, caseGrammar,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
