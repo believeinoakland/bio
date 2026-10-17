@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12991 words, 900 protected; SHA-256
-   b9d25d71c94a15fc43517b60828e3bf10ec2cf8d9eb515a5fbe597e94b70f045), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (13008 words, 902 protected; SHA-256
+   92a77bab01baa9d087af2e264cb9df4360dc4108ca435d3f78afaebfb34dd7ca), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "b9d25d71c9";
+export const WORDS_COMMIT = "92a77bab01";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5913,6 +5913,19 @@ export const WORD_ROWS = Object.freeze([
   ["screen.question.reject.reason.help","Your reason is kept with the reading, so whoever looks at this question later sees why it was not taken up.","DEC-314: basis-versions R4",null,false],
   ["screen.question.reject.summary","Reject this reading","DEC-314: basis-versions R4: the fold",null,false],
   ["screen.question.reject.go","Reject it","DEC-314: basis-versions R4: the button in the fold",null,false],
+  ["screen.case-editor.account","The account","DEC-315: the case's account: section and field",null,false],
+  ["screen.case-editor.account.help","The case's account: what happened, told in your words, each sentence resting on the evidence the case cites.","DEC-315: the section",null,false],
+  ["screen.case-editor.account.order","Order it","DEC-315: case-account R1: the framing",null,false],
+  ["case-account.framing.time_order","In time order","DEC-315: case-account R1 ACCOUNT_FRAMINGS",null,false],
+  ["case-account.framing.by_question","Question by question","DEC-315: case-account R1",null,false],
+  ["case-account.framing.by_rule","Rule by rule","DEC-315: case-account R1",null,false],
+  ["screen.case-editor.account.flagged","Not supported by what it cites: “{sentence}”","DEC-315: case-account R2: an account_check's flag; the sentence follows",null,false],
+  ["screen.case-editor.account.use","Use what you agree with in your own account below; Civicsmith records that it began as the assistant's draft.","DEC-315: case-account R4, R6: began_as machine_draft",null,false],
+  ["screen.case-editor.account.notasis","Taking the draft as it stands is not offered: you vouch only for words you wrote.","DEC-315: case-account R4: ACCEPT_MUST_REAUTHOR, never offered",null,false],
+  ["refusal.BAD_ACCOUNT_DRAFT","The assistant's draft of the account was empty or longer than 8,000 characters, so it was not kept. Ask for it again.","DEC-315: case-account R1",null,false],
+  ["refusal.BAD_ACCOUNT_FRAMING","An account is ordered in time order, question by question, or rule by rule; that is none of them. Nothing was kept.","DEC-315: case-account R1",null,false],
+  ["refusal.NO_SUCH_ACCOUNT_DRAFT","No draft of this case's account that you can see has that name, so nothing was recorded.","DEC-315: case-account R4",null,false],
+  ["refusal.BAD_ACCOUNT","The account is missing or can't be read, so nothing was recorded. Write it, then save again.","DEC-315: case-account R4",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
@@ -12270,6 +12283,8 @@ export const WORD_ROWS = Object.freeze([
   ["act.statementack.label.case-editor","Acknowledge what it leaves out",null,"Acknowledges what the case does not cover, so readers are told.",true],
   ["act.attribute.label.case-editor","Name a person with the reason",null,"Names a person in the case with the reason it must, under the team's rules for naming people.",true],
   ["act.writinghelp.label.case-editor","Help me write this",null,"Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",true],
+  ["act.accountpropose.label.case-editor","Draft the account with the assistant",null,"Asks the assistant to draft the case's account in the order you chose, from the case's own findings and evidence. Its draft arrives labeled as machine work, with the sentences Civicsmith could not support marked; the account stays the one you write.",true],
+  ["act.accountdrafts.label.case-editor","See its earlier drafts",null,"Lists every draft the assistant made of this case's account, oldest first, each with how it was ordered and what Civicsmith marked.",true],
   ["act.reviewgrant.label.review-copy","Share for review",null,"Shares the draft with named people outside the team until a date. You can stop sharing at any time.",true],
   ["act.reviewrevoke.label.review-copy","Stop sharing",null,"Stops sharing the review copy at once.",true],
   ["act.reviewcomment.label.review-copy","Comment",null,"Comments on the draft, for the case's owner to read.",true],
@@ -12368,6 +12383,8 @@ export const WORD_ROWS = Object.freeze([
   ["act.noteturn.does","Turns your note into something the team shares: an observation, a hunch or a question. The note itself stays private.",null,null,false],
   ["act.noterevise.does","Changes your note. Notes are yours alone, so nothing else changes.",null,null,false],
   ["act.notedelete.does","Deletes your note. If you turned it into something shared, that stays.",null,null,false],
+  ["act.accountpropose.does","Asks the assistant to draft the case's account in the order you chose, from the case's own findings and evidence. Its draft arrives labeled as machine work, with the sentences Civicsmith could not support marked; the account stays the one you write.",null,null,false],
+  ["act.accountdrafts.does","Lists every draft the assistant made of this case's account, oldest first, each with how it was ordered and what Civicsmith marked.",null,null,false],
   ["act.writinghelp.does","Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",null,null,false],
   ["act.translationdraft.does","Asks the assistant to draft translations of Civicsmith's words, labeled as drafts for a speaker to check.",null,null,false],
   ["act.translationadopt.does","Keeps a translation so members reading that language see it. Protected words need a second speaker's check first.",null,null,false],
