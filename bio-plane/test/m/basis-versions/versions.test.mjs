@@ -243,6 +243,7 @@ test("R1, R2, R3, R6, R8, R35: every C-25 row this module's grammar, promotion c
   const bad = (b) => { const id = `INQ-2026-1001-b${++n}`; const r = w.inquiry(id, block(b)); collect(r);
     assert.equal(w.record.head(id), null, "a refused version never lands"); };
   bad(V1({ description: "short" }));
+  bad(ver("x".repeat(65), V1F));   /* R54: a name outside the form */
   bad(merge(V1(), V1({ description: "Another reading with one name." })));
   bad(V1({ relationship: undefined }));
   bad(V1({ relationship: "or" }));
@@ -271,7 +272,7 @@ test("R1, R2, R3, R6, R8, R35: every C-25 row this module's grammar, promotion c
     VERSION_DERIVATION_CYCLE: "C-25.8", VERSION_DERIVED_FROM_UNKNOWN: "C-25.7", VERSION_DISPOSITION_UNATTRIBUTED: "C-25.19",
     VERSION_FROZEN: "C-25.11", VERSION_GROUND_UNASSERTED: "C-25.6", VERSION_HIDDEN_NOT_BOOLEAN: "C-25.13",
     VERSION_LEG_NOT_CITABLE: "C-25.10", VERSION_LEG_SELF: "C-25.14", VERSION_LEG_UNRESOLVED: "C-25.16",
-    VERSION_NAME_NOT_UNIQUE: "C-25.2", VERSION_NO_DESCRIPTION: "C-25.1", VERSION_NO_RELATIONSHIP: "C-25.3",
+    VERSION_NAME_MALFORMED: "C-25.36", VERSION_NAME_NOT_UNIQUE: "C-25.2", VERSION_NO_DESCRIPTION: "C-25.1", VERSION_NO_RELATIONSHIP: "C-25.3",
     VERSION_ORPHAN_ROW: "C-25.15", VERSION_PARTITION_INCOMPLETE: "C-25.5", VERSION_REGROUP_UNATTRIBUTED: "C-25.9",
     VERSION_RELATIONSHIP_DISAGREES: "C-25.4", VERSION_STATE_UNKNOWN: "C-25.12" }, "the C-numbers pinned by name");
 });
