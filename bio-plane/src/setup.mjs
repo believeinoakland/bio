@@ -2460,7 +2460,7 @@ export class InstanceSetup {
 
   /* =====================================================================
    * THE ASSISTANT DRAFTS THE GROUP'S DESCRIPTION (R65; DEC-152, K1818, K1837, K1841 (2)). On "Who your group is", an
-   * administrator answers a few questions and asks for a labelled draft of the group's focus and purpose
+   * administrator answers a few questions and asks for a labeled draft of the group's focus and purpose
    * (`membership` R109). It writes nothing: the words become the group's only when the administrator keeps them through
    * `op=groupdescriptionset`. The draft is built from the answers and, while the suggestions switch of the account that
    * serves the administrator is on, what the group holds, and it passes `wizard-scripts`' no-added-fact check. In T35
