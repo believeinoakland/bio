@@ -243,9 +243,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   const realTimeout = globalThis.setTimeout;
   globalThis.setTimeout = (fn) => realTimeout(fn, 0);
   const acct = new Map(Object.entries(pre));
-  /* `r2: "exists"` an account already holding a bucket; `"late"` one whose bucket appears between the install's look (R32,
+  /* `r2: "exists"` an account already holding the slug's bucket (R64's name); `"late"` one whose bucket appears between the install's look (R32,
      which reads it absent) and its creation (R7, which meets "already exists"): a race, the only way an install meets one. */
-  const buckets = new Set([...(r2 === "exists" || r2 === "late" ? ["bio-captures"] : []), ...preBuckets]);
+  const buckets = new Set([...(r2 === "exists" || r2 === "late" ? [`bio-captures-${slug}`] : []), ...preBuckets]);
   /* What each script was last uploaded with, as the account would hand it back (R33's read-back). `readBack`: "raw" (the
      module itself), "multipart" (the module as the `index.mjs` part), "differ" (other bytes, every time), "differ-once"
      (other bytes on the first read only), "fail" (the read refused). */
@@ -353,7 +353,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     } },
     { m: (u) => u.endsWith("/logpush/jobs"), f: () => logpush === "refused" ? cferr("Authentication error", 403, 10000) : cfok(logpush) },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "PUT", f: (u, init) => {
-      if (refuseSchedules) return cferr("schedules refused <i>by the fake</i>", 500);
+      if (refuseSchedules) return cferr("schedules refused <i>by the fake</i>", 403);
       schedules.set(u.split("/workers/scripts/")[1].split("/")[0], JSON.parse(init.body).map((x) => x.cron));
       return cfok({ schedules: JSON.parse(init.body) });
     } },
@@ -398,7 +398,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       acct.delete(name); classes.delete(name); sources.delete(name); removed.push(name);
       return cfok({});
     } },
-    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => cfok({ buckets: [...buckets].map((name) => ({ name })) }) },
+    { m: (u, mth) => /\/r2\/buckets$/.test(u) && mth === "GET", f: () => cfok({ buckets: (r2 === "late" ? [] : [...buckets]).map((name) => ({ name })) }) },
     { m: (u, mth) => /\/r2\/buckets\/[^/]+\/usage$/.test(u) && mth === "GET", f: (u) => {
       const b = u.split("/r2/buckets/")[1].split("/")[0];
       return buckets.has(b) ? cfok({ objectCount: (bucketObjects.get(b) || []).length }) : cferr("The specified bucket does not exist.", 404, 10006);
@@ -465,7 +465,8 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       : cferr("no subdomain", 404) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "PUT", f: (u, init) => {
       const want = JSON.parse(init.body).subdomain;
-      if (subdomainPut === "fail") return cferr("upstream trouble", 500);
+      if (subdomainPut === "fail") return cferr("not permitted", 403);
+      if (subdomainPut === "down") return cferr("upstream trouble", 500);
       if (taken.includes(want)) return cferr("That subdomain is taken", 409);
       prefix = want; return cfok({ subdomain: want });
     } },

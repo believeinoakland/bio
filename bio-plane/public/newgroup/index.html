@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Start your group's own Civicsmith</title>
-<meta name="description" content="Free software for groups that check whether government keeps its own rules and promises.">
+<title>Start your team's own Civicsmith</title>
+<meta name="description" content="Free software for teams that check whether government keeps its own rules and promises.">
 <style>
 :root{
   --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
@@ -48,25 +48,25 @@ hr{border:0;border-top:1px solid var(--rule);margin:34px 0}
 <body>
 <main>
 <p class="eyebrow">Civicsmith</p>
-<h1>Start your group's own Civicsmith</h1>
+<h1>Start your team's own Civicsmith</h1>
 
-<p class="what">Free software for groups that check whether government keeps its own rules and promises.</p>
-<p class="small who">Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work.</p>
+<p class="what">Free software for teams that check whether government keeps its own rules and promises.</p>
+<p class="small who">Neighborhood and issue groups, newsrooms, professional associations, and public offices checking their own work.</p>
 
 <p class="lede">Every capture is signed, every change kept, nothing quietly
-rewritten. Your group can run its own Civicsmith for the government it watches,
+rewritten. Your team can run its own Civicsmith for the government it watches,
 the agency it holds to account, the fight it is in. Not an account on
-someone else's servers: your group's own, in your own infrastructure, from the
+someone else's servers: your team's own, in your own infrastructure, from the
 first second.</p>
 
 <h2>What you get</h2>
 <ul>
-<li>Your group's own Civicsmith, running in your own Cloudflare account, at
+<li>Your team's own Civicsmith, running in your own Cloudflare account, at
 your own web address.</li>
 <li>Full control: your passwords, your credentials, your data. No one else,
 the publisher of Civicsmith releases included, holds a key to any of it or can
 see inside it.</li>
-<li>An append-only history, so what your group has established can be shown
+<li>An append-only history, so what your team has established can be shown
 and cannot be silently altered, by anyone, including you.</li>
 </ul>
 
@@ -75,21 +75,20 @@ and cannot be silently altered, by anyone, including you.</li>
 <li><b>A Cloudflare account.</b> An email address and a couple of
 minutes. <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create
 one here</a> if you do not have one.</li>
-<li><b>The Workers Paid plan,</b> $5 a month from Cloudflare. Your group's Civicsmith reads
+<li><b>The Workers Paid plan,</b> $5 a month from Cloudflare. Your team's Civicsmith reads
 documents and assembles evidence, and the free plan's processing allowance is
 too small for that work.</li>
 <li><b>A payment method on the account.</b> Cloudflare requires one before it
-turns on the file storage your group's Civicsmith keeps its evidence in. The installer
+turns on the file storage your team's Civicsmith keeps its evidence in. The installer
 checks for the plan and the storage before it creates anything, and stops,
 saying which is missing, if either is.</li>
-<li><b>The Workers Containers permission,</b> which the setup asks for, for
-two things that run in containers. It installs the built-in file scanner and
-safe view: without it, files are kept and shown but not scanned, and a
-high-risk file opens only in its safe view once one can be made. And it serves
-the assistant through a member's own Claude subscription: without it, the
-assistant is used only with an API key: a member's own, or your group's.
-Everything else installs either way. The assistant is optional, and the
-installer takes no Claude credential of any kind.</li>
+<li><b>The Workers Containers permission,</b> which the setup asks for. It
+installs the built-in file scanner and safe view: without it, files are kept and
+shown but not scanned, and a high-risk file opens only in its safe view once one
+can be made. Everything else installs either way.</li>
+<li><b>For the assistant, a Claude plan with cloud sessions,</b> which an
+organization can turn off. The assistant is optional, and the installer takes no
+Claude credential of any kind.</li>
 <li><b>About twenty minutes,</b> in a browser. No terminal, no code, nothing
 to download.</li>
 </ul>
@@ -100,11 +99,11 @@ naming exactly what it may do in your account: install the software, set
 up its storage, and set up its containers (the file scanner and the assistant's). You approve it on Cloudflare's own page, and you can revoke
 it any time from your dashboard. That permission passes through our
 assistant for the seconds the installation takes, is stored nowhere, and is
-never seen by a person. After setup, nothing your group does routes through
+never seen by a person. After setup, nothing your team does routes through
 the installer, or its publisher, at all.</p>
 <p class="small">Prefer that nothing pass through the installer even once? The
 manual path is documented and permanently supported, using only the Cloudflare
-dashboard. It exists so your group could stand its Civicsmith up even if the
+dashboard. It exists so your team could stand its Civicsmith up even if the
 publisher of Civicsmith releases disappeared tomorrow. Find it in the project
 documentation.</p>
 
@@ -119,9 +118,9 @@ name in your address bar the whole time. We send you there with a button
 rather than a silent redirect, so you always know where you are.</p>
 </div>
 
-<p><a class="btn" href="https://newgroup.believeinoakland.workers.dev/">Set up my group's Civicsmith</a></p>
+<p><a class="btn" href="https://newgroup.believeinoakland.workers.dev/">Set up my team's Civicsmith</a></p>
 
-<p class="small">Already running your group's Civicsmith and want the latest software? That
+<p class="small">Already running your team's Civicsmith and want the latest software? That
 is a separate page:
 <span class="mono">newgroup.believeinoakland.workers.dev/update</span>.
 Updates never touch your passwords or your record.</p>

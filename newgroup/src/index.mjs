@@ -29,7 +29,7 @@ import { WIZARD_HTML, updateHtml, PRODUCT, publisherFooter, PROFILE_CHOICES, ASS
 import { word } from "./words.mjs";
 import { cf as cfCall, Session, patiently, sleep, WAIT_BOUND_MINUTES } from "./cfx.mjs";
 /* R62–R65, R69, R70: what the account holds and the names a copy's parts carry. */
-import { namesFor, schemeOf, SLUG_SCHEME, LEGACY_SCHEME, MARK, allCopies, inventory, freeName, readCopyFacts, countsViaApi, resourcesOf,
+import { namesFor, schemeOf, SLUG_SCHEME, LEGACY_SCHEME, MARK, allCopies, inventory, freeName, readCopyFacts, describeCopy, countsViaApi, resourcesOf,
   deleteResources, takeLock, touchLock, dropLock, listScripts, listBuckets, listNamespaces, listApps, bindingsOf } from "./account.mjs";
 /* R53 (DEC-122 (3); K3100): interface-assets' stylesheet and faces, carried in this bundle and served at ASSET_PREFIX. */
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
@@ -2057,7 +2057,7 @@ async function installRun(emit0, code, saved, guard) {
         : "Whether a log on your Cloudflare account records who opens which file: undetermined; the step above says how to check it yourself." },
   ];
   /* R61: every part and its version, from the one release's own statement. */
-  const parts = [{ name: "plane", version: release.version }, ...((fleet?.done || []).map((m) => ({ name: m, version: String(release.man?.version ?? release.version) })))];
+  const parts = [{ name: "civicsmith", version: release.version }, ...((fleet?.done || []).map((m) => ({ name: m, version: String(release.man?.version ?? release.version) })))];
   /* R69 (K3747): the mark written last. Without it a later run takes this copy for one this installer did not finish. */
   let markLag = null;
   try { await putSecret(token, acct.id, slug, MARK, release.version); }
