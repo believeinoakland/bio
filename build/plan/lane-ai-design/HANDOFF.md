@@ -32,3 +32,10 @@ Record: `NOTES.md` §Q2 (per provider: page, quote as relayed, date read; OPEN i
 **Needs a person:** the blocked terms pages (OpenAI, xAI) and counsel's read of the "app holds the customer's key" question; BOB to say whether to put them to Bob.
 
 **Next:** Q3, the boundary (one neutral interface, one adapter per AI, cascade); first read K1364 and its named rulings, and the Capability Ladders "Labelled drafts" row, as BOB directed.
+
+## A3 · 2026-10-17 · Requirements for multi-AI support taken in
+Record: `REQUIREMENTS.md` (the direction kept verbatim in §1; made specific as AIR1–AIR10, each with how it is checked and what today's design does; §3 research gaps; §4 questions for Bob; §5 effect on Q3–Q5). Nothing decided; no product code touched.
+
+**For BOB.** (1) These need Bob's ruling as requirements (P17); §4 has the four questions with a recommendation each (adopt AIR1–10; personal subscriptions for a member's own use only where terms allow, with scope enforced; weaker AIs allowed and named; a dated, release-carried provider catalogue). (2) If the direction came from Bob in his own words, say so, so the verbatim text in §1 can be recorded in `build/rulings.md` as his (K1762: his words govern).
+
+**Plan change (the lane's own).** Before Q3, run **Q2b**: plans and their terms per provider, session/caching facilities, model-by-model controls, signup and partner programs (`REQUIREMENTS.md` §3). Workers sonnet/medium. Q3 then designs a provider-neutral interface plus a plan-and-capability catalogue. Tell me if you prefer Q3 first.
