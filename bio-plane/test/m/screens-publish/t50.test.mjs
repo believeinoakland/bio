@@ -359,6 +359,11 @@ test("R35 the account's refusals are drawn by key, refusal.BAD_ACCOUNT in a fold
   const q = await open(`/app/case-editor/${P}`, { plane: { ...reach, accountpropose: refusedIn("BAD_ACCOUNT_FRAMING", "") } });
   await press(q, "accountpropose", { reason: "draft" });
   assert.ok(drew(q, "refusal.BAD_ACCOUNT_FRAMING"));
+  const d = await open(`/app/case-editor/${P}`, { plane: { ...reach, accountpropose: refusedIn("BAD_ACCOUNT_DRAFT", ""), accountdrafts: refusedIn("NO_SUCH_ACCOUNT_DRAFT", "") } });
+  await press(d, "accountpropose", { reason: "draft" });
+  assert.ok(drew(d, "refusal.BAD_ACCOUNT_DRAFT"));
+  await press(d, "accountdrafts", { reason: "list" });
+  assert.ok(drew(d, "refusal.NO_SUCH_ACCOUNT_DRAFT"));
 });
 
 /* ---------- R36: publishedcase read asynchronously ---------- */
