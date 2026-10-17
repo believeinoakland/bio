@@ -626,7 +626,7 @@
   },
   {
    "key": "screen.install.cf.containers",
-   "en": "Running its containers: the built-in file scanner, the safe view for risky files, and signing in with a Claude subscription. Without them, files are kept and shown but not scanned, and a high-risk file can't be opened.",
+   "en": "Running its containers: the built-in file scanner and the safe view for risky files. Without them, files are kept and shown but not scanned, and a high-risk file can't be opened.",
    "protected": true,
    "note": "DEC-259"
   },
@@ -703,6 +703,12 @@
    "note": "DEC-259"
   },
   {
+   "key": "screen.install.progress.assistant",
+   "en": "Checking the assistant's connection answers this release",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
    "key": "screen.install.progress.answers",
    "en": "Checking it answers, and that nothing keeps a log of who opens which file",
    "protected": false,
@@ -728,7 +734,7 @@
   },
   {
    "key": "screen.install.stopped.others",
-   "en": "Other steps stop the same way and say what to do: no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file. A stop before setup has begun creates nothing.",
+   "en": "Other steps stop the same way and say what to do: no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file; the assistant's connection answering an older release. A stop before setup has begun creates nothing.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -753,6 +759,12 @@
   {
    "key": "screen.install.ready.nolog",
    "en": "No log records who opens which file",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.install.ready.assistant",
+   "en": "The assistant's connection answers this release",
    "protected": false,
    "note": "DEC-259"
   },
@@ -6635,6 +6647,18 @@
    "en": "the chrome region was not recorded",
    "protected": false,
    "note": "DEC-305: capture R29: one page's chrome observation with no region named"
+  },
+  {
+   "key": "refusal.SIGNIN_EXPIRED",
+   "en": "The Claude sign-in your team's assistant uses has expired, so the assistant can't work until it is connected again. An administrator can connect again under Settings, The assistant. Nothing was sent.",
+   "protected": false,
+   "note": "DEC-307: screens-settings R41, agent-worker R84"
+  },
+  {
+   "key": "refusal.PUBLISH_AT_NO_ZONE",
+   "en": "Your team's time zone isn't set, and a publishing time is counted in it, so only \"Sign and publish now\" is offered. An administrator can set it under Settings, Your team.",
+   "protected": false,
+   "note": "DEC-307: ratification R44, publish-schedule R1: only \"Publish now\" is offered"
   }
  ],
  "rewrite": {

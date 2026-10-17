@@ -17,7 +17,6 @@ const SCREEN_REFS = {
     ["lakeshore-tenants",null,"<b>lakeshore-tenants</b> · the short name typed here · becomes lakeshore-tenants.rosa-m.workers.dev and the label on every signature","This exact label is what every case your team signs will carry."],
     ["Signed release verified",null,"<b>Signed release</b> · the Civicsmith release you installed · its signature checked before anything ran","Confirms the software in your account is the release as published, unaltered."],
     ["Record store ready",null,"<b>Record store</b> · where your team's records are kept · inside your own Cloudflare account, nowhere else","Your team's work is stored here from the moment you claim it."],
-    ["The assistant's container",null,"<b>The assistant's container</b> · the part of your Cloudflare account that runs the optional assistant · not yet allowed","Only a team that will use the assistant needs it; setting up works without it."],
     ["one-time password",null,"<b>One-time password</b> · shown once, on this page · spent when you claim the team in the next part","The only way to become the first administrator; if lost before claiming, only the Cloudflare account can set a new one."],
     ["first administrator","setup","<b>First administrator</b> · the person who claims the team with the one-time password · invites members and can add administrators","That is you, in the next part; a second administrator later means the team never depends on one person."]
   ],
