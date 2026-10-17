@@ -1,4 +1,4 @@
-/* site's generator (R9, R11, R12; tests: site/test/site.test.mjs, "R9", "R11", "R12"). Run from the repository root:
+/* site's generator (R9, R11, R12, R14; tests: site/test/site.test.mjs, "R9", "R11", "R12"). Run from the repository root:
  *   node site/build.mjs            writes site/src/pages.mjs
  *   node site/build.mjs --check    exits non-zero, naming the first difference, when site/src/pages.mjs is stale
  * It is not imported by the Worker, so it is not bundled. It reads the design's `SCR.site` at SITE_COMMIT from git
@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { word } from "../bio-plane/src/setup-words/index.mjs";
 
-export const SITE_COMMIT = "af89fd5931";
+export const SITE_COMMIT = "7be06eb4cb";
 const ROOT = new URL("../", import.meta.url);
 const SCREENS = "docs/development/ux-substrate/screens/";
 const OUT = new URL("src/pages.mjs", import.meta.url);
@@ -33,7 +33,7 @@ export const KEYS = Object.freeze({
   "screen.site.start.lede": [], "screen.site.fit.head": [], "screen.site.fit.what": [],
   "screen.site.need.head": [], "screen.site.need.cloudflare": [], "screen.site.need.time": [], "screen.site.need.nothing": [],
   "screen.site.hold.head": [], "screen.site.hold.what": [],
-  "screen.site.steps.head": [], "screen.site.steps.name": ["places"], "screen.site.steps.permission": [], "screen.site.steps.install": [],
+  "screen.site.steps.head": [], "screen.site.steps.name": ["places"], "screen.site.steps.name.noplace": [], "screen.site.steps.permission": [], "screen.site.steps.install": [],
   "screen.site.steps.claim": [], "screen.site.steps.setup": [], "screen.site.steps.invite": [],
   "screen.site.costs.head": [], "screen.site.costs.what": [], "screen.site.create": [], "screen.site.back": [],
   "screen.site.groups.lede": [], "screen.site.groups.listing": [], "screen.site.groups.none": [], "site.groups.rule": [], "site.groups.rule.head": [], "site.groups.rule.text": [],
@@ -126,7 +126,12 @@ function matchText(text, pats) {
   return null;
 }
 
-// ---- the places ready now: the released jurisdictions profiles, read as data (R11) ----
+// ---- the places ready now: the released jurisdictions profiles, read as data (R11, R14) ----
+
+/* Joined as DEC-247 (3) joins them: commas, "and" before the last, no serial comma; "" when none is ready (R14). */
+export function joinPlaces(names) {
+  return names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
 
 export function placesReady(dir = new URL("jurisdictions/profiles/", ROOT)) {
   const names = [];
@@ -136,8 +141,7 @@ export function placesReady(dir = new URL("jurisdictions/profiles/", ROOT)) {
     if (!name || !test) throw new Error(`site build: ${f} has no top-level name or test`);
     if (test[1] === "false") names.push(JSON.parse(`"${name[1]}"`));
   }
-  if (!names.length) throw new Error("site build: no released jurisdiction profile");
-  return names.join(", ");
+  return joinPlaces(names);
 }
 
 // ---- the transform ----
@@ -147,6 +151,9 @@ const DROP_CLASS = new Set(["mk-data", "st"]);
 
 export function generate({ commit = SITE_COMMIT, places = placesReady() } = {}) {
   const pats = patterns();
+  /* R14: with no place ready, the places step is the key that says so, never "Places ready now:" with nothing after it. */
+  const NOPLACE = "screen.site.steps.name.noplace";
+  const keyed = (m) => (m && !places ? m.map((k) => (k.key === "screen.site.steps.name" ? { key: NOPLACE, en: norm(word(NOPLACE)) } : k)) : m);
   const tree = parse(designMain(commit));
   const unkeyed = [];
   const fills = { example: words("screen.site.uses.ask.example"), places: esc(places), address: "{{stewards}}" };
@@ -163,7 +170,7 @@ export function generate({ commit = SITE_COMMIT, places = placesReady() } = {}) 
     return s;
   };
   const sentence = (text) => {
-    const m = matchText(norm(text), pats);
+    const m = keyed(matchText(norm(text), pats));
     if (!m) { unkeyed.push(norm(text)); return ""; }
     return m.map((k) => words(k.key, fills)).join(" ");
   };
@@ -217,7 +224,7 @@ export function generate({ commit = SITE_COMMIT, places = placesReady() } = {}) 
     const text = norm(textOf(n));
     const icons = [];
     for (const k of n.kids) { if (typeof k !== "string" && !norm(textOf(k))) icons.push(k); else if (typeof k !== "string" || norm(k)) break; }
-    const m = text && n.kids.some((k) => typeof k === "string" && norm(k)) ? matchText(text, pats) : null;
+    const m = text && n.kids.some((k) => typeof k === "string" && norm(k)) ? keyed(matchText(text, pats)) : null;
     let inner;
     if (m) inner = icons.map(draw).join("") + (emphasised(n.kids.slice(icons.length), m) ?? leadBold(n.kids.slice(icons.length), m));
     else inner = n.kids.map(draw).join("");

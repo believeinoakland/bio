@@ -1,5 +1,5 @@
 /* machinery-producers — the feed's conditions about our own machinery (requirements:
- * `build/requirements/machinery-producers.md`, R1–R12). Split from `queue-producers` by copy (K617, K624 (1), K1850; seam read
+ * `build/requirements/machinery-producers.md`, R1–R15). Split from `queue-producers` by copy (K617, K624 (1), K1850; seam read
  * `build/extraction/queue-producers-split.md`), with no change of meaning: its R3, R22, R26 and R27 are this module's R2–R5.
  * Each producer derives, on read and writing nothing, the CONDITIONs one provider's facts earn for a viewer, naming each
  * item's subjects and home subjects for `queue-producers` to answer in `feedItems` (its R8) and for `queue` to home,
@@ -35,6 +35,7 @@ import { linkSweepOf, SWEEP_CONDITION_KINDS } from "../link-sweep/index.mjs";
 import { actionsOf, zoneOf } from "../actions/index.mjs";
 import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
 import { word } from "../setup-words/index.mjs";
+import { runPrincipalOf } from "../run-rules/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
@@ -158,8 +159,7 @@ export class MachineryProducers {
     } catch { return null; }
   }
 
-  static ZONE_UNDETERMINED = "no time zone is held for it by your group's Civicsmith, so the local day it is counted from is "
-    + "undetermined; it is never counted on the UTC day";
+  static ZONE_UNDETERMINED = word("machinery-producers.zone_undetermined");
 
   /** R10: an item's `age` from a day or an instant, counted on local days in `zone`: a day ages from its first local
    *  instant, an instant from itself; `days` the whole local days since. With no zone held it is undetermined
@@ -343,7 +343,7 @@ export class MachineryProducers {
         case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
         subject: { kind: "host", id: null, host: r.host,
                    bundles: subj.ids.slice(0, MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX) },
-        summary: `our own pacing is holding ${r.host}: captures from it are PACED, not broken`,
+        summary: word("machinery-producers.summary.pacing_holding_captures", { host: r.host }),
         detail: `the per-host governor is in cool-off for ${r.host} for another `
               + `${Math.max(0, r.cooloff_until - now)}ms after `
               + `${r.refusals} consecutive refusal${r.refusals === 1 ? "" : "s"}`
@@ -423,7 +423,7 @@ export class MachineryProducers {
         subject: bundleId
           ? { kind: "bundle", id: bundleId, capture_sha: r.primary_sha, locator: r.locator }
           : { kind: "capture", id: null, capture_sha: r.primary_sha, locator: r.locator },
-        summary: `the capture of ${r.locator} did not finish: support material is still outstanding`,
+        summary: word("machinery-producers.summary.capture_did_finish", { locator: r.locator }),
         detail: "the primary document is captured and its bytes are in the store; the platform's "
               + "subrequest ceiling was reached before its support material was fetched, and the "
               + `remainder is parked for another tick (tick ${r.ticks}, expires ${r.expires}).`,
@@ -463,21 +463,37 @@ export class MachineryProducers {
     return rows.filter((r) => visible(r.bundle_id) !== null).map((r) => ({ capture_sha: r.capture_sha, note: ACQUIRE_GRADE_NOTE }));
   }
 
-  /** R3: the detail's sentence carrying the notes, the same words for each capture, said once with the captures named. */
+  /** R3, R15: the detail's sentence carrying the notes, read by key (`queue.capture-completed-unattended.gradenote`) once
+   *  for each distinct note, each led by a space; the captures a note is of are on the basis's `grade_notes`. */
   static #gradeNoteSentence(notes) {
-    if (!notes.length) return "";
-    const byNote = new Map();
-    for (const n of notes) byNote.set(n.note, [...(byNote.get(n.note) || []), n.capture_sha]);
-    return [...byNote].map(([note, shas]) => ` The grade note of ${shas.length === 1 ? "the capture" : "the captures"} it `
-      + `names (${shas.map((x) => x.slice(0, 12)).join(", ")}), as a member present would have read it: ${note}`).join("");
+    return [...new Set(notes.map((n) => n.note))]
+      .map((note) => ` ${word("queue.capture-completed-unattended.gradenote", { note })}`).join("");
   }
 
   /** R13 (T49; DEC-272): what `{member}` says of the person who started a capture: the handle the founder or a member holds,
    *  or, with none held (a credential that is no member, or a member with no handle), the word for an unnamed starter. The
    *  id is never said: a member's id is their record's key, not their name. */
   #starterOf(author) {
-    const handle = author === Membership.ROOT_ADMIN ? this.#membership.founderHandle() : this.#membership.memberFacts(author)?.handle;
-    return handle || word("queue.capture-completed-unattended.who");
+    return this.#handleOf(author) || word("queue.capture-completed-unattended.who");
+  }
+
+  /** The handle a member or the founder holds, else null (a member with none, or an id that is no member): never the id. */
+  #handleOf(memberId) {
+    if (typeof memberId !== "string" || !memberId) return null;
+    const handle = memberId === Membership.ROOT_ADMIN ? this.#membership.founderHandle() : this.#membership.memberFacts(memberId)?.handle;
+    return typeof handle === "string" && handle.trim() ? handle : null;
+  }
+
+  /** R15: the member a completed capture request was made for, by handle, else null. A member's own request names her in
+   *  `at_the_request_of.member` (capture-requests R56); a run's names the member in the attribution's `principals.plane`,
+   *  read through `runPrincipalOf` (a credential that member minted is the member's; any other principal is nobody). */
+  #requesterOf(attribution) {
+    const at = attribution && attribution.at_the_request_of;
+    if (!at || typeof at !== "object") return null;
+    if (typeof at.member === "string" && at.member) return this.#handleOf(at.member);
+    if (at.run === undefined || at.run === null) return null;
+    const plane = runPrincipalOf(attribution.principals && attribution.principals.plane);
+    return plane.startsWith("member:") ? this.#handleOf(plane.slice("member:".length)) : null;
   }
 
   /** `capture-completed-unattended` (D-61, closed by REC-2).
@@ -621,16 +637,25 @@ export class MachineryProducers {
       if (!attribution.ok) continue;
       const capturedMs = Date.parse(r.captured_at);
       const notes = this.#gradeNotes({ sha: r.capture_sha }, visible);
+      /* R15 (T50; N1143; DEC-274): told by key, composing no English. {member} the requester's handle, {title} the title of
+         the document the capture is registered under, or the untitled word when none is held or the viewer may not see it. */
+      const requester = this.#requesterOf(attribution);
+      const home = typeof r.capture_sha === "string" && r.capture_sha
+        ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, r.capture_sha.toLowerCase()) : null;
+      const info = home && visible(home.bundle_id) !== null ? this.#record.bundleInfo(home.bundle_id) : null;
+      const title = info && typeof info.title === "string" && info.title.trim() ? info.title : word("screen.held.untitled");
+      const fills = requester ? { member: requester, title } : { title };
+      const k = "queue.capture-completed-unattended.request";
+      const byRun = attribution.at_the_request_of && attribution.at_the_request_of.run !== undefined
+        && attribution.at_the_request_of.run !== null;
       out.push({
         id: `CONDITION::capture-completed-unattended::${r.request}`,
         class: "CONDITION",
         kind: "capture-completed-unattended",
         case: this.#conditionHomes([r.target], viewer),
         subject: { kind: "capture_request", id: r.request },
-        summary: `${r.address} was captured by the daemon at the investigative session's request`,
-        detail: `${attribution.statement}. The capture is an entry of a document to the store and NOT `
-              + "an entry of that document into the leg of a claim: it lands at 'collected' and never "
-              + "higher, and nothing about the record's conclusions has moved."
+        summary: word(requester ? `${k}.summary` : `${k}.summary.unnamed`, fills),
+        detail: word(!requester ? `${k}.detail.unnamed` : byRun ? `${k}.detail.assistant` : `${k}.detail`, fills)
               + MachineryProducers.#gradeNoteSentence(notes),
         basis: { source: "capture_requests", request: r.request, run: r.run, inquiry: r.target,
                  address: r.address, host: r.host, purpose: r.purpose, ua_mode: r.ua_mode,
@@ -711,7 +736,7 @@ export class MachineryProducers {
         case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
         subject: { kind: "address", id: null, address,
                    bundles: subj.ids.slice(0, MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX) },
-        summary: `${address} has stopped answering often enough that its archived copy may be fetched instead`,
+        summary: word("machinery-producers.summary.stopped_answering_often", { address }),
         detail: "our own attempts at this address have failed enough times, for long enough, that the archive "
               + "fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about "
               + "the publisher.",
@@ -751,9 +776,8 @@ export class MachineryProducers {
         kind: "monitoring-recheck-due",
         case: this.#conditionHomes([r.bundle], viewer),
         subject: { kind: "address", id: r.bundle, address: r.address ?? null },
-        summary: overdue
-          ? `${r.address || r.bundle} is overdue for its check by more than its own interval`
-          : `${r.address || r.bundle} is monitored and has no check scheduled`,
+        summary: word(overdue ? "machinery-producers.summary.overdue_check_interval" : "machinery-producers.summary.monitored_check_scheduled",
+          { bundle: r.address || r.bundle }),
         detail: overdue
           ? `it was due at ${r.due_at} and is checked every ${Math.round(r.interval_ms / 3600000)} hours; the check `
             + "has not run since. Nothing about the source is claimed here."
@@ -819,7 +843,7 @@ export class MachineryProducers {
          reason is the code's own family's sentence; a code no family catalogues says so. */
       const row = renderHoldReason(r.code);
       const words = row.translation
-        || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
+        || word("machinery-producers.text.last_thing_recorded", { code: r.code || "no code" });
       const released = r.state === "expired";
       const sinceMs = Date.parse(r.requested_at);
       out.push({
@@ -829,9 +853,8 @@ export class MachineryProducers {
         case: this.#conditionHomes([r.target], viewer),
         subject: { kind: "capture_request", id: r.request },
         summary: released
-          ? `the render of ${r.address} was never performed: it was held until its request expired, and what `
-            + "the page showed is UNDETERMINED"
-          : `a render of ${r.address} is waiting: ${words}`,
+          ? word("machinery-producers.summary.render_performed_held", { address: r.address })
+          : word("machinery-producers.summary.render_waiting", { address: r.address, words }),
         detail: released
           ? `${words} The request expired at ${r.expires} and was released; nothing was filed in the `
             + "render's place, and no conclusion about the page can rest on it."
@@ -897,33 +920,33 @@ export class MachineryProducers {
   static NOTICE_LAPSE_NEAR_DAYS = 7;
   static NOTICE_CLOSED_DAYS = 30;
   /** R5: the act that answers a notice (network-notices R6, R11): a new revision, or a stop with an optional handoff. */
-  static NOTICE_REVISE = Object.freeze({ id: "noticeprepare", label: "Revise this notice, or stop it", weight: "single" });
-  static NOTICE_STOP = Object.freeze({ id: "noticeprepare", label: "Stop this notice, with a handoff if you want one", weight: "single" });
+  static NOTICE_REVISE = Object.freeze({ id: "noticeprepare", label: word("machinery-producers.label.revise_notice_stop"), weight: "single" });
+  static NOTICE_STOP = Object.freeze({ id: "noticeprepare", label: word("machinery-producers.label.stop_notice_handoff"), weight: "single" });
 
   /** R4's sentences, one per kind, each saying what the condition's `detail` gives and nothing more. */
   static #sweepWords(kind, d, title) {
-    const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : "an undetermined number of");
+    const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : word("machinery-producers.text.undetermined_number"));
     const list = (xs, f) => (Array.isArray(xs) && xs.length ? xs.map(f).join("; ") : "none named");
     switch (kind) {
       case "sweep-held-backlog":
-        return { summary: `the sweep ${title} is held: its captures awaiting review have reached its limit`,
+        return { summary: word("machinery-producers.summary.sweep_held_captures", { title }),
                  detail: `${n(d.backlog)} of its captures are still awaiting review, at or over its backlog limit of `
                        + `${n(d.limit)}. It runs again when members review or set aside enough of them.` };
       case "sweep-yield-anomaly":
-        return { summary: `the sweep ${title} filed an unusual number of documents on its last run`,
+        return { summary: word("machinery-producers.summary.sweep_filed_unusual", { title }),
                  detail: `its last run filed ${n(d.filed)} against a median of ${n(d.median)} over its recent runs. `
                        + "Nothing else changed: the run's note says only that the number was unusual." };
       case "sweep-seed-unreachable":
-        return { summary: `a listing page the sweep ${title} reads failed on its last run`,
+        return { summary: word("machinery-producers.summary.listing_page_sweep", { title }),
                  detail: `on its last run these could not be fetched: ${list(d.seeds, (x) => String(x && x.seed))}. `
                        + "The sweep's other pages were read; each one's reachability is on the basis." };
       case "sweep-redirect-out-of-scope":
-        return { summary: `the sweep ${title} met a redirect outside its sources on its last run`,
+        return { summary: word("machinery-producers.summary.sweep_met_redirect", { title }),
                  detail: `on its last run these addresses redirected outside the sweep's sources, and nothing at the target `
                        + `was fetched: ${list(d.redirects, (x) => (x && typeof x === "object"
                          ? `${x.address ?? "an address"} to ${x.target ?? "an undetermined target"}` : String(x)))}.` };
       default:
-        return { summary: `the sweep ${title} has filed nothing on its last ${n(d.runs)} runs`,
+        return { summary: word("machinery-producers.summary.sweep_filed_last", { title, runs: n(d.runs) }),
                  detail: `its last ${n(d.runs)} runs each filed nothing, and it is not held. Its seeds or its match may `
                        + "no longer find what it was set up to find." };
     }
@@ -1024,8 +1047,7 @@ export class MachineryProducers {
                    detail: "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never "
                          + "restated. It is told to the project's owners and to nobody else, and it leaves on the first "
                          + "read after it stops holding." },
-          age: MachineryProducers.#localAge(since, zone, now, "no_notice_instant",
-            "the notice carries no instant this producer can read for when this began"),
+          age: MachineryProducers.#localAge(since, zone, now, "no_notice_instant", word("machinery-producers.age.notice_carries_instant")),
           assignee: null,
           assignee_role: null,
           recipients: [...owners],
@@ -1046,8 +1068,8 @@ export class MachineryProducers {
               ? instant(a) > missMs : String(a.as_of || "").slice(0, 7) > miss.month));
             if (!since)
               item("notice-attestation-missed", n, { since: miss.at ?? null,
-                summary: `the monthly attestation of ${title}'s working-on notice for ${miss.month} was not issued`,
-                detail: "no instance key was bound when it fell due, so your group's Civicsmith could not sign the notice's activity "
+                summary: word("machinery-producers.summary.monthly_attestation_working", { title, month: miss.month }),
+                detail: "no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity "
                       + "level. The notice shows its last attested level with that level's date until an attestation "
                       + "is issued; an administrator binds the key.",
                 facts: { month: miss.month, missed_at: miss.at ?? null, missed: misses.length },
@@ -1058,7 +1080,7 @@ export class MachineryProducers {
           const reached = today || MachineryProducers.#today(now, "Etc/GMT-14");
           if (opens && reached && opens <= reached) {
             item("notice-lapse-near", n, { since: opens,
-              summary: `${title}'s working-on notice will lapse on ${n.lapse_date.slice(0, 10)}`,
+              summary: word("machinery-producers.summary.working_notice_will", { title, lapse_date: n.lapse_date.slice(0, 10) }),
               detail: "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no "
                     + "revision lapses it. A revision or a stop answers this; so does the lapse itself.",
               facts: { lapse_date: n.lapse_date.slice(0, 10), window_days: MachineryProducers.NOTICE_LAPSE_NEAR_DAYS,
@@ -1075,9 +1097,9 @@ export class MachineryProducers {
             : !Number.isFinite(closedMs) || now - closedMs < MachineryProducers.NOTICE_CLOSED_DAYS * DAY;
           if (stands) {
             item("notice-project-closed", n, { since,
-              summary: `${title} closed while its working-on notice was open`,
-              detail: "your group's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice "
-                    + "with a handoff naming another group or an open lead. This stands for 30 days from the closing, "
+              summary: word("machinery-producers.summary.closed_while_working", { title }),
+              detail: "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice "
+                    + "with a handoff naming another team or an open lead. This stands for 30 days from the closing, "
                     + "or until an owner stops the notice.",
               facts: { closed_at: since, window_days: MachineryProducers.NOTICE_CLOSED_DAYS },
               options: [MachineryProducers.NOTICE_STOP] });
@@ -1169,17 +1191,15 @@ export class MachineryProducers {
       kind: "update-ready",
       case: { ...UNGROUPED },
       subject: { kind: "release", id: null, version },
-      summary: security
-        ? `a new release of your group's Civicsmith, ${version}, with a security fix, is ready to install`
-        : `a new release of your group's Civicsmith, ${version}, is ready to install`,
+      summary: word(security ? "machinery-producers.summary.new_release_group" : "machinery-producers.summary.new_release_group_civicsmith", { version }),
       detail: { version, date: r.date, security },
       basis: { source: "instance-setup.updateNoticeState", version, date: r.date, security, found_at: r.found_at,
                running: st.running.version,
-               detail: "the to-do is derived on read from the signed notice your group's Civicsmith already holds. It goes to "
+               detail: "the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to "
                      + "every administrator and leaves every administrator's queue when one of them updates, puts it aside "
-                     + "until a later day or skips it, or when your group is running that release or a newer one." },
+                     + "until a later day or skips it, or when your team is running that release or a newer one." },
       age: MachineryProducers.#localAge(r.found_at, this.#instanceZone(), now, "no_release_instant",
-        "the notice carries no instant this producer can read for when the release was found"),
+        word("machinery-producers.age.notice_carries_instant_producer")),
       assignee: null,
       assignee_role: "admin",
       recipients: [...admins],

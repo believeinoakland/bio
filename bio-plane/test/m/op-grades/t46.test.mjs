@@ -90,12 +90,12 @@ test("R33: joindoors and clockproposals are reads, each `read: …` writing noth
   assert.equal(gradeOf("clockadopt"), "undetermined");
 });
 
-test("R33: textcheck writes nothing and takes no rung; its sentence a draft naming the four readings, a labelled proposal "
+test("R33: textcheck writes nothing and takes no rung; its sentence a draft naming the four readings, a labeled proposal "
    + "for the member, never rewriting the text", () => {
   assert.equal(gradeOf("textcheck"), null);
   assert.ok(isDraft("textcheck"));
   for (const re of [/sentences of a prepared outward text/, /an assertion, a position, an own-benefit ask or a staff member named/,
-    /labelled proposal for the member/, /never rewrites the text/]) assert.match(NON_ACTS.textcheck, re);
+    /labeled proposal for the member/, /never rewrites the text/]) assert.match(NON_ACTS.textcheck, re);
   assert.ok(!Object.hasOwn(MACHINE_REFUSALS, "textcheck"));
   /* negative control */
   assert.ok(!isRead("textcheck"));

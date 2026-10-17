@@ -158,6 +158,7 @@ import * as WIZARD_SCRIPTS from "../wizard-scripts/checks.mjs";
 import * as TASKS from "../tasks/checks.mjs";
 import * as QUEUE from "../queue/checks.mjs";
 import * as ADMISSION from "../admission/checks.mjs";
+import * as TRANSLATIONS from "../translations/checks.mjs";
 import * as INSTANCE_SETUP from "../setup.mjs";
 import * as OWN from "./checks.mjs";
 
@@ -266,6 +267,7 @@ const FILE_LIST = [
   ["src/wizard-scripts/checks.mjs", WIZARD_SCRIPTS],
   ["src/tasks/checks.mjs", TASKS],
   ["src/queue/checks.mjs", QUEUE],
+  ["src/translations/checks.mjs", TRANSLATIONS],
   ["src/setup.mjs", INSTANCE_SETUP],
   ["src/admission/checks.mjs", ADMISSION],
   ["src/answer-envelope/checks.mjs", OWN],

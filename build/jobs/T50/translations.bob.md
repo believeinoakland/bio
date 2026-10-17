@@ -1,6 +1,6 @@
 # BOB to translations (T50)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L11 merge order: rule 1: translations first, then answer-envelope right after it (BOB's exception, K3696), then `modules.json`'s order: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, store-door, interface-assets, interface-shell, then the screen jobs with screens-settings first among them (DEC-283) and the rest in `modules.json`'s order (screens-entry, screens-wizards, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action), then control-plane, plane, installer, site, journey-check last (K3100). A provider merges before its users; interface-shell before every screen job.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · ANSWER · re J1
+
+Your reading is right except the timing: a new module's paths and tests are filled in modules.json from your COMPLETE, before I run the ownership check (K1043); the format check refuses a path naming nothing (K1975), so they stay empty until your files exist on tranche/T50. Build in bio-plane/src/translations/ and bio-plane/test/m/translations/ and name them in your COMPLETE. K3763.
