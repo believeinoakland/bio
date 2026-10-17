@@ -67,11 +67,13 @@ export async function pdfStructureOp(url, env, store, { json, storeSilent, store
 
 /** R71: op=pagetranscribe, refused here as R31 refuses: no evidence storage (the storage-absent refusal), a digest
  *  that is not 64 lowercase hex (the required-argument refusal); the rest is the Durable Object's (`pageTranscribe`),
- *  handed the control plane's stamps and the project the act names as its payer (`project`, when given). Exported for
- *  control-plane R74 to route (L11); not in `EXTRACTION_OPS`, so the plane's door does not reach it before op-declarations
- *  R47 declares it (K2635). */
+ *  handed the control plane's stamps and the project the act names as its payer (`project`, when given). (T50; N1082;
+ *  R72) The door's `trace` and `memberRef` are stamps beside `author`, forwarded to the store only when each is a
+ *  non-empty string, and never read from the url or a body. Exported for control-plane R74 to route (L11); not in
+ *  `EXTRACTION_OPS`, so the plane's door does not reach it before op-declarations R47 declares it (K2635). */
 export async function pageTranscribeOp(url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,
-                                                          requiredArgument, cls, session, caps, viewer, author, storeName }) {
+                                                          requiredArgument, cls, session, caps, viewer, author, storeName,
+                                                          trace, memberRef }) {
   const op = "pagetranscribe";
   if (typeof env.CAPTURES?.get !== "function") return storageAbsent(op, "R2 is not configured on this instance");
   const sha = (url.searchParams.get("sha256") || "").toLowerCase();
@@ -82,6 +84,8 @@ export async function pageTranscribeOp(url, env, store, { json, storeSilent, sto
     caps: [...(caps || [])].join(","), viewer: viewer || "", author: author || "", store: storeName || "bio" });
   const project = url.searchParams.get("project");
   if (project) q.set("project", project);
+  if (typeof trace === "string" && trace) q.set("trace", trace);
+  if (typeof memberRef === "string" && memberRef) q.set("memberRef", memberRef);
   const r = await ask(store, `http://x/pagetranscribe?${q}`, undefined, doAnswer);
   return unanswered(r, op, { json, storeSilent, storeRefusal }) ?? json(r.result.body, r.result.status);
 }

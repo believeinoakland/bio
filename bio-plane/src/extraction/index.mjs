@@ -29,6 +29,7 @@ import { EXTRACTION_SCHEMA } from "./schema.mjs";
 import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, TRANSCRIBE_WORDS, fillWords,
          pagesSaid, AGENT_WORKER_REASONS } from "./checks.mjs";
 import { evidenceAbsent } from "../capture/ops.mjs";
+import { say } from "./words.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
 import * as pipeline from "../reading-pipeline/index.mjs";
@@ -867,9 +868,9 @@ export class Extraction {
     };
     for (const u of ordered) {
       const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string" ? u.extent.kind : null;
-      if (!kind) { unaddressable++; unaddressed.push({ seq: u.seq, why: "the unit names no extent kind" }); continue; }
+      if (!kind) { unaddressable++; unaddressed.push({ seq: u.seq, why: say("extraction.why.unit_names_extent") }); continue; }
       const extent = canonicalExtent(u.extent);
-      if (seen.has(extent)) { unaddressable++; unaddressed.push({ seq: u.seq, extent: u.extent, why: "an earlier unit holds this address" }); continue; }
+      if (seen.has(extent)) { unaddressable++; unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue; }
       seen.add(extent);
       const full = u.text;
       const capped = full.length > CAPTURE_TEXT_UNIT_CAP ? full.slice(0, CAPTURE_TEXT_UNIT_CAP) : full;
@@ -932,7 +933,7 @@ export class Extraction {
     if (typeof bundleId !== "string" || !bundleId || typeof captureSha !== "string" || !captureSha)
       return { offered: 0, written: 0, bytes: 0, truncated: 0, over_bound: 0, wire_over_bound: 0, unaddressable: 0,
                unaddressed: [], chain_kind: "undetermined", skipped: [], skipped_named: 0, state: null,
-               why: "an authored observation is indexed under its record and its capture digest, and one was not named" };
+               why: say("extraction.why.authored_observation_indexed") };
     return this.core.transact(() => {
       const indexed = this.indexUnits(bundleId, captureSha, [{ extent: { kind: "document" }, text: words, seq: 0 }], null);
       for (const l of this.#indexListeners)
@@ -966,13 +967,11 @@ export class Extraction {
              reader_found: !!row.found, entity_count: row.entity_count, at: row.at, reading,
              /* R21 (K104): whose reading this is. */
              origin: row.origin == null
-               ? { state: "undetermined", why: "this reading was recorded before this record kept who composed it" }
+               ? { state: "undetermined", why: say("extraction.why.reading_recorded_record") }
                : row.origin === "asserted"
                  ? { state: "asserted", asserted_by: row.asserted_by, standing: row.asserted_standing,
-                     justification: row.justification,
-                     why: "your group's Civicsmith did not compose this reading: a caller carried it in, and it is recorded as that "
-                        + "caller's assertion, standing as the caller stands" }
-                 : { state: "composed", why: "your group's Civicsmith read the capture's bytes and composed this reading" },
+                     justification: row.justification, why: say("extraction.why.group_civicsmith_did") }
+                 : { state: "composed", why: say("extraction.why.group_civicsmith_read") },
              text_provenance: ts
                ? { transcribed: !!ts.transcribed, terminal_step: ts.terminal_step,
                    engines: safeJson(ts.engines) || [], derivation_cap: ts.derivation_cap,
@@ -1435,9 +1434,7 @@ export class Extraction {
         structure.reextraction = {
           performed: false, written: false, cost,
           candidate: t3.seeded && t3.seeded.length ? t3.stillWanting : needsTier3(structure.text),
-          why: t3.ocrNote
-            || "no page of this document lacks a text layer, so there is nothing for OCR to read; the "
-             + "engine was not called and nothing about this capture was changed",
+          why: t3.ocrNote || say("extraction.why.page_document_lacks"),
         };
       } else {
         /* R34: the reading by reading-pipeline R11's rule with the stored reading's type, `at` the capture instant, page count and
@@ -1535,7 +1532,7 @@ export class Extraction {
   /* ---- transcribing the pages Civicsmith could not read, `op=pagetranscribe` (R71, R72) ---- */
 
   /** R72 (K31's pattern; plane R36): the composition root registers one transcriber, once, at start. `t` is
-   *  `{deployable(), keptAway({project, use}), transcription({member, project, at})}`, `transcription` answering
+   *  `{deployable(), keptAway({project, use}), transcription({member, project, at, trace?, memberRef?})}`, `transcription` answering
    *  reading-pipeline R29's `{member, project?, credentials, useCheck, transcribe, at, act}`. A malformed registration
    *  is refused LISTENER_MALFORMED and a second, by any module, LISTENER_DECLARED (membership's `listenerRefusal`, its
    *  R81: the slot takes one registration whoever makes it). Everything above this layer arrives through it. */
@@ -1566,7 +1563,7 @@ export class Extraction {
    *  filled, `says` is read by key by what the AI path answered (`unfilledOutcome`); a refusal says
    *  `transcribe.refused` beside its own fields. */
   async pageTranscribe({ captureSha = null, project = null, cls = null, session = false, caps = [], viewer = null,
-                         by = null, storeName = "bio", env = null } = {}) {
+                         by = null, trace = null, memberRef = null, storeName = "bio", env = null } = {}) {
     const e = env || this.env || {};
     const op = "pagetranscribe";
     const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
@@ -1600,7 +1597,7 @@ export class Extraction {
        fails closed itself, and a transcriber that throws here fails the request, nothing read or sent (no code is
        minted here for it). */
     const away = reg.t.keptAway({ project: this.#projectOfBundle(basis.bundleId), use: TRANSCRIBE_USE });
-    if (away) return { status: 403, body: withRefusedSays(away) };
+    if (away) return { status: refusalStatus(away), body: withRefusedSays(away) };
     /* END DEC-49 REGION is-transcribe */
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const obj = ev ? await ev.get(sha) : null;
@@ -1614,12 +1611,12 @@ export class Extraction {
     const unread = (why) => ({ status: 200, body: { ok: true, op, sha256: sha, format: fmt,
       transcription: { performed: false, written: false, why } } });
     if (!entry || typeof entry.structure !== "function")
-      return unread(`the stored bytes read as ${fmt === "undetermined" ? "no format your group's Civicsmith knows" : `"${fmt}"`}, `
-                  + `which has no pages for the AI to transcribe, so nothing was read, sent or changed`);
+      return unread(say("extraction.unread.stored_bytes_read", {
+        fmt: fmt === "undetermined" ? say("extraction.unread.format_group_civicsmith") : `"${fmt}"` }));
     const structure = await entry.structure(bytes);
     if (!structure || !structure.ok)
-      return unread(`the stored bytes read as "${fmt}", but its reader could not read their pages`
-                  + `${structure && structure.reason ? ` (${structure.reason})` : ""}, so nothing was sent or changed`);
+      return unread(say("extraction.unread.stored_bytes_read_reader", {
+        format: fmt, reason: structure && structure.reason ? ` (${structure.reason})` : "" }));
     /* R71 (R31, reading-pipeline R3): tier 2 by the one escalation every path runs. */
     let tier = 1, t2PerPage = null, t2Note = null, text = structure.text;
     const notes = [...(Array.isArray(structure.notes) ? structure.notes : [])];
@@ -1635,8 +1632,13 @@ export class Extraction {
       seed: tier3SeedFrom(stored, basis.units), liveCalibration: (q) => this.#liveCalibration(q) });
     const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: fmt });
     const at = stampInstant("second");
+    /* R72 (T50; N1082): the door's `trace` and `memberRef`, handed on only when each is a non-empty string, so a call
+       with none passes neither key (plane R55). Neither is read, stored or answered here. */
+    const door = {};
+    if (typeof trace === "string" && trace) door.trace = trace;
+    if (typeof memberRef === "string" && memberRef) door.memberRef = memberRef;
     let tx = null;
-    try { tx = reg.t.transcription({ member: by, project, at }); } catch { tx = null; }
+    try { tx = reg.t.transcription({ member: by, project, at, ...door }); } catch { tx = null; }
     /* R71 (N862, K2689): whether the AI path was asked, for which pages, and what it answered, so `transcribe.none`
        is said only when agent-worker was asked and filled nothing. */
     const asked = { pages: null, answer: null };
@@ -1652,7 +1654,7 @@ export class Extraction {
     const refusal = t4.aiRefusal && typeof t4.aiRefusal === "object" ? t4.aiRefusal : null;
     if (refusal && !t4.filled.length) return { status: refusalStatus(refusal), body: withRefusedSays(refusal) };
     if (!t4.filled.length) {
-      const why = t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed";
+      const why = t4.aiNote || say("extraction.text.ai_asked_transcribe");
       const outcome = asked.pages === null ? null : unfilledOutcome(asked.answer, fmt);
       /* (T44) a refusal agent-worker answered after the post, carrying its row's translation, is that refusal too. */
       if (outcome && outcome.refusal) return { status: refusalStatus(outcome.refusal), body: withRefusedSays(outcome.refusal) };
@@ -1746,15 +1748,12 @@ export class Extraction {
     const all = raw.filter((o) => (engine ? o.engine === engine : true)).filter((o) => visible(o.bundle_id) !== null);
     return { ok: true, ...(engine ? { engine } : {}), obligations: all, count: all.length,
              limit: raw.limit, truncated: !!raw.truncated, regraded: 0,
-             ...(raw.unavailable ? { undetermined: "the calibration module is not reachable here, so which "
-                                   + "transcriptions rest on a worse measurement is UNDETERMINED, not none" } : {}),
+             ...(raw.unavailable ? { undetermined: say("extraction.undetermined.calibration_module_reachable") } : {}),
              why: all.length
                ? `${all.length} transcription(s) were graded under a measurement a later probe `
                  + `found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: `
                  + `this names the work so a member can do it (DEC-4)`
-               : `no transcription in this store rests on a calibration that a later probe measured `
-                 + `worse. A calibration that measured BETTER raises nothing by design — a grade `
-                 + `rises only by an authored act` };
+               : say("extraction.why.transcription_store_rests") };
   }
 
   /** R40: `calibration.onCalibration`'s listener, answering `{obligations, truncated}` (K137, calibration R12).
@@ -1775,12 +1774,8 @@ export class Extraction {
 function unwrittenWhy(w, act) {
   if (w.ok === true) return {};
   return w.rolledBack === true
-    ? { why: "the record's reading of this capture could not be written: the write was refused while it ran "
-           + `and rolled back whole, so the text above was read and NOT recorded, and nothing the ${act} `
-           + "would have changed was changed" }
-    : { why: "the record's reading of this capture could not be written (it was no "
-           + "longer held for this caller when the write arrived), so the text above "
-           + "was read and NOT recorded" };
+    ? { why: say("extraction.why.record_reading_capture", { act }) }
+    : { why: say("extraction.why.record_reading_capture_written") };
 }
 
 /* R71 (T44; N869, N876; DEC-191 (4), (5), DEC-192 (1), (2); K2689, K2713): the transcriber's reasons that posted
@@ -1859,7 +1854,7 @@ function keepUntested(reading, stored, untested) {
   else if (untested) reading.untested = untested;
 }
 
-/* R72: a transcriber is `{deployable(), keptAway({project, use}), transcription({member, project, at})}`. */
+/* R72: a transcriber is `{deployable(), keptAway({project, use}), transcription({member, project, at, trace?, memberRef?})}`. */
 const isTranscriber = (t) => !!t && typeof t === "object" && typeof t.deployable === "function"
   && typeof t.keptAway === "function" && typeof t.transcription === "function";
 
@@ -1888,6 +1883,7 @@ export function extractionOps(x, url, body, env) {
     /* R71: the control plane's stamps in the query; `by` is its author stamp. */
     pagetranscribe: () => x.pageTranscribe({ captureSha: q("sha256"), project: q("project") || null, cls: q("cls"),
       session: q("session") === "1", caps: (q("caps") || "").split(",").filter(Boolean), viewer: q("viewer"),
-      by: q("author") || null, storeName: q("store") || "bio", env }),
+      by: q("author") || null, trace: q("trace") || null, memberRef: q("memberRef") || null,
+      storeName: q("store") || "bio", env }),
   };
 }

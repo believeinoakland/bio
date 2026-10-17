@@ -137,13 +137,9 @@ test("R75 (T46; N886; DEC-193): each of agent-worker R72's six codes answered af
     }
 });
 
-test("R75: the reasons are words read by key: noaccount, badaccount and needsapikey are words.json's verbatim; requestfault is the list's key held as R75's interim word in DEC-149's form (K2919)", () => {
-  for (const key of ["transcribe.reason.noaccount", "transcribe.reason.badaccount", "transcribe.reason.needsapikey"])
+test("R75: the reasons are words read by key: noaccount, badaccount, needsapikey and requestfault are words.json's verbatim (K2919 conformed requestfault, so no interim word remains)", () => {
+  for (const key of ["transcribe.reason.noaccount", "transcribe.reason.badaccount", "transcribe.reason.needsapikey", "transcribe.reason.requestfault"])
     assert.equal(TRANSCRIBE_WORDS[key], WORD(key), key);
-  assert.equal(typeof WORD("transcribe.reason.requestfault"), "string", "the list holds the key");
-  assert.equal(TRANSCRIBE_WORDS["transcribe.reason.requestfault"],
-    "Your group's Civicsmith sent the assistant a request it couldn't use. The fault is your group's Civicsmith's, not yours: "
-    + "try again, and if it happens again, tell an administrator.");
 });
 
 test("R75 (controls): a refusal carrying its own row's translation keeps it; another agent-worker code with no row is no refusal of the job's own, 200 performed false with no says", async () => {

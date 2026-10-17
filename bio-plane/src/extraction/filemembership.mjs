@@ -23,6 +23,8 @@
  * WHAT IT DOES NOT DO. It reads one document's links and persists nothing: `op=pdfstructure` is a read and so is
  * this. The stored membership is `connections`' (its R49). */
 
+import { say } from "./words.mjs";
+
 export const MEMBERSHIP_LABEL = Object.freeze({
   derived: "containment",
   work: "machine",
@@ -114,10 +116,7 @@ export function deriveMembership(structure, view) {
     membership: {
       ...MEMBERSHIP_LABEL,
       system: shape.system,
-      basis: "each file link is assigned to the item link whose region contains the top edge of its "
-           + "rect; a region runs from an item link's top edge down to the next item link's, in page "
-           + "order. The publisher linked neither end to the other: this pairing is an "
-           + "inference from position, to be confirmed, never the publisher's own link.",
+      basis: say("extraction.basis.file_link_assigned"),
       counts: { items: groups.length, placed: groups.reduce((n, g) => n + g.files.length, 0), unplaced: unplaced.length },
       items: groups,
       unplaced,

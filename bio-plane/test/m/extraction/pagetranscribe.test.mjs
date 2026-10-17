@@ -289,7 +289,7 @@ test("R71 R73: past its refusals an absent object is capture's one answer for it
   const r = await withEntry(pdf(SCAN), () => n.w.x.pageTranscribe({ captureSha: notPdf, ...member1 }));
   assert.deepEqual([r.status, r.body.ok, r.body.transcription.performed, r.body.transcription.written], [200, true, false, false]);
   assert.equal(r.body.format, "undetermined");
-  assert.match(r.body.transcription.why, /no format your group's Civicsmith knows/);
+  assert.equal(r.body.transcription.why, WORD("extraction.unread.stored_bytes_read").replace("{fmt}", WORD("extraction.unread.format_group_civicsmith")));
   assert.equal(writes(n.w), before);
   assert.deepEqual(tr.calls.transcribe, []);
 });
