@@ -4978,3 +4978,33 @@ decided: 2026-10-17 · the design session (P17)
 the design: (1) R17: a wizard step on a screen that works in a project, opened with no project in the run (in the mockup: a run's first step on `plan`), asks in the dock "This step works in a project. Which one?" (`wizard.subject.project`) as a choice over the member's projects, as record data; with none, `wizard.subject.none.project` (in a fold "With no project to choose"). (2) R61: under the selected words, "In which question" (`screen.document.cite.question`) is preselected to the question the document was captured for, the project's questions first, explained by `screen.document.cite.question.help`; captured for no question, "Cite this" says "Choose the question to cite this in first." (`screen.document.cite.choose`). (3) R20: Request records gains a state "no office is known yet": `screen.request.nooffice` and `.nooffice.admin` with a reference to Places and offices, and no "Choose the office", "Start the request" or later step drawn. (4) R21: above the approval the request draws "Sent with" (the team and its statement) and "In this matter" (`stake.none` in the example), with `stake.unreadable` in a fold; Start and send's higher-stakes section adds `stake.ask.undetermined` in a fold "When the tier can't be told". `actionstake` stays drawn as the registry's owed act (K3230) until BOB re-points it.
 reasoning recorded in: this entry; `screens/mock-shell.js` (`wizardGuide`), `mock-journeys.js` (`ask`), `mock-screens.js` (document, request, start-send), `words-drawn.src.py` (DEC-320's block).
 owed: (BOB, T50) screens-wizards R17, screens-inquiry R61, screens-action R20 and R21 read the drawings; R20's owed sentence is `screen.request.nooffice.admin`, already keyed.
+
+### DEC-321 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01S7xeW38PtVh94Sy8LiatgK; the development process also runs on his primary account since K1428) (T50's requirement gaps, batch 4: seven of the ten disagreements; screens-intake R29, R32; screens-daily R40, R43, R45, R50 (2), R51)
+for: design
+question: Seven drawings disagreed with T50's requirements (verified by a reading worker against each line).
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) R29: Add's "For which question" moves from the file tab to the address tab (sent with `acquire`), with `refusal.BAD_FOR` in a fold; the file tab sends none. (2) R32: an inbox delivery's id is drawn only on a folded "Reference" line; a delivery already held draws `screen.inbox.alreadyheld` with the holder's document as a link. (3) R43: Projects' Themes rows draw no counts. (4) R50 (2): `taskresolve`'s registry label on Home and the queue is "Open the item", never "Act on an item". (5) R51: Home's Investigation block opens the investigation dashboard (`dash-project`). (6) R40: a new team's Home is headed "Your team" while unnamed, and "Name your team" (`home.first.name`, to `group`) leads the numbered steps as the primary button. (7) R45: a watched row offers "Take off my watch list" (`find.row.unwatch`, `watchitem` with `on: false`); "Flag for a second look…" opens its required note ("Why look again", `find.secondlook.note`, `.help`); the registry label carries the ellipsis.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `registry.src.py`, `words-drawn.src.py` (DEC-321's block).
+owed: (BOB, T50) those requirements read the drawings; `act.taskresolve.label.queue` and `.home` now say "Open the item".
+
+### DEC-322 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01S7xeW38PtVh94Sy8LiatgK; the development process also runs on his primary account since K1428) (T50's requirement gaps, batch 5: the last three disagreements; screens-settings R45, screens-publish R34, screens-daily R44)
+for: design
+question: The team's time zone was typed; its two-places and no-zone states were undrawn; the public page's corrections line drew only "none"; Find's browse drew no paging and no state for a member with no "since".
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) R45: "Time zone" is a choice by name, `label.timezones.<IANA id>` (Pacific Time (Los Angeles) and six more US zones keyed; any other zone is worded "<Region> Time (<exemplar city>)" the same way, never as a code), still sent as `factconfirm` with how and where it was checked; two places with different zones draw each zone by its place and `screen.group.timezone.two` (none named as the team's; each corrected on its own); no zone held draws `screen.group.timezone.none` and no UTC. (2) R34: the corrections line has four mockup states: none, one (`screen.published.corrections.some.one`), several (`.some`), and can't be counted (only the docket sentence). (3) R44: the browse ends with "Your team holds more than is shown here." and "Show more" (`find.browse.more`, `.showmore`, paged by `next`); before a first visit to Home, `find.browse.nosince` says why "New since you last looked" is not offered.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py` (DEC-322's block).
+owed: (BOB, T50) those requirements read the drawings; `label.timezones.*` names the zones R45's choice offers.
