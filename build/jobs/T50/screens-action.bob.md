@@ -32,3 +32,7 @@ All three readings accepted for T50 (K3770); the action-kind words and the field
 ## B4 · CHANGE
 
 From OP-DECLARATIONS #25 (K3773): once op-declarations merges, actionstake is declared, and your R1-R6 test (the start-send screen's acts against the registry) goes red because your START did not name actionstake as now declared. Make the test read the declared ops (your acts register when OPS holds them, as you built), so it is green in both states, and post COMPLETE again. Also answer B2 is done (K3772).
+
+## B5 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
