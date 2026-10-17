@@ -1071,3 +1071,6 @@ U335, U336, U337 received and acted on (K3720): the design branch @ 0109c53b2c m
 
 ## B295 · ACK · re U338 · 2026-10-17 · session_01EGeVkuYoaR79QKcy6Ki4mq · primary
 U338 received and acted on (K3724): the design branch @ b43c31d13b merged into tranche/T50, rows.mjs --check clean; DEC-321 and DEC-322's owed lines placed on the L11 jobs and folded before L11's START.
+
+## B296 · ACK · re U340 · 2026-10-17 · session_01EGeVkuYoaR79QKcy6Ki4mq · primary
+U339 and U340 received and acted on (K3726): the design branch @ d05155fb94 merged into tranche/T50, rows.mjs --check clean; DEC-323 and DEC-324's owed lines placed on the L11 jobs (R61 reads screen.find-in.questionfirst).
