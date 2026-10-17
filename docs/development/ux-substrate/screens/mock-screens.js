@@ -950,7 +950,7 @@ SCR['open-file'] = c => { const st = OPEN_ST[c.v] || 'b'; const sel = v => v ===
    ${sheet(row(I('accepted'), '<b>What to do next</b><br>Read it in the safe view below. To open the original itself, ask for a deeper check first.', ''))}
    ${acts(btn('safeview', 'Read the safe view', { tone: 'primary' }), btn('deepercheck', 'Ask for a deeper check'))}
    <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><b>The safe view</b><span class="mk-small">A copy made by your team's Civicsmith: each page as a picture, nothing in it can run. ${origin('machine', 'Derived · a safe copy of the original')} Cite the original, never the safe copy; a citation always points at the original.</span></div>
-   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><span class="mk-small">Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.</span><pre class="mk-data">Walked Lakeshore Ave, 9 Oct: 4 open potholes between 2nd and 5th.</pre><span class="mk-small muted">The file is longer than this view shows; the rest is in the original file.</span></div>
+   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><span class="mk-small">Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.</span><pre class="mk-data" style="white-space:pre-wrap;overflow-wrap:anywhere;margin:0">Walked Lakeshore Ave, 9 Oct: 4 open potholes between 2nd and 5th.</pre><span class="mk-small muted">The file is longer than this view shows; the rest is in the original file.</span></div>
   ${sec('Checks', note('Not checked yet: its first check is waiting. The original never opens before a check.'))}
   </div></div>` }; };
 

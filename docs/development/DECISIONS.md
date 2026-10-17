@@ -5052,4 +5052,5 @@ response: none needed (the design's detail).
 decided: 2026-10-17 · the design session (P17)
 the design: `document.untitled.web` heads a held page with no title ("A page from oaklandca.gov, captured 2 October"); `document.image.unread` in a fold on the document; `case.draft.untitled` heads a first case's draft ("Pothole repairs: draft case"); `screen.case-editor.tip.distributed` explains the ladder's last rung beneath it; `member.founder.unnamed` with its help in a fold on Members. `settings.set.system` stays undrawn: no setting the design draws is set by Civicsmith itself, so it waits for one (the walks will name it if a screen needs it). The gaps list is drawn through, apart from the assistant's states, which K3717 leaves.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py`.
+walk: the 390 px walk over DEC-318 to DEC-325's 27 screens found one fault, the safe text view's `pre` (DEC-323) stretching its sheet past the column; it now wraps (`white-space: pre-wrap`). 0 others.
 owed: none.
