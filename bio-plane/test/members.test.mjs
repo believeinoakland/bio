@@ -466,7 +466,7 @@ console.log("\n--- REC-41: what a STRANGER is told by op=bootstrap ---");
    before the anonymous answer is asserted to withhold it. */
 const rosterNow = (await GET(`op=memberlist&token=t-admin-1`)).result.members.map((m) => m.member_id).sort();
 t("R132 REC-41: the instance really does hold the roster the stranger was not shown",
-  rosterNow, ["meilan", "ruth"]);
+  rosterNow, ["admin", "meilan", "ruth"]);   // R147: the founder is listed beside the members
 const anon = await GET("op=bootstrap");
 /* R132 (T47-7; N989, K3027): REC-41 stated as membership's requirement. The arms below are one function, so the
    same instrument that judges the live answer is run on mutants of it (K874's negative control): an arm that passed a
@@ -598,7 +598,7 @@ console.log("\n--- the roster is visible, invites are not ---");
 /* The shared MEMBER_TOKEN that used to read the roster here is retired (admission R5, K2166); an ordinary member's own
    session reads it instead, and the retired token reads nothing (section 3). */
 const ml = await GET(`op=memberlist&${M2}`);
-t("an ordinary member's session reads the roster", ml.result.members.length, 2);
+t("an ordinary member's session reads the roster (the founder's row, R147, and two members)", ml.result.members.length, 3);
 t("no invite material in the roster", JSON.stringify(ml.result).includes(add2.result.invite), false);
 
 console.log("\n--- section 3: only administrators see cover and handle TOGETHER (D-157) ---");
@@ -622,7 +622,8 @@ console.log("\n--- section 3: only administrators see cover and handle TOGETHER 
      already public, covers are the administrator's private labels, and only the
      PAIR maps the public record back to the people in it. */
   const rowsFor = async (q) => (await GET(`op=memberlist&${q}`)).result.members;
-  const hasKey = (rs, k) => rs.every((r) => k in r);
+  /* R147: the founder's row has no cover (she holds none), so the pairing is asked of the members' rows */
+  const hasKey = (rs, k) => rs.filter((r) => r.founder !== true).every((r) => k in r);
   const anyKey = (rs, k) => rs.some((r) => k in r);
 
   /* The administrator half: the pairing is SERVED, not merely permitted — the
@@ -652,7 +653,7 @@ console.log("\n--- section 3: only administrators see cover and handle TOGETHER 
   t("and receives NO cover field at all — absent, not null, not empty",
     anyKey(asMember, "cover"), false);
   t("while still receiving the handle roster it is entitled to (§3)",
-    [hasKey(asMember, "handle"), asMember.length], [true, 2]);
+    [hasKey(asMember, "handle"), asMember.length], [true, 3]);
   t("and the whole answer carries no cover value smuggled elsewhere",
     JSON.stringify(asMember).includes("the CPA from Tuesday"), false);
 

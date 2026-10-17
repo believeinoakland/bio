@@ -1,21 +1,16 @@
 /* R83 (K289, N280): `MODULE_ORDER`, the frozen list of build/modules.json's module ids in its total order, the one list
    the modules order their listeners by (this module's R79 among them). T49-1 (N1073, K3268): the test reads the order and
-   every module's place from the file, the owner's declaration, and hand-lists no other module's ids; only the names it
-   tolerates as not yet built are its own (R83's rule, R145). */
+   every module's place from the file, the owner's declaration, and hand-lists no other module's ids. T50 (R146): the names
+   tolerated as not yet built are the file's too (the modules without paths), none kept here. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { world } from "./fixture.mjs";
-import { MODULE_ORDER } from "../../../src/membership/index.mjs";
+import { MODULE_ORDER, moduleOrderFrom } from "../../../src/membership/index.mjs";
 
 const modulesJson = async () =>
   JSON.parse(await readFile(new URL("../../../../build/modules.json", import.meta.url), "utf8")).modules;
-
-/* The names tolerated as not yet built, each only while the file gives it no paths (R83's T33-19a rule; its merge gives it
-   them, and from then on it is held to them on disk). T49-1 (R145; K657, K3328): `op-capabilities` and `site`, which T49's
-   opening adds, join `ai-accounts` (T48's), until each one's job merges. */
-const NOT_YET_BUILT = ["ai-accounts", "op-capabilities", "site"];
 
 /* A module's place: the module before it, itself, the module after it (undefined past either end). */
 const pin = (list, id) => { const i = list.indexOf(id); return [list[i - 1], id, list[i + 1]]; };
@@ -49,101 +44,81 @@ test("R83 every module the file names is in MODULE_ORDER in the file's place, an
   assert.notDeepEqual(MODULE_ORDER.slice(0, -1), ids, "a list stopping before the last module is not the file's");
 });
 
-test("R83 T33-19a every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges is named as not yet built, by name, and fails nothing; the tolerated names are exactly those still without paths", async (t) => {
-  const modules = await modulesJson();
-  const notYet = [];
-  for (const m of modules) {
-    assert.ok(MODULE_ORDER.includes(m.id), m.id);
-    if (!m.paths.length) {
-      assert.ok(NOT_YET_BUILT.includes(m.id), `${m.id} has no code and is not a module the plan tolerates by name`);
-      notYet.push(m.id);
-      continue;
-    }
-    for (const p of m.paths)
-      assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `${m.id}: ${p} is on disk`);
-  }
-  /* A tolerated name that has merged is held to its paths like any other (the loop above), never tolerated twice. */
-  for (const id of NOT_YET_BUILT) assert.ok(modules.some((m) => m.id === id), `${id} is a module the file names`);
-  /* control of the tolerance: a built module that lost its paths is not tolerated */
-  const built = modules.find((m) => m.paths.length && !NOT_YET_BUILT.includes(m.id));
-  const forged = modules.map((m) => (m.id === built.id ? { ...m, paths: [] } : m));
-  assert.deepEqual(forged.filter((m) => !m.paths.length).map((m) => m.id).filter((id) => !NOT_YET_BUILT.includes(id)),
-    [built.id], `${built.id} without paths is not tolerated`);
-  if (notYet.length) t.diagnostic(`not yet built (tolerated until its job merges): ${notYet.join(", ")}`);
-});
-
-/* T47-82 (R140; K3064, K3069; amends R83): `screens-entry` in layer 11, directly after `interface-shell` and before
-   `screens-wizards`, in the list and in the file. Control: a list without it, or holding it out of its place, fails. */
-test("R140 T47-82 MODULE_ORDER equals modules.json's order with screens-entry directly after interface-shell in layer 11; control: a list missing it, or holding it out of its place, fails", async () => {
+/* T50 (R146; N1115, N1171; K657, K3268; amends R83, R140, R145, R79): the list is assembled from the file, so the places
+   R83, R140 and R145 gave a module ("directly after" another) describe the file as it then stood and bind nothing now. What
+   they asked for, that each module sits in the file's place and the pathless ones are tolerated, is held for every module
+   the file names, read from the file, with no module's id written here but as a fixture of the test itself. */
+test("R146 R140 R145 MODULE_ORDER is the file's order with setup-words first and translations directly before instance-setup; every module keeps the file's neighbours", async () => {
   const modules = await modulesJson();
   const ids = modules.map((m) => m.id);
-  const entry = modules.find((m) => m.id === "screens-entry");
-  const want = ["interface-shell", "screens-entry", "screens-wizards"];
   assert.deepEqual([...MODULE_ORDER], ids, "the list is the file's order");
-  assert.equal(entry.layer, 11, "screens-entry is in layer 11");
-  assert.deepEqual(pin(MODULE_ORDER, "screens-entry"), want, "interface-shell → screens-entry → screens-wizards in the list");
-  assert.deepEqual(pin(ids, "screens-entry"), want, "and in the file");
-  assert.notDeepEqual(without(MODULE_ORDER, "screens-entry"), ids, "a list without screens-entry is not the file's");
-  assert.notDeepEqual(pin(earlier(MODULE_ORDER, "screens-entry"), "screens-entry"), want, "the pin refuses it one place early");
-  /* `setup-page` and `legacy-ui` are in the list exactly while the file names them */
-  for (const id of ["setup-page", "legacy-ui"])
-    assert.equal(MODULE_ORDER.includes(id), ids.includes(id), `${id} is in the list exactly while the file names it`);
+  assert.equal(MODULE_ORDER[0], "setup-words", "setup-words is first");
+  assert.equal(modules[0].layer, 1, "and in layer 1");
+  assert.deepEqual(pin(MODULE_ORDER, "translations").map((x) => x ?? null).slice(1, 3), ["translations", "instance-setup"],
+    "translations directly before instance-setup");
+  assert.equal(modules.find((m) => m.id === "translations").layer, 11);
+  /* the places R140 and R145 named, as the file now holds them, are held for every module alike */
+  for (const id of ids) assert.deepEqual(pin(MODULE_ORDER, id), pin(ids, id), `${id}: the file's neighbours`);
+  /* controls: a list without the last module, with translations after instance-setup, or with setup-words not first fails */
+  assert.notDeepEqual(MODULE_ORDER.slice(0, -1), ids, "a list lacking the file's last module fails");
+  const swapped = [...MODULE_ORDER];
+  const i = swapped.indexOf("translations");
+  [swapped[i], swapped[i + 1]] = [swapped[i + 1], swapped[i]];
+  assert.notDeepEqual(swapped, ids, "translations after instance-setup fails");
+  assert.notDeepEqual([...MODULE_ORDER.slice(1), MODULE_ORDER[0]], ids, "setup-words last fails");
 });
 
-/* T48-9 (K657, K3100; N1014): `ai-accounts` between `project-roster` and `credentials` in layer 2, `signin-door` after
-   `store-door`, `setup-page` gone and `legacy-ui` kept; T49-1 moves "last" to `journey-check` still: nothing follows it. */
-test("R83 T48-9 MODULE_ORDER equals modules.json's order with ai-accounts between project-roster and credentials, signin-door after store-door, journey-check last, setup-page gone and legacy-ui kept; control: a list without journey-check, or holding one of them out of its place, fails", async () => {
+test("R146 R83 the modules tolerated as not yet built are exactly those the file shows without paths, read from the file; every other module is held to its paths on disk, and a built module that lost its paths is not tolerated", async () => {
   const modules = await modulesJson();
-  const ids = modules.map((m) => m.id);
-  const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
-  const pins = [["project-roster", "ai-accounts", "credentials", 2], ["store-door", "signin-door", "interface-assets", 11],
-                ["stewards", "journey-check", undefined, 11]];
-  assert.deepEqual([...MODULE_ORDER], ids, "the list is the file's order");
-  for (const [before, id, after, layer] of pins) {
-    assert.equal(layerOf.get(id), layer, `${id} is in layer ${layer}`);
-    assert.deepEqual(pin(MODULE_ORDER, id), [before, id, after], `${before} → ${id} → ${after} in the list`);
-    assert.deepEqual(pin(ids, id), [before, id, after], `${before} → ${id} → ${after} in the file`);
-    assert.notDeepEqual(without(MODULE_ORDER, id), ids, `a list without ${id} is not the file's`);
-    assert.notDeepEqual(pin(earlier(MODULE_ORDER, id), id), [before, id, after], `the pin refuses ${id} out of its place`);
-  }
-  assert.ok(!MODULE_ORDER.includes("setup-page") && !ids.includes("setup-page"), "setup-page gone from both");
-  assert.ok(MODULE_ORDER.includes("legacy-ui") && ids.includes("legacy-ui"), "legacy-ui kept in both");
-  assert.notDeepEqual([...MODULE_ORDER, "setup-page"], ids, "a list still holding setup-page is not the file's");
-});
-
-/* T49-1 (R145; K657, K3328; amends R140): the two modules T49's opening adds, in layer 11: `op-capabilities` directly
-   before `op-declarations`, `site` directly after `installer`; each tolerated by name as not yet built until its job merges
-   with its paths. Test: the list equals the file's order with both in place. Control: a list missing either, or holding
-   either out of its place, fails; and a module that is not one of the tolerated names is not tolerated. */
-test("R145 T49-1 MODULE_ORDER equals modules.json's order with op-capabilities directly before op-declarations and site directly after installer, both in layer 11 and tolerated by name while pathless; control: a list missing either, or holding either out of its place, fails", async () => {
-  const modules = await modulesJson();
-  const ids = modules.map((m) => m.id);
-  const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
-  const pins = [["instance-setup", "op-capabilities", "op-declarations"], ["installer", "site", "stewards"]];
-  assert.deepEqual([...MODULE_ORDER], ids, "the list is the file's order");
-  for (const [before, id, after] of pins) {
-    assert.equal(layerOf.get(id), 11, `${id} is in layer 11`);
-    assert.deepEqual(pin(MODULE_ORDER, id), [before, id, after], `${before} → ${id} → ${after} in the list`);
-    assert.deepEqual(pin(ids, id), [before, id, after], `${before} → ${id} → ${after} in the file`);
-    /* control: without it, or one place early, the list is not the file's and the pin refuses it */
-    assert.notDeepEqual(without(MODULE_ORDER, id), ids, `a list without ${id} is not the file's`);
-    assert.notDeepEqual(earlier(MODULE_ORDER, id), ids, `${id} one place early is not the file's order`);
-    assert.notDeepEqual(pin(earlier(MODULE_ORDER, id), id), [before, id, after], `the pin refuses ${id} out of its place`);
-    /* one place late, after its right neighbour */
-    const i = MODULE_ORDER.indexOf(id), late = [...MODULE_ORDER];
-    [late[i], late[i + 1]] = [late[i + 1], late[i]];
-    assert.notDeepEqual(late, ids, `${id} one place late is not the file's order`);
-    assert.notDeepEqual(pin(late, id), [before, id, after], `the pin refuses ${id} one place late`);
-    /* tolerated by name while the file gives it no paths; held to its paths on disk from its merge */
-    const m = modules.find((x) => x.id === id);
-    assert.ok(NOT_YET_BUILT.includes(id), `${id} is a tolerated name`);
-    for (const p of m.paths) assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `${id}: ${p} is on disk`);
-  }
-  /* the tolerated names are exactly those still without paths, and no other module is tolerated */
   const unbuilt = modules.filter((m) => !m.paths.length).map((m) => m.id);
-  assert.deepEqual(unbuilt.filter((id) => !NOT_YET_BUILT.includes(id)), [], "every module without paths is a tolerated name");
-  assert.deepEqual(NOT_YET_BUILT.filter((id) => !pins.some(([, p]) => p === id)), ["ai-accounts"],
-    "besides the two, ai-accounts alone is tolerated");
+  for (const m of modules) {
+    assert.ok(MODULE_ORDER.includes(m.id), `${m.id} is in the list, built or not`);
+    if (m.paths.length) for (const p of m.paths) assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `${m.id}: ${p} is on disk`);
+  }
+  /* control: forging a copy of the file, a built module without paths joins the tolerated names; the list is unchanged */
+  const built = modules.find((m) => m.paths.length);
+  const forged = modules.map((m) => (m.id === built.id ? { ...m, paths: [] } : m));
+  assert.deepEqual(forged.filter((m) => !m.paths.length).map((m) => m.id).sort(), [...unbuilt, built.id].sort());
+  assert.deepEqual([...moduleOrderFrom({ modules: forged })], [...MODULE_ORDER], "the list does not depend on paths");
+});
+
+test("R146 moduleOrderFrom answers the frozen ids of a parsed copy of the file, in its order: a module moved and one added take their new places and nothing else changes; MODULE_ORDER is its answer for the file itself", async () => {
+  const file = JSON.parse(await readFile(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
+  assert.deepEqual([...moduleOrderFrom(file)], [...MODULE_ORDER]);
+  assert.ok(Object.isFrozen(moduleOrderFrom(file)));
+  const ids = file.modules.map((m) => m.id);
+  /* move the module at position 5 to just before the last, and add a new one after position 10 */
+  const moved = ids[5], after = ids[10];
+  const copy = { ...file, modules: file.modules.filter((m) => m.id !== moved) };
+  copy.modules.splice(copy.modules.length - 1, 0, file.modules.find((m) => m.id === moved));
+  copy.modules.splice(copy.modules.findIndex((m) => m.id === after) + 1, 0, { id: "a-new-module", layer: 2, paths: [] });
+  const got = [...moduleOrderFrom(copy)];
+  assert.deepEqual(got, copy.modules.map((m) => m.id), "the copy's order");
+  assert.equal(got.indexOf("a-new-module"), got.indexOf(after) + 1, "the added module is where it was put");
+  assert.equal(got.at(-2), moved, "the moved module is where it was put");
+  assert.deepEqual(got.filter((id) => id !== "a-new-module" && id !== moved), ids.filter((id) => id !== moved),
+    "nothing else changed");
+  assert.ok(Object.isFrozen(moduleOrderFrom(copy)));
+  /* the same function takes the bare list, and drops what is not a module id and what repeats */
+  assert.deepEqual([...moduleOrderFrom([{ id: "a" }, { id: "b" }, { id: "a" }, { nope: 1 }, null, { id: "" }])], ["a", "b"]);
+  assert.deepEqual([...moduleOrderFrom(null)], []);
+  assert.deepEqual([...moduleOrderFrom({ modules: "x" })], []);
+});
+
+test("R146 order.mjs is generated from build/modules.json, never hand-written: its text is exactly the generator's for the file, and a changed file makes it stale", async () => {
+  const { render, idsOf, firstDifference, MODULES_PATH, ORDER_PATH } = await import("../../../src/membership/order-build.mjs");
+  const bytes = await readFile(MODULES_PATH);
+  const have = await readFile(ORDER_PATH, "utf8");
+  assert.equal(have, render(bytes), "order.mjs is not stale");
+  assert.equal(firstDifference(have, render(bytes)), null);
+  const file = JSON.parse(bytes.toString("utf8"));
+  const changed = Buffer.from(JSON.stringify({ ...file, modules: [...file.modules, { id: "zz-new", layer: 11, paths: [] }] }));
+  assert.match(firstDifference(have, render(changed)), /^line \d+/, "a module added to the file stales it");
+  const moved = Buffer.from(JSON.stringify({ ...file, modules: [file.modules.at(-1), ...file.modules.slice(0, -1)] }));
+  assert.notEqual(render(moved), have, "a module moved stales it");
+  assert.throws(() => idsOf({ modules: [{ id: "a" }, { id: "a" }] }), /not distinct/);
+  assert.throws(() => idsOf({ modules: [{}] }), /without an id/);
+  assert.throws(() => idsOf({}), /no modules list/);
 });
 
 test("R83 MODULE_ORDER is frozen: no write changes it", () => {
@@ -167,4 +142,14 @@ test("R83 R79 the revocation notice runs its listeners in MODULE_ORDER, whatever
   for (const m of registered) assert.equal(w.m.onRevoked(m, () => heard.push(m)).ok, true, m);
   assert.equal(w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" }).ok, true);
   assert.deepEqual(heard, [...MODULE_ORDER, "unknown-b", "unknown-a"]);
+});
+
+test("R146 R79 three listeners registered in an order other than the file's are called in the file's order; one registered by a module the file does not name is called last", async () => {
+  const w = await world({ omit: ["revoked"] }).group("ann");
+  const heard = [];
+  const three = [MODULE_ORDER[40], MODULE_ORDER[3], MODULE_ORDER[120]];
+  for (const m of [three[2], three[0], three[1]]) assert.equal(w.m.onRevoked(m, () => heard.push(m)).ok, true, m);
+  assert.equal(w.m.onRevoked("not-in-the-file", () => heard.push("not-in-the-file")).ok, true);
+  assert.equal(w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" }).ok, true);
+  assert.deepEqual(heard, [MODULE_ORDER[3], MODULE_ORDER[40], MODULE_ORDER[120], "not-in-the-file"]);
 });

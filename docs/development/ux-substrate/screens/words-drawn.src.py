@@ -33,7 +33,7 @@ w('screen.archive.refused.head', 'Could not open this archive, because {reason}.
 w('screen.archive.refused.note', 'A damaged or tampered archive is refused whole rather than filed in part. If the city has a clean copy, capture it again from its address; it lands beside this one.')
 REWRITE.update({
   'screen.archive.summary': 'Opened when it was captured: {filed} files filed and held for review beside it, {held} already held, {notfiled} not filed, {folders} folders.',
-  'screen.archive.alreadyheld': 'Already held · the same file {name} captured directly on {date}; this copy is kept as a second sighting of it',
+  'screen.archive.alreadyheld': 'Already held · the same file {name} captured on {date}; this copy is kept as a second sighting of it',
   'screen.archive.folder': 'A folder · its {count} files are listed and filed below it',
   'screen.archive.refused.none': 'Nothing in it is filed. The archive itself stays captured exactly as it arrived, with its grade, and anyone can check why it was refused.',
 })
@@ -1443,6 +1443,30 @@ w301('proceeding.kind.appeal', 'Appeal', False, 'proceeding_kinds appeal')
 w301('proceeding.kind.complaint', 'Administrative complaint', False, 'proceeding_kinds complaint: filed with an agency or board, not a court')
 w301('proceeding.kind.help', 'What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.', False, "the choice's explanation")
 # --- end DEC-301
+# --- DEC-302 (BOB's B266, K3624, K3627: T50's L2-L4 words; screens-intake draws them in L11)
+def w302(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-302' + (': ' + note if note else '')))
+w302('refusal.BAD_FOR', "Say which question this capture is for: choose one of the project's questions. Nothing was captured.", False, "acquisition R47: acquire's for is not a question")
+w302('screen.inbox.alreadyheld', 'Already held: {holder} brought in the same file. Marked as brought in; nothing new was written.', False, 'doorbell R13')
+w302('screen.inbox.alreadyheld.other', "Already held: the same file is already in your team's records. Marked as brought in; nothing new was written.", False, 'doorbell R13: the holder is not one the viewer may see')
+w302('screen.open-file.safetext', 'Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.', False, 'file-safety R45')
+w302('screen.open-file.safetext.cut', 'The file is longer than this view shows; the rest is in the original file.', False, 'file-safety R45')
+REWRITE.update({  # DEC-302 (1), (4): keys minted in words-t48 and words-mod-2
+  'refusal.ACCOUNT_MEMBER_NOT_ACTIVE': "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
+  'refusal.NO_SAFE_VIEW': "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
+})
+# --- end DEC-302
+# --- DEC-303 (BOB's B267, K3629; B268, K3630): T50's L2 stake keys and L5 fold keys for the L11 screens
+def w303(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-303' + (': ' + note if note else '')))
+w303('refusal.MACHINE_CANNOT_SET_STAKE', "Only a member sets a project's stake, and this came from the assistant or another automated credential. Sign in to set it. Nothing was written.", True, 'project-roster R31, C-147.9')
+w303('refusal.STAKE_MALFORMED.project', "This project's stake says, in your own words, only what this matter adds to your team's usual stake: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written.", False, "project-roster R31: a project's stake; refusal.STAKE_MALFORMED stays the team's")
+w303('timeline.dated.title', 'Dated in the documents', False, "events R53: the Timeline's third list")
+w303('timeline.dated.tip', "Dates a document states, such as a deadline it sets or the date a letter bears. They are not events on the timeline until you record one from them.", False, "the list's explanation")
+w303('findin.cell.uncalculated', "{cell}: a formula the file never calculated, so it has no value here. Open the original in a spreadsheet program to see its result.", False, 'retrieval R83')
+w303('findin.match.nameinpassage', 'Named in this passage', False, 'retrieval R84: correspondence name_in_passage')
+w303('findin.match.sheet', 'Sheet {sheet}, row {row}', False, "retrieval R83: a sheet match's place")
+# --- end DEC-303
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

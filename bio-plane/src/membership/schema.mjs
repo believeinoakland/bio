@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS members (
   updated     TEXT NOT NULL,
   -- R58: the actor whose act caused the latest status transition; NULL reads 'not recorded', never back-filled.
   status_by   TEXT,
+  status_at   TEXT,
   -- D-134: who invited the member (server-stamped); NULL reads 'not recorded'.
   invited_by  TEXT,
   -- R19 (section 3, "Pairing"): whether this member's cover-and-handle pairing is published, the member's or an
@@ -254,6 +255,7 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["members", "handle", "TEXT"],
   ["members", "capabilities", "TEXT"],
   ["members", "status_by", "TEXT"],
+  ["members", "status_at", "TEXT"],
   ["members", "invited_by", "TEXT"],
   ["members", "pairing_published", "INTEGER NOT NULL DEFAULT 0"],
   ["members", "invite_expires", "TEXT"],
