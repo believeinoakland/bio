@@ -2,7 +2,7 @@
 
 Entries `A<n>`, newest last. BOB reads past its cursor at takeover and each backstop check.
 
-**Read by BOB** · through A2
+**Read by BOB** · through A5
 
 ## A1 · 2026-10-17 · Question 1 done: what exists
 Record: `NOTES.md` §Q1 (sources, tables with requirement ids). Nothing decided; no product code touched; no secret read or written.
@@ -42,3 +42,17 @@ Record: `REQUIREMENTS.md` (the direction kept verbatim in §1; made specific as 
 
 ## A4 · 2026-10-17 · Direction agreed in the lane session; Q2b started
 In the lane session the person directing it wrote: "I agree with your recommendations for now, though this is a conversation in which they're bound to evolve." The lane treats AIR1–AIR10 and the four recommendations in `REQUIREMENTS.md` §4 as the **working bar, provisional and open to change**. That is not yet a K ruling: BOB to record it (as Bob's if it was his words) and to expect revisions. Q2b (plans and terms, sessions and caching, model controls, signup and programs) is running now; Q3 follows.
+
+## A5 · 2026-10-17 · Q2b done: plans and terms, sessions and caching, model controls
+Record: `NOTES.md` §Q2b (tables with sources and OPEN items), `OPTIONS.md` §Q2b. Nothing decided; no product code touched. Blocked pages (OpenAI policies and pricing, x.ai terms and /grok, Cloudflare Galileo) were not worked around and stay OPEN: a person must read them.
+
+**Findings that matter.**
+1. **The one plan class whose terms read as allowing a team's application to serve its own users is a pay-as-you-go API account owned by that team** (confirmed text at Google, Mistral, OpenRouter; OPEN at OpenAI, xAI, Cohere, Cloudflare). No provider confirms a consumer subscription may power an app; Google bars the CLI-OAuth pattern; OpenAI's Sign in with ChatGPT (preview) is the one documented route and its terms are unread.
+2. **No documented referral or special-pricing arrangement for Civicsmith exists at any provider found**; programs found are unconfirmed (Google for Startups credits, OpenAI nonprofit chat seats, Cloudflare Galileo). AIR9's "special plans" therefore stays a future arrangement the catalogue can carry.
+3. **Session design:** provider-held conversation state conflicts with zero data retention at OpenAI, xAI and probably Mistral; Groq has none. So the plane's run record stays the source of truth with append-only history and a neutral session key; provider state is an optional per-adapter optimisation (AIR7).
+4. **Efficiency:** caching is automatic at most providers; batch is ~50% off at six; usage reports differ (cost only at OpenRouter). The harness needs neutral "session key", "cached tokens" and "reasoning tokens" fields.
+5. **Effort/model controls are per model, not per provider**, and only xAI, DeepSeek, OpenRouter and Together publish prices or effort machine-readably; the catalogue is partly hand-vetted and dated.
+
+**Needs from BOB.** Nothing new to decide. A2's three questions (connection ways, DeepSeek, free tiers) remain with Bob; Q2b adds a fourth for him when convenient: consumer subscriptions listed as "not available for use with Civicsmith" unless a provider documents a route (recommended). A person should read the blocked pages and counsel the "app holds the customer's key" point.
+
+**Next:** Q3, the boundary: provider-neutral interface, plan and model catalogues, adapters, session and usage shapes, cascade. Will read K1364 and the Capability Ladders "Labelled drafts" row first.

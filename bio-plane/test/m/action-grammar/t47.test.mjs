@@ -125,8 +125,8 @@ test("R28: the twelve rows whose raising site moved to action-records (C-73.2–
 
 test("R28: no other row moves: exactly those twelve name action-records, every other row's where names actions' or this module's site as before; control: C-32.21 stays actions' #seeksFence (its R72) and C-73.1, C-73.6, C-90.1 stay where they were", () => {
   const moved = new Set(Object.values(MOVED).flatMap((rows) => Object.keys(rows)));
-  /* T48 (R29) adds five rows to those naming action-records; they are pinned in t48.test.mjs */
-  const T48_MOVED = ["MACHINE_CANNOT_CORRESPOND", "BAD_DATE", "CAPTURE_AND_TESTIMONY", "NEITHER_CAPTURE_NOR_TESTIMONY", "UNREGISTERED_ARTIFACT"];
+  /* T48 (R29) adds five rows to those naming action-records, pinned in t48.test.mjs; T50 (BOB B2) adds NO_SUCH_ACTION, C-117.2, whose site action-records raises */
+  const T48_MOVED = ["MACHINE_CANNOT_CORRESPOND", "BAD_DATE", "CAPTURE_AND_TESTIMONY", "NEITHER_CAPTURE_NOR_TESTIMONY", "UNREGISTERED_ARTIFACT", "NO_SUCH_ACTION"];
   const naming = allRows().filter(({ row }) => row.where.startsWith(`${RECORDS_FILE} `)).map(({ code }) => code).sort();
   assert.deepEqual(naming, [...moved, ...T48_MOVED].sort());
   for (const { code, row } of allRows()) if (!moved.has(code) && !T48_MOVED.includes(code)) assert.match(row.where, /^src\/(actions\/index|action-grammar\/checks)\.mjs /, code);

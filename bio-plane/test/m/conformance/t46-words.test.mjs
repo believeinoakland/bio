@@ -11,6 +11,7 @@ import { readFile } from "node:fs/promises";
 import { scene, V, MACHINE } from "./fixture.mjs";
 import { CONFORMANCE_CHECKS, CONFORMANCE_WORDS, determinationVoided } from "../../../src/conformance/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -62,15 +63,17 @@ const KEPT_THREE = {
 /* Every row R38 does not re-word (34: the three above among them; not C-113.6, R40), as T45 left them: their canonical JSON's sha256, so
    no check, where or translation of theirs moves. */
 const KEPT = { count: 34, sha256: "969bae03b449a9723f5bd7a9f5c52a7e4abfecd0c0a234e72943c828709b194f" };
-/* T48 (R40) re-words C-113.6 NO_FINDINGS, so it leaves this set; the fourth-row test below holds its sentence. */
-const R40 = "A determination rests on at least one finding: one your group published, one checked and held for publication, "
-  + "or another group's finding your group has accepted. Name the findings it rests on. Nothing was written.";
+/* T48 (R40) re-worded C-113.6 NO_FINDINGS, and T50 reads it by key; it leaves this set, and the R40 test below holds it. */
+const R40 = ["C-113.6", AT("#pinFindings", "is-finding-named")];
 
-test("R38 C-113.38–C-113.43 read words.json's refusal.<CODE> by key from CONFORMANCE_WORDS, never a copy; codes, numbers and wheres unmoved; T45's words answered no longer", () => {
+test("R38 R40 C-113.38–C-113.43 and C-113.6 read words.json's refusal.<CODE> by key from CONFORMANCE_WORDS, never a copy; codes, numbers and wheres unmoved; T45's words answered no longer", () => {
   assert.ok(Object.isFrozen(CONFORMANCE_WORDS));
-  assert.deepEqual(Object.keys(CONFORMANCE_WORDS).sort(), Object.keys(TAKEN).map((c) => `refusal.${c}`).sort(),
-    "the table holds exactly the six rows' keys");
-  for (const [key, text] of Object.entries(CONFORMANCE_WORDS)) assert.equal(text, en(key), `${key} verbatim`);
+  assert.deepEqual(Object.keys(CONFORMANCE_WORDS).sort(), [...Object.keys(TAKEN), "NO_FINDINGS"].map((c) => `refusal.${c}`).sort(),
+    "the table holds exactly the six rows' keys and C-113.6's");
+  for (const [key, text] of Object.entries(CONFORMANCE_WORDS)) {
+    assert.equal(text, en(key), `${key} verbatim`);
+    assert.equal(text, word(key), `${key} through setup-words' word`);
+  }
   for (const [code, [check, where]] of Object.entries(TAKEN)) {
     const row = CONFORMANCE_CHECKS[code];
     assert.deepEqual([row.check, row.where], [check, where], code);
@@ -171,16 +174,17 @@ test("R38 C-113.39–C-113.43: cureLink's and cureUnlink's re-worded refusals ar
   assert.equal(w.c.cureUnlink({ link: ok.link, reason: "recorded in error", author: V("olive"), viewer: V("olive") }).ok, true);
 });
 
-test("R40 C-113.6 NO_FINDINGS' translation names the three kinds of finding (published, checked and held, another group's accepted), BOB's draft while words.json holds no refusal.NO_FINDINGS; code, number and where unmoved; determine with no findings still answers it in R1's place; a finding named lands (control)", () => {
+test("R40 C-113.6 NO_FINDINGS' translation is words.json's refusal.NO_FINDINGS read by key and names the three kinds of finding, an accepted one among them; code, number and where unmoved; determine with no findings still answers it in R1's place; a finding named lands (control)", () => {
   const row = CONFORMANCE_CHECKS.NO_FINDINGS;
-  assert.deepEqual([row.check, row.where, row.translation], ["C-113.6", AT("#pinFindings", "is-finding-named"), R40]);
+  assert.deepEqual([row.check, row.where], R40);
   assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"]);
+  assert.equal(row.translation, word("refusal.NO_FINDINGS"));
+  assert.equal(row.translation, en("refusal.NO_FINDINGS"));
+  assert.equal(row.translation, CONFORMANCE_WORDS["refusal.NO_FINDINGS"]);
   assert.match(row.translation, /published/);
   assert.match(row.translation, /checked and held/);
-  assert.match(row.translation, /another group's finding your group has accepted/);
-  /* until the design stream gives the key, no copy and no by-key read: the sentence is BOB's */
-  if (!WORDS.some((x) => x.key === "refusal.NO_FINDINGS")) assert.ok(!("refusal.NO_FINDINGS" in CONFORMANCE_WORDS));
-  else assert.equal(row.translation, WORDS.find((x) => x.key === "refusal.NO_FINDINGS").en, "read by key once given");
+  assert.match(row.translation, /another team's finding your team has accepted/);
+  assert.doesNotMatch(row.translation, /\bgroup\b/, "D29: team, never group, in text people read");
   const { w, input } = scene();
   for (const findings of [[], undefined]) {
     const before = w.snapshot();

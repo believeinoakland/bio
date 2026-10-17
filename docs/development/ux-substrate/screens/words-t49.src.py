@@ -675,6 +675,7 @@ w18('queue.capture-completed-unattended.request.detail.unnamed', "This document 
 w18('queue.capture-completed-unattended.gradenote', 'When it was captured, a member there would have read this note on it: {note}', False, "appended to either producer's detail once per distinct grade note; {note} the note's own words; never a fingerprint")
 # --- end DEC-274
 
+RETIRED_DEC328 = ['queue.muted.case']  # DEC-328 (B300 (2)): queue answers no whole-project mute
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # DEC-279: setup's long assistant panel and its headings, no longer drawn (the parts say it in their own words)
 RETIRED += ['screen.setup.choice.head', 'screen.setup.choice.own', 'screen.setup.choice.both', 'screen.setup.choice.none', 'screen.setup.setting.head', 'screen.setup.setting.groupkey', 'screen.setup.setting.own', 'screen.setup.leaves.head', 'screen.setup.keepaway.head', 'screen.setup.people.head']
@@ -684,5 +685,6 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
+RETIRED += RETIRED_DEC328
 open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-269' if k in DEC269_REWORDED else 'DEC-268' if k in DEC268_REWORDED else 'DEC-267' if k in DEC267_REWORDED else 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

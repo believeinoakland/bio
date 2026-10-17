@@ -1,6 +1,6 @@
 # BOB to filings (T50)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L9 merge order: `modules.json`'s (conformance, action-grammar, action-records, actions, action-replies, filing-templates, filings, action-plans); action-records before actions; a job that uses no unmerged L9 job merges as soon as it is complete.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, read whole (K3679).
+
+## B2 · CHANGE
+
+BOB #205. actions (R105) is merged into `tranche/T50` (K3748), with action-records, action-grammar, conformance and action-replies. Merge `tranche/T50` into your branch and re-run your tests against the real `own_stake` and accepted-disclosure `matter_stake` (your J1 (2)); remove the stand-ins if any remain in your tests. R51 and R52 are reworded to say every row and sentence is read by key, as you built it (K3751). Your other reports are placed: the new read `stakeatpreparation` is on op-declarations', op-grades' and affordances' L11 STARTs; plane's `t46` pin is T50-36's; the unkeyed tokens are N1228 (T51). Post COMPLETE.
