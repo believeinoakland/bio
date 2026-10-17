@@ -117,7 +117,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   ADDRESSEE_REFUSED: {
     check: 'C-124.17', where: at("#optionFields", "is-option-addressee"),
     translation: 'An addressee is an office by its role and body, a reporter or outlet, an organisation or another '
-      + 'civic team by role and organisation, or a described audience. It is never a private individual. Nothing '
+      + 'civic organization by role and organisation, or a described audience. It is never a private individual. Nothing '
       + 'was written.',
   },
   DATE_REFUSED: {
