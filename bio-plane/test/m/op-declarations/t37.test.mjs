@@ -193,9 +193,10 @@ test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry ever
     assert.ok(actsOf("declared").includes(op) && !owed.includes(op), `${op} is not re-pointed to its declared op`);
     assert.ok(Object.hasOwn(OPS, op) && familyOf(op), `${op}: not declared in a family`);
   }
-  /* T46 (R52): every owed act of PR #28's registry is declared (infolevelset, owed with no spec until T46, is R50's); (T49,
-     K3321 (B)) but the five PR #36 owes whose ops T49 leaves out (N933, DEC-238, DEC-239), named, with no spec */
-  const LEFT_OUT = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem"];
+  /* T46 (R52): every owed act of PR #28's registry is declared (infolevelset, owed with no spec until T46, is R50's); (T50,
+     R73) the five PR #36 owes whose ops T49 left out are declared now; the registry also owes the installer's four own
+     routes (K3471, installer R62), no plane op, named, with no spec */
+  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
   assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)).sort(), LEFT_OUT);
   const src = readFileSync(new URL("bio-plane/src/op-declarations/index.mjs", ROOT), "utf8");
   assert.doesNotMatch(src, /`setpassword` \(credentials, in process\)/);
