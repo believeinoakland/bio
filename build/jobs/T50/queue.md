@@ -37,3 +37,9 @@ Nothing.
 - `checks/format.mjs bio`: 171 modules, 170 requirements files; 0 failures. `checks/architecture.mjs bio queue`: 32 product files, 97 relative imports; 0 failures. `checks/coverage.mjs bio queue`: 47 of 47 live requirement ids named by a test; 0 failures. `checks/ownership.mjs bio queue tranche/T50`: see the line below.
 
 Size (session_016Aha62MHvicFq7HrjZjQZz): test runs 9, module lines 3214
+
+## J1 · REPORT
+
+Found outside queue (T50-21; details in my record):
+1. answer-envelope R7's hash pins: queue's C-33.27 KIND_NOT_PERSONAL and C-33.50 NO_PROJECT_SCOPE now read refusal.KIND_NOT_PERSONAL / refusal.NO_PROJECT_SCOPE from words.json, whose sentences differ from the old inline ones ("group" is "team"; "no team's list" is "no project's list"). The other five queue refusals are word for word unchanged. The two pins stay red until T50-25 re-pins them; answer-envelope merges before queue, so the order of that re-pin is BOB's.
+2. For the design lane: queue's catalogue sentences (QUEUE_*_KINDS, one per kind, 'op=… — LIVE: …') are developer-facing, published only as op=affordances vocabularies; no screen draws them, so they stay inline. If the design lane wants them keyed, that is a new list of keys. Tell me if so.
