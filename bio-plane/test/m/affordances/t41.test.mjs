@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const { RUNGS, RUNG_ABSENT, NON_ACTS } = G;
 const RETIRED = ["aiceilingset", "aicopyceilingset", "accountswitchset", "groupswitchset"];
@@ -59,5 +60,5 @@ test("R41: a refusal of a T41 op is explained with that op's rung or stated abse
   }
   for (const op of reads) assert.deepEqual([A.explainRefusal({ op, code: "X" }).rung, A.explainRefusal({ op, code: "X" }).rung_absence], [null, null], op);
   const gone = A.explainRefusal({ op: "aiceilingset", code: "X" });
-  assert.deepEqual([gone.rung, gone.rung_absence, gone.detail], [null, null, A.NOT_CATALOGUED]);
+  assert.deepEqual([gone.rung, gone.rung_absence, gone.detail], [null, null, word("refusal.uncatalogued")]);
 });

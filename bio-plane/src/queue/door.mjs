@@ -36,7 +36,7 @@ export async function queueFeedOp(url, store, { json, doAnswer, storeRefusal, st
   const inner = new URL("http://do/queue");
   inner.searchParams.set("viewer", viewer);
   inner.searchParams.set("member", member);
-  for (const k of ["limit", "sort"]) {
+  for (const k of ["limit", "sort", "muted"]) {
     const v = url.searchParams.get(k);
     if (v !== null) inner.searchParams.set(k, v);
   }

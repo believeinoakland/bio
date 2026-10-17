@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T50)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -26,3 +26,11 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B3 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
+
+## B4 · CHANGE
+
+interface-shell (T50-27) is merged into tranche/T50 (K3777); it reads every screen's acts from SCREEN_REGISTRY (design 7be06eb4cb). Its R73 test finds screens-settings' members naming six acts and screens-investigate's person one act that the registry does not list for them, as composed from tranche/T50 today. Merge tranche/T50, run interface-shell's t-composition test (R73, every act of the real SCREENS composes) with your module, make your screens draw exactly the registry's acts, and post COMPLETE.

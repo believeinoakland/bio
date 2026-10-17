@@ -3,7 +3,7 @@
    expected refusal writes no console line. Every sentence is read through `setup-words`' `word` (R70). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, classLiterals, RE_POINTS, checkScreens } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, classLiterals, checkScreens } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
@@ -159,24 +159,9 @@ test("R71 the startup bootstrap carries the page's session whenever the page hol
   assert.equal(signedIn.byOp("bootstrap")[0].headers.Authorization, "Bearer " + SESSION.t);
   const signedOut = await boot({ screens: ALL, session: null, path: "/app/home", plane: { bootstrap: ok({ test_instance: false }) } });
   assert.equal(signedOut.byOp("bootstrap")[0].headers.Authorization, undefined);
-  assert.equal(RE_POINTS.setup.includes("founderhandleset"), true);
+  /* R73: setup's founderhandleset is the registry's (owed), admitted under its op name once op-declarations declares the op */
   const s = (id, op) => ({ id, reads: () => ({}), acts: [{ op }], render: () => "" });
-  /* composes once op-declarations declares the op (its R71) */
-  if (Object.hasOwn(OPS, "founderhandleset")) assert.equal(checkScreens([s("setup", "founderhandleset")]), true);
+  const owed = (SCREEN_REGISTRY.find((r) => r.id === "setup") || { owed: [] }).owed.some((o) => o.op === "founderhandleset");
+  if (owed && Object.hasOwn(OPS, "founderhandleset")) assert.equal(checkScreens([s("setup", "founderhandleset")]), true);
 });
 
-test("R72 until the registry is re-taken, RE_POINTS admits the acts the design's registry lists that the generated one lacks, on their screens; control: an act on none of them throws", () => {
-  const s = (id, op) => ({ id, reads: () => ({}), acts: [{ op }], render: () => "" });
-  const admitted = { connect: ["reauth"], group: ["declaredstakeset", "writinghelp"], projects: ["themeread", "projectjoin"], theme: ["themeread", "themedeclare", "themeplace", "themewithdraw"],
-    queue: ["projectjoin", "release", "filingapprove"], finder: ["themeread"], document: ["adoptversion", "keepversion", "connectionchoose", "explore", "themeplace", "themepropose", "themewithdraw", "captureprogressions", "thread"],
-    project: ["projectvisibilityset", "projectownerremove", "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue", "writinghelp"], projectai: ["projectjoin"],
-    question: ["inquiryground", "versionaccept", "versionhide", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "readtranslate", "themeplace", "airunopen", "airunclose"],
-    person: ["entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"], timeline: ["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"],
-    explore: ["stepsource"], plan: ["planask"], "start-send": ["writinghelp"], action: ["actionrisktier", "actionlaws", "actionlawspropose"], "review-outside": ["statementack"], home: ["projectjoin"] };
-  for (const [id, ops] of Object.entries(admitted)) for (const op of ops) {
-    assert.ok(RE_POINTS[id].includes(op), id + " " + op + " is listed");
-    /* composes where the screen is in the registry and the owner declares the op (a screen the stale registry lacks, and an op not yet declared, wait for N1122 and their owners) */
-    if (SCREEN_REGISTRY.some((r) => r.id === id) && Object.hasOwn(OPS, op)) assert.equal(checkScreens([s(id, op)]), true, id + " " + op);
-  }
-  assert.throws(() => checkScreens([s("members", "projectjoin")]), /members.*projectjoin/);
-});
