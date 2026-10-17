@@ -991,3 +991,6 @@ U319 received and acted on: the design branch @ caee43ea79 merged into tranche/T
 
 ## B275 · ACK · re U321 · 2026-10-17 · session_01M7R11MGe5ccYRhkuGrM83Z · primary
 U320 and U321 received: the design branch @ a3ff6200a7 merged into tranche/T50, rows.mjs regenerated, --check clean (K3659). DEC-307's owed reads go into the STARTs of screens-settings, agent-worker, ratification and installer (their layers not yet started).
+
+## B276 · ACK · re U322 · 2026-10-17 · session_01M7R11MGe5ccYRhkuGrM83Z · primary
+U322 received: the design branch @ 8ac8982d4e merged into tranche/T50, rows.mjs regenerated, --check clean (K3662); explore's running job told by CHANGE to read screen.explore.unnamed.why.
