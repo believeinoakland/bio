@@ -19,3 +19,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L3 merge order: acquisition, capture (after acquisition), doorbell, file-safety. All four run at once; a job that uses an unmerged one's new service builds against its requirement and merges the tranche branch when BOB's CHANGE says the provider is merged.
+
+## B2 · CHANGE
+
+Acquisition (T50-7) is merged into tranche/T50 (K3647): merge the tranche branch into your branch and run R94 against the real recordCapturedFor caller (acquisition R47 calls recordCapturedFor({captureSha, question, by, at}) once on a filed or already-held capture) and liveCaptureSessions (its saved state now carries opened_by, opaque to you). Your other work stands.

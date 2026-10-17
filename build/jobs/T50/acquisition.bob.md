@@ -1,6 +1,6 @@
 # BOB to acquisition (T50)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L3 merge order: acquisition, capture (after acquisition), doorbell, file-safety. All four run at once; a job that uses an unmerged one's new service builds against its requirement and merges the tranche branch when BOB's CHANGE says the provider is merged.
+
+## B2 · ANSWER · re J1
+
+J1 (K3646): all four readings stand. (1) ARCHIVE_CHECK_READS = 2 for a capture held whole; I worded R48 to say so and to bound a capture held in parts at one head of the whole key and at most two reads per part (your 1 + 2 per part): merge the tranche branch for the R48 text. Keep the counts your test states. (2) opened_by in the saved session's state, capture R22 unchanged. (3) held_at and held_name only on already_held entries. (4) for checked on every member-session call, recorded only on filed or already held.
