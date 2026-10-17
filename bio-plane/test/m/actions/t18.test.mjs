@@ -193,7 +193,7 @@ test("R47 actionCreate is a promotion of an action document, its id minted; op=a
   assert.equal(op.ok, true);
   const read = actions.actionsOps(w.a, url({ id: op.id, viewer: M }), null).action();
   assert.deepEqual([read.ok, read.id, read.kind], [true, op.id, "other"]);
-  assert.equal(actions.actionsOps(w.a, url({ id: op.id, viewer: "nobody" }), null).action().reason, "NO_SUCH_BUNDLE");
+  assert.equal(actions.actionsOps(w.a, url({ id: op.id, viewer: "nobody" }), null).action().reason, "NO_SUCH_ACTION", "R106: invisible answers as absent, through R43");
   const list = actions.actionsOps(w.a, url({ viewer: M, kind: "other" }), null).actions();
   assert.deepEqual(list.items.map((x) => x.id), [c.id, aud.id, op.id]);
 });

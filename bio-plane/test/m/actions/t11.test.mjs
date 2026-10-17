@@ -125,7 +125,8 @@ test("R43 noSuchAction answers the one refusal for an action the caller may not 
   const row = grammar.ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
   assert.deepEqual(Object.keys(r).sort(), ["action", "check", "code", "detail", "ok", "reason", "translation"]);
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.action], [false, "NO_SUCH_ACTION", "NO_SUCH_ACTION", "C-117.2", row.translation, "ACTN-2026-0001-a"]);
-  assert.equal(row.where, "src/actions/index.mjs noSuchAction > is-no-such-action");
+  /* R107 (T50): the function's home is action-records'; the row names the function and its region wherever it stands */
+  assert.match(row.where, / noSuchAction > is-no-such-action$/);
   assert.equal(actions.noSuchAction("ACTN-2026-9999-q").detail, r.detail, "one sentence for every id and every caller");
   assert.equal(actions.noSuchAction().action, null);
   assert.equal(actions.noSuchAction(null).action, null);

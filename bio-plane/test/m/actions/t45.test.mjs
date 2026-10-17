@@ -136,7 +136,7 @@ test("R75 the read answers disclosures: one per distinct held check and per dist
   assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).disclosures, [
     { kind: "checked_held", checked_at: "2026-11-03" },
     { kind: "accepted", group: "Hayward Parents", edition_date: "2026-09-03", accepted_at: "2026-09-20",
-      identity: "Hayward Parents for Accountability", stake: "none declared" }]);
+      identity: "Hayward Parents for Accountability", stake: "none declared", matter_stake: null }]);
   /* control: an action resting only on published findings answers none */
   assert.equal(w.promote(B, breach(B, PUB)).ok, true);
   assert.deepEqual(w.a.actionRead({ id: B, viewer: M }).disclosures, []);
@@ -561,7 +561,10 @@ test("R8 R74 R77 R78 R79 R82 R85 R86 (T45) each code this module mints has its r
   const MOVED = new Set(["PRESSURE_MARKED", "PRESSURE_NO_ENTRY", "MACHINE_CANNOT_SET_HOLD", "HOLD_REFUSED", "HOLD_NO_LEGAL_MARK",
     "HOLD_RELEASE_IS_ITS_OWN_ACT", "HOLD_PROJECTS_REFUSED", "HOLD_ALREADY_RELEASED",
     /* `NOT_A_PROCEEDING` is `entities`' one site since T48 (R104; its R53); action-grammar's C-117.28 row is reported */
-    "NOT_A_PROCEEDING"]);
+    "NOT_A_PROCEEDING",
+    /* `NO_SUCH_ACTION` is minted by `action-records.noSuchAction` since T50 (R107; its R18): its region moved with it, and
+       action-grammar's C-117.2 row is re-pointed there (its R29), reported at this job's COMPLETE */
+    "NO_SUCH_ACTION"]);
   /* K3128 (T48): the rows are read through the census (`test/system/row-census.mjs`, promotion R50), as every module's are,
      not through a table this test names; the regions are then looked up in the file each row's `where` names. */
   const { censusRows } = await import("../../system/row-census.mjs");
