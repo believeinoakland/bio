@@ -2,7 +2,9 @@
  * one scope, by kind, that records nothing. `Retrieval.findIn` resolves the scope under the viewer's sight (a capture, a
  * selection, an enumerated set, a project's holdings) and hands this file the captures, in capture-sha order; this file
  * reads each capture's readings and text (`extraction`'s and `content`'s read contracts) and answers each kind by a
- * deterministic matcher, never a model.
+ * deterministic matcher, never a model. T50 (N1123, N1177, N1183, N1191, N1193): each match also names its document and its
+ * content row (R80, R81), keeps a passage's line breaks (R82), says where in a sheet it lies (R83), and `people` also
+ * finds a held alias in a passage's words (R84).
  *
  * WHAT IT NEVER DOES: write (no selection, no observation, no fact, no reading: a member's own searching writes
  * nothing, observation-log R24); fold a capture it could not read into "Nothing here" (DEC-98: `nothing` is said only
@@ -17,7 +19,9 @@
  * whole document in its place (a reader's silence is not a member's citation of the whole). */
 import { isCalendarDate } from "../civil-time/index.mjs";
 import { parseFigure } from "../calc-grammar/index.mjs";
-import { extentRelation } from "../content/index.mjs";
+import { extentRelation, canonicalExtent } from "../content/index.mjs";
+import { normAlias } from "../extraction/index.mjs";
+import { say } from "./words.mjs";
 
 /* R74: the kinds, closed (DEC-164 (2)). */
 export const FIND_KINDS = Object.freeze(["people", "money", "dates", "requirements", "events", "term"]);
@@ -34,6 +38,9 @@ export const FIND_TERM_MAX = 200;
 export const FIND_EVENT_TYPES = Object.freeze(["meeting_minutes", "meeting_agenda"]);
 /* R74's `people`: the kinds of registered entity a name is found for (entities' closed kinds). */
 export const FIND_PEOPLE_KINDS = Object.freeze(["person", "office"]);
+/* R84: the held aliases read per page, and the most pages one find reads (past it, `truncated`). */
+const ALIAS_PAGE = 5000;
+const ALIAS_PAGES_MAX = 4;
 /* The one origin every match carries ("Found by search", DEC-164 (4)). */
 export const FIND_ORIGIN = "search";
 /* R73 (N715; DEC-164 (4)): the recording modules whose `recordedBy` reads a find calls, in the modules' total order,
@@ -41,9 +48,11 @@ export const FIND_ORIGIN = "search";
    later module is registered. */
 export const RECORDED_BY_MODULES = Object.freeze(["events", "standards", "money", "people"]);
 export const RECORDED_BY_LIMIT = 500;
-export const RECORDED_NONE_REGISTERED = "no later module's records were read: none registered";
-/* R73: the relations under which a recorded item is the match's: the same extent, one inside it, one around it. */
-const RECORDED_RELATIONS = Object.freeze(["same", "narrower", "wider"]);
+export const RECORDED_NONE_REGISTERED = say("retrieval.recorded_none_registered");
+/* R73 (T50; N1191 (d)): the relations under which a recorded item is the match's: the same extent, or one inside it.
+   A fact recorded around the match (the whole document, a whole sheet, the page holding it) marks none of the passages
+   inside it, so `wider` is not one. */
+const RECORDED_RELATIONS = Object.freeze(["same", "narrower"]);
 
 /* R75 (DEC-99): the matchers' words, held per language in this one place and nowhere else in this module's code: a
    frozen map from a BCP 47 primary language subtag to its vocabularies. A language is added by adding its set, with
@@ -76,7 +85,7 @@ export const FIND_MATCHERS = deepFreeze({
                  "forty-five": 45, forty: 40, sixty: 60, ninety: 90, "one hundred twenty": 120, "one hundred eighty": 180 },
     },
     /* The requirement words, longest first so "shall not" is read before "shall". A sentence carrying one is found;
-       it is never labelled a force (standards R35; K1722). */
+       it is never labeled a force (standards R35; K1722). */
     requirements: ["is required to", "are required to", "shall not", "must not", "may not", "shall", "must"],
   },
 });
@@ -128,12 +137,14 @@ function sentenceAround(text, start, end) {
   return text.slice(a, b).trim();
 }
 
-/** R73: a match's words as written, at most `FIND_WORDS_MAX` characters, cut at a word with `…`. */
+/** R73, R82: a match's words as written, at most `FIND_WORDS_MAX` characters, cut at a word with `…`. A run of
+ *  whitespace holding a line break is one line break, any other run one space, so a title line and the sentence under
+ *  it are two lines and never one run. */
 export function cutWords(s) {
-  const t = String(s ?? "").replace(/\s+/g, " ").trim();
+  const t = String(s ?? "").replace(/\s+/gu, (run) => (/[\n\r\u2028\u2029\u0085]/u.test(run) ? "\n" : " ")).trim();
   if (t.length <= FIND_WORDS_MAX) return t;
   const head = t.slice(0, FIND_WORDS_MAX - 1);
-  const at = head.lastIndexOf(" ");
+  const at = Math.max(head.lastIndexOf(" "), head.lastIndexOf("\n"));
   return `${(at > 0 ? head.slice(0, at) : head).trimEnd()}…`;
 }
 
@@ -164,9 +175,9 @@ export function matchDates(text, set) {
     if (g[0] !== undefined) date = `${g[2]}-${two(p.monthOf.get(g[0].toLowerCase()))}-${two(g[1])}`;
     else if (g[3] !== undefined) date = `${g[5]}-${two(p.monthOf.get(g[4].toLowerCase()))}-${two(g[3])}`;
     else if (g[6] !== undefined) date = `${g[6]}-${g[7]}-${g[8]}`;
-    else if (g[9] !== undefined) why = "the words write the day and the month as numbers, and which comes first is not said";
-    else why = "the words name a month, not a day";
-    if (date && !isCalendarDate(date)) { why = `${date} names no day of the calendar`; date = null; }
+    else if (g[9] !== undefined) why = say("retrieval.why.words_write_day");
+    else why = say("retrieval.why.words_name_month");
+    if (date && !isCalendarDate(date)) { why = say("retrieval.why.names_day_calendar", { date }); date = null; }
     out.push({ index: m.index, end: m.index + m[0].length, as_read: m[0], date, ...(why ? { date_why: why } : {}) });
   }
   for (const m of t.matchAll(p.period)) {
@@ -217,7 +228,7 @@ export class Finder {
       const acc = { items: [], not_read: [], truncated: false };
       const add = (item) => {
         if (acc.items.length > limit) return;
-        acc.items.push(item);
+        acc.items.push(placed(item, data.get(item.capture_sha)));
       };
       const skip = (c, why) => acc.not_read.push({ capture_sha: c.capture_sha, why });
       if (kind === "people") this.#people(captures, data, add, skip, viewer, acc, limit);
@@ -245,15 +256,15 @@ export class Finder {
       const items = acc.items.slice(0, limit);
       /* DEC-98: "Nothing here" only when every capture of the scope was read for this kind and none matched. */
       const nothing = whole && items.length === 0 && acc.not_read.length === 0 && !truncated;
-      return { kind, items, count: items.length, truncated, nothing, ...(nothing ? { says: "Nothing here" } : {}),
+      return { kind, items, count: items.length, truncated, nothing, ...(nothing ? { says: say("state.empty") } : {}),
                not_read: acc.not_read };
     });
   }
 
   /** R73, R76 (N715; K1941, K2063): who recorded each match. Every read (`r.recordedReads()`: the four recording
    *  modules' `recordedBy`, then each registered one) is called once per capture of `captures`, under `viewer`, with
-   *  `limit` RECORDED_BY_LIMIT; each item whose extent stands to the match's (a table item's `table.extent`) as `same`,
-   *  `narrower` or `wider` (`content.extentRelation`) is in the match's `recorded`, `relation` that answer. A read
+   *  `limit` RECORDED_BY_LIMIT; each item whose extent stands to the match's (a table item's `table.extent`) as `same`
+   *  or `narrower` (`content.extentRelation`; T50: never `wider`, R73) is in the match's `recorded`, `relation` that answer. A read
    *  that throws, rejects, refuses or answers another shape is in `not_read` with why and changes nothing else; a
    *  promise is never awaited (a find is synchronous), and its rejection is caught. Answers `{read, not_read}`. */
   recorded(kinds, captures, viewer) {
@@ -290,6 +301,41 @@ export class Finder {
     return { read, not_read };
   }
 
+  /** R80, R81 (T50; N1123, N1177): every match carries `title`, the title of the bundle R73 attributes its capture to (null
+   *  when that bundle states none), and, with an extent (a table item's `table.extent`), `content_id`, the id of the row
+   *  `content` holds for exactly that capture and extent, or null with `content_held: false`. A find mints nothing, so a
+   *  passage nobody has marked citable answers null. A row held in a bundle the viewer may not see is no row to them. */
+  annotate(kinds, captures, viewer) {
+    const bundleOf = new Map(captures.map((c) => [c.capture_sha, c.bundle_id]));
+    const sees = this.r.sight(viewer);
+    const titles = new Map(), held = new Map();
+    const titleOf = (id) => {
+      if (!titles.has(id)) {
+        const row = id ? this.r.oneOf(`SELECT title FROM bundles WHERE bundle_id = ?`, id) : null;
+        titles.set(id, row && typeof row.title === "string" && row.title.trim() ? row.title : null);
+      }
+      return titles.get(id);
+    };
+    const contentOf = (sha, extent) => {
+      let canon = null;
+      try { canon = canonicalExtent(extent); } catch { canon = null; }
+      if (canon === null) return null;
+      const key = `${sha}\u0000${canon}`;
+      if (!held.has(key)) {
+        const row = this.r.rowsOf(`SELECT content_id, bundle_id FROM content WHERE capture_sha = ? AND extent = ?
+                                    ORDER BY stale, at, content_id`, sha, canon).find((r) => sees(r.bundle_id));
+        held.set(key, row ? row.content_id : null);
+      }
+      return held.get(key);
+    };
+    for (const k of kinds)
+      for (const m of k.items) {
+        m.title = titleOf(bundleOf.get(m.capture_sha) ?? null);
+        const at = m.table ? m.table.extent : m.extent;
+        if (at) { m.content_id = contentOf(m.capture_sha, at); m.content_held = m.content_id !== null; }
+      }
+  }
+
   /* One capture's reading (content type, language, typed cells, items) and its text units in reading order. */
   #load(c) {
     const row = this.r.oneOf(`SELECT content_type, reading FROM readings WHERE capture_sha = ?`, c.capture_sha);
@@ -301,7 +347,8 @@ export class Finder {
       ? reading.language.split("-")[0].toLowerCase() : null;
     const cells = reading && reading.cells && typeof reading.cells === "object" && !Array.isArray(reading.cells)
       ? reading.cells : null;
-    return { reading: row ? { content_type: row.content_type, value: reading } : null, units, language: lang, cells };
+    return { reading: row ? { content_type: row.content_type, value: reading } : null, units, language: lang, cells,
+             grids: new Map() };
   }
 
   /* `money` and `dates`: over the text units, and over a workbook's typed cells where the reading holds them. A
@@ -330,8 +377,7 @@ export class Finder {
         /* A table in a document: its reading holds the table's text but not its cells, so which column holds the
            dates or amounts is not read. It is one result naming the table, as a column is. */
         add({ kind, table: { capture_sha: c.capture_sha, extent: e, column: null, rows: null,
-                             column_why: "the reading holds this table's text but not its cells, so which column "
-                                       + "holds these is not read" },
+                             column_why: say("retrieval.column_why") },
               words: cutWords(String(u.text).split("\n")[0]), capture_sha: c.capture_sha, extent: e, origin: FIND_ORIGIN });
         continue;
       }
@@ -434,12 +480,12 @@ export class Finder {
     /* DEC-98: a page whose names could not be read is in `not_read`, never "Nothing here". */
     const unread = (why) => { for (const c of captures) if (read.includes(c.capture_sha)) skip(c, why); };
     const entities = this.r.entitiesFor();
-    if (!entities) { unread("not read: the followed people and offices could not be read"); return; }
+    if (!entities) { unread(say("retrieval.unread.read_followed_people")); return; }
     /* entities R52 (K1972): R17's candidates for every followed person and office over this page's captures, in one
        bounded read; its page is this kind's own, so its `truncated` is this kind's. */
     const ans = entities.namingIn({ captureShas: read, kinds: [...FIND_PEOPLE_KINDS], limit, viewer });
     if (!ans || ans.ok !== true) {
-      unread(`not read: the followed people and offices could not be read${ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : ""}`);
+      unread(say("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
       return;
     }
     if (ans.truncated) acc.truncated = true;
@@ -448,17 +494,97 @@ export class Finder {
       .map((cand) => ({ ent: byId.get(cand.entity_id), cand }));
     found.sort((a, b) => a.cand.capture_sha.localeCompare(b.cand.capture_sha) || String(a.cand.ref).localeCompare(String(b.cand.ref))
       || a.ent.entity_id.localeCompare(b.ent.entity_id));
+    const refs = [];
     for (const { ent, cand } of found) {
       const pos = this.r.oneOf(`SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha = ? AND ref = ?
                                  ORDER BY seq LIMIT 1`, cand.capture_sha, cand.ref);
       const { extent, extent_why } = pos && pos.pos_kind
         ? { extent: { kind: pos.pos_kind, ...(safeJson(pos.pos) || {}) }, extent_why: null }
         : extentOfSource(null);
+      refs.push({ entity_id: ent.entity_id, capture_sha: cand.capture_sha, extent });
       add({ kind: "people", words: cutWords(cand.label ?? cand.key ?? cand.ref), capture_sha: cand.capture_sha, extent,
             ...(extent_why ? { extent_why } : {}), origin: FIND_ORIGIN,
             entity: { entity_id: ent.entity_id, kind: ent.kind, label: ent.label },
             correspondence: cand.correspondence, matched_alias: cand.matched_alias, ref: cand.ref });
     }
+    this.#aliasPeople(captures, read, data, entities, add, skip, acc, viewer, refs);
+  }
+
+  /* R84 (N1193): a held alias of a registered person or office is also found in the words of the scope's text units. Each
+     standing alias (`entities.aliasesOf`, its R55) is folded as `entities` folds a name (R17) and matched as a whole
+     phrase, its terms in order and adjacent between non-letters, against each unit's folded text: one item per (unit,
+     entity), however many aliases or occurrences match, its `matched_alias` the first in entity then alias order. A name
+     two entities hold lists each and nothing is resolved (entities R9). A reference already found for the same entity
+     in the same unit stands as it is (the stronger correspondence); a capture with no text unit is in `not_read`. */
+  #aliasPeople(captures, read, data, entities, add, skip, acc, viewer, refs) {
+    const unreadAll = (why) => { for (const c of captures) if (read.includes(c.capture_sha)) skip(c, why); };
+    if (typeof entities.aliasesOf !== "function") {
+      unreadAll(say("retrieval.unread.read_followed_people"));
+      return;
+    }
+    const held = [];
+    let after = null;
+    for (let page = 0; page < ALIAS_PAGES_MAX; page++) {
+      let ans = null;
+      try { ans = entities.aliasesOf({ kinds: [...FIND_PEOPLE_KINDS], limit: ALIAS_PAGE, after, viewer }); } catch { ans = null; }
+      const list = ans && ans.ok === true && Array.isArray(ans.aliases) ? ans.aliases : null;
+      if (!list) {
+        unreadAll(say("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
+        return;
+      }
+      held.push(...list);
+      if (!(ans && ans.truncated === true)) { after = null; break; }
+      after = ans.next ?? null;
+      if (after === null || page === ALIAS_PAGES_MAX - 1) { acc.truncated = true; break; }
+    }
+    const phrases = [];
+    for (const a of held) {
+      const phrase = foldTokens(normAlias(a && a.alias));
+      if (a && typeof a.entity_id === "string" && phrase.length) phrases.push({ ...a, phrase });
+    }
+    for (const c of captures) {
+      if (!read.includes(c.capture_sha)) continue;
+      const d = data.get(c.capture_sha);
+      if (!d.units.length) { skip(c, "no text: this capture's reading holds no text unit to find a held name in"); continue; }
+      if (!phrases.length) continue;
+      for (const u of d.units) {
+        const tokens = foldTokens(u.text);
+        if (!tokens.length) continue;
+        const at = new Map();
+        tokens.forEach((t, i) => { if (!at.has(t)) at.set(t, []); at.get(t).push(i); });
+        const seen = new Map();
+        for (const p of phrases) {
+          if (seen.has(p.entity_id) || !phraseIn(tokens, at, p.phrase)) continue;
+          seen.set(p.entity_id, p);
+        }
+        for (const [id, p] of [...seen].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) {
+          const stands = refs.some((r) => r.entity_id === id && r.capture_sha === c.capture_sha && r.extent && u.extentObj
+            && ["same", "narrower"].includes(relationOf(u.extentObj, r.extent)));
+          if (stands) continue;
+          const { extent, extent_why } = u.extentObj ? { extent: u.extentObj, extent_why: null } : extentOfSource(null);
+          add({ kind: "people", words: cutWords(u.text), capture_sha: c.capture_sha, extent, ...(extent_why ? { extent_why } : {}),
+                origin: FIND_ORIGIN, entity: { entity_id: id, kind: p.kind ?? null, label: p.label ?? null },
+                correspondence: "name_in_passage", matched_alias: String(p.alias) });
+        }
+      }
+    }
+  }
+
+  /* R83: the rows of one sheet holding `phrase` in a cell's value, in row order: each the first matching cell's words, the
+     row's `sheet-range`, its cells and the addresses of its formulas the file never calculated. Empty where the reading
+     holds no typed cells for the sheet, or no one cell holds the phrase. */
+  #sheetRows(d, sheet, phrase) {
+    const grid = gridOf(d, sheet);
+    if (!grid || !phrase.length) return [];
+    const out = [];
+    for (const row of [...grid.keys()].sort((a, b) => a - b)) {
+      const hit = grid.get(row).find(({ cell }) => cell.value != null && !uncalculated(cell) && hasPhrase(tokensOf(cell.value), phrase));
+      if (!hit) continue;
+      const r = rowOf(d, sheet, row);
+      out.push({ words: String(hit.cell.value), range: r.range, cells: r.cells, cells_truncated: r.cells_truncated,
+                 not_calculated: r.not_calculated });
+    }
+    return out;
   }
 
   /* `term`: the term as written, matched as `search` matches words in a passage (query-language's `passage:` arm,
@@ -472,11 +598,12 @@ export class Finder {
       else shas.add(c.capture_sha);
     }
     const bundles = [...new Set(captures.filter((c) => shas.has(c.capture_sha)).map((c) => c.bundle_id))].sort();
-    const phrase = `passage:"${String(term).replace(/"/g, " ").trim()}"`;
+    const phrase = tokensOf(term);
+    const query = `passage:"${String(term).replace(/"/g, " ").trim()}"`;
     const rows = [];
     const tally = { applied: 0 };
     for (let i = 0; i < bundles.length; i += 64) {
-      const plan = this.r.planOf({ q: phrase, viewer, ids: bundles.slice(i, i + 64), rows: "passage",
+      const plan = this.r.planOf({ q: query, viewer, ids: bundles.slice(i, i + 64), rows: "passage",
                                    rowLimit: 1000, rowOffset: 0 });
       const got = this.r.runQuery(plan.statements.meaning(), tally);
       if (got.length >= 1000) acc.truncated = true;
@@ -488,11 +615,108 @@ export class Finder {
       const k = `${r.capture_sha}\u0000${r.seq}\u0000${r.extent}`;
       if (seen.has(k)) continue;
       seen.add(k);
-      const u = data.get(r.capture_sha).units.find((x) => x.seq === r.seq && x.extent === r.extent);
+      const d = data.get(r.capture_sha);
+      const u = d.units.find((x) => x.seq === r.seq && x.extent === r.extent);
+      const extent = safeJson(r.extent);
+      /* R83: a passage of a sheet is found cell by cell, and a match names the row it lies in. */
+      const rows = extent && SHEET_EXTENTS.includes(extent.kind) && typeof extent.sheet === "string"
+        ? this.#sheetRows(d, extent.sheet, phrase) : [];
+      if (rows.length) {
+        for (const x of rows)
+          add({ kind: "term", words: cutWords(x.words), capture_sha: r.capture_sha, extent: x.range, origin: FIND_ORIGIN,
+                term: String(term), sheet: extent.sheet, cells: x.cells, cells_truncated: x.cells_truncated,
+                not_calculated: x.not_calculated });
+        continue;
+      }
       add({ kind: "term", words: cutWords(u ? u.text : r.snippet ?? ""), capture_sha: r.capture_sha,
-            extent: safeJson(r.extent), origin: FIND_ORIGIN, term: String(term) });
+            extent, origin: FIND_ORIGIN, term: String(term) });
     }
   }
+}
+
+
+/* ---- R83: where a match found in a sheet lies ---- */
+
+/* The most cells of one row a match lists (R83). */
+export const FIND_ROW_CELLS_MAX = 50;
+const SHEET_EXTENTS = Object.freeze(["sheet-cell", "sheet-range"]);
+/* Why a sheet match names no cells: the reading holds none for the sheet (over its reader's size guard), or the words it
+   found run across more than one cell. A diagnostic beside `cells: null`, as every `why` of this file is. */
+const NO_CELLS_WHY = "the reading holds no typed cells for this sheet, or the words found run across cells, so no row of cells is named";
+
+/* A sheet's typed cells by row: `row → [{col, n, at, cell}]` in column order, or null where the reading holds none. */
+function gridOf(d, sheet) {
+  if (d.grids.has(sheet)) return d.grids.get(sheet);
+  const list = d.cells && Array.isArray(d.cells[sheet]) ? d.cells[sheet] : null;
+  let grid = null;
+  if (list) {
+    grid = new Map();
+    for (const cell of list) {
+      const m = cell && cell.source && typeof cell.source.cell === "string" ? A1.exec(cell.source.cell) : null;
+      if (!m) continue;
+      const row = Number(m[2]), col = m[1].toUpperCase();
+      if (!grid.has(row)) grid.set(row, []);
+      grid.get(row).push({ col, n: colNum(col), at: `${col}${row}`, cell });
+    }
+    for (const r of grid.values()) r.sort((a, b) => a.n - b.n);
+  }
+  d.grids.set(sheet, grid);
+  return grid;
+}
+
+/* R83: a formula the file carries no cached value for: no figure or date is read from it. */
+const uncalculated = (cell) => cell.formula != null && cell.formula !== "" && (cell.cached === null || cell.cached === undefined);
+
+/* R83: one row's cells as a match lists them, `[{cell, value, type}]` in column order (a formula with no cached value
+   with `value: null`, its `formula` and `cached: null`), at most FIND_ROW_CELLS_MAX with `cells_truncated`, and the
+   addresses of the row's uncalculated formulas. Null where the grid holds no such row. */
+function rowOf(d, sheet, row) {
+  const grid = gridOf(d, sheet), held = grid ? grid.get(row) : null;
+  if (!held) return null;
+  const cells = held.slice(0, FIND_ROW_CELLS_MAX).map(({ at, cell }) => (uncalculated(cell)
+    ? { cell: at, value: null, type: cell.type ?? null, formula: cell.formula, cached: null }
+    : { cell: at, value: cell.value ?? cell.cached ?? null, type: cell.type ?? null }));
+  return { cells, cells_truncated: held.length > FIND_ROW_CELLS_MAX,
+           not_calculated: held.filter(({ cell }) => uncalculated(cell)).map((x) => x.at),
+           range: { kind: "sheet-range", sheet, range: `A${row}:${held[held.length - 1].col}${row}` } };
+}
+
+/* R83: a match found in a sheet says where. A column result names its sheet beside its table; a cell found in the typed
+   cells lists its row's cells; a match of a unit's own text, where no cell can be named, says so. */
+function placed(item, d) {
+  const e = item.table ? item.table.extent : item.extent;
+  if (!e || !SHEET_EXTENTS.includes(e.kind) || typeof e.sheet !== "string" || item.cells !== undefined) return item;
+  const out = { ...item, sheet: e.sheet };
+  if (item.table) return out;
+  const m = e.kind === "sheet-cell" && typeof e.cell === "string" ? A1.exec(e.cell) : null;
+  const row = m && d ? rowOf(d, e.sheet, Number(m[2])) : null;
+  return row ? { ...out, cells: row.cells, cells_truncated: row.cells_truncated, not_calculated: row.not_calculated }
+             : { ...out, cells: null, cells_why: NO_CELLS_WHY };
+}
+
+/* R84: `entities`' fold of a name (R17): lower-cased, split on anything that is no letter or digit, diacritics kept. */
+const foldTokens = (s) => String(s ?? "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+/* Whether `phrase` stands in order and adjacent in `tokens`, `at` the positions of each token. */
+function phraseIn(tokens, at, phrase) {
+  for (const i of at.get(phrase[0]) || []) {
+    let k = 1;
+    while (k < phrase.length && tokens[i + k] === phrase[k]) k++;
+    if (k === phrase.length) return true;
+  }
+  return false;
+}
+
+/* The words of `s` as the text index folds them: lower-cased, diacritics dropped, split on anything that is no letter or
+   digit. A phrase is found where its tokens stand in order and adjacent. */
+const tokensOf = (s) => String(s ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+function hasPhrase(tokens, phrase) {
+  if (!phrase.length || tokens.length < phrase.length) return false;
+  for (let i = 0; i + phrase.length <= tokens.length; i++) {
+    let k = 0;
+    while (k < phrase.length && tokens[i + k] === phrase[k]) k++;
+    if (k === phrase.length) return true;
+  }
+  return false;
 }
 
 /* A reading position (`text-chain.readingSource`: an extent with its `ref`) as an extent in content's grammar; a
@@ -502,7 +726,7 @@ export function extentOfSource(source) {
     const { ref, ...extent } = source;
     return { extent, extent_why: null };
   }
-  return { extent: null, extent_why: "the reading does not say where in the document this was read" };
+  return { extent: null, extent_why: say("retrieval.extent_why") };
 }
 
 /* R73 (N715): one recorder read for one capture: its items and `truncated`, or `{why}` when it threw, answered a
@@ -511,13 +735,13 @@ export function extentOfSource(source) {
 function callRead(read, captureSha, viewer) {
   let a;
   try { a = read({ captureSha, limit: RECORDED_BY_LIMIT, viewer }); }
-  catch (e) { return { why: `the read threw: ${String((e && e.message) || e).slice(0, 200)}` }; }
+  catch (e) { return { why: say("retrieval.why.read_threw", { e: String((e && e.message) || e).slice(0, 200) }) }; }
   if (a && typeof a.then === "function") {
     Promise.resolve(a).catch(() => {});
-    return { why: "the read answered a promise: it is called in process, synchronously" };
+    return { why: say("retrieval.why.read_answered_promise") };
   }
   if (a && typeof a === "object" && a.ok === false)
-    return { why: `the read refused: ${String(a.code ?? a.reason ?? "no reason given").slice(0, 200)}` };
+    return { why: say("retrieval.why.read_refused", { given: String(a.code ?? a.reason ?? say("monitoring.reason_given")).slice(0, 200) }) };
   if (!a || typeof a !== "object" || a.ok !== true || !Array.isArray(a.items)
       || !a.items.every((it) => it && typeof it === "object" && !Array.isArray(it)))
     return { why: "the read answered another shape than events R49's" };

@@ -10,6 +10,7 @@
  * writes them; the legs into `inquiry_basis` and `inquiry_basis_version_legs` as a promoted basis leaves them. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word as WORD } from "../../../src/setup-words/index.mjs";
 import { world, V, T0, sha } from "./fixture.mjs";
 import { retrievalRoutes } from "../../../src/retrieval/index.mjs";
 import { MEANING, meaningVocabulary } from "../../../src/query.mjs";
@@ -107,35 +108,31 @@ test("R13: which level was empty is said by the envelope — a document in scope
   assert.deepEqual([e.ok, e.total, e.rows], [true, 0, []]);
   assert.deepEqual(e.scope, { documents: 1, documents_with_rows: 0, documents_without_rows: 1 });
   assert.equal(e.levels.content.state, "COUNTED");
-  assert.match(e.levels.content.why, /^none of the 1 document\(s\) in scope holds a single content row/);
-  assert.match(e.levels.content.why, /a fact about CITATION and never evidence about what those documents say/);
-  assert.match(e.levels.content.why, /`passage:` with `rows=passage` is the arm that searches what those documents SAY/);
-  assert.equal(e.says, "nothing matched over 1 document(s) in scope, none of which holds a row of this kind at all. "
-    + "That is absence at THIS level and says nothing about the level below it");
+  /* The sentences are the word list's, read by key (plan rule 6): the test reads the owner's words, never a copy. */
+  assert.equal(e.levels.content.why, WORD("retrieval.why.document_scope_holds", { count: 1 }));
+  assert.equal(e.says, WORD("retrieval.text.matched_over_document", { documents: 1 }));
   assert.deepEqual(Object.keys(e.levels), ["internet", "document", "content", "meaning"]);
   assert.equal(e.levels.internet.state, "UNDETERMINED");
-  assert.match(e.levels.internet.why, /observation log, which this read does not reach/);
-  assert.match(e.levels.internet.why, /cannot tell 'we looked and found nothing' from 'nobody has looked yet'/);
+  assert.equal(e.levels.internet.why, WORD("retrieval.why.anybody_looked_all"));
   /* No document in scope at all. */
   const none = rows(w, "id:NOTHING-AT-ALL");
   assert.deepEqual([none.total, none.rows, none.scope.documents, none.levels.document.state, none.levels.document.documents],
     [0, [], 0, "COUNTED", 0]);
-  assert.match(none.levels.document.why, /no document is in scope at all/);
-  assert.equal(none.says, "nothing matched, and no document was in scope to match in — this is an empty DOCUMENT level, not an empty record");
+  assert.equal(none.levels.document.why, WORD("retrieval.why.document_scope_all"));
+  assert.equal(none.says, WORD("retrieval.text.matched_document_scope"));
   assert.notEqual(JSON.stringify(e.levels), JSON.stringify(none.levels), "the two empties differ by the envelope alone");
   assert.notEqual(e.says, none.says);
   /* A document holding content rows, none of which the filter admits. */
   const cut = rows(w, `id:${DOC_OCR} content:machine`);
   assert.deepEqual([cut.total, cut.rows], [0, []]);
   assert.deepEqual(cut.scope, { documents: 1, documents_with_rows: 1, documents_without_rows: 0 });
-  assert.equal(cut.says, "nothing matched over 1 document(s) in scope, 1 of which hold rows of this kind that this query's filters excluded");
+  assert.equal(cut.says, WORD("retrieval.text.matched_over_document_scope", { documents: 1, with_rows: 1 }));
   assert.ok(![e.says, none.says].includes(cut.says));
   /* A meaning-level arm carries the same block at its own level, and sends the content question to rows=content. */
   const l = rows(w, "has:leg", V("vera"), "leg");
   assert.deepEqual([l.level, l.levels.meaning.state, l.levels.content.state], ["meaning", "COUNTED", "UNDETERMINED"]);
-  assert.match(l.levels.content.why, /`content:` with `rows=content`/);
-  assert.match(l.levels.content.why, /`passage:` with\s+`rows=passage`/);
-  assert.deepEqual([l.total, l.says], [3, "3 row(s) over 6 document(s) in scope"]);
+  assert.equal(l.levels.content.why, WORD("retrieval.why.arm_answers_meaning"));
+  assert.deepEqual([l.total, l.says], [3, WORD("retrieval.text.row_over_document", { total: 3, documents: 6 })]);
 });
 
 test("R29: two members see the same content rows — every content row hangs off an information bundle, which the participant clause does not fence — while the gate is live on the same call (ann's project is in her scope, not vera's); an absent viewer sees none and a zero", () => {

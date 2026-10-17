@@ -1,8 +1,10 @@
 /* retrieval — its checks (K6, R31): C-23.1 and C-23.2 (the meaning-grain read's refusals, R10) and C-33.20 and
  * C-33.32 (a selection's two refusals, R19 and R20), moved out of the check catalogue (`bio-checks.mjs`) with their
  * numbers unchanged. Each is one row holding the C-number, the wire code's `where` and the canned translation, read
- * from here at the site that refuses, so a surface rendering a translation keyed on a code the plane sent cannot drift
+ * by key from setup-words (plan rule 6: `refusal.<CODE>`, never typed here) at the site that refuses, so a surface rendering a translation keyed on a code the plane sent cannot drift
  * from what the plane refuses (DEC-49). */
+
+import { say } from "./words.mjs";
 
 /* ===========================================================================
  * PL-9 / D-222 OPTION C — THE MEANING-GRAIN READ'S REFUSALS.
@@ -30,9 +32,7 @@ export const MEANING_READ_CHECKS = {
   MEANING_ROWS_NO_ARM: {
     check: 'C-23.1',
     where: 'src/retrieval/index.mjs meaningRows, reached from op=meaningrows',
-    translation: 'That request did not say which kind of meaning to read. '
-      + 'The record holds the legs a claim rests on and the resolutions a document carries, '
-      + 'and they are different things — so it asks rather than choosing one for you.',
+    translation: say('refusal.MEANING_ROWS_NO_ARM'),
   },
   /* A grain was named and the record has no such thing. Refused rather than read
      as free text: this argument selects a TABLE, and a mistyped table name that
@@ -41,9 +41,7 @@ export const MEANING_READ_CHECKS = {
   MEANING_ROWS_UNKNOWN_ARM: {
     check: 'C-23.2',
     where: 'src/retrieval/index.mjs meaningRows, reached from op=meaningrows',
-    translation: 'The record has no meaning of that kind to read. '
-      + 'Rather than answer from a different one and let the answer look complete, '
-      + 'it says so and names the kinds it does hold.',
+    translation: say('refusal.MEANING_ROWS_UNKNOWN_ARM'),
   },
 };
 
@@ -53,9 +51,7 @@ export const SELECTION_CHECKS = {
   NO_SUCH_SELECTION: {
     check: 'C-33.20',
     where: 'src/retrieval/index.mjs selectionResolve > is-selection-known',
-    translation: 'That set of things is not one this store can find: either it never existed here, '
-      + 'it was let go, or it timed out. Selections are deliberately short-lived so that an act '
-      + 'never runs against a list somebody assembled a long time ago.',
+    translation: say('refusal.NO_SUCH_SELECTION'),
   },
 
   /* ---------------------------------------------------------------------------
@@ -83,8 +79,6 @@ export const SELECTION_CHECKS = {
   SET_MOVED: {
     check: 'C-33.32',
     where: 'src/retrieval/index.mjs selectionResolve > is-selection-moved, reached from every act that takes a selection',
-    translation: 'This would have changed things, and the list of items it would have changed is not '
-      + 'the list you were looking at — it has moved since you chose it. Nothing was done. Look at the '
-      + 'selection again and choose it again, so that what you approve is what actually happens.',
+    translation: say('refusal.SET_MOVED'),
   },
 };
