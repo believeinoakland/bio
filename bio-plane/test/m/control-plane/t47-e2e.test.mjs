@@ -185,18 +185,26 @@ test("R81 end to end: a wizard started from one of Home's front doors: the doors
   assert.ok(doors, "Home draws its front doors");
   const at = doors.querySelector(`[data-door="${door.door}"]`);
   assert.ok(at, `the ${door.door} door is drawn`);
-  const button = at.querySelectorAll('button[data-act="startfrom"]').find((b) => b.getAttribute("data-script") === SCRIPT);
-  assert.ok(button, "the door's script is a control");
+  /* screens-daily R9, R40 (T50): a door is a button that starts directly, pressing it sends `startfrom` for it and opens its
+     offer in place; the door's scripts are drawn in that offer, so the door is pressed first */
+  const doorButton = at.querySelectorAll('button[data-act="startfrom"]').find((b) => !b.getAttribute("data-script"));
+  assert.ok(doorButton, "the door is a control");
+  await p.click(doorButton);
+  await until(p, () => main(p).querySelector(`[data-door="${door.door}"][data-open="true"]`));
+  const button = main(p).querySelector(`[data-door="${door.door}"]`).querySelectorAll('button[data-act="startfrom"]')
+    .find((b) => b.getAttribute("data-script") === SCRIPT);
+  assert.ok(button, "the open door's script is a control");
   /* control: before the press, no wizard runs and no script was read */
   assert.equal(p.byOp("wizardread").length, 0);
   assert.equal(p.root().querySelector('[data-guide-state="running"]'), null, "no wizard runs before the press");
   const startfromBefore = p.byOp("startfrom").length;
+  const startfromPosts = p.byOp("startfrom").filter((r) => r.method === "POST").length;
 
   await p.click(button);
   await until(p, () => p.root().querySelector('[data-guide-state="running"]') && p.byOp("wizardprogress").length > 0);
   /* screens-daily R23: a script is started by the shell's `cs.wizard`; the press sends no act of its own. Home may read the
      doors again as it redraws (a GET), but no `startfrom` is ever a POST */
-  assert.ok(p.byOp("startfrom").every((r) => r.method === "GET"), "the script button sends no act of its own");
+  assert.equal(p.byOp("startfrom").filter((r) => r.method === "POST").length, startfromPosts, "the script button sends no act of its own");
   assert.ok(startfromBefore >= 1);
   const [read] = answered(p, "wizardread");
   assert.equal(read.query.script, SCRIPT);
