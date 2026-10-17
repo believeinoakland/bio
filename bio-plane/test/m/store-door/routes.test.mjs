@@ -217,7 +217,8 @@ test("R10 (N669, N765, N812; K2200, K2201, K2238, K2500; instance-setup R67; ans
   const setup = instanceSetupOf(r.ctx);
   /* `by` as control-plane stamps it, the folded member id; `viewer` the member */
   const draft = (by, body) => r.go(`translationdraft?by=${by}&viewer=member:${by}`, "POST", body);
-  const word = (await import("../../../src/setup.mjs")).INTERFACE_WORDS.find((w) => w.protected && !/[{}]/.test(w.en));
+  const word = (await import("../../../src/setup-words/index.mjs")).WORD_ROWS
+    .map(([key, en, , , prot]) => ({ key, en, protected: prot })).find((w) => w.protected && !/[{}]/.test(w.en));
   const TO_LANG = { language: "es", direction: "to_language", keys: [word.key] };
   const TO_EN = { language: "es", direction: "to_english", key: word.key };
   const want = (body, by) => ({ language: body.language, direction: body.direction, keys: body.keys, key: body.key, by });
@@ -343,8 +344,8 @@ test("R15 (T47; K3143; admission R25, credentials R71 (2)): the store-internal r
   const { SESSION_HEADER } = D;
   const r = await record({ sealSecret: "store-door-test-seal-secret-00006" });
   const C = credentialsOf(r.ctx);
-  assert.equal((await C.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" })).ok, true);
-  const signed = await C.login({ password: "founder-passphrase-1" });
+  assert.equal((await C.claim({ password: "founder-passphrase-1", handle: "founder", tokenFp: "fp-1" })).ok, true);
+  const signed = await C.login({ handle: "founder", password: "founder-passphrase-1" });
   assert.equal(signed.ok, true, JSON.stringify(signed));
   const T = signed.token;
   const ask = async (token, path = "reauthdue") => {
