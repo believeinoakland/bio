@@ -6245,11 +6245,41 @@
    "en": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
    "protected": false,
    "note": "DEC-301: the choice's explanation"
+  },
+  {
+   "key": "refusal.BAD_FOR",
+   "en": "Say which question this capture is for: choose one of the project's questions. Nothing was captured.",
+   "protected": false,
+   "note": "DEC-302: acquisition R47: acquire's for is not a question"
+  },
+  {
+   "key": "screen.inbox.alreadyheld",
+   "en": "Already held: {holder} brought in the same file. Marked as brought in; nothing new was written.",
+   "protected": false,
+   "note": "DEC-302: doorbell R13"
+  },
+  {
+   "key": "screen.inbox.alreadyheld.other",
+   "en": "Already held: the same file is already in your team's records. Marked as brought in; nothing new was written.",
+   "protected": false,
+   "note": "DEC-302: doorbell R13: the holder is not one the viewer may see"
+  },
+  {
+   "key": "screen.open-file.safetext",
+   "en": "Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.",
+   "protected": false,
+   "note": "DEC-302: file-safety R45"
+  },
+  {
+   "key": "screen.open-file.safetext.cut",
+   "en": "The file is longer than this view shows; the rest is in the original file.",
+   "protected": false,
+   "note": "DEC-302: file-safety R45"
   }
  ],
  "rewrite": {
   "screen.archive.summary": "Opened when it was captured: {filed} files filed and held for review beside it, {held} already held, {notfiled} not filed, {folders} folders.",
-  "screen.archive.alreadyheld": "Already held · the same file {name} captured directly on {date}; this copy is kept as a second sighting of it",
+  "screen.archive.alreadyheld": "Already held · the same file {name} captured on {date}; this copy is kept as a second sighting of it",
   "screen.archive.folder": "A folder · its {count} files are listed and filed below it",
   "screen.archive.refused.none": "Nothing in it is filed. The archive itself stays captured exactly as it arrived, with its grade, and anyone can check why it was refused.",
   "screen.calculation.counts": "{visited} of {n} visited: {yes} yes, {no} no, {unsure} could not tell",
@@ -6392,6 +6422,8 @@
   "wizard.marks.chip.one": "Show me how",
   "screen.people.add.kind": "A person or an organization?",
   "stake.none": "No stake of its own beyond the team's",
-  "screen.review-copy.until.nozone": "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share."
+  "screen.review-copy.until.nozone": "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share.",
+  "refusal.ACCOUNT_MEMBER_NOT_ACTIVE": "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
+  "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view."
  }
 }
