@@ -1,6 +1,6 @@
 # installer (T50)
 
-**Status** · session_01LU7u79LMCH9X9FGKvCQJBU · depth 2 · WORKING · handled B1
+**Status** · session_01LU7u79LMCH9X9FGKvCQJBU · depth 2 · WORKING · handled B2
 
 ## Progress record (INSTALLER #14, stopped for context at the first half-window; a restart continues from here)
 
