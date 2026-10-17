@@ -14,7 +14,11 @@
  * apart and labelled (R14). The evidence package's available-actions block is registered with `public-read` (R15)
  * and answered on its own for `escalation` (R21). The AI prepares; a member approves, files and records it. (T48) A Tier 2
  * filing offers a counsel packet beside its advisory (R58); `filingRead` answers a prepared draft as it was stored, so a
- * reload loses nothing (R59); R40's quoting check is `filing-templates`' (R57, its R33).
+ * reload loses nothing (R59); R40's quoting check is `filing-templates`' (R57, its R33). (T50) The matter's stake: the
+ * action's own, else its project's, else none (R60), stands in the stamp's `group` beside the team's stake and in the
+ * in-band block's words (R61), after an accepted source's identity and stake on its line (R63); `stakeAtPreparation`
+ * tells the preparation screen whether to ask (R62: a prompt, never a gate). Every sentence it writes is read by key
+ * through setup-words (`./words.mjs`; R51, R52; N1116, N1132).
  *
  * A NEW MODULE (T8, layer 9): nothing moved into it and it writes no legacy file. Its tables are `./schema.mjs`; a
  * deadline's date is `./dates.mjs`, counted by `action-clocks`' rule. Its R26 library moved to `filing-templates` (T21,
@@ -87,7 +91,7 @@ import { projectRosterOf } from "../project-roster/index.mjs";
 import * as actionGrammar from "../action-grammar/index.mjs";
 import { checkAccount } from "../case-checker/account.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word } from "./words.mjs";
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
@@ -103,6 +107,7 @@ export { FILINGS_SCHEMA, FILINGS_TABLES } from "./schema.mjs";
 export { FILINGS_CHECKS } from "./checks.mjs";
 export { deadlineDate, COUNTED_FROM } from "./dates.mjs";
 export { keyed, sentencesOf, OVERRIDE_HEAD, overrideDisclosure, matterWords } from "./outward.mjs";
+export { wordsRead, WORDS_OWED } from "./words.mjs";
 
 /* R3, R28 (K922 (1)): the blanks, the longest text and `blanksOf` are `filing-templates`' (its R19), read there; this
    module holds no copy. */
@@ -1001,7 +1006,7 @@ export class Filings {
     out.push(law ? { part: "a time", text: word("filings.time_law_allows", { days: law.days ?? law.amount ?? "a period", count: law.count ?? law.units ?? "days",
                                                                              citation: law.citation ?? word("filings.citation_stated") }),
                      source: `profile:${law.profile}/deadlines/${law.rule}` }
-      : window ? { part: "a time", text: word("filings.time_set", { date: window.date, basis: window.basis }), source: `${a.id}/clock` }
+      : window ? { part: "a time", text: word("filings.time_set", { date: window.date, basis: window.basis ?? word("filings.stated") }), source: `${a.id}/clock` }
       : { part: "a time", text: word("filings.time_undetermined_profile"), source: null, undetermined: true });
     return out;
   }
@@ -1723,14 +1728,14 @@ export class Filings {
     const latest = list.length ? list[list.length - 1] : null;
     if (!latest || latest.hold !== "in_place")
       return holdNotInPlace(p);
-    const where = p.project ? `the project ${p.project}` : Number.isInteger(p.ord) ? word("filings.entry_action", { ord: p.ord, target: p.target }) : `the action ${p.target}`;
+    const where = p.project ? `the project ${p.project}` : Number.isInteger(p.ord) ? word("filings.entry_action", { ord: p.ord, target: p.target ?? word("filings.stated") }) : `the action ${p.target}`;
     const lines = [
       word("filings.litigation_hold_notice"),
       word("filings.hold_place", { where, at: latest.at ?? word("filings.date_record_state") }),
       word("filings.reason_stated", { reason: latest.reason ?? word("filings.reason_recorded") }),
       word("filings.keep_outside_civicsmith", { kinds: word("filings.documents_letters_emails") }),
     ];
-    const sources = [{ part: "the place", source: p.project || p.target }, { part: word("filings.reason_date"), source: `hold:${p.project || p.target}${Number.isInteger(p.ord) ? `#${p.ord}` : ""}` }];
+    const sources = [{ part: "the place", source: p.project || p.target }, { part: "the reason and the date", source: `hold:${p.project || p.target}${Number.isInteger(p.ord) ? `#${p.ord}` : ""}` }];
     const at = this.#when();
     const text = lines.join("\n");
     return this.record.transact(() => {

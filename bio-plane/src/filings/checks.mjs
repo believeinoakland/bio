@@ -18,7 +18,7 @@
  * `words.json`'s `refusal.<CODE>`, read by key; codes, numbers and `where`s unmoved. T47 (DEC-209,
  * K3100): R54's `SENT_REFERENCE_MALFORMED` (C-115.57) and R55's `FILL_UNKNOWN_BLANK` (C-115.58), new rows. */
 
-import { word } from "../setup-words/index.mjs";
+import { word } from "./words.mjs";
 
 const at = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 
@@ -167,7 +167,7 @@ export const FILINGS_CHECKS = Object.freeze({
   },
   /* T45 (K2780, K2791): the record check, the chance to fix, quoting, joint texts, second approval, the assertion gate,
      "as myself" (R34, R36, R38, R40, R42–R44); R23's chosen findings; the marks stated at preparation. T46 (R51): eight
-     translate by `FILINGS_WORDS`, read by key; `SECOND_APPROVAL_NEEDED` keeps its own until its sentence and R42 agree. */
+     translate by `words.json`'s `refusal.<CODE>`, read by key (T50: every row of the family, `SECOND_APPROVAL_NEEDED` too). */
   CONTRADICTED_HELD: {
     check: "C-115.45", where: at("#outwardRefusal", "is-contradicted-held"),
     translation: word("refusal.CONTRADICTED_HELD"),

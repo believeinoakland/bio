@@ -6,7 +6,7 @@
  * first (R24, R35), and the keyed sentences whose words are the design stream's (each held here under its key, as
  * `words.json` holds it since T46, R52). */
 
-import { word } from "../setup-words/index.mjs";
+import { word } from "./words.mjs";
 
 /** A keyed sentence with its `{name}`s filled: the words `words.json` holds for `key`, read through setup-words' `word`
  *  (layer 1), never a copy (R52; T50, N1116, DEC-259). Every sentence this module writes into what it prepares, or

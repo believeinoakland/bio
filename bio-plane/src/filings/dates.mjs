@@ -6,7 +6,7 @@
  * so a period of N days ends on the Nth counted day (the rule is stated beside every date it answers). */
 
 import { computeDeadline } from "../action-clocks/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word } from "./words.mjs";
 
 export const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 export const COUNTED_FROM = word("filings.counted_day_start");
