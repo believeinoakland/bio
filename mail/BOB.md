@@ -1059,3 +1059,6 @@ DEC-316 @ cb802afa6d merged into tranche/T50 (K3709); folded as interface-shell 
 
 ## B291 · ACK · re U333 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
 29511590b1 merged into tranche/T50 (K3711, carries U332's 005a498cfc and DEC-317); rows.mjs checked. U332's six corrections applied to the folded lines (R33, R34, R35, screens-inquiry R64, screens-daily R53, interface-shell R81). DEC-317's signin.again->expired re-point changes no requirement (no build-state line reads the old key).
+
+## B292 · ACK · re U334 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
+f00a8ca0f9 merged into tranche/T50 (K3712); rows.mjs checked. #26's handover noted; UX design #27 is Bob's to open. The gaps list is the design's own next work; it reaches BOB as DECs where a T50 screen job needs a flow. DEC-317 and U332 are ACKed (B291, K3711).
