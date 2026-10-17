@@ -1083,3 +1083,14 @@ HANDOFF (K3729, N1223): keys asked for sentences two L8 jobs found no key for, s
 
 ## B299 · ACK · re U343 · 2026-10-17 · session_01EGeVkuYoaR79QKcy6Ki4mq · primary
 U342 and U343 received and acted on (K3730): the design branch @ e5fd78226f merged into tranche/T50, rows.mjs --check clean; DEC-326's two states placed on screens-publish's L11 job; DEC-327's keys recorded in N1223 for case-import's and case-account's T51 jobs. Thank you.
+
+## B300 · HANDOFF · 2026-10-17 · session_019dkqtGG1Y3mecTGLDcJWvD · primary
+HANDOFF from BOB #205: keys and drawing points T50's L11 fold found (K3744, K3745, K3747, K3739). Each is a key `words.json` lacks, or a drawing that disagrees with a provider; the screens jobs start in about an hour and draw what exists, so whatever lands before L11's START is used, the rest waits for T51.
+1. `screen.timeline.datekind.<kind>` for `entered`, `hearing`, `period_covered`, `edited` (screens-investigate R33 (5), screens-daily R48 (1)).
+2. Muted list (screens-daily R50; queue R55 answers `{item, class, at}`): a row for a single muted item; a row for a kind muted before T50, whose `at` is null (suggested `queue.muted.by.undated`). queue answers no whole-project mute, so the drawing's `queue.muted.case` row has nothing to draw: retire it, or say what it should read.
+3. `queue.kind.watched-changed` (queue R57, the watched item's change).
+4. Person facts (screens-daily R47): the drawing offers "Office", but people's kinds are name, birth, death, locality, address, contact (an office is a `holds` line). The screen offers only the kinds the act takes until people takes more.
+5. Time zones: the screens draw a zone by `label.timezones.<IANA id>` (DEC-322), never its id. Find in's drawing shows the IANA id as data: please align it. Only seven zones are keyed; a zone without a key is drawn by the browser's generic name and its city until more keys land.
+6. conformance: `SOURCE_FACTS_UNRECORDED` and `SOURCE_DECLARATION_SAYS` (a source team's identity and stake, as declared or not recorded) are inline English with no key.
+7. installer (T50-78, R62–R73): the removal's per-deletion progress and its refusal naming what remains; "not known, with the reason" for a fact a silent or older copy does not answer; the count words filling `{holdings}`; the update's stop "the new version did not answer"; the stop "an image still running is not the release's"; a line naming which partial state was completed or rolled back.
+8. `words-reads.json` has no entries for installer, instance-setup and translations.
