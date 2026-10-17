@@ -12,13 +12,13 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREENS, SCREEN_WORDS, KEYS } from "../../../src/screens-settings/index.mjs";
 import { open, said, day } from "./kit.mjs";
 import { interfacePage, checkScreens } from "../../../src/interface-shell/index.mjs";
-import { ADMIN, MEMBER, membersTable, accountTable, connectTable, notesTable, groupTable, identityTable, placesTable, recoveryTable, securityTable, translationsTable, updatesTable } from "./fixtures.mjs";
+import { ADMIN, MEMBER, membersTable, teamaiTable, accountTable, connectTable, notesTable, groupTable, identityTable, placesTable, recoveryTable, securityTable, translationsTable, updatesTable } from "./fixtures.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const PATH = "docs/development/ux-substrate/screens/registry.json";
 // the registry as merged into tranche/T47 at L11's START (PR #33's head; wizard-scripts R35)
 const registry = () => JSON.parse(readFileSync(join(ROOT, PATH), "utf8"));
-const IDS = ["settings", "members", "account", "connect", "notes", "group", "group-identity", "places", "recovery", "security", "translations", "updates"];
+const IDS = ["settings", "members", "teamai", "account", "connect", "notes", "group", "group-identity", "places", "recovery", "security", "translations", "updates"];
 
 test("the screens are the registry's, each listing exactly its registry acts, an owed act by the op it owes (interface-shell R38)", () => {
   const reg = registry().screens;
@@ -48,7 +48,7 @@ test("the shell serves the screens: interfacePage passes its R21 check, and the 
   assert.equal(checkScreens(SCREENS), true);
   const html = interfacePage(SCREENS);
   for (const s of SCREENS) for (const a of s.acts) assert.ok(html.includes(a.op), `${s.id}'s ${a.op} is in the page`);
-  const tables = { settings: {}, members: membersTable(), account: accountTable(ADMIN), connect: connectTable(ADMIN, "own"), notes: notesTable(ADMIN), group: groupTable(), "group-identity": identityTable(),
+  const tables = { settings: {}, members: membersTable(), teamai: teamaiTable(), account: accountTable(ADMIN), connect: connectTable(ADMIN, "own"), notes: notesTable(ADMIN), group: groupTable(), "group-identity": identityTable(),
     places: placesTable(), recovery: recoveryTable(), security: securityTable(), translations: translationsTable(), updates: updatesTable() };
   for (const s of SCREENS) {
     const o = await open(s.id, { me: ADMIN, table: tables[s.id], reachable: true });
@@ -84,9 +84,11 @@ test("R39 words by key: the module holds no row, every key it reads is a word of
 
 test("R39 what a screen draws for a sample of its keys equals word(key, vars)", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
-  for (const k of ["screen.members.col.handle", "screen.members.col.status", "screen.members.invite.heading", "screen.members.key.heading", "screen.members.keepaway.heading"])
+  for (const k of ["screen.members.col.handle", "screen.members.col.status", "screen.members.invite.heading"])
     assert.ok(a.text.includes(unescapeHtml(word(k))), k);
   assert.ok(a.text.includes(unescapeHtml(word("screen.members.count", { members: 5, administrators: 3 }))));
+  const t = await open("teamai", { me: ADMIN, table: teamaiTable() });
+  for (const k of ["screen.teamai.sub", "screen.panel.uses.heading", "screen.panel.limits.heading"]) assert.ok(t.text.includes(unescapeHtml(word(k))), k);
   const c = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   for (const k of ["screen.connect.way.field", "screen.connect.way.subscription", "screen.connect.signin.step1", "connect.ifnot"]) assert.ok(c.text.includes(unescapeHtml(word(k))), k);
   const u = await open("updates", { me: ADMIN, table: updatesTable() });

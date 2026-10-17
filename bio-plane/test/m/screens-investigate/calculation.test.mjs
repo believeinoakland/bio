@@ -51,7 +51,7 @@ test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationacce
   await press(p, "calculationdraw", { reason: "a sample to visit" });
   assert.deepEqual(p.byOp("calculationdraw")[0].body, { set: SHA, n: 40, seed: "2026-10-05-7f31", question: "Was it repaired?", project: P, reason: "a sample to visit" });
   assert.equal(p.byOp("spotcheck").at(-1).query.draw, "e".repeat(64), "the new draw is read");
-  fill(p, { "calc-content": "CNT-2026-0003", "calc-header": "report, closed, reported" });
+  fill(p, { "calc-content": SHA, "calc-header": "report, closed, reported" });
   await press(p, "tabledeclare", { reason: "the work orders" });
   assert.deepEqual(p.byOp("tabledeclare")[0].body.header, ["report", "closed", "reported"]);
   fill(p, { "calc-wb": SHA2, "calc-period": "FY2025" });
@@ -109,4 +109,11 @@ test("R11 \"How spot-checks work\" is reached from calculation and says, in plai
   for (const k of ["does", "random", "says", "notsays", "evidence"]) drew(m, "screen.help." + k + ".p");
   assert.equal(m.querySelectorAll("button[data-act]").length, 0, "a help page has no act");
   assert.equal(p.byOp("calculation").length >= 1, true);
+});
+
+test("R34 the calculation's draw set, tabled content, workbook and photo are chosen among documents by title, never typed as fingerprints", async () => {
+  const p = await open("/app/calculation/" + CALC);
+  for (const id of ["calc-set", "calc-content", "calc-wb", "calc-photo"]) {
+    assert.deepEqual(p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent), ["Lease amendment 1", "Rent schedule"], id);
+  }
 });

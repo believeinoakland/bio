@@ -13,8 +13,9 @@ export const updates = {
   id: "updates",
 
   reads(view) {
-    // `updatenotice` is refused to anyone who does not administer (instance-setup R89), so it is not asked
-    if (!(view.me && view.me.administer === true)) return {};
+    // `updatenotice` is refused to anyone who does not administer (instance-setup R89), so it is not asked; they are told whose
+    // screen it is, by the administrators' handles (the roster a member reads)
+    if (!(view.me && view.me.administer === true)) return { roster: { op: "memberlist" } };
     return { notice: { op: "updatenotice" } };
   },
 
@@ -25,7 +26,14 @@ export const updates = {
     const ui = view.ui || {};
     const data = view.data || {};
     const out = [cs.title()];
-    if (me.administer !== true) { out.push(`<p data-state="admins">${W(S + "admins")}</p>`); return out.join(""); }
+    if (me.administer !== true) {
+      out.push(cs.state(data.roster, (v) => {
+        const admins = (Array.isArray(v.members) ? v.members : []).filter((m) => m.role === "admin" && m.status === "active")
+          .map((m) => (m.founder === true || m.member_id === "admin" ? m.handle || String(W("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (x, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) : m.handle || m.member_id));
+        return admins.length ? `<p data-state="admins">${W(S + "admins", { admins: admins.join(", ") })}</p>` : "";
+      }));
+      return out.join("");
+    }
     // who allowed or skipped a release, as plain text for a word's fill (R37: every fill filled). A member by their handle; the founder
     // by hers while her own session answers it. An install with no member behind it (setup, the founder before she has a handle, a
     // token or a seed) has no one to name: it is drawn by the `_setup` words, never as "allowed by set at setup" (R33, R37)

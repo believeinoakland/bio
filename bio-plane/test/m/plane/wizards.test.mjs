@@ -138,7 +138,6 @@ test("R19, R5, R39: every op of wizard-scripts' map is in the route map, after r
 });
 
 test("R57 (R085-34; K874; wizard-scripts R40): the registration the plane builds carries the administrator's acts and screens; through the live store, a plain member's startFrom omits the three group-setup scripts and an administrator's lists them", async () => {
-  const SETUP = ["Say who your group is", "Invite a member", "Update your group's Civicsmith"];
   const named = (r) => r.scripts.map((s) => s.name);
   const reg = wizardRegistration();
   assert.deepEqual(reg.adminActs, [...ADMIN_ACTS], "the administrator's acts, from interface-shell");
@@ -152,10 +151,14 @@ test("R57 (R085-34; K874; wizard-scripts R40): the registration the plane builds
   const w = wizardScriptsOf(x.ctx);
   const member = named(w.startFrom({ viewer: "member:ann" }));
   const admin = named(w.startFrom({ viewer: "member:ada" }));
+  /* the group-setup scripts are the ones wizard-scripts offers an administrator and withholds from a plain member: read
+     from its own answers, never typed here (its names change with the design's words) */
+  const SETUP = admin.filter((n) => !member.includes(n));
+  assert.equal(SETUP.length, 3, `the three group-setup scripts: ${SETUP.join(" | ")}`);
   for (const n of SETUP) {
     assert.ok(!member.includes(n), `${n} is withheld from a plain member`);
     assert.ok(admin.includes(n), `${n} is offered to an administrator`);
   }
   /* negative control (K874): the plain member is offered the scripts she may take, so the withholding is the setup scripts' alone */
-  assert.ok(member.includes("Connect your Claude account") && member.includes("Your ties") && member.length < admin.length, "a plain member keeps the scripts she may take");
+  assert.ok(member.length > 0 && member.length === admin.length - SETUP.length, "a plain member keeps the scripts she may take");
 });

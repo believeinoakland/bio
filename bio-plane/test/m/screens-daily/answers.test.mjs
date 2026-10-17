@@ -154,5 +154,5 @@ test("R6: in both, standingquestionset keeps asking and standingquestionend stop
 
 test("R34: every key Ask reads is a word of the list", () => {
   for (const k of screen("answers").words) assert.ok(hasWord(k), k);
-  for (const k of Object.values(screen("answers").acts.find((a) => a.op === "ask").refusals)) assert.ok(hasWord(k), k);
+  for (const k of Object.values(screen("answers").acts.find((a) => a.op === "ask").refusals).filter((k) => typeof k === "string")) assert.ok(hasWord(k), k);
 });

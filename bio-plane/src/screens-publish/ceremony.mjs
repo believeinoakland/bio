@@ -2,8 +2,8 @@
  * DEC-210; N683, N757, N788): Projects › <project> › Publish. Its steps in order, the current one marked; the checks
  * against the bar and what will be disclosed; the Photos step; the Ties step that prepares the edition; then the Sign
  * step inside the ceremony: when it becomes public, one sitting of the member's own key over every statement listed, and
- * the edition signed and waiting or published. Its subject is `<project>/<draft>`. Every function is self-contained
- * (interface-shell R21 (1)). */
+ * the edition signed and waiting or published. Its subject is `<project>/<draft>`, or the project alone (R32): the newest
+ * draft, else nothing ready to publish. Every function is self-contained (interface-shell R21 (1)). */
 import { PARTS } from "./parts.mjs";
 
 export const CEREMONY = Object.freeze({
@@ -11,8 +11,14 @@ export const CEREMONY = Object.freeze({
   parts: PARTS,
 
   reads: function (view) {
-    if (!view.parts.subject(view, 2)) return {}; // K3171: no subject in the address, no subject read
+    if (!view.parts.subject(view, 1)) return {}; // K3171: no subject in the address, no subject read
     const s = String(view.subject || "").split("/");
+    // R32: with no draft in the address the project's drafts are read first; none, and the ceremony's own reads are not sent.
+    if (!s[1]) return {
+      project: { op: "image", query: { id: s[0] } },
+      drafts: { op: "casedrafts", query: { project: s[0] }, empty: function (v) { return !v || !Array.isArray(v.drafts) || v.drafts.length === 0; } },
+      group: { op: "groupidentity" },
+    };
     return {
       project: { op: "image", query: { id: s[0] } },
       copy: { op: "reviewcopy", query: { draft: s[1] || "" }, subject: true },
@@ -27,19 +33,31 @@ export const CEREMONY = Object.freeze({
   },
 
   render: function (cs, view) {
-    if (!view.parts.subject(view, 2)) return view.parts.nothing(cs);
+    if (!view.parts.subject(view, 1)) return view.parts.nothing(cs);
     const P = view.parts, ui = view.ui;
     const s = String(view.subject || "").split("/");
-    const draft = s[1] || "";
-    const copy = view.data.copy && view.data.copy.state === "ok" ? view.data.copy.value : null;
+    let draft = s[1] || "";
+    let copyR = view.data.copy;
     const pv = view.data.project && view.data.project.state === "ok" ? view.data.project.value : null;
     const projectTitle = P.titleOf(pv, s[0]);
     const g = view.data.group && view.data.group.state === "ok" ? view.data.group.value : null;
     const groupName = g ? g.display_name || g.group || "" : "";
+    if (!draft) {
+      // R32: a project with no draft has nothing ready to publish, and says so with the one door that leads to it; a read
+      // that failed is drawn failed, never as nothing ready.
+      const d = view.data.drafts;
+      if (!d || d.state !== "ok" && d.state !== "empty") return cs.title(null) + cs.state("drafts", function () { return ""; });
+      if (d.state === "empty") return cs.title(null) + '<p class="cs-state" data-state="empty" data-nothing-ready>' + cs.w("screen.ceremony.nothing") + "</p>"
+        + "<p>" + cs.ref("case-editor", s[0], P.plain(cs.w("case.links.editor")), []) + "</p>";
+      draft = d.value.drafts[d.value.drafts.length - 1].draft_id;
+      copyR = P.later(cs, view, "copy", "reviewcopy", { query: { draft: draft } });
+    }
+    ui.draftId = draft;
+    const copy = copyR && copyR.state === "ok" ? copyR.value : null;
     const c = copy && copy.case ? copy.case : {};
     const out = [cs.title(c.identity ? cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") }) : null, { thing: "case" }),
       '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"];
-    if (!copy) { out.push(cs.state("copy", function () { return ""; })); return out.join(""); }
+    if (!copy) { out.push(cs.state(copyR, function () { return ""; })); return out.join(""); }
     const args = P.caseArgs(copy, draft);
 
     // R3's reads: the checks against the bar, what will be disclosed, and an edition waiting to publish.
@@ -69,14 +87,26 @@ export const CEREMONY = Object.freeze({
       return "<li" + (i < current ? ' class="done"' : "") + (i === current ? ' aria-current="step"' : "") + ' data-step="' + n + '">' + cs.w("screen.ceremony.step." + n) + "</li>";
     }).join("") + "</ol>");
 
-    // R3: each finding against the bar and every refusal that holds before signing, by its words; "Check again".
+    // R3: each finding against the bar and every refusal that holds before signing; "Check again". R28: what stops the
+    // signing is listed under its heading, each gate in plain words on its own line, never a check's code or its developer text.
     out.push(cs.sec("screen.ceremony.checks", cs.state(pre, function (v) {
       const what = stepWith("pinned");
       const pinned = what && Array.isArray(what.pinned) ? what.pinned : [];
-      const blockers = (v.first ? [v.first] : []).concat(Array.isArray(v.blockers) ? v.blockers : []);
+      const found = (v.first ? [v.first] : []).concat(Array.isArray(v.blockers) ? v.blockers : []);
+      const seen = {};
+      const lines = [];
+      found.forEach(function (b) {
+        const code = String(b && (b.code || b.reason) || "");
+        if (code === "NO_TARGET" || (code && seen[code])) return;
+        seen[code] = true;
+        const says = b && b.says && typeof b.says.key === "string" ? cs.w(b.says.key, b.says.vars || {}) : P.refusalText(cs, b);
+        lines.push(cs.w("ceremony.gate.other", { what: { html: says.replace(/[.\s]+$/, "") } }));
+      });
+      if (!args.targets.length || found.some(function (b) { return b && (b.code || b.reason) === "NO_TARGET"; })) lines.unshift(cs.w("ceremony.gate.notargets"));
       return (pinned.length ? cs.sheet(pinned.map(function (f) { return cs.row("", cs.ref("question", f.target, f.target, []), ""); }).join("")) : "")
-        + '<p data-ready="' + (v.ready ? "yes" : "no") + '">' + cs.w(v.ready ? "screen.ceremony.ready" : "screen.ceremony.notready") + "</p>"
-        + (blockers.length ? '<ul class="mk-list" data-blockers>' + blockers.map(function (b) { return '<li role="alert">' + P.refusalText(cs, b) + "</li>"; }).join("") + "</ul>" : "");
+        + (v.ready && !lines.length ? '<p data-ready="yes">' + cs.w("screen.ceremony.ready") + "</p>"
+          : lines.length ? '<p data-ready="no"><b>' + cs.w("ceremony.gate.heading") + '</b></p><ul class="mk-list" data-blockers>' + lines.map(function (l) { return '<li role="alert">' + l + "</li>"; }).join("") + "</ul>"
+            : '<p data-ready="no">' + cs.w("screen.ceremony.notready") + "</p>");
     }) + '<div class="mk-acts">' + cs.act("publishpreflight") + "</div>"));
 
     // R3: what will be disclosed with the case; "See everything that will be disclosed". Not drawn when nothing is to be
@@ -130,7 +160,7 @@ export const CEREMONY = Object.freeze({
 
     // R5: the Ties step: the member's own confirmation of no undeclared tie, sent with `publish` as `tieAttested`.
     out.push(cs.sec("screen.ceremony.ties", cs.checks("ce-tie", "screen.ceremony.ties.legend", [["yes", "screen.ceremony.ties.confirm", false]])
-      + '<div class="mk-acts">' + cs.act("publish", { tone: "primary" }) + "</div><p class=\"muted\">" + cs.w("screen.ceremony.ties.part") + "</p>"
+      + '<div class="mk-acts">' + P.explained(cs, cs.act("publish", { tone: "primary" }), "act.publish.does", "act.publish.here.ceremony") + "</div><p class=\"muted\">" + cs.w("screen.ceremony.ties.part") + "</p>"
       + P.said(view, "publish") + (prepared ? '<p class="mk-note" role="status">' + cs.w("screen.ceremony.prepared", { edition: String(prepared.edition) }) + "</p>" : "")));
 
     // R12–R15: the Sign step, offered only once `publish` has answered (R5's control); at the phone width it says where
@@ -190,8 +220,8 @@ export const CEREMONY = Object.freeze({
       // R3: "Check again": the checks read once more.
       op: "publishpreflight", label: "act.publishpreflight.label.ceremony",
       send: function (view) {
-        const copy = view.data.copy && view.data.copy.state === "ok" ? view.data.copy.value : null;
-        return copy ? { body: view.parts.caseArgs(copy, String(view.subject || "").split("/")[1] || "") } : null;
+        const copy = view.parts.copyOf(view);
+        return copy ? { body: view.parts.caseArgs(copy, view.ui.draftId || "") } : null;
       },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "publishpreflight", answer)) view.parts.forget(view); }, // D29
     },
@@ -199,7 +229,7 @@ export const CEREMONY = Object.freeze({
       // R3: "See everything that will be disclosed".
       op: "publishtensions", label: "act.publishtensions.label.ceremony",
       send: function (view) {
-        const copy = view.data.copy && view.data.copy.state === "ok" ? view.data.copy.value : null;
+        const copy = view.parts.copyOf(view);
         if (!copy) return null;
         const a = view.parts.caseArgs(copy, "");
         return { body: { project: a.project, targets: a.targets } };
@@ -243,12 +273,11 @@ export const CEREMONY = Object.freeze({
       // R5: the Ties step's confirmation prepares the edition for signing: `publish` with `tieAttested: true`.
       op: "publish", label: "act.publish.label.ceremony",
       send: function (view, el, cs) {
-        const copy = view.data.copy && view.data.copy.state === "ok" ? view.data.copy.value : null;
+        const copy = view.parts.copyOf(view);
         if (!copy) return null;
         const tick = cs.value("ce-tie");
         if (!(Array.isArray(tick) ? tick.includes("yes") : tick === true)) return { refuse: "screen.ceremony.ties.needed" };
-        const s = String(view.subject || "").split("/");
-        return { body: Object.assign(view.parts.caseArgs(copy, s[1] || ""), { tieAttested: true }) };
+        return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), { tieAttested: true }) };
       },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "publish", answer)) return; // D29: nothing is prepared on a refusal

@@ -4,7 +4,8 @@
    `docs/development/ux-substrate/screens/words-reads.json` (308 keys at `fa3c8b7e8e`), `act.optionpropose.label.plan`
    read as the design's `act.planask.label.plan`, less the keys of the fields R18 replaces by picked references
    (`screen.plan.subject.kind*`, `screen.plan.subject.standard`), with the keys R16 and R17 name (`law.*`, `risk.*`) and
-   `shell.unread` (the words of a refusal that carries none). */
+   `shell.unread` (the words of a refusal that carries none). T50 adds the keys of R20 to R23 (the no-office state, the matter's
+   stake, the records help from the profile, the question opened from an action). */
 
 export const SCREEN_WORDS = Object.freeze([
   "act.filingrecordsent.does",
@@ -331,5 +332,40 @@ export const SCREEN_WORDS = Object.freeze([
   "risk.proposed",
   "risk.proposal",
   "risk.proposal.not",
+  "screen.request.nooffice.admin",
+  "screen.places.name",
+  "screen.places.purpose",
+  "stake.sentwith",
+  "stake.inmatter",
+  "stake.source.project",
+  "stake.source.action",
+  "stake.none",
+  "stake.unreadable",
+  "stake.unreadable.summary",
+  "stake.undetermined.summary",
+  "stake.ask.title",
+  "stake.ask.says",
+  "stake.ask.help",
+  "stake.ask.undetermined",
+  "stake.action.label",
+  "stake.action.help",
+  "stake.action.save",
+  "act.owed_actionstake.label.start-send",
+  "act.owed_actionstake.does",
+  "refusal.MACHINE_CANNOT_SET_STAKE",
+  "refusal.STAKE_MALFORMED.action",
+  "screen.help-records.notheld",
+  "screen.help-records.sub",
+  "screen.help-records.faster.what",
+  "screen.help-records.portal.where",
+  "action.noreply.title",
+  "action.noreply.says",
+  "action.noreply.question",
+  "action.noreply.question.help",
+  "act.owed_actioninquiry.label.action",
+  "act.owed_actioninquiry.does",
+  "refusal.ACTION_INQUIRY_NO_QUESTION",
+  "refusal.ACTION_NO_PROJECT",
+  "refusal.MACHINE_CANNOT_OPEN_FROM_ACTION",
   "shell.unread",
 ]);

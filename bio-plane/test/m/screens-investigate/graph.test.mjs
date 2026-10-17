@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, silent, pending } from "../interface-shell/harness.mjs";
-import { open, main, button, GRAPH, GRAPH_PERSON, ENT, ORG, MSR, SHA, word, drew, notDrew } from "./fixtures.mjs";
+import { open, main, button, GRAPH, GRAPH_PERSON, ENT, ORG, MSR, SHA, PATHS, dayOf, word, drew, notDrew } from "./fixtures.mjs";
 
 const graphOf = (p) => main(p).querySelector(".mk-graph");
 
@@ -20,6 +20,11 @@ test("R18 explore draws the graph from exploregraph with the screen's subject as
   assert.ok(g.querySelector(".gwrap .e-pos"), "a position line in its class");
   assert.equal(g.querySelector(".gwrap .e-money"), null, "no line of a class the walk did not meet");
   drew(g, "connection.thing.org", undefined, "the far end of a position is an organization, by its kind's word");
+  /* R35: nodes are named; an unnamed one says so, and no node is drawn by its id */
+  assert.ok(g.textContent.includes("R. Alvarez"), "the person one ring out is drawn by name");
+  drew(g, "connection.node.unnamed", undefined, "an unnamed organization two rings out");
+  assert.ok(g.querySelector(`[data-node="${ORG}"][data-tip]`), "the unnamed node explains itself");
+  assert.doesNotMatch(g.textContent, /ENT-2026-\d+/, "no node is drawn by its id");
   drew(g, "connection.thing.person", undefined, "the near end of a position is a person");
   assert.deepEqual(g.querySelectorAll("svg .gchip text").map((t) => t.textContent).sort(), ["B", "C"], "each line carries its grade's letter");
   assert.ok(g.textContent.includes("mentioned together") && g.textContent.includes("held the post (employee)"), "each step's word, as the plane gives it");
@@ -96,4 +101,15 @@ test("R18 the money trail draws the graph with the trail's set as the centre; a 
   assert.ok(link, "a node on the money trail opens Explore connections at it (the registry lists no explore act on money)");
   const q = await open("/app/money/" + MSR, { plane: { exploregraph: silent } });
   assert.ok(main(q).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.money.graph")).querySelector('[data-state="failed"]'));
+});
+
+test("R35 a step_source step shows who attached the source and when beside its citation and offers stepsourcewithdraw; control: a step of another kind shows neither", async () => {
+  const gr = GRAPH();
+  gr.steps = gr.steps.concat([{ id: "REL-9", from: ENT, to: GRAPH_PERSON, kind: "step_source", word: "stated in a source", class: "evidentiary", attached_by: "member:mai", at: "2026-10-05T09:00:00Z", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA }], valid: {} }]);
+  const p = await open(PATHS.explore, { plane: { exploregraph: ok(gr), stepsourcewithdraw: ok({ ok: true }) } });
+  const g = graphOf(p);
+  drew(g, "screen.explore.attached", { by: "mai", date: dayOf("2026-10-05") });
+  assert.equal(g.querySelectorAll('button[data-act="stepsourcewithdraw"]').length, 1, "one withdrawal, for the one attached source");
+  const q = await open(PATHS.explore);
+  assert.equal(graphOf(q).querySelectorAll('[data-attached]').length, 0);
 });

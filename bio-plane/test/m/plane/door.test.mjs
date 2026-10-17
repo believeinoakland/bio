@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import "./fixture.mjs";   /* answers `cloudflare:workers` */
+const { translationsOf, translationsOps } = await import("../../../src/translations/index.mjs");
 const D = await import("../../../src/store-door/dispatch.mjs");
 const { Store } = await import("../../../src/plane/store.mjs");
 const S = await import("../../../src/setup.mjs");
@@ -153,7 +154,9 @@ test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's forty-four routes (T
   for (const drive of DRIVES) {
     const a = await store.fetch(req(drive));
     const url = new URL(`http://do/${drive[0]}`);
-    const direct = await S.instanceSetupOps(m, url, drive[2] === undefined ? null : drive[2])[url.pathname.slice(1)]();
+    /* R61 (T50): the nine translation routes are translations' (its own map answers them), not instance-setup's copy */
+    const opName = url.pathname.slice(1), tmap = translationsOps(translationsOf(before.ctx), url, drive[2] === undefined ? null : drive[2]);
+    const direct = await (Object.hasOwn(tmap, opName) ? tmap : S.instanceSetupOps(m, url, drive[2] === undefined ? null : drive[2]))[opName]();
     const at = await a.text();
     /* (T47; instance-setup R86) `grouplogo` answers a Response, the logo's bytes; the door relays it as it is */
     if (direct instanceof Response) {

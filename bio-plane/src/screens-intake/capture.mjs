@@ -2,9 +2,19 @@
  * `/app/capture/saw` (the subject names the tab; none is the address tab). Every function is self-contained (interface-shell
  * R21 (1)): it refers only to its parameters, the kit `cs` and the language's own globals. */
 
-/* R1–R3: the screen reads nothing before an act. */
-function captureReads() {
-  return {};
+/* R1–R3: nothing is read before an act, but on the address tab (R29, R31): the member's open captures (`opencaptures`,
+ * for "Unfinished"), the held documents (the title of the one that holds a capture's primary) and, when Add is opened from a
+ * question, the questions the member may see (`search`, as `find-in` reads them) for "For which question". */
+function captureReads(view) {
+  /* the tab and the subject as `forOf` reads them: an unknown tab is the address tab */
+  const s = String((view && view.subject) || "");
+  const at = s.indexOf("/");
+  const tab = at < 0 ? s : s.slice(0, at), id = at < 0 ? "" : s.slice(at + 1);
+  if (tab === "file" || tab === "saw") return {};
+  return { open: { op: "opencaptures", query: {}, empty: (v) => !v || !Array.isArray(v.captures) || !v.captures.length },
+           held: { op: "heldcaptures", query: { limit: 200 } },
+           ...(/^INQ-[A-Za-z0-9-]+$/.test(id) ? { questions: { op: "search", query: { q: "type:inquiry", limit: "200" },
+             empty: (v) => !v || !Array.isArray(v.hits) || !v.hits.length } } : {}) };
 }
 
 /* R22 (T49; BOB's reading of J2): the subject is the route's `<tab>` or `<tab>/<id>`, the id a project (`PROJ-…`) or a
@@ -39,6 +49,27 @@ async function projectOf(cs, id) {
   }
   const pm = await front(project);
   return { id: project, title: (pm && field(pm, "title")) || project, question };
+}
+
+/* R33 (N1139; DEC-325): a document is titled from its own title: the reading's `title` when it is not null; else what the
+ * answer's document states; else, for an address that gives only a host, `document.untitled.web` (`{site}` the host,
+ * `{date}` the day captured), never a slug or an address; else the address's last segment, as before. Plain text, at most
+ * 200 characters. */
+function titleOf(cs, o) {
+  const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  const read = o.reading && typeof o.reading.title === "string" ? o.reading.title.replace(/\s+/g, " ").trim() : "";
+  if (read) return read.slice(0, 200);
+  const address = String(o.address || "");
+  const stated = o.doc && typeof o.doc.title === "string" ? o.doc.title.trim() : "";
+  if (stated) return stated.slice(0, 200);
+  let host = "", hostOnly = false;
+  try { const u = new URL(address); host = u.hostname; hostOnly = u.pathname.replace(/\/+$/, "") === ""; } catch (e) { host = ""; }
+  if (host && hostOnly) {
+    const day = new Date(cs.now ? cs.now() : Date.now()).toISOString().split(".")[0] + "Z";
+    return plain(cs.w("document.untitled.web", { site: host, date: { html: cs.date(day) } })).slice(0, 200);
+  }
+  const last = (address.replace(/[?#].*$/, "").match(/\/([^/]+)\/?$/) || [])[1] || "";
+  return String(last || address).slice(0, 200);
 }
 
 /* R1, R21, R23 (N747): a document the screen promotes as an information bundle at `collected`, the one composition both
@@ -114,11 +145,23 @@ function renderCapture(cs, view) {
   const made = (g) => g && typeof g.bundleId === "string" && g.bundleId
     ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.title || g.bundleId, [])}`
       + (g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
-      + (/^INQ-/.test(at.id) ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.bundleId)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
+      /* R35: "Cite a passage" opens `find-in` over the document by its capture's fingerprint, never its record id */
+      + (/^INQ-/.test(at.id) && typeof g.sha === "string" && g.sha ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.sha)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
       + "</p>" : "";
   /* R21: a refused promotion is drawn on its tab in the owner's words, else the shell's own for a failure with none */
   const refusedPromotion = (t) => U.promoteRefused && U.promoteRefused.tab === t
     ? `<p class="cs-state" data-state="failed" role="alert">${U.promoteRefused.text ? cs.esc(U.promoteRefused.text) : cs.w("shell.unread")}</p>` : "";
+  /* R36 (DEC-292 D14; K3726): Add opened from a question says what it files under, first. The project and question are read
+     once and kept in page memory (`filedFor`), as the act that files the capture reads them. */
+  let forqNote = "";
+  if (at.id) {
+    if (!U.forq || U.forq.id !== at.id) {
+      U.forq = { id: at.id, state: "loading" };
+      view.parts.projectOf(cs, at.id).then((r) => cs.set("forq", { id: at.id, state: "ok", value: r }), () => cs.set("forq", { id: at.id, state: "ok", value: null }));
+    }
+    const m = U.forq.state === "ok" && U.forq.value && U.forq.value.id && U.forq.value.question && /^INQ-/.test(at.id) ? U.forq.value : null;
+    if (m) forqNote = said("screen.capture.forq", { project: m.title, question: `\u201C${m.question}\u201D` });
+  }
   let body = "";
   if (tab === "address") {
     const got = U.captured;
@@ -126,10 +169,30 @@ function renderCapture(cs, view) {
     /* R18: one act row; watching and checking join it once the address has a document, with the frequency chosen beside
        them, and no watching section is drawn before anything is captured. R14, R16: two acts, each on that document. */
     const watch = !!got && (cs.can("monitorset") || cs.can("monitor"));
+    /* R29 (N1117; DEC-321 (1)): opened from a question, "For which question", preset to it and changeable among the
+       questions the member may see (`cs.choice` over record data); the routed one stays chosen though the list omits it */
+    const D = view.data || {};
+    const qs = D.questions && D.questions.state === "ok" && D.questions.value && Array.isArray(D.questions.value.hits) ? D.questions.value.hits : [];
+    const routed = at.id && /^INQ-/.test(at.id) && !qs.some((h) => String(h.bundle_id) === at.id) ? [{ value: at.id, text: at.id }] : [];
+    const forq = /^INQ-/.test(at.id) ? cs.choice("ci-for", "capture.forquestion", routed.concat(qs.map((h) => ({ value: String(h.bundle_id), text: String(h.title || h.bundle_id) }))), { value: at.id })
+      + `<p class="mk-small muted">${cs.w("capture.forquestion.help")}</p>` : "";
+    /* R31 (N1094; DEC-240 D3): the member's own unfinished captures, each titled from the held document that holds its
+       primary, else the address; drawn only when one is answered (R17), a read that failed drawn failed */
+    const O = D.open;
+    const heldRows = D.held && D.held.state === "ok" && D.held.value && Array.isArray(D.held.value.held) ? D.held.value.held : [];
+    const unfinished = !O || O.state === "empty" ? "" : O.state !== "ok" ? cs.state(O, () => "")
+      : (Array.isArray(O.value.captures) ? O.value.captures : []).map((c) => {
+        const row = heldRows.find((r) => r && r.capture && r.capture.sha256 === c.primary_sha);
+        const title = (row && row.title) || String(c.locator || "");
+        return `<p class="mk-note" role="status">${cs.w("capture.unfinished", { title, n: c.outstanding, ago: { html: cs.date(c.started) } })} `
+          + cs.act("acquire", { label: "capture.finish", data: { session: c.session, locator: String(c.locator || ""), title } }) + "</p>";
+      }).join("");
     body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
+      + forq
       + (watch && cs.can("monitorset") ? `<p class="mk-small">${cs.w("screen.capture.address.watchabout")}</p>`
         + cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
       + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}${watch ? `${cs.act("monitorset")}${cs.act("monitor")}` : ""}</div>`
+      + unfinished
       + (got ? (got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
@@ -146,9 +209,9 @@ function renderCapture(cs, view) {
     body = cs.field("ci-file", "screen.capture.file.choose", { type: "file", help: "screen.capture.file.choosehelp", capture: "environment",
         accept: "image/*,video/*,audio/*,application/pdf,text/*,.csv,.doc,.docx,.xls,.xlsx,.odt,.ods,.zip" })
       + `<p class="mk-small muted">${cs.w("photo.reminder")}</p>`
-      + `<fieldset class="mk-checks"><legend>${cs.w("screen.capture.file.how")}</legend>`
+      + `<div class="cs-field"><fieldset class="mk-checks"><legend>${cs.w("screen.capture.file.how")}</legend>`
       + how.map(([k, w]) => `<label><input type="radio" id="ci-how-${k}" name="ci-how" value="${k}"> ${cs.w(w)}</label>`).join("")
-      + "</fieldset>"
+      + "</fieldset></div>"
       + `<p class="mk-small muted">${cs.w("screen.capture.file.downloaded")} <a href="/app/capture/address${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav>${cs.w("screen.capture.file.toaddress")}</a></p>`
       + cs.field("ci-where", "screen.capture.file.where", { help: "screen.capture.file.wherehelp", value: U.where || "" })
       + cs.field("ci-what", "screen.capture.file.what", { area: true, rec: true, value: U.what || "" })
@@ -174,6 +237,7 @@ function renderCapture(cs, view) {
       + `<p class="mk-note">${cs.w("screen.capture.saw.after")}</p>`;
   }
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div>`
+    + forqNote
     + `<nav class="mk-tabs2" role="tablist" aria-label="${cs.w("screen.capture.tabs")}">${tabs}</nav>`
     + `<div data-tab="${tab}">${body}</div>`;
 }
@@ -181,10 +245,22 @@ function renderCapture(cs, view) {
 /* R1: `acquire` with the address. Its five refusals each in its own sentence (`refusals`, by key beside the address, R25),
  * any other by shell R13; an empty address is `capture.fieldneeded` with the field's label (R25). */
 function sendAcquire(view, el, cs) {
+  /* R31: "Finish it" resumes the session (`continue`, acquisition R12): its primary is not fetched again */
+  const session = el && el.dataset ? String(el.dataset.session || "") : "";
+  if (session) {
+    cs.set("address", String(el.dataset.locator || ""));
+    cs.set("finishing", { session, title: String(el.dataset.title || "") });
+    return { body: { continue: session } };
+  }
+  cs.set("finishing", null);
   const address = String(cs.value("ci-address") || "").trim();
   if (!address) return { refuse: "capture.fieldneeded", fills: { field: { html: cs.w("screen.capture.address.label") } } };
   cs.set("address", address);
-  return { body: { locator: address } };
+  /* R29 (N1117; acquisition R47): opened from a question, the chosen question rides as `for`; the file tab and a capture
+     with no subject send none, and no `capturerequest` is made for it */
+  const chosen = view.parts.forOf(view).id;
+  const question = /^INQ-/.test(chosen) ? String(cs.value("ci-for") || chosen).trim() : "";
+  return { body: question ? { locator: address, for: question } : { locator: address } };
 }
 
 /* R1 (N747; control-plane R58): an answer that carries `promoted` (an archive the door already promoted) is not
@@ -193,20 +269,24 @@ function sendAcquire(view, el, cs) {
 async function doneAcquire(view, answer, cs) {
   const a = answer || {}, doc = a.document || {};
   const address = String((view.ui && view.ui.address) || "");
-  const last = (address.replace(/[?#].*$/, "").match(/\/([^/]+)\/?$/) || [])[1] || "";
-  const title = String(doc.title || last || address).slice(0, 200);
+  /* R33: the document is titled from its own title (`reading.title`), see `titleOf` */
+  const fin = view.ui && view.ui.finishing;
+  const title = fin && fin.session && fin.title ? fin.title : view.parts.titleOf(cs, { reading: a.reading, doc, address });
+  const sha = doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "";
   cs.set("promoteRefused", null);
+  /* R31: a continuation (`continued`) files nothing new: its supporting files join the capture it resumed */
+  if (a.continued) { cs.set("captured", { title, address, bundleId: null, sha }); cs.set("finishing", null); return; }
   if (Array.isArray(a.promoted)) {
     cs.set("captured", { archive: true, filed: a.promoted.length, notPromoted: Array.isArray(a.not_promoted) ? a.not_promoted.length : 0, title, address,
                          bundleId: typeof a.bundleId === "string" ? a.bundleId : null });
     return;
   }
-  if (a.existed === true) { cs.set("captured", { existed: true, title, address, bundleId: typeof a.bundleId === "string" ? a.bundleId : null }); return; }
-  const filed = await view.parts.projectOf(cs, view.parts.forOf(view).id);
+  if (a.existed === true) { cs.set("captured", { existed: true, title, address, bundleId: typeof a.bundleId === "string" ? a.bundleId : null, sha }); return; }
+  const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "address", text: "" }); return; }
   const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "address", text: made.refused }); return; }
-  cs.set("captured", { title, address, bundleId: made.bundleId, filed });
+  cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha });
 }
 
 /* R14 (capture-requests R56): "Ask for this later" is the member's own request: `capturerequest` with the address and no
@@ -218,6 +298,14 @@ function sendCaptureRequest(view, el, cs) {
 }
 function doneCaptureRequest(view, answer, cs) {
   cs.set("requested", { address: String(cs.value("ci-address") || "").trim(), drains: !(answer && answer.drains === false) });
+}
+
+/* R22, R36: where the subject files a capture: the project and question the page read once (kept in page memory) when it
+ * is read, else read now. Null when the question could not be read. */
+async function filedFor(view, cs) {
+  const id = view.parts.forOf(view).id, M = view.ui && view.ui.forq;
+  if (M && M.id === id && M.state === "ok") return M.value;
+  return view.parts.projectOf(cs, id);
 }
 
 /* R14, R16: the document the address was captured into: this visit's capture of it (the acquire's bundle), else the held
@@ -280,6 +368,8 @@ function sendUpload(view, el, cs) {
   /* R27 (control-plane R100): the file's declared media type rides beside `statement` and `name`; an empty type sends none */
   const query = { statement, name: file.name };
   if (typeof file.type === "string" && file.type) query.type = file.type;
+  /* R34: the file's name and declared type are kept as the act is sent; `doneUpload` uses them, never the input read afterwards */
+  cs.set("sent", { name: file.name, type: typeof file.type === "string" ? file.type : "" });
   return { query, raw: file };
 }
 /* R21 (D9; capture R86, control-plane R72): an upload's answer is a provenance document; it is promoted as an information
@@ -287,17 +377,21 @@ function sendUpload(view, el, cs) {
  * in Held captures" is said only once that promotion answers; a refusal is drawn on the tab. An answer with `existed: true`
  * promotes nothing new. */
 async function doneUpload(view, answer, cs) {
-  const a = answer || {}, file = cs.file("ci-file");
-  const name = file && file.name ? file.name : "";
+  const a = answer || {}, sent = (view.ui && view.ui.sent) || {};
+  const name = typeof sent.name === "string" ? sent.name : "";
   cs.set("promoteRefused", null);
   cs.set("uploaded", null);
   if (a.existed === true) { cs.set("uploaded", { name, existed: true, bundleId: null }); return; }
   const doc = a.document && typeof a.document === "object" ? a.document : {};
-  const filed = await view.parts.projectOf(cs, view.parts.forOf(view).id);
+  const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "file", text: "" }); return; }
-  const made = await view.parts.promoteDocument(cs, { doc, title: name || String(doc.locator || ""), locator: String(doc.locator || ""), project: filed.id });
+  /* R33: an upload is titled by its file's name, or by the reading's title when the answer carries one and the file is a page */
+  const isPage = /html/i.test(String(sent.type || "")) || /\.html?$/i.test(name);
+  const read = isPage && a.reading && typeof a.reading.title === "string" ? a.reading.title.replace(/\s+/g, " ").trim().slice(0, 200) : "";
+  const title = read || name || String(doc.locator || "");
+  const made = await view.parts.promoteDocument(cs, { doc, title, locator: String(doc.locator || ""), project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "file", text: made.refused }); return; }
-  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title: name, filed });
+  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha: doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "" });
 }
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */
@@ -339,19 +433,22 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, forOf, projectOf, promoteDocument }),
+  parts: Object.freeze({ bundleFor, filedFor, forOf, projectOf, promoteDocument, titleOf }),
   acts: Object.freeze([
-    Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, rereads: [],
+    Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire,
                     refusals: Object.freeze({ BAD_LOCATOR: "refusal.BAD_LOCATOR", SOURCE_REFUSED: "refusal.SOURCE_REFUSED",
+                                              /* R29: `BAD_FOR` (not a question of the project's) beside the field, in the fold the design draws it in, open
+                                                 whenever drawn, titled `capture.forquestion.refused.summary`; nothing was captured */
+                                              BAD_FOR: function (refusal, cs) { return `<details class="mk-details" open><summary>${cs.w("capture.forquestion.refused.summary")}</summary>${cs.w("refusal.BAD_FOR")}</details>`; },
                                               FETCH_FAILED: "refusal.FETCH_FAILED", EMPTY: "refusal.EMPTY", TOO_LARGE: "refusal.TOO_LARGE" }) }),
-    Object.freeze({ op: "capturerequest", label: "act.capturerequest.label.capture", send: sendCaptureRequest, done: doneCaptureRequest, rereads: [] }),
-    Object.freeze({ op: "monitorset", label: "act.monitorset.label.capture", send: sendMonitorSet, done: doneMonitorSet, rereads: [] }),
-    Object.freeze({ op: "monitor", label: "act.monitor.label.capture", send: sendMonitor, done: doneMonitor, rereads: [] }),
-    Object.freeze({ op: "captureupload", label: "act.captureupload.label.capture", send: sendUpload, done: doneUpload, rereads: [], reasonField: "statement",
+    Object.freeze({ op: "capturerequest", label: "act.capturerequest.label.capture", send: sendCaptureRequest, done: doneCaptureRequest }),
+    Object.freeze({ op: "monitorset", label: "act.monitorset.label.capture", send: sendMonitorSet, done: doneMonitorSet }),
+    Object.freeze({ op: "monitor", label: "act.monitor.label.capture", send: sendMonitor, done: doneMonitor }),
+    Object.freeze({ op: "captureupload", label: "act.captureupload.label.capture", send: sendUpload, done: doneUpload, reasonField: "statement",
                     refusals: Object.freeze({ UPLOAD_NO_STATEMENT: "screen.capture.refusal.UPLOAD_NO_STATEMENT", EMPTY: "screen.capture.refusal.upload.EMPTY",
                                               TOO_LARGE: "screen.capture.refusal.upload.TOO_LARGE",
                                               MEMBER_SESSION_REQUIRED: "screen.capture.refusal.MEMBER_SESSION_REQUIRED" }) }),
-    Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, rereads: [], reasonField: "words" }),
-    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.capture", send: sendWritingHelp, done: doneWritingHelp, rereads: [], reasonField: "told" }),
+    Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, reasonField: "words" }),
+    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.capture", send: sendWritingHelp, done: doneWritingHelp, reasonField: "told" }),
   ]),
 });

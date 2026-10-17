@@ -103,7 +103,7 @@ test("R23 state b: three cited passages and no partition: the ask first, no stre
   assert.ok(main(a).querySelector(".mk-strengthbox") && !section(a, "question.ask.title"));
 });
 
-test("R24 the read-back: one single part and one two-passage part in both shapes; who set it; each change; a shared origin's line", async () => {
+test("R24 R54 the read-back: one single part and one two-passage part in both shapes; who set it; each change; a shared origin's line", async () => {
   const legs = [{ target: D, role: "supports", ground: "part 1" }, { target: "INFO-2026-0007", role: "supports", ground: "part 2" }, { target: "INFO-2026-0009", role: "supports", ground: "part 2" }];
   const refs = legs.map((l) => [l.target, "cites", "confirmed", null]);
   const log = ["### Session 2026-10-08T09:00:00Z | Restructured | member:mai", "Trigger: op=inquiryground on " + Q, "Reason: the audit stands alone",
@@ -112,7 +112,12 @@ test("R24 the read-back: one single part and one two-passage part in both shapes
   const titled = (id, t) => ({ "bundle.md": `---\nid: ${id}\ntitle: "${t}"\n---\n` });
   const docs = { "INFO-2026-0007": titled("INFO-2026-0007", "The count"), "INFO-2026-0009": titled("INFO-2026-0009", "The audit") };
   const p = await open(at, { images: { [Q]: { "bundle.md": md }, ...docs }, plane: {
-    partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [{ a: "part 1", b: "part 2", through: ["issuer:Public Works"] }], complete: true } }) } });
+    partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [{ a: "part 1", b: "part 2", through: ["issuer:Public Works"] }], complete: true } }),
+    /* R54: who set it and each change come from `inquirypartition`; a `strength_after` of null is said, never computed */
+    inquirypartition: ok({ ok: true, id: Q, grouped: true, groups: [{ ground: "part 1", asserted_by: "dev", at: "2026-10-05T09:00:00Z", legs: [0] }], ungrouped: [],
+      changes: [{ at: "2026-10-05T09:00:00Z", by: "dev", act: "authored", reason: null, strength_before: null, strength_after: null },
+        { at: "2026-10-08T09:00:00Z", by: "mai", act: "restructured", reason: "the audit stands alone", strength_before: { capture: { grade: "B" }, connection: { grade: "C" } }, strength_after: null }],
+      strength_now: { capture: { grade: "B" }, connection: { grade: "C" } } }) } });
   const r = section(p, "question.rests.title");
   assert.ok(says(r, "question.rests.any"));
   assert.ok(r.textContent.includes("Administrative Instruction 4.12"), "the single part, by its title as the reading shown names it");
@@ -120,7 +125,9 @@ test("R24 the read-back: one single part and one two-passage part in both shapes
   assert.ok(says(r, "question.origin.shared", { passages: "Administrative Instruction 4.12, The count, The audit", origin: "Public Works" }));
   assert.ok(r.textContent.includes(lead("question.rests.set")) && r.textContent.includes("dev"));
   assert.ok(r.querySelector('[data-change="0"]').textContent.includes("the audit stands alone"));
-  assert.ok(r.querySelector('[data-change="0"]').textContent.includes("B, C"), "the strength before, as the Session Log records it");
+  assert.ok(r.querySelector('[data-change="0"]').textContent.includes("B/C"), "the strength before, as the change records it");
+  assert.equal(r.querySelectorAll("[data-change]").length, 1, "the first authoring is the setting, not a change");
+  assert.ok(r.querySelector('[data-change="0"] .cs-gap'), "a strength_after of null is said as undetermined, never computed");
   /* "Change what a passage carries…" reopens the questions in place; the change is sent with her reason */
   const change = r.querySelector('[data-regroup="1"]');
   assert.ok(says(change.querySelector("summary"), "question.rests.change"));
@@ -162,7 +169,11 @@ test("R25 readings: three drawn with their states, one a what-if, stands on the 
   /* each act sends its op with the version; Stand on with project; accept affirms every ground */
   await press(p, "versionaccept", { within: row("Two counts") });
   await press(p, "versionconsider", { within: row("The audit alone"), reason: "worth weighing" });
-  await press(p, "versionreject", { within: row("Two counts"), reason: "not enough on its own" });
+  /* R64: Reject is a fold holding the required reason; with none it sends nothing */
+  await press(p, "versionreject", { within: row("Two counts") });
+  assert.equal(p.byOp("versionreject").length, 0, "no reason, nothing sent");
+  fill(p, { "question-reject-1": "not enough on its own" });
+  await press(p, "versionreject", { within: row("Two counts") });
   await press(p, "versionrevert", { within: row("Seven-day standard") });
   await press(p, "versionhide", { within: row("The audit alone") });
   const sent = { versionaccept: "Two counts", versionconsider: "The audit alone", versionreject: "Two counts", versionrevert: "Seven-day standard", versionhide: "The audit alone" };
@@ -217,18 +228,25 @@ test("R27 Concluding links the case's screens where a read names the question's 
   assert.equal(section(n, "screen.question.concluding.head").querySelector("[data-case]"), null);
 });
 
-test("R35 R41 before a reading stands, no conclude, what is owed said; after versioncurrent, conclude offered as the form, carrying it", async () => {
+test("R35 R41 R50 conclude is offered once a passage is cited, on a reading that stands or one she writes; before a citation it is not and what is owed is said", async () => {
+  /* nothing cited: no Concluding section, the owed sentence beneath the three ways (R50) */
+  const empty = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, [], { legs: [] }) } } });
+  assert.ok(says(main(empty), "question.empty.conclude.own"));
+  assert.ok(!actsIn(main(empty)).includes("conclude") && section(empty, "screen.question.concluding.head") === undefined);
+  /* cited, and no reading stands: the form is offered with her own reading as the choice */
   const none = await open(at, { ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [{ name: "draft", state: "considering", legs: [] }] }) } });
   const c = section(none, "screen.question.concluding.head");
-  assert.ok(!actsIn(c).includes("conclude"));
-  assert.ok(says(c, "question.empty.conclude.own"));
+  assert.ok(actsIn(c).includes("conclude"));
+  assert.equal(none.doc.getElementById("question-conclude-reading").value, "", "no reading stands: her own is the choice");
   const p = await open(at, { ...A, plane: { conclude: ok({ ok: true }) } });
   const form = section(p, "screen.question.concluding.head").querySelector('[data-conclude="form"]');
+  assert.ok(form.hasAttribute("open"), "a reading stands: Conclude opens by itself");
   for (const k of ["question.conclude.reading", "question.conclude.falsifier", "question.conclude.nofalsifier", "question.conclude.commentary"]) assert.ok(says(form, k), k);
   fill(p, { "question-conclude-falsifier": "inspection records showing repair", "question-conclude-commentary": "the counts agree" });
   await press(p, "conclude");
   const q = p.byOp("conclude")[0].query;
   assert.deepEqual([q.target, q.project, q.version, q.falsifier, q.commentary], [Q, P, "main", "inspection records showing repair", "the counts agree"]);
+  assert.ok(!("reading" in q), "an accepted reading sends version, never reading");
   for (const r of p.requests) for (const k of ["by", "author", "viewer", "assist", "draft"])
     assert.ok(!(k in (r.query || {})) && !(r.body && typeof r.body === "object" && k in r.body), `${r.op} sends ${k}`);
 });
@@ -282,7 +300,12 @@ test("R41 state e: the assistant's proposal, machine work, accepted or declined 
   const s = section(p, "question.proposal.heading");
   assert.ok(s.querySelector('[data-origin="machine"]') && s.textContent.includes("About 9 in 10 within seven days."));
   assert.ok(s.textContent.includes("the 2026 performance report"));
-  await press(p, "versionreject", { within: s, reason: "it skips the audit" });
+  assert.ok(says(s.querySelector("details[data-reject] summary"), "screen.question.reject.summary"), "R64: the fold");
+  assert.ok(says(s, "ai.progress.checked.all"), "R58: beneath the proposal");
+  await press(p, "versionreject", { within: s });
+  assert.equal(p.byOp("versionreject").length, 0, "R64: no reason, nothing sent");
+  fill(p, { "question-reject-0": "it skips the audit" });
+  await press(p, "versionreject", { within: s });
   assert.deepEqual([p.byOp("versionreject")[0].body.version, p.byOp("versionreject")[0].body.reason], ["Proposed", "it skips the audit"]);
 });
 
@@ -307,7 +330,7 @@ test("R41 state g: concluded, who and when, the reading's words, what would chan
   assert.ok(g.textContent.includes("No: 1 in 10 is not repaired in time."));
   assert.ok(says(g, "question.concluded.falsifier", { falsifier: "logs showing repairs dated later" }));
   assert.equal(g.querySelectorAll(".cs-grade").length, 2);
-  assert.deepEqual(actsIn(g).sort(), ["planopen", "withdrawconclusion"]);
+  assert.deepEqual(actsIn(g), ["casedraft", "planopen", "withdrawconclusion"], "R62: in this order");
   assert.ok(!actsIn(main(p)).includes("conclude"), "never a second conclusion");
   await press(p, "withdrawconclusion", { within: g, reason: "new evidence" });
   assert.deepEqual(p.byOp("withdrawconclusion")[0].query, { op: "withdrawconclusion", target: Q, project: P, reason: "new evidence" });
@@ -319,7 +342,7 @@ test("R41 state g: concluded over a project is drawn from the read that names th
   const p = await open(at, { ...A, plane: { basisversions: basis(false) } });
   const g = section(p, "question.concluded.heading");
   assert.ok(g.textContent.includes("No: 1 in 10 is not repaired in time.") && g.textContent.includes("dev"));
-  assert.deepEqual(actsIn(g).sort(), ["planopen", "withdrawconclusion"]);
+  assert.deepEqual(actsIn(g), ["casedraft", "planopen", "withdrawconclusion"]);
   assert.ok(p.byOp("basisversions").some((c) => c.query.project === P), "read with the project");
   /* control: the project's read answers the conclusion withdrawn: state g is not drawn */
   const w = await open(at, { ...A, plane: { basisversions: basis(true) } });

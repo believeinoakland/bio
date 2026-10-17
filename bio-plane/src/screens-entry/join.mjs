@@ -1,7 +1,7 @@
 /* screens-entry R7 (and R8–R11): `join`, "Your invitation", in the setup frame at `/app/join` (the shell forwards
    `/#invite=` and `/#join=` here and hands the fragment as `view.fragment`, taken from the address on load). An
    invitation is read with `invitelook`; a join link first asks the name the group will know the person by and sends
-   `joinlinkinvite`. A dead link draws "This link no longer works" and no form. Then the language among the group's
+   `joinlinkinvite`. A dead link draws "This link no longer works" and no form (state e), the daily cap in its own fold. Then the language among the group's
    (`grouplanguages`), the handle checked as it is typed (`handlecheck`; fixed for good, DEC-197), the password twice;
    `enroll`, `login` on an own device, `memberlanguageset` and `recoverycodesissue`, the codes shown once; then Home,
    the welcome wizard's join steps counted (screens-wizards R7). The invitation, the link and the password travel only
@@ -31,7 +31,11 @@ export const join = {
     const invite = ui.invite || (typeof f.invite === "string" && f.invite ? f.invite : "");
     const link = typeof f.join === "string" && f.join ? f.join : "";
     const member = `<p class="mk-small">${W(S + "member")} <a href="/app/front" data-nav>${W(S + "member.go")}</a></p>`;
-    const dead = (code) => `<h1 class="t-title">${W(S + "dead")}</h1><p class="cs-row" data-state="dead">${code === "JOIN_LINK_DAILY_CAP" ? W("refusal.JOIN_LINK_DAILY_CAP") : W(S + "dead.what")}</p>` + member;
+    // state e: a dead link says why it may have stopped; the join link's daily cap is drawn as the design draws it, in its
+    // own fold, open whenever drawn (K3742)
+    const dead = (code) => `<h1 class="t-title">${W(S + "dead")}</h1>` + (code === "JOIN_LINK_DAILY_CAP"
+      ? `<details class="mk-details" open data-state="dead"><summary>${W("join.cap.says")}</summary><div class="cs-gap" data-gap="refused"><span>${W("refusal.JOIN_LINK_DAILY_CAP")}</span></div></details>`
+      : `<p class="cs-row" data-state="dead">${W(S + "dead.what")}</p>`) + member;
 
     // joined: the codes shown once, then Home
     if (ui.joined) {

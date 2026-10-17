@@ -1,4 +1,4 @@
-/* screens-inquiry R1, R9–R11, R14, R16, R20, R21, R27–R30, R38–R40, R43, R44: the project screen (Projects › <project>;
+/* screens-inquiry R1, R9–R11, R14, R16, R20, R21, R27–R30, R38–R40, R43, R44, R52–R54, R60, R63: the project screen (Projects › <project>;
  * registry screen `project`).
  *
  * Self-contained functions (interface-shell R21 (1)); the readers they share are the screen's `parts` (common.mjs). The
@@ -31,6 +31,9 @@ function reads(view) {
     /* what pays (`projectaccountstate`) is read by the screen (`later`) once she is a participant: an invited member who has
        not joined is answered NO_SUCH_PROJECT, a refused read the page must not make (R1, R37) */
     visibility: { op: "projectvisibility", query: { projectId: id } },
+    /* R53: the team's declared stake and the project's own (project-roster R32), each its own state when it cannot be read */
+    identity: { op: "groupidentity", query: {} },
+    stake: { op: "projectstake", query: { projectId: id } },
     votes: { op: "projectownervotes", query: { projectId: id } },
     plans: { op: "plans", query: { project: id }, empty: (v) => !v || !(Array.isArray(v.plans) ? v.plans : v.items || []).length },
     ...directory,
@@ -77,18 +80,23 @@ function render(cs, view) {
   if (seen && view.me && view.me.administer === true) {
     const aff = later("rescue", "affordances", { target: id });
     const roster = aff.state === "ok" && aff.value && aff.value.roster ? aff.value.roster : null;
+    /* R54: the date of the rescue's title is `projectownersgone`'s `since`; none recorded draws the title without one */
+    const gone = roster && roster.rescue_open === true ? later("gone", "projectownersgone", { projectId: id }) : null;
+    if (gone && gone.state === "loading") { out.push(cs.state({ state: "loading" }, () => "")); return out.join(""); }
     if (roster && roster.rescue_open === true) {
       const owners = (Array.isArray(seen.owners) ? seen.owners : []).map((o) => P.who(cs, o)).join(", ");
-      out.push(cs.sec("project.rescue.title", `<p>${W("project.rescue.says", { owners })}</p>`
+      const since = gone && gone.state === "ok" && gone.value && gone.value.since ? String(gone.value.since) : "";
+      out.push(cs.sec(since ? "project.rescue.title" : "project.rescue.title.nodate", `<p>${W("project.rescue.says", { owners })}</p>`
         + cs.field("project-rescue-why", "shell.reason", { area: true, rec: true, help: "shell.reason.help" })
         + cs.act("projectownerrescue", { label: "act.projectownerrescue.label.project", data: { project: id }, tone: "primary" })
-        + `<p class="mk-small">${W("project.rescue.own")}</p>`, { fills: { date: roster.since ? { html: cs.date(String(roster.since), { year: true }) } : "" }, id: "state-rescue" }));
+        + `<p class="mk-small">${W("project.rescue.own")}</p>`, { fills: { date: since ? { html: cs.date(since, { year: true }) } : "" }, id: "state-rescue" }));
       return out.join("");
     }
     if (aff.state === "loading") { out.push(cs.state({ state: "loading" }, () => "")); return out.join(""); }
   }
 
-  /* not joined (R1): she sees that it exists, and joins where she may */
+  /* not joined (R1, R60): an invited member joins; a findable project (the directory lists it) shows its name with "Ask to
+     join" and her open request; a hidden one is unavailable (state b), with no form */
   const me = view.me && view.me.handle;
   /* R1, R37: an invited member who has not joined is a participant to the roster but not to the project's reads
      (`projectaccountstate` answers NO_SUCH_PROJECT): she sees the not-joined state, never a failed read */
@@ -98,9 +106,14 @@ function render(cs, view) {
   const notJoined = !!seen || !!listed || invited;
   if (notJoined) {
     const owners = seen && Array.isArray(seen.owners) && seen.owners.length ? seen.owners.map((o) => P.who(cs, o)).join(", ") : "";
+    if (!invited && !listed) return out.join("") + P.unavailable(cs);
+    const req = listed && listed.request && listed.request.state === "open" ? listed.request : null;
     out.push(cs.sec("screen.project.members.head",
       `<p>${W("screen.project.notjoined")}</p>${owners ? `<p>${W("screen.project.notjoined.owners", { owners })}</p>` : ""}`
-      + cs.act("projectjoin", { label: "act.projectjoin.label.project", data: { project: id }, tone: "primary" })));
+      + (invited ? cs.act("projectjoin", { label: "act.projectjoin.label.project", data: { project: id }, tone: "primary" })
+        : req ? `<p class="mk-note" data-request="asked">${W("projects.request.asked", { date: { html: req.asked ? cs.date(String(req.asked), { year: true }) : "" } })}</p>`
+            + cs.act("projectrequestwithdraw", { label: "act.projectrequestwithdraw.label.project", data: { project: id } })
+          : cs.act("projectrequest", { label: "act.projectrequest.label.project", data: { project: id }, tone: "primary" }))));
     return out.join("");
   }
   if (doc && doc.objective && doc.objective !== title)
@@ -125,20 +138,16 @@ function render(cs, view) {
       + (k === "undetermined" ? cs.mark("gap", "undetermined", { reason: s.detail || "" }) : "") + counts(s.questions || {});
   })));
 
-  /* R10: the project's own bar, set by `projectbarset` to a joined member */
-  const barAct = joined ? cs.act("projectbarset", { label: "act.projectbarset.label.project", data: { project: id } }) : "";
-  const letters = () => [{ value: "", text: T("screen.project.bar.unset") }].concat(["A", "B", "C", "D"].map((g) => ({ value: g, text: g })));
-  out.push(cs.sec("screen.project.bar.head", cs.state("bar", view, (bv) => {
-    const bar = bv.bar || {};
-    const declared = bar.declared === true && (bar.capture || bar.connection);
-    const axis = (a) => (bar[a] ? cs.grade(a, bar[a]) : `<span data-axis-none="${a}">${W("screen.project.bar.axisnone", { axis: T("mark.scale." + a + ".name") })}</span>`);
-    const said = declared ? `<p>${axis("capture")} ${axis("connection")}</p><p>${W("screen.project.bar.declared")}</p>`
-      : `<p>${cs.mark("gap", "unrated")} ${W("screen.project.bar.none")}</p>`;
-    return said + (barAct
-      ? cs.choice("project-bar-capture", "mark.scale.capture.name", letters(), { value: declared && bar.capture ? bar.capture : "" })
-        + cs.choice("project-bar-connection", "mark.scale.connection.name", letters(), { value: declared && bar.connection ? bar.connection : "" })
-        + `<p class="mk-small">${W("screen.project.bar.help")}</p>` + barAct : "");
-  })));
+  /* R10, R52 (2), (3): the project's bar read in words, in the one of its four cases that is true (never as zero); the
+     setting is in the foot's fold. "Bar" a card: the project's meaning, the team's when it has none of its own */
+  const barRead = d.bar && d.bar.state === "ok" && d.bar.value ? (d.bar.value.bar || {}) : null;
+  const barDeclared = !!(barRead && barRead.declared === true && (barRead.capture || barRead.connection));
+  out.push(cs.sec("screen.project.bar.head", cs.state("bar", view, () => {
+    const c = barRead.capture, k = barRead.connection;
+    return `<p data-bar="${!barDeclared ? "none" : c && k ? "both" : c ? "source_only" : "connection_only"}">`
+      + (!barDeclared ? W("project.bar.none") : c && k ? W("project.bar.both", { source: c, connection: k })
+        : c ? W("project.bar.source_only", { source: c }) : W("project.bar.connection_only", { connection: k })) + "</p>";
+  }), { help: barDeclared ? "term.bar.project.means" : "term.bar.team.means" }));
 
   /* R9: the project's questions, paged to the end; each a reference opening `question`, with its strength */
   const pages = [];
@@ -164,7 +173,8 @@ function render(cs, view) {
   if (firstQuestion) {
     /* R43, state b: "Your first question", before "Open a question", sent as R11's two steps */
     out.push(cs.sec("project.firstquestion", cs.field("project-question", "project.firstquestion", { area: true, rec: true, help: "project.firstquestion.help" })
-      + cs.act("promote", { label: "act.promote.label.project", data: { project: id }, tone: "primary" }) + said + adddoc, { id: "state-b" }));
+      + cs.act("promote", { label: "act.promote.label.project", data: { project: id }, tone: "primary" })
+      + `<p class="mk-small">${W("act.promote.here.project")}</p>` + said + adddoc, { id: "state-b" }));
   } else {
     const qInner = cs.state("questions", view, () => cs.sheet(items.map((x) => {
       const q = String(x.inquiry);
@@ -179,7 +189,8 @@ function render(cs, view) {
     }).join("")) + (pending ? cs.state({ state: "loading" }, () => "") : "") + (failed ? cs.state(failed, () => "") : ""));
     out.push(cs.sec("screen.project.questions.head", qInner
       + cs.field("project-question", "screen.project.question.label", { area: true, rec: true, help: "screen.project.question.help" })
-      + cs.act("promote", { label: "act.promote.label.project", data: { project: id }, tone: "primary" }) + said
+      + cs.act("promote", { label: "act.promote.label.project", data: { project: id }, tone: "primary" })
+      + `<p class="mk-small">${W("act.promote.here.project")}</p>` + said
       + cs.act("findin", { label: "act.findin.label.project", data: { project: id } }) + adddoc));
   }
 
@@ -198,30 +209,53 @@ function render(cs, view) {
     if (drawInner) out.push(cs.sec("screen.project.draw.head", drawInner));
   }
 
-  /* R27, R36: this project's work: its plans by name, and the calculations, standards and timeline its references name;
-     a kind it has none of is not listed, and the section is not drawn when none is */
+  /* R27, R36, R52 (1), R63: this project's work, every screen that works within a project as the kit's reference link
+     with its card. A kind it has none of is still listed (the first one can be made), with the project as subject; its
+     published cases and docket are listed only when it has published one (the ceremony, listed, is what makes one) */
   const planList = d.plans && d.plans.state === "ok" ? (Array.isArray(d.plans.value.plans) ? d.plans.value.plans : d.plans.value.items || []) : [];
   const plans = planList.concat((Array.isArray(ui.plans) ? ui.plans : []).filter((p) => !planList.some((x) => x && (x.id || x.plan) === p.id)));
   const refs = doc ? (doc.lists.references || []).filter((r) => r && r.target && r.status !== "severed") : [];
   const work = [];
-  for (const p of plans) if (p && (p.id || p.plan)) work.push(["plan", String(p.id || p.plan), String(p.title || T("state.undetermined", { reason: "" }))]);
-  if (refs.some((r) => /^EVT-/.test(String(r.target)))) work.push(["timeline", id, T("screen.timeline.name")]);
+  const kindName = (kind) => T("screen." + kind + ".name");
+  const own = { plan: [], timeline: [], money: [], calculation: [], proceeding: [], standard: [], request: [], matter: [], action: [],
+    "case-editor": [], "review-copy": [], ceremony: [] };
+  for (const p of plans) if (p && (p.id || p.plan)) own.plan.push([String(p.id || p.plan), String(p.title || T("state.undetermined", { reason: "" }))]);
+  if (refs.some((r) => /^EVT-/.test(String(r.target)))) own.timeline.push([id, kindName("timeline")]);
   for (const r of refs) {
     const t = String(r.target);
-    if (/^CALC-/.test(t)) work.push(["calculation", t, String(r.title || T("screen.calculation.name"))]);
-    else if (/^STD-/.test(t)) work.push(["standard", t, String(r.title || T("screen.standard.name"))]);
+    if (/^CALC-/.test(t)) own.calculation.push([t, String(r.title || kindName("calculation"))]);
+    else if (/^STD-/.test(t)) own.standard.push([t, String(r.title || kindName("standard"))]);
   }
-  if (work.length) out.push(cs.sec("project.work.title", cs.sheet(work.map(([kind, sid, label]) =>
-    cs.row("", (() => { const h = String(cs.ref(kind, sid, label, [T("shell.card." + kind)])); return /^<a /.test(h) ? h : `<span class="rec">${cs.esc(label)}</span>`; })(), "")).join("")),
-    { help: "project.work.help" }));
+  for (const kind of Object.keys(own)) {
+    if (!own[kind].length) own[kind].push([id, kindName(kind)]);
+    for (const [sid, label] of own[kind]) work.push([kind, sid, label]);
+  }
+  /* R63: the published cases this project is the publisher of, read from the published editions (a case once however many
+     editions it has); a read that fails is drawn failed, never as none */
+  const pub = later("published", "publishedlist", {});
+  const caseIds = pub.state === "ok" && pub.value && Array.isArray(pub.value.cases)
+    ? [...new Set(pub.value.cases.map((c) => c && c.case_id).filter(Boolean).map(String))] : [];
+  const ours = [];
+  let pubPending = pub.state === "loading";
+  for (const cid of caseIds) {
+    const latest = Math.max(...pub.value.cases.filter((c) => c && String(c.case_id) === cid).map((c) => Number(c.edition) || 0));
+    const one = later("pubcase:" + cid, "publishedcase", { caseId: cid, edition: String(latest) });
+    if (one.state === "loading") pubPending = true;
+    else if (one.state === "ok" && one.value && one.value.project === id) ours.push(cid);
+  }
+  for (const cid of ours) { work.push(["published", cid, kindName("published")]); work.push(["docket", cid, kindName("docket")]); }
+  const workRows = work.map(([kind, sid, label]) =>
+    cs.row("", (() => { const h = String(cs.ref(kind, sid, label, [T("shell.card." + kind)])); return /^<a /.test(h) ? h : `<span class="rec">${cs.esc(label)}</span>`; })(), ""));
+  out.push(cs.sec("project.work.title", cs.sheet(workRows.join(""))
+    + (pub.state === "failed" ? cs.state(pub, () => "") : pubPending ? cs.state({ state: "loading" }, () => "") : ""), { help: "project.work.help" }));
   /* the act that opens a plan, for one of the project's questions */
   const choices = items.map((x) => ({ value: String(x.inquiry), text: String(x.title || T("state.undetermined", { reason: "" })) }));
   if (choices.length) out.push(cs.sec("screen.project.plan.head", cs.field("project-plan", "screen.project.plan.label", {})
     + cs.choice("project-plan-about", "screen.project.plan.about", choices, {})
     + cs.act("planopen", { label: "act.planopen.label.project", data: { project: id } })));
 
-  /* R28: who can find it, its history newest first, and an owner's act */
-  out.push(cs.sec("project.visibility.title", cs.state("visibility", view, (v) => {
+  /* R28: who can find it, its history newest first, and an owner's act (drawn in the foot's fold, R52 (2)) */
+  const visibilitySec = cs.sec("project.visibility.title", cs.state("visibility", view, (v) => {
     const hist = (Array.isArray(v.history) ? v.history : []).slice();
     const setWord = (s) => T(s === "discoverable" ? "project.visibility.discoverable" : "project.visibility.hidden");
     const byOf = (x) => {
@@ -236,7 +270,7 @@ function render(cs, view) {
       + lines.join("")
       + (owner ? cs.field("project-visibility-why", "shell.reason", { area: true, rec: true, help: "shell.reason.help" })
         + cs.act("projectvisibilityset", { label: "act.projectvisibilityset.label.project", data: { to: v.setting === "discoverable" ? "hidden" : "discoverable" } }) : "");
-  })));
+  }));
 
   /* what pays for the assistant here (credentials' projectaccountstate), and the project's AI screen (R14) */
   out.push(cs.sec("screen.project.account.head", cs.state(!d.participants || d.participants.state === "loading" ? { state: "loading" } : later("account", "projectaccountstate", { project: id }), (a) => {
@@ -245,12 +279,34 @@ function render(cs, view) {
     return `<p>${W(say)}</p>`;
   }) + `<p class="mk-small">${W("screen.project.account.where")} <a class="cs-btn" data-tone="quiet" href="/app/projectai/${cs.esc(id)}" data-nav>${W("screen.projectai.name")}</a></p>`));
 
+  /* R53: what the team has at stake here: the team's own statement read-only, the project's stake with who set it and when, its
+     history, and the participant's (or an administrator's) field; an unreadable stake is said, never none */
+  {
+    const idv = d.identity && d.identity.state === "ok" && d.identity.value ? d.identity.value : null;
+    const groupStake = idv && idv.declared_stake && typeof idv.declared_stake.stake === "string" && idv.declared_stake.stake ? idv.declared_stake.stake : "";
+    const st = d.stake;
+    const canSet = joined || (view.me && view.me.administer === true);
+    const stakeInner = cs.state("stake", view, (v) => {
+      if (v.stake === "undetermined" || (v.stake !== null && typeof v.stake !== "string"))
+        return `<details class="mk-details" data-stake="unreadable" open><summary>${W("stake.unreadable.summary")}</summary><p class="mk-small">${W("stake.unreadable")}</p></details>`;
+      const earlier = Array.isArray(v.history) ? Math.max(0, v.history.length - 1) : 0;
+      return (groupStake ? `<p class="mk-small" data-stake="group">${W("stake.project.group", { stake: groupStake })}</p>` : "")
+        + (v.stake ? `<p><b>${W("stake.project.label")}</b></p><p class="rec" data-stake="project">${cs.esc(v.stake)}</p>`
+          + `<p class="mk-small">${W("stake.set", { who: P.who(cs, v.set_by || ""), date: { html: v.set_at ? cs.date(String(v.set_at), { year: true }) : "" } })}${earlier ? " · " + W("stake.history", { n: String(earlier) }) : ""}</p>`
+          : `<p class="mk-small" data-stake="none">${W("stake.none")}</p>`)
+        + (canSet ? cs.field("project-stake", "stake.project.label", { area: true, rec: true, help: "stake.project.help", value: v.stake || "" })
+          + cs.act("projectstakeset", { label: "stake.project.save", data: { project: id } }) : "");
+    });
+    if (!(st && st.state === "empty")) out.push(cs.sec("stake.project.title", stakeInner, { id: "stake" }));
+  }
+
   /* R29: members, one row each with role and date (the founder unnamed by key, R40); owners' acts; changes waiting */
   out.push(cs.sec("screen.project.members.head", cs.state("participants", view, () => {
     const rows = people.map((x) => {
       const name = P.who(cs, x);
       const role = W(Number(x.owner) ? "project.member.owner" : "project.member.member");
-      const since = x.since || x.joined_at || x.owner_since || null;
+      /* R54: an owner's date is `owner_since`, a member's `joined_at`; a null date draws none, never "since null" */
+      const since = Number(x.owner) ? x.owner_since || null : x.joined_at || null;
       const date = since ? W(Number(x.owner) ? "project.member.since" : "project.member.joined", { date: { html: cs.date(String(since), { year: true }) } }) : "";
       const self = x.handle && x.handle === me;
       const acts = self && Number(x.owner) ? cs.act("projectownerremove", { label: "act.projectownerremove.label.project", data: { handle: String(x.handle) } })
@@ -279,6 +335,13 @@ function render(cs, view) {
         + cs.choice("project-fork-visibility", "project.visibility.title", [["hidden", "project.visibility.start.hidden"], ["discoverable", "project.visibility.start.discoverable"]], { value: "hidden" })
         + cs.act("projectfork", { label: "act.projectfork.label.project", data: { project: id } }) : "");
   })));
+  /* R52 (2): the foot folds the project's settings: the setting of its bar (R10) and who can find it (R28) */
+  const letters2 = () => [{ value: "", text: T("screen.project.bar.unset") }].concat(["A", "B", "C", "D"].map((g) => ({ value: g, text: g })));
+  const barSet = joined ? cs.state("bar", view, () =>
+    cs.choice("project-bar-capture", "mark.scale.capture.name", letters2(), { value: barDeclared && barRead.capture ? barRead.capture : "" })
+    + cs.choice("project-bar-connection", "mark.scale.connection.name", letters2(), { value: barDeclared && barRead.connection ? barRead.connection : "" })
+    + `<p class="mk-small">${W("screen.project.bar.help")}</p>` + cs.act("projectbarset", { label: "act.projectbarset.label.project", data: { project: id } })) : "";
+  out.push(`<details class="mk-details" data-fold="settings"><summary>${W("project.settings.fold")}</summary>${barSet}${visibilitySec}</details>`);
   return out.join("");
 }
 
@@ -419,6 +482,17 @@ const acts = [
       const r = answer && answer.result !== undefined ? answer.result : answer;
       if (r && r.newId) cs.go("project", String(r.newId));
     } },
+  /* R53: the project's stake, as typed; an emptied field clears it (project-roster R31: the exact word `null`) */
+  { op: "projectstakeset", label: "stake.project.save", rereads: ["stake"],
+    send(view, el, cs) {
+      const stake = String(cs.value("project-stake") || "").trim();
+      return { query: { projectId: String(view.subject || ""), stake: stake || "null" }, raw: "" };
+    } },
+  /* R60: a findable project's "Ask to join", and withdrawing her open request */
+  { op: "projectrequest", label: "act.projectrequest.label.project", rereads: ["directory"],
+    send(view) { return { query: { projectId: String(view.subject || "") } }; } },
+  { op: "projectrequestwithdraw", label: "act.projectrequestwithdraw.label.project", rereads: ["directory"],
+    send(view) { return { query: { projectId: String(view.subject || "") } }; } },
   /* R30: an administrator becomes its owner, naming herself, with her reason (in the query) */
   { op: "projectownerrescue", label: "act.projectownerrescue.label.project", reasonField: "reason",
     send(view, el, cs) {
@@ -431,19 +505,28 @@ const acts = [
 const words = Object.freeze([
   "screen.project.name", "screen.project.purpose", "screen.projectai.name",
   ...["promote", "drawquestion", "findin", "projectbarset", "projectinvite", "projectjoin", "planopen", "projectvisibilityset",
-    "projectownerremove", "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue"]
+    "projectownerremove", "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue",
+    "projectrequest", "projectrequestwithdraw"]
     .map((op) => "act." + op + ".label.project"),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.connection.name", "mark.scale.connection.means",
   "mark.grade.reading", "mark.strength.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
   "mark.gap.unrated.name", "mark.gap.unrated.means", "state.empty", "state.loading", "state.failed", "state.undetermined",
   "member.founder.unnamed", "shell.reason", "shell.reason.help", "shell.reason.needed", "file.recheck.revisit", "file.recheck.none",
   "screen.timeline.name", "screen.calculation.name", "screen.standard.name",
-  "shell.card.plan", "shell.card.timeline", "shell.card.calculation", "shell.card.standard",
+  "shell.card.plan", "shell.card.timeline", "shell.card.calculation", "shell.card.standard", "shell.card.money", "shell.card.proceeding",
+  "shell.card.request", "shell.card.matter", "shell.card.action", "shell.card.case-editor", "shell.card.review-copy", "shell.card.ceremony",
+  "shell.card.published", "shell.card.docket", "screen.money.name", "screen.proceeding.name", "screen.request.name", "screen.matter.name",
+  "screen.action.name", "screen.plan.name", "screen.case-editor.name", "screen.review-copy.name", "screen.ceremony.name",
+  "screen.published.name", "screen.docket.name", "project.settings.fold", "project.bar.both", "project.bar.source_only",
+  "project.bar.connection_only", "project.bar.none", "term.bar.project.means", "term.bar.team.means", "act.promote.here.project",
+  "stake.project.title", "stake.project.group", "stake.project.label", "stake.project.help", "stake.project.save", "stake.set",
+  "stake.history", "stake.none", "stake.unreadable", "stake.unreadable.summary", "projects.request.asked",
+  "shell.unavailable.notyours.title", "shell.unavailable.notyours.says",
   "project.work.title", "project.work.help", "project.visibility.title", "project.visibility.hidden", "project.visibility.discoverable",
   "project.visibility.history", "project.visibility.started", "project.visibility.start.hidden", "project.visibility.start.discoverable",
   "project.member.owner", "project.member.member", "project.member.since", "project.member.joined", "project.owners.pending",
   "project.owners.pending.remove", "project.owners.agree", "project.owners.rule", "project.rescue.title", "project.rescue.says",
-  "project.rescue.own", "project.firstquestion", "project.firstquestion.help", "project.adddoc", "project.start.title", "project.start.title.help",
+  "project.rescue.own", "project.rescue.title.nodate", "project.firstquestion", "project.firstquestion.help", "project.adddoc", "project.start.title", "project.start.title.help",
   ...["objective", "stage.head", "stage.forming", "stage.investigating", "stage.matured", "stage.closed", "stage.read", "stage.legs",
     "stage.concluded", "bar.head", "bar.declared", "bar.axisnone", "bar.none", "bar.unset", "bar.help", "questions.head",
     "questions.notdrawn", "draw.head", "draw.choose", "draw.note", "draw.help", "draw.empty", "draw.already", "draw.done",

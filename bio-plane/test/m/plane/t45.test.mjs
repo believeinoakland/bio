@@ -277,7 +277,7 @@ test("R41 (K2824): an infraction or bearing draft whose records the member canno
   const w = await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET }, parts: GATE_PARTS });
   const b = await w.draft({ op: "bearingdraft", action: "ACTN-2026-0009-none", reply: 1 });
   assert.equal(b.status, 409);
-  assert.equal(b.body.reason, "NO_SUCH_BUNDLE", JSON.stringify(b.body));
+  assert.equal(b.body.reason, "NO_SUCH_ACTION", JSON.stringify(b.body));   /* the action's own refusal for one she cannot see (action-records) */
   const p = await w.draft({ op: "infractiondraft", matter: "PLN-2026-0009-none", audience: "members" });
   assert.equal(p.status, 409);
   assert.equal(p.body.ok, false);
@@ -332,7 +332,7 @@ test("R41 (K2824): the records are assembled from the asking member's own reads 
   const none = assembleRecords(w.host, { kind: "infractiondraft", matter: { actions: [RFC] }, viewer: "nobody", read });
   assert.deepEqual(none.records.record, { plan: null, actions: [], correspondence: [], findings: [] });
   assert.equal(assembleRecords(w.host, { kind: "bearingdraft", action: RFC, reply: ord, viewer: "nobody", read }).reason,
-               "NO_SUCH_BUNDLE");
+               "NO_SUCH_ACTION");
 });
 
 import { caseAccountOf } from "../../../src/case-account/index.mjs";

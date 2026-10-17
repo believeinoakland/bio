@@ -140,15 +140,20 @@ test("R14 controls: a participant who is no owner sees what pays and the keep-aw
   const none = await openAi({ state: { held: false, kind: null, on: false, set_at: null, by: null, serving: false } });
   assert.ok(says(main(none).querySelector('[data-account="none"]'), "screen.projectai.account.none"));
   assert.ok(!actsIn(main(none)).includes("projectaccountswitch") && !actsIn(main(none)).includes("projectaccountremove"));
-  /* an administrator who is no participant of the project sees the not-joined state (R37), no account act */
+  /* an administrator who is no participant of a hidden project sees it unavailable (R60), no account act */
   const admin = await open(at, { boot: { plane: { ...plane(), ...ai(), whoami: ok({ ...MEMBER, member: "rosa", handle: "rosa", administer: true }) } } });
-  assert.deepEqual(actsIn(main(admin)), ["projectjoin"]);
+  assert.deepEqual(actsIn(main(admin)), []);
+  assert.ok(says(main(admin), "shell.unavailable.notyours.says"));
 });
 
 test("R37 a member not joined to the project sees the not-joined state by key, with Join; never What pays failed", async () => {
   const seen = { status: 200, json: { ok: true, result: { ok: false, code: "PROJECT_SEEN_NOT_A_PARTICIPANT", reason: "PROJECT_SEEN_NOT_A_PARTICIPANT" } } };
-  for (const extra of [{ projectdirectory: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs" }] }) },
-                       { projectparticipants: seen, projectaccountstate: seen, projectkeynotice: seen, projectaikeepawaystate: seen }]) {
+  /* R60: a hidden project she is not in is unavailable, with no form */
+  const hidden = await openAi({}, { projectparticipants: seen, projectaccountstate: seen, projectkeynotice: seen, projectaikeepawaystate: seen });
+  assert.deepEqual(actsIn(main(hidden)), [], "no form");
+  assert.ok(says(main(hidden), "shell.unavailable.notyours.says"));
+  assert.ok(!says(main(hidden), "screen.projectai.account.head"), "never What pays");
+  for (const extra of [{ projectdirectory: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs" }] }) }]) {
     const p = await openAi({}, { projectjoin: ok({ ok: true }), ...extra });
     const m = main(p);
     assert.ok(m.querySelector('[data-state="notjoined"]'));

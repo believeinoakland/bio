@@ -26,7 +26,7 @@ function render(cs, view) {
   const add = cs.field("people-add-name", S + "add.name", {})
     + cs.choice("people-add-kind", S + "add.kind", [["person", S + "add.kind.person"], ["institution", S + "add.kind.organization"]], {})
     + cs.field("people-add-note", S + "add.note", { area: true, rec: true, help: S + "add.note.help" })
-    + cs.act("entitycreate", { label: "act.entitycreate.label.people" });
+    + cs.act("entitycreate", { label: "screen.people.add.submit" });
   /* R13: each row: the kind's mark, the name opening `person`, who they are today, the counts, Explore connections */
   const kindMark = (k) => {
     const org = k !== "person";
@@ -43,25 +43,34 @@ function render(cs, view) {
     const note = typeof t.note === "string" ? t.note.trim() : "";
     return note && t.machine !== true ? note : null;
   };
+  /* R37: a body's kind is drawn beside its name, and what setup seeded on a line of its own (exactly when `today.machine` is true, R15) */
+  const kinds = ["office", "body", "institution", "movement", "fund", "program"];
+  const kindWord = (r) => {
+    const t = r.today || {};
+    return r.kind !== "person" && kinds.includes(t.kind || r.kind) ? cs.w(S + "today.kind." + (t.kind || r.kind)) : "";
+  };
   const todayHtml = (r) => {
     const text = todayText(r);
-    if (text !== null) return cs.esc(text);
     const t = r.today || {};
-    if (r.kind !== "person" && t.machine === true) return cs.w(S + "today.seeded");
-    const kinds = ["office", "body", "institution", "movement", "fund", "program"];
-    return r.kind !== "person" && kinds.includes(t.kind || r.kind) ? cs.w(S + "today.kind." + (t.kind || r.kind)) : cs.w(S + "today.none");
+    const seeded = r.kind !== "person" && t.machine === true;
+    const kw = kindWord(r);
+    const who = text !== null ? cs.esc(text) : seeded || (kw && r.kind !== "person") ? "" : cs.w(S + "today.none");
+    return (kw ? ` <span class="mk-small">${kw}</span>` : "") + (who ? (kw ? " · " : " · ") + who : "")
+      + (seeded ? `<br><span class="mk-small" data-seeded="1">${cs.w(S + "today.seeded")}</span>` : "");
   };
   /* R22: no count is drawn at zero: only what the row is named in */
   const counts = (r) => {
     const parts = [];
+    /* R37: a row no document names says so, and offers no "Explore connections" */
+    if (!r.documents) return cs.w(S + "counts.none");
     if (r.documents) parts.push(cs.w(S + (r.documents === 1 ? "count.document" : "count.documents"), { n: String(r.documents) }));
     if (r.questions) parts.push(cs.w(S + (r.questions === 1 ? "count.question" : "count.questions"), { n: String(r.questions) }));
     if (r.projects) parts.push(cs.w(S + (r.projects === 1 ? "count.project" : "count.projects"), { n: String(r.projects) }));
     return (parts.length ? cs.w(S + "counts", { list: parts.join(", ") }) : "") + (r.newest_added ? (parts.length ? " · " : "") + cs.w(S + "newest", { date: cs.date(r.newest_added) }) : "");
   };
   const line = (r) => cs.row(kindMark(r.kind),
-    `<b>${cs.ref("person", r.entity, r.name || r.entity, [todayText(r)])}</b> · ${todayHtml(r)}<span class="meta">${counts(r)}</span>`,
-    cs.act("explore", { label: "act.explore.label.people", data: { entity: r.entity } }));
+    `<b>${cs.ref("person", r.entity, r.name || r.entity, [todayText(r)])}</b>${todayHtml(r)}<span class="meta">${counts(r)}</span>`,
+    r.documents ? cs.act("explore", { label: "act.explore.label.people", data: { entity: r.entity } }) : "");
   const typed = !!(f.q || f.office || (f.namedIn && f.namedIn !== "any") || f.since || (f.show && f.show !== "both"));
   /* R25: nothing followed and nothing searched: the designed empty state alone, no search, filters or counts */
   if (d && d.state === "empty" && !typed) {
@@ -93,7 +102,7 @@ function render(cs, view) {
     const mine = rows.filter((r) => r.mine), rest = rows.filter((r) => !r.mine);
     return `<p class="mk-note">${cs.w(S + (v.in_your_projects ? "countline" : "countline.none"), { following: String(v.following || rows.length), mine: String(v.in_your_projects || 0) })}</p>`
       + (mine.length ? cs.sec(S + "yours", cs.sheet(mine.map(line).join(""))) : "")
-      + (rest.length ? cs.sec(S + "others", cs.sheet(rest.map(line).join(""))) : "")
+      + (rest.length ? (mine.length ? cs.sec(S + "others", cs.sheet(rest.map(line).join(""))) : cs.sheet(rest.map(line).join(""))) : "")
       + (v.truncated ? `<p class="mk-small">${cs.w(S + "more", { n: String(rows.length) })}</p>` : "");
   }));
   out.push(cs.sec(S + "add.head", add));
@@ -126,7 +135,7 @@ const acts = [
   { op: "explore", label: "act.explore.label.people",
     send(view, el, cs) { cs.go("explore", String(el.dataset.entity || "")); return null; } },
   /* R13: Add someone the record follows, with the member's note (its own words serve as the reason, DEC-88) */
-  { op: "entitycreate", label: "act.entitycreate.label.people", reasonField: "note",
+  { op: "entitycreate", label: "screen.people.add.submit", reasonField: "note",
     send(view, el, cs) {
       const label = String(cs.value("people-add-name") || "").trim();
       const note = String(cs.value("people-add-note") || "").trim();
@@ -152,11 +161,11 @@ const PEOPLE_KEYS = [
   "screen.people.count.projects", "screen.people.newest", "screen.people.more", "screen.people.none", "screen.people.none.how",
   "screen.people.none.capture", "screen.people.nomatch", "screen.people.nomatch.how", "screen.people.nomatch.find", "screen.people.add.head",
   "screen.people.add.name", "screen.people.add.kind", "screen.people.add.kind.person", "screen.people.add.kind.organization",
-  "screen.people.add.note", "screen.people.add.note.help", "screen.people.add.empty",
+  "screen.people.add.note", "screen.people.add.note.help", "screen.people.add.empty", "screen.people.counts.none", "screen.people.add.submit",
 ];
 
 const words = ["screen.people.name", "screen.people.purpose", "act.search.label.people", "act.search.does",
-  "act.explore.label.people", "act.explore.does", "act.entitycreate.label.people", "act.entitycreate.does",
+  "act.explore.label.people", "act.explore.does", "act.entitycreate.does",
   "state.empty", "state.loading", "state.failed", ...PEOPLE_KEYS];
 
 export const PEOPLE_SCREEN = Object.freeze({ id: "people", reads, render, acts, words, parts: PARTS });

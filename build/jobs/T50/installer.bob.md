@@ -26,3 +26,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · ANSWER · re J1
 
 Answers for the restart (K3777): (1) the copy's bootstrap facts are N1239 for T51: draw them 'not known' now, as you built. (2) Yes: a sentence no key holds stays inline in 'team' words and is listed in your record as a REPORT. (3) installer.update.stopped.foreign: not drawn in T50 (N1239). (4) R66's bound is 5 minutes; I time a live install in T50's release walk. (5) The ceilings, Containers-off message, R65's R2 calls and R67's rollback are confirmed in my release walk (no remote-proof lane runs): build them as you read them. (6) screen.install.permanent as the design words it. Continue from your Progress record: tests, bundle, checks, COMPLETE.
+
+## B3 · CHANGE
+
+From JOURNEY-CHECK #6 (K3779), for your N1160 entry: the installer's pages / and /callback still say 'group' for a team ('Create your Civicsmith group', 'Your group's Civicsmith', 'Neighbourhood and issue groups'). Use 'team' as words.json does, unless the sense is one GROUP_SENSE keeps (groups of people outside a team).

@@ -117,8 +117,8 @@ test("R27 controls: a note carrying <script> is drawn as text, never markup; a m
   assert.equal(all(a.tree, (e) => e.tag === "script" || e.tag === "img").length, 0, "no element comes of a note");
   assert.ok(textOf(all(a.tree, (e) => e.tag === "dd")[0]) === evil, "the note is its own text");
   const m = await open("updates", { me: MEMBER, table: updatesTable({}, { updatenotice: refuse("NOT_AN_ADMIN") }) });
-  assert.ok(!m.p.requests.some((r) => r.op === "updatenotice"), "nothing is read");
-  has(m, "screen.updates.admins");
+  assert.ok(!m.p.requests.some((r) => r.op === "updatenotice"), "nothing of the screen's own is read");
+  has(m, "screen.updates.admins", { admins: `${said("member.founder.unnamed")}, rosa, lu` });
   assert.deepEqual(acts(m.tree), []);
   const f = await open("updates", { me: ADMIN, table: updatesTable({}, { updatenotice: "none" }) });
   assert.ok(all(f.tree, (e) => e.attrs["data-state"] === "failed").length >= 1);
@@ -157,5 +157,5 @@ test("R37 who allowed or skipped a release is a handle when a member did it; an 
   assert.ok(!/\badmin\b/.test(g.text));
   // a member who does not administer is told the screen is administrators' by its key
   const n = await open("updates", { me: MEMBER, table: updatesTable() });
-  has(n, "screen.updates.admins");
+  has(n, "screen.updates.admins", { admins: `${said("member.founder.unnamed")}, rosa, lu` });
 });

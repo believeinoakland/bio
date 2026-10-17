@@ -20,6 +20,7 @@ const PAGES = {
   published: [`/app/published/${C}`, { session: null }],
   imported: ["/app/imported/IMP-2026-0001", {}],
   docket: [`/app/docket/${P}/${C}`, {}],
+  "docket-public": [`/app/docket-public/${C}`, { session: null }],
   doorbell: ["/app/doorbell", { session: null }],
   "review-outside": ["/app/review", { session: null, hash: "#grant=" + GRANT_SECRET }],
 };
@@ -102,9 +103,9 @@ test("R11 no secret is written to storage, an address or a later request: the gr
   assert.ok(!String(q.location.hash).includes(GRANT_SECRET) && !q.location.pathname.includes(GRANT_SECRET));
 });
 
-test("R10 (interface-shell R21) the eight registry screens, each drawing exactly its registry acts, labelled act.<op>.label.<screen>; the shell serves them", () => {
+test("R10 (interface-shell R21) the nine registry screens, each drawing exactly its registry acts, labelled act.<op>.label.<screen>; the shell serves them", () => {
   assert.equal(typeof interfacePage(SCREENS), "string", "interface-shell R21's check passes");
-  assert.deepEqual(SCREENS.map((s) => s.id), ["case-editor", "review-copy", "ceremony", "published", "imported", "docket", "doorbell", "review-outside"]);
+  assert.deepEqual(SCREENS.map((s) => s.id), ["case-editor", "review-copy", "ceremony", "published", "imported", "docket", "docket-public", "doorbell", "review-outside"]);
   for (const s of SCREENS) {
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
@@ -163,7 +164,8 @@ test("R24 what each screen draws is the word's text read through setup-words, fi
 const BARE = {
   "case-editor": ["/app/case-editor", {}, ["casedrafts", "image"], `/app/case-editor/${P}`, "casedrafts"],
   "review-copy": ["/app/review-copy", {}, ["casedrafts", "image"], `/app/review-copy/${P}`, "casedrafts"],
-  ceremony: [`/app/ceremony/${P}`, {}, ["reviewcopy", "image"], `/app/ceremony/${P}/${DR}`, "reviewcopy"],
+  ceremony: ["/app/ceremony", {}, ["reviewcopy", "image", "casedrafts"], `/app/ceremony/${P}/${DR}`, "reviewcopy"],
+  "docket-public": ["/app/docket-public", { session: null }, ["docketpublic"], `/app/docket-public/${C}`, "docketpublic"],
   published: ["/app/published", { session: null }, ["publishedcase"], `/app/published/${C}`, "publishedcase"],
   docket: [`/app/docket/${P}`, {}, ["docket", "image"], `/app/docket/${P}/${C}`, "docket"],
 };

@@ -8,7 +8,7 @@ const links = (o) => all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"])
 
 test("R17 settings: \"Yours\" then, to a session that administers, \"The group's\", each a reference to its screen; a member is drawn only their own", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
-  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "places", "security", "updates", "translations", "wizards"]);
+  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards"]);
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(l.attrs.href, "/app/" + id);
@@ -83,4 +83,14 @@ test("R20 recovery: to an administrator, adminrecoverystep's note while not met;
   assert.equal(all(met.tree, (e) => e.attrs["data-note"] === "step").length, 0);
   const silent = await open("recovery", { me: ADMIN, table: recoveryTable({ adminrecoverystep: refuse("STORE_DID_NOT_ANSWER") }) });
   assert.equal(all(silent.tree, (e) => e.attrs["data-note"] === "step").length, 0);
+});
+
+/* R42 (T50; U3b): recovery says the codes were shown once, to the member alone */
+test("R42 recovery draws screen.recovery.onlyyou once, above the act that issues new codes", async () => {
+  for (const me of [MEMBER, ADMIN]) {
+    const m = await open("recovery", { me, table: recoveryTable() });
+    has(m, "screen.recovery.onlyyou");
+    assert.equal(m.text.split(said("screen.recovery.onlyyou")).length, 2, "once");
+    assert.ok(m.text.indexOf(said("screen.recovery.onlyyou")) < m.text.indexOf(said("act.recoverycodesissue.label.recovery")), "above the act");
+  }
 });

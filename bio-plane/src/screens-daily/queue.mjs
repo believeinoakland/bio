@@ -24,6 +24,8 @@ export const queue = Object.freeze({
         op: "queue", query: sort ? { sort: sort } : {},
         empty: function (v) { return !v || !Array.isArray(v.items) || v.items.length === 0; },
       },
+      // R50 (1): what the member has muted, `queue` R55's list, at the foot.
+      muted: { op: "queue", query: { muted: "true" }, empty: function (v) { return !v || !Array.isArray(v.muted) || v.muted.length === 0; } },
     };
   },
 
@@ -36,7 +38,7 @@ export const queue = Object.freeze({
       taskresolve: "taskresolve", taskforward: "taskforward", proposedispose: "proposedispose", queuesnooze: "queuesnooze",
       queuemute: "queuemute", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion",
       versionkeep: "keepversion", reminderanswer: "reminderanswer", promote: "promote", projectkeyset: "projectkeyset",
-      exploreapprove: "exploreapprove", updatelater: "updatelater",
+      exploreapprove: "exploreapprove", updatelater: "updatelater", projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer",
     };
     const sort = SORTS.indexOf(String(view.subject || "")) >= 0 ? String(view.subject) : "case";
     // The fields an act needs from the member, drawn in place in a disclosure with the act (interface-shell R11's dialog is
@@ -47,7 +49,16 @@ export const queue = Object.freeze({
       projectkeyset: [["key", "screen.queue.projectkey"]], queuesnooze: [["until", "screen.queue.snooze.until"]],
     };
     let seq = 0;
-    const actOf = function (op, data) {
+    const actOf = function (op, data, it) {
+      // R42: an owner answers a request to join with Grant or Decline, the answers the item's option carries (queue-producers R42).
+      if (op === "projectrequestanswer") {
+        const opt = (it && Array.isArray(it.options) ? it.options : []).filter(function (o) { return o && (o.id || o.op) === op; })[0];
+        const answers = opt && Array.isArray(opt.answers) && opt.answers.length ? opt.answers
+          : [{ answer: "grant", label: "screen.home.request.grant" }, { answer: "decline", label: "screen.home.request.decline" }];
+        return answers.map(function (a) {
+          return cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) });
+        }).join("");
+      }
       const fields = FIELDS[op];
       if (!fields) return cs.act(op, { label: "act." + op + ".label.queue", data: data });
       const f = "qa-" + (seq++);
@@ -112,6 +123,7 @@ export const queue = Object.freeze({
         mutecase: near ? String(near.id) : "",
         item: it.id, cls: it.class || "", kind: it.kind || "",
         subject: it.subject && it.subject.id ? String(it.subject.id) : "",
+        who: it.subject && it.subject.requester ? String(it.subject.requester) : (it.fills && it.fills.who ? String(it.fills.who) : ""),
         entry: it.subject && it.subject.entry !== undefined ? String(it.subject.entry) : "",
         day: it.subject && it.subject.day ? String(it.subject.day) : "",
         owner: it.basis && it.basis.owner ? String(it.basis.owner) : "",
@@ -119,7 +131,9 @@ export const queue = Object.freeze({
         finding: d.finding ? String(d.finding) : "",
         project: d.project ? String(d.project) : (Array.isArray(d.projects) && d.projects[0] ? String(d.projects[0]) : (cas ? String(cas.id) : "")),
       };
-      const drawn = ops.map(function (op) { return actOf(op, data); }).join("");
+      // R42: an invitation or a request to join names its project as its subject, not as a case.
+      if ((it.kind === "project-invitation" || it.kind === "project-request") && it.subject && it.subject.id) data.project = String(it.subject.id);
+      const drawn = ops.map(function (op) { return actOf(op, data, it); }).join("");
       const to = iw.open(it);
       const open = other && to ? '<a class="cs-btn" data-tone="quiet" data-nav href="' + to + '">' + cs.w("screen.queue.open") + "</a>" : "";
       return drawn + open;
@@ -151,7 +165,7 @@ export const queue = Object.freeze({
       return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"),
         wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "") + hintOf(it)
           + '<span class="mk-acts">' + (it.kind === "request-unsent" ? unsentActs(it, cas) : actsOf(it, cas)) + "</span>",
-        it.due ? dueOf(it.due) : "", "");
+        it.due ? (iw.ours(cs, it) || dueOf(it.due)) : "", "");
     };
 
     // The three-kinds note: once per member, on the device (R2). Decided once per visit and kept in the screen's page
@@ -211,27 +225,55 @@ export const queue = Object.freeze({
         const snooze = g.c ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
         return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(itemRow).join("")) + "</section>";
       }).join("") + (q.truncated ? '<p class="mk-note">' + (function (m) { return m === 1 ? cs.w("screen.queue.more.one") : cs.w("screen.queue.more", { n: String(m) }); })(Math.max(0, n - items.length)) + "</p>" : "");
-    }, { empty: "screen.queue.uptodate" });
+    }, { empty: "screen.queue.empty" });
 
-    // R12 (DEC-201 (13)): with nothing waiting, the member is up to date, one step from Home.
+    // R50 (1): "Muted", at the foot: each kind muted in a project, and each item muted on its own, with "Turn back on". A row
+    // with no instant says `queue.muted.by.undated`, never a blank date. Not drawn when nothing is drawable.
+    const mutedPart = (function () {
+      const m = view.data.muted;
+      if (!m || m.state === "loading" || m.state === "empty") return "";
+      if (m.state === "failed") return cs.sec("queue.muted.title", cs.state("muted", null), { help: "queue.muted.help" });
+      const rows = (m.value && Array.isArray(m.value.muted) ? m.value.muted : []).map(function (r) {
+        if (!r) return "";
+        const by = r.at ? cs.w("queue.muted.by", { date: { html: cs.date(String(r.at)) } }) : cs.w("queue.muted.by.undated");
+        if (r.kind && r.case && r.case.id) {
+          const unmute = cs.act("queuemute", { label: "queue.muted.unmute", data: { unmute: "kind", mutecase: String(r.case.id), kind: String(r.kind) } });
+          return cs.row("", cs.w("queue.muted.kind", { kind: { html: cs.w("queue.kind." + String(r.kind)) }, project: { html: cs.ref("project", String(r.case.id), r.case.title || String(r.case.id), []) } })
+            + '<span class="meta">' + by + "</span>", unmute, "");
+        }
+        if (r.item) {
+          const unmute = cs.act("queuemute", { label: "queue.muted.unmute", data: { unmute: "item", item: String(r.item) } });
+          return cs.row("", cs.w("queue.muted.item", { item: String(r.item) }) + '<span class="meta">' + by + "</span>", unmute, "");
+        }
+        return "";
+      }).filter(Boolean);
+      return rows.length ? cs.sec("queue.muted.title", cs.sheet(rows.join("")), { help: "queue.muted.help" }) : "";
+    })();
+    const doneNote = typeof ui.done === "string" && ui.done
+      ? '<p class="mk-note" role="status">' + cs.w("queue.done", { what: { html: cs.w("act." + ui.done + ".label.queue") } }) + "</p>" : "";
+
+    // R41 (U8b; DEC-292 D13): with nothing waiting, the sentence only: no kinds note, no sort controls.
     const q = view.data.queue;
-    const home = q && q.state === "empty" ? '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app">' + cs.w("screen.queue.gohome") + "</a></p>" : "";
-    return cs.title(undefined, {}) + note + sorts + body + home;
+    if (q && q.state === "empty") return cs.title(undefined, {}) + doneNote + body + mutedPart;
+    return cs.title(undefined, {}) + doneNote + note + sorts + body + mutedPart;
   },
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).
   acts: [
     { op: "taskresolve", label: "act.taskresolve.label.queue",
-      send: function (view, el) { return { body: { id: el.dataset.item } }; } },
+      send: function (view, el) { return { body: { id: el.dataset.item } }; },
+      done: function (view, answer, cs) { cs.set("done", "taskresolve"); } },
     { op: "taskforward", label: "act.taskforward.label.queue",
       send: function (view, el, cs) {
         const to = String(cs.value(el.dataset.f + "-to") || "").trim().replace(/^@/, "");
         return to ? { body: { id: el.dataset.item, to: to } } : { refuse: "screen.queue.fieldfirst" };
-      } },
+      },
+      done: function (view, answer, cs) { cs.set("done", "taskforward"); } },
     { op: "proposedispose", label: "act.proposedispose.label.queue",
       send: function (view, el) {
         return { body: { project: el.dataset.project, finding: el.dataset.finding || el.dataset.item, to: "dismissed" } };
-      } },
+      },
+      done: function (view, answer, cs) { cs.set("done", "proposedispose"); } },
     { op: "queuesnooze", label: "act.queuesnooze.label.queue",
       send: function (view, el, cs) {
         const until = String(cs.value(el.dataset.f + "-until") || "").trim();
@@ -240,16 +282,22 @@ export const queue = Object.freeze({
     // R18 (queue R19, R20): "Mute a kind" mutes the item's kind for its nearest home case; with no case, the item.
     { op: "queuemute", label: "act.queuemute.label.queue",
       send: function (view, el) {
+        // R50 (1): "Turn back on" sends the same form with `unmute`.
+        if (el.dataset.unmute === "kind") return { body: { case: el.dataset.mutecase, kinds: [el.dataset.kind], unmute: true } };
+        if (el.dataset.unmute === "item") return { body: { item: el.dataset.item, unmute: true } };
         return el.dataset.mutecase && el.dataset.kind ? { body: { case: el.dataset.mutecase, kinds: [el.dataset.kind] } } : { body: { item: el.dataset.item } };
-      } },
+      },
+      done: function (view, answer, cs) { cs.set("done", "queuemute"); } },
     // Adopting asks why (reevaluation R15); the member's words are the act's reason (interface-shell R11, K3002).
     { op: "adoptversion", label: "act.adoptversion.label.queue", reasonField: "why",
       send: function (view, el, cs) {
         const why = String(cs.value(el.dataset.f + "-why") || "").trim();
         return why ? { body: { notice: el.dataset.notice, why: why } } : { refuse: "screen.queue.fieldfirst" };
-      } },
+      },
+      done: function (view, answer, cs) { cs.set("done", "adoptversion"); } },
     { op: "keepversion", label: "act.keepversion.label.queue",
-      send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
+      send: function (view, el) { return { body: { notice: el.dataset.notice } }; },
+      done: function (view, answer, cs) { cs.set("done", "keepversion"); } },
     { op: "reminderanswer", label: "act.reminderanswer.label.queue",
       send: function (view, el, cs) {
         const on = String(cs.value(el.dataset.f + "-on") || "").trim();
@@ -292,6 +340,15 @@ export const queue = Object.freeze({
     // R13: the unsent request dropped, with the member's reason (the shell asks it: `actionmove` is reasoned).
     { op: "actionmove", label: "act.actionmove.label.queue",
       send: function (view, el) { return el.dataset.action ? { body: { target: el.dataset.action, to: "abandoned" } } : null; } },
+    // R42: "Join" an invitation, and an owner's Grant or Decline of a request to join; the item leaves with the re-read.
+    { op: "projectjoin", label: "act.projectjoin.label.queue",
+      send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; },
+      done: function (view, answer, cs) { cs.set("done", "projectjoin"); } },
+    { op: "projectrequestanswer", label: "act.projectrequestanswer.label.queue",
+      send: function (view, el) {
+        return el.dataset.project && el.dataset.who && el.dataset.answer ? { query: { projectId: el.dataset.project, handle: el.dataset.who, answer: el.dataset.answer } } : null;
+      },
+      done: function (view, answer, cs) { cs.set("done", "projectrequestanswer"); } },
     // R19: Not now, for every administrator (instance-setup R90).
     { op: "updatelater", label: "act.owed_updatelater.label.queue",
       send: function (view, el) { return el.dataset.version ? { body: { version: el.dataset.version } } : null; } },

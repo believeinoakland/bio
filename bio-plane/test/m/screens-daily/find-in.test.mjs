@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { open, ok, refused, text, ops, acts, button, press, beside, last, main, screen, word, hasWord, settle } from "./page.mjs";
+import { Event } from "../interface-shell/harness.mjs";
 
 const QUESTIONS = ok({ hits: [{ bundle_id: "INQ-1", title: "Is the city repairing reported potholes within seven days?" }] });
 const SHA = "9f2c0d1e".padEnd(64, "a"); // a capture's digest: 64 hex digits, never drawn
@@ -20,9 +21,11 @@ const KINDS = [
 ];
 const FOUND = ok({ ok: true, scope: { form: "project", project: "PROJ-1", captures: 14 }, kinds: KINDS });
 const PROJECT_DOC = ok({ "bundle.md": '---\nobject_type: project\ntitle: "The Coliseum lease"\nobjective: "The Coliseum lease"\ncurrent_state: forming\n---\n\n## Session Log\n' });
-const PLANE = { search: QUESTIONS, findin: FOUND, image: PROJECT_DOC };
+const PQ = ok({ ok: true, project: "PROJ-1", items: [{ inquiry: "INQ-1", title: "Is the city repairing reported potholes within seven days?" }], cursor: null });
+const ZONE = ok({ ok: true, count: 1, facts: [{ path: "profile.time_zone", fact: { profile: "p1", fact: "time_zone" }, status: "confirmed", governs: { value: "America/Los_Angeles", origin: "profile" } }] });
+const PLANE = { search: QUESTIONS, projectquestions: PQ, factstatus: ZONE, findin: FOUND, image: PROJECT_DOC };
 const R = "looking";
-const ALL_KINDS = { "findin-kind-people": true, "findin-kind-money": true, "findin-kind-dates": true, "findin-kind-requirements": true, "findin-kind-events": true, "findin-kind-term": true, "findin-term": "closed" };
+const ALL_KINDS = { "findin-kind-people": true, "findin-kind-money": true, "findin-kind-dates": true, "findin-kind-requirements": true, "findin-kind-events": true, "findin-term": "closed" };
 const shown = async (plane = {}) => {
   const p = await open("/app/find-in/PROJ-1", { ...PLANE, ...plane });
   await press(p, "findin", { values: { ...ALL_KINDS, "findin-question": "INQ-1" }, reason: R });
@@ -58,17 +61,22 @@ test("R5, R26: the scope is set by where it was opened (a document, the held set
   assert.ok(!main(none).querySelector("fieldset, select, input"));
 });
 
-test("R5: the member ticks what to find, with an optional term and question; findin is sent over the scope, and records nothing", async () => {
+test("R5, R48: the member ticks what to find, with an optional term (no tick box: it applies when filled) and question; findin is sent over the scope, and records nothing", async () => {
   const p = await open("/app/find-in/PROJ-1", PLANE);
-  for (const k of ["people", "money", "dates", "requirements", "events", "term"]) assert.ok(p.doc.getElementById("findin-kind-" + k), k);
-  assert.equal(p.doc.getElementById("findin-question").querySelectorAll("option")[1].textContent, "Is the city repairing reported potholes within seven days?");
+  for (const k of ["people", "money", "dates", "requirements", "events"]) assert.ok(p.doc.getElementById("findin-kind-" + k), k);
+  assert.ok(!p.doc.getElementById("findin-kind-term"), "R48 (6): the term has no tick box");
+  assert.ok(text(p).includes(word("screen.find-in.term.help")));
+  // R48 (7): the project's questions, the first preselected, with no "None yet".
+  const options = p.doc.getElementById("findin-question").querySelectorAll("option");
+  assert.deepEqual(options.map((o) => o.textContent), [word("findin.question.choose"), "Is the city repairing reported potholes within seven days?"], "none preselected; no \"None yet\"");
+  assert.ok(!text(p).includes(word("screen.document.cite.noquestion")));
   const nothing = await press(p, "findin", { values: { "findin-kind-people": false, "findin-kind-money": false, "findin-kind-dates": false, "findin-kind-requirements": false }, reason: R });
   assert.equal(beside(p, nothing), word("screen.find-in.kindsfirst"));
-  const noTerm = await press(p, "findin", { values: { "findin-kind-term": true, "findin-term": " " }, reason: R });
-  assert.equal(beside(p, noTerm), word("screen.find-in.termfirst"));
-  await press(p, "findin", { values: { "findin-kind-people": true, "findin-kind-term": true, "findin-term": " closed ", "findin-question": "INQ-1" }, reason: R });
+  await press(p, "findin", { values: { "findin-kind-people": true, "findin-term": " closed ", "findin-question": "INQ-1" }, reason: R });
   const r = last(p, "findin");
-  assert.deepEqual({ scope: r.body.scope, kinds: r.body.kinds, term: r.body.term }, { scope: { project: "PROJ-1" }, kinds: ["people", "term"], term: "closed" });
+  assert.deepEqual({ scope: r.body.scope, kinds: r.body.kinds, term: r.body.term }, { scope: { project: "PROJ-1" }, kinds: ["people", "term"], term: "closed" }, "a filled term is found too");
+  await press(p, "findin", { values: { "findin-term": "  " }, reason: R });
+  assert.deepEqual(last(p, "findin").body.kinds, ["people"], "control: an empty term adds nothing");
   const sel = await open("/app/find-in/sel-abc", PLANE);
   await press(sel, "findin", { values: { "findin-kind-money": true, "findin-kind-people": false, "findin-kind-dates": false, "findin-kind-requirements": false }, reason: R });
   assert.deepEqual(last(sel, "findin").body.scope, { selection: "sel-abc" });
@@ -78,6 +86,10 @@ test("R5: the member ticks what to find, with an optional term and question; fin
   assert.deepEqual(last(doc, "findin").body.scope, { capture: "9f2c" });
   // Finding records nothing (K1468): the op is a read, and its answer is kept in the screen's page memory only.
   assert.equal(OPS.findin.mutating, false);
+  // R48 (7): a project with no question says to open one first.
+  const none = await open("/app/find-in/PROJ-1", { ...PLANE, projectquestions: ok({ ok: true, project: "PROJ-1", items: [], cursor: null }) });
+  assert.ok(text(none).includes(word("screen.document.cite.noquestion")));
+  assert.ok(!none.doc.getElementById("findin-question"));
 });
 
 test("R5, R26: results by kind, each with its words as written, its document's title, its passage and Found by search; a kind with none says \"Nothing here\"", async () => {
@@ -102,7 +114,7 @@ test("R5, R26: results by kind, each with its words as written, its document's t
 test("R5: each result offers only the recording act of its kind; one already recorded shows who recorded it", async () => {
   const p = await shown();
   const recs = acts(p).filter(([, d]) => d.k !== undefined).map(([op, d]) => `${d.k}.${d.i}:${op}`);
-  assert.deepEqual(recs, ["0.0:recordpersonfact", "2.0:recorddatedfact", "2.1:tabledeclare", "5.0:cite"]);
+  assert.deepEqual(recs, ["0.0:recordpersonfact", "2.0:recorddatedfact", "2.1:tabledeclare", "3.0:standarddeclare", "5.0:cite"], "R48 (5): a recorded passage keeps its act");
   assert.ok(text(p, sections(p)[3]).includes(word("screen.find-in.recorded", { who: "Mai" })));
   assert.ok(sections(p)[3].querySelector('.cs-origin[data-origin="accepted"]'));
   const more = await open("/app/find-in/PROJ-1", { ...PLANE, findin: ok({ kinds: [
@@ -119,13 +131,14 @@ test("R5: each recording act sends its owner's body from the result's passage an
   const p = await shown();
   const f = (op) => button(p, op).dataset.f;
   await press(p, "recordpersonfact", { values: { [f("recordpersonfact") + "-kind"]: "locality", [f("recordpersonfact") + "-value"]: "Oakland" } });
-  assert.deepEqual(last(p, "recordpersonfact").body, { person: "ENT-9", kind: "locality", value: "Oakland", citation: { capture_sha: SHA, extent: { passage: 3 } }, question: "INQ-1" });
+  assert.deepEqual(last(p, "recordpersonfact").body, { person: "ENT-9", kind: "locality", value: "Oakland", valid: { from: null, to: null, precision: "day", zone: "America/Los_Angeles" },
+    citation: { capture_sha: SHA, extent: { passage: 3 } }, question: "INQ-1" });
   await press(p, "recorddatedfact", { values: { [f("recorddatedfact") + "-kind"]: "effective", [f("recorddatedfact") + "-value"]: "2023-01-01" } });
   assert.deepEqual(last(p, "recorddatedfact").body, { captureSha: SHA, extent: { passage: 3 }, kind: "effective", value: "2023-01-01", method: "typed", question: "INQ-1" });
   await press(p, "tabledeclare", { values: { [f("tabledeclare") + "-header"]: "reported, closed ,," }, reason: R });
   assert.deepEqual(last(p, "tabledeclare").body.source, "CNT-4");
   assert.deepEqual(last(p, "tabledeclare").body.header, ["reported", "closed"]);
-  const m = await open("/app/find-in/PROJ-1", { ...PLANE, findin: ok({ kinds: [
+  const m = await open("/app/find-in/PROJ-1", { ...PLANE, projectquestions: ok({ ok: true, project: "PROJ-1", items: [], cursor: null }), findin: ok({ kinds: [
     { kind: "money", items: [{ as_read: "$4.2 million", capture_sha: "c", extent: { passage: 7 }, recorded: [] }] },
     { kind: "requirements", items: [{ words: "shall", capture_sha: "c", extent: {}, content_id: "CNT-1", recorded: [] }] }] }) });
   await press(m, "findin", { reason: R });
@@ -166,7 +179,7 @@ test("R24: \"Cite in the question\" asks whether the passage supports the questi
   assert.equal(last(against, "cite").query.role, "cuts_against", "\"against\" is the question's role cuts_against (citation R1)");
   // The question is still required first.
   const noQ = await open("/app/find-in/PROJ-1", PLANE);
-  await press(noQ, "findin", { values: { "findin-kind-term": true, "findin-term": "closed" }, reason: R });
+  await press(noQ, "findin", { values: { "findin-term": "closed" }, reason: R });
   const b = await press(noQ, "cite", { values: { [button(noQ, "cite").dataset.f + "-role-supports"]: true } });
   assert.equal(noQ.byOp("cite").length, 0);
   assert.equal(beside(noQ, b), word("screen.find-in.questionfirst"));
@@ -195,7 +208,7 @@ test("R5 (K3372): /app/find-in/<scope>/<question> opens with that question chose
 
 test("R5: standingquestionset keeps finding over the scope; search is \"See all in Find\"", async () => {
   const p = await shown({ standingquestionset: ok({ ok: true, id: "STQ-1" }) });
-  await press(p, "standingquestionset", { values: { "findin-kind-people": false, "findin-kind-money": false, "findin-kind-dates": false, "findin-kind-requirements": false, "findin-kind-events": false, "findin-kind-term": true, "findin-term": "closed", "findin-question": "INQ-1" } });
+  await press(p, "standingquestionset", { values: { "findin-kind-people": false, "findin-kind-money": false, "findin-kind-dates": false, "findin-kind-requirements": false, "findin-kind-events": false, "findin-term": "closed", "findin-question": "INQ-1" } });
   const b = last(p, "standingquestionset").body;
   assert.equal(b.question, "Is the city repairing reported potholes within seven days?");
   assert.deepEqual(b.find, { scope: { project: "PROJ-1" }, kinds: ["term"], term: "closed" });

@@ -27,11 +27,31 @@ export function appRouteOf(req, url) {
 }
 
 /** The page, built at this request from the screens handed in (`interfacePage(screens, options)`; R81: the nine screen
- *  modules' screens and screens-wizards' guide). */
-export function appPage(req, { interfacePage, screens, options = {} }) {
+ *  modules' screens and screens-wizards' guide). `status` is 200 but for R104's "nothing is here" page, 404. */
+export function appPage(req, { interfacePage, screens, options = {}, status = 200 }) {
   const html = interfacePage(screens, options);
   return new Response(req.method === "HEAD" ? null : html,
-    { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+    { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+}
+
+/* R104 (T50; N1174, B-14; DEC-299 (11), DEC-301 (3); interface-shell R79): AN ADDRESS OUTSIDE THE TEAM'S PAGES DRAWS A PAGE.
+   A GET or HEAD of a path that is not `/`, not `/app` or below it, not `/api` or below it, not `/version`, `/sign` or
+   `/favicon.ico` (answered before this is asked), carries no `op=` and names no op draws the interface's public
+   "nothing is here" page with status 404: the page is the shell's own (it reads the address and draws `unavailable` in
+   the public frame, no session read), so this answers the same page the other routes do, at that status. `/doorbell`
+   and `/tour` (a trailing slash allowed) are the doorbell's and the tour's own addresses, the same page at 200. A path
+   naming an op (`/bootstrap`), an `op=` request, a path below `/api/` and any other method are not answered here:
+   they stay the op door's, `UNKNOWN_OP` JSON byte for byte when no op is named (R2). `opNamed(name)` is the door's
+   own test of an op's name (its spec table, an alias read as the op it is). Answers `{status}`, or null. */
+export const PUBLIC_ALIASES = Object.freeze(["/doorbell", "/tour"]);
+export function addressPageOf(req, url, { opNamed }) {
+  if (req.method !== "GET" && req.method !== "HEAD") return null;
+  const p = url.pathname;
+  if (p === "/api" || p.startsWith("/api/") || url.searchParams.get("op")) return null;
+  const bare = p.length > 1 && p.endsWith("/") ? p.slice(0, -1) : p;
+  if (bare === "" || bare === "/") return null;
+  if (PUBLIC_ALIASES.includes(bare)) return { status: 200 };
+  return opNamed(bare.slice(1)) ? null : { status: 404 };
 }
 
 /* A face's bytes, from the base64 its entry holds. */

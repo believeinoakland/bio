@@ -1,20 +1,22 @@
-/* The AI account panel at the module's interface (R9; DEC-188 (1)): one render over an owner, drawn by `members` for the
-   group's key and by `connect` for the member's own account. */
+/* The AI account panel at the module's interface (R9; DEC-188 (1)): one render over an owner, drawn by `teamai` for the
+   team's key (R48) and by `connect` for the member's own account (R49), each in the parts that open and close. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SCREENS, acts, all, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, membersTable, membersTableMember, connectTable, refuse, env, LIMITS, OVER } from "./fixtures.mjs";
+import { ADMIN, MEMBER, teamaiTable, connectTable, refuse, env, LIMITS, OVER } from "./fixtures.mjs";
 
-const section = (o, key) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2")[0] && textOf(all(e, (h) => h.tag === "h2")[0]) === said(key))[0];
+// a section by its heading, or a part (R48, R49) by its title
+const section = (o, key) => all(o.tree, (e) => (e.tag === "section" && all(e, (h) => h.tag === "h2")[0] && textOf(all(e, (h) => h.tag === "h2")[0]) === said(key))
+  || (e.tag === "details" && /\bcs-part\b/.test(e.attrs.class || "") && all(e, (h) => h.attrs.class === "t")[0] && textOf(all(e, (h) => h.attrs.class === "t")[0]) === said(key)))[0];
 
-test("R9 one render serves both: members (owner group) and connect (owner member:<me>) draw the same panel function", () => {
-  const m = SCREENS.find((s) => s.id === "members"), c = SCREENS.find((s) => s.id === "connect");
+test("R9 one render serves both: teamai (owner group) and connect (owner member:<me>) draw the same panel function", () => {
+  const m = SCREENS.find((s) => s.id === "teamai"), c = SCREENS.find((s) => s.id === "connect");
   assert.equal(m.parts.aiPanel, c.parts.aiPanel);
   assert.equal(m.parts.aiPanelSend, c.parts.aiPanelSend);
 });
 
 test("R9 what the account pays for: each use (ai.use.<u>.name) on or off with its switch; exploring (ai.explore.*) at group level only", async () => {
-  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const a = await open("teamai", { me: ADMIN, table: teamaiTable() });
   const uses = section(a, "screen.panel.uses.heading");
   for (const u of ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "suggestions"]) assert.ok(textOf(uses).includes(said(`ai.use.${u}.name`)), u);
   const sw = acts(uses).filter((b) => b.attrs["data-act"] === "accountusesset" && b.attrs["data-sw"] !== "explore");
@@ -31,7 +33,7 @@ test("R9 what the account pays for: each use (ai.use.<u>.name) on or off with it
 });
 
 test("R9 its limits as a table with one form: set (overall, a use within or on top, each member's use at group level) and remove", async () => {
-  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const a = await open("teamai", { me: ADMIN, table: teamaiTable() });
   const lim = section(a, "screen.panel.limits.heading");
   const rows = all(lim, (e) => e.tag === "tbody")[0].children.filter((c) => c.tag === "tr");
   assert.equal(rows.length, LIMITS.limits.length);
@@ -55,7 +57,7 @@ test("R9 its limits as a table with one form: set (overall, a use within or on t
 
 test("R9 a refused limit is drawn with ai.limitfield.* naming the field (AI_LIMIT_INVALID)", async () => {
   for (const field of ["amount", "unit", "period", "scope"]) {
-    const a = await open("members", { me: ADMIN, table: membersTable({ ailimitset: refuse("AI_LIMIT_INVALID", { field }) }) });
+    const a = await open("teamai", { me: ADMIN, table: teamaiTable({ ailimitset: refuse("AI_LIMIT_INVALID", { field }) }) });
     await a.press("ailimitset", { data: { remove: "" }, values: { "aig-scope": "overall", "aig-amount": "5", "aig-unit": "usd", "aig-period": "day" } });
     assert.equal(a.refused.text, said("ai.refused.limitinvalid", { field: said(`ai.limitfield.${field}`) }));
   }
@@ -65,7 +67,7 @@ test("R9 a refused limit is drawn with ai.limitfield.* naming the field (AI_LIMI
 });
 
 test("R9 this month's use summed per use and in all, naming no member; the changes with who and when, the limits' and the account's together", async () => {
-  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const a = await open("teamai", { me: ADMIN, table: teamaiTable() });
   const use = textOf(section(a, "screen.panel.usage.heading"));
   assert.ok(use.includes("220") && use.includes("1,900,000") && use.includes("$12.60") && use.includes("296") && use.includes("5,000,000") && use.includes("$31.40"));
   assert.ok(use.includes(said("screen.panel.usage.group")));
@@ -74,8 +76,9 @@ test("R9 this month's use summed per use and in all, naming no member; the chang
   assert.ok(ch[0].startsWith(said("screen.panel.change.limit.removed", { who: "lu", scope: said("ai.use.draft.name"), amount: "", unit: said("screen.panel.unit.calls"), period: said("screen.panel.period.day") })) && ch[0].endsWith(day("2026-10-08")), "newest first, with who and when");
   assert.ok(ch.some((t) => t.startsWith(said("screen.panel.change.use_set", { who: "lu", use: said("ai.use.explore.name"), value: said("ai.explore.ask") }))));
   assert.ok(ch.some((t) => t.startsWith(said("screen.panel.change.key_set", { who: "rosa" }))));
+  // R49: her own page draws no changes; the team's names each by handle, the founder never by `admin` (R37)
   const c = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
-  assert.ok(textOf(section(c, "screen.panel.changes.heading")).includes(said("screen.panel.change.key_set", { who: MEMBER.handle })), "R37: the member's own change is theirs by handle, never \"you\"");
+  assert.equal(section(c, "screen.panel.changes.heading"), undefined);
 });
 
 /* R26: thirty days of bars and a meter against each limit */
@@ -83,7 +86,7 @@ const bars = (o) => all(o.tree, (e) => e.attrs.class === "mk-bars")[0];
 const meters = (o) => all(o.tree, (e) => /\bmk-meter\b/.test(e.attrs.class || ""));
 
 test("R26 thirty bars, oldest first, the newest marked today so far; the summary line; a meter for each limit, rust from four fifths", async () => {
-  for (const [screen, me, table, owner] of [["members", ADMIN, membersTable(), "group"], ["connect", MEMBER, connectTable(MEMBER, "own"), "member:dev"]]) {
+  for (const [screen, me, table, owner] of [["teamai", ADMIN, teamaiTable(), "group"], ["connect", MEMBER, connectTable(MEMBER, "own"), "member:dev"]]) {
     const a = await open(screen, { me, table });
     assert.ok(a.p.requests.some((r) => r.op === "aiuseovertime" && r.query.owner === owner), `${screen} reads aiuseovertime over ${owner}`);
     const b = bars(a);
@@ -99,7 +102,9 @@ test("R26 thirty bars, oldest first, the newest marked today so far; the summary
     const tallest = bar.map((x) => Number(/height:(\d+)px/.exec(x.attrs.style)[1]));
     assert.equal(Math.max(...tallest), 44, "the busiest day is the tallest");
     assert.ok(a.text.includes("Last 30 days:"), "the summary");
-    const m = meters(a);
+    // R48: the team's card carries this month's meter on the key, ahead of the use part's own
+    if (screen === "teamai") assert.equal(meters(a).length, 3, "the card's meter and one for each limit");
+    const m = screen === "teamai" ? meters(a).slice(1) : meters(a);
     assert.equal(m.length, 2, "a meter for each limit");
     assert.ok(a.text.includes(said("ai.usage.meter", { label: said("screen.panel.scope.overall") + " · " + said("screen.panel.unit.usd") + " · " + said("screen.panel.period.month"), used: "$31.40", limit: "$60.00" })), "used against the limit");
     assert.equal(m[0].attrs["data-near"], undefined, "52% is not near");
@@ -113,7 +118,7 @@ test("R26 thirty bars, oldest first, the newest marked today so far; the summary
 
 test("R26 a limit that is not set draws no limit, not a meter against nothing; a day with no use is a zero bar", async () => {
   const days = OVER("group").days.map((d, i) => (i === 3 ? { ...d, calls: 0, dollars: 0 } : d));
-  const a = await open("members", { me: ADMIN, table: membersTable({ aiuseovertime: () => env(OVER("group", { days, periods: [{ scope: "overall", unit: "usd", period: "month", period_start: "2026-10-01", used: 31.4, limit: null }] })) }) });
+  const a = await open("teamai", { me: ADMIN, table: teamaiTable({ aiuseovertime: () => env(OVER("group", { days, periods: [{ scope: "overall", unit: "usd", period: "month", period_start: "2026-10-01", used: 31.4, limit: null }] })) }) });
   const m = meters(a);
   assert.equal(m.length, 1);
   assert.ok(textOf(m[0]).includes(said("ai.usage.nolimit")));
@@ -125,7 +130,7 @@ test("R26 a limit that is not set draws no limit, not a meter against nothing; a
 
 test("R26 control: a read answering unreadable, or refused, is drawn failed, never as zeros", async () => {
   for (const answer of [() => env(OVER("group", { unreadable: true, days: [], periods: [] })), () => env({ ok: false, reason: "UNREADABLE", code: "UNREADABLE" })]) {
-    const a = await open("members", { me: ADMIN, table: membersTable({ aiuseovertime: answer }) });
+    const a = await open("teamai", { me: ADMIN, table: teamaiTable({ aiuseovertime: answer }) });
     assert.equal(bars(a), undefined, "no bars");
     assert.equal(meters(a).length, 0, "no meter");
     const sec = section(a, "screen.panel.usage.heading");
@@ -134,26 +139,26 @@ test("R26 control: a read answering unreadable, or refused, is drawn failed, nev
 });
 
 test("R26 control: a member who does not administer reads no group use over time", async () => {
-  const a = await open("members", { me: MEMBER, table: membersTableMember() });
+  const a = await open("teamai", { me: MEMBER, table: teamaiTable() });
   assert.ok(!a.p.requests.some((r) => r.op === "aiuseovertime"));
   assert.equal(bars(a), undefined);
 });
 
 test("R26 (K3293) aiUsageBars is a part of the module: it draws the bars and a meter per limit over an aiuseovertime answer already read, whether handed the answer or the screen's read of it", async () => {
-  const members = SCREENS.find((s) => s.id === "members");
+  const members = SCREENS.find((s) => s.id === "teamai");
   assert.equal(typeof members.parts.aiUsageBars, "function");
   assert.equal(members.parts.aiUsageBars, SCREENS.find((s) => s.id === "connect").parts.aiUsageBars, "one function for every screen that draws it");
   // a screen's functions are self-contained in the page: the answer is written into the host's source
   const hosted = (value) => ({ ...members, reads: () => ({}), render: new Function("cs", "view", `return cs.title() + view.parts.aiUsageBars(cs, view, { owner: "group", value: ${JSON.stringify(value)} });`) });
   for (const value of [OVER("group"), { state: "ok", value: OVER("group") }]) {
-    const a = await open("members", { me: ADMIN, table: membersTable(), screens: SCREENS.map((s) => (s.id === "members" ? hosted(value) : s)) });
+    const a = await open("teamai", { me: ADMIN, table: teamaiTable(), screens: SCREENS.map((s) => (s.id === "teamai" ? hosted(value) : s)) });
     assert.equal(all(bars(a), (e) => e.tag === "i").length, 30);
     assert.equal(meters(a).length, 2);
     assert.equal(a.p.requests.filter((r) => r.op === "aiuseovertime").length, 0, "it reads nothing itself");
   }
   // control: an answer that is unreadable, refused or failed to read is drawn failed, never as zeros
   for (const value of [OVER("group", { unreadable: true, days: [] }), { state: "failed" }, { state: "ok", value: { ok: false, reason: "UNREADABLE" } }]) {
-    const a = await open("members", { me: ADMIN, table: membersTable(), screens: SCREENS.map((s) => (s.id === "members" ? hosted(value) : s)) });
+    const a = await open("teamai", { me: ADMIN, table: teamaiTable(), screens: SCREENS.map((s) => (s.id === "teamai" ? hosted(value) : s)) });
     assert.equal(bars(a), undefined);
     assert.equal(meters(a).length, 0);
     assert.ok(all(a.tree, (e) => e.attrs["data-state"] === "failed").length >= 1);

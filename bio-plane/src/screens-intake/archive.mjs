@@ -76,8 +76,10 @@ function renderArchive(cs, view) {
     }) : "";
     const other = rest.map((e) => {
       const name = e.state === "folder" ? `<span class="id">${cs.esc(e.name ?? "")}</span>` : opens(e);
-      /* the earlier capture's date, when the entry states it (`held_at`); else the plain count of one already held (J3) */
-      const what = e.state === "already_held" ? (e.held_at ? cs.w("screen.archive.alreadyheld", { name: String(e.name ?? ""), date: { html: cs.date(e.held_at) } })
+      /* R30 (N1126; acquisition R41): an entry already held names the earlier capture (`held_name`, else its own name) and when it
+         was captured (`held_at`), whole; an entry stating either alone draws its state only, never the sentence with a blank */
+      const earlier = e.state === "already_held" ? String(e.held_name || e.name || "") : "";
+      const what = e.state === "already_held" ? (e.held_at && earlier ? cs.w("screen.archive.alreadyheld", { name: earlier, date: { html: cs.date(e.held_at) } })
           : cs.w("screen.archive.sum.held", { count: 1 }))
         : e.state === "folder" ? cs.w("screen.archive.folder", { count: inFolder(e) })
         : e.state === "link" ? cs.w("screen.archive.link", { target: e.target ?? "" })

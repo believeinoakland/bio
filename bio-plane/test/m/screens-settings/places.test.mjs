@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, env, placesTable } from "./fixtures.mjs";
+import { ADMIN, MEMBER, COURTS, env, placesTable } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 // the next page is read on the page's clock (cs.later): the harness's fake clock is moved on
@@ -29,7 +29,7 @@ test("R19 places: the place wanted (placewantedstate, placewanted; empty clears)
 test("R19 places: the offices read page by page to the end, each marked by origin; a later page that fails is said, never drawn as none", async () => {
   const a = await open("places", { me: ADMIN, table: placesTable() });
   await settle(a);
-  const reads = a.p.requests.filter((r) => r.op === "entitieskind");
+  const reads = a.p.requests.filter((r) => r.op === "entitieskind" && r.query.kind === "office");
   assert.deepEqual(reads.map((r) => [r.query.kind, r.query.after || null]), [["office", null], ["office", "ENT-0002"]]);
   for (const n of ["Office of the City Clerk", "Department of Public Works", "Office of the City Auditor"]) assert.ok(a.text.includes(n), n);
   const items = all(all(a.tree, (e) => e.attrs["data-list"] === "offices")[0], (e) => e.tag === "li").map((e) => e.children.map((c) => c.text || "").join(""));
@@ -48,8 +48,8 @@ test("R19 places: officesseed and entitycreate (an office with the member's note
   const a = await open("places", { me: ADMIN, table: placesTable() });
   assert.deepEqual((await a.press("officesseed")).sent[0].body, {});
   has(a, "screen.places.seeded", { seeded: 1, already: 2, unseeded: 0 });
-  assert.deepEqual((await a.press("entitycreate", { values: { "pl-label": "Public Works", "pl-note": "Fixes the streets." } })).sent[0].body, { kind: "office", label: "Public Works", note: "Fixes the streets." });
-  assert.deepEqual((await a.press("entitycreate", { values: { "pl-label": "Public Works", "pl-note": "" } })).sent, []);
+  assert.deepEqual((await a.press("entitycreate", { data: { court: null }, values: { "pl-label": "Public Works", "pl-note": "Fixes the streets." } })).sent[0].body, { kind: "office", label: "Public Works", note: "Fixes the streets." });
+  assert.deepEqual((await a.press("entitycreate", { data: { court: null }, values: { "pl-label": "Public Works", "pl-note": "" } })).sent, []);
   const m = await open("places", { me: MEMBER, table: placesTable() });
   assert.deepEqual(ops(m), []);
   assert.ok(!m.p.requests.some((r) => r.op === "placewantedstate"), "the place wanted is an administrator's read");
@@ -86,4 +86,44 @@ test("R25 control: none listed draws the reference alone; a pointer of null is d
   const m = await open("places", { me: MEMBER, table: placesTable() });
   assert.ok(!m.p.requests.some((r) => r.op === "startfrom"));
   assert.equal(link(m).length, 0);
+});
+
+/* R46 (T50; N1190): the courts held, and "Add a court" */
+const courtsSection = (o) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2").some((h) => textOf(h) === said("screen.places.courts")))[0];
+
+test("R46 the Courts section lists the forums of kind court by name, a seeded one and an added one each with its own line", async () => {
+  const a = await open("places", { me: ADMIN, table: placesTable() });
+  const read = a.p.requests.find((r) => r.op === "entitieskind" && r.query.kind === "body");
+  assert.deepEqual(read.query, { kind: "body", forum_kind: "court", limit: "500" }, "the courts, read by kind and forum kind");
+  const sec = courtsSection(a);
+  assert.ok(sec, "the section is drawn to an administrator");
+  const items = all(all(sec, (e) => e.attrs["data-list"] === "courts")[0], (e) => e.tag === "li").map((e) => textOf(e));
+  assert.equal(items.length, COURTS.length);
+  assert.ok(items[0].includes("Alameda County Superior Court") && items[0].includes(said("screen.places.court.seeded")), "a seeded court: where it came from");
+  assert.ok(items[1].includes("Oakland Small Claims") && items[1].includes(said("screen.places.court.added", { name: "lu", date: day("2026-10-09T00:00:00Z") })), "an added court: by the member's handle and the day");
+  // control: a failed read is drawn failed, never as none
+  const failed = await open("places", { me: ADMIN, table: placesTable({ entitieskind: (q) => q.kind === "body" ? "none" : env({ ok: true, kind: "office", entities: [], count: 0, truncated: false, next: null }) }) });
+  assert.ok(all(courtsSection(failed), (e) => e.attrs["data-state"] === "failed").length >= 1, "drawn failed");
+  assert.equal(all(courtsSection(failed), (e) => e.attrs["data-list"] === "courts").length, 0);
+});
+
+test("R46 Add a court sends entitycreate of kind body with forum_kind court and the name, says the court added, and reads the list again; an empty name sends nothing", async () => {
+  const a = await open("places", { me: ADMIN, table: placesTable() });
+  has(a, "court.add.name");
+  assert.deepEqual((await a.press("entitycreate", { data: { court: "1" }, values: { "pl-court": " Berkeley Housing Court " } })).sent[0].body, { kind: "body", forum_kind: "court", label: "Berkeley Housing Court", note: "Berkeley Housing Court" });
+  assert.ok(a.p.requests.filter((r) => r.op === "entitieskind" && r.query.kind === "body").length >= 2, "the list read again");
+  const empty = await a.press("entitycreate", { data: { court: "1" }, values: { "pl-court": "  " } });
+  assert.deepEqual(empty.sent, []);
+  assert.ok(empty.refused, "refused by a word");
+  // the court's name is said after the answer
+  const b = await open("places", { me: ADMIN, table: placesTable({ entitycreate: (q, body) => env({ ok: true, entity_id: "ENT-0103", kind: "body", label: body.label, forum_kind: "court", alias_count: 0, at: "2026-10-12T00:00:00Z" }) }) });
+  await b.press("entitycreate", { data: { court: "1" }, values: { "pl-court": "Berkeley Housing Court" } });
+  has(b, "screen.places.court.done", { name: "Berkeley Housing Court" });
+});
+
+test("R46 control: a member who does not administer is drawn no Courts section and no act, and the courts are not read", async () => {
+  const m = await open("places", { me: MEMBER, table: placesTable() });
+  assert.equal(courtsSection(m), undefined);
+  assert.deepEqual(ops(m), []);
+  assert.ok(!m.p.requests.some((r) => r.op === "entitieskind" && r.query.kind === "body"));
 });

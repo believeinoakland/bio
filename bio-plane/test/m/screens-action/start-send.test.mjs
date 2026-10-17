@@ -4,7 +4,8 @@
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, W, D, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, draft } from "./page.mjs";
+import { SCREENS, open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, W, D, hasWord, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, STAKE, draft } from "./page.mjs";
+import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const STEP1 = `/app/start-send/${PLAN_ID}~opt-1`;
 const STEP2 = `/app/start-send/${ACTION_ID}`;
@@ -170,3 +171,87 @@ test("R11: a draft already approved is not read again; control: a page with no d
   const none = await open(STEP2, { ...DATA_PLANE, filingread: ok(READ()) });
   assert.equal(none.byOp("filingread").length, 0);
 });
+
+/* ---------- R21 (T50; N933; K3230; DEC-231; DEC-320; filings R60 to R62): the matter's stake at preparation, a prompt and never a gate ---------- */
+
+// `actionstake` is an owed act (`interface-shell` R73): drawn once `op-declarations` declares it (R12); until then none is, and nothing throws.
+const DECLARED = Object.hasOwn(OPS, "actionstake");
+const TIER2 = (o = {}) => ok(STAKE({ higher_stakes: true, governing_tier: 2, matter_stake: null, ...o }));
+const ASK = () => ({ ...DATA_PLANE, filingsfor: ok(FILINGS([draft()])), filingread: ok(READ()) });
+
+test("R21: a Tier 2 action asks the question above the approval, with its says and its help; the extra sentence only when the tier is undetermined; control: Tier 1 asks nothing", async () => {
+  const p = await open(STEP2, { ...ASK(), stakeatpreparation: TIER2() });
+  assert.equal(p.byOp("stakeatpreparation")[0].query.action, ACTION_ID);
+  if (!DECLARED) {
+    // not yet declared: the question has nowhere to go, so it is not asked; the lines and the approval are drawn
+    assert.ok(!text(p).includes(W("stake.ask.title")));
+    assert.ok(!ops(p).includes("actionstake"));
+    said(p, "stake.inmatter");
+    assert.ok(ops(p).includes("filingapprove"));
+    return;
+  }
+  said(p, "stake.ask.title");
+  said(p, "stake.ask.says", { kind: "Records request" });
+  const head = main(p).querySelectorAll("h2").find((h) => h.textContent === W("stake.ask.title"));
+  assert.ok(head.getAttribute("data-tip").includes(W("stake.ask.help")), "its help is the section's");
+  said(p, "stake.action.label");
+  assert.ok(button(p, "actionstake").textContent.includes(W("stake.action.save")));
+  assert.ok(main(p).innerHTML.indexOf('id="action-stake"') < main(p).innerHTML.indexOf('data-act="filingapprove"'), "above the approval");
+  assert.ok(!text(p).includes(W("stake.ask.undetermined")), "the tier is known: no extra sentence");
+  const und = await open(STEP2, { ...ASK(), stakeatpreparation: TIER2({ governing_tier: "undetermined" }) });
+  said(und, "stake.ask.undetermined");
+  said(und, "stake.undetermined.summary");
+  assert.ok(main(und).querySelector("details[open] .mk-small"), "inside its fold, open");
+  const one = await open(STEP2, { ...ASK(), stakeatpreparation: ok(STAKE()) });
+  for (const k of ["stake.sentwith", "stake.inmatter"]) said(one, k);
+  assert.ok(!text(one).includes(W("stake.ask.title")));
+  assert.equal(one.doc.getElementById("action-stake"), null);
+  assert.ok(!ops(one).includes("actionstake"));
+});
+
+test("R21: saving a stake sends actionstake with the action and the stake, and the lines are read again; an empty save clears the action's own and sends nothing where it has none", async () => {
+  if (!DECLARED) return assert.ok(!SCREENS_ACTS().includes("actionstake"), "not declared: the act is not registered");
+  let stake = TIER2();
+  const p = await open(STEP2, { ...ASK(), stakeatpreparation: () => stake, actionstake: () => { stake = ok(STAKE({ higher_stakes: true, governing_tier: 2,
+    matter_stake: { stake: "A member is a party.", set_by: "member:mai", set_at: "2026-10-12T09:00:00Z", source: "action" } })); return ok({ ok: true }); } });
+  const none = await press(p, "actionstake", { reason: "x" });
+  assert.equal(p.byOp("actionstake").length, 0, "nothing to save: nothing sent");
+  assert.ok(none);
+  await press(p, "actionstake", { values: { "action-stake": "  A member is a party.  " }, reason: "she is" });
+  assert.deepEqual({ ...last(p, "actionstake").body, reason: undefined }, { target: ACTION_ID, stake: "A member is a party.", reason: undefined });
+  assert.ok(text(p).includes("A member is a party."), "read again and drawn");
+  said(p, "stake.source.action", { who: "mai", date: D("2026-10-12") });
+  await press(p, "actionstake", { values: { "action-stake": "" }, reason: "clear it" });
+  assert.equal(last(p, "actionstake").body.stake, null, "empty clears it");
+});
+
+test("R21: nothing waits on the question: approving, preparing and recording the sending are drawn and work unanswered; no stake is recorded unless she saves one", async () => {
+  let drafts = [draft()];
+  const p = await open(STEP2, { ...DATA_PLANE, filingread: ok(READ()), filingsfor: () => ok(FILINGS(drafts)), stakeatpreparation: TIER2(),
+    filingapprove: () => { drafts = [draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" } })]; return ok({ filing: FILING }); }, actionstake: ok({}) });
+  assert.ok(ops(p).includes("filingapprove"));
+  await press(p, "filingapprove", { confirm: true });
+  assert.equal(p.byOp("filingapprove").length, 1, "approved with the question unanswered");
+  assert.equal(p.byOp("actionstake").length, 0, "no answer is recorded");
+  assert.deepEqual(ops(p), ["filingrecordsent"]);
+  const fresh = await open(STEP2, { ...DATA_PLANE, stakeatpreparation: TIER2() });
+  assert.ok(ops(fresh).includes("communicationprepare") && ops(fresh).includes("filingprepare"));
+  // the stake read failing or being undetermined stops nothing either
+  const failed = await open(STEP2, { ...ASK(), stakeatpreparation: refused("STORE_DID_NOT_ANSWER", null, 502) });
+  assert.ok(ops(failed).includes("filingapprove"));
+  assert.ok(!text(failed).includes(W("stake.ask.title")), "a stake that cannot be read is not a Tier 2");
+  assert.ok(main(failed).querySelector('[data-state="failed"]'));
+});
+
+test("R21: MACHINE_CANNOT_SET_STAKE and STAKE_MALFORMED are drawn by their words, beside the act", async () => {
+  assert.ok(hasWord("refusal.MACHINE_CANNOT_SET_STAKE") && hasWord("refusal.STAKE_MALFORMED.action"));
+  if (!DECLARED) return;
+  for (const [code, key] of [["MACHINE_CANNOT_SET_STAKE", "refusal.MACHINE_CANNOT_SET_STAKE"], ["STAKE_MALFORMED", "refusal.STAKE_MALFORMED.action"]]) {
+    const p = await open(STEP2, { ...ASK(), stakeatpreparation: TIER2(), actionstake: refusedIn(code, "the owner's own sentence") });
+    const b = await press(p, "actionstake", { values: { "action-stake": "a stake" }, reason: "x" });
+    assert.ok(beside(p, b).includes(W(key)), code);
+    assert.ok(!beside(p, b).includes("the owner's own sentence"));
+  }
+});
+
+const SCREENS_ACTS = () => SCREENS.flatMap((x) => x.acts.map((a) => a.op));

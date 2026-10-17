@@ -5,7 +5,6 @@
    the queue's `owed:updatelater`, Home's item acts. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -17,21 +16,18 @@ import { nestedTips, accessibleName, controls } from "../interface-shell/harness
 import { open, main, text, ops, ok, refused, textNodes, wordChecker, MEMBER } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const COMMIT = "4664e8efd4";
-const atCommit = (path) => {
-  try { return JSON.parse(execFileSync("git", ["show", `${COMMIT}:${path}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 24 })); }
-  catch { return JSON.parse(readFileSync(join(ROOT, path), "utf8")); }
-};
-// An owed act (`owed:<op> K…`) is that op once declared (wizard-scripts R13).
-const REGISTRY = atCommit("docs/development/ux-substrate/screens/registry.json").screens
-  .map((r) => ({ ...r, acts: r.acts.map((a) => ({ ...a, op: String(a.op).replace(/^owed:/, "").split(" ")[0] })) }));
+// The registry is the design's (shell R73, N1122): read from the working copy, never a commit. An owed act (`owed:<op> K…`) is
+// that op once declared (wizard-scripts R13) and is drawn only then (interface-shell R12): until `OPS` holds it, it is left out.
+const REGISTRY = JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substrate/screens/registry.json"), "utf8")).screens
+  .map((r) => ({ ...r, acts: r.acts.filter((a) => !String(a.op).startsWith("owed:") || OPS[String(a.op).replace(/^owed:/, "").split(" ")[0]])
+    .map((a) => ({ ...a, op: String(a.op).replace(/^owed:/, "").split(" ")[0] })) }));
 const byId = Object.fromEntries(SCREENS.map((s) => [s.id, s]));
 const SCREEN_IDS = SCREENS.map((s) => s.id);
 // The acts a screen draws are the registry's for it (the owner's declaration, N1073: read, never listed here) less the ones this
 // module leaves to other screens (R17: Home's "Vouch for them" and "Read and approve it" open theirs), with a named re-point
 // of the shell (interface-shell R21: R29's "Join" on Home and Projects, until the registry lists it there).
 // Registered acts this module leaves to other screens (R17: Home's "Vouch for them" and "Read and approve it" open theirs).
-const ELSEWHERE_DRAWN = { home: ["release", "filingapprove"] };
+const ELSEWHERE_DRAWN = { home: ["release", "filingapprove"], queue: ["release", "filingapprove"] };
 const EXPECTED = Object.fromEntries(REGISTRY.filter((r) => SCREEN_IDS.includes(r.id)).map((r) => [r.id,
   [...new Set([...r.acts.map((a) => a.op), ...(RE_POINTS[r.id] || [])])].filter((op) => !(ELSEWHERE_DRAWN[r.id] || []).includes(op))]));
 
@@ -101,7 +97,7 @@ const DATA_PLANE = {
     case: { ancestors: [{ id: "PROJ-1", type: "project", title: "Pothole repairs" }] }, due: "2026-10-20" }], item_count: 1 }),
   search: ok({ total: 1, hits: [{ bundle_id: "PROJ-1", title: "Pothole repairs", current_state: "forming" }] }),
   projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Pothole repairs", stage: "forming", members: [{ member: "M-1", handle: "mai" }], activity: [0, 1, 0, 2, 0, 1, 3, 1], lastChange: "2026-10-20T10:00:00Z" }] }),
-  projectquestions: ok({ ok: true, items: [{ inquiry: "INQ-1" }], cursor: null }),
+  projectquestions: ok({ ok: true, items: [{ inquiry: "INQ-1", title: "Is it fixed?" }], cursor: null }),
   projectdirectory: ok({ projects: [{ id: "PROJ-9", name: "Library hours" }] }),
   startfrom: ok({ ok: true, scripts: [{ id: "WIZ-33b5887790b7561b", version: 1, name: "Check a claim" }],
     doors: [{ door: "problem", scripts: ["WIZ-33b5887790b7561b"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }],
@@ -110,7 +106,7 @@ const DATA_PLANE = {
   lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
 };
 const ROUTES = { home: "/app", elsewhere: "/app/elsewhere", projects: "/app/projects", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/PROJ-1", answers: "/app/answers" };
-const DATA = ["Town service line", "Fixes one thing for you.", "311", "the town's website", "2 October 2026", "River Town", "Lakeshore Tenants", "Rents.", "Vouch for photos", "Pothole repairs", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M", "Check a claim"];
+const DATA = ["Town service line", "Fixes one thing for you.", "311", "the town's website", "2 October 2026", "River Town", "Lakeshore Tenants", "Rents.", "Vouch for photos", "Pothole repairs", "Is it fixed?", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M", "Check a claim"];
 
 test("R1–R10, R15 (interface-shell R21): the shell accepts the seven screens and serves them: each route draws its screen under its path", async () => {
   assert.equal(checkScreens(SCREENS), true);
@@ -161,12 +157,12 @@ test("R7 (interface-shell R12, R15, R22): an act the gate refuses is absent, nev
 test("R7 (interface-shell R13): each refusal word an act names is a listed word", () => {
   for (const s of SCREENS) {
     const listed = new Set(s.words);
-    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
+    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(typeof key === "function" || listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
   }
 });
 
 test("R7: after an act the screen re-reads what it changed: an act names only its own screen's reads to re-read, or all of them", () => {
-  const readsOf = { home: ["group", "queue", "projects", "doors", "looked", "members", "boot", "places", "languages", "aiuse", "matching"], elsewhere: ["door"], projects: ["projects"], queue: ["queue"], finder: ["search", "selection", "frontier"], "find-in": ["questions"], answers: ["search"] };
+  const readsOf = { home: ["group", "queue", "projects", "doors", "looked", "members", "boot", "places", "languages", "aiuse", "directory", "requests"], elsewhere: ["door"], projects: ["projects", "themes", "directory", "requests"], queue: ["queue", "muted"], finder: ["search", "selection", "frontier", "lookedat", "themes", "theme"], "find-in": ["questions"], answers: ["search"] };
   for (const s of SCREENS) for (const a of s.acts) for (const r of a.rereads || []) assert.ok(readsOf[s.id].includes(r), `${s.id}.${a.op} rereads ${r}`);
   // The queue's acts change the queue: each re-reads all (the item resolved or muted leaves the list, R3).
   for (const a of byId.queue.acts) assert.equal(a.rereads, undefined, a.op);

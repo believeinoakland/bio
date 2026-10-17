@@ -3,7 +3,8 @@
    R46); "Get new recovery codes" (`recoverycodesissue`) shows the ten codes once, saying first that issuing again spends
    every earlier one; to an administrator, the one-administrator step's note while it is not met (`adminrecoverystep`,
    instance-setup R66), a read that did not answer never drawn as not met. The codes are held only in the page's memory
-   while shown, never stored, drawn again after leaving or sent anywhere (R10). Every function is self-contained
+   while shown, never stored, drawn again after leaving or sent anywhere (R10). T50 (R42): above the act, that the codes were
+   shown once, to the member alone (`screen.recovery.onlyyou`). Every function is self-contained
    (interface-shell R21). */
 
 export const recovery = {
@@ -39,7 +40,7 @@ export const recovery = {
     if (issue) {
       const shown = Array.isArray(ui.codes) && ui.codes.length
         ? `<div class="mk-msg" data-shown="codes"><p>${W(S + "shown")}</p><ol class="mk-list">${ui.codes.map((c) => `<li><code>${E(c)}</code></li>`).join("")}</ol></div>` : "";
-      out.push(cs.sec(S + "issue.heading", `<p>${W(S + "spends")}</p>${shown}${issue}`));
+      out.push(cs.sec(S + "issue.heading", `<p>${W(S + "onlyyou")}</p><p>${W(S + "spends")}</p>${shown}${issue}`));
     }
     return out.join("");
   },

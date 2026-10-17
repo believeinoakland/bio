@@ -466,7 +466,7 @@ test("R40 (T46; K2999; public-read R34; control-plane R20): the Store's RPC `gro
   const x = await store();
   const f = await x.s.groupFields();
   assert.deepEqual(f, publicReadOf(x.ctx).groupFields());
-  assert.deepEqual(Object.keys(f).sort(), ["detail", "domain", "domain_verified_at", "group", "name", "stake"]);
+  assert.deepEqual(Object.keys(f).sort(), ["detail", "domain", "domain_verified_at", "group", "matter_stake", "name", "stake"]);
   /* control: a spy on public-read shows the RPC is its answer, not a copy */
   const pr = publicReadOf(x.ctx), was = pr.groupFields.bind(pr);
   pr.groupFields = () => ({ ...was(), name: "Spied Group" });
