@@ -33,3 +33,9 @@ My best reading is applied; no answer is needed to continue. words-reads.json's 
 ## J2 · COMPLETE
 
 T50-19 done. R63 stated and tested (connection kinds and the vocabularies by key; the 38 provisional words reported). R64: all 64 act labels are word(act.<id>.name[.selected]), the two prompts and the fence are keys, NOT_CATALOGUED is refusal.uncatalogued, reauth held. R65/R66: watchitem, secondlook, projectstakeset, actionstake, actioninquiry, secondlookclear, aliaswithdraw, factconfirm, projectrequest, projectrequestwithdraw, projectrequestanswer held under their ops (ACT_HELP 344 ops, no owed_ key). t36 R48/R61 re-based on the word list (clears rule 5 (11)). Module 268/268; format, architecture, coverage (50/50), ownership 0 failures. Dependents: tasks, queue pass; store-door and op-declarations show only baseline reds plus 3 expected op-declarations R34 partition reds (six ops, cleared by T50-24 R75). Plane bundle staled (BOB regenerates at layer close). Op-grades T50-18 and wizard-scripts T50-17 had not merged; T50's new ops' owner-map pins are named in my tests, their grades are op-grades'. Details in my record.
+
+## Completion, after B2
+
+B2: `tranche/T50` merged in (wizard-scripts T50-17: `SCREEN_REGISTRY` from design 7be06eb4cb). No conflict, no code change. `node --test bio-plane/test/m/affordances/`: 268 tests, 268 pass. format, architecture, coverage (50 of 50), ownership: 0 failures.
+
+Size (session_01RZg8B4R3X8kop7zSsMSMzS): test runs 13, module lines 2,615
