@@ -47,3 +47,7 @@ FOUND IN OTHER MODULES (details in my record, build/jobs/T50/screens-intake.md):
 ## J2 · COMPLETE
 
 T50-30 applied: R29–R37 met. Module tests 112, pass 111, fail 1 (R37's link test, red until interface-shell R81's archive kind merges; no change of mine needed). format, architecture, coverage (37 of 37 ids), ownership: 0 failures. Pushed to job/T50/screens-intake. Open points are in the REPORT (held rows lack the uploader and size; shell.noanswer vs shell.unread; R34's live acquire left to the remote proof). Record: build/jobs/T50/screens-intake.md.
+
+## After B2 (CHANGE)
+
+`tranche/T50` merged (interface-shell and instance-setup in). Module tests against the real shell: tests 112, pass 112, fail 0; the R37 link test now passes (Deferred 1 cleared). format, architecture, coverage (37 of 37), ownership: 0 failures.
