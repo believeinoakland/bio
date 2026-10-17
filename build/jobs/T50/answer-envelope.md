@@ -1,6 +1,6 @@
 # answer-envelope (T50)
 
-**Status** · session_01JzujgzuDHRDzLuCvJTsAv4 · depth 2 · COMPLETE · handled B4
+**Status** · session_01JzujgzuDHRDzLuCvJTsAv4 · depth 2 · COMPLETE · handled B5
 
 ## J1 · BLOCKED
 
@@ -69,3 +69,17 @@ Checks and tests:
 - format, architecture, coverage and ownership for answer-envelope: 0 failures each. Coverage: 18 of 18 live ids named.
 
 Size (session_01JzujgzuDHRDzLuCvJTsAv4): test runs 8, module lines 912.
+
+## J5 · COMPLETE
+
+T50-25 answer-envelope is complete again on `job/T50/answer-envelope` @ 5de3bac5e0, after B5 (instance-setup, T50-23, merged to tranche/T50, K3777).
+
+Applied: merged tranche/T50, then re-pinned instance-setup's seven rows to their keys (C-64.2, C-64.3, C-64.5, C-64.6, C-119.1, C-119.3, C-119.4) in `rows-before-r43.json`, with a sentence in `changed.note`. Before the re-pin I confirmed every drifted row reads its key's sentence. Nothing else changed.
+
+Deferred: nothing.
+
+Checks and tests:
+- Module tests: 41 tests, 41 pass.
+- format, architecture, coverage and ownership for answer-envelope: 0 failures each. Coverage: 18 of 18 live ids named.
+
+Size (session_01JzujgzuDHRDzLuCvJTsAv4): test runs 9, module lines 912.
