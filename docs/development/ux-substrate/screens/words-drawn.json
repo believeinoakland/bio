@@ -8069,6 +8069,324 @@
    "en": "The account is missing or can't be read. Write it, then save again. Nothing was recorded.",
    "protected": false,
    "note": "DEC-315: case-account R4"
+  },
+  {
+   "key": "screen.find-in.valid",
+   "en": "When it is true",
+   "protected": false,
+   "note": "DEC-318: screens-daily R47: the person fact's validity bounds"
+  },
+  {
+   "key": "screen.find-in.valid.help",
+   "en": "Leave a bound empty when the passage does not state it: it is recorded as not stated, never guessed.",
+   "protected": false,
+   "note": "DEC-318: R47: a bound not stated is null"
+  },
+  {
+   "key": "screen.find-in.valid.from",
+   "en": "True from",
+   "protected": false,
+   "note": "DEC-318: R47 valid.from"
+  },
+  {
+   "key": "screen.find-in.valid.to",
+   "en": "True until",
+   "protected": false,
+   "note": "DEC-318: R47 valid.to"
+  },
+  {
+   "key": "screen.find-in.valid.precision",
+   "en": "How exact the dates are",
+   "protected": false,
+   "note": "DEC-318: R47 valid.precision"
+  },
+  {
+   "key": "label.timeprecisions.day",
+   "en": "To the day",
+   "protected": false,
+   "note": "DEC-318: civil-time PRECISIONS"
+  },
+  {
+   "key": "label.timeprecisions.minute",
+   "en": "To the minute",
+   "protected": false,
+   "note": "DEC-318: civil-time PRECISIONS"
+  },
+  {
+   "key": "label.timeprecisions.second",
+   "en": "To the second",
+   "protected": false,
+   "note": "DEC-318: civil-time PRECISIONS"
+  },
+  {
+   "key": "label.timeprecisions.edtf",
+   "en": "Partly known: a month, a year, or about",
+   "protected": false,
+   "note": "DEC-318: civil-time PRECISIONS: an EDTF date"
+  },
+  {
+   "key": "screen.find-in.valid.zone",
+   "en": "Counted in your team's time zone: {zone}.",
+   "protected": false,
+   "note": "DEC-318: R47: the zone is the team's, civil-time R23"
+  },
+  {
+   "key": "label.personfactkinds.office",
+   "en": "Holds an office",
+   "protected": false,
+   "note": "DEC-318: people: a person fact of office (the line kind)"
+  },
+  {
+   "key": "label.personfactkinds.name",
+   "en": "Name",
+   "protected": false,
+   "note": "DEC-318: people PERSON_FACT_KINDS"
+  },
+  {
+   "key": "label.personfactkinds.birth",
+   "en": "Birth",
+   "protected": false,
+   "note": "DEC-318: people PERSON_FACT_KINDS"
+  },
+  {
+   "key": "label.personfactkinds.death",
+   "en": "Death",
+   "protected": false,
+   "note": "DEC-318: people PERSON_FACT_KINDS"
+  },
+  {
+   "key": "refusal.BAD_VALIDITY",
+   "en": "Those dates can't be recorded: a bound is a date, or left empty when the passage does not state it. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-318: R47: recordpersonfact refuses BAD_VALIDITY"
+  },
+  {
+   "key": "screen.find-in.flow.help",
+   "en": "Asked for an actual payment, before it is recorded.",
+   "protected": false,
+   "note": "DEC-318: R48 (3): the flow step's fields"
+  },
+  {
+   "key": "findin.fieldneeded",
+   "en": "Fill in {field} first: it is needed to record this. Nothing was sent.",
+   "protected": false,
+   "note": "DEC-318: R48's control, in capture.fieldneeded's form"
+  },
+  {
+   "key": "screen.find-in.field.payee.short",
+   "en": "who received it",
+   "protected": false,
+   "note": "DEC-318: findin.fieldneeded {field} for the payee"
+  },
+  {
+   "key": "screen.find-in.sheet",
+   "en": "A match in a sheet",
+   "protected": false,
+   "note": "DEC-318: R48 (8)"
+  },
+  {
+   "key": "screen.find-in.bounds.summary",
+   "en": "If the bounds can't be read",
+   "protected": false,
+   "note": "DEC-318: R47: the refusal fold"
+  },
+  {
+   "key": "screen.find-in.empty.summary",
+   "en": "A required field left empty",
+   "protected": false,
+   "note": "DEC-318: R48's control: the refusal fold"
+  },
+  {
+   "key": "screen.find-in.recorded.office",
+   "en": "{name} holds the office of {office}, from {from}",
+   "protected": false,
+   "note": "DEC-318: findin.recorded {fact} for an office fact"
+  },
+  {
+   "key": "screen.person.facts.undetermined",
+   "en": "{reason} · from {document}",
+   "protected": false,
+   "note": "DEC-319: R32 (2): a fact of undetermined validity, marked mark.gap.undetermined; the reason first"
+  },
+  {
+   "key": "screen.person.facts.source",
+   "en": "from {document}",
+   "protected": false,
+   "note": "DEC-319: R32 (2): where an undetermined fact was read"
+  },
+  {
+   "key": "screen.person.facts.withdrawn",
+   "en": "Withdrawn facts · {n}",
+   "protected": false,
+   "note": "DEC-319: R32 (2): withdrawn facts apart"
+  },
+  {
+   "key": "screen.person.facts.withdrawn.by",
+   "en": "withdrawn by {name} on {date}: {reason}",
+   "protected": false,
+   "note": "DEC-319: R32 (2)"
+  },
+  {
+   "key": "screen.person.claim.kind.same_as",
+   "en": "claimed the same person",
+   "protected": false,
+   "note": "DEC-319: R38: You say, as label.identityclaimkinds.same_as"
+  },
+  {
+   "key": "screen.person.claim.kind.not_same_as",
+   "en": "claimed not the same person",
+   "protected": false,
+   "note": "DEC-319: R38"
+  },
+  {
+   "key": "screen.person.claim.kind.unsure",
+   "en": "unsure whether the same person",
+   "protected": false,
+   "note": "DEC-319: R38"
+  },
+  {
+   "key": "label.claimbases.identifier",
+   "en": "An identifier both records hold",
+   "protected": false,
+   "note": "DEC-319: people CLAIM_BASES; R38: the bases' labels owed to UX-DESIGN"
+  },
+  {
+   "key": "label.claimbases.corroborated_name",
+   "en": "The same name, with another detail that agrees",
+   "protected": false,
+   "note": "DEC-319: people CLAIM_BASES"
+  },
+  {
+   "key": "label.claimbases.name",
+   "en": "The same name only",
+   "protected": false,
+   "note": "DEC-319: people CLAIM_BASES"
+  },
+  {
+   "key": "label.claimbases.testimony",
+   "en": "What I know myself",
+   "protected": false,
+   "note": "DEC-319: people CLAIM_BASES"
+  },
+  {
+   "key": "screen.person.claim.basis.help",
+   "en": "The basis decides the highest grade the claim can earn: an identifier both records hold earns the most, what you know yourself the least.",
+   "protected": false,
+   "note": "DEC-319: R38: Because"
+  },
+  {
+   "key": "screen.person.claim.candidate",
+   "en": "{record} · agrees: {agrees}; differs: {differs}",
+   "protected": false,
+   "note": "DEC-319: R38: a samepersoncandidates row, what agrees and differs (people R7)"
+  },
+  {
+   "key": "screen.person.claim.empty.summary",
+   "en": "The other record or the reason left empty",
+   "protected": false,
+   "note": "DEC-319: R38: the refusal fold"
+  },
+  {
+   "key": "screen.person.claim.withdraw.reason",
+   "en": "Why you withdraw it",
+   "protected": false,
+   "note": "DEC-319: R38: withdrawidentityclaim's reason"
+  },
+  {
+   "key": "screen.person.state.none",
+   "en": "a person with no connections yet",
+   "protected": false,
+   "note": "DEC-319: R32 (3): the mockup state"
+  },
+  {
+   "key": "screen.proceeding.court.help",
+   "en": "The courts and forums your team holds, from its place and the ones members added.",
+   "protected": false,
+   "note": "DEC-319: R36"
+  },
+  {
+   "key": "screen.proceeding.court.none.summary",
+   "en": "When no court is held yet",
+   "protected": false,
+   "note": "DEC-319: R36: court.none and the form"
+  },
+  {
+   "key": "screen.places.courts",
+   "en": "Courts",
+   "protected": false,
+   "note": "DEC-319: screens-settings R46"
+  },
+  {
+   "key": "screen.places.court.seeded",
+   "en": "from your place's rules",
+   "protected": false,
+   "note": "DEC-319: R46: a forum the place seeds"
+  },
+  {
+   "key": "screen.places.court.added",
+   "en": "added by {name} on {date}",
+   "protected": false,
+   "note": "DEC-319: R46: a court a member added"
+  },
+  {
+   "key": "screen.places.court.done",
+   "en": "Added the court: {name}.",
+   "protected": false,
+   "note": "DEC-319: R46: after the act, by name"
+  },
+  {
+   "key": "screen.timeline.dated.meta",
+   "en": "{precision} · a dated fact, from {document} · grade {grade}",
+   "protected": false,
+   "note": "DEC-319: R33 (5): each fact's stated date at its precision, its kind and grade"
+  },
+  {
+   "key": "wizard.subject.none.summary",
+   "en": "With no project to choose",
+   "protected": false,
+   "note": "DEC-320: screens-wizards R17: wizard.subject.none.project in a fold"
+  },
+  {
+   "key": "screen.document.cite.question.help",
+   "en": "Set to the question this document was captured for; this project's questions come first.",
+   "protected": false,
+   "note": "DEC-320: screens-inquiry R61"
+  },
+  {
+   "key": "screen.document.cite.none.summary",
+   "en": "Captured for no question",
+   "protected": false,
+   "note": "DEC-320: R61: nothing preselected, the act says to choose"
+  },
+  {
+   "key": "screen.document.cite.choose",
+   "en": "Choose the question to cite this in first.",
+   "protected": false,
+   "note": "DEC-320: R61: as screen.find-in.questionfirst"
+  },
+  {
+   "key": "screen.request.state.offices",
+   "en": "offices are known",
+   "protected": false,
+   "note": "DEC-320: screens-action R20: the mockup state"
+  },
+  {
+   "key": "screen.request.state.nooffice",
+   "en": "no office is known yet",
+   "protected": false,
+   "note": "DEC-320: R20: the mockup state"
+  },
+  {
+   "key": "stake.unreadable.summary",
+   "en": "When the stake can't be read",
+   "protected": false,
+   "note": "DEC-320: screens-action R21"
+  },
+  {
+   "key": "stake.undetermined.summary",
+   "en": "When the tier can't be told",
+   "protected": false,
+   "note": "DEC-320: R21: stake.ask.undetermined in a fold"
   }
  ],
  "rewrite": {
@@ -8220,6 +8538,9 @@
   "refusal.ACCOUNT_MEMBER_NOT_ACTIVE": "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
   "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
   "refusal.MACHINE_CANNOT_MARK": "Only a member, acting for themselves, marks this: a watch, a second look, or a result from a paid or account-gated service. No assistant, scheduled task or unattended process can. Nothing was written.",
-  "screen.held.archivefiles": "Open its files"
+  "screen.held.archivefiles": "Open its files",
+  "screen.proceeding.kind.help": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
+  "screen.find-in.question": "For which question",
+  "screen.find-in.term.help": "Only passages with this name or term are shown, when you fill it in."
  }
 }
