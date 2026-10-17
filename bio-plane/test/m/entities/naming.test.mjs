@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R17 namingDocuments: NO_ENTITY, NO_SUCH_ENTITY; every term of an alias in ref, key or label; one candidate per (capture, reference) at its strongest correspondence; grade_if_resolved is R9's; writes nothing", () => {
   const { e, read, rows } = world();
@@ -100,7 +101,7 @@ test("R19 namingPlan answers the query plan of R17's lookup through the term ind
   const w = world();
   const none = w.e.namingPlan();
   assert.deepEqual([none.determined, none.terms, none.sql, none.plan], [false, [], null, null]);
-  assert.match(none.why, /no term is assumed/);
+  assert.equal(none.why, word("entities.why.terms_given_group"));
   const given = w.e.namingPlan(["alpha", "beta"]);
   assert.deepEqual([given.determined, given.from, given.terms], [true, "caller", ["alpha", "beta"]]);
   assert.match(given.sql, /reading_ref_terms t/);
