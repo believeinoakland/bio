@@ -13,6 +13,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { membershipOf, viewerPredicate } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { queueProducersOf } from "../../../src/queue-producers/index.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
@@ -47,6 +48,8 @@ export function world(fakes = {}) {
   const membership = membershipOf(host, { record });
   /* credentials registers its seam with membership at its start (credentials R16, R17) and holds the signer keys (its R8). */
   const credentials = credentialsOf(host, { record, membership });
+  /* project-roster (R41, R42): real, over the same storage, so an invitation and a request are the module's own rows. */
+  const roster = projectRosterOf(host, { record, membership });
   for (const t of `${RECORD_SCHEMA};${PROVENANCE_SCHEMA}`.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
   db.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
            CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT);
@@ -58,9 +61,10 @@ export function world(fakes = {}) {
   record.migrate();
   membership.migrate();
   credentials.migrate();
+  roster.migrate();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
-  const p = queueProducersOf(host, { record, membership, credentials, ...F });
+  const p = queueProducersOf(host, { record, membership, credentials, projectRoster: roster, ...F });
 
   /* The caller's R7 walk: every inquiry and project upward by basis legs and cites, through the viewer's gate. */
   const homesOf = (viewer) => (subjects) => {
@@ -84,7 +88,7 @@ export function world(fakes = {}) {
   };
   const asked = { homes: [], options: [] };
   const w = {
-    db, sql, host, record, membership, credentials, p, fakes: F, statements, now: NOW, asked,
+    db, sql, host, record, membership, credentials, roster, p, fakes: F, statements, now: NOW, asked,
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {
       const st = state || ({ inquiry: "open", project: "active", information: "collected" }[type] || "collected");
@@ -92,9 +96,9 @@ export function world(fakes = {}) {
                   VALUES (?,?,?,?,?,?,?,?)`).run(id, type, "g", title, st, iso(NOW), iso(NOW), "sha");
       return id;
     },
-    member(id, { role = "member", status = "active" } = {}) {
-      db.prepare(`INSERT INTO members (member_id, cover, role, status, created, updated, pairing_published) VALUES (?,?,?,?,?,?,0)`)
-        .run(id, id, role, status, iso(NOW), iso(NOW));
+    member(id, { role = "member", status = "active", handle = null } = {}) {
+      db.prepare(`INSERT INTO members (member_id, cover, handle, role, status, created, updated, pairing_published) VALUES (?,?,?,?,?,?,?,0)`)
+        .run(id, id, handle, role, status, iso(NOW), iso(NOW));
       return id;
     },
     join(project, member, { owner = false, state = "joined" } = {}) {

@@ -8,7 +8,7 @@ import { world } from "../money-checks/fixture.mjs";
 import { fresh, reader, byId, texts, sentences, snapshot } from "./fixture.mjs";
 import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX,
-  ACCOUNT_ITEMS_MAX, INVESTIGATION_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
+  ACCOUNT_ITEMS_MAX, INVESTIGATION_ITEMS_MAX, WATCHED_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
@@ -80,7 +80,7 @@ function setup(over = {}) {
   return { w, n, calls, ...reader(n) };
 }
 
-test("R1: every item R2–R6 and R12–R17 derive for this member and viewer, each homed through homesOf and carrying its options; facts state each producer's bound and truncated, R16's and R17's as R13's", () => {
+test("R1: every item R2–R6, R12–R17 and R24 derive for this member and viewer, each homed through homesOf and carrying its options; facts state each producer's bound and truncated, R16's and R17's as R13's", () => {
   const { read, asked } = setup((w) => ({ membership: adminAlice(w.membership) }));
   const r = read("alice", { now: NOW });
   const m = byId(r);
@@ -115,7 +115,7 @@ test("R1: every item R2–R6 and R12–R17 derive for this member and viewer, ea
     step_due: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, step_cost_shared: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
     step_cost_message: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, milestone: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
     project_quiet: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, review_left_out: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
-    failed: [] });
+    watched_changed: { bound: WATCHED_ITEMS_MAX, truncated: false }, failed: [] });
   /* R16's and R17's items each carry the class queue R1 takes for its kind */
   assert.deepEqual(Object.fromEntries(r.items.filter((i) => !/::(interest|money|standing|temporal|inquiry|security|policy|scan)/.test(i.id))
     .map((i) => [i.kind, i.class])), { "explore-ask": "FINDING", "ai-limit-reached": "FINDING", "project-account-suspended": "FINDING",

@@ -13,12 +13,40 @@ const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-s
 const SESSION_KEY = "refusal.DOOR_RATE_LIMITED.session";
 const ROW_CODES = Object.values(C).flatMap((rows) => Object.keys(rows));
 
-test("R28: every key admission reads is held by setup-words (hasWord), and the keys it reads are exactly the refusal.<CODE> of its rows plus the session window's own (refusal.DOOR_RATE_LIMITED.session, DEC-262, DEC-271) — no row without a key, no key without a row", () => {
-  assert.ok(Array.isArray(READS) && READS.length > 0);
+/* R31 (T50; N1146; DEC-278): the eight keys the list names that no row of this module holds, each with why. Five are the
+   refusals this module only counts (R22's tally), one it relays (R25's, credentials'), two the generator's join
+   over-reaches to; their sentences are their owners' and this module reads none of them. */
+const NAMED_NOT_READ = Object.freeze({
+  "refusal.NO_SUCH_INVITATION": "counted (R22): membership's refusal of an expired or unknown invitation",
+  "refusal.NO_SUCH_JOIN_LINK": "counted (R22): membership's refusal of an unknown join link",
+  "refusal.WEBSITE_KEY_UNKNOWN": "counted (R22): membership's refusal of an unknown website key",
+  "refusal.WEBSITE_DAILY_CAP": "counted (R22): membership's daily cap of the website door, relayed",
+  "refusal.JOIN_LINK_DAILY_CAP": "counted (R22): membership's daily cap of the join link, relayed",
+  "refusal.REAUTH_DUE": "relayed (R25): credentials' refusal, given as it gives it",
+  "refusal.EXISTS": "the generator's join over-reaches to it: a record-core refusal this module never answers",
+  "refusal.TABLE_DECLARED": "the generator's join over-reaches to it: a record-core refusal this module never answers",
+});
+/* a code the module answers with no key in the list: the keys that are missing, by name */
+const keysMissing = (codes, reads) => codes.map((code) => `refusal.${code}`).filter((key) => !reads.includes(key));
+
+test("R31 (R28): the key list is the design's regenerated one, 31 keys: every key is a word (hasWord); every code this module's rows hold is among them as refusal.<CODE>; so is the session window's own; the other eight are each named here with their reason; a code answered with no key in the list fails by name", () => {
+  assert.ok(Array.isArray(READS));
+  assert.equal(READS.length, 31, "31 keys at DEC-278's regeneration");
+  assert.equal(new Set(READS).size, READS.length, "no key twice");
   for (const key of READS) assert.equal(hasWord(key), true, key);
-  assert.deepEqual([...READS].sort(), [...ROW_CODES.map((code) => `refusal.${code}`), SESSION_KEY].sort());
-  /* the session window's own sentence (R27; DEC-262) */
+  assert.deepEqual(keysMissing(ROW_CODES, READS), [], "every code of the module's rows has its key");
+  assert.equal(ROW_CODES.length, 22, "the module's rows: 22 codes");
+  assert.ok(READS.includes(SESSION_KEY));
   assert.equal(hasWord(SESSION_KEY), true);
+  /* the eight that are neither a row's nor the session window's: exactly those named here, each with a reason */
+  const others = READS.filter((key) => !ROW_CODES.some((code) => key === `refusal.${code}`) && key !== SESSION_KEY).sort();
+  assert.deepEqual(others, Object.keys(NAMED_NOT_READ).sort());
+  for (const [key, why] of Object.entries(NAMED_NOT_READ)) assert.ok(why.length > 0 && hasWord(key), key);
+  /* no row of this module is one of the eight: it reads none of their sentences */
+  for (const key of Object.keys(NAMED_NOT_READ)) assert.equal(ROW_CODES.includes(key.slice("refusal.".length)), false, key);
+  /* control: a code the module answers with no key in the list is named, so the test fails by it */
+  assert.deepEqual(keysMissing([...ROW_CODES, "A_CODE_WITH_NO_KEY"], READS), ["refusal.A_CODE_WITH_NO_KEY"]);
+  assert.deepEqual(keysMissing(ROW_CODES, READS.filter((k) => k !== "refusal.NOT_CAPABLE")), ["refusal.NOT_CAPABLE"]);
   /* control: a key nobody holds is no word, and reading it is a loud failure, never a fallback */
   assert.equal(hasWord("refusal.NO_SUCH_CODE_ANYWHERE"), false);
   assert.throws(() => word("refusal.NO_SUCH_CODE_ANYWHERE"), (e) => e.code === "UNKNOWN_WORD" || /UNKNOWN_WORD/.test(String(e.message)));

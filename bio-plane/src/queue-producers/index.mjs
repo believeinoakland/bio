@@ -1,9 +1,9 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R39).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R42).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1, R2, R4–R7, R9, R14, R23, R30–R35, R37–R39 derive
+ *   feedItems      queue's one read of this module (R8): every item R1, R2, R4–R7, R9, R14, R23, R30–R35, R37–R39, R41, R42 derive
  *                  for a member and viewer, every item `machinery-producers.conditionItems` answers (its R1: the
  *                  CONDITIONs about our own machinery, split out by K1850) and every item `action-producers.actionItems`
  *                  answers (its R13: the Action layer's to-dos, was this module's R15–R21, R29, moved by T45, K2781 (1)),
@@ -22,7 +22,7 @@
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, provenance, captureRequests, basisVersions, progressions, aiRuns, bias, publication,
  *   corpusExport, reevaluation, intent, monitoring, contradiction, docket, caseImport, wizardScripts, caseTensions,
- *   publishSchedule   the providers; and `machinery` (machinery-producers, K1850) and `actionProducers` (action-producers,
+ *   publishSchedule, projectRoster   the providers; and `machinery` (machinery-producers, K1850) and `actionProducers` (action-producers,
  *   T45), each built lazily over these same deps, so a dep a caller injects reaches them too (the moved producers' own:
  *   governor, capture, captureRequests, monitoring, linkSweep, networkNotices, actions; and actionClocks, escalation,
  *   actionPlans, actions, actionHolds, filingTemplates, localFacts, following, planWork).
@@ -59,6 +59,8 @@ import { caseImportOf } from "../case-import/index.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { machineryProducersOf, MachineryProducers } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -115,6 +117,8 @@ export class QueueProducers {
   get #caseTensions() { return this.#dep("caseTensions", () => { void this.#publication; return caseTensionsOf(this.#host); }); }
   /* N823 (K2438): a case edition set to publish at a time is publish-schedule's (its R4, was publication R69). */
   get #publishSchedule() { return this.#dep("publishSchedule", () => publishScheduleOf(this.#host)); }
+  /* T50 (R41, R42; N1091): a project's participants and requests to join are project-roster's (its R1, R14, R26, R34). */
+  get #projectRoster() { return this.#dep("projectRoster", () => projectRosterOf(this.#host, { record: this.#record, membership: this.#membership })); }
   /* R38: the read instance-setup registers at start (its R62), or null while none is. */
   #placeArrivals = null;
 
@@ -271,6 +275,9 @@ export class QueueProducers {
       items.push(...this.#conditionsPlaceArrived(me, viewer, at));
       /* R39 (DEC-158 (4); K1818): a copied wizard whose base has a newer approved version, to the copy's editors. */
       items.push(...this.#findingsWizardBaseUpdated(me, viewer, at));
+      /* R41, R42 (T50; N1091; DEC-248, DEC-286): a project's invitation, to the member invited; a request to join it, to its owners. */
+      items.push(...this.#obligationsProjectInvitation(me, viewer, at));
+      items.push(...this.#obligationsProjectRequest(me, viewer, at));
       return {
         items,
         facts: {
@@ -2706,6 +2713,112 @@ export class QueueProducers {
         recipients: [me],
         options: [QueueProducers.WIZARD_BASE_READ, QueueProducers.WIZARD_BASE_ADOPT],
       });
+    }
+    return out;
+  }
+
+  /* ======================================================================
+   * T50 · R41, R42 — AN INVITATION TO A PROJECT, AND A REQUEST TO JOIN ONE (project-roster R1, R12, R14, R26, R34; N1091;
+   * DEC-248, DEC-286, DEC-309 (1)). Each reads the one fact project-roster offers, derived on read and writing nothing, so
+   * an item leaves on the first read after the fact stops holding. Every sentence is a word of setup-words' list (K3366).
+   * ====================================================================== */
+
+  /** R41, R42: how many projects each producer asks about (R4's bound). */
+  static QUEUE_PROJECT_ITEMS_MAX = 50;
+
+  /** `project-invitation` (R41; DEC-248): one OBLIGATION for each project in which the member's `participation` is
+   *  `invited` (project-roster R34, read through `projectList`), at most 50 in id order, keyed
+   *  `OBLIGATION::project-invitation::<project>::<member>`, to her and to nobody else, with no project home; it names the
+   *  project and offers `projectjoin`. Its `age` is from her own row's `created` in `projectParticipants` (R1: for an
+   *  `invited` row, the invitation's instant). No read gives the inviter to the invited member, so the summary is the
+   *  unnamed one (DEC-309 (1)) until project-roster answers it (`projectInvitations`, T51). It leaves when her state changes. */
+  #obligationsProjectInvitation(me, viewer, now) {
+    if (!me) return [];
+    const list = this.#projectRoster.projectList({ viewer });
+    if (!list || list.ok !== true || !Array.isArray(list.projects)) return [];
+    const cap = QueueProducers.QUEUE_PROJECT_ITEMS_MAX;
+    const invited = list.projects.filter((p) => p && typeof p.id === "string" && p.id && p.participation === "invited");
+    const handle = this.#membership.memberFacts(me)?.handle ?? me;
+    const out = [];
+    for (const p of invited.slice(0, cap)) {
+      const roster = this.#projectRoster.projectParticipants({ projectId: p.id, by: me });
+      const own = roster && roster.ok === true && Array.isArray(roster.participants)
+        ? roster.participants.find((x) => x && x.handle === handle && x.state === "invited") : null;
+      const name = typeof p.name === "string" && p.name ? p.name : p.id;
+      out.push({
+        id: `OBLIGATION::project-invitation::${p.id}::${me}`,
+        class: "OBLIGATION",
+        kind: "project-invitation",
+        case: this.#homesOf([]),
+        subject: { kind: "project", id: p.id, name: p.name ?? null },
+        summary: word("queue.project-invitation.summary.unnamed", { project: name }),
+        detail: word("queue.project-invitation.detail"),
+        basis: { source: "project-roster.projectList", project: p.id, participation: "invited",
+                 invited_at: own ? own.created ?? null : null, inviter: null, recipients_rule: "invited_member",
+                 bound: { limit: cap, truncated: invited.length > cap, list_truncated: list.truncated === true },
+                 detail: "an invitation is membership's row for the member (project-roster R34, membership R118), read here "
+                       + "at every read and never stored. It goes to the member invited and to nobody else, and leaves "
+                       + "when her state changes: she joins, is removed, or the invitation is withdrawn." },
+        age: QueueProducers.#instantAge(own ? own.created : null, now, "no_invitation_instant",
+                                        "the member's row carries no instant this producer can read"),
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [{ id: "projectjoin", label: word("act.projectjoin.label.queue"), weight: "single" }],
+      });
+    }
+    return out;
+  }
+
+  /** `project-request` (R42; DEC-286): for each project the member owns, at most 50 in id order, one OBLIGATION per open
+   *  request `projectRequests({projectId})` answers (project-roster R14), keyed
+   *  `OBLIGATION::project-request::<project>::<requester>` (the requester by handle), to each owner of the project
+   *  (membership R65) and to nobody else, with no project home. The requester is named by handle; her own comment is
+   *  carried apart as `quote`, her words and not this module's. It offers `projectrequestanswer` with its two answers.
+   *  Aged from the request's `asked`. It leaves for every owner at once when one owner answers it or the requester
+   *  withdraws (the read no longer answers it). */
+  #obligationsProjectRequest(me, viewer, now) {
+    if (!me) return [];
+    /* A store project-roster has not migrated holds no request (the plane migrates it with every module; a caller's test
+       world may not), so it holds none: asked, never thrown over, as R23's case documents are. */
+    if (!this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='project_join_requests'`)) return [];
+    const cap = QueueProducers.QUEUE_PROJECT_ITEMS_MAX;
+    const scope = this.#ownedProjects(me, viewer, cap);
+    const out = [];
+    for (const project of scope.projects) {
+      const r = this.#projectRoster.projectRequests({ projectId: project, by: me, viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.requests)) continue;
+      const owners = this.#membership.projectOwners(project) || [];
+      const info = this.#record.bundleInfo(project);
+      const name = info && typeof info.title === "string" && info.title ? info.title : project;
+      for (const q of r.requests) {
+        if (!q || q.state !== "open" || typeof q.handle !== "string" || !q.handle) continue;
+        const text = typeof q.comment === "string" && q.comment.trim() ? q.comment : null;
+        out.push({
+          id: `OBLIGATION::project-request::${project}::${q.handle}`,
+          class: "OBLIGATION",
+          kind: "project-request",
+          case: this.#homesOf([]),
+          subject: { kind: "project", id: project, name: info?.title ?? null, requester: q.handle },
+          summary: word("queue.project-request.summary", { who: q.handle, project: name }),
+          detail: word("queue.project-request.detail"),
+          quote: text === null ? null : { by: q.handle, text },
+          basis: { source: "project-roster.projectRequests", project, requester: q.handle, comment: text, asked: q.asked ?? null,
+                   recipients_rule: "project_owners",
+                   bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true,
+                            requests_limit: r.limit ?? null, requests_truncated: r.truncated === true },
+                   detail: "an open request to join is project-roster's row (its R12, R14), read here at every read and "
+                         + "never stored. It goes to each owner of the project and to nobody else, and leaves for all of "
+                         + "them when one owner answers it or the requester withdraws." },
+          age: QueueProducers.#instantAge(q.asked, now, "no_request_instant", "the request carries no instant this producer can read"),
+          assignee: null,
+          assignee_role: null,
+          recipients: [...owners],
+          options: [{ id: "projectrequestanswer", label: word("act.projectrequestanswer.label.queue"), weight: "single",
+                      answers: [{ answer: "grant", label: word("screen.home.request.grant") },
+                                { answer: "decline", label: word("screen.home.request.decline") }] }],
+        });
+      }
     }
     return out;
   }
