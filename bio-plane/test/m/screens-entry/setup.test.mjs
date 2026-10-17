@@ -1,10 +1,11 @@
-/* screens-entry R6, R17–R20: `setup`, the founder's claim with the handle she chooses, the group's first settings, the
-   handle chosen later by a founder from before T49, the state of anyone else, and DEC-246's two states, walked over a
-   fake plane from the claim to "Finished", at the module's interface. */
+/* screens-entry R6, R17–R20, R22, R23: `setup`, the founder's claim with the handle she chooses, the team's first
+   settings drawn as the design draws them (numbered parts that open and close, choices that open only what they need,
+   "Skip for now", the second administrator), the handle chosen later by a founder from before T49, the state of anyone
+   else, and DEC-246's two states, walked over a fake plane from the claim to "Finished", at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { open, has, lacks, said, date, all, actOps, links, word, sentence, SCREENS, FOUNDER, OLD_FOUNDER, JOINED, AN_ADMIN } from "./kit.mjs";
+import { open, has, lacks, said, date, all, actOps, links, word, sentence, unescape, squash, SCREENS, FOUNDER, OLD_FOUNDER, JOINED, AN_ADMIN } from "./kit.mjs";
 
 const OTP = "otp-sentinel-5d1e";
 const PW = "founder long password";
@@ -26,10 +27,18 @@ const plane = (over = {}) => ({
   securitytoolcatalogue: { ok: true, result: CATALOGUE },
   securitytools: { ok: true, result: { tools: [] } },
   memberadd: { ok: true, result: { ok: true, memberId: "dev", invite: "inv-xyz", expires: "2026-10-21T00:00:00Z" } },
+  memberlist: { ok: true, result: { members: [{ member_id: "admin", handle: HANDLE, founder: true, role: "admin", status: "active" }] } },
+  entitieskind: { ok: true, result: { ok: true, kind: "office", entities: [], count: 0 } },
   securitytooladd: { ok: true, result: { ok: true, tool_id: "T-1" } },
   securitytooltest: { ok: true, result: { ok: true, passed: true } },
   ...over,
 });
+
+// a part as drawn (R22): its element, its state, whether it is open
+const partOf = (o, key) => all(o.tree, (e) => e.attrs["data-part"] === key)[0];
+const stateOf = (o, key) => partOf(o, key).attrs["data-state"];
+const isOpen = (o, key) => "open" in partOf(o, key).attrs;
+const PARTS = ["claim", "group", "places", "offices", "assistant", "court", "security", "admins"];
 
 async function claimed(over) {
   const o = await open("setup", { fragment: { boot: OTP }, table: plane(over) });
@@ -39,7 +48,7 @@ async function claimed(over) {
 
 test("R6 R17 the claim: the one-time password filled from #boot=, then 'Choose your handle', then the founder's password twice; only the claim is offered before a session", async () => {
   const o = await open("setup", { fragment: { boot: OTP }, table: plane() });
-  assert.deepEqual(o.requests.map((r) => r.op), ["bootstrap"]);
+  assert.deepEqual(o.requests.map((r) => r.op), ["bootstrap", "groupidentity"]);
   assert.equal(all(o.tree, (e) => e.attrs.id === "su-otp")[0].attrs.value, OTP);
   assert.deepEqual(actOps(o.tree), ["claim"]);
   has(o, "screen.setup.claim"); has(o, "screen.hosting.heading"); has(o, "screen.hosting.s1");
@@ -52,13 +61,13 @@ test("R6 R17 the claim: the one-time password filled from #boot=, then 'Choose y
 
 test("R17 a fake plane walked from the claim with a chosen handle: claim sends it, login signs in by the handle the claim answers on an own device, then recoverycodesissue", async () => {
   const o = await claimed();
-  assert.deepEqual(o.requests.slice(1, 4).map((r) => [r.op, r.body]), [
+  assert.deepEqual(o.requests.slice(2, 5).map((r) => [r.op, r.body]), [
     ["claim", { bootstrapToken: OTP, password: PW, handle: HANDLE }],
     ["login", { handle: HANDLE, password: PW, device: "own" }],
     ["recoverycodesissue", {}],
   ]);
   assert.deepEqual(o.signins.map((s) => [s.answer.token, s.opts]), [["tok-founder", { device: "own", handle: HANDLE, stay: true }]]);
-  assert.equal(o.requests[3].header, true, "the codes asked under the new session");
+  assert.equal(o.requests[4].header, true, "the codes asked under the new session");
   // the claim's next step names the group ("Your group" while unnamed) and her handle
   has(o, "screen.setup.claimed", { group: said("screen.entry.group"), handle: HANDLE });
   assert.ok(!("pending" in o.view.ui), "the password left the page's memory");
@@ -85,7 +94,7 @@ test("R17 refusals: NO_HANDLE, BAD_HANDLE, HANDLE_TAKEN and HANDLE_FIXED drawn b
     assert.equal(o.fields["su-handle"], HANDLE, code + ": the handle kept");
     assert.equal(o.fields["su-pw"], "", code); assert.equal(o.fields["su-pw2"], "", code);
     assert.ok(!o.view.ui.pending, code + ": no password left in the page's memory");
-    assert.deepEqual(o.requests.map((x) => x.op), ["bootstrap", "claim"], code + ": nothing more is sent");
+    assert.deepEqual(o.requests.map((x) => x.op), ["bootstrap", "groupidentity", "claim"], code + ": nothing more is sent");
     assert.deepEqual(actOps(o.tree), ["claim"], code + ": the step is kept");
   }
   // the same refusal answered inside an ok answer is no success (D29)
@@ -107,7 +116,8 @@ test("R6 R17 control: two passwords that differ, a short one, no one-time passwo
 
 test("R20 the ten codes shown once under setup.codes.once, with 'Copy them' and 'Save them as a file'; control: the codes are in no storage and drawn once", async () => {
   const o = await claimed();
-  has(o, "screen.entry.codes.heading"); has(o, "setup.codes.once");
+  has(o, "screen.setup.codes.intro"); has(o, "setup.codes.once");
+  assert.ok(isOpen(o, "claim"), "part 1 open while the codes are shown");
   const pre = all(o.tree, (e) => e.tag === "pre");
   assert.equal(pre.length, 1);
   assert.deepEqual(pre[0].children.map((c) => c.text).join("").split("\n"), CODES);
@@ -205,39 +215,55 @@ test("R19 a member, or an administrator who is not the founder, opening setup se
   lacks(before, "setup.member.heading");
 });
 
-test("R6 after the claim every part is the registry's act for it, each drawn", async () => {
-  // the group's key held, so its switch is drawn too
-  const o = await claimed({ recoverycodesstate: { ok: true, result: { ok: true, held: true, remaining: 10 } }, groupkeystate: { ok: true, result: { on: false, held: true } } });
+// a choice made on the page (R22): the radio checked, its others not, and the page's clock moved past the watch
+async function choose(o, name, i, n = 2) {
+  for (let k = 0; k < n; k++) o.fields[`${name}-${k}`] = k === i;
+  await o.tick(300);
+}
+// every choice that opens an act made: a website, a place not yet known, the team paying for the assistant
+async function opened(over) {
+  const o = await claimed({ recoverycodesstate: { ok: true, result: { ok: true, held: true, remaining: 10 } }, groupkeystate: { ok: true, result: { on: false, held: true } }, ...over });
+  await choose(o, "su-site", 1);
+  await choose(o, "su-pay", 1);
+  return o;
+}
+
+test("R6 after the claim every part is the registry's act for it, each drawn once its choice opens it", async () => {
+  const o = await opened();
   // the parts are the registry's acts for setup (its own declaration, N1073), but the claim (before a session), the
-  // codes (shown once, R20) and the founder's handle (R18), each drawn in its own state
+  // codes (shown once, R20), the founder's handle (R18), and the acts a choice opens instead of another
   const REG = JSON.parse(fs.readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
   const parts = (REG.screens || REG).find((r) => r.id === "setup").acts.map((x) => String(x.op).replace(/^owed:/, "").split(/\s/)[0])
     .filter((op) => !["claim", "recoverycodesissue", "founderhandleset"].includes(op));
   assert.ok(parts.length >= 10);
-  assert.deepEqual(actOps(o.tree), [...new Set(parts)].sort());
-  for (const k of ["name", "places", "offices", "assistant", "court", "hosting", "admins", "security", "finished"]) has(o, "screen.setup." + k);
-  for (const k of ["claim", "name", "places", "offices", "assistant", "court", "hosting", "admins", "security"]) has(o, "screen.setup.step." + k);
+  // with the place known and the assistant paid for by the team: all but `placewanted` (a place not known) and
+  // `aikeepaway` (keeping AI out), each drawn when chosen
+  const drawn = actOps(o.tree);
+  assert.deepEqual(drawn, [...new Set(parts)].filter((op) => !["placewanted", "aikeepaway"].includes(op)).sort());
+  o.fields["su-pick"] = "other"; await o.tick(300);
+  assert.ok(actOps(o.tree).includes("placewanted") && !actOps(o.tree).includes("officesseed"));
+  await choose(o, "su-ai", 1);
+  assert.ok(actOps(o.tree).includes("aikeepaway"));
+  for (const k of ["places", "offices", "assistant", "court", "security", "admins", "finished"]) has(o, "screen.setup." + k);
+  has(o, "screen.setup.part.group");
   assert.ok(links(o.tree).includes("/app"), "Finished links /app");
 });
 
 test("R6 a fake plane walked from the claim to Finished: each part sends its act's body", async () => {
-  const o = await claimed({ groupkeystate: { ok: true, result: { on: false, held: true } } });
+  const o = await opened();
   const sent = async (op, values, data) => (await o.press(op, { values, data })).sent.filter((x) => x.op === op).map((x) => x.body);
   assert.deepEqual(await sent("groupnameset", { "su-name": " River Town Tenants " }), [{ name: "River Town Tenants" }]);
   assert.deepEqual(await sent("groupdomainset", { "su-domain": "rivertown.example" }), [{ domain: "rivertown.example" }]);
-  assert.deepEqual(await sent("profilesset", { "su-pf-0": true, "su-pf-1": true }), [{ profiles: ["p-a", "p-b"] }]);
-  assert.deepEqual(await sent("profilesset", { "su-pf-0": false, "su-pf-1": false }), [{ profiles: [] }], "choosing none is allowed");
-  assert.deepEqual(await sent("placewanted", { "su-place": "A place not held" }), [{ name: "A place not held" }]);
+  assert.deepEqual(await sent("profilesset", { "su-pick": "p-b" }), [{ profiles: ["p-b"] }]);
   assert.deepEqual(await sent("officesseed", {}), [{}]);
   assert.deepEqual(await sent("entitycreate", { "su-office": "The records office", "su-office-note": "" }), [{ kind: "office", label: "The records office", note: null }]);
   has(o, "screen.setup.office.added", { label: "The records office" });
-  assert.deepEqual(await sent("aikeepaway", { "su-why": "We hold tips from employees." }, { on: "on" }), [{ on: true, reason: "We hold tips from employees." }]);
   assert.deepEqual(await sent("groupkeyset", { "su-key0": "sk-sentinel-key" }), [{ key: "sk-sentinel-key" }]);
   assert.ok(!o.drawn().includes("sk-sentinel-key"), "the key never drawn");
   assert.deepEqual(await sent("groupkeyswitch", {}, { on: "on" }), [{ on: true }]);
   assert.deepEqual(await sent("ailimitset", { "su-limit": "$5.00" }), [{ owner: "group", scope: "per_member", unit: "usd", period: "day", amount: 5 }]);
   assert.deepEqual(await sent("courtnoticeset", { "su-court-0": false, "su-court-1": true }), [{ choice: "dont" }]);
-  assert.deepEqual(await sent("hostingaccessset", { "su-holders": "Two members, on the group's account", "su-hnote": "" }), [{ holders: "Two members, on the group's account", note: null }]);
+  assert.deepEqual(await sent("hostingaccessset", { "su-holders": "Two members, on the team's account", "su-hnote": "" }), [{ holders: "Two members, on the team's account", note: null }]);
   assert.deepEqual(await sent("memberadd", { "su-adm-id": "dev", "su-adm-cover": "Dev, from the block" }), [{ memberId: "dev", cover: "Dev, from the block", role: "admin" }]);
   has(o, "screen.setup.admins.shown", { date: { html: date("2026-10-21") } });
   assert.ok(o.text.includes("https://group.example/#invite=inv-xyz"), "the invitation shown once");
@@ -248,25 +274,36 @@ test("R6 a fake plane walked from the claim to Finished: each part sends its act
     ["securitytools", undefined],
   ]);
   has(o, "screen.setup.security.passed", { tool: "Scan Co" });
+  // a place not yet known: "Somewhere else" names it, and chooses no profile
+  o.fields["su-pick"] = "other"; await o.tick(300);
+  assert.deepEqual(await sent("placewanted", { "su-place": "A place not held" }), [{ name: "A place not held" }]);
+  assert.deepEqual(await sent("profilesset", { "su-pick": "other" }), [{ profiles: [] }], "choosing none is allowed");
+  // keeping AI out, with the founder's reason
+  await choose(o, "su-ai", 1);
+  assert.deepEqual(await sent("aikeepaway", { "su-why": "We hold tips from employees." }, { on: "on" }), [{ on: true, reason: "We hold tips from employees." }]);
 });
 
 test("R6 control: a refused part keeps the step and sends nothing more; a part with its field empty sends nothing", async () => {
-  const o = await claimed({ groupnameset: { ok: false, code: "NOT_AN_ADMIN" }, securitytooladd: { ok: false, code: "PROVIDER_REFUSED" } });
+  const o = await opened({ groupnameset: { ok: false, code: "NOT_AN_ADMIN" }, securitytooladd: { ok: false, code: "PROVIDER_REFUSED" } });
   const before = o.requests.length;
   const r = await o.press("groupnameset", { values: { "su-name": "River Town" } });
   assert.equal(r.refused, true);
   assert.deepEqual(o.requests.slice(before).map((x) => x.op), ["groupnameset"], "nothing more is sent");
-  has(o, "screen.setup.name");
+  assert.ok(isOpen(o, "group"), "the refused part stays open");
+  assert.equal(stateOf(o, "group"), "optional");
   const s = await o.press("securitytooladd", { values: { "su-st-0-cfg-0": "eu", "su-st-0-cred-0": "k" }, data: { tool: "0" } });
   assert.deepEqual(s.sent.map((x) => x.op), ["securitytooladd"], "no test after a refused add");
+  o.fields["su-pick"] = "other"; await o.tick(300);
   for (const [op, values, key, data] of [["groupnameset", { "su-name": "" }, "screen.setup.name.empty"], ["placewanted", { "su-place": "" }, "screen.setup.place.empty"],
-    ["entitycreate", { "su-office": "" }, "screen.setup.office.empty"], ["aikeepaway", { "su-why": "" }, "screen.setup.keepaway.noreason", { on: "on" }],
-    ["ailimitset", { "su-limit": "lots" }, "screen.setup.limit.bad"], ["courtnoticeset", {}, "screen.setup.court.pick"],
+    ["entitycreate", { "su-office": "" }, "screen.setup.office.empty"], ["ailimitset", { "su-limit": "lots" }, "screen.setup.limit.bad"], ["courtnoticeset", {}, "screen.setup.court.pick"],
     ["hostingaccessset", { "su-holders": "" }, "screen.setup.hosting.empty"], ["memberadd", { "su-adm-id": "dev", "su-adm-cover": "" }, "screen.setup.admins.incomplete"],
     ["securitytooladd", { "su-st-0-cfg-0": "", "su-st-0-cred-0": "k" }, "screen.setup.security.missing", { tool: "0" }]]) {
     assert.deepEqual((await o.press(op, { values, data })).sent, [], op);
     assert.equal(o.refused.key, key, op);
   }
+  await choose(o, "su-ai", 1);
+  assert.deepEqual((await o.press("aikeepaway", { values: { "su-why": "" }, data: { on: "on" } })).sent, []);
+  assert.equal(o.refused.key, "screen.setup.keepaway.noreason");
 });
 
 test("R6 every part is resumable: what the reads answer is drawn as done, and the scanner's sentence only while part_scanner is true", async () => {
@@ -274,11 +311,14 @@ test("R6 every part is resumable: what the reads answer is drawn as done, and th
     groupidentity: { ok: true, result: { ok: true, group: "river-town", display_name: "River Town", domain: "rivertown.example", domain_verified_at: "2026-10-01" } },
     courtnotice: { ok: true, result: { choice: "tell" } }, hostingaccess: { ok: true, result: { current: { holders: "The treasurer" } } },
     aikeepawaystate: { ok: true, result: { on: true, reason: "Tips." } }, securitytools: { ok: true, result: { tools: [{ tool_id: "T-1", name: "Scan Co" }] } },
+    entitieskind: { ok: true, result: { ok: true, kind: "office", entities: [{ id: "E-1", label: "City Clerk" }], count: 1 } },
+    memberlist: { ok: true, result: { members: [{ member_id: "admin", founder: true, role: "admin", status: "active" }, { member_id: "dev", role: "admin", status: "active" }] } },
   });
   has(o, "screen.setup.name.now", { name: "River Town" }); has(o, "screen.setup.domain.verified", { domain: "rivertown.example" });
   has(o, "screen.setup.court.now.tell"); has(o, "screen.setup.hosting.now", { holders: "The treasurer" }); has(o, "screen.setup.keepaway.on");
   has(o, "screen.setup.security.held", { tool: "Scan Co" });
-  assert.ok(all(o.tree, (e) => e.tag === "li" && /done/.test(e.attrs.class || "")).length >= 6);
+  assert.ok(o.text.includes("City Clerk"), "the team's offices listed");
+  assert.deepEqual(PARTS.map((k) => stateOf(o, k)), ["done", "done", "done", "done", "off", "done", "done", "done"]);
   has(o, "screen.setup.security.scanner");
   const off = await claimed({ bootstrap: { ok: true, result: { ok: true, claimed: false, bootstrapConfigured: true, part_scanner: false } } });
   lacks(off, "screen.setup.security.scanner");
@@ -294,4 +334,215 @@ test("R6 the words setup reads: no sentence says administrators see spending by 
   // control: the pattern finds one
   assert.match("administrators see spending by member", /(see|sees|seeing)[^.]*(spend|spending|use)[^.]*by member/i);
   assert.ok(read.some(([, en]) => /file scanner/.test(en)) && read.some(([, en]) => /safe view/.test(en)));
+});
+
+// ---- R22: setup drawn as the design draws it (DEC-279) ----
+const tipOf = (e) => squash(unescape(e.attrs["data-tip"] || ""));
+const summaryOf = (o, key) => all(partOf(o, key), (e) => e.tag === "summary")[0];
+
+test("R22 before the claim only part 1, 'Make it yours', is open; the seven parts that follow are shown closed beneath it under screen.setup.coming", async () => {
+  const o = await open("setup", { fragment: { boot: OTP }, table: plane() });
+  assert.deepEqual(all(o.tree, (e) => e.attrs["data-part"]).map((e) => e.attrs["data-part"]), PARTS);
+  assert.equal(partOf(o, "claim").tag, "details");
+  assert.ok(isOpen(o, "claim")); assert.equal(stateOf(o, "claim"), "needed");
+  has(o, "screen.setup.part.claim.why"); has(o, "screen.setup.state.needed"); has(o, "screen.setup.claim.intro"); has(o, "screen.setup.coming");
+  for (const k of PARTS.slice(1)) {
+    assert.equal(partOf(o, k).tag, "div", k + ": shown, not opened");
+    assert.equal(stateOf(o, k), "later");
+    assert.equal(all(partOf(o, k), (e) => ["input", "button", "select"].includes(e.tag)).length, 0, k);
+    has(o, "screen.setup.part." + k + ".why");
+  }
+  // the numbers in order, every field and act inside part 1
+  assert.deepEqual(all(o.tree, (e) => e.attrs.class === "n").map((e) => e.children.map((c) => c.text).join("")), ["1", "2", "3", "4", "5", "6", "7", "8"]);
+  for (const f of all(o.tree, (e) => e.tag === "input" || e.attrs["data-act"])) assert.ok(all(partOf(o, "claim"), (e) => e === f).length === 1, "outside part 1");
+  // the long explanations behind explained terms: the one-time password's and the handle's
+  const tips = all(o.tree, (e) => /\bcs-card\b/.test(e.attrs.class || "")).map(tipOf);
+  for (const k of ["screen.setup.otp.tip", "screen.setup.handle.tip"]) assert.ok(tips.includes(said(k)), k);
+  lacks(o, "screen.setup.otp.tip"); lacks(o, "screen.setup.handle.tip");
+  // the act as the design names it
+  assert.equal(all(o.tree, (e) => e.attrs["data-act"] === "claim")[0].children.map((c) => c.text).join(""), word("screen.setup.claim.button"));
+  // the head names the short name until the team is named
+  assert.deepEqual(all(o.tree, (e) => e.attrs.class === "muted").map((e) => e.children.map((c) => c.text).join("")), ["river-town"]);
+});
+
+test("R22 just claimed: screen.setup.after heads the parts, each with its number, its name, what it is for and its state; part 1 done", async () => {
+  const o = await claimed();
+  has(o, "screen.setup.after"); lacks(o, "screen.setup.coming"); lacks(o, "screen.setup.lede");
+  for (const k of PARTS) {
+    assert.equal(partOf(o, k).tag, "details", k);
+    const sum = summaryOf(o, k);
+    for (const c of ["n", "t", "why", "cs-due"]) assert.equal(all(sum, (e) => e.attrs.class === c).length, 1, `${k}: ${c}`);
+  }
+  assert.equal(stateOf(o, "claim"), "done");
+  assert.deepEqual(PARTS.slice(1).map((k) => stateOf(o, k)), ["optional", "done", "optional", "optional", "optional", "optional", "optional"]);
+  for (const st of ["done", "optional"]) has(o, "screen.setup.state." + st);
+  // the parts in the design's order, under their names
+  for (const [k, t] of [["group", "part.group"], ["places", "places"], ["offices", "offices"], ["assistant", "assistant"], ["court", "court"], ["security", "security"], ["admins", "admins"]]) {
+    assert.equal(all(summaryOf(o, k), (e) => e.attrs.class === "t")[0].children.map((c) => c.text).join(""), word("screen.setup." + t), k);
+  }
+  // part 2 open on the team's name (R14), the rest closed but the codes'
+  assert.ok(isOpen(o, "claim") && isOpen(o, "group"));
+  for (const k of PARTS.slice(2)) assert.ok(!isOpen(o, k), k);
+});
+
+test("R22 a saved name draws screen.setup.name.now with the accepted mark beside the field, and the team's name replaces the short name in the head; its help explains what changes", async () => {
+  let name = null;
+  const o = await claimed({ groupnameset: (b) => { name = b.name; return { ok: true, result: { ok: true } }; }, groupidentity: () => ({ ok: true, result: { ok: true, group: "river-town", display_name: name } }) });
+  assert.ok(o.text.includes("river-town"), "the short name until named");
+  await o.press("groupnameset", { values: { "su-name": "River Town" } });
+  const mark = all(o.tree, (e) => e.attrs["data-state"] === "named")[0];
+  assert.equal(mark.attrs["data-due"], "met");
+  has(o, "screen.setup.name.now", { name: "River Town" });
+  assert.ok(all(partOf(o, "group"), (e) => e === mark).length === 1, "beside the field, in part 2");
+  assert.equal(stateOf(o, "group"), "done");
+  assert.deepEqual(all(o.tree, (e) => e.attrs.class === "grp").map((e) => e.children.map((c) => c.text).join("")), ["River Town"]);
+  assert.ok(!o.drawn().split("\n").at(-1).includes("river-town"), "the short name gone from the head");
+  assert.ok(all(o.tree, (e) => /\bcs-card\b/.test(e.attrs.class || "")).map(tipOf).includes(said("screen.setup.name.tip")));
+  // control: a name not yet saved draws no "now"
+  lacks(await claimed(), "screen.setup.name.now", { name: "River Town" });
+});
+
+test("R22 the website: 'No' draws nothing more; 'Yes', explained by screen.setup.site.tip, opens the address and groupdomainset", async () => {
+  const o = await claimed();
+  const choice = all(o.tree, (e) => e.tag === "fieldset" && e.attrs.id === "su-site")[0];
+  assert.equal(choice.attrs.class, "cs-choice");
+  assert.ok(all(choice, (e) => /\bcs-card\b/.test(e.attrs.class || "")).map(tipOf).includes(said("screen.setup.site.tip")));
+  assert.ok(!actOps(o.tree).includes("groupdomainset") && all(o.tree, (e) => e.attrs.id === "su-domain").length === 0, "no: nothing more");
+  await choose(o, "su-site", 1);
+  assert.ok(actOps(o.tree).includes("groupdomainset") && all(o.tree, (e) => e.attrs.id === "su-domain").length === 1);
+  assert.ok(isOpen(o, "group"), "the part that holds the choice stays open");
+  await choose(o, "su-site", 0);
+  assert.ok(!actOps(o.tree).includes("groupdomainset"));
+  // a team that holds a website opens on "Yes"
+  const held = await claimed({ groupidentity: { ok: true, result: { ok: true, group: "river-town", display_name: "River Town", domain: "rivertown.example" } } });
+  assert.ok(actOps(held.tree).includes("groupdomainset"));
+});
+
+test("R22 the assistant: 'no' sends aikeepaway on with the reason and then hides every other element about AI in setup (screen.setup.ai.off); the part is off", async () => {
+  let on = false;
+  const o = await claimed({ aikeepaway: (b) => { on = b.on; return { ok: true, result: { ok: true } }; }, aikeepawaystate: () => ({ ok: true, result: { on, reason: on ? "We hold tips." : null } }) });
+  assert.equal(stateOf(o, "assistant"), "optional");
+  assert.equal(all(o.tree, (e) => e.tag === "fieldset" && e.attrs.id === "su-ai")[0].attrs.class, "cs-choice");
+  has(o, "screen.setup.ai.yes.help");
+  assert.ok(all(partOf(o, "assistant"), (e) => /\bcs-card\b/.test(e.attrs.class || "")).map(tipOf).includes(said("screen.setup.leaves.what")));
+  await choose(o, "su-ai", 1);
+  assert.ok(actOps(o.tree).includes("aikeepaway"));
+  assert.equal(all(o.tree, (e) => e.attrs.id === "su-pay").length, 0, "no pay choice under 'no'");
+  const r = await o.press("aikeepaway", { values: { "su-why": "We hold tips." }, data: { on: "on" } });
+  assert.deepEqual(r.sent.filter((x) => x.op === "aikeepaway").map((x) => x.body), [{ on: true, reason: "We hold tips." }]);
+  has(o, "screen.setup.ai.off"); has(o, "screen.setup.keepaway.on");
+  assert.equal(stateOf(o, "assistant"), "off"); has(o, "screen.setup.state.off");
+  // no AI field, key or pay choice is drawn after, whatever the page's radios say
+  const ai = partOf(o, "assistant");
+  assert.equal(all(ai, (e) => ["input", "select", "textarea"].includes(e.tag) && !/^su-skip-/.test(e.attrs.id || "")).length, 0);
+  assert.deepEqual(actOps(ai), []);
+  for (const k of ["screen.setup.pay.q", "screen.setup.key", "screen.setup.limit", "screen.setup.ai.q"]) lacks(o, k);
+});
+
+test("R22 control: choosing 'yes' draws no key field until 'your team pays' is chosen; the team's key, its switch and the limit only then", async () => {
+  const o = await claimed();
+  const keyed = () => all(o.tree, (e) => /^su-key/.test(e.attrs.id || "")).length;
+  assert.equal(keyed(), 0); assert.ok(!actOps(o.tree).includes("groupkeyset"));
+  has(o, "screen.setup.pay.q");
+  await choose(o, "su-pay", 1);
+  assert.equal(keyed(), 1);
+  for (const op of ["groupkeyset", "ailimitset"]) assert.ok(actOps(o.tree).includes(op), op);
+  has(o, "screen.setup.key.told");
+  assert.ok(all(o.tree, (e) => /\bcs-card\b/.test(e.attrs.class || "")).map(tipOf).includes(said("screen.setup.key.tip")));
+  await choose(o, "su-pay", 0);
+  assert.equal(keyed(), 0);
+});
+
+test("R22 the place: screen.setup.place.other opens placewanted, and the offices part then says offices are added by hand", async () => {
+  const o = await claimed({ placewantedstate: { ok: true, result: { name: "Fresno" } } });
+  has(o, "screen.setup.offices.what", { place: "Profile A" });
+  assert.ok(actOps(o.tree).includes("officesseed") && !actOps(o.tree).includes("placewanted"));
+  o.fields["su-pick"] = "other"; await o.tick(300);
+  assert.ok(actOps(o.tree).includes("placewanted") && !actOps(o.tree).includes("officesseed"));
+  has(o, "screen.setup.offices.none", { place: "Fresno" }); lacks(o, "screen.setup.offices.what", { place: "Profile A" });
+  assert.ok(actOps(o.tree).includes("entitycreate"), "an office added by hand");
+  assert.ok(isOpen(o, "places"));
+});
+
+test("R22 each part's state is the one its read gives; control: a read that fails or does not answer leaves its part optional, never done", async () => {
+  const doneAll = {
+    groupidentity: { ok: true, result: { ok: true, group: "river-town", display_name: "River Town" } },
+    entitieskind: { ok: true, result: { ok: true, kind: "office", entities: [{ id: "E-1", label: "City Clerk" }] } },
+    courtnotice: { ok: true, result: { choice: "dont" } }, securitytools: { ok: true, result: { tools: [{ tool_id: "T-1" }] } },
+    memberlist: { ok: true, result: { members: [{ member_id: "admin", founder: true, role: "admin", status: "active" }, { member_id: "dev", role: "admin", status: "active" }] } },
+  };
+  const o = await claimed(doneAll);
+  assert.deepEqual(PARTS.map((k) => stateOf(o, k)), ["done", "done", "done", "done", "optional", "done", "done", "done"]);
+  // the founder alone, or a second person who is not an administrator, is no second administrator
+  const one = await claimed({ ...doneAll, memberlist: { ok: true, result: { members: [{ member_id: "admin", founder: true, role: "admin" }, { member_id: "mai", role: "member" }] } } });
+  assert.equal(stateOf(one, "admins"), "optional");
+  for (const fail of [{ ok: false, code: "DOOR_RATE_LIMITED" }, "none"]) {
+    const f = await claimed({ ...doneAll, groupidentity: { ok: true, result: { ok: true, group: "river-town", display_name: "River Town" } },
+      profiles: fail, entitieskind: fail, courtnotice: fail, securitytools: fail, memberlist: fail, aikeepawaystate: fail });
+    assert.deepEqual(PARTS.slice(2).map((k) => stateOf(f, k)), ["optional", "optional", "optional", "optional", "optional", "optional"], JSON.stringify(fail));
+  }
+});
+
+test("R22 the drawing's five states over a fake plane: unclaimed, just claimed, a founder with no handle, already claimed, a member opening setup", async () => {
+  const e = await open("setup", { fragment: { boot: OTP }, table: plane() });
+  has(e, "screen.setup.lede"); assert.equal(all(e.tree, (x) => x.tag === "details" && "open" in x.attrs).length, 1);
+  const a = await claimed();
+  has(a, "screen.setup.after"); has(a, "screen.setup.claimed", { group: said("screen.entry.group"), handle: HANDLE });
+  // the claimed state marked as the release walk finds it (journey-check)
+  assert.equal(all(summaryOf(a, "claim"), (x) => x.attrs["data-state"] === "claimed").length, 1);
+  const b = await open("setup", { me: OLD_FOUNDER, table: plane() });
+  assert.deepEqual(all(b.tree, (x) => x.tag === "h1").map((x) => x.children.map((c) => c.text).join("")), [word("founder.handle.title")]);
+  assert.equal(all(b.tree, (x) => x.attrs["data-part"]).length, 0);
+  const c = await open("setup", { fragment: { boot: OTP }, table: plane({ bootstrap: { ok: true, result: { ok: true, claimed: true } } }) });
+  assert.deepEqual(all(c.tree, (x) => x.tag === "h1").map((x) => x.children.map((t) => t.text).join("")), [word("setup.claimed.heading")]);
+  assert.equal(all(c.tree, (x) => /\bcs-gap\b/.test(x.attrs.class || "")).length, 1);
+  const d = await open("setup", { me: JOINED, table: plane() });
+  assert.deepEqual(all(d.tree, (x) => x.tag === "h1").map((x) => x.children.map((t) => t.text).join("")), [word("setup.member.heading")]);
+  for (const s of [b, c, d]) assert.equal(all(s.tree, (x) => x.attrs["data-part"]).length, 0, "no parts");
+});
+
+// ---- R23: Skip for now, and the second administrator ----
+test("R23 every part after part 1 carries 'Skip for now', explained by setup.skip_does; skipping each sends no request and marks it skipped, closed", async () => {
+  const o = await claimed();
+  assert.equal(all(partOf(o, "claim"), (e) => e.attrs["data-skip"]).length, 0, "part 1 has none");
+  for (const k of PARTS.slice(1)) {
+    const skip = all(partOf(o, k), (e) => e.attrs["data-skip"] === k);
+    assert.equal(skip.length, 1, k);
+    assert.equal(skip[0].children.filter((c) => c.text).map((c) => c.text).join("").trim(), word("setup.skip"));
+    assert.equal(tipOf(skip[0]), said("setup.skip_does"));
+  }
+  for (const k of PARTS.slice(1)) {
+    const before = o.requests.length;
+    const was = stateOf(o, k);
+    o.fields["su-skip-" + k] = true;
+    await o.tick(300);
+    assert.deepEqual(o.requests.slice(before), [], k + ": nothing sent");
+    assert.equal(partOf(o, k).attrs["data-skipped"], "true", k);
+    assert.ok(!isOpen(o, k), k + ": closed");
+    assert.equal(stateOf(o, k), was, k + ": left as it is");
+  }
+  // un-skipped, it is as it was
+  o.fields["su-skip-group"] = false; await o.tick(300);
+  assert.equal(partOf(o, "group").attrs["data-skipped"], undefined);
+  // control: nothing is kept but the page: setup opened again shows no part skipped
+  const again = await open("setup", { me: FOUNDER, table: plane() });
+  assert.equal(all(again.tree, (e) => e.attrs["data-skipped"]).length, 0);
+});
+
+test("R23 part 8's act is setup.admin.invite, explained by setup.admin.invite_does, sending memberadd with role admin; no plain invitation to a member is offered", async () => {
+  const o = await claimed();
+  const btn = all(partOf(o, "admins"), (e) => e.attrs["data-act"] === "memberadd");
+  assert.equal(btn.length, 1);
+  assert.equal(btn[0].children.map((c) => c.text).join(""), word("setup.admin.invite"));
+  assert.equal(tipOf(btn[0].parent), said("setup.admin.invite_does"));
+  assert.equal(all(o.tree, (e) => e.attrs["data-act"] === "memberadd").length, 1, "one invitation, the administrator's");
+  const r = await o.press("memberadd", { values: { "su-adm-id": "dev", "su-adm-cover": "Dev" } });
+  assert.deepEqual(r.sent.filter((x) => x.op === "memberadd").map((x) => x.body), [{ memberId: "dev", cover: "Dev", role: "admin" }]);
+  // control: refused, the step is kept and nothing more is sent
+  const n = await claimed({ memberadd: { ok: false, code: "MEMBER_EXISTS" } });
+  const before = n.requests.length;
+  await n.press("memberadd", { values: { "su-adm-id": "dev", "su-adm-cover": "Dev" } });
+  assert.deepEqual(n.requests.slice(before).map((x) => x.op), ["memberadd"]);
+  assert.ok(isOpen(n, "admins") && actOps(partOf(n, "admins")).includes("memberadd"));
+  lacks(n, "screen.setup.admins.shown", { date: { html: date("2026-10-21") } });
 });

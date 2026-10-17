@@ -67,7 +67,7 @@ test("R7 walked by the join link: the name the group will know the person by fir
   has(o, "screen.join.joined", { handle: "mai" });
 });
 
-test("R7 a dead link draws 'This link no longer works', one sentence for NO_SUCH_INVITATION and NO_SUCH_JOIN_LINK, JOIN_LINK_DAILY_CAP by its own words; control: no form", async () => {
+test("R7 a dead link (state e) draws 'This link no longer works', one sentence for NO_SUCH_INVITATION and NO_SUCH_JOIN_LINK, JOIN_LINK_DAILY_CAP by its own words in its own fold, open; control: no form", async () => {
   const dead = [
     await open("join", { fragment: { invite: INVITE }, table: plane({ invitelook: { ok: false, code: "NO_SUCH_INVITATION" } }) }),
     await open("join", {}),
@@ -83,6 +83,13 @@ test("R7 a dead link draws 'This link no longer works', one sentence for NO_SUCH
   const cap = await open("join", { fragment: { join: LINKID }, table: plane({ joinlinkinvite: { ok: false, code: "JOIN_LINK_DAILY_CAP" } }) });
   await cap.press("joinlinkinvite", { values: { "jn-cover": "Mai" } });
   has(cap, "screen.join.dead"); has(cap, "refusal.JOIN_LINK_DAILY_CAP"); lacks(cap, "screen.join.dead.what");
+  // the cap drawn as the design draws it: inside its fold, under join.cap.says, open whenever drawn (K3742)
+  const fold = all(cap.tree, (e) => e.tag === "details");
+  assert.equal(fold.length, 1);
+  assert.ok("open" in fold[0].attrs, "the fold is open");
+  assert.equal(all(fold[0], (e) => e.tag === "summary").map((e) => e.children.map((c) => c.text).join(""))[0], said("join.cap.says"));
+  assert.ok(all(fold[0], (e) => /\bcs-gap\b/.test(e.attrs.class || "")).length === 1, "the cap's words in the fold");
+  for (const o of dead) assert.equal(all(o.tree, (e) => e.tag === "details").length, 0, "no fold for a link that is simply dead");
   assert.equal(all(cap.tree, (e) => e.tag === "input").length, 0);
   // an invitation found dead at enrolment draws the same
   const late = await open("join", { fragment: { invite: INVITE }, table: plane({ enroll: { ok: false, code: "NO_SUCH_INVITATION" } }) });
