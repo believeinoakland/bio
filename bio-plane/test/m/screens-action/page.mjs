@@ -8,9 +8,9 @@ import { dirname, join } from "node:path";
 import { SCREENS } from "../../../src/screens-action/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { wordsOf, interfacePage } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, refused, refusedIn, settle, textNodes, MEMBER } from "../interface-shell/harness.mjs";
+import { boot, ok, refused, refusedIn, settle, textNodes, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
 
-export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER, word, hasWord };
+export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER, ADMIN, word, hasWord };
 /** A word read through `setup-words` as a drawn text node holds it (whitespace collapsed): the tests assert keys, never a sentence's text (R19). */
 /** The word as the page carries it for a key (the shell's own rows win over the list's until it reads `word` itself, `interface-shell` R70). */
 export const PAGE = (key) => String(new Map(wordsOf(SCREENS)).get(key)).replace(/\s+/g, " ").trim();
@@ -159,6 +159,11 @@ export const READ = (o = {}) => ({ ok: true, id: FILING, filing: FILING, action:
   fills: [], template: null, disclosure: { machine: false }, notices: [], label: "x", at: "2026-10-09T10:00:00Z", approval: null, second_approval: null, sending: null, ...o });
 export const draft = (o = {}) => ({ filing: FILING, form: "communication", purpose: "request", label: "x", at: "2026-10-09T10:00:00Z",
   approval: null, second_approval: null, second_needed: false, signatories: [], voice: "group", sending: null, ...o });
+/** `stakeatpreparation` as filings R62 answers it: the tier-1 case, a stake of the project's beside the team's. */
+export const STAKE = (o = {}) => ({ ok: true, action: ACTION_ID, higher_stakes: false, governing_tier: 1, group_stake: "Some members rent from landlords the city licenses.",
+  matter_stake: { stake: "Two members live in buildings on the city's list of slow repairs.", set_by: "dev", set_at: "2026-10-09T09:00:00Z", source: "project" },
+  project: PROJECT, ...o });
+export const FUTURE_ACTION = Object.freeze({ ...ACTION, clock: ACTION.clock.map((c) => ({ ...c, date: "2099-10-26" })) });
 export const FILINGS = (drafts = []) => ({ action: ACTION_ID, drafts, drafts_truncated: false, packets: [], packets_truncated: false });
 export const PROFILES = { profiles: [{ id: "p", name: "p", covers: [] }], conflicts: [], choices: [], stage_findings: [],
   view: { deadlines: [
@@ -166,6 +171,15 @@ export const PROFILES = { profiles: [{ id: "p", name: "p", covers: [] }], confli
       extension: { days: 14, citation: "Gov. Code § 7922.535(c)" } },
     { rule: "immediate_disclosure", applies_to: "records_request", units: "days", amount: 3, count: "business", citation: "Mun. Code § 2.20.230" },
     { rule: "meeting_notice", applies_to: "comment", amount: 72, count: "calendar", citation: "Open meetings law" }] } };
+
+/** The test profile's `records_help` block (`jurisdictions` R93, R84: differing in every value from any first profile's). */
+export const RECORDS_HELP = { law: "Testland Records Act", days: 7, extra_days: 9, status: "researched", basis: "TEST",
+  extension_reasons: [{ reason: "the records are kept elsewhere", citation: "TRA § 4(a)" }, { reason: "a very large volume", citation: "TRA § 4(b)" }],
+  portal: { name: "OpenDoor", url: "https://records.testville.example" },
+  faster: { ordinance: "Testville Open Ordinance", window: "two business days", request: "quick request", citation: "TOO § 1" },
+  citations: { answer: "TRA § 1", extend: "TRA § 2", assist: "TRA § 3", segregate: "TRA § 5", refuse_in_writing: "TRA § 6", electronic: "TRA § 7",
+    cost: "TRA § 8", cost_electronic: "TRA § 9", inspect_photograph: "TRA § 10", purpose: "TRA § 11" } };
+export const PROFILES_WITH_HELP = (help = RECORDS_HELP) => ({ ...PROFILES, view: { ...PROFILES.view, name: "Testville", records_help: help } });
 
 export const DETERMINATION = { id: DET, project: PROJECT, act: { id: "EVT-1", event: "The 2024 rent adjustment", actor: { role: "City Administrator", body: "City" }, when: "2024-03-01" },
   outcomes: [{ standard: "STD-1", outcome: "noncompliant" }, { standard: "STD-2", outcome: "compliant" }],
@@ -186,7 +200,7 @@ export const DATA_PLANE = {
   plan: ok(PLAN), planproposals: ok(PROPOSALS), list: ok(PROJECTS), optionstartpreview: ok(PREVIEW),
   projectquestions: ok(PROJECT_QUESTIONS), determinations: ok(DETERMINATIONS),
   action: ok(ACTION), filingsfor: ok(FILINGS([])), actionholdpreview: ok({ target: ACTION_ID, ord: null, hold: null, restarts: [] }),
-  pressurefor: ok(PRESSURE),
+  pressurefor: ok(PRESSURE), stakeatpreparation: ok(STAKE()),
   profiles: ok(PROFILES), determination: ok(DETERMINATION), consequencesof: ok(CONSEQUENCES), escalationstatus: ok(STATUS_OPEN), escalation: ok(ESCALATION),
 };
 export const ROUTES = {

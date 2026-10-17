@@ -12,7 +12,7 @@ import { WORD_ROWS, hasWord, word } from "../../../src/setup-words/index.mjs";
 import { checkScreens, interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
 import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
 import { open, main, crumbs, text, ops, ok, refused, textNodes, wordChecker, servedClasses, MEMBER, DATA_PLANE, ROUTES, PLAN_ID, ACTION_ID, DET, ESC, PROJECT, PLAN, ACTION, DETERMINATION,
-  CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING, W, QUESTION_TITLE, PAGE } from "./page.mjs";
+  CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING, W, QUESTION_TITLE, PAGE, ADMIN, STAKE, FUTURE_ACTION, PROFILES_WITH_HELP, draft } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const REGISTRY = JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substrate/screens/registry.json"), "utf8")).screens;
@@ -49,6 +49,25 @@ test("R1–R6 (interface-shell R21, R38): each screen's acts are exactly its reg
   assert.equal(checkScreens(SCREENS), true);
   // R16, R17: the action screen draws the registry's three acts for the law and the risk
   for (const op of ["actionrisktier", "actionlaws", "actionlawspropose"]) assert.ok(SCREENS.find((s) => s.id === "action").acts.some((a) => a.op === op), op);
+});
+
+test("R20 to R23, R19: the keys each new requirement names are the module's, each one setup-words holds, on the screen that draws it", () => {
+  const words = (id) => new Set(SCREENS.find((s) => s.id === id).words);
+  const NEED = {
+    request: ["screen.request.nooffice", "screen.request.nooffice.admin", "screen.places.name", "screen.places.purpose", "stake.sentwith", "stake.inmatter", "stake.source.project",
+      "stake.source.action", "stake.none", "stake.unreadable"],
+    "start-send": ["stake.sentwith", "stake.inmatter", "stake.source.project", "stake.source.action", "stake.none", "stake.unreadable", "stake.ask.title", "stake.ask.says", "stake.ask.help",
+      "stake.ask.undetermined", "stake.action.label", "stake.action.help", "stake.action.save", "refusal.MACHINE_CANNOT_SET_STAKE", "refusal.STAKE_MALFORMED.action"],
+    "help-records": ["screen.help-records.must.2", "screen.help-records.must.3", "screen.help-records.must.4", "screen.help-records.must.5", "screen.help-records.must.6", "screen.help-records.must.7",
+      "screen.help-records.faster.what", "screen.help-records.sub", "screen.help-records.portal.where", "screen.help-records.notheld"],
+    action: ["action.noreply.title", "action.noreply.says", "action.noreply.question", "action.noreply.question.help", "refusal.ACTION_INQUIRY_NO_QUESTION", "refusal.ACTION_NO_PROJECT",
+      "refusal.MACHINE_CANNOT_OPEN_FROM_ACTION"],
+  };
+  for (const [id, keys] of Object.entries(NEED)) for (const k of keys) {
+    assert.ok(hasWord(k), `${k} is a word of setup-words`);
+    assert.ok(words(id).has(k), `${id} reads ${k}`);
+    assert.ok(SCREEN_WORDS.includes(k), `${k} is in SCREEN_WORDS`);
+  }
 });
 
 test("R19 (setup-words R12, R13): the module holds keys only: SCREEN_WORDS is a list of keys, each one setup-words holds, and each screen's words are keys of it or of the acts' and the shell's", () => {
@@ -107,7 +126,8 @@ const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's c
   "Tenants of the district", "class", "38000 USD", "from the rent schedules", "The repair program", "program", "its trigger was met 5 days ago",
   "no live compliant determination", "not every part addressed", "the records law's ten days", "1", "2", "3", "10", "14", "notification", "Open",
   "12 October 2026", "26 October 2099", "2 October 2026", "3 October 2026", "4 October 2026", "20 October 2026", "30 November 2026", "20 December 2026", "24 October 2026", "1 March 2024",
-  QUESTION_TITLE, "Who signed the closure memo?", "Gov. Code § 7922.535(b)", "Open meetings law", "agent:claude", "claude", "asha", "the office has fought requests before"];
+  QUESTION_TITLE, "Who signed the closure memo?", "Gov. Code § 7922.535(b)", "Open meetings law", "agent:claude", "claude", "asha", "the office has fought requests before",
+  "Some members rent from landlords the city licenses.", "Two members live in buildings on the city's list of slow repairs.", "dev", "9 October 2026", "Testville", "Director of Public Works, Public Works"];
 
 test("R1–R6, R9 (interface-shell R8, R21): the shell serves the six screens: each route draws its screen under its path, from its own source", async () => {
   assert.match(interfacePage(SCREENS), /<script nonce="__CSP_NONCE__">/);
@@ -202,6 +222,13 @@ const CLASS_PLANES = () => {
     [{ ...DATA_PLANE, filingsfor: ok(FILINGS([{ filing: FILING, form: "communication", at: "2026-10-09T10:00:00Z", approval: { approved_by: "member:mai", at: "x", sha: "s" }, second_approval: null, second_needed: false, sending: null }])) },
       [ROUTES.request, `/app/start-send/${ACTION_ID}`]],
     [DATA_PLANE, [`/app/request/${PROJECT}`, `/app/start-send/${ACTION_ID}`]],
+    // T50 (R20 to R23): the states the new requirements draw
+    [{ ...DATA_PLANE, addresseesuggest: ok({ subject: PROJECT, offices: [], suggestion: true }), whoami: ok(ADMIN) }, [`/app/request/${PROJECT}`]],
+    [{ ...DATA_PLANE, addresseesuggest: ok({ subject: PROJECT, offices: [{ addressee: { state: "named", kind: "office", role: "City Clerk", body: "Office of the City Clerk" } }] }) }, [`/app/request/${PROJECT}`]],
+    [{ ...DATA_PLANE, filingsfor: ok(FILINGS([draft()])), stakeatpreparation: ok(STAKE({ higher_stakes: true, governing_tier: "undetermined", matter_stake: { stake: "undetermined", set_by: null, set_at: null, source: "action" } })) },
+      [ROUTES.request, `/app/start-send/${ACTION_ID}`]],
+    [{ ...DATA_PLANE, profiles: ok(PROFILES_WITH_HELP()) }, [ROUTES["help-records"]]],
+    [{ ...DATA_PLANE, action: ok(FUTURE_ACTION) }, [ROUTES.action]],
   ];
 };
 
@@ -246,7 +273,8 @@ test("R14: a section, list or reading that holds nothing is not drawn, and no co
     profiles: ok({ ...PROFILES, view: { deadlines: [] } }),
   };
   const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), planproposals: ok({ plan: PLAN_ID, run: "RUN-1", proposals: [], says: "x" }) };
-  for (const [path, extra] of [[ROUTES.plan, reach], [ROUTES.plan, {}], [ROUTES.action, {}], [ROUTES.matter, {}], [ROUTES["help-records"], {}], [ROUTES.request, {}], [`/app/start-send/${ACTION_ID}`, {}]]) {
+  for (const [path, extra] of [[ROUTES.plan, reach], [ROUTES.plan, {}], [ROUTES.action, {}], [ROUTES.matter, {}], [ROUTES["help-records"], {}], [ROUTES.request, {}], [`/app/start-send/${ACTION_ID}`, {}],
+    [`/app/request/${PROJECT}`, { addresseesuggest: ok({ subject: PROJECT, offices: [], suggestion: true }), whoami: ok(ADMIN) }]]) {
     const p = await open(path, { ...DATA_PLANE, ...empty, ...extra });
     for (const sec of main(p).querySelectorAll("section.cs-section")) {
       const head = (sec.querySelector("h2") || { textContent: "" }).textContent;
