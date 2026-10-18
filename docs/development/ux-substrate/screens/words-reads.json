@@ -43307,6 +43307,42 @@
      "line": 78,
      "text": "paths is a list, each a non-empty list of connections or {hops, quantities}",
      "why": "states the wire's fields or grammar for whoever builds the request (a grammar finding's message, a field's description, a shape check); no screen draws it"
+    },
+    {
+     "file": "bio-plane/src/connection-grammar/conformance.mjs",
+     "line": 110,
+     "text": "two identical calls gave different answers",
+     "why": "ownerConformance's findings: the battery each owner runs over its own fixture in its job; never a member-facing read (B343, CONNECTION-GRAMMAR #5 J2)"
+    },
+    {
+     "file": "bio-plane/src/connection-grammar/conformance.mjs",
+     "line": 116,
+     "text": "an item is answered on two pages",
+     "why": "ownerConformance's findings: the battery each owner runs over its own fixture in its job; never a member-facing read (B343, CONNECTION-GRAMMAR #5 J2)"
+    },
+    {
+     "file": "bio-plane/src/connection-grammar/conformance.mjs",
+     "line": 142,
+     "text": "the other viewer's pages are not the complete set less the fenced item",
+     "why": "ownerConformance's findings: the battery each owner runs over its own fixture in its job; never a member-facing read (B343, CONNECTION-GRAMMAR #5 J2)"
+    },
+    {
+     "file": "bio-plane/src/connection-grammar/conformance.mjs",
+     "line": 157,
+     "text": "an owner of hunch kinds names a hunch and its working inquiry in its fixture",
+     "why": "ownerConformance's findings: the battery each owner runs over its own fixture in its job; never a member-facing read (B343, CONNECTION-GRAMMAR #5 J2)"
+    },
+    {
+     "file": "bio-plane/src/connection-grammar/conformance.mjs",
+     "line": 170,
+     "text": "the fixture's hub node is not answered as a hub",
+     "why": "ownerConformance's findings: the battery each owner runs over its own fixture in its job; never a member-facing read (B343, CONNECTION-GRAMMAR #5 J2)"
+    },
+    {
+     "file": "bio-plane/src/connection-grammar/conformance.mjs",
+     "line": 93,
+     "text": "next repeats a page already read",
+     "why": "ownerConformance's findings: the battery each owner runs over its own fixture in its job; never a member-facing read (B343, CONNECTION-GRAMMAR #5 J2)"
     }
    ],
    "batch": "DEC-260"
@@ -48731,6 +48767,687 @@
    "files": [
     "query.mjs"
    ]
+  },
+  "doctypes": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "doctypes/index.mjs",
+     "line": 48,
+     "text": "the types are already registered here",
+     "why": "registerDoctypes' why, read by the composition root at wiring time; no member sees it (B343, DOCTYPES #5 J5)"
+    },
+    {
+     "file": "doctypes/index.mjs",
+     "line": 58,
+     "text": "every type was already held by this registry",
+     "why": "registerDoctypes' why, read by the composition root at wiring time; no member sees it (B343, DOCTYPES #5 J5)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "court-doctypes": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "court-doctypes/index.mjs",
+     "line": 24,
+     "text": "no register function was given",
+     "why": "registerCourtTypes' wiring why, read by the composing code (B343, COURT-DOCTYPES #2 J2)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "jurisdictions": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1009,
+     "text": "days is a positive integer",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1011,
+     "text": "days is the pre-T33 form of units and amount; give one form, not both",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1013,
+     "text": "amount is a positive integer",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1017,
+     "text": "count is calendar or business",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1018,
+     "text": "count is given with units: days only",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1038,
+     "text": "defends is true, or absent",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1039,
+     "text": "roll is true or false",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1046,
+     "text": "an extension is {days, count, when, citation?}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1089,
+     "text": "defends is true or false",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1090,
+     "text": "evaluates is a list of Tier 2 or 3 kinds",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1095,
+     "text": "a legal organisation evaluates at least one Tier 2 or 3 kind, or defends a group (defends: true)",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1096,
+     "text": "contacts is a non-empty list of {how, value}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1102,
+     "text": "the value is a non-empty string",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1122,
+     "text": "offices is a non-empty list of roles or {venue: <kind>}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1133,
+     "text": "an office is a counterparty role or {venue: <kind>}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1134,
+     "text": "an office is named twice in one entry",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1141,
+     "text": "year is a four-digit year",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1173,
+     "text": "body is a counterparty body of this profile, or * for every body",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1176,
+     "text": "start is the first day, MM-DD",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1194,
+     "text": "rank is a positive integer, 1 the highest",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1207,
+     "text": "jurisdiction is a segment matching ^[a-z0-9][a-z0-9-]*$",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1244,
+     "text": "a stage has a label",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1261,
+     "text": "scheme is a non-empty name",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1270,
+     "text": "systems is a list of origins",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1283,
+     "text": "forms is a non-empty list of patterns",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1284,
+     "text": "a form is a pattern {re, flags?}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1292,
+     "text": "codes is a list of {code, label}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1359,
+     "text": "threshold is {amount, unit}, a positive amount and its unit",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1380,
+     "text": "items is a non-empty list of {route, expect?, citation, after?}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1430,
+     "text": "languages is a non-empty list of language tags",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1434,
+     "text": "a pointer names the page it was read from, by address or citation",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1436,
+     "text": "a pointer's status is researched: it is read on the body's own page",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1500,
+     "text": "ids is a non-empty list of {scheme, id}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1537,
+     "text": "an official translation names the publication it is read from, by address or citation",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1541,
+     "text": "an official translation rests on a measurement of its publication (M-<n> or a dated entry)",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 1653,
+     "text": "combine takes a list of profile ids or profiles",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 286,
+     "text": "a profile is a plain object",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 291,
+     "text": "a profile has a name",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 293,
+     "text": "covers is a non-empty list of names",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 294,
+     "text": "test is true or false",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 299,
+     "text": "every fact names its basis",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 322,
+     "text": "a researched fact rests on a measurement (M-<n> or a dated entry)",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 328,
+     "text": "weekly is a list of {day, open, close}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 359,
+     "text": "a cutoff cites its source",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 364,
+     "text": "outages is a list of {from, to, status, basis}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 367,
+     "text": "an outage is {from, to, status, basis}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 371,
+     "text": "to is an instant with its offset",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 372,
+     "text": "an outage ends after it starts",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 382,
+     "text": "a receipt rule cites the local rule that states it",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 389,
+     "text": "normal is a non-empty list of parts",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 399,
+     "text": "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 404,
+     "text": "a pattern is {re, flags?}: a regular expression that compiles, flags from i and u",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 410,
+     "text": "an entry is an object",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 423,
+     "text": "hosts is a non-empty list of lower-case host names",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 454,
+     "text": "spaces is an object keyed by space",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 498,
+     "text": "the first number is a positive integer",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 513,
+     "text": "a crosswalk names the content hash of its capture",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 521,
+     "text": "a pair is [value in form a, value in form b]",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 541,
+     "text": "vocabulary is an object keyed by vocabulary key",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 584,
+     "text": "separators are the characters between a section number's parts, possibly none",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 660,
+     "text": "stages is a non-empty ordered list of {stage, label, citation}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 729,
+     "text": "a weekend leaves some day open",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 743,
+     "text": "key is an issuer's segment, matching ^[a-z0-9][a-z0-9-]*$",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 758,
+     "text": "a law level is a government's: an entry with a level has sector government or none",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 770,
+     "text": "series.label is how the family's documents name it, non-empty",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 771,
+     "text": "an entry with a series carries its issuer's key",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 780,
+     "text": "a series' cite has a named group number, the item's number as written",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 781,
+     "text": "an edition group is a standard's designation only",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 786,
+     "text": "normal is a series' number's normal form: given with a series",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 803,
+     "text": "id is a non-empty string",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 812,
+     "text": "ids is {office?, body?}, at least one",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 821,
+     "text": "kind is an entity kind",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 822,
+     "text": "ids is a list of {scheme, id}, possibly empty",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 836,
+     "text": "elected is true or false",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 837,
+     "text": "oversight is true or false",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 856,
+     "text": "version is a positive integer",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 859,
+     "text": "notes are text, possibly empty",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 863,
+     "text": "the approver is not the template's author",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 864,
+     "text": "contributors is a list of names",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 866,
+     "text": "reviews is a list of {reviewer, kind, organisation?, credential?, scope, outcome, at}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 869,
+     "text": "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 874,
+     "text": "the reviewer is a non-empty name",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 876,
+     "text": "the scope is non-empty text",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 879,
+     "text": "the organisation is a non-empty name",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 880,
+     "text": "the credential is non-empty text",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 885,
+     "text": "a template rests on the ruling that approved it (K<n>)",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 887,
+     "text": "a Tier 3 kind has no use: file template; a brief may serve it",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 949,
+     "text": "a kind gives its single template or its templates, not both",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 950,
+     "text": "templates is a non-empty list of templates",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 966,
+     "text": "an advisory note is text",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 967,
+     "text": "an advisory note is given only on a Tier 2 kind",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 977,
+     "text": "evidence names the venue's standard in words",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 985,
+     "text": "coattested is true or false",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 988,
+     "text": "accepts lists at least one grade the venue admits",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    },
+    {
+     "file": "jurisdictions/index.mjs",
+     "line": 989,
+     "text": "accepts is a list of {grade, coattested?}",
+     "why": "a profile validator's detail, read by the author of a place's profile data, who fixes the file; no member or installer screen shows it (B343, jurisdictions R10, JURISDICTIONS #14 J3)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "roster-reader": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "roster-reader/lines.mjs",
+     "line": 24,
+     "text": "a an and are as at be by but for from has have he her his i if in is it its\n  of on or our she that the their these they this those to was we were will with your you all any each\n  every no not yes please dear total page pages date name names updated update regular meeting meetings\n  agenda minutes notes note item items vacant reserved pending tbd tba none open position positions\n  office offices division divisions section sections unit units bureau bureaus department departments\n  dept agency agencies program programs programme services service center centre centers team teams\n  branch board boards committee committees commission commissions council councils organization\n  organisation organizations administration management operations group groups area areas district\n  districts foundation inc llc company co corporation association union local hospital school schools\n  college university library police fire works public city county state staff members member roster\n  chart directory contacts contact phone email fax address street avenue suite floor plaza level\n  january february march april may june july august september october november december monday tuesday\n  wednesday thursday friday saturday sunday chair chairs",
+     "why": "recognition vocabulary the roster reader matches against, a word list, not a sentence (B343, ROSTER-READER #3 J2)"
+    },
+    {
+     "file": "roster-reader/lines.mjs",
+     "line": 40,
+     "text": "office division section unit bureau department dept agency program programme\n  services center centre team branch board committee commission council councils administration\n  operations group area district task force",
+     "why": "recognition vocabulary the roster reader matches against, a word list, not a sentence (B343, ROSTER-READER #3 J2)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "file-scanner": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "file-scanner/container/renderer.mjs",
+     "line": 105,
+     "text": "route must be pdf or office",
+     "why": "the renderer's refusal of a route render.mjs never sends; not passed to a member (B343, FILE-SCANNER #7 J4)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "docprofile": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "docprofile/doctypes/registry.mjs",
+     "line": 54,
+     "text": "a content type is registered by its key, and this one carries no key",
+     "why": "registerDoctype's refusal to the plane's wiring (wiring.mjs registerReaders) (B343, DOCPROFILE #6 J1)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "pdf-pixels": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "pdf-worker/src/pagepixels.mjs",
+     "line": 119,
+     "text": "an image past the memory bound",
+     "why": "a codec mapping key, not a sentence (B343, PDF-PIXELS #6 J1)"
+    }
+   ],
+   "batch": "DEC-344"
   }
  }
 }

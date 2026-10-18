@@ -21731,6 +21731,18 @@
    "en": "Civicsmith does not recognize that time zone, so nothing was calculated. Use a standard zone name such as America/Los_Angeles.",
    "protected": false,
    "note": "DEC-342: time zone not recognized"
+  },
+  {
+   "key": "odf-reader.odf.content_xml_with_text_list",
+   "en": "content.xml with text:list xml:id relabeled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
+   "protected": false,
+   "note": "DEC-344: reviewed from code (K3930, B343, SETUP-WORDS #7 J3): American spelling (DEC-221); translator: a builder's provenance note, kept verbatim but for the spelling"
+  },
+  {
+   "key": "roster-reader.org-chart.labelled_line_s_name_a",
+   "en": "{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labeled, {floor} boxes): this document does not lay out an organization's boxes",
+   "protected": false,
+   "note": "DEC-344: reviewed from code (K3930, B343, SETUP-WORDS #7 J3): American spelling (DEC-221); {labelled}, {named}, {min_labels}, {floor} are counts; translator: keep the placeholder names"
   }
  ],
  "rewrite": {
