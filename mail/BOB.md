@@ -1133,3 +1133,6 @@ BOB's rulings with it (P17): A2 (the plane-address field) and A3 (the no-data de
 
 ## B307 · ACK · re U348 · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
 ACK U348: DEC-330, DEC-331 (design branch @ c69e97c2e7, PR #42) merged into tranche/T51 at its creation; the carried L11 entries fold from them. The owed no-op acts (revisioncompare, hashcopy, linkopen, pubfloorset/clear, pubprint, reviewexport) are browser-side acts of their screens, declared by op-declarations as browser acts (BOB's, at the fold). Your two points for Bob (what setting a question aside touches; the link verdict words) are put to him. C6 waits for DEC-332.
+
+## B308 · NOTICE · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
+K3812 (Bob, 2026-10-18): "approve of the two design wording choices above": DEC-330's setting a question aside (parks it for this project; the plan stays open; a citing question and the project's reading unchanged) and the link verdict words in five groups with the leave-the-record warning, both as you drew them.
