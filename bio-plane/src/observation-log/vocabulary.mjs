@@ -56,8 +56,8 @@ export const OBSERVATION_STATE_WORDS = Object.freeze(Object.fromEntries(
 /* The states a look can STORE: `NEVER_LOOKED` is never one (§3, R3). NAMED `_OUTCOMES`
    AND NOT `_STATES` ON PURPOSE: these are observation states (D-129), not a record's
    lifecycle states, which is what a `_STATES` name holds (record-grammar's `STATES`).
-   The name was chosen when `civicos-ui/check-semantics.mjs`, deleted in T20, read every
-   array constant whose name ends in _STATES as lifecycle states. */
+   A checker that reads every array constant whose name ends in _STATES as a lifecycle
+   set would otherwise take these for lifecycle states. */
 export const LEAD_LOOK_OUTCOMES = Object.freeze(["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"]);
 
 /* D-682: the vocabulary `leadRead` and the internet frontier publish — the five states
@@ -258,9 +258,8 @@ export const OBSERVATION_SUBJECT_KINDS = {
  * spelling is then a build error and not a review finding.
  *
  * MEASURED AT THIS ITEM'S SPAWN, not assumed: `grep -a` for the four members
- * over `bio-plane/{src,checks,test}`, `civicos-ui/` and `agent-worker/` returned
- * ZERO hits on `6e88e35`, so REC-93 did not export it and REC-94 is the first
- * lander. CONDUCT folds the landed spelling into `CONTENT-SEARCH-DESIGN.md`
+ * over the product's source, checks and tests returned ZERO hits on `6e88e35`,
+ * so REC-93 did not export it and REC-94 is the first lander. CONDUCT folds the landed spelling into `CONTENT-SEARCH-DESIGN.md`
  * §4.4, `OBSERVATION-LOG-DESIGN.md` §4.2 and `EXTRACTION-BREADTH-DESIGN.md`
  * §5.1 at this integration.
  *
