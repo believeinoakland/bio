@@ -24,3 +24,5 @@
 - `node --test test/m/bundler/release.test.mjs`: 63 pass. `thirdparty.test.mjs`, `bundle`, `deploybindings`, `resolveversion` system tests: 18 pass.
 - `node --test test/system/fleetbundles.test.mjs`: one FAIL line (the marker list above); all other arms pass.
 - process repo: `format.mjs`: 0 failures; `architecture.mjs bundler`: 0 failures; `coverage.mjs bundler`: 37 of 37 live ids named, 0 failures.
+
+Size (session_01X7jKAKCTDrVKXvoacZ8mWN): test runs 14, module lines 3768
