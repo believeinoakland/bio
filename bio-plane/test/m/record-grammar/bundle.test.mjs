@@ -330,3 +330,11 @@ test("R62 negative controls: a SUC id with a slug draws C-1.2; a SUC id under an
   const narrowed = await checkSuccess({}, { knownSchemas: ["consequence@1"] });
   assert.deepEqual(narrowed.findings.map((f) => f.message), ["schema version 'success_record@1' is not known to this check catalog"]);
 });
+
+test("record-grammar.bundle.schema_stamp_form R39 a schema stamp that is not <type>@<n> refuses C-2.5 and names the stamp it read; a well-formed one raises no such finding", async () => {
+  const base = fixtures()["clean information"];
+  const at = (schema) => checkBundle({ ...base, files: new Map([["bundle.md", base.files.get("bundle.md").replace("schema: information@1", `schema: ${schema}`)]]) }, {});
+  const malformed = (r) => r.findings.filter((f) => f.check === "C-2.5" && f.message.includes(`'information1'`));
+  assert.equal(malformed(await at("information1")).length, 1);
+  assert.equal(malformed(await at("information@1")).length, 0);
+});
