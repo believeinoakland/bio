@@ -96,7 +96,7 @@ test("R2 addAlias refuses NO_ENTITY, NO_ALIAS, NO_SUCH_ENTITY, then ALREADY_ALIA
   const b = e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat Doe" }).entity_id;
   assert.equal(e.addAlias({ alias: "x" }).reason, "NO_ENTITY");
   const nr = ENTITY_CHECKS.NO_ALIAS;
-  assert.deepEqual([nr.check, nr.where], ["C-33.25", "src/entities/index.mjs addAlias > is-alias-named"], "this module's own row (copied, T18)");
+  assert.deepEqual([nr.check, nr.where], ["C-33.25", "src/entities/index.mjs noAlias > is-alias-named"], "this module's own row (copied, T18)");
   for (const alias of [undefined, null, "", " \t ", "\n\n"]) {
     const na = e.addAlias({ entityId: a, alias });
     assert.deepEqual([na.ok, na.reason, na.code, na.check, na.translation], [false, "NO_ALIAS", "NO_ALIAS", nr.check, nr.translation],

@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS resolutions (
   raised_from  TEXT,
   resolved_by  TEXT,
   at           TEXT,
+  matched_by   TEXT,
   PRIMARY KEY (capture_sha, ref, entity_id)
 );
 CREATE INDEX IF NOT EXISTS resolutions_entity ON resolutions(entity_id);
@@ -171,6 +172,12 @@ CREATE INDEX IF NOT EXISTS resolution_defects_bundle ON resolution_defects(bundl
    the schema, with its index, and filled once for the rows a store held before it; NULL for testimony (R8). */
 export const BASIS_NORM_COLUMN = Object.freeze(["resolutions", "basis_norm"]);
 export const BASIS_NORM_INDEX = "CREATE INDEX IF NOT EXISTS resolutions_entity_basis ON resolutions(entity_id, basis_norm)";
+
+/* R58 (T51; N1207, DEC-330 A31): how a resolution's grade was reached (`identifier`, `reference`, `reference_key`, `label` or
+   `testimony`), NULL for one held before T51 whose method sentence does not say (migrate fills it from the sentence's
+   tier once, when it adds the column). Added to a store written before it. */
+export const MATCHED_BY_COLUMN = Object.freeze(["resolutions", "matched_by"]);
+export const MATCHED_BY = Object.freeze(["identifier", "reference", "reference_key", "label", "testimony"]);
 
 /* R42 (T33-25): the sector column a store written before T33 lacks; its organisations read 'undetermined'. */
 export const SECTOR_COLUMN = Object.freeze(["entities", "sector"]);

@@ -10,6 +10,9 @@
    one kind (R51); `namingIn` answers R17's candidates for every entity of some kinds over named captures in one read
    (R52). T50 (T50-59): a `body` or `institution` may carry a `forum_kind` (R54), and `aliasesOf` (R55) and `labelsOf`
    (R56) are the in-process reads retrieval and explore make of the registry; R35 now states the `label` column.
+   T51 (T51-30): a resolution says how it was matched (`matched_by`, R58) and `resolutionsFor` answers what the document
+   names (`names`); `onlyByIdentifier` (R57), `subjectsNamed` (R59) and `similarSubjects` (R60) are the reads the graph,
+   Find's subject route and the near-match check make; a naming candidate carries its `page` (R61).
    Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their dispatch), the check
    catalogue (C-91, now `checks.mjs`; the shared act rows and the grade list are `record-grammar`'s, read from there)
    and `schema.mjs` (the four tables, now `schema.mjs` here), with the rows this job applied named at their sites.
@@ -27,11 +30,13 @@ import { MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { registerOwner, BOUNDS, DECLARED_LABEL, LOWEST_GRADE } from "../connection-grammar/index.mjs";
 import { validAt, compare as compareTimes } from "../civil-time/index.mjs";
 import { checkContentExtent, canonicalExtent, describeExtent, CONTENT_EXTENT_DOCUMENT_ONLY } from "../content/index.mjs";
-import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS, BASIS_NORM_COLUMN, BASIS_NORM_INDEX, SECTOR_COLUMN, FORUM_KIND_COLUMN } from "./schema.mjs";
+import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS, BASIS_NORM_COLUMN, BASIS_NORM_INDEX, SECTOR_COLUMN, FORUM_KIND_COLUMN, MATCHED_BY_COLUMN, MATCHED_BY } from "./schema.mjs";
 import { IDSPACE_CHECKS, ENTITY_CHECKS, idspaceRefusal } from "./checks.mjs";
 
 export { IDSPACE_CHECKS, ENTITY_CHECKS, ENTITIES_SCHEMA };
 export { WORD_KEYS } from "./words.mjs";
+/* R58 (T51): the five ways a resolution's grade is reached, `schema.mjs`' list. */
+export { MATCHED_BY };
 /* R50 (K1902 (2)): the one sector list is `jurisdictions`' `SECTORS` (its R64); this module holds no copy and exports
    that same frozen list, so a reader of either name reads one list. */
 export { SECTORS };
@@ -92,6 +97,15 @@ export const ALIASES_LIMIT_DEFAULT = 1000;
 export const ALIASES_LIMIT_MAX = 5000;
 /* R56 (T50; N1086): the most entity ids one `labelsOf` is asked for. */
 export const LABELS_IDS_MAX = 500;
+/* R57 (T51; N1207): the most entity ids one `onlyByIdentifier` is asked for. */
+export const ONLY_BY_IDENTIFIER_IDS_MAX = 500;
+/* R59 (T51; DEC-330 A15): the page of subjects Find's subject route answers. */
+export const SUBJECTS_LIMIT_DEFAULT = 50;
+export const SUBJECTS_LIMIT_MAX = 200;
+/* R60 (T51; DEC-330 A51): the page of near matches, and the fewest characters a fold has for a spelling difference to count. */
+export const SIMILAR_LIMIT_DEFAULT = 10;
+export const SIMILAR_LIMIT_MAX = 50;
+export const SIMILAR_SPELLING_MIN = 6;
 /* R22: the most addresses read per capture to judge its system. */
 export const IDMATCH_ADDRESS_LIMIT = 32;
 /* R8: a withdrawal's stated reason, at most. */
@@ -184,6 +198,15 @@ export function notAProceeding(detail = null, extra = null) {
            translation: row.translation, ...Object.fromEntries(own),
            detail: typeof detail === "string" && detail.trim() ? detail : NOT_A_PROCEEDING_DETAIL };
   /* END DEC-49 REGION is-proceeding-kind */
+}
+
+/* R2, R60 (REC-64/C-33.25): THE ONE ANSWER TO ONE CONDITION, a name that folds to nothing, so `NO_ALIAS` is minted at one
+   site, this module's own row. `detail` is the caller's sentence. Writes nothing and never throws. */
+function noAlias(detail) {
+  /* DEC-49 REGION is-alias-named — REC-64/C-33.25, this module's row; N126: the whole refusal. */
+  const row = ENTITY_CHECKS.NO_ALIAS;
+  return { ok: false, reason: "NO_ALIAS", code: "NO_ALIAS", check: row.check, translation: row.translation, detail };
+  /* END DEC-49 REGION is-alias-named */
 }
 
 /* The label as kept (R1): trimmed, whitespace collapsed, at most 200 characters. */
@@ -285,7 +308,7 @@ const isUninformative = (reach, corpus) => corpus > 1 && reach >= corpus;
    satisfied by one word of the label and one of the reference. `term IN (...)` with a HAVING count, not INTERSECT
    (D-36: a compound SELECT meets an undocumented ceiling near five arms in workerd). `namingPlan` explains THIS text. */
 function refTermsSql(nTerms, gateSql) {
-  return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
+  return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type, rr.pos_kind, rr.pos
             FROM reading_ref_terms t
             JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref AND rr.seq = 0
             LEFT JOIN readings r ON r.capture_sha = t.capture_sha
@@ -295,6 +318,35 @@ function refTermsSql(nTerms, gateSql) {
            ORDER BY t.bundle_id, t.capture_sha, t.ref, t.src
            LIMIT ?`;
 }
+/* R61 (T51; N1236): the page a reader sees (the first page 1) on which a reference sits, from its first place's position
+   (`extraction`'s `reading_refs` `pos_kind` and `pos`: a pdf page is held as an index from 0); null where the reading
+   cannot say, never the whole document and never guessed. */
+function pageOf(posKind, pos) {
+  if (posKind !== "pdf-page" || typeof pos !== "string") return null;
+  try { const p = JSON.parse(pos).page; return Number.isInteger(p) && p >= 0 ? p + 1 : null; } catch { return null; }
+}
+/* R60 (T51): whether two folds differ by one inserted, deleted or replaced character, or one swap of adjacent characters. */
+function oneEdit(a, b) {
+  if (a === b || Math.abs(a.length - b.length) > 1) return false;
+  if (a.length === b.length) {
+    const at = []; for (let i = 0; i < a.length && at.length < 3; i++) if (a[i] !== b[i]) at.push(i);
+    return at.length === 1 || (at.length === 2 && at[1] === at[0] + 1 && a[at[0]] === b[at[1]] && a[at[1]] === b[at[0]]);
+  }
+  const [s, l] = a.length < b.length ? [a, b] : [b, a];
+  let i = 0; while (i < s.length && s[i] === l[i]) i++;
+  return s.slice(i) === l.slice(i + 1);
+}
+/* R60: the closeness of one name to another by their folds: `same`, `contains` or `spelling`, else null. */
+const CLOSENESS = Object.freeze(["same", "contains", "spelling"]);
+function closeness(nameFold, nameTerms, otherFold, otherTerms) {
+  if (!nameFold || !otherFold) return null;
+  if (nameFold === otherFold) return "same";
+  const [short, long] = nameTerms.length <= otherTerms.length ? [nameTerms, otherTerms] : [otherTerms, nameTerms];
+  if (short.length >= 2 && short.every((t) => long.includes(t))) return "contains";
+  if (nameFold.length >= SIMILAR_SPELLING_MIN && otherFold.length >= SIMILAR_SPELLING_MIN && oneEdit(nameFold, otherFold)) return "spelling";
+  return null;
+}
+
 /* REC-77: how many references an alias reaches per source — the lookup itself wrapped and counted, never a twin. */
 const refReachSql = (nTerms, gateSql) => `SELECT src, COUNT(*) AS n FROM (${refTermsSql(nTerms, gateSql)}) GROUP BY src`;
 
@@ -379,6 +431,18 @@ export class Entities {
                        normAlias(r.basis) || null, r.capture_sha, r.ref, r.entity_id);
     }
     this.#sql.exec(BASIS_NORM_INDEX);
+    /* R58: how each resolution was matched, filled once for a store written before it from the tier its method sentence
+       names (the sentences `recogniseTier`, `#identifierHits` and `testify` write); a sentence of none of them stays null. */
+    const [mt, mc] = MATCHED_BY_COLUMN;
+    if (!this.#cols(mt).includes(mc)) {
+      this.#sql.exec(`ALTER TABLE ${mt} ADD COLUMN ${mc} TEXT`);
+      this.#sql.exec(`UPDATE ${mt} SET ${mc} = CASE
+          WHEN method LIKE 'scheme identifier --%' THEN 'identifier'
+          WHEN method LIKE 'source identifier in content --%' THEN 'reference_key'
+          WHEN method LIKE 'source identifier --%' THEN 'reference'
+          WHEN method LIKE 'correspondence --%' THEN 'label'
+          WHEN method LIKE 'testimony --%' THEN 'testimony' END`);
+    }
     this.declareTables();
   }
 
@@ -551,15 +615,10 @@ export class Entities {
   addAlias({ entityId, alias, declaredBy = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an alias is attached to an entity by its id");
-    /* DEC-49 REGION is-alias-named — REC-64/C-33.25, this module's row; N126: the whole refusal. */
     const norm = normAlias(alias);
-    if (!norm) {
-      const row = ENTITY_CHECKS.NO_ALIAS;
-      return { ok: false, reason: "NO_ALIAS", code: "NO_ALIAS", check: row.check, translation: row.translation,
-               detail: "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so "
-                 + "there is nothing a document could be matched by. Nothing was written." };
-    }
-    /* END DEC-49 REGION is-alias-named */
+    if (!norm)
+      return noAlias("an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so "
+        + "there is nothing a document could be matched by. Nothing was written.");
     if (!this.has(entityId)) return noSuchEntity(entityId);
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
     if (dup) return { ok: false, reason: "ALREADY_ALIASED", entity_id: entityId, alias: dup.alias,
@@ -756,6 +815,132 @@ export class Entities {
       }
       const labels = Object.fromEntries(ids.filter((id) => typeof id === "string").map((id) => [id, found.get(id) ?? null]));
       return { ok: true, labels, count: Object.keys(labels).length };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+    }
+  }
+
+  /** R57 (T51; N1207, K3665, DEC-308 (3); `op=entityidonly`): for at most 500 entity ids, how many documents name each
+   *  only by an identifier, `[{entity_id, documents}]`, so the graph's unnamed node draws its sentence with the count. A
+   *  capture counts for an entity when the viewer may see it (R32), one of its resolutions to the entity was matched by
+   *  `identifier` (R58) and none by `reference`, `reference_key` or `label`; testimony neither counts nor disqualifies, a
+   *  resolution held before `matched_by` (null) is neither, and a capture counts once. Reads only the resolutions held.
+   *  `NO_ENTITY` for no ids, `TOO_MANY_IDS` beyond 500; a viewer `membership` does not recognise is answered every one 0.
+   *  Writes nothing and never throws. */
+  onlyByIdentifier({ ids, viewer } = {}) {
+    try {
+      const asked = Array.isArray(ids) ? [...new Set(ids.filter((id) => typeof id === "string" && id))] : [];
+      if (!asked.length) return noEntity("the documents naming a subject only by an identifier are counted for entity ids, a list of them");
+      if (ids.length > ONLY_BY_IDENTIFIER_IDS_MAX)
+        return { ok: false, reason: "TOO_MANY_IDS", count: ids.length, max: ONLY_BY_IDENTIFIER_IDS_MAX,
+                 detail: `documents are counted for at most ${ONLY_BY_IDENTIFIER_IDS_MAX} entity ids at once; ${ids.length} were named. Nothing was read.` };
+      const deny = viewerPredicate(viewer).scope === "DENY";
+      const g = this.#gate("r.bundle_id", viewer), x = this.#gate("x.bundle_id", viewer);
+      const entities = asked.map((entityId) => ({ entity_id: entityId, documents: deny ? 0 : Number(this.#one(
+        `SELECT COUNT(DISTINCT r.capture_sha) AS n FROM resolutions r
+          WHERE r.entity_id=? AND r.matched_by='identifier' AND (${g.sql})
+            AND NOT EXISTS (SELECT 1 FROM resolutions x WHERE x.capture_sha = r.capture_sha AND x.entity_id = r.entity_id
+                              AND x.matched_by IN ('reference','reference_key','label') AND (${x.sql}))`,
+        entityId, ...g.args, ...x.args).n) }));
+      return { ok: true, entities, count: entities.length };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: `the resolutions could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+    }
+  }
+
+  /** R59 (T51; DEC-330 A15; `op=subjectsnamed`): Find's subjects route, answered apart from the text and passage routes:
+   *  the registered entities of the given `kinds` (any kind when none is given) whose label or a standing alias carries every
+   *  term of `q` (R17's fold and term bounds), each `{entity_id, kind, label, note, matched, documents}`, `matched` the label
+   *  or alias that carried the terms and `documents` the distinct captures the viewer may see resolving to the entity.
+   *  `count` is the whole number of subjects matching; the page is `limit` (1-200, default 50) after `after` (the previous
+   *  `next`), ordered by label fold then entity id, never ranked. `NO_QUERY` for a `q` that folds to no term; a kind is
+   *  refused as R51 refuses it; a viewer `membership` does not recognise answers `count: 0`. The registry is read whole
+   *  (it is the group's, a few thousand rows at most) because no index serves a term test over names. Writes nothing and
+   *  never throws. */
+  subjectsNamed({ q, kinds = null, limit = null, after = null, viewer } = {}) {
+    try {
+      const terms = typeof q === "string" ? labelTerms(q) : [];
+      if (!terms.length) return { ok: false, reason: "NO_QUERY",
+        detail: "a subject is looked for by words of its name, and the query given folds to none. Nothing was read." };
+      const asked = Array.isArray(kinds) ? kinds : kinds == null || kinds === "" ? [] : [kinds];
+      const want = asked.length ? this.#kindsWanted(asked) : [...ENTITY_KINDS];
+      if (!Array.isArray(want)) return want;
+      const n = Number(limit);
+      const cap = limit == null || limit === "" || !Number.isFinite(n) ? SUBJECTS_LIMIT_DEFAULT : Math.max(1, Math.min(Math.trunc(n), SUBJECTS_LIMIT_MAX));
+      const empty = { ok: true, q, kinds: want, subjects: [], count: 0, limit: cap, truncated: false, next: null };
+      if (viewerPredicate(viewer).scope === "DENY") return empty;
+      const carries = (name) => { const have = labelTerms(name); return terms.every((t) => have.includes(t)); };
+      const marks = want.map(() => "?").join(",");
+      const aliasOf = new Map();
+      for (const a of this.#rows(`SELECT a.entity_id, a.alias FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
+                                   WHERE e.kind IN (${marks}) AND a.withdrawn_at IS NULL ORDER BY a.entity_id, a.alias_norm`, ...want)) {
+        if (!aliasOf.has(a.entity_id)) aliasOf.set(a.entity_id, []);
+        aliasOf.get(a.entity_id).push(a.alias);
+      }
+      const hits = [];
+      for (const e of this.#rows(`SELECT entity_id, kind, label, note FROM entities WHERE kind IN (${marks})`, ...want)) {
+        const matched = carries(e.label) ? e.label : (aliasOf.get(e.entity_id) || []).find(carries);
+        if (matched !== undefined) hits.push({ ...e, matched, fold: normAlias(e.label) });
+      }
+      hits.sort((x, y) => (x.fold < y.fold ? -1 : x.fold > y.fold ? 1 : x.entity_id < y.entity_id ? -1 : x.entity_id > y.entity_id ? 1 : 0));
+      const cursor = typeof after === "string" ? after : "";
+      const bar = cursor.lastIndexOf("|");
+      const [afterFold, afterId] = bar === -1 ? [cursor, ""] : [cursor.slice(0, bar), cursor.slice(bar + 1)];
+      const rest = cursor ? hits.filter((h) => h.fold > afterFold || (h.fold === afterFold && h.entity_id > afterId)) : hits;
+      const truncated = rest.length > cap;
+      const page = truncated ? rest.slice(0, cap) : rest;
+      const g = this.#gate("r.bundle_id", viewer);
+      const subjects = page.map((h) => ({ entity_id: h.entity_id, kind: h.kind, label: h.label, note: h.note, matched: h.matched,
+        documents: Number(this.#one(`SELECT COUNT(DISTINCT r.capture_sha) AS n FROM resolutions r WHERE r.entity_id=? AND (${g.sql})`,
+                                    h.entity_id, ...g.args).n) }));
+      const last = page[page.length - 1];
+      return { ...empty, subjects, count: hits.length, truncated, next: truncated ? `${last.fold}|${last.entity_id}` : null };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+    }
+  }
+
+  /** R60 (T51; DEC-330 A51; `op=entitysimilar`): the near-match check made before `createEntity`: the registered entities
+   *  of any kind (`kind` narrows) whose label or a standing alias is close to `name`, each `{entity_id, kind, label, note,
+   *  alias, closeness}`, `alias` the name that is close and `closeness` `same` (equal folds), `contains` (the distinct
+   *  terms of one name include all those of the other, the shorter having two or more) or `spelling` (folds of six or more
+   *  characters one edit apart), a fact and no score. The entity's closest name is the one reported. Ordered `same`,
+   *  `contains`, `spelling`, then label fold, then entity id; `limit` 1-50 (default 10), `truncated` by reading one past.
+   *  `NO_ALIAS` for a name that folds to nothing (R2's); a kind is refused as R51 refuses it; a viewer `membership` does not
+   *  recognise answers none. Refuses nothing else: whether to register is the member's. Writes nothing and never throws. */
+  similarSubjects({ name, kind = null, limit = null, viewer } = {}) {
+    try {
+      const fold = normAlias(name);
+      if (!fold) return noAlias("a near match is looked for by a name, and the one given folds to nothing (it is empty, or only whitespace). Nothing was read.");
+      const want = kind == null || kind === "" ? [...ENTITY_KINDS] : this.#kindsWanted([kind]);
+      if (!Array.isArray(want)) return want;
+      const n = Number(limit);
+      const cap = limit == null || limit === "" || !Number.isFinite(n) ? SIMILAR_LIMIT_DEFAULT : Math.max(1, Math.min(Math.trunc(n), SIMILAR_LIMIT_MAX));
+      const empty = { ok: true, name: cleanLabel(name), kinds: want, similar: [], count: 0, limit: cap, truncated: false };
+      if (viewerPredicate(viewer).scope === "DENY") return empty;
+      const terms = labelTerms(name);
+      const marks = want.map(() => "?").join(",");
+      const aliasOf = new Map();
+      for (const a of this.#rows(`SELECT a.entity_id, a.alias FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
+                                   WHERE e.kind IN (${marks}) AND a.withdrawn_at IS NULL ORDER BY a.entity_id, a.alias_norm`, ...want)) {
+        if (!aliasOf.has(a.entity_id)) aliasOf.set(a.entity_id, []);
+        aliasOf.get(a.entity_id).push(a.alias);
+      }
+      const found = [];
+      for (const e of this.#rows(`SELECT entity_id, kind, label, note FROM entities WHERE kind IN (${marks})`, ...want)) {
+        let best = null;
+        for (const other of [e.label, ...(aliasOf.get(e.entity_id) || [])]) {
+          const c = closeness(fold, terms, normAlias(other), labelTerms(other));
+          if (c && (best === null || CLOSENESS.indexOf(c) < CLOSENESS.indexOf(best.closeness))) best = { alias: other, closeness: c };
+        }
+        if (best) found.push({ entity_id: e.entity_id, kind: e.kind, label: e.label, note: e.note, alias: best.alias, closeness: best.closeness });
+      }
+      const byLabel = (x, y) => { const a = normAlias(x.label), b = normAlias(y.label); return a < b ? -1 : a > b ? 1 : 0; };
+      found.sort((x, y) => (CLOSENESS.indexOf(x.closeness) - CLOSENESS.indexOf(y.closeness)) || byLabel(x, y)
+                           || (x.entity_id < y.entity_id ? -1 : x.entity_id > y.entity_id ? 1 : 0));
+      const truncated = found.length > cap;
+      const similar = truncated ? found.slice(0, cap) : found;
+      return { ...empty, similar, count: similar.length, truncated };
     } catch (err) {
       return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
     }
@@ -1241,27 +1426,30 @@ export class Entities {
   /* R10: the improvable-grade rule, inside the caller's transaction. A stronger grade raises in place
      (`raised_from`); an equal or weaker one is kept; a grade never falls. R13: each insert or raise runs the
      `onResolved` listeners. */
-  #upsert({ captureSha, bundleId, ref, entityId, grade, method, basis, resolvedBy }) {
+  #upsert({ captureSha, bundleId, ref, entityId, grade, method, basis, resolvedBy, matchedBy }) {
     const at = this.#now();
     const est = isEstablished(grade) ? 1 : 0;
     const b = basis == null ? null : String(basis).slice(0, 400);
     /* R39: the fold of the matched string, for a machine resolution only (testimony matched no name, R8). */
     const bn = grade === "D" || b == null ? null : normAlias(b) || null;
     const by = resolvedBy == null ? null : String(resolvedBy).slice(0, 200);
-    const existing = this.#one(`SELECT grade FROM resolutions WHERE capture_sha=? AND ref=? AND entity_id=?`, captureSha, ref, entityId);
+    const existing = this.#one(`SELECT grade, matched_by FROM resolutions WHERE capture_sha=? AND ref=? AND entity_id=?`, captureSha, ref, entityId);
     if (existing && !(gradeRank[grade] > (gradeRank[existing.grade] || 0)))
       return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade: existing.grade,
+               matched_by: existing.matched_by ?? null,
                established: isEstablished(existing.grade), needs_confirmation: existing.grade === "C", raised: false, kept: true };
+    /* R58: how the grade was reached travels with the resolution; a raise takes the stronger resolution's. */
+    const mb = MATCHED_BY.includes(matchedBy) ? matchedBy : null;
     if (!existing)
-      this.#sql.exec(`INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,basis_norm,established,raised_from,resolved_by,at)
-                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`, captureSha, bundleId, ref, entityId, grade, method, b, bn, est, null, by, at);
+      this.#sql.exec(`INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,basis_norm,established,raised_from,resolved_by,at,matched_by)
+                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, captureSha, bundleId, ref, entityId, grade, method, b, bn, est, null, by, at, mb);
     else
-      this.#sql.exec(`UPDATE resolutions SET grade=?, method=?, basis=?, basis_norm=?, established=?, raised_from=?, resolved_by=?, at=?
+      this.#sql.exec(`UPDATE resolutions SET grade=?, method=?, basis=?, basis_norm=?, established=?, raised_from=?, resolved_by=?, at=?, matched_by=?
                        WHERE capture_sha=? AND ref=? AND entity_id=?`,
-                     grade, method, b, bn, est, existing.grade, by, at, captureSha, ref, entityId);
+                     grade, method, b, bn, est, existing.grade, by, at, mb, captureSha, ref, entityId);
     const raised = !!existing;
     for (const l of this.#onResolved) l.fn({ entityId, captureSha, ref, grade, raised });
-    return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade, method, basis: b,
+    return { capture_sha: captureSha, bundle_id: bundleId, ref, entity_id: entityId, grade, method, basis: b, matched_by: mb,
              established: !!est, needs_confirmation: grade === "C", raised,
              ...(raised ? { raised_from: existing.grade } : {}), resolved_by: by, at };
   }
@@ -1300,7 +1488,8 @@ export class Entities {
         const matches = tier.hits.map((entityId) => {
           const own = tier.per && tier.per.get(entityId);
           return this.#upsert({ captureSha: rr.capture_sha, bundleId: rr.bundle_id, ref: rr.ref, entityId, grade: tier.grade,
-                                method: own ? own.method : tier.method, basis: own ? own.basis : tier.basis, resolvedBy });
+                                method: own ? own.method : tier.method, basis: own ? own.basis : tier.basis, resolvedBy,
+                                matchedBy: own ? "identifier" : tier.grade === "A" ? "reference" : tier.grade === "B" ? "reference_key" : "label" });
         });
         /* REC-95 (R13): one attempt per reference, matched or not, in the same transaction; what was tried is the
            row's own fields, the recogniser's cascade order. */
@@ -1335,7 +1524,7 @@ export class Entities {
     /* D-219: what grade D lacks is a captured DOCUMENT, not a basis. */
     const method = `testimony -- asserted by ${resolvedBy || "a member"} on the member's stated basis, with no captured document (framework 8.1 grade D)`;
     const m = this.#record.transact(() => this.#upsert({
-      captureSha, bundleId: rr.bundle_id, ref, entityId, grade: "D", method, basis: b, resolvedBy }));
+      captureSha, bundleId: rr.bundle_id, ref, entityId, grade: "D", method, basis: b, resolvedBy, matchedBy: "testimony" }));
     return { ok: true, grade_declared: "D", ...m };
   }
 
@@ -1458,12 +1647,13 @@ export class Entities {
   #clamp(limit) { return Math.max(1, Math.min(Number(limit) || MEANING_LIMIT_DEFAULT, MEANING_LIMIT_MAX)); }
 
   /** R14: a capture's resolutions, ordered by reference then entity, bounded, `truncated` measured by reading one
-   *  more; R32's withholding; R8's `withdrawn_name`; R38's reports beside each. */
+   *  more; R32's withholding; R8's `withdrawn_name`; R38's reports beside each; R58's `matched_by` on each and `names`,
+   *  what the document names, one entry per entity its resolutions name. */
   resolutionsFor({ captureSha, limit = null, viewer = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return noSha("resolutions are read for a captured document, by its capture sha256");
     const cap = this.#clamp(limit);
-    const scan = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
+    const scan = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at, matched_by
                     FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`;
     const rows = this.#rows(scan, captureSha, cap + 1);
     const truncated = rows.length > cap;
@@ -1471,15 +1661,43 @@ export class Entities {
     const keep = this.#redactor(viewer);
     const withdrawn = this.#withdrawnNames(page.map((r) => r.entity_id));
     const defects = this.#defectsOf(scan, [captureSha, cap], keep);
+    const names = this.#namesOf(captureSha, cap);
     return { ok: true, capture_sha: captureSha, count: page.length, limit: cap, truncated,
+             names: names.names, names_truncated: names.truncated,
              resolutions: page.map((r) => {
                const bundle = keep(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
                return { capture_sha: r.capture_sha, bundle_id: bundle, ref: r.ref, entity_id: r.entity_id,
-                        grade: r.grade, established: !!r.established, needs_confirmation: r.grade === "C",
+                        grade: r.grade, matched_by: r.matched_by ?? null, established: !!r.established, needs_confirmation: r.grade === "C",
                         method: hidden && r.grade === "D" ? Entities.#TESTIMONY_WITHHELD : r.method, basis: r.basis,
                         raised_from: r.raised_from, resolved_by: hidden ? null : r.resolved_by, at: r.at,
                         withdrawn_name: Entities.#restsOn(withdrawn, r), ...Entities.#defectsFor(defects, r) };
              }) };
+  }
+
+  /* R58: what a capture names, one entry per entity its resolutions name: the strongest resolution's grade and
+     `matched_by` (a tie at one grade takes the way a name is least in doubt, `MATCHED_BY`'s order), `mentions` the distinct
+     references resolving to the entity, `label` and `kind` as R56 reads them (`null` when the entity holds none), strongest
+     grade first, then label fold, then entity id; at most `cap`, `truncated` when more remain. One read of the capture's
+     resolutions with the registry joined in. */
+  #namesOf(captureSha, cap) {
+    const by = new Map();
+    for (const r of this.#rows(`SELECT r.entity_id, r.ref, r.grade, r.matched_by, e.kind, e.label
+                                  FROM resolutions r LEFT JOIN entities e ON e.entity_id = r.entity_id
+                                 WHERE r.capture_sha=? ORDER BY r.entity_id, r.ref`, captureSha)) {
+      let n = by.get(r.entity_id);
+      if (!n) by.set(r.entity_id, n = { entity_id: r.entity_id, label: r.label ?? null, kind: r.kind ?? null,
+                                        grade: r.grade, matched_by: r.matched_by ?? null, refs: new Set() });
+      n.refs.add(r.ref);
+      const stronger = (gradeRank[r.grade] || 0) - (gradeRank[n.grade] || 0);
+      const rank = (m) => { const i = MATCHED_BY.indexOf(m); return i === -1 ? MATCHED_BY.length : i; };
+      if (stronger > 0 || (stronger === 0 && rank(r.matched_by) < rank(n.matched_by))) { n.grade = r.grade; n.matched_by = r.matched_by ?? null; }
+    }
+    const fold = (n) => (n.label == null ? null : normAlias(n.label));
+    const all = [...by.values()].sort((x, y) => ((gradeRank[y.grade] || 0) - (gradeRank[x.grade] || 0))
+      || ((fold(x) === null) - (fold(y) === null)) || (fold(x) < fold(y) ? -1 : fold(x) > fold(y) ? 1 : 0)
+      || (x.entity_id < y.entity_id ? -1 : x.entity_id > y.entity_id ? 1 : 0));
+    return { truncated: all.length > cap, names: all.slice(0, cap).map((n) => ({ entity_id: n.entity_id, label: n.label, kind: n.kind,
+      grade: n.grade, established: isEstablished(n.grade), needs_confirmation: n.grade === "C", matched_by: n.matched_by, mentions: n.refs.size })) };
   }
 
   /* R15, R16: the per-capture collapse, keeping each capture's strongest resolution. It joins on entity_id ONLY:
@@ -1622,7 +1840,7 @@ export class Entities {
                                                                              : "entities.text.labels_reference");
         const cand = {
           capture_sha: r.capture_sha, bundle_id: r.bundle_id, ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label,
-          content_type: r.content_type, matched_alias: a.alias, canonical_name: !!a.canonical,
+          content_type: r.content_type, page: pageOf(r.pos_kind, r.pos), matched_alias: a.alias, canonical_name: !!a.canonical,
           correspondence, matched_on: r.src, selectivity, grade_if_resolved: gradeIf,
           detail: (whole
             ? `this document's reading ${where} '${srcText}', which is this subject's name '${a.alias}'`
@@ -1673,7 +1891,7 @@ export class Entities {
     const gate = this.#gate("t.bundle_id", viewer);
     /* THE ONE READ: every term row of the named captures the viewer may see, with its reference's first place. */
     const terms = this.#rows(`SELECT t.capture_sha, t.ref, t.src, t.term, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label,
-                                     r.content_type, rr.ref IS NOT NULL AS placed
+                                     r.content_type, rr.pos_kind, rr.pos, rr.ref IS NOT NULL AS placed
                                 FROM reading_ref_terms t
                                 LEFT JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref AND rr.seq = 0
                                 LEFT JOIN readings r ON r.capture_sha = t.capture_sha
@@ -1693,7 +1911,8 @@ export class Entities {
     for (const g of all) corpus.set(g.row.src, (corpus.get(g.row.src) || 0) + 1);
     const matching = (ts) => all.filter((g) => ts.every((x) => g.terms.has(x)));
     const shape = (g) => ({ capture_sha: g.row.capture_sha, ref: g.row.ref, src: g.row.src, bundle_id: g.row.bundle_id,
-                            ref_kind: g.row.ref_kind, ref_key: g.row.ref_key, label: g.row.label, content_type: g.row.content_type });
+                            ref_kind: g.row.ref_kind, ref_key: g.row.ref_key, label: g.row.label, content_type: g.row.content_type,
+                            pos_kind: g.row.pos_kind, pos: g.row.pos });
     const source = {
       matches: (ts) => matching(ts).filter((g) => g.row.placed).map(shape),
       reach: (ts) => { const m = new Map(); for (const g of matching(ts).filter((x) => x.row.placed)) m.set(g.row.src, (m.get(g.row.src) || 0) + 1); return m; },
@@ -1868,6 +2087,13 @@ export function entitiesOps(e, url, body) {
     /* R54 (T50): `forum_kind`, one value or a comma-separated list, filters to the entities carrying one of them. */
     entitieskind: () => e.entitiesOfKind({ kind: q("kind"), limit: q("limit"), after: q("after"), viewer: q("viewer"),
                                            forum_kind: (q("forum_kind") || "").split(",").map((v) => v.trim()).filter(Boolean) }),
+    /* R57 (T51): `ids`, a comma-separated list of entity ids. */
+    entityidonly: () => e.onlyByIdentifier({ ids: (q("ids") || "").split(",").map((v) => v.trim()).filter(Boolean), viewer: q("viewer") }),
+    /* R59 (T51): Find's subject route; `kinds`, a comma-separated list, narrows it. */
+    subjectsnamed: () => e.subjectsNamed({ q: q("q"), kinds: (q("kinds") || "").split(",").map((v) => v.trim()).filter(Boolean),
+                                           limit: q("limit"), after: q("after"), viewer: q("viewer") }),
+    /* R60 (T51): the near-match check made before `entitycreate`. */
+    entitysimilar: () => e.similarSubjects({ name: q("name"), kind: q("kind"), limit: q("limit"), viewer: q("viewer") }),
     relation: () => e.readRelation({ relationId: q("id") }),
     resolutions: () => e.resolutionsFor({ captureSha: q("sha256"), limit: q("limit"), viewer: q("viewer") }),
     concerns: () => e.concerns({ entityId: q("id"), limit: q("limit"), viewer: q("viewer") }),
