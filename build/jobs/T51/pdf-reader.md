@@ -20,4 +20,4 @@
 - `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage shows no pdf-reader failure (39 of 39 ids named; the 6 failures listed are other modules' own not-yet-met ids); channels 0 failures.
 - `node checks/ownership.mjs /home/user/bio pdf-reader tranche/T51 job/T51/pdf-reader`: 4 files changed; 0 failures.
 
-Size (session_01KswWpSMer2zv2tpsG99AC5): test runs 9, module lines 3253
+Size (session_01KswWpSMer2zv2tpsG99AC5): test runs 9, module lines 3247
