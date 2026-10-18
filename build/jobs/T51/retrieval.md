@@ -46,3 +46,5 @@ Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942
 ## J3 · COMPLETE
 
 B4 applied: merged tranche/T51, findin.mjs is a one-line re-export of retrieval-browse's findin (the R90 no-copy test now asserts exactly that). retrieval tests plus citation recorded.test.mjs: 179 pass, 0 fail. Architecture, format, coverage (79/79) and ownership: 0 failures. Source 2,942 lines. Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942
+
+Ringing BOB for J3 failed (its session session_01SWiZCAUEHumgaPPppY3QhQ is archived: triggers bind only to active or paused sessions); J3 is pushed, and is the message for BOB's backstop (mechanics §13).
