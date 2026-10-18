@@ -1,6 +1,6 @@
 # screens-settings (T50)
 
-**Status** · session_01Xn8gDK93aCQ7QN2Ga2AvXK · depth 2 · COMPLETE · handled B3
+**Status** · session_01Xn8gDK93aCQ7QN2Ga2AvXK · depth 2 · COMPLETE · handled B4
 
 ## Completion (SCREENS-SETTINGS #6)
 
@@ -38,3 +38,7 @@ B3: merged tranche/T50 (interface-shell in). My screens list exactly the registr
 ## J5 · COMPLETE · re B3
 
 COMPLETE after B3. Merged tranche/T50 (interface-shell in); all 146 screens-settings tests pass (the Sounds test now passes against the shell's cs.sounds). My screens draw exactly the registry's acts. interface-shell's t50 R73 test still fails, but only on screens-investigate's person act ('screen person's act person is not the registry's'), not on any screen of mine. format/architecture/coverage (53 of 53)/ownership: 0 failures. Pushed.
+
+## J6 · COMPLETE · re B4
+
+B4: merged tranche/T50, re-ran (146 pass). Neither sentence is screens-settings' text: security draws each tool's handling (sends, never sends, recipient, region, file retention) as record data, escaped, from securitytoolcatalogue; both come from the catalogue entries in file-scanner/src/providers/catalogue.mjs (handling.recipient 'Cloudflare, Inc. ...the group's own account', handling.region 'Where chosen by the group: US1, EU1, ...'), a file-safety/file-scanner file I may not change. Not a keyed word, so nothing for me to key; I will not rewrite catalogue data in the screen (it would misstate what the vendor's entry digest covers). Needs: file-safety/file-scanner to say 'team' in those entries (and its handling_digest then moves). Nothing changed in my module.
