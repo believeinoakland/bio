@@ -46,3 +46,11 @@ Merged `tranche/T51` (not rebased). `COVER_REFUSALS` now reads `word("refusal.<C
 Checks after the change: `node --test bio-plane/test/m/image-cover/` 16 pass, 0 fail; `checks/words.mjs image-cover` 0 failures (inline 0, plain 0, unkeyed 12); `bio-plane/src/setup-words/build.mjs --check` matches; coverage 9 of 9; architecture 0; format 0.
 
 Size (session_01CSjPbRFbq35fHhD3md1yuV): test runs 2, module lines 1288
+
+## J2 · COMPLETE
+
+CHANGE B2 (K3970, DEC-344) is done. Merged `tranche/T51` (no rebase). `COVER_REFUSALS` now reads `word("refusal.<CODE>")` for `NOT_A_COVERABLE_FORMAT`, `UNSUPPORTED_JPEG_PROCESS`, `PNG_INTERLACED` and `AREA_MALFORMED`; no member English is left in the module. A new R3 words test compares each code with `word()`, never with a sentence.
+
+Checks: `node --test bio-plane/test/m/image-cover/` 16 pass, 0 fail; `checks/words.mjs image-cover` 0 failures; `bio-plane/src/setup-words/build.mjs --check` matches; coverage 9 of 9; architecture and format 0 failures; ownership 3 files, 0 failures.
+
+Size (session_01CSjPbRFbq35fHhD3md1yuV): test runs 2, module lines 1288
