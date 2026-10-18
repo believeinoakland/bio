@@ -1,7 +1,7 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R37). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R37; T51 adds R35 `projectInvitations`, R36 the list's cursor, R37 `member_id` on requests). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `said`); T47 (R26) lists the
@@ -908,7 +908,7 @@ export class ProjectRoster {
       const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : viewerPredicate(viewer).member;
       if (!me || !this.#activeMemberRow(me)) return empty;
       const cursor = typeof after === "string" && after !== "" ? after : null;
-      /* `invited_by` is read beside the contract's columns (membership R120 lacks it: asked of BOB, J1). */
+      /* `invited_by` is part of membership's read contract (its R120, amended T51, K3838); read here and nowhere else. */
       const rows = this.#rows(
         `SELECT p.project_id AS id, p.created AS at, p.invited_by AS by_id, i.member_id AS inviter, i.handle AS inviter_handle
            FROM project_participants p JOIN bundles b ON b.bundle_id = p.project_id AND b.object_type = 'project'
