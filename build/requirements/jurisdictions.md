@@ -86,6 +86,7 @@ Holds the jurisdiction profiles: every local fact the product uses, as data, eac
 ### Uses
 
 - `record-grammar`: `BASIS_GRADES` (its R16), for R39 (K585 (4), K624 (6); the module is formed first in T18's layer 1, and R39 is built after it merges).
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

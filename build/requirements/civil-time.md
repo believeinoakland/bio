@@ -78,6 +78,7 @@ The one engine for civil time: local days, date-times with their precision and z
 
 - `record-grammar`: `ISO_TS_RE` for instants.
 - `jurisdictions`: the combined view's shape (`combine`): `deadlines` (R26 as widened by T33-2: units, direction, roll, closures, computation, extension, tolling, anchors, channel `cutoff`), `holidays` with `offices` (R33, R43), `hours` (R42), `time_zone` (R41), `weekend`, `fiscal_year`, and the view's `conflicts`.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

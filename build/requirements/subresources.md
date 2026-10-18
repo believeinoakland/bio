@@ -65,6 +65,7 @@ Finds every reference an HTML page needs to render as itself, fetches or reuses 
 ### Uses
 
 - `runtime-limits`: `makeMeter()` as the default `meter` (`meter.sync(label, fn, bytes)`, `meter.cpuAwait(label, fn, bytes)`, `meter.report()`), so every synchronous compute segment inside `captureSubresources` is timed into `manifest.compute`.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

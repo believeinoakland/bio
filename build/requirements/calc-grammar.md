@@ -57,6 +57,7 @@ The pure engine of calculation: it reads figures exactly as printed, holds them 
 
 - `record-grammar`: the id grammar, for names that bind inputs to record ids in a trace.
 - `civil-time`: `compare` (R7), `span` (R9).
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

@@ -37,6 +37,7 @@ Reads a government's financial documents as tables: annual comprehensive financi
 - `pdf-reader`: the text layer per page (R2's `text`), `no_text_layer` (R14) and the `image_unread` markers (R34).
 - `office-readers`: typed cells for CSV and xlsx sheets (R30).
 - `jurisdictions` (through the view): title, heading and header words, fiscal-year forms, and the classification scheme's code forms, under this module's keys (T33-2: "classification and identifier schemes per site").
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 
