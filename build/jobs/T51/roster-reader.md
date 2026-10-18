@@ -23,3 +23,7 @@ No requirement, public or private, changed. No test copies a sentence: the tests
 - `node --test roster-reader/test/` (module tests): `tests 22, pass 22, fail 0`.
 
 Size (session_01PVypQMNUHxqcGtP1kD7qN2): test runs 1, module lines 963
+
+## J1 · COMPLETE
+
+T51-172 done. The two words findings in roster-reader/org-chart.mjs are fixed by keyed localize calls (the unlabelled-line refusal in detect; pairs_why split into two keys, same wording). Module tests 22/22 pass; format, architecture, coverage (12/12) and ownership pass for roster-reader; the words check shows no finding in roster-reader. Whole-repo words/coverage reds are outside this module and are not mine. Record: build/jobs/T51/roster-reader.md (commit 5937ed1f34). Note: I left out the Co-Authored-By model line from the commit, since the system rules bar model identifiers in commits.
