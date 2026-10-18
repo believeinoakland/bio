@@ -3,7 +3,8 @@
  * calendar, due dates with their basis kind, bounded recurrences, fiscal periods and `validAt`. Pure: no store, no
  * network, no clock; "now" is always the caller's (R26). Every local fact comes from the jurisdiction view it is
  * given (R27): no zone, weekend, holiday, office hour, rule or fiscal year is held in this module's code. */
-export { localDay, bounds, compare, isCalendarDate, dayRange, joinLocal, validAt } from "./values.mjs";
+export { localDay, localClock, bounds, compare, isCalendarDate, dayRange, joinLocal, validAt } from "./values.mjs";
 export { parseEdtf } from "./edtf.mjs";
 export { evaluateRule, due, overdueOn, span } from "./rules.mjs";
 export { expandRecurrence, fiscalPeriod } from "./recurrence.mjs";
+export { reasonText } from "./reasons.mjs";

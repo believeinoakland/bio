@@ -6,7 +6,7 @@ import { parseDay, dayText, dayNumber, civil, monthLength, weekdayOf, addMonths,
 import { wallToInstants, offsetAt, instantText, runtimeVersions } from "./zone.mjs";
 import { spanOf, isNo, refuse, undetermined, zoneRefusal } from "./values.mjs";
 import { missing } from "./calendar.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const SUBSET = ["FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "BYSETPOS", "EXDATE", "UNTIL"];
 const FREQS = ["WEEKLY", "MONTHLY", "YEARLY"];
@@ -235,7 +235,7 @@ export function fiscalPeriod(args) {
     return { undetermined: true, code: m.code, why: m.why };
   }
   if (typeof f.start !== "string" || !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(f.start) || (f.named_by !== "start" && f.named_by !== "end"))
-    return { undetermined: true, code: "FACT_INVALID", why: `the fiscal year held for ${body} is not of the form {start: MM-DD, named_by}` };
+    return { undetermined: true, code: "FACT_INVALID", why: localize("civil-time.recurrence.fiscal_year_form", "the fiscal year held for {body} does not give a start day (MM-DD) and a named_by (start or end)", { body: String(body) }) };
   const s = typeof date === "string" && date.length === 10 ? spanOf({ value: date, precision: "day", zone: "UTC" }) : spanOf(date);
   if (isNo(s)) return s;
   if (s.lo === null || s.hi === null) return undetermined(word("civil-time.date_open_unknown"));
