@@ -30,6 +30,8 @@ const PEN = join(MEMBER, ".nc-versions");
 const LOG = join(PEN, "run.out");
 const SUITE = join(DIR, "versions.test.mjs");
 const INDEX = join(MEMBER, "src/index.mjs");
+/* T51 (R119): the collect row is `agent-steps`'. */
+const STEPS_WORK = join(MEMBER, "..", "agent-steps", "src/work.mjs");
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const FLOOR = 200;
@@ -82,7 +84,7 @@ const ARMS = {
 
   1: {
     label: "(1) THE ARM THE ROW NAMES — drop the chain read: the collect row never asks op=versionchain.",
-    run: () => withReplaced(INDEX,
+    run: () => withReplaced(STEPS_WORK,
       'const chain = planeAnswer(await call("versionchain", { address: target, limit: 1000 }), "versionchain");',
       "const chain = { result: null };",
       () => report(runSuite(), {

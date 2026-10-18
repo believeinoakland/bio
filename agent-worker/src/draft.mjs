@@ -35,7 +35,7 @@
  * `x-civicsmith-member-ref` when sent in their shapes (`doorTrace`), so a member's runner receives them (`agent-model`
  * R16); nothing else changes with them. */
 import { admitRead, readTool, ASK_DECLARED } from "./ask.mjs";
-import { toolContent } from "./reads.mjs";
+import { toolContent } from "../../agent-steps/src/index.mjs";
 import { ACTION_DRAFT_OPS, actionTaskOf, actionDraft } from "./action-drafts.mjs";
 import { untestedOf, UNTESTED_BAD } from "./untested.mjs";
 import { doorTrace } from "./signin.mjs";

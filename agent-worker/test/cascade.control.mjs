@@ -28,6 +28,8 @@ const PEN = join(MEMBER, ".nc-cascade");
 const LOG = join(PEN, "run.out");
 const SUITE = join(DIR, "cascade.test.mjs");
 const INDEX = join(MEMBER, "src/index.mjs");
+/* T51 (R119): the payer check is `agent-steps`'. */
+const STEPS_DRIVE = join(MEMBER, "..", "agent-steps", "src/drive.mjs");
 const CASCADE = join(MEMBER, "src/cascade.mjs");
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -104,7 +106,7 @@ const ARMS = {
 
   3: {
     label: "(3) THE PAYER-CONSISTENCY CHECK REMOVED — the record names one payer, the runtime resolves another, and the segment drives anyway.",
-    run: () => withReplaced(INDEX,
+    run: () => withReplaced(STEPS_DRIVE,
       /* T46: re-anchored on R10's check as it stands (the payer compared with the account's member, K1755). */
       "if (account && recordedPayer !== account.member)",
       "if (false && account && recordedPayer !== account.member)",

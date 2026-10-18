@@ -23,3 +23,21 @@
 ## J1 · REPORT
 
 Pre-merge part done. The stale comment at index.mjs:287 is fixed (comment only). I read the requirements, the split map and index.mjs whole, and recorded the deletion plan in my record. Module tests with that edit: 25 of 26 suites pass; the one red is requirements.test.mjs R45, the committed bundle being stale against the edited source (expected; you regenerate it at L6's close, I do not). Waiting for your CHANGE once agent-steps has merged.
+
+### Completion (B2 CHANGE: delegate to agent-steps)
+
+**Entries applied (T51-65).** Merged `tranche/T51` (agent-steps in). `agent-worker/src/index.mjs` no longer holds the segment driver, steps, sub-sessions or shared readers: it imports `driveHarness, MAX_STEPS, planeAnswer, publishedPack, loadableLayers, loadLayer, modelHalf, SEGMENT_END_BY` from `agent-steps` and hands `driveHarness` the host `STEPS_HOST = { askPlane, refusal, planeSilent, planeRefused, modelSilent, modelRefused }` (agent-steps R43). Deleted `reads.mjs`, `holdings.mjs` and `MEANING_ARM`, `RESPONSE_ID`, `SEGMENT_END_BY` from `ops.mjs`. `ask.mjs`, `draft.mjs`, `action-drafts.mjs` import `toolContent` from `agent-steps`. The stale comment at `index.mjs`:287 is fixed. `src` is **2,724 lines** (R119: under 4,000).
+
+**Tests.** Deleted what the map moved and `agent-steps` carries identically: `r096`, `r101`, `r103`, `t49r90` suites, and the four `plane-*.mjs` fixtures (remaining suites import them from `agent-steps/test/`, as the map says). Kept, per B2: `versions.test`, `versions.control`, `fanout.test` Part A (Part B deleted, moved), the `r107` NO_ACCOUNT control (rewritten as a small suite on the shell's wire, naming R6 and R57), `plan.test`'s R53 section (the PLANE_OPS arm and the two request-field arms with the rest of R53). Imports re-pointed (`MEANING_ARM`, `SEGMENT_END_BY` from `agent-steps`). R45's input list now names the `agent-steps` files (R119 control) and no longer `reads.mjs`.
+
+**Control drivers re-pointed** (they edit real source by exact string; each arm that quotes moved text now patches the `agent-steps` file, and the fan-out measured is `agent-steps`' suite): `harness.control` (H6, H8, T1, T2, D2, S2), `agent-worker.control` (D1–D5), `cascade.control` (3), `versions.control` (1), `t41.control` (5, 8, 9), `t46.control` (2–5 and the sign-in payer arm), `wire-vocabulary.control`. Three anchors were already stale before the split and are re-anchored (H6's tick, A9's `ids`, t46 arms 2 and 3). Results: harness T1/T2/H6/H8/D2/S2 armed; agent-worker D1–D5 AS DECLARED; cascade 4/4; versions baseline 20/0 with arm 1 red as declared; t41 9 pass 0 fail; t42 17/0; t46 13/0; t47 12/0; wire-vocabulary 4/4. Every restore verified by sha256 and cmp; `git status` clean of `agent-steps` after.
+
+**Tests run.** `npm test` in `agent-worker/`: 21 of 22 suites pass (fewer files after deletions); the one red is `requirements.test.mjs` R45, **the bundle stale** (below), nothing else.
+
+**Checks.** format: 0 failures. ownership: 0 failures. coverage: agent-worker not among the failures (the 22 failures listed are other modules'). architecture: **5 failures, all mine and all one cause**: `requirements.test`, `versions.test` and `wire-vocabulary.test` import the fixtures `agent-steps/test/plane-*.mjs` and `agent-steps` is not yet in my `uses` in `modules.json`. They clear when BOB adds it.
+
+**For BOB.** (1) `modules.json`: add `agent-steps` to agent-worker's `uses`. (2) The bundle `agent-worker/dist/*` is stale (source changed twice); regenerate at L6's close (`agent-worker/`: `npm run build`); the manifest row then names agent-steps. (3) `agent-harness/src/harness.mjs` line 5 still says `MEANING_ARM` is agent-worker's `ops.mjs` (it is `agent-steps`' `names.mjs`): the next agent-harness job. (4) A flaw in agent-steps' tests, not mine: none found.
+
+Deferred: none.
+
+Size (session_01RTunPjz5nMUCRagijvxJzE): test runs 12, module lines 2724
