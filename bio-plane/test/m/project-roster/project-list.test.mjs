@@ -31,7 +31,7 @@ async function listWorld() {
 }
 const PROJECTS = ["PROJ-A", "PROJ-D", "PROJ-E", "PROJ-F"];
 const ids = (a) => a.projects.map((p) => p.id);
-const EMPTY = { ok: true, projects: [], count: 0, limit: ProjectRoster.PROJECT_LIST_LIMIT, truncated: false };
+const EMPTY = { ok: true, projects: [], count: 0, limit: ProjectRoster.PROJECT_LIST_LIMIT, truncated: false, next: null };
 
 test("R26 projectList answers exactly the projects the viewer sees at FULL (membership R43, R44): a member's own in any state, an administrator's and the founder's discoverable ones too, never a hidden one they are not in; a machine credential every one", async () => {
   const w = await listWorld();
@@ -91,7 +91,7 @@ test("R26 each project is {id, name, stage}: name its title (record-core R34), s
   w.project("PROJ-0", null, "investigating");   // a legacy state, as recorded; no title
   w.project("PROJ-Z", "Zeta", "");              // an empty state records none
   const all = w.r.projectList({ viewer: `${MACHINE_CLASS_PREFIX}member` });
-  assert.deepEqual(Object.keys(all).sort(), ["count", "limit", "ok", "projects", "truncated"]);
+  assert.deepEqual(Object.keys(all).sort(), ["count", "limit", "next", "ok", "projects", "truncated"]);
   assert.deepEqual([all.ok, all.count, all.limit, all.truncated], [true, 6, 200, false]);
   /* R27 (T47) adds each project's `owner`; no manifest entry is recorded here, so every one answers null. R28 (T47) adds
      `members`, `activity` and `lastChange`, held whole by R28's own tests; here only that they are present */
