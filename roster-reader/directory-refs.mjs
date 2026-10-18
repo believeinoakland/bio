@@ -24,15 +24,15 @@ export function directoryPersonRefs(entities, view) {
     if (!e || e.kind !== "contact" || typeof e.key !== "string" || !e.key) continue;
     const line = e.facts && typeof e.facts.line === "string" ? e.facts.line : "";
     const ref = { contact_key: e.key };
-    if (!line.trim()) { out.push({ ...ref, match_grade: null, why: "the entry carries no line to read a name from" }); continue; }
+    if (!line.trim()) { out.push({ ...ref, match_grade: null, why: localize("roster-reader.directory-refs.the_entry_carries_no_line", "the entry carries no line to read a name from") }); continue; }
     const spans = withoutContacts(line).parts.flatMap((part) => nameSpans(removeSpans(part, titleSpans(titles, part))));
     if (spans.length === 1)
       out.push({ ...ref, name: spans[0].text, match_grade: NAME_GRADE,
-                 why: "one name-shaped span remains on the entry's line once its address, phone numbers and staff titles are removed; a name alone is grade C" });
+                 why: localize("roster-reader.directory-refs.one_name_shaped_span_remains", "one name-shaped span remains on the entry's line once its address, phone numbers and staff titles are removed; a name alone is grade C") });
     else
       out.push({ ...ref, match_grade: null,
                  why: spans.length ? localize("roster-reader.directory-refs.length_name_shaped_spans_remain", "{length} name-shaped spans remain on the entry's line, which may hold more than one person's text, so no name is read", { length: String(spans.length) })
-                                   : "no name-shaped span remains on the entry's line once its address, phone numbers and staff titles are removed" });
+                                   : localize("roster-reader.directory-refs.no_name_shaped_span_remains", "no name-shaped span remains on the entry's line once its address, phone numbers and staff titles are removed") });
   }
   return out;
 }

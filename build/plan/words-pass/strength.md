@@ -232,3 +232,10 @@ Layer 6. 213 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - plain `bio-plane/src/strength/method.mjs:36` "this rests on bears it out, so it is visible here and does not count as evidence"
 - plain `bio-plane/src/strength/method.mjs:132` "so it does not apply here"
 - plain `bio-plane/src/strength/method.mjs:384` "this grading method version is not one that has been published, so the grade cannot be ..."
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/strength/version.test.mjs:292` "\", but every transcription of its text is UNMEASURED: no step in the\""
+- testcopy `bio-plane/test/m/strength/version.test.mjs:293` "\"provenance of this document's text carries a measured fidelity, so ...\""

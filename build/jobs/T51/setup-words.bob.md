@@ -30,3 +30,7 @@ Do:
 4. Run your tests, `node bio-plane/src/setup-words/build.mjs --check`, and the process checks over your module (`node /home/user/civicos-process/checks/run.mjs .` — civicos-process `ebcc1a3` or later; its words check now reads the marker as `localize`). Then record completion (names R14, R15 as met) and post COMPLETE.
 
 Model and effort: as your START (sonnet, medium); workers haiku low if any. One small entry: finish in this session.
+
+## B3 · CHANGE
+
+CHANGE (K3962, K3965): merge tranche/T51 and pull civicos-process (ea6cd83) first. The words check's testcopy arm now also counts a test string that copies the en of a product localize call (tag code). Your module's tests hold some: section 'Test copies of code sentences (K3962)' of build/plan/words-pass/setup-words.md (read it whole). Make each test compare with localize(id, en) / word(id) or assert the key, never the sentence's text (K3810); convert also any such copy written as a regular expression, which the check cannot read. Run your tests, the checks and 'node bio-plane/src/setup-words/build.mjs --check' (read-only); record COMPLETE again.

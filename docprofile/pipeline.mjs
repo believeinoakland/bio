@@ -89,7 +89,7 @@ export async function assess(before, after, ctx) {
   catch (e) {
     /* Only a caller's missing hash function or a failing one reaches here. The honest
        answer is that nothing could be compared, never a guess in either direction. */
-    note(LAYER.BYTES, "the two captures could not be compared");
+    note(LAYER.BYTES, localize("docprofile.pipeline.the_two_captures_could_not_be_compared", "the two captures could not be compared"));
     return out({ verdict: "undetermined", meaningful: null, events: [], connections: [],
                  why: localize("docprofile.pipeline.the_two_captures_could_not", "the two captures could not be compared ({String}), so nothing is claimed", { String: String(String((e && e.message) || e)) }) });
   }
@@ -101,16 +101,15 @@ export async function assess(before, after, ctx) {
        frequently-checked source it is the majority of all observations. */
     return out({ verdict: "identical", meaningful: false, events: [], connections: [],
                  confirmation: { kind: "identical_bytes", hash: db.identity, at: ctx.after_at || null,
-                   why: "the source served exactly the bytes the record holds" },
-                 why: "the source is still serving exactly what the record holds" });
+                   why: localize("docprofile.pipeline.the_source_served_exactly_the", "the source served exactly the bytes the record holds") },
+                 why: localize("docprofile.pipeline.the_source_is_still_serving", "the source is still serving exactly what the record holds") });
   }
   note(LAYER.BYTES, "the bytes differ", { before: da.identity.slice(0, 12), after: db.identity.slice(0, 12) });
 
   if (cmp.verdict === "undetermined") {
-    note(LAYER.NOTEWORTHY, "cannot say: the stack is not recognised confidently enough");
+    note(LAYER.NOTEWORTHY, localize("docprofile.pipeline.cannot_say_the_stack_is_not", "cannot say: the stack is not recognised confidently enough"));
     return out({ verdict: "undetermined", meaningful: null, events: [], connections: [],
-                 why: "the document differs and this kind of document is not recognised well "
-                    + "enough to say whether the difference matters" });
+                 why: localize("docprofile.pipeline.the_document_differs_and_this", "the document differs and this kind of document is not recognised well enough to say whether the difference matters") });
   }
   if (cmp.verdict === "unchanged") {
     note(LAYER.NOTEWORTHY, "only per-render machinery differs",
@@ -121,16 +120,16 @@ export async function assess(before, after, ctx) {
     return out({ verdict: "unchanged", meaningful: false, events: [], connections: [],
                  confirmation: { kind: "same_substance", digest: db.evidentiary,
                    at: ctx.after_at || null,
-                   why: "the substance is the same; only machinery this site rebuilds on every visit differs" },
-                 why: "the document is unchanged; only machinery this site rebuilds differs" });
+                   why: localize("docprofile.pipeline.the_substance_is_the_same", "the substance is the same; only machinery this site rebuilds on every visit differs") },
+                 why: localize("docprofile.pipeline.the_document_is_unchanged_only", "the document is unchanged; only machinery this site rebuilds differs") });
   }
   if (cmp.verdict === "restyled") {
     note(LAYER.NOTEWORTHY, "only the surroundings differ",
          { normalised: da.presentational_bytes });
     return out({ verdict: "restyled", meaningful: false, events: [], connections: [],
                  confirmation: { kind: "same_substance", digest: db.evidentiary, at: ctx.after_at || null,
-                   why: "the document itself is unchanged; the site around it changed" },
-                 why: "the document itself is unchanged; something around it moved, such as navigation" });
+                   why: localize("docprofile.pipeline.the_document_itself_is_unchanged_surroundings", "the document itself is unchanged; the site around it changed") },
+                 why: localize("docprofile.pipeline.the_document_itself_is_unchanged_navigation", "the document itself is unchanged; something around it moved, such as navigation") });
   }
   /* cmp.verdict === "changed": the substance itself differs, so keep going. */
   note(LAYER.NOTEWORTHY, "the substance differs");
@@ -139,7 +138,7 @@ export async function assess(before, after, ctx) {
   let dt;
   try { dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind }); }
   catch (e) {
-    note(LAYER.CONTENT_TYPE, "no content type could be decided");
+    note(LAYER.CONTENT_TYPE, localize("docprofile.pipeline.no_content_type_could_be_decided", "no content type could be decided"));
     return out({ verdict: "changed", meaningful: null, events: [], connections: [],
                  why: localize("docprofile.pipeline.the_substance_differs_and_which", "the substance differs, and which kind of document this is could not be decided ({String}), so what changed is not described", { String: String(String((e && e.message) || e)) }) });
   }

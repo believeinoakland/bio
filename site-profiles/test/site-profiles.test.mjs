@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as sp from "../index.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { calendarHtml, wordpressArticle, shellHtml, plainHtml } from "./fixtures.mjs";
 
 const {
@@ -73,7 +74,8 @@ test("R1 identify returns the first CERTAIN stack, else the highest match, else 
     const d = identify(ctx);
     assert.equal(d.handler, conservative);
     assert.equal(d.confidence, CONFIDENCE.NONE);
-    assert.match(d.why, /no handler recognised/);
+    assert.equal(d.why, localize("site-profiles.index.no_handler_recognised_this_document",
+      "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"));
     assert.deepEqual(d.signals, []);
     assert.deepEqual(d.considered, []);
   }
@@ -305,7 +307,7 @@ test("R10 compare: identical, undetermined, changed, restyled, unchanged, each a
   // the record of how: handler, confidence, artifacts, applied, digests
   assert.equal(un.handler, "aspnet_webforms");
   assert.equal(un.confidence, CONFIDENCE.CERTAIN);
-  assert.ok(un.artifacts.includes("page state this site rebuilds on every visit"));
+  assert.ok(un.artifacts.includes(localize("site-profiles.aspnet-webforms.page_state_this_site_rebuilds", "page state this site rebuilds on every visit")));
   assert.deepEqual(un.digests.before, await digests(base, aspnetWebforms, cert));
   assert.deepEqual(un.applied, un.digests.before.applied);
   // conservative is trusted without certainty
@@ -353,7 +355,8 @@ test("R12 profileRecord names the handler, its version, the confidence, signals,
   assert.equal(none.handler, "conservative");
   assert.equal(none.confidence, "none");
   assert.equal(none.document_kind, "unknown");
-  assert.match(none.note, /no handler recognised/);
+  assert.equal(none.note, localize("site-profiles.index.no_handler_recognised_this_document",
+    "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"));
   assert.match(none.at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
   assert.equal(profileRecord(identify({ text: "X-KINDLESS-STACK" }), { now: NOW }).document_kind, "unknown");
   // never throws
@@ -524,12 +527,15 @@ test("R19 every no says which no and why", async () => {
   // no match
   const none = identify({ text: "plain" });
   assert.equal(none.confidence, CONFIDENCE.NONE);
-  assert.match(none.why, /no handler recognised.*treated conservatively/);
-  assert.match(profileRecord(none, { now: NOW }).note, /no handler recognised/);
+  const noHandler = localize("site-profiles.index.no_handler_recognised_this_document",
+    "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported");
+  assert.equal(none.why, noHandler);
+  assert.equal(profileRecord(none, { now: NOW }).note, noHandler);
   // no confidence: undetermined, with null rather than false, and why
   const u = await compare(enc("<p>a</p>"), enc("<p>b</p>"), aspnetWebforms, { sha256, confidence: CONFIDENCE.LIKELY });
   assert.equal(u.evidentiary_change, null);
-  assert.match(u.why, /not recognised well enough/);
+  assert.equal(u.why, localize("site-profiles.index.the_document_differs_and_this_kind",
+    "the document differs and this kind of document is not recognised well enough to say whether the difference matters"));
   // no meaningful change: each settled no says which
   const row = [["1", "B", "3/3/2026"]];
   const cert = { sha256, confidence: CONFIDENCE.CERTAIN };

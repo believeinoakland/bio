@@ -142,7 +142,7 @@ const clockOf = (s, re) => { const m = re.exec(String(s || "")); return m ? m[0]
 
 export default {
   key: "meeting_minutes",
-  label: "a set of meeting minutes",
+  label: localize("doctypes.meeting-minutes.label", "a set of meeting minutes"),
   version: 1,
   /* A list of items, each with what happened to it, so what matters is MEMBERSHIP:
      which matters the body took up and whether each still says what it said. Declared
@@ -172,13 +172,13 @@ export default {
     else if (named) signals.push(localize("doctypes.meeting-minutes.self_naming_once", "names itself as minutes once ({count}), which a reference also does", { count: String(named) }));
 
     const motion = MOTION_MADE.test(flat) && MOTION_RESULT.test(flat);
-    if (motion) signals.push("motions made, seconded and carried or failed");
+    if (motion) signals.push(localize("doctypes.meeting-minutes.motions", "motions made, seconded and carried or failed"));
     const tallies = (flat.match(new RegExp(TALLY_LABEL.source, "gi")) || []).length;
     if (tallies >= 2) signals.push(localize("doctypes.meeting-minutes.tally_labels", "{count} roll-call vote tally label(s)", { count: String(tallies) }));
     const outcome = motion || tallies >= 2;
 
     const frame = CONVENED.test(flat) && ADJOURNED.test(flat);
-    if (frame) signals.push("a meeting that convened and adjourned at stated times");
+    if (frame) signals.push(localize("doctypes.meeting-minutes.frame", "a meeting that convened and adjourned at stated times"));
 
     const roster = selfNaming(t, ROSTER_LABEL) >= 2;
     if (roster) signals.push("an attendance roster");
@@ -289,9 +289,8 @@ export default {
     }
     const body_why = body ? null
       : !bodyEnds.length
-      ? "no active jurisdiction profile says how a body is named, so which body met is not read"
-      : "no single line of this document names the body at the rate a running header "
-      + "does, so which body met is not stated here rather than guessed from one line";
+      ? localize("doctypes.meeting-minutes.no_body_profile", "no active jurisdiction profile says how a body is named, so which body met is not read")
+      : localize("doctypes.meeting-minutes.no_body_line", "no single line of this document names the body at the rate a running header does, so which body met is not stated here rather than guessed from one line");
     const convened = clockOf(flat, CONVENED);
     const adjourned = clockOf(flat, ADJOURNED);
     /* DRAFT is a first-class fact about the record a member would be citing, not a
@@ -417,7 +416,7 @@ export default {
     return {
       entities, body, body_why, date, convened, adjourned, status,
       references_why: filePats.length ? null
-        : "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no matter was read",
+        : localize("doctypes.meeting-minutes.no_file_shape", "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no matter was read"),
       attendance: Object.keys(roster).length ? roster : null,
       also_satisfies: alsoSatisfies(ctx, "meeting_minutes"),
       at: ctx.at || null,
@@ -429,8 +428,7 @@ export default {
     /* A read that found nothing is a failed reader, never an emptied record. */
     if (!a.entities.length || !b.entities.length)
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               why: "the matters in these minutes could not be read this time, so nothing is "
-                  + "claimed about them either way" };
+               why: localize("doctypes.meeting-minutes.unread", "the matters in these minutes could not be read this time, so nothing is claimed about them either way") };
 
     const d = diffEntities(a.entities, b.entities);
     const events = [];
@@ -445,21 +443,21 @@ export default {
       if (heavy.length)
         events.push(event("outcome_changed", { key: alt.entity.key, label: alt.entity.label,
           moved: heavy,
-          why: "what these minutes record the body as having done with this matter changed" }));
+          why: localize("doctypes.meeting-minutes.outcome_changed", "what these minutes record the body as having done with this matter changed") }));
       if (light.length)
         events.push(event("item_changed", { key: alt.entity.key, label: alt.entity.label,
           moved: light,
-          why: "what these minutes say about this matter changed" }));
+          why: localize("doctypes.meeting-minutes.item_changed", "what these minutes say about this matter changed") }));
     }
     /* A matter vanishing from a published record of a past meeting is the
        quiet-substitution class with no moving window to excuse it. */
     for (const e of d.gone)
       events.push(event("item_pulled", { key: e.key, label: e.label,
-        why: "a matter these minutes recorded is no longer in them" }));
+        why: localize("doctypes.meeting-minutes.pulled", "a matter these minutes recorded is no longer in them") }));
     /* Minutes gaining a matter is normal while they are a draft and is recorded. */
     for (const e of d.appeared)
       events.push(event("item_added", { key: e.key, label: e.label,
-        why: "a matter was added to these minutes" }));
+        why: localize("doctypes.meeting-minutes.added", "a matter was added to these minutes") }));
 
     bySeverity(events);
     const intact = a.entities.filter((e) =>

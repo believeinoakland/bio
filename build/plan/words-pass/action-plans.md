@@ -24,3 +24,9 @@ Layer 9. 15 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 
 - plain `bio-plane/src/action-plans/index.mjs:1288` "the phase that leads here has not led here yet, so no occurrence is read"
 - plain `bio-plane/src/action-plans/index.mjs:2139` "work) after a response was recorded; it decides nothing, and what the team chose change..."
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/action-plans/duty-starts.test.mjs:77` "\"a condition of up to 500 characters and the phase each judgement le...\""

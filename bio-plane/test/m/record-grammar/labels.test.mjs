@@ -31,7 +31,7 @@ test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195'
     assert.deepEqual(Object.keys(t), STATES3, subject);
     for (const s of STATES3) { assert.equal(typeof t[s], "string"); assert.ok(t[s].length > 20); said.add(t[s]); }
     if (subject !== "governing_laws") assert.ok(Object.isFrozen(t), subject);
-    assert.match(t.machine_proposed, /machine work, labelled as machine work/, subject);
+    assert.match(t.machine_proposed, /machine work, labeled as machine work/, subject);
   }
   assert.equal(said.size, 17 * 3, "no two sentences are the same");
 });
@@ -49,7 +49,7 @@ test("R42 PROPOSAL_STATES.template: after communication, frozen, three sentences
     assert.match(t[s], /wording for a filing template/, s);
     assert.match(t[s], /not a template's text until a member adopts it into a draft|not that until a member adopts it into a draft/, s);
   }
-  assert.match(t.machine_proposed, /machine work, labelled as machine work: it can propose wording and it can never draft, review or approve a template/);
+  assert.match(t.machine_proposed, /machine work, labeled as machine work: it can propose wording and it can never draft, review or approve a template/);
   assert.match(t.member_proposed, /the record holds who proposed it/);
   for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
     const state = lawProposalState(w);
@@ -70,7 +70,7 @@ function newSubject(subject, after, what, until) {
     assert.match(t[s], until, s);
   }
   assert.match(t.machine_proposed, /^a machine credential /);
-  assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it is a draft/);
+  assert.match(t.machine_proposed, /That is machine work, labeled as machine work: it is a draft/);
   assert.match(t.member_proposed, /^a member /);
   assert.match(t.member_proposed, /It is a proposal and not .*the record holds who proposed it$/);
   assert.match(t.unstated, /^the record does not say who /);
@@ -114,7 +114,7 @@ test("R49 PROPOSAL_STATES.law_relation: after wizard, frozen, a law relation, co
     assert.match(t[s], /not one the record holds until a member records it themselves/, s);
   }
   assert.match(t.machine_proposed, /^a machine credential proposed /);
-  assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it can propose one and it can never record one\./);
+  assert.match(t.machine_proposed, /That is machine work, labeled as machine work: it can propose one and it can never record one\./);
   assert.match(t.member_proposed, /^a member proposed /);
   assert.match(t.member_proposed, /It is a proposal and not one the record holds .*the record holds who proposed it$/);
   assert.match(t.unstated, /^the record does not say who proposed /);
@@ -132,8 +132,9 @@ test("R49 PROPOSAL_STATES.law_relation: after wizard, frozen, a law relation, co
 });
 
 /* The twelve tables as they stood before R50, every sentence, as one digest over their canonical JSON (taken at T37's
-   START, before the change). */
-const TWELVE_BEFORE_R50 = "091d110cdba03a5023d00bda44184a87699ba5cc8eb521b2e79b48aa8c4dda7c";
+   START, before the change). Re-pinned at the words change (T51-171 B3): the machine sentences now read the design rows, which
+   spell "labeled"; with that one spelling reversed the digest is T37's, so only the spelling moved. */
+const TWELVE_BEFORE_R50 = "83fb8224a5e9d6c1cf4a75c84d7fb877b359ade581fc2a988a0ea25fe630c773";
 
 test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two), frozen, a draft translation of an interface word shown as \"Draft\", not the group's wording until a member granted that language adopts it; machine work can draft one and never adopt or confirm one; the other tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
@@ -149,7 +150,7 @@ test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two)
   }
   assert.match(t.machine_proposed, /^a machine credential drafted /);
   assert.match(t.machine_proposed,
-    /That is machine work, labelled as machine work: it can draft a translation and it can never adopt or confirm one\./);
+    /That is machine work, labeled as machine work: it can draft a translation and it can never adopt or confirm one\./);
   assert.match(t.member_proposed, /^a member proposed /);
   assert.match(t.member_proposed, /the record holds who proposed it$/);
   assert.match(t.unstated, /^the record does not say who drafted /);
@@ -173,9 +174,9 @@ test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two)
 
 /* The thirteen tables as they stood before R54, every sentence, as one digest over their canonical JSON (taken at T42's
    START from the committed module, before the change). */
-const THIRTEEN_BEFORE_R54 = "bd280de102e5754ec0ce6ef4e4bd5d366ce18e367e3079392e9bc72fc635009e";
+const THIRTEEN_BEFORE_R54 = "45ad0b0d9434d816a02cf3b5150ade783a85916e892c3060ab9fadbd2ada595c";
 
-test("R54 PROPOSAL_STATES gains case_account and account_check after translation, each frozen with the three states: a draft of a case's account from its cited evidence, never the case's account, which a member writes in her own words; flagged sentences of a member's account the evidence they cite does not support, a draft and never a finding of the group; machine work labelled as machine work; the other thirteen tables unchanged", () => {
+test("R54 PROPOSAL_STATES gains case_account and account_check after translation, each frozen with the three states: a draft of a case's account from its cited evidence, never the case's account, which a member writes in her own words; flagged sentences of a member's account the evidence they cite does not support, a draft and never a finding of the group; machine work labeled as machine work; the other thirteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
   assert.equal(keys.length, 17, "R60's bearing and R61's status_report follow them");
   assert.deepEqual(keys.slice(-5), ["translation", "case_account", "account_check", "bearing", "status_report"]);
@@ -184,7 +185,7 @@ test("R54 PROPOSAL_STATES gains case_account and account_check after translation
     assert.ok(Object.isFrozen(t), subject);
     assert.deepEqual(Object.keys(t), STATES3, subject);
     assert.match(t.machine_proposed, /^a machine credential /, subject);
-    assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it is a draft/, subject);
+    assert.match(t.machine_proposed, /That is machine work, labeled as machine work: it is a draft/, subject);
     assert.match(t.member_proposed, /^a member /, subject);
     assert.match(t.member_proposed, /the record holds who proposed it$/, subject);
     assert.match(t.unstated, /^the record does not say who /, subject);
@@ -348,9 +349,9 @@ test("R29 C-33.41's where names entities' and progressions' sites, not store.mjs
 
 /* The fifteen tables as they stood before R60, every sentence, as one digest over their canonical JSON (taken at T46's
    START from the committed module, before the change). */
-const FIFTEEN_BEFORE_R60 = "6206024c35bda51065196a3b0e7eee3f16472a81e9b638f05e40f40fc7b49197";
+const FIFTEEN_BEFORE_R60 = "93650050b988d923b0d9e594118d266d78ffba6f5fbd170dae18241c985f4f54";
 
-test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the three states: a proposed reading of how a reply bears on each claim of an action, never the group's reading until a member records it; machine work labelled as machine work, which can propose a layout and never record one; the other fifteen tables unchanged", () => {
+test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the three states: a proposed reading of how a reply bears on each claim of an action, never the group's reading until a member records it; machine work labeled as machine work, which can propose a layout and never record one; the other fifteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
   assert.equal(keys.indexOf("bearing"), keys.indexOf("account_check") + 1);
   assert.equal(keys.indexOf("status_report"), keys.indexOf("bearing") + 1, "R61's follows it");
@@ -363,7 +364,7 @@ test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the thr
     assert.doesNotMatch(t[s], /\bis the team's reading\b/, s);
   }
   assert.match(t.machine_proposed, /^a machine credential proposed /);
-  assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it can propose a layout and it can never record one\./);
+  assert.match(t.machine_proposed, /That is machine work, labeled as machine work: it can propose a layout and it can never record one\./);
   assert.match(t.member_proposed, /^a member proposed /);
   assert.match(t.member_proposed, /the record holds who proposed it$/);
   assert.match(t.unstated, /^the record does not say who proposed /);
@@ -394,9 +395,9 @@ test("R60 R61 negative control: near spellings of bearing throw a RangeError nam
 
 /* The sixteen tables as they stood before R61, every sentence, as one digest over their canonical JSON (taken at T47's
    START from the committed module, before the change). */
-const SIXTEEN_BEFORE_R61 = "9b72a96870248a85f1fcc945fad900b4153c0cb98bf2bdec71b01e20d35370f8";
+const SIXTEEN_BEFORE_R61 = "e3b110dca515d5e98e4afe6cd602167102aa30f9392aacadfee014801094b773";
 
-test("R61 PROPOSAL_STATES gains status_report after bearing, last, frozen with the three states: a draft of a status report on a plan, kept with the plan and never published, the report kept the member's; machine work the assistant's draft, labelled as machine work, which can draft a report and never keep or publish one; the other sixteen tables unchanged", () => {
+test("R61 PROPOSAL_STATES gains status_report after bearing, last, frozen with the three states: a draft of a status report on a plan, kept with the plan and never published, the report kept the member's; machine work the assistant's draft, labeled as machine work, which can draft a report and never keep or publish one; the other sixteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
   assert.equal(keys.indexOf("status_report"), keys.indexOf("bearing") + 1);
   assert.equal(keys.at(-1), "status_report");
@@ -412,7 +413,7 @@ test("R61 PROPOSAL_STATES gains status_report after bearing, last, frozen with t
     assert.doesNotMatch(t[s], /(is|was) published|is the report kept/, s);
   }
   assert.match(t.machine_proposed, /^a machine credential drafted /);
-  assert.match(t.machine_proposed, /It is the assistant's draft: machine work, labelled as machine work, which can draft a report and can never keep or publish one\./);
+  assert.match(t.machine_proposed, /It is the assistant's draft: machine work, labeled as machine work, which can draft a report and can never keep or publish one\./);
   assert.match(t.member_proposed, /^a member drafted /);
   assert.match(t.member_proposed, /the record holds who proposed it$/);
   assert.match(t.unstated, /^the record does not say who drafted /);

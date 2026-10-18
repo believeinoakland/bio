@@ -7,3 +7,9 @@ Layer 5. 5 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/local-facts/rows.test.mjs:71` [part] "A path names one profile's holiday year (of its office calendar or ..." — part test copy
 - testcopy `bio-plane/test/m/local-facts/rows.test.mjs:72` [part] "time zone. Nothing was written."
 - testcopy `bio-plane/test/m/local-facts/rules.test.mjs:237` "holds a key the view already holds" — regex
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/local-facts/status.test.mjs:43` "\"no active profile names it\""

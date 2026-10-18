@@ -54,3 +54,13 @@ Layer 8. 32 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/ratification/release.mjs:85` "this selection resolves to no members, so there is nothing to release"
 - plain `bio-plane/src/ratification/retire.mjs:62` "this selection resolves to no members, so there is nothing to retire"
 - plain `bio-plane/src/ratification/retire.mjs:103` "history the document does not carry (C-4.2)"
+
+## Test copies of code sentences (K3962)
+
+5 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/ratification/case-commit.test.mjs:172` "\"completeness_acknowledgements:\""
+- testcopy `bio-plane/test/m/ratification/converted-a.test.mjs:237` "\"completeness_acknowledgements\""
+- testcopy `bio-plane/test/m/ratification/converted-a.test.mjs:240` "\"completeness_acknowledgements\""
+- testcopy `bio-plane/test/m/ratification/converted-c.test.mjs:61` "\"completeness_acknowledgements:\""
+- testcopy `bio-plane/test/m/ratification/converted-c.test.mjs:469` "\"does not resolve in the store\""

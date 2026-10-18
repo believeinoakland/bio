@@ -710,7 +710,7 @@ async function odfPartsUnguarded(row, bytes) {
     undetermined.push({
       part: META_PART,
       why: "part_absent",
-      detail: "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author",
+      detail: localize("odf-reader.odf.this_package_carries_no_meta", "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author"),
     });
   }
 
@@ -1045,7 +1045,7 @@ function officeBody(contentXml, kind) {
 
 /** Why a structure() read no body (R10), for its notes. */
 function bodyNotRead(parts, element) {
-  if (parts.guard) return "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())";
+  if (parts.guard) return localize("odf-reader.odf.content_xml_not_read_over", "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())");
   if (parts.repeat) return localize("odf-reader.odf.content_xml_not_read_its", "content.xml not read: its repeats expand past {boundName} (stated in evidentiary.undetermined and by text())", { boundName: String(parts.repeat.boundName) });
   return `content.xml unreadable or carries no <office:${element}>: element references unavailable (stated)`;
 }
@@ -2261,11 +2261,11 @@ export const ODF_EVIDENTIARY_VERSION = 1;
  *  (formats-odf.test.mjs pins that index.mjs spells none of them — D-70). */
 export const ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 export const ODF_EVIDENTIARY_MEASURED = Object.freeze({
-  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
-  odt: "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
+  ods: localize("odf-reader.odf.content_xml_byte_identical_across", "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)"),
+  odt: localize("odf-reader.odf.content_xml_with_text_list", "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents"),
 });
 const ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
-  odp: "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp",
+  odp: localize("odf-reader.odf.no_odp_export_has_been", "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp"),
 });
 
 /** Package members that content.xml REFERENCES by `href`, among the members
@@ -2379,7 +2379,7 @@ async function odfEvidentiaryDigestUnguarded(bytes, sha256Hex) {
     const d = detectOdf(r, b, null);
     if (d && d.confidence === "certain") { row = r; break; }
   }
-  if (!row) return no(null, "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken");
+  if (!row) return no(null, localize("odf-reader.odf.the_bytes_are_not_an", "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken"));
   const flavour = row.flavour;
   if (!ODF_EVIDENTIARY_MEASURED[flavour])
     return no(flavour, ODF_EVIDENTIARY_UNMEASURED[flavour]
@@ -2397,14 +2397,14 @@ async function odfEvidentiaryDigestUnguarded(bytes, sha256Hex) {
      nothing (R37). */
   let xml;
   try { xml = UTF8_STRICT.decode(read.bytes); } catch {
-    return no(flavour, "content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken");
+    return no(flavour, localize("odf-reader.odf.content_xml_is_not_valid", "content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken"));
   }
   const refs = referencedMembers(xml, container);
   if (refs.length)
     return no(flavour, localize("odf-reader.odf.content_xml_references_length_package", "content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed", { length: String(refs.length), refs: String(refs.slice(0, 3).join(", ")), v1: String(refs.length > 3 ? ", …" : "") }));
   const norm = ODF_EVIDENTIARY_NORMALISE[flavour];
   const digested = norm ? norm.apply(read.bytes) : read.bytes;
-  if (!digested) return no(flavour, "content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken");
+  if (!digested) return no(flavour, localize("odf-reader.odf.content_xml_is_not_valid_2", "content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken"));
   return {
     determined: true, flavour, over: CONTENT_PART,
     evidentiary: await sha256Hex(digested),

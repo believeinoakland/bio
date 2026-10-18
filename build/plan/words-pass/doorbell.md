@@ -30,3 +30,13 @@ Layer 3. 10 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/doorbell/index.mjs:721` "the knock's receipt: its digest, taken as the bytes arrived, and its instant"
 - plain `bio-plane/src/doorbell/index.mjs:725` "doorbell knock, received, hashed at receipt"
 - plain `bio-plane/src/doorbell/index.mjs:742` "knocksOf names the pseudonym whose knocks it lists"
+
+## Test copies of code sentences (K3962)
+
+5 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/doorbell/knock-origin.test.mjs:27` "\"a member's own capture\""
+- testcopy `bio-plane/test/m/doorbell/rows.test.mjs:19` "\"Changing a knock's status records why, in your own words, and no re...\""
+- testcopy `bio-plane/test/m/doorbell/rows.test.mjs:23` "\"Your material was not received. This team's inbox is not taking any...\""
+- testcopy `bio-plane/test/m/doorbell/rows.test.mjs:26` "\"This team's inbox read your material and cannot keep it, because it...\""
+- testcopy `bio-plane/test/m/doorbell/t35.test.mjs:97` "\"these bytes were received at the doorbell of your team's Civicsmith...\""

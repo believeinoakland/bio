@@ -13,3 +13,12 @@ Layer 2. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/ai-accounts/index.mjs:313` "switching the team key's assistant settings"
 - plain `bio-plane/src/ai-accounts/index.mjs:585` "reading the team key's assistant settings"
 - plain `bio-plane/src/ai-accounts/index.mjs:1178` "keeping the team's material away from every assistant"
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/ai-accounts/seams.test.mjs:524` "\"whether the team keeps its material away from every assistant could...\""
+- testcopy `bio-plane/test/m/ai-accounts/t35-misc.test.mjs:142` "\"your team's Civicsmith has no seal secret set, so a key cannot be k...\""
+- testcopy `bio-plane/test/m/ai-accounts/t35-misc.test.mjs:153` "\"the reference does not open under the seal secret of your team's Ci...\""
+- testcopy `bio-plane/test/m/ai-accounts/t35-misc.test.mjs:156` "\"the team's key does not open under the seal secret of your team's C...\""

@@ -89,7 +89,7 @@ export function readLine(lineText, titles) {
       return { rows: parts.map((name) => ({ name: name.trim(), title, ...(unit ? { unit } : {}) })), paired: true, named: true };
     }
     if (leadingName(right))
-      return { rows: [{ line: t, why: "the line does not divide into a post and the names after it: what follows its colon is not names alone" }],
+      return { rows: [{ line: t, why: localize("roster-reader.staff-roster.the_line_does_not_divide", "the line does not divide into a post and the names after it: what follows its colon is not names alone") }],
                paired: true, named: true };
   }
   /* A title printed before or after one name: the view's titles, never a guess. */
@@ -101,7 +101,7 @@ export function readLine(lineText, titles) {
     if (isName(rest) && contiguous && (lead || tail))
       return { rows: [{ name: rest, title: ts.map((h) => h.text).join(" ").trim() }], paired: true, named: true };
     if (nameSpans(rest).length)
-      return { rows: [{ line: t, why: "the line prints staff titles and names that do not divide into one name beside its title, so it is not paired by guess" }],
+      return { rows: [{ line: t, why: localize("roster-reader.staff-roster.the_line_prints_staff", "the line prints staff titles and names that do not divide into one name beside its title, so it is not paired by guess") }],
                paired: true, named: true };
     /* A post with no name on its line ("Electrician Leader") is a box, not a row. */
     return { rows: [], paired: false, named: false };
@@ -112,7 +112,7 @@ export function readLine(lineText, titles) {
   if (UNIT_WORDS.has((t.split(" ").pop() || "").replace(/[^\p{L}]/gu, "").toLowerCase()))
     return { rows: [], paired: false, named: false };
   if (leadingName(t))
-    return { rows: [{ line: t, why: "the line opens with a name but what follows it is not one of the view's staff titles, so where the name ends is not divided by guess" }],
+    return { rows: [{ line: t, why: localize("roster-reader.staff-roster.the_line_opens_with_a", "the line opens with a name but what follows it is not one of the view's staff titles, so where the name ends is not divided by guess") }],
              paired: true, named: true };
   return { rows: [], paired: false, named: nameSpans(t).length > 0 };
 }
@@ -180,7 +180,7 @@ export function asOfOf(lines, selfLines) {
 
 export default {
   key: "staff_roster",
-  label: "a staff or membership roster",
+  label: localize("roster-reader.staff-roster.a_staff_or_membership", "a staff or membership roster"),
   version: 1,
   /* A roster is a LIST: which rows are present and whether each still says what it said. */
   contract: CONTRACT.MEMBERSHIP,
@@ -188,7 +188,7 @@ export default {
   detect(ctx) {
     const raw = String((ctx && ctx.text) || "");
     const { lines, paired, named, contactLines, boxes } = readRows(raw, ctx);
-    if (!lines.length) return no("no text was read, so there are no rows to recognise");
+    if (!lines.length) return no(localize("roster-reader.staff-roster.no_text_was_read_so", "no text was read, so there are no rows to recognise"));
     /* (1) ROWS ARE THE BODY: the floor. */
     if (paired < ROSTER_FLOOR)
       return no(localize("roster-reader.staff-roster.paired_line_s_carry_a", "{paired} line(s) carry a name with more beside it, below the floor of {ROSTER_FLOOR}: the rows are not the body of this document", { paired: String(paired), ROSTER_FLOOR: String(ROSTER_FLOOR) }));
@@ -210,7 +210,7 @@ export default {
       return no(localize("roster-reader.staff-roster.boxes_line_s_print_a", "{boxes} line(s) print a post or unit with no name beside it, against {paired} row(s): posts laid out apart from their holders are a chart's boxes, not a roster's rows", { boxes: String(boxes), paired: String(paired) }));
     const self = namedAs(selfNamingLines(lines, rosterWordPatterns(ctx)), "roster");
     if (self.only_other)
-      return no("it names itself, with the view's words, as a chart and not as a roster");
+      return no(localize("roster-reader.staff-roster.it_names_itself_with_the_views", "it names itself, with the view's words, as a chart and not as a roster"));
     const signals = [localize("roster-reader.staff-roster.paired_line_s_carry_a_2", "{paired} line(s) carry a name with a title, unit or organisation beside it", { paired: String(paired) }),
                      localize("roster-reader.staff-roster.named_of_length_lines_carry_2", "{named} of {length} lines carry a name ({round}%)", { named: String(named), length: String(lines.length), round: String(Math.round(share * 100)) })];
     if (self.as.length) {
@@ -218,7 +218,7 @@ export default {
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     }
     return { match: true, confidence: CONFIDENCE.LIKELY, signals,
-             why: "no short line names it a roster with the view's words, so it is read as a roster on its rows alone" };
+             why: localize("roster-reader.staff-roster.no_short_line_names_it_a", "no short line names it a roster with the view's words, so it is read as a roster on its rows alone") };
   },
 
   /** The rows as the lines state them (R2), each placed where `ctx.locate` says (`doctypes` R7). */
@@ -237,9 +237,9 @@ export default {
       rows: out,
       counts: { rows: out.length, divided: out.filter((r) => r.name).length, whole: out.filter((r) => r.line).length },
       as_of: asOf ? { text: asOf.text, date: asOf.date, precision: asOf.precision, source: locate(asOf.offset) || null } : null,
-      as_of_why: asOf ? (asOf.why || null) : "no line among the document's first eight, or beside its self-naming line, states a date",
+      as_of_why: asOf ? (asOf.why || null) : localize("roster-reader.staff-roster.no_line_among_the_documents_first", "no line among the document's first eight, or beside its self-naming line, states a date"),
       organisation: org ? { text: org.text, source: locate(org.offset) || null } : null,
-      organisation_why: org ? null : "neither its first line nor the line before its self-naming line is a heading that names an organisation",
+      organisation_why: org ? null : localize("roster-reader.staff-roster.neither_its_first_line_nor", "neither its first line nor the line before its self-naming line is a heading that names an organisation"),
       also_satisfies: alsoSatisfies(ctx, "staff_roster"),
       at: (ctx && ctx.at) || null,
     };

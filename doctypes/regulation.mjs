@@ -212,7 +212,7 @@ export default {
     const signals = [];
 
     const enacting = ENACTING.test(flat);
-    if (enacting) signals.push("an enacting formula in the operative voice");
+    if (enacting) signals.push(localize("doctypes.regulation.enacting", "an enacting formula in the operative voice"));
     const recitals = (flat.match(RECITAL) || []).length;
     if (recitals >= 2) signals.push(localize("doctypes.regulation.recital_chain", "a recital chain of {count} WHEREAS clause(s)", { count: String(recitals) }));
     const caption = allMatches(regCaptions(ctx), flat).length > 0;
@@ -346,8 +346,7 @@ export default {
       entities,
       form,
       form_why: form ? null
-        : "this text carries no enacting formula, no instrument caption under a body, and no section heading of a "
-        + "code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section",
+        : localize("doctypes.regulation.no_form", "this text carries no enacting formula, no instrument caption under a body, and no section heading of a code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section"),
       ...st,
       instrument,
       /* Null means THIS INSTRUMENT CARRIES NO NUMBER — document A's caption is
@@ -355,10 +354,8 @@ export default {
          not mean the reader failed, and `number_why` says which. */
       number,
       number_why: number ? null
-        : cap ? "this instrument's caption carries no number, which is what a proposed ordinance "
-              + "or resolution looks like before a body adopts it"
-        : "no caption introduced by an enacting body was read, in the words the active "
-        + "jurisdiction profiles give for instruments and bodies, so the number is not stated",
+        : cap ? localize("doctypes.regulation.proposed_no_number", "this instrument's caption carries no number, which is what a proposed ordinance or resolution looks like before a body adopts it")
+        : localize("doctypes.regulation.no_caption", "no caption introduced by an enacting body was read, in the words the active jurisdiction profiles give for instruments and bodies, so the number is not stated"),
       title,
       recitals,
       also_satisfies: alsoSatisfies(ctx, "regulation"),
@@ -373,7 +370,7 @@ export default {
     const readNothing = (x) => !x.instrument && !(x.entities || []).length && !(x.sections || []).length;
     if (readNothing(a) || readNothing(b))
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               sections_compared: false, sections_why: "nothing was read from one of the readings, so nothing is said about its sections",
+               sections_compared: false, sections_why: localize("doctypes.regulation.one_side_unread", "nothing was read from one of the readings, so nothing is said about its sections"),
                why: "nothing could be read from this instrument this time, so nothing is claimed "
                   + "about it either way" };
 
@@ -388,21 +385,21 @@ export default {
           why: localize("doctypes.regulation.instrument_changed", "this instrument's {field} is not what it was at this address", { field: k }) }));
     if (Number(a.recitals || 0) !== Number(b.recitals || 0))
       events.push(event("instrument_changed", { key: "recitals", was: a.recitals, now: b.recitals,
-        why: "the recitals establishing this instrument's grounds changed in number" }));
+        why: localize("doctypes.regulation.recitals", "the recitals establishing this instrument's grounds changed in number") }));
 
     if ((a.form || b.form) && String(a.form || "") !== String(b.form || ""))
       events.push(event("instrument_changed", { key: "form", was: a.form || null, now: b.form || null,
-        why: "what was read at this address is not the same form of law it was" }));
+        why: localize("doctypes.regulation.form_changed", "what was read at this address is not the same form of law it was") }));
     const sec = sectionChanges(a, b);
     for (const e of sec.events) events.push(e);
 
     const d = diffEntities(a.entities || [], b.entities || []);
     for (const e of d.gone)
       events.push(event("item_pulled", { key: e.key, label: e.label,
-        why: "an instrument or code section this one acted on is no longer named in it" }));
+        why: localize("doctypes.regulation.pulled", "an instrument or code section this one acted on is no longer named in it") }));
     for (const e of d.appeared)
       events.push(event("item_added", { key: e.key, label: e.label,
-        why: "this instrument now names something it did not name before" }));
+        why: localize("doctypes.regulation.added", "this instrument now names something it did not name before") }));
 
     bySeverity(events);
     return {
@@ -411,7 +408,7 @@ export default {
       sections_compared: sec.compared, sections_why: sec.why,
       why: events.length
         ? localize("doctypes.regulation.changes", "{count} change(s) to an instrument at the same address", { count: String(events.length) })
-        : "this instrument says what it said, and acts on the same things",
+        : localize("doctypes.regulation.unchanged", "this instrument says what it said, and acts on the same things"),
     };
   },
 };

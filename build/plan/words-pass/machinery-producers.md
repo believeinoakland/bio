@@ -18,3 +18,12 @@ Layer 11. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/machinery-producers/index.mjs:776` "an unscheduled address has no instant it fell due"
 - plain `bio-plane/src/machinery-producers/index.mjs:855` "the request row carries a request stamp this producer cannot read as an instant"
 - plain `bio-plane/src/machinery-producers/index.mjs:974` "the sweep's status carries no instant this producer can read"
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/machinery-producers/conditions.test.mjs:51` "\"Nothing about the source is being claimed\""
+- testcopy `bio-plane/test/m/machinery-producers/conditions.test.mjs:77` "\"primary document is captured\""
+- testcopy `bio-plane/test/m/machinery-producers/invariants.test.mjs:207` "\"no instance key was bound when it fell due, so your team's Civicsmi...\""
+- testcopy `bio-plane/test/m/machinery-producers/invariants.test.mjs:209` "\"your team's Civicsmith signed the closing into the notice's public ...\""

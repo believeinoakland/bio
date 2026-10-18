@@ -26,3 +26,10 @@ Layer 6. 13 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/inquiry/index.mjs:1839` "pointing at a history the document does not carry (C-4.2); nothing was moved"
 - plain `bio-plane/src/inquiry/index.mjs:1997` "this inquiry has no readable bundle.md, so its state cannot be moved"
 - plain `bio-plane/src/inquiry/index.mjs:2571` "this inquiry has no readable bundle.md, so its structure cannot be authored"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/inquiry/case-grammar.test.mjs:75` "\"from this document's frontmatter\""
+- testcopy `bio-plane/test/m/inquiry/case-grammar.test.mjs:261` "\"' is not a named member: \\\"these legs are enough on their own\\\" is an...\""
