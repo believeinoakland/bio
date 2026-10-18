@@ -1,6 +1,52 @@
 # bundler (T51)
 
-**Status** · session_01X7jKAKCTDrVKXvoacZ8mWN · depth 2 · COMPLETE · handled B2
+**Status** · session_017VMvhjxUfKRwS5rFeW66NT · depth 2 · COMPLETE · handled B6
+
+## Record (BUNDLER #22, B4/B6: R38)
+
+**Entries applied (R38, K3953 as amended by K3958; T51-144 stays as BUNDLER #21 left it, J3)**
+- **How it works (`fleet-bundle.mjs`, `buildMember`):** for a fleet member (a descriptor `discoverMembers` marks; the plane, `wholeWordTable`, and any other descriptor, such as the standalone case checker's, carry the table whole) a probe build stubs `setup-words/rows.mjs` out and names the first-party inputs; each is parsed with the vendored acorn (`setup-words/vendor/acorn.mjs`, never a pattern) by `wordKeysOf`, which reads every call of `word`, `localize` and `hasWord` (a name the file declares itself is not the call, setup-words' own rule): a string or no-expression template is a key, a `+` chain or template with a literal head is a prefix, both arms of `?:`, `||`, `??` count. The real build then replaces the `rows.mjs` import (an esbuild `onLoad` plugin) by a module of the rows named or under a prefix, in the table's order. `manifestFrom` records `words: {rows, sha256}` (the SHA-256 of the kept rows); `verifyFresh` compares the manifest's word fields with the fresh build's and names a disagreement as STALE BUNDLE.
+- **K3958 (a variable key keeps the whole table):** a call with no literal prefix, `word` used other than as a callee, `WORD_ROWS` imported or re-exported outside setup-words' own index, a dynamic import of the table: the build does not fail; it keeps the whole table and the manifest says `words: "all"` with `wordSites`, every site as `file:line` (code-point order, member-relative). A member whose inputs do not reach the table records nothing, as before; the plane's manifest and bytes are as before (tested against the plain recipe).
+- **Real fleet (kept rows of 18,680, each member's inputs as the tree stands at the tranche merge):** pdf-worker **10**, ocr-worker **74**, sheet-worker **15**, agent-runner **2**, file-scanner **45**; agent-worker keeps **the whole table** for 6 sites (7 findings; `project-roster/checks.mjs:14` holds two on one line): `../bio-plane/src/capture/words.mjs:78`, `extraction/words.mjs:7` (imports `WORD_ROWS`) and `:67`, `membership/words.mjs:11`, `project-roster/checks.mjs:14`, `run-rules/checks.mjs:26`. The standalone case checker's `program.mjs` build is unchanged (checked: sha256 `de50988e…` before and after).
+- **Tests (bundler.test.mjs, all name R38):** fixture exact keys (word, localize, hasWord, template, conditional; table order; manifest rows and digest; the bundle still runs); `'refusal.' + code` and a template keep every row under the prefix; bare variable / call result / no argument / spread / one bare site among literal ones keep the whole table naming the site, and the build equals the untrimmed one; `word` as a value, the table imported, a dynamic import; a local `word` is not the call; the plane built by the plain recipe, no `words` field; a non-member descriptor is built whole; `verifyFresh` covers the rows (wrong count, wrong digest, missing, "all") and the sites; real fleet: each buildable member's rows are in the table's order and each kept key appears quoted in its inputs or begins with a literal prefix before a `+` or `${` (an independent regex check), counts printed; agent-worker named as keeping the whole table with its sites. The scratch repository (`repo.mjs`) copies the vendored parser the build now imports.
+
+**Deferred / not done**
+- Nothing deferred. Not done, as instructed: no `dist/` bundle or manifest rebuilt or committed.
+
+**For BOB (not mine)**
+1. **Architecture: 1 failure, yours to clear.** `fleet-bundle.mjs` imports `bio-plane/src/setup-words/vendor/acorn.mjs` (the parser B4 names), so `bundler`'s `uses` in `build/modules.json` and the Uses part of `build/requirements/bundler.md` need `setup-words` added (`signatures`, `test-support`, `setup-words`). I cannot edit either; nothing else in the check fails. setup-words is earlier in layer 1.
+2. **Every committed bundle is now stale against a fresh build** (as intended before R1's close): `fleetbundles` fails the byte arm for agent-runner, agent-worker, file-scanner, ocr-worker, pdf-worker (their manifests record no `words`; their bundles carry the whole table), and several members' static arm was already stale from merged source changes (the plane, agent-worker, file-scanner, ocr-worker, pdf-worker: sources changed by other modules since each bundle was built). `bundles.mjs` at R1's close regenerates them (agent-worker, with its whole table and 6 sites, builds).
+3. **Real-fleet expectation (K3958):** the second real-fleet test lists the members keeping the whole table and their sites (agent-worker today) and fails only if pdf-worker, ocr-worker or sheet-worker did. When the five modules' jobs make their reads literal (CR-4, T51-157, T51-180, T51-189, T51-218) agent-worker trims, its count is printed by the first real-fleet test with the others (it skips only a member that keeps the whole table), and the second test then lists no member; BOB tightens it to assert none.
+4. `node_modules` of `agent-runner` and `file-scanner` were absent in this container; I ran `npm ci --ignore-scripts` there (untracked `node_modules`, nothing committed).
+
+**Tests and checks** (from `/home/user/bio/bio-plane` and the process repository)
+- `node --test test/m/bundler/bundler.test.mjs release.test.mjs thirdparty.test.mjs test/system/bundle.test.mjs deploybindings.test.mjs resolveversion.test.mjs`: **129 pass, 0 fail** (8 new R38 tests).
+- `node --test test/system/fleetbundles.test.mjs`: red as item 2 says (stale committed bundles; not skipped).
+- `node checks/format.mjs`: 0 failures. `coverage.mjs bundler`: 38 of 38 live ids named, 0 failures. `ownership.mjs bundler tranche/T51 job/T51/bundler`: 0 failures. `architecture.mjs bundler`: 1 failure (item 1). `checks/run.mjs`: words findings repo-wide, none in bundler's files.
+
+Size (session_017VMvhjxUfKRwS5rFeW66NT): test runs 14, module lines 3986
+
+## Record (BUNDLER #21, B3: T51-144)
+
+**Entries applied (T51-144, R36 second half: the two digests agree)**
+- **Real fleet (`bundler.test.mjs`, R36 · T51-144):** `digestDisagreements(members)` compares, for each container class, the marker's `image.digest` with the digest the `wrangler.jsonc` `containers[]` entry of the same `class_name` names; it returns the disagreeing classes as text naming the member and the class. The real-fleet test holds it empty over `discoverMembers()` and counts the three classes (agent-runner's `AgentRunner`, file-scanner's `FileScanner` and `SafeViewRenderer`). Today the real pairs agree: agent-runner `954ac088…`, file-scanner `38d314ed…` and `27941d2a…`, the same in `fleet-member.json` and `wrangler.jsonc`. The test reads those files and never edits them.
+- **Control (fixture, R36 · T51-144):** a fixture member whose `wrangler.jsonc` digest is rewritten to a second digest fails the test with exactly `runner Runner: fleet-member.json names <digest>, wrangler.jsonc names <other>`; the same fixture with the digests equal passes.
+- **`--record-image` writes both (B3 note 2):** no change was needed. `recordContainerDigest` already writes `fleet-member.json` and `wrangler.jsonc` in one call, both or neither (refusals run before either write). The CLI test `release.test.mjs` R36 (the `--record-image` subprocess test) already asserts both files name the new digest and agree, so I did not duplicate it.
+
+**Deferred / not done**
+- Nothing deferred. `recordContainerDigest` still writes `fleet-member.json` before `wrangler.jsonc`, so a failure of the second write would leave the first written; both writes follow the refusal checks, so no refusal leaves one file changed. Not in T51-144's words; noted for BOB.
+
+**Reports (not my module, or for BOB)**
+1. The three real-fleet reds recorded at BUNDLER #20 (R24 and R35 real-fleet tests, and `fleetbundles` "agent-runner and file-scanner are listed as container members") are green on this tree: the members' markers now name `docker.io/civicsmith/…` (file-scanner T51-9 and agent-runner T51-64 have merged). Nothing for BOB to do there.
+2. The real markers still record no `source_sha256`, so the assembly refuses `CONTAINER_IMAGE_STALE` until the cut's `--record-image` runs (BOB's act at the cut, per the plan's BOB's acts; the workflow is not edited). Unchanged from #20.
+
+**Tests and checks** (from `/home/user/bio/bio-plane`, and the process repository)
+- `node --test --test-name-pattern='T51-144' test/m/bundler/bundler.test.mjs`: 2 pass.
+- `node --test` over `test/m/bundler/bundler.test.mjs`, `release.test.mjs`, `thirdparty.test.mjs`, `test/system/bundle.test.mjs`, `deploybindings.test.mjs`, `resolveversion.test.mjs`, `fleetbundles.test.mjs`: 122 pass, 0 fail.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage 33 failures, none in bundler (`coverage.mjs bundler`: 37 of 37 live ids named, 0 failures); words 2,821 failures repo-wide, none in bundler's files (T51's words pass and the R1 re-run carry them).
+- `node checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`: 0 failures (one file changed by bundler: `bio-plane/test/m/bundler/bundler.test.mjs`).
+
+Size (session_01Tfsgwbtwh4oCYrrgbCtzBG): test runs 4, module lines 3802
 
 ## Record (BUNDLER #20)
 
@@ -41,3 +87,37 @@ Size (session_01X7jKAKCTDrVKXvoacZ8mWN): test runs 18, module lines 3768
 ## J2 · COMPLETE
 
 COMPLETE (B2, K3835 applied): the signing page is out of my tests and fixture; details in my record. Remaining reds unchanged: the two real-fleet marker tests and fleetbundles' marker list, until file-scanner and agent-runner merge.
+
+## J3 · COMPLETE
+
+COMPLETE. T51-144 applied in commit 616cc3718f (job/T51/bundler): a real-fleet test that each container class's fleet-member.json image.digest equals the digest its wrangler.jsonc containers[] entry names (agent-runner's AgentRunner, file-scanner's FileScanner and SafeViewRenderer), with a fixture control whose two digests differ. Today the real pairs agree. --record-image already writes both files, both or neither, and release.test.mjs R36 tests it through the CLI, so no code change was needed. Tests: bundler, release, thirdparty and the four system tests named in the record, 122 pass, 0 fail (the three real-fleet reds from #20 are green now that the markers name docker.io). checks: format 0, architecture 0, coverage bundler 37 of 37, ownership 0. Repo-wide coverage (33) and words (2,821) findings are none in bundler's files. Nothing for you to do; the cut's --record-image act is yours, as before. Size: test runs 4, module lines 3802. Full detail in build/jobs/T51/bundler.md.
+
+## J4 · BLOCKED
+
+BLOCKED (cause: tests). B4 (CHANGE, R38: a member's bundle carries only the word rows its inputs read) is more than I can do at my model, as B4 itself allows. Why: R38 changes what every fleet member's bundle contains and how the byte-freshness guard sees it. It needs a parser pass over every bundled input to collect the literal keys at word/localize/hasWord calls and the literal prefixes of built keys, a refusal for a bare variable key, an esbuild substitution of the trimmed rows, manifest fields for the kept rows (count and digest) that verifyFresh checks, and real-fleet count tests with fixture controls. Getting every member's test suite green on that is a Sonnet-level pass, and I have not started writing code for it. Merged: tranche/T51 is merged into job/T51/bundler (b7f9585831, pushed), no conflicts. Nothing else changed. Next step for BOB: restart this job one model up (sonnet) to take B4; the merge is already on the branch. Size is unchanged from COMPLETE.
+
+## J5 · QUESTION
+
+QUESTION (R38 on the real agent-worker; my best reading below, I carry on with it).
+
+R38 as written (a call whose key has no literal prefix fails the build) cannot be met by the real agent-worker today: its bundled inputs hold 7 sites in OTHER modules, which I may not change. Built with R38, agent-worker's `buildMember` refuses (so `verifyFresh` says "not checked", and R1's regeneration of its bundle would fail) until each site is literal. The other members build: pdf-worker keeps 10 of 18,680 rows, ocr-worker 74, sheet-worker 15, agent-runner 2, file-scanner 45; the plane is unchanged (whole table).
+
+Sites, all found by the vendored parser (my build lists them at once):
+1. `bio-plane/src/run-rules/checks.mjs:26` — `[...four 'refusal.X' literals].map((key) => [key, word(key)])` (run-rules).
+2. `bio-plane/src/membership/words.mjs:11` — `keyed(key, names)` wraps `word(key, …)`; its callers pass `rowKey(code)` / `SENTENCE_KEYS` (membership).
+3. `bio-plane/src/project-roster/checks.mjs:14` — `said(code, key = `refusal.${code}`)`: `hasWord(key)` / `word(key)` (project-roster).
+4. `bio-plane/src/extraction/words.mjs:7` imports `WORD_ROWS` (the whole table) and `:67` `say(key)` calls `word(key, vars)` (extraction).
+5. `bio-plane/src/capture/words.mjs:78` — `say(key)` calls `word(key, vars)` (capture).
+These modules each hold their vocabulary as a list of string literals (`WORD_KEYS`, `SENTENCE_KEYS`) and read it through a wrapper with a variable key.
+
+My best reading: R38 stands as written, so those five modules' jobs make their reads literal (or each wrapper's reads literal prefixes, as `` `refusal.${code}` `` is accepted: a template or `'refusal.' + code` with a literal head is a prefix and keeps every `refusal.` row). A prefix-wrapper fix is small for 3 and 4/5's refusal reads; the rest must name their keys at the call.
+The alternative, if BOB prefers it (a requirement change, yours): treat every string literal in the member's inputs that equals a row key as read (a list of literal keys then counts), keeping the bare-variable refusal only for calls whose key could come from a non-literal source. I do NOT build that unless told: R38's own control (a bare variable fails the build naming the site) means the strict reading.
+Until then: my real-fleet test states each of the five buildable members' kept row count and, for agent-worker, asserts the build refuses naming exactly these sites by file (a control that turns green-for-the-right-reason when the five modules are fixed, then BOB changes it to a count).
+
+## J6 · COMPLETE · re B6
+
+COMPLETE. T51-144 (J3, unchanged) and R38 (B4, K3953 as amended by K3958) are applied: commit 477843e080 on job/T51/bundler.
+R38: a fleet member's bundle carries only the word rows its inputs name (vendored acorn reads word/localize/hasWord; literal keys and literal prefixes; esbuild plugin substitutes the trimmed rows.mjs); manifest `words: {rows, sha256}`; a variable-key site or any whole-table read keeps the whole table, `words: "all"` + `wordSites` (file:line); verifyFresh covers both; the plane and non-member builds (the case checker's program.mjs: sha unchanged) are as before. Kept rows of 18,680: pdf-worker 10, ocr-worker 74, sheet-worker 15, agent-runner 2, file-scanner 45; agent-worker keeps the whole table for 6 sites (capture/words.mjs:78, extraction/words.mjs:7 and :67, membership/words.mjs:11, project-roster/checks.mjs:14, run-rules/checks.mjs:26). No dist bundle touched.
+Tests: 129 pass, 0 fail (bundler, release, thirdparty, bundle, deploybindings, resolveversion; 8 new R38 tests). format 0; coverage bundler 38 of 38; ownership 0.
+For you: (1) architecture shows 1 failure: fleet-bundle.mjs imports setup-words/vendor/acorn.mjs, so `setup-words` must be added to bundler's `uses` in build/modules.json and the Uses part of build/requirements/bundler.md (neither is mine); nothing else fails. (2) Every committed member bundle is stale against a fresh build until your R1-close regeneration (fleetbundles red on the byte arm; some static arms were already stale from merged sources). (3) The container members' node_modules were missing here; I ran `npm ci --ignore-scripts` (untracked). Details and the Size line are in my record.
+Size (session_017VMvhjxUfKRwS5rFeW66NT): test runs 14, module lines 3986
