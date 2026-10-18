@@ -326,7 +326,7 @@ export const RUN_ENDINGS = {
    held to it by `rules.test.mjs` R1), and `RUN_STATUS` is kept out of that shape
    on purpose: giving these terms texts would present a lifecycle word as though a
    surface rendered a sentence in its place, which is not what this vocabulary is.
-   The shape is kept; the reasoning is here. (`civicos-ui/check-refusal-codes.mjs`
+   The shape is kept; the reasoning is here. (The refusal-code guard's
    arm E, deleted in T20, harvested such vocabularies by that shape and recorded
    `RUN_STATUS` as excluded by it.) */
 export const RUN_STATUS = { running: 1, finished: 1, stopped: 1, "never-started": 1 };
@@ -858,7 +858,7 @@ export function runConsultsProjects(contextType) {
 /* THERE IS NO `NOT_PARTICIPANT` GROUND, AND ITS ABSENCE IS A CORRECTION THIS
    ITEM'S OWN GUARD RUN FORCED RATHER THAN AN OMISSION. The first draft had one,
    and it was a SECOND NAME for a fact that already has a canonical one: the
-   refusal's C-22.8 code. `civicos-ui/check-refusal-codes.mjs` failed the
+   refusal's C-22.8 code. The refusal-code guard, deleted in T20, failed the
    harness on the shape that produced it — a refusing return whose code arrived
    through a spread rather than as a literal at the site — and the fix that
    satisfies the guard is the same fix that removes the duplicate name: the
@@ -894,7 +894,7 @@ export function runConsultsProjects(contextType) {
  *  CORRECTION THIS ITEM'S OWN GUARD RUN FORCED rather than a shape chosen up
  *  front. The first draft led with `applied`, which is not a verdict at all —
  *  it says whether the gate had anything to check — so the two PERMITTING
- *  grounds returned `applied: false` and `civicos-ui/check-refusal-codes.mjs`
+ *  grounds returned `applied: false` and the refusal-code guard, deleted in T20,
  *  read both of them as CODELESS REFUSALS and failed the harness. It was right
  *  to: a reader who cannot tell *this gate did not apply* from *this gate
  *  refused* by looking at the verdict is the member-facing version of the same
@@ -952,8 +952,7 @@ export function projectGate(asked) {
      the table, so the refusal carries its row: `test/m/run-rules/table.test.mjs`
      R11 holds every refusal this module mints to its row, and control-plane's
      `test/m/control-plane/families.test.mjs` R22 holds the table reached whole.
-     (The guard that read the literal here, `civicos-ui/check-refusal-codes.mjs`,
-     was deleted in T20; a code arriving through a spread was invisible to it, and
+     (The refusal-code guard that read the literal here was deleted in T20; a code arriving through a spread was invisible to it, and
      one shipped `translation: undefined` to a member exactly that way.) THIS IS THE ONE
      PLACE THE CODE IS WRITTEN: the three `ai-runs` call sites RELAY what comes
      back, precisely as its open relays C-22.7 from `./skill-version.mjs`.

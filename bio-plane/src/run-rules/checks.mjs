@@ -398,7 +398,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
 
      ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
      REC-64's work — and the reason WAS a defect in the guard (arm C of
-     `civicos-ui/check-refusal-codes.mjs`, deleted in T20; this paragraph and the
+     the refusal-code guard, deleted in T20; this paragraph and the
      two below are its history) rather than a
      judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
      C's matcher was `ok: false`, so a REGION here would have judged zero refusals
@@ -477,7 +477,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
 
      A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
      narrowed REGION, which is what the old process's `kickoffs/WORKER.md` (retired) asked for — and
-     `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
+     the refusal-code guard then FAILED all three by name: `aiRunOpen`'s three
      rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
      region's refusals twice, once at the region and once at the enclosing
      function, where their codes were not rows. So these three were written at
@@ -525,8 +525,8 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
  * defect, not the vigilance. **AND THE COLLISION WAS INVISIBLE TO THE BATTERY**
  * (the old suite runner, `battery.mjs`, deleted since).
  * 139/139 suites green at 8,887 assertions with two families both claiming
- * C-34.1-3; only `node civicos-ui/test/run.mjs` caught it (through
- * `check-refusal-codes.mjs`, deleted in T20), with *"Two conditions behind one
+ * C-34.1-3; only the old `civicos-ui` suite caught it (through its
+ * refusal-code guard, deleted in T20), with *"Two conditions behind one
  * C-number are one condition as far as op=audit can see."* Within this table, one
  * C-number per condition is held today by `test/m/run-rules/table.test.mjs` R11.
  *
@@ -546,7 +546,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
  * match no run at all — MEANING_READ_CHECKS' shape one construct over, and that
  * family is the precedent this one follows rather than C-22's (it was a family of
  * this file; since T5 it lives in `src/retrieval/checks.mjs`, retrieval's). The floor in
- * `civicos-ui/check-refusal-codes.mjs` (deleted in T20) was moved in the same
+ * the refusal-code guard (deleted in T20) was moved in the same
  * turn, from the figure the guard PRINTED.
  *
  * WHY THEY ARE REFUSALS AND NOT AN EMPTY ANSWER, which is the whole judgement
