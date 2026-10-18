@@ -27,3 +27,25 @@ Completion of T51-252 (text-chain), commit 6a26c46c93 on job/T51/text-chain.
 - `checks/words.mjs`: no finding in text-chain. The product-wide run still reports 4,829 words failures in other modules (the inherited reds); none is in text-chain's paths or tests.
 
 Size (session_01RQyitqBGKNtCPSNEoaoewp): test runs 2, module lines 1983
+
+## J2 · COMPLETE
+
+Completion again after CHANGE B2 (K3962, K3965), commit 0761388f1e on job/T51/text-chain.
+
+**Done.**
+- Merged tranche/T51 and pulled civicos-process (ea6cd83) first.
+- The six extent phrases now read word('textchain.text.cell_spreadsheet'), shape_deck, paragraph_document, range_cells_spreadsheet, table_document and image_document (K3965). The localize ids for them are removed.
+- The R92 test in extent.test.mjs compares each human with word(key); the three R92 tests in words.test.mjs became one test that does the same.
+- The six test copies listed in build/plan/words-pass/text-chain.md (K3962) are converted; the module's tests hold no sentence copy. No regular-expression copies were found.
+
+**Checks.**
+- node --test test/m/text-chain/*.test.mjs: 130 pass, 0 fail.
+- setup-words build --check: exit 0. Its one warning is for jurisdictions.index.amount_is_amount_and_units, not this module.
+- format: 0 failures. architecture: 0 failures (run.mjs).
+- coverage text-chain: 104 of 104 live requirement ids named by a test.
+- ownership: 1 file changed by text-chain, 0 failures.
+- words: no finding in text-chain. Product-wide run: 4,549 failures, all in other modules.
+
+**Deferred.** None. **Found in other modules.** None.
+
+Size (session_01RQyitqBGKNtCPSNEoaoewp): test runs 3, module lines 1983
