@@ -12269,6 +12269,222 @@
    "en": "The first part of your team's address, before the first dot. It was installed under the name “{slug}”; your team's short name may differ. It is recorded once and cannot be changed.",
    "protected": false,
    "note": "DEC-331: {slug} the installed name"
+  },
+  {
+   "key": "queue.multi.head",
+   "en": "Choose several items, then act on all of them at once.",
+   "protected": false,
+   "note": "DEC-330: B306 A58: the queue sub-line while choosing"
+  },
+  {
+   "key": "queue.multi.head2",
+   "en": "Each item says what happened to it.",
+   "protected": false,
+   "note": "DEC-330: B306 A58"
+  },
+  {
+   "key": "queue.multi.forward",
+   "en": "Forward them to a member",
+   "protected": false,
+   "note": "DEC-330: B306 A58: bar act, taskforward on the chosen items"
+  },
+  {
+   "key": "queue.multi.snooze",
+   "en": "Snooze them to a date",
+   "protected": false,
+   "note": "DEC-330: B306 A58: bar act, queuesnooze on the chosen items"
+  },
+  {
+   "key": "queue.multi.dismiss",
+   "en": "Dismiss them with a reason",
+   "protected": false,
+   "note": "DEC-330: B306 A58: bar act, proposedispose on the chosen items"
+  },
+  {
+   "key": "queue.multi.result",
+   "en": "You acted on 4 items. 2 are done and left your queue; 2 were not handled and stay here.",
+   "protected": false,
+   "note": "DEC-330: B306 A58: per-item outcome head; counts are the mockup's"
+  },
+  {
+   "key": "queue.multi.refused",
+   "en": "Not handled, stays here",
+   "protected": false,
+   "note": "DEC-330: B306 A58: label of a refused item"
+  },
+  {
+   "key": "queue.multi.why.letter",
+   "en": "Approving a letter needs you to read it first.",
+   "protected": false,
+   "note": "DEC-330: B306 A58: why one item was refused"
+  },
+  {
+   "key": "queue.multi.why.check",
+   "en": "A check needs your answer on the check itself.",
+   "protected": false,
+   "note": "DEC-330: B306 A58: why one item was refused"
+  },
+  {
+   "key": "queue.multi.back",
+   "en": "Back to your queue",
+   "protected": false,
+   "note": "DEC-330: B306 A58/A61"
+  },
+  {
+   "key": "queue.multi.entry",
+   "en": "Choose several items to answer at once, or look back at what you answered.",
+   "protected": false,
+   "note": "DEC-330: B306 A58/A61: entry row on the queue"
+  },
+  {
+   "key": "queue.answered.head",
+   "en": "The items you dealt with, what you did, and when.",
+   "protected": false,
+   "note": "DEC-330: B306 A61: sub-line"
+  },
+  {
+   "key": "queue.answered.left",
+   "en": "They have left your queue.",
+   "protected": false,
+   "note": "DEC-330: B306 A61"
+  },
+  {
+   "key": "queue.answered.photos",
+   "en": "Vouched for 2 photos you captured on Seminary Avenue",
+   "protected": false,
+   "note": "DEC-330: B306 A61 receipt"
+  },
+  {
+   "key": "queue.answered.forwarded.note",
+   "en": "with your note “you know this clause best”",
+   "protected": false,
+   "note": "DEC-330: B306 A61 receipt"
+  },
+  {
+   "key": "queue.answered.granted",
+   "en": "Granted Teo's request to join Pothole repairs",
+   "protected": false,
+   "note": "DEC-330: B306 A61 receipt"
+  },
+  {
+   "key": "queue.answered.granted.meta",
+   "en": "Teo saw your answer",
+   "protected": false,
+   "note": "DEC-330: B306 A61 receipt"
+  },
+  {
+   "key": "queue.answered.snoozed.meta",
+   "en": "it comes back that day",
+   "protected": false,
+   "note": "DEC-330: B306 A61 receipt"
+  },
+  {
+   "key": "queue.answered.byother",
+   "en": "an administrator's to-do leaves every administrator's queue",
+   "protected": false,
+   "note": "DEC-330: B306 A61 receipt: someone else on the team answered it"
+  },
+  {
+   "key": "queue.aside.dismissed",
+   "en": "Dismissed by you, 8 October",
+   "protected": false,
+   "note": "DEC-330: B306 A63 decision line"
+  },
+  {
+   "key": "queue.aside.v2",
+   "en": "judged against the progression as it stood in version 2",
+   "protected": false,
+   "note": "DEC-330: B306 A63: the version each decision judged"
+  },
+  {
+   "key": "queue.aside.finding2",
+   "en": "No reply recorded to the Demand to rescind",
+   "protected": false,
+   "note": "DEC-330: B306 A63"
+  },
+  {
+   "key": "queue.aside.deferred",
+   "en": "Put off by you until 1 November",
+   "protected": false,
+   "note": "DEC-330: B306 A63"
+  },
+  {
+   "key": "queue.aside.v3",
+   "en": "judged against the progression as it stood in version 3",
+   "protected": false,
+   "note": "DEC-330: B306 A63"
+  },
+  {
+   "key": "queue.allclear.withheld",
+   "en": "Not everything answered, so this cannot say nothing is waiting on you.",
+   "protected": false,
+   "note": "DEC-330: B306 A62: all-clear withheld"
+  },
+  {
+   "key": "queue.allclear.failed",
+   "en": "Notices about the documents your team watches did not answer.",
+   "protected": false,
+   "note": "DEC-330: B306 A62"
+  },
+  {
+   "key": "queue.allclear.failed2",
+   "en": "What did answer shows nothing waiting; what did not may hold something.",
+   "protected": false,
+   "note": "DEC-330: B306 A62"
+  },
+  {
+   "key": "queue.none.todo",
+   "en": "To do: none here.",
+   "protected": false,
+   "note": "DEC-330: B306 A62 per kind"
+  },
+  {
+   "key": "queue.none.todo2",
+   "en": "Nothing asks for your act.",
+   "protected": false,
+   "note": "DEC-330: B306 A62 per kind"
+  },
+  {
+   "key": "queue.none.noticed2",
+   "en": "The record found nothing new that you follow.",
+   "protected": false,
+   "note": "DEC-330: B306 A62 per kind"
+  },
+  {
+   "key": "queue.none.status2",
+   "en": "Nothing you follow has changed.",
+   "protected": false,
+   "note": "DEC-330: B306 A62 per kind"
+  },
+  {
+   "key": "queue.multi.done.help",
+   "en": "Marks each chosen item done where nothing more is asked of you.",
+   "protected": false,
+   "note": "DEC-330: B306 A58 bar act explanation"
+  },
+  {
+   "key": "queue.multi.done.help2",
+   "en": "An item that needs you to read, check or decide stays in your queue, and says why.",
+   "protected": false,
+   "note": "DEC-330: B306 A58"
+  },
+  {
+   "key": "queue.answered.help",
+   "en": "What left your queue because of you, or because someone else on the team did it for everyone.",
+   "protected": false,
+   "note": "DEC-330: B306 A61 section explanation"
+  },
+  {
+   "key": "queue.aside.help",
+   "en": "Findings you put off or dismissed, with your reason and the version of the progression each decision judged.",
+   "protected": false,
+   "note": "DEC-330: B306 A63"
+  },
+  {
+   "key": "queue.aside.help2",
+   "en": "Nothing here is deleted; the record keeps it.",
+   "protected": false,
+   "note": "DEC-330: B306 A63"
   }
  ],
  "rewrite": {
