@@ -63,9 +63,10 @@ const secops = {
 };
 
 // Elastic `_bulk`: one index action and the record, as newline-delimited JSON.
+export const ELASTIC_DEFAULT_INDEX = 'civicsmith-security-counts';
 const elastic = {
   async forward(ctx, record) {
-    const index = String(ctx.config.index || 'civicsmith-security-counts');
+    const index = String(ctx.config.index || ELASTIC_DEFAULT_INDEX);
     const body = `${JSON.stringify({ index: { _index: index } })}\n${JSON.stringify(record)}\n`;
     const j = await jsonOf(await ctx.net.http(`${baseOf(ctx)}/_bulk`, { method: 'POST',
       headers: { authorization: `ApiKey ${ctx.cred('api_key')}`, 'content-type': 'application/x-ndjson' }, body }));
