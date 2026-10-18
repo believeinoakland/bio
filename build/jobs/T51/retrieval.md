@@ -42,3 +42,7 @@ T51-42 retrieval complete (record: Completion (T51-42)). R87 (scopes on searchFi
 Merged `tranche/T51` (retrieval's `uses` now gain `retrieval-browse`, drop `civil-time` and `calc-grammar`). `bio-plane/src/retrieval/findin.mjs` is back as a one-line re-export of `retrieval-browse`'s findin, so `citation`'s `recorded.test.mjs` stays green; the R90 no-copy test now asserts the file is only that re-export. Reran: `bio-plane/test/m/retrieval/` and `citation/recorded.test.mjs` 179 pass, 0 fail; architecture 0 failures, format 0, coverage 79 of 79, ownership 0 failures. Source 2,942 lines.
 
 Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942
+
+## J3 · COMPLETE
+
+B4 applied: merged tranche/T51, findin.mjs is a one-line re-export of retrieval-browse's findin (the R90 no-copy test now asserts exactly that). retrieval tests plus citation recorded.test.mjs: 179 pass, 0 fail. Architecture, format, coverage (79/79) and ownership: 0 failures. Source 2,942 lines. Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942
