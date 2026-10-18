@@ -17,12 +17,12 @@
 ## 3. The build step (the extraction)
 
 - The generator (`setup-words/build.mjs`, R10's, extended by R15) reads every product source file once (a real JavaScript parser, never a regular expression), collects each `t(id, en)` call, and writes `rows.mjs` from `words.json` plus the extracted rows. One step for the whole tree, under a minute; run at each layer close as a generated artifact (manifest, §14) and by `--check` in the tests. Between closes a new `t` call already works: it answers its own `en` until the rows are regenerated.
-- The extraction also writes `docs/development/ux-substrate/screens/words-unreviewed.json` (generated, never edited): every code-origin row with its id, `en`, module, file and line. That is the design stream's review list.
+- The extraction also writes `bio-plane/src/setup-words/words-unreviewed.json` (generated, never edited): every code-origin row with its id, `en`, module, file and line. That is the design stream's review list.
 
 ## 4. The design stream (condition 3)
 
 - **Drawn screens are written first by the design**: the screen modules (`screens-*`, `interface-shell`, `wizard-scripts`, `site`, the installer's pages) read only through `word`; a `t` call in them fails the check.
-- **Every new row is reviewed before a release**: at each tranche close BOB sends the design one HANDOFF naming `words-unreviewed.json`'s new rows. The design reviews a row by writing it into `words.json` under the same id (as is, or reworded, with a translator's `note`); the row then leaves the unreviewed list. The release cut's words check (`--release`, §10) fails while any unreviewed row remains.
+- **Every new row is reviewed before a release**: at each tranche close BOB sends the design one HANDOFF naming `bio-plane/src/setup-words/words-unreviewed.json`'s new rows. The design reviews a row by writing it into `words.json` under the same id (as is, or reworded, with a translator's `note`); the row then leaves the unreviewed list. The release cut's words check (`--release`, §10) fails while any unreviewed row remains.
 - Nothing a job does waits on the design for words any more: a job writes `t(id, en)` and carries on.
 
 ## 5. Translation, ready but not built (N1094 is Bob's)
@@ -61,4 +61,4 @@ Everything else is listed for a judgment and goes to its module's job in R (clos
 - `marker` (new): a `t` call whose id or `en` is not a string literal, whose id is not `KEY_RE`, whose id is used with two different `en`, or that sits in a drawn-screen module.
 - `missingkey`: as now, for `word`, `hasWord`, `wordsOf` only (a `t` id needs no row).
 - `testcopy`, `handlist`: as now.
-- `--release`: also fails while `words-unreviewed.json` lists a row.
+- `--release`: also fails while `bio-plane/src/setup-words/words-unreviewed.json` lists a row.
