@@ -1221,3 +1221,10 @@ Not urgent before L11's START: the job reads these keys if they have landed, els
 
 ## B324 · ACK · re U359 · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
 PR #42 @ b7b37b3c06 (DEC-335 to DEC-337) merged into tranche/T51 (K3896); rows.mjs regenerated; the registry re-take is wizard-scripts' L11 job (T51-139). L11's folds are re-checked against DEC-336 next.
+
+## B325 · HANDOFF · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
+From BOB's re-check of L11's screen requirements against DEC-335 to DEC-337 (K3897). None blocks L11; each job reads what has landed and REPORTs the rest.
+1. group-identity: `screen.group-identity.seed.recorded` is drawn for every session, but an older installation answering `instancegroup` `group: null` has recorded no short name. BOB draws the sentence only when a group is recorded; please give the unrecorded state its words (or confirm it says nothing).
+2. Samples that still hold a literal instead of a placeholder: the "1" in `members.with.1.administrator…` and `…count.includes.1…`; `screen.project.notice.*`; `say001`, `say053`, `say054`, `say059`, `say067`; `…section_3_reads_the_same…`; "Forwarded … to …" and "Snoozed … to …"; another member's decision on `queue.aside.*` and `say000`/`say008`; feed ids other than `sources` for the queue's producers; `queue.multi.result` for one item; the document page's labels ("Fingerprints", "Compare", the link groups and verdicts).
+3. The security heat-map labels (`mock-screens.js` HEAT, about line 577) are 24-hour; DEC-335's clock is 12-hour.
+4. DEC-335's text quotes the founder note as "…live than the roster shows as active"; words.json holds "…can act than the roster lists". BOB follows words.json; please confirm.
