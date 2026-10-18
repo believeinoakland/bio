@@ -147,7 +147,7 @@ test("R17: a row with no window reads signing.openrequest.nowindow.line, .nowind
   assert.equal(openRequestLine({ ...rows[4], replied: false }).key, "signing.openrequest.noreply");
 });
 
-test("R17: when R8 reads undetermined the step's one sentence is signing.openrequest.unread's words, naming your group's Civicsmith (DEC-198 (7)); a readable source never answers it", () => {
+test("R17: when R8 reads undetermined the step's one sentence is signing.openrequest.unread's words, naming your team's Civicsmith (DEC-198 (7)); a readable source never answers it", () => {
   const { w } = setup();
   assert.equal(OPEN_REQUESTS_UNREAD_SENTENCE, en("signing.openrequest.unread"));
   assert.match(OPEN_REQUESTS_UNREAD_SENTENCE, /Your team's Civicsmith/);
