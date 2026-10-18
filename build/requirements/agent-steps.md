@@ -1,6 +1,6 @@
 # agent-steps — requirements
 
-**Status** · Draft by a planning worker for BOB, T51 (T51-45; N1205, N1218; K617, K624, K3809 (3)); not yet reviewed. New by copy from `agent-worker` (K624): the segment driver, the steps and the sub-sessions of `agent-worker/src/index.mjs` as a module of its own, `agent-worker` delegating (its R119); the name is BOB's (K3809 (3)). Meaning unchanged and no assistant work (K3717): R1–R42 name their `agent-worker` ids (retired there, "moved to `agent-steps` R<n>", T51, K3846); R5 and R43–R49 are new (each says what it splits from). The split map is `build/extraction/agent-steps.md`. Every requirement is marked not yet met: T51 (the module does not exist until T51-45).
+**Status** · Draft by a planning worker for BOB, T51 (T51-45; N1205, N1218; K617, K624, K3809 (3)); not yet reviewed. New by copy from `agent-worker` (K624): the segment driver, the steps and the sub-sessions of `agent-worker/src/index.mjs` as a module of its own, `agent-worker` delegating (its R119); the name is BOB's (K3809 (3)). Meaning unchanged and no assistant work (K3717): R1–R42 name their `agent-worker` ids (retired there, "moved to `agent-steps` R<n>", T51, K3850); R5 and R43–R49 are new (each says what it splits from). The split map is `build/extraction/agent-steps.md`. Every requirement is marked not yet met: T51 (the module does not exist until T51-45).
 
 | old (`agent-worker`) | new | |
 | --- | --- | --- |
