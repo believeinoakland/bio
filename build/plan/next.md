@@ -2,6 +2,8 @@
 
 **Status** · Entries for the tranche after T50, written as T50 runs (P18). At T50's opening by BOB #197 (K3616) it holds every entry left out of T50 or placed there only in part (each hard reason in `current.md`'s "Left out of T50"); entries placed whole moved to `archive/next-applied.md`. N1070, N1094, N1108 and N1160 are here for their parts T50 does not carry.
 
+**Placed in T51 by K3916** (P10 as amended, K3915; each line stays here until its job merges, then moves to `archive/next-applied.md`): N1211, N1073 (L11: T51-143, plane, affordances; CR-5, CR-12), N1245, N1061, N1248, N1249, N1250, N1252, N1251, N1253, N1216, N1070, N1071, N1108's events part (the completion round, `current.md`). The words-by-key entries wait on Bob's question 2 (K3915).
+
 ## Entries
 
 - N1253 · basis-versions (P6; BASIS-VERSIONS #19 J2; K3888) · 4,199 lines of source after T51-53 (its `conclude` family now in `conclude.mjs`): split by copy into a module of its own, the old delegating (K624), its name and cut BOB's at the map; with it, `refusal.VERSION_COMPARE_*` read by key (DEC-337, U359) · K3888 · hard reason: P10 (found at T51's L6 merge)

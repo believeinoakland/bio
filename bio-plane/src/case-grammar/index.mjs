@@ -24,8 +24,9 @@ import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
 import { WHAT_CHANGED_HEAD } from "./edition.mjs";
+import { wordsOfFormat } from "./words.mjs";
 
-export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
          caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials } from "./formats.mjs";
@@ -37,8 +38,9 @@ export { caseTensionsOf, disclosedCandidates, TENSION_STATE_WORDS, TENSION_HIGHL
          TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE } from "./tensions.mjs";
 export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBlockLines, whatChangedSectionLines,
          whatChangedOf, LENS_HEAD, LENS_STATEMENT_FIELDS, LENS_CITATION_FIELDS, LENS_KIND_WORDS, LENS_CLOSING_SENTENCES,
-         LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
+         lensClosingSentencesOf, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
          editionStatementsOf } from "./edition.mjs";
+export { WORDS, caseWordsOf } from "./words.mjs";
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
 export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_OBSCURED_FIELDS, MATERIAL_OBSCURED_MARKED_FIELD, MATERIAL_OBSCURED_KIND_FIELD,
          MATERIAL_OBSCURED_KINDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
@@ -92,13 +94,15 @@ export function attributionFrontmatterLines(rows) {
       `    shown: ${r.shown == null ? "null" : `"${fmSafe(r.shown)}"`}`,
       `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`])];
 }
-export function attributionBodyLines(given) {
+/* R33: the section is spelled in the words of the version `format` names (the format in force when none is given), so a
+   prepared `/7` document re-authored later keeps its `/7` words and a `/8` one says "team". */
+export function attributionBodyLines(given, format) {
   const rows = rowsOf(given);
-  const said = { group: "the group that publishes this case", project: "the project that produced it",
-                 cover: "the cover the group knows its author by", name: "the name its author chose to appear under" };
+  const words = wordsOfFormat(format);
+  const said = words.attributionSaid;
   return [ATTRIBUTION_PROSE_HEAD, "",
     `This case rests, directly or through another finding, on ${rows.length} firsthand observation`
-    + `${rows.length === 1 ? "" : "s"} recorded by a member of this group. What it shows of who SAID each one is `
+    + `${rows.length === 1 ? "" : "s"} recorded by ${words.attributionMember}. What it shows of who SAID each one is `
     + "that member's own choice, made for this edition and never filled in for them (MEMBER-KNOWLEDGE-DESIGN.md "
     + "§4). An observation names no person in its own bytes; the words below are the whole of the attribution.",
     "",
