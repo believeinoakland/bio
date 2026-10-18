@@ -17,3 +17,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio civil-time tranche/T51 job/T51/civil-time`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3961; CONNECTION-GRAMMAR #5 J2, P9): merge tranche/T51 into your branch first. bio-plane/src/civil-time/recurrence.mjs:158, :241 and :248 pass a plain word(...) string to undetermined(); R30 says every undetermined why is {key, vars}, and connection-grammar R6 now refuses a string why, so an owner whose item carries one of those reasons fails its battery. Pass reason(key, vars) there, with a test naming each. Also your module's 'Plain findings (K3957)' section in build/plan/words-pass/civil-time.md if it lists any. Run 'node bio-plane/src/setup-words/build.mjs --check' (read-only) before COMPLETE. Record COMPLETE again.
