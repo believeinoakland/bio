@@ -250,7 +250,7 @@ export function reach(v, number, kind = null) {
     return { reach: "INSIDE", says: word("idspaces.says.kind_coverage_floor_record", { named: String(named) }) };
   const unknown = each.filter((e) => e.floor == null).map((e) => e.why);
   return { reach: "UNDETERMINED", says: word("idspaces.says.kind_stated_inside", { boolean: String([
-    known.length ? `${n} is inside the reach for some kinds and outside it for others (floors: ${named})` : null,
+    known.length ? localize("id-spaces.idspaces.inside_reach_some_kinds", "{n} is inside the reach for some kinds and outside it for others (floors: {named})", { n: String(n), named }) : null,
     ...unknown].filter(Boolean).join("; ")) }) };
 }
 
@@ -286,8 +286,8 @@ export function parcelStanding(key, evidence) {
     standing: "UNDETERMINED", between: [word("idspaces.between.retired_earliest_published"), word("idspaces.between.parcel")],
     vintages_searched: vintages,
     says: localize("id-spaces.idspaces.v1_undetermined_between_retired_before", "{v1}; undetermined between retired before the earliest published lineage and never a parcel — absence from what was searched decides neither", { v1: String(vintages.length
-      ? `in none of the ${vintages.length} published vintage(s) searched`
-      : "no published vintage of the assessor's roll or lineage is held, so none was searched") }),
+      ? localize("id-spaces.idspaces.in_none_of_the_published", "in none of the {count} published vintage(s) searched", { count: String(vintages.length) })
+      : localize("id-spaces.idspaces.no_published_vintage_of", "no published vintage of the assessor's roll or lineage is held, so none was searched")) }),
   };
 }
 
