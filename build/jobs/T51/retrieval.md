@@ -17,7 +17,7 @@
 - **R88, R89**: as in the work notes above.
 
 **Tests.** `node --test bio-plane/test/m/retrieval/`: 167 tests, 167 pass. Moved out with the code (their copies are in `retrieval-browse`): `browse.test.mjs`, `findin.test.mjs`, `t50.test.mjs`, `t37.test.mjs` deleted; `t36.test.mjs` keeps R77 `selectionRead`, `findIn` over a real selection and the real-`recordedBy` test; new `delegation.test.mjs` (R90: op equality with an independently built module, a registered stub reaching both, second registration refused, the re-exports, `BROWSE_ID_CHUNK === SELECTION_ID_CHUNK`, no copy, under 4,000 lines, the five host reads); `t51.test.mjs` R87 x5, R88 x2, R89 x2. Others run: `answers` 64, `following` 112, `queue` 164, `question-explorer` 46 all pass; `citation` 90 pass, 1 fail (below).
-**Checks** (process repo): format 0 failures; coverage retrieval 79 of 79 live ids named, 0 failures; ownership retrieval 0 failures; architecture: 2 failures, both "imports retrieval-browse, which retrieval does not declare in uses" (modules.json is BOB's). Size: `retrieval/*.mjs` 2,940 lines (was 4,001).
+**Checks** (process repo): format 0 failures; coverage retrieval 79 of 79 live ids named, 0 failures; ownership retrieval 0 failures; architecture: 2 failures, both "imports retrieval-browse, which retrieval does not declare in uses" (modules.json is BOB's). Size: `retrieval/*.mjs` 2,942 lines (was 4,001).
 
 **For BOB (modules.json, K1043).** retrieval `uses`: add `retrieval-browse`; drop `civil-time` and `calc-grammar` (nothing of mine imports them any more, grepped); `events`, `standards`, `money`, `people`, `entities` stay as the table read contracts of R68 (their factories are no longer imported).
 **Found in other modules.**
@@ -27,7 +27,7 @@
 4. Sentences with no key (REPORT'd by the design lane's list, mine): `ROUTES_CROSSED`, `SCOPE_UNKNOWN`, `scope_undetermined` `detail`/`why` are inline English beside their codes; no word key added (the reads list is the design lane's).
 **Deferred.** None.
 
-Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 14, module lines 2940
+Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 14, module lines 2942
 
 ## J1 · REPORT
 
@@ -35,4 +35,10 @@ R88 and R89 are met and pushed (index.mjs, t51.test.mjs; module suite 197 pass, 
 
 ## J2 · COMPLETE
 
-T51-42 retrieval complete (record: Completion (T51-42)). R87 (scopes on searchFields, search, meaningRows; the applied scope in query.scope), R88, R89, R90 (moved code deleted, delegation through retrievalBrowseOf with the five host reads, old exports re-exported), words test on 49 keys, stale comment fixed. Tests: bio-plane/test/m/retrieval 167/167 pass; answers, following, queue, question-explorer pass. Checks: format 0, coverage 79/79 ids 0, ownership 0, architecture 2 failures only because modules.json lacks retrieval-browse in retrieval's uses (yours to add; also drop civil-time and calc-grammar). One red outside the module: citation recorded.test.mjs:7 imports retrieval/findin.mjs, to re-point to retrieval/index.mjs (its owner). Also reported: op-declarations needs the scope parameter; query-language's ids binds one variable per id (scopes up to 5,000 vs the 100-variable bound). Source 2,940 lines (was 4,001). Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 14, module lines 2940
+T51-42 retrieval complete (record: Completion (T51-42)). R87 (scopes on searchFields, search, meaningRows; the applied scope in query.scope), R88, R89, R90 (moved code deleted, delegation through retrievalBrowseOf with the five host reads, old exports re-exported), words test on 49 keys, stale comment fixed. Tests: bio-plane/test/m/retrieval 167/167 pass; answers, following, queue, question-explorer pass. Checks: format 0, coverage 79/79 ids 0, ownership 0, architecture 2 failures only because modules.json lacks retrieval-browse in retrieval's uses (yours to add; also drop civil-time and calc-grammar). One red outside the module: citation recorded.test.mjs:7 imports retrieval/findin.mjs, to re-point to retrieval/index.mjs (its owner). Also reported: op-declarations needs the scope parameter; query-language's ids binds one variable per id (scopes up to 5,000 vs the 100-variable bound). Source 2,942 lines (was 4,001). Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 14, module lines 2942
+
+## Change B4 (K3872)
+
+Merged `tranche/T51` (retrieval's `uses` now gain `retrieval-browse`, drop `civil-time` and `calc-grammar`). `bio-plane/src/retrieval/findin.mjs` is back as a one-line re-export of `retrieval-browse`'s findin, so `citation`'s `recorded.test.mjs` stays green; the R90 no-copy test now asserts the file is only that re-export. Reran: `bio-plane/test/m/retrieval/` and `citation/recorded.test.mjs` 179 pass, 0 fail; architecture 0 failures, format 0, coverage 79 of 79, ownership 0 failures. Source 2,942 lines.
+
+Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942

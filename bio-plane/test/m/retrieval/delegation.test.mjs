@@ -71,8 +71,12 @@ test("R90: the names retrieval exported from findin.mjs and browse.mjs are re-ex
   assert.equal(R.BROWSE_ID_CHUNK, R.SELECTION_ID_CHUNK);
 });
 
-test("R90: retrieval holds no copy of the moved code and its source is under 4,000 lines (P6)", () => {
-  assert.equal(existsSync(new URL("findin.mjs", SRC)), false);
+test("R90: retrieval holds no copy of the moved code and its source is under 4,000 lines (P6)", async () => {
+  /* findin.mjs stays as a one-line re-export of the moved file (K3872), so citation's test keeps its import. */
+  const shim = readFileSync(new URL("findin.mjs", SRC), "utf8").split("\n").filter((l) => l.trim() && !l.trim().startsWith("/*") && !l.trim().startsWith("*"));
+  assert.equal(shim.length, 1);
+  assert.match(shim[0], /^export \* from "..\/retrieval-browse\/findin\.mjs";$/);
+  assert.equal((await import("../../../src/retrieval/findin.mjs")).RECORDED_NONE_REGISTERED, B.RECORDED_NONE_REGISTERED);
   assert.equal(existsSync(new URL("browse.mjs", SRC)), false);
   const lines = readdirSync(SRC).filter((f) => f.endsWith(".mjs")).reduce((n, f) => n + readFileSync(new URL(f, SRC), "utf8").split("\n").length, 0);
   assert.ok(lines < 4000, `${lines} lines`);
