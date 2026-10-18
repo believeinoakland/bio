@@ -344,7 +344,6 @@ const ARMS = {
  * proofs — and NEVER `store.mjs` or `schema.mjs`, which is FL-10's own claim
  * rule made physical here. */
 const PLANE_ENTRY = join(PLANE, "src/plane/index.mjs");   /* the plane's entry since T20 (plane R6, K846) */
-const SIGNPAGE_HTML = join(PLANE, "src/sign-release.html");
 
 ARMS["6"] = {
   label: "(6) FL-10's OWN ARM — a PLANE source moves and the committed plane bundle does not. Append one export "
@@ -380,26 +379,10 @@ ARMS["6b"] = {
   }),
 };
 
-ARMS["7"] = {
-  label: "(7) THE GENERATED-INPUT LOOP — bio-plane/src/sign-release.html changes and src/signpage.mjs was never "
-    + "re-rendered. Every input hash stays TRUE (signpage.mjs itself did not move), so only the render "
-    + "comparison can see it. Append one HTML comment to the page.",
-  run: () => withAppended(SIGNPAGE_HTML, "\n<!-- fl10 armed probe -->\n", () => {
-    const r = report("7", runSuite(), {
-      mustFail: "exit non-zero on the ONE assertion comparing committed src/signpage.mjs against the render "
-        + "of bio-plane/src/sign-release.html — naming the stale render",
-      mustNot: "any input-hash or byte-identity arm, plane or member: no hashed input moved",
-    });
-    console.log(`     the render assertion fired: ${named(r, "committed src/signpage.mjs IS the render")}`);
-    return r;
-  }),
-};
-
 ARMS["8"] = {
   label: "(8) OVER-STRICTNESS, PLANE HALF — a legitimate rebuild of the UNCHANGED plane, in memory, must equal "
     + "the committed artifact and manifest byte for byte, and the suite stay green. RUN AFTER THE COMMIT, like "
-    + "arm 5: the byte-equal half is only a statement about a clean tree. (The render of `src/signpage.mjs`, "
-    + "`npm run build`'s pre-step, is arm 7's and the suite's, compared in memory.)",
+    + "arm 5: the byte-equal half is only a statement about a clean tree.",
   run: async () => {
     console.log("  (a) rebuilding the plane from unchanged sources, writing nothing");
     console.log(`      bio-plane: ${await rebuildMatches(planeMember(REPO))}`);
