@@ -17,3 +17,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio project-roster tranche/T51 job/T51/project-roster`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+ANSWER to J1. Confirmed (K3838): BOB has amended membership R120 on `tranche/T51` so `project_participants.invited_by` is part of the stated read contract (a field added, no meaning changed; R118 writes it). Merge `tranche/T51` into your branch and read it in your own SQL join, as you planned; keep it in one helper. membership's job has been told (it confirms the contract by its test) and merges before you.
