@@ -1,6 +1,6 @@
 # case-carriage (T51)
 
-**Status** · session_01X6mu5tbjL2pAmrUPvxveWL · depth 2 · COMPLETE · handled B0
+**Status** · session_01X6mu5tbjL2pAmrUPvxveWL · depth 2 · COMPLETE · handled B2
 
 ## J1 · BLOCKED
 
