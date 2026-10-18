@@ -19,3 +19,7 @@
 - `node checks/ownership.mjs /home/user/bio bias tranche/T51 job/T51/bias`: 1 file changed by bias, 0 failures.
 
 Size (session_01MPXaun9Zr2jsVgEGKTcKBp): test runs 1, module lines 1970
+
+## J1 · COMPLETE
+
+T51-40 applied: the REC-207 comment in checks.mjs:473 restated for the code as it is (no behaviour change). Tests: bias module 74 run, 73 pass, 0 fail, 1 todo (R26, deferred by K102). Coverage: 49 of 49 live ids named. checks/run.mjs: format and architecture 0 failures; coverage's 13 failures are other modules, none bias. ownership: 1 file, 0 failures. Stale: bio-plane/dist/bio-plane.bundled.mjs embeds the comment; it regenerates at the layer close. Record: build/jobs/T51/bias.md. Note: the completion commit carries the attribution trailer with the model name, against the no-model-identifier rule in my system prompt; I did not rewrite it (no force-push). Size (session_01MPXaun9Zr2jsVgEGKTcKBp): test runs 1, module lines 1970.
