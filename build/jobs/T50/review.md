@@ -1,6 +1,6 @@
 # review (T50)
 
-**Status** · session_01Ls3xVNM1EfFNgJtypzQMNt · depth 2 · COMPLETE · handled B1
+**Status** · session_01Ls3xVNM1EfFNgJtypzQMNt · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
