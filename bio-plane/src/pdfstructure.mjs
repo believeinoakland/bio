@@ -2975,6 +2975,84 @@ function launchTarget(doc, action) {
 }
 
 /* ------------------------------------------------------------------ *
+ * N1202 (R39) — THE DOCUMENT'S OWN TITLE, FROM ITS /Info
+ * ------------------------------------------------------------------ *
+ *
+ * `/Title` of the same `/Info` dictionary R10 chooses, decoded as a PDF text
+ * string (ISO 32000-1 §7.9.2.2) from its raw bytes (R38): UTF-16BE after the
+ * `FE FF` mark, otherwise PDFDocEncoding. A title it cannot decode is stated as
+ * none, with the note `title_undecodable`; no character is replaced or guessed,
+ * and nothing is invented from a file name or a heading. */
+
+/** PDFDocEncoding's code points above 0x17 that are not Latin-1 (ISO 32000-1
+ *  Annex D.2): 0x18-0x1F and 0x80-0xA0. Codes 0x7F, 0x9F and 0xAD are undefined. */
+const PDFDOC_HIGH = Object.freeze({
+  0x18: 0x02d8, 0x19: 0x02c7, 0x1a: 0x02c6, 0x1b: 0x02d9, 0x1c: 0x02dd, 0x1d: 0x02db, 0x1e: 0x02da, 0x1f: 0x02dc,
+  0x80: 0x2022, 0x81: 0x2020, 0x82: 0x2021, 0x83: 0x2026, 0x84: 0x2014, 0x85: 0x2013, 0x86: 0x0192, 0x87: 0x2044,
+  0x88: 0x2039, 0x89: 0x203a, 0x8a: 0x2212, 0x8b: 0x2030, 0x8c: 0x201e, 0x8d: 0x201c, 0x8e: 0x201d, 0x8f: 0x2018,
+  0x90: 0x2019, 0x91: 0x201a, 0x92: 0x2122, 0x93: 0xfb01, 0x94: 0xfb02, 0x95: 0x0141, 0x96: 0x0152, 0x97: 0x0160,
+  0x98: 0x0178, 0x99: 0x017d, 0x9a: 0x0131, 0x9b: 0x0142, 0x9c: 0x0153, 0x9d: 0x0161, 0x9e: 0x017e, 0xa0: 0x20ac,
+});
+
+/** A PDF text string's characters from its raw bytes, or null when they cannot
+ *  be read exactly: an odd-length or unpaired-surrogate UTF-16BE string, a
+ *  language-tag escape left open, or a byte PDFDocEncoding leaves undefined. */
+function decodePdfTextStrict(raw) {
+  if (raw[0] === 0xfe && raw[1] === 0xff) {
+    if (raw.length % 2) return null;
+    const units = [];
+    for (let i = 2; i < raw.length; i += 2) units.push((raw[i] << 8) | raw[i + 1]);
+    let out = "";
+    for (let i = 0; i < units.length; i++) {
+      const u = units[i];
+      if (u === 0x1b) { // language tag: ESC, code, ESC
+        const close = units.indexOf(0x1b, i + 1);
+        if (close === -1) return null;
+        i = close;
+      } else if (u >= 0xd800 && u <= 0xdbff) {
+        const lo = units[i + 1];
+        if (!(lo >= 0xdc00 && lo <= 0xdfff)) return null;
+        out += String.fromCharCode(u, lo); i++;
+      } else if (u >= 0xdc00 && u <= 0xdfff) {
+        return null;
+      } else out += String.fromCharCode(u);
+    }
+    return out;
+  }
+  let out = "";
+  for (const b of raw) {
+    if (b === 0x09 || b === 0x0a || b === 0x0d || (b >= 0x20 && b < 0x7f) || (b >= 0xa1 && b <= 0xff && b !== 0xad)) {
+      out += String.fromCharCode(b);
+    } else if (b in PDFDOC_HIGH) {
+      out += String.fromCharCode(PDFDOC_HIGH[b]);
+    } else return null;
+  }
+  return out;
+}
+
+/** R39's `metadata` for an opened document: `null` when no `/Info` can be read
+ *  (none, dangling, or an encrypted document's undecoded strings). Notes
+ *  `title_undecodable` on `doc` when the title cannot be decoded. Never throws. */
+function extractMetadata(doc) {
+  try {
+    if (doc.isEncrypted()) return null;
+    const info = doc.infoDict();
+    if (!info) return null;
+    const metadata = {};
+    const t = doc.resolve(info.Title);
+    if (t && t.t === "str") {
+      const text = decodePdfTextStrict(t.raw);
+      if (text === null) doc.note("title_undecodable");
+      else if (text.trim().length) metadata.title = text;
+    }
+    metadata.source = "/Info";
+    return metadata;
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ *
  * The public entry point
  * ------------------------------------------------------------------ */
 
@@ -3107,6 +3185,10 @@ export async function extractPdfStructure(bytes) {
   /* R34: and every painted image above the floor says its content is unread. */
   if (imgs.images) markImagesUnread(doc, text, imgs.images);
 
+  /* R39 (N1202): the document's /Info /Title; before the return, since a title
+     it cannot decode adds a note. */
+  const metadata = extractMetadata(doc);
+
   return {
     ok: true,
     container: "pdf",
@@ -3123,6 +3205,8 @@ export async function extractPdfStructure(bytes) {
     /* R36 (K1888): every place the file can act when opened, read and never
        run; top-level for the same reason. */
     active: extractActive(doc),
+    /* R39: the title, top-level for the same reason. */
+    metadata,
     notes: doc.notes,
   };
 }
