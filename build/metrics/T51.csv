@@ -29,3 +29,15 @@ session_01MPXaun9Zr2jsVgEGKTcKBp,job,bias,2574680,71532,50,11488,,1,1970
 session_01FS8FKWSy2DYXTK38z1ksz2,job,query-language,10711992,193294,114,31583,,6,3034
 session_01JxyVZhdF7dFTzuF5dsCwRc,job,retrieval,22350255,320898,180,68307,,17,2942
 session_01DvBBwC7XQbBDwxu9WUQ8sR,BOB-final,,53800899,344050,415,89259,,,
+session_014xZJjPy87dzogFnfVQBDhH,job,agent-steps,22726266,295861,200,101912,,35,1714
+session_01MSX35oLuKxfsaPu7fR6wpD,job,hypotheses,3435006,112913,60,17490,,3,1110
+session_01LSyNpJD3npEurHcTzv9LS6,job,basis-versions,14444375,258033,134,44724,,40,4
+session_01VzUCjGbAYLcqyufLSZVAQD,job,strength,5641158,130976,82,34501,,3,2934
+session_01JK3uw1JJkjBgojR6Ty8YBQ,job,run-rules,2986289,134282,46,18294,,1,2574
+session_01JUn6Nym4wmGYzEebaoLgqG,job,ai-use,3070873,77598,56,16348,,3,1289
+session_01Qs8rZ8r9tU9hSh4VTyESSo,job,capture-requests,7456562,209337,92,35696,,3,2653
+session_015QhswVAs4DNWLV8CzQhqJP,job,agent-harness,3110881,120768,48,23688,,1,1940
+session_01Srpe2rAH6yyk13jeJqT84Y,job,agent-runner,3975709,203155,66,10281,,8,2
+session_01RTunPjz5nMUCRagijvxJzE,job,agent-worker,25350772,266947,218,40627,,12,2724
+session_017ET2SSU7JxkBc5hxVCEU44,job,contradiction,5171107,285466,90,37257,,5,3698
+session_01K9Zb4DmgqUt5XwdxVRzjzu,job,skills,2379934,60365,50,7520,,3,0
