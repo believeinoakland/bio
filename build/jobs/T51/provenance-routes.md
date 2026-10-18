@@ -16,3 +16,7 @@
 - `node checks/ownership.mjs /home/user/bio provenance-routes tranche/T51 job/T51/provenance-routes`: 0 failures (1 file changed, `bio-plane/src/provenance-routes/index.mjs`).
 
 Size (session_01BrNh4dMAAcmVMwQjAe5j7i): test runs 1, module lines 1239
+
+## J1 · REPORT
+
+Found in other modules while running checks/run.mjs for T51-18. Not this module's; not touched. The coverage check names 10 modules with live ids that no test names: agent-harness R17; agent-runner R36 R37 R38 R40; capture R96; entities R57-R61; explore R26; journey-check R19; people R40 R41; progressions R46; retrieval-browse R1-R18 (all 18); retrieval R87 R89 R90. provenance-routes is not among them.
