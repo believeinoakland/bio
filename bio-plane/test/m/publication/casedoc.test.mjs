@@ -126,12 +126,13 @@ test("K651 the case document's grammar is case-grammar's, re-exported here uncha
                       "caseDocumentRequiresDisclosures", "caseDocumentRequiresV4Disclosures", "caseDocumentRequiresTensionSection",
                       "caseTensionsOf", "caseDocumentBlocks", "captureBlockLines", "sourceBlockLines", "sourceStatement",
                       "unnamedSourceStatement", "REAUTHORABLE_SECTIONS", "ATTRIBUTION_LEVELS", "ATTRIBUTION_PROSE_HEAD",
-                      "attributionFrontmatterLines", "attributionBodyLines", "publishedGraphEdges"])
+                      "attributionFrontmatterLines", "attributionBodyLines", "publishedGraphEdges",
+                      "CASE_DOCUMENT_FORMAT_V7", "WORDS", "caseWordsOf", "lensClosingSentencesOf"])
     assert.equal(pub[name], cg[name], name);
   for (const name of ["CASE_DOCUMENT_FORMAT", "CASE_DOCUMENT_FORMAT_V6", "caseDocumentStatesMemberBlocks",
                       "caseDocumentRequiresTensionSection"])
     assert.equal(chk[name], cg[name], `checks.mjs ${name}`);
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/8");
 });
 test("R21 storeCaseDocument replaces an unsigned document, never a signed one, and answers what the store holds", () => {
   const { w, proj, roles } = prepared();
