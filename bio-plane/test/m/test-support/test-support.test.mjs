@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import {
   chmodSync, chownSync, existsSync, mkdirSync, mkdtempSync, openSync, closeSync, readdirSync, readFileSync,
-  statSync, writeFileSync,
+  rmSync, statSync, writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
@@ -222,6 +222,31 @@ const READ_ONLY = `
 
 const NOBODY = 65534;
 
+/** Whether this host can run R2's non-root case at all. Not root, the case
+ *  needs nothing more. As root it needs `setpriv` on PATH, the right to change
+ *  a directory's owner (childNotRoot hands the host directory to NOBODY) and
+ *  the right to drop to NOBODY; a root that lacks any of them cannot make a
+ *  child that is not root, so that case is skipped by name rather than failed.
+ *  Probed once, and only as far as the case itself goes. */
+const DROP = (() => {
+  if (process.getuid() !== 0) return { ok: true };
+  const dir = mkdtempSync(join(tmpdir(), "drop-"));
+  try {
+    chownSync(dir, NOBODY, NOBODY);
+  } catch (e) {
+    return { ok: false, reason: `this root cannot change a directory's owner (${e.code})` };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const r = spawnSync("setpriv", [`--reuid=${NOBODY}`, `--regid=${NOBODY}`, "--clear-groups",
+    process.execPath, "-e", "process.stdout.write(String(process.getuid()))"], { encoding: "utf8", timeout: 60_000 });
+  if (r.error) return { ok: false, reason: `setpriv cannot be run (${r.error.code})` };
+  if (r.status !== 0 || r.stdout !== String(NOBODY)) {
+    return { ok: false, reason: `this root cannot drop to uid ${NOBODY}: ${(r.stderr || "").trim() || `exit ${r.status}`}` };
+  }
+  return { ok: true };
+})();
+
 /** Runs `body` like child(), but as a user that is not root: this process's
  *  own user when it is not root, else uid and gid 65534 through `setpriv`.
  *  A dropped child cannot traverse this process's 0700 sandbox to reach its
@@ -246,7 +271,8 @@ function childNotRoot(body, hostDir) {
   return { ...r, result: line ? JSON.parse(line.slice(MARK.length)) : undefined };
 }
 
-test("R2 a tree a test left read-only is removed, also when the process does not run as root, by every ending", () => {
+test("R2 a tree a test left read-only is removed, also when the process does not run as root, by every ending", (t) => {
+  if (!DROP.ok) return t.skip(`the non-root case cannot run here: ${DROP.reason}`);
   for (const [name, ending] of Object.entries(ENDINGS)) {
     const H = host();
     const r = childNotRoot(`
