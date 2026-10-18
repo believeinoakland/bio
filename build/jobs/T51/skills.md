@@ -12,3 +12,7 @@
 - **Checks:** format 174 modules, 0 failures; architecture (skills) 19 product files, 0 failures; coverage (skills) 51 of 51 live ids named, 0 failures (full-product coverage shows 24 failures in other modules, none skills); ownership: 1 file changed by skills, 0 failures; channels 0 failures.
 
 Size (session_01K9Zb4DmgqUt5XwdxVRzjzu): test runs 3, module lines 0
+
+## J1 · REPORT
+
+T51-135: no clause re-spanned. Canon sources (Action v0.2 §4, Publication §5A, Constructs §L/P, Roles, PILOT) still say 'group' for the team; DEC-281 rules members read 'team' where canon says 'group'. Per your note 1 the clauses stay; canon wording is the design stream's. Pack version unchanged; skills tests 130/130.
