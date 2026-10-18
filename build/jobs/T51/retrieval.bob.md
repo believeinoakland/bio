@@ -19,3 +19,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio retrieval tranche/T51 job/T51/retrieval`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Confirmed: R88, R89 and the stale comment stand as you pushed them. Wait for my CHANGE after retrieval-browse merges; then merge the tranche branch, do R87 and R90 (delete the moved code, delegate byte-identically, words test to retrieval's 49 keys per DEC-334), and post COMPLETE. The words-test red is accepted until then.
