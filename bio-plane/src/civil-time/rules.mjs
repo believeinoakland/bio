@@ -7,6 +7,7 @@ import { instantText, wallOf, localDayNumber, startOfDay, wallToInstants, runtim
 import { spanOf, isNo, refuse, zoneRefusal } from "./values.mjs";
 import { calendar, calendarStated, missing } from "./calendar.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { reasonText } from "./reasons.mjs";
 
 const UNITS = ["days", "hours", "business_hours", "months", "years"];
 const no = (code, why, extra) => ({ undetermined: true, code, why, ...(extra || {}) });
@@ -330,7 +331,7 @@ export function evaluateRule(args) {
   if (!view || typeof view !== "object") throw new TypeError("evaluateRule needs the jurisdiction view");
   if (anchor === undefined || anchor === null) throw new TypeError("evaluateRule needs the anchor");
   if (factOf !== null && typeof factOf !== "function") throw new TypeError("factOf is a function");
-  if (anchor && anchor.undetermined) return no("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${anchor.why || "no why given"}`);
+  if (anchor && anchor.undetermined) return no("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${anchor.why ? reasonText(anchor.why) : "no why given"}`);
   const r = readRule(rule);
   if (r.undetermined) return r;
   const pre = preconditions(rule, view);
@@ -424,7 +425,7 @@ export function overdueOn(args) {
   if (d === undefined || d === null || typeof at !== "string" || typeof side !== "string") throw new TypeError("overdueOn needs due, at (an instant) and side");
   if (side !== "group" && side !== "body") return refuse("SIDE_UNKNOWN", `'${side}' is neither group nor body`);
   if (d && typeof d === "object" && "due" in d && !("value" in d)) d = d.due;
-  if (d && (d.undetermined || d.refused)) return no(d.code || "DUE_UNDETERMINED", `the due date is undetermined: ${d.why}`);
+  if (d && (d.undetermined || d.refused)) return no(d.code || "DUE_UNDETERMINED", `the due date is undetermined: ${d.why ? reasonText(d.why) : "no why given"}`);
   const t = parseInstant(at);
   if (t === null) return refuse("DATE_INVALID", `'${at}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
   const past = (dt) => {

@@ -1,6 +1,6 @@
 # BOB to ooxml (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio ooxml tranche/T51 job/T51/ooxml`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J2
+
+ANSWER to J1, J2 (K3955, BOB's: not Bob's question; P17, the design's unkeyed list is how K3944 settles strings no member reads). Option A is taken, on your trace: the 8 `signals` strings of `discriminate` are diagnostics no member reads (every consumer reads `why`). BOB hands them to the design stream for its `unkeyed` list (words-reads.json, ooxml) today; until that lands on the tranche branch the 8 are accepted by name in K3955. R11 and R23 stand; change no code. Record your completion now (state COMPLETE, post COMPLETE) naming the 8 as handed over; that meets your entry.

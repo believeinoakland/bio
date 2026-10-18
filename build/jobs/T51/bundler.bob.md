@@ -1,6 +1,6 @@
 # BOB to bundler (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -44,3 +44,11 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B4 · CHANGE
 
 CHANGE (K3953, BOB's): a new requirement in your module, bundler R38, folded on the tranche branch (merge `tranche/T51` into your branch first). Every fleet member's bundle today carries the whole word table (`setup-words/rows.mjs`, 3.4 MB raw, 18,691 rows) though each member reads 10 to 50 keys: a production Worker loads it on every cold start for nothing. R38: a member's bundle carries only the rows its own bundled inputs can read (literal keys at `word`/`localize`/`hasWord` calls, plus every row under a literal prefix a call builds a key from); a key with no literal prefix fails the build naming the site; the plane's bundle unchanged; the manifest records the kept rows and `verifyFresh` covers them. How you substitute the trimmed rows in the bundle (an esbuild plugin replacing the `rows.mjs` import, a generated per-member module) is yours; read the calls with the vendored parser setup-words uses (`bio-plane/src/setup-words/vendor/`), never a pattern. You never write the bundles themselves: BOB regenerates them at R1's close and measures each member. Add R38 to your entry's work and to your COMPLETE; if it is more than you can do at your model, post BLOCKED with cause `tests` and BOB restarts the job one model up.
+
+## B5 · RESUME · re J4
+
+RESUME (K3955): BUNDLER #21 blocked on B4 (R38) at its model, as B4 allowed; you are BUNDLER #22 on claude-sonnet-5-5. T51-144 is done on this branch (J3: the real-fleet digest test, 122 pass); do not redo it. Your work is B4: bundler R38 (read it whole in build/requirements/bundler.md; the tranche is already merged into your branch at b7f9585831). Keep the plane's bundle unchanged; never commit a rebuilt dist/ bundle (BOB regenerates every one at R1's close); prove R38 on fixtures and on the real members' inputs by your test, stating each member's kept row count in your record. Then COMPLETE with T51-144 and R38 both named.
+
+## B6 · ANSWER · re J5
+
+ANSWER (K3958): neither reading as you framed it. R38 is amended on the tranche (merge it): a member whose inputs hold a word read with a variable key (no literal prefix) keeps the WHOLE table, and its manifest lists every such site by file and line (words: "all"); the build never fails for it. Every other member keeps only its own rows. Your real-fleet test names each member keeping the whole table with its sites (agent-worker today: the five sites you found) and states every other member's kept row count. The five sites are entries in their modules' R jobs (CR-4 membership, T51-157 project-roster, T51-180 capture, T51-189 extraction, T51-218 run-rules); BOB updates your test's expectation when they merge. Do not treat every literal equal to a key as read.

@@ -218,15 +218,16 @@ test("R16 R25 DEC-149: a disputed or unreadable entry, and a correction counted 
   const st = (status, extra = {}) => () => ({ status, ...extra });
   const dis = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("disputed") });
   assert.equal(dis.code, "FACT_DISPUTED");
-  assert.equal(dis.why, "the closure list 'judicial' for 2026 is disputed in your team's Civicsmith");
+  const list2026 = `${word("civil-time.closure_list", { list: "judicial" })} for 2026`;
+  assert.ok(dis.why.startsWith(list2026), dis.why);
   const abs = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent", { why: word("case-disclosures.why.read_failed") }) });
   assert.equal(abs.code, "FACT_ABSENT");
-  assert.equal(abs.why, "the closure list 'judicial' for 2026 cannot be read in your team's Civicsmith: the read failed");
+  assert.ok(abs.why.startsWith(list2026) && abs.why.endsWith(`: ${word("case-disclosures.why.read_failed")}`), abs.why);
   const bare = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent") });
-  assert.equal(bare.why, "the closure list 'judicial' for 2026 cannot be read in your team's Civicsmith");
+  assert.ok(bare.why.startsWith(list2026) && abs.why.startsWith(bare.why) && bare.why !== dis.why, "unreadable without a reason is the same sentence as with one, less the reason");
   const fixed = [{ date: "2026-10-12", name: "corrected in" }];
   const gov = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("confirmed", { corrected: true, value: fixed, says: "corrected locally by a member, 2026-10-02" }) });
-  assert.ok(gov.trace.calendar.notes.includes("counted on a correction that governs in your team's Civicsmith, now confirmed (corrected locally by a member, 2026-10-02) (2026)"), JSON.stringify(gov.trace.calendar.notes));
+  assert.ok(gov.trace.calendar.notes.includes(word("civil-time.counted_correction_governs", { status: "confirmed", says: " (corrected locally by a member, 2026-10-02)", year: "2026" })), JSON.stringify(gov.trace.calendar.notes));
   const cor = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: fixed, by: "a member", at: "2026-10-02" }) });
   assert.ok(cor.trace.calendar.notes.includes("counted on a calendar corrected in your team's Civicsmith by a member, 2026-10-02 (2026)"), JSON.stringify(cor.trace.calendar.notes));
   const plain = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: fixed }) });
@@ -262,7 +263,7 @@ test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed 
   for (const status of ["confirmed", "unconfirmed"]) {
     const r = ev(v, "records_response", day("2026-09-30", LA), { factOf: st(status, { corrected: true, value: fixed, says: "corrected locally by a member, 2026-10-02" }) });
     assert.equal(r.due.value, "2026-10-13", `the confirmed correction governs (${status})`);
-    assert.match(r.trace.calendar.notes.join(" "), new RegExp(`counted on a correction that governs in your team's Civicsmith, now ${status} \\(corrected locally by a member, 2026-10-02\\)`));
+    assert.ok(r.trace.calendar.notes.includes(word("civil-time.counted_correction_governs", { status, says: " (corrected locally by a member, 2026-10-02)", year: "2026" })), JSON.stringify(r.trace.calendar.notes));
     assert.ok(r.trace.calendar.entries.some((e) => e.governs === "correction" && e.status === status));
     assert.match(r.trace.notes.join(" "), new RegExp(`counted on its correction, now ${status}`));
   }

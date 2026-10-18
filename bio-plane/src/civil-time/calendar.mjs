@@ -3,7 +3,7 @@
  * caller's `factOf`) all come from the arguments. A missing fact is never read as an open day, a closed day or a
  * zero: it makes the answer that needs it undetermined, with why. */
 import { civil, dayText, weekdayOf, parseDay } from "./days.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const no = (code, why) => ({ undetermined: true, code, why });
 
@@ -74,9 +74,11 @@ export function calendar({ view, list = null, office = null, factOf = null }) {
                     ...(f && f.status === "corrected" ? { corrected_by: f.by ?? null, corrected_at: f.at ?? null } : {}),
                     ...(governs ? { governs: "correction", ...(typeof f.says === "string" ? { says: f.says } : {}) } : {}) });
         if (f && (f.status === "disputed" || f.status === "absent")) {
+          const at = { list_words: String(listWords), year: String(y), offices: Array.isArray(h.offices) ? ` (${h.offices.map(officeWords).join(", ")})` : "" };
           out = no(f.status === "disputed" ? "FACT_DISPUTED" : "FACT_ABSENT",
-            `${listWords} for ${y}${Array.isArray(h.offices) ? ` (${h.offices.map(officeWords).join(", ")})` : ""} `
-            + (f.status === "disputed" ? "is disputed in your team's Civicsmith" : `cannot be read in your team's Civicsmith${f.why ? `: ${f.why}` : ""}`));
+            f.status === "disputed" ? localize("civil-time.calendar.disputed", "{list_words} for {year}{offices} is disputed in your team's Civicsmith", at)
+              : f.why ? localize("civil-time.calendar.cannot_read_why", "{list_words} for {year}{offices} cannot be read in your team's Civicsmith: {why}", { ...at, why: String(f.why) })
+                : localize("civil-time.calendar.cannot_read", "{list_words} for {year}{offices} cannot be read in your team's Civicsmith", at));
           break;
         }
         const list2 = governs || h.days;
@@ -108,7 +110,7 @@ export function calendar({ view, list = null, office = null, factOf = null }) {
 export function calendarStated(cal) {
   const notes = [];
   for (const r of cal.read) {
-    if (r.status === "unconfirmed") notes.push(word("civil-time.counted_unconfirmed_calendar", { basis: String(r.basis ?? "no source stated"), year: String(r.year) }));
+    if (r.status === "unconfirmed") notes.push(word("civil-time.counted_unconfirmed_calendar", { basis: String(r.basis ?? localize("civil-time.calendar.no_source_stated", "no source stated")), year: String(r.year) }));
     if (r.governs === "correction" && r.status !== "corrected")
       notes.push(word("civil-time.counted_correction_governs", { status: String(r.status), says: String(r.says ? ` (${r.says})` : ""), year: String(r.year) }));
     if (r.status === "corrected") notes.push(word("civil-time.counted_calendar_corrected", { corrected_by: String(r.corrected_by ? ` by ${r.corrected_by}` : ""), corrected_at: String(r.corrected_at ? `, ${r.corrected_at}` : ""), year: String(r.year) }));

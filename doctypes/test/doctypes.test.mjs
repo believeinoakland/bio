@@ -356,7 +356,7 @@ test("R21 deterministic over its inputs apart from R8, and nothing reads a store
     const src = fs.readFileSync(new URL(`../${f}`, import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "");
     assert.ok(!/\bfetch\s*\(|node:(?:fs|net|http)|\bD1\b|\.prepare\s*\(|indexedDB|localStorage/.test(src), `${f} reads no store or network`);
     for (const m of src.matchAll(/from\s+"([^"]+)"/g))
-      assert.ok(/^\.\/|^\.\.\/(?:docprofile|site-profiles|jurisdictions|bio-plane\/src\/civil-time)\//.test(m[1]), `${f} imports only its declared uses: ${m[1]}`);
+      assert.ok(/^\.\/|^\.\.\/(?:docprofile|site-profiles|jurisdictions|bio-plane\/src\/civil-time|bio-plane\/src\/setup-words)\//.test(m[1]), `${f} imports only its declared uses: ${m[1]}`);
   }
 });
 

@@ -3,7 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createRegistry, derivedId, DECLARED_LABEL, HUNCH_LABEL } from "../../../src/connection-grammar/index.mjs";
-import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { canonicalJson, BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { KINDS, tie, mention, said, guess, valid, NODE } from "./fixtures/owner.mjs";
 
 const reg = () => {
@@ -73,6 +74,13 @@ test("R1 checkConnection never throws, whatever it is given", () => {
     assert.equal(res.ok, false);
     assert.ok(res.errors.length && res.errors.every((e) => typeof e.field === "string" && typeof e.why === "string"));
   }
+});
+
+test("R1 the declared label and the grade's shape are read by connection-grammar.shape.label_declared and connection-grammar.shape.grade_shape", () => {
+  assert.equal(DECLARED_LABEL, localize("connection-grammar.shape.label_declared", "declared, not evidenced"));
+  const res = reg().checkConnection({ ...tie("c-1", NODE, "ENT-2026-0002"), grade: { assertion: "E", ends: ["A", "A"] } });
+  assert.equal(res.errors.find((e) => e.field === "grade").why, localize("connection-grammar.shape.grade_shape",
+    "grade is not {shape} in the letters {letters}", { shape: "{assertion, ends: [from_grade, to_grade]}", letters: BASIS_GRADES.join(" ") }));
 });
 
 test("R11 derivedId is the SHA-256 of the canonical JSON of the five fields, the same five giving the same id", () => {

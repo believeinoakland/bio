@@ -65,7 +65,7 @@ export function answerFailures(answer, ctx) {
     try { v = validAt({ valid: item.valid, basis: item.basis }, ctx.at); } catch (e) { v = { undetermined: true, why: String(e?.message ?? e) }; }
     if (v === 'out') fail('at', localize('connection-grammar.reads.name_is_out_at_the', '{name} is out at the date asked, so it is not returned', { name: String(name) }));
     else if (v === 'in') { if (item.undetermined !== undefined) fail('at', localize('connection-grammar.reads.name_is_in_at_the', '{name} is in at the date asked, yet marked undetermined', { name: String(name) })); }
-    else if (!isObj(item.undetermined) || !filled(item.undetermined.why)) fail('at', `${name} is undetermined at the date asked and is not marked undetermined: {why}`);
+    else if (!isObj(item.undetermined) || !filled(item.undetermined.why)) fail('at', localize('connection-grammar.reads.name_is_undetermined_at_the', '{name} is undetermined at the date asked and is not marked undetermined: {why}', { name: String(name), why: String(v.why) }));
     if (ctx.kindOf(item.kind)?.class === 'hunch' && (ctx.scope === null || ctx.scope === undefined || item.scope !== ctx.scope)) {
       fail('scope', localize('connection-grammar.reads.name_is_a_hunch_returned', '{name} is a hunch returned outside the working inquiry that holds it', { name: String(name) }));
     }

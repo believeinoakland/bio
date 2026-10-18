@@ -76,7 +76,7 @@ export function createRegistry() {
   function neighbours(arg) {
     const a = arg !== null && typeof arg === 'object' ? arg : /** @type {any} */ ({});
     if (a.viewer === undefined || a.viewer === null || a.viewer === '') {
-      return refuse('VIEWER_MISSING', 'a read names the member reading; an absent viewer is neither an administrator nor the public');
+      return refuse('VIEWER_MISSING', localize('connection-grammar.registry.viewer_missing', 'a read names the member reading; an absent viewer is neither an administrator nor the public'));
     }
     const e = byOwner.get(a.owner);
     if (!e) return refuse('OWNER_UNKNOWN', `${String(a.owner).slice(0, 60)} is not a registered owner`);

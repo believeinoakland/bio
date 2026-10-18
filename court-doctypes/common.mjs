@@ -328,25 +328,32 @@ export function assessRegister(before, after) {
   const composite = /composite/.test(String(b.key_basis || a.key_basis || ""));
   const pairs = composite ? counterparts(d.gone.map((e) => byKeyA.get(e.key)), d.appeared.map((e) => byKeyB.get(e.key))) : new Map();
   const bothComplete = a.complete === true && b.complete === true;
+  /* R10 and R11: each why is one whole sentence, the counterpart named inside it, never a clause added to another. */
+  const goneWhy = (key) => {
+    const counterpart = pairs.get(key);
+    if (bothComplete)
+      return counterpart === undefined
+        ? localize("court-doctypes.common.row_gone_both_complete", "a row the register listed is no longer listed, and both readings hold the whole register")
+        : localize("court-doctypes.common.row_gone_both_complete_counterpart", "a row the register listed is no longer listed, and both readings hold the whole register; the row added under key {key} is likely this row with a key field edited, and the two are reported together, never paired silently", { key: String(counterpart) });
+    const v1 = String(a.complete === true ? "the later" : b.complete === true ? "the earlier" : "neither");
+    return counterpart === undefined
+      ? localize("court-doctypes.common.a_row_is_not_in", "a row is not in the later reading, and {v1} reading holds the whole register, so whether it was removed or is on a page not read is not established", { v1 })
+      : localize("court-doctypes.common.a_row_is_not_in_counterpart", "a row is not in the later reading, and {v1} reading holds the whole register, so whether it was removed or is on a page not read is not established; the row added under key {key} is likely this row with a key field edited, and the two are reported together, never paired silently", { v1, key: String(counterpart) });
+  };
   for (const e of d.gone) {
     const r = byKeyA.get(e.key);
-    const detail = { key: e.key, entry_id: r.entry_id, date: r.date, text: r.text,
-      why: bothComplete
-        ? "a row the register listed is no longer listed, and both readings hold the whole register"
-        : localize("court-doctypes.common.a_row_is_not_in", "a row is not in the later reading, and {v1} reading holds the whole register, so whether it was removed or is on a page not read is not established", { v1: String(a.complete === true ? "the later" : b.complete === true ? "the earlier" : "neither") }) };
-    if (pairs.has(e.key)) {
-      detail.counterpart = pairs.get(e.key);
-      detail.why += `; the row added under key ${pairs.get(e.key)} is likely this row with a key field edited, and the two are reported together, never paired silently`;
-    }
+    const detail = { key: e.key, entry_id: r.entry_id, date: r.date, text: r.text, why: goneWhy(e.key) };
+    if (pairs.has(e.key)) detail.counterpart = pairs.get(e.key);
     events.push(event(bothComplete ? "delisted" : "possibly_delisted", detail));
   }
   for (const e of d.appeared) {
     const r = byKeyB.get(e.key);
-    const detail = { key: e.key, entry_id: r.entry_id, date: r.date, text: r.text, why: "a row was added to the register" };
-    if (pairs.has(e.key)) {
-      detail.counterpart = pairs.get(e.key);
-      detail.why += `; it is likely the row no longer listed under key ${pairs.get(e.key)} with a key field edited`;
-    }
+    const counterpart = pairs.get(e.key);
+    const detail = { key: e.key, entry_id: r.entry_id, date: r.date, text: r.text,
+      why: counterpart === undefined
+        ? localize("court-doctypes.common.row_added", "a row was added to the register")
+        : localize("court-doctypes.common.row_added_counterpart", "a row was added to the register; it is likely the row no longer listed under key {key} with a key field edited", { key: String(counterpart) }) };
+    if (pairs.has(e.key)) detail.counterpart = counterpart;
     events.push(event("item_added", detail));
   }
   for (const alt of d.altered) {
