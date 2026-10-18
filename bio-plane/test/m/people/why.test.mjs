@@ -2,8 +2,9 @@
    `{key, vars}` drawn through `word(key, vars)`, never English; a reason an owner answers is passed on as it answers it. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, OUT, doc } from "./fixture.mjs";
+import { world, ANN, doc } from "./fixture.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
+import { validAt } from "../../../src/civil-time/index.mjs";
 import { hasWord, word } from "../../../src/setup-words/index.mjs";
 
 const day = (from, to) => ({ from, to, precision: "day", zone: "UTC" });
@@ -123,7 +124,7 @@ test("R40 a duty whose in-force answer is unsettled with no reason is answered p
   assert.deepEqual(stringWhys(du), []);
 });
 
-test("R40 a hub answer of the identity kinds carries people.why.person_end_identity with {hub}", () => {
+test("R40 a hub answer of the identity kinds, at connection-grammar's string contract, is the sentence word reads for people.why.person_end_identity with {hub}, and why_key stands beside it", () => {
   const w = world();
   const node = w.person("Hub Person");
   const others = Array.from({ length: BOUNDS.hub + 1 }, (_, i) => w.person(`Other ${i}`));
@@ -131,7 +132,24 @@ test("R40 a hub answer of the identity kinds carries people.why.person_end_ident
   const n = w.p.neighbours({ node, at: "2024-01-01", viewer: ANN });
   assert.deepEqual(n.items, []);
   assert.equal(n.hub.set_size, others.length);
-  assert.deepEqual(n.hub.why, keyed("people.why.person_end_identity", { hub: BOUNDS.hub }));
-  assert.equal(draws(n.hub.why), word("people.why.person_end_identity", { hub: BOUNDS.hub }));
-  void OUT;
+  assert.deepEqual(n.hub.why_key, keyed("people.why.person_end_identity", { hub: BOUNDS.hub }), "the key a screen draws");
+  assert.equal(n.hub.why, word("people.why.person_end_identity", { hub: BOUNDS.hub }), "the sentence connection-grammar's contract judges, read by key");
+  assert.equal(draws(n.hub.why_key), n.hub.why);
+  /* the registry accepts it: control, the answer conforms to the neighbours contract */
+  const walked = w.registry.neighbours({ owner: "people", node, at: "2024-01-01", viewer: ANN });
+  assert.equal(walked.refused, undefined, JSON.stringify(walked).slice(0, 200));
+  assert.equal(walked.hub.why, n.hub.why);
+});
+
+test("R40 a claim whose validity does not settle the date is a hop marked undetermined, its why the sentence connection-grammar's contract judges (the owner's, as it answers) and why_key the key or null; the registry accepts it", () => {
+  const w = world();
+  const [a, b] = [w.person("Kay Roe"), w.person("Kay Roe")];
+  assert.equal(w.p.claimIdentity({ a, b, kind: "same_as", basis: "testimony", note: "said so", by: ANN }).ok, true);
+  const n = w.registry.neighbours({ owner: "people", node: a, at: "2024-01-01", viewer: ANN });
+  assert.equal(n.refused, undefined, JSON.stringify(n).slice(0, 200));
+  const u = n.items[0].undetermined;
+  assert.equal(typeof u.why, "string");
+  /* no start nor end is stated: civil-time answers, and its reason is passed on as it answers it (English today: a REPORT) */
+  assert.equal(u.why, validAt({ valid: { from: null, to: null, precision: "day", zone: "UTC" }, basis: null }, { value: "2024-01-01", precision: "day", zone: "UTC" }).why);
+  assert.equal(u.why_key, null, "the owner's reason is no key of this module's");
 });
