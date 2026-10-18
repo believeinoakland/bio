@@ -1,7 +1,7 @@
 Depth 2. Your entry: `build/plan/current.md` (T51), layer 11, screens-settings: **T51-116 · screens-settings** (read the entry line whole). Model: claude-sonnet-5-5.
 Your requirements: `build/requirements/screens-settings.md` (read whole); the ids marked `*(not yet met: T51)*` are yours to meet (R55–R59), as folded (K3868) and re-checked against DEC-335 to DEC-337 (K3897).
 BOB's notes for this job:
-1. R58 (K3897): `instancegroupseed` is drawn nowhere; `screen.group-identity.seed.recorded` only when `groupidentity` answers a recorded group (the unrecorded state's words are asked of the design, B325). R56's removals-under-way block waits for N1248 (T52). R59: the glossary's sixteen item states.
+1. R58 (K3897): `instancegroupseed` is drawn nowhere; `screen.group-identity.seed.recorded` only when `groupidentity` answers a recorded group (and `seed.unrecorded` otherwise, DEC-338). R56's removals-under-way block waits for N1248 (T52). R59: the glossary's sixteen item states.
 2. Plan rule 2: also read whole the drawings your lines name (`docs/development/ux-substrate/screens/mock-screens.js`, each screen's drawing function from start to end with the helpers it calls) and their registry rows. If a drawing is missing or contradicts a requirement, build to the requirement, REPORT the difference at once, and carry on (rule 10; BOB asks the design).
 3. Merge order: after interface-assets and interface-shell (their kit options), and after the providers your lines read; a provider not yet merged when you need it: say so and wait for BOB's CHANGE.
 4. Your 2 test(s) reading design files that went red at the opening's design merge (K3820) are yours: fix them against the merged design (DEC-329 to DEC-337).

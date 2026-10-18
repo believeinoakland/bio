@@ -1,7 +1,7 @@
 Depth 2. Your entry: `build/plan/current.md` (T51), layer 11, screens-publish: **T51-121 · screens-publish** (read the entry line whole). Model: claude-sonnet-5-5.
 Your requirements: `build/requirements/screens-publish.md` (read whole); the ids marked `*(not yet met: T51)*` are yours to meet (R37–R41), as folded (K3869) and re-checked (K3897, K3898).
 BOB's notes for this job:
-1. Reads public-read R38, R39 (`publishedfrozen`, `publishedcase`) and review R35 (merged L8). Printing by `cs.print()` with a `printed` hook (K3861). B326 items 3–5 (a leg's grade and falsifier, "Named only" documents, the print note) are open with the design: build to R37–R39.
+1. Reads public-read R38, R39 (`publishedfrozen`, `publishedcase`) and review R35 (merged L8). Printing by `cs.print()` with a `printed` hook (K3861). B326 was answered by DEC-338 (U360): the drawing now draws each leg's grade and the falsifier override, unpublished documents unnamed, and the print note on screen only, as R37–R39 say.
 2. Plan rule 2: also read whole the drawings your lines name (`docs/development/ux-substrate/screens/mock-screens.js`, each screen's drawing function from start to end with the helpers it calls) and their registry rows. If a drawing is missing or contradicts a requirement, build to the requirement, REPORT the difference at once, and carry on (rule 10; BOB asks the design).
 3. Merge order: after interface-assets and interface-shell (their kit options), and after the providers your lines read; a provider not yet merged when you need it: say so and wait for BOB's CHANGE.
 4. Your 12 test(s) reading design files that went red at the opening's design merge (K3820) are yours: fix them against the merged design (DEC-329 to DEC-337).
