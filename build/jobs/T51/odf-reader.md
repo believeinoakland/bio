@@ -1,6 +1,6 @@
 # odf-reader (T51)
 
-**Status** · session_013zPuS6aCiGt1Nqw5Gii5vD · depth 2 · COMPLETE · handled B2
+**Status** · session_013zPuS6aCiGt1Nqw5Gii5vD · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -48,3 +48,20 @@ Checks after the merge:
 Still open from J1 and J2: the eight inline strings in `ooxml.mjs` (for BOB to route to ooxml's owner) and the two regex assertions in `digest.test.mjs` (a question for BOB about moving them to key comparisons once rows are regenerated).
 
 Size (session_013zPuS6aCiGt1Nqw5Gii5vD): test runs 2, module lines 2413
+
+## J4 · COMPLETE
+
+CHANGE B3 (K3968; K3965) handled. Merged tranche/T51 into job/T51/odf-reader (the merge brought my `odf.mjs` change into the tranche, so ownership now reports 0 odf-reader files changed against the tranche).
+
+Done: the two regex assertions in `bio-plane/test/m/odf-reader/digest.test.mjs` now compare by equality with `localize`: the not-certain refusal (`odf-reader.odf.the_bytes_are_not_an`) and the unmeasured `.odp` basis (`odf-reader.odf.no_odp_export_has_been`), each with its en text. Commit is on the job branch and pushed. The file imports `localize` from `src/setup-words/index.mjs`.
+
+Checks:
+- `node --test test/m/odf-reader/*.test.mjs` (bio-plane): 70 pass, 0 fail.
+- `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio odf-reader`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio odf-reader`: 47 of 47 live ids named by a test.
+- `node checks/ownership.mjs /home/user/bio odf-reader tranche/T51 job/T51/odf-reader`: 0 files changed against the tranche, 0 failures.
+- `node checks/run.mjs /home/user/bio`: no odf-reader or `odf.mjs` finding; exits 1 on other modules' failures only (4174).
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note names other modules (for example `budget-doctypes`), not odf-reader; regenerating is left to R1's close, as B3 says.
+
+Size (session_013zPuS6aCiGt1Nqw5Gii5vD): test runs 3, module lines 2413
