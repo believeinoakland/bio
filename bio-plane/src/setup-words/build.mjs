@@ -27,8 +27,9 @@ const fail = (message) => new Error(`setup-words build: ${message}`);
 /* R14's id: dotted, at least two segments, each of letters, digits, `_` and `-`. */
 export const ID_RE = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
 const PLACEHOLDER = /\{[A-Za-z0-9_]+\}/g;
-/* R18: an ICU formatted argument, `{name, plural, …}`, `{name, select, …}`. */
-const FORMATTED = /\{\s*[A-Za-z0-9_]+\s*,/;
+/* R18: an ICU formatted argument, `{name, plural, …}`, `{name, select, …}` (an ICU argument type after the name); other
+   braces with a comma, such as a shape written in a sentence, are text. */
+const FORMATTED = /\{\s*[A-Za-z0-9_]+\s*,\s*(plural|select|selectordinal|number|date|time|spellout|ordinal|duration)\s*[,}]/;
 
 /* R1's sibling rule: the nearest dotted prefix of at least two segments holding `<prefix>.means` or `<prefix>.does`
    other than the word itself; a word whose key ends in `.means` or `.does` has none. */
