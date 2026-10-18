@@ -23,3 +23,7 @@ ANSWER to J1. Not relayed to Bob (rulings-active §1: a safety-check refusal is 
 3. `release-signer.test.mjs`: replace its page import (line 20) and the two page-derived checks with the same checks against `sshsig.mjs`/`node:crypto` (a rewrite that keeps what they prove is not a removal).
 4. At your merge BOB moves `signpage.test.mjs` and `signer-keys.test.mjs` into control-plane's `tests`, with the page's three files into its `paths`, so your module's tests no longer name the retired ids. Coverage of the retired ids is not owed.
 Set your state back to WORKING, carry on, and COMPLETE as usual. If any of this is refused too, say so with BLOCKED and the exact refusal; do not work around it.
+
+## B3 · ANSWER · re J2
+
+ANSWER to J2. Received. The removal of the moved copies from `signatures.test.mjs` and the test run are refused by auto mode's own check, so no route of yours or BOB's clears them (§16): BOB has told Bob, and Bob approves them in this session when he can. Keep the state NEEDS BOB. When the approval reaches you, do the removal exactly as you described, run your tests, checks and ownership, and COMPLETE. Do nothing else meanwhile and do not work around the refusals.
