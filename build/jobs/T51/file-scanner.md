@@ -1,0 +1,19 @@
+# file-scanner (T51)
+
+**Status** · session_017CLfp2cx6WQCCmCguGYJu2 · depth 2 · COMPLETE · handled B2
+
+## J1 · QUESTION
+
+QUESTION 1. Entry T51-9 (Docker Hub addresses) against file-scanner R10, whose text still reads: "each a `ghcr.io/believeinoakland/<image>@sha256:<64 hex>` reference ... and no other registry named". Entry says "Text: none", so R10 is not amended, yet it forbids the Docker Hub address the entry asks for, and `worker.test.mjs` (R10, three tests) asserts ghcr.io and rejects `docker.io/civicos…`.
+My best reading: R10's registry rule is superseded by N1242/K3805 (images named `docker.io/civicsmith/<image>@sha256:…`, the GitHub copy kept but not named); BOB amends R10 accordingly (the rule, "no other registry named", and the sentence "Cloudflare Containers do not pull from ghcr.io, so an instance runs the images copied by digest into its own account's registry" which no longer describes the release).
+I carry on on that reading: marker, wrangler.jsonc, its comment and the R10 tests name `docker.io/civicsmith/file-scanner-scanner` and `…-renderer`, with the digests of run 39084912830 on tranche/T51 (7a5ac2e450; no docker.io marker is committed, so I read them from that run's logs): scanner sha256:38d314ed955e0af0c3f5379ecb609c718b562911af80e34cd787d0c3bc0a76fd, renderer sha256:27941d2aab6f9fd11e308ff4d3715674d38f268be7a6dcf3d7be8e398fa5ae9c. (They differ from the committed 0.85.0 ghcr digests because that run rebuilt from tranche/T51.) If you amend R10 differently, tell me and I redo it.
+Note 1 of START: the module's `catalogue.mjs` already says "team" and has no "group" in any served text; `handling_digest` is not produced by this module (file-safety R27 computes it in bio-plane), so there is nothing to regenerate here.
+
+## J2 · COMPLETE
+
+COMPLETE. Entry T51-9 applied on the reading posted in J1 (no answer yet; bundler R35 states the same registry rule for file-scanner's two classes).
+- Entries applied: (1) words: `providers/catalogue.mjs` already says "team" (no "group" in any served text; the remaining "group's" are code comments, left as they are because changing `src/` would make `dist/` stale); `handling_digest` is not made by this module (file-safety R27 computes it in bio-plane), so nothing to regenerate. (2) `fleet-member.json` image repositories and `wrangler.jsonc` `containers[].image` now `docker.io/civicsmith/file-scanner-scanner@sha256:38d314ed…76fd` and `docker.io/civicsmith/file-scanner-renderer@sha256:27941d2a…ae9c`; the comment at wrangler.jsonc:33–37 restated for Docker Hub; the note at fleet-member.json:108 and the bucket comment say "team's bucket". The digests are from container-images run 39084912830 (tranche/T51 @ 7a5ac2e450, success); no docker.io marker is committed, so I read them from that run's logs (they differ from the 0.85.0 GitHub digests because that run rebuilt from tranche/T51). R10's three tests changed to the Docker Hub rule (and no longer assert agent-runner's file, which is another module's).
+- Needs BOB: amend R10's text (ghcr.io rule and "no other registry named" sentence) to the Docker Hub rule; the release's `release/file-scanner/container/*.json` parts (generated, bundler's) still name ghcr.io at the old digests until the next cut.
+- Deferred: none. Found in other modules: none.
+- Ran: file-scanner tests 68 tests, 58 pass, 0 fail, 10 skipped (clamscan and sigtool not installed here, as before); format 0 failures; architecture 0 failures; coverage file-scanner 32 of 32 ids named; ownership 4 files changed, 0 failures; checks/run.mjs: only other modules' coverage reds (agent-harness R17, agent-runner R36 R37 R38 R40, bundler R36 R37, journey-check R19, office-readers R34, pdf-reader R39, project-roster R35 R36).
+- Size (session_017CLfp2cx6WQCCmCguGYJu2): test runs 4, module lines 2777
