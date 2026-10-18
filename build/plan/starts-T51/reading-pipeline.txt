@@ -1,0 +1,4 @@
+Depth 2. Your entry: `build/plan/current.md` (T51), layer 4, reading-pipeline: **T51-133 · reading-pipeline** (read the entry line whole). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/reading-pipeline.md` (read whole); no id of yours is marked not yet met.
+BOB's notes for this job:
+1. K3820: one of your tests went red when the design stream's DEC-329 to DEC-333 were merged into the tranche (a test reading a design file). Run your tests, find it, diagnose it against the merged design (`docs/development/ux-substrate/`, `docs/development/DECISIONS.md`), and fix it at your module's interface: the design's files are never edited by you (they are the design stream's). If the fix is a requirement's meaning, post a QUESTION. Convert the test to read keys or the word table if it copies a sentence (K3810).
