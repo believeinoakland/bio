@@ -26,3 +26,9 @@ COMPLETE for B3 (CR-3, layer 1 re-run, R1), commit 51324ae678 on job/T51/file-sc
 - Deferred: none. Found in other modules: none.
 - Ran: `node --test test/` in file-scanner: 68 tests, 58 pass, 0 fail, 10 skipped (clamscan and sigtool not installed here, as before). `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words: 0 findings in file-scanner (remaining 2821 failures are other modules' testcopy/inline words and coverage, not this module). `checks/coverage.mjs /home/user/bio file-scanner`: 32 of 32 live ids named, 0 failures. `checks/architecture.mjs`: 0 failures. `checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`: 3 files changed by file-scanner, 0 failures.
 - Size (session_01CQsZuxrAShje62YCqQbMMf): test runs 1, module lines 4430 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)
+
+## J4 · REPORT
+
+REPORT for B4 (CHANGE, K3957). One plain finding of the file-scanner module is left unkeyed, for the design's unkeyed list (K3944):
+
+- `file-scanner/container/renderer.mjs:105` "route must be pdf or office". Why: a developer and wire string. The renderer's own refusal for a route it is never sent: `render.mjs` refuses any route other than `pdf` or `office` before the renderer is called, and the renderer's NOT_RENDERABLE message is not passed on to a member (`render.mjs` passes a container message only for RENDER_FAILED). No member reads it.
