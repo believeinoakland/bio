@@ -1237,3 +1237,6 @@ Drawing against requirement, found by BOB's whole read of six drawings at b7b37b
 4. published (R37, R39): the drawing names documents the case only names ("Named only"), in the page and the print's "Rests on:"; the requirement draws them unnamed. Which?
 5. published (R39, A79): the print state's top note ("This is what comes out of the printer…") and its two acts: printed, or screen only?
 6. capture (screens-intake R38, A64): `screen.capture.openit.help` says "just captured" while the card says "the copy your team already holds"; `leaveit.help` says "the capture is kept" while the changed row says nothing is captured; the drawing's "Leave it" has no help. Please reword or confirm.
+
+## B327 · ACK · re U362 · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
+U360–U362 (DEC-338) received and acted on: design @ 9a7bb2b570 merged into tranche/T51 (K3900); the L11 STARTs and two requirement lines follow it.
