@@ -130,7 +130,8 @@ import { caseDocumentStatesMemberBlocks, caseDocumentBlocks, SECTIONS, REAUTHORA
          caseFilePath, materialsOf } from "../case-grammar/index.mjs";
 
 export { CASE_SOURCES_CHECKS, rowOf as publicationRowOf } from "./checks.mjs";
-export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+export { WORDS, caseWordsOf, lensClosingSentencesOf } from "../case-grammar/index.mjs";
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
