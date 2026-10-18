@@ -33,6 +33,7 @@ import { provenanceOf, PROVENANCE_ACT_CHECKS } from "../provenance/index.mjs";
 import { ARCHIVE_DEPTH_MAX } from "../ooxml.mjs";
 import { ATTEST_CHECKS } from "./checks.mjs";
 import { migrateAttestation, ATTESTATION_TABLES, ATTESTATION_EXEMPT } from "./schema.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export { ATTEST_CHECKS } from "./checks.mjs";
 export { ATTESTATION_SCHEMA, ATTESTATION_TABLES, ATTESTATION_EXEMPT, migrateAttestation } from "./schema.mjs";
@@ -169,7 +170,7 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
     const locator = typeof body.locator === "string" ? body.locator : "";
     if (!isPublicHttpsLocator(locator)) {
       attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
-                      note: "no public https locator to archive" });
+                      note: word("attestation.note.public_https_locator") });
     } else {
       try {
         const res = await fetchFn(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
@@ -180,7 +181,7 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
                           kind: "co-archive", archived_locator: archived });
         } else {
           attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
-                          note: res.ok ? "archived but returned no locator" : `http ${res.status}` });
+                          note: res.ok ? word("attestation.note.archived_returned_locator") : `http ${res.status}` });
         }
       } catch (e) {
         attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
@@ -199,11 +200,11 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
         kind: "rfc3161", service, sha256: tokenSha, bytes: token.length,
         over: sha,
       },
-      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; your team's Civicsmith obtains and stores it, and does not claim to have verified the signature.",
+      note: word("attestation.note.trusted_timestamp_capture"),
       ...(held ? { held } : {}),
     } : {
       reason: "NO_ATTESTATION",
-      note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped.",
+      note: word("attestation.note.attempt_recorded_register"),
     }),
   };
 }
@@ -301,10 +302,9 @@ export class Attestation {
         const c = isObj(d.container) ? d.container : null;
         const archive = c ? bareSha(c.archive_sha256) : null;
         const index = c ? c.index : null;
-        const named = through.length ? `the archive above it (through entries ${through.join(", ")})` : "this capture";
+        const named = through.length ? word("attestation.archive_above_through", { through: String(through.join(", ")) }) : "this capture";
         if (!archive || !/^[0-9a-f]{64}$/.test(archive) || !Number.isInteger(index) || index < 0) {
-          why.push(`the record states ${named} was cut out of an archive, but its container block names no archive `
-                 + "digest of 64 hex and whole entry index, so whose attestations it carries cannot be read");
+          why.push(word("attestation.record_states_cut", { named: String(named) }));
           continue;
         }
         const path = [index, ...through];
@@ -315,16 +315,14 @@ export class Attestation {
         }
         const above = this.#recordedFor(archive);
         for (const a of above.attestations) out.push({ ...a, inherited: { from: archive, through: path } });
-        if (above.why) why.push(`for the archive ${archive} it was cut out of (through entries ${path.join(", ")}): ${above.why}`);
+        if (above.why) why.push(word("attestation.archive_cut_through", { archive: String(archive), path: String(path.join(", ")), why: String(above.why) }));
         climb(above.entries, path, depth + 1);
       }
     };
     climb(own.entries, [], 0);
-    const note = "read from what the record holds: no timestamp authority or archive was asked, and no token's "
-               + "signature was verified here"
-               + (unpacked ? ". This capture was cut out of a captured archive: an attestation marked inherited is "
+    const note = word("attestation.note.read_record_holds", { value: String(unpacked ? ". This capture was cut out of a captured archive: an attestation marked inherited is "
                    + "the archive's, recorded for the archive named in `from`, and its token proves the archive existed "
-                   + "at its instant, and so every byte cut out of it" : "");
+                   + "at its instant, and so every byte cut out of it" : "") });
     return { ok: true, sha256: s, registered: own.registered, attestations: out,
              ...(why.length ? { undetermined: why.join("; ") } : {}), note };
   }
@@ -340,10 +338,10 @@ export class Attestation {
                 + "attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
     const PATH = "data/provenance.json";
     const f = this.#record.readFile(home.bundleId, PATH);
-    if (!f) return none(`its home ${home.bundleId} carries no ${PATH}`);
-    if (typeof f.text !== "string") return none(`its home's ${PATH} is held as a blob, which cannot be read here`);
+    if (!f) return none(word("attestation.home_carries", { bundle_id: String(home.bundleId), path: String(PATH) }));
+    if (typeof f.text !== "string") return none(word("attestation.home_held_blob", { path: String(PATH) }));
     const reg = safeJson(f.text);
-    if (!isObj(reg) || !Array.isArray(reg.documents)) return none(`its home's ${PATH} cannot be read as a register`);
+    if (!isObj(reg) || !Array.isArray(reg.documents)) return none(word("attestation.home_cannot_read", { path: String(PATH) }));
     const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
     const entries = [], out = [];
     for (const d of reg.documents) {

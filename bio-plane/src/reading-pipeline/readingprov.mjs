@@ -30,6 +30,7 @@
  * after that the document's tier. A page nothing speaks for reads tier NULL, and says so. */
 
 import { flattenText } from "../../../docprofile/readtext.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export const PROVENANCE_SCHEME = "reading-provenance/1";
 
@@ -132,7 +133,7 @@ export async function readingProvenance({ text = null, chain = null, tier = null
      one would let two readings that read NOTHING compare as agreeing. */
   out.text_sha256 = flat.text.length ? await sha256Hex(flat.text) : null;
   /* R18: null for empty text says why, as it does for absent text. */
-  if (!flat.text.length) out.why = "the text this document yielded is empty, so there is nothing to digest";
+  if (!flat.text.length) out.why = word("reading-pipeline.why.text_document_yielded");
   const byKey = new Map();
   const credit = (t, engine, page, fallback = null) => {
     const member = t == null ? fallback : (TIER_MEMBERS[t] ?? null);
@@ -194,7 +195,7 @@ export function describePages(list) {
   return `${ps.length === 1 ? "page" : "pages"} ${runs.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(", ")}`;
 }
 
-const who = (t, m) => (t == null ? "an undetermined tier" : `tier ${t} on ${m || "an unnamed member"}`);
+const who = (t, m) => (t == null ? word("reading-pipeline.undetermined_tier") : `tier ${t} on ${m || "an unnamed member"}`);
 /* D-635: a page with two producers is named by both, so a changed page is never attributed to one of them. */
 const whoOf = (p) => (Array.isArray(p.producers) && p.producers.length > 1
   ? p.producers.map((q) => who(q.tier, q.member)).join(" and ") : who(p.tier, p.member));
@@ -212,17 +213,15 @@ const isProv = (p) => !!(p && typeof p === "object" && p.scheme === PROVENANCE_S
  */
 export function compareProvenance(prior, next) {
   if (!isProv(prior) || !isProv(next)) {
-    const which = !isProv(prior) && !isProv(next) ? "neither reading carries" :
-      !isProv(prior) ? "the earlier reading carries" : "this reading carries";
+    const which = !isProv(prior) && !isProv(next) ? word("reading-pipeline.reading_carries") :
+      !isProv(prior) ? word("reading-pipeline.earlier_reading_carries") : word("reading-pipeline.this_reading_carries");
     return { state: "undetermined",
-             says: `${which} no reading provenance (it was written before D-536, or by a caller that did not `
-                 + `carry it), so whether the text changed, and which tier's, is UNDETERMINED — it is not `
-                 + `inferred from the document-level tier or from the chain` };
+             says: localize("reading-pipeline.readingprov.which_no_reading_provenance_it", "{which} no reading provenance (it was written before D-536, or by a caller that did not carry it), so whether the text changed, and which tier's, is UNDETERMINED — it is not inferred from the document-level tier or from the chain", { which: String(which) }) };
   }
   if (prior.text_sha256 == null && next.text_sha256 == null)
-    return { state: "no_text", says: "neither reading classified any text, so there is nothing to compare" };
+    return { state: "no_text", says: word("reading-pipeline.says.reading_classified_text") };
   if (prior.text_sha256 === next.text_sha256)
-    return { state: "agrees", says: "the re-read classified the same text as the reading before it (SHA-256 equal)" };
+    return { state: "agrees", says: word("reading-pipeline.says.read_classified_text") };
   if (!Array.isArray(prior.pages) || !Array.isArray(next.pages)) {
     const pp = (prior.producers || []).map((p) => who(p.tier, p.member)).join(" and ") || who(prior.text_tier, null);
     const np = (next.producers || []).map((p) => who(p.tier, p.member)).join(" and ") || who(next.text_tier, null);
@@ -251,13 +250,11 @@ export function compareProvenance(prior, next) {
                  + "how the pages were joined into the text the reader was handed" };
   const says = changed.map((g) => {
     const pgs = describePages(g.pages);
-    if (!g.before) return `${whoOf(g.now)} returned ${pgs}, which the earlier reading did not have`;
-    if (!g.now) return `the earlier reading had ${pgs} (${whoOf(g.before)}), which this reading does not`;
+    if (!g.before) return word("reading-pipeline.returned_earlier_reading", { now: String(whoOf(g.now)), pgs: String(pgs) });
+    if (!g.now) return word("reading-pipeline.earlier_reading_reading", { pgs: String(pgs), before: String(whoOf(g.before)) });
     if (whoOf(g.before) === whoOf(g.now))
-      return `${whoOf(g.now)} returned different text for ${pgs}`;
-    return `${pgs} ${g.pages.length === 1 ? "was" : "were"} read by ${whoOf(g.before)} before and by `
-         + `${whoOf(g.now)} now, `
-         + `and the text differs`;
+      return word("reading-pipeline.returned_different_text", { now: String(whoOf(g.now)), pgs: String(pgs) });
+    return word("reading-pipeline.read_text_differs", { pgs: String(pgs), pages: String(g.pages.length === 1 ? "was" : "were"), before: String(whoOf(g.before)), now: String(whoOf(g.now)) });
   }).join("; ");
   return { state: "differs", changed, says };
 }

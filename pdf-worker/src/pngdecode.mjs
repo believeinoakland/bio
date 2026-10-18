@@ -42,6 +42,8 @@
  * ever held; a stream that inflates past the frame is stopped at once.
  */
 
+import { localize } from "../../bio-plane/src/setup-words/index.mjs"
+
 export class PngRefusal extends Error {
   constructor(code, detail = {}) {
     super(`${code}${detail.feature ? `: ${detail.feature}` : detail.note ? `: ${detail.note}` : ""}`);
@@ -105,19 +107,19 @@ function readChunks(d) {
   let p = 8, ihdr = null, plte = null, trns = null, ended = false;
   const idat = [];
   while (!ended) {
-    if (p + 8 > d.length) throw truncated(`the data ends at byte ${p}, before an IEND chunk`);
+    if (p + 8 > d.length) throw truncated(localize("image-codecs.pngdecode.the_data_ends_at_byte", "the data ends at byte {p}, before an IEND chunk", { p: String(p) }));
     const len = u32(d, p);
     const type = String.fromCharCode(d[p + 4], d[p + 5], d[p + 6], d[p + 7]);
-    if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt(`a chunk type that is not four letters at byte ${p}`, { at: p });
-    if (len > 0x7fffffff) throw corrupt(`the ${type} chunk declares a length past 2^31 - 1`, { chunk: type });
-    if (p + 12 + len > d.length) throw truncated(`the ${type} chunk at byte ${p} runs past the data`, { chunk: type });
+    if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt(localize("image-codecs.pngdecode.a_chunk_type_that_is", "a chunk type that is not four letters at byte {p}", { p: String(p) }), { at: p });
+    if (len > 0x7fffffff) throw corrupt(localize("image-codecs.pngdecode.the_type_chunk_declares_a", "the {type} chunk declares a length past 2^31 - 1", { type: String(type) }), { chunk: type });
+    if (p + 12 + len > d.length) throw truncated(localize("image-codecs.pngdecode.the_type_chunk_at_byte", "the {type} chunk at byte {p} runs past the data", { type: String(type), p: String(p) }), { chunk: type });
     const start = p + 8, end = start + len;
     const critical = (d[p + 4] & 0x20) === 0;
     if (critical || USED_ANCILLARY.has(type)) {
-      if (crc32(d, p + 4, end) !== u32(d, end)) throw corrupt(`the ${type} chunk's CRC does not match its data`, { chunk: type, at: p });
+      if (crc32(d, p + 4, end) !== u32(d, end)) throw corrupt(localize("image-codecs.pngdecode.the_type_chunks_crc_does", "the {type} chunk's CRC does not match its data", { type: String(type) }), { chunk: type, at: p });
     }
     if (critical && !KNOWN_CRITICAL.has(type)) throw unsupported("an unknown critical chunk", { chunk: type });
-    if (!ihdr && type !== "IHDR") throw corrupt(`the first chunk is ${type}, not IHDR`, { chunk: type });
+    if (!ihdr && type !== "IHDR") throw corrupt(localize("image-codecs.pngdecode.the_first_chunk_is_type", "the first chunk is {type}, not IHDR", { type: String(type) }), { chunk: type });
     switch (type) {
       case "IHDR":
         if (ihdr) throw corrupt("a second IHDR chunk");
@@ -146,14 +148,14 @@ function readChunks(d) {
 }
 
 function readIhdr(d, p, len) {
-  if (len !== 13) throw corrupt(`an IHDR of ${len} bytes, not 13`);
+  if (len !== 13) throw corrupt(localize("image-codecs.pngdecode.an_ihdr_of_len_bytes", "an IHDR of {len} bytes, not 13", { len: String(len) }));
   const h = { width: u32(d, p), height: u32(d, p + 4), depth: d[p + 8], colourType: d[p + 9],
               compression: d[p + 10], filter: d[p + 11], interlace: d[p + 12] };
   if (!h.width || !h.height || h.width > 0x7fffffff || h.height > 0x7fffffff)
     throw corrupt(`an image of ${h.width}x${h.height}`, { width: h.width, height: h.height });
   if (!(h.colourType in DEPTHS)) throw corrupt(`colour type ${h.colourType}`, { colour_type: h.colourType });
   if (!DEPTHS[h.colourType].includes(h.depth))
-    throw corrupt(`bit depth ${h.depth} with colour type ${h.colourType}`, { colour_type: h.colourType, bit_depth: h.depth });
+    throw corrupt(localize("image-codecs.pngdecode.bit_depth_depth_with_colour", "bit depth {depth} with colour type {colourType}", { depth: String(h.depth), colourType: String(h.colourType) }), { colour_type: h.colourType, bit_depth: h.depth });
   if (h.compression !== 0) throw corrupt(`compression method ${h.compression}`);
   if (h.filter !== 0) throw corrupt(`filter method ${h.filter}`);
   if (h.interlace > 1) throw corrupt(`interlace method ${h.interlace}`);
@@ -197,7 +199,7 @@ export async function decodePng(bytes) {
   let palette = null, alphaOf = null, key = null, transparency = colourType === 4 || colourType === 6 ? "alpha channel" : null;
   if (colourType === 3) {
     if (!plte) throw corrupt("a palette image with no PLTE chunk before its image data");
-    if (!plte.length || plte.length % 3 || plte.length > 768) throw corrupt(`a PLTE of ${plte.length} bytes`);
+    if (!plte.length || plte.length % 3 || plte.length > 768) throw corrupt(localize("image-codecs.pngdecode.a_plte_of_length_bytes", "a PLTE of {length} bytes", { length: String(plte.length) }));
     palette = plte;
     alphaOf = new Uint8Array(256).fill(255);
     if (trns) { alphaOf.set(trns.subarray(0, Math.min(trns.length, plte.length / 3))); transparency = "tRNS"; }
@@ -226,7 +228,7 @@ export async function decodePng(bytes) {
         const pa = Math.abs(b - c), pb = Math.abs(a - c), pc = Math.abs(a + b - 2 * c);
         r[i] = (r[i] + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c)) & 0xff;
       }
-    } else if (f !== 0) throw corrupt(`filter type ${f} in row ${y}`, { row: y, filter: f });
+    } else if (f !== 0) throw corrupt(localize("image-codecs.pngdecode.filter_type_f_in_row", "filter type {f} in row {y}", { f: String(f), y: String(y) }), { row: y, filter: f });
     writeRow(r, y);
     [cur, prev] = [prev, cur];
     y++;
@@ -263,7 +265,7 @@ export async function decodePng(bytes) {
   };
 
   const paletteOut = (v, o) => {
-    if (v >= entries) throw corrupt(`palette index ${v} past the palette's ${entries} entries`, { index: v, entries });
+    if (v >= entries) throw corrupt(localize("image-codecs.pngdecode.palette_index_v_past_the", "palette index {v} past the palette's {entries} entries", { v: String(v), entries: String(entries) }), { index: v, entries });
     const a = alphaOf[v], p = 3 * v;
     out[o] = overWhite(palette[p], a); out[o + 1] = overWhite(palette[p + 1], a); out[o + 2] = overWhite(palette[p + 2], a);
     return o + 3;
@@ -300,13 +302,13 @@ export async function decodePng(bytes) {
      * words, which differ between platforms, so all are CORRUPT here; a file cut
      * short is TRUNCATED by its chunks, and a whole stream of too few rows below. */
     const why = String((e && e.message) || (e && e.code) || e);
-    throw corrupt(y < H ? `the image data does not inflate (row ${y} of ${H})` : "the image data's zlib trailer is damaged or missing",
+    throw corrupt(y < H ? localize("image-codecs.pngdecode.the_image_data_does_not", "the image data does not inflate (row {y} of {H})", { y: String(y), H: String(H) }) : "the image data's zlib trailer is damaged or missing",
       { rows: y, height: H, inflater: why });
   }
   if (extra) {
     reader.cancel().catch(() => {});
     throw corrupt("the image data inflates past the frame", { height: H, row_bytes: rowBytes });
   }
-  if (y < H) throw truncated(`the image data ends after ${y} of ${H} rows`, { rows: y, height: H });
+  if (y < H) throw truncated(localize("image-codecs.pngdecode.the_image_data_ends_after", "the image data ends after {y} of {H} rows", { y: String(y), H: String(H) }), { rows: y, height: H });
   return { width: W, height: H, comps, samples: out, detail: { colour_type: colourType, bit_depth: depth, transparency } };
 }

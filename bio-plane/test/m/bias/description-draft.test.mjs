@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, S, WHY } from "./world.mjs";
 import { biasOf } from "../../../src/bias/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "BIAS-2026-0001-a";
 const DESC = { kinds: ["issue", "other"], otherKind: "A records clinic", focus: "The records office and its contracts.",
@@ -43,8 +44,8 @@ test("R48: to an active member it answers the latest self-description (kinds, ot
     assert.deepEqual(r.description, { kinds: ["community"], otherKind: null, focus: "The harbour board.", purpose: null,
       by: "second", at: last.at }, `${viewer}: the latest record, never the history`);
     assert.deepEqual([r.ok, r.offered, r.proposed, r.authored, r.statements], [true, true, true, false, []], viewer);
-    assert.equal(r.label, "what the team wrote about itself");
-    assert.equal(r.offers, "the opening text of a new bias set the member authors");
+    assert.equal(r.label, word("bias.label.group_wrote_itself"));
+    assert.equal(r.offers, word("bias.opening_text_new"));
     assert.match(r.stated, /a member writes each statement, names its subject in the registry and justifies it/);
     assert.match(r.stated, /adopts it with a member's name on it/);
     assert.equal("history" in r, false, "only the latest record is offered");

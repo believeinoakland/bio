@@ -10,6 +10,7 @@ import { seeded, V, TEST, TEXT, reviewedOf, PROFILE_IDS } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import * as jurisdictions from "../../../../jurisdictions/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -21,7 +22,7 @@ const en = (key) => {
 const A = V("alice");
 const rows = ft.FILING_TEMPLATE_CHECKS;
 /* the RFC row's word, read by key from words.json (DEC-260); pinned as r33.test.mjs pins it */
-const RFC_TRANSLATION = "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.";
+const RFC_TRANSLATION = word("refusal.RFC_QUOTING_MISSING");
 const AT = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
 /* C-125.33 as T45 worded it: answered no longer. */
 const T45_NOT_REVIEWED = "This template from the jurisdiction profile is not offered yet. A profile's template is offered only "

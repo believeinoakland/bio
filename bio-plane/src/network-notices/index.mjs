@@ -57,6 +57,7 @@ import {
   ACTIVITY_METHOD_VERSION, ACTIVITY_METHOD_EARLIER_LABELS, levelOf, SEAL_SLOTS, WEEK_SLOTS, SEAL_METHOD, leafHash,
   weekLeafHash, slotsFor, randomHex, randomPositions, treeOf, rootOf, pathOf, verifyOpening, OPENING_FORMAT,
 } from "./seals.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export { NETWORK_NOTICE_CHECKS } from "./checks.mjs";
 export { NETWORK_NOTICES_SCHEMA, NETWORK_NOTICES_TABLES } from "./schema.mjs";
@@ -89,17 +90,17 @@ export const NOTICE_STATUSES = Object.freeze(["open", "stopped", "closed", "laps
 /** R3: the doorbell's path relative to the group's public address (`capture`'s knock, its R32: `op=knock`). */
 export const DOORBELL_PATH = "?op=knock";
 /** R3: the fixed sentence every revision carries. Its final words are the UX design stream's (K1031). */
-export const OTHERS_WELCOME = "Others working on this are welcome to make contact.";
+export const OTHERS_WELCOME = word("network-notices.others_working_welcome");
 /** R2: the outward-act warning, as a code and its meaning; its words are the UX design stream's (K1031 (5)). */
 export const OUTWARD_ACT_WARNING = Object.freeze({
   code: "outward_act",
-  meaning: "The public, including anyone being examined, will see this notice, and stopping it later will not unsay it.",
+  meaning: word("network-notices.public_including_anyone"),
 });
 /** R2 (K1031 (4)): the caution's code; it never refuses, and its words are the UX design stream's. */
 export const CAUTION_TWO_OPEN = "two_open_without_published_work";
 /** R21: how the keys of the group's own Civicsmith are labelled. The public reads it with no credential, so it says
  *  "this group's Civicsmith", never "your group's" nor "this copy" (DEC-149, K1821, K1833). */
-export const COPY_KEY_LABEL = "this team's Civicsmith key";
+export const COPY_KEY_LABEL = word("network-notices.group_civicsmith_key");
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 /* R15: the user agent the timestamp requests carry, naming the product (DEC-124). */
@@ -909,7 +910,7 @@ export class NetworkNotices {
     const title = (p && p.data && str(p.data.title)) || str(heading) || null;
     return { ok: true, group: this.#slug(), case: id, edition: ed,
              link: `?op=publishedcase&caseId=${encodeURIComponent(id)}&edition=${ed}`, title, summary: str(row.scope) || null,
-             sends: "nothing: copy these fields, or open them" };
+             sends: word("network-notices.nothing_copy_fields") };
   }
 }
 

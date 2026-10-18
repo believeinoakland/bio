@@ -6,6 +6,7 @@ import * as actions from "../../../src/actions/index.mjs";
 import { migrateActions } from "../../../src/actions/schema.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 const profile = (id) => combine([id]).view;
 
 const A = "ACTN-2026-0001-a";
@@ -67,7 +68,7 @@ test("R25 R26 the projection block: derived at now beside the cached flag; legs,
   assert.equal(w.reg.decorations[0].m, "actions", "registered with retrieval R56");
   const d = w.reg.decorations[0].fn({ bundle_id: A, object_type: "action", action_clock_overdue: 0 }, { nowMs: Date.parse("2026-09-20T00:00:00Z") }).action;
   assert.deepEqual([d.kind, d.risk_tier, d.risk_tier_words, d.clock_next, d.clock_overdue, d.clock_overdue_cached, d.as_of],
-    ["records_request", 2, "file with caution", "2026-09-14", true, false, "2026-09-20T00:00:00.000Z"]);
+    ["records_request", 2, word("risk.tier.2"), "2026-09-14", true, false, "2026-09-20T00:00:00.000Z"]);
   assert.equal(d.basis.length, 1); assert.equal(d.correspondence.length, 0);
   assert.equal(d.governing_laws.state, "undetermined"); assert.match(d.governing_laws.stated, /assumes none/);
   assert.ok(d.governing_laws_proposals.says && d.risk_tier_proposals.says);

@@ -32,6 +32,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { DOORBELL_ORIGIN, UPLOAD_ORIGIN, PROVENANCE_ACT_CHECKS } from "../provenance/index.mjs";
 import { migrateProvenanceRoutes } from "./schema.mjs";
 import { ROUTE_MARK_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { PROVENANCE_ROUTES_SCHEMA } from "./schema.mjs";
 export { ROUTE_MARK_CHECKS } from "./checks.mjs";
@@ -126,12 +127,12 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
      attestor, and it never flips `bound` to true: what is unbound here is the
      locator-to-bytes link, which is precisely what a TSR does not cover. */
   const tsrNote = tsrAuth && tsrFile
-    ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address`
+    ? word("provenance-routes.text.rfc_token_binds", { tsr_file: String(tsrFile), tsr_auth: String(tsrAuth) })
     : "";
   const stamp = (from) => ({
     at: at || secondOf(new Date().toISOString()),
     by: "op=provenancechain (REC-54)",
-    basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
+    basis: word("provenance-routes.basis.derived_fields_capture"),
     from,
   });
 
@@ -150,8 +151,8 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
     const rsha = str(receipt.sha256) || sha;
     return { ok: true, hops: [{
       who: `instance ${instanceName} (doorbell)`,
-      asserts: `these bytes were received for knock:${knockId} at ${received}`,
-      evidence: `the knock's receipt, sha256 ${rsha || "not recorded"} taken as the bytes arrived${tsrNote}`,
+      asserts: localize("provenance-routes.index.these_bytes_were_received_for", "these bytes were received for knock:{knockId} at {received}", { knockId: String(knockId), received: String(received) }),
+      evidence: localize("provenance-routes.index.the_knocks_receipt_sha256_v1", "the knock's receipt, sha256 {v1} taken as the bytes arrived{tsrNote}", { v1: String(rsha || "not recorded"), tsrNote: String(tsrNote) }),
       bound: false,
       via: DOORBELL_ORIGIN,
       reconstructed: stamp(["origin.kind", "source.receipt.knock_id", "source.receipt.received", "source.receipt.sha256"]),
@@ -174,8 +175,8 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
     const actor = str(cap.actor);
     return { ok: true, hops: [{
       who: `instance ${instanceName} (upload${actor ? ` by ${actor}` : ""})`,
-      asserts: `these bytes were received for upload:${rsha} at ${received}`,
-      evidence: `the upload's receipt, sha256 ${rsha} taken as the bytes arrived${tsrNote}`,
+      asserts: localize("provenance-routes.index.these_bytes_were_received_for_2", "these bytes were received for upload:{rsha} at {received}", { rsha: String(rsha), received: String(received) }),
+      evidence: localize("provenance-routes.index.the_uploads_receipt_sha256_rsha", "the upload's receipt, sha256 {rsha} taken as the bytes arrived{tsrNote}", { rsha: String(rsha), tsrNote: String(tsrNote) }),
       bound: false,
       via: UPLOAD_ORIGIN,
       reconstructed: stamp(["origin.kind", "source.receipt.sha256", "source.receipt.received", "capture.actor"]),
@@ -190,8 +191,8 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
   if (method && retrieved && locator && locator !== "in hand") {
     const actor = str(cap.actor_class);
     return { ok: true, hops: [{
-      who: `instance ${instanceName} (${actor ? `${actor} ` : ""}capture method ${method})`,
-      asserts: `these bytes were served for ${locator} at ${retrieved}`,
+      who: word("provenance-routes.who.instance_capture_method", { instance_name: String(instanceName), actor: String(actor ? `${actor} ` : ""), method: String(method) }),
+      asserts: localize("provenance-routes.index.these_bytes_were_served_for", "these bytes were served for {locator} at {retrieved}", { locator: String(locator), retrieved: String(retrieved) }),
       evidence: `${method}, sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
       bound: false,
       via: "direct",
@@ -206,7 +207,7 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
   if (holder && obtained) {
     return { ok: true, hops: [{
       who: `member ${holder}`,
-      asserts: `this member held these bytes and supplied them to the record at ${obtained}`,
+      asserts: localize("provenance-routes.index.this_member_held_these_bytes", "this member held these bytes and supplied them to the record at {obtained}", { obtained: String(obtained) }),
       evidence: `${str(custody.setting) || "setting not recorded"}${str(custody.attestation) ? `; ${str(custody.attestation)}` : ""}`
               + `; sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
       bound: false,
@@ -290,10 +291,7 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
  *  marker, because the whole risk of this shape is a member meeting a
  *  `verified` document with a doubt on it and concluding the record is broken. */
 export const ROUTE_MARK_NOTE =
-  "this document stays where the team put it: a verification was an attested act by people, and "
-  + "this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that "
-  + "its ROUTE cannot be shown from the evidence held — a statement about our evidence, not about the "
-  + "bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
+  localize("provenance-routes.index.this_document_stays_where_the", "this document stays where the team put it: a verification was an attested act by people, and this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that its ROUTE cannot be shown from the evidence held — a statement about our evidence, not about the bytes. The state and this finding disagree deliberately, and neither is a defect in the other.");
 
 /** THE ONE COMPOSITION POINT for what a read publishes, so `op=list`,
  *  `op=audit` and both provenance ops cannot answer this question in three
@@ -309,12 +307,11 @@ export const ROUTE_MARK_NOTE =
 export function routeFinding(objectType, mark) {
   if (objectType !== "information")
     return { applies: false, assessed: false, marked: false, finding: null, means: null,
-             note: "a route is a fact about a captured document, and this record is not one" };
+             note: word("provenance-routes.note.route_fact_captured") };
   if (!mark)
     return { applies: true, assessed: false, marked: false,
              finding: "NEVER_LOOKED", means: FINDING_MEANS.NEVER_LOOKED,
-             note: "no assessment of this document's route has ever been recorded. This is NOT a finding "
-                 + "that the route cannot be shown; it is the absence of the question having been asked." };
+             note: word("provenance-routes.note.assessment_document_route") };
   const marked = mark.finding === "LOOKED_INDETERMINATE";
   return {
     applies: true, assessed: true, marked,
@@ -322,7 +319,7 @@ export function routeFinding(objectType, mark) {
     at: mark.at, by: mark.by, stateAt: mark.state_at, seq: mark.seq,
     register: mark.register_state, undetermined: mark.undetermined, documents: mark.documents_n,
     note: marked ? ROUTE_MARK_NOTE
-                 : "this document's route was assessed and every document in its register can be shown",
+                 : word("provenance-routes.note.document_route_assessed"),
   };
 }
 
@@ -357,10 +354,7 @@ export const ROUTE_FINDING_KEY = "route";
 export const ROUTE_TALLY_MARKED_MAX = 20;
 /** The fixed sentence the finding carries (R6), word for word as `op=audit` has always answered it. */
 export const ROUTE_TALLY_NOTE =
-  "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in "
-  + "`tally` or `withErrors`: each names a document whose route cannot be shown, standing where "
-  + "the team put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
-  + "assessment has run, not that anything is wrong.";
+  localize("provenance-routes.index.these_are_stated_doubts_not", "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in `tally` or `withErrors`: each names a document whose route cannot be shown, standing where the team put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no assessment has run, not that anything is wrong.");
 
 /* The route-mark read's constants (R5). In the legacy store they were declared after the method that used them, so
    that the suites walking `store.mjs` by method segment read them as that method's; here they are module constants. */
@@ -463,8 +457,7 @@ class ProvenanceRoutes {
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "NO_AUTHOR",
                detail: who
-                 ? `'${who.slice(0, 60)}' is a machine credential. Reconstructing a provenance chain is a named `
-                   + "member's act: the record must show which person decided that the evidence supported this route"
+                 ? localize("provenance-routes.index.who_is_a_machine_credential", "'{who}' is a machine credential. Reconstructing a provenance chain is a named member's act: the record must show which person decided that the evidence supported this route", { who: String(who.slice(0, 60)) })
                  : "reconstructing a provenance chain is a named act: the record must show who decided "
                    + "that the evidence supported this route" };
     if (!bundleId)
@@ -523,12 +516,7 @@ class ProvenanceRoutes {
                   It has somewhere to go now: the doubt is RECORDED at the state
                   the document already sits in, which is what DEC-56 settles. */
                route: routeFinding("information", this.#latestRouteMark(bundleId)),
-               detail: "the capture record does not hold a route for every document in this register, and a "
-                     + "chain that cannot be reconstructed is UNDETERMINED rather than assumed. Nothing was "
-                     + "written. Stating the route these bytes took would be an invention, which is the one "
-                     + "thing this path exists to refuse. What CAN be done is to say so in the record: "
-                     + "op=provenanceroute records a standing marker on this document that its route cannot "
-                     + "be shown, leaving the document where it is (DEC-56, DEC-19)." };
+               detail: localize("provenance-routes.index.the_capture_record_does_not", "the capture record does not hold a route for every document in this register, and a chain that cannot be reconstructed is UNDETERMINED rather than assumed. Nothing was written. Stating the route these bytes took would be an invention, which is the one thing this path exists to refuse. What CAN be done is to say so in the record: op=provenanceroute records a standing marker on this document that its route cannot be shown, leaving the document where it is (DEC-56, DEC-19).") };
     if (!apply || !changed)
       return { ok: true, bundleId, applied: false, changed, documents: report,
                /* REC-63: the marker travels with the report too, so an operator
@@ -672,12 +660,8 @@ class ProvenanceRoutes {
        a bearer credential's `token:<class>` stamp is nobody's name (Membership v2 §4.10's provenance pair). */
     if (!who || isMachineIdentity(who))
       return refusal("ROUTE_MARK_NO_AUTHOR",
-        who ? `'${who.slice(0, 60)}' is a machine credential. Recording that a route cannot be shown is a named `
-              + "member's act: the record must show which person assessed the evidence and found it did not "
-              + "support a route, and a credential's class is nobody's name."
-            : "recording that a route cannot be shown is a named act: the record must show who assessed the "
-              + "evidence and found it did not support a route. A standing statement with nobody's name on it "
-              + "is not a statement.");
+        who ? localize("provenance-routes.index.who_is_a_machine_credential_2", "'{who}' is a machine credential. Recording that a route cannot be shown is a named member's act: the record must show which person assessed the evidence and found it did not support a route, and a credential's class is nobody's name.", { who: String(who.slice(0, 60)) })
+            : localize("provenance-routes.index.recording_that_a_route_cannot", "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement."));
     if (!bundleId)
       return refusal("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
     const gate = viewerPredicate(viewer);
@@ -686,14 +670,11 @@ class ProvenanceRoutes {
       bundleId, ...gate.args);
     if (!seen)
       return refusal("ROUTE_MARK_NO_SUCH_BUNDLE",
-        "no document of that name is in the record, or none this viewer may see — the two answer "
-        + "identically here, as they do on every read addressed to a record (REC-25/D-15).",
+        localize("provenance-routes.index.no_document_of_that_name", "no document of that name is in the record, or none this viewer may see — the two answer identically here, as they do on every read addressed to a record (REC-25/D-15)."),
         { bundleId });
     if (seen.object_type !== "information")
       return refusal("ROUTE_MARK_NOT_A_DOCUMENT",
-        `this record is a ${String(seen.object_type).slice(0, 40)}, and only a captured document `
-        + "travelled a route to get into the record. Marking one would put a doubt on every question in "
-        + "the store, which says nothing about any of them.",
+        localize("provenance-routes.index.this_record_is_a_string", "this record is a {String}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.", { String: String(String(seen.object_type).slice(0, 40)) }),
         { bundleId, objectType: seen.object_type });
     /* END DEC-49 REGION is-route-mark */
 
@@ -983,15 +964,11 @@ class ProvenanceRoutes {
       complete: neverAssessed === 0,
       says: !documents.length
         ? ROUTE_MARKED_CAUSES[cause]
-        : `${marked} document${marked === 1 ? "" : "s"} in this record carry a standing marker saying `
-          + `their route cannot be shown from the evidence held`,
+        : word("provenance-routes.says.document_record_carry", { marked: String(marked), s: String(marked === 1 ? "" : "s") }),
       completeness: neverAssessed === 0
         ? "every captured document this viewer can see has been assessed at least once, so this roster "
           + "is complete over the corpus"
-        : `${neverAssessed} of ${documentsVisible} captured documents have NEVER been assessed — `
-          + "NEVER_LOOKED, which is the ABSENCE OF THE QUESTION HAVING BEEN ASKED and not a finding "
-          + "that their routes can be shown. This roster is complete over what was assessed and says "
-          + "nothing about the rest",
+        : localize("provenance-routes.index.neverassessed_of_documentsvisible_captured_documents", "{neverAssessed} of {documentsVisible} captured documents have NEVER been assessed — NEVER_LOOKED, which is the ABSENCE OF THE QUESTION HAVING BEEN ASKED and not a finding that their routes can be shown. This roster is complete over what was assessed and says nothing about the rest", { neverAssessed: String(neverAssessed), documentsVisible: String(documentsVisible) }),
     };
   }
 }

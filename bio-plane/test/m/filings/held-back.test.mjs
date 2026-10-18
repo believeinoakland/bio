@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, F, WHY } from "./fixture.mjs";
 import { Filings } from "../../../src/filings/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const CODE = "INFO-2026-0010-code", ACTS = "INFO-2026-0011-acts";
@@ -107,7 +108,7 @@ test("R8 a standard's adoption is the edition the act's body had adopted on the 
   /* no module answering adoptions: undetermined, said so */
   const bare = { ...Object.fromEntries(["standardRead", "inForce"].map((k) => [k, x.standards[k].bind(x.standards)])) };
   const u = pack({}, x.filingsWith({ standards: bare })).sections.standards.items.find((i) => i.standard === S3).adoption;
-  assert.deepEqual([u.state, u.why], ["undetermined", "no module answers a standard's adoptions here"]);
+  assert.deepEqual([u.state, u.why], ["undetermined", word("filings.why.module_answers_standard")]);
 });
 
 test("R8 R9 access as standards holds it: paywalled and reading-room standards carried with only the passages relied on, in the members' words, a law kind's too; a free standard, and a law kind stating no access (K2019: public law), carried as R9 states (its text content ids, no passages quoted); negative controls", async () => {
@@ -115,13 +116,13 @@ test("R8 R9 access as standards holds it: paywalled and reading-room standards c
   const as = (access, words) => new Proxy(x.standards, { get: (t, k) => (k === "standardRead"
     ? (a) => { const r = t.standardRead(a); return r.ok && r.id === S3 ? { ...r, access, says: { ...r.says, ...(words ? { access: words } : {}) } } : r; }
     : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
-  for (const [access, words] of [["paywalled", "Behind a paywall"], ["reading_room", "Reading room only"]]) {
+  for (const [access, words] of [["paywalled", word("label.standardaccess.paywalled")], ["reading_room", word("label.standardaccess.reading_room")]]) {
     const s = pack({}, x.filingsWith({ standards: as(access, words) })).sections.standards.items.find((i) => i.standard === S3);
     assert.deepEqual([s.access, s.passages.map((q) => q.content_id), "text" in s], [access, [P0, WHOLE], false], access);
-    assert.equal(s.access_says, `${words}: only the passages relied on are carried, never the whole text`);
+    assert.equal(s.access_says, word("filings.passages_relied_carried", { words: String(words) }));
   }
   /* negative control: the same standard free to read is carried whole, as R9 states */
-  const free = pack({}, x.filingsWith({ standards: as("free", "Free to read") })).sections.standards.items.find((i) => i.standard === S3);
+  const free = pack({}, x.filingsWith({ standards: as("free", word("label.standardaccess.free")) })).sections.standards.items.find((i) => i.standard === S3);
   assert.deepEqual([free.access, free.text, "passages" in free, "designation" in free], ["free", [P0, P1, P2, WHOLE], false, false]);
   /* the fixture's ordinance and commitment state no access: public law, carried as R9 states (K2019) */
   const T = x.action({ kind: "commitment_claim" });

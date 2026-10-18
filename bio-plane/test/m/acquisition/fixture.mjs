@@ -16,6 +16,7 @@ import { acceptDatetime } from "../../../src/capture-sources/memento.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 export const H = (hex) => hex.padEnd(64, "0").slice(0, 64);
@@ -147,10 +148,10 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
     sourceReachability({ addressNorm }) {
       const r = state.reach.get(addressNorm);
       if (!r) return { address_norm: addressNorm, known: false, consecutive_failures: 0, governed_refusals: 0, fallback_eligible: false,
-                       basis: "no attempt on this address has ever been recorded" };
+                       basis: word("capture.basis.attempt_address_ever") };
       const eligible = r.consecutive_failures >= failures;
       return { address_norm: addressNorm, known: true, ...r, fallback_eligible: eligible,
-               basis: eligible ? `${r.consecutive_failures} consecutive failures produced by the source, threshold ${failures}` : "not eligible: the threshold is not met" };
+               basis: eligible ? word("capture.basis.consecutive_failures_produced", { consecutive_failures: String(r.consecutive_failures), failures: String(failures) }) : word("capture.basis.eligible_threshold_met") };
     },
     /* capture R22 */
     saveCaptureSession(s) { state.sessionSaves.push(s); const cur = state.sessions.get(s.session);
@@ -175,7 +176,7 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
     },
     loadCaptureSession({ session }) { const s = state.sessions.get(session);
       return s ? { session, found: true, locator: s.locator, primarySha: s.primarySha, primaryFile: s.primaryFile, base: s.base, ticks: s.ticks, state: s.state }
-               : { session, found: false, note: "no such capture session: it either never existed, was already finished, or expired" }; },
+               : { session, found: false, note: word("capture.note.capture_session_either") }; },
     dropCaptureSession({ session }) { state.sessionDrops.push(session); state.sessions.delete(session); return { session, dropped: true }; },
     /* capture R39–R40: the concurrency cap first, then the day's account; a reservation held until spent. */
     renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at = null }) {

@@ -86,6 +86,7 @@ import { canonicalExtent } from "../textchain.mjs";
 import { checkReevalPending, REEVAL_SOURCES, VERSION_NOTICE_SUBJECT_CHECKS, REEVALUATION_ACT_CHECKS,
          rowOf } from "./checks.mjs";
 import { REEVALUATION_TABLES, migrateReevaluation } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { checkReevalPending, REEVAL_SOURCES, REEVAL_POLICY_AGE_DAYS, VERSION_NOTICE_SUBJECT_CHECKS,
          REEVALUATION_ACT_CHECKS } from "./checks.mjs";
@@ -100,7 +101,7 @@ export const VERSION_NOTICE_LEGS_MAX = 200;
 export const CHANGED_FROM_AUDIT_LIMIT_DEFAULT = 200;
 export const CHANGED_FROM_AUDIT_LIMIT_MAX = 1000;
 /** R12: the one literal the pre-2026-08-08 `addGo` wrote, up to the parenthesis that opens the named id. */
-export const CHANGED_FROM_SENTENCE = "The record already holds an earlier capture of this same address (";
+export const CHANGED_FROM_SENTENCE = word("reevaluation.record_already_holds");
 /** R9: the findings and the passages one `changesOf` read answers, each. */
 export const CHANGES_OF_MAX = 200;
 /** R14: the basis legs one sweep reads (default and most). */
@@ -244,12 +245,8 @@ function laterThan(at, written) {
 function attributionDetail(m) {
   /* R32: a capture's attesting member is never named, only the capture. */
   if (m.capture_sha)
-    return `the credit level of the member attesting capture ${m.capture_sha.slice(0, 12)} moved from ${m.level_before} `
-      + `to ${m.level_after}${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, `
-      + `at ${m.at}: how the member who attests it is identified has changed.`;
-  return `the credit level of the observation ${m.observation} moved from ${m.level_before} to ${m.level_after}`
-    + `${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, at ${m.at}:`
-    + ` how the member who gave it is identified has changed.`;
+    return word("reevaluation.credit_level_member", { capture_sha: String(m.capture_sha.slice(0, 12)), level_before: String(m.level_before), level_after: String(m.level_after), case_id: String(m.case_id ? ` in case ${m.case_id}` : ""), edition: String(m.edition != null ? ` at edition ${m.edition}` : ""), at: String(m.at) });
+  return word("reevaluation.credit_level_observation", { observation: String(m.observation), level_before: String(m.level_before), level_after: String(m.level_after), case_id: String(m.case_id ? ` in case ${m.case_id}` : ""), edition: String(m.edition != null ? ` at edition ${m.edition}` : ""), at: String(m.at) });
 }
 
 /* R36: a notice's `across`, as stored. */
@@ -287,16 +284,10 @@ function movesCited(m, n, moves) {
    seq and date, the words it gives, whether its key is one the case file lists, and a take-back. */
 function movedDetail(ref, n, m, group, kase) {
   const what = m.kind === "edition" ? `published edition ${m.edition}`
-    : m.edition === "all" ? "withdrew every edition" : `withdrew edition ${m.edition}`;
+    : m.edition === "all" ? word("reevaluation.withdrew_edition") : `withdrew edition ${m.edition}`;
   const words = m.kind === "edition" ? m.what_changed : m.reason;
-  return `this leg rests on another team's finding ${ref} at edition ${n}${kase ? `, of case ${kase}` : ""}`
-    + `${group ? ` by ${group}` : ""}, and its publisher ${what} (docket entry ${m.seq ?? "unnumbered"}`
-    + `${m.date ? `, dated ${m.date}` : ""}${words ? `: "${words}"` : ""}).`
-    + `${m.key_listed === false ? " The entry's signing key is not among the keys the imported case file lists." : ""}`
-    + `${m.taken_back ? ` The publisher has since taken this entry back (entry ${m.taken_back.seq ?? "unnumbered"}`
-      + `${m.taken_back.date ? `, dated ${m.taken_back.date}` : ""}); the cause still stands.` : ""}`
-    + ` The finding keeps answering as that edition published it and the leg is unchanged; whether this finding still `
-    + `stands is the members' to decide.`;
+  return word("reevaluation.leg_rests_group", { ref: String(ref), n: String(n), kase: String(kase ? `, of case ${kase}` : ""), group: String(group ? ` by ${group}` : ""), what: String(what), seq: String(m.seq ?? "unnumbered"), date: String(m.date ? `, dated ${m.date}` : ""), words: String(words ? `: "${words}"` : ""), key_listed: String(m.key_listed === false ? " The entry's signing key is not among the keys the imported case file lists." : ""), taken_back: String(m.taken_back ? ` The publisher has since taken this entry back (entry ${m.taken_back.seq ?? "unnumbered"}`
+      + `${m.taken_back.date ? `, dated ${m.taken_back.date}` : ""}); the cause still stands.` : "") });
 }
 
 export class Reevaluation {
@@ -461,9 +452,7 @@ export class Reevaluation {
     /* THE LIFECYCLE ARMS (D-5), off the target's own state pair; the reversible acts RAISE rather than refuse. */
     if (row.current_state === "deferred")
       causes.push({ source: "deferred", since: row.last_updated,
-                    detail: `${targetId} has been set down. It is reversible and the team may pick it back `
-                          + `up, and until it does, a claim resting on it rests on a question nobody is `
-                          + `working.` });
+                    detail: localize("reevaluation.index.targetid_has_been_set_down", "{targetId} has been set down. It is reversible and the team may pick it back up, and until it does, a claim resting on it rests on a question nobody is working.", { targetId: String(targetId) }) });
     else if (row.current_state === "dismissed")
       causes.push({ source: "dismissed", since: row.last_updated,
                     detail: `${targetId} was abandoned. A claim resting on it names a question that will `
@@ -857,10 +846,7 @@ export class Reevaluation {
       byPair.get(pk).push({
         source: "acceptance", since: w.at, ord: l.ord, role: x.role ?? null, state: x.state ?? null, ref: l.target_id,
         edition, withdrawal: w.withdrawal, import: w.import, group: s.group, case: s.case,
-        detail: `this leg rests on another team's finding ${l.target_id} at edition ${edition}`
-          + `${s.case ? `, of case ${s.case}` : ""}${s.group ? ` by ${s.group}` : ""}, and this team's acceptance of that `
-          + `edition was withdrawn (${w.withdrawal}${w.at ? `, at ${w.at}` : ""}). The finding keeps answering as that `
-          + `team published it and the leg is unchanged; whether this finding still stands is the members' to decide.` });
+        detail: localize("reevaluation.index.this_leg_rests_on_another", "this leg rests on another team's finding {target_id} at edition {edition}{v1}{v2}, and this team's acceptance of that edition was withdrawn ({withdrawal}{v3}). The finding keeps answering as that team published it and the leg is unchanged; whether this finding still stands is the members' to decide.", { target_id: String(l.target_id), edition: String(edition), v1: String(s.case ? `, of case ${s.case}` : ""), v2: String(s.group ? ` by ${s.group}` : ""), withdrawal: String(w.withdrawal), v3: String(w.at ? `, at ${w.at}` : "") }) });
     }
     for (const list of byPair.values())
       list.sort((a, b) => (a.ord - b.ord) || (a.withdrawal < b.withdrawal ? -1 : a.withdrawal > b.withdrawal ? 1 : 0));
@@ -1018,10 +1004,7 @@ export class Reevaluation {
     if (!axes.length) return null;
     return {
       source: "weakened", since: frozen.ratified_at ?? null, edition: latest, axes,
-      detail: `${dependent} now derives weaker than edition ${latest} froze: `
-        + axes.map((a) => `${a.axis} ${a.derived.grade} where the edition says ${a.frozen.grade}`).join("; ")
-        + `. The signed edition keeps its own pair and nothing here changes either; a new edition stays the `
-        + `authors' choice (DEC-12, DEC-69).`,
+      detail: localize("reevaluation.index.dependent_now_derives_weaker_than", "{dependent} now derives weaker than edition {latest} froze: {map}. The signed edition keeps its own pair and nothing here changes either; a new edition stays the authors' choice (DEC-12, DEC-69).", { dependent: String(dependent), latest: String(latest), map: String(axes.map((a) => `${a.axis} ${a.derived.grade} where the edition says ${a.frozen.grade}`).join("; ")) }),
     };
   }
 
@@ -1097,8 +1080,8 @@ export class Reevaluation {
       if (!byPair.has(pk)) byPair.set(pk, []);
       for (const { m, side } of found) {
         const what = side.on === "content"
-          ? `the passage ${side.content_id} this leg rests on (capture ${side.capture_sha.slice(0, 12)})`
-          : `the claim of ${side.inquiry} at version ${side.version}, which this leg names`;
+          ? word("reevaluation.passage_leg_rests", { content_id: String(side.content_id), capture_sha: String(side.capture_sha.slice(0, 12)) })
+          : word("reevaluation.claim_version_leg", { inquiry: String(side.inquiry), version: String(side.version) });
         byPair.get(pk).push({
           source: "corrected", since: m.at ?? null, ord: l.ord, candidate: m.candidate, kind: m.kind ?? null,
           reason: m.reason ?? null, member: m.member ?? null,
@@ -1197,9 +1180,7 @@ export class Reevaluation {
       byPair.get(pk).push({
         source: "source", since: m.at, ord: l.ord, source_id: m.source_id, entry: m.entry_id ?? null,
         rung_before: m.rung_before ?? null, rung_after: m.rung_after, capture_sha: cap,
-        detail: `the source of capture ${cap.slice(0, 12)}, which this leg rests on, moved from `
-          + `${m.rung_before ?? "an unstated rung"} to ${m.rung_after} at ${m.at}: what the team knows of who gave it `
-          + `has changed. The leg's grade is unchanged; whether this finding still stands is the members' to decide.`,
+        detail: localize("reevaluation.index.the_source_of_capture_cap", "the source of capture {cap}, which this leg rests on, moved from {v1} to {rung_after} at {at}: what the team knows of who gave it has changed. The leg's grade is unchanged; whether this finding still stands is the members' to decide.", { cap: String(cap.slice(0, 12)), v1: String(m.rung_before ?? "an unstated rung"), rung_after: String(m.rung_after), at: String(m.at) }),
       });
     }
     for (const list of byPair.values())
@@ -1307,9 +1288,7 @@ export class Reevaluation {
         source: "attribution", since: m.at, ord: l.ord,
         ...(m.capture_sha ? { capture_sha: m.capture_sha } : { observation: m.observation }),
         level_before: m.level_before, level_after: m.level_after, case: m.case_id ?? null, edition: m.edition ?? null,
-        detail: attributionDetail(m)
-          + ` This leg rests on it. The leg's grade is unchanged and the weight the new level gives is strength's to `
-          + `judge; whether this finding still stands is the members' to decide.`,
+        detail: localize("reevaluation.index.attributiondetail_this_leg_rests_on", "{attributionDetail} This leg rests on it. The leg's grade is unchanged and the weight the new level gives is strength's to judge; whether this finding still stands is the members' to decide.", { attributionDetail: String(attributionDetail(m)) }),
       });
     }
     for (const list of byPair.values())
@@ -1434,8 +1413,7 @@ export class Reevaluation {
       try { dependents = this.#liveLegsOn(names); } catch { dependents = []; }
       const out = { ok: true, kept: true, at, dependents: dependents.length };
       this.#tellAfterCommit({ kind: EVENT_CHANGED, subject: id, source: EVENT_CHANGED, since: at, change,
-        detail: `the event ${id} ${change === "when_moved" ? "moved in time" : "had a participant re-resolved"}; `
-          + `${dependents.length ? "what rests on it directly is named" : "nothing live here rests on it"}`,
+        detail: localize("reevaluation.index.the_event_id_v1_v2", "the event {id} {v1}; {v2}", { id: String(id), v1: String(change === "when_moved" ? "moved in time" : "had a participant re-resolved"), v2: String(dependents.length ? "what rests on it directly is named" : "nothing live here rests on it") }),
         dependents }, out);
       return out;
     } catch { return { ok: true, kept: false }; }
@@ -1650,23 +1628,14 @@ export class Reevaluation {
                             cited_edition: cited, latest_edition: moved.edition.latest,
                             latest_ratified_edition: moved.edition.latest_ratified,
                             detail: legStatus === "severed"
-                              ? (cited === null
+                              ? localize("reevaluation.index.v1_a_withdrawn_leg_supports", "{v1} A withdrawn leg supports nothing here: it adds nothing to strength, gates nothing and counts toward no bar. It is listed because the connection still informs a second look (DEC-70).", { v1: String(cited === null
                                 ? `this leg was WITHDRAWN (severed) and named no edition of ${t}, which `
                                   + `now stands at edition ${moved.edition.latest}.`
                                 : `this leg was WITHDRAWN (severed) and named edition ${cited} of ${t}, `
-                                  + `which now stands at edition ${moved.edition.latest}.`)
-                                + ` A withdrawn leg supports nothing here: it adds nothing to strength, `
-                                + `gates nothing and counts toward no bar. It is listed because the `
-                                + `connection still informs a second look (DEC-70).`
+                                  + `which now stands at edition ${moved.edition.latest}.`) })
                               : cited === null
-                              ? `this leg names no edition of ${t}, which now stands at edition `
-                                + `${moved.edition.latest}. A leg keeps citing the edition it names `
-                                + `(DEC-12) and this one names none, so which edition it rests on cannot `
-                                + `be read off the record.`
-                              : `this leg rests on edition ${cited} of ${t}, which now stands at edition `
-                                + `${moved.edition.latest}. Edition ${cited} keeps answering with its own `
-                                + `signature and its own frozen strength; nothing here follows the case `
-                                + `forward on your behalf (DEC-12).` });
+                              ? localize("reevaluation.index.this_leg_names_no_edition", "this leg names no edition of {t}, which now stands at edition {latest}. A leg keeps citing the edition it names (DEC-12) and this one names none, so which edition it rests on cannot be read off the record.", { t: String(t), latest: String(moved.edition.latest) })
+                              : localize("reevaluation.index.this_leg_rests_on_edition", "this leg rests on edition {cited} of {t}, which now stands at edition {latest}. Edition {cited_2} keeps answering with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).", { cited: String(cited), t: String(t), latest: String(moved.edition.latest), cited_2: String(cited) }) });
           }
         }
         causes.push(...(corr.byPair.get(`${bundleId}\u0000${t}`) || []), ...(srcm.byPair.get(`${bundleId}\u0000${t}`) || []),
@@ -2044,7 +2013,7 @@ export class Reevaluation {
     try {
       const e = str(entry), c = str(caseId);
       if (!DOCKET_KINDS.includes(kind) || !e)
-        return { ok: true, told: false, why: "only a withdrawal or a contesting entry, named, is told" };
+        return { ok: true, told: false, why: word("reevaluation.why.withdrawal_contesting_entry") };
       const dk = this.#docket();
       const rec = dk.get().entries.get(`${kind}\u0000${e}`);
       const found = !!rec && (!c || rec.case === c);
@@ -2070,7 +2039,7 @@ export class Reevaluation {
           + `${dependents.length ? "what rests on it is named" : "nothing here rests on it"}`,
         dependents }, out);
       return out;
-    } catch { return { ok: true, told: false, why: "the docket could not be read" }; }
+    } catch { return { ok: true, told: false, why: word("reevaluation.why.docket_read") }; }
   }
 
   /* ---------------------------------------------------------------- R31: an acceptance withdrawn */
@@ -2084,7 +2053,7 @@ export class Reevaluation {
   acceptanceWithdrawn({ withdrawal = null } = {}) {
     try {
       const id = str(withdrawal && typeof withdrawal === "object" ? withdrawal.withdrawal : withdrawal);
-      if (!id) return { ok: true, told: false, why: "only a named withdrawal is told" };
+      if (!id) return { ok: true, told: false, why: word("reevaluation.why.named_withdrawal_told") };
       const aw = this.#accepted();
       const rec = aw.get().entries.get(id) || null;
       let dependents = [];
@@ -2101,11 +2070,10 @@ export class Reevaluation {
                     ...(rec ? {} : { withdrawal_read: false }), ...aw.flags() };
       this.#tellAfterCommit({ kind: "acceptance", subject: id, source: "acceptance", since,
         import: rec ? rec.import : null, edition: rec ? rec.edition : null, refs: rec ? rec.refs : [],
-        detail: `this team's acceptance of another team's work was withdrawn (${id}`
-          + `${rec ? `, edition ${rec.edition}` : ""}); ${dependents.length ? "what rests on it is named" : "nothing here rests on it"}`,
+        detail: localize("reevaluation.index.this_teams_acceptance_of_another", "this team's acceptance of another team's work was withdrawn ({id}{v1}); {v2}", { id: String(id), v1: String(rec ? `, edition ${rec.edition}` : ""), v2: String(dependents.length ? "what rests on it is named" : "nothing here rests on it") }),
         dependents }, out);
       return out;
-    } catch { return { ok: true, told: false, why: "accepted work could not be read" }; }
+    } catch { return { ok: true, told: false, why: word("reevaluation.why.accepted_work_read") }; }
   }
 
   /* ---------------------------------------------------------------- R33: a cited edition moved at its publisher */
@@ -2172,7 +2140,7 @@ export class Reevaluation {
   citedCaseMoved({ move = null } = {}) {
     try {
       const id = str(move && typeof move === "object" ? move.move : move);
-      if (!id) return { ok: true, told: false, why: "only a named move is told" };
+      if (!id) return { ok: true, told: false, why: word("reevaluation.why.named_move_told") };
       const mv = this.#publisherMoves();
       const rec = mv.get().entries.get(id) || null;
       const dependents = !rec ? []
@@ -2184,7 +2152,7 @@ export class Reevaluation {
       const out = { ok: true, told: true, kind: CITED_CASE_MOVED, move: id, dependents: dependents.length,
                     ...(rec ? {} : { move_read: false }), ...mv.flags() };
       const what = !rec ? "moved" : rec.kind === "edition" ? `published edition ${rec.edition}`
-        : rec.edition === "all" ? "withdrew every edition" : `withdrew edition ${rec.edition}`;
+        : rec.edition === "all" ? word("reevaluation.withdrew_edition") : `withdrew edition ${rec.edition}`;
       this.#tellAfterCommit({ kind: CITED_CASE_MOVED, subject: id, source: CITED_CASE_MOVED, since,
         import: rec ? rec.import : null, group: rec ? rec.group : null, case: rec ? rec.case : null,
         move_kind: rec ? rec.kind : null, edition: rec ? rec.edition : null, seq: rec ? rec.seq : null,
@@ -2193,7 +2161,7 @@ export class Reevaluation {
           + `${dependents.length ? "what rests on it is named" : "nothing here rests on it"}`,
         dependents }, out);
       return out;
-    } catch { return { ok: true, told: false, why: "accepted work could not be read" }; }
+    } catch { return { ok: true, told: false, why: word("reevaluation.why.accepted_work_read") }; }
   }
 
   /* ---------------------------------------------------------------- R10, R11: the cross-version notice (D-394) */
@@ -2261,9 +2229,7 @@ export class Reevaluation {
       wrote: false, proposal_only: true,
       visible_to: "the version chains here are the ones visible to you; a version filed in a project you "
         + "were not invited to is not in them",
-      says: "a notice, computed now and stored nowhere. A newer version is stated with certainty where the "
-        + "version chain was read; a passage at the same extent in it is a CANDIDATE, never the same passage; "
-        + "nothing was moved, minted or written, and only a member's act can re-point a citation.",
+      says: word("reevaluation.says.notice_computed_stored"),
     };
   }
 
@@ -2780,9 +2746,7 @@ export class Reevaluation {
     const text = why.trim();
     if (r.kind === "case")
       return this.#refuse("VERSION_ADOPT_UNWRITABLE",
-        `${r.notice_id} is about a part case ${r.holder} cites at its pin; a case edition keeps the bytes it was signed `
-        + `over, and resting a case on the newer version is a new edition, which is the case's authors' act. `
-        + `Nothing was written.`, { notice: r.notice_id });
+        localize("reevaluation.index.notice_id_is_about_a", "{notice_id} is about a part case {holder} cites at its pin; a case edition keeps the bytes it was signed over, and resting a case on the newer version is a new edition, which is the case's authors' act. Nothing was written.", { notice_id: String(r.notice_id), holder: String(r.holder) }), { notice: r.notice_id });
     const fm = this.#frontmatterOf(r.holder);
     const legs = this.#basisFrontmatter(fm);
     const leg = legs[r.ord];
@@ -2840,12 +2804,11 @@ export class Reevaluation {
       for (const l of vlegs) l.ground = "all";
       labels.clear(); labels.add("all");
       grounds = [{ ground: "all", asserted_by: who, at: when,
-                   statement: "every leg is needed, as the live basis holds them" }];
+                   statement: word("reevaluation.leg_needed_live") }];
     }
     if (![...labels].every((g) => GROUND_LABEL_RE.test(g)))
       return this.#refuse("VERSION_ADOPT_UNWRITABLE",
-        `${r.holder}'s grounds carry a label a version cannot hold, so the newer version could not be written. `
-        + `Nothing was written.`, { notice: r.notice_id });
+        localize("reevaluation.index.holder_s_grounds_carry_a", "{holder}'s grounds carry a label a version cannot hold, so the newer version could not be written. Nothing was written.", { holder: String(r.holder) }), { notice: r.notice_id });
     const names = new Set((Array.isArray(fm.basis_versions) ? fm.basis_versions : [])
       .map((v) => String(v && v.name ? v.name : "").trim().toLowerCase()));
     let name = `adopt-${r.newer_capture.slice(0, 8)}-${r.ord}`;
@@ -2855,10 +2818,7 @@ export class Reevaluation {
     /* END DEC-49 REGION is-version-adoptable */
     /* The why on one line: a line break in it would open a heading of its own in the Session Log. */
     const line = text.replace(/\s*[\r\n]+\s*/g, " ");
-    const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}`
-      + `${r.newer_content ? ", at another address" : ""}: leg ${r.ord} rests on capture `
-      + `${r.newer_capture.slice(0, 12)} in place of ${r.capture_sha.slice(0, 12)} (notice ${r.notice_id}). `
-      + `Every other leg is as the live basis holds it. Why: ${line}`;
+    const description = word("reevaluation.adopts_newer_version", { target_id: String(r.target_id), home: String(home !== r.target_id ? ` (held as ${home})` : ""), newer_content: String(r.newer_content ? ", at another address" : ""), ord: String(r.ord), newer_capture: String(r.newer_capture.slice(0, 12)), capture_sha: String(r.capture_sha.slice(0, 12)), notice_id: String(r.notice_id), line: String(line) });
     const answer = this.record.transact(() => {
       const w = this.basisVersions.appendVersion({
         target: r.holder, version: { name, description, relationship: labels.size > 1 ? "or" : "and", author: who },
@@ -2870,8 +2830,7 @@ export class Reevaluation {
            + `Why: ${line}\n` });
       /* basis-versions' own refusal passes through as it came; no answer at all is this module's C-110.9 (N182 (4)). */
       if (w && !w.ok) return { ...w, ok: false, notice: r.notice_id };
-      if (!w) return this.#refuse("VERSION_ADOPT_UNWRITABLE", `the newer version of ${r.holder} could not be written. `
-        + `Nothing was written.`, { notice: r.notice_id });
+      if (!w) return this.#refuse("VERSION_ADOPT_UNWRITABLE", localize("reevaluation.index.the_newer_version_of_holder", "the newer version of {holder} could not be written. Nothing was written.", { holder: String(r.holder) }), { notice: r.notice_id });
       this.sql.exec(`UPDATE reevaluation_notices SET state='adopted', closed_by=?, closed_at=?, why=?, adopted_version=?
                       WHERE notice_id=? AND state='open'`, who, when, text, name, r.notice_id);
       return { ok: true, bundleSha: w.bundleSha ?? null };
@@ -2883,8 +2842,7 @@ export class Reevaluation {
              ...(legs[r.ord].grade ? { grade_not_carried: { grade: legs[r.ord].grade,
                why: "the grade was given to the passage in the earlier capture; the newer passage is not graded until a "
                   + "member grades it" } } : {}),
-             says: `a new reading of ${r.holder} rests leg ${r.ord} on the newer capture; the live basis and every earlier `
-                 + `reading are unchanged and readable, and the new reading is suggested until a member accepts it` };
+             says: word("reevaluation.says.new_reading_rests", { holder: String(r.holder), ord: String(r.ord) }) };
   }
 
   /** R15: KEEP records "stays on the earlier version" with who, when, the optional why and both captures. */
@@ -2903,9 +2861,7 @@ export class Reevaluation {
                   who, when, text, r.notice_id);
     return { ok: true, notice: r.notice_id, holder: r.holder, ord: r.ord, act: "kept", author: who, at: when,
              why: text, capture_sha: r.capture_sha, newer_capture: r.newer_capture,
-             says: `${r.kind === "case" ? `case ${r.holder}'s cited part ${r.target_id}` : `${r.holder}'s leg ${r.ord}`} `
-                 + `stays on the earlier version (${r.capture_sha.slice(0, 12)}); the newer capture `
-                 + `(${r.newer_capture.slice(0, 12)}) will not raise this notice again` };
+             says: word("reevaluation.says.stays_earlier_version", { kind: String(r.kind === "case" ? `case ${r.holder}'s cited part ${r.target_id}` : `${r.holder}'s leg ${r.ord}`), capture_sha: String(r.capture_sha.slice(0, 12)), newer_capture: String(r.newer_capture.slice(0, 12)) }) };
   }
 
   /* ---------------------------------------------------------------- R16: a recorded re-evaluation */
@@ -2945,8 +2901,7 @@ export class Reevaluation {
                    VALUES (?,?,?,?,?,?,?)`, dep, tgt, src, cause.since ?? null, text, who, when);
     return { ok: true, dependent: dep, target: tgt, source: src, since: cause.since ?? null, note: text,
              author: who, at: when, closed: true,
-             says: `the ${src} cause on ${dep} from ${tgt} is recorded as looked at again by ${who}; it is owed again `
-                 + `only when ${tgt} moves again` };
+             says: word("reevaluation.says.cause_recorded_looked", { src: String(src), dep: String(dep), tgt: String(tgt), who: String(who), tgt_2: String(tgt) }) };
   }
 
   /* ---------------------------------------------------------------- R22: C-10.1 at the write and in the audit */

@@ -11,6 +11,7 @@ import * as M from "../../../src/ratification/index.mjs";
 import * as CC from "../../../src/case-catalogue/checks.mjs";
 import * as RG from "../../../src/record-grammar/index.mjs";
 import { world } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const M1 = "INQ-2026-0001-first";
 
@@ -108,11 +109,11 @@ test("R14, R22, R35, R2: C-58.4 CONTESTED_IN_BATCH, C-58.5 ANONYMOUS_TESTIMONY_U
 /* R46 (DEC-147 (3)) and R47 (DEC-149): the translations as the requirements word them, word for word. */
 test("R46: C-58.6–C-58.10 carry R46's translations word for word, each minted at its one site", () => {
   const want = {
-    SCHEDULE_UNCHECKABLE: ["C-58.6", "Publishing at a set time means checking again at that time everything checked now, and part of it cannot be read now. It is named. Nothing was signed. You can publish now, or try again later."],
-    SCHEDULED_SOURCES_CHANGED: ["C-58.7", "This edition was not published at its set time: a source it rests on changed since it was signed. It is named. Nothing was published. Prepare and sign the edition again to publish it."],
-    SCHEDULED_TIES_CHANGED: ["C-58.8", "This edition was not published at its set time: a member who signed it has declared or withdrawn a tie to someone the case names since signing, so their confirmation of no undeclared tie may no longer hold. Nothing was published. Prepare and sign the edition again to publish it."],
-    SCHEDULED_HOLD_CHANGED: ["C-58.9", "This edition was not published at its set time: a hold on the case or its project changed since it was signed. It is named. Nothing was published. Prepare and sign the edition again to publish it."],
-    SCHEDULED_CHECK_REFUSED: ["C-58.10", "This edition was not published at its set time: a check made when it was signed no longer passes, or could not be made. The reason is given. Nothing was published. Prepare and sign the edition again to publish it."],
+    SCHEDULE_UNCHECKABLE: ["C-58.6", word("refusal.SCHEDULE_UNCHECKABLE")],
+    SCHEDULED_SOURCES_CHANGED: ["C-58.7", word("refusal.SCHEDULED_SOURCES_CHANGED")],
+    SCHEDULED_TIES_CHANGED: ["C-58.8", word("refusal.SCHEDULED_TIES_CHANGED")],
+    SCHEDULED_HOLD_CHANGED: ["C-58.9", word("refusal.SCHEDULED_HOLD_CHANGED")],
+    SCHEDULED_CHECK_REFUSED: ["C-58.10", word("refusal.SCHEDULED_CHECK_REFUSED")],
   };
   for (const [code, [check, translation]] of Object.entries(want))
     assert.deepEqual(R.rowOf(code), { code, check, translation }, code);
@@ -122,9 +123,9 @@ test("R46: C-58.6–C-58.10 carry R46's translations word for word, each minted 
 
 test("R47: C-32.14's and C-32.15's translations say \"one of the operator's access tokens for your group's Civicsmith\", nothing else changed, and no row of this module calls it this copy, this instance or this plane", () => {
   assert.deepEqual(R.rowOf("OPERATOR_TOKEN_CANNOT_RATIFY"), { code: "OPERATOR_TOKEN_CANNOT_RATIFY", check: "C-32.14",
-    translation: "Ratifying puts a finding into the published record under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for your team's Civicsmith, not a person: a valid signature does not change that, because the credential that carries it in decides when the record changes. Sign in as the member whose key signed it and ratify it there." });
+    translation: word("refusal.OPERATOR_TOKEN_CANNOT_RATIFY") });
   assert.deepEqual(R.rowOf("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"), { code: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", check: "C-32.15",
-    translation: "Ratifying a case commits the team's own assertions about it under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for your team's Civicsmith, not a person, and a valid signature does not change that. Sign in as the member whose key signed it and ratify it there." });
+    translation: word("refusal.OPERATOR_TOKEN_CANNOT_RATIFY_CASE") });
   const rows = [R.RATIFY_MACHINE_FENCE_CHECKS, R.RATIFY_TESTIMONY_CHECKS, R.RATIFY_ATTRIBUTION_CHECKS,
                 R.CASE_CONCLUSION_CHECKS, R.RATIFY_SCOPE_CHECKS, R.RELEASE_CHECKS, R.RATIFY_REGISTRATION_CHECKS]
     .flatMap((f) => Object.values(f).map((r) => r.translation));

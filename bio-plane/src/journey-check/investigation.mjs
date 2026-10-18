@@ -11,6 +11,7 @@ import { settle, StepFailed } from "./walker.mjs";
 import { act, control, type, open, requireDrawn } from "./journeys.mjs";
 import { requireWord, requireAnyWord, byWord, wordPattern, word } from "./words.mjs";
 import { NOTICE_ADDRESS, NOTICE_PASSAGE, HEAT_ADDRESS, HEAT_PASSAGE } from "./city.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export const PLAN_TITLE = "Get the roof repaired";
 const PROJECT_TITLE = "Roof repairs at 14 Lakeshore Row";
@@ -149,7 +150,7 @@ async function captureAndVouch(walk, page, base, { question, password }) {
    Find-in (from the document's own "Find in this"), for the question, and cited from the result as supporting it
    (screens-daily R24: the role chosen, none preselected). The question then holds the passage. */
 async function readAndCite(walk, page, { document, question, phrase = FIND_PHRASE, passage = NOTICE_PASSAGE, prefix = "" }) {
-  await walk.step(page, (prefix ? prefix : "7 · ") + "open the document, see its words, and Find-in a passage", async (p) => {
+  await walk.step(page, localize("journey-check.investigation.v1_open_the_document_see", "{v1}open the document, see its words, and Find-in a passage", { v1: String(prefix ? prefix : "7 · ") }), async (p) => {
     await p.goto(document); await settle(p);
     await requireDrawn(walk, p, "document");
     await requireWord(p, "screen.document.passages.head", { within: "#cs-main" });
@@ -168,7 +169,7 @@ async function readAndCite(walk, page, { document, question, phrase = FIND_PHRAS
     await act(p, "findin");
     if (!(await p.locator("#cs-main").textContent()).includes(phrase)) throw new Error("Find-in found no passage holding the phrase");
   }, { expect: READING_EXPECTS });
-  await walk.step(page, (prefix ? prefix : "8 · ") + "cite it with a role (supports)", async (p) => {
+  await walk.step(page, localize("journey-check.investigation.v1_cite_it_with_a", "{v1}cite it with a role (supports)", { v1: String(prefix ? prefix : "8 · ") }), async (p) => {
     const cite = p.locator('#cs-main details:has([data-act="cite"])').first();
     try { await cite.waitFor({ state: "attached", timeout: 10000 }); } catch { throw new Error(`no result offers to cite it on ${where(p)}`); }
     if (!(await cite.evaluate((d) => d.open))) await cite.locator("summary").first().click();

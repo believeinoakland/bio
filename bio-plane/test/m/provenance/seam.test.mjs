@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import * as P from "../../../src/provenance/index.mjs";
 import * as CHECKS from "../../../src/provenance/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const { PROVENANCE_ACT_CHECKS, DOORBELL_ORIGIN } = P;
 
@@ -25,7 +26,7 @@ test("R58: PROVENANCE_ACT_CHECKS is exported whole (C-103.1–C-103.7), each row
     + "the address it was fetched from and when, and one of those was missing or not in its form, so no receipt was signed.");
   assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.translation, "Your team's Civicsmith holds no key to sign its receipts "
     + "with, so this receipt was not signed, and nothing claims that it was. Whoever hosts your team's Civicsmith can add one.");
-  assert.equal(PROVENANCE_ACT_CHECKS.NO_BUNDLE.translation, "This did not say which document it is about, so nothing was done.");
+  assert.equal(PROVENANCE_ACT_CHECKS.NO_BUNDLE.translation, word("refusal.NO_BUNDLE"));
   assert.equal(DOORBELL_ORIGIN, "doorbell");
   assert.equal(P.DOORBELL_VIA, "doorbell");
 });

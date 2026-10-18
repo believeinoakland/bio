@@ -17,6 +17,7 @@
  * N155, T18). Every code below is minted by this module's `index.mjs`, inside the region its row's `where` names. */
 
 import { SUGGEST_KINDS } from "../basis-versions/index.mjs";
+import { word } from '../setup-words/index.mjs';
 
 export { SUGGEST_KINDS };
 
@@ -41,28 +42,22 @@ const SUGGEST_ROWS = {
   SUGGEST_NO_TARGET: {
     check: 'C-27.1',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'That request did not say which question the suggestion is about. '
-      + 'A reading of the evidence always belongs to one question, so it asks rather than guessing.',
+    translation: word('refusal.SUGGEST_NO_TARGET'),
   },
   SUGGEST_NOT_AN_INQUIRY: {
     check: 'C-27.2',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'Only a question carries readings of its evidence, and the thing named here is not a '
-      + 'question. There is nothing under it for a suggestion to be a reading of.',
+    translation: word('refusal.SUGGEST_NOT_AN_INQUIRY'),
   },
   SUGGEST_UNKNOWN_KIND: {
     check: 'C-27.3',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'A suggestion is one of five kinds and this one names none of them. The kinds are a '
-      + 'closed set so that a run reporting an empty search is told apart from a run that reported '
-      + 'nothing at all, which no other field can distinguish.',
+    translation: word('refusal.SUGGEST_UNKNOWN_KIND'),
   },
   SUGGEST_NO_RUN: {
     check: 'C-27.4',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'Every suggestion names the piece of work that produced it, and this one named none '
-      + 'that can be read here. What was searched, under which declared conditions, and where it '
-      + 'stopped is what lets anyone else check a reading rather than take it on trust.',
+    translation: word('refusal.SUGGEST_NO_RUN'),
   },
   /* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): A VERSION IS FORMED UNDER A LIVE RUN. The
      run is what a version is read against, and a run that has ended stopped being the conditions anything is
@@ -72,9 +67,7 @@ const SUGGEST_ROWS = {
   SUGGEST_RUN_NOT_RUNNING: {
     check: 'C-27.18',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'The investigation this suggestion names has ended. A suggestion is read against the '
-      + 'conditions of the investigation that produced it, and those stopped being current when it '
-      + 'stopped, so going on means starting a new one.',
+    translation: word('refusal.SUGGEST_RUN_NOT_RUNNING'),
   },
   /* REC-165, BOB #28 (2026-09-22, §11 item 5, "Rule 1's target"): A SUGGESTION LANDS ONLY INSIDE ITS RUN'S
      CONTEXT — the context itself, or, for a run over a project, a question that project confirmed-cites. Asked
@@ -82,23 +75,17 @@ const SUGGEST_ROWS = {
   SUGGEST_OUTSIDE_RUN_CONTEXT: {
     check: 'C-27.19',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'This suggestion is about a question the investigation was not working on. An investigation '
-      + 'is read against its own question, or the questions its project draws on, so work on a different '
-      + 'question starts an investigation of that question.',
+    translation: word('refusal.SUGGEST_OUTSIDE_RUN_CONTEXT'),
   },
   SUGGEST_NAME_TAKEN: {
     check: 'C-27.5',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'This question already holds a reading by that name. Names are unique within one '
-      + 'question so a member can ask for a reading by name, and a second one wearing the same name '
-      + 'would make every later reference ambiguous.',
+    translation: word('refusal.SUGGEST_NAME_TAKEN'),
   },
   SUGGEST_EMPTY_LEVEL_UNSTATED: {
     check: 'C-27.6',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'Reporting that a level of the search is empty means saying WHICH level was searched '
-      + 'and where the log of that search can be read. Absence at one level is not absence at the '
-      + 'next, and an unattributed empty answer is the one shape nobody can check.',
+    translation: word('refusal.SUGGEST_EMPTY_LEVEL_UNSTATED'),
   },
   /* SEPARATE FROM SUGGEST_UNWRITABLE_DOCUMENT, and the DEC-49 GUARD IS WHAT
      FORCED THE DISTINCTION rather than a design instinct. One code was written
@@ -112,16 +99,12 @@ const SUGGEST_ROWS = {
   SUGGEST_NO_DOCUMENT: {
     check: 'C-27.17',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'This question has no readable file behind it, so there is nothing for a reading of its '
-      + 'evidence to be added to. That is a fact about the question rather than about the reading, and '
-      + 'nothing was composed.',
+    translation: word('refusal.SUGGEST_NO_DOCUMENT'),
   },
   SUGGEST_TOO_MANY_LEGS: {
     check: 'C-27.7',
     where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
-    translation: 'This suggestion rests on more pieces of evidence than one reading may carry. The '
-      + 'limit is published in the refusal so a caller can split the reading rather than guess at '
-      + 'what would have fitted.',
+    translation: word('refusal.SUGGEST_TOO_MANY_LEGS'),
   },
 
   /* ---- THE SIX PRE-WRITE CHECKS (section 14b.5). Each is its own C-number and
@@ -136,9 +119,7 @@ const SUGGEST_ROWS = {
   SUGGEST_LEG_UNREACHABLE: {
     check: 'C-27.8',
     where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
-    translation: 'One of the pieces of evidence this reading rests on cannot be reached where it says '
-      + 'it is: it is not in the record, it cannot be read from here, or the record has retired it. '
-      + 'A reading resting on something retired reads to a later member as live support for the answer.',
+    translation: word('refusal.SUGGEST_LEG_UNREACHABLE'),
   },
   /* CHECK 2. The pair, PER AXIS, over the version's own declared structure —
      DEC-21/DEC-44 refuse a single composed number four ways, so what has to
@@ -146,9 +127,7 @@ const SUGGEST_ROWS = {
   SUGGEST_PAIR_DOES_NOT_COMPUTE: {
     check: 'C-27.9',
     where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
-    translation: 'The strength of this reading does not work out over the structure it declares, on '
-      + 'one or both of the two things strength is measured on. A reading whose arithmetic cannot be '
-      + 'run is a reading nobody can check, and it is not put forward.',
+    translation: word('refusal.SUGGEST_PAIR_DOES_NOT_COMPUTE'),
   },
   /* CHECK 3. Section 6 rule 8, Bob's own words: a background run adds its output
      as a new version ONLY IF IT DIFFERS IN SUBSTANCE from every existing one.
@@ -157,9 +136,7 @@ const SUGGEST_ROWS = {
   SUGGEST_NOT_DIFFERENT: {
     check: 'C-27.10',
     where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
-    translation: 'This reading of the evidence is the same in substance as one this question already '
-      + 'holds, so it is not put forward a second time. The reading it matches is named, and adding a '
-      + 'duplicate would grow the review pile without adding anything to review.',
+    translation: word('refusal.SUGGEST_NOT_DIFFERENT'),
   },
   /* CHECK 4. D-195, and *"the Judith Miller error with arithmetic behind it"* is
      what the sweep called an AI composing alternatives at volume. The arithmetic
@@ -169,18 +146,13 @@ const SUGGEST_ROWS = {
   SUGGEST_BRANCHES_NOT_INDEPENDENT: {
     check: 'C-27.11',
     where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
-    translation: 'Two parts of this reading are offered as separate routes to the same answer, and the '
-      + 'record can show they trace back to the same original material. Treating them as separate '
-      + 'makes the answer look better supported than it is, so a machine may not put it forward that '
-      + 'way; a member may still say they are genuinely separate, and that is their call to sign for.',
+    translation: word('refusal.SUGGEST_BRANCHES_NOT_INDEPENDENT'),
   },
   /* CHECK 5. The placeholder defect at machine scale. */
   SUGGEST_BOILERPLATE: {
     check: 'C-27.12',
     where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
-    translation: 'A field this reading has to fill in carries filler text rather than an account of '
-      + 'anything. A required field filled to get past a check is worse than an empty one, because it '
-      + 'reads to the next member as something somebody wrote.',
+    translation: word('refusal.SUGGEST_BOILERPLATE'),
   },
   /* CHECK 6. Section 4: THE AI HOLDS NO OP THAT ACCEPTS. The sole possible
      output of this endpoint is a version in state `suggested`, so anything the
@@ -189,9 +161,7 @@ const SUGGEST_ROWS = {
   SUGGEST_UNWRITABLE_STATE: {
     check: 'C-27.13',
     where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
-    translation: 'This suggestion tries to arrive already decided — settled, set aside, hidden, or '
-      + 'signed by somebody. A suggestion may only ever arrive as something put forward; deciding '
-      + 'what to do with it is a named member\'s act and no automated caller can reach it.',
+    translation: word('refusal.SUGGEST_UNWRITABLE_STATE'),
   },
 
   /* THE CHECK THAT DID NOT FINISH, and it is its own condition rather than a
@@ -206,10 +176,7 @@ const SUGGEST_ROWS = {
   SUGGEST_COMPARISON_INCOMPLETE: {
     check: 'C-27.16',
     where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
-    translation: 'The record holds more material behind this question than could be checked in one '
-      + 'pass, so whether this reading is genuinely new, or genuinely made of separate parts, was not '
-      + 'settled either way. Not finishing the check is a different fact from passing it, and this '
-      + 'record does not let the two read the same.',
+    translation: word('refusal.SUGGEST_COMPARISON_INCOMPLETE'),
   },
 
   /* ---- the write itself. Separate from check 6 on purpose: that one is about
@@ -217,9 +184,7 @@ const SUGGEST_ROWS = {
   SUGGEST_UNWRITABLE_DOCUMENT: {
     check: 'C-27.14',
     where: 'src/run-productions/index.mjs suggest > is-suggest-write',
-    translation: 'This question\'s own file could not be extended in place, so nothing was written. '
-      + 'Adding a reading edits the record the reading lives in, and a half-written record is worse '
-      + 'than an unchanged one.',
+    translation: word('refusal.SUGGEST_UNWRITABLE_DOCUMENT'),
   },
 
 };
@@ -251,73 +216,59 @@ const EXTRACT_PROPOSE_ROWS = {
   NO_PROPOSER: {
     check: 'C-104.1',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-run',
-    translation: 'This proposed reading arrived without saying who proposed it, and the record keeps nothing it cannot '
-      + 'attribute. Nothing was proposed and no passage was marked citable.',
+    translation: word('refusal.NO_PROPOSER'),
   },
   /* T41-24: the run's three questions are asked by ONE helper (`productionRun`) for every production that names a run
      (R10, R15, R23, R24), so each code has one site; the sentences are true of reading, proposing and noting alike. */
   NO_RUN: {
     check: 'C-104.2',
     where: 'src/run-productions/index.mjs productionRun > is-production-run',
-    translation: 'A machine reads and proposes only as part of an investigation a member opened, and this named none. '
-      + 'Nothing was done.',
+    translation: word('refusal.NO_RUN'),
   },
   NO_SUCH_RUN: {
     check: 'C-104.3',
     where: 'src/run-productions/index.mjs productionRun > is-production-run',
-    translation: 'No investigation you can see is open under that name, so nothing was done. A member opens an '
-      + 'investigation; the assistant may suggest one, and may not start it.',
+    translation: word('refusal.NO_SUCH_RUN'),
   },
   RUN_NOT_RUNNING: {
     check: 'C-104.4',
     where: 'src/run-productions/index.mjs productionRun > is-production-live',
-    translation: 'The investigation this names has ended, and an ended investigation reads and proposes nothing more: its '
-      + 'work is read against the conditions it ran under, and those stopped when it stopped. Nothing was done.',
+    translation: word('refusal.RUN_NOT_RUNNING'),
   },
   NOT_AN_EXTRACT_RUN: {
     check: 'C-104.5',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
-    translation: 'This investigation was not opened to read documents for what they name, so it cannot propose readings; '
-      + 'an investigation exploring a question proposes them only for the step it serves. What an investigation may do '
-      + 'is set when it is opened and never widened by its work. Nothing was proposed.',
+    translation: word('refusal.NOT_AN_EXTRACT_RUN'),
   },
   NO_MINTS_BOUND: {
     check: 'C-104.6',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
-    translation: 'This investigation was opened with no limit on how many passages it may mark citable, and without a '
-      + 'limit it may mark none. The member who opens an investigation sets that limit. Nothing was proposed.',
+    translation: word('refusal.NO_MINTS_BOUND'),
   },
   MINTS_BOUND_REACHED: {
     check: 'C-104.7',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
-    translation: 'This investigation has already marked as many passages citable as it was allowed to, so it proposes '
-      + 'nothing more and ends. Nothing was proposed.',
+    translation: word('refusal.MINTS_BOUND_REACHED'),
   },
   NO_PROPOSALS: {
     check: 'C-104.8',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
-    translation: 'This named no passage or connection to propose. A look that found nothing is recorded in the '
-      + 'investigation\'s log of what was looked at, where it says which kind of absence it was, and not here. Nothing '
-      + 'was proposed.',
+    translation: word('refusal.NO_PROPOSALS'),
   },
   NOT_A_DOCUMENT: {
     check: 'C-104.9',
     where: 'src/run-productions/index.mjs heldDocument > is-held-document',
-    translation: 'That is not a captured document. A question, a project or an action has no pages or text of its own, '
-      + 'so there is nothing in it to read or to point into. Nothing was changed.',
+    translation: word('refusal.NOT_A_DOCUMENT'),
   },
   NO_BYTES_HELD: {
     check: 'C-104.10',
     where: 'src/run-productions/index.mjs heldDocument > is-held-document',
-    translation: 'The record holds no captured copy of that document, so there is no text in it to read or to point '
-      + 'into. That is a fact about what has been captured, never about what the document says. Nothing was changed.',
+    translation: word('refusal.NO_BYTES_HELD'),
   },
   MINTS_BOUND_WOULD_EXCEED: {
     check: 'C-104.11',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-whole-batch',
-    translation: 'This batch would mark more passages citable than the investigation has left of its limit, so the whole '
-      + 'batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes '
-      + 'were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation.',
+    translation: word('refusal.MINTS_BOUND_WOULD_EXCEED'),
   },
   /* K163 (T6): op=extractproposals' unscoped read. run-productions mints this code of its own in place of the
      store's `NO_SCOPE`, whose other site (a published case's authored scope) is a different condition. Minted by
@@ -325,8 +276,7 @@ const EXTRACT_PROPOSE_ROWS = {
   EXTRACT_NO_SCOPE: {
     check: 'C-104.12',
     where: 'src/run-productions/index.mjs extractProposals > is-extract-scope',
-    translation: 'This list of proposed readings names neither an investigation nor a document, so nothing was '
-      + 'listed. A list of every proposal in the record would be a scan nobody can act on; name the one you mean.',
+    translation: word('refusal.EXTRACT_NO_SCOPE'),
   },
 
   /* ---- T41-24: READING INSIDE A HELD DOCUMENT (R21–R24; Investigation §5, AI Roles §3 rule 3; D2, D3, D4, D22). ---- */
@@ -336,20 +286,17 @@ const EXTRACT_PROPOSE_ROWS = {
   NOT_A_READING_RUN: {
     check: 'C-104.13',
     where: 'src/run-productions/index.mjs readPages > is-read-run',
-    translation: 'This investigation was not opened to read inside documents, so it reads none. What an investigation may '
-      + 'do is set when it is opened and never widened by its work. Nothing was read.',
+    translation: word('refusal.NOT_A_READING_RUN'),
   },
   NO_PAGES_BOUND: {
     check: 'C-104.14',
     where: 'src/run-productions/index.mjs readPages > is-read-door',
-    translation: 'This investigation was opened with no limit on how many pages it may read, and without a limit it may '
-      + 'read none. The member who opens an investigation sets that limit. Nothing was read.',
+    translation: word('refusal.NO_PAGES_BOUND'),
   },
   PAGES_BOUND_REACHED: {
     check: 'C-104.15',
     where: 'src/run-productions/index.mjs readPages > is-read-door',
-    translation: 'This investigation has read as many pages as it was allowed to, so it reads no more. The answer says '
-      + 'how far it read in this document. Nothing more was read.',
+    translation: word('refusal.PAGES_BOUND_REACHED'),
   },
 
   /* R21: a proposed connection, each checked before anything is written and the batch refused whole on the first bad
@@ -359,102 +306,88 @@ const EXTRACT_PROPOSE_ROWS = {
   CONNECTION_GRADE_OFFERED: {
     check: 'C-104.16',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-connection',
-    translation: 'This proposed connection came with its own grade. A connection\'s grade is worked out by the record from '
-      + 'how the link is established, never given by the machine that proposed it. Nothing was proposed.',
+    translation: word('refusal.CONNECTION_GRADE_OFFERED'),
   },
   CONNECTION_NO_TARGET: {
     check: 'C-104.17',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-connection',
-    translation: 'This proposed connection does not name something it can connect to: a public body, a person in a public '
-      + 'role, another document or a question that can be read here. Nothing was proposed.',
+    translation: word('refusal.CONNECTION_NO_TARGET'),
   },
   CONNECTION_NO_QUOTE: {
     check: 'C-104.18',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-connection',
-    translation: 'A proposed connection is tied to the exact words it rests on and to the place in the document where '
-      + 'they are, and this one gave no words or no readable place. Nothing was proposed.',
+    translation: word('refusal.CONNECTION_NO_QUOTE'),
   },
   CONNECTION_PERSON_NO_ROLE: {
     check: 'C-104.19',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-connection',
-    translation: 'A connection to a person is about their part in a public matter, so it names the public role the '
-      + 'words show, and this one named none. Investigations never look at a private life. Nothing was proposed.',
+    translation: word('refusal.CONNECTION_PERSON_NO_ROLE'),
   },
   CONNECTION_NOT_ESTABLISHED: {
     check: 'C-104.20',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-connection',
-    translation: 'This proposed connection does not say how the link is established, or the identifier, name or date it '
-      + 'names is not in its own words. A machine only points; it never grades a connection on its own say-so. '
-      + 'Nothing was proposed.',
+    translation: word('refusal.CONNECTION_NOT_ESTABLISHED'),
   },
   /* R21: the step a production serves (steps R9, `recordProduct`). A step that cannot be tied refuses the call whole:
      a production said to serve a step and tied to none would be a claim the record does not hold. */
   STEP_UNREADABLE: {
     check: 'C-104.21',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-step',
-    translation: 'This names a step the work serves, and the step could not be read here, so nothing was tied to it. '
-      + 'Nothing was proposed.',
+    translation: word('refusal.STEP_UNREADABLE'),
   },
 
   /* R22: the member's one accepting act on a proposed passage or connection (record-grammar R52). */
   READING_PROPOSAL_ABSENT: {
     check: 'C-104.22',
     where: 'src/run-productions/index.mjs proposalAccept > is-accept',
-    translation: 'No proposed passage or connection you can see goes by that name, so nothing was accepted.',
+    translation: word('refusal.READING_PROPOSAL_ABSENT'),
   },
   ACCEPT_NOT_A_MEMBER: {
     check: 'C-104.23',
     where: 'src/run-productions/index.mjs proposalAccept > is-accept',
-    translation: 'Taking up a proposal is a member\'s own act, and this came from no member. A machine never accepts '
-      + 'its own work. Nothing was accepted.',
+    translation: word('refusal.ACCEPT_NOT_A_MEMBER'),
   },
   ACCEPT_FORM_UNKNOWN: {
     check: 'C-104.24',
     where: 'src/run-productions/index.mjs proposalAccept > is-accept',
-    translation: 'A proposal is taken up as proposed, taken up in your own words, or replaced by your own reading, and '
-      + 'this named none of the three. Nothing was accepted.',
+    translation: word('refusal.ACCEPT_FORM_UNKNOWN'),
   },
   ACCEPT_NEEDS_HER_WORDS: {
     check: 'C-104.25',
     where: 'src/run-productions/index.mjs proposalAccept > is-accept',
-    translation: 'Taking up a proposal in your own words, or replacing it with your own reading, records what you say it '
-      + 'means, and no words were given. Nothing was accepted.',
+    translation: word('refusal.ACCEPT_NEEDS_HER_WORDS'),
   },
   ACCEPT_AS_PROPOSED_TAKES_NO_WORDS: {
     check: 'C-104.26',
     where: 'src/run-productions/index.mjs proposalAccept > is-accept',
-    translation: 'Taking up a proposal as proposed records its meaning as it was proposed, so it carries no words of your '
-      + 'own; to say it differently, take it up in your own words. Nothing was accepted.',
+    translation: word('refusal.ACCEPT_AS_PROPOSED_TAKES_NO_WORDS'),
   },
   PROPOSAL_ALREADY_ACCEPTED: {
     check: 'C-104.27',
     where: 'src/run-productions/index.mjs proposalAccept > is-accept',
-    translation: 'You have already taken up this proposal, and the record keeps how you did. Nothing was changed.',
+    translation: word('refusal.PROPOSAL_ALREADY_ACCEPTED'),
   },
 
   /* R23: the bearing note. Its sentences are kept only when each is tied to the document's own words. */
   BEARING_NO_QUESTION: {
     check: 'C-104.28',
     where: 'src/run-productions/index.mjs bearingNote > is-bearing',
-    translation: 'A note on what a document says about a question names a question you can see, and this named none. '
-      + 'Nothing was kept.',
+    translation: word('refusal.BEARING_NO_QUESTION'),
   },
   BEARING_NO_CAPTURE: {
     check: 'C-104.29',
     where: 'src/run-productions/index.mjs bearingNote > is-bearing',
-    translation: 'A note on what a document says is about one captured copy of it that the record holds and you can see, '
-      + 'and this named none. Nothing was kept.',
+    translation: word('refusal.BEARING_NO_CAPTURE'),
   },
   BEARING_NO_SENTENCES: {
     check: 'C-104.30',
     where: 'src/run-productions/index.mjs bearingNote > is-bearing',
-    translation: 'This note held no sentences, or more than one note may hold. Nothing was kept.',
+    translation: word('refusal.BEARING_NO_SENTENCES'),
   },
   BEARING_NOTHING_TIED: {
     check: 'C-104.31',
     where: 'src/run-productions/index.mjs bearingNote > is-bearing',
-    translation: 'None of this note\'s sentences could be tied to the document\'s own words where it said they were, so '
-      + 'there is nothing to keep. A sentence that cannot be tied is left out, never kept on trust.',
+    translation: word('refusal.BEARING_NOTHING_TIED'),
   },
 
   /* R25 (T42; N834): the read this module registers with inquiry R62 and basis-versions R49. A member's leg on a
@@ -463,9 +396,7 @@ const EXTRACT_PROPOSE_ROWS = {
   PROPOSAL_NOT_TAKEN_UP: {
     check: 'C-104.32',
     where: 'src/run-productions/index.mjs machinePassage > is-machine-passage',
-    translation: 'This cites as yours a passage a machine proposed, and you have not taken that proposal up. Take it up '
-      + 'first, as proposed, in your own words, or with your own reading instead; then you may cite it as yours. '
-      + 'Nothing was changed.',
+    translation: word('refusal.PROPOSAL_NOT_TAKEN_UP'),
   },
 };
 

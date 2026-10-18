@@ -51,6 +51,8 @@
  *  and takes the ordinary capture path byte-for-byte. A leading `www.` is
  *  stripped before the comparison because it costs nothing and a source page
  *  may well carry one; nothing else is normalised away. */
+import { word, localize } from "./setup-words/index.mjs";
+
 export const DRIVE_HOSTS = ["docs.google.com", "drive.google.com",
                             "sheets.google.com", "slides.google.com"];
 
@@ -86,7 +88,7 @@ const FILE_ID = /^[A-Za-z0-9_-]{10,200}$/;
 
 /** The producer, in ONE place. It reaches the record on the hop and it reaches a
  *  refusal's detail; a second spelling is how two statements of one fact drift. */
-export const DRIVE_PRODUCER = "Google Drive export";
+export const DRIVE_PRODUCER = word("drive.google_drive_export");
 
 /** The export endpoint's canonical host. `sheets.google.com` and
  *  `slides.google.com` are aliases that redirect to `docs.google.com`, and
@@ -160,9 +162,7 @@ export function readDriveAddress(address) {
       || (seg[0] === "drive" && seg[1] === "my-drive")
       || (seg[0] === "drive" && seg[1] === "shared-with-me")) {
     return { ...base, shape: "folder", harvestable: false,
-      why: "a Drive FOLDER is a listing of files, not a document: there is no export address to "
-         + "compose and no single set of bytes a capture of it could honestly hold. The link is "
-         + "recorded; harvesting the files it lists is a separate act nobody has asked for." };
+      why: word("drive.why.drive_folder_listing") };
   }
 
   /* THE PUBLISH-TO-WEB SHAPE, and it is recognised so that it can be LEFT ALONE.
@@ -175,9 +175,7 @@ export function readDriveAddress(address) {
   const kindRow = DRIVE_KINDS.find((k) => k.segment === seg[0]);
   if (kindRow && seg[1] === "d" && seg[2] === "e") {
     return { ...base, shape: "published", harvestable: false,
-      why: "this is Google's PUBLISH-TO-WEB address, which serves static HTML rather than the "
-         + "application shell. It is already an honest document and is captured by the ordinary "
-         + "path; its `e/…` published id is not a file id the export endpoint accepts." };
+      why: localize("capture-sources.drive.this_is_googles_publish_to", "this is Google's PUBLISH-TO-WEB address, which serves static HTML rather than the application shell. It is already an honest document and is captured by the ordinary path; its `e/…` published id is not a file id the export endpoint accepts.") };
   }
 
   /* THE THREE EDITOR KINDS. `/<segment>/d/<file id>/…` — the trailing segments
@@ -203,17 +201,11 @@ export function readDriveAddress(address) {
     const fileId = (seg[0] === "file" && seg[1] === "d" && FILE_ID.test(seg[2] || "")) ? seg[2]
                  : (idParam && FILE_ID.test(idParam) ? idParam : null);
     return { ...base, shape: "file", harvestable: false, ...(fileId ? { fileId } : {}),
-      why: "this Drive address names a FILE ID and no KIND. The kind is what decides the export "
-         + "format, so no OpenDocument export address can be composed from it, and asking for one "
-         + "kind at a venture would file bytes whose format the record had guessed. If the file is "
-         + "an uploaded document, capture its own address; if it is a Doc, Sheet or Slides deck, "
-         + "capture the editor address, which carries the kind." };
+      why: word("drive.why.drive_address_names") };
   }
 
   return { ...base, shape: "unknown", harvestable: false,
-    why: `this is a Drive host (${host}) with a path shape this recogniser does not read, so it is `
-       + "named rather than harvested. A Drive address whose shape is unread is not a document "
-       + "your team's Civicsmith can promise to have captured." };
+    why: localize("capture-sources.drive.this_is_a_drive_host", "this is a Drive host ({host}) with a path shape this recogniser does not read, so it is named rather than harvested. A Drive address whose shape is unread is not a document your team's Civicsmith can promise to have captured.", { host: String(host) }) };
 }
 
 /** The export address, composed BY THE PLANE from the file id and the kind — the
@@ -241,19 +233,16 @@ export function exportAddressFor(kindRow, fileId) {
  */
 export function driveHop(drive, { retrieved, resolved = null, detected = null } = {}) {
   const confirmed = detected && detected.format === drive.format;
-  const signals = detected && Array.isArray(detected.signals) ? detected.signals.join("; ") : "no signals stated";
+  const signals = detected && Array.isArray(detected.signals) ? detected.signals.join("; ") : word("drive.signals_stated");
   return {
     who: `Google Drive (${DRIVE_PRODUCER})`,
-    asserts: `these bytes are Google's ${drive.format.toUpperCase()} conversion, made at export time, `
-           + `of the Drive ${drive.kind} ${drive.fileId}, served for ${drive.exportAddress} at ${retrieved}. `
-           + `The document itself lives at ${drive.address}, which is the address the record keeps.`,
+    asserts: localize("capture-sources.drive.these_bytes_are_googles_format", "these bytes are Google's {format} conversion, made at export time, of the Drive {kind} {fileId}, served for {exportAddress} at {retrieved}. The document itself lives at {address}, which is the address the record keeps.", { format: String(drive.format.toUpperCase()), kind: String(drive.kind), fileId: String(drive.fileId), exportAddress: String(drive.exportAddress), retrieved: String(retrieved), address: String(drive.address) }),
     evidence: [
       `export address ${drive.exportAddress}`,
-      `export format ${drive.format} (${drive.mimetype})`,
+      localize("capture-sources.drive.export_format_format_mimetype", "export format {format} ({mimetype})", { format: String(drive.format), mimetype: String(drive.mimetype) }),
       `producer ${DRIVE_PRODUCER}`,
-      `the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the file id and the kind carried in `
-        + `${drive.address}, and no part of it was read from the request (D-112)`,
-      `the export endpoint is canonicalised to ${EXPORT_HOST}${drive.host === EXPORT_HOST ? "" : `, though the link named ${drive.host}`}`,
+      localize("capture-sources.drive.the_export_address_was_composed", "the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the file id and the kind carried in {address}, and no part of it was read from the request (D-112)", { address: String(drive.address) }),
+      localize("capture-sources.drive.the_export_endpoint_is_canonicalised", "the export endpoint is canonicalised to {EXPORT_HOST}{v1}", { EXPORT_HOST: String(EXPORT_HOST), v1: String(drive.host === EXPORT_HOST ? "" : `, though the link named ${drive.host}`) }),
       resolved && resolved !== drive.exportAddress ? `redirected to ${resolved}` : null,
       /* BYTES-FIRST, and stated either way. COFF-9's discriminator reads the
          first-and-stored `mimetype` entry, so the flavour is CERTAIN from the
@@ -264,18 +253,12 @@ export function driveHop(drive, { retrieved, resolved = null, detected = null } 
          undeclared interface change wearing the costume of caution. */
       detected
         ? (confirmed
-            ? `confirmed from the bytes: ${detected.format} (${detected.confidence}) — ${signals}`
-            : `NOT confirmed from the bytes: ${drive.format} was asked for and the bytes detect as `
-              + `${detected.format} (${detected.confidence}) — ${signals}. The capture is `
-              + `filed with the disagreement stated rather than refused; what is refused by name is the `
-              + `application shell, and these bytes are not it.`)
+            ? localize("capture-sources.drive.confirmed_from_the_bytes_format", "confirmed from the bytes: {format} ({confidence}) — {signals}", { format: String(detected.format), confidence: String(detected.confidence), signals: String(signals) })
+            : localize("capture-sources.drive.not_confirmed_from_the_bytes", "NOT confirmed from the bytes: {format} was asked for and the bytes detect as {format_2} ({confidence}) — {signals}. The capture is filed with the disagreement stated rather than refused; what is refused by name is the application shell, and these bytes are not it.", { format: String(drive.format), format_2: String(detected.format), confidence: String(detected.confidence), signals: String(signals) }))
         : "the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed",
     ].filter(Boolean).join("; "),
     bound: false,
-    unsigned_reason: "no attestation exists over a Google Drive export, and the bytes are not the "
-      + "original file: they are Google's conversion performed at fetch time. What this hop discloses "
-      + "is the FACT that Google served a conversion of the named file, never the fidelity of the "
-      + "conversion and never the credibility of the content.",
+    unsigned_reason: word("drive.attestation_exists_google"),
     via: "direct",
     /* THE THREE FACTS, AS NAMED KEYS. They are in `asserts` and `evidence` as
        prose because a hop is read by people; they are here as fields because a
@@ -407,7 +390,7 @@ export function driveBaselineRow(rows, drive, locator) {
 export function classifyDriveBaseline({ drive, locator, rows, retrievals = [] }) {
   const row = driveBaselineRow(rows, drive, locator);
   if (!row) return { verdict: "no_baseline", baseline: null,
-    basis: "the register holds no row naming the document or its export address, so there is no baseline to judge" };
+    basis: word("drive.why.register_holds_row") };
   const profile = row.profile && typeof row.profile === "object" ? row.profile : {};
   const format = profile.format && typeof profile.format === "object" && typeof profile.format.format === "string"
     ? profile.format.format : null;
@@ -437,23 +420,23 @@ export function classifyDriveBaseline({ drive, locator, rows, retrievals = [] })
     fetched_record: fetched.length ? (fromExport && fromPage ? "both" : fromExport ? "export" : fromPage ? "page" : "other")
                                    : "none",
   };
-  const said = htmlSaid ? "the register's profile says HTML"
-    : docSaid ? `the register's profile says ${format}` : "the register's profile names no format";
+  const said = htmlSaid ? word("drive.register_profile_says")
+    : docSaid ? word("drive.the_register_s_profile_says", { format: String(format) }) : word("drive.register_profile_names");
   if (fromExport && !fromPage) return { verdict: htmlSaid ? "undetermined" : "export", ...facts,
     basis: htmlSaid
-      ? `your team's Civicsmith recorded fetching the export address, but ${said}; the two disagree and neither is taken over the other`
-      : `your team's Civicsmith recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said}` };
+      ? word("drive.why.group_civicsmith_recorded", { said: String(said) })
+      : localize("capture-sources.drive.your_teams_civicsmith_recorded_fetching", "your team's Civicsmith recorded fetching the export address {exportAddress} (CAP-8), and {said}", { exportAddress: String(drive.exportAddress), said: String(said) }) };
   if (fromPage && !fromExport) return { verdict: docSaid ? "undetermined" : "shell", ...facts,
     basis: docSaid
-      ? `your team's Civicsmith recorded fetching ${fetchedAddress}, not the export, but ${said}; the two disagree and neither is taken over the other`
-      : `your team's Civicsmith recorded fetching ${fetchedAddress}, not the export address — Google serves the application there, not the document — and ${said}` };
+      ? word("drive.why.group_civicsmith_recorded_fetching", { fetched_address: String(fetchedAddress), said: String(said) })
+      : word("drive.why.group_civicsmith_recorded_fetching_export", { fetched_address: String(fetchedAddress), said: String(said) }) };
   if (fromExport && fromPage) return { verdict: "undetermined", ...facts,
-    basis: `your team's Civicsmith recorded these bytes from BOTH the export and ${fetchedAddress}; which one the baseline is cannot be told` };
+    basis: word("drive.why.group_civicsmith_recorded_bytes", { fetched_address: String(fetchedAddress) }) };
   /* No direct retrieval on record: the register alone. */
   if (row.locator === drive.exportAddress && !htmlSaid) return { verdict: "export", ...facts,
-    basis: `the register row names the export address and ${said}; your team's Civicsmith holds no retrieval record for these bytes` };
+    basis: word("drive.why.register_row_names", { said: String(said) }) };
   if (htmlSaid && row.locator !== drive.exportAddress) return { verdict: "shell", ...facts,
-    basis: `${said} for a row at the document address; your team's Civicsmith holds no retrieval record for these bytes, so this rests on the register alone` };
+    basis: word("drive.why.row_document_address", { said: String(said) }) };
   return { verdict: "undetermined", ...facts,
-    basis: `your team's Civicsmith holds no direct retrieval record for these bytes and ${said}` };
+    basis: word("drive.why.group_civicsmith_holds", { said: String(said) }) };
 }

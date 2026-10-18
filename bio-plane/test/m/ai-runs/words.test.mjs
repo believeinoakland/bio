@@ -9,7 +9,7 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8"))
   .modules["ai-runs"].reads;
-const GONE = "no such run: it either never existed or was purged";
+const GONE = word("ai-runs.note.run_either_existed");
 
 test("R54 (words): every key the module reads is held by setup-words and says team, never group", () => {
   assert.ok(READS.length >= 37);

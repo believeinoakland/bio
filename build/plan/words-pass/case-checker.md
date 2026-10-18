@@ -1,0 +1,185 @@
+# case-checker: the words check after the conversion (K3949)
+
+Layer 8. 162 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `bio-plane/src/case-checker/account.mjs:287` "sentence {} cites nothing, and is not marked as following a printed..." — signed or pinned text
+- inline `bio-plane/src/case-checker/account.mjs:289` "sentence {} cites {}, which is not among what it may cite" — signed or pinned text
+- inline `bio-plane/src/case-checker/account.mjs:302` "sentence {} states {}, which {} not in what it cites" — signed or pinned text
+- inline `bio-plane/src/case-checker/account.mjs:310` "sentence {} states finding {} as determined, where the record holds..." — signed or pinned text
+- inline `bio-plane/src/case-checker/account.mjs:314` "sentence {} states finding {}'s conclusion other than the record ho..." — signed or pinned text
+- inline `bio-plane/src/case-checker/account.mjs:318` "sentence {} reads {} as supporting finding {}, where it cuts agains..." — signed or pinned text
+- inline `bio-plane/src/case-checker/account.mjs:324` "sentence {} is marked as following bias statement {}, which this ca..." — signed or pinned text
+- inline `bio-plane/src/case-checker/account.mjs:328` [copy] "a finding's outcome" — signed or pinned text
+- inline `bio-plane/src/case-checker/account.mjs:331` "sentence {} is marked as bias and states {}: a fact is never bias" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:1005` "calculation {}'s result key is stated as {}, and it recomputes to {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:1010` "calculation {} does not recompute: the evaluator refuses it ({}: {})" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:1012` "calculation {}'s result is stated as {}, and it recomputes to {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:122` "the case file could not be read: {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:128` [copy] "no part of a case file was given" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:140` "part {} given carries no {} at its root" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:143` "part {} given carries a manifest that differs from the first part's" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:147` [copy] "the manifest is not JSON" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:148` [copy] "the manifest is not a JSON object" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:185` "{} does not match the manifest: it has SHA-256 {} and {} bytes, whe..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:191` "part {}'s files do not recompute the fingerprint the manifest lists..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:194` "part {} given carries {}, which the manifest does not list" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:321` "the case document is not carried; fetch the file whose SHA-256 is {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:324` "the case document's SHA-256 is {}, where the manifest names {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:326` "the case document names case {}, where the manifest names {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:328` "the case document names edition {}, where the manifest names {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:345` "the case file lists a key whose fingerprint is {}, beside the finge..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:352` [copy] "was made with a key the case file does not list" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:353` [copy] "does not verify over what it signs" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:353` [copy] "was made for another purpose" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:354` [copy] "cannot be read as a signature" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:366` "the case document's signature is not carried; fetch the file whose ..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:373` "the case document's signature {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:44` "Recreating a case shows that what it carries is intact and consiste..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:445` "an attestation names material {}, which the case document's materia..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:447` [copy] "this member's attestation carries no signature at the attribution l..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:45` "it states. It does not show that the case is true, and it is not an..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:453` "the signed account attesting {} is not carried, so its signature ca..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:458` "the member's signed account attesting {} {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:462` "a team attestation of {} names a signature other than the case docu..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:463` "the team's attestation of {} is the case document's signature, whic..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:464` "the team's attestation of {} is the case document's signature, whic..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:467` "a {}attestation names {}, which the case file's manifest does not list" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:468` "an attestation of {} names a kind this checker does not know ({})" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:47` "Part of this case rests on another team's published finding. That part" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:48` "is checked against that team's own case file, named here, and not o..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:484` "C-2.8's testimony-row and per-ground arms for each member whose bas..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:488` "the case does not pass publication check {}: {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:493` [copy] "the case file carries no complete edition" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:495` "the complete edition is not carried; fetch the file whose SHA-256 i..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:50` "The signing keys were not checked against the team's published list of" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:51` "keys, because no list was given to this check." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:510` [copy] "this checker could not render the complete edition from the case file" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:514` [copy] "the carried complete edition is the edition the rest of the case fi..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:515` "the carried complete edition (SHA-256 {}) is not the edition the re..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:525` "a supplied document (SHA-256 {}) matches no fingerprint this case f..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:53` "The publication checks ran at this checker's version, {}," — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:533` "{}; fetch the file whose SHA-256 is {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:54` "not at the version the case states, {}." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:553` "{} is not carried; fetch the file whose SHA-256 is {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:562` "the case file carries no published bytes for finding {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:571` "finding {}'s carried bytes are not the version the case pins ({})" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:572` "the case file carries no signature for finding {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:58` "This value was recomputed by the publishing copy's engine, not by t..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:588` "finding {}'s carried passages are not the passages the signed case ..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:589` "finding {}'s passages cannot be read" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:59` "so it is not shown here to agree." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:593` "a passage of {} relied on by {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:595` "{} does not recompute to the content id it states ({})" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:598` "{} cannot be found, because the document's extracted text is not ca..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:604` "{} is not found where it is said to be: its quoted text is not in t..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:612` "finding {}'s carried grading facts are not the facts the signed cas..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:614` "the case file carries no grading facts for finding {}, so its grade..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:615` "finding {}'s grading facts cannot be read" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:620` "the grade was set by grading method {}, which this checker does not..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:621` "finding {}'s grade could not be recomputed: {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:625` [copy] "the case document" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:626` "the grading facts of {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:627` "the case document records no pair for finding {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:633` "on {}, {} records {} for finding {}, and it recomputes to {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:635` "{} rests on {}, whose stated grade on {} does not recompute" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:652` "on {}, finding {} reaches {}, short of the bar the case records ({})" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:658` "{}'s chain reaches {} {}, which the case document's materials do no..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:66` [copy] "Recreated in part" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:67` [copy] "Did not recreate" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:670` "the copy of {} carried in its place (a photo with its marked areas ..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:675` "fetch the {} whose SHA-256 is {}{}{}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:678` "{} is load-bearing and rests on {}, which the case lists as not tra..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:682` "{} is not the bytes the signed case fingerprints ({})" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:685` "{}{} is not carried; {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:693` "{}'s chain rests on calculation {}, which the case document's calcu..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:807` [copy] "the case document is not carried, so nothing was re-weighed under t..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:837` "the case could not be re-weighed under the lens: {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:846` "Whether this standard's whole text travels with the case is not judged" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:847` "here, because its row was recorded before the case file said which ..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:863` "the criteria the case measures against are not carried; fetch the f..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:864` "the criteria the case measures against are not judged, because {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:925` "account sentence {} cites {}, whose text this case file does not ca..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:929` "the case document's account cannot be read ({})" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:980` "calculation {} was computed by calculation method {}, which this ch..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:988` "calculation {}'s carried file is not the row the signed case docume..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:989` "calculation {}'s inputs cannot be read" — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:994` "input {} of calculation {} is not carried{}; fetch the file whose S..." — signed or pinned text
+- inline `bio-plane/src/case-checker/check.mjs:998` "input {} of calculation {} is not a table or figure this checker ca..." — signed or pinned text
+- inline `bio-plane/src/case-checker/index.mjs:63` [stitched] "{}; it holds {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/index.mjs:64` "the specification of {}, named as version" — signed or pinned text
+- inline `bio-plane/src/case-checker/index.mjs:65` "the specifications of {} and {}, each named as version" — signed or pinned text
+- inline `bio-plane/src/case-checker/lens.mjs:106` [copy] "it is recorded at a conclusion's claim and moves no grade" — signed or pinned text
+- inline `bio-plane/src/case-checker/lens.mjs:107` [copy] "it names no leg this case file carries, so it moves no grade here" — signed or pinned text
+- inline `bio-plane/src/case-checker/lens.mjs:20` [copy] "A re-check re-weighs the analysis that exists; it cannot write what..." — signed or pinned text
+- inline `bio-plane/src/case-checker/lens.mjs:62` [copy] "its statement is not among the lens's statements" — signed or pinned text
+- inline `bio-plane/src/case-checker/main.mjs:40` "could not read {}: {} {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:11` "# The case file, format bio-case-file/1 This document specifies ver..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:130` "answers the same as the checker Civicsmith runs." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:134` "manifest naming one departs from its format." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:136` "which must be the rendering of the signed rows." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:137` "which must be the rendering of the signed rows." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:153` "`stated: \"not held\"`. A case edition committed before criteria were..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:160` "`statement`: the case's own statement of what it covers and what it..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:162` "measures against, beside the results: it changes no finding's resul..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:163` "Every departure is named, never only the first:" — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:167` "not judged for this check." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:170` "- A member finding whose rows are all `binds: false` (it rests on n..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:171` "or {}, as whole words in any letter case, in its `case_conclusions:..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:175` "prints quoted passages, whose own words may say otherwise." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:194` "a kind its format lacks departs from its format." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:197` "A standard whose `access` is not `free` carries nothing of its text..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:201` "committed before them) has no `captures` field, and it is never fil..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:202` "`stated: \"not held\"`. A case edition committed before criteria were..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:203` "`stated: \"not held\"` (its `captures` null). A case edition committe..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:210` "original's fingerprints (the original never travels) each depart (r..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:211` "Material whose source's identity is withheld is listed like any other." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:212` "Material whose source's identity is withheld is listed like any oth..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:222` "them travels as before." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:223` "So a case file published before `/7` still renders its own carried ..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:224` "So a case file published before `/7` still renders its own carried ..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:226` "word for word, when it has one; an edition stating no copy renders ..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:227` "Not carried is missing; not listed, or listed as not included, diff..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:228` "Not carried is missing; not listed, or listed as not included, diff..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:232` "3). The answer lists each such row, `{ref, sha, copy, label}`, in t..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:233` "The case file does not carry which captures hold a standard's text,..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:234` "not judged for this check." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:235` "Those captures are its row's `captures`. A row with no `captures` f..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:236` "and its standard is named as not judged for it." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:237` "one of its row's `passages` whose `content` is the `content_id` of ..." — signed or pinned text
+- inline `bio-plane/src/case-checker/spec.mjs:240` "is a finding's, so offline only the first can depart)." — signed or pinned text
+- inline `bio-plane/src/case-checker/zip.mjs:38` [copy] "the part is not bytes" — signed or pinned text
+- inline `bio-plane/src/case-checker/zip.mjs:44` [copy] "the part is not a ZIP archive: it has no end-of-central-directory r..." — signed or pinned text
+- inline `bio-plane/src/case-checker/zip.mjs:48` [copy] "the part's central directory lies outside the archive" — signed or pinned text
+- inline `bio-plane/src/case-checker/zip.mjs:54` "the part's central directory is cut short at entry {} of {}" — signed or pinned text
+- inline `bio-plane/src/case-checker/zip.mjs:64` "the part names {} twice" — signed or pinned text
+- inline `bio-plane/src/case-checker/zip.mjs:66` "{} is compressed; a case file stores every file as it is" — signed or pinned text
+- inline `bio-plane/src/case-checker/zip.mjs:67` "{} has no local header" — signed or pinned text
+- inline `bio-plane/src/case-checker/zip.mjs:69` "{} is cut short" — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/check.test.mjs:319` "the copy of the document" — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/lens.test.mjs:101` "its statement is not among the lens's statements" — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/lens.test.mjs:102` "it names no leg this case file carries, so it moves no grade here" — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/lens.test.mjs:103` "it is recorded at a conclusion's claim and moves no grade" — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/lens.test.mjs:30` "A re-check re-weighs the analysis that exists; it cannot write what..." — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/says.test.mjs:28` "Behind a paywall" — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/says.test.mjs:30` "Free to read" — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/standards-offline.test.mjs:30` "Behind a paywall" — signed or pinned text
+- testcopy `bio-plane/test/m/case-checker/standards-offline.test.mjs:32` "Free to read" — signed or pinned text
+
+## Plain findings (K3957)
+
+8 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('case-checker.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/case-checker/check.mjs:278` "the case file could not be read, so its complete edition was not compared"
+- plain `bio-plane/src/case-checker/check.mjs:317` "the case document carries no front matter this checker can read"
+- plain `bio-plane/src/case-checker/check.mjs:320` "the manifest lists no case document"
+- plain `bio-plane/src/case-checker/check.mjs:364` "the case file carries no signature of the case document, so nobody can be shown to have..."
+- plain `bio-plane/src/case-checker/check.mjs:372` "the case document's signature was made with a key that is not among the team's publishe..."
+- plain `bio-plane/src/case-checker/check.mjs:524` "a supplied document is not bytes, so it was not used"
+- plain `bio-plane/src/case-checker/check.mjs:537` "the calculations' provenance file the case file carries is not the rendering of the cal..."
+- plain `bio-plane/src/case-checker/check.mjs:866` "the criteria the case measures against are not judged, because the case document is not..."
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/case-checker/fixture.mjs:135` "\"completeness_acknowledgements\""

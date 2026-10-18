@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* A world in which every producer has something to say, for the checks that range over all of them. */
 const DOCKET_DEPENDENTS = { ok: true, truncated: false, cursor: null, entries: [
@@ -181,7 +182,7 @@ test("R9: an out-of-inquiry-lead offers, on the inquiry it bears on, the take-up
   const w = busy();
   const lead = byId(w.read("alice"))["FINDING::out-of-inquiry-lead::CR-L"];
   // the act is the take-up, cite, and nothing of optionsOf: the producer's own inquiry-grain act (queue adds the set-aside at its mint)
-  assert.deepEqual(lead.options, [{ id: "cite", label: "Take it up under this question", weight: "report" }]);
+  assert.deepEqual(lead.options, [{ id: "cite", label: word("queue-producers.label.take_up_under"), weight: "report" }]);
   assert.ok(!w.asked.options.some((s) => s.includes("INQ-A")), "nothing is offered on the question the run was working");
   // on the inquiry it bears on: the item is about that inquiry, filed under its homes, and its basis names it apart
   assert.deepEqual([lead.subject.inquiry, lead.basis.bears_on, lead.basis.found_while_working], ["INQ-S", "INQ-S", "INQ-A"]);

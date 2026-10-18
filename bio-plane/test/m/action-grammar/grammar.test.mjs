@@ -54,7 +54,7 @@ test("R1: riskTierState reads 1, 2, 3 and undetermined (absent, null, the word) 
   for (const v of [undefined, null, "undetermined"]) assert.equal(AG.riskTierState(v), "undetermined");
   for (const v of [1, 2, 3]) assert.equal(AG.riskTierState(v), v);
   for (const v of ["1", 0, 4, 1.5, "", [], {}]) assert.equal(AG.riskTierState(v), null);
-  assert.equal(AG.RISK_TIERS[3], "do not file without counsel");
+  assert.equal(AG.RISK_TIERS[3], tableWord("risk.tier.3"));
 });
 
 test("R1, R11: actionKinds(view) answers the product's kinds, then the view's action_kinds once each, in order; under the test profile it adds that profile's kinds", () => {
@@ -214,7 +214,7 @@ const HOLD_ROWS = {
   HOLD_REFUSED: {
     check: "C-117.21",
     where: "src/actions/index.mjs actionHold > is-hold",
-    translation: "A litigation hold is recorded as in place or released, with a reason of up to 500 characters and no quotation mark, backslash or line break. This one was not, so nothing was written.",
+    translation: tableWord("refusal.HOLD_REFUSED"),
   },
 };
 /* Each retired at T45 (R9; K2845, K2859): C-117.22 HOLD_NO_LEGAL_MARK with actions R52 amended, and the moved hold rows once
@@ -226,12 +226,12 @@ const DEC113_ROWS = {
   HOLD_RELEASE_IS_ITS_OWN_ACT: {
     check: "C-117.23",
     where: "src/actions/index.mjs actionHold > is-hold-release-own-act",
-    translation: "Releasing a litigation hold is its own act, recorded with its own reason, so that a release is never a side effect of placing one. This asked to release a hold through the act that places one, so nothing was written. Use the release act.",
+    translation: tableWord("refusal.HOLD_RELEASE_IS_ITS_OWN_ACT"),
   },
   HOLD_PROJECTS_REFUSED: {
     check: "C-117.24",
     where: "src/actions/index.mjs #holdProjects > is-hold-projects",
-    translation: "Projects are named as a list of their ids, at most fifty different ones, and asking whether projects are held names at least one. The list given was not of that form, so it was refused and nothing was written.",
+    translation: tableWord("refusal.HOLD_PROJECTS_REFUSED"),
   },
   HOLD_ALREADY_RELEASED: {
     check: "C-117.25",
@@ -249,12 +249,12 @@ const T33_ROWS = {
   NO_SUBJECT: {
     check: "C-117.26",
     where: "src/actions/index.mjs addresseeSuggest > is-addressee-subject",
-    translation: "An addressee is suggested for something: an entity in the subject registry, or a record the action rests on. None was named, so there is nothing to suggest an office for. Name the subject and ask again.",
+    translation: tableWord("refusal.NO_SUBJECT"),
   },
   MACHINE_CANNOT_SET_PROCEEDING: {
     check: "C-117.27",
     where: "src/actions/index.mjs #heldLinks > is-machine-set-proceeding",
-    translation: "Which proceeding an action belongs to is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot set, change or remove it. Nothing was written. Sign in to state it yourself.",
+    translation: tableWord("refusal.MACHINE_CANNOT_SET_PROCEEDING"),
   },
 };
 
@@ -265,20 +265,20 @@ const R14_ROWS = {
   MACHINE_CANNOT_STATE_SEEKS: {
     check: "C-32.21",
     where: "src/actions/index.mjs #seeksFence > is-machine-state-seeks",
-    translation: "Which stages a records request asks the records for is a statement a member makes and answers for. The credential that asked here is an automated one, or no member is named behind it: it can propose the stages for a member to consider, but it cannot state or change what the request seeks. Nothing was written. Sign in to state it yourself.",
+    translation: tableWord("refusal.MACHINE_CANNOT_STATE_SEEKS"),
   },
 };
 const T41_ROWS = {
   SEEKS_REFUSED: {
     check: "C-117.29",
     where: "src/action-grammar/checks.mjs seeksFindings > is-seeks",
-    translation: "A records request may name the stages it asks the records for: one to twelve different entries, each naming a progression, an entity and a stage in at most 200 characters each, and each stage one its progression declares. Only a records request names them. This write named them otherwise, so nothing was written.",
+    translation: tableWord("refusal.SEEKS_REFUSED"),
   },
 };
 /* R13: C-94.5's translation, which names the outcome vocabulary, names none_exists; a changed row, awaiting T42's stamp. */
 /* T45 (K2849 (4)): C-117.19 refuses the override's reason alone; its ground's refusals are R15's (C-117.31, .32). */
 const C117_19_NOW = tableWord("refusal.PREMISE_OVERRIDE_REFUSED");
-const C94_5_NOW = "An outcome is one of granted, denied, partial, reversed, affirmed, none_exists when the body says no responsive record exists, or none_stated when the body stated none.";
+const C94_5_NOW = tableWord("refusal.OUTCOME_NOT_IN_VOCABULARY");
 
 test("R9: the rows C-117.26 NO_SUBJECT (actions R62), and C-117.27 MACHINE_CANNOT_SET_PROCEEDING are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, in that order before T41's row, their wheres naming actions' minting sites; no other table holds them; their words name no op, ruling or check number", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;

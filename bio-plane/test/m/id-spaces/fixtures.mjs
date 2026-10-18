@@ -171,7 +171,7 @@ export const REPORTERS = {
 const src = (o, profile = "test-harbor") => ({ ...o, basis: T, profile, bases: [{ profile, basis: T }] });
 export const SERIES = [
   src({ source: "Harbor administrative instructions", kind: "policy", issuer: "Harbor City Administrator", level: "city", key: "harbor",
-        series: { key: "ai", label: "Administrative Instruction" },
+        series: { key: "ai", label: "Harbor directive" },
         cite: P("\\bA\\.?I\\.?\\s+(?<number>\\d{1,2}\\.\\d{1,3})(?:\\s*§\\s*(?<portion>\\d+(?:\\.\\d+)*))?") }),
   src({ source: "Harbor police general orders", kind: "policy", issuer: "Harbor Police Department", level: "city", key: "harbor-pd",
         series: { key: "dgo", label: "Departmental General Order" },

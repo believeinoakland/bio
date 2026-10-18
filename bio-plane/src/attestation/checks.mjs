@@ -19,13 +19,12 @@
    the bytes are not called absent, and a timestamp is not rested on a caller's
    word. NO_SUCH_CAPTURE stays for a hash nothing names at all.
    =========================================================================== */
+import { word } from '../setup-words/index.mjs';
+
 export const ATTEST_CHECKS = {
   CAPTURE_HELD_IN_PARTS: {
     check: 'C-89.1',
     where: 'src/attestation/index.mjs attest > is-attest-parts',
-    translation: 'The record lists this document, but keeps it in parts rather than as one file, and your '
-      + "team's Civicsmith has no record of fetching it itself. A timestamp is only requested for bytes your "
-      + "team's Civicsmith can vouch for, so none was requested. Nothing is missing: do not capture the document "
-      + "again. If your team's Civicsmith fetches it from its address, it can then be co-attested.",
+    translation: word('refusal.CAPTURE_HELD_IN_PARTS'),
   },
 };

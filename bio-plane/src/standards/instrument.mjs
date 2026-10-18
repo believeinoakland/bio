@@ -5,6 +5,8 @@
  * it. A source with no `key`, a view with no `instrument_key`, or no active profile answers the key undetermined with
  * why: no place is named in code (R13, `layers.md` rule 1). */
 
+import { word } from "../setup-words/index.mjs";
+
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const SEGMENT = /^[a-z0-9][a-z0-9-]*$/;
 /* The number at the end of what a citation pattern matched: digits first, then letters, digits, `.` or `-` (a section
@@ -54,11 +56,11 @@ function compose(view, source, number) {
   const ik = isObj(view) && isObj(view.instrument_key) ? view.instrument_key : null;
   if (!ik || typeof ik.jurisdiction !== "string" || !SEGMENT.test(ik.jurisdiction))
     return { state: "undetermined", key: null,
-             why: "the active jurisdiction profiles state no instrument_key segment, so no instrument key is composed" };
+             why: word("standards.why.active_jurisdiction_profiles_state") };
   if (!source || typeof source.key !== "string" || !SEGMENT.test(source.key))
     return { state: "undetermined", key: null,
-             why: `the source ${source ? `'${source.source}' ` : ""}states no key segment, so no instrument key is composed` };
-  if (!number) return { state: "undetermined", key: null, why: "the citation states no number or section path" };
+             why: word("standards.why.source_states_key", { source: String(source ? `'${source.source}' ` : "") }) };
+  if (!number) return { state: "undetermined", key: null, why: word("standards.why.citation_states_number") };
   return { state: "composed", key: `/eli/${ik.jurisdiction}/${source.key}/${number}`, source: source.source,
            basis: [ik.basis, source.basis].filter(Boolean).join("; ") };
 }
@@ -68,13 +70,13 @@ function compose(view, source, number) {
  *  undetermined. Never throws. */
 export function instrumentKey({ cite = null, view = null } = {}) {
   try {
-    if (!isObj(view)) return { state: "undetermined", key: null, why: "no active jurisdiction profile, so no instrument key is composed" };
+    if (!isObj(view)) return { state: "undetermined", key: null, why: word("standards.why.active_jurisdiction_profile") };
     const m = matchSource(view, cite);
     if (!m) return { state: "undetermined", key: null,
-                     why: "the citation matches the citation form of no source the active jurisdiction profiles list" };
+                     why: word("standards.why.citation_matches_citation") };
     return compose(view, m.entry, numberIn(view, m.entry, String(cite), m.matched, m.groups));
   } catch {
-    return { state: "undetermined", key: null, why: "the citation could not be read for an instrument key" };
+    return { state: "undetermined", key: null, why: word("standards.why.citation_read_instrument") };
   }
 }
 

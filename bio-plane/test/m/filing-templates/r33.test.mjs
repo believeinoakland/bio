@@ -9,13 +9,14 @@ import { readFile } from "node:fs/promises";
 import { seeded, V, TEST, TEXT, PRO_REVIEW, reviewedOf } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import * as jurisdictions from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")).words;
 const A = V("alice"), B = V("bob"), F = V("frank");
-const SENTENCE = "Your reply may be quoted unless it says otherwise.";
+const SENTENCE = word("filing-templates.rfc_quoting_sentence");
 const ROW = ft.FILING_TEMPLATE_CHECKS.RFC_QUOTING_MISSING;
 /* the row's word, pinned here: words.json holds it by key (DEC-260), its text unchanged since DEC-234 (K3357) */
-const RFC_TRANSLATION = "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.";
+const RFC_TRANSLATION = word("refusal.RFC_QUOTING_MISSING");
 const RFC = "request_for_comment";
 const BODY = "To the {{counterparty_role}}: {{group}} asks for your comment on {{act}}.";
 
@@ -27,7 +28,7 @@ const profileTemplate = (id, use, text) => ({ id, version: 1, use, text, notes: 
 const whole = (t) => ({ ...t, sources: [{ citation: "P.E.B.L. § 1" }], reviews: [PRO_REVIEW] });
 const withRfc = () => reviewedOf(jurisdictions, (p) => {
   if (p.id !== TEST || p.action_kinds.some((k) => k.kind === RFC)) return;
-  p.action_kinds.push({ kind: RFC, label: "request for comment", tier: 1, shape: "recognition", basis: "TEST",
+  p.action_kinds.push({ kind: RFC, label: word("screen.start-send.kind.request_for_comment"), tier: 1, shape: "recognition", basis: "TEST",
     venue: { name: "the Harbour District office", how: "mail", basis: "TEST" },
     templates: [profileTemplate("TPL-test-rfc-with", "file", `${BODY} ${SENTENCE}`), profileTemplate("TPL-test-rfc-without", "file", BODY),
                 profileTemplate("TPL-test-rfc-brief", "brief", BODY)].map(whole) });
@@ -145,7 +146,7 @@ test("R33 R15's other reasons come first: a profile template of the kind lacking
   const w = seeded({ jur: { ...jurisdictions, get: (id) => {
     const p = jurisdictions.get(id);
     if (p && p.id === TEST && !p.action_kinds.some((k) => k.kind === RFC))
-      p.action_kinds.push({ kind: RFC, label: "request for comment", tier: 1, shape: "recognition", basis: "TEST",
+      p.action_kinds.push({ kind: RFC, label: word("screen.start-send.kind.request_for_comment"), tier: 1, shape: "recognition", basis: "TEST",
         venue: { name: "the Harbour District office", how: "mail", basis: "TEST" }, templates: [profileTemplate("TPL-test-rfc-bare", "file", BODY)] });
     return p;
   } } });

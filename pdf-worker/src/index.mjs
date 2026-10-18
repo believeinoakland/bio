@@ -50,6 +50,7 @@ if (typeof Math.sumPrecise !== "function") {
 
 import { getDocumentProxy, extractText } from "unpdf";
 import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* The member's surface, declared: hand it a capture, get back the I2
  * structure+text shape, and ask it which build is answering. `fleet-member.json`
@@ -145,20 +146,14 @@ async function handleStructure(req, env) {
     return json({ ok: false, reason: "BAD_SHA", detail: "capture_sha must be 64 lowercase hex" }, 400);
   if (typeof body?.store !== "string")
     return json({ ok: false, reason: "BAD_STORE",
-                  detail: "a capture lives inside one namespace and this member guesses none: the caller must "
-                        + "say which. A default namespace here would read the real record for a caller who "
-                        + "believed it was reading a scratch one." }, 400);
+                  detail: localize("pdf-worker.index.a_capture_lives_inside_one", "a capture lives inside one namespace and this member guesses none: the caller must say which. A default namespace here would read the real record for a caller who believed it was reading a scratch one.") }, 400);
   /* D-478: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, the empty string — is
      refused by the plane's own code, with `asked` and `namespaces` beside it, and R2 was never touched. Before
      this, such a name reached R2 as a key prefix and came back NOT_FOUND: a statement about the capture where the
      truth was a statement about the namespace. */
   if (!NAMESPACES.includes(store))
     return json({ ok: false, reason: "NAMESPACE_UNKNOWN",
-                  detail: "a capture is read from the namespace the caller names, and no namespace by that name "
-                        + "exists on any instance this member can be bound to, so nothing was read. There are "
-                        + "two: the record itself and a scratch area kept apart for testing, and the name must "
-                        + "match one of them exactly; they are listed beside this message. This is NOT the same "
-                        + "answer as NOT_FOUND, which says the namespace exists and holds no such capture.",
+                  detail: localize("pdf-worker.index.a_capture_is_read_from", "a capture is read from the namespace the caller names, and no namespace by that name exists on any instance this member can be bound to, so nothing was read. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message. This is NOT the same answer as NOT_FOUND, which says the namespace exists and holds no such capture."),
                   asked: store.slice(0, 80), namespaces: [...NAMESPACES] }, 400);
 
   // I1 §2: the R2 key shape, promoted here from documentation to a load-bearing

@@ -21,6 +21,7 @@ import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { dayRange } from "../../../src/civil-time/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -160,17 +161,17 @@ export function standardsProvider(w) {
     inForceAt({ standard = null, date = null, viewer = null, ...rest } = {}) {
       const s = held.get(standard);
       if (!s) return w.standards.inForceAt({ standard, date, viewer, ...rest });
-      if (s.held !== "text") return { state: "undetermined", why: "its text is not held, so it is not a measure", standard };
+      if (s.held !== "text") return { state: "undetermined", why: localize("standards.why.text_held_measure", "its text is not held, so it is not a measure"), standard };
       const { from, to } = s.period;
       if ((from && day(date) < from) || (to && day(date) > to)) return { state: "not_in_force", why: `${date} is outside ${from ?? "…"}–${to ?? "…"}`, standard };
-      if (!to) return { state: "undetermined", why: "no end is stated", standard };
+      if (!to) return { state: "undetermined", why: localize("civil-time.end_stated", "no end is stated"), standard };
       return { state: "in_force", why: `${date} is within ${from}–${to}`, standard, version: standard };
     },
     isMeasure(id, viewer = null) { void viewer; const s = held.get(id); return !!s && s.held === "text"; },
     bindsAt({ standard = null, body = null, date = null } = {}) {
       const s = held.get(standard);
       const state = s && s.binds ? s.binds[body] : undefined;
-      return state ? { state, why: `as the test records it on ${date}` } : { state: "undetermined", why: "whether this law binds the body is not recorded" };
+      return state ? { state, why: `as the test records it on ${date}` } : { state: "undetermined", why: localize("standards.whether_law_binds", "whether this law binds the body is not recorded") };
     },
     forcesOf({ standard = null } = {}) { const s = held.get(standard); return { ok: true, forces: s && s.force ? [s.force] : [] }; },
   };

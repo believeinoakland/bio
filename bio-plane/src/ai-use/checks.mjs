@@ -7,6 +7,8 @@
  * run-rules' rows, read there by key. Each row's `where` names its one site in `index.mjs`. Tested in
  * `test/m/ai-use/`. */
 
+import { word } from '../setup-words/index.mjs';
+
 const at = (fn, region) => `src/ai-use/index.mjs ${fn} > ${region}`;
 
 /* R13 (DEC-188 (7); T43, N856, N862: DEC-189, DEC-190; T44, N859, N869, N876: DEC-191, DEC-192): the words of
@@ -22,22 +24,22 @@ const at = (fn, region) => `src/ai-use/index.mjs ${fn} > ${region}`;
 export const AI_USE_WORDS = Object.freeze({
   'ai.use.ask.name': 'Asking',
   'ai.use.draft.name': 'Drafting',
-  'ai.use.run.name': 'Working through checks and plans',
+  'ai.use.run.name': word('ai.use.run.name'),
   'ai.use.standing.name': 'Standing questions',
   'ai.use.explore.name': 'Exploring',
-  'ai.use.enquire.name': 'Interviews and planning',
-  'ai.use.read.name': 'Reading inside documents',
-  'ai.use.transcribe.name': 'Reading unclear pages',
-  'ai.use.account.name': 'Drafting a case\'s account',
+  'ai.use.enquire.name': word('ai.use.enquire.name'),
+  'ai.use.read.name': word('ai.use.read.name'),
+  'ai.use.transcribe.name': word('ai.use.transcribe.name'),
+  'ai.use.account.name': word('ai.use.account.name'),
   'ai.use.ask.inline': 'asking',
   'ai.use.draft.inline': 'drafting',
-  'ai.use.run.inline': 'working through checks and plans',
-  'ai.use.standing.inline': 'standing questions',
+  'ai.use.run.inline': word('ai.use.run.inline'),
+  'ai.use.standing.inline': word('ai.use.standing.inline'),
   'ai.use.explore.inline': 'exploring',
-  'ai.use.enquire.inline': 'interviews and planning',
-  'ai.use.read.inline': 'reading inside documents',
-  'ai.use.transcribe.inline': 'reading unclear pages',
-  'ai.use.account.inline': 'drafting a case\'s account',
+  'ai.use.enquire.inline': word('ai.use.enquire.inline'),
+  'ai.use.read.inline': word('ai.use.read.inline'),
+  'ai.use.transcribe.inline': word('ai.use.transcribe.inline'),
+  'ai.use.account.inline': word('ai.use.account.inline'),
   'ai.whose.group': 'your team\'s',
   'ai.whose.project': 'this project\'s',
   'ai.whose.own': 'your own',
@@ -67,21 +69,19 @@ export const AI_USE_WORDS = Object.freeze({
     + 'now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.',
   'ai.refused.limitinvalid': 'That limit can\'t be set: {field}. A limit is a positive amount in dollars, tokens or calls, '
     + 'for a day or a month.',
-  'ai.limitfield.owner': 'it doesn\'t say which account it is for',
-  'ai.limitfield.scope': 'that isn\'t something a limit can cover',
-  'ai.limitfield.unit': 'that isn\'t a unit a limit takes',
-  'ai.limitfield.period': 'that isn\'t a period a limit takes',
-  'ai.limitfield.amount': 'that isn\'t an amount a limit takes',
-  'ai.limitfield.inclusive': 'only a limit on one use can be on top of the overall limit',
-  'ai.limitfield.use': 'that isn\'t one of the assistant\'s uses',
-  'ai.limitfield.count': 'the count is a whole number, one or more',
-  'ai.refused.unitunavailable': 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set '
-    + 'it in tokens or calls instead.',
+  'ai.limitfield.owner': word('ai.limitfield.owner'),
+  'ai.limitfield.scope': word('ai.limitfield.scope'),
+  'ai.limitfield.unit': word('ai.limitfield.unit'),
+  'ai.limitfield.period': word('ai.limitfield.period'),
+  'ai.limitfield.amount': word('ai.limitfield.amount'),
+  'ai.limitfield.inclusive': word('ai.limitfield.inclusive'),
+  'ai.limitfield.use': word('ai.limitfield.use'),
+  'ai.limitfield.count': word('ai.limitfield.count'),
+  'ai.refused.unitunavailable': word('ai.refused.unitunavailable'),
   'ai.refused.explorenotenabled': 'Exploring is off on {whose} account. Its owners can switch it on.',
   'ai.refused.exploreoutofscope': 'The assistant can\'t explore this question on {whose} account: it lies outside what '
     + 'the account\'s owners chose to explore.',
-  'ai.refused.exploreaskinvalid': 'Nothing was recorded: an ask to explore names the day and what is worth exploring that '
-    + 'day.',
+  'ai.refused.exploreaskinvalid': word('ai.refused.exploreaskinvalid'),
   'ai.queue.exploreask': 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on '
     + '{account}? If nobody says yes today, it doesn\'t.',
 });

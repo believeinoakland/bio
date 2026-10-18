@@ -54,7 +54,7 @@ export const WORD_KEYS = Object.freeze([...new Set([
   ...SENTENCE_KEYS])]);
 import { recordOf } from "../record-core/index.mjs";
 import { MODULE_IDS } from "./order.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* The marker every generated statement carries (moved from query.mjs with `viewerPredicate`, K57). It is a SQL
    comment, so it changes nothing about what runs; the runtime test asserts each gated statement contains it. */
@@ -105,7 +105,7 @@ export function viewerPredicate(viewer, reach = null) {
   const who = founder ? Membership.ROOT_ADMIN : memberId;
   return {
     member: memberId,
-    sql: `${GATE_MARK} (${outside} OR ${participant} OR ${administers})`,
+    sql: localize("membership.index.gate_mark_outside_or_participant", "{GATE_MARK} ({outside} OR {participant} OR {administers})", { GATE_MARK: String(GATE_MARK), outside: String(outside), participant: String(participant), administers: String(administers) }),
     args: founder ? [who] : [who, who],
     viewer: v, scope: "participant",
   };
@@ -222,9 +222,7 @@ export function notAnAdmin(by, act, extra = null) {
   return { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check, translation: row.translation,
            by: by ?? null, ...Object.fromEntries(own),
            ...(remedy ? { remedy, message: `${row.translation} ${remedy}` } : {}),
-           detail: `${what} is an administrator's act (Membership Architecture v2 §4.9), and your team's Civicsmith `
-                 + "takes who is asking from the signed-in session rather than from the caller. This caller is not "
-                 + "one of the active administrators. Nothing was changed." };
+           detail: localize("membership.index.what_is_an_administrators_act", "{what} is an administrator's act (Membership Architecture v2 §4.9), and your team's Civicsmith takes who is asking from the signed-in session rather than from the caller. This caller is not one of the active administrators. Nothing was changed.", { what: String(what) }) };
   /* END DEC-49 REGION is-custodial-admin */
 }
 
@@ -257,7 +255,7 @@ export function notAParticipant(projectId, by, extra = null) {
    instance-setup and control-plane in their own jobs; `setup-page` retired at T48). `member` is the id as asked (null when none); the detail is one
    fixed sentence, the same for every caller. `extra` adds a caller's own fields beside these and never replaces one of
    them. Writes nothing and never throws. */
-const NO_SUCH_MEMBER_DETAIL = "no member of your team answers to that id here. Nothing was changed.";
+const NO_SUCH_MEMBER_DETAIL = localize("membership.index.no_member_of_your_team", "no member of your team answers to that id here. Nothing was changed.");
 const NO_SUCH_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "member", "detail"]);
 export function noSuchMember(memberId, extra = null) {
   let own = [];
@@ -620,21 +618,19 @@ export class Membership {
   adminResign({ by = null } = {}) {
     if (by === Membership.ROOT_ADMIN)
       return { ok: false, reason: "ROOT_OF_TRUST",
-               detail: "the founding administrator holds ADMIN_TOKEN and does not resign inside the application; the "
-                     + "remedy is at the hosting account (section 4.6). Nothing was written." };
+               detail: localize("membership.index.the_founding_administrator_holds_admin", "the founding administrator holds ADMIN_TOKEN and does not resign inside the application; the remedy is at the hosting account (section 4.6). Nothing was written.") };
     const m = typeof by === "string" && by ? this.#one(`SELECT role, status FROM members WHERE member_id=?`, by) : null;
     if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, "resigning administrator status");   /* R84 */
     const admins = this.activeAdmins();
     /* DEC-49 REGION is-admin-resign-last */
     if (admins.length <= 1)
       return Membership.#rowRefusal("LAST_ADMIN",
-        "the team would be left with no administrator, so its last one does not step down (DEC-134 (4)). Add "
-      + "another administrator first. Nothing was written.", { administrators: admins.length });
+        localize("membership.index.the_team_would_be_left", "the team would be left with no administrator, so its last one does not step down (DEC-134 (4)). Add another administrator first. Nothing was written."), { administrators: admins.length });
     /* END DEC-49 REGION is-admin-resign-last */
     const now = new Date().toISOString();
     this.sql.exec(`UPDATE members SET role='member', status_by=?, updated=? WHERE member_id=?`, by, now, by);
     return { ok: true, memberId: by, role: "member", administrators: admins.length - 1,
-             detail: "resigned: an ordinary member now, holding the capabilities an administrator last set for them." };
+             detail: localize("membership.index.resigned_an_ordinary_member_now", "resigned: an ordinary member now, holding the capabilities an administrator last set for them.") };
   }
 
   /* R11 (section 4.8; DEC-134 (3)): the group's answer to who holds hosting access. It is asked at setup
@@ -647,8 +643,7 @@ export class Membership {
     const h = String(holders ?? "").trim().slice(0, 500);
     if (!h)
       return refusal("NO_HOLDERS",
-        "name who holds hosting access: the record keeps the team's answer as it was given, and an empty "
-      + "answer records nobody. Nothing was written.");
+        localize("membership.index.name_who_holds_hosting_access", "name who holds hosting access: the record keeps the team's answer as it was given, and an empty answer records nobody. Nothing was written."));
     /* END DEC-49 REGION is-hosting-access-holders */
     const at = new Date().toISOString();
     const n = note === null || note === undefined || String(note).trim() === "" ? null : String(note).slice(0, 280);
@@ -683,8 +678,7 @@ export class Membership {
     /* DEC-49 REGION is-pairing-yours */
     if (by !== memberId && !this.isAdministrator(by))
       return refusal("PAIRING_NOT_YOURS",
-        "whether a pairing is published is the member's own decision or an administrator's (section 3). "
-      + "Nothing was written.", { by });
+        localize("membership.index.whether_a_pairing_is_published", "whether a pairing is published is the member's own decision or an administrator's (section 3). Nothing was written."), { by });
     /* END DEC-49 REGION is-pairing-yours */
     const want = published === true || published === 1 || published === "1" || published === "true";
     this.sql.exec(`UPDATE members SET pairing_published=?, updated=? WHERE member_id=?`,
@@ -997,8 +991,7 @@ export class Membership {
     } catch { /* fail closed below */ }
     /* DEC-49 REGION is-project-guard-checked */
     return Membership.#rowRefusal("PROJECT_GUARD_UNCHECKED",
-      "whether this project's own rules allow the act could not be read, so it was not made: a project act is not made "
-      + "on a guess. Nothing was written.", { project: Membership.#echo(projectId ?? null), act });
+      localize("membership.index.whether_this_projects_own_rules", "whether this project's own rules allow the act could not be read, so it was not made: a project act is not made on a guess. Nothing was written."), { project: Membership.#echo(projectId ?? null), act });
     /* END DEC-49 REGION is-project-guard-checked */
   }
 /* Membership Architecture v2 section 7: authority over a project belongs to its
@@ -1081,9 +1074,7 @@ export class Membership {
     /* DEC-49 REGION is-project-authority */
     if (need === "joined" && !this.isJoinedParticipant(projectId, who))
       return refusal("PROJECT_ACT_NOT_A_PARTICIPANT",
-        `${act} on ${String(projectId).slice(0, 80)} is work inside that project, and ${who} has not joined it `
-        + `(§7.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not `
-        + `directing it: an administrator directs no project, whatever it sees (§4.9, §7). Nothing was written.`);
+        localize("membership.index.act_on_string_is_work", "{act} on {String} is work inside that project, and {who} has not joined it (§7.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not directing it: an administrator directs no project, whatever it sees (§4.9, §7). Nothing was written.", { act: String(act), String: String(String(projectId).slice(0, 80)), who: String(who) }));
     /* END DEC-49 REGION is-project-authority */
     return null;
   }
@@ -1126,10 +1117,7 @@ export class Membership {
     /* DEC-49 REGION is-case-signer-owner */
     if (!project || !this.isProjectOwner(project, signer))
       return refusal("CASE_SIGNER_NOT_AN_OWNER",
-        `${subject} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} `
-        + `production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). `
-        + `The signature is ${signer ?? "an unnamed signer"}'s, who is not an owner of it. Being a `
-        + `registered signer in your team's Civicsmith is not authority over a project. Nothing was committed.`);
+        localize("membership.index.subject_is_v1_production_and", "{subject} is {v1} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is {v2}'s, who is not an owner of it. Being a registered signer in your team's Civicsmith is not authority over a project. Nothing was committed.", { subject: String(subject), v1: String(project ? `${String(project).slice(0, 80)}'s` : "a project-less"), v2: String(signer ?? "an unnamed signer") }));
     /* END DEC-49 REGION is-case-signer-owner */
     return null;
   }
@@ -1326,10 +1314,8 @@ export class Membership {
     };
     /* DEC-49 REGION is-project-existence-only */
     return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT", hidden
-      ? "this project is hidden and you are neither invited to it nor joined to it. As an administrator you see its "
-        + "id, its name and its owners, and nothing inside it; its owners can add you (Membership Architecture v2 §7.9)."
-      : "this project is discoverable and you are not one of its participants. Its existence and name are all "
-        + "it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).");
+      ? localize("membership.index.this_project_is_hidden_and", "this project is hidden and you are neither invited to it nor joined to it. As an administrator you see its id, its name and its owners, and nothing inside it; its owners can add you (Membership Architecture v2 §7.9).")
+      : localize("membership.index.this_project_is_discoverable_and", "this project is discoverable and you are not one of its participants. Its existence and name are all it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14)."));
     /* END DEC-49 REGION is-project-existence-only */
   }
 
@@ -1354,9 +1340,7 @@ export class Membership {
     /* DEC-49 REGION is-project-visibility-owner */
     if (!this.isProjectOwner(projectId, by))
       return refusal("PROJECT_VISIBILITY_NOT_THE_OWNER",
-        `whether ${String(projectId).slice(0, 80)} can be found is its OWNERS' choice (Membership Architecture `
-        + `v2 §7.14), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one of them. Seeing a project `
-        + `is not directing it. Nothing was written.`);
+        localize("membership.index.whether_string_can_be_found", "whether {String} can be found is its OWNERS' choice (Membership Architecture v2 §7.14), and {String_2} is not one of them. Seeing a project is not directing it. Nothing was written.", { String: String(String(projectId).slice(0, 80)), String_2: String(String(by ?? "an unnamed caller").slice(0, 80)) }));
     /* END DEC-49 REGION is-project-visibility-owner */
     /* REC-197: the value check moved into ONE helper, which a creation's `visibility` asks too, so the two
        doors cannot disagree about what a setting is. Still asked AFTER the owner check here, as before. */
@@ -1394,8 +1378,7 @@ export class Membership {
     /* DEC-49 REGION is-project-visibility-setting */
     if (want !== "discoverable" && want !== "hidden")
       return refusal("PROJECT_VISIBILITY_UNKNOWN_SETTING",
-        `${JSON.stringify(want.slice(0, 40))} is not a setting: a project is "discoverable" or "hidden", and `
-        + `nothing else. Nothing was written.`);
+        localize("membership.index.stringify_is_not_a_setting", "{stringify} is not a setting: a project is \"discoverable\" or \"hidden\", and nothing else. Nothing was written.", { stringify: String(JSON.stringify(want.slice(0, 40))) }));
     /* END DEC-49 REGION is-project-visibility-setting */
     return null;
   }
@@ -1503,8 +1486,7 @@ export class Membership {
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project invites participants to it. An administrator directs "
-                     + "no project, whatever it sees." };
+               detail: localize("membership.index.only_an_owner_of_this", "only an owner of this project invites participants to it. An administrator directs no project, whatever it sees.") };
     const target = this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
@@ -1528,7 +1510,7 @@ export class Membership {
     { const existence = this.existenceAct(projectId, viewer); if (existence) return existence; }
     const p = this.participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_INVITED",
-      detail: "a member joins a project they were invited to. Being uninvited is not a refusal you can see." };
+      detail: localize("membership.index.a_member_joins_a_project", "a member joins a project they were invited to. Being uninvited is not a refusal you can see.") };
     /* R127 (K2404): the instant the row becomes `joined`; a row already joined keeps the instant it joined. */
     const now = new Date().toISOString();
     this.sql.exec(`UPDATE project_participants SET joined_at=CASE WHEN state='joined' THEN joined_at ELSE ? END,
@@ -1560,17 +1542,14 @@ export class Membership {
       const committed = this.#committedOwners(projectId).filter((o) => o !== by);
       if (!committed.length)
         return { ok: false, reason: "LAST_COMMITTED_OWNER", owners: this.projectOwners(projectId).sort(),
-                 detail: "no other owner of this project is committed to it (every other owner has asked to leave, "
-                       + "or there is none), and one committed owner is the floor, so a request to leave could never "
-                       + "be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or "
-                       + "deactivate the project (7.11). Nothing was written." };
+                 detail: localize("membership.index.no_other_owner_of_this", "no other owner of this project is committed to it (every other owner has asked to leave, or there is none), and one committed owner is the floor, so a request to leave could never be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or deactivate the project (7.11). Nothing was written.") };
     }
     /* END DEC-49 REGION is-leave-owner-floor */
     const c = comment === null ? null : String(comment).slice(0, 280);
     this.sql.exec(`UPDATE project_participants SET state='leaving', comment=?, updated=? WHERE project_id=? AND member_id=?`,
       c, new Date().toISOString(), projectId, by);
     return { ok: true, projectId, state: "leaving", comment: c,
-             detail: "recorded as a request to leave. An owner of this project removes participants; this does not." };
+             detail: localize("membership.index.recorded_as_a_request_to", "recorded as a request to leave. An owner of this project removes participants; this does not.") };
   }
 
   /** 7.7, REVERSED in Membership Architecture v2: only an OWNER of the project
@@ -1585,8 +1564,7 @@ export class Membership {
     { const existence = this.existenceAct(projectId, viewer); if (existence) return existence; }
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project removes a participant from it. This REVERSES the "
-                     + "earlier rule, under which an administrator removed and an owner could not." };
+               detail: localize("membership.index.only_an_owner_of_this_2", "only an owner of this project removes a participant from it. This REVERSES the earlier rule, under which an administrator removed and an owner could not.") };
     const target = this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     const p = this.participation(projectId, target.member_id);
@@ -1602,8 +1580,7 @@ export class Membership {
     }
     /* END DEC-49 REGION is-remove-target-participant */
     if (p.owner) return { ok: false, reason: "OWNER",
-      detail: "an owner is not removed from a project by this action. Ownership changes by the section "
-            + "7.10 process, and removal from the project follows once they are no longer an owner." };
+      detail: localize("membership.index.an_owner_is_not_removed", "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner.") };
     const why = comment === null || comment === undefined ? null : String(comment).slice(0, 280);
     const at = new Date().toISOString();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
@@ -1637,8 +1614,7 @@ export class Membership {
     });
     if (active.length)
       return { ok: false, reason: "OWNERS_ARE_ACTIVE", active: active.sort(),
-               detail: "an administrator may add an owner only when EVERY owner of the project is inactive. "
-                     + "While one is active the project is theirs to run, and 7.10 is the route." };
+               detail: localize("membership.index.an_administrator_may_add_an", "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route.") };
     return null;
   }
 
@@ -1928,8 +1904,7 @@ export class Membership {
     if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
     if (want.includes("administer") || m.role === "admin")
       return { ok: false, reason: "NOT_A_CAPABILITY_GRANT",
-               detail: "administrator status is granted and removed only by the section 4 process, never by "
-                     + "editing a field. 4.4: no administrator may strip another." };
+               detail: localize("membership.index.administrator_status_is_granted_and", "administrator status is granted and removed only by the section 4 process, never by editing a field. 4.4: no administrator may strip another.") };
     const bad = want.filter((c) => !Membership.CAPABILITIES.includes(c));
     if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad, known: Membership.CAPABILITIES };
     this.sql.exec(`UPDATE members SET capabilities=?, updated=? WHERE member_id=?`,
@@ -1957,8 +1932,7 @@ export class Membership {
       const row = MEMBERSHIP_CHECKS.NOT_PROPOSED;
       return { ok: false, reason: "NOT_PROPOSED", code: "NOT_PROPOSED", check: row.check, translation: row.translation,
                status: m.status,
-               detail: "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this "
-                     + "member's is not. Nothing was written." };
+               detail: localize("membership.index.only_a_member_whose_status", "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written.") };
     }
     /* END DEC-49 REGION is-endorse-proposed */
     const now = new Date().toISOString();
@@ -1999,10 +1973,7 @@ export class Membership {
        instance to unclaimed. */
     if (memberId === Membership.ROOT_ADMIN)
       return { ok: false, reason: "ROOT_OF_TRUST",
-               detail: "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the "
-                     + "application. Whoever can set ADMIN_TOKEN can take the team over, and there is no "
-                     + "arrangement in which nobody holds that power, because your team's Civicsmith runs in "
-                     + "somebody's hosting account. The remedy is at the hosting account, not here (section 4.6)." };
+               detail: localize("membership.index.the_founding_administrator_holds_admin_2", "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the application. Whoever can set ADMIN_TOKEN can take the team over, and there is no arrangement in which nobody holds that power, because your team's Civicsmith runs in somebody's hosting account. The remedy is at the hosting account, not here (section 4.6).") };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     /* D-134: the TARGET is not an administrator — a different fact from the CALLER not being one, which is
@@ -2022,9 +1993,7 @@ export class Membership {
     const math = Membership.adminMath(admins.length);
     if (!math.possible)
       return { ok: false, reason: "IMPOSSIBLE_AT_TWO", ...math,
-               detail: `removal takes ${math.votesNeeded} of ${math.administrators} administrators and only `
-                     + `${math.eligibleVoters} may vote, so it cannot be carried. That is the rule working, not `
-                     + `a defect: a lone administrator must never be able to eject the other.` };
+               detail: localize("membership.index.removal_takes_votesneeded_of_administrators", "removal takes {votesNeeded} of {administrators} administrators and only {eligibleVoters} may vote, so it cannot be carried. That is the rule working, not a defect: a lone administrator must never be able to eject the other.", { votesNeeded: String(math.votesNeeded), administrators: String(math.administrators), eligibleVoters: String(math.eligibleVoters) }) };
 
     if (this.#one(`SELECT voter FROM admin_votes WHERE kind='remove' AND target=? AND voter=?`, memberId, by))
       return { ok: false, reason: "ALREADY_VOTED", by };
@@ -2075,15 +2044,14 @@ export class Membership {
     /* DEC-49 REGION is-member-id-reserved */
     if (memberId === Membership.ROOT_ADMIN)
       return refusal("MEMBER_ID_RESERVED",
-        `'${Membership.ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be `
-        + `enrolled under it`);
+        localize("membership.index.root_admin_names_the_founding", "'{ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be enrolled under it", { ROOT_ADMIN: String(Membership.ROOT_ADMIN) }));
     /* END DEC-49 REGION is-member-id-reserved */
     /* DEC-49 REGION is-member-add-shape */
     if (!label || typeof label !== "string")
       return refusal("NO_COVER",
         "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name");
     if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return refusal("EXISTS", `a member row already holds the id '${memberId}'; nothing was written`, { memberId });
+      return refusal("EXISTS", localize("membership.index.a_member_row_already_holds", "a member row already holds the id '{memberId}'; nothing was written", { memberId: String(memberId) }), { memberId });
     /* END DEC-49 REGION is-member-add-shape */
 
     /* D-51. v1.4 let an administrator ASSIGN expertise when creating the
@@ -2137,8 +2105,7 @@ export class Membership {
         .map((r) => r.voter).filter((v) => admins.includes(v));
       /* DEC-49 REGION is-admin-consensus */
       return refusal("CONSENSUS_REQUIRED",
-        "adding an administrator beyond the second requires the consensus of every existing "
-      + "administrator. No invitation is issued until they have all endorsed it.",
+        localize("membership.index.adding_an_administrator_beyond_the", "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it."),
         { memberId, proposed: true, have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort() });
       /* END DEC-49 REGION is-admin-consensus */
     }
@@ -2172,8 +2139,7 @@ export class Membership {
    * them would confirm to whoever found the archived link that it had once
    * addressed somebody real, which is exactly what the burner is for. */
   static #INVITE_MISS = { ok: false, reason: "NO_SUCH_INVITATION",
-    detail: "this invitation is not live. An invitation is spent the moment it is used, and a spent one "
-          + "cannot be told apart from one that never existed, nor from one that expired or was withdrawn." };
+    detail: localize("membership.index.this_invitation_is_not_live", "this invitation is not live. An invitation is spent the moment it is used, and a spent one cannot be told apart from one that never existed, nor from one that expired or was withdrawn.") };
 
   async #invited(invite) {
     if (typeof invite !== "string" || !/^[0-9a-f]{16,64}$/.test(invite)) return null;
@@ -2243,9 +2209,7 @@ export class Membership {
      the handle is free. */
   #handleRefusal(h, self) {
     if (!h) return { ok: false, reason: "NO_HANDLE",
-      detail: "choose a handle. It is what the record shows: the author of a promotion, the attestor of a "
-            + "ratification, the participant list of a project. It is yours, not the label the administrator "
-            + "used to invite you." };
+      detail: localize("membership.index.choose_a_handle_it_is", "choose a handle. It is what the record shows: the author of a promotion, the attestor of a ratification, the participant list of a project. It is yours, not the label the administrator used to invite you.") };
     if (!Membership.HANDLE_PATTERN.test(h))
       return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
     if (this.#heldByAnother(h, self)) return { ok: false, reason: "HANDLE_TAKEN", handle: h };
@@ -2259,8 +2223,7 @@ export class Membership {
     const row = MEMBERSHIP_CHECKS.ENROL_NOT_RECORDED;
     return { ok: false, reason: "ENROL_NOT_RECORDED", code: "ENROL_NOT_RECORDED", check: row.check,
              translation: row.translation,
-             detail: "the password could not be recorded, so the enrolment did not happen: the member is not active "
-                   + "and the invitation is still live. Nothing was written." };
+             detail: localize("membership.index.the_password_could_not_be", "the password could not be recorded, so the enrolment did not happen: the member is not active and the invitation is still live. Nothing was written.") };
     /* END DEC-49 REGION is-enrol-password-set */
   }
 
@@ -2435,8 +2398,7 @@ export class Membership {
       /* DEC-49 REGION is-handle-check-window */
       if (est.prev * (1 - est.f) + est.cur >= Membership.HANDLE_CHECK_WINDOW.perKey)
         return Membership.#rowRefusal("HANDLE_CHECK_PAUSED",
-          "too many handles were checked for this invitation or member in the last few minutes, so this one was not "
-          + "read. Nothing was changed.",
+          localize("membership.index.too_many_handles_were_checked", "too many handles were checked for this invitation or member in the last few minutes, so this one was not read. Nothing was changed."),
           Membership.#pausedFor(Membership.#handleCheckRetry(est)));
       /* END DEC-49 REGION is-handle-check-window */
       this.sql.exec(`INSERT INTO handle_check_window (key, win, count) VALUES (?,?,1)
@@ -2511,12 +2473,10 @@ export class Membership {
     /* DEC-49 REGION is-founder-handle-founder */
     if (by !== Membership.ROOT_ADMIN && by !== `member:${Membership.ROOT_ADMIN}`)
       return Membership.#rowRefusal("FOUNDER_HANDLE_NOT_FOUNDER",
-        "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the "
-        + "founder. Nothing was written.", { by: Membership.#echo(by ?? null) });
+        localize("membership.index.the_founders_handle_is_chosen", "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the founder. Nothing was written."), { by: Membership.#echo(by ?? null) });
     /* END DEC-49 REGION is-founder-handle-founder */
     if (this.founderHandle() !== null)
-      return Membership.#handleFixed("the founder's handle is chosen once and never changed (DEC-197), and one is held. "
-        + "Nothing was written.");
+      return Membership.#handleFixed(localize("membership.index.the_founders_handle_is_chosen_2", "the founder's handle is chosen once and never changed (DEC-197), and one is held. Nothing was written."));
     const h = String(handle ?? "").trim();
     const refused = this.#handleRefusal(h, null);
     if (refused) return refused;
@@ -2573,9 +2533,7 @@ export class Membership {
        member's live sessions and revokes their keys, naming this act's actor (REC-159). */
     if (status === "revoked" && m.status !== "revoked") this.#announceRevoked(memberId, actor, now);   /* N123, R20 */
     return { ok: true, memberId, status, by: Membership.#statusBy(actor), ...(demoted ? { demoted: true,
-      detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: "
-            + "the team voted them out under 4.7, and putting them back is an appointment, which needs "
-            + "the consensus of all existing administrators like any other." } : {}) };
+      detail: localize("membership.index.reactivated_as_an_ordinary_member", "reactivated as an ordinary member. Administrator status is not restored by reactivation: the team voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other.") } : {}) };
   }
 
   /* ===== T34 (T34-10; DEC-132 to DEC-136, Bob's; K1745) — INVITATIONS THAT EXPIRE, THE GROUP'S TWO DOORS, ADDRESSING
@@ -2604,8 +2562,7 @@ export class Membership {
     if (Number.isInteger(v) && v >= 1 && v <= Membership.INVITE_DAYS_MAX) return v;
     /* DEC-49 REGION is-invitation-expiry */
     return Membership.#rowRefusal("BAD_EXPIRY",
-      `an invitation lasts a whole number of days from 1 to ${Membership.INVITE_DAYS_MAX} (seven when none is chosen), `
-      + "and the number given is not one. Nothing was written.", { expiresInDays: Membership.#echo(v) });
+      localize("membership.index.an_invitation_lasts_a_whole", "an invitation lasts a whole number of days from 1 to {INVITE_DAYS_MAX} (seven when none is chosen), and the number given is not one. Nothing was written.", { INVITE_DAYS_MAX: String(Membership.INVITE_DAYS_MAX) }), { expiresInDays: Membership.#echo(v) });
     /* END DEC-49 REGION is-invitation-expiry */
   }
 
@@ -2616,8 +2573,7 @@ export class Membership {
     if (Number.isInteger(v) && v >= 1) return v;
     /* DEC-49 REGION is-door-daily-cap */
     return Membership.#rowRefusal("BAD_DAILY_CAP",
-      "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with "
-      + "no default. Nothing was written.", { dailyCap: Membership.#echo(v) });
+      localize("membership.index.a_door_makes_at_most", "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written."), { dailyCap: Membership.#echo(v) });
     /* END DEC-49 REGION is-door-daily-cap */
   }
 
@@ -2660,8 +2616,7 @@ export class Membership {
     /* DEC-49 REGION is-invitation-unused */
     if (m.status !== "invited" || !m.invite_hash)
       return Membership.#rowRefusal("NO_UNUSED_INVITATION",
-        "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they "
-        + "have joined, theirs was withdrawn, or none was made yet. Nothing was written.", { memberId, status: m.status });
+        localize("membership.index.only_an_invitation_that_has", "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written."), { memberId, status: m.status });
     /* END DEC-49 REGION is-invitation-unused */
     const now = new Date().toISOString();
     /* Dead at once (the hash goes, so R15 answers NO_SUCH_INVITATION), and the member is revoked, told as R20 tells. */
@@ -2723,7 +2678,7 @@ export class Membership {
     if (now) return now;
     /* DEC-49 REGION is-website-key-live */
     return Membership.#rowRefusal("NO_WEBSITE_KEY",
-      `${act} acts on the team's live website key, and there is none. Nothing was written.`);
+      localize("membership.index.act_acts_on_the_teams", "{act} acts on the team's live website key, and there is none. Nothing was written.", { act: String(act) }));
     /* END DEC-49 REGION is-website-key-live */
   }
 
@@ -2732,7 +2687,7 @@ export class Membership {
     if (now) return now;
     /* DEC-49 REGION is-join-link-live */
     return Membership.#rowRefusal("JOIN_LINK_OFF",
-      `${act} acts on the team's join link, and it is off. Nothing was written.`);
+      localize("membership.index.act_acts_on_the_teams_2", "{act} acts on the team's join link, and it is off. Nothing was written.", { act: String(act) }));
     /* END DEC-49 REGION is-join-link-live */
   }
 
@@ -2742,7 +2697,7 @@ export class Membership {
     /* DEC-49 REGION is-website-key-one */
     if (this.#doorNow("website"))
       return Membership.#rowRefusal("WEBSITE_KEY_EXISTS",
-        "the team holds one live website key at a time (DEC-133). Nothing was created.");
+        localize("membership.index.the_team_holds_one_live", "the team holds one live website key at a time (DEC-133). Nothing was created."));
     /* END DEC-49 REGION is-website-key-one */
     const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
     if (!s.ok) return s;
@@ -2819,16 +2774,15 @@ export class Membership {
     /* DEC-49 REGION is-website-key-known */
     if (!live)
       return Membership.#rowRefusal("WEBSITE_KEY_UNKNOWN",
-        "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer "
-        + "is the same for each. Nothing was written.");
+        localize("membership.index.this_key_opens_no_door", "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer is the same for each. Nothing was written."));
     /* END DEC-49 REGION is-website-key-known */
     const label = Membership.#doorCover(cover);
     if (!label) return Membership.#custodialRefusal("NO_COVER",
-      "the website names the person by the cover the team will know them by. Nothing was written.");
+      localize("membership.index.the_website_names_the_person", "the website names the person by the cover the team will know them by. Nothing was written."));
     /* DEC-49 REGION is-website-daily-cap */
     if (this.#doorToday(`website:${live.id}`) >= live.dailyCap)
       return Membership.#rowRefusal("WEBSITE_DAILY_CAP",
-        "the website key has made its daily number of invitations in the last 24 hours. Nothing was written.",
+        localize("membership.index.the_website_key_has_made", "the website key has made its daily number of invitations in the last 24 hours. Nothing was written."),
         { dailyCap: live.dailyCap });
     /* END DEC-49 REGION is-website-daily-cap */
     const a = approvedBy === null || approvedBy === undefined ? "" : String(approvedBy).trim().slice(0, 120);
@@ -2841,7 +2795,7 @@ export class Membership {
     /* DEC-49 REGION is-join-link-one */
     if (this.#doorNow("link"))
       return Membership.#rowRefusal("JOIN_LINK_ON",
-        "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.");
+        localize("membership.index.the_team_holds_one_live_2", "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed."));
     /* END DEC-49 REGION is-join-link-one */
     const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
     if (!s.ok) return s;
@@ -2891,8 +2845,7 @@ export class Membership {
     /* DEC-49 REGION is-join-link-known */
     if (!live)
       return Membership.#rowRefusal("NO_SUCH_JOIN_LINK",
-        "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, "
-        + "and the answer is the same for each. Nothing was written.");
+        localize("membership.index.this_link_opens_no_door", "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, and the answer is the same for each. Nothing was written."));
     /* END DEC-49 REGION is-join-link-known */
     const label = Membership.#doorCover(cover);
     if (!label) return Membership.#custodialRefusal("NO_COVER",
@@ -2901,7 +2854,7 @@ export class Membership {
     /* DEC-49 REGION is-join-link-daily-cap */
     if (this.#doorToday(`join-link:${live.id}`) >= live.dailyCap)
       return Membership.#rowRefusal("JOIN_LINK_DAILY_CAP",
-        "the join link has let in its daily number of people in the last 24 hours. Nothing was written.",
+        localize("membership.index.the_join_link_has_let", "the join link has let in its daily number of people in the last 24 hours. Nothing was written."),
         { dailyCap: live.dailyCap });
     /* END DEC-49 REGION is-join-link-daily-cap */
     return this.#doorMember("link", live, label, null);
@@ -2978,7 +2931,7 @@ export class Membership {
     /* DEC-49 REGION is-court-notice-choice */
     if (choice !== "tell" && choice !== "dont")
       return Membership.#rowRefusal("COURT_NOTICE_UNKNOWN_CHOICE",
-        "the choice is `tell` or `dont`, and nothing else. Nothing was written.", { choice: Membership.#echo(choice ?? null) });
+        localize("membership.index.the_choice_is_tell_or", "the choice is `tell` or `dont`, and nothing else. Nothing was written."), { choice: Membership.#echo(choice ?? null) });
     /* END DEC-49 REGION is-court-notice-choice */
     const at = new Date().toISOString();
     this.sql.exec(`INSERT INTO court_notice (choice, set_by, at) VALUES (?,?,?)`, choice, by, at);
@@ -3048,22 +3001,21 @@ export class Membership {
   /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
   groupDescriptionSet({ kinds, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the team");   /* R84 */
-    const refuse = (code, detail, extra) => Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
+    const refuse = (code, detail, extra) => Membership.#rowRefusal(code, localize("membership.index.detail_nothing_was_written", "{detail} Nothing was written.", { detail: String(detail) }), extra);
     /* DEC-49 REGION is-group-description */
     if (!Array.isArray(kinds) || kinds.some((k) => !Membership.GROUP_KINDS.includes(k)))
-      return refuse("GROUP_KIND_UNKNOWN", `the kinds are a list drawn from ${Membership.GROUP_KINDS.join(", ")}, `
-        + "and may be empty.");
+      return refuse("GROUP_KIND_UNKNOWN", localize("membership.index.the_kinds_are_a_list", "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.", { GROUP_KINDS: String(Membership.GROUP_KINDS.join(", ")) }));
     const ks = [...new Set(kinds)];
     const other = ks.includes("other") ? Membership.#text(otherKind) : null;
     if (ks.includes("other") && !other)
-      return refuse("GROUP_KIND_OTHER_EMPTY", "`other` was chosen, and the kind it describes was left empty.");
+      return refuse("GROUP_KIND_OTHER_EMPTY", localize("membership.index.other_was_chosen_and_the", "`other` was chosen, and the kind it describes was left empty."));
     const f = Membership.#text(focus), p = Membership.#text(purpose);
     for (const [name, v, max] of [["otherKind", other, 120], ["focus", f, 1000], ["purpose", p, 4000]])
       if (v !== null && v.length > max)
-        return refuse("GROUP_DESCRIPTION_TOO_LONG", `${name} is at most ${max} characters.`, { field: name, max });
+        return refuse("GROUP_DESCRIPTION_TOO_LONG", localize("membership.index.name_is_at_most_max", "{name} is at most {max} characters.", { name: String(name), max: String(max) }), { field: name, max });
     const vis = visibility === undefined || visibility === null ? "members" : visibility;
     if (vis !== "members" && vis !== "public")
-      return refuse("GROUP_VISIBILITY_UNKNOWN", "the description is seen by `members` or by the `public` too.");
+      return refuse("GROUP_VISIBILITY_UNKNOWN", localize("membership.index.the_description_is_seen_by", "the description is seen by `members` or by the `public` too."));
     /* END DEC-49 REGION is-group-description */
     const at = new Date().toISOString();
     this.sql.exec(`INSERT INTO group_description (kinds, other_kind, focus, purpose, visibility, set_by, at)

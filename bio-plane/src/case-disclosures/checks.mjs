@@ -26,6 +26,8 @@
 /** R22 (T38; DEC-183; K2220; T40: DEC-187 (1), K2348 (1)): the protected words of `words.json`
  *  (`docs/development/ux-substrate/screens/words.json`) this module answers, by their keys, each `en` verbatim; `{photo}`
  *  is the photo named. The rows' translations and R29's `words` are read from here by key, so each is held once. */
+import { word, localize } from '../setup-words/index.mjs';
+
 export const PHOTO_WORDS = Object.freeze({
   'photo.refused.format': 'This photo\'s format can\'t be obscured: {photo}. Capture it again as an ordinary photo, or '
     + 'stop relying on it.',
@@ -49,83 +51,68 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   TENSION_NOT_DISCLOSED: {
     check: 'C-120.1',
     where: at('tensionsJudged', 'is-tension-disclosed'),
-    translation: 'A finding in this case rests on something the record holds in unresolved conflict, and a case may '
-      + 'be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you '
-      + 'cannot see is named by its finding, and the published case will highlight it without naming that record. '
-      + 'Disclose it, or resolve it first. Nothing was published.',
+    translation: word('refusal.TENSION_NOT_DISCLOSED'),
   },
   DISCLOSURE_NOT_STANDING: {
     check: 'C-120.2',
     where: at('tensionsJudged', 'is-disclosure-standing'),
-    translation: 'One of the conflicts disclosed is not an unresolved conflict on this case\'s findings: it may have '
-      + 'been resolved since. Read the list again. Nothing was published.',
+    translation: word('refusal.DISCLOSURE_NOT_STANDING'),
   },
   TENSIONS_UNDETERMINED: {
     check: 'C-120.3',
     where: at('tensionsUndetermined', 'is-tensions-determined'),
-    translation: 'The record could not be read completely for conflicts on this case\'s findings, so what must be '
-      + 'disclosed is not known. Try again. Nothing was published.',
+    translation: word('refusal.TENSIONS_UNDETERMINED'),
   },
   /* R2 (DEC-81 item 3 (b)): the owner's attributed acknowledgement, in the pattern of NO_FALSIFIER's override. */
   CO_ATTESTATION_UNACKNOWLEDGED: {
     check: 'C-120.4',
     where: at('selfAttestedJudged', 'is-co-attestation-acknowledged'),
-    translation: 'A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing '
-      + 'it as self-attested only, with a reason. Nothing was written.',
+    translation: word('refusal.CO_ATTESTATION_UNACKNOWLEDGED'),
   },
   SELF_ATTESTED_NO_REASON: {
     check: 'C-120.5',
     where: at('selfAttestedJudged', 'is-self-attested-reasoned'),
-    translation: 'Publishing a document as self-attested only says why. Give the reason. Nothing was written.',
+    translation: word('refusal.SELF_ATTESTED_NO_REASON'),
   },
   SELF_ATTESTATION_NOT_STANDING: {
     check: 'C-120.6',
     where: at('selfAttestedJudged', 'is-self-attestation-standing'),
-    translation: 'A document acknowledged as self-attested only is either co-attested already or not one this case rests '
-      + 'on, so it needs no acknowledgement. Remove it from the list. Nothing was written.',
+    translation: localize('case-disclosures.checks.a_document_acknowledged_as_self', 'A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written.'),
   },
   /* R16 (Publication §3 rule 4; DEC-20): the one bias that must be cleared before publication. */
   UNCLEARED_HUNCH: {
     check: 'C-120.7',
     where: at('hunchDebt', 'is-hunch-cleared'),
-    translation: 'A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that '
-      + 'must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the '
-      + 'record earns, or take the hunch out of the basis, and publish again. Nothing was written.',
+    translation: word('refusal.UNCLEARED_HUNCH'),
   },
   /* R6 (DEC-112 (4); K1134 reading 1): everything a load-bearing finding relies on travels whole. C-120.9 (K1254) was
      withdrawn unstamped (K1275), and its number is not used. New in T28: awaiting stamp (T29's promotion). */
   RELIED_ON_NOT_PRESENTABLE: {
     check: 'C-120.8',
     where: at('materialsJudged', 'is-relied-on-presentable'),
-    translation: 'A finding this case relies on rests on material your team\'s Civicsmith does not hold whole, and '
-      + 'everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or '
-      + 'make the finding supporting. Nothing was written.',
+    translation: word('refusal.RELIED_ON_NOT_PRESENTABLE'),
   },
   /* R13, R14 (DEC-96 item 4; N522): another group's work a case rests on, its acceptance stated and its open flags
      disclosed, never blocked (R1's pattern). New in T28: awaiting stamp. */
   ACCEPTED_WORK_NOT_IN_FORCE: {
     check: 'C-120.10',
     where: at('acceptedWorkJudged', 'is-accepted-work-in-force'),
-    translation: 'A finding in this case rests on another team\'s finding, and this team\'s acceptance of that edition '
-      + 'is not in force. Accept it again, or take the leg out. Nothing was written.',
+    translation: word('refusal.ACCEPTED_WORK_NOT_IN_FORCE'),
   },
   FLAG_NOT_DISCLOSED: {
     check: 'C-120.11',
     where: at('flagsJudged', 'is-flag-disclosed'),
-    translation: 'Another team\'s work this case rests on carries an open flag, and a case may be published with it '
-      + 'only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.',
+    translation: word('refusal.FLAG_NOT_DISCLOSED'),
   },
   FLAGS_UNDETERMINED: {
     check: 'C-120.12',
     where: at('flagsJudged', 'is-flags-determined'),
-    translation: 'The flags on another team\'s work this case rests on could not be read completely, so what must be '
-      + 'disclosed is not known. Try again. Nothing was published.',
+    translation: word('refusal.FLAGS_UNDETERMINED'),
   },
   FLAG_DISCLOSURE_NOT_STANDING: {
     check: 'C-120.13',
     where: at('flagsJudged', 'is-flag-disclosure-standing'),
-    translation: 'One of the flags disclosed is not open on work this case rests on: it may have been cleared since. '
-      + 'Read the list again. Nothing was published.',
+    translation: word('refusal.FLAG_DISCLOSURE_NOT_STANDING'),
   },
   /* R25, R27 (Design Requirement 6 as amended, K1483; K1490; T33-68): every person a case names has a recorded basis,
      checked before anything is signed, and each signer attests that they hold no undeclared tie. New in T33, numbered
@@ -134,21 +121,17 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   PERSON_BASIS_UNRECORDED: {
     check: 'C-120.14',
     where: at('peopleJudged', 'is-person-basis-recorded'),
-    translation: 'This case names a person without a recorded reason for naming them. Give each person named a basis: '
-      + 'their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is '
-      + 'named. Nothing was written.',
+    translation: word('refusal.PERSON_BASIS_UNRECORDED'),
   },
   PERSON_BASIS_NOT_STANDING: {
     check: 'C-120.15',
     where: at('peopleJudged', 'is-person-basis-standing'),
-    translation: 'A reason given for naming a person is not one the record holds, or the position it cites was not held '
-      + 'on the date of the act. Read the list again. Nothing was written.',
+    translation: word('refusal.PERSON_BASIS_NOT_STANDING'),
   },
   TIE_ATTESTATION_MISSING: {
     check: 'C-120.16',
     where: at('tieAttestationJudged', 'is-tie-attested'),
-    translation: 'Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the '
-      + 'case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written.',
+    translation: word('refusal.TIE_ATTESTATION_MISSING'),
   },
   /* R6 (T37; N757; DEC-180 (3), (4); K2206; T38: DEC-183 (1), K2220, K2303): a photo whose cover `image-cover` refused,
      marked or not, is neither carried whole nor left out, so a load-bearing chain reaching it is refused; a photo whose
@@ -163,8 +146,7 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   PHOTO_MARKS_UNDETERMINED: {
     check: 'C-120.18',
     where: at('materialsJudged', 'is-photo-marks-determined'),
-    translation: 'A photo this case relies on could not be checked for the people and number plates marked in it, so '
-      + 'what the published case would show of it is not known. Try again. Nothing was written.',
+    translation: word('refusal.PHOTO_MARKS_UNDETERMINED'),
   },
   /* R6 (T38; N788 (1); DEC-183 (1), superseding K2206's "never blocks"; K2220, K2291, K2303): the Photos step is a gate.
      A photo with no standing mark that any member's chain reaches blocks signing. New in T38, stamped C-120.19 in
@@ -183,8 +165,7 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   DOCUMENT_COPY_UNDETERMINED: {
     check: 'C-120.20',
     where: at('materialsJudged', 'is-document-copy-determined'),
-    translation: 'A document this case relies on could not be checked for the details a member\'s file can carry, so what '
-      + 'the published case would show of it is not known. Try again. Nothing was written.',
+    translation: word('refusal.DOCUMENT_COPY_UNDETERMINED'),
   },
   DOCUMENT_COPY_PENDING: {
     check: 'C-120.21',
@@ -204,45 +185,37 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   ACCOUNT_SENTENCE_UNSUPPORTED: {
     check: 'C-120.23',
     where: at('accountJudged', 'is-account-sentence-supported'),
-    translation: 'A sentence of the account rests on nothing it cites. Cite what it rests on, mark it as following a '
-      + 'printed bias statement, or take it out. Nothing was written.',
+    translation: word('refusal.ACCOUNT_SENTENCE_UNSUPPORTED'),
   },
   ACCOUNT_FACT_NOT_IN_CITED: {
     check: 'C-120.24',
     where: at('accountJudged', 'is-account-fact-cited'),
-    translation: 'A sentence of the account states a figure, date, name or quotation that what it cites does not hold. '
-      + 'Say only what it cites holds, or cite what holds it. Nothing was written.',
+    translation: word('refusal.ACCOUNT_FACT_NOT_IN_CITED'),
   },
   ACCOUNT_CONTRADICTED_BY_RECORD: {
     check: 'C-120.25',
     where: at('accountJudged', 'is-account-consistent-with-record'),
-    translation: 'A sentence of the account says something other than the record holds: a finding\'s conclusion or a '
-      + 'determination, or a leg that cuts against it read as support. It cannot be tied to evidence. Say what the record '
-      + 'holds, or take it out. Nothing was written.',
+    translation: word('refusal.ACCOUNT_CONTRADICTED_BY_RECORD'),
   },
   ACCOUNT_BIAS_NOT_PRINTED: {
     check: 'C-120.26',
     where: at('accountJudged', 'is-account-bias-printed'),
-    translation: 'A sentence of the account is framed by a bias statement this case\'s lens does not print. Frame it by a '
-      + 'statement the lens prints, or write it without the framing. Nothing was written.',
+    translation: word('refusal.ACCOUNT_BIAS_NOT_PRINTED'),
   },
   ACCOUNT_CLAIM_NOT_BIAS: {
     check: 'C-120.27',
     where: at('accountJudged', 'is-account-bias-not-a-claim'),
-    translation: 'A sentence marked as following a bias statement states a fact: a figure, date, name, quotation or a '
-      + 'finding\'s outcome. Lying is not bias. Cite what the fact rests on, or take it out. Nothing was written.',
+    translation: word('refusal.ACCOUNT_CLAIM_NOT_BIAS'),
   },
   ACCOUNT_FLAG_UNANSWERED: {
     check: 'C-120.28',
     where: at('accountJudged', 'is-account-flag-answered'),
-    translation: 'The machine flagged a sentence of the account as not supported by what it cites, and the flag is not '
-      + 'answered. Tie the sentence to evidence, or take it out. Nothing was written.',
+    translation: word('refusal.ACCOUNT_FLAG_UNANSWERED'),
   },
   ACCOUNT_CHECK_UNDETERMINED: {
     check: 'C-120.29',
     where: at('accountJudged', 'is-account-checked'),
-    translation: 'The account could not be checked against what it cites, so whether every sentence stands is not '
-      + 'known. Try again. Nothing was written.',
+    translation: word('refusal.ACCOUNT_CHECK_UNDETERMINED'),
   },
 });
 

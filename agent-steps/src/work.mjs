@@ -9,6 +9,7 @@ import { MEANING_ARM, RESPONSE_ID } from "./names.mjs";
 import { LOG_DETAIL_MAX } from "./entries.mjs";
 import { planeAnswer, meaningRead } from "./plane.mjs";
 import { runSubsessions } from "./subsessions.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /** WHAT EACH ROW ACTUALLY DOES AGAINST THE PLANE. One `case` per row that has
  *  work, and rows that have none say so by falling through — the table already
@@ -66,8 +67,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         contracts.push(made.contract);
       }
       out.consume.subsessions = LEVELS.length;
-      out.note = `${contracts.length} sub-session contract(s) composed, one per level, each read-only `
-               + `(${SUBSESSION_OPS.join(", ")}) and with no field for the lens to arrive in`;
+      out.note = localize("agent-steps.work.length_sub_session_contract_s", "{length} sub-session contract(s) composed, one per level, each read-only ({SUBSESSION_OPS}) and with no field for the lens to arrive in", { length: String(contracts.length), SUBSESSION_OPS: String(SUBSESSION_OPS.join(", ")) });
       out.state = { ...state, contracts };
 
       /* agent-harness R7 — THE SUB-SESSIONS RUN, when model turns do: one per level, each its own conversation under its own
@@ -160,8 +160,8 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         const ticked = await logSeq.tickEntry({
           level: "meaning", subject: "collect -> re-read", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
           terminal: false, bound: null,
-          detail: `re-read ${record} (${i + 1} of ${total}): the plane ${got.refused
-            ? `refused '${String(got.refused.code ?? "?")}'` : "answered"}`.slice(0, LOG_DETAIL_MAX),
+          detail: localize("agent-steps.work.re_read_record_v1_of", "re-read {record} ({v1} of {total}): the plane {v2}", { record: String(record), v1: String(i + 1), total: String(total), v2: String(got.refused
+            ? `refused '${String(got.refused.code ?? "?")}'` : "answered") }).slice(0, LOG_DETAIL_MAX),
           read: { record, n: i + 1, total, outcome },
         }, { step: "collect", to: "compose" });
         if (ticked.silent) return { silent: ticked.silent };
@@ -227,19 +227,14 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
       const holdings = withRecordIds(documentHoldings(resolved), resolved);
       if (rereadRefused.length) out.refused = rereadRefused;
 
-      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of `
-               + `${addresses.length} citation(s) re-read BY ADDRESS`
-               + (rereadRefused.length
+      out.note = localize("agent-steps.work.length_report_s_taken_length", "{length} REPORT(s) taken, {length_2} REFUSED; {reread} of {length_3} citation(s) re-read BY ADDRESS{v1}; {holdingsNote}{v2}. No document was returned by a sub-session and none was loaded", { length: String(taken.length), length_2: String(refused.length), reread: String(reread), length_3: String(addresses.length), v1: String(rereadRefused.length
                   ? `, and ${rereadRefused.length} read(s) could NOT be made — the plane refused `
                     + `'${String(rereadRefused[0].code ?? "?")}', so what they would have answered is UNREAD `
                     + "rather than empty"
-                  : "")
-               + `; ${holdingsNote(holdings)}`
-               + (fenced.length
+                  : ""), holdingsNote: String(holdingsNote(holdings)), v2: String(fenced.length
                   ? `; ${fenced.length} cited record(s) (${fenced.slice(0, 5).map((f) => `'${f}'`).join(", ")}) are not answered `
                     + "to the run's credential, so each is UNDETERMINED and none is held"
-                  : "")
-               + `. No document was returned by a sub-session and none was loaded`;
+                  : "") });
       out.state = { ...state, reports: taken, rereads: (state.rereads || 0) + reread,
                     reportsRefused: [...(state.reportsRefused || []), ...refused], holdings };
       return out;
@@ -274,8 +269,8 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         level: "meaning", subject: "compose -> level-empty candidate dropped", state: "LOOKED_INDETERMINATE",
         governed: false, condition: null, terminal: false, bound: null,
         detail: (unconfirmed === "contradicted"
-          ? `the sub-session reported the meaning level empty, but this step's read of it holds ${rowsForTarget} row(s) for the question: the report is contradicted by the read, so 'level-empty-${REPORTING_LEVEL.meaning}' is not composed`
-          : `the sub-session reported the meaning level empty, but this step's read of it gave no rows to confirm that, so 'level-empty-${REPORTING_LEVEL.meaning}' is not composed`).slice(0, LOG_DETAIL_MAX),
+          ? localize("agent-steps.work.the_sub_session_reported_the", "the sub-session reported the meaning level empty, but this step's read of it holds {rowsForTarget} row(s) for the question: the report is contradicted by the read, so 'level-empty-{meaning}' is not composed", { rowsForTarget: String(rowsForTarget), meaning: String(REPORTING_LEVEL.meaning) })
+          : localize("agent-steps.work.the_sub_session_reported_the_2", "the sub-session reported the meaning level empty, but this step's read of it gave no rows to confirm that, so 'level-empty-{meaning}' is not composed", { meaning: String(REPORTING_LEVEL.meaning) })).slice(0, LOG_DETAIL_MAX),
       }];
 
       /* D-276 — THREE OUTCOMES, THREE SENTENCES, AND THE RUN NOTE IS RECORD.
@@ -288,11 +283,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
       let said;
       if (read.refused) {
         out.refused = read.refused;
-        said = `the meaning layer was NOT READ — the plane refused `
-             + `'${String(read.refused.code ?? "?")}'`
-             + (read.refused.check ? ` (${read.refused.check})` : "")
-             + `, so this run knows NOTHING about meaning-grain rows for this query and does not `
-             + `report zero of them`;
+        said = localize("agent-steps.work.the_meaning_layer_was_not", "the meaning layer was NOT READ — the plane refused '{String}'{v1}, so this run knows NOTHING about meaning-grain rows for this query and does not report zero of them", { String: String(String(read.refused.code ?? "?")), v1: String(read.refused.check ? ` (${read.refused.check})` : "") });
       } else if (!Array.isArray(read.result?.rows)) {
         /* UNDETERMINED IS FIRST-CLASS AND IS STATED. This branch is the one that
            makes the note honest even if the refusal check above is ever weakened:
@@ -301,11 +292,9 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         said = "how many meaning-grain row(s) the record holds for this query is UNDETERMINED — the "
              + "plane answered without a rows collection this member could read";
       } else {
-        said = `${read.result.rows.length} meaning-grain row(s) queried at the '${MEANING_ARM}' grain`;
+        said = localize("agent-steps.work.length_meaning_grain_row_s", "{length} meaning-grain row(s) queried at the '{MEANING_ARM}' grain", { length: String(read.result.rows.length), MEANING_ARM: String(MEANING_ARM) });
       }
-      out.note = `${said}; no document `
-               + `was loaded. ${empties.length} level(s) observed EMPTY and written down as §9's kind`
-               + (wronged ? `; ${wronged} reported empty and ${unconfirmed === "contradicted" ? "contradicted by the read" : "not confirmed by the read"}, so not written down` : "");
+      out.note = localize("agent-steps.work.said_no_document_was_loaded", "{said}; no document was loaded. {length} level(s) observed EMPTY and written down as §9's kind{v1}", { said: String(said), length: String(empties.length), v1: String(wronged ? `; ${wronged} reported empty and ${unconfirmed === "contradicted" ? "contradicted by the read" : "not confirmed by the read"}, so not written down` : "") });
       /* R116 (T50; N1187; K3557; `agent-harness` R19): A DISAGREEMENT BETWEEN LEVELS IS STATED AND READ ONCE, NEVER LOOPED.
          For each (record, levels) pair the judgement named that the table has not settled (`disagreementsToSettle`, once
          per pair per run, whatever the pass or segment), the record is read at passage grain through the one reader
@@ -322,10 +311,10 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         statements.push({
           level: pair.levels[0], subject: "compose -> levels disagree", state: "LOOKED_INDETERMINATE", governed: false,
           condition: null, terminal: false, bound: null,
-          detail: `${named} disagree about ${pair.record}: ${got.refused
+          detail: localize("agent-steps.work.named_disagree_about_record_v1", "{named} disagree about {record}: {v1}", { named: String(named), record: String(pair.record), v1: String(got.refused
             ? `the record was unread (the plane refused '${String(got.refused.code ?? "?")}')`
             : n === null ? "the record was read, and the plane answered without a list of passages this member could count"
-            : `the record was read at passage grain (${n} passage(s))`}`.slice(0, LOG_DETAIL_MAX),
+            : `the record was read at passage grain (${n} passage(s))`) }).slice(0, LOG_DETAIL_MAX),
           disagree: { record: pair.record, levels: [...pair.levels] },
         });
         if (got.refused) out.refused = [...(Array.isArray(out.refused) ? out.refused : out.refused ? [out.refused] : []), got.refused];
@@ -359,11 +348,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
          say it compared. */
       if (held.refused) {
         out.refused = held.refused;
-        out.note = `the record's own versions could NOT be read — the plane refused `
-                 + `'${String(held.refused.code ?? "?")}'`
-                 + (held.refused.check ? ` (${held.refused.check})` : "")
-                 + `, so this run compared its ${proposed} candidate(s) against NOTHING and says so `
-                 + `rather than reporting them all as new. PL-3's check 3 is still the fence`;
+        out.note = localize("agent-steps.work.the_records_own_versions_could", "the record's own versions could NOT be read — the plane refused '{String}'{v1}, so this run compared its {proposed} candidate(s) against NOTHING and says so rather than reporting them all as new. PL-3's check 3 is still the fence", { String: String(String(held.refused.code ?? "?")), v1: String(held.refused.check ? ` (${held.refused.check})` : ""), proposed: String(proposed) });
         out.state = { ...state, queue: [...(state.candidates || [])] };
         return out;
       }
@@ -382,7 +367,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
          candidate that states no level has none to be logged at and stays in the note alone. */
       /* R105: a held version this run wrote itself says so, with the pass that wrote it, rather than reading as someone else's. */
       const mine = (n) => (state.written || []).find((w) => w.name === n) ?? null;
-      const ofRun = (n) => (mine(n) ? ` (written by this run in pass ${mine(n).pass})` : "");
+      const ofRun = (n) => (mine(n) ? localize("agent-steps.work.written_by_this_run_in", " (written by this run in pass {pass})", { pass: String(mine(n).pass) }) : "");
       /* R108: a candidate whose level is none of the four is dropped and logged too, at the `meaning` level (the look
          dedup itself makes is of the question), its detail saying it states no level. */
       const byLevel = new Map();
@@ -390,17 +375,14 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level) ?? "meaning";
         const n = String(c.name ?? "");
         byLevel.set(level, [...(byLevel.get(level) || []),
-          `'${n}'${LEVELS.some((l) => REPORTING_LEVEL[l] === c.level) ? "" : " (stating no level)"}${ofRun(n)}, matching the held version of that name`]);
+          localize("agent-steps.work.n_v1_ofrun_matching_the", "'{n}'{v1}{ofRun}, matching the held version of that name", { n: String(n), v1: String(LEVELS.some((l) => REPORTING_LEVEL[l] === c.level) ? "" : " (stating no level)"), ofRun: String(ofRun(n)) })]);
       }
       if (byLevel.size) out.logEntries = [...byLevel].map(([level, named]) => ({
         level, subject: "dedup -> candidate dropped", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
         terminal: false, bound: null,
-        detail: `dropped before any write: ${named.join(", ")} already held on the question`.slice(0, LOG_DETAIL_MAX),
+        detail: localize("agent-steps.work.dropped_before_any_write_named", "dropped before any write: {named} already held on the question", { named: String(named.join(", ")) }).slice(0, LOG_DETAIL_MAX),
       }));
-      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; `
-               + `${queue.length} survived`
-               + (droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'${ofRun(String(c.name ?? ""))}`).join(", ")})` : "")
-               + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
+      out.note = localize("agent-steps.work.proposed_candidate_s_compared_against", "{proposed} candidate(s) compared against {size} on the record; {length} survived{v1}{v2}", { proposed: String(proposed), size: String(names.size), length: String(queue.length), v1: String(droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'${ofRun(String(c.name ?? ""))}`).join(", ")})` : ""), v2: String(elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "") });
       out.state = { ...state, queue };
       return out;
     }
@@ -431,7 +413,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         const level = LEVELS.find((l) => REPORTING_LEVEL[l] === candidate.level);
         if (level) out.logEntries = [{
           level, subject: "submit -> candidate written", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
-          terminal: false, bound: null, detail: `wrote '${name}' at level ${level} in pass ${pass}`.slice(0, LOG_DETAIL_MAX),
+          terminal: false, bound: null, detail: localize("agent-steps.work.wrote_name_at_level_level", "wrote '{name}' at level {level} in pass {pass}", { name: String(name), level: String(level), pass: String(pass) }).slice(0, LOG_DETAIL_MAX),
         }];
         out.state = { ...state, queue, refusal: null, submission: candidate,
                       written: [...(state.written || []), { name, level: level ?? null, pass }] };
@@ -449,7 +431,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
                          refusal: the code, the C-number and the DEC-49 canned
                          translation are the plane's. */
                       plane: answer };
-      out.note = `refused '${String(answer.code ?? answer.reason ?? "?")}' — routing to ADJUST, never to a retry`;
+      out.note = localize("agent-steps.work.refused_string_routing_to_adjust", "refused '{String}' — routing to ADJUST, never to a retry", { String: String(String(answer.code ?? answer.reason ?? "?")) });
       out.state = { ...state, queue, refusal: answer, submission: candidate };
       return out;
     }
@@ -523,16 +505,13 @@ export async function performPlanStep(call, state, runId) {
          row's facts) and are weighed there; this only counts them, so the trace says what the run had to weigh. */
       const noted = (n) => (n && typeof n === "object" ? typeof n.note === "string" && n.note.trim() : typeof n === "string" && n.trim());
       const notes = [planDoc?.closed, ...earlier.map((p) => p?.closing_note)].filter(noted).length;
-      out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED `
-               + "(refused, silent or not published) and carried into every proposal's why, never as an absence; "
-               + `${earlier.length} earlier plan(s) of the same project, ${notes} closing note(s) of closed plans among them`
-               + (state.origin === "reexamination" ? "; a re-examination after a recorded response, read with it" : "");
+      out.note = localize("agent-steps.work.length_read_s_answered_under", "{length} read(s) answered under the run's credential, {length_2} UNDETERMINED (refused, silent or not published) and carried into every proposal's why, never as an absence; {length_3} earlier plan(s) of the same project, {notes} closing note(s) of closed plans among them{v1}", { length: String(reads.length), length_2: String(undetermined.length), length_3: String(earlier.length), notes: String(notes), v1: String(state.origin === "reexamination" ? "; a re-examination after a recorded response, read with it" : "") });
       out.state = { ...state, planDoc, earlier, reads, undetermined };
       return out;
     }
 
     case "compose": {
-      out.note = `${(state.candidates || []).length} candidate proposal(s) composed, strongest first`;
+      out.note = localize("agent-steps.work.length_candidate_proposal_s_composed", "{length} candidate proposal(s) composed, strongest first", { length: String((state.candidates || []).length) });
       return out;
     }
 
@@ -543,16 +522,14 @@ export async function performPlanStep(call, state, runId) {
       const candidates = state.candidates || [];
       if (!held || held.silent || held.refused) {
         if (held?.refused) out.refused = held.refused;
-        out.note = `the plan could NOT be read (${held?.refused ? `the plane refused '${String(held.refused.code ?? "?")}'`
-                   : held?.silent ? "the plane was silent" : "the run names no plan"}), so ${candidates.length} candidate(s) `
-                 + "were compared against NOTHING and say so rather than being reported new";
+        out.note = localize("agent-steps.work.the_plan_could_not_be", "the plan could NOT be read ({v1}), so {length} candidate(s) were compared against NOTHING and say so rather than being reported new", { v1: String(held?.refused ? `the plane refused '${String(held.refused.code ?? "?")}'`
+                   : held?.silent ? "the plane was silent" : "the run names no plan"), length: String(candidates.length) });
         out.state = { ...state, queue: [...candidates] };
         return out;
       }
       const doc = held.result && typeof held.result === "object" ? (held.result.plan ?? held.result) : {};
       const { queue, dropped } = planDedup(candidates, doc);
-      out.note = `${candidates.length} candidate(s) compared against the plan's options and proposals; ${dropped.length} `
-               + `already held, dropped before any write; ${queue.length} to propose, in order`;
+      out.note = localize("agent-steps.work.length_candidate_s_compared_against", "{length} candidate(s) compared against the plan's options and proposals; {length_2} already held, dropped before any write; {length_3} to propose, in order", { length: String(candidates.length), length_2: String(dropped.length), length_3: String(queue.length) });
       out.state = { ...state, queue };
       return out;
     }
@@ -579,7 +556,7 @@ export async function performPlanStep(call, state, runId) {
       if (answer.repeated === true) out.verbatim = true;
       out.refused = { at: "optionpropose", code: answer.code ?? answer.reason ?? null, check: answer.check ?? null,
                       repeated: answer.repeated === true, plane: answer };
-      out.note = `refused '${String(answer.code ?? answer.reason ?? "?")}' — routing to ADJUST, never to a retry`;
+      out.note = localize("agent-steps.work.refused_string_routing_to_adjust_2", "refused '{String}' — routing to ADJUST, never to a retry", { String: String(String(answer.code ?? answer.reason ?? "?")) });
       out.state = { ...state, queue, refusal: answer, submission: candidate };
       return out;
     }

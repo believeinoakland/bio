@@ -8,13 +8,14 @@
 import { derivedId, isRecordId, chainLabel, DECLARED_LABEL, HUNCH_LABEL } from '../connection-grammar/index.mjs';
 import { kindsByOwner, makeReader } from './reader.mjs';
 import { isObj, filled, refuse, viewerRefusal, nodeRefusal } from './answer.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const DERIVED_ID = /^[0-9a-f]{64}$/;
 const no = (why, extra = {}) => ({ ok: true, matches: false, why, ...extra });
 
 /** Why an input naming a hop is not read: one reason, whether it is not held, withheld or a hunch outside scope (R7, R19). */
-export const INPUT_NOT_READ = 'no connection by this id is read at either end of the derivation for this viewer within this scope, so what it rests on is not settled';
+export const INPUT_NOT_READ = word('explore.input_not_read');
 
 /**
  * rederive({kind, from, to, as_of, method, id, scope?, viewer}).
@@ -34,28 +35,28 @@ function rederiveOne(ctx, a) {
     return refuse('BAD_SCOPE', 'a scope is {inquiry}: the inquiry the leg naming the derived connection belongs to');
   }
   const scope = a.scope ? a.scope.inquiry : null;
-  for (const f of ['kind', 'as_of', 'method', 'id']) if (!filled(a[f])) return no(`${f} is not stated, so the derivation cannot be recomputed`);
+  for (const f of ['kind', 'as_of', 'method', 'id']) if (!filled(a[f])) return no(word('explore.no.stated_derivation_recomputed', { f: String(f) }));
   const entry = ctx.registry.kindOf(a.kind);
-  if (!entry) return no(`no owner registered the kind ${a.kind}`);
-  if (entry.class !== 'derived') return no(`${a.kind} is of class ${entry.class}, not a derived kind`);
+  if (!entry) return no(word('explore.no.owner_registered_kind', { kind: String(a.kind) }));
+  if (entry.class !== 'derived') return no(word('explore.no.class_derived_kind', { kind: String(a.kind), class: String(entry.class) }));
   const recomputed = derivedId({ kind: a.kind, from: a.from, to: a.to, as_of: a.as_of, method: a.method });
   // The owner is read as of the derivation's own date: a day is read in UTC, an instant as it is.
   const at = DAY.test(a.as_of) ? { value: a.as_of, precision: 'day', zone: 'UTC' } : a.as_of;
   const reader = makeReader(ctx, { at, viewer: a.viewer, scope });
   const items = reader.read(entry.owner, a.from, [a.kind]);
   if (!items) {
-    const why = reader.s.refusals[0] ? `${entry.owner} refused: ${reader.s.refusals[0].why}` : reader.s.hubs[0] ? `${a.from} is ${reader.s.hubs[0].words}` : 'the read used its time budget';
+    const why = reader.s.refusals[0] ? `${entry.owner} refused: ${reader.s.refusals[0].why}` : reader.s.hubs[0] ? `${a.from} is ${reader.s.hubs[0].words}` : word('explore.text.read_used_time');
     return no(why, { recomputed_id: recomputed });
   }
   const held = items.find((h) => h.kind === a.kind && isObj(h.derived) && h.derived.method === a.method && h.derived.as_of === a.as_of
     && ((h.from === a.from && h.to === a.to) || (h.from === a.to && h.to === a.from)));
-  if (!held) return no(`${entry.owner} holds no ${a.kind} between ${a.from} and ${a.to} by ${a.method} as of ${a.as_of}`, { recomputed_id: recomputed });
+  if (!held) return no(word('explore.no.holds_between', { owner: String(entry.owner), kind: String(a.kind), from: String(a.from), to: String(a.to), method: String(a.method), as_of: String(a.as_of) }), { recomputed_id: recomputed });
   const rests = restsOn(ctx, reader, held, [a.from, a.to]);
   const undetermined = rests.filter((r) => r.undetermined);
   const idsMatch = recomputed === a.id && held.id === recomputed;
   const matches = idsMatch && !undetermined.length;
-  const why = !idsMatch ? (recomputed !== a.id ? 'the id asked is not the id its parameters derive' : 'the owner\'s held id is not the id its parameters derive')
-    : undetermined.length ? `${undetermined.length} of the hops it rests on ${undetermined.length === 1 ? 'is' : 'are'} not read, so it cannot be re-derived` : null;
+  const why = !idsMatch ? (recomputed !== a.id ? word('explore.text.id_asked_id') : word('explore.text.owner_held_id'))
+    : undetermined.length ? word('explore.text.hops_rests_read', { undetermined: String(undetermined.length), are: String(undetermined.length === 1 ? 'is' : 'are') }) : null;
   return {
     ok: true, matches, recomputed_id: recomputed, id: a.id, held_id: held.id, derivation: held.derived, scope: a.scope ?? null, rests_on: rests,
     declared_or_hunch: rests.some((r) => r.class === 'declared' || r.class === 'hunch'),
@@ -129,7 +130,7 @@ function rederiveChain(ctx, a) {
   }
   const chain = a.chain;
   if (!Array.isArray(chain) || chain.length < 1 || chain.length > CHAIN_MAX) {
-    return refuse('BAD_CHAIN', `a chain is a path's steps in order, 1 to ${CHAIN_MAX}`);
+    return refuse('BAD_CHAIN', localize('explore.rederive.a_chain_is_a_paths', 'a chain is a path\'s steps in order, 1 to {CHAIN_MAX}', { CHAIN_MAX: String(CHAIN_MAX) }));
   }
   const forms = chain.map((h) => formOf(ctx.registry, h));
   const bad = forms.indexOf(null);
@@ -140,7 +141,7 @@ function rederiveChain(ctx, a) {
     const p = chain[i - 1], h = chain[i];
     if (![p.from, p.to, h.from, h.to].every(filled)) continue; // a step that states no ends cannot be shown apart
     if (![p.from, p.to].some((n) => n === h.from || n === h.to)) {
-      return refuse('CHAIN_BROKEN', `step ${i + 1} shares no record with step ${i}`);
+      return refuse('CHAIN_BROKEN', localize('explore.rederive.step_v1_shares_no_record', 'step {v1} shares no record with step {i}', { v1: String(i + 1), i: String(i) }));
     }
   }
   const hops = chain.map((h, i) => {
@@ -149,8 +150,8 @@ function rederiveChain(ctx, a) {
       return { rederived: true, ...rederiveOne(ctx, { kind, from, to, as_of, method, id, scope: a.scope ?? null, viewer: a.viewer }) };
     }
     const k = ctx.registry.kindOf(h.kind);
-    if (!k) return { id: h.id, rederived: false, class: null, undetermined: true, why: `no owner registered the kind ${String(h.kind).slice(0, 60)}` };
-    if (k.owner !== h.owner) return { id: h.id, rederived: false, class: k.class, undetermined: true, why: `the kind ${h.kind} is ${k.owner}'s, not ${String(h.owner).slice(0, 60)}'s` };
+    if (!k) return { id: h.id, rederived: false, class: null, undetermined: true, why: word('explore.no.owner_registered_kind', { kind: String(String(h.kind).slice(0, 60)) }) };
+    if (k.owner !== h.owner) return { id: h.id, rederived: false, class: k.class, undetermined: true, why: word('explore.why.kind', { kind: String(h.kind), owner: String(k.owner), owner3: String(String(h.owner).slice(0, 60)) }) };
     return { id: h.id, rederived: false, class: k.class };
   });
   const labelled = chain.map((h, i) => {

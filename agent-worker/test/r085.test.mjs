@@ -17,6 +17,7 @@ import worker from "../src/index.mjs";
 import { SEGMENT_END_BY } from "../../agent-steps/src/index.mjs";
 import { MEMBER, ACCOUNT, withAccount } from "./account.mjs";
 import { checkObservation } from "../../bio-plane/src/run-rules/index.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -65,7 +66,7 @@ function planeStub(rec, { tick = "real", payer = MEMBER, throwAt = null } = {}) 
       case "airuntick": {
         if (tick === "refuseWhole")
           return ok({ run: body.run, ticked: false, found: true, status: "running", code: "AI_RUN_NOT_PRINCIPAL",
-                      check: "C-22.12", note: "Nothing was appended and no budget was spent" });
+                      check: "C-22.12", note: word("ai-runs.note.appended_budget_spent") });
         const refused = [];
         let appended = 0;
         for (const e of Array.isArray(body?.log) ? body.log : []) {

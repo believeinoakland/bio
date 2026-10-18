@@ -71,6 +71,7 @@ that entry's own account.
 - `odf-reader`: `odtEntry`, `odsEntry`, `odpEntry` (`odf.mjs`) — three more ready-made entry objects, registered here unmodified, same division of responsibility.
 - `pdf-reader`: `extractPdfStructure(bytes)` (`pdfstructure.mjs`) — the function the built-in `pdf` entry's `structure` slot delegates to (R22); its own behaviour is `pdf-reader`'s requirement.
 - `ooxml`: `hasZipMagic`, `readContainer` and `listArchive` (T35-11; the edge added at T35's opening, rule 8) — what the built-in `zip` entry's `detect` and `parts` are built on (R28); the listing's behaviour is `ooxml`'s requirement.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

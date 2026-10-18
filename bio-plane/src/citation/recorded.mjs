@@ -21,6 +21,7 @@
 import { normalizeType } from "../record-grammar/types.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { canonicalExtent, extentRelation, citationExtent, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R13 (events R49): `limit` is clamped to 1–500, 100 by default. */
 export const RECORDED_LIMIT_DEFAULT = 100;
@@ -149,8 +150,7 @@ export function recordedBy(c, memo, args) {
     const doc = home && said(home.bundleId) ? home.bundleId : null;
     if (!doc || !c.membership.inSight(doc, a.viewer)) return answer([], false);
     if (!c.inquiry || typeof c.inquiry.restingOn !== "function")
-      return { ok: false, reason: "INQUIRY_UNAVAILABLE", detail: "the legs that cite a passage are found through the inquiry "
-               + "module's leg projection, and your team's Civicsmith was created without it, so this read could not be made." };
+      return { ok: false, reason: "INQUIRY_UNAVAILABLE", detail: localize("citation.recorded.the_legs_that_cite_a", "the legs that cite a passage are found through the inquiry module's leg projection, and your team's Civicsmith was created without it, so this read could not be made.") };
 
     /* The citing objects: a capture's legs through `inquiry`'s leg projection (its R12, which projects every leg this
        module writes; K2132), the inquiries holding a leg on the document; a project's `cites` edges, whose pin no

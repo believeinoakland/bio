@@ -41,6 +41,7 @@ import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } 
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
          KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS }
   from "./checks.mjs";
 /* R72 (T48, transitional; K3101): `ACCOUNT_CHECKS` as its readers knew it, a frozen view of `ai-accounts`' rows
@@ -75,8 +76,7 @@ const SECURITY_SERVICE_RE = /^security:[A-Za-z0-9._-]{1,120}$/;
    or `perRole` for the role, the next attempt is paused. `SIGN_IN_STATED` is the bound as the pause states it, composed
    from the same constants. */
 export const SIGN_IN_WINDOW = Object.freeze({ perSource: 10, perRole: 10, windowMs: 10 * 60 * 1000 });
-export const SIGN_IN_STATED = `at most ${SIGN_IN_WINDOW.perSource} refused attempts from one place, and `
-  + `${SIGN_IN_WINDOW.perRole} for one account, in any ${SIGN_IN_WINDOW.windowMs / 60000} minutes`;
+export const SIGN_IN_STATED = word("credentials.refused_attempts_place", { per_source: String(SIGN_IN_WINDOW.perSource), per_role: String(SIGN_IN_WINDOW.perRole), window_ms: String(SIGN_IN_WINDOW.windowMs / 60000) });
 /* R63 (T47; N955, K2976, K3033): the write ops the runner makes on a run, in every deployed mode: `check`'s (agent-worker
    R37) and `plan`'s (agent-worker R53, `optionpropose` with `airuntick` and `airunclose`). A run segment's credential
    holds a non-empty list of these and nothing else; `ai-runs` passes the run's mode's own. A mode deployed later adds
@@ -91,7 +91,7 @@ export const AI_CREDENTIAL_EXPIRY_DAYS = Object.freeze({ min: 1, max: 365, defau
 export const SECURITY_KINDS = Object.freeze(["signin", "credential", "rate", "handover", "through"]);
 export const SECURITY_DAYS = 90;
 /* R45 (DEC-166 (1)): the map's note, exactly. */
-export const SECURITY_NOTE = "A country is not proof of who is behind an attempt.";
+export const SECURITY_NOTE = word("credentials.country_proof_behind");
 /* R45 (K1881, K1934 (2), (3)): an hour is unusual at `atLeast` or more and more than `times` its usual (more than
    `times` itself when its usual is 0); the usual is the median of the same hour of the day over `usualDays` days. */
 export const SECURITY_THRESHOLD = Object.freeze({ atLeast: 10, times: 5, usualDays: 28 });
@@ -832,9 +832,7 @@ export class Credentials {
     /* DEC-49 REGION is-signer-member-attesting */
     if (!enrolled)
       return refusal("SIGNER_MEMBER_NOT_ENROLLED",
-        `${memberId} has not enrolled: status '${m.status}', no handle chosen. op=ratify weighs a `
-      + `signature against the member's own standing, so a key registered now would sit on the roster as `
-      + `one your team's Civicsmith would refuse. Nothing was written.`);
+        localize("credentials.index.memberid_has_not_enrolled_status", "{memberId} has not enrolled: status '{status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one your team's Civicsmith would refuse. Nothing was written.", { memberId: String(memberId), status: String(m.status) }));
     return refusal("SIGNER_MEMBER_NOT_ACTIVE",
       `${memberId} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a `
     + `signature against the member's own standing and would refuse this one. Nothing was written.`);
@@ -1046,10 +1044,7 @@ export class Credentials {
      * site. */
     if (!who || isMachineIdentity(who))
       return refusal("AI_CREDENTIAL_MINT_NOT_A_MEMBER",
-        who ? `'${String(who).slice(0, 60)}' is a machine identity, and minting an AI credential is a `
-              + `MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the `
-              + `scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without `
-              + `knowing that class exists.`
+        who ? localize("credentials.index.string_is_a_machine_identity", "'{String}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.", { String: String(String(who).slice(0, 60)) })
             : "no member is named on this act. An authority granted by nobody is an authority nobody "
               + "can be asked about afterwards.",
         { who: who || null });
@@ -1067,7 +1062,7 @@ export class Credentials {
        R84, its remedy the member-scoped credential open to every member (DEC-83). */
     if (kind === "organisation" && !this.membership.isAdministrator(minter))
       return notAnAdmin(minter, "minting an organisation-wide AI credential",
-        { remedy: "A member-scoped AI credential, which acts for you alone, is open to every member." });
+        { remedy: word("credentials.member_scoped_credential") });
     const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai`
                     : kind === "member" ? `member:${minter}`
                     : null;
@@ -1080,8 +1075,7 @@ export class Credentials {
 
     if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
       return refusal("AI_CREDENTIAL_IDENTITY_TAKEN",
-        id ? `'${id.slice(0, 60)}' already names a credential in your team's Civicsmith. Acts cite the `
-             + `IDENTITY, so rebinding it would re-attribute work already done.`
+        id ? localize("credentials.index.id_already_names_a_credential", "'{id}' already names a credential in your team's Civicsmith. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.", { id: String(id.slice(0, 60)) })
            : "pass an identity for this credential: it is the name acts will cite, and a credential "
              + "nothing can name is one nothing can revoke either.",
         { tokenId: id || null });
@@ -1136,18 +1130,14 @@ export class Credentials {
     /* DEC-49 REGION is-ai-credential-revoke */
     if (!who || isMachineIdentity(who))
       return refusal("AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
-        who ? `'${String(who).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a `
-              + `machine name there would record the team withdrawing an authority nobody in the `
-              + `team decided to withdraw.`
+        who ? localize("credentials.index.string_is_a_machine_identity_2", "'{String}' is a machine identity. The row carries revoked_by, and a machine name there would record the team withdrawing an authority nobody in the team decided to withdraw.", { String: String(String(who).slice(0, 60)) })
             : "no member is named on this act, and a withdrawal nobody authored is not one.",
         { who: who || null });
 
     const row = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
     if (!row)
       return refusal("AI_CREDENTIAL_UNKNOWN",
-        `no credential in your team's Civicsmith is called '${id.slice(0, 60) || "(none)"}'. Nothing was `
-        + `withdrawn, and being told so is the point: believing an authority is gone when it is not `
-        + `is the worse of the two outcomes.`,
+        localize("credentials.index.no_credential_in_your_teams", "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.", { v1: String(id.slice(0, 60) || "(none)") }),
         { tokenId: id || null });
     /* END DEC-49 REGION is-ai-credential-revoke */
 
@@ -1283,8 +1273,7 @@ export class Credentials {
     return Credentials.#row(AI_CREDENTIAL_CHECKS, "AI_RUN_CREDENTIAL_MALFORMED", what === "run"
       ? "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted."
       : what === "project"
-        ? "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was "
-          + "neither. Nothing was minted."
+        ? localize("credentials.index.a_runs_credential_names_the", "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.")
       : `a run's credential holds a non-empty list of the runner's writes, each one of ${AI_RUN_WRITES.join(", ")}, and `
         + "this was not one. Nothing was minted.", { what });
     /* END DEC-49 REGION is-ai-run-credential-shape */
@@ -1888,8 +1877,7 @@ export class Credentials {
     const id = Credentials.#memberOf(member);
     /* DEC-49 REGION is-reset-link-member */
     if (id === null || id === ROOT || isMachineIdentity(id) || this.#memberFacts(id)?.status !== "active")
-      return Credentials.#row(ACCOUNT_CHECKS, "RESET_LINK_MEMBER_NOT_ACTIVE", "a reset link is made only for an active "
-        + "member of the team. Nothing was made.", { member: id });
+      return Credentials.#row(ACCOUNT_CHECKS, "RESET_LINK_MEMBER_NOT_ACTIVE", localize("credentials.index.a_reset_link_is_made", "a reset link is made only for an active member of the team. Nothing was made."), { member: id });
     /* END DEC-49 REGION is-reset-link-member */
     const link = `rl-${Credentials.#rand(32)}`;
     const now = Date.now();
@@ -1961,17 +1949,17 @@ export class Credentials {
      `.`, `_` or `-` and each value a non-blank string), held and answered as one value. No key at all (null or left
      out) removes the service's key. Answers the form to seal, or the refusal. */
   static #keyForm(key) {
-    if (typeof key === "string") return key.trim() === "" ? { empty: "no key was given" } : { form: "key", text: key };
+    if (typeof key === "string") return key.trim() === "" ? { empty: word("credentials.key_given") } : { form: "key", text: key };
     if (key && typeof key === "object" && !Array.isArray(key) && Object.getPrototypeOf(key) === Object.prototype) {
       const names = Object.keys(key);
-      if (!names.length) return { empty: "the set of fields was empty" };
+      if (!names.length) return { empty: word("credentials.set_fields_empty") };
       for (const n of names) {
-        if (!/^[A-Za-z0-9._-]{1,64}$/.test(n)) return { empty: `a field's name, '${n.slice(0, 64)}', is not one a set holds` };
-        if (typeof key[n] !== "string" || key[n].trim() === "") return { empty: `the field '${n}' holds no value` };
+        if (!/^[A-Za-z0-9._-]{1,64}$/.test(n)) return { empty: word("credentials.field_name_set", { n: String(n.slice(0, 64)) }) };
+        if (typeof key[n] !== "string" || key[n].trim() === "") return { empty: word("credentials.field_holds_value", { n: String(n) }) };
       }
       return { form: "fields", text: JSON.stringify(Object.fromEntries(names.sort().map((n) => [n, key[n]]))) };
     }
-    return { empty: "no key was given" };
+    return { empty: word("credentials.key_given") };
   }
 
   async keyedServiceSet({ service = null, key = null, by = null } = {}) {

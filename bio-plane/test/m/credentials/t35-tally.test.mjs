@@ -8,6 +8,7 @@ import { world, PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
 import { SIGN_IN_CHECKS, SECURITY_KINDS, SECURITY_DAYS, SECURITY_NOTE, SECURITY_THRESHOLD, Credentials }
   from "../../../src/credentials/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const H = 3600e3, D = 24 * H;
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -183,7 +184,7 @@ test("R45 the answer's shape; the step (an hour to 48 hours, six hours to 14 day
     const m = map(w, NOW - 6 * H, NOW);
     assert.deepEqual(Object.keys(m).sort(), ["buckets", "countries", "from", "level", "levelAt", "note", "ok", "step", "to", "totals", "unplaced"]);
     assert.deepEqual([m.from, m.to, m.note], [iso(NOW - 6 * H), iso(NOW), SECURITY_NOTE]);
-    assert.equal(SECURITY_NOTE, "A country is not proof of who is behind an attempt.");
+    assert.equal(SECURITY_NOTE, word("credentials.country_proof_behind"));
     assert.deepEqual(m.buckets.map((b) => b.start), [6, 5, 4, 3, 2, 1, 0].map((k) => iso((HOUR - k) * H)), "whole hours from the one `from` falls in");
     for (const b of m.buckets) {
       assert.deepEqual(Object.keys(b).sort(), ["counts", "start", "usual"]);

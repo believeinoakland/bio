@@ -79,6 +79,7 @@ import * as caseGrammar from "../case-grammar/index.mjs";
 import { isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
 import { REVIEW_TABLES, migrateReview } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { REVIEW_COPY_CHECKS } from "./checks.mjs";
 export { REVIEW_SCHEMA, REVIEW_TABLES } from "./schema.mjs";
@@ -103,10 +104,7 @@ export const APPROVAL_REASON_MAX = 4000;
 export const REVIEW_LIST_MAX = 500;
 /** R11: the marking every copy carries. Read by members and by recipients outside the group, so it names no machine
  *  and addresses no one as the group (DEC-149, T34-87). */
-export const REVIEW_MARKING = "REVIEW COPY — NOT A PUBLICATION. This is a draft of a case, shown to the people it "
-  + "was addressed to without leaving the team that made it. It is not signed, it is not published, it may still "
-  + "change, and it may never be published at all. What a publication would require that this draft does "
-  + "not yet have is listed under `missing`, in the publish gates' own words.";
+export const REVIEW_MARKING = word("review.review_marking");
 
 const SECRET_SHA = /^[0-9a-f]{64}$/;
 /* R34: record-core's stamp form, `stampInstant("second" | "millisecond")`: UTC, a `Z`, whole seconds or milliseconds. */
@@ -132,10 +130,7 @@ function refusal(code, detail, extra) {
 export function noReviewCopy() {
   /* DEC-49 REGION is-no-review-copy */
   return refusal("NO_REVIEW_COPY",
-           "no review copy answers to this request. A review copy is read through the grant that "
-         + "was issued for it, or by a member with standing in the project that produced it; a "
-         + "grant that was withdrawn, or whose draft has moved to another edition, answers exactly "
-         + "as one that was never issued.");
+           localize("review.index.no_review_copy_answers_to", "no review copy answers to this request. A review copy is read through the grant that was issued for it, or by a member with standing in the project that produced it; a grant that was withdrawn, or whose draft has moved to another edition, answers exactly as one that was never issued."));
   /* END DEC-49 REGION is-no-review-copy */
 }
 
@@ -145,16 +140,13 @@ export function noReviewCopy() {
 const AUTHORITY = Object.freeze({
   draft: "authoring a review copy's draft is EDITING the production, and needs the project's edit permission: "
        + "an owner, or a JOINED participant, holding `contribute` (BIO_Publication §6A.2; Membership v2 §7.5).",
-  grant: "handing the team's draft to someone outside it is the producing project's own act and is wielded by an "
-       + "OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them.",
-  revoke: "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing "
-        + "one is (BIO_Publication §6A.2). An administrator sees every project and directs none of them.",
+  grant: localize("review.index.handing_the_teams_draft_to", "handing the team's draft to someone outside it is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them."),
+  revoke: localize("review.index.withdrawing_a_grant_is_the", "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing one is (BIO_Publication §6A.2). An administrator sees every project and directs none of them."),
 });
 function notReviewOwner(act) {
   /* DEC-49 REGION is-review-authority */
   return refusal("REVIEW_NOT_PROJECT_OWNER",
-           `${AUTHORITY[act]} A project, draft or grant you hold no such authority over `
-         + "is answered exactly as one that does not exist.");
+           localize("review.index.v1_a_project_draft_or", "{v1} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.", { v1: String(AUTHORITY[act]) }));
   /* END DEC-49 REGION is-review-authority */
 }
 
@@ -175,11 +167,9 @@ export function statedEdition(ident, newCase) {
  *  Pure. */
 export function caseIdentitySentence(caseId, edition, newCase) {
   if (caseId && newCase)
-    return `the next edition (${edition}) of ${caseId} — but this draft also asks for a new case, and `
-         + `publication refuses those two instructions together, so which case it is stays UNDETERMINED `
-         + `until one of them is withdrawn`;
-  if (caseId) return `the next edition (${edition}) of ${caseId}`;
-  if (newCase) return "a new case, whose identity is not yet allocated — a case id is minted only by publication";
+    return word("review.text.next_edition_draft", { edition: String(edition), case_id: String(caseId) });
+  if (caseId) return word("review.text.next_edition", { edition: String(edition), case_id: String(caseId) });
+  if (newCase) return word("review.text.new_case_whose");
   return "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED "
        + "here: the draft names no case and does not ask for a new one, so publication reads the record at "
        + "that moment — a further edition of the one case its findings already serve, a refusal to choose "
@@ -230,28 +220,21 @@ function lastChange({ draft, comments, grants, acknowledgements }) {
   for (const c of cand) if (!last || instantOrder(c.at, last.at) > 0) last = c;
   const who = (c) => `${c.kind === "edit" ? "an edit of the draft" : `a ${c.kind}`} by `
                    + `${c.by ?? "somebody this record does not name"}`;
-  const act = !last ? "UNDETERMINED: these bytes carry no dated act at all"
-    : `the newest dated act these bytes carry is ${who(last)}`;
+  const act = !last ? word("review.text.undetermined_bytes_carry")
+    : word("review.text.newest_dated_act", { last: String(who(last)) });
   const WHOLE = /T\d{2}:\d{2}:\d{2}Z$/;
   const second = (at) => Math.floor(Date.parse(at) / 1000);
   const tied = !last ? [] : cand.filter((c) => c !== last && second(c.at) === second(last.at)
                                              && (WHOLE.test(c.at) || WHOLE.test(last.at)));
   const tieStated = tied.map((c) => {
     const [a, b] = WHOLE.test(c.at) ? [c, last] : [last, c];
-    return ` Which of ${who(a)} (${a.at}) and ${who(b)} (${b.at}) came later is undetermined: `
-         + (WHOLE.test(b.at) ? "both were recorded to the second" : `${who(a)} was recorded to the second`)
-         + `, so the date this copy carries is the instant order's pick and not an order the record holds `
-         + `(BOB #34, 2026-09-25).`;
+    return localize("review.index.which_of_who_at_and", " Which of {who} ({at}) and {who_2} ({at_2}) came later is undetermined: {v1}, so the date this copy carries is the instant order's pick and not an order the record holds (BOB #34, 2026-09-25).", { who: String(who(a)), at: String(a.at), who_2: String(who(b)), at_2: String(b.at), v1: String(WHOLE.test(b.at) ? "both were recorded to the second" : `${who(a)} was recorded to the second`) });
   }).join("");
   return {
     at: last ? last.at : null, by: last ? last.by : null,
     by_kind: last ? last.by_kind : null, kind: last ? last.kind : null,
     undetermined_within: tied.map((c) => ({ at: c.at, by: c.by, by_kind: c.by_kind, kind: c.kind })),
-    stated: `${act}.${tieStated} THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as `
-          + `BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an `
-          + `acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy `
-          + `draws live and dates nowhere — each finding's text, the publish gates' verdict, and the `
-          + `project's declared floors — any of which can move the hash without moving this date.`,
+    stated: localize("review.index.act_tiestated_this_is_the", "{act}.{tieStated} THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy draws live and dates nowhere — each finding's text, the publish gates' verdict, and the project's declared floors — any of which can move the hash without moving this date.", { act: String(act), tieStated: String(tieStated) }),
   };
 }
 
@@ -338,7 +321,7 @@ export class Review {
     const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
                          WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
     if (!b) return { target: id, present: false, role,
-                     detail: "this draft names a finding its editor cannot read, or one that does not exist." };
+                     detail: localize("review.index.this_draft_names_a_finding", "this draft names a finding its editor cannot read, or one that does not exist.") };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
     return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
              text: md ? md.content : null };
@@ -452,16 +435,14 @@ export class Review {
     /* DEC-49 REGION is-machine-review — REC-126/C-32.16. The fence alone. */
     if (!who || isMachineIdentity(who))
       return refusal("MACHINE_CANNOT_REVIEW",
-               "a review copy is an addressed act: somebody in this team hands a draft to a named "
-             + "person and the record says who. A machine credential may prepare the material and "
-             + "may not put the team's draft in front of anyone. Sign in as a member.");
+               localize("review.index.a_review_copy_is_an", "a review copy is an addressed act: somebody in this team hands a draft to a named person and the record says who. A machine credential may prepare the material and may not put the team's draft in front of anyone. Sign in as a member."));
     /* END DEC-49 REGION is-machine-review */
     if (act === "draft") return this.#draft(who, args);
     if (act === "grant") return this.#grant(who, args);
     if (act === "revoke") return this.#revoke(who, args);
     /* DEC-49 REGION is-review-unknown-act — every act but the three above falls through to here, named back. */
     return refusal("REVIEW_UNKNOWN_ACT",
-             "the review copy's authoring acts are draft, grant and revoke.", { act });
+             localize("review.index.the_review_copys_authoring_acts", "the review copy's authoring acts are draft, grant and revoke."), { act });
     /* END DEC-49 REGION is-review-unknown-act */
   }
 
@@ -483,8 +464,7 @@ export class Review {
     if (existing && proj && proj !== existing.project_id)
       /* DEC-49 REGION is-review-draft-changes-project */
       return refusal("REVIEW_DRAFT_CHANGES_PROJECT",
-               `this draft is ${existing.project_id}'s production, and a case does not change hands `
-             + `(DEC-72). Draft this material as a new case under the other project instead.`);
+               localize("review.index.this_draft_is_project_id", "this draft is {project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.", { project_id: String(existing.project_id) }));
       /* END DEC-49 REGION is-review-draft-changes-project */
     if (!this.membership.isProjectEditor(owning, who)) return notReviewOwner("draft");
     const params = {};
@@ -494,9 +474,7 @@ export class Review {
       if (this.#caseProject(named) !== owning)
         /* DEC-49 REGION is-review-no-such-case */
         return refusal("REVIEW_NO_SUCH_CASE",
-                 `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its `
-               + `next edition, and a case this project did not publish is answered exactly as one `
-               + `that does not exist.`, { caseId: named });
+                 localize("review.index.no_case_of_owning_s", "no case of {owning}'s answers to {named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.", { owning: String(owning), named: String(named) }), { caseId: named });
         /* END DEC-49 REGION is-review-no-such-case */
       params.caseId = named;
     }
@@ -548,15 +526,13 @@ export class Review {
     if (!to || to.length > REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
       /* DEC-49 REGION is-review-recipient */
       return refusal("REVIEW_NO_RECIPIENT",
-               `name the person or team this copy is addressed to, in one line of at most `
-             + `${REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not `
-             + `attributed, and the grant is the record of who was handed what.`);
+               localize("review.index.name_the_person_or_team", "name the person or team this copy is addressed to, in one line of at most {REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not attributed, and the grant is the record of who was handed what.", { REVIEW_RECIPIENT_MAX: String(REVIEW_RECIPIENT_MAX) }));
       /* END DEC-49 REGION is-review-recipient */
     /* DEC-49 REGION is-review-secret — the fingerprint's test and its refusal. */
     const s = String(secretSha ?? "");
     if (!SECRET_SHA.test(s))
       return refusal("REVIEW_NO_SECRET",
-               "the read secret's fingerprint is set by the control plane and was absent.");
+               localize("review.index.the_read_secrets_fingerprint_is", "the read secret's fingerprint is set by the control plane and was absent."));
     /* END DEC-49 REGION is-review-secret */
     const when = this.#when();
     /* R34 (T48; N1038; DEC-100): the reader's end date, after R6's refusals: an instant in record-core's stamp form
@@ -584,9 +560,7 @@ export class Review {
     return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId,
              edition: statedEdition(ident, newCase),
              recipient: to, issuedBy: who, issuedAt: when, until: end,
-             boundTo: `this grant reads ${caseIdentitySentence(ident.caseId, ident.edition, newCase)} and nothing `
-                    + `else. It ends when it is revoked, and when that edition is published and signed.`
-                    + (end ? ` It also ends at ${end}.` : "") };
+             boundTo: localize("review.index.this_grant_reads_caseidentitysentence_and", "this grant reads {caseIdentitySentence} and nothing else. It ends when it is revoked, and when that edition is published and signed.{v1}", { caseIdentitySentence: String(caseIdentitySentence(ident.caseId, ident.edition, newCase)), v1: String(end ? ` It also ends at ${end}.` : "") }) };
   }
 
   /* R7: withdraw a grant, once; a repeat answers the first revocation. */
@@ -638,14 +612,12 @@ export class Review {
       if (e !== ROLLBACK) throw e;
     }
     if (out && out.ok) return { gates: "passed", missing: [],
-      evaluated: "every publish gate was run over this draft and none refused. Nothing was published: "
-               + "publication still needs the act itself and a member's signature over the case document." };
+      evaluated: word("review.evaluated.publish_gate_run") };
     if (!out) return { gates: "undetermined", missing: [],
-      evaluated: "the publish gates gave no answer over this draft, so what is missing is UNDETERMINED." };
+      evaluated: word("review.evaluated.publish_gates_gave") };
     const { ok: _ok, ...refused } = out;
     return { gates: "refused", missing: [refused],
-      evaluated: "the publish gates run in order and stop at the first refusal, so this is the first refusal "
-               + "only. Whether any later gate would also refuse is UNDETERMINED, not absent." };
+      evaluated: word("review.evaluated.publish_gates_run") };
   }
 
   /* R10: the two doors. A recipient through a live grant (a named draft must be the grant's own), or a member with
@@ -758,7 +730,7 @@ export class Review {
       /* R11 (REC-193, §3 rule 13): WHO WROTE THE STATEMENT THAT STANDS, beside the editor of everything else. */
       statement_by: d.statement_by ?? null,
       statement_by_stated: d.statement_by
-        ? `${d.statement_by} wrote the exclusion statement as it now stands`
+        ? word("review.statement_by_stated.wrote_exclusion_statement", { statement_by: String(d.statement_by) })
         : "UNDETERMINED: this draft predates the recording of the statement's author, and its last editor "
           + "is not evidence of who wrote the statement",
       ...grantPart,
@@ -777,9 +749,8 @@ export class Review {
     return [...new Set([...r.self, ...r.via.map((v) => v.observation)])].map((obs) => {
       const chosen = ident.caseId ? this.caseTensions.attributionInForce(ident.caseId, ident.edition, obs) : null;
       return { observation: obs, chosen: !!chosen,
-               stated: chosen ? `its author has chosen a level for ${ident.caseId} edition ${ident.edition}`
-                 : ident.caseId ? `its author has chosen no level for ${ident.caseId} edition ${ident.edition}; `
-                                  + "the edition cannot be signed until they do (op=attribute)"
+               stated: chosen ? word("review.stated.author_chosen_level", { case_id: String(ident.caseId), edition: String(ident.edition) })
+                 : ident.caseId ? localize("review.index.its_author_has_chosen_no", "its author has chosen no level for {caseId} edition {edition}; the edition cannot be signed until they do (op=attribute)", { caseId: String(ident.caseId), edition: String(ident.edition) })
                  : "this draft names no case yet, so no level can be chosen; its author chooses one "
                    + "(op=attribute) once op=publish has prepared the case document" };
     });
@@ -798,7 +769,7 @@ export class Review {
     if (!body || body.length > REVIEW_TEXT_MAX)
       /* DEC-49 REGION is-review-comment-text */
       return refusal("REVIEW_NO_COMMENT_TEXT",
-               `a comment says something: at least one character and at most ${REVIEW_TEXT_MAX}.`);
+               localize("review.index.a_comment_says_something_at", "a comment says something: at least one character and at most {REVIEW_TEXT_MAX}.", { REVIEW_TEXT_MAX: String(REVIEW_TEXT_MAX) }));
       /* END DEC-49 REGION is-review-comment-text */
     const when = this.#when();
     const grantId = grant ? grant.grant_id : null;
@@ -893,16 +864,15 @@ export class Review {
       /* DEC-49 REGION is-approval-rule-approvers */
       if (!ids.length || list.length > APPROVERS_MAX || !list.every(active))
         return refusal("APPROVAL_RULE_BAD_APPROVERS",
-                 `an approval rule names one or more active members of the team by member id, at most `
-               + `${APPROVERS_MAX}; approvers: null turns the rule off. Nothing was changed.`);
+                 localize("review.index.an_approval_rule_names_one", "an approval rule names one or more active members of the team by member id, at most {APPROVERS_MAX}; approvers: null turns the rule off. Nothing was changed.", { APPROVERS_MAX: String(APPROVERS_MAX) }));
       /* END DEC-49 REGION is-approval-rule-approvers */
     }
     const when = this.#when();
     this.sql.exec(`INSERT INTO approval_rules (approvers, set_by, set_at) VALUES (?,?,?)`,
                   list ? JSON.stringify(list) : null, who, when);
     return { ok: true, approvers: list, set_by: who, set_at: when,
-             stated: list ? `every case of the team needs the approval of ${list.join(", ")} before it is signed`
-                          : "the team requires no approvals before a case is signed" };
+             stated: list ? word("review.stated.case_group_needs", { list: String(list.join(", ")) })
+                          : word("review.stated.group_requires_approvals") };
   }
 
   /** R31 (D60): a named approver who may see the case's project approves one case edition's document at its
@@ -931,15 +901,13 @@ export class Review {
     /* DEC-49 REGION is-approval-document */
     if (!doc || this.caseGrammar.approvalSubjectSha(doc.text) !== sha)
       return refusal("APPROVAL_NO_SUCH_DOCUMENT",
-               `no document of ${cid} edition ${Number.isInteger(ed) ? ed : "(none)"} has that approval digest `
-             + "(its sha without the approvals block); an approval names the document it approves. Nothing was "
-             + "recorded.", { caseId: cid });
+               localize("review.index.no_document_of_cid_edition", "no document of {cid} edition {v1} has that approval digest (its sha without the approvals block); an approval names the document it approves. Nothing was recorded.", { cid: String(cid), v1: String(Number.isInteger(ed) ? ed : "(none)") }), { caseId: cid });
     /* END DEC-49 REGION is-approval-document */
     const why = reason == null ? null : String(reason).trim() || null;
     /* DEC-49 REGION is-approval-reason */
     if (why && why.length > APPROVAL_REASON_MAX)
       return refusal("APPROVAL_REASON_TOO_LONG",
-               `an approval's reason is at most ${APPROVAL_REASON_MAX} characters. Nothing was recorded.`);
+               localize("review.index.an_approvals_reason_is_at", "an approval's reason is at most {APPROVAL_REASON_MAX} characters. Nothing was recorded.", { APPROVAL_REASON_MAX: String(APPROVAL_REASON_MAX) }));
     /* END DEC-49 REGION is-approval-reason */
     const held = this.#one(`SELECT approved_by, reason, at FROM case_approvals
                             WHERE case_id=? AND edition=? AND doc_sha=? AND approved_by=?`, cid, ed, sha, who);

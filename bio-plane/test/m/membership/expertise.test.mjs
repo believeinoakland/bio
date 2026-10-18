@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R21 expertiseDeclare: the member's own act; refusals; labels normalised", async () => {
   const w = await world().group("ann", "bob");
@@ -10,8 +11,7 @@ test("R21 expertiseDeclare: the member's own act; refusals; labels normalised", 
   assert.equal(w.m.expertiseDeclare({ memberId: "bob", label: "CPA" }).reason, "NOT_ACTIVE");
   /* N285: the no-label refusal is its own code with its own row, never the shared NO_LABEL; nothing is written. */
   const row = { check: "C-96.13", where: "src/membership/index.mjs expertiseDeclare > is-expertise-labelled",
-                translation: "An expertise is declared by a name a person can read, such as 'CPA', and this one has none. "
-                  + "Nothing was written." };
+                translation: word("refusal.EXPERTISE_NO_LABEL") };
   assert.deepEqual({ ...MEMBERSHIP_CHECKS.EXPERTISE_NO_LABEL }, row);
   for (const label of [undefined, null, "", "  \n ", "\t\t"]) {
     const r = w.m.expertiseDeclare({ memberId: "ann", label });

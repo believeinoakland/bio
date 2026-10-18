@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
 import { noSuchDetermination } from "../../../src/conformance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const S = "STD-2026-0001-law";
 const S2 = "STD-2026-0002-other";
@@ -58,7 +59,7 @@ test("R7: every live part, totals only within one state, unit and currency, labe
   /* No parts: an empty answer that says so; and an absent determination is refused. */
   const E = w.determination("CONF-2026-0002-empty", w.P, { [S]: "noncompliant" });
   assert.deepEqual([w.c.consequencesOf({ determination: E, viewer: V("alice") }).parts, w.c.consequencesOf({ determination: E, viewer: V("alice") }).says],
-                   [[], "no consequence recorded"]);
+                   [[], word("escalation.consequence_recorded")]);
   assert.deepEqual(w.c.consequencesOf({ determination: "CONF-2026-0099-x", viewer: V("alice") }),
                    noSuchDetermination("CONF-2026-0099-x"));
   /* A superseded determination's parts stay readable. */
@@ -217,7 +218,7 @@ test("R15: an undetermined computation keeps its why without a withheld operand'
   const lacking = w.part({ unit: "money" }, { op: "difference", operands: [{ content: a, figure: "1,000" }, { content: h, figure: "900" }] });
   let [pat, alice] = w.both(c, lacking);
   assert.equal(alice.undetermined.why, 'the figure is not in the record: operand 1\'s passage does not hold the figure "900"');
-  assert.deepEqual([pat.state, pat.undetermined.code, pat.undetermined.why], ["undetermined", "not_in_record", "the figure is not in the record"]);
+  assert.deepEqual([pat.state, pat.undetermined.code, pat.undetermined.why], ["undetermined", "not_in_record", word("consequences.not_in_record")]);
   assert.deepEqual([pat.computation.operands.length, pat.out_of_view, holds(pat, "900"), holds(pat, h)], [1, true, false, false]);
   /* Negative controls: the withheld figure is found wherever the answer carries it, as alice's why does, or as an
      operand would; and a project id whose drawn digits hold it finds nothing (the chance collision, K1055). */
@@ -235,7 +236,7 @@ test("R15: an undetermined computation keeps its why without a withheld operand'
   const short = w.part({ unit: "money" }, { op: "difference", operands: [{ content: h, figure: "2,500" }] });
   [pat, alice] = w.both(c, short);
   assert.match(alice.undetermined.why, /1 was given/);
-  assert.deepEqual([pat.undetermined.why, pat.computation.operands, pat.out_of_view], ["the figure is not in the record", [], true]);
+  assert.deepEqual([pat.undetermined.why, pat.computation.operands, pat.out_of_view], [word("consequences.not_in_record"), [], true]);
 });
 
 test("R15: an established causation whose inquiry pat may not see is {state} alone; reopened, it raises pat no cause", () => {
@@ -293,7 +294,7 @@ test("R15: an assessed part's rests_on and an addressed record's evidence keep o
   const c = w.sighted(new Set([HID, INQ]));
   const [pat, alice] = w.both(c, id);
   assert.deepEqual(pat.assessment.rests_on, [a]);
-  assert.equal(pat.assessment.says, "a member's assessment, resting on the ids listed");
+  assert.equal(pat.assessment.says, word("consequences.says.member_assessment_resting"));
   assert.deepEqual(pat.addressed.evidence, [a]);
   assert.equal(pat.out_of_view, true);
   assert.deepEqual([holds(pat, h), holds(pat, INQ), holds(pat, PLACEHOLDER)], [false, false, false]);
@@ -306,7 +307,7 @@ test("R15: an assessed part's rests_on and an addressed record's evidence keep o
   const all = w.part({ unit: "count", value: 1 }, { rationale: "r", rests_on: [h] });
   const p = c.consequenceRead({ id: all, viewer: V("pat") }).part;
   assert.deepEqual([p.assessment.rests_on, p.assessment.says, p.out_of_view],
-                   [[], "a member's assessment, resting on nothing in the record (stated as none)", true]);
+                   [[], word("consequences.says.member_assessment_resting_record"), true]);
   /* addressed() states no ids, so it answers pat as alice (K905: a listing states no out_of_view). */
   assert.deepEqual(c.addressed({ determination: w.D, viewer: V("pat") }), c.addressed({ determination: w.D, viewer: V("alice") }));
 });

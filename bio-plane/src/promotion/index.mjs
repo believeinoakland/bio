@@ -26,7 +26,7 @@ import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHE
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { MECHANICAL_FIELD_SETS } from "./history.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { projectNameKey } from "./names.mjs";
 import { INFO2_GRAMMAR } from "./info2.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences, quotedScalar,
@@ -513,8 +513,7 @@ class Promotion {
     const empty = files.filter((f) => typeof f.text !== "string" && !blobHeld(f)).map((f) => f.path);
     if (empty.length)
       return refusal("PROMOTED_FILE_CONTENT_UNSTATED",
-        `${empty.join(", ")}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. `
-        + "Nothing was written.", { paths: empty });
+        localize("promotion.index.empty_neither_text_a_string", "{empty}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.", { empty: String(empty.join(", ")) }), { paths: empty });
     const sizeless = files.filter((f) => blobHeld(f) && !(Number.isInteger(f.bytes) && f.bytes >= 0)).map((f) => f.path);
     if (sizeless.length)
       return refusal("PROMOTED_FILE_BYTES_UNSTATED",
@@ -565,9 +564,7 @@ class Promotion {
     /* DEC-49 REGION is-promote-digest */
     if (digested.disagree.length)
       return refusal("FILE_DIGEST_MISMATCH",
-        "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ")
-        + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). "
-        + "The record stores a digest only of what it holds. Nothing was written.",
+        localize("promotion.index.the_sha256_sent_for_map", "the sha256 sent for {map} is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.", { map: String(digested.disagree.map((d) => d.path).join(", ")) }),
         { paths: digested.disagree.map((d) => d.path), files: digested.disagree });
     /* END DEC-49 REGION is-promote-digest */
     files = digested.files.map((f) => {
@@ -589,8 +586,7 @@ class Promotion {
         /* DEC-49 REGION is-group-undetermined */
         if (!createdGroup)
           return refusal("GROUP_UNDETERMINED",
-            "this store records no producing team, and this creation names none — neither a group: line in its "
-            + "bundle.md nor a team in its meta. The record does not supply one. Nothing was created.",
+            localize("promotion.index.this_store_records_no_producing", "this store records no producing team, and this creation names none — neither a group: line in its bundle.md nor a team in its meta. The record does not supply one. Nothing was created."),
             { act: "promote" });
         /* END DEC-49 REGION is-group-undetermined */
       }
@@ -727,8 +723,7 @@ class Promotion {
       /* DEC-49 REGION is-promote-cas */
       if (head && head.bundleSha !== base)
         return refusal("CAS_STALE",
-          "the base this revision names is not the record's current version: someone else changed it since it was read. "
-          + "Nothing was written.", { expected: head.bundleSha, got: base });
+          localize("promotion.index.the_base_this_revision_names", "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written."), { expected: head.bundleSha, got: base });
       /* END DEC-49 REGION is-promote-cas */
 
       /* R10: a revision never retypes its bundle. */
@@ -754,9 +749,7 @@ class Promotion {
         && String(sentFm.group).trim() !== "" ? String(sentFm.group).trim() : null;
       if (head && revisionGroup !== null && revisionGroup !== String(head.groupId).trim() && !replay)
         return refusal("REVISION_REGROUPS_BUNDLE",
-          `${cut(bundleId, 80)} was produced by '${cut(head.groupId, 40)}' and this revision says `
-          + `'${cut(revisionGroup, 40)}'. A revision changes what a document says, never whose it is. Send it again `
-          + `with the team the record holds, or with none. Nothing was written.`,
+          localize("promotion.index.cut_was_produced_by_cut", "{cut} was produced by '{cut_2}' and this revision says '{cut_3}'. A revision changes what a document says, never whose it is. Send it again with the team the record holds, or with none. Nothing was written.", { cut: String(cut(bundleId, 80)), cut_2: String(cut(head.groupId, 40)), cut_3: String(cut(revisionGroup, 40)) }),
           { head_group: cut(head.groupId, 80), revision_group: cut(revisionGroup, 80) });
       /* END DEC-49 REGION is-revision-regroups-bundle */
       /* R14: a document's id is the bundle it is filed under. */

@@ -266,7 +266,7 @@ test("R16 a section whose heading, text, definitions or exceptions moved, or pre
 test("R17 tested on the captured codifier sections and charter articles, with their provenance, every boundary exact", () => {
   assert.equal(CODIFIER.captures.length, 3);
   for (const cap of CODIFIER.captures) {
-    assert.match(cap.source, /^https:\/\/api\.municode\.com\/CodesContent\?/, "the address it was fetched from");
+    assert.match(cap.source, /^https:\/\/api\.municode\.com\/CodesContent\?/, "source URL");
     assert.match(cap.sha256, /^[0-9a-f]{64}$/);
     assert.ok(cap.bytes > 0 && cap.status === 200 && !Number.isNaN(Date.parse(cap.fetched)));
   }

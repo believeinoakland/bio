@@ -197,8 +197,8 @@ function loadRows(root) {
   return { keys, byEn, byNorm, en };
 }
 
-// files the module's tests require to load nothing, or to import only a named leaf (found from the red tests of the dry runs): never given an import; a trailing / is a directory
-export const LEAVES = new Set(['bio-plane/src/duties/vocab.mjs', 'bio-plane/src/setup-fleet.mjs', 'doctypes/staff-directory.mjs', 'stewards/src/']);
+// files the module's tests require to load nothing, or to import only a named leaf (found from the red tests of the dry runs and of the pass, K3949: doctypes R21's test allows only its declared imports, ooxml R23 imports nothing): never given an import; a trailing / is a directory
+export const LEAVES = new Set(['bio-plane/src/duties/vocab.mjs', 'bio-plane/src/setup-fleet.mjs', 'doctypes/', 'bio-plane/src/ooxml.mjs', 'stewards/src/']);
 // a word the setup-words tests ban in any row (bio-plane/test/m/setup-words/word-list.test.mjs: R8's control)
 const BANNED = /labelled/i;
 
@@ -383,6 +383,7 @@ export async function convert(root, { write = false, coerce = true, leaves = LEA
             used.add(nm); text += `{${nm}}`; vars.push([nm, exprSrc(exprs[i])]);
           }
         }
+        if (BANNED.test(text)) { jj('spelling: fix in the module\'s job (a placeholder name)'); continue; }
         const base = `${it.module}.${stemOf(file)}.${slug(text)}`; id = base;
         for (let k = 2; usedIds.has(id); k++) id = `${base}_${k}`;
         usedIds.add(id);

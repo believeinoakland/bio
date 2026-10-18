@@ -23,6 +23,7 @@
 
 import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
 import { ISO_TS_RE, idPattern } from "../record-grammar/ids.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 /* The catalogue's finding shape (legacy-checks' private `f`), for the check that moved here. */
 function f(check, severity, message, extra) {
@@ -51,10 +52,7 @@ export const DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_IS_THE_SHELL: Object.freeze({
     check: 'C-48.8',
     where: at('monitor', 'is-drive-tick-export'),
-    translation: 'The check of that Google Drive document did not run: the export address answered '
-      + 'with a web page rather than a document, which is what Drive does when a file stops being '
-      + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
-      + 'changed — what is known is that your team\'s Civicsmith could not see the document today.',
+    translation: word('refusal.DRIVE_TICK_EXPORT_IS_THE_SHELL'),
   }),
   /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
      declared type and the first kibibyte are two different pieces of evidence,
@@ -65,10 +63,7 @@ export const DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
     check: 'C-48.9',
     where: at('monitor', 'is-drive-tick-bytes'),
-    translation: 'The check of that Google Drive document did not run: the export address said it '
-      + 'was sending a document and sent a web page instead. Your team\'s Civicsmith reads the bytes rather '
-      + 'than the label, so the application page was recognised and not compared against the '
-      + 'captured document — comparing it would report a change on every visit that nobody made.',
+    translation: localize('monitoring.checks.the_check_of_that_google', 'The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. Your team\'s Civicsmith reads the bytes rather than the label, so the application page was recognised and not compared against the captured document — comparing it would report a change on every visit that nobody made.'),
   }),
 });
 
@@ -79,9 +74,7 @@ export const GATHERING_CHECKS = Object.freeze({
   GATHERING_REFUSED: Object.freeze({
     check: 'C-18.10',
     where: at('gatheringCheck', 'is-gathering-refused'),
-    translation: 'This was not saved: the list of things to gather that it carries is not written the way the record '
-      + 'writes them, and a gathering request is shown to members as data, so it must stay within its grammar. The '
-      + 'findings beside this say which requests and what is wrong with each. Nothing was changed.',
+    translation: word('refusal.GATHERING_REFUSED'),
   }),
 });
 
@@ -92,32 +85,27 @@ export const FREQUENCY_CHECKS = Object.freeze({
   MACHINE_CANNOT_SET_FREQUENCY: Object.freeze({
     check: 'C-18.11',
     where: at('addressFrequencySet', 'is-frequency-member'),
-    translation: 'How often an address is checked is set by a named member, with the member\'s reason. An assistant '
-      + 'or a machine may suggest it; it may not set it. Nothing was changed.',
+    translation: word('refusal.MACHINE_CANNOT_SET_FREQUENCY'),
   }),
   NO_SUCH_ADDRESS: Object.freeze({
     check: 'C-18.12',
     where: at('addressFrequencySet', 'is-frequency-address'),
-    translation: 'No monitored document you can see is checked at that address, so there is no check whose frequency '
-      + 'could be set there. Nothing was changed.',
+    translation: word('refusal.NO_SUCH_ADDRESS'),
   }),
   BAD_FREQUENCY: Object.freeze({
     check: 'C-18.13',
     where: at('addressFrequencySet', 'is-frequency-word'),
-    translation: 'That is not a frequency this record knows. Choose one of the listed frequencies, or none to return '
-      + 'the address to the frequency its documents set. Nothing was changed.',
+    translation: word('refusal.BAD_FREQUENCY'),
   }),
   NOT_A_SOURCE_OWNER: Object.freeze({
     check: 'C-18.14',
     where: at('addressFrequencySet', 'is-frequency-owner'),
-    translation: 'The frequency of an address is set by an owner of a project that holds a monitored document there, '
-      + 'and you own none of them. Ask an owner of one of those projects. Nothing was changed.',
+    translation: word('refusal.NOT_A_SOURCE_OWNER'),
   }),
   FREQUENCY_NO_REASON: Object.freeze({
     check: 'C-18.15',
     where: at('addressFrequencySet', 'is-frequency-reason'),
-    translation: 'A frequency is set with a reason: one of the listed reasons, or your own words of up to 2,000 '
-      + 'characters. Nothing was changed.',
+    translation: word('refusal.FREQUENCY_NO_REASON'),
   }),
 });
 
@@ -129,8 +117,7 @@ export const WATCH_END_CHECKS = Object.freeze({
   WATCH_END_REFUSED: Object.freeze({
     check: 'C-18.19',
     where: at('addressWatchEnd', 'is-watch-end-day'),
-    translation: 'A watch ends on a calendar day, today or later, or has no end date. That day could not be used. '
-      + 'Nothing was changed.',
+    translation: word('refusal.WATCH_END_REFUSED'),
   }),
 });
 
@@ -141,14 +128,12 @@ export const MONITOR_SET_CHECKS = Object.freeze({
   MACHINE_CANNOT_SET_MONITORING: Object.freeze({
     check: 'C-18.20',
     where: at('monitorSet', 'is-monitor-set-member'),
-    translation: 'Only a member asks for a document to be watched, and this came from an automated credential. '
-      + 'Nothing was changed.',
+    translation: localize('monitoring.checks.only_a_member_asks_for', 'Only a member asks for a document to be watched, and this came from an automated credential. Nothing was changed.'),
   }),
   MONITOR_SET_REFUSED: Object.freeze({
     check: 'C-18.21',
     where: at('monitorSet', 'is-monitor-set-shape'),
-    translation: 'Say whether this document is watched, yes or no, and, if you give one, how often, as one of the '
-      + 'listed frequencies. Nothing was changed.',
+    translation: localize('monitoring.checks.say_whether_this_document_is', 'Say whether this document is watched, yes or no, and, if you give one, how often, as one of the listed frequencies. Nothing was changed.'),
   }),
 });
 
@@ -245,7 +230,7 @@ export function checkGatheringGrammar(ctx, findings, sweepArm = null) {
     let errs;
     try { errs = sweepArm.grammar(s, ids); } catch (e) { errs = e instanceof Error ? e : new Error(String(e)); }
     if (!Array.isArray(errs)) {
-      const why = errs instanceof Error ? `failed (${String(errs.message).slice(0, 120)})` : 'answered no list of findings';
+      const why = errs instanceof Error ? `failed (${String(errs.message).slice(0, 120)})` : word('monitoring.answered_list_findings');
       findings.push(f('C-18.5', 'error', `gathering.json sweeps[${i}] could not be checked: the sweep grammar ${String(sweepArm.module)} `
         + `registered ${why}, so the entry is refused, never admitted`));
       continue;

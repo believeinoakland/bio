@@ -39,7 +39,7 @@ import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from 
    `machinePassageUnchecked`, its one spelling of a machine-passage read that answered nothing usable (its R62) */
 import { inquiryOf, legCapped, actNoBasis, biasNotInForce, machinePassageUnchecked,
          dividedCannotRestructure } from "../inquiry/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 /* The extent grammar is content's face (N99): its `extentRelation` holds D-670's space rule and the `envelope` kind,
    which the retired check catalogue's copy (legacy-checks) did not. */
@@ -180,10 +180,7 @@ export class BasisVersions {
       const fm = parseFrontmatter(this.#doc(b.bundle_id) ?? "").data;
       into = fm && fm.division && Array.isArray(fm.division.into) ? fm.division.into.filter((x) => typeof x === "string") : [];
     } catch { into = []; }
-    return dividedCannotRestructure(`${b.bundle_id} was divided${into.length ? ` into ${into.join(", ")}` : ""}, and its `
-      + "children carry the question on, so its document is closed: no revision of it lands, whatever it changes (a leg "
-      + "severed, reinstated or added, a conclusion, a grouping). Work on the child that carries the part you mean. "
-      + "Nothing was written.", { ...extra, target: b.bundle_id, ...(into.length ? { children: into } : {}) });
+    return dividedCannotRestructure(localize("basis-versions.index.bundle_id_was_divided_v1", "{bundle_id} was divided{v1}, and its children carry the question on, so its document is closed: no revision of it lands, whatever it changes (a leg severed, reinstated or added, a conclusion, a grouping). Work on the child that carries the part you mean. Nothing was written.", { bundle_id: String(b.bundle_id), v1: String(into.length ? ` into ${into.join(", ")}` : "") }), { ...extra, target: b.bundle_id, ...(into.length ? { children: into } : {}) });
   }
 
   #seen(id, viewer) {
@@ -251,9 +248,7 @@ export class BasisVersions {
                    findings: [{ check: BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED.check,
                                 code: "VERSION_LEG_UNRESOLVED",
                                 translation: BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED.translation,
-                                detail: `basis version '${v.name}' rests on '${leg.target_id}', which does not `
-                                      + `resolve in this store: an account of the evidence names material the `
-                                      + `record holds, or it points a reader at nothing while claiming support`,
+                                detail: localize("basis-versions.index.basis_version_name_rests_on", "basis version '{name}' rests on '{target_id}', which does not resolve in this store: an account of the evidence names material the record holds, or it points a reader at nothing while claiming support", { name: String(v.name), target_id: String(leg.target_id) }),
                                 repairs: ["capture or promote the target first, then compose the version on it",
                                           "or drop the leg — a version may honestly rest on less"] }] };
       }
@@ -275,10 +270,7 @@ export class BasisVersions {
       return { ok: false, reason: "VERSION_FROZEN", version: v.name, changed,
                findings: [{ check: BASIS_VERSION_CHECKS.VERSION_FROZEN.check, code: "VERSION_FROZEN",
                             translation: BASIS_VERSION_CHECKS.VERSION_FROZEN.translation,
-                            detail: `basis version '${v.name}' of ${bundleId} is frozen and this promotion changes `
-                                  + `it in place (${changed}): a version is frozen once written, because two members `
-                                  + `exploring one version collide otherwise and comparison stops meaning anything `
-                                  + `when the thing being compared shifts underneath them`,
+                            detail: localize("basis-versions.index.basis_version_name_of_bundleid", "basis version '{name}' of {bundleId} is frozen and this promotion changes it in place ({changed}): a version is frozen once written, because two members exploring one version collide otherwise and comparison stops meaning anything when the thing being compared shifts underneath them", { name: String(v.name), bundleId: String(bundleId), changed: String(changed) }),
                             repairs: [`add a NEW version with its own name and derived_from: '${v.name}'`,
                                       `or restore '${v.name}' to the composition the record holds`] }] };
     }
@@ -489,8 +481,7 @@ export class BasisVersions {
         + "question's basis, and there is no default question.");
     if (!isInquiryId(inq))
       return refuse("BASIS_VERSIONS_NOT_AN_INQUIRY",
-        `${inq.slice(0, 60)} is not an inquiry. Only an inquiry has a basis, so only an inquiry has `
-        + "versions of one; an empty list here would say this thing has none when it could not have any.");
+        localize("basis-versions.index.inq_is_not_an_inquiry", "{inq} is not an inquiry. Only an inquiry has a basis, so only an inquiry has versions of one; an empty list here would say this thing has none when it could not have any.", { inq: String(inq.slice(0, 60)) }));
     const cap = Math.max(1, Math.min(BASIS_VERSIONS_LIMIT_MAX, Math.floor(Number(limit) || BASIS_VERSIONS_LIMIT_DEFAULT)));
     const from = Math.max(0, Math.floor(Number(offset) || 0));
     const present = this.#seen(inq, viewer);
@@ -540,14 +531,14 @@ export class BasisVersions {
     try {
       const inq = String(target ?? "").trim();
       if (!inq || !isInquiryId(inq) || !this.#seen(inq, viewer))
-        return refuse("VERSION_COMPARE_NO_INQUIRY", "no question by that id is readable here.");
+        return refuse("VERSION_COMPARE_NO_INQUIRY", localize("basis-versions.index.no_question_by_that_id", "no question by that id is readable here."));
       const na = String(a ?? "").trim(), nb = String(b ?? "").trim();
       if (!na || !nb) return refuse("VERSION_COMPARE_NO_VERSION", "pass a=<reading> and b=<reading>.");
       const get = (n) => this.#one(`SELECT * FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, inq, n);
       const ra = get(na), rb = get(nb);
       const missing = [[na, ra], [nb, rb]].filter(([, r]) => !r).map(([n]) => n);
       if (missing.length)
-        return { ...refuse("VERSION_COMPARE_NO_SUCH_VERSION", "this question holds no reading by that name."),
+        return { ...refuse("VERSION_COMPARE_NO_SUCH_VERSION", localize("basis-versions.index.this_question_holds_no_reading", "this question holds no reading by that name.")),
                  missing: missing.slice(0, 2) };
       const legsOf = (n) => this.#rows(
         `SELECT ord, target_id, content_id FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=?
@@ -597,7 +588,7 @@ export class BasisVersions {
       return { ok: true, a: na, b: nb, differs: Object.values(dimensions).filter((d) => !d.same).length, of: 5,
                dimensions, legs };
     } catch {
-      return refuse("VERSION_COMPARE_NO_INQUIRY", "no question by that id is readable here.");
+      return refuse("VERSION_COMPARE_NO_INQUIRY", localize("basis-versions.index.no_question_by_that_id_2", "no question by that id is readable here."));
     }
   }
 
@@ -662,8 +653,7 @@ export class BasisVersions {
                        withdraws_at: s(r.withdraws_at), reason: s(r.reason) ?? "" });
       } else {
         history.push({ ...base, act: "unrecognised", state: "undetermined", recorded_act: act,
-                       detail: "this entry names an act your team's Civicsmith does not know, so what the project "
-                             + "stood on after it is undetermined rather than guessed." });
+                       detail: localize("basis-versions.index.this_entry_names_an_act", "this entry names an act your team's Civicsmith does not know, so what the project stood on after it is undetermined rather than guessed.") });
       }
     }
     return { history, stance: history.length ? history[history.length - 1] : null };
@@ -681,10 +671,7 @@ export class BasisVersions {
     return { state: "undetermined", text: null, version: null,
              detail: why
                ? why
-               : "this conclusion adopted no claim a reader can check. It was written before a conclusion "
-                 + "named the reading whose claim it adopts (INVESTIGATIVE-SESSION.md §7.1 items 5-6), so "
-                 + "WHICH claim it concluded is undetermined — never back-filled from its conclusion text, "
-                 + "which is the member's words and not a claim any reading stated." };
+               : localize("basis-versions.index.this_conclusion_adopted_no_claim", "this conclusion adopted no claim a reader can check. It was written before a conclusion named the reading whose claim it adopts (INVESTIGATIVE-SESSION.md §7.1 items 5-6), so WHICH claim it concluded is undetermined — never back-filled from its conclusion text, which is the member's words and not a claim any reading stated.") };
   }
 
   /** R23: the inquiry's own conclusion, the no-project relationship's (null when its state is not `concluded`). Its
@@ -705,11 +692,9 @@ export class BasisVersions {
       claim = matches
         ? { state: "adopted", text: nc, version: nv }
         : BasisVersions.undeterminedClaim(
-            `this conclusion names reading '${nv.slice(0, 80)}' and a claim, but ${!v
+            localize("basis-versions.index.this_conclusion_names_reading_nv", "this conclusion names reading '{nv}' and a claim, but {v1}, so which claim was concluded cannot be established from the record and is undetermined (INVESTIGATIVE-SESSION.md §7.1 item 6) — never taken on the frontmatter's word.", { nv: String(nv.slice(0, 80)), v1: String(!v
               ? "the inquiry carries no such reading"
-              : "that reading does not state the claim recorded"}, so which claim was concluded cannot be `
-            + "established from the record and is undetermined (INVESTIGATIVE-SESSION.md §7.1 item 6) — "
-            + "never taken on the frontmatter's word.");
+              : "that reading does not state the claim recorded") }));
     }
     return { project: null, inquiry: String(inquiryId), relationship: "no_project", state: "concluded",
              relationship_established: false,
@@ -912,7 +897,7 @@ export class BasisVersions {
         + "there must not be one.");
     if (!isInquiryId(target))
       return refuse("VERSION_ACT_NOT_AN_INQUIRY",
-        `${target.slice(0, 60)} is not an inquiry, so it holds no readings of its evidence to act on.`, { target });
+        localize("basis-versions.index.target_is_not_an_inquiry", "{target} is not an inquiry, so it holds no readings of its evidence to act on.", { target: String(target.slice(0, 60)) }), { target });
     const vname = String(a.version ?? "").trim();
     if (!vname)
       return refuse("VERSION_ACT_NO_VERSION",
@@ -921,26 +906,22 @@ export class BasisVersions {
     const who = String(a.author ?? "").trim();
     if (!who || isMachineIdentity(who))
       return refuse("MACHINE_CANNOT_MOVE_VERSION",
-        `op=version${act} moves what the record stands on or shows, and the credential that called it `
-        + `is ${who ? "a machine" : "unnamed"}. A machine credential may COMPOSE an account of the `
-        + `evidence and propose it, and may never accept it, turn it down, set it aside, hide it, or `
-        + `make it what a project stands on. Sign in as a member.`, { target, version: vname });
+        localize("basis-versions.index.op_version_act_moves_what", "op=version{act} moves what the record stands on or shows, and the credential that called it is {v1}. A machine credential may COMPOSE an account of the evidence and propose it, and may never accept it, turn it down, set it aside, hide it, or make it what a project stands on. Sign in as a member.", { act: String(act), v1: String(who ? "a machine" : "unnamed") }), { target, version: vname });
     const b = this.#visible(target, a.viewer ?? null);
     if (!b)
       return refuse("VERSION_ACT_NO_SUCH_VERSION",
-        "no question by that id is readable here, so it holds no reading by that name either.",
+        localize("basis-versions.index.no_question_by_that_id_3", "no question by that id is readable here, so it holds no reading by that name either."),
         { target, version: vname });
     let text = this.#doc(target);
     if (text === null)
       return refuse("VERSION_ACT_UNWRITABLE",
-        "this question has no readable file, so nothing about its readings can be moved.", { target, version: vname });
+        localize("basis-versions.index.this_question_has_no_readable", "this question has no readable file, so nothing about its readings can be moved."), { target, version: vname });
     const fm = parseFrontmatter(text).data || {};
     const rows = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const idx = rows.findIndex((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname);
     if (idx < 0)
       return refuse("VERSION_ACT_NO_SUCH_VERSION",
-        `this question holds no reading named '${vname.slice(0, 60)}'. Readings are named so a member `
-        + `can ask for one by name, and a name nobody wrote is refused rather than matched to the nearest.`,
+        localize("basis-versions.index.this_question_holds_no_reading_2", "this question holds no reading named '{vname}'. Readings are named so a member can ask for one by name, and a name nobody wrote is refused rather than matched to the nearest.", { vname: String(vname.slice(0, 60)) }),
         { target, version: vname, known: rows.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
     const row = rows[idx];
     const from = typeof row.state === "string" ? row.state.trim() : "";
@@ -948,7 +929,7 @@ export class BasisVersions {
        so `preview` answers it as the act does (R14). `current` rewrites only the project (R15), asked below. */
     if (act !== "current" && setVersionField(text, vname, "hidden", row.hidden === true) === null)
       return refuse("VERSION_ACT_UNWRITABLE",
-        "this question's version block could not be rewritten in place, so nothing was changed.", { target, version: vname });
+        localize("basis-versions.index.this_questions_version_block_could", "this question's version block could not be rewritten in place, so nothing was changed."), { target, version: vname });
     /* R52: every act that writes the question's document (all but `current`, which writes the project) */
     if (act !== "current") {
       const divided = this.#dividedRefusal(b, { act, version: vname });
@@ -965,13 +946,7 @@ export class BasisVersions {
         return { ...member, ok: false, reason: member.reason, code: member.code, act, target, version: vname };
       if (member.value)
         return refuse("PUBLISHED_CANNOT_MOVE_VERSION",
-          `'${vname}' belongs to a question that is PUBLISHED, and a published case froze this finding `
-          + `at the version its members signed. Moving a reading from ${from || "no recorded state"} to `
-          + `${to} would change what this finding rests on underneath an edition already on the record, `
-          + `leaving it deriving something the published bytes contradict. Reopen it (op=reopen), move `
-          + `the reading, and publish what changed as a new edition — the route DEC-12 built for exactly `
-          + `this, and the one op=inquiryground and op=inquirydivide already send you down. The pinned `
-          + `edition keeps its own signature and keeps answering.`,
+          localize("basis-versions.index.vname_belongs_to_a_question", "'{vname}' belongs to a question that is PUBLISHED, and a published case froze this finding at the version its members signed. Moving a reading from {v1} to {to} would change what this finding rests on underneath an edition already on the record, leaving it deriving something the published bytes contradict. Reopen it (op=reopen), move the reading, and publish what changed as a new edition — the route DEC-12 built for exactly this, and the one op=inquiryground and op=inquirydivide already send you down. The pinned edition keeps its own signature and keeps answering.", { vname: String(vname), v1: String(from || "no recorded state"), to: String(to) }),
           { target, version: vname, from, to, state: b.current_state });
     }
 
@@ -987,16 +962,11 @@ export class BasisVersions {
     if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why)
         || (versionNeedsReason(to) && why.length < VERSION_REASON_MIN))
       return refuse("VERSION_REASON_MALFORMED",
-        `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a `
-        + `backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a `
-        + `reading aside or turning it down is at least ${VERSION_REASON_MIN} characters, the shortest the record keeps.`,
+        localize("basis-versions.index.a_reason_is_at_most", "a reason is at most {VERSION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a reading aside or turning it down is at least {VERSION_REASON_MIN} characters, the shortest the record keeps.", { VERSION_REASON_MAX: String(VERSION_REASON_MAX), VERSION_REASON_MIN: String(VERSION_REASON_MIN) }),
         { target, version: vname, reason_length: why.length });
     if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
       return refuse("VERSION_ILLEGAL_TRANSITION",
-        `'${vname}' is ${from || "in no recorded state"} and op=version${act} would make it ${to}. `
-        + `The states are not a one-way ladder and being considered or turned down is reversible, but `
-        + `a reading a member ACCEPTED is a historical fact: it is corrected by turning it down or by `
-        + `putting it back under consideration, never by returning it to something nobody acted on.`,
+        localize("basis-versions.index.vname_is_v1_and_op", "'{vname}' is {v1} and op=version{act} would make it {to}. The states are not a one-way ladder and being considered or turned down is reversible, but a reading a member ACCEPTED is a historical fact: it is corrected by turning it down or by putting it back under consideration, never by returning it to something nobody acted on.", { vname: String(vname), v1: String(from || "in no recorded state"), act: String(act), to: String(to) }),
         { target, version: vname, from, to, legal: VERSION_MACHINE.edges[from] || [] });
 
     /* The transitive basis cycle at the accept, through inquiry's ONE walk: a leg naming an inquiry that rests on
@@ -1012,8 +982,7 @@ export class BasisVersions {
         const cycle = this.inquiry.cyclePath(target, inqTargets);
         if (cycle)
           return refuse("VERSION_BASIS_CYCLE",
-            `accepting '${vname}' would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a `
-            + `DAG, and the chain above already rests on ${target}.`, { target, version: vname, path: cycle });
+            localize("basis-versions.index.accepting_vname_would_close_a", "accepting '{vname}' would close a cycle: {cycle}. An inquiry's basis is a DAG, and the chain above already rests on {target}.", { vname: String(vname), cycle: String(cycle.join(" -> ")), target: String(target) }), { target, version: vname, path: cycle });
       }
     }
 
@@ -1038,10 +1007,7 @@ export class BasisVersions {
     if (act === "current") {
       if (from !== "accepted")
         return refuse("VERSION_NOT_ACCEPTED",
-          `'${vname}' is ${from || "in no recorded state"}. Current implies accepted (§6 rule 5), and `
-          + `exploring an unaccepted reading is done by CALCULATING OVER IT rather than by making it `
-          + `what everyone stands on — once a stance is shared, designating one temporarily would move `
-          + `a whole team's ground so one member could examine a possibility.`, { target, version: vname, from });
+          localize("basis-versions.index.vname_is_v1_current_implies", "'{vname}' is {v1}. Current implies accepted (§6 rule 5), and exploring an unaccepted reading is done by CALCULATING OVER IT rather than by making it what everyone stands on — once a stance is shared, designating one temporarily would move a whole team's ground so one member could examine a possibility.", { vname: String(vname), v1: String(from || "in no recorded state") }), { target, version: vname, from });
       projectId = String(a.project ?? "").trim();
       if (!projectId)
         return refuse("VERSION_CURRENT_NO_PROJECT",
@@ -1052,7 +1018,7 @@ export class BasisVersions {
       if (!projectRow) { const existence = this.membership.existenceAct(projectId, a.viewer ?? null); if (existence) return existence; }
       if (!projectRow || normalizeType(projectRow.object_type) !== "project")
         return refuse("VERSION_CURRENT_UNRELATED",
-          `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
+          localize("basis-versions.index.projectid_is_not_a_project", "{projectId} is not a project readable here, so it holds no stance to move.", { projectId: String(projectId.slice(0, 60)) }),
           { target, version: vname, project: projectId });
       /* REC-134: sight is not authority; the actor must have JOINED the project (Membership v2 §7.5). */
       const denied = this.membership.projectAuthority(projectId, a.identity ?? null, "joined", "versioncurrent");
@@ -1060,12 +1026,11 @@ export class BasisVersions {
       const ptext = this.#doc(projectId);
       if (!drawsOn(ptext !== null ? (parseFrontmatter(ptext).data || {}) : {}, target))
         return refuse("VERSION_CURRENT_UNRELATED",
-          `${projectId} does not draw on ${target}, so it has no stance on this question to move. `
-          + `Cite the question into the project first.`, { target, version: vname, project: projectId });
+          localize("basis-versions.index.projectid_does_not_draw_on", "{projectId} does not draw on {target}, so it has no stance on this question to move. Cite the question into the project first.", { projectId: String(projectId), target: String(target) }), { target, version: vname, project: projectId });
       /* C-25.31 on the project's side, before the receipt, so `preview` answers it as the act does (R14) */
       if (setCurrentVersionRow(ptext, target, vname, who, "") === null)
         return refuse("VERSION_ACT_UNWRITABLE",
-          `${projectId}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.`,
+          localize("basis-versions.index.projectid_s_current_versions_block", "{projectId}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.", { projectId: String(projectId) }),
           { target, version: vname, project: projectId });
     }
 
@@ -1110,14 +1075,11 @@ export class BasisVersions {
     if (act === "hide" && text !== null) text = setVersionField(text, vname, "hidden", hidden);
     if (text === null)
       return refuse("VERSION_ACT_UNWRITABLE",
-        "this question's version block could not be rewritten in place, so nothing was changed.", { target, version: vname });
+        localize("basis-versions.index.this_questions_version_block_could_2", "this question's version block could not be rewritten in place, so nothing was changed."), { target, version: vname });
     text = setScalar(text, "last_updated", `"${when}"`);
     text = appendSessionLog(text,
-      `### Session ${when} | Version ${act} | ${who}\n`
-      + `Trigger: op=version${act} on ${target}\n`
-      + `Changes: reading '${vname}' ${to === null
-          ? `${hidden ? "hidden from" : "returned to"} the display` : `${from} to ${to}`}.\n`
-      + (why ? `Reason: ${why}\n` : ""));
+      localize("basis-versions.index.session_when_version_act_who", "### Session {when} | Version {act} | {who}\nTrigger: op=version{act_2} on {target}\nChanges: reading '{vname}' {v1}.\n{v2}", { when: String(when), act: String(act), who: String(who), act_2: String(act), target: String(target), vname: String(vname), v1: String(to === null
+          ? `${hidden ? "hidden from" : "returned to"} the display` : `${from} to ${to}`), v2: String(why ? `Reason: ${why}\n` : "") }));
     const promoted = this.#repromote({ bundleId: target, base: b.bundle_sha, text, when, author: who,
       meta: { object_type: fm.object_type ?? b.object_type, title: fm.title, current_state: b.current_state,
               prior_state: fm.prior_state ?? null, created: fm.created, last_updated: when,
@@ -1174,10 +1136,7 @@ export class BasisVersions {
     if (text === null) return unwritable(`${pid}'s current_versions block could not be rewritten in place`);
     text = setScalar(text, "last_updated", `"${when}"`);
     text = appendSessionLog(text,
-      `### Session ${when} | Stands on | ${who}\n`
-      + `Trigger: op=versioncurrent on ${inquiryId}\n`
-      + `Changes: this project now stands on reading '${vname}' of ${inquiryId}.\n`
-      + (why ? `Reason: ${why}\n` : ""));
+      localize("basis-versions.index.session_when_stands_on_who", "### Session {when} | Stands on | {who}\nTrigger: op=versioncurrent on {inquiryId}\nChanges: this project now stands on reading '{vname}' of {inquiryId_2}.\n{v1}", { when: String(when), who: String(who), inquiryId: String(inquiryId), vname: String(vname), inquiryId_2: String(inquiryId), v1: String(why ? `Reason: ${why}\n` : "") }));
     return this.#repromote({ bundleId: pid, base: projectRow.bundle_sha, text, when, author: who,
       meta: { object_type: pfm.object_type ?? "project", title: pfm.title, current_state: pfm.current_state ?? "forming",
               prior_state: pfm.prior_state ?? null, created: pfm.created, last_updated: when,
@@ -1265,14 +1224,11 @@ export class BasisVersions {
     let text = BasisVersions.#withVersion(src, v, grounds, legs);
     if (text === null)
       return { ok: false, reason: "UNSPLICEABLE_BASIS", target: tgt,
-               detail: "this question's version block is in a shape the restricted frontmatter grammar "
-                     + "cannot extend in place, so nothing was written." };
+               detail: localize("basis-versions.index.this_questions_version_block_is", "this question's version block is in a shape the restricted frontmatter grammar cannot extend in place, so nothing was written.") };
     text = setScalar(text, "last_updated", `"${when}"`);
     text = appendSessionLog(text, typeof log === "string" && log
       ? log
-      : `### Session ${when} | Version appended | ${author}\n`
-        + `Trigger: appendVersion on ${tgt}\n`
-        + `Changes: reading '${fmSafe(name)}' added, in state suggested.\n`);
+      : localize("basis-versions.index.session_when_version_appended_author", "### Session {when} | Version appended | {author}\nTrigger: appendVersion on {tgt}\nChanges: reading '{fmSafe}' added, in state suggested.\n", { when: String(when), author: String(author), tgt: String(tgt), fmSafe: String(fmSafe(name)) }));
     return this.#repromote({ bundleId: tgt, base: b.bundle_sha, text, when, author,
       meta: { object_type: fm0.object_type ?? b.object_type, title: fm0.title, current_state: b.current_state,
               prior_state: fm0.prior_state ?? null, created: fm0.created, last_updated: when,
@@ -1303,8 +1259,7 @@ export class BasisVersions {
     const b = tgt ? this.#visible(tgt, viewer) : null;
     if (!b || normalizeType(b.object_type) !== "inquiry")
       return refusal("NARROW_NO_INQUIRY",
-        tgt ? `no question by the id '${tgt.slice(0, 60)}' is readable here. A question you may not `
-              + `see answers exactly as one that does not exist.`
+        tgt ? localize("basis-versions.index.no_question_by_the_id", "no question by the id '{tgt}' is readable here. A question you may not see answers exactly as one that does not exist.", { tgt: String(tgt.slice(0, 60)) })
             : `pass target=<INQ-…>: the question whose reading holds the citation.`, { target: tgt || null });
     const text = this.#doc(b.bundle_id);
     const fm = text !== null ? (parseFrontmatter(text).data || {}) : {};
@@ -1312,9 +1267,8 @@ export class BasisVersions {
     const vrow = vname ? versions.find((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname) : null;
     if (!vrow)
       return refusal("NARROW_NO_SUCH_VERSION",
-        vname ? `${b.bundle_id} holds no reading named '${vname.slice(0, 64)}'.`
-                + (versions.length ? "" : " It holds no readings at all: the live basis is not a reading, and "
-                  + "a citation on it is made more specific by a reading taken from it.")
+        vname ? localize("basis-versions.index.bundle_id_holds_no_reading", "{bundle_id} holds no reading named '{vname}'.{v1}", { bundle_id: String(b.bundle_id), vname: String(vname.slice(0, 64)), v1: String(versions.length ? "" : " It holds no readings at all: the live basis is not a reading, and "
+                  + "a citation on it is made more specific by a reading taken from it.") })
               : `pass version=<the name of the reading that holds the citation>.`,
         { target: b.bundle_id, version: vname || null,
           known: versions.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
@@ -1323,8 +1277,7 @@ export class BasisVersions {
     const k = /^\d+$/.test(ordRaw) ? parseInt(ordRaw, 10) : -1;
     if (k < 0 || k >= legRows.length)
       return refusal("NARROW_NO_SUCH_LEG",
-        `the reading '${vname}' has ${legRows.length} piece(s) of evidence, counted from 0, and `
-        + `${ordRaw ? `'${ordRaw.slice(0, 12)}'` : "no position"} was named.`,
+        localize("basis-versions.index.the_reading_vname_has_length", "the reading '{vname}' has {length} piece(s) of evidence, counted from 0, and {v1} was named.", { vname: String(vname), length: String(legRows.length), v1: String(ordRaw ? `'${ordRaw.slice(0, 12)}'` : "no position") }),
         { target: b.bundle_id, version: vname, ord: ordRaw || null, legs: legRows.length });
     const leg = legRows[k];
     /* the row the projection resolved for this leg: one answer to "which part", never a second derivation */
@@ -1334,9 +1287,8 @@ export class BasisVersions {
     if (!proj || proj.target_id !== leg.target || !row)
       return refusal("NARROW_NO_PART",
         isInquiryId(leg.target)
-          ? `piece ${k} of '${vname}' rests on another question (${leg.target}), which has no part to name.`
-          : `piece ${k} of '${vname}' rests on ${leg.target}, and this record resolves no part of it — it `
-            + `holds no copy of that document to point into.`,
+          ? localize("basis-versions.index.piece_k_of_vname_rests", "piece {k} of '{vname}' rests on another question ({target}), which has no part to name.", { k: String(k), vname: String(vname), target: String(leg.target) })
+          : localize("basis-versions.index.piece_k_of_vname_rests_2", "piece {k} of '{vname}' rests on {target}, and this record resolves no part of it — it holds no copy of that document to point into.", { k: String(k), vname: String(vname), target: String(leg.target) }),
         { target: b.bundle_id, version: vname, ord: k, leg_target: leg.target ?? null });
     /* END DEC-49 REGION is-narrow-source */
     const extent = row.extent && typeof row.extent === "object" ? row.extent : { kind: row.extent_kind };
@@ -1378,9 +1330,7 @@ export class BasisVersions {
       push({ source: "reading", ref: pos.ref, extent: { kind: pos.kind, ...posFields(pos) },
              reference: r.ref, label: r.label ?? null, mentions_subject: subject ? !!r.named : null,
              content_id: null, mint: mintLabel(CONTENT_MINTED_BY_PLANE), machine_work: true,
-             says: `the record's own reading of this document found a reference ('${String(r.ref).slice(0, 80)}') `
-                 + `at ${pos.ref}. That it is there is what the reading says; whether it is on point is yours `
-                 + `to judge.` });
+             says: word("basis-versions.says.record_reading_document", { ref: String(String(r.ref).slice(0, 80)), ref2: String(pos.ref) }) });
     }
     /* (2) what an extract run proposed, through the candidate source run-productions registers (R40; K73 (2), K3257) */
     if (this.#candidateSource) {
@@ -1395,8 +1345,7 @@ export class BasisVersions {
         push({ source: "extract", ref: pos.ref, extent: { kind: pos.kind, ...posFields(pos) },
                reference: r.ref, label: r.label ?? null, run: r.run, mentions_subject: null,
                content_id: r.content_id ?? null, mint: mintLabel(r.proposed_by), machine_work: true,
-               says: `a machine proposed this passage in run ${r.run}. It is a PROPOSAL: not part of any `
-                   + `citation, and not coverage, until a member chooses it.` });
+               says: word("basis-versions.says.machine_proposed_passage", { run: String(r.run) }) });
       }
     }
     /* (3) rows a machine marked citable (content R45's read contract) */
@@ -1408,7 +1357,7 @@ export class BasisVersions {
       push({ source: "marked", ref: r.ref, extent: { kind: r.extent_kind, ...(safeJson(r.extent) || {}) },
              reference: null, label: null, mentions_subject: null, content_id: r.content_id,
              mint: mintLabel(r.minted_by), machine_work: true,
-             says: `a machine marked this passage citable. Nobody has chosen it for this citation.` });
+             says: word("basis-versions.says.machine_marked_passage") });
     }
     /* subject mentions first — the one ordering the record can defend — then as read */
     out.sort((x, y) => (y.mentions_subject === true) - (x.mentions_subject === true));
@@ -1426,11 +1375,8 @@ export class BasisVersions {
                   extent: src.extent, capture_sha: src.row.capture_sha };
     const absence = list.candidates.length ? null
       : !list.read
-        ? { level: "document", says: "this copy of the document has never been read, so the machine has "
-              + "no passage to propose. You may still name the part yourself." }
-        : { level: "content", says: "the document was read and nothing the machine found lies inside what "
-              + "this citation already points at. That is not evidence there is no better passage — only "
-              + "that none was proposed. You may still name the part yourself." };
+        ? { level: "document", says: word("basis-versions.says.copy_document_read") }
+        : { level: "content", says: word("basis-versions.says.document_read_machine") };
     return { ok: true, target: src.b.bundle_id, version: src.vname, ord: src.k, leg,
              subject: list.subject, candidates: list.candidates, counts: list.counts,
              limit: NARROW_CANDIDATES_MAX, truncated: list.truncated, absence, proposal_only: true,
@@ -1464,14 +1410,12 @@ export class BasisVersions {
     /* DEC-49 REGION is-narrow-extent */
     if (!who || isMachineIdentity(who))
       return refusal("NARROW_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. It may propose passages (op=narrowcandidates `
-              + `lists them); choosing which one a citation rests on is a member's act.`
-            : `this act names no member, and a choice nobody made is not a choice.`, { target: src.b.bundle_id });
+        who ? localize("basis-versions.index.who_is_a_machine_credential", "'{who}' is a machine credential. It may propose passages (op=narrowcandidates lists them); choosing which one a citation rests on is a member's act.", { who: String(who.slice(0, 60)) })
+            : localize("basis-versions.index.this_act_names_no_member", "this act names no member, and a choice nobody made is not a choice."), { target: src.b.bundle_id });
     const unknown = Object.keys(bag).filter((k) => !(k in EXTENT_FIELDS)).sort();
     if (unknown.length)
       return refusal("NARROW_BAD_EXTENT",
-        `this call names ${unknown.map((k) => `'${k}'`).join(", ")}, which this act does not take. The `
-        + `fields it takes are: ${Object.keys(EXTENT_FIELDS).join(", ")}.`, { got: unknown });
+        localize("basis-versions.index.this_call_names_map_which", "this call names {map}, which this act does not take. The fields it takes are: {keys}.", { map: String(unknown.map((k) => `'${k}'`).join(", ")), keys: String(Object.keys(EXTENT_FIELDS).join(", ")) }), { got: unknown });
     if (!authored.length)
       return refusal("NARROW_NO_EXTENT",
         "pass extent={…}: the part of the document the citation should now point at, or the content_id "
@@ -1480,8 +1424,7 @@ export class BasisVersions {
       const raw = String(bag[k]).trim();
       if (raw.length > 200 || /["\\\r\n#]/.test(raw))
         return refusal("NARROW_BAD_EXTENT",
-          `'${k}' cannot be written into the record as it stands: at most 200 characters, and no quotation `
-          + `mark, backslash, line break or comment mark.`, { field: k });
+          localize("basis-versions.index.k_cannot_be_written_into", "'{k}' cannot be written into the record as it stands: at most 200 characters, and no quotation mark, backslash, line break or comment mark.", { k: String(k) }), { field: k });
       const t = EXTENT_FIELDS[k];
       if (t === "int" && /^\d+$/.test(raw)) legFields[k] = parseInt(raw, 10);
       else if (t === "nums") {
@@ -1493,19 +1436,17 @@ export class BasisVersions {
     if (legFields.content_id !== undefined) {
       if (authored.length > 1)
         return refusal("NARROW_BAD_EXTENT",
-          "this call names a content id AND describes a part: one fact written twice, which can disagree. "
-          + "Send one or the other.", { got: authored });
+          localize("basis-versions.index.this_call_names_a_content", "this call names a content id AND describes a part: one fact written twice, which can disagree. Send one or the other."), { got: authored });
       chosenRow = this.content.contentRow(String(legFields.content_id));
       if (!chosenRow)
         return refusal("NARROW_BAD_EXTENT",
-          `content id '${String(legFields.content_id).slice(0, 16)}…' names no part this record holds.`,
+          localize("basis-versions.index.content_id_string_names_no", "content id '{String}…' names no part this record holds.", { String: String(String(legFields.content_id).slice(0, 16)) }),
           { content_id: String(legFields.content_id) });
       if (chosenRow.bundle_id !== src.leg.target || chosenRow.capture_sha !== src.row.capture_sha)
         return refusal("NARROW_OTHER_CAPTURE",
-          `the citation rests on ${src.leg.target} as captured at ${src.row.capture_sha.slice(0, 12)}…, and `
-          + `the part named is ${chosenRow.bundle_id === src.leg.target
+          localize("basis-versions.index.the_citation_rests_on_target", "the citation rests on {target} as captured at {capture_sha}…, and the part named is {v1}.", { target: String(src.leg.target), capture_sha: String(src.row.capture_sha.slice(0, 12)), v1: String(chosenRow.bundle_id === src.leg.target
             ? `in a DIFFERENT copy of it (${String(chosenRow.capture_sha).slice(0, 12)}…)`
-            : `in a different document (${chosenRow.bundle_id})`}.`,
+            : `in a different document (${chosenRow.bundle_id})`) }),
           { from_capture: src.row.capture_sha, to_capture: chosenRow.capture_sha, to_bundle: chosenRow.bundle_id });
     }
     /* END DEC-49 REGION is-narrow-extent */
@@ -1518,8 +1459,7 @@ export class BasisVersions {
         return { ok: false, reason: "BASIS_REFUSED", target: src.b.bundle_id,
                  findings: errs.map((x) => ({ check: x.check, code: x.code ?? null, detail: x.message,
                                               repairs: x.repairs ?? [] })),
-                 detail: "the part named is refused by the SAME catalog function op=promote runs at the "
-                       + "write, so nothing was written." };
+                 detail: localize("basis-versions.index.the_part_named_is_refused", "the part named is refused by the SAME catalog function op=promote runs at the write, so nothing was written.") };
     }
     const newExtent = chosenRow ? chosenRow.extent : legExtent(legFields);
     const relation = extentRelation(src.extent, newExtent);
@@ -1528,21 +1468,18 @@ export class BasisVersions {
     /* DEC-49 REGION is-narrow-claim */
     if (relation !== "narrower")
       return refusal("NARROW_NOT_NARROWER",
-        `the citation points at ${src.row.ref} and the part named (${describeExtent(newExtent)}) is `
-        + (relation === "same" ? "that same part"
+        localize("basis-versions.index.the_citation_points_at_ref", "the citation points at {ref} and the part named ({describeExtent}) is {v1}. Narrowing only ever points a citation at less of its document.", { ref: String(src.row.ref), describeExtent: String(describeExtent(newExtent)), v1: String(relation === "same" ? "that same part"
           : relation === "wider" ? "WIDER than it"
           : relation === "disjoint" ? "a different place, not a part of it"
-          : "not one this record can compare with it")
-        + ". Narrowing only ever points a citation at less of its document.",
+          : "not one this record can compare with it") }),
         { relation, from: src.extent, to: newExtent });
     if (!name || !VERSION_NAME_RE.test(name) || existingNames.has(nameWritten))
       return refusal("NARROW_NAME",
         !name ? "pass name=<a name for the new reading>."
           : existingNames.has(nameWritten)
-            ? `'${name.slice(0, 64)}' already names a reading of ${src.b.bundle_id}` + (nameWritten === src.vname
-              ? ` — it is the reading being narrowed, and reusing its name would change it in place.` : `.`)
-            : `'${name.slice(0, 64)}' is not a name a reading can carry: letters, digits, space, dot, `
-              + `dash and underscore, starting with a letter or digit, at most 64 characters.`,
+            ? localize("basis-versions.index.name_already_names_a_reading", "'{name}' already names a reading of {bundle_id}{v1}", { name: String(name.slice(0, 64)), bundle_id: String(src.b.bundle_id), v1: String(nameWritten === src.vname
+              ? ` — it is the reading being narrowed, and reusing its name would change it in place.` : `.`) })
+            : localize("basis-versions.index.name_is_not_a_name", "'{name}' is not a name a reading can carry: letters, digits, space, dot, dash and underscore, starting with a letter or digit, at most 64 characters.", { name: String(name.slice(0, 64)) }),
         { name: name || null, taken: existingNames.has(nameWritten) });
     if (!description || isBoilerplate(description))
       return refusal("NARROW_NO_DESCRIPTION",
@@ -1587,14 +1524,7 @@ export class BasisVersions {
     const toKey = canonicalExtent(newExtent);
     const matched = this.#narrowCandidateList(src).candidates.find((c) => canonicalExtent(c.extent) === toKey) || null;
     const promoted = this.appendVersion({ target: src.b.bundle_id, version, grounds, legs, author: who, at: nowIso,
-      log: `### Session ${nowIso} | Narrowed a citation | ${who}\n`
-        + `Trigger: op=narrow on ${src.b.bundle_id}\n`
-        + `Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggested; piece ${src.k} `
-        + `(${src.leg.target}) now points at ${fmSafe(describeExtent(newExtent))} instead of `
-        + `${fmSafe(src.row.ref)}. '${src.vname}' is unchanged.`
-        + (matched ? ` Chosen from a machine proposal (${matched.source}).` : ` Named by the member.`)
-        + (Object.keys(dropped).length ? ` The old grade was not carried: a part earns only from what is in it.` : ``)
-        + `\n` });
+      log: localize("basis-versions.index.session_nowiso_narrowed_a_citation", "### Session {nowIso} | Narrowed a citation | {who}\nTrigger: op=narrow on {bundle_id}\nChanges: reading '{nameWritten}' derived from '{vname}', in state suggested; piece {k} ({target}) now points at {fmSafe} instead of {fmSafe_2}. '{vname_2}' is unchanged.{v1}{v2}\n", { nowIso: String(nowIso), who: String(who), bundle_id: String(src.b.bundle_id), nameWritten: String(nameWritten), vname: String(src.vname), k: String(src.k), target: String(src.leg.target), fmSafe: String(fmSafe(describeExtent(newExtent))), fmSafe_2: String(fmSafe(src.row.ref)), vname_2: String(src.vname), v1: String(matched ? ` Chosen from a machine proposal (${matched.source}).` : ` Named by the member.`), v2: String(Object.keys(dropped).length ? ` The old grade was not carried: a part earns only from what is in it.` : ``) }) });
     if (!promoted.ok) return { ...promoted, target: src.b.bundle_id, name: nameWritten };
     const after = this.#one(`SELECT content_id FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? AND ord=?`,
                             src.b.bundle_id, nameWritten, src.k);
@@ -1614,15 +1544,11 @@ export class BasisVersions {
              chosen_from: matched ? { source: matched.source, machine_work: true, says: matched.says } : null,
              grade_not_carried: Object.keys(dropped).length
                ? { was: dropped,
-                   why: "a grade was earned for what the citation pointed at before; a part earns only from "
-                      + "what is in it, so the narrowed piece is left ungraded and stated as such. "
-                      + "op=earnedbasis answers what this part earns." }
+                   why: localize("basis-versions.index.a_grade_was_earned_for", "a grade was earned for what the citation pointed at before; a part earns only from what is in it, so the narrowed piece is left ungraded and stated as such. op=earnedbasis answers what this part earns.") }
                : null,
              bundleSha: promoted.bundleSha ?? promoted.bundle_sha ?? null,
              version_content: promoted.version_content ?? [],
-             says: `a new reading '${nameWritten}' was written, taken from '${src.vname}', with piece ${src.k} `
-                 + `pointing at less of its document. '${src.vname}' and its citation are exactly as they `
-                 + `were. The new reading is SUGGESTED: standing on it is a separate act.` };
+             says: word("basis-versions.says.new_reading_written", { name_written: String(nameWritten), vname: String(src.vname), k: String(src.k) }) };
   }
 }
 

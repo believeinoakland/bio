@@ -1,0 +1,35 @@
+# inquiry: the words check after the conversion (K3949)
+
+Layer 6. 13 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `bio-plane/src/inquiry/index.mjs:180` "and whether it is in {} could not be read, so the application is re..."
+- inline `bio-plane/src/inquiry/index.mjs:181` "which is not in {}" — string concatenation (operand is a conditional or logical expression)
+- inline `bio-plane/src/inquiry/index.mjs:2121` ", and {} of them CUT AGAINST this inquiry"
+- inline `bio-plane/src/inquiry/index.mjs:2540` "again; that is a restructuring like any other and takes a reason."
+- inline `bio-plane/src/inquiry/index.mjs:2749` "First grouping: no earlier structure to revise."
+- inline `bio-plane/src/inquiry/index.mjs:2750` "Strength before: not stated (no module answers it here)."
+- inline `bio-plane/src/inquiry/index.mjs:638` "this child does not name {}, which {} was also divided"
+- inline `bio-plane/src/inquiry/index.mjs:640` "the other half EXISTS (R4)."
+- inline `bio-plane/src/inquiry/index.mjs:642` "it also names {}, which {} was not divided into."
+- testcopy `bio-plane/test/m/inquiry/person-warning.test.mjs:46` [part] "a person in a public role" — part test copy
+- testcopy `bio-plane/test/m/inquiry/surfaced.test.mjs:17` [part] "This revision changes who surfaced the question, a member or an ass..." — part test copy
+- testcopy `bio-plane/test/m/inquiry/surfaced.test.mjs:18` [part] "once, when the question is opened, and a later edit cannot rewrite ..." — part test copy
+- testcopy `bio-plane/test/m/inquiry/surfaced.test.mjs:19` [part] "value the current version carries and save the revision again." — part test copy
+
+## Plain findings (K3957)
+
+6 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('inquiry.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/inquiry/index.mjs:726` "no duty the record holds derives it"
+- plain `bio-plane/src/inquiry/index.mjs:1713` "this selection resolves to no members, so there is nothing to dispose"
+- plain `bio-plane/src/inquiry/index.mjs:1831` "this inquiry has no readable bundle.md, so its state cannot be moved; nothing was moved"
+- plain `bio-plane/src/inquiry/index.mjs:1839` "pointing at a history the document does not carry (C-4.2); nothing was moved"
+- plain `bio-plane/src/inquiry/index.mjs:1997` "this inquiry has no readable bundle.md, so its state cannot be moved"
+- plain `bio-plane/src/inquiry/index.mjs:2571` "this inquiry has no readable bundle.md, so its structure cannot be authored"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/inquiry/case-grammar.test.mjs:75` "\"from this document's frontmatter\""
+- testcopy `bio-plane/test/m/inquiry/case-grammar.test.mjs:261` "\"' is not a named member: \\\"these legs are enough on their own\\\" is an...\""

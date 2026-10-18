@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, serve, DAEMON, V, NOW } from "./fixture.mjs";
 import { investigationOf } from "../../../src/investigation/index.mjs";
 import { normalizeAddress } from "../../../src/subresources.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LA = "https://records.example.org/agenda.txt";
 const LB = "https://records.example.org/budget.txt";
@@ -97,7 +98,7 @@ test("R70: a change tick on a source a watched project's intent R7 names is repo
   assert.deepEqual(changed.body.arrivals, { reported: [{ project: P1, source: normalizeAddress(LA), at }], failed: [] });
   assert.deepEqual(w.arrivals(), [{ project_id: P1, source: normalizeAddress(LA), arrived_at: at }], "once for that look");
   const q = w.inv.quietState({ project: P1, viewer: V("carol") });
-  assert.deepEqual([q.quiet, q.why], [false, "something arrived from a watched source"], "the project's work reads reopened");
+  assert.deepEqual([q.quiet, q.why], [false, word("investigation.why.something_arrived_watched")], "the project's work reads reopened");
   /* a caller who may not see the project is not told of it, and it is reported all the same */
   w.st.sql.exec(`UPDATE project_sight SET setting = 'hidden' WHERE project_id = ?`, P1);
   w.clock.ms += 1000;

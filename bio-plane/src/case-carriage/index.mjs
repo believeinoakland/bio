@@ -73,6 +73,7 @@ import { materialsOf, extractedTextOf, acceptedWorkOf as acceptedWorkBlocksOf, c
          sourceRowsStanding } from "../case-grammar/index.mjs";
 import { CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES, migrateCaseCarriage } from "./schema.mjs";
 import { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { CASE_CARRIAGE_SCHEMA, CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES } from "./schema.mjs";
 export { CASE_CARRIAGE_CHECKS, CASE_CARRIAGE_WORDS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
@@ -104,20 +105,20 @@ const IMAGE_EXT = /\.(jpe?g|jfif|png|gif|webp|heic|heif|avif|tiff?|bmp)$/i;
 /* R8 (K2291 (2)): an entry of an archive's listing that is itself an archive never opened. */
 const ARCHIVE_EXT = /\.zip$/i;
 /* R1, R8 (T38; N779): why a photo, or an archive holding an image, is not carried. */
-export const PHOTO_ONLY_AS_COPY = "a photo travels only as its copy";
-export const ARCHIVE_HOLDS_IMAGE = "the archive holds an image, and an image leaves only as its copy";
+export const PHOTO_ONLY_AS_COPY = word("case-carriage.photo_only_as_copy");
+export const ARCHIVE_HOLDS_IMAGE = word("case-carriage.archive_holds_image");
 /* R1, R8, R13 (T39; N806, K2333): why a member document carried whole, or a member's archive, is not carried. */
-export const MEMBER_DOCUMENT_ONLY_AS_COPY = "a member's document travels only as its copy";
-export const ARCHIVE_SUPPLIED_BY_MEMBER = "the archive was supplied by a member, and a member's file leaves only as its copy";
+export const MEMBER_DOCUMENT_ONLY_AS_COPY = word("case-carriage.member_document_only_as_copy");
+export const ARCHIVE_SUPPLIED_BY_MEMBER = word("case-carriage.archive_supplied_by_member");
 /* R13: why a member document's row lapses when its state cannot be read. */
-const DOCUMENT_UNREAD = "the document's copy could not be read, so it cannot be confirmed";
+const DOCUMENT_UNREAD = word("case-carriage.document_unread");
 /* R13: why a photo's row lapses when its marks cannot be read. */
-const MARKS_UNREAD = "the photo's marks could not be read, so its copy cannot be confirmed";
+const MARKS_UNREAD = word("case-carriage.marks_unread");
 /* R20 (T46; N907): why a row lapses over the interval since a check. */
-export const COPY_CHANGED_SINCE = "the copy changed since the check was made, so the check no longer holds";
-const SINCE_UNREAD = "the instant the check was made cannot be read, so its copy cannot be confirmed since";
-const MARKS_HISTORY_UNREAD = "the photo's marks since the check could not be read, so its copy cannot be confirmed";
-const DOCUMENT_HISTORY_UNREAD = "the document's copies since the check could not be read, so its copy cannot be confirmed";
+export const COPY_CHANGED_SINCE = word("case-carriage.copy_changed_since");
+const SINCE_UNREAD = word("case-carriage.since_unread");
+const MARKS_HISTORY_UNREAD = word("case-carriage.marks_history_unread");
+const DOCUMENT_HISTORY_UNREAD = word("case-carriage.document_history_unread");
 /* R19: the page asked of accepted-work's withdrawals (case-import's bound), and the most pages one read walks. */
 const WITHDRAWAL_PAGE = 1000, WITHDRAWAL_PAGES_MAX = 1000;
 /* R21 (T47): the page asked of a source's changes (sources R20's bound), and the most pages one source's read walks. */
@@ -256,10 +257,10 @@ export class CaseCarriage {
       const inlineOk = !!inline && shaOf(inline.content) === sha;
       if (kind === "observation") {
         if (inlineOk) hold(ref, "observation", sha, inline.content);
-        else miss("observation", "your team's Civicsmith holds no text of that observation at its digest");
+        else miss("observation", word("case-carriage.miss.group_civicsmith_holds"));
         continue;
       }
-      if (!inlineOk && !(home && !inline)) { miss("document", "your team's Civicsmith holds no bytes of that document at its digest"); continue; }
+      if (!inlineOk && !(home && !inline)) { miss("document", word("case-carriage.miss.group_civicsmith_holds_bytes")); continue; }
       /* (T39; N806, K2333) a member document is carried whole only when it carries nothing doc-clean removes */
       const member = this.#memberOf(sha);
       if (member && member.state !== "clean") { miss("document", MEMBER_DOCUMENT_ONLY_AS_COPY); continue; }
@@ -274,7 +275,7 @@ export class CaseCarriage {
           text = extractedTextOf(u.units);
       } catch { text = null; }
       if (typeof text === "string" && HEX64.test(textSha) && shaOf(text) === textSha) hold(ref, "extracted_text", textSha, text);
-      else miss("extracted_text", "your team's Civicsmith holds no whole extracted text of that document at its stated digest");
+      else miss("extracted_text", word("case-carriage.miss.group_civicsmith_holds_whole"));
       /* its timestamp tokens, as the capture's home provenance names them (K1315, K1322) */
       this.#holdTokens(ref, home, sha, hold, unheld);
       /* R8 (N688; K1844): a member of a captured archive, carried with its archive, outward to the outermost; (T39) a
@@ -295,7 +296,7 @@ export class CaseCarriage {
     } catch {
       /* Nothing written can be answered as held: every item is named unheld instead, never refused. */
       return { materials: [], files: [], unheld: [...files.map((f) => ({ ref: f.ref || null, kind: f.kind, sha256: f.sha256,
-        why: "your team's Civicsmith could not record it" })), ...unheld].slice(0, UNHELD_MAX) };
+        why: word("case-carriage.why.group_civicsmith_record") })), ...unheld].slice(0, UNHELD_MAX) };
     }
     return { materials, unheld: unheld.slice(0, UNHELD_MAX), files };
   }
@@ -307,7 +308,7 @@ export class CaseCarriage {
       const f = this.#fileRow(home.bundle_id, t);
       if (f && typeof f.text === "string") hold(ref, "attestation", shaOf(f.text), f.text);
       else if (f && typeof f.blobSha === "string" && HEX64.test(f.blobSha)) hold(ref, "attestation", f.blobSha, null, f.bytes);
-      else unheld.push({ ref: ref || null, kind: "attestation", sha256: sha, why: `the timestamp token ${t} is not held` });
+      else unheld.push({ ref: ref || null, kind: "attestation", sha256: sha, why: word("case-carriage.why.timestamp_token_held", { t: String(t) }) });
     }
   }
 
@@ -330,7 +331,7 @@ export class CaseCarriage {
       const c = entry.container;
       const archive = str(c.archive_sha256).toLowerCase();
       if (digestOf(c.member_sha256) !== cur || !HEX64.test(archive)) {
-        unheld.push({ ref: ref || null, kind: "container", sha256: cur, why: "the container record does not name this document" });
+        unheld.push({ ref: ref || null, kind: "container", sha256: cur, why: word("case-carriage.why.container_record_name") });
         return;
       }
       const record = canonicalJson(c);
@@ -341,7 +342,7 @@ export class CaseCarriage {
       const inline = aHome ? this.#fileText(aHome.bundle_id, aHome.path) : null;
       const inlineOk = !!inline && shaOf(inline.content) === archive;
       if (!inlineOk && !(aHome && !inline)) {
-        unheld.push({ ref: ref || null, kind: "archive", sha256: archive, why: "the archive is not held" });
+        unheld.push({ ref: ref || null, kind: "archive", sha256: archive, why: word("case-carriage.why.archive_held") });
         return;
       }
       if (this.#fetched(archive) !== true) {
@@ -712,7 +713,7 @@ export class CaseCarriage {
           || this.#one(`SELECT bytes FROM document_copies WHERE capture=? AND sha256=? AND state='copy' LIMIT 1`, sha, ob.copy);
     } catch { r = null; }
     if (r) hold(ref, "obscured", ob.copy, null, Number.isInteger(r.bytes) ? r.bytes : null, true);
-    else unheld.push({ ref: ref || null, kind: "obscured", sha256: ob.copy || null, why: "the obscured copy is not held" });
+    else unheld.push({ ref: ref || null, kind: "obscured", sha256: ob.copy || null, why: word("case-carriage.why.obscured_copy_held") });
   }
 
   /* R1, R8, R13 (T38; N779): whether a capture is a photo (R9's term), judged over every home the record holds it on,
@@ -856,19 +857,19 @@ export class CaseCarriage {
       if (!p.photo) return refusal("NOT_A_PHOTO", "that capture is not an image", { capture: p.sha });
       const bad = (area, detail) => refusal("MARK_MALFORMED", detail, { capture: p.sha, area });
       if (!Array.isArray(areas)) return bad(null, "areas is not a list");
-      if (areas.length > MARK_AREAS_MAX) return bad(null, `a mark holds at most ${MARK_AREAS_MAX} areas`);
+      if (areas.length > MARK_AREAS_MAX) return bad(null, localize("case-carriage.index.a_mark_holds_at_most", "a mark holds at most {MARK_AREAS_MAX} areas", { MARK_AREAS_MAX: String(MARK_AREAS_MAX) }));
       const clean = [];
       for (const [i, a] of areas.entries()) {
         if (!a || typeof a !== "object" || Array.isArray(a)) return bad(i, `area ${i} is not an object {rect, kind, reason?}`);
         const r = a.rect;
         if (!Array.isArray(r) || r.length !== 4 || !r.every((v) => Number.isSafeInteger(v)) || !(r[0] < r[2] && r[1] < r[3]))
           return bad(i, `area ${i}'s rect is not four integers [x0, y0, x1, y1] with x0 < x1 and y0 < y1`);
-        if (!MARK_KINDS.includes(a.kind)) return bad(i, `area ${i}'s kind is not one of ${MARK_KINDS.join(", ")}`);
+        if (!MARK_KINDS.includes(a.kind)) return bad(i, localize("case-carriage.index.area_i_s_kind_is", "area {i}'s kind is not one of {MARK_KINDS}", { i: String(i), MARK_KINDS: String(MARK_KINDS.join(", ")) }));
         clean.push({ rect: [...r], kind: a.kind, ...(a.reason !== undefined ? { reason: a.reason } : {}) });
       }
       for (const [i, a] of clean.entries())
         if (a.kind === "staff" && !(typeof a.reason === "string" && a.reason.trim() && a.reason.length <= STAFF_REASON_MAX))
-          return refusal("STAFF_MARK_NO_REASON", `area ${i} obscures a staff member with no reason of 1 to ${STAFF_REASON_MAX} characters`,
+          return refusal("STAFF_MARK_NO_REASON", localize("case-carriage.index.area_i_obscures_a_staff", "area {i} obscures a staff member with no reason of 1 to {STAFF_REASON_MAX} characters", { i: String(i), STAFF_REASON_MAX: String(STAFF_REASON_MAX) }),
                          { capture: p.sha, area: i });
       for (const a of clean) if (a.kind !== "staff") delete a.reason;
       return await this.#serially(p.sha, () => this.#mark(p.sha, clean, by.trim()));
@@ -904,10 +905,10 @@ export class CaseCarriage {
     if (!own) return refusal("NO_SUCH_MARK", "no mark of that number is on that photo",
                              { capture: sha, mark: Number.isSafeInteger(id) ? id : null, photo: sha });
     const prior = this.#one(`SELECT withdrawal, by, at FROM photo_mark_withdrawals WHERE mark=?`, id);
-    if (prior) return refusal("MARK_ALREADY_WITHDRAWN", `mark ${id} was withdrawn at ${prior.at} by ${prior.by}`,
+    if (prior) return refusal("MARK_ALREADY_WITHDRAWN", localize("case-carriage.index.mark_id_was_withdrawn_at", "mark {id} was withdrawn at {at} by {by}", { id: String(id), at: String(prior.at), by: String(prior.by) }),
                               { capture: sha, mark: id, withdrawn: { by: prior.by, at: prior.at }, member: prior.by, date: prior.at });
     if (!(typeof reason === "string" && reason.trim() && reason.length <= WITHDRAW_REASON_MAX))
-      return refusal("WITHDRAW_NO_REASON", `a withdrawal gives a reason of 1 to ${WITHDRAW_REASON_MAX} characters`, { capture: sha, mark: id });
+      return refusal("WITHDRAW_NO_REASON", localize("case-carriage.index.a_withdrawal_gives_a_reason", "a withdrawal gives a reason of 1 to {WITHDRAW_REASON_MAX} characters", { WITHDRAW_REASON_MAX: String(WITHDRAW_REASON_MAX) }), { capture: sha, mark: id });
     const { marks } = this.#marksOf(sha);
     const standing = marks.filter((m) => !m.withdrawn && m.mark !== id);
     const derivation = standing.length ? await this.#derive(sha, standing.flatMap((m) => m.areas).map((a) => a.rect), Infinity) : null;
@@ -1077,7 +1078,7 @@ export class CaseCarriage {
       try { s = this.#documentState(sha); } catch { s = UNDETERMINED; }
       if (s.state === "undetermined") return { ref, sha, kind: "document", why: DOCUMENT_UNREAD };
       if (!(s.state === "copy" && s.copy === ob.copy))
-        return { ref, sha, kind: "document", why: "the document's copy is no longer the one the case names, so the case must be prepared again" };
+        return { ref, sha, kind: "document", why: word("case-carriage.why.document_copy_longer") };
       return null;
     }
     let view = null;
@@ -1087,7 +1088,7 @@ export class CaseCarriage {
     } catch { view = null; }
     if (!view) return { ref, sha: sha || null, kind: "photo", why: MARKS_UNREAD };
     if (!(view.copy && view.copy.sha256 === ob.copy))
-      return { ref, sha, kind: "photo", why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" };
+      return { ref, sha, kind: "photo", why: word("case-carriage.why.mark_photo_added") };
     return null;
   }
 
@@ -1191,7 +1192,7 @@ export class CaseCarriage {
       r = { ok: false, reason: "REGISTRATION_THREW", detail: String((e && e.message) || e) };
     }
     if (!(r && typeof r === "object" && r.ok === true)) {
-      const refused = r && typeof r === "object" ? r : { ok: false, reason: "REGISTRATION_UNANSWERED", detail: `the registration answered ${String(r)}` };
+      const refused = r && typeof r === "object" ? r : { ok: false, reason: "REGISTRATION_UNANSWERED", detail: localize("case-carriage.index.the_registration_answered_string", "the registration answered {String}", { String: String(String(r)) }) };
       this.#fault("onReceipt", refused);
       return refused;
     }
@@ -1292,7 +1293,7 @@ export class CaseCarriage {
     if (fetched === null) return { failed: true };
     if (fetched) return { state: "public" };
     const tooLarge = (size) => ({ state: "refused", code: "DOCUMENT_TOO_LARGE",
-      detail: `the document is ${size} bytes, over the ${CLEAN_MAX_BYTES} a copy is made from` });
+      detail: localize("case-carriage.index.the_document_is_size_bytes", "the document is {size} bytes, over the {CLEAN_MAX_BYTES} a copy is made from", { size: String(size), CLEAN_MAX_BYTES: String(CLEAN_MAX_BYTES) }) });
     const stated = Math.max(-1, ...this.#homes(sha).map((h) => Number(h.bytes)).filter(Number.isFinite));
     if (stated > CLEAN_MAX_BYTES) return tooLarge(stated);
     let bytes = null;

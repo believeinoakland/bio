@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const T = { statement: "I attended the swearing-in" };
 
@@ -25,7 +26,7 @@ test("R6 bound_cache holds each bound resolved: a value as given, an event bound
   assert.equal(w.move(left, "2024-06-30").ok, true);
   assert.deepEqual([cache().to_instant, cache().to_precision, cache().to_zone], ["2024-06-30", "day", "America/Halifax"]);
   assert.equal(w.l.holderAt({ office: o, at: "2024-06-30", viewer: ANN }).holder, p, "a to-bound reads through the event's whole day");
-  assert.equal(w.l.holderAt({ office: o, at: "2024-07-01", viewer: ANN }).undetermined, "no line covers the date");
+  assert.equal(w.l.holderAt({ office: o, at: "2024-07-01", viewer: ANN }).undetermined, word("lines.undetermined.line_covers_date"));
   /* a failed event write rolls the cache back with it: a later module's listener throws, so events undoes the move */
   let boom = false;
   assert.equal(w.ev.onWhenChanged("local-facts", () => { if (boom) throw new Error("this listener fails"); }).ok, true);

@@ -4,6 +4,7 @@
    none says "knows", "network", "conflict", "suspicious" or "most connected" (R16), or names a place (R18). */
 import { bounds } from '../civil-time/index.mjs';
 import { isRecordId, depthOf, DECLARED_LABEL, HUNCH_LABEL } from '../connection-grammar/index.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 export const refuse = (refused, why) => ({ refused, why });
 export const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -11,12 +12,12 @@ export const filled = (v) => typeof v === 'string' && v.trim() !== '';
 export const isRefusal = (a) => isObj(a) && filled(a.refused);
 
 /** The sentence every lead carries (R6, K1467, K1487). */
-export const LEAD_SENTENCE = 'This path is a lead: no finding rests on it until each declared or hunch step is replaced by evidence.';
+export const LEAD_SENTENCE = word('explore.lead_sentence');
 /** What a declared hop and a hunch hop are marked (R6). */
 export const DECLARED_MARK = DECLARED_LABEL;
 export const HUNCH_MARK = HUNCH_LABEL;
 /** What every answer says it is not (R16, K1486). */
-export const NOT_ASSERTED = 'Each step is a cited connection the record holds; the answer asserts nothing beyond them.';
+export const NOT_ASSERTED = word('explore.not_asserted');
 
 /** A viewer is the control plane's stamp; absent, every read fails closed (Terms). @param {unknown} viewer */
 export function viewerRefusal(viewer) {
@@ -29,9 +30,9 @@ export function viewerRefusal(viewer) {
 /** NO_NODE, BAD_NODE for one end (R1). @param {unknown} node @param {string} name @param {boolean} required */
 export function nodeRefusal(node, name, required) {
   if (node === undefined || node === null || node === '') {
-    return required ? refuse('NO_NODE', `no ${name} is named: a walk starts from a record id`) : null;
+    return required ? refuse('NO_NODE', localize('explore.answer.no_name_is_named_a', 'no {name} is named: a walk starts from a record id', { name: String(name) })) : null;
   }
-  if (!isRecordId(node)) return refuse('BAD_NODE', `${name} ${String(node).slice(0, 60)} is not a record id the id grammar knows`);
+  if (!isRecordId(node)) return refuse('BAD_NODE', localize('explore.answer.name_string_is_not_a', '{name} {String} is not a record id the id grammar knows', { name: String(name), String: String(String(node).slice(0, 60)) }));
   return null;
 }
 
@@ -41,7 +42,7 @@ export function nodeRefusal(node, name, required) {
  * @param {unknown} at @param {string} [name]
  */
 export function dateRefusal(at, name = 'at') {
-  if (at === undefined || at === null || at === '') return refuse('NO_DATE', `no ${name} is stated: an exploration is always as of a stated date, never of "now"`);
+  if (at === undefined || at === null || at === '') return refuse('NO_DATE', localize('explore.answer.no_name_is_stated_an', 'no {name} is stated: an exploration is always as of a stated date, never of "now"', { name: String(name) }));
   let b;
   try { b = bounds(/** @type {any} */ (at)); } catch (e) {
     return refuse('BAD_DATE', `${name} is not a date-time {value, precision, zone} or an instant: ${String(/** @type {any} */ (e)?.message ?? e)}`);

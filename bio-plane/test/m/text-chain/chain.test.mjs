@@ -8,6 +8,7 @@ import {
   MACHINE_READ_KINDS, TEXT_CHAIN_CHECKS,
 } from "../../../src/textchain.mjs";
 import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const KINDS = Object.keys(STEP_KINDS);
 /* A minimal well-formed step of each kind. */
@@ -391,7 +392,7 @@ test("R37: a malformed chain evidences nothing", () => {
 });
 
 test("R38: describeChain of a malformed chain is the unrecorded sentence", () => {
-  for (const c of ["x", [], null, [{ step: "nope" }]]) assert.equal(describeChain(c), "this text's provenance was not recorded");
+  for (const c of ["x", [], null, [{ step: "nope" }]]) assert.equal(describeChain(c), word("textchain.text.text_provenance_recorded"));
 });
 
 test("R39: describeChain joins one sentence per step with ' -> '", () => {

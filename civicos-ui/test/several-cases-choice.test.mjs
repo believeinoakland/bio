@@ -66,6 +66,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { appScript } from "./extract.mjs";
 import { ratifyCase } from "../../bio-plane/test/caseceremony.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -174,8 +175,8 @@ const inquiryMd = (id, { title, versions = [], basis = [] }) => ["---",
   "recheck_triggers:", "  - text: Revisit after the next budget cycle", "    description: The adopted budget may restate it.",
   ...(basis.length ? ["basis:", ...basis.flatMap((b) => [`  - target: ${b}`, "    role: supports"])] : []),
   ...versionLines(versions),
-  "---", "", "## Question", "", "Did the transfer follow the process?", "", "## What It Rests On", "",
-  "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+  "---", "", "## Question", "", "Did the transfer follow the process?", "", word("conformance.rests"), "",
+  "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
   `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema: information@1",
   `title: "Info ${id}"`, "current_state: collected", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,

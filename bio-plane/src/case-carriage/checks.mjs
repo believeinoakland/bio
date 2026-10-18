@@ -16,7 +16,7 @@
  * Every sentence of this module's own names no place (R7) and carries no figure; those of C-141.1–.6 and .11 speak in
  * DEC-149's voice ("your group's Civicsmith"), and the words read by key are the design stream's. */
 
-import { word, WORD_ROWS } from "../setup-words/index.mjs";
+import { word, WORD_ROWS, localize } from "../setup-words/index.mjs";
 
 const at =(fn, region) => `src/case-carriage/index.mjs ${fn} > ${region}`;
 const row = (check, where, translation) => Object.freeze({ check, where, translation });
@@ -63,24 +63,22 @@ export const COPY_CLEANED_LABEL = CASE_CARRIAGE_WORDS['document.cleaned.label'];
 export const CASE_CARRIAGE_CHECKS = Object.freeze({
   /* R9 (DEC-180, its design detail; N790): only a member marks; an assistant's proposal of areas is Bob's. */
   MACHINE_CANNOT_MARK_PHOTO: row("C-141.1", at("obscureMark", "is-member-marking"),
-    "Only a member can mark what to obscure in a photo. Nothing was recorded."),
+    word("refusal.MACHINE_CANNOT_MARK_PHOTO")),
   /* R9, R10, R14: the capture is not held, or the asker may not see it: one answer. */
   NO_SUCH_PHOTO: row("C-141.2", at("#photo", "is-photo-seen"),
-    "Your team's Civicsmith holds no photo you can see under that digest. Nothing was recorded."),
+    word("refusal.NO_SUCH_PHOTO")),
   /* R9: the capture is not an image. */
   NOT_A_PHOTO: row("C-141.3", at("#photo", "is-photo"),
-    "That capture is not a photo, so there is nothing in it to obscure. Nothing was recorded."),
+    word("refusal.NOT_A_PHOTO")),
   /* R9: an area is not a rectangle with a kind, or there are too many. */
   MARK_MALFORMED: row("C-141.4", at("obscureMark", "is-mark-well-formed"),
-    "An area of this mark is not a rectangle of the photo with a kind (a person, a number plate or a staff member). "
-      + "The area is named. Nothing was recorded."),
+    word("refusal.MARK_MALFORMED")),
   /* R9 (DEC-180 (5)): city staff at work are part of what a case is about. */
   STAFF_MARK_NO_REASON: row("C-141.5", at("obscureMark", "is-staff-mark-reasoned"),
-    "City staff at work are part of what a case is about, so a staff member is obscured only with a reason. "
-      + "Give the reason for the area named. Nothing was recorded."),
+    word("refusal.STAFF_MARK_NO_REASON")),
   /* R9: image-cover's AREA_OUTSIDE, relayed with its detail. */
   AREA_OUTSIDE: row("C-141.6", at("obscureMark", "is-area-inside"),
-    "An area of this mark lies wholly outside the photo. Mark it again on the photo. Nothing was recorded."),
+    localize("case-carriage.checks.an_area_of_this_mark", "An area of this mark lies wholly outside the photo. Mark it again on the photo. Nothing was recorded.")),
   /* R14 (DEC-183 (2); T40: DEC-187 (3)): only a member withdraws a mark. `photo.withdraw.refused.machine`, by key. */
   MACHINE_CANNOT_WITHDRAW_MARK: row("C-141.7", at("obscureMarkWithdraw", "is-member-withdrawing"),
     CASE_CARRIAGE_WORDS['photo.withdraw.refused.machine']),
@@ -96,5 +94,5 @@ export const CASE_CARRIAGE_CHECKS = Object.freeze({
     CASE_CARRIAGE_WORDS['photo.withdraw.refused.noreason']),
   /* R15 (T39; N806, K2333): copyBatch with no evidence store to read a member's document from or hold its copy in. */
   DOCUMENT_COPY_NO_STORE: row("C-141.11", at("copyBatch", "is-store-bound"),
-    "Your team's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made."),
+    word("refusal.DOCUMENT_COPY_NO_STORE")),
 });

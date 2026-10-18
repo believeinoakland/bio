@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { scene, V, MACHINE, F, DOC } from "./fixture.mjs";
 import { Conformance, CONFORMANCE_CHECKS, CAUSE_MAX, CAUSE_NOT_ESTABLISHED, RECOMMENDATION_KEYS, FACTS_SAY,
          OUTCOMES_DIFFER_SAYS, LIMITS } from "../../../src/conformance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -135,7 +136,7 @@ test("R9 R22 R24: determinationRead answers the cause with its evidence, or caus
   const none = w.c.determine(input());
   const n = w.c.determinationRead({ id: none.id, viewer: V("pat") });
   assert.deepEqual([n.cause, n.cause_says], [null, CAUSE_NOT_ESTABLISHED]);
-  assert.equal(CAUSE_NOT_ESTABLISHED, "cause not established");
+  assert.equal(CAUSE_NOT_ESTABLISHED, word("conformance.cause_established"));
   assert.match(w.text(none.id), /## Cause\n\nCause not established\./);
   /* evidence a viewer may not see leaves the list whole (R24); the statement stays, and the read says something was
      withheld */

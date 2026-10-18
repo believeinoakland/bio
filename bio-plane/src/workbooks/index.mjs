@@ -25,19 +25,20 @@ import { GRID, cellAt, cellName, splitRange, cellValue, sourceValue, sameValue, 
 import { indexWorkbook, inputCells, lintFindings, LINT_KINDS } from "./lint.mjs";
 import { buildExport } from "./export.mjs";
 import { XLSX_CONTENT_TYPE } from "./xlsxwrite.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export { WORKBOOKS_SCHEMA, WORKBOOKS_TABLES } from "./schema.mjs";
 export { LINT_KINDS } from "./lint.mjs";
 export { COMPUTED_LABEL, FORMULA_LABEL } from "./export.mjs";
 export { workbooksOps, WORKBOOKS_OPS } from "./ops.mjs";
 
-export const RECOMPUTE_STATUSES = Object.freeze(["agrees", "differs", "partial", "not recomputed here"]);
+export const RECOMPUTE_STATUSES = Object.freeze(["agrees", "differs", "partial", word("workbooks.recomputed")]);
 export const CHECK_OUTCOMES = Object.freeze(["agrees", "disagrees", "could_not_check"]);
-export const NOT_RECOMPUTED = "not recomputed here";
+export const NOT_RECOMPUTED = word("workbooks.recomputed");
 /** R6: how many cells each recorded list keeps; the counts are always whole, and a cut list says how many it left. */
 export const LIST_MAX = 2000;
 /** R8: the meaning every recompute statement carries. */
-export const RECOMPUTE_MEANING = "agreement between the file's engine and the engine your team's Civicsmith runs, never accuracy";
+export const RECOMPUTE_MEANING = word("workbooks.agreement_between_file");
 /** R8: the engine's measured agreement on the corpus, as `sheet-worker`'s job recorded it (T33-18, K1531), for the
  *  engine build it was measured on. Another build answers that it is not measured. */
 export const ENGINE_MEASURE = Object.freeze({
@@ -237,19 +238,19 @@ export class Workbooks {
   async #source(input, viewer) {
     if (input && typeof input.table === "string") {
       const t = await this.#readTable(input.table, viewer);
-      if (!t || !Array.isArray(t.rows)) return { why: "no declared table with this sha is held" };
+      if (!t || !Array.isArray(t.rows)) return { why: word("workbooks.why.declared_table_sha") };
       const r = splitRange(`x!${input.range ?? ""}`);
       const a = r && a1Corner(r.a), b = r && a1Corner(r.b);
-      if (!a || !b) return { why: "a table range is A1 over the table's fields (A the first) and data rows (1 the first)" };
+      if (!a || !b) return { why: word("workbooks.why.table_range_table") };
       const r1 = Math.min(a.row, b.row), r2 = Math.max(a.row, b.row), c1 = Math.min(a.col, b.col), c2 = Math.max(a.col, b.col);
-      if (r2 > t.rows.length || c2 > t.fields.length) return { why: `the range lies outside the table (${t.rows.length} rows, ${t.fields.length} fields)` };
+      if (r2 > t.rows.length || c2 > t.fields.length) return { why: word("workbooks.why.range_lies_outside", { rows: String(t.rows.length), fields: String(t.fields.length) }) };
       return { kind: "table", table: t, rows: r2 - r1 + 1, cols: c2 - c1 + 1,
                at: (i, j) => { const f = t.fields[c1 - 1 + j]; return sourceValue(t.rows[r1 - 1 + i]?.[f.name], f.type); },
                label: (i, j) => `${input.table.slice(0, 12)}…!${cellName(r1 + i, c1 + j)}` };
     }
     if (input && typeof input.extent === "string") {
       const row = this.#readExtent(input.extent, viewer);
-      if (!row) return { why: "no content extent with this id is held" };
+      if (!row) return { why: word("workbooks.why.content_extent_held") };
       let text = null;
       try { text = this.content.passageText(input.extent); } catch { text = null; }
       const v = text === null || text === undefined ? { kind: "empty", value: null } : sourceValue(String(text).trim(), "number");
@@ -373,12 +374,12 @@ export class Workbooks {
     const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
     let answer = null, why = null, reason = null;
-    if (!this.engine) { reason = "NO_ENGINE"; why = "no engine bound"; }
+    if (!this.engine) { reason = "NO_ENGINE"; why = word("workbooks.why.engine_bound"); }
     else {
       try { answer = await this.engine(wb.capture_sha); } catch (e) { answer = null; why = `no answer: ${e && e.message ? e.message : e}`; }
       if (!answer || typeof answer !== "object") { reason = "NO_ANSWER"; why = why || "no answer"; answer = null; }
       else if (answer.ok !== true) { reason = typeof answer.reason === "string" ? answer.reason : "NO_ANSWER"; why = typeof answer.why === "string" ? answer.why : reason; answer = null; }
-      else if (!Array.isArray(answer.cells)) { reason = "NO_ANSWER"; why = "the engine's answer holds no cells"; answer = null; }
+      else if (!Array.isArray(answer.cells)) { reason = "NO_ANSWER"; why = word("workbooks.why.engine_answer_holds"); answer = null; }
     }
     const at = this.now();
     let rec;
@@ -590,7 +591,7 @@ function pair(answer, cells) {
     if (cachedErr || c.cached === null || c.cached === undefined) {
       counts.cache_stale++;
       cacheStale.push({ cell: ref, cached: c.cached ?? null, engine_value: e.value ?? null,
-                        why: cachedErr ? "the file caches an error where the engine gives a value" : "the file caches no value" });
+                        why: cachedErr ? word("workbooks.why.file_caches_error") : word("workbooks.why.file_caches_value") });
       continue;
     }
     counts.compared++;
@@ -618,13 +619,13 @@ function pair(answer, cells) {
 /** R8: the disclosure a recompute statement carries. */
 function disclosure(rec) {
   if (!rec || rec.status === NOT_RECOMPUTED) {
-    const why = rec ? rec.why || rec.reason : "no recompute is recorded";
-    return { text: `${NOT_RECOMPUTED}: ${why}; open it in any spreadsheet program`, status: NOT_RECOMPUTED };
+    const why = rec ? rec.why || rec.reason : word("workbooks.recompute_recorded");
+    return { text: word("workbooks.open_spreadsheet_program", { not_recomputed: String(NOT_RECOMPUTED), why: String(why) }), status: NOT_RECOMPUTED };
   }
   const measured = rec.engine === ENGINE_MEASURE.engine && rec.engine_version === ENGINE_MEASURE.engine_version;
-  return { text: `recomputed by the engine your team's Civicsmith runs (${rec.engine} ${rec.engine_version}); open it in any spreadsheet program`,
+  return { text: word("workbooks.recomputed_engine_group", { engine: String(rec.engine), engine_version: String(rec.engine_version) }),
            meaning: RECOMPUTE_MEANING, status: rec.status,
-           measure: measured ? ENGINE_MEASURE : { measured: false, why: `no corpus measure is recorded for ${rec.engine} ${rec.engine_version}` } };
+           measure: measured ? ENGINE_MEASURE : { measured: false, why: word("workbooks.why.corpus_measure_recorded", { engine: String(rec.engine), engine_version: String(rec.engine_version) }) } };
 }
 
 function recomputeView(row) {

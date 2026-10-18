@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, listWorld, sweepDef, NOW_MS, WEEK, site, SEED, U, page, filedBundles } from "./fixture.mjs";
 import { linkSweepOf, linkSweepOps, SWEEP_CHECKS, SWEEP_CONSUMER, sweepRefusal } from "../../../src/link-sweep/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LIST = "INFO-2026-0990-list";
 const PROJ = "PROJ-2026-0990-seam";
@@ -79,7 +80,7 @@ test("R4 R7 (monitoring R65): the run reaches monitoring only through sweepHost:
   const epoch = host.openEpoch(SWEEP_CONSUMER, NOW_MS, 86400000);
   assert.equal(host.claim(SWEEP_CONSUMER, `${LIST}#minutes`, epoch), true);
   const skipped = await w.s.sweepTick(NOW_MS);
-  assert.deepEqual(skipped.skipped, [{ sweep: `${LIST}#minutes`, reason: "claimed by a tick that did not finish" }]);
+  assert.deepEqual(skipped.skipped, [{ sweep: `${LIST}#minutes`, reason: word("monitoring.claimed_tick_finish") }]);
   assert.equal(skipped.epoch, epoch, "the epoch the host holds open");
   host.closeEpoch(SWEEP_CONSUMER, epoch);
   /* the host's landing (monitoring R28's): every document filed lands as an Information bundle at collected, in the

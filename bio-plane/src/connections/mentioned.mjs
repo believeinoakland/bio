@@ -9,6 +9,7 @@
  * entity), its id `derivedId` of the pair in sorted order, the derivation time and the pair rule through the entity;
  * a capped derivation is read from `connection_derivations` (R64). */
 import { BOUNDS, derivedId } from "../connection-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R62: the owner, its one kind, the members' word (K1486) and its class. */
 export const MENTIONED_OWNER = "connections";
@@ -65,8 +66,7 @@ export function mentionedNeighbours(k, args, { positionOf = () => null } = {}) {
     const size = k.visibleCaptureCount(e, viewer);
     if (size > CO_MENTION_HUB) {
       hubs.push({ entity: e, set_size: size,
-                  why: `${size} documents you can see concern ${e}, more than ${CO_MENTION_HUB}, so being mentioned `
-                     + `together through it says little; its co-mentions are not listed, and a walk can step around it` });
+                  why: word("connections.why.documents_see_concern", { size: String(size), entry: String(e), co_mention_hub: String(CO_MENTION_HUB) }) });
       continue;
     }
     const d = k.lastDerivation(e);
@@ -95,8 +95,7 @@ export function mentionedNeighbours(k, args, { positionOf = () => null } = {}) {
   /* connection-grammar R6: a node whose set exceeds the hub bound is answered by its size, with no items. */
   if (items.length > BOUNDS.hub)
     return { items: [], hub: { set_size: items.length,
-             why: `this document is mentioned together with ${items.length} others, more than ${BOUNDS.hub}; it is named, `
-                + `never expanded` }, ...extra };
+             why: word("connections.why.document_mentioned_together", { items: String(items.length), hub: String(BOUNDS.hub) }) }, ...extra };
 
   const after = isObj(page) && typeof page.after === "string" ? page.after : null;
   const rest = after ? items.filter((i) => i.id > after) : items;
@@ -105,14 +104,12 @@ export function mentionedNeighbours(k, args, { positionOf = () => null } = {}) {
   return { items: shown, ...(more ? { next: { after: shown[shown.length - 1].id } } : {}), ...extra,
            ...(items.length >= WARN_BAND
              ? { set_size: items.length,
-                 says: `this document is mentioned together with ${items.length} others; the set is answered whole` }
+                 says: word("connections.says.document_mentioned_together", { items: String(items.length) }) }
              : {}) };
 }
 
 function cappedWhy(e, d) {
-  return `${e}'s last derivation stopped at its bound: it paired ${d.documents} documents (at most ${d.document_limit} `
-    + `for ${d.pair_limit} pairs) and read ${d.resolution_rows} resolution rows, so documents beyond the bound are not `
-    + `connected here and this set is not the whole`;
+  return word("connections.last_derivation_stopped", { entry: String(e), documents: String(d.documents), document_limit: String(d.document_limit), pair_limit: String(d.pair_limit), resolution_rows: String(d.resolution_rows) });
 }
 
 /* One row as the shape (R63): the two documents in sorted order, so either end gives the same id. */

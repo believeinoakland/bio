@@ -5,7 +5,7 @@ import { world, doc, ANN, OUT } from "./fixture.mjs";
 import { READ_LIST_MAX, peopleOf } from "../../../src/people/index.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
 import { validAt } from "../../../src/civil-time/index.mjs";
-import { hasWord } from "../../../src/setup-words/index.mjs";
+import { hasWord, word } from "../../../src/setup-words/index.mjs";
 
 /* civil-time's own reason for a validity open at the end, at a date: what personAt passes on or fills a key with (R40) */
 const openEnd = (from, at) => validAt({ valid: { from, to: null, precision: "day", zone: "UTC" }, basis: null }, { value: at, precision: "day", zone: "UTC" }).why;
@@ -82,7 +82,7 @@ test("R15 careerOf answers every holds line of the cluster in validity order wit
   const w = world();
   const { a, b } = linked(w);
   const gov = w.entity("office", "Clerk"), co = w.entity("institution", "Harbour Co");
-  const l2 = w.line("holds", b, co, span("2015-01-01", "2019-12-31"), { capacity: "officer or director", title: "Vice-President, Harbour Operations" });
+  const l2 = w.line("holds", b, co, span("2015-01-01", "2019-12-31"), { capacity: word("label.linecapacities.officer_or_director"), title: "Vice-President, Harbour Operations" });
   const l1 = w.line("holds", a, gov, span("2010-01-01", "2014-12-31"), { capacity: "elected" });
   const l0 = w.line("holds", a, w.entity("institution", "Early Co"), span(null, null));
   w.line("educated_at", a, w.entity("institution", "Marlow College"), span("1990-01-01", "1994-06-01"));
@@ -94,7 +94,7 @@ test("R15 careerOf answers every holds line of the cluster in validity order wit
   const guilded = w.line("credentialed_by", a, guild, span("1998-01-01", "2026-12-31"));
   const career = w.p.careerOf({ entityId: a, viewer: ANN }).career;
   assert.deepEqual(career.map((x) => x.line_id), [l1, l2, l0], "validity order, unstated last");
-  assert.equal(career[1].capacity, "officer or director");
+  assert.equal(career[1].capacity, word("label.linecapacities.officer_or_director"));
   for (const x of career) assert.ok("grade" in x && "citation" in x && "valid" in x && "title" in x);
   assert.equal(career[1].title, "Vice-President, Harbour Operations", "the title as the line's basis words it");
   assert.deepEqual([career[0].title, career[2].title], [null, null], "not stated: null, never composed from the office or capacity");
@@ -130,7 +130,7 @@ test("R15 careerOf answers every holds line of the cluster in validity order wit
   assert.deepEqual(i.interests.map((x) => x.line_id), [share]);
   assert.deepEqual(i.money.map((m) => `${m.fact_id}:${m.side}`).sort(), [`${contrib}:payer`, `${gift}:payee`, `${inc}:payee`].sort());
   for (const m of i.money) assert.ok(m.citation && m.grade, "each cited and graded");
-  assert.ok(!("total" in i), "facts, never a total");
+  assert.ok(!("total" in i), word("money.says.facts_total"));
 });
 
 test("R16 statementsOf answers each member's statements and acts (decider, signatory, implementer, author) merged in events' order, three-valued: two events whose order the record does not settle are answered as such, never placed", () => {
@@ -187,7 +187,7 @@ test("R18 staffingAt answers, for an organisation and its parts at a date, the p
   const r = w.p.staffingAt({ organisation: dept, at: "2020-01-01", viewer: ANN });
   assert.deepEqual(r.staff.map((s) => s.person).sort(), [p1, p2].sort());
   assert.deepEqual(r.units, [dept, unit]);
-  assert.deepEqual(r.rosters, [{ source: null, level: "held as a table, not read" }]);
+  assert.deepEqual(r.rosters, [{ source: null, level: word("people.held_as_a_table_not") }]);
   w.p.registerRosterSource("calculations", ({ organisation }) => ({ rows: [{ name: "K. Orr", organisation }] }));
   const r2 = w.p.staffingAt({ organisation: dept, at: "2020-01-01", viewer: ANN });
   assert.equal(r2.rosters[0].level, "held as a table, read by calculations");

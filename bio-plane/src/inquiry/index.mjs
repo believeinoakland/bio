@@ -58,7 +58,7 @@ import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHEC
          INQUIRY_WARNINGS } from "./checks.mjs";
 import { checkInquiryEntry, inquiryQuestionOf } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { partitionOfDoc, loggedChanges } from "./partition.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
@@ -176,10 +176,9 @@ export function biasNotInForce(args = {}) {
     ? word("inquiry.text.lens_force", { id: scope.id }) : word("inquiry.text.group_lens_force");
   return { check: row.check, code: "BIAS_APPLICATION_NOT_IN_FORCE", translation: row.translation,
            statement: id, where: at, in_force: inForce === null ? null : false,
-           detail: `${at ?? "a bias application"} names the bias statement ${id === null ? "(none)" : `'${fmSafe(id)}'`}, `
-                 + (inForce === null
+           detail: localize("inquiry.index.v1_names_the_bias_statement", "{v1} names the bias statement {v2}, {v3}", { v1: String(at ?? "a bias application"), v2: String(id === null ? "(none)" : `'${fmSafe(id)}'`), v3: String(inForce === null
                    ? `and whether it is in ${lens} could not be read, so the application is refused rather than trusted`
-                   : `which is not in ${lens}`) };
+                   : `which is not in ${lens}`) }) };
   /* END DEC-49 REGION is-bias-application-in-force */
 }
 
@@ -194,8 +193,7 @@ export function machinePassageUnchecked(detail, extra = {}) {
            ok: false, reason: "MACHINE_PASSAGE_UNCHECKED", code: "MACHINE_PASSAGE_UNCHECKED", check: row.check,
            translation: row.translation,
            detail: typeof detail === "string" && detail ? detail
-             : "whether the passages this act cites were proposed by an assistant and taken up by the member could not be "
-               + "read, so the act is refused rather than passed on trust. Nothing was written." };
+             : localize("inquiry.index.whether_the_passages_this_act", "whether the passages this act cites were proposed by an assistant and taken up by the member could not be read, so the act is refused rather than passed on trust. Nothing was written.") };
   /* END DEC-49 REGION is-machine-passage-checked */
 }
 
@@ -211,8 +209,7 @@ export function dividedCannotRestructure(detail, extra = {}) {
   return { ...x, ok: false, reason: "DIVIDED_CANNOT_RESTRUCTURE", code: "DIVIDED_CANNOT_RESTRUCTURE",
            target: typeof x.target === "string" && x.target ? x.target : null, from: "divided",
            detail: typeof detail === "string" && detail ? detail
-             : "this question was divided and its children carry it on, so its document is closed: nothing in it is "
-               + "revised now. Work on the child that carries the part you mean. Nothing was written." };
+             : localize("inquiry.index.this_question_was_divided_and", "this question was divided and its children carry it on, so its document is closed: nothing in it is revised now. Work on the child that carries the part you mean. Nothing was written.") };
   /* END DEC-49 REGION is-divided-closed */
 }
 
@@ -599,11 +596,7 @@ export class Inquiry {
       if (!this.entities.has(se))
         return { ok: false, reason: "SUBJECT_REFUSED", target: se,
                  findings: [{ check: "C-2.8",
-                   detail: `subject_entity '${se}' does not resolve in this store: an inquiry naming its `
-                         + `subject names an entry in the SUBJECT REGISTRY, and this one names a key no `
-                         + `entity has. Register the subject with op=entitycreate, or omit subject_entity `
-                         + `— an inquiry may name no subject, and then no leg of it earns an A/B/C `
-                         + `connection grade (DEC-15).` }] };
+                   detail: localize("inquiry.index.subject_entity_se_does_not", "subject_entity '{se}' does not resolve in this store: an inquiry naming its subject names an entry in the SUBJECT REGISTRY, and this one names a key no entity has. Register the subject with op=entitycreate, or omit subject_entity — an inquiry may name no subject, and then no leg of it earns an A/B/C connection grade (DEC-15).", { se: String(se) }) }] };
     }
     /* REC-16 / R4: the supersession edge (on any document: `supersedes` is in every type's vocabulary) and the
        division disclosure, whose sibling set only the record can complete against the parent's `division.into`. */
@@ -617,13 +610,11 @@ export class Inquiry {
         if (!r || typeof r !== "object" || r.rel !== "supersedes") continue;
         if (r.target === bundleId)
           return { ok: false, reason: "SUPERSESSION_REFUSED", target: r.target,
-                   findings: [{ check: "C-6.1", detail: `${bundleId} supersedes itself: a question cannot be the thing it replaced` }] };
+                   findings: [{ check: "C-6.1", detail: localize("inquiry.index.bundleid_supersedes_itself_a_question", "{bundleId} supersedes itself: a question cannot be the thing it replaced", { bundleId: String(bundleId) }) }] };
         if (!this.record.bundleInfo(r.target))
           return { ok: false, reason: "SUPERSESSION_REFUSED", target: r.target,
                    findings: [{ check: "C-6.1",
-                     detail: `supersedes target '${r.target}' does not resolve in this store: an edge that `
-                           + `asserts a lineage must name a question that exists, or it points a reader at `
-                           + `nothing while claiming a replacement happened` }] };
+                     detail: localize("inquiry.index.supersedes_target_target_does_not", "supersedes target '{target}' does not resolve in this store: an edge that asserts a lineage must name a question that exists, or it points a reader at nothing while claiming a replacement happened", { target: String(r.target) }) }] };
       }
       const df = [];
       divisionDisclosureFindings(docFm, df);
@@ -637,10 +628,7 @@ export class Inquiry {
         const into = pfm && pfm.division && Array.isArray(pfm.division.into) ? pfm.division.into.filter((x) => typeof x === "string") : null;
         if (!into || !into.includes(bundleId))
           return { ok: false, reason: "NO_SIBLING_DISCLOSURE", parent: parentId,
-                   detail: `${parentId} does not record ${bundleId} as one of the questions it was divided `
-                         + `into, so the parent and the child disagree about whether this division happened. `
-                         + `A child names a parent that names it back, or the disclosure is a claim nobody `
-                         + `can check.` };
+                   detail: localize("inquiry.index.parentid_does_not_record_bundleid", "{parentId} does not record {bundleId} as one of the questions it was divided into, so the parent and the child disagree about whether this division happened. A child names a parent that names it back, or the disclosure is a claim nobody can check.", { parentId: String(parentId), bundleId: String(bundleId) }) };
         const declared = new Set(Array.isArray(docFm.division_siblings) ? docFm.division_siblings : []);
         const missing = into.filter((x) => x !== bundleId && !declared.has(x));
         const invented = [...declared].filter((x) => !into.includes(x));
@@ -661,7 +649,7 @@ export class Inquiry {
       for (const leg of basisLegs)
         if (leg.target === bundleId)
           return withRow({ ok: false, reason: "SELF_BASIS", path: [bundleId, bundleId],
-                           detail: `${bundleId} cannot rest on itself: a question is not evidence for its own answer` });
+                           detail: localize("inquiry.index.bundleid_cannot_rest_on_itself", "{bundleId} cannot rest on itself: a question is not evidence for its own answer", { bundleId: String(bundleId) }) });
       const inqTargets = [...new Set(basisLegs
         .filter((l) => typeof l.target === "string" && normalizeType(OBJECT_TYPES[l.target.split("-")[0]]) === "inquiry")
         .map((l) => l.target))];
@@ -669,8 +657,7 @@ export class Inquiry {
       const cycle = this.legEarning.cyclePath(bundleId, inqTargets);
       if (cycle)
         return withRow({ ok: false, reason: "BASIS_CYCLE", path: cycle,
-                         detail: `this write would close a cycle: ${cycle.join(" -> ")}. `
-                               + `An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.` });
+                         detail: localize("inquiry.index.this_write_would_close_a", "this write would close a cycle: {cycle}. An inquiry's basis is a DAG; the chain above already rests on {bundleId}.", { cycle: String(cycle.join(" -> ")), bundleId: String(bundleId) }) });
       /* END DEC-49 REGION is-basis-acyclic */
     }
     /* R47 (N345, C-2.11–C-2.16): the contradiction arm, judged as C-2.8's entry requirements are, so every door that
@@ -685,8 +672,7 @@ export class Inquiry {
       if (holder)
         return withRow({ ok: false, reason: "CANDIDATE_ALREADY_TAKEN_UP", code: "CANDIDATE_ALREADY_TAKEN_UP",
                          candidate, inquiry: holder,
-                         detail: `the contradiction candidate ${candidate} is already taken up as ${holder}, and one `
-                               + `conflict has one question where it is resolved. Work on it in ${holder}.` });
+                         detail: localize("inquiry.index.the_contradiction_candidate_candidate_is", "the contradiction candidate {candidate} is already taken up as {holder}, and one conflict has one question where it is resolved. Work on it in {holder_2}.", { candidate: String(candidate), holder: String(holder), holder_2: String(holder) }) });
       /* END DEC-49 REGION is-candidate-taken-up */
     }
     return this.#surfacedByCarried(c);
@@ -701,10 +687,7 @@ export class Inquiry {
       const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
       into = fm && fm.division && Array.isArray(fm.division.into) ? fm.division.into.filter((x) => typeof x === "string") : [];
     } catch { into = []; }
-    return dividedCannotRestructure(`${bundleId} was divided${into.length ? ` into ${into.join(", ")}` : ""}, and its `
-      + "children carry the question on, so its document is closed: no revision of it lands, whatever it changes (a leg "
-      + "severed, reinstated or added, a conclusion, a grouping). Work on the child that carries the part you mean. "
-      + "Nothing was written.", { target: bundleId, ...(into.length ? { children: into } : {}) });
+    return dividedCannotRestructure(localize("inquiry.index.bundleid_was_divided_v1_and", "{bundleId} was divided{v1}, and its children carry the question on, so its document is closed: no revision of it lands, whatever it changes (a leg severed, reinstated or added, a conclusion, a grouping). Work on the child that carries the part you mean. Nothing was written.", { bundleId: String(bundleId), v1: String(into.length ? ` into ${into.join(", ")}` : "") }), { target: bundleId, ...(into.length ? { children: into } : {}) });
   }
 
   /* R11 (T33-45): the new leg kinds' record checks, after the grammar (`inquiry-grammar` R13–R15) judged their shape.
@@ -731,32 +714,29 @@ export class Inquiry {
         try { r = this.standards ? this.standards.standardRead({ id: t, viewer }) : null; } catch { r = null; }
         if (!r || r.ok !== true)
           out.push({ check: "C-2.8", code: (r && r.reason) || "NO_SUCH_STANDARD", target: t,
-                     detail: `basis[${i}] rests on ${t}, which this record does not hold as a standard you may read` });
+                     detail: localize("inquiry.index.basis_i_rests_on_t", "basis[{i}] rests on {t}, which this record does not hold as a standard you may read", { i: String(i), t: String(t) }) });
         else if (typeof leg.target_portion === "string" && (!r.portion || r.portion.path !== leg.target_portion.trim()))
           out.push({ check: "C-2.8", code: "PORTION_UNKNOWN", target: t, portion: leg.target_portion,
-                     detail: `basis[${i}] names the portion '${fmSafe(leg.target_portion)}' of ${t}, which that standard `
-                           + `does not hold${r.portion ? ` (it holds ${fmSafe(r.portion.path)})` : ""}` });
+                     detail: localize("inquiry.index.basis_i_names_the_portion", "basis[{i}] names the portion '{fmSafe}' of {t}, which that standard does not hold{v1}", { i: String(i), fmSafe: String(fmSafe(leg.target_portion)), t: String(t), v1: String(r.portion ? ` (it holds ${fmSafe(r.portion.path)})` : "") }) });
       } else if (parseOccurrenceRef(t) !== null) {
         const e = derived[t];
         if (!e || (e.determined !== true && e.undetermined_because !== "OCCURRENCE_UNDETERMINED"))
           out.push({ check: "C-2.8", code: "NO_SUCH_OCCURRENCE", target: t,
-                     detail: `basis[${i}] rests on ${t}, which the record does not hold: ${e && e.why ? e.why
-                       : "no duty the record holds derives it"}` });
+                     detail: localize("inquiry.index.basis_i_rests_on_t_2", "basis[{i}] rests on {t}, which the record does not hold: {v1}", { i: String(i), t: String(t), v1: String(e && e.why ? e.why
+                       : "no duty the record holds derives it") }) });
       } else if (CALCULATION_REF_RE.test(t) || /^CALC-/.test(t)) {
         /* R11 (T34-29; N576, N596, K1601, K1639): calculations' synchronous status read (its R31), as the author sees it */
         const s = this.#calcStatus(t, viewer);
         if (s === null)
           out.push({ check: "C-2.8", code: "CALCULATION_NOT_ACCEPTED", target: t,
-                     detail: `basis[${i}] rests on the calculation ${t}, and whether it is held, visible to you and `
-                           + `accepted could not be read, so the leg is refused rather than passed on trust` });
+                     detail: localize("inquiry.index.basis_i_rests_on_the", "basis[{i}] rests on the calculation {t}, and whether it is held, visible to you and accepted could not be read, so the leg is refused rather than passed on trust", { i: String(i), t: String(t) }) });
         else if (!s.held || !s.visible)
           /* DEC-36: a calculation the author may not see is answered exactly as one the record does not hold */
           out.push({ check: "C-2.8", code: "NO_SUCH_CALCULATION", target: t,
-                     detail: `basis[${i}] rests on ${t}, which this record does not hold as a calculation you may read` });
+                     detail: localize("inquiry.index.basis_i_rests_on_t_3", "basis[{i}] rests on {t}, which this record does not hold as a calculation you may read", { i: String(i), t: String(t) }) });
         else if (!s.accepted)
           out.push({ check: "C-2.8", code: "CALCULATION_NOT_ACCEPTED", target: t,
-                     detail: `basis[${i}] rests on the calculation ${t}, whose acceptance is not recorded: a `
-                           + `calculation is a leg once a member has accepted it` });
+                     detail: localize("inquiry.index.basis_i_rests_on_the_2", "basis[{i}] rests on the calculation {t}, whose acceptance is not recorded: a calculation is a leg once a member has accepted it", { i: String(i), t: String(t) }) });
       }
     });
     return out;
@@ -834,9 +814,7 @@ export class Inquiry {
       const row = INQUIRY_SURFACE_CHECKS.SURFACED_BY_REWRITTEN;
       return { ok: false, reason: "SURFACED_BY_REWRITTEN", code: "SURFACED_BY_REWRITTEN", check: row.check,
                translation: row.translation, bundleId, current: was, revision: now,
-               detail: `the current version of ${bundleId} records surfaced_by ${was}, and this revision records ${now}. `
-                     + `Who surfaced a question is recorded once, at its creation; a revision carries it forward `
-                     + `unchanged. Nothing was written.` };
+               detail: localize("inquiry.index.the_current_version_of_bundleid", "the current version of {bundleId} records surfaced_by {was}, and this revision records {now}. Who surfaced a question is recorded once, at its creation; a revision carries it forward unchanged. Nothing was written.", { bundleId: String(bundleId), was: String(was), now: String(now) }) };
     }
     /* END DEC-49 REGION is-promote-surfaced-by */
     return null;
@@ -1450,18 +1428,18 @@ export class Inquiry {
     const who = typeof by === "string" ? by.trim() : "";
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_LOOK",
-               detail: "a look at a dated wait is the setter's own act: a member signed in, never a machine credential." };
+               detail: localize("inquiry.index.a_look_at_a_dated", "a look at a dated wait is the setter's own act: a member signed in, never a machine credential.") };
     const idx = Number(index);
     const w = typeof inquiry === "string" && inquiry && Number.isInteger(idx)
       ? this.#one(`SELECT * FROM inquiry_dated_waits WHERE bundle_id=? AND idx=? AND ended IS NULL`, inquiry, idx) : null;
     if (!w || !this.membership.inSight(w.bundle_id, who))
       return { ok: false, reason: "NO_SUCH_WAIT", inquiry, index,
-               detail: "no dated wait is held at that position on that question." };
+               detail: localize("inquiry.index.no_dated_wait_is_held", "no dated wait is held at that position on that question.") };
     if (w.set_by !== memberStamp(who))
       return { ok: false, reason: "NOT_YOUR_WAIT", inquiry, index,
-               detail: "a dated wait is its setter's own: only the member who set it records that they looked." };
+               detail: localize("inquiry.index.a_dated_wait_is_its", "a dated wait is its setter's own: only the member who set it records that they looked.") };
     if (note !== null && note !== undefined && (typeof note !== "string" || note.length > LOOK_NOTE_MAX))
-      return { ok: false, reason: "BAD_NOTE", detail: `a look's note is text of at most ${LOOK_NOTE_MAX} characters.` };
+      return { ok: false, reason: "BAD_NOTE", detail: localize("inquiry.index.a_looks_note_is_text", "a look's note is text of at most {LOOK_NOTE_MAX} characters.", { LOOK_NOTE_MAX: String(LOOK_NOTE_MAX) }) };
     const at = this.#when();
     this.sql.exec(`UPDATE inquiry_dated_waits SET looked_by=?, looked_at=?, look_note=? WHERE wait_id=?`,
       who, at, typeof note === "string" && note.trim() ? note.trim() : null, w.wait_id);
@@ -1526,8 +1504,7 @@ export class Inquiry {
       const ids = [...new Set((Array.isArray(questions) ? questions : []).filter((q) => typeof q === "string" && q))];
       if (ids.length > DOCUMENT_WAITS_MAX)
         return { ok: false, reason: "TOO_MANY_QUESTIONS", bound: DOCUMENT_WAITS_MAX, asked: ids.length,
-                 detail: `a call reads the waits of at most ${DOCUMENT_WAITS_MAX} questions; ask the list in parts. `
-                       + "Nothing was read." };
+                 detail: localize("inquiry.index.a_call_reads_the_waits", "a call reads the waits of at most {DOCUMENT_WAITS_MAX} questions; ask the list in parts. Nothing was read.", { DOCUMENT_WAITS_MAX: String(DOCUMENT_WAITS_MAX) }) };
       const out = [];
       for (const id of ids) {
         const b = this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id);
@@ -1716,7 +1693,7 @@ export class Inquiry {
 
     if (!INQUIRY_STATES.includes(to))
       return { ok: false, reason: "BAD_TARGET_STATE", to, legal: INQUIRY_STATES,
-               detail: `an inquiry's state is one of ${INQUIRY_STATES.join(", ")}` };
+               detail: localize("inquiry.index.an_inquirys_state_is_one", "an inquiry's state is one of {INQUIRY_STATES}", { INQUIRY_STATES: String(INQUIRY_STATES.join(", ")) }) };
     /* R20 (N285): the one answer to a word that is no disposition, minted in `progressions.notADisposition`. */
     const undisposed = notADisposition(to);
     if (undisposed) return undisposed;
@@ -1724,12 +1701,10 @@ export class Inquiry {
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
-               detail: "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a "
-                     + "disposition with no reason would produce a record the catalog rejects." };
+               detail: localize("inquiry.index.c_2_8_requires_a", "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a disposition with no reason would produce a record the catalog rejects.") };
     if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
-               detail: `a reason is at most ${EDGE_REASON_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+               detail: localize("inquiry.index.a_reason_is_at_most", "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { EDGE_REASON_MAX: String(EDGE_REASON_MAX) }) };
 
     const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
     if (!sel.ok) return sel;
@@ -1774,8 +1749,7 @@ export class Inquiry {
          §2.7 change 13 — the refusal stops naming a construct that no longer
          exists). */
       return { ok: false, reason: "NOT_INQUIRIES", offenders: offenders.sort(),
-               detail: "disposition moves an inquiry's state, and this selection carries something else. "
-                     + "The set is refused whole rather than narrowed to the inquiries in it." };
+               detail: localize("inquiry.index.disposition_moves_an_inquirys_state", "disposition moves an inquiry's state, and this selection carries something else. The set is refused whole rather than narrowed to the inquiries in it.") };
     /* END DEC-49 REGION is-dispose-inquiries */
     /* CASE-4 / DEC-72. Before the generic transition refusal, for
        PUBLISHED_CANNOT_DIVIDE's reason: a member told the move is illegal would
@@ -1783,18 +1757,10 @@ export class Inquiry {
     if (published.length)
       return { ok: false, reason: "PUBLISHED_CANNOT_BE_SET_DOWN", to,
                offenders: published.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "a finding that is a member of a published case cannot be deferred or dismissed. "
-                     + "AGEING IS WHAT HAPPENS TO A FINDING NOBODY PUBLISHED (D-79): a question the team "
-                     + "quietly stopped working is indistinguishable from one that was never asked, which "
-                     + "is why it is made visible rather than left to vanish. A published case is already "
-                     + "out in the world and cannot stop being worked on quietly — a reader is holding it. "
-                     + "What IS available is the route DEC-12 built: reopen it (op=reopen), and let the "
-                     + "next edition say what changed." };
+               detail: localize("inquiry.index.a_finding_that_is_a", "a finding that is a member of a published case cannot be deferred or dismissed. AGEING IS WHAT HAPPENS TO A FINDING NOBODY PUBLISHED (D-79): a question the team quietly stopped working is indistinguishable from one that was never asked, which is why it is made visible rather than left to vanish. A published case is already out in the world and cannot stop being worked on quietly — a reader is holding it. What IS available is the route DEC-12 built: reopen it (op=reopen), and let the next edition say what changed.") };
     if (illegal.length)
       return { ok: false, reason: "ILLEGAL_TRANSITION", to, offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "these are not legal moves in the catalog's state table. A move to the state "
-                     + "something is already in usually means the view was taken before someone else's "
-                     + "disposition, so it is refused rather than treated as a no-op." };
+               detail: localize("inquiry.index.these_are_not_legal_moves", "these are not legal moves in the catalog's state table. A move to the state something is already in usually means the view was taken before someone else's disposition, so it is refused rather than treated as a no-op.") };
 
     /* REC-17 / D-5: THE WALK-BACK EDGES, and the criterion is the corpus's own
        rather than a preference. `SB-CORE.md:1507` says retire is "the existing
@@ -1822,12 +1788,7 @@ export class Inquiry {
       }
       if (cited.length)
         return { ok: false, reason: "CITED", to, offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
-                 detail: "live basis legs still rest on these questions. Dismissing one abandons it, and a "
-                       + "claim resting on an abandoned question would go on reading at a strength nobody "
-                       + "will ever re-examine — the downstream consequence retire already refuses on. "
-                       + "Withdraw those legs first (sever the citation with a reason), or DEFER instead: "
-                       + "deferring is reversible and raises the re-evaluation obligation on every "
-                       + "dependent rather than stranding it." };
+                 detail: localize("inquiry.index.live_basis_legs_still_rest", "live basis legs still rest on these questions. Dismissing one abandons it, and a claim resting on an abandoned question would go on reading at a strength nobody will ever re-examine — the downstream consequence retire already refuses on. Withdraw those legs first (sever the citation with a reason), or DEFER instead: deferring is reversible and raises the re-evaluation obligation on every dependent rather than stranding it.") };
     }
 
     /* R39 (K2371, K2436; H10, H38): DEFERRAL AND DISMISSAL ARE EACH PROJECT'S OWN ACT on its own relationship to a
@@ -1849,8 +1810,7 @@ export class Inquiry {
     }
     if (unread.length)
       return { ok: false, reason: "PROJECTS_UNDETERMINED", to, offenders: unread.sort(),
-               detail: "which projects draw on these questions could not be read, so whether this shared act would "
-                     + "move a question a project works on is not known, and nothing was moved. Try again." };
+               detail: localize("inquiry.index.which_projects_draw_on_these", "which projects draw on these questions could not be read, so whether this shared act would move a question a project works on is not known, and nothing was moved. Try again.") };
     if (drawn.length)
       return withRow({ ok: false, reason: "DRAWN_ON_BY_A_PROJECT", code: "DRAWN_ON_BY_A_PROJECT", to,
                        offenders: drawn.sort((x, y) => (x.id < y.id ? -1 : 1)),
@@ -1884,9 +1844,7 @@ export class Inquiry {
         text = setScalar(text, "last_updated", `"${when}"`);
         /* C-13.2: a moved last_updated has a Session Log entry. */
         text = appendSessionLog(text,
-          `### Session ${when} | ${to === "deferred" ? "Deferred" : "Dismissed"} | ${author || "member"}\n`
-          + `Trigger: selection ${handle}\n`
-          + `Changes: state ${cur.current_state} to ${to}. Reason: ${why}.\n`);
+          localize("inquiry.index.session_when_v1_v2_trigger", "### Session {when} | {v1} | {v2}\nTrigger: selection {handle}\nChanges: state {current_state} to {to}. Reason: {why}.\n", { when: String(when), v1: String(to === "deferred" ? "Deferred" : "Dismissed"), v2: String(author || "member"), handle: String(handle), current_state: String(cur.current_state), to: String(to), why: String(why) }));
         const fm = parseFrontmatter(text).data || {};
         const promoted = this.#promote({
           bundleId: id, base: cur.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`,
@@ -1895,8 +1853,7 @@ export class Inquiry {
           meta: { object_type: "inquiry", title: fm.title, current_state: to, prior_state: cur.current_state,
                   created: fm.created, last_updated: when, criticality: fm.criticality ?? null },
         });
-        if (!promoted.ok) return { ...promoted, bundleId: id, detail: (promoted.detail ? promoted.detail + " " : "")
-                                   + "The set moves whole or not at all, so nothing was moved." };
+        if (!promoted.ok) return { ...promoted, bundleId: id, detail: localize("inquiry.index.v1_the_set_moves_whole", "{v1}The set moves whole or not at all, so nothing was moved.", { v1: String(promoted.detail ? promoted.detail + " " : "") }) };
         disposed.push(id);
       }
       return null;
@@ -2009,21 +1966,15 @@ export class Inquiry {
     /* DEC-49 REGION is-machine-divide — REC-64/C-32.7. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_DIVIDE",
-               detail: "dividing is a named member's judgement that the team's own question was malformed — "
-                     + "that it was two questions — and that judgement carries a name. A machine credential "
-                     + "may surface a question and gather what it rests on; it may not restructure the "
-                     + "record's questions. Sign in as a member." };
+               detail: localize("inquiry.index.dividing_is_a_named_members", "dividing is a named member's judgement that the team's own question was malformed — that it was two questions — and that judgement carries a name. A machine credential may surface a question and gather what it rests on; it may not restructure the record's questions. Sign in as a member.") };
     /* END DEC-49 REGION is-machine-divide */
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
-               detail: "a division records WHY the question was two questions. One authored reason covers the "
-                     + "whole restructuring (DEC-29) and nothing is derived, defaulted or proposed: "
-                     + "'divided' with no account of why is a state change wearing a correction's clothes." };
+               detail: localize("inquiry.index.a_division_records_why_the", "a division records WHY the question was two questions. One authored reason covers the whole restructuring (DEC-29) and nothing is derived, defaulted or proposed: 'divided' with no account of why is a state change wearing a correction's clothes.") };
     if (why.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
-               detail: `the reason is at most ${RELEASE_ACK_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+               detail: localize("inquiry.index.the_reason_is_at_most", "the reason is at most {RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { RELEASE_ACK_MAX: String(RELEASE_ACK_MAX) }) };
     if (!target)
       return { ok: false, reason: "NO_TARGET",
                detail: "a division restructures ONE question: pass target=<inquiry id>" };
@@ -2038,7 +1989,7 @@ export class Inquiry {
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(b.object_type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
-               detail: "dividing splits a question, and only an inquiry carries one." };
+               detail: localize("inquiry.index.dividing_splits_a_question_and", "dividing splits a question, and only an inquiry carries one.") };
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
@@ -2063,10 +2014,7 @@ export class Inquiry {
        would have become divisible with the suite green. */
     if (this.#caseMember(target))
       return { ok: false, reason: "PUBLISHED_CANNOT_DIVIDE", target, from: b.current_state,
-               detail: "a published case cannot be divided. An EDITION says the case continues; a DIVISION "
-                     + "says the parent was malformed, and a hash somebody has already relied on cannot be "
-                     + "retroactively declared malformed. Reopen it (op=reopen) and publish what changed as "
-                     + "a new edition, which is the act DEC-12 built for exactly this." };
+               detail: localize("inquiry.index.a_published_case_cannot_be", "a published case cannot be divided. An EDITION says the case continues; a DIVISION says the parent was malformed, and a hash somebody has already relied on cannot be retroactively declared malformed. Reopen it (op=reopen) and publish what changed as a new edition, which is the act DEC-12 built for exactly this.") };
 
     /* THE MAP RULE: the machine is the catalog's, looked up through vocabFor
        over the DECLARED spelling, never STATES.inquiry by a raw key. */
@@ -2104,51 +2052,40 @@ export class Inquiry {
     const restsOn = this.legEarning.restsOnLive(target);
     if (restsOn.confirmed.length)
       return { ok: false, reason: "CITED", target, offenders: restsOn.confirmed,
-               detail: "live basis legs still rest on this question. Dividing it declares it MALFORMED and "
-                     + "ends it, and a claim resting on it would be left pointing at a question the record "
-                     + "has withdrawn. Withdraw those legs first (sever the citation with a reason), or "
-                     + "re-point them at the child that carries the half they rely on once it exists." };
+               detail: localize("inquiry.index.live_basis_legs_still_rest_2", "live basis legs still rest on this question. Dividing it declares it MALFORMED and ends it, and a claim resting on it would be left pointing at a question the record has withdrawn. Withdraw those legs first (sever the citation with a reason), or re-point them at the child that carries the half they rely on once it exists.") };
 
     /* THE CHILDREN, and the apportionment they carry. Both AUTHORED: nothing
        here proposes a split, guesses a question, or distributes a leg. */
     const kids = Array.isArray(children) ? children.filter((c) => c && typeof c === "object") : [];
     if (kids.length < 2)
       return { ok: false, reason: "TOO_FEW_CHILDREN", target, got: kids.length,
-               detail: "a division produces at least TWO questions. One child is a rename and zero is a "
-                     + "deletion, and neither is what dividing claims about the parent." };
+               detail: localize("inquiry.index.a_division_produces_at_least", "a division produces at least TWO questions. One child is a rename and zero is a deletion, and neither is what dividing claims about the parent.") };
     const ids = kids.map((c) => String(c.id ?? "").trim());
     for (const id of ids)
       if (!BUNDLE_ID_RE.test(id) || normalizeType(OBJECT_TYPES[id.split("-")[0]]) !== "inquiry")
         return { ok: false, reason: "BAD_CHILD_ID", target, child: id,
-                 detail: "each child is named with a canonical INQ- id: a division produces questions, and "
-                       + "the id grammar is what makes them addressable by everything that will cite them." };
+                 detail: localize("inquiry.index.each_child_is_named_with", "each child is named with a canonical INQ- id: a division produces questions, and the id grammar is what makes them addressable by everything that will cite them.") };
     if (new Set(ids).size !== ids.length)
       return { ok: false, reason: "BAD_CHILD_ID", target, children: ids,
                detail: "two children carry the same id: a leg apportioned to a child named twice has one "
                      + "home, not two." };
     if (ids.includes(target))
       return { ok: false, reason: "BAD_CHILD_ID", target,
-               detail: "a division's child cannot be the parent itself: the parent is terminal and the "
-                     + "children are what carry the question forward." };
+               detail: localize("inquiry.index.a_divisions_child_cannot_be", "a division's child cannot be the parent itself: the parent is terminal and the children are what carry the question forward.") };
     for (const id of ids) {
       const exists = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id);
       if (exists)
         return { ok: false, reason: "CHILD_EXISTS", target, child: id,
-                 detail: "this id already names a record. A division CREATES its children, so re-using an "
-                       + "existing id would overwrite a question somebody else is working on." };
+                 detail: localize("inquiry.index.this_id_already_names_a", "this id already names a record. A division CREATES its children, so re-using an existing id would overwrite a question somebody else is working on.") };
     }
     for (const c of kids) {
       const q = String(c.question ?? "").trim();
       if (!q)
         return { ok: false, reason: "NO_CHILD_QUESTION", target, child: String(c.id ?? ""),
-                 detail: "each child is a QUESTION and its question is authored, never derived from the "
-                       + "parent's. The whole claim a division makes is that these are two different "
-                       + "questions, so a child that cannot state its own has not been shown to be one." };
+                 detail: localize("inquiry.index.each_child_is_a_question", "each child is a QUESTION and its question is authored, never derived from the parent's. The whole claim a division makes is that these are two different questions, so a child that cannot state its own has not been shown to be one.") };
       if (q.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(q))
         return { ok: false, reason: "BAD_CHILD_QUESTION", target, child: String(c.id ?? ""),
-                 detail: `a child's question is at most ${RELEASE_ACK_MAX} characters and cannot `
-                       + `contain a quote, a backslash, or a newline: the restricted frontmatter grammar `
-                       + `has no escapes` };
+                 detail: localize("inquiry.index.a_childs_question_is_at", "a child's question is at most {RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { RELEASE_ACK_MAX: String(RELEASE_ACK_MAX) }) };
     }
 
     /* THE APPORTIONMENT. Addressed by ORDINAL, because duplicate targets are
@@ -2158,24 +2095,18 @@ export class Inquiry {
     const legs = Array.isArray(fm.basis) ? fm.basis.filter((l) => l && typeof l === "object") : [];
     if (!legs.length)
       return { ok: false, reason: "NO_APPORTIONMENT", target, orphans: [],
-               detail: "this inquiry rests on nothing, so there is nothing to apportion and both children "
-                     + "would inherit nothing. A standing objective with no legs is not two questions yet "
-                     + "(DEC-22); it is one question nobody has gathered anything for." };
+               detail: localize("inquiry.index.this_inquiry_rests_on_nothing", "this inquiry rests on nothing, so there is nothing to apportion and both children would inherit nothing. A standing objective with no legs is not two questions yet (DEC-22); it is one question nobody has gathered anything for.") };
     const homes = new Map();               // ord -> [child ids], in children order
     for (let k = 0; k < kids.length; k++) {
       const raw = Array.isArray(kids[k].legs) ? kids[k].legs : null;
       if (!raw || !raw.length)
         return { ok: false, reason: "NO_APPORTIONMENT", target, child: ids[k],
-                 detail: `${ids[k]} was apportioned no leg of the parent's basis. A child that inherits `
-                       + `nothing is a NEW question, not a half of this one — open it as its own inquiry `
-                       + `rather than calling it a division.` };
+                 detail: localize("inquiry.index.v1_was_apportioned_no_leg", "{v1} was apportioned no leg of the parent's basis. A child that inherits nothing is a NEW question, not a half of this one — open it as its own inquiry rather than calling it a division.", { v1: String(ids[k]) }) };
       for (const o of raw) {
         const ord = Number(o);
         if (!Number.isInteger(ord) || ord < 0 || ord >= legs.length)
           return { ok: false, reason: "BAD_APPORTIONMENT", target, child: ids[k], ord: o,
-                   detail: `a leg is apportioned by its ORDINAL in the parent's basis (0..${legs.length - 1}); `
-                         + `'${o}' names none. Ordinals rather than targets, because one document `
-                         + `legitimately carries two legs (D4).` };
+                   detail: localize("inquiry.index.a_leg_is_apportioned_by", "a leg is apportioned by its ORDINAL in the parent's basis (0..{v1}); '{o}' names none. Ordinals rather than targets, because one document legitimately carries two legs (D4).", { v1: String(legs.length - 1), o: String(o) }) };
         if (!homes.has(ord)) homes.set(ord, []);
         if (!homes.get(ord).includes(ids[k])) homes.get(ord).push(ids[k]);
       }
@@ -2187,11 +2118,7 @@ export class Inquiry {
       return { ok: false, reason: "NO_APPORTIONMENT", target,
                orphans: orphans.map((i) => ({ ord: i, target: legs[i].target ?? null, role: legs[i].role ?? null })),
                cuts_against_orphans: cutting.length,
-               detail: `every leg gets a home. ${orphans.length} leg(s) were apportioned to no child`
-                     + (cutting.length ? `, and ${cutting.length} of them CUT AGAINST this inquiry` : "")
-                     + ". Division RE-HOMES material and only severance REMOVES it, which is why dividing "
-                     + "cannot do severance's work at a discount (R4): apportion them, or sever them with "
-                     + "a reason, which is the act that takes material out of a question." };
+               detail: localize("inquiry.index.every_leg_gets_a_home", "every leg gets a home. {length} leg(s) were apportioned to no child{v1}. Division RE-HOMES material and only severance REMOVES it, which is why dividing cannot do severance's work at a discount (R4): apportion them, or sever them with a reason, which is the act that takes material out of a question.", { length: String(orphans.length), v1: String(cutting.length ? `, and ${cutting.length} of them CUT AGAINST this inquiry` : "") }) };
     }
 
     const when = this.#when();
@@ -2203,8 +2130,7 @@ export class Inquiry {
     const pg = this.promotion.fact("producingGroup");
     if (!(pg.ok && pg.value) && !(typeof fm.group === "string" && fm.group.trim()))
       return this.#groupUndetermined("inquirydivide",
-        `${target}'s children would be new documents that must name the team that produced them; this store `
-        + `records none and ${target}'s own document names none, so nothing was divided.`);
+        localize("inquiry.index.target_s_children_would_be", "{target}'s children would be new documents that must name the team that produced them; this store records none and {target_2}'s own document names none, so nothing was divided.", { target: String(target), target_2: String(target) }));
 
     /* THE CHILDREN ARE DERIVED FROM THE PARENT'S OWN DOCUMENT, not built from a
        template here. A template would be this file's private idea of what an
@@ -2328,12 +2254,12 @@ export class Inquiry {
          and the projections read — the same two-places discipline op=publish
          takes with `## What This Excludes`. A disclosure only a parser can find
          is not a disclosure. */
-      text = setSection(text, "## What It Rests On", [
+      text = setSection(text, word("conformance.rests"), [
         word("inquiry.set_section.divided_out", { target, when, who }), "",
         why, "",
         word("inquiry.set_section.half_question_stays", { sibs: sibs.join(", "), target })]);
       text = setSection(text, "## Conclusion", []);
-      text = setSection(text, "## What Would Falsify This", []);
+      text = setSection(text, word("conformance.falsify"), []);
       text = setSection(text, "## Session Log", [
         `### Session ${when} | Divided out | ${who}`,
         `Trigger: op=inquirydivide on ${target}`,
@@ -2382,10 +2308,7 @@ export class Inquiry {
       if (errs.length)
         return { ok: false, reason: "CHILD_REFUSED", target, child: pl.id,
                  findings: errs.map((x) => ({ check: x.check, detail: x.message })),
-                 detail: `the document this division would create for ${pl.id} would not pass the catalog, `
-                       + `so nothing was written: the parent is untouched and no child exists. A division `
-                       + `that landed half-applied would leave a terminal parent naming a question nobody `
-                       + `can open.` };
+                 detail: localize("inquiry.index.the_document_this_division_would", "the document this division would create for {id} would not pass the catalog, so nothing was written: the parent is untouched and no child exists. A division that landed half-applied would leave a terminal parent naming a question nobody can open.", { id: String(pl.id) }) };
     }
 
     /* THE PARENT MOVES FIRST, and every child follows. The pre-flight above is
@@ -2438,13 +2361,7 @@ export class Inquiry {
       ...legs.map((l, i) => `- ${l.target}${l.role === "cuts_against" ? " (cuts against)" : ""} -> `
                           + `${homes.get(i).join(", ")}`)]);
 
-    const entry = `### Session ${when} | Divided | ${who}\n`
-                + `Trigger: op=inquirydivide on ${target}\n`
-                + `Changes: state ${b.current_state} to divided (terminal).\n`
-                + `Into: ${ids.join(", ")}\n`
-                + `Reason: ${why}\n`
-                + `Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), `
-                + `${legs.filter((l) => l.role === "cuts_against").length} cutting against.\n`;
+    const entry = localize("inquiry.index.session_when_divided_who_trigger", "### Session {when} | Divided | {who}\nTrigger: op=inquirydivide on {target}\nChanges: state {current_state} to divided (terminal).\nInto: {ids}\nReason: {why}\nApportioned: {length} leg(s), {length_2} placement(s), {length_3} cutting against.\n", { when: String(when), who: String(who), target: String(target), current_state: String(b.current_state), ids: String(ids.join(", ")), why: String(why), length: String(legs.length), length_2: String(rows.length), length_3: String(legs.filter((l) => l.role === "cuts_against").length) });
     const at = text.indexOf("## Session Log");
     if (at < 0) text += "\n## Session Log\n\n" + entry;
     else {
@@ -2482,8 +2399,7 @@ export class Inquiry {
         });
         if (!cp.ok)
           return { ...cp, target, child: pl.id,
-                   detail: `${cp.detail ? cp.detail + " " : ""}The division lands whole or not at all, so nothing was `
-                         + `written: the parent is untouched and no child exists.` };
+                   detail: localize("inquiry.index.v1_the_division_lands_whole", "{v1}The division lands whole or not at all, so nothing was written: the parent is untouched and no child exists.", { v1: String(cp.detail ? cp.detail + " " : "") }) };
         created.push({ id: pl.id, question: pl.q, siblings: pl.sibs, legs: pl.mine, bundleSha: cp.bundleSha });
         /* R44 (N149): the child is the parent's question asked again, in the browser the parent's was asked in. */
         this.sql.exec(`INSERT OR IGNORE INTO inquiry_member_agents (bundle_id, user_agent, at)
@@ -2611,11 +2527,7 @@ export class Inquiry {
     /* DEC-49 REGION is-machine-ground — REC-64/C-32.8. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_GROUND",
-               detail: "grouping is a named member's judgement that some of their reasons are enough on "
-                     + "their own to carry their answer, and it is the one act in this record that makes a "
-                     + "finding STRONGER. A machine credential may surface a question and gather what it "
-                     + "rests on; it may not decide that part of the gathering was sufficient by itself. "
-                     + "Sign in as a member." };
+               detail: localize("inquiry.index.grouping_is_a_named_members", "grouping is a named member's judgement that some of their reasons are enough on their own to carry their answer, and it is the one act in this record that makes a finding STRONGER. A machine credential may surface a question and gather what it rests on; it may not decide that part of the gathering was sufficient by itself. Sign in as a member.") };
     /* END DEC-49 REGION is-machine-ground */
     if (!target)
       return { ok: false, reason: "NO_TARGET",
@@ -2637,7 +2549,7 @@ export class Inquiry {
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(b.object_type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
-               detail: "a basis is what a QUESTION rests on, and only an inquiry carries one." };
+               detail: localize("inquiry.index.a_basis_is_what_a", "a basis is what a QUESTION rests on, and only an inquiry carries one.") };
     /* CASE-4 / DEC-72: THE CASE RELATION, not the state word — divide's reason
        exactly, and the stakes here are higher, because this act RAISES A GRADE.
        A restructure that reached a member of a signed edition would leave the
@@ -2646,11 +2558,7 @@ export class Inquiry {
        would silently have permitted. */
     if (this.#caseMember(target))
       return { ok: false, reason: "PUBLISHED_CANNOT_RESTRUCTURE", target, from: b.current_state,
-               detail: "a published case's composed strength and its per-group breakdown are inside signed, "
-                     + "ratified bytes. Re-cutting the structure underneath them would leave this document "
-                     + "composing to something the edition on the record contradicts. Reopen it "
-                     + "(op=reopen), restructure, and publish what changed as a new edition — the route "
-                     + "DEC-12 built for exactly this." };
+               detail: localize("inquiry.index.a_published_cases_composed_strength", "a published case's composed strength and its per-group breakdown are inside signed, ratified bytes. Re-cutting the structure underneath them would leave this document composing to something the edition on the record contradicts. Reopen it (op=reopen), restructure, and publish what changed as a new edition — the route DEC-12 built for exactly this.") };
     /* R27, R64 (K231): one condition, one code, minted by the one helper the write's check answers through too */
     if (b.current_state === "divided")
       return dividedCannotRestructure("this question was declared malformed and carried forward into children that "
@@ -2667,13 +2575,10 @@ export class Inquiry {
     const legs = all.filter((l) => l && typeof l === "object");
     if (!legs.length)
       /* D-484: routed through the ONE governed site (see `actNoBasis`). */
-      return actNoBasis("a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite "
-                      + "what it rests on first (op=cite); an assertion that nothing is enough on its own is "
-                      + "not a thing the record can hold.", { target });
+      return actNoBasis(localize("inquiry.index.a_grouping_is_a_partition", "a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite); an assertion that nothing is enough on its own is not a thing the record can hold."), { target });
     if (legs.length !== all.length)
       return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
-               detail: "this question's basis carries an entry that is not a leg, so the ordinals a "
-                     + "partition addresses cannot be lined up against the document. Nothing was written." };
+               detail: localize("inquiry.index.this_questions_basis_carries_an", "this question's basis carries an entry that is not a leg, so the ordinals a partition addresses cannot be lined up against the document. Nothing was written.") };
 
     /* WHAT STANDS TODAY, read from the DOCUMENT — `inquiry_basis` is a
        projection of it and never a second place to state it (D-21). */
@@ -2692,15 +2597,10 @@ export class Inquiry {
     const why = String(reason ?? "").trim();
     if (restructure && !why)
       return { ok: false, reason: "NO_REASON", target, restructure: true,
-               detail: "this question already carries an authored structure, so changing it is a REVISION "
-                     + "and records WHY. Restructuring after seeing a strength is legal and is never "
-                     + "blocked (DEC-32) — the defence is that it is visible, which it is not without an "
-                     + "account of it. Nothing here is derived, defaulted or prefilled. A FIRST grouping "
-                     + "needs no reason: there is no earlier structure for it to be a revision of." };
+               detail: localize("inquiry.index.this_question_already_carries_an", "this question already carries an authored structure, so changing it is a REVISION and records WHY. Restructuring after seeing a strength is legal and is never blocked (DEC-32) — the defence is that it is visible, which it is not without an account of it. Nothing here is derived, defaulted or prefilled. A FIRST grouping needs no reason: there is no earlier structure for it to be a revision of.") };
     if (why && (why.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(why)))
       return { ok: false, reason: "BAD_REASON", target,
-               detail: `a reason is at most ${RELEASE_ACK_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+               detail: localize("inquiry.index.a_reason_is_at_most_2", "a reason is at most {RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { RELEASE_ACK_MAX: String(RELEASE_ACK_MAX) }) };
 
     /* ---------------- the caller's partition, mapped onto the legs ----------
        THE SHAPE ARMS BELOW ARE THE MAPPING AND NOTHING ELSE. Every rule about
@@ -2718,34 +2618,25 @@ export class Inquiry {
       const row = grounds[i];
       if (!row || typeof row !== "object" || Array.isArray(row))
         return { ok: false, reason: "BAD_PARTITION", target, at: i,
-                 detail: `grounds[${i}] is not an object` };
+                 detail: localize("inquiry.index.grounds_i_is_not_an", "grounds[{i}] is not an object", { i: String(i) }) };
       const label = typeof row.ground === "string" ? row.ground.trim() : row.ground;
       const ords = row.legs;
       if (!Array.isArray(ords))
         return { ok: false, reason: "BAD_PARTITION", target, at: i,
-                 detail: `grounds[${i}].legs must be an array of ordinals — a group is a partition OF THE `
-                       + `LEGS, and a group naming none asserts that nothing is enough on its own. Legs are `
-                       + `addressed by ORDINAL (their position in basis[]) and never by target id, because `
-                       + `one document legitimately carries two legs (D4).` };
+                 detail: localize("inquiry.index.grounds_i_legs_must_be", "grounds[{i}].legs must be an array of ordinals — a group is a partition OF THE LEGS, and a group naming none asserts that nothing is enough on its own. Legs are addressed by ORDINAL (their position in basis[]) and never by target id, because one document legitimately carries two legs (D4).", { i: String(i) }) };
       const stmt = row.statement === undefined || row.statement === null ? null : row.statement;
       if (stmt !== null && (typeof stmt !== "string"
           || stmt.length > EDGE_REASON_MAX || /["\\\r\n]/.test(stmt)))
         return { ok: false, reason: "BAD_STATEMENT", target, at: i,
-                 detail: `grounds[${i}].statement is at most ${EDGE_REASON_MAX} characters and cannot `
-                       + `contain a quote, a backslash, or a newline: the restricted frontmatter grammar `
-                       + `has no escapes` };
+                 detail: localize("inquiry.index.grounds_i_statement_is_at", "grounds[{i}].statement is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { i: String(i), EDGE_REASON_MAX: String(EDGE_REASON_MAX) }) };
       for (const raw of ords) {
         if (!Number.isInteger(raw) || raw < 0 || raw >= legs.length)
           return { ok: false, reason: "BAD_PARTITION", target, at: i, ord: raw ?? null, legs: legs.length,
-                   detail: `grounds[${i}].legs names ord ${JSON.stringify(raw) ?? "null"}, and this question `
-                         + `has legs 0..${legs.length - 1}. An ordinal that addresses no leg groups nothing.` };
+                   detail: localize("inquiry.index.grounds_i_legs_names_ord", "grounds[{i}].legs names ord {v1}, and this question has legs 0..{v2}. An ordinal that addresses no leg groups nothing.", { i: String(i), v1: String(JSON.stringify(raw) ?? "null"), v2: String(legs.length - 1) }) };
         if (claimed.has(raw))
           return { ok: false, reason: "BAD_PARTITION", target, ord: raw,
                    claimed_by: [claimed.get(raw), label],
-                   detail: `basis[${raw}] is claimed by two groups. A leg belongs to exactly ONE group: a `
-                         + `leg that is needed whatever else holds is NECESSARY, and the honest way to say `
-                         + `so is to leave the reasons ungrouped — an ungrouped basis is read as no `
-                         + `stronger than its weakest leg, which is the conservative reading.` };
+                   detail: localize("inquiry.index.basis_raw_is_claimed_by", "basis[{raw}] is claimed by two groups. A leg belongs to exactly ONE group: a leg that is needed whatever else holds is NECESSARY, and the honest way to say so is to leave the reasons ungrouped — an ungrouped basis is read as no stronger than its weakest leg, which is the conservative reading.", { raw: String(raw) }) };
         claimed.set(raw, label);
         nextLabel[raw] = label;
       }
@@ -2788,9 +2679,7 @@ export class Inquiry {
         && rowsOut.every((r) => r.carried_forward)
         && standingByLabel.size === rowsOut.length)
       return { ok: false, reason: "PARTITION_UNCHANGED", target,
-               detail: "this is the structure this question already carries, leg for leg. Nothing was "
-                     + "written: a revision that changes nothing would put a restructuring in the record "
-                     + "that did not happen." };
+               detail: localize("inquiry.index.this_is_the_structure_this", "this is the structure this question already carries, leg for leg. Nothing was written: a revision that changes nothing would put a restructuring in the record that did not happen.") };
 
     /* ---------------- ONE GRAMMAR, judged before a byte moves ---------------
        The CANDIDATE frontmatter, checked by the catalog's own function over the
@@ -2816,9 +2705,7 @@ export class Inquiry {
     if (errs.length)
       return { ok: false, reason: "BASIS_REFUSED", target,
                findings: errs.map((x) => ({ check: x.check, detail: x.message, repairs: x.repairs ?? [] })),
-               detail: "the structure this would author is refused by the SAME catalog function op=promote "
-                     + "runs at the write, so nothing was written. Every group is a claim that its legs are "
-                     + "enough on their own, and that claim carries a name and a date." };
+               detail: localize("inquiry.index.the_structure_this_would_author", "the structure this would author is refused by the SAME catalog function op=promote runs at the write, so nothing was written. Every group is a claim that its legs are enough on their own, and that claim carries a name and a date.") };
 
     /* ---------------------------------------------------- and now the bytes */
     /* R28: the pair before the act, from the module that holds strength (its registration); absent, said so. */
@@ -2826,8 +2713,7 @@ export class Inquiry {
     const spliced = spliceBasisGround(text, nextLabel);
     if (!spliced)
       return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
-               detail: "this document's basis block is not in a shape this grammar can edit in place. "
-                     + "Nothing was written — a partial edit of a basis is worse than none." };
+               detail: localize("inquiry.index.this_documents_basis_block_is", "this document's basis block is not in a shape this grammar can edit in place. Nothing was written — a partial edit of a basis is worse than none.") };
     text = spliced;
     text = grounds.length
       ? setOrAddBlock(text, "grounds", rowsOut.flatMap((r) => [

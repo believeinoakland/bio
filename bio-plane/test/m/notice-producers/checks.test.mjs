@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, ANN } from "../people/fixture.mjs";
 import { producers, fresh, reader, ofKind, sentences, texts, JUDGMENT, snapshot, hintFailures } from "./fixture.mjs";
 import { TAKE_UP, NOTICED_LABEL, HINT_MARK } from "../../../src/notice-producers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
 const span = (from, to) => ({ from, to });
@@ -147,11 +148,11 @@ test("R9: a second guard: a check whose answer does not say its gate is open rai
 test("R11: an interest-check item is marked \"Hint · machine work\" in its summary and detail, every sentence calls it a hint and none a signal; its label, kind and key unchanged", () => {
   const { w, read } = setup();
   gate(w, 0.1);
-  assert.equal(HINT_MARK, "Hint · machine work");
+  assert.equal(HINT_MARK, word("mark.hint.label"));
   const it = ofKind(read("ann", { now: NOW }), "interest-check-noticed")[0];
   assert.deepEqual(hintFailures(it, HINT_MARK), []);
   assert.equal(it.summary, `Hint · machine work: a pattern the check "revolving door" finds in held facts`);
-  assert.equal(it.options[0].label, "Take this hint up as your own hunch or hypothesis");
+  assert.equal(it.options[0].label, word("notice-producers.label.take_hint_hunch"));
   assert.equal(it.label, "noticed");
   assert.equal(it.kind, "interest-check-noticed");
   assert.match(it.id, /^FINDING::interest-check-noticed::CHK-[^:]+::[^:]+$/);

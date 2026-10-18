@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { reviewCommentBodyLines, REVIEW_COMMENTS_INCLUDED_MAX } from "../../../src/case-account/index.mjs";
 import { reviewCommentsLines } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const ROWS = [{ comment_id: "RVC-1", draft_id: "DRAFT-1", reviewer: "bo", reviewer_kind: "member", text: "The dates hold.", at: "2026-09-27T10:00:00Z" },
@@ -89,14 +90,14 @@ test("R7: reviewCommentBodyLines answers the body section a reader reads — eac
   assert.deepEqual(reviewCommentBodyLines({ comments: [{ reviewer: "bo", text: "The dates\nhold.", at: "2026-09-27T10:00:00Z" },
                                                        { reviewer: null, text: "Fine.", at: null }], left_out: 1 }), [
     "## What Reviewers Said", "",
-    "The publisher chose to carry these comments from the case's review copies, in the reviewers' own words:", "",
+    word("case-account.document.publisher_chose_carry"), "",
     "- bo, on 2026-09-27T10:00:00Z: The dates hold.", "- (a reviewer), on (an unrecorded date): Fine.", "",
-    "1 comment was left out. A reviewer left out may file a response in the case's docket.", ""]);
+    word("case-account.document.left_out.one"), ""]);
   assert.deepEqual(reviewCommentBodyLines({ comments: [], left_out: 3 }), ["## What Reviewers Said", "",
-    "The publisher carried no comment from the case's review copies.", "",
+    word("case-account.document.publisher_carried_comment"), "",
     "3 comments were left out. A reviewer left out may file a response in the case's docket.", ""]);
   assert.deepEqual(reviewCommentBodyLines({ comments: [], left_out: null }).at(-2),
-                   "How many comments were left out is undetermined: the review copies' comments could not all be read here.");
+                   word("case-account.document.how_many_comments"));
   /* what reviewCommentsChosen answers as `body` is what it reads */
   const w = world();
   w.cacc.registerReviewComments(() => ROWS);

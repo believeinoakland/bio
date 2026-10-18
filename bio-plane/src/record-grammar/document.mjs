@@ -4,6 +4,7 @@
    catalogue at T19 with their comments. */
 
 import { normalizeType } from './types.mjs';
+import { word } from '../setup-words/index.mjs';
 
 /** Literal heading constants per type (spec Section 4).
  *
@@ -18,7 +19,7 @@ import { normalizeType } from './types.mjs';
  * the NORMALIZED type as the fallback. */
 export const HEADINGS = {
   information: ['## Summary', '## Provenance Notes', '## Session Log', '## Review Notes'],
-  inquiry: ['## Question', '## What It Rests On', '## Conclusion', '## What Would Falsify This', '## Session Log', '## Review Notes'],
+  inquiry: ['## Question', word('conformance.rests'), '## Conclusion', word('conformance.falsify'), '## Session Log', '## Review Notes'],
   focus: ['## Statement', '## Why It Matters', '## Open Questions', '## Session Log', '## Review Notes'],
   project: ['## Thesis Summary', '## Open Questions', '## Ruled Out', '## Session Log', '## Review Notes'],
   action: ['## Plan', '## Status', '## Correspondence', '## Session Log', '## Review Notes'],

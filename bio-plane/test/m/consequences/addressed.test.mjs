@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { noSuchDetermination } from "../../../src/conformance/index.mjs";
 import { ADDRESSED_WORDS, CONSEQUENCES_CHECKS } from "../../../src/consequences/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const S = "STD-2026-0001-law";
 const DOC = "INFO-2026-0001-doc";
@@ -73,7 +74,7 @@ test("R9 (D54): addressedRecord's refusals, with a negative control", () => {
 test("R9: overall addressed across every mix of states; the latest record per part wins", () => {
   const w = setup();
   /* No live part: undetermined, "no consequence recorded", never addressed (K172). */
-  assert.deepEqual([w.overall().state, w.overall().why], ["undetermined", "no consequence recorded"]);
+  assert.deepEqual([w.overall().state, w.overall().why], ["undetermined", word("escalation.consequence_recorded")]);
   const p1 = w.part();
   assert.equal(w.overall().state, "not_addressed", "never assessed is not addressed");
   assert.equal(w.overall().parts[0].addressed, "never_assessed");
@@ -121,7 +122,7 @@ test("R9 R5 (N257, K172, K283): a group's judgment of no consequence, a zero mea
   assert.deepEqual(overall().parts.map((p) => p.causation), ["not_applicable"]);
   assert.equal(overall().state, "not_addressed", "a zero part is not unproven, and is not yet addressed");
   w.mark(z.id);
-  assert.deepEqual([overall().state, overall().why], ["addressed", "every live part is recorded addressed, with evidence"]);
+  assert.deepEqual([overall().state, overall().why], ["addressed", word("consequences.why.live_part_recorded")]);
   w.mark(z.id, "not_addressed", []);
   assert.equal(overall().state, "not_addressed", "the latest record wins for a zero part too");
   w.mark(z.id);

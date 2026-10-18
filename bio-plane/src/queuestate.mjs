@@ -65,6 +65,7 @@
  * the action's own record is where the overdue entry is met or waived. It is queue's to add and not observation-log's,
  * because no look ever carries it (C-22.4 checks a look's condition against observation-log's list alone). */
 import { CONDITION_KINDS } from "./observation-log/vocabulary.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 export const QUEUE_CONDITION_KINDS = Object.freeze({
   ...CONDITION_KINDS,
   "action-clock-overdue":       "a deadline on one of the team's actions passed while its entry is still pending "
@@ -99,9 +100,9 @@ export const QUEUE_OBLIGATION_KINDS = {
      `moved`, read from aiRunRead and never compared again; queue-producers #obligationsBiasDebt serves it on op=queue. */
   "bias-debt":                   "a re-run is owed after a lens change (D-86) — DISCLOSED, never blocking (DEC-20) "
                               + "— LIVE: bias's debt sweep, served by queue-producers #obligationsBiasDebt",
-  "endorsement-owed":            "an endorsement is owed on a pending administrator or owner vote",
-  "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
-  "membership-request":          "a membership request is at the doorbell",
+  "endorsement-owed":            word("queuestate.endorsement_owed"),
+  "expertise-confirmation-owed": word("queuestate.expertise_confirmation_owed"),
+  "membership-request":          word("queuestate.membership_request"),
   "project-owners-inactive":     "every owner of a project is inactive; rescue is available (D-47)",
   /* N345 (R1; DEC-84 item 2, DEC-85): a duty is never muted, dismissed or set aside, and it leaves only by resolution
      (contradiction R24), so both are OBLIGATIONs. Their producers are `queue-producers`' (its R4, R7). */
@@ -444,11 +445,7 @@ export function classOfKind(kind) {
  * cannot do: the finding stays on every other feed and in op=proposals, and it
  * leaves the team's list only by op=proposedispose. OBLIGATION alone is refused. */
 export const MUTE_REFUSAL_DETAIL = {
-  OBLIGATION: "a to-do is something a named person must do for the record to proceed, and it leaves "
-            + "every list only when it is DONE (op=taskresolve, or the act its item names as "
-            + "`disposition.instead`): record state, not a preference. "
-            + "Quieting it would remove it from the only list that routes it while `tasks` keeps no "
-            + "per-member quiet, so the record would go on believing the question reached a person.",
+  OBLIGATION: localize("queue.queuestate.a_to_do_is_something", "a to-do is something a named person must do for the record to proceed, and it leaves every list only when it is DONE (op=taskresolve, or the act its item names as `disposition.instead`): record state, not a preference. Quieting it would remove it from the only list that routes it while `tasks` keeps no per-member quiet, so the record would go on believing the question reached a person."),
 };
 
 /* The classes a PERSONAL mute may reach, in either form (D-125). A CONDITION and

@@ -7,6 +7,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { localize } from "../setup-words/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 export const MODULES_PATH = join(ROOT, "build/modules.json");
@@ -43,7 +44,7 @@ export function firstDifference(have, want) {
   if (have === want) return null;
   const a = have.split("\n"), b = want.split("\n");
   for (let i = 0; i < Math.max(a.length, b.length); i++)
-    if (a[i] !== b[i]) return `line ${i + 1}: have ${JSON.stringify(a[i] ?? null)}, the file gives ${JSON.stringify(b[i] ?? null)}`;
+    if (a[i] !== b[i]) return localize("membership.order-build.line_v1_have_stringify_the", "line {v1}: have {stringify}, the file gives {stringify_2}", { v1: String(i + 1), stringify: String(JSON.stringify(a[i] ?? null)), stringify_2: String(JSON.stringify(b[i] ?? null)) });
   return "differs";
 }
 
@@ -56,7 +57,7 @@ function main(argv) {
     let have = null;
     try { have = readFileSync(out, "utf8"); } catch { /* absent */ }
     const d = have === null ? "the generated list is absent" : firstDifference(have, want);
-    if (d) { process.stderr.write(`membership: ${out} is stale: ${d}\n`); return 1; }
+    if (d) { process.stderr.write(localize("membership.order-build.membership_out_is_stale_d", "membership: {out} is stale: {d}\n", { out: String(out), d: String(d) })); return 1; }
     process.stdout.write("membership: order.mjs matches modules.json\n");
     return 0;
   }

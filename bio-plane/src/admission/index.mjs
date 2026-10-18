@@ -52,7 +52,7 @@
    asked (R29); the viewer of an `ai` credential minted in a project carries that project (R30); the key list R28 reads
    is the design's regenerated one (R31). */
 import { liveToken, sha256hex } from "../tokens.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS,
          OP_FAMILIES } from "../op-declarations/index.mjs";
@@ -402,9 +402,7 @@ export function aiTaskScope(cred, op, spec, { named = [] } = {}) {
 
   if (!aiReachesAsMember(spec, op))
     return { refusal: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", ...aiScopeRow("AI_BEYOND_TASK_SCOPE"),
-      detail: `no member of this team reaches '${String(op).slice(0, 60)}', so no declared scope reaches it `
-      + `either. An agent is confined to what a member could do themselves, which is a property of the `
-      + `operation rather than a list kept anywhere.`,
+      detail: localize("admission.index.no_member_of_this_team", "no member of this team reaches '{String}', so no declared scope reaches it either. An agent is confined to what a member could do themselves, which is a property of the operation rather than a list kept anywhere.", { String: String(String(op).slice(0, 60)) }),
       op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes, cls: "ai" } } };
 
   /* R26 (T48; N1045; K3150): a read that answers WHO A SOURCE IS is no part of the floor. A member's reach alone never
@@ -488,10 +486,7 @@ export function aiScopeDeclaration(writes) {
             + `session, and no agent credential is among the credentials it admits, so it cannot be `
             + `handed to an agent. This is a property of the operation and not a list of forbidden `
             + `ones: its OPS row names the credentials that reach it, and an agent's is not one.`
-          : `'${op.slice(0, 60)}' is not reachable by a member of this team, so it cannot be handed `
-            + `to an agent. This is a property of the operation and not a list of forbidden ones: the `
-            + `unattended worker's own verbs carry no member class by construction, so they are `
-            + `outside every scope anybody can author.`,
+          : localize("admission.index.op_is_not_reachable_by", "'{op}' is not reachable by a member of this team, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.", { op: String(op.slice(0, 60)) }),
         op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null } } };
   }
   /* END DEC-49 REGION is-ai-scope-declaration */
@@ -592,11 +587,7 @@ export function sessionOpGate(kind, op, spec, method, tables = DECLARED) {
   if (recorded)
     return { status: 403, body: { ok: false, reason: "MACHINE_CREDENTIAL_REQUIRED", ...admissionRow("MACHINE_CREDENTIAL_REQUIRED"),
       error: "this operation requires a machine credential, not a signed-in session",
-      detail: `'${String(op).slice(0, 60)}' is on the unattended path. No signed-in session of any role `
-      + `reaches it, the founder's included; it answers to a credential held in the hosting `
-      + `account. This instance holds a decision on record saying so, cited in 'recorded' so you `
-      + `can check it. Nothing here says a machine is trusted more than a person (DEC-52 rules the `
-      + `opposite): it says which credential this verb is addressed to.`,
+      detail: localize("admission.index.string_is_on_the_unattended", "'{String}' is on the unattended path. No signed-in session of any role reaches it, the founder's included; it answers to a credential held in the hosting account. This instance holds a decision on record saying so, cited in 'recorded' so you can check it. Nothing here says a machine is trusted more than a person (DEC-52 rules the opposite): it says which credential this verb is addressed to.", { String: String(String(op).slice(0, 60)) }),
       op, recorded } };
   return { status: 403, body: { ok: false, reason: "SESSION_ROUTE_NOT_RECORDED", ...admissionRow("SESSION_ROUTE_NOT_RECORDED"),
     error: "no signed-in session reaches this operation, and no decision on record says why",
@@ -950,9 +941,7 @@ export function doorRateLimited(retryAfter, { session = false } = {}) {
   /* DEC-49 REGION is-door-window */
   return { status: 429, body: { ok: false, reason: "DOOR_RATE_LIMITED", ...admissionRow("DOOR_RATE_LIMITED", { minutes },
       session ? "refusal.DOOR_RATE_LIMITED.session" : undefined),
-    detail: `too many requests to the operations anyone may call reached this team's Civicsmith from ${where} in `
-      + `a short time, so this one was turned away before the operation ran; nothing was read or written. Try again `
-      + `in ${wait} seconds.`,
+    detail: localize("admission.index.too_many_requests_to_the", "too many requests to the operations anyone may call reached this team's Civicsmith from {where} in a short time, so this one was turned away before the operation ran; nothing was read or written. Try again in {wait} seconds.", { where: String(where), wait: String(wait) }),
     stated: session ? SESSION_WINDOW_STATED : DOOR_WINDOW_STATED, retryAfter: wait, minutes } };
   /* END DEC-49 REGION is-door-window */
 }

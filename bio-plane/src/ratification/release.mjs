@@ -32,6 +32,7 @@
 import { parseFrontmatter, isMachineIdentity, createSha256 } from "../record-grammar/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
 import { rowOf } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R20. Longer than a reason, because a release acknowledgment is a statement of what was weighed and what was checked,
    not a label. Same forbidden characters, because it is spliced into the Session Log and must stay one line per
@@ -55,9 +56,7 @@ export function release(deps,
      outside, which is exactly why the governed span stops here. */
   if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
     return { ok: false, reason: "MACHINE_CANNOT_RELEASE", ...rowOf("MACHINE_CANNOT_RELEASE"),
-             detail: "the collected-to-verified transition is a named member's decision (Intake Doctrine "
-                   + "section 4, C-18.1). A machine credential may read and may prepare the review packet, "
-                   + "and may not release. Sign in as a member." };
+             detail: localize("ratification.release.the_collected_to_verified_transition", "the collected-to-verified transition is a named member's decision (Intake Doctrine section 4, C-18.1). A machine credential may read and may prepare the review packet, and may not release. Sign in as a member.") };
   /* END DEC-49 REGION is-machine-release */
   const ack = String(acknowledgment ?? "").trim();
   const mit = String(mitigation ?? "").trim();
@@ -66,9 +65,7 @@ export function release(deps,
      template-literal code and is outside the span for that reason. */
   if (!ack)
     return { ok: false, reason: "NO_ACKNOWLEDGMENT", ...rowOf("NO_ACKNOWLEDGMENT"),
-             detail: "a bulk release records the member's explicit acknowledgment that the batch is "
-                   + "homogeneous and that the risks of releasing in bulk were weighed. Without it the "
-                   + "record shows only that a button was pressed." };
+             detail: localize("ratification.release.a_bulk_release_records_the", "a bulk release records the member's explicit acknowledgment that the batch is homogeneous and that the risks of releasing in bulk were weighed. Without it the record shows only that a button was pressed.") };
   if (!mit)
     return { ok: false, reason: "NO_MITIGATION", ...rowOf("NO_MITIGATION"),
              detail: "a bulk release records what the member actually did: what was sampled, what was "
@@ -78,8 +75,7 @@ export function release(deps,
   for (const [name, v] of [["acknowledgment", ack], ["mitigation", mit]])
     if (v.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
       return { ok: false, reason: `BAD_${name.toUpperCase()}`,
-               detail: `${name} is at most ${RELEASE_ACK_MAX} characters and cannot contain a `
-                     + `quote, a backslash, or a newline` };
+               detail: localize("ratification.release.name_is_at_most_release", "{name} is at most {RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline", { name: String(name), RELEASE_ACK_MAX: String(RELEASE_ACK_MAX) }) };
 
   /* R21: retrieval's refuse-weight resolve, whose refusal is answered as it stands. */
   const sel = retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
@@ -122,7 +118,7 @@ export function release(deps,
   for (const id of sel.members) {
     const moved = moveMember({ sql, promotion }, {
       id, when, author: who, to: "verified",
-      blurb: `batch release via selection ${handle}; acknowledgment and mitigation in Session Log`,
+      blurb: word("ratification.blurb", { handle: String(handle) }),
       sessionEntry: (from) => `### Session ${when} | Released (batch) | ${who}\n`
                             + `Trigger: selection ${handle}\n`
                             + `Changes: state ${from} to verified.\n`
@@ -144,21 +140,11 @@ export function release(deps,
 
 /* R22, R34: each class's reason, the one sentence the release's refusal and capture's held list (its R78) both give. */
 export const CLASS_REASONS = Object.freeze({
-  NOT_INFORMATION: "release moves an Information state, and this selection carries something else. "
-                 + "The set is refused whole rather than narrowed.",
-  ILLEGAL_TRANSITION: "only collected Information may be released. Something already verified has been "
-                    + "released once and release is not repeatable; something retired is terminal.",
-  CRUCIAL_IN_BATCH: "crucial-criticality material is never batch-released (Intake Doctrine v1.2): "
-                  + "ratifying it requires verifying its co-attestations, which is per-document work, "
-                  + "and a batch containing crucial material is not a low-variance collection. Release "
-                  + "these individually, or re-select without them.",
-  CONTESTED_IN_BATCH: "contested material is never batch-released (Intake Doctrine section 4; DEC-97): a "
-                    + "contradiction touching each of these documents is not yet resolved, or whether one is could "
-                    + "not be read. Resolve it, or release these individually, or re-select without them.",
-  ENTRY_REQUIREMENTS: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, "
-                    + "and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route "
-                    + "for every document in the register (C-18.9). Releasing these as they stand would mint "
-                    + "records the catalog immediately rejects.",
+  NOT_INFORMATION: localize("ratification.release.release_moves_an_information_state", "release moves an Information state, and this selection carries something else. The set is refused whole rather than narrowed."),
+  ILLEGAL_TRANSITION: localize("ratification.release.only_collected_information_may_be", "only collected Information may be released. Something already verified has been released once and release is not repeatable; something retired is terminal."),
+  CRUCIAL_IN_BATCH: localize("ratification.release.crucial_criticality_material_is_never", "crucial-criticality material is never batch-released (Intake Doctrine v1.2): ratifying it requires verifying its co-attestations, which is per-document work, and a batch containing crucial material is not a low-variance collection. Release these individually, or re-select without them."),
+  CONTESTED_IN_BATCH: localize("ratification.release.contested_material_is_never_batch", "contested material is never batch-released (Intake Doctrine section 4; DEC-97): a contradiction touching each of these documents is not yet resolved, or whether one is could not be read. Resolve it, or release these individually, or re-select without them."),
+  ENTRY_REQUIREMENTS: localize("ratification.release.verified_state_has_entry_requirements", "verified state has entry requirements: a well-formed content_hash, data/dataset.json, and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route for every document in the register (C-18.9). Releasing these as they stand would mint records the catalog immediately rejects."),
 });
 
 /* R22 (K1025): the viewer the contested arm reads as. The plane's own, which sees every bundle (membership R43), so a

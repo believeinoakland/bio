@@ -29,6 +29,8 @@
  *  NEVER RAISES A CAPTURE GRADE. `C` is the letter `textchain.mjs`'s own D-252
  *  note already uses for an OCR pass, so this member reports the letter this
  *  estate already means rather than minting a second convention. */
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+
 export const CAP = "C";
 
 /** Where that letter's measurement lives. A free string a HUMAN follows — the
@@ -37,14 +39,7 @@ export const CAP = "C";
  *  measurement must not acquire a second home; extraction's
  *  `bio-plane/src/extraction/pipeline.mjs` says so at the join). */
 export const MEASURED_BY =
-  "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the "
-  + "deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one "
-  + "human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible "
-  + "over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the "
-  + "invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed "
-  + "page, ONE engine version, ONE model. Every other corpus figure in that row is "
-  + "agreement-with-the-local-floor and NOT accuracy — and D-314/CPDF-16 measured that NEITHER "
-  + "local model passes the noise control, so no agreement figure may be read as accuracy at all.";
+  localize("ocr-worker.contract.measurements_md_2026_09_10", "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy — and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.");
 
 /** The largest RGBA frame CPDF-15 measured COMPLETING on the deployed runtime,
  *  in bytes. **A WORKLOAD SIZE, NEVER A SHARE OF 128 MB** — D-312 exists because

@@ -75,6 +75,7 @@
 
 import { BASIS_GRADES } from "./record-grammar/grades.mjs";
 import { appendStep, checkChain, derivationCap, readingSource } from "./textchain.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 
 /* ------------------------------------------------------------------ *
  * The vocabulary
@@ -220,14 +221,10 @@ const no = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extr
 export function checkExtractFunction(fn) {
   if (!isNonEmptyString(fn))
     return no("NO_FUNCTION",
-      `an ai() step names WHAT performed the derivation, and this proposal names nothing. `
-    + `The chain exists to carry that fact: a calibration is OF a function and a version, and `
-    + `neither can be recovered from the word 'ai'`);
+      localize("extraction.extractrun.an_ai_step_names_what", "an ai() step names WHAT performed the derivation, and this proposal names nothing. The chain exists to carry that fact: a calibration is OF a function and a version, and neither can be recovered from the word 'ai'"));
   if (!Object.prototype.hasOwnProperty.call(EXTRACT_FUNCTIONS, fn))
     return no("UNKNOWN_FUNCTION",
-      `'${String(fn).slice(0, 60)}' is not one of the EXTRACT functions this repository emits `
-    + `(${Object.keys(EXTRACT_FUNCTIONS).join(", ")}). A function is in that roster when something `
-    + `produces it, so a name that is not there names no producer`,
+      localize("extraction.extractrun.string_is_not_one_of", "'{String}' is not one of the EXTRACT functions this repository emits ({keys}). A function is in that roster when something produces it, so a name that is not there names no producer", { String: String(String(fn).slice(0, 60)), keys: String(Object.keys(EXTRACT_FUNCTIONS).join(", ")) }),
       { functions: Object.keys(EXTRACT_FUNCTIONS) });
   return null;
 }
@@ -280,17 +277,13 @@ export function proposedReadingGrade(entry, capture = null) {
   const v = base.grade == null ? null : verifiedQuote(e, capture);
   if (!v) return { ...base, verified_quote: false, check: [] };
   const check = quoteFigures(e.quote);
-  const named = check.length === 0 ? `It holds no number or date`
-    : `Its ${check.length} number(s) and date(s) are named for the member to check at acceptance`;
+  const named = check.length === 0 ? word("extractrun.holds_number_date")
+    : word("extractrun.number_date_named", { check: String(check.length) });
   if (v.ceiling == null)
     return { grade: null, verified_quote: true, check,
-             why: `earned undetermined: this proposal's quote is the capture's own text at its place, byte for `
-                + `byte, so it keeps the capture's own ceiling, and that ceiling is undetermined. A letter would `
-                + `be a claim the capture does not support. ${named}` };
+             why: word("extractrun.why.earned_undetermined_proposal", { named: String(named) }) };
   return { grade: v.ceiling, verified_quote: true, check,
-           why: `earned ${v.ceiling}: this proposal's quote is the capture's own text at its place, byte for `
-              + `byte, so it keeps the capture's own ceiling (${v.ceiling}) rather than the ${PROPOSED_READING_CEILING} `
-              + `a machine's reading of a string is worth. ${named}` };
+           why: word("extractrun.why.earned_proposal_quote", { ceiling: String(v.ceiling), ceiling_2: String(v.ceiling), proposed_reading_ceiling: String(PROPOSED_READING_CEILING), named: String(named) }) };
 }
 
 /* What the reference alone NAMES: B for a kind and a key, C for a label, nothing for neither. */
@@ -306,18 +299,12 @@ function namedGrade(e) {
   if (isNonEmptyString(e.refKind) && isNonEmptyString(e.refKey)) {
     const grade = "B";
     return { grade,
-             why: `earned ${grade}: this proposal names an identifier the document itself carries `
-                + `(${String(e.refKind).slice(0, 40)}:${String(e.refKey).slice(0, 60)}), read out of the `
-                + `text by a machine rather than taken from the source's own structure — which is what `
-                + `a registered reader's reference key is worth, and one letter below the A a `
-                + `source-assigned reference earns` };
+             why: word("extractrun.why.earned_proposal_names", { grade: String(grade), ref_kind: String(String(e.refKind).slice(0, 40)), ref_key: String(String(e.refKey).slice(0, 60)) }) };
   }
   if (isNonEmptyString(e.label)) {
     const grade = "C";
     return { grade,
-             why: `earned ${grade}: this proposal names only a NAME, which is the weakest thing the `
-                + `framework grades — a document that mentions a subject by name carries no reference `
-                + `the source assigned` };
+             why: word("extractrun.why.earned_proposal_names_name", { grade: String(grade) }) };
   }
   return { grade: null,
            why: `earned nothing: this proposal names neither an identifier nor a name, so there is `
@@ -361,10 +348,7 @@ export function checkProposedRef(entry, capture = null) {
   const ceiling = graded.verified_quote ? (capture.ceiling ?? null) : PROPOSED_READING_CEILING;
   if (rank(graded.grade) != null && (ceiling == null || rank(graded.grade) < rank(ceiling)))
     return no("PROPOSAL_ABOVE_CEILING",
-      `a proposed reading earned ${graded.grade}, which is stronger than the `
-    + `${ceiling == null ? "undetermined ceiling of the capture its quote is read from" : ceiling} `
-    + `it may reach. A machine reading text reaches B at most; only a quote that is the capture's own `
-    + `text keeps the capture's own ceiling, and never more`);
+      localize("extraction.extractrun.a_proposed_reading_earned_grade", "a proposed reading earned {grade}, which is stronger than the {v1} it may reach. A machine reading text reaches B at most; only a quote that is the capture's own text keeps the capture's own ceiling, and never more", { grade: String(graded.grade), v1: String(ceiling == null ? "undetermined ceiling of the capture its quote is read from" : ceiling) }));
   /* The position is OPTIONAL and its absence is honest: a reading that cannot
      say WHERE is most readings today (FW-17 / IC-86), and `readingSource`'s own
      contract is that every malformed or incomplete input answers null rather
@@ -414,9 +398,7 @@ export function proposalChain(captureChain, { fn, version, cap = null } = {}) {
       { chain_refusal: badChain });
   if (cap != null && rank(cap) == null)
     return no("CAP_NOT_A_GRADE",
-      `'${String(cap).slice(0, 20)}' is not one of ${BASIS_GRADES.join(", ")}. A step's cap is the `
-    + `strongest transcription fidelity it can support and it is a MEASUREMENT — absent means `
-    + `undetermined and stated, never a letter chosen to get past this line`);
+      localize("extraction.extractrun.string_is_not_one_of_2", "'{String}' is not one of {BASIS_GRADES}. A step's cap is the strongest transcription fidelity it can support and it is a MEASUREMENT — absent means undetermined and stated, never a letter chosen to get past this line", { String: String(String(cap).slice(0, 20)), BASIS_GRADES: String(BASIS_GRADES.join(", ")) }));
   const out = appendStep(captureChain, { step: "ai", engine: fn, version: String(version).trim(),
                                          cap: cap == null ? null : cap });
   /* `appendStep` returns the new chain OR a refusal object. A refusal is not an
@@ -448,8 +430,5 @@ export function mintRatio({ minted = 0, cited = 0 } = {}) {
                  + `nothing to measure. This is an absence and not a clean result` };
   const uncited = Math.max(0, m - c);
   return { minted: m, cited: c, uncited, ratio: c / m,
-           says: `${c} of ${m} passage(s) a machine marked citable have been cited by a member. The `
-               + `other ${uncited} are PROPOSALS: the record keeps them, labels them, and counts `
-               + `none of them as extraction coverage. If this fraction never rises across runs, the `
-               + `assistant is manufacturing citable-looking passages` };
+           says: word("extractrun.says.passage_machine_marked", { count: String(c), m: String(m), uncited: String(uncited) }) };
 }

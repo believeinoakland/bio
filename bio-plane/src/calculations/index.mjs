@@ -45,6 +45,7 @@ import { PATTERNS, GATE_MAX_RATE, runPattern } from "./patterns.mjs";
 import { defaultRegistry } from "../connection-grammar/index.mjs";
 import { USES_FIELDS, USES_HEADER, NONE_HELD, tieOf, foldReason, APPLICATION_RECIPES, APPLICATION_KINDS, composeApplication,
   answerApplication } from "./application.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { CALCULATIONS_SCHEMA, CALCULATIONS_TABLES } from "./schema.mjs";
 export { ROLES, MONEY_ROLES, KEY_ROLES, ROSTER_ROLES, CROSSWALK_ROLES, TABLE_MAX_BYTES, TABLE_MAX_CELLS, parseCsv,
@@ -63,7 +64,7 @@ export const INGEST_STAMP = "class:daemon";
 export const INGEST_METHOD = "table_binding";
 /** R9 (N676, K1799): the engine named for a value a spreadsheet file computed, when the file records none (office-readers
  *  reads no application), and the engines whose agreement is recorded as measured: none yet. */
-export const FILE_ENGINE = "the file's spreadsheet program";
+export const FILE_ENGINE = word("calculations.file_spreadsheet_program");
 export const MEASURED_ENGINES = Object.freeze([]);
 /** R9: the derivation step a third-party engine's value takes (K1447 (ii); strength R36). */
 export const ENGINE_STEP = "third-party engine";
@@ -78,7 +79,7 @@ export const VISIT_FINDINGS = Object.freeze(["yes", "no", "could_not_tell"]);
 /** R39: a drawn item's standing over its visits. */
 export const STANDINGS = Object.freeze(["yes", "no", "disagree", "could_not_tell", "not_visited"]);
 /** R40: what the interval over visits assumes, stated with every estimate over a draw that carries a question. */
-export const VISIT_ASSUMPTION = "The interval treats the judged items as a simple random draw from the set: it assumes that the drawn items not judged are like those judged, and it says nothing else of them.";
+export const VISIT_ASSUMPTION = word("calculations.interval_treats_judged");
 /** R40: the canonical table an estimate over visits is computed over, one row per drawn item (R9: its bytes). */
 const STANDING_FIELDS = Object.freeze([{ name: "item", type: "string" }, { name: "standing", type: "string" }, { name: "visits", type: "number" }]);
 
@@ -338,7 +339,7 @@ export class Calculations {
     const name = engine.version ? `${engine.name} ${engine.version}` : engine.name;
     const measured = MEASURED_ENGINES.includes(name);
     if (measured) return { ...g, engine: name, engine_measured: true, derivation_step: ENGINE_STEP };
-    return { grade: null, why: `its values were computed by a third-party engine (${name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii))${g.grade ? `; its capture alone reads ${g.grade}` : ""}`,
+    return { grade: null, why: localize("calculations.index.its_values_were_computed_by", "its values were computed by a third-party engine ({name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii)){v1}", { name: String(name), v1: String(g.grade ? `; its capture alone reads ${g.grade}` : "") }),
       engine: name, engine_measured: false, derivation_step: ENGINE_STEP };
   }
 
@@ -346,17 +347,17 @@ export class Calculations {
   #usesGrade(tableSha) {
     const u = this.#one(`SELECT ids_json FROM calc_uses WHERE sha=?`, tableSha);
     const events = this.dep("events");
-    if (!u || !events) return { grade: null, why: "the frozen uses are not readable here" };
+    if (!u || !events) return { grade: null, why: word("calculations.why.frozen_uses_readable") };
     let weakest = null;
     for (const id of parse(u.ids_json) || []) {
       let e = null;
       try { e = events.readEvent({ eventId: id, viewer: INGEST_STAMP }); } catch { e = null; }
       const ev = e && e.found !== false && e.ok !== false && typeof e.then !== "function" ? e.event || e : null;
       const gov = ev && ev.governing != null ? (ev.attestations || []).find((a) => Number(a.attestation_id) === Number(ev.governing)) : null;
-      if (!gov || !isGrade(gov.grade)) return { grade: null, why: `undetermined: the event ${id} has no governing attestation with a grade${ev ? "" : " readable here"}` };
+      if (!gov || !isGrade(gov.grade)) return { grade: null, why: word("calculations.why.undetermined_event_governing", { id: String(id), ev: String(ev ? "" : " readable here") }) };
       weakest = weakest ? weaker(weakest, gov.grade) : gov.grade;
     }
-    return weakest ? { grade: weakest, why: `the weakest of its events' governing attestations, ${weakest}` } : { grade: null, why: "it holds no event" };
+    return weakest ? { grade: weakest, why: word("calculations.why.weakest_events_governing", { weakest: String(weakest) }) } : { grade: null, why: word("calculations.why.holds_event") };
   }
 
   /* R9: a held table's grade facts: its source extent's capture grade capped by its derivation, with its engine marks;
@@ -365,7 +366,7 @@ export class Calculations {
     const src = parse(r && r.source_json) || {};
     if (src.kind === "uses") return this.#withEngine(this.#usesGrade(r.sha), null);
     const crow = src.content_id ? this.content.contentRow(src.content_id) : null;
-    const g = crow ? this.#contentGrade(crow) : { grade: null, why: "the table's source is not held" };
+    const g = crow ? this.#contentGrade(crow) : { grade: null, why: word("calculations.why.table_source_held") };
     return this.#withEngine(g, src.engine !== undefined ? src.engine : this.#engineOf(crow));
   }
 
@@ -377,7 +378,7 @@ export class Calculations {
   async #sourceRows(row) {
     if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
       const got = this.content.cellsAt(row.content_id);
-      if (!got || !Array.isArray(got.cells)) return { fault: `the range's cells are not held (${got && got.reason ? got.reason : "unread"})` };
+      if (!got || !Array.isArray(got.cells)) return { fault: word("calculations.range_cells_held", { got: String(got && got.reason ? got.reason : "unread") }) };
       const byRow = new Map();
       for (const c of got.cells) {
         const m = /^([A-Z]+)(\d+)$/.exec(String((plain(c.source) ? c.source.cell : c.source) ?? "").replace(/\$/g, "").toUpperCase());
@@ -401,7 +402,7 @@ export class Calculations {
         if (obj) text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
       } catch { text = null; }
     }
-    if (typeof text !== "string") return { fault: "the source's text is not held: the passage was not read, or its capture's bytes are not in the evidence store" };
+    if (typeof text !== "string") return { fault: word("calculations.source_text_held") };
     if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: true };
     return { text };
   }
@@ -410,7 +411,7 @@ export class Calculations {
    *  capture's document, a passage, a workbook range or a portal export). Async: the bytes go to the evidence store. */
   async declareTable({ source = null, schema = null, header = null, roles = null, vintage = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by))
-      return no("MEMBER_ACT_ONLY", "a table is declared by a member; a machine may not declare one (K1468). Nothing was written.");
+      return no("MEMBER_ACT_ONLY", localize("calculations.index.a_table_is_declared_by", "a table is declared by a member; a machine may not declare one (K1468). Nothing was written."));
     const contentId = typeof source === "string" ? source.trim() : plain(source) ? str(source.content) : "";
     if (!contentId) return no("NO_SOURCE", "a table names its captured source: the content id of a CSV, a workbook range or a portal export. Nothing was written.");
     const row = this.content.contentRow(contentId);
@@ -455,7 +456,7 @@ export class Calculations {
     const held = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
     if (held) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
     const ev = this.record.evidenceStore();
-    if (!ev) return no("NO_EVIDENCE_STORE", "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.");
+    if (!ev) return no("NO_EVIDENCE_STORE", localize("calculations.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written."));
     try { await ev.put(tableSha, bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
     const at = this.now();
     const superseded = vintage && vintage.supersedes ? vintage.supersedes : null;
@@ -483,7 +484,7 @@ export class Calculations {
     return { sha: r.sha, source: parse(r.source_json), schema: parse(r.schema_json), header: parse(r.header_json),
       roles: parse(r.roles_json), vintage: parse(r.vintage_json), superseded_by: r.superseded_by ?? null, rows: r.rows,
       bytes: r.bytes, undetermined: { count: r.undetermined_count, cells: parse(r.undetermined_json) || [],
-        why: "a cell that does not read as its column's declared type is held as written and counted undetermined, never coerced" },
+        why: word("calculations.why.cell_read_column") },
       declared_by: r.declared_by, declared_at: r.declared_at };
   }
 
@@ -546,7 +547,7 @@ export class Calculations {
         grade_facts: { capture_grade: cg && isGrade(cg.grade) ? cg.grade : null, derivation: crow && isGrade(crow.derivation_cap) ? crow.derivation_cap : null,
           grade: g.grade, why: g.why, engine: g.engine, engine_measured: g.engine_measured, ...(g.derivation_step ? { derivation_step: g.derivation_step } : {}) } },
       page: t ? { after: from, limit: lim, rows: rows.slice(from, from + lim).map((x) => header.map((h) => x[h])),
-        truncated: from + lim < rows.length } : { rows: null, why: "the table's bytes are not held in the evidence store" } };
+        truncated: from + lim < rows.length } : { rows: null, why: word("calculations.why.table_bytes_held") } };
   }
 
   /** R3: `tablesAt({key, at, viewer})`: the vintage under `key` valid at `at` (`civil-time.validAt`), or undetermined
@@ -556,7 +557,7 @@ export class Calculations {
     if (!(typeof at === "string" && isCalendarDate(at))) return no("NO_DATE", "name the date, YYYY-MM-DD.");
     const view = this.#view();
     const rows = this.#rows(`SELECT * FROM calc_tables WHERE vintage_key=? ORDER BY sha`, str(key)).filter((r) => this.#seesTable(r, viewer));
-    if (!rows.length) return { ok: true, key: str(key), at, state: "undetermined", table: null, why: `no table is held under the key "${str(key)}"` };
+    if (!rows.length) return { ok: true, key: str(key), at, state: "undetermined", table: null, why: word("calculations.why.table_held_key", { key: String(str(key)) }) };
     const judged = rows.map((r) => {
       const v = parse(r.vintage_json);
       let a;
@@ -568,9 +569,9 @@ export class Calculations {
     const open = judged.filter((j) => j.answer !== "in" && j.answer !== "out");
     const listed = judged.map((j) => ({ sha: j.sha, valid: j.valid, superseded_by: j.superseded_by, at: typeof j.answer === "string" ? j.answer : "undetermined", ...(typeof j.answer === "string" ? {} : { why: j.answer.why }) }));
     if (inside.length === 1 && !open.length) return { ok: true, key: str(key), at, state: "determined", table: inside[0].sha, vintages: listed };
-    const why = inside.length > 1 ? `${inside.length} vintages are each valid on ${at}, and none is chosen between them`
-      : open.length ? `whether ${open.map((j) => j.sha.slice(0, 12)).join(", ")} ${open.length > 1 ? "were" : "was"} valid on ${at} is undetermined: ${open.map((j) => j.answer.why).join("; ")}`
-      : `no vintage under "${str(key)}" is valid on ${at}`;
+    const why = inside.length > 1 ? word("calculations.vintages_valid_none", { inside: String(inside.length), at: String(at) })
+      : open.length ? word("calculations.whether_valid_undetermined", { open: String(open.map((j) => j.sha.slice(0, 12)).join(", ")), open_2: String(open.length > 1 ? "were" : "was"), at: String(at), open_3: String(open.map((j) => j.answer.why).join("; ")) })
+      : word("calculations.vintage_valid", { key: String(str(key)), at: String(at) });
     return { ok: true, key: str(key), at, state: "undetermined", table: null, why, vintages: listed };
   }
 
@@ -633,9 +634,9 @@ export class Calculations {
     try { g = this.provenance.captureGrade(row.capture_sha); } catch { g = null; }
     const capture = g && isGrade(g.grade) ? g.grade : null;
     const cap = isGrade(row.derivation_cap) ? row.derivation_cap : null;
-    if (!capture) return { grade: null, why: `the capture grade is undetermined${g && g.why ? `: ${g.why}` : ""}` };
+    if (!capture) return { grade: null, why: word("calculations.why.capture_grade_undetermined", { grade: String(g && g.why ? `: ${g.why}` : "") }) };
     const grade = cap ? weaker(capture, cap) : capture;
-    why = cap && grade !== capture ? `capture ${capture}, capped by its derivation at ${cap}` : `capture ${capture}${cap ? `, its derivation capped at ${cap}` : ""}`;
+    why = cap && grade !== capture ? word("calculations.capture_capped_derivation", { capture: String(capture), cap: String(cap) }) : `capture ${capture}${cap ? `, its derivation capped at ${cap}` : ""}`;
     return { grade, why };
   }
 
@@ -679,26 +680,26 @@ export class Calculations {
         for (const id of ids) refs.push({ name: inp.name, kind, ref: id });
         apart.withdrawn.push(...m.withdrawn.map((w) => ({ input: inp.name, ...w })));
         described.push({ name: inp.name, kind, ref: ids, facts: m.facts.map((f) => f.fact_id), grade: m.grade,
-          why: m.grade ? `the weakest reading grade of its money facts is ${m.grade}` : "no money fact states its reading grade" });
+          why: m.grade ? word("calculations.why.weakest_reading_grade", { grade: String(m.grade) }) : word("calculations.why.money_fact_states") });
       } else if (kind === "figure") {
         const row = typeof ref === "string" ? this.content.contentRow(ref) : null;
         if (!row || !this.#sees(row.bundle_id, viewer)) { missing(inp.name, String(ref)); break; }
         let text = null;
         if (row.extent_kind === "sheet-cell") { const c = this.content.cellsAt(ref); text = c && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; }
         else { try { text = this.content.passageText(ref); } catch { text = null; } }
-        const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: "the passage's text is not held" };
+        const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: word("calculations.why.passage_text_held") };
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" cites a passage that does not read as one figure: ${f.why}. Nothing was written.`, { input: inp.name, ref }); break; }
         const fig = { ...f }; delete fig.as_read;
         const g = this.#contentGrade(row);
         bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: g.grade, why: g.why });
       } else if (kind === "value") {
-        const f = typeof ref === "string" ? parseFigure(ref) : { refused: "FIGURE_INVALID", why: "a typed figure is text" };
+        const f = typeof ref === "string" ? parseFigure(ref) : { refused: "FIGURE_INVALID", why: word("calculations.why.typed_figure_text") };
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" is not a figure: ${f.why}. Nothing was written.`, { input: inp.name }); break; }
         const fig = { ...f }; delete fig.as_read;
         bound[inp.name] = fig; held(inp.name, { value: fig });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: TESTIMONY, unbound: true,
-          why: "a figure typed with no cited source is unbound, and an unbound input is testimony (D)" });
+          why: word("calculations.why.figure_typed_cited") });
       } else if (kind === "calculation") {
         const c = typeof ref === "string" && CALC_RE.test(ref) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, ref) : null;
         if (!c || !this.#visible(c, viewer)) { missing(inp.name, String(ref)); break; }
@@ -715,19 +716,19 @@ export class Calculations {
         const text = pre ? canonicalJson({ recipe: parse(c.recipe_json), inputs: pre, method_version: c.method_version }) : null;
         bound[inp.name] = b; hashes[inp.name] = c.result_key; canon[inp.name] = text && sha256HexSync(text) === c.result_key ? text : null;
         refs.push({ name: inp.name, kind, ref });
-        described.push({ name: inp.name, kind, ref, grade: axis.capture.grade, why: `its own capture axis: ${axis.capture.why}` });
+        described.push({ name: inp.name, kind, ref, grade: axis.capture.grade, why: word("calculations.why.capture_axis", { why: String(axis.capture.why) }) });
       } else if (kind === "set") {
         const s = typeof ref === "string" ? this.#one(`SELECT * FROM calc_sets WHERE set_sha=?`, ref) : null;
         if (!s || !this.#sees(s.project, viewer)) { missing(inp.name, String(ref)); break; }
         const ids = parse(s.ids_json) || [];
         const seen = ids.filter((id) => this.#sees(id, viewer));
-        if (seen.length !== ids.length) apart.out_of_view.push({ input: inp.name, count: ids.length - seen.length, why: "members of the frozen set out of your view at evaluation, counted apart and never as zero" });
+        if (seen.length !== ids.length) apart.out_of_view.push({ input: inp.name, count: ids.length - seen.length, why: word("calculations.why.members_frozen_set") });
         bound[inp.name] = { fields: [{ name: "id", type: "string" }], rows: seen.map((id) => ({ id })) };
         held(inp.name, ids);
         if (hashes[inp.name] !== s.set_sha) { hashes[inp.name] = s.set_sha; canon[inp.name] = null; }
         refs.push({ name: inp.name, kind, ref: s.set_sha });
         described.push({ name: inp.name, kind, ref: s.set_sha, n: ids.length, grade: null, not_graded: true,
-          why: "a frozen set of the record's own ids carries no capture grade; the method that froze it is disclosed" });
+          why: word("calculations.why.frozen_set_record") });
       } else {
         const d = typeof ref === "string" ? this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, ref) : null;
         if (!d || !this.#sees(d.project, viewer)) { missing(inp.name, String(ref)); break; }
@@ -754,18 +755,18 @@ export class Calculations {
           table = { fields: t.fields, rows: sample.map((k) => at.get(Number(k))).filter(Boolean) };
         } else {
           const seen = sample.filter((id) => this.#sees(id, viewer));
-          if (seen.length !== sample.length) apart.out_of_view.push({ input: inp.name, count: sample.length - seen.length, why: "drawn members out of your view at evaluation, counted apart" });
+          if (seen.length !== sample.length) apart.out_of_view.push({ input: inp.name, count: sample.length - seen.length, why: word("calculations.why.drawn_members_view") });
           table = { fields: [{ name: "id", type: "string" }], rows: seen.map((id) => ({ id })) };
         }
         bound[inp.name] = table; held(inp.name, { set: d.set_sha, kind: d.set_kind, seed: d.seed, n: d.n, method: d.method });
         if (hashes[inp.name] !== d.draw_key) { hashes[inp.name] = d.draw_key; canon[inp.name] = null; }
         refs.push({ name: inp.name, kind, ref: d.draw_key });
         described.push({ name: inp.name, kind, ref: d.draw_key, draw: { frame_size: d.frame_size, n: d.n, seed: d.seed, method: d.method, set: d.set_sha, question: null },
-          grade: null, not_graded: true, why: "a recorded draw is graded as the set it was drawn from; the draw itself is a mechanical, reproducible step" });
+          grade: null, not_graded: true, why: word("calculations.why.recorded_draw_graded") });
       }
     }
     if (refused) return refused;
-    if (hyps.length) return no("HYPOTHESIS_NOT_A_FACT", `"${hyps[0]}" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.`, { hypothesis: hyps[0] });
+    if (hyps.length) return no("HYPOTHESIS_NOT_A_FACT", localize("calculations.index.v1_is_a_hypothesis_hunches", "\"{v1}\" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.", { v1: String(hyps[0]) }), { hypothesis: hyps[0] });
     return { ok: true, bound, hashes, canon, refs, inputs: described, apart };
   }
 
@@ -784,7 +785,7 @@ export class Calculations {
       if (!row || !this.#sees(row.bundle_id, viewer)) return no("BAD_THRESHOLD", "the threshold's cited figure is not held, or is not one you may see. Nothing was written.");
       let text = null;
       try { text = this.content.passageText(threshold.figure); } catch { text = null; }
-      const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: "its text is not held" };
+      const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: word("calculations.why.text_held") };
       if (f.refused) return no("BAD_THRESHOLD", `the threshold's cited passage is not one figure: ${f.why}. Nothing was written.`);
       fig = { ...f }; delete fig.as_read; as_read = f.as_read; contentRef = threshold.figure; grade = this.#contentGrade(row).grade;
     }
@@ -793,7 +794,7 @@ export class Calculations {
       const standards = this.dep("standards");
       const dates = period.key ? [] : [period.from, period.to].filter(Boolean);
       if (!standards || typeof standards.inForceAt !== "function" || !dates.length)
-        standing = { state: "undetermined", why: !dates.length ? "the calculation's period is a key with no stated dates, so whether the standard was in force for it is undetermined" : "the standards module is not reachable here, so whether the standard was in force is undetermined" };
+        standing = { state: "undetermined", why: !dates.length ? word("calculations.why.calculation_period_key") : word("calculations.why.standards_module_reachable_whether") };
       else {
         const answers = dates.map((date) => { try { return standards.inForceAt({ standard: threshold.standard, ...(threshold.portion ? { portion: threshold.portion } : {}), date, viewer }); } catch (e) { return { state: "undetermined", why: String(e && e.message || e) }; } });
         const refused = answers.find((a) => a && a.ok === false);
@@ -801,7 +802,7 @@ export class Calculations {
         const notIn = answers.find((a) => a && a.state === "not_in_force");
         if (notIn) return no("THRESHOLD_NOT_IN_FORCE", `the standard cited as the threshold was not in force for the calculation's period: ${notIn.why}. Nothing was written.`, { standard: threshold.standard });
         const open = answers.find((a) => !a || a.state !== "in_force");
-        standing = open ? { state: "undetermined", why: open && open.why ? open.why : "the standards module gave no answer" }
+        standing = open ? { state: "undetermined", why: open && open.why ? open.why : word("calculations.why.standards_module_gave") }
           : { state: "in_force", why: answers.map((a) => a.why).filter(Boolean).join("; ") };
       }
     }
@@ -821,7 +822,7 @@ export class Calculations {
         const end = (role, col) => roles.some(([c, r]) => c === col && r.role === role);
         if (d && end("crosswalk_from", st.crosswalk.left) && end("crosswalk_to", st.crosswalk.right)) continue;
       }
-      return no("JOIN_NOT_BY_IDENTIFIER", `the join "${st.as}" is not keyed through an id space (${SPACES.join(", ")}) or a captured crosswalk declared as one (its crosswalk_from and crosswalk_to columns); a join on a name alone is refused (K1452). Nothing was written.`, { step: st.as ?? null });
+      return no("JOIN_NOT_BY_IDENTIFIER", localize("calculations.index.the_join_as_is_not", "the join \"{as}\" is not keyed through an id space ({SPACES}) or a captured crosswalk declared as one (its crosswalk_from and crosswalk_to columns); a join on a name alone is refused (K1452). Nothing was written.", { as: String(st.as), SPACES: String(SPACES.join(", ")) }), { step: st.as ?? null });
     }
     return null;
   }
@@ -833,7 +834,7 @@ export class Calculations {
     if (kind === "estimate") {
       const draws = described.filter((d) => d.kind === "draw");
       if (!draws.length)
-        return no("ESTIMATE_WITHOUT_DRAW", "a population estimate is answered only over a recorded draw (a seeded draw over a frozen set), with its exact interval (K1448). Nothing was written.");
+        return no("ESTIMATE_WITHOUT_DRAW", localize("calculations.index.a_population_estimate_is_answered", "a population estimate is answered only over a recorded draw (a seeded draw over a frozen set), with its exact interval (K1448). Nothing was written."));
       const asked = draws.find((d) => d.draw.question !== null);
       if (asked) {
         /* R40: an estimate over visits runs its own recipe over the one draw whose items members visited */
@@ -863,7 +864,7 @@ export class Calculations {
       for (const [d, phase] of [[a, "adopted"], [b, "actual"]]) {
         const phases = [...new Set(bound[d.name].rows.map((r) => r.phase))];
         if (phases.length !== 1 || phases[0] !== phase)
-          return no("BUDGET_INPUTS", `the input "${d.name}" holds facts of phase ${phases.join(", ") || "none"}; it holds only ${phase} facts (each total within one phase, R12). Nothing was written.`);
+          return no("BUDGET_INPUTS", localize("calculations.index.the_input_name_holds_facts", "the input \"{name}\" holds facts of phase {v1}; it holds only {phase} facts (each total within one phase, R12). Nothing was written.", { name: String(d.name), v1: String(phases.join(", ") || "none"), phase: String(phase) }));
       }
       const periods = [...new Set([...bound.adopted.rows, ...bound.actual.rows].map((r) => r.fiscal_period).filter(Boolean))].sort();
       if (!periods.length) return no("BUDGET_INPUTS", "no fiscal period could be read for these facts from the profile's fiscal year. Nothing was written.");
@@ -886,12 +887,12 @@ export class Calculations {
     if (kind === "ranking") {
       const q = terms ? terms.quantity : undefined;
       if (Array.isArray(q) && q.length > 1)
-        return no("SCORE_NOT_A_FACT", "a ranking orders by one stated, measured quantity; several measures composed into one figure are refused (K1471, K1473). Nothing was written.");
+        return no("SCORE_NOT_A_FACT", localize("calculations.index.a_ranking_orders_by_one", "a ranking orders by one stated, measured quantity; several measures composed into one figure are refused (K1471, K1473). Nothing was written."));
       const quantity = Array.isArray(q) ? q[0] : q;
       if (!str(quantity) || !str(terms.scope) || !terms.period)
         return no("RANKING_TERMS", "a ranking names its quantity, its scope and its period in its terms. Nothing was written.");
       if (JUDGMENT_WORDS.test(String(quantity)))
-        return no("SCORE_NOT_A_FACT", "the quantity named stands for a judgment, not a measured quantity; a figure standing for importance, suspicion, significance or severity never orders a ranking (K1471, K1473). Nothing was written.");
+        return no("SCORE_NOT_A_FACT", localize("calculations.index.the_quantity_named_stands_for", "the quantity named stands for a judgment, not a measured quantity; a figure standing for importance, suspicion, significance or severity never orders a ranking (K1471, K1473). Nothing was written."));
       if (!recipe || !Array.isArray(recipe.steps)) return null;
       const last = recipe.steps.find((s) => plain(s) && s.as === recipe.output);
       if (!last || last.op !== "sort") return no("NOT_A_RANKING", "a ranking's answer is a sort by its one stated quantity. Nothing was written.");
@@ -920,15 +921,15 @@ export class Calculations {
         const from = plain(r.period) ? r.period.from : null;
         const day = typeof from === "string" ? from.slice(0, 10) : null;
         if (!isCalendarDate(day ?? "")) return no("CHANGE_DATE_UNDETERMINED", "the standard's version states no date its period starts from, so before and after cannot be told apart. Nothing was written.", { standard: ch.standard });
-        ctx.change = { date: day, rests_on: { standard: str(ch.standard), period: r.period, says: `the version's period starts ${day}, as the standard is held` } };
-      } else if (isCalendarDate(ch.date ?? "")) ctx.change = { date: ch.date, rests_on: { says: `the date ${ch.date}, as the member named it` } };
+        ctx.change = { date: day, rests_on: { standard: str(ch.standard), period: r.period, says: word("calculations.says.version_period_starts", { day: String(day) }) } };
+      } else if (isCalendarDate(ch.date ?? "")) ctx.change = { date: ch.date, rests_on: { says: word("calculations.says.date_member_named", { date: String(ch.date) }) } };
       else return no("NO_CHANGE", "the change is {standard} or {date: YYYY-MM-DD}. Nothing was written.");
     }
     if (kind === "target_met") {
       const r = read(t.target);
       if (!r) return noStandard(t.target, "the target");
       const tg = plain(r.target) ? r.target : null;
-      if (!tg || !plain(tg.threshold)) return no("NO_TARGET", "the standard holds no target (standards R42): a metric, a threshold, a period and a definition. Nothing was written.", { standard: t.target });
+      if (!tg || !plain(tg.threshold)) return no("NO_TARGET", localize("calculations.index.the_standard_holds_no_target", "the standard holds no target (standards R42): a metric, a threshold, a period and a definition. Nothing was written."), { standard: t.target });
       const f = parseFigure(String(tg.threshold.value ?? ""));
       if (f.refused) return no("NO_TARGET", `the target's threshold is not a figure: ${f.why}. Nothing was written.`, { standard: t.target });
       if (!str(t.body)) return no("BAD_TERMS", "target_met names the body measured. Nothing was written.", { field: "body" });
@@ -942,9 +943,9 @@ export class Calculations {
       if (!r) return noStandard(pv.standard, "the provision");
       let measure = false;
       try { measure = standards && typeof standards.isMeasure === "function" ? standards.isMeasure(str(pv.standard), viewer) === true : false; } catch { measure = false; }
-      if (!measure) return no("PROVISION_NOT_A_MEASURE", `the provision's standard is held ${r.held ?? "without its text"}, not as its own words, so it is not a measure an act is held against (standards R34). Nothing was written.`, { standard: str(pv.standard), held: r.held ?? null });
+      if (!measure) return no("PROVISION_NOT_A_MEASURE", localize("calculations.index.the_provisions_standard_is_held", "the provision's standard is held {v1}, not as its own words, so it is not a measure an act is held against (standards R34). Nothing was written.", { v1: String(r.held ?? "without its text") }), { standard: str(pv.standard), held: r.held ?? null });
       const date = period && !period.key ? period.to || period.from : null;
-      let standing = { state: "undetermined", why: "the calculation's period states no date, so the version in force is undetermined" };
+      let standing = { state: "undetermined", why: word("calculations.why.calculation_period_states") };
       if (date) {
         try { standing = standards.inForceAt({ standard: str(pv.standard), ...(pv.portion ? { portion: pv.portion } : {}), date, viewer }) || standing; } catch (e) { standing = { state: "undetermined", why: String(e && e.message || e) }; }
         if (standing.state === "not_in_force") return no("THRESHOLD_NOT_IN_FORCE", `the provision was not in force for the calculation's period: ${standing.why}. Nothing was written.`, { standard: str(pv.standard) });
@@ -953,7 +954,7 @@ export class Calculations {
       try { const fs = typeof standards.forcesOf === "function" ? standards.forcesOf({ standard: str(pv.standard), viewer }) : null; force = fs && Array.isArray(fs.forces) ? fs.forces.find((x) => plain(x) && x.portion === (pv.portion ?? null)) || null : null; } catch { force = null; }
       ctx.provision = { standard: str(pv.standard), portion: pv.portion ?? null, version: standing.version ?? str(pv.standard),
         standing: { state: standing.state, why: standing.why ?? null }, force, held: r.held ?? "text",
-        says: "the provision at its version in force for the period, beside the measured practice" };
+        says: word("calculations.says.provision_version_force") };
     }
     const c = composeApplication(kind, t, b.bound, ctx);
     if (!c.ok) return c;
@@ -965,7 +966,7 @@ export class Calculations {
         let st = null;
         try { st = standards.inForceAt({ standard: ctx.target.standard, date: p.to, viewer }); } catch { st = null; }
         if (st && st.state === "not_in_force") return no("THRESHOLD_NOT_IN_FORCE", `the target was not in force for the period ending ${p.to}: ${st.why}. Nothing was written.`, { standard: ctx.target.standard });
-        p.standing = st ? { state: st.state, why: st.why ?? null } : { state: "undetermined", why: "the standards module gave no answer" };
+        p.standing = st ? { state: st.state, why: st.why ?? null } : { state: "undetermined", why: word("calculations.why.standards_module_gave") };
       }
     }
     return { ok: true, recipe: c.recipe, application: { plan: c.plan, ctx, terms: t }, extra: c.extra || null };
@@ -973,13 +974,13 @@ export class Calculations {
 
   /* R35: `standards.bindsAt` for the body measured on a day, as `{state, why, body}`: binds, benchmark or undetermined. */
   #bindsAt(standard, body, date, viewer) {
-    if (!isCalendarDate(date ?? "")) return { state: "undetermined", why: "the period states no last day, so whether the target binds the body is undetermined", body };
+    if (!isCalendarDate(date ?? "")) return { state: "undetermined", why: word("calculations.why.period_states_last"), body };
     const standards = this.dep("standards");
     let r = null;
     try { r = standards && typeof standards.bindsAt === "function" ? standards.bindsAt({ standard, body, date, viewer }) : null; } catch (e) { r = { state: "undetermined", why: String(e && e.message || e) }; }
     const state = r ? (r.state ?? r.answer ?? r.bindingness) : null;
     if (state === "binds" || state === "benchmark") return { state, why: r.why ?? null, rests_on: r.rests_on ?? null, body };
-    return { state: "undetermined", why: (r && r.why) || "the standards module gave no answer on whether the target binds the body", body };
+    return { state: "undetermined", why: (r && r.why) || word("calculations.why.standards_module_gave_answer"), body };
   }
 
   /* R17: a measure across mixed kinds of link: the table a ranking's grouped measure counts holds rows of more than
@@ -1002,7 +1003,7 @@ export class Calculations {
       }
       const kinds = [...seen];
       if (kinds.length > 1)
-        return no("SCORE_NOT_A_FACT", `the ranking counts rows of ${kinds.length} kinds (${kinds.slice(0, 5).join(", ")}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.`, { field: f });
+        return no("SCORE_NOT_A_FACT", localize("calculations.index.the_ranking_counts_rows_of", "the ranking counts rows of {length} kinds ({kinds}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.", { length: String(kinds.length), kinds: String(kinds.slice(0, 5).join(", ")) }), { field: f });
     }
     return null;
   }
@@ -1053,7 +1054,7 @@ export class Calculations {
       if (s && s.ok === false && sums.some((x) => x.from === d.name))
         return no(s.reason || s.refused || s.code, `${s.detail || s.why || "the money facts cannot be summed"} (money's summation rule). Nothing was written.`, { input: d.name, ...(s.facts ? { facts: s.facts } : {}) });
       if (s && s.ok && Array.isArray(s.interfund) && s.interfund.length) interfund.push({ input: d.name, transfers: s.interfund,
-        says: "the total includes transfers between funds, flagged so a total across funds can net them" });
+        says: word("calculations.says.total_includes_transfers") });
     }
     const e = evaluateRecipe(r, bound, opts);
     /* R4 (K1734): a table result answered streamed is stored and answered as the same table of row objects */
@@ -1066,8 +1067,8 @@ export class Calculations {
       ...(b.apart.out_of_view.length && { out_of_view: b.apart.out_of_view }),
       ...(interfund.length && { interfund }),
       says: e.undetermined_rows || b.apart.out_of_view.length || b.apart.withdrawn.length
-        ? "values that could not be counted are counted apart and stated here, never as zero"
-        : "every value was counted" };
+        ? word("calculations.says.values_counted_counted")
+        : word("calculations.says.value_counted") };
     if (plain(e.result) && e.result.relation !== undefined) results.label = "computed fact";
     if (plan && plan.unit) results.unit = plan.unit;
     if (plan && plan.ranking) results.ranking = { ...plan.ranking, could_not_count: e.undetermined_rows };
@@ -1077,7 +1078,7 @@ export class Calculations {
         return { fiscal_period: p, adopted: at(`adopted_total_${i}`), actual: at(`actual_total_${i}`), difference: at(`difference_${i}`), comparison: at(`comparison_${i}`) };
       });
       results.bases = plan.bases;
-      results.bases_says = `adopted on ${plan.bases.adopted.join(", ")} basis; actual on ${plan.bases.actual.join(", ")} basis`;
+      results.bases_says = word("calculations.adopted_basis_actual", { adopted: String(plan.bases.adopted.join(", ")), actual: String(plan.bases.actual.join(", ")) });
     }
     if (kind === "estimate" && plan && plan.visits) {
       /* R40: share_judged, the interval over the judged items, estimate_count, what was counted apart, the assumption */
@@ -1095,27 +1096,27 @@ export class Calculations {
       results.share_judged = share;
       results.interval = { low: iv.low, high: iv.high, low_share: divide(fig(iv.low), fig(N), RATIO_DEFAULT), high_share: divide(fig(iv.high), fig(N), RATIO_DEFAULT),
         confidence, frame_size: N, sample_size: judged, successes: yes, method: iv.method, seed: plan.visits.draw.seed,
-        says: `low and high are counts of the set's ${N} items, and beside them shares of it, over the ${judged} drawn items judged` };
+        says: word("calculations.says.low_high_counts", { n: String(N), judged: String(judged) }) };
       results.estimate_count = multiply(share.value, fig(N));
       results.counted_apart = { could_not_tell: at("could_not_tell"), disagree: at("disagree"), not_visited: at("not_visited"), steps: counted,
-        says: "drawn items that could not be judged, counted apart by their reason, never as no and never as zero" };
+        says: word("calculations.says.drawn_items_judged") };
       results.assumption = VISIT_ASSUMPTION;
     } else if (kind === "estimate") {
       const dr = b.inputs.find((d) => d.kind === "draw").draw;
       const succ = e.result;
       const x = plain(succ) && succ.precision === "exact" && succ.sign === "+" && /^\d+$/.test(succ.value || "") ? Number(succ.value) : null;
       const confidence = terms && terms.confidence !== undefined ? String(terms.confidence) : "0.95";
-      const iv = x === null ? { refused: "INTERVAL_INVALID", why: "the recipe's answer is not a whole count of successes" }
+      const iv = x === null ? { refused: "INTERVAL_INVALID", why: word("calculations.why.recipe_answer_whole") }
         : interval({ frame_size: dr.frame_size, sample_size: dr.n, successes: x, confidence });
       if (iv.refused) return no(iv.refused, `the estimate's interval cannot be computed: ${iv.why}. Nothing was written.`);
       results.interval = { ...iv, confidence, frame_size: dr.frame_size, sample_size: dr.n, successes: x, seed: dr.seed,
-        says: "an estimate over a recorded random draw, read as a mechanical draw, not the machine choosing what to look into" };
+        says: word("calculations.says.estimate_recorded_random") };
     }
     if (plan && plan.application) {
       const a = plan.application;
       const at = (n) => rowObjects(n === r.output ? e.result : (e.trace.find((x) => x.step === n) || {}).output ?? null);
       const population = b.inputs.filter((d) => d.kind === "table" || d.kind === "calculation").map((d) => (plain(d.source) && d.source.kind === "uses"
-        ? { input: d.name, table: d.ref, filter: d.source.filter, frozen_by: d.source.frozen_by, frozen_at: d.source.frozen_at, says: "the held uses the member could see when frozen: a population, not a census" }
+        ? { input: d.name, table: d.ref, filter: d.source.filter, frozen_by: d.source.frozen_by, frozen_at: d.source.frozen_at, says: word("calculations.says.held_uses_member") }
         : { input: d.name, [d.kind]: d.ref }));
       const body = str(a.terms.body);
       let bodyLabel = null;
@@ -1327,15 +1328,15 @@ export class Calculations {
     const money = this.dep("money");
     for (const inp of inputs) {
       if (!plain(inp)) continue;
-      if (inp.value !== undefined) { per.push({ name: inp.name, kind: "value", ref: inp.value, grade: TESTIMONY, unbound: true, why: "an unbound input is testimony (D)", engine: null, engine_measured: null }); continue; }
+      if (inp.value !== undefined) { per.push({ name: inp.name, kind: "value", ref: inp.value, grade: TESTIMONY, unbound: true, why: word("calculations.why.unbound_input_testimony"), engine: null, engine_measured: null }); continue; }
       if (inp.table !== undefined) {
         const t = this.#one(`SELECT sha, source_json FROM calc_tables WHERE sha=?`, inp.table);
-        const g = t ? this.#tableGrade(t) : { grade: null, why: "the table's source is not held", engine: null, engine_measured: null };
+        const g = t ? this.#tableGrade(t) : { grade: null, why: word("calculations.why.table_source_held"), engine: null, engine_measured: null };
         per.push({ name: inp.name, kind: "table", ref: inp.table, ...g }); continue;
       }
       if (inp.figure !== undefined) {
         const row = this.content.contentRow(inp.figure);
-        const g = row ? this.#withEngine(this.#contentGrade(row), this.#engineOf(row)) : { grade: null, why: "the cited passage is not held", engine: null, engine_measured: null };
+        const g = row ? this.#withEngine(this.#contentGrade(row), this.#engineOf(row)) : { grade: null, why: word("calculations.why.cited_passage_held"), engine: null, engine_measured: null };
         per.push({ name: inp.name, kind: "figure", ref: inp.figure, ...g }); continue;
       }
       if (inp.money !== undefined) {
@@ -1348,12 +1349,12 @@ export class Calculations {
           const r = fact && plain(fact.grade) ? fact.grade.reading : fact ? fact.grade : null;
           grade = isGrade(r) ? (grade ? weaker(grade, r) : r) : grade;
         }
-        per.push({ name: inp.name, kind: "money", ref: inp.money, grade, why: grade ? `the weakest reading grade of its money facts is ${grade}` : "no reading grade is stated", engine: null, engine_measured: null }); continue;
+        per.push({ name: inp.name, kind: "money", ref: inp.money, grade, why: grade ? word("calculations.why.weakest_reading_grade", { grade: String(grade) }) : word("calculations.why.reading_grade_stated"), engine: null, engine_measured: null }); continue;
       }
       if (inp.calculation !== undefined) {
         const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, inp.calculation);
         const g = o ? this.#gradeFacts(o).capture : { grade: null, why: "not held" };
-        per.push({ name: inp.name, kind: "calculation", ref: inp.calculation, grade: g.grade, why: `its own capture axis: ${g.why}`, engine: null, engine_measured: null }); continue;
+        per.push({ name: inp.name, kind: "calculation", ref: inp.calculation, grade: g.grade, why: word("calculations.why.capture_axis", { why: String(g.why) }), engine: null, engine_measured: null }); continue;
       }
       if (inp.draw !== undefined) {
         const d = this.#one(`SELECT question FROM calc_draws WHERE draw_key=?`, inp.draw);
@@ -1363,19 +1364,19 @@ export class Calculations {
         }
       }
       per.push({ name: inp.name, kind: inp.set !== undefined ? "set" : "draw", ref: inp.set ?? inp.draw, grade: null, not_graded: true,
-        why: "the record's own ids carry no capture grade; the method that froze or drew them is disclosed", engine: null, engine_measured: null });
+        why: word("calculations.why.record_ids_carry"), engine: null, engine_measured: null });
     }
     const t = parse(c.threshold_json);
     if (t) per.push({ name: "threshold", kind: "threshold", grade: t.grade ?? (t.content ? null : TESTIMONY), ...(t.content ? {} : { unbound: true }),
-      why: t.content ? "the threshold's cited figure" : "a threshold typed with no cited source is testimony (D)", engine: null, engine_measured: null });
+      why: t.content ? word("calculations.why.threshold_cited_figure") : word("calculations.why.threshold_typed_cited"), engine: null, engine_measured: null });
     const graded = per.filter((p) => !p.not_graded);
     const open = graded.filter((p) => !isGrade(p.grade));
     const weakest = graded.filter((p) => isGrade(p.grade)).reduce((g, p) => (g ? weaker(g, p.grade) : p.grade), null);
     const capture = open.length ? { grade: null, why: `undetermined: ${open.map((p) => `${p.name}, ${p.why}`).join("; ")}` }
-      : weakest ? { grade: weakest, why: `the weakest input capture, ${weakest}; recipe arithmetic is not a weakening step` }
-      : { grade: null, why: "no input carries a capture grade" };
+      : weakest ? { grade: weakest, why: word("calculations.why.weakest_input_capture", { weakest: String(weakest) }) }
+      : { grade: null, why: word("strength.stopped.input_carries_capture") };
     return { inputs: per, capture, method: { version: c.method_version, note: c.method_note ?? null, recipe: parse(c.recipe_json),
-      disclosed: true, graded: false, says: "the method is disclosed, not graded" } };
+      disclosed: true, graded: false, says: word("calculations.says.method_disclosed_graded") } };
   }
 
   /** R8–R10: `read({calcId, viewer})`: the stored results, with `computed_at` and the method version, never a
@@ -1407,7 +1408,7 @@ export class Calculations {
       method_version: c.method_version, method_note: c.method_note ?? null, recompute_status: c.recompute_status,
       recompute: parse(c.recompute_json), accepted_by: c.accepted_by ?? null, accepted_at: c.accepted_at ?? null,
       created_by: c.created_by, created_at: c.created_at, grade: this.#gradeFacts(c),
-      says: "results are recomputed at acceptance, at publication and in the checker, never on a read" };
+      says: word("calculations.says.results_recomputed_acceptance") };
   }
 
   /** R30 (N576): `gradeFactsOf({calcId, viewer})`, synchronously: R9's grade facts as `read` answers them, with whether
@@ -1491,7 +1492,7 @@ export class Calculations {
    *  column of the table carrying that role, or to `{value}`, one value for every row (kind, phase, stage, basis,
    *  currency, period). The payer and payee are columns declared with a way to resolve (an entity scheme or crosswalk). */
   adoptBinding({ table = null, roles = null, by = null } = {}) {
-    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", "a binding is adopted by a member (K1468). Nothing was written.");
+    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", localize("calculations.index.a_binding_is_adopted_by", "a binding is adopted by a member (K1468). Nothing was written."));
     const t = typeof table === "string" ? this.#one(`SELECT * FROM calc_tables WHERE sha=?`, table) : null;
     if (!t || !this.#sees(t.bundle_id, by)) return no("NO_SUCH_TABLE", "no table answers to that sha here, or it is not one you may see. Nothing was written.");
     if (!plain(roles)) return no("BINDING_ROLES", "a binding maps each money role to a column or to one value. Nothing was written.");
@@ -1501,7 +1502,7 @@ export class Calculations {
       if (!MONEY_ROLES.includes(role)) return no("BINDING_ROLES", `"${role}" is not a money role (${MONEY_ROLES.join(", ")}). Nothing was written.`, { role });
       if (typeof v === "string") {
         if (!header.includes(v)) return no("BINDING_ROLES", `the role ${role} names "${v}", not a column of the table. Nothing was written.`, { role });
-        if (!declared[v] || declared[v].role !== role) return no("BINDING_ROLES", `the column "${v}" is not declared with the role ${role}; the table's declaration is the member's (R2). Nothing was written.`, { role });
+        if (!declared[v] || declared[v].role !== role) return no("BINDING_ROLES", localize("calculations.index.the_column_v_is_not", "the column \"{v}\" is not declared with the role {role}; the table's declaration is the member's (R2). Nothing was written.", { v: String(v), role: String(role) }), { role });
       } else if (!(plain(v) && typeof v.value === "string" && v.value.trim() && ["kind", "phase", "stage", "basis", "currency", "period"].includes(role)))
         return no("BINDING_ROLES", `the role ${role} maps to a column, or (for kind, phase, stage, basis, currency, period) to one value. Nothing was written.`, { role });
     }
@@ -1532,15 +1533,15 @@ export class Calculations {
 
   /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk. */
   #resolveParty(spec, value) {
-    if (!value || !String(value).trim()) return { why: "the cell is empty" };
+    if (!value || !String(value).trim()) return { why: word("calculations.why.cell_empty") };
     const entities = this.dep("entities");
     if (spec.scheme) {
       let e = null;
       try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: String(value).trim() }) : null; } catch { e = null; }
       if (e && typeof e.then === "function") e = null;
-      if (plain(e) && e.undetermined) return { why: `"${String(value).slice(0, 64)}" through the scheme ${spec.scheme} is undetermined: ${e.why || "more than one entity"}` };
+      if (plain(e) && e.undetermined) return { why: word("calculations.why.through_scheme_undetermined", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme), why: String(e.why || "more than one entity") }) };
       const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
-      return id ? { entity: id } : { why: `"${String(value).slice(0, 64)}" resolves to no registered entity through the scheme ${spec.scheme}` };
+      return id ? { entity: id } : { why: word("calculations.why.resolves_registered_entity", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme) }) };
     }
     if (spec.crosswalk) {
       const t = this.#heldTableSync(spec.crosswalk.table);
@@ -1548,7 +1549,7 @@ export class Calculations {
       if (t) for (const r of t.objects()) if (String(r[spec.crosswalk.from]).trim() === String(value).trim()) hit.push(String(r[spec.crosswalk.to]).trim());
       const ids = [...new Set(hit)];
       if (ids.length === 1 && idPattern("ENT").test(ids[0])) return { entity: ids[0] };
-      return { why: ids.length > 1 ? `"${String(value).slice(0, 64)}" maps to ${ids.length} entities in the crosswalk` : `"${String(value).slice(0, 64)}" is not in the crosswalk, or maps to no entity id` };
+      return { why: ids.length > 1 ? word("calculations.why.maps_entities_crosswalk", { value: String(String(value).slice(0, 64)), ids: String(ids.length) }) : word("calculations.why.crosswalk_maps_entity", { value: String(String(value).slice(0, 64)) }) };
     }
     return { why: "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk" };
   }
@@ -1557,14 +1558,14 @@ export class Calculations {
    *  only at a member's request, only from an adopted binding, and only for rows whose payer and payee each resolve
    *  through an identifier. `rows` lists row numbers (0-based); every row only with `rows: "all"` and a reason. */
   async ingestMoney({ binding = null, rows = null, reason = null, by = null } = {}) {
-    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", "money facts are read from a table only at a member's request (K1468). Nothing was written.");
+    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", localize("calculations.index.money_facts_are_read_from", "money facts are read from a table only at a member's request (K1468). Nothing was written."));
     const b = typeof binding === "string" ? this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, binding) : null;
     if (!b || !this.#sees(b.bundle_id, by)) return no("NO_SUCH_BINDING", "no adopted binding answers to that key here, or it is not one you may see. Nothing was written.");
     const t = await this.#heldTable(b.table_sha);
     if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
     let picked;
     if (rows === "all") {
-      if (!str(reason)) return no("NO_REASON", "taking every row of a table is the rare case; state the reason (K1468). Nothing was written.");
+      if (!str(reason)) return no("NO_REASON", localize("calculations.index.taking_every_row_of_a", "taking every row of a table is the rare case; state the reason (K1468). Nothing was written."));
       picked = Array.from({ length: t.size }, (_, i) => i);
     } else if (Array.isArray(rows) && rows.length && rows.every((n) => Number.isSafeInteger(n) && n >= 0)) picked = [...new Set(rows)].sort((x, y) => x - y);
     else return no("NO_ROWS", "name the rows to read into money facts, by number, or every row with rows: \"all\" and a reason. Nothing was written.");
@@ -1591,7 +1592,7 @@ export class Calculations {
         const spec = declared[roles.fund] || {};
         const raw = String(row[roles.fund]).trim();
         const r = spec.scheme || spec.crosswalk ? this.#resolveParty(spec, raw)
-          : idPattern("ENT").test(raw) ? { entity: raw } : { why: `"${raw.slice(0, 64)}" names no registered fund; declare the fund column's scheme or crosswalk` };
+          : idPattern("ENT").test(raw) ? { entity: raw } : { why: word("calculations.why.names_registered_fund", { raw: String(raw.slice(0, 64)) }) };
         if (!r.entity) { notWritten.push({ row: i, reason: "FUND_NOT_IDENTIFIED", detail: r.why }); continue; }
         fund = r.entity;
       }
@@ -1655,7 +1656,7 @@ export class Calculations {
     const held = this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key);
     const answer = (r) => ({ ok: true, draw: r.draw_key, set: r.set_sha, set_kind: r.set_kind, seed: r.seed, n: r.n, frame_size: r.frame_size,
       frame_hash: r.frame_hash, method: r.method, sample: parse(r.sample_json), question: r.question ?? null, drawn_by: r.drawn_by, drawn_at: r.drawn_at,
-      says: "a seeded, recorded random draw over a frozen set: anyone with the set, the seed and SHA-256 reproduces it" });
+      says: word("calculations.says.seeded_recorded_random") });
     if (held) return { ...answer(held), already: true };
     const at = this.now();
     this.record.transact(() => {
@@ -1733,7 +1734,7 @@ export class Calculations {
     const v = this.#one(`SELECT * FROM calc_visits WHERE draw_key=? AND seq=?`, d.draw_key, seq);
     const standing = standingOf(this.#rows(`SELECT finding FROM calc_visits WHERE draw_key=? AND item=?`, d.draw_key, item).map((r) => r.finding));
     return { ok: true, draw: d.draw_key, ...visitAnswer(v), standing,
-      says: "a visit is the visitor's testimony tied to one drawn item: kept as recorded, never changed, and graded as testimony (D)" };
+      says: word("calculations.says.visit_visitor_testimony") };
   }
 
   /** R39: `spotCheck({draw, viewer})` (`op=spotcheck`): a spot-check's data: the draw (its set and the set's size, n,
@@ -1758,7 +1759,7 @@ export class Calculations {
         draw: { draw: d.draw_key, set: d.set_sha, set_kind: d.set_kind, set_size: d.frame_size, n: d.n, seed: d.seed, method: d.method,
           frame_hash: d.frame_hash, reproduced: this.#reproduce(d).reproduced, drawn_by: d.drawn_by, drawn_at: d.drawn_at },
         question: d.question ?? null, items, counts, estimates,
-        says: "each drawn item stands as its visits find it; visits that find both yes and no are kept in tension and never picked between, and an item not judged is counted apart by its reason, never as no or as zero. No estimate is computed here." };
+        says: word("calculations.says.drawn_item_stands") };
     } catch { return absent; }
   }
 
@@ -1785,7 +1786,7 @@ export class Calculations {
       return { ok: true };
     });
     return { ok: true, set: setSha, n: ids.length, ids, frozen_by: by, frozen_at: at, digest: r.digest ?? null,
-      says: "a count over this set is reproducible from the set: its ids are frozen with their sha" };
+      says: word("calculations.says.count_set_reproducible") };
   }
 
   /* ===================================================================== *
@@ -1831,7 +1832,7 @@ export class Calculations {
             const ended = (tie === "employment" || tie === "donation") && it.valid.to != null
               && (() => { try { return validAt({ valid: { ...it.valid, from: null }, basis: null }, at) === "out"; } catch { return false; } })();
             if (ended) found.add(tie === "employment" ? "former_employment" : "donation");
-          } else found.add(`${tie} (validity at the act's date undetermined)`);
+          } else found.add(word("calculations.validity_act_date", { tie: String(tie) }));
         }
         if (!r.next) break;
         page = r.next;
@@ -1907,10 +1908,10 @@ export class Calculations {
     const at = this.now();
     const answer = () => ({ ok: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, built.sha)), filter,
       frozen_by: by, frozen_at: this.#one(`SELECT frozen_at FROM calc_uses WHERE sha=?`, built.sha).frozen_at, n: ids.length,
-      says: `the held uses of powers you may see, ${ids.length} acts: a population, not a census of every use made` });
+      says: word("calculations.says.held_uses_powers", { ids: String(ids.length) }) });
     if (this.#one(`SELECT 1 AS x FROM calc_uses WHERE sha=?`, built.sha)) return { ...answer(), already: true };
     const ev = this.record.evidenceStore();
-    if (!ev) return no("NO_EVIDENCE_STORE", "your team's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written.");
+    if (!ev) return no("NO_EVIDENCE_STORE", localize("calculations.index.your_teams_civicsmith_has_no_2", "your team's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written."));
     try { await ev.put(built.sha, built.bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
     const bundle = project ? str(project) : null;
     this.record.transact(() => {
@@ -1931,7 +1932,7 @@ export class Calculations {
 
   /** R33: `applicationRecipes()`: the recipes of application, as data, each with its inputs and parameters. */
   applicationRecipes() {
-    return { ok: true, recipes: APPLICATION_RECIPES, says: "each is instantiated through create, kind its name and terms its parameters: a calculation the member makes, never a pattern the machine raised" };
+    return { ok: true, recipes: APPLICATION_RECIPES, says: word("calculations.says.instantiated_through_create") };
   }
 
   /* ===================================================================== *
@@ -1948,11 +1949,11 @@ export class Calculations {
     for (const c of this.#rows(`SELECT * FROM calculations WHERE accepted_by IS NOT NULL AND evidences_json IS NOT NULL ORDER BY created_at, rowid`)) {
       const ev = parse(c.evidences_json) || [];
       if (!ev.some((e) => e.duty === dutyId && e.occurrence === key)) continue;
-      if (viewer !== null && !this.#visible(c, viewer)) { out.push({ withheld: true, evidence: null, says: "a calculation measuring this occurrence rests on an input you may not see, and is withheld whole" }); continue; }
+      if (viewer !== null && !this.#visible(c, viewer)) { out.push({ withheld: true, evidence: null, says: word("calculations.says.calculation_measuring_occurrence") }); continue; }
       const g = this.#gradeFacts(c);
       const terms = parse(c.terms_json) || {};
       const item = { calc_id: c.calc_id, kind: c.kind, results: parse(c.results_json), grade: g.capture, state: c.recompute_status === "stale" ? "stale" : "current",
-        cited_as: "measured evidence (a calculation output)", accepted_by: c.accepted_by, accepted_at: c.accepted_at };
+        cited_as: word("calculations.measured_evidence_calculation"), accepted_by: c.accepted_by, accepted_at: c.accepted_at };
       /* duties R12 reads an item's `when` as the match's date: only a date the calculation's terms state it measures */
       const when = typeof terms.met_on === "string" && isCalendarDate(terms.met_on) ? { value: terms.met_on, precision: "day", zone: "UTC" } : null;
       out.push({ ...item, evidence: { ...item }, ...(when ? { when } : {}) });
@@ -1978,9 +1979,9 @@ export class Calculations {
       let a = "undetermined";
       if (v) { try { a = validAt({ valid: { from: v.valid.from ?? null, to: v.valid.to ?? null, precision: "day", zone: "UTC" }, basis: v.basis ?? null }, { value: day, precision: "day", zone: "UTC" }, { view }); } catch { a = "undetermined"; } }
       if (a === "out") continue;
-      if (a !== "in") { notRead.push({ table: t.sha, why: v ? `whether its vintage was valid on ${day} is undetermined${a && a.why ? `: ${a.why}` : ""}` : "the table states no vintage, so its validity is not stated" }); continue; }
+      if (a !== "in") { notRead.push({ table: t.sha, why: v ? word("calculations.why.whether_vintage_valid", { day: String(day), first: String(a && a.why ? `: ${a.why}` : "") }) : word("calculations.why.table_states_vintage") }); continue; }
       const g = this.#heldTableSync(t.sha);
-      if (!g) { notRead.push({ table: t.sha, why: "the table's bytes are not held" }); continue; }
+      if (!g) { notRead.push({ table: t.sha, why: word("calculations.why.the_table_s_bytes_are") }); continue; }
       tables.push(t.sha);
       const post = col("roster_post"), period = col("roster_period");
       let i = -1;
@@ -1993,7 +1994,7 @@ export class Calculations {
           table: t.sha, row: i });
       }
     }
-    return { rows, tables, not_read: notRead, level: "held as a table", says: "roster rows are answered from their tables and never copied into lines" };
+    return { rows, tables, not_read: notRead, level: word("calculations.held_table"), says: word("calculations.says.roster_rows_answered") };
   }
 
   /* ===================================================================== *
@@ -2014,7 +2015,7 @@ export class Calculations {
       if (evaluated > 0 && this.clock() - start >= budget) break;
       const p = PATTERNS[i];
       let out;
-      try { out = await runPattern(p, deps); } catch (e) { out = { results: [], denominator: { n: null, why: `the pattern could not be evaluated: ${String(e && e.message || e).slice(0, 200)}` }, evaluated: 0 }; }
+      try { out = await runPattern(p, deps); } catch (e) { out = { results: [], denominator: { n: null, why: word("calculations.why.pattern_evaluated", { entry: String(String(e && e.message || e).slice(0, 200)) }) }, evaluated: 0 }; }
       const at = this.now();
       this.record.transact(() => {
         const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM calc_pattern_runs WHERE pattern=? AND version=?`, p.pattern, p.version).n + 1;
@@ -2042,7 +2043,7 @@ export class Calculations {
     const g = this.#one(`SELECT * FROM calc_pattern_gates WHERE pattern=? AND version=? ORDER BY seq DESC LIMIT 1`, pattern, version);
     if (!g) return { open: false, reason: "this pattern's false-alarm rate has not been measured on a gold set, so its results are not shown (K1504, M-C8)" };
     const rate = Number(g.false_alarm_rate);
-    if (!(rate <= GATE_MAX_RATE)) return { open: false, reason: `this pattern's measured false-alarm rate, ${g.false_alarm_rate}, is above ${GATE_MAX_RATE}, so its results are not shown`, gate: g };
+    if (!(rate <= GATE_MAX_RATE)) return { open: false, reason: word("calculations.pattern_measured_false", { false_alarm_rate: String(g.false_alarm_rate), gate_max_rate: String(GATE_MAX_RATE) }), gate: g };
     return { open: true, gate: g };
   }
 
@@ -2110,7 +2111,7 @@ export class Calculations {
     return { result: r.result_key, pattern: r.pattern, version: r.version, subject: r.subject ?? null, value: parse(r.value_json),
       denominator: parse(r.denominator_json), derivation: parse(r.derivation_json), rests_on: parse(r.rests_on_json),
       layer: "hypothesis", label: "Noticed", by: "the machine", at: r.at,
-      says: "noticed by the machine: worth a look, never a fact, never a finding, and never stored on a person or entity" };
+      says: word("calculations.says.noticed_machine_worth") };
   }
 
   /** R23: `patternResults({pattern?, project?, viewer})`: a pattern's results only once its gate is recorded at a
@@ -2123,7 +2124,7 @@ export class Calculations {
     const out = [];
     for (const p of list) {
       const head = { pattern: p.pattern, version: p.version, label: p.label, denominator: p.denominator, method: p.method };
-      if (this.#switchedOff(p.pattern, str(project) || null)) { out.push({ ...head, switched_off: true, says: "switched off for this project by a member" }); continue; }
+      if (this.#switchedOff(p.pattern, str(project) || null)) { out.push({ ...head, switched_off: true, says: word("calculations.says.switched_off_project") }); continue; }
       const g = this.#gate(p.pattern, p.version);
       if (!g.open) { out.push({ ...head, gated: true, reason: g.reason }); continue; }
       const results = [];

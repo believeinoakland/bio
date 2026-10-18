@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, V, provDoc } from "./fixture.mjs";
 import { routeFinding, ROUTE_MARK_NOTE, ROUTE_MARKED_LIMIT_DEFAULT, ROUTE_MARKED_LIMIT_MAX, ROUTE_MARKED_CAUSES,
          FINDING_MEANS, OBSERVATION_MEANS } from "../../../src/provenance-routes/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 function twoDocs(w, id, { secondRouted = false } = {}) {
   const a = w.cap(`${id}-a`), b = w.cap(`${id}-b`);
@@ -18,7 +19,7 @@ test("R5: routeFinding states never-looked as the question never asked, not appl
   for (const t of ["inquiry", "project", "action", undefined, null]) {
     const na = routeFinding(t, { finding: "LOOKED_INDETERMINATE" });
     assert.deepEqual([na.applies, na.assessed, na.marked, na.finding, na.means], [false, false, false, null, null], String(t));
-    assert.equal(na.note, "a route is a fact about a captured document, and this record is not one");
+    assert.equal(na.note, word("provenance-routes.note.route_fact_captured"));
   }
   const never = routeFinding("information", null);
   assert.deepEqual([never.applies, never.assessed, never.marked, never.finding, never.means],

@@ -9,6 +9,7 @@ import { world, sha, evidence, provDoc, infoMd, granted, net, resp, pkcs8 } from
 import { attest, attestStatus, instanceStatement, ATTEST_CHECKS } from "../../../src/attestation/index.mjs";
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE } from "../../../src/tsa.mjs";
 import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R1: a digest must be 64 hex; a miss asks the record, which separates parts, the register alone and nothing", async () => {
   const s = sha("capture");
@@ -113,7 +114,7 @@ test("R3: the co-archive only when asked, only for a public https locator, recor
   const n3 = net(() => resp(200, granted(s)));
   const c = await attest({ sha256: s, archive: true, locator: "http://localhost/x" }, { head: store.head, put: store.put, fetch: n3.fetch });
   assert.equal(n3.calls.some((x) => x.url.startsWith(ARCHIVE_SAVE_BASE)), false);
-  assert.deepEqual(c.attempts.find((x) => x.service === ARCHIVE_SERVICE), { service: ARCHIVE_SERVICE, attempted: c.attempts.find((x) => x.service === ARCHIVE_SERVICE).attempted, ok: false, note: "no public https locator to archive" });
+  assert.deepEqual(c.attempts.find((x) => x.service === ARCHIVE_SERVICE), { service: ARCHIVE_SERVICE, attempted: c.attempts.find((x) => x.service === ARCHIVE_SERVICE).attempted, ok: false, note: word("attestation.note.public_https_locator") });
   const n4 = net((url) => (url.startsWith(ARCHIVE_SAVE_BASE) ? resp(523) : resp(200, granted(s))));
   const d = await attest({ sha256: s, archive: true, locator: "https://e.org/doc" }, { head: store.head, put: store.put, fetch: n4.fetch });
   assert.deepEqual(d.attempts.find((x) => x.service === ARCHIVE_SERVICE).note, "http 523");

@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world, V, NOW, SIG } from "./fixture.mjs";
 import { STAGE_QUESTIONS_MAX, WORK_PRODUCTS_MAX, READINESS_RUNGS, PROJECT_STAGES, STAGE_NEEDS, STAGE_SENTENCES,
          CLOSED_REASONS, CLOSED_RECORDED_MAX } from "../../../src/project-stage/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const Q1 = "INQ-2026-0001", Q2 = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
 /* An inquiry's own (no-project) conclusion, as inquiry R11 accepts it (inquiry-grammar R1; K819): a conclusion and a
@@ -143,20 +144,20 @@ test("R3 R6 each case the project owns is a work product; each rung by its own c
   assert.deepEqual(READINESS_RUNGS, ["draft", "internally_checked", "externally_compliant", "distributed"]);
   let s = stage();
   assert.deepEqual([s.readiness, s.work_products, s.published_editions, s.work_products_truncated], ["absent", [], 0, false]);
-  const notEvaluated = { met: false, why: "no evaluation is recorded" };
+  const notEvaluated = { met: false, why: word("project-stage.why.evaluation_recorded") };
   /* prepared, not signed: a draft */
   aCase(w, proj, "CASE-2026-0001");
   s = stage();
   assert.deepEqual(s.work_products, [{ case: "CASE-2026-0001", readiness: "draft", editions: 0, latest_edition: null,
     rungs: { draft: { met: true }, internally_checked: notEvaluated, externally_compliant: notEvaluated,
-             distributed: { met: false, why: "no edition of this case is ratified" } } }]);
+             distributed: { met: false, why: word("project-stage.why.edition_case_ratified") } } }]);
   assert.deepEqual([s.readiness, s.stage], ["draft", "forming"], "a draft is not a ratified edition");
   /* signed and ratified: distributed, and no longer a draft (its document is signed) */
   w.signCase("CASE-2026-0001", 1, { project: proj, roster: [{ bundle_id: Q2, version_sha: w.head(Q2), role: "load_bearing" }] });
   w.signFinding(Q2);
   s = stage();
   assert.deepEqual(s.work_products[0], { case: "CASE-2026-0001", readiness: "distributed", editions: 1, latest_edition: 1,
-    rungs: { draft: { met: false, why: "no unsigned case document of this case is stored" }, internally_checked: notEvaluated,
+    rungs: { draft: { met: false, why: word("project-stage.why.unsigned_case_document") }, internally_checked: notEvaluated,
              externally_compliant: notEvaluated, distributed: { met: true } } });
   assert.deepEqual([s.readiness, s.published_editions], ["distributed", 1]);
   /* a second edition prepared: the draft rung is met again, readiness stays the highest rung met */
@@ -458,14 +459,14 @@ test("R4 R2 R7 a failed question read still asks rule 2's ratified half: a ratif
   let calls = 0;
   /* the first page reads, the second throws */
   w.basisVersions.projectQuestions = (a) => {
-    if (calls++ % 2) throw new Error("the read failed");
+    if (calls++ % 2) throw new Error(word("case-disclosures.why.read_failed"));
     return { ...real(a), cursor: Q1 };
   };
   let s = oneRule(stage());
   assert.deepEqual([s.stage, s.at_least, s.questions.truncated, s.basis], ["undetermined", "investigating", true, null]);
   assert.equal(s.detail, "the questions this project holds could not all be read, so its stage is undetermined");
   assert.deepEqual(s.stages.map((x) => x.reached), [true, true, null, null]);
-  w.basisVersions.projectQuestions = () => { throw new Error("the read failed"); };
+  w.basisVersions.projectQuestions = () => { throw new Error(word("case-disclosures.why.read_failed")); };
   assert.deepEqual([stage().stage, stage().at_least], ["undetermined", "forming"]);
   aCase(w, proj, "CASE-2026-0001", { sign: true });
   s = oneRule(stage());
@@ -557,7 +558,7 @@ test("R4 R5 nothing written: every table's rows are the same before and after ea
     w.op("projectstage", { project: proj, viewer: V("olive") });
     assert.deepEqual(w.snapshot(), snap);
   }
-  w.basisVersions.projectQuestions = () => { throw new Error("the read failed"); };
+  w.basisVersions.projectQuestions = () => { throw new Error(word("case-disclosures.why.read_failed")); };
   const snap = w.snapshot();
   assert.equal(stage().stage, "undetermined");
   assert.deepEqual(w.snapshot(), snap);
@@ -571,7 +572,7 @@ test("R1 R7 R3 never thrown: the cases the project owns unreadable, the answer i
     const s = stage();
     assert.deepEqual([s.ok, s.stage, s.readiness, s.published_editions, s.work_products, s.basis],
                      [true, "undetermined", "undetermined", null, [], null]);
-    assert.equal(s.detail, "the cases this project owns could not be read, so its stage and its readiness are undetermined");
+    assert.equal(s.detail, word("project-stage.cases_project_owns"));
     assert.deepEqual(s.stages, PROJECT_STAGES.map((st) => ({ stage: st, reached: null, earned: null, since: null, needs: null, why: s.detail })));
     assert.deepEqual(w.op("projectstage", { project: proj, viewer: V("olive") }), s);
   } finally { w.st.sql.exec(`ALTER TABLE cases_away RENAME TO cases`); }

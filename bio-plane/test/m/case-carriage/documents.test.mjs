@@ -12,6 +12,7 @@ import { CLEAN_MAX_BYTES } from "../../../src/doc-clean/index.mjs";
 import { DOCUMENT_COPY_BATCH_MAX, DOCUMENT_COPY_RETRY_MS, COPY_CLEANED_LABEL, OBSCURED_LABEL, CASE_CARRIAGE_CHECKS,
          CASE_CARRIAGE_DOCUMENT_TABLES, MEMBER_DOCUMENT_ONLY_AS_COPY, ARCHIVE_SUPPLIED_BY_MEMBER, obscuredKey }
   from "../../../src/case-carriage/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const KNOCKED = pdf();                                                    // EXIF with GPS in its image, /Info, XMP
@@ -149,7 +150,7 @@ test("R15 a read of the evidence store that fails leaves the document queued, tr
   assert.deepEqual({ ok: no.ok, code: no.code, check: no.check, translation: no.translation },
                    { ok: false, code: "DOCUMENT_COPY_NO_STORE", check: "C-141.11", translation: CASE_CARRIAGE_CHECKS.DOCUMENT_COPY_NO_STORE.translation });
   assert.equal(CASE_CARRIAGE_CHECKS.DOCUMENT_COPY_NO_STORE.translation,
-               "Your team's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made.");
+               word("refusal.DOCUMENT_COPY_NO_STORE"));
   assert.deepEqual(w2.snapshot(), before, "nothing derived or written");
   assert.equal(w2.cc.documentCopy(s).state, "pending");
 });
@@ -270,8 +271,8 @@ test("R1 a knock PDF with EXIF is carried as its copy only: the copy held derive
   const before = w.snapshot();
   const whole = w.cc.holdMaterials(caseFm({ materials: [docRow("INFO-2026-0101-knock", knock)] }), { caseId: CASE, edition: 2, at: NOW });
   assert.deepEqual([whole.materials, whole.files], [[], []]);
-  assert.deepEqual(whole.unheld, [{ ref: "INFO-2026-0101-knock", kind: "document", sha256: knock, why: "a member's document travels only as its copy" }]);
-  assert.equal(MEMBER_DOCUMENT_ONLY_AS_COPY, "a member's document travels only as its copy");
+  assert.deepEqual(whole.unheld, [{ ref: "INFO-2026-0101-knock", kind: "document", sha256: knock, why: word("case-carriage.member_document_only_as_copy") }]);
+  assert.equal(MEMBER_DOCUMENT_ONLY_AS_COPY, word("case-carriage.member_document_only_as_copy"));
   assert.deepEqual(w.snapshot(), before);
   /* the same for a pending, a refused and an undetermined one; a clean one is carried whole */
   const pending = supplied(w, "INFO-2026-0107-pending", REFUSED.slice(1), { via: null });
@@ -286,7 +287,7 @@ test("R1 a knock PDF with EXIF is carried as its copy only: the copy held derive
   assert.deepEqual(r2.materials, [{ sha: clean, held: "evidence" }]);
   /* a copy not held at the digest the row names */
   const wrong = w.cc.holdMaterials(caseFm({ materials: [copyRow("X", knock, sha("no such copy"))] }), { caseId: CASE, edition: 4, at: NOW });
-  assert.deepEqual(wrong.unheld, [{ ref: "X", kind: "obscured", sha256: sha("no such copy"), why: "the obscured copy is not held" }]);
+  assert.deepEqual(wrong.unheld, [{ ref: "X", kind: "obscured", sha256: sha("no such copy"), why: word("case-carriage.why.obscured_copy_held") }]);
 });
 
 test("R8 a member document carries none of R8's files, carried whole (clean) or as its copy; a walk that reaches an archive this copy did not fetch carries it for no material and stops", async () => {
@@ -313,7 +314,7 @@ test("R8 a member document carries none of R8's files, carried whole (clean) or 
   assert.deepEqual(r.files.map((f) => f.kind), ["document", "container"]);
   assert.deepEqual(r.unheld.filter((u) => u.kind === "archive"),
                    [{ ref: "INFO-2026-0011-notes", kind: "archive", sha256: archiveSha, why: ARCHIVE_SUPPLIED_BY_MEMBER }]);
-  assert.equal(ARCHIVE_SUPPLIED_BY_MEMBER, "the archive was supplied by a member, and a member's file leaves only as its copy");
+  assert.equal(ARCHIVE_SUPPLIED_BY_MEMBER, word("case-carriage.archive_supplied_by_member"));
   /* negative control: the archive fetched, it is carried */
   w.receipt(archiveSha, "direct");
   const fetchedArchive = w.cc.holdMaterials(caseFm({ materials: [docRow("INFO-2026-0011-notes", notes)] }), { caseId: CASE, edition: 2, at: NOW });
@@ -357,8 +358,8 @@ test("R13 (T39) kind document: a row stating a member document's copy that is no
   /* undetermined */
   w.cc.provenance = { fetchedByThisCopy: () => { throw new Error("down"); } };
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [copyRow("K", knock, copy), docRow("C", clean)] })).map((x) => [x.ref, x.kind, x.why]),
-    [["K", "document", "the document's copy could not be read, so it cannot be confirmed"],
-     ["C", "document", "the document's copy could not be read, so it cannot be confirmed"]]);
+    [["K", "document", word("case-carriage.document_unread")],
+     ["C", "document", word("case-carriage.document_unread")]]);
 });
 
 /* ---------------------------------------------------------------- R12, the label */
@@ -381,7 +382,7 @@ test("R12 (T39) the queue and the record of member documents' copies are declare
   const now = w.rows(`SELECT * FROM document_copies`);
   assert.deepEqual(now.slice(0, kept.length), kept, "never rewritten or removed");
   assert.equal(now.length, kept.length + 1);
-  assert.equal(COPY_CLEANED_LABEL, "Details of who made this file, and of its pictures, removed for publication; the team holds the original");
+  assert.equal(COPY_CLEANED_LABEL, word("document.cleaned.label"));
   assert.notEqual(COPY_CLEANED_LABEL, OBSCURED_LABEL);
 });
 

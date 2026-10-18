@@ -7,6 +7,8 @@
    and compare (K585 (2)). Since T47 (R28; N961) the six recorded rows whose raising site moved to `action-records`
    (C-73.2–.5, C-90.2, C-90.6) carry that site in `golden.json`; every other byte is as recorded. */
 
+import { word } from "../../../src/setup-words/index.mjs";
+
 export const NOW = Date.parse("2026-07-02T12:00:00Z");
 export const TODAY = "2026-07-02";
 
@@ -35,7 +37,7 @@ const laws = (list, o = {}) => base({ governing_laws: list, governing_laws_by: "
 export const DOCS = {
   "clean-records-request": base(),
   "clean-other": base({ action_kind: "other" }),
-  "not-an-action": { object_type: "inquiry", action_kind: "nonsense", counterparty: "to be named" },
+  "not-an-action": { object_type: "inquiry", action_kind: "nonsense", counterparty: word("action-grammar.named") },
   "no-object-type": { action_kind: "records_request" },
 
   /* action_basis (C-2.10 legs; C-54.1; C-81.1; DEC-13) */
@@ -137,7 +139,7 @@ export const DOCS = {
   "cp-undetermined": base({ counterparty: { state: "undetermined", basis: "the office is not yet known" } }),
   "cp-undetermined-empty": base({ counterparty: { state: "undetermined" } }),
   "cp-undetermined-named": base({ counterparty: { state: "undetermined", basis: "x", name: "Clerk", body: "Board" } }),
-  "cp-placeholder-field": base({ counterparty: { state: "undetermined", basis: "to be named" } }),
+  "cp-placeholder-field": base({ counterparty: { state: "undetermined", basis: word("action-grammar.named") } }),
 
   /* the governing laws (C-2.10, D-149) */
   "laws-clean": laws([{ level: "state", citation: "Records Act s.1" }, { level: "city", citation: "Bylaw 4" }]),

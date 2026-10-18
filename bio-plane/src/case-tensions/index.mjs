@@ -51,6 +51,7 @@ import { disclosedCandidates, caseDocumentBlocks, SECTIONS, ATTRIBUTION_LEVELS, 
          attributionBodyLines, materialsOf, materialAttestationLines } from "../case-grammar/index.mjs";
 import { ATTRIBUTION_ACT_CHECKS } from "./checks.mjs";
 import { CASE_TENSIONS_TABLES, migrateCaseTensions } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { ATTRIBUTION_ACT_CHECKS, rowOf } from "./checks.mjs";
 export { CASE_TENSIONS_SCHEMA, CASE_TENSIONS_TABLES, migrateCaseTensions } from "./schema.mjs";
@@ -134,10 +135,10 @@ export class CaseTensions {
                  : str(provider && provider.module) || "unnamed";
     if (!provider || typeof provider !== "object" || !PUBLICATION_DOORS.every((d) => typeof provider[d] === "function"))
       return { ok: false, reason: "PROVIDER_MALFORMED",
-               detail: `the publication provider gives the doors ${PUBLICATION_DOORS.join(", ")}` };
+               detail: localize("case-tensions.index.the_publication_provider_gives_the", "the publication provider gives the doors {PUBLICATION_DOORS}", { PUBLICATION_DOORS: String(PUBLICATION_DOORS.join(", ")) }) };
     if (this.#provider)
       return { ok: false, reason: "PROVIDER_DECLARED", module: this.#provider.module,
-               detail: `the publication provider is already registered by ${this.#provider.module}` };
+               detail: localize("case-tensions.index.the_publication_provider_is_already", "the publication provider is already registered by {module}", { module: String(this.#provider.module) }) };
     this.#provider = { module, ...Object.fromEntries(PUBLICATION_DOORS.map((d) => [d, provider[d]])) };
     return { ok: true, module };
   }
@@ -183,9 +184,7 @@ export class CaseTensions {
       const cases = rows.map((r) => this.#caseTensionsOne(r.case_id, Number(r.edition), r.project_id ?? null));
       return { ok: true, wrote: false, project: pid || null, cases, limit: cap,
                cursor: more ? rows[rows.length - 1].case_id : null,
-               says: "each is a contradiction found on what a published case's findings rest on, one level deep, that "
-                   + "its latest edition did not disclose, or one it disclosed that has since been resolved. The signed "
-                   + "edition does not change; a later edition discloses or resolves it. No strength is composed." };
+               says: word("case-tensions.says.contradiction_found_published") };
     } catch (e) {
       return { ok: true, wrote: false, project: str(project) || null, cases: [], limit: pageOf(limit, CASE_TENSIONS_MAX),
                cursor: null, undetermined: true, why: String(e && e.message || e).slice(0, 160) };
@@ -206,7 +205,7 @@ export class CaseTensions {
     const tensions = [], resolvedSince = [], unread = [];
     const answered = new Set();
     for (const m of members) {
-      if (!m.version_sha) { unread.push({ member: m.bundle_id, undetermined: true, why: "no version was pinned" }); continue; }
+      if (!m.version_sha) { unread.push({ member: m.bundle_id, undetermined: true, why: word("case-tensions.why.version_pinned") }); continue; }
       const byCandidate = new Map();
       let undetermined = false, truncated = false;
       for (const viewer of viewers) {
@@ -388,10 +387,7 @@ export class CaseTensions {
              projects_owing: [...new Set(flags.filter((x) => x.outstanding)
                .map((x) => x.project_id))].sort((a, b) => String(a) < String(b) ? -1 : 1),
              /* SET-BUT-NEVER-CLEAR, SAID IN THE ANSWER. */
-             doctrine: "a revision flag is SET AND NEVER CLEARED: it is DISCHARGED by the owning "
-                     + "project publishing a new edition of that case, which is recorded beside it "
-                     + "rather than replacing it. A case with several owning projects is not "
-                     + "discharged by one of them acting (DEC-72, D-266's scoping, D-79's ageing)." };
+             doctrine: localize("case-tensions.index.a_revision_flag_is_set", "a revision flag is SET AND NEVER CLEARED: it is DISCHARGED by the owning project publishing a new edition of that case, which is recorded beside it rather than replacing it. A case with several owning projects is not discharged by one of them acting (DEC-72, D-266's scoping, D-79's ageing).") };
   }
 
   /* ---------------------------------------------------------------- R5–R7: attribution */
@@ -475,7 +471,7 @@ export class CaseTensions {
       const key = HEX64.test(String(obs)) ? { capture: obs } : { observation: obs };
       const act = this.attributionInForce(caseId, edition, obs);
       if (!act) return { ...key, level: null, shown: null, chosen_at_edition: null,
-                         why: "its author has chosen no level for this edition or any earlier one" };
+                         why: word("case-tensions.why.author_chosen_level") };
       /* R7: a capture's level publishes its attesting member's values, the member who chose it. */
       const g = HEX64.test(String(obs)) ? { author: act.chosen_by }
         : this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
@@ -488,8 +484,7 @@ export class CaseTensions {
         : null;
       if (shown === null && act.level !== "group")
         return { ...key, level: null, shown: null, chosen_at_edition: null,
-                 why: `its author chose '${act.level}' at edition ${act.edition}, and the record holds no `
-                    + `${act.level === "name" ? "handle" : act.level} for them to publish under it` };
+                 why: word("case-tensions.why.author_chose_edition", { level: String(act.level), edition: String(act.edition), level3: String(act.level === "name" ? "handle" : act.level) }) };
       return { ...key, level: act.level, shown, chosen_at_edition: Number(act.edition), why: null };
     });
   }
@@ -501,7 +496,7 @@ export class CaseTensions {
   #reauthorAttributions(doc) {
     if (!SECTIONS.attribution(doc.text.split("\n")))
       return { case_id: doc.case_id, edition: doc.edition, reauthored: false,
-               why: "this case document carries no attribution statements to re-author" };
+               why: word("case-tensions.why.case_document_carries") };
     const fm = parseFrontmatter(doc.text).data || {};
     const rows = this.attributionStatements(doc.case_id, Number(doc.edition), String(fm.case_project ?? "").trim(),
                                             this.#attributedReachedBy(doc.text));
@@ -513,7 +508,7 @@ export class CaseTensions {
   #splice(args) {
     const r = this.#ask("reauthorSection", null, args);
     if (!r || typeof r !== "object") return { case_id: args.caseId, edition: args.edition, reauthored: false,
-                                               why: "the case document could not be re-authored here" };
+                                               why: word("case-tensions.why.case_document_re") };
     const { ok: _ok, ...out } = r;
     return out;
   }
@@ -567,8 +562,7 @@ export class CaseTensions {
     /* DEC-49 REGION is-attribute-act */
     if (!who || isMachineIdentity(who))
       return refusal("ATTRIBUTION_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential, and how a member's words are attributed is that `
-              + `member's own choice` : `this call carries nobody; the plane stamps who chose from the credential`);
+        who ? localize("case-tensions.index.who_is_a_machine_credential", "'{who}' is a machine credential, and how a member's words are attributed is that member's own choice", { who: String(who.slice(0, 60)) }) : `this call carries nobody; the plane stamps who chose from the credential`);
     const lv = typeof level === "string" ? level.trim() : "";
     if (!lv)
       return refusal("ATTRIBUTION_NO_LEVEL",
@@ -583,13 +577,12 @@ export class CaseTensions {
         why == null
           ? (reason === undefined || reason === null
               ? "give the reason you choose this level, in your own words (reason=…)"
-              : `the reason must be your words, as text; a ${typeof reason} was sent`)
+              : localize("case-tensions.index.the_reason_must_be_your", "the reason must be your words, as text; a {v1} was sent", { v1: String(typeof reason) }))
           : !why.trim() ? "the reason is blank. Say in your own words why you choose this level"
-          : `the reason is ${chars} characters, over the ${ATTRIBUTION_REASON_MAX} a choice's reason is kept to. `
-            + "Refused rather than cut", { limit: ATTRIBUTION_REASON_MAX });
+          : localize("case-tensions.index.the_reason_is_chars_characters", "the reason is {chars} characters, over the {ATTRIBUTION_REASON_MAX} a choice's reason is kept to. Refused rather than cut", { chars: String(chars), ATTRIBUTION_REASON_MAX: String(ATTRIBUTION_REASON_MAX) }), { limit: ATTRIBUTION_REASON_MAX });
     if (!ATTRIBUTION_LEVELS.includes(lv))
       return refusal("ATTRIBUTION_LEVEL_UNKNOWN",
-        `'${lv.slice(0, 40)}' is not a level; choose one of ${ATTRIBUTION_LEVELS.join(", ")}`,
+        localize("case-tensions.index.lv_is_not_a_level", "'{lv}' is not a level; choose one of {ATTRIBUTION_LEVELS}", { lv: String(lv.slice(0, 40)), ATTRIBUTION_LEVELS: String(ATTRIBUTION_LEVELS.join(", ")) }),
         { allowed: ATTRIBUTION_LEVELS });
     /* END DEC-49 REGION is-attribute-act */
     const cap = typeof capture === "string" && capture.trim() ? capture.trim().toLowerCase() : "";
@@ -608,30 +601,25 @@ export class CaseTensions {
          answer for a capture no such document names, so the act is not a way to learn what cases exist. */
       if (!HEX64.test(cap) || !doc || !this.#capturesReachedBy(doc.text).includes(cap))
         return refusal("ATTRIBUTION_NOT_AN_OBSERVATION",
-          `${cap.slice(0, 80)} is not material from a source the named case edition shows as Withheld, so it has no `
-          + `attesting member to choose how they are credited`, named);
+          localize("case-tensions.index.cap_is_not_material_from", "{cap} is not material from a source the named case edition shows as Withheld, so it has no attesting member to choose how they are credited", { cap: String(cap.slice(0, 80)) }), named);
       let actors = [];
       try { actors = (this.capture.captureAccountsOf(cap).actors || []).map((r) => String(r.actor || "").replace(/^member:/, "")); }
       catch { actors = []; }
       if (!actors.includes(who.replace(/^member:/, "")))
         return refusal("ATTRIBUTION_NOT_THE_AUTHOR",
-          `${cap} was attested by another member. Only the member who attested off-the-record material chooses how a `
-          + `case credits them: not a project owner, not an administrator, and not a default (DEC-119 (3))`, named);
+          localize("case-tensions.index.cap_was_attested_by_another", "{cap} was attested by another member. Only the member who attested off-the-record material chooses how a case credits them: not a project owner, not an administrator, and not a default (DEC-119 (3))", { cap: String(cap) }), named);
     } else {
       if (!reg)
         return refusal("ATTRIBUTION_NOT_AN_OBSERVATION",
-          `${obs ? obs.slice(0, 80) : "(none named)"} is not a member's firsthand observation in this record, so it `
-          + `has no author to choose how it is attributed`, named);
+          localize("case-tensions.index.v1_is_not_a_members", "{v1} is not a member's firsthand observation in this record, so it has no author to choose how it is attributed", { v1: String(obs ? obs.slice(0, 80) : "(none named)") }), named);
       if (reg.author !== who)
         return refusal("ATTRIBUTION_NOT_THE_AUTHOR",
-          `${obs} was recorded by another member. Only an observation's author chooses how a case shows who said it: `
-          + `not a project owner, not an administrator, and not a default (§4.2)`, named);
+          localize("case-tensions.index.obs_was_recorded_by_another", "{obs} was recorded by another member. Only an observation's author chooses how a case shows who said it: not a project owner, not an administrator, and not a default (§4.2)", { obs: String(obs) }), named);
     }
     const me = this.membership.memberFacts(who);
     if (!me || me.status !== "active")
       return refusal("ATTRIBUTION_AUTHOR_NOT_ACTIVE",
-        `the ${cap ? "attesting member" : "author"} of ${subject} is not an active member, and nobody takes this act for `
-        + `them (§4.5)`, named);
+        localize("case-tensions.index.the_v1_of_subject_is", "the {v1} of {subject} is not an active member, and nobody takes this act for them (§4.5)", { v1: String(cap ? "attesting member" : "author"), subject: String(subject) }), named);
     /* END DEC-49 REGION is-attribute-author */
     const reaches = !!doc && (cap ? true : this.#observationsReachedBy(doc.text).includes(obs));
     /* DEC-49 REGION is-attribute-edition
@@ -639,13 +627,10 @@ export class CaseTensions {
        a way to learn what cases exist: the author is told only about an edition that uses their words. */
     if (!reaches)
       return refusal("ATTRIBUTION_NOT_REACHED",
-        `no prepared case edition ${cid ? `${cid.slice(0, 60)} edition ${Number.isInteger(ed) ? ed : "(none)"}` : "(none named)"} `
-        + `rests on ${obs}. An attribution is chosen for an edition that uses the observation, once op=publish has `
-        + `prepared its case document`, { ...named, caseId: cid || null, edition: Number.isInteger(ed) ? ed : null });
+        localize("case-tensions.index.no_prepared_case_edition_v1", "no prepared case edition {v1} rests on {obs}. An attribution is chosen for an edition that uses the observation, once op=publish has prepared its case document", { v1: String(cid ? `${cid.slice(0, 60)} edition ${Number.isInteger(ed) ? ed : "(none)"}` : "(none named)"), obs: String(obs) }), { ...named, caseId: cid || null, edition: Number.isInteger(ed) ? ed : null });
     if (doc.signed)
       return refusal("ATTRIBUTION_EDITION_RATIFIED",
-        `${cid} edition ${ed} is already signed, and a signed edition answers forever; your choice applies to the `
-        + `next edition, which inherits it until you change it (§4.3)`, { ...named, caseId: cid, edition: ed });
+        localize("case-tensions.index.cid_edition_ed_is_already", "{cid} edition {ed} is already signed, and a signed edition answers forever; your choice applies to the next edition, which inherits it until you change it (§4.3)", { cid: String(cid), ed: String(ed) }), { ...named, caseId: cid, edition: ed });
     if (lv === "name" && !(me.handle && String(me.handle).trim()))
       return refusal("ATTRIBUTION_NAME_NO_HANDLE",
         `'name' publishes the handle you appear under in this record, and you have none (§4.6). Choose another `
@@ -678,8 +663,7 @@ export class CaseTensions {
              reason: held ? held.reason ?? null : null,
              previous: prior ? { level: prior.level, edition: Number(prior.edition) } : null,
              case_document: reauthored, ...(attested ? { attestations: attested } : {}),
-             stated: `edition ${ed} of ${cid} now states ${subject} at level '${lv}'. The case document was re-authored; `
-                   + `its owner signs the new bytes. A later edition inherits this choice until you change it.` };
+             stated: word("case-tensions.stated.edition_now_states", { ed: String(ed), cid: String(cid), subject: String(subject), lv: String(lv) }) };
   }
 
   /* R7 (K1317; case-authoring R48): RE-AUTHOR THE CAPTURE'S ATTESTING MEMBER ROW in the unsigned document's
@@ -689,7 +673,7 @@ export class CaseTensions {
      as written. A document with no such section or row is left as it is and the answer says so. */
   #reauthorCaptureAttestation(caseId, edition, cap, who, level, me) {
     const doc = this.#doc(caseId, edition);
-    if (!doc || doc.signed) return { reauthored: false, why: "no unsigned case document is held for this edition" };
+    if (!doc || doc.signed) return { reauthored: false, why: word("case-tensions.why.unsigned_case_document") };
     let m = null;
     try { m = materialsOf(parseFrontmatter(doc.text).data || {}); } catch { m = null; }
     const rows = m && Array.isArray(m.attestations) ? m.attestations : null;
@@ -700,7 +684,7 @@ export class CaseTensions {
       && (r.by == null || r.by === "null" || ["group", "project"].includes(r.level)
           || [bare(who), me.handle, me.cover].filter(Boolean).includes(bare(r.by)));
     if (!rows || !rows.some(mine))
-      return { reauthored: false, why: "this case document states no attestation row of yours for that capture" };
+      return { reauthored: false, why: word("case-tensions.why.case_document_states") };
     let signature = null;
     try {
       const accounts = (this.capture.captureAccountsOf(cap).accounts || []).filter((a) => bare(a.by) === bare(who));

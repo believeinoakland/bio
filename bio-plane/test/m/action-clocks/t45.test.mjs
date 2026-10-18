@@ -12,6 +12,7 @@ import { world, V, MACHINE, actionMd, CP, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import { get, combine } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice"), BOB = V("bob");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c";
@@ -48,7 +49,7 @@ test("R2 (T45) a received rule counts from the receipt actions records when one 
   /* control: no receipt held: counted from sending (Tue 1 Sept: 5 business days on 'town', Sunday the weekend: Mon 7). */
   const s = P();
   assert.deepEqual([s.entry.date, s.start, s.start_from, s.start_note, s.trace.start_from, s.trace.start_note],
-    ["2026-09-07", "2026-09-01", "sent", "receipt not recorded: counted from sending", "sent", "receipt not recorded: counted from sending"]);
+    ["2026-09-07", "2026-09-01", "sent", word("action-clocks.note.receipt_recorded_counted"), "sent", word("action-clocks.note.receipt_recorded_counted")]);
   /* a receipt recorded on the sent entry (Thu 3 Sept): counted from it, the trace saying so; the latest record (the last, action-records R4) governs. */
   receipt(w, A, 0, "receipt", "2026-09-02");
   receipt(w, A, 0, "receipt", "2026-09-03T09:30");
@@ -198,7 +199,7 @@ test("R7 (T45) a fifth basis kind, stated: a deadline the other side stated, nam
     basis: "Test Stat. § 1.140", basis_kind: "rule", author: M, viewer: M }).ok, true);
   const by = Object.fromEntries(w.c.overdueClocks({ viewer: M }).items.map((x) => [x.ord, x.basis_of]));
   assert.deepEqual(by[0], { kind: "stated", citation: "the clerk's letter", stated_by: "the Town Clerk", held_in: "correspondence 0",
-                            says: "a date the other side has stated, held as what they said" });
+                            says: word("action-clocks.says.date_side_stated") });
   assert.deepEqual(by[1], { kind: "rule", citation: "Test Stat. § 1.140" }, "a rule keeps its citation words");
   const ics = w.c.clocksIcs({ actions: [A], viewer: M }).ics.replace(/\r\n /g, "");
   assert.match(ics, /Basis: a date stated by the Town Clerk\\, held in correspondence 0: the clerk's letter/);

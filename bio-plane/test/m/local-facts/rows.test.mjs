@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, P, MACHINE, written, V, sha } from "./fixture.mjs";
 import { LOCAL_FACTS_CHECKS, localFactsOps } from "../../../src/local-facts/index.mjs";
 import { get } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CODES = ["MACHINE_CANNOT_CONFIRM", "NO_SUCH_FACT", "FACT_ACT_REFUSED", "FACT_HOW_REFUSED", "FACT_VALUE_REFUSED",
   /* R14 (T45): R10–R13's codes join the family */
@@ -74,7 +75,7 @@ test("R8 R2 R3 DEC-149: each member-facing string names the group's Civicsmith o
   assert.doesNotMatch(w.act("nowhere", "confirm").translation, NAMES_THE_COPY);
   /* factStatus's list note: "your group's Civicsmith transmits nothing" */
   const note = w.lf.factStatus({}).note;
-  assert.equal(note, "corrections and disputes come first, for a member to report for a profile fix; your team's Civicsmith transmits nothing");
+  assert.equal(note, word("local-facts.note.corrections_disputes_come"));
   /* the undetermined horizon's why: reworded to need no name */
   const nozone = written("test-nozone", { holidays: [{ year: 2026, days: [{ date: "2026-01-01", name: "New Year's Day" }], status: "researched", basis: "TEST" }] });
   const n = world({ profiles: ["test-nozone"], own: [nozone] });

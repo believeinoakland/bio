@@ -10,6 +10,7 @@
  * a program past the bound) it names, for C-18.5's `SWEEP_TERM_REFUSED`. */
 
 import { normalizeAddress } from "../subresources.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R1: whether `address` is in scope of `sources`: its normalised form (`subresources.normalizeAddress`) equals a
  *  prefix's, or continues one at a `/`. The one rule C-18.5, a run, a redirect and R12's check read. */
@@ -92,10 +93,10 @@ function parse(src) {
       if (peek() === "?") {
         eat();
         const k = eat();
-        if (k === "=" || k === "!") throw new Refused("a lookahead", `(?${k} looks ahead, which a term may not`);
+        if (k === "=" || k === "!") throw new Refused("a lookahead", localize("link-sweep.sweep-match.k_looks_ahead_which_a", "(?{k} looks ahead, which a term may not", { k: String(k) }));
         if (k === "<" && (peek() === "=" || peek() === "!")) throw new Refused("a lookbehind", `(?<${peek()} looks behind, which a term may not`);
         if (k === "<") { while (peek() !== undefined && peek() !== ">") eat(); if (eat() !== ">") throw new Refused("an unclosed group name", "a named group's name has no closing >"); }
-        else if (k !== ":") throw new Refused(`the group (?${k ?? ""}`, `(?${k ?? ""} is not a group a term reads`);
+        else if (k !== ":") throw new Refused(`the group (?${k ?? ""}`, localize("link-sweep.sweep-match.v1_is_not_a_group", "(?{v1} is not a group a term reads", { v1: String(k ?? "") }));
       }
       const x = alt();
       if (eat() !== ")") throw new Refused("an unclosed group", "a ( has no closing )");
@@ -125,7 +126,7 @@ function parse(src) {
       if (!m) return x;   // a brace that opens no count is a literal, as JavaScript reads it
       min = Number(m[1]); max = m[2] ? (m[3] === "" ? Infinity : Number(m[3])) : min;
       if (min > TERM_REPEAT_MAX || (max !== Infinity && max > TERM_REPEAT_MAX) || max < min)
-        throw new Refused("a count past the bound", `a count is at most ${TERM_REPEAT_MAX} and never runs backwards`);
+        throw new Refused("a count past the bound", localize("link-sweep.sweep-match.a_count_is_at_most", "a count is at most {TERM_REPEAT_MAX} and never runs backwards", { TERM_REPEAT_MAX: String(TERM_REPEAT_MAX) }));
       i += m[0].length - 1;
     } else return x;
     eat();
@@ -152,7 +153,7 @@ function parse(src) {
    | {op: "match"}. `emit` answers [entry, holes], where holes are the states whose dangling exit is patched later. */
 function compile(tree) {
   const prog = [];
-  const add = (s) => { if (prog.length >= TERM_PROGRAM_MAX) throw new Refused("an expression past the bound", `the term compiles to more than ${TERM_PROGRAM_MAX} states`); prog.push(s); return prog.length - 1; };
+  const add = (s) => { if (prog.length >= TERM_PROGRAM_MAX) throw new Refused("an expression past the bound", localize("link-sweep.sweep-match.the_term_compiles_to_more", "the term compiles to more than {TERM_PROGRAM_MAX} states", { TERM_PROGRAM_MAX: String(TERM_PROGRAM_MAX) })); prog.push(s); return prog.length - 1; };
   const patch = (holes, to) => { for (const [s, k] of holes) prog[s][k] = to; };
   const emit = (n) => {
     if (n.t === "char") { const s = add({ op: "char", test: n.test, next: -1 }); return [s, [[s, "next"]]]; }
@@ -238,7 +239,7 @@ function run({ prog, start }, chars) {
  *  construct, detail}` naming what was refused. Never throws. */
 export function compileTerm(term) {
   if (typeof term !== "string" || !term.length || term.length > TERM_MAX || /[\r\n]/.test(term))
-    return { ok: false, construct: "not a term", detail: `a term is a single line of 1 to ${TERM_MAX} characters` };
+    return { ok: false, construct: word("link-sweep.construct.term"), detail: localize("link-sweep.sweep-match.a_term_is_a_single", "a term is a single line of 1 to {TERM_MAX} characters", { TERM_MAX: String(TERM_MAX) }) };
   const regex = term.length >= 2 && term.startsWith("/") && term.endsWith("/");
   if (!regex) {
     const needle = Array.from(term, fold).join("");
@@ -249,7 +250,7 @@ export function compileTerm(term) {
     return { ok: true, kind: "regex", test: (text) => run(m, Array.from(cut(text))) };
   } catch (e) {
     if (e instanceof Refused) return { ok: false, construct: e.construct, detail: e.message };
-    return { ok: false, construct: "an expression that does not compile", detail: String(e && e.message || e).slice(0, 160) };
+    return { ok: false, construct: word("link-sweep.construct.expression_compile"), detail: String(e && e.message || e).slice(0, 160) };
   }
 }
 

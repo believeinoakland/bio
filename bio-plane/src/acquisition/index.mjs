@@ -38,7 +38,7 @@ import { attest } from "../attestation/index.mjs";
 import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
@@ -304,7 +304,7 @@ async function hashBody(res, max = CAPTURE_MAX) {
 }
 /* A memento whose body broke off while it was read: the archive could not be read, not a memento of anything. */
 const archiveBroke = (detail) => ({ ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE",
-  detail: `the memento's body broke off while it was read (${detail})` } });
+  detail: localize("acquisition.index.the_mementos_body_broke_off", "the memento's body broke off while it was read ({detail})", { detail: String(detail) }) } });
 
 /* SHA-256 of no bytes: the digest an empty memento's row is made over (`mementoRow` reads its `bytes: 0` as the
    empty-body digest, R29's own refusal). */
@@ -354,12 +354,12 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
     catch (e) { return { fail: { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } } }; }
     if (g.refusedByGovernor)
       return { fail: { ok: false, status: 429, payload: { ok: false, reason: "HOST_COOLING_OFF",
-        detail: `the governor is holding requests to ${hostOf(url)} (${g.reason})`, retry_in_ms: g.retry_in_ms || 0 } } };
+        detail: localize("acquisition.index.the_governor_is_holding_requests", "the governor is holding requests to {hostOf} ({reason})", { hostOf: String(hostOf(url)), reason: String(g.reason) }), retry_in_ms: g.retry_in_ms || 0 } } };
     return { res: g.res };
   };
   const archiveRefused = (res, what) => ({ ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_REFUSED", status: res.status,
     detail: res.status === 429 ? "the archive is rate-limiting us; the governor will hold this host"
-                               : `the archive's ${what} answered ${res.status}`, considered } });
+                               : localize("acquisition.index.the_archives_what_answered_status", "the archive's {what} answered {status}", { what: String(what), status: String(res.status) }), considered } });
   /* One memento, raw, its redirects followed by hand within the archive's public addresses. */
   const tryMemento = async (uri) => {
     let url = typeof ARCHIVE.raw === "function" ? ARCHIVE.raw(uri) : uri;
@@ -558,7 +558,7 @@ function ownHostRefused(locator, extra = {}) {
   const row = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
   return { ok: false, reason: "OWN_HOST_REFUSED", code: "OWN_HOST_REFUSED", check: row.check, translation: row.translation,
            host: hostnameOf(locator), locator, ...extra,
-           detail: `${hostnameOf(locator)} is one of your team's own hosts; nothing was fetched or filed` };
+           detail: localize("acquisition.index.hostnameof_is_one_of_your", "{hostnameOf} is one of your team's own hosts; nothing was fetched or filed", { hostnameOf: String(hostnameOf(locator)) }) };
 }
 
 /** R1–R23, R31, R32, R35, R40, R42–R44. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member`
@@ -573,7 +573,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const own = ownHostsOf(cap, ownHosts);
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
   /* C-68.1 (K794, K850): raised through this module's one raiser, its body as it has always been (no `code`). */
-  if (!ev) return evidenceStorageAbsent(op, "your team's Civicsmith has no evidence storage configured", { code: false });
+  if (!ev) return evidenceStorageAbsent(op, word("capture.response.group_civicsmith_evidence"), { code: false });
   /* R1, K58: THE CAPTURE-REQUEST ARM IS IN PROCESS ONLY. From outside, `via: "capture-request"` is refused
      C-28.13 whatever the caller: the AI does not capture, it REQUESTS, and the daemon captures. */
   if (!captureRequest && body.via === "capture-request") {
@@ -581,19 +581,14 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const row = CAPTURE_REQUEST_ARM_CHECKS.CAPTURE_NOT_DRAINING;
     return answer(403, { ok: false, reason: "CAPTURE_NOT_DRAINING", code: "CAPTURE_NOT_DRAINING",
       check: row.check, translation: row.translation, cls, request: body.request ?? null, op,
-      detail: "your team's Civicsmith fetches a requested document only from inside its own drain, and a request cannot "
-            + "reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with "
-            + "provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it." });
+      detail: localize("acquisition.index.your_teams_civicsmith_fetches_a", "your team's Civicsmith fetches a requested document only from inside its own drain, and a request cannot reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it.") });
     /* END DEC-49 REGION is-capture-request-arm */
   }
   /* R1, REC-33: the daemon class reaches acquire through the archive fallback and the capture-request drain. Direct
      acquisition is a member's or an operator's act. */
   if (cls === "daemon" && body.via !== "archive.org" && !captureRequest)
     return answer(403, { ok: false, reason: "NOT_PERMITTED", op, cls,
-      detail: "the daemon class reaches op=acquire through the archive fallback "
-            + "(via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). "
-            + "Direct acquisition is a member's or an operator's act, and the "
-            + "unattended credential is scoped to the verbs the unattended paths need." });
+      detail: localize("acquisition.index.the_daemon_class_reaches_op", "the daemon class reaches op=acquire through the archive fallback (via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the verbs the unattended paths need.") });
   /* R47 (N1117; T50): `for`, read only from a member session (as R43's `coArchive` is), names the question the member is
      capturing for. Absent or null records nothing; anything but a non-blank string of at most 200 characters is refused
      before any fetch, nothing written or filed. From any other caller the key is ignored, so the answer is the one
@@ -617,8 +612,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   if (body.via === "archive.org") {
     if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
       return answer(403, { ok: false, reason: "NOT_PERMITTED", op, via: "archive.org",
-        detail: "the archive fallback is a monitoring path: it runs under an operator or daemon credential, "
-              + "never a member's. Capture the document directly, or ask an administrator to run the fallback." });
+        detail: localize("acquisition.index.the_archive_fallback_is_a", "the archive fallback is a monitoring path: it runs under an operator or daemon credential, never a member's. Capture the document directly, or ask an administrator to run the fallback.") });
     const addr = body.address;
     if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
       return answer(400, { ok: false, reason: "BAD_ADDRESS",
@@ -677,12 +671,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const supplied = callerSuppliedHopFacts(body);
     if (supplied.length)
       return answer(400, { ok: false, reason: "DRIVE_HOP_FACT_SUPPLIED", ...driveRow("DRIVE_HOP_FACT_SUPPLIED"), op, supplied,
-        detail: `this request carried ${supplied.map((k) => `\`${k}\``).join(", ")}. The export `
-              + `address, the export format and the producer are DERIVED by your team's Civicsmith from the `
-              + `file id and the kind in the address, at the moment it performs the fetch, and are `
-              + `never read from a request. A provenance hop a caller can hand us is a provenance `
-              + `hop a caller can invent (D-112), and the whole value of a disclosed chain is that `
-              + `the disclosure is ours. Send the Drive link alone.` });
+        detail: localize("acquisition.index.this_request_carried_map_the", "this request carried {map}. The export address, the export format and the producer are DERIVED by your team's Civicsmith from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.", { map: String(supplied.map((k) => `\`${k}\``).join(", ")) }) });
     const drive = readDriveAddress(body.locator);
     if (drive) {
       /* NAMED, NEVER SILENTLY SKIPPED: a silent fall-through would file the application shell as the document. */
@@ -735,23 +724,20 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   if (renderAsked) {
     if (body.render !== true)
       return answer(400, { ok: false, reason: "RENDER_FLAG_MALFORMED", ...renderRow("RENDER_FLAG_MALFORMED"),
-        op, detail: `render=${JSON.stringify(body.render).slice(0, 40)} is not a value this op reads. `
-                  + `Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.` });
+        op, detail: localize("acquisition.index.render_stringify_is_not_a", "render={stringify} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.", { stringify: String(JSON.stringify(body.render).slice(0, 40)) }) });
     const conflict = body.via === "archive.org" ? word("acquisition.text.via_archive_org")
                    : driveCapture ? word("acquisition.text.google_drive_export")
                    : body.continue ? `continue: <session> ${word("acquisition.text.capture_already_filed")}` : null;
     if (conflict)
       return answer(400, { ok: false, reason: "RENDER_ARM_CONFLICT", ...renderRow("RENDER_ARM_CONFLICT"),
-        op, conflict, detail: `render: true cannot be combined with ${conflict}.` });
+        op, conflict, detail: localize("acquisition.index.render_true_cannot_be_combined", "render: true cannot be combined with {conflict}.", { conflict: String(conflict) }) });
     renderer = rendererFor(cap.env);
     if (typeof renderer.render !== "function")
       return answer(501, { ok: false, reason: "RENDER_NO_RENDERER", ...renderRow("RENDER_NO_RENDERER"),
         op, renderer: renderer.kind,
         detail: renderer.kind === "browser-binding-without-driver"
-          ? "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no "
-            + "endpoint to open a devtools session on. Nothing was fetched."
-          : "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). "
-            + "Nothing was fetched." });
+          ? localize("acquisition.index.browser_is_bound_to_something", "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched.")
+          : localize("acquisition.index.no_renderer_is_bound_to", "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.") });
     /* THROUGH THE HOST GOVERNOR: the render is a second load of the page. */
     let rHost = null;
     try { rHost = new URL(locator).host; } catch { rHost = null; }
@@ -761,7 +747,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       if (g && g.admitted === false)
         return answer(429, { ok: false, reason: "RENDER_HOST_COOLING_OFF", ...renderRow("RENDER_HOST_COOLING_OFF"),
           op, host: rHost, retry_in_ms: g.retry_in_ms || 0,
-          detail: `the per-host governor is holding requests to ${rHost} (${g.reason || "governed"}).` });
+          detail: localize("acquisition.index.the_per_host_governor_is", "the per-host governor is holding requests to {rHost} ({v1}).", { rHost: String(rHost), v1: String(g.reason || "governed") }) });
     }
     /* D-492: the admission RESERVES this render's maximum cost, read ONCE so the release names the same figure. */
     renderReserved = renderReserveMs(RENDER_DEFAULTS);
@@ -772,16 +758,13 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (adm && adm.state === "waiting")
       return answer(429, { ok: false, reason: "RENDER_AT_CAPACITY", ...renderRow("RENDER_AT_CAPACITY"),
         op, render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
-        detail: `${adm.running} renders are running in your team's Civicsmith, which runs at most ${adm.cap} at once; `
-              + `this render is waiting and nothing was fetched.` });
+        detail: localize("acquisition.index.running_renders_are_running_in", "{running} renders are running in your team's Civicsmith, which runs at most {cap} at once; this render is waiting and nothing was fetched.", { running: String(adm.running), cap: String(adm.cap) }) });
     if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
     if (!adm || adm.state !== "admitted")
       return answer(429, { ok: false, reason: "RENDER_DEFERRED", ...renderRow("RENDER_DEFERRED"),
         op, render: { state: "deferred", content: "undetermined", allowance: adm || null },
-        detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed `
-                    + `(${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this `
-                    + `render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).`
-                    : "the render allowance could not be read, so the render is deferred rather than run unmetered." });
+        detail: adm ? localize("acquisition.index.todays_render_allowance_allowance_ms", "today's render allowance ({allowance_ms} ms, day {day}) is committed ({spent_ms} ms spent, {reserved_ms} ms reserved by renders in flight), and this render reserves {reserve_ms} ms; it is recorded as deferred ({deferred} today).", { allowance_ms: String(adm.allowance_ms), day: String(adm.day), spent_ms: String(adm.spent_ms), reserved_ms: String(adm.reserved_ms), reserve_ms: String(adm.reserve_ms), deferred: String(adm.deferred) })
+                    : localize("acquisition.index.the_render_allowance_could_not", "the render allowance could not be read, so the render is deferred rather than run unmetered.") });
   }
   /* END DEC-49 REGION is-render-admit */
 
@@ -836,7 +819,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       if (g.refusedByGovernor) {
         await noteOutcome("governed", null);
         return answer(429, { ok: false, reason: "HOST_COOLING_OFF",
-          detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1000)}s`,
+          detail: localize("acquisition.index.the_per_host_governor_is_2", "the per-host governor is holding requests to this host ({reason}); retry in about {ceil}s", { reason: String(g.reason), ceil: String(Math.ceil((g.retry_in_ms || 0) / 1000)) }),
           retry_in_ms: g.retry_in_ms || 0, locator });
       }
       res = g.res;
@@ -859,8 +842,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
         return answer(422, { ok: false, reason: "SWEEP_REDIRECT_OUT_OF_SCOPE", code: "SWEEP_REDIRECT_OUT_OF_SCOPE", check: row.check,
           translation: row.translation, op, target: next || loc, locator, redirected_from: url, status: res.status,
           matched_sweep: crOrigin.matched_sweep,
-          detail: `${url} redirected (${res.status}) to ${next || loc}, which is outside the sweep's scope; the redirect `
-                + "was not followed, nothing at its target was fetched, and nothing was filed" });
+          detail: localize("acquisition.index.url_redirected_status_to_v1", "{url} redirected ({status}) to {v1}, which is outside the sweep's scope; the redirect was not followed, nothing at its target was fetched, and nothing was filed", { url: String(url), status: String(res.status), v1: String(next || loc) }) });
       }
       /* END DEC-49 REGION is-sweep-redirect */
       /* In scope but not a public locator: R28's fence; the redirect itself is the answer (SOURCE_REFUSED). */
@@ -895,12 +877,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     await noteOutcome("source_refused", res.status);
     return answer(502, { ok: false, reason: "DRIVE_EXPORT_UNREACHABLE", ...driveRow("DRIVE_EXPORT_UNREACHABLE"), op,
       status: res.status, locator: driveCapture.address, export_address: driveCapture.exportAddress, drive: driveFacts,
-      detail: `Google answered ${res.status} at the OpenDocument export address `
-            + `${driveCapture.exportAddress}, which your team's Civicsmith composed from the ${driveCapture.kind} `
-            + `id in ${driveCapture.address}. Nothing was captured, and the application page at the `
-            + `document's own address was NOT captured in its place — a fallback to the shell would `
-            + `record a success holding no document. A 404 usually means the id is wrong; a 403 `
-            + `usually means the file is not shared with anyone who has the link.` });
+      detail: localize("acquisition.index.google_answered_status_at_the", "Google answered {status} at the OpenDocument export address {exportAddress}, which your team's Civicsmith composed from the {kind} id in {address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place — a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.", { status: String(res.status), exportAddress: String(driveCapture.exportAddress), kind: String(driveCapture.kind), address: String(driveCapture.address) }) });
   }
   if (driveCapture) {
     const ect = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
@@ -909,12 +886,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       try { await res.body?.cancel?.(); } catch { /* the source may already be gone */ }
       return answer(502, { ok: false, reason: "DRIVE_EXPORT_IS_THE_SHELL", ...driveRow("DRIVE_EXPORT_IS_THE_SHELL"), op,
         status: res.status, locator: driveCapture.address, export_address: driveCapture.exportAddress,
-        declared_content_type: ect, refused_on: "the declared content type", drive: driveFacts,
-        detail: `the OpenDocument export address answered with \`${ect}\`, which is the Google Drive `
-              + `APPLICATION — a client-rendered shell whose bytes carry no document (framework Part I `
-              + `§6's UNWATCHABLE case, D-64/D-55). It is refused by name and it is not parsed: the `
-              + `shell is never filed as the document. Google serves it here when the file is not `
-              + `shared with anyone who has the link.` });
+        declared_content_type: ect, refused_on: word("monitoring.declared_content_type"), drive: driveFacts,
+        detail: localize("acquisition.index.the_opendocument_export_address_answered", "the OpenDocument export address answered with `{ect}`, which is the Google Drive APPLICATION — a client-rendered shell whose bytes carry no document (framework Part I §6's UNWATCHABLE case, D-64/D-55). It is refused by name and it is not parsed: the shell is never filed as the document. Google serves it here when the file is not shared with anyone who has the link.", { ect: String(ect) }) });
     }
   }
   /* END DEC-49 REGION is-drive-export */
@@ -972,7 +945,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       await noteOutcome("fetch_failed", null);
       return answer(502, { ok: false, reason: "FETCH_FAILED", locator,
         detail: crCredential ? "the body broke off while it was read; its error is not carried because a supplied credential rode it"
-                             : `the body broke off while it was read (${String(e && e.message || e)})` });
+                             : localize("acquisition.index.the_body_broke_off_while", "the body broke off while it was read ({String})", { String: String(String(e && e.message || e)) }) });
     }
     const { done, value } = chunk;
     if (done) break;
@@ -998,11 +971,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       return answer(502, { ok: false, reason: "DRIVE_EXPORT_BYTES_ARE_THE_SHELL", ...driveRow("DRIVE_EXPORT_BYTES_ARE_THE_SHELL"), op,
         status: res.status, locator: driveCapture.address, export_address: driveCapture.exportAddress,
         declared_content_type: declared || null, refused_on: "the bytes", detected: sniff, drive: driveFacts,
-        detail: `the OpenDocument export address served bytes that are HTML — ${sniff.signals.join("; ")} `
-              + `— while declaring \`${declared || "(no content type)"}\`. That is the Google Drive `
-              + `APPLICATION, not the document, and the declared type did not say so. Detection here is `
-              + `bytes-first and certain, which is the whole reason this arm exists beside the one that `
-              + `reads the header. Nothing was filed, and the shell is never filed as the document.` });
+        detail: localize("acquisition.index.the_opendocument_export_address_served", "the OpenDocument export address served bytes that are HTML — {signals} — while declaring `{v1}`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.", { signals: String(sniff.signals.join("; ")), v1: String(declared || "(no content type)") }) });
     }
   }
   /* END DEC-49 REGION is-drive-bytes */
@@ -1067,8 +1036,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       catch { /* an unreleased reservation under-uses the allowance; it never fails the refusal */ }
       return answer(422, { ok: false, reason: "RENDER_NOT_A_PAGE", ...renderRow("RENDER_NOT_A_PAGE"),
         op, content_type: ct || null, bytes: total, multipart,
-        detail: `the served bytes are ${multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``}, `
-              + `not an HTML page; nothing was filed.` });
+        detail: localize("acquisition.index.the_served_bytes_are_v1", "the served bytes are {v1}, not an HTML page; nothing was filed.", { v1: String(multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``) }) });
     }
     /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
     /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
@@ -1081,7 +1049,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX)
       return answer(502, { ok: false, reason: "RENDER_FAILED", ...renderRow("RENDER_FAILED"), op, shell_sha256: sha, filed: false,
-        detail: rb.ok ? `the rendered document is ${rbytes.length} bytes, over this surface's ${MAX}.` : rb.problem });
+        detail: rb.ok ? localize("acquisition.index.the_rendered_document_is_length", "the rendered document is {length} bytes, over this surface's {MAX}.", { length: String(rbytes.length), MAX: String(MAX) }) : rb.problem });
     /* END DEC-49 REGION is-render-result */
     /* D-529: every subresource the render LOADED is hashed BY THE PLANE over bytes it KEEPS. */
     const renderDigests = await keepRenderBodies(answerR, { sha256: sha256Hex,
@@ -1207,8 +1175,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     provenance_chain: [{
       who: firstHopWho((cap.env || {}).INSTANCE_NAME, (cap.env || {}).VERSION),
       asserts: renderRecorded
-        ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}`
-        : `these bytes were served for ${locator} at ${retrieved}`,
+        ? localize("acquisition.index.these_bytes_are_the_document", "these bytes are the document a {v1} render produced from {locator} at {retrieved}; the shell it was rendered from was served for {locator_2} and is held beside it (render.of){v2}", { v1: String(renderRecorded.engine || "renderer (engine not reported)"), locator: String(locator), retrieved: String(retrieved), locator_2: String(locator), v2: String(completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : "") })
+        : localize("acquisition.index.these_bytes_were_served_for", "these bytes were served for {locator} at {retrieved}", { locator: String(locator), retrieved: String(retrieved) }),
       evidence: renderRecorded
         ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment"
         : "first-party https fetch, hashed at receipt, transport record on this document",
@@ -1216,7 +1184,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     }, ...(archiveHopRecorded ? [archiveHopRecorded] : []), ...(driveHopRecorded ? [driveHopRecorded] : [])],
     capture: {
       method: renderRecorded ? RENDERED_METHOD : multipart
-        ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt`
+        ? localize("acquisition.index.bio_plane_acquire_https_fetch", "bio-plane acquire, https fetch, streamed in {length} parts, hashed at receipt", { length: String(parts.length) })
         : "bio-plane acquire, https fetch, hashed at receipt",
       /* R18 (D-698): provenance's rule, each letter read from its one definition, never typed here. */
       grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
@@ -1436,8 +1404,7 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
   const SUB_PARSE_MAX = 8 * 1024 * 1024;
   if (multipart || total > SUB_PARSE_MAX)
     return { subs: null, skipped: { reason: "TOO_LARGE_TO_PARSE", detail:
-      "subresource capture reads the primary back into memory to parse it, so it is bounded to "
-      + `${SUB_PARSE_MAX} bytes; this document is ${total}` } };
+      localize("acquisition.index.subresource_capture_reads_the_primary", "subresource capture reads the primary back into memory to parse it, so it is bounded to {SUB_PARSE_MAX} bytes; this document is {total}", { SUB_PARSE_MAX: String(SUB_PARSE_MAX), total: String(total) }) } };
   if (detectFormat(null, ct || null).format !== "html")
     return { subs: null, skipped: { reason: "NOT_HTML", content_type: ct || null, detail:
       "only an HTML page has subresources; the capture is unaffected and complete" } };
@@ -1515,8 +1482,7 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
      runtime observation itself, and `snapshot.compute` is unchanged. */
   try {
     await cap.emit("compute", { metric: "capture_work_bytes", value: subs.manifest.compute.work_bytes,
-      detail: `${subs.manifest.compute.work_calls} compute calls over ${subs.manifest.compute.work_bytes} bytes; `
-            + `${subs.manifest.counts.fetched} fetched, ${subs.manifest.discovered} discovered` });
+      detail: localize("acquisition.index.work_calls_compute_calls_over", "{work_calls} compute calls over {work_bytes} bytes; {fetched} fetched, {discovered} discovered", { work_calls: String(subs.manifest.compute.work_calls), work_bytes: String(subs.manifest.compute.work_bytes), fetched: String(subs.manifest.counts.fetched), discovered: String(subs.manifest.discovered) }) });
   } catch { /* an unfiled measurement is not a failed capture */ }
   /* The links, anchors included (an in-page anchor is an element reference into this document). */
   try {

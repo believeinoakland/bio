@@ -7,6 +7,7 @@ import { world, V, AUTHORED } from "./fixture.mjs";
 import { NOTICE_SEALS_SENTENCE } from "../../../src/case-authoring/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { workingOnLines, workingOnOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const NOTICE = "WON-2026-0412";
@@ -88,7 +89,7 @@ test("R42: the pre-flight's \"what becomes permanent\" step says, when the proje
   const { w, P } = setup();
   const args = { ...AUTHORED, project: P, targets: [Q], roles: { [Q]: "load_bearing" }, viewer: V("alice"), author: "alice" };
   const without = w.ca.publishPreflight(args);
-  assert.equal(without.steps[0].name, "what becomes permanent");
+  assert.equal(without.steps[0].name, word("case-authoring.name.becomes_permanent"));
   assert.equal(without.steps[0].says.includes(NOTICE_SEALS_SENTENCE), false);
   assert.equal(without.steps[0].working_on, null);
   w.notices.set(P, NOTICE);

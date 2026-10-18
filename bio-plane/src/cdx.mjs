@@ -28,6 +28,8 @@
 /** base32(SHA-1("")). Wayback computes its digest over the response BODY, so
  *  every empty-bodied capture in the index carries this exact value. Two rows
  *  agreeing on it agree on nothing. */
+import { word, localize } from "./setup-words/index.mjs";
+
 export const EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
 
 /** MEASURED: `output=json` returns an ARRAY OF ARRAYS whose first element is a
@@ -97,7 +99,7 @@ export function selectCapture(rows, { notAfter = null } = {}) {
     const why = rowRefusal(r);
     if (why) { considered.push({ timestamp: r && r.timestamp, refused: why }); continue; }
     if (notAfter && String(r.timestamp) > String(notAfter)) {
-      considered.push({ timestamp: r.timestamp, refused: `later than the requested bound ${notAfter}` });
+      considered.push({ timestamp: r.timestamp, refused: word("capture-sources.refused.later_requested_bound", { not_after: String(notAfter) }) });
       continue;
     }
     usable.push(r);
@@ -168,20 +170,20 @@ export function cdxQuery(address, { limit = 40 } = {}) {
  *  never the credibility of the content. */
 export function archiveHop(chosen, replay, { mementoDatetime = null, warcSource = null } = {}) {
   return {
-    who: "Internet Archive Wayback Machine",
-    asserts: `these bytes were served for ${chosen.original} at ${chosen.archived_at}, with HTTP status ${chosen.statuscode}`,
+    who: word("capture-sources.name.internet_archive_wayback"),
+    asserts: localize("capture-sources.cdx.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: String(chosen.original), archived_at: String(chosen.archived_at), statuscode: String(chosen.statuscode) }),
     evidence: [
       chosen.urlkey ? `CDX urlkey ${chosen.urlkey}` : "the CDX record carried no urlkey",
-      `CDX record: timestamp ${chosen.timestamp}, digest ${chosen.digest} (base32 SHA-1, over the body as they stored it)`,
+      localize("capture-sources.cdx.cdx_record_timestamp_timestamp_digest", "CDX record: timestamp {timestamp}, digest {digest} (base32 SHA-1, over the body as they stored it)", { timestamp: String(chosen.timestamp), digest: String(chosen.digest) }),
       chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
-      chosen.warc_record_length ? `WARC record length ${chosen.warc_record_length}, which is THEIR compressed record size and not the length of what we received` : null,
+      chosen.warc_record_length ? localize("capture-sources.cdx.warc_record_length_warc_record", "WARC record length {warc_record_length}, which is THEIR compressed record size and not the length of what we received", { warc_record_length: String(chosen.warc_record_length) }) : null,
       mementoDatetime ? `Memento-Datetime: ${mementoDatetime}` : null,
       warcSource ? `x-archive-src: ${warcSource}` : null,
       `replayed from ${replay}`,
     ].filter(Boolean).join("; "),
     /* Not cryptographic, and said plainly. This is delegated attestation. */
     bound: false,
-    unsigned_reason: "no cryptographic attestation exists over a Wayback capture; this is a dated third-party claim we are trusting, not verifying",
+    unsigned_reason: word("cdx.unsigned_reason"),
     via: "archive.org",
     /* D-524: the document these bytes are a capture OF, as a named key, as
        `driveHop` carries it. The capture is FILED under the CDX original while

@@ -22,6 +22,7 @@ import { T49_SHARES } from "./t49.mjs";
 import { T50_SHARES, T50_FAMILIES } from "./t50.mjs";
 import { needsRows } from "../op-capabilities/index.mjs";
 import { composeNeeds } from "./compose.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* R69 (T48; N1039, K3147, K3200): EVALUATING THIS MODULE BUILDS NO TABLE. Every table and list below is frozen data
    (R5), built by `build()` on the first read of any export and reused after, so importing the module adds nothing to the
@@ -2494,18 +2495,13 @@ const UNATTENDED_BY_DECISION = Object.freeze({
        + "SESSION_OPS, purge above all, still requires a machine credential.'",
   cpuprobe: "src/control-plane/ops.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the "
           + "runtime cuts it off. Probe and admin only: it belongs nowhere near a member's session.'",
-  capturerequestdrain: "src/control-plane/ops.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY "
-                     + "DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the "
-                     + "class by decision, not by drift.'",
+  capturerequestdrain: localize("op-declarations.index.src_control_plane_ops_mjs", "src/control-plane/ops.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'"),
   taskdrain: "src/control-plane/ops.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S — a member "
            + "reaching for it by hand would be a person doing the daemon's job with the daemon's "
            + "conduct rules applied to them.'",
   /* D-436: recorded by the D-436 worker as a PROVISIONAL decision, and stated as one in IC-172 — the seed is
      the root of trust's, as the claim and the export are. The citation is the OPS row's own sentence. */
-  instancegroupseed: "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE "
-                   + "INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN "
-                   + "THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION "
-                   + "OF ANY ROLE REACHES IT.'",
+  instancegroupseed: localize("op-declarations.index.src_control_plane_ops_mjs_2", "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION OF ANY ROLE REACHES IT.'"),
   /* REC-155: the two §4.10 RULES unattended by decision (BOB #19, 2026-09-21). Each citation is the one §4.10
      quotes, re-read at the artifact by this landing; the ruling is cited beside it so a caller can find both. */
   livefire: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/livefire.mjs, header: 'the only "
@@ -2600,7 +2596,7 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    `reauth` (`affordances` R64: `act.reauth.does`) and `aliaswithdraw`, `factconfirm`, `projectrequest`,
    `projectrequestwithdraw` and `projectrequestanswer` (each now explained by its `does` word) leave the last ground. */
 const ACT_HELP_ABSENT = Object.freeze({
-  alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
+  alias: Object.freeze({ ground: localize("op-declarations.index.an_alias_of_a_declared", "An alias of a declared op (R21): its op's explanation serves it."),
     ops: frozenList([
       "addparticipant", "addworkbook", "adoptversion", "bind", "createevent", "createset", "declare", "declaretie",
       "exclude", "filingrecordsent", "include", "keepversion", "reconcile", "recordcheck", "recorddatedfact",
@@ -2644,7 +2640,7 @@ const ACT_HELP_ABSENT = Object.freeze({
   nocontrol: Object.freeze({ ground: "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check, a wizard's progress, a capture a tool files (the screen's upload is captureupload), or the mark a screen records of itself when it opens (Home's lookedsince).",
     ops: frozenList([
       "airuntick", "allocid", "answercheck", "capture", "lease", "wizardprogress"]) }),
-  unexplained: Object.freeze({ ground: "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3)).",
+  unexplained: Object.freeze({ ground: localize("op-declarations.index.an_act_or_a_draft", "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3))."),
     ops: frozenList([
       "accountpropose", "actalias", "actionholdrelease", "actionriskpropose", "actionseekspropose", "addressedrecord",
       "addressfrequencyset", "adminresign", "aicredentialmint", "aicredentialrevoke", "aigrantmint", "airunverify",

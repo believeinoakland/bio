@@ -47,6 +47,7 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
    The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 let n = 0; const fails = [];
 /* A DOM stub only creates an element when it is QUERIED, so a section where the
@@ -62,12 +63,12 @@ function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL",
    is ignorant of them. ---- */
 function ownerMath(nn){
   if(nn<=1) return { owners:nn, votesNeeded:0, eligibleVoters:0, targetMayVote:false, possible:false,
-                     why:"one owner is the floor, so the last owner is not removable" };
+                     why:localize("membership.why.owner_floor_last", "one owner is the floor, so the last owner is not removable") };
   if(nn===2) return { owners:2, votesNeeded:2, eligibleVoters:2, targetMayVote:true, possible:true,
-                      why:"both owners must agree, the departing one included: resignation with the other's assent" };
+                      why:localize("membership.why.both_owners_agree", "both owners must agree, the departing one included: resignation with the other's assent") };
   const votesNeeded = Math.floor(nn/2)+1, eligibleVoters = nn-1;
   return { owners:nn, votesNeeded, eligibleVoters, targetMayVote:false, possible: votesNeeded<=eligibleVoters,
-           why:"a majority of all owners, the target counted in the denominator and not voting" };
+           why:localize("membership.why.majority_all_owners", "a majority of all owners, the target counted in the denominator and not voting") };
 }
 const arithTable = () => [1,2,3,4,5,6,7,8,9].map(ownerMath);
 

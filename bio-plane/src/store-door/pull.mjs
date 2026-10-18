@@ -13,6 +13,7 @@
    whose capture no bundle holds (pulled through the doorbell's own route) is promoted by this door's next pull. */
 import { createSha256 } from "../record-grammar/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* The id's stem is record-core's `INFO-<year>-NNNN`; the slug says where the material came from. */
 export const PULL_BUNDLE_SLUG = "doorbell-knock";
@@ -29,7 +30,7 @@ const enc = (text) => {
 function filing(record, doc, { knockId, by, identity, viewer, at }) {
   const cap = doc.capture || {};
   const id = `${record.allocId("INFO", at.slice(0, 4)).id}-${PULL_BUNDLE_SLUG}`;
-  const title = `Material handed in at the doorbell (${knockId})`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+  const title = word("store-door.title.material_handed_doorbell", { knock_id: String(knockId) }).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
   const md = ["---",
     `id: ${id}`, "object_type: information", "schema: information@2",
     `title: ${JSON.stringify(title)}`, "current_state: collected", "prior_state: null",
@@ -43,12 +44,9 @@ function filing(record, doc, { knockId, by, identity, viewer, at }) {
     `  retrieved: ${doc.retrieved || at}`,
     "monitoring:", "  enabled: false", "  frequency: none",
     "---", "", "## Summary", "",
-    `Material handed to the team at its doorbell as knock ${knockId} by an unnamed knocker, and brought into the `
-    + `record by ${by}. Its bytes are \`${doc.file}\`, exactly as received; nothing here summarises them.`, "",
+    localize("store-door.pull.material_handed_to_the_team", "Material handed to the team at its doorbell as knock {knockId} by an unnamed knocker, and brought into the record by {by}. Its bytes are `{file}`, exactly as received; nothing here summarises them.", { knockId: String(knockId), by: String(by), file: String(doc.file) }), "",
     "## Provenance Notes", "",
-    `Received, not fetched from any address: its digest was taken as it arrived at the doorbell. The knocker's note `
-    + `travels in data/provenance.json as the knocker's words, not as evidence of their truth. Filed at collected and `
-    + `never higher: releasing it is a named member's decision.`, "",
+    word("store-door.md.received_fetched_address"), "",
     "## Session Log", "",
     `### Session ${at} | Collected | ${by}`,
     `Trigger: knock ${knockId} brought in`,
@@ -117,9 +115,8 @@ export async function pullAndFile(deps, { knockId, by, identity, viewer, resolve
   if (!pulled.document) return { ...answer, bundle: null };
   let again;
   try { again = promoteIn(deps, pulled.document, { ...who, at: pulled.pulled_at || at }); }
-  catch { again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: "the promotion did not complete." }; }
+  catch { again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: localize("store-door.pull.the_promotion_did_not_complete", "the promotion did not complete.") }; }
   if (again && again.ok === true) return { ...answer, bundle: bundleOf(again) };
   return { ...(again || { ok: false, reason: "PROMOTE_FAILED" }), ok: false, knockId,
-           detail: `the knock was already brought in, and its record was not filed; nothing was written. `
-                 + String((again && again.detail) || "").slice(0, 300) };
+           detail: localize("store-door.pull.the_knock_was_already_brought", "the knock was already brought in, and its record was not filed; nothing was written. {String}", { String: String(String((again && again.detail) || "").slice(0, 300)) }) };
 }

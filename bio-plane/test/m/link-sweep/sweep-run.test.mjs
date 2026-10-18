@@ -10,6 +10,7 @@ import { listWorld, sweepDef, NOW_MS, DAY, WEEK, site, SEED, U, page, runsOf, fi
 import { SWEEP_TICK_BATCH, SWEEP_ACTOR } from "../../../src/link-sweep/index.mjs";
 import { listFormats } from "../../../src/formats.mjs";
 import { normalizeAddress } from "../../../src/subresources.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const PROJ = "PROJ-2026-0950-sweep";
 const LIST = "INFO-2026-0950-list";
@@ -158,8 +159,8 @@ test("R4 due only when ratified, not paused, daemon enabled, its project not clo
   write([sweepDef({ seeds: [U("s0.html")] })], { enabled: true });
   assert.equal(due(NOW_MS + 2 * WEEK), true, "the negative control");
   w.stages[PROJ] = "closed";
-  assert.equal(due(NOW_MS + 2 * WEEK), false, "its project is closed");
-  assert.equal(w.s.sweeps({ viewer: "member:alice", now: NOW_MS + 2 * WEEK }).sweeps[0].why, "its project is closed");
+  assert.equal(due(NOW_MS + 2 * WEEK), false, word("link-sweep.no.project_closed"));
+  assert.equal(w.s.sweeps({ viewer: "member:alice", now: NOW_MS + 2 * WEEK }).sweeps[0].why, word("link-sweep.no.project_closed"));
   w.stages[PROJ] = "matured";
   w.pause(true);
   assert.equal(due(NOW_MS + 2 * WEEK), false, "paused");

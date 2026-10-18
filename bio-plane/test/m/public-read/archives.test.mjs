@@ -23,6 +23,7 @@ import { serialiseContainer } from "../../../src/container.mjs";
 import { crc32 } from "../../../src/ooxml.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, caseFileManifestCheck, caseFilePath } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 bindPublishedPlane({
@@ -323,7 +324,7 @@ test("R33 the case file carries the edition's criteria as one file of kind crite
 test("R33 an edition carrying criteria rows carries them whole in the criteria file", async () => {
   const { w, env, memberSha } = scene();
   const rows = [{ standard: "STD-2026-0001-policy", portion: "s.3", body: "ENT-2026-0001", binds: true,
-                  label: "Standard · binds City Clerk", access: "free", access_words: "Free to read", passages: [] }];
+                  label: "Standard · binds City Clerk", access: "free", access_words: word("label.standardaccess.free"), passages: [] }];
   const orig = w.signCase.bind(w);
   w.signCase = (...a) => { const r = orig(...a); w.st.sql.exec(`UPDATE published_cases SET criteria=? WHERE case_id=?`, JSON.stringify(rows), CASE); return r; };
   const { m, read } = await publish(w, env, [docRow(MEM, memberSha)]);

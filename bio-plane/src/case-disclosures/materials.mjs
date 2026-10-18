@@ -8,6 +8,7 @@
  * publisher may not see is not followed and not listed (R17: sight at the act governs). */
 
 import { PHOTO_WORDS } from "./checks.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** The material one leg reaches: the passage's own capture when the leg names a content row, else every capture its
  *  document registers. Answers `[{ref, kind, sha}]`; `kind` is `observation` for a member's authored words (provenance
@@ -155,24 +156,24 @@ const HEX64 = /^[0-9a-f]{64}$/i;
 export function photoRead(read) {
   const unread = (why) => ({ photo: null, unread: true, why });
   let a = null;
-  try { a = read(); } catch { return unread("the marks could not be read"); }
+  try { a = read(); } catch { return unread(word("case-disclosures.marks_read")); }
   if (!a || typeof a !== "object" || a.ok !== true)
-    return unread(a && typeof a.reason === "string" ? `the marks read answered ${a.reason}` : "the marks could not be read");
+    return unread(a && typeof a.reason === "string" ? word("case-disclosures.marks_read_answered", { reason: String(a.reason) }) : word("case-disclosures.marks_read"));
   if (a.photo === false) return { photo: false };
   if (a.photo !== true || !PHOTO_STATES.includes(a.state) || !Array.isArray(a.marks)
       || a.marks.some((m) => !m || typeof m !== "object" || !Array.isArray(m.areas)))
-    return unread("the marks read answered a shape it does not state");
+    return unread(word("case-disclosures.marks_read_answered_shape"));
   const standing = a.marks.filter((m) => m.withdrawn == null);
   const state = !standing.length ? "unchecked" : standing.some((m) => m.areas.length) ? "marked" : "nothing_to_obscure";
-  if (state !== a.state) return unread(`the marks read answered ${a.state} where the standing marks say ${state}`);
+  if (state !== a.state) return unread(word("case-disclosures.marks_read_answered_standing", { state: String(a.state), state_2: String(state) }));
   const copy = a.copy && typeof a.copy === "object" && typeof a.copy.sha256 === "string" && HEX64.test(a.copy.sha256)
     ? a.copy.sha256.toLowerCase() : null;
   const refused = a.refused && typeof a.refused === "object" && typeof a.refused.code === "string"
     ? { code: a.refused.code, detail: a.refused.detail ?? null } : null;
   if ((a.copy != null && !copy) || (a.refused != null && !refused))
-    return unread("the marks read answered a shape it does not state");
+    return unread(word("case-disclosures.marks_read_answered_shape"));
   if (state !== "unchecked" && !copy && !refused)
-    return unread(`the photo is checked (${state}) but holds neither a copy nor a refused cover`);
+    return unread(word("case-disclosures.photo_checked_holds", { state: String(state) }));
   const carried = state !== "unchecked" && !refused ? copy : null;
   /* R32 (T47; N953; `case-carriage` R22): a photo carried as its copy is answered with case-carriage's own `obscured`
      object, handed on whole, `kind` included; one that names another copy, another kind, or a `marked` its standing
@@ -209,12 +210,12 @@ export const DOCUMENT_STATES = Object.freeze(["public", "clean", "copy", "refuse
 export function documentRead(read) {
   const unread = (why) => ({ state: "undetermined", copy: null, refused: null, why });
   let a = null;
-  try { a = read(); } catch { return unread("the copy's state could not be read"); }
+  try { a = read(); } catch { return unread(word("case-disclosures.copy_state_read")); }
   if (!a || typeof a !== "object" || a.ok === false)
-    return unread(a && typeof a.reason === "string" ? `the copy's state read answered ${a.reason}` : "the copy's state could not be read");
-  if (!DOCUMENT_STATES.includes(a.state)) return unread("the copy's state read answered a shape it does not state");
-  if (a.state === "undetermined") return unread("case-carriage could not read the copy's state");
-  if (a.state === "photo") return unread("the copy's state read answered photo for a document that is no photo");
+    return unread(a && typeof a.reason === "string" ? word("case-disclosures.copy_state_read_answered", { reason: String(a.reason) }) : word("case-disclosures.copy_state_read"));
+  if (!DOCUMENT_STATES.includes(a.state)) return unread(word("case-disclosures.copy_state_read_answered_shape"));
+  if (a.state === "undetermined") return unread(word("case-disclosures.case_carriage_read"));
+  if (a.state === "photo") return unread(word("case-disclosures.copy_state_read_answered_photo"));
   if (a.state === "copy") {
     if (typeof a.copy !== "string" || !HEX64.test(a.copy)) return unread("the copy's state read answered copy with no SHA-256");
     /* R32 (T47): its `obscured` object, `kind` "document", handed on whole */
@@ -225,6 +226,6 @@ export function documentRead(read) {
   if (a.state === "refused")
     return a.refused && typeof a.refused === "object" && typeof a.refused.code === "string" && a.refused.code
       ? { state: "refused", copy: null, refused: { code: a.refused.code, detail: a.refused.detail ?? null } }
-      : unread("the copy's state read answered refused with no code");
+      : unread(word("case-disclosures.copy_state_read_answered_refused"));
   return { state: a.state, copy: null, refused: null };
 }

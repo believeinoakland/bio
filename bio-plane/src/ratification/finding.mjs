@@ -10,6 +10,7 @@ import { partsHeld } from "../provenance/index.mjs";
 import { userAgent } from "../acquisition/index.mjs";
 import { parseFrontmatter, normalizeType, isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { rowOf, isCaseMemberBytes, completenessFields } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R4: the refusals `op=ratify` answers from the gate facts before the signature is weighed, in its order (C-58.1,
  *  C-53.10, C-53.11, C-92.12, RATIFY_STALE), as `{body, status}` without the envelope's `store` and `tokenClass`, or null.
@@ -27,8 +28,7 @@ export function findingFactsRefusal(facts, { bundleId, expectedSha, statedInSitt
   if (normalizeType(facts.row.object_type) === "project")
     return { status: 409, body: { ok: false, reason: "RATIFY_PROJECT_BUNDLE", ...rowOf("RATIFY_PROJECT_BUNDLE"),
       bundleId,
-      detail: `${bundleId} is a project's own document, and a project is published through its cases, `
-            + `never directly (BIO_Publication_v0_1.md §3 rule 2; D-429). Nothing was published.` } };
+      detail: localize("ratification.finding.bundleid_is_a_projects_own", "{bundleId} is a project's own document, and a project is published through its cases, never directly (BIO_Publication_v0_1.md §3 rule 2; D-429). Nothing was published.", { bundleId: String(bundleId) }) } };
   /* END DEC-49 REGION is-ratify-project-bundle */
   /* DEC-49 REGION is-testimony-publish-bundle — MK-1 (A) / C-53.10, C-53.11, NARROWED BY MK-7.
      MEASURED before MK-1 built it (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes
@@ -41,15 +41,11 @@ export function findingFactsRefusal(facts, { bundleId, expectedSha, statedInSitt
   if (facts.testimony && facts.testimony.self.length && legacy.includes(bundleId))
     return { status: 409, body: { ok: false, reason: "TESTIMONY_UNPUBLISHABLE", ...rowOf("TESTIMONY_UNPUBLISHABLE"),
       bundleId,
-      detail: `${bundleId} is a member's observation whose own files name its author (written before §4.1), or `
-            + `cannot be read to show they do not; publishing it could publish that name at any level `
-            + `(MEMBER-KNOWLEDGE-DESIGN.md §4.1)` } };
+      detail: localize("ratification.finding.bundleid_is_a_members_observation", "{bundleId} is a member's observation whose own files name its author (written before §4.1), or cannot be read to show they do not; publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)", { bundleId: String(bundleId) }) } };
   if (facts.testimony && facts.testimony.via.some((v) => legacy.includes(v.observation)))
     return { status: 409, body: { ok: false, reason: "TESTIMONY_CITED_UNPUBLISHABLE", ...rowOf("TESTIMONY_CITED_UNPUBLISHABLE"),
       bundleId, rests_on: facts.testimony.via.filter((v) => legacy.includes(v.observation)),
-      detail: `${bundleId} rests on an observation whose own files name its author (written before §4.1) or `
-            + `cannot be read to show they do not `
-            + `(${facts.testimony.via.filter((v) => legacy.includes(v.observation)).slice(0, 5).map((v) => v.observation).join(", ")})` } };
+      detail: localize("ratification.finding.bundleid_rests_on_an_observation", "{bundleId} rests on an observation whose own files name its author (written before §4.1) or cannot be read to show they do not ({map})", { bundleId: String(bundleId), map: String(facts.testimony.via.filter((v) => legacy.includes(v.observation)).slice(0, 5).map((v) => v.observation).join(", ")) }) } };
   /* END DEC-49 REGION is-testimony-publish-bundle */
   /* DEC-49 REGION is-attribution-ratify — MK-7 / C-92.12. THE LIFT OF C-53.10 for an observation in
      §4.1's form: its own bytes cross only as a ratified case's evidence (D-431 (b), in the committer) AND
@@ -63,8 +59,7 @@ export function findingFactsRefusal(facts, { bundleId, expectedSha, statedInSitt
   if (facts.testimony && facts.testimony.self.length && !stated)
     return { status: 409, body: { ok: false, reason: "ATTRIBUTION_UNSTATED", ...rowOf("ATTRIBUTION_UNSTATED"),
       bundleId,
-      detail: `no ratified case document states an attribution for ${bundleId}; sign the case edition that `
-            + `uses it (op=caseratify) first, and its author's chosen level is published with it` } };
+      detail: localize("ratification.finding.no_ratified_case_document_states", "no ratified case document states an attribution for {bundleId}; sign the case edition that uses it (op=caseratify) first, and its author's chosen level is published with it", { bundleId: String(bundleId) }) } };
   /* END DEC-49 REGION is-attribution-ratify */
   if (facts.row.bundle_sha !== expectedSha)
     return { status: 409, body: { ok: false, reason: "RATIFY_STALE",
@@ -245,11 +240,7 @@ export async function reuseCheck({ env, ask, bundleId, silentReason, silentDetai
   const reused = reusedOut.result;
   if (!reusedOut.answered)
     return { ok: false, reason: silentReason, op: "ratify/reusedparts", detail: silentDetail,
-             note: "whether this record reused any part from the record is UNDETERMINED for this "
-                 + "ratification, and that is NOT the same as no part having been reused. The "
-                 + "record is ratified -- the signature, the gate and the published rows are all "
-                 + "unaffected by this read -- and the reuse re-check (CAP-4 item 6b) did not "
-                 + "happen. Re-ratifying converges it." };
+             note: word("ratification.note.record_reused_part") };
   if (!(reused && Array.isArray(reused.parts) && reused.parts.length)) return null;
   /* REC-53: a silence here left `observed` null, which is ALSO what a
      genuine "nothing calibrated yet" answers — so the recorded basis of
@@ -284,9 +275,7 @@ export async function reuseCheck({ env, ask, bundleId, silentReason, silentDetai
     }
     if (spent >= budget) {
       verdicts.push({ ...base, verdict: "not_attempted", observed_sha: null,
-        basis: `this ratification's re-fetch budget (${budget}, bounded by the calibrated subrequest `
-             + `ceiling ${ceilingWord}) was spent before this part; `
-             + `it is recorded as outstanding, not silently omitted` });
+        basis: word("ratification.basis.ratification_re_fetch", { budget: String(budget), ceiling_word: String(ceilingWord) }) });
       continue;
     }
     spent++;
@@ -295,8 +284,7 @@ export async function reuseCheck({ env, ask, bundleId, silentReason, silentDetai
     catch { r = null; }
     if (!r || !r.ok) {
       verdicts.push({ ...base, verdict: "unavailable", observed_sha: null,
-        basis: `a plain GET returned ${r ? r.status : "a network error"}; the source no longer answers, `
-             + `and the record is ratified with the bytes captured on the day` });
+        basis: word("ratification.basis.plain_get_returned", { error: String(r ? r.status : "a network error") }) });
       continue;
     }
     const got = hexOf(await crypto.subtle.digest("SHA-256", new Uint8Array(await r.arrayBuffer())));
@@ -331,16 +319,11 @@ export async function reuseCheck({ env, ask, bundleId, silentReason, silentDetai
     unavailable: tally("unavailable"), not_attempted: tally("not_attempted"),
     outcomes: verdicts.map((v) => ({ address_norm: v.address_norm, source_capture: v.source_capture,
                                      verdict: v.verdict, observed_sha: v.observed_sha, basis: v.basis })),
-    note: "every reused part carries an outcome. confirmed/changed/unavailable all ratify and say "
-        + "different things; not_attempted names a part the budget could not reach. Re-fetch is a plain "
-        + "GET, hashed by us -- a reused part ratified in silence is what is forbidden.",
+    note: word("ratification.note.reused_part_carries"),
     ...(vOut.answered ? {}
                       : { recorded: { ok: false, reason: silentReason,
                                       op: "ratify/recordreuseverdicts", detail: silentDetail,
-                                      note: "the outcomes above are what this ratification OBSERVED; "
-                                          + "whether they reached the record is undetermined, so do not "
-                                          + "read their absence from the reuse history as their never "
-                                          + "having been checked. Re-ratifying converges it." } }),
+                                      note: word("ratification.note.outcomes_ratification_observed") } }),
   };
 }
 

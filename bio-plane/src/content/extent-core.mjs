@@ -26,6 +26,7 @@ import {
   CONTENT_EXTENT_KINDS, CONTENT_EXTENT_A1_RE, rangeCorners, a1ToRowCol, canonicalExtent, describeExtent, contentCitedAs,
 } from "../textchain.mjs";
 import { CONTENT_EXTENT_CHECKS } from "./checks.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 /** `dom` is NOT in the map above and that is the point: it is refused BY NAME
  *  rather than falling through the unknown-kind arm, because the two are
@@ -286,13 +287,10 @@ export function checkContentExtent(extent, ctx = {}) {
   const row = CONTENT_EXTENT_KINDS[e.kind];
   if (!row)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `extent kind '${String(e.kind).slice(0, 40)}' is not one of: `
-      + `${Object.keys(CONTENT_EXTENT_KINDS).join(', ')}`);
+      localize('content.extent-core.extent_kind_string_is_not', 'extent kind \'{String}\' is not one of: {keys}', { String: String(String(e.kind).slice(0, 40)), keys: String(Object.keys(CONTENT_EXTENT_KINDS).join(', ')) }));
   if (!row.landed)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `extent kind '${e.kind}' (${row.human}) is named in the grammar and what it covers cannot `
-      + `yet be evaluated, so it mints nothing. The pdf-page and document arms landed with `
-      + `REC-82 and the other three follow with REC-85`);
+      localize('content.extent-core.extent_kind_kind_human_is', 'extent kind \'{kind}\' ({human}) is named in the grammar and what it covers cannot yet be evaluated, so it mints nothing. The pdf-page and document arms landed with REC-82 and the other three follow with REC-85', { kind: String(e.kind), human: String(row.human) }));
   if (e.kind === 'pdf-page') {
     if (!Number.isInteger(e.page) || e.page < 0)
       return refusal("CONTENT_EXTENT_UNREADABLE",
@@ -313,8 +311,7 @@ export function checkContentExtent(extent, ctx = {}) {
     if (ctx.known !== false
         && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
       return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
-        `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
-        + `extent names page ${e.page}`);
+        localize('content.extent-core.this_captures_page_set_holds', 'this capture\'s page set holds {pageCount} page(s) (0-{v1}) and the extent names page {page}', { pageCount: String(ctx.pageCount), v1: String(ctx.pageCount - 1), page: String(e.page) }));
   }
   /* ==================================================================== *
      REC-85 / IC-83 — THE OTHER THREE ARMS, each in two halves that answer two
@@ -421,8 +418,7 @@ export function checkContentExtent(extent, ctx = {}) {
        two spellings of slide 1 exist and would mint two rows for one shape. */
     if (!Number.isInteger(e.slide) || e.slide < 1)
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). `
-        + `This one names '${String(e.slide).slice(0, 40)}'`);
+        localize('content.extent-core.a_slide_shape_extent_names', 'a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). This one names \'{String}\'', { String: String(String(e.slide).slice(0, 40)) }));
     if (e.shape !== undefined && e.shape !== null && !(Number.isInteger(e.shape) && e.shape >= 0))
       return refusal("CONTENT_EXTENT_UNREADABLE",
         `a slide-shape extent's shape is a 0-based integer or absent. A shape that is present `
@@ -444,12 +440,10 @@ export function checkContentExtent(extent, ctx = {}) {
   const citedAs = contentCitedAs(e);
   if (citedAs !== 'text' && citedAs !== 'bytes')
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of `
-      + `text, bytes. This one says '${String(citedAs).slice(0, 40)}'`);
+      localize('content.extent-core.cited_as_says_whether_a', 'cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of text, bytes. This one says \'{String}\'', { String: String(String(citedAs).slice(0, 40)) }));
   if (citedAs === 'bytes' && e.kind !== 'image')
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `only an image can be cited as its bytes. A ${e.kind} extent addresses text, and reading `
-      + `'bytes' here as 'text' would silently change what the citation claims, so it is refused`);
+      localize('content.extent-core.only_an_image_can_be', 'only an image can be cited as its bytes. A {kind} extent addresses text, and reading \'bytes\' here as \'text\' would silently change what the citation claims, so it is refused', { kind: String(e.kind) }));
   if (e.kind === 'sheet-range') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())
       return refusal("CONTENT_EXTENT_UNREADABLE",
@@ -491,12 +485,11 @@ export function checkContentExtent(extent, ctx = {}) {
             + `it is on (in a PDF), and this one names neither`);
     if (hasPart && !(typeof e.part === 'string' && /^[0-9a-fA-F]{64}$/.test(e.part.trim())))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `an image's part is the SHA-256 of the embedded media member, 64 hexadecimal characters. `
-        + `This one names '${String(e.part).slice(0, 40)}'`);
+        localize('content.extent-core.an_images_part_is_the', 'an image\'s part is the SHA-256 of the embedded media member, 64 hexadecimal characters. This one names \'{String}\'', { String: String(String(e.part).slice(0, 40)) }));
     if (hasPage) {
       if (!Number.isInteger(e.page) || e.page < 0)
         return refusal("CONTENT_EXTENT_UNREADABLE",
-          `an image extent's page is a 0-based integer. This one names '${String(e.page).slice(0, 40)}'`);
+          localize('content.extent-core.an_image_extents_page_is', 'an image extent\'s page is a 0-based integer. This one names \'{String}\'', { String: String(String(e.page).slice(0, 40)) }));
       if (e.rect !== undefined && e.rect !== null
           && !(Array.isArray(e.rect) && e.rect.length === 4
                && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n))))
@@ -506,8 +499,7 @@ export function checkContentExtent(extent, ctx = {}) {
       if (ctx.known !== false
           && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
         return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
-          `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
-          + `image extent names page ${e.page}`);
+          localize('content.extent-core.this_captures_page_set_holds_2', 'this capture\'s page set holds {pageCount} page(s) (0-{v1}) and the image extent names page {page}', { pageCount: String(ctx.pageCount), v1: String(ctx.pageCount - 1), page: String(e.page) }));
       /* D-420: the page set says the page EXISTS; the record's placement list
          says whether an image is PAINTED there. No list held (a PDF acquired
          before D-420, a walk that did not finish, a capture that is not a PDF)
@@ -567,8 +559,7 @@ export function checkContentExtent(extent, ctx = {}) {
   if (ctx.known !== false && citedAs !== 'bytes'
       && e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal("CONTENT_EXTENT_NO_CHAIN",
-      `this record holds no extraction chain for the capture this leg cites, so there is no `
-      + `transcription over ${describeExtent(e)} for the citation to point at`);
+      localize('content.extent-core.this_record_holds_no_extraction', 'this record holds no extraction chain for the capture this leg cites, so there is no transcription over {describeExtent} for the citation to point at', { describeExtent: String(describeExtent(e)) }));
   /* END DEC-49 REGION is-content-extent */
   return null;
 }
@@ -619,17 +610,13 @@ function coversSheetCell(e, container) {
   const want = String(e.sheet).trim();
   const sheet = sheets.find((x) => x && typeof x.name === 'string' && x.name === want);
   if (!sheet)
-    return `this capture's workbook holds ${sheets.length} sheet(s) `
-      + `(${sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')}`
-      + `${sheets.length > 12 ? ', …' : ''}) and the extent names a sheet called '${want.slice(0, 40)}'`;
+    return word('content.text.capture_workbook_holds', { count: String(sheets.length), sheets: String(sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')), more: String(sheets.length > 12 ? ', …' : ''), want: String(want.slice(0, 40)) });
   const at = a1ToRowCol(e.cell);
   if (!at) return null;
   if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at.row > sheet.rows)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) `
-      + `and the extent names row ${at.row}`;
+    return word('content.text.sheet_capture_holds', { want: String(want.slice(0, 40)), rows: String(sheet.rows), row: String(at.row) });
   if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at.col > sheet.cols)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent `
-      + `names column ${at.col}`;
+    return word('content.text.sheet_capture_holds_column', { want: String(want.slice(0, 40)), cols: String(sheet.cols), col: String(at.col) });
   return null;
 }
 
@@ -639,8 +626,7 @@ function coversDocPara(e, container) {
   const n = container ? container.paragraphs : null;
   if (!(Number.isInteger(n) && n > 0)) return null;
   if (e.para >= n)
-    return `this capture's text holds ${n} paragraph(s) (0-${n - 1}) and the extent names `
-      + `paragraph ${e.para}`;
+    return word('content.text.capture_text_holds', { n: String(n), n2: String(n - 1), para: String(e.para) });
   return null;
 }
 
@@ -650,13 +636,11 @@ function coversSlideShape(e, container) {
   const slides = container && Array.isArray(container.slides) ? container.slides : null;
   if (!slides || !slides.length) return null;
   if (e.slide > slides.length)
-    return `this capture's deck holds ${slides.length} slide(s) (1-${slides.length}) and the extent `
-      + `names slide ${e.slide}`;
+    return word('content.text.capture_deck_holds', { slides: String(slides.length), slide: String(e.slide) });
   const slide = slides[e.slide - 1];
   const n = slide ? slide.shapes : null;
   if (Number.isInteger(e.shape) && Number.isInteger(n) && n > 0 && e.shape >= n)
-    return `slide ${e.slide} of this capture holds ${n} shape(s) (0-${n - 1}) and the extent names `
-      + `shape ${e.shape}`;
+    return word('content.text.slide_capture_holds', { slide: String(e.slide), n: String(n), n3: String(n - 1), shape: String(e.shape) });
   return null;
 }
 
@@ -688,17 +672,13 @@ function coversSheetRange(e, container) {
   const want = String(e.sheet).trim();
   const sheet = sheets.find((x) => x && typeof x.name === 'string' && x.name === want);
   if (!sheet)
-    return `this capture's workbook holds ${sheets.length} sheet(s) `
-      + `(${sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')}`
-      + `${sheets.length > 12 ? ', …' : ''}) and the extent names a sheet called '${want.slice(0, 40)}'`;
+    return word('content.text.capture_workbook_holds', { count: String(sheets.length), sheets: String(sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')), more: String(sheets.length > 12 ? ', …' : ''), want: String(want.slice(0, 40)) });
   const k = rangeCorners(e.range);
   if (!k) return null;
   if (Number.isInteger(sheet.rows) && sheet.rows > 0 && k.r1 > sheet.rows)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) `
-      + `and the range reaches row ${k.r1}`;
+    return word('content.text.sheet_capture_holds_row', { want: String(want.slice(0, 40)), rows: String(sheet.rows), r1: String(k.r1) });
   if (Number.isInteger(sheet.cols) && sheet.cols > 0 && k.c1 > sheet.cols)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the range `
-      + `reaches column ${k.c1}`;
+    return word('content.text.sheet_capture_holds_column_range', { want: String(want.slice(0, 40)), cols: String(sheet.cols), c1: String(k.c1) });
   return null;
 }
 
@@ -708,18 +688,15 @@ function coversDocTable(e, container) {
   const tables = container && Array.isArray(container.tables) ? container.tables : null;
   if (!tables) return null;
   if (e.table >= tables.length)
-    return `this capture's document holds ${tables.length} table(s)`
-      + `${tables.length ? ` (0-${tables.length - 1})` : ''} and the extent names table ${e.table}`;
+    return word('content.text.capture_document_holds', { count: String(tables.length), range: String(tables.length ? ` (0-${tables.length - 1})` : ''), table: String(e.table) });
   if (typeof e.cell !== 'string' || !e.cell.trim()) return null;
   const t = tables[e.table] || {};
   const at = a1ToRowCol(e.cell);
   if (!at) return null;
   if (Number.isInteger(t.rows) && t.rows > 0 && at.row > t.rows)
-    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent `
-      + `names row ${at.row}`;
+    return word('content.text.table_capture_holds', { table: String(e.table), rows: String(t.rows), row: String(at.row) });
   if (Number.isInteger(t.cols) && t.cols > 0 && at.col > t.cols)
-    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names `
-      + `column ${at.col}`;
+    return word('content.text.table_capture_holds_column', { table: String(e.table), cols: String(t.cols), col: String(at.col) });
   return null;
 }
 
@@ -730,8 +707,7 @@ function coversImage(e, container) {
   if (!images) return null;
   const want = String(e.part).trim().toLowerCase();
   if (images.some((x) => x && typeof x.part === 'string' && x.part.toLowerCase() === want)) return null;
-  return `this capture's container holds ${images.length} image(s) and none of them has the content `
-    + `hash ${want.slice(0, 16)}… that the extent names`;
+  return word('content.text.capture_container_holds', { images: String(images.length), want: String(want.slice(0, 16)) });
 }
 
 /** D-440 — an embedded image's `{part}`, against WHETHER THIS CAPTURE IS A
@@ -799,15 +775,12 @@ function coversImagePlacement(e, container) {
   const onPage = all.filter((x) => x && x.page === e.page && Array.isArray(x.rect) && x.rect.length === 4);
   if (!(Array.isArray(e.rect) && e.rect.length === 4)) {
     if (onPage.length) return null;
-    return `page ${e.page} of this capture paints no image — the record holds ${all.length} image `
-      + `placement(s) over the whole document, and none is on this page`;
+    return word('content.text.page_capture_paints', { page: String(e.page), all: String(all.length) });
   }
   const norm = (r) => [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
   const want = norm(e.rect);
   const same = (r) => norm(r).every((v, i) => Math.abs(v - want[i]) <= 0.001 + 1e-9);
   if (onPage.some((x) => same(x.rect))) return null;
   const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(', ')}]`).join(' ');
-  return `page ${e.page} of this capture paints ${onPage.length} image(s)`
-    + `${onPage.length ? ` (${listed}${onPage.length > 6 ? ' …' : ''})` : ''} and none at `
-    + `[${want.join(', ')}], the rectangle the extent names`;
+  return word('content.text.page_capture_paints_image', { page: String(e.page), count: String(onPage.length), listed: String(onPage.length ? ` (${listed}${onPage.length > 6 ? ' …' : ''})` : ''), rect: String(want.join(', ')) });
 }

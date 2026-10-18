@@ -56,7 +56,7 @@ import { localFactsOf } from "../local-facts/index.mjs";
 import * as EVENTS from "../events/index.mjs";
 import * as STANDARDS from "../standards/index.mjs";
 import { registerOwner, BOUNDS } from "../connection-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
 import { refusal, generic, notADisposition } from "./checks.mjs";
 
@@ -438,7 +438,7 @@ export class Progressions {
       /* DEC-49 REGION is-stage-required — C-100.7. */
       if (!STAGE_REQUIREDNESS.includes(req))
         return refusal("BAD_REQUIRED",
-          `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", "),
+          localize("progressions.index.stage_sk_required_must_be", "stage '{sk}' required must be one of {STAGE_REQUIREDNESS}", { sk: String(sk), STAGE_REQUIREDNESS: String(STAGE_REQUIREDNESS.join(", ")) }),
           { stage_key: sk });
       /* END DEC-49 REGION is-stage-required */
       norm.push({ stage_key: sk, stage_no: i + 1,
@@ -565,8 +565,7 @@ export class Progressions {
     const want = version == null || version === "" ? cur.version : Number(version);
     /* DEC-49 REGION is-version-held — C-100.8. */
     if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
-      return refusal("PROGRESSION_VERSION_NOT_HELD", `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions `
-                                 + versions.map((v) => v.version).join(", "),
+      return refusal("PROGRESSION_VERSION_NOT_HELD", localize("progressions.index.key_has_no_version_string", "'{key}' has no version {String}; it holds versions {map}", { key: String(key), String: String(String(version).slice(0, 40)), map: String(versions.map((v) => v.version).join(", ")) }),
                      { progression_key: key, version: String(version).slice(0, 40), current_version: cur.version,
                        versions_held: versions.map((v) => v.version) });
     /* END DEC-49 REGION is-version-held */
@@ -999,7 +998,7 @@ export class Progressions {
       /* END DEC-49 REGION is-set-named */
       /* DEC-49 REGION is-set-bounded */
       if (ids.length > INSTANCES_SET_MAX)
-        return refusal("SET_TOO_LARGE", `a set of at most ${INSTANCES_SET_MAX} entity ids is read at once; ${ids.length} were named`,
+        return refusal("SET_TOO_LARGE", localize("progressions.index.a_set_of_at_most", "a set of at most {INSTANCES_SET_MAX} entity ids is read at once; {length} were named", { INSTANCES_SET_MAX: String(INSTANCES_SET_MAX), length: String(ids.length) }),
                        { max: INSTANCES_SET_MAX, given: ids.length });
       /* END DEC-49 REGION is-set-bounded */
       const n = limit === null || limit === undefined || limit === "" ? INSTANCES_LIMIT_DEFAULT : Number(limit);
@@ -1034,7 +1033,7 @@ export class Progressions {
                ...(truncated ? { next: `${encodeURIComponent(last.entity_id)},${encodeURIComponent(last.progression_key)}` } : {}) };
     } catch (e) {
       return { ok: false, reason: "INSTANCES_UNREADABLE", code: "INSTANCES_UNREADABLE",
-               detail: `the matters could not be read: ${String(e && e.message || e).slice(0, 200)}` };
+               detail: localize("progressions.index.the_matters_could_not_be", "the matters could not be read: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) };
     }
   }
 
@@ -1314,9 +1313,7 @@ export class Progressions {
                  predecessor_at: c.documents.map((x) => x.own_date).reduce(later, null).value,
                  overdue_by: { amount, unit: c.interval.unit },
                  overdue_by_ms: nowMs - endMs(L), says: this.#says(c, L.value),
-                 detail: "the '" + f.stage_key + "' stage is " + f.required + " required and still absent past its '"
-                       + c.within_interval + "' deadline after '" + c.predecessor_stage + "' (" + L.value + ", the local day in "
-                       + L.zone + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade" });
+                 detail: localize("progressions.index.the_stage_key_stage_is", "the '{stage_key}' stage is {required} required and still absent past its '{within_interval}' deadline after '{predecessor_stage}' ({value}, the local day in {zone}) -- an overdue successor (framework 8.2, temporal), carrying the instance's grade", { stage_key: String(f.stage_key), required: String(f.required), within_interval: String(c.within_interval), predecessor_stage: String(c.predecessor_stage), value: String(L.value), zone: String(L.zone) }) });
     }
     return out;
   }

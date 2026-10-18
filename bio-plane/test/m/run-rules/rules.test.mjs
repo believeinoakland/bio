@@ -7,6 +7,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_STATUS, RUN_NEVER_STARTED, runStatusFor, S
          PROJECT_GATE_GROUNDS, runConsultsProjects, checkRunContextKind, runPrincipalOf, runPrincipalGate,
          checkSkillVersion, parseSkillVersion, translationOf, AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { refusal } from "./helpers.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const BOUNDS = ["fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces", "proposals", "pages", "lease"];
 const ENDINGS = ["completed", "cancelled", "nothing-written", "mode-not-deployed"];
@@ -149,7 +150,7 @@ test("R5: runPrincipalGate compares caller and principal with a member credentia
   const plain = runPrincipalGate({ caller: "member:bob", principal: "member:ann" });
   assert.equal(plain.check, "C-22.12");
   assert.match(plain.detail, /^ticking or closing a run is its principal's act/);
-  const named = runPrincipalGate({ caller: "member:bob", principal: "member:ann", act: "opening a question under a run" });
+  const named = runPrincipalGate({ caller: "member:bob", principal: "member:ann", act: word("ai-runs.act.opening_question_under") });
   assert.match(named.detail, /^opening a question under a run is its principal's act/);
   /* never throws: a call with no object is refused, never thrown on */
   for (const x of [null, undefined, 3, "x"]) refusal(runPrincipalGate(x), "AI_RUN_NOT_PRINCIPAL");

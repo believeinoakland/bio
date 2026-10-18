@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, onRef, REF, ALICE } from "./fixture.mjs";
 import * as accepted from "../../../src/accepted-work/index.mjs";
 import { ACCEPTED_WORK_CHECKS as ROWS_FILE } from "../../../src/accepted-work/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R5 no table, and nothing regrades: making the module adds no table; the pair, acceptance and gaps are answered exactly as the source gave them; the module offers no grade, strength or score of its own", () => {
   const before = world({ register: false });
@@ -40,8 +41,7 @@ test("R6 rows C-21.4 IMPORTED_NOT_ACCEPTED and C-21.5 ACCEPTED_WORK_UNREADABLE a
     + "first, or take the leg out. Nothing was written.");
   assert.equal(ROWS_FILE.ACCEPTED_WORK_UNREADABLE.check, "C-21.5");
   assert.equal(ROWS_FILE.ACCEPTED_WORK_UNREADABLE.translation,
-    "Another team's work this finding rests on could not be read, so whether it is accepted is not known. Try again. "
-    + "Nothing was written.");
+    word("refusal.ACCEPTED_WORK_UNREADABLE"));
   for (const row of Object.values(ROWS_FILE)) {
     assert.match(row.check, /^C-\d+/);
     assert.equal(typeof row.where, "string");

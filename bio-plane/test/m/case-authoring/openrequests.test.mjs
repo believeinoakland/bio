@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
 import { OPEN_REQUEST_KEYS, openRequestLine, OPEN_REQUESTS_UNREAD_SENTENCE } from "../../../src/case-inputs/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const ROWS = [
@@ -30,7 +31,7 @@ const sign = (pre) => pre.steps.find((s) => s.name === "sign");
 /* The answer with the sign step's open_requests left out, and the case id the rolled-back run minted (and the digest of
    the document naming it) written as placeholders: two runs of one act mint two ids. */
 const without = (pre) => {
-  const s1 = pre.steps.find((s) => s.name === "what becomes permanent");
+  const s1 = pre.steps.find((s) => s.name === word("case-authoring.name.becomes_permanent"));
   let t = JSON.stringify({ ...pre, steps: pre.steps.map((s) => {
     if (s.name !== "sign") return s; const { open_requests: _, ...rest } = s; return rest; }) });
   if (s1 && s1.case) t = t.split(s1.case).join("<case>").split(s1.document.doc_sha).join("<doc>");
@@ -61,7 +62,7 @@ test("R34 (case-inputs R8, R10, R17): the pre-flight's sign step carries open_re
   }
   /* called once, with the case the act resolved and each member at the bytes it pins */
   assert.equal(calls.length, 1);
-  const step1 = pre.steps.find((s) => s.name === "what becomes permanent");
+  const step1 = pre.steps.find((s) => s.name === word("case-authoring.name.becomes_permanent"));
   assert.deepEqual(calls[0], { case: step1.case, members: step1.pinned.map((m) => ({ bundle_id: m.target, version_sha: m.bundleSha })),
                                viewer: V("alice") });
   /* listed once: no other step carries it */

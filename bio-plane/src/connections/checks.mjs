@@ -13,6 +13,7 @@
  * are the only ones; the leg grammars read `themeLegFindings` from here. */
 
 import { idPattern } from "../record-grammar/index.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 /* The catalogue's finding shape (`f`, legacy-checks), copied for `themeLegFindings`: a finding is
    `{check, severity, message}`, with `repairable` and `repairs` when repairs are named and `code` when one is. */
@@ -43,25 +44,17 @@ export const CONNECTION_CHOICE_CHECKS = {
   CONNECTION_CHOICE_NOT_A_MEMBER: {
     check: 'C-74.1',
     where: 'src/connections/index.mjs choose > is-connection-choice',
-    translation: 'Choosing which mention of a subject is the one on point for a connection is a '
-      + 'member\'s own act, done in their name. A machine may point out the mentions a document '
-      + 'holds, but deciding which one a connection rests on is a judgment a person signs for.',
+    translation: word('refusal.CONNECTION_CHOICE_NOT_A_MEMBER'),
   },
   CONNECTION_CHOICE_NO_CONNECTION: {
     check: 'C-74.2',
     where: 'src/connections/index.mjs choose > is-connection-choice',
-    translation: 'That request does not name a connection this record holds and you can see. A '
-      + 'connection is named by the two documents it joins and the subject that joins them, and '
-      + 'it exists once the record has derived it — choose after it appears among the document\'s '
-      + 'connections.',
+    translation: word('refusal.CONNECTION_CHOICE_NO_CONNECTION'),
   },
   CONNECTION_CHOICE_NOT_A_MENTION: {
     check: 'C-74.3',
     where: 'src/connections/index.mjs choose > is-connection-choice',
-    translation: 'The mention named is not one this document carries for that subject. The choice '
-      + 'is among the places the record actually read the subject in this document, by the '
-      + 'reference as the reading recorded it; a mention the record never read cannot be the one '
-      + 'a connection rests on.',
+    translation: word('refusal.CONNECTION_CHOICE_NOT_A_MENTION'),
   },
   /* D-454: the reference named was read at MORE THAN ONE place in this document, so naming the
      string is not yet a choice between its mentions. Refused rather than defaulted: a default
@@ -70,9 +63,7 @@ export const CONNECTION_CHOICE_CHECKS = {
   CONNECTION_CHOICE_OCCURRENCE_UNNAMED: {
     check: 'C-74.4',
     where: 'src/connections/index.mjs choose > is-connection-choice',
-    translation: 'That reference was read at more than one place in this document, and each place is '
-      + 'its own mention. Say which one is on point — by the occurrence the record lists for it, or by '
-      + 'the place as the record names it — and the choice will rest on that place alone.',
+    translation: word('refusal.CONNECTION_CHOICE_OCCURRENCE_UNNAMED'),
   },
 };
 
@@ -109,10 +100,7 @@ export const CONNECTION_PAIR_CHECKS = {
   CONNECTION_PAIR_OUTSIDE_EXTENT: {
     check: 'C-49.1',
     where: 'src/connections/pair.mjs checkConnectionPairCovers > is-connection-pair-covering',
-    translation: 'This connection was established by a reference somewhere else in the document, '
-      + 'not in the part you cited. A citation that points at a passage stands on what is IN that '
-      + 'passage, so it cannot borrow a link the record found elsewhere in the same file. Cite the '
-      + 'part where the reference actually appears, or cite the document as a whole and say so.',
+    translation: word('refusal.CONNECTION_PAIR_OUTSIDE_EXTENT'),
   },
   /* THE UNPLACEABLE PAIR. The connection has its two references and neither
      reading recorded WHERE it read one, so whether the reference is inside the
@@ -123,10 +111,7 @@ export const CONNECTION_PAIR_CHECKS = {
   CONNECTION_PAIR_UNPLACED: {
     check: 'C-49.2',
     where: 'src/connections/pair.mjs checkConnectionPairCovers > is-connection-pair-covering',
-    translation: 'The record knows which reference links these two documents but not where in '
-      + 'either document it was read, so it cannot say whether that reference falls inside the part '
-      + 'you cited. This is stated rather than assumed either way: the connection is real and its '
-      + 'reach into your citation is undetermined until the document is read with positions.',
+    translation: word('refusal.CONNECTION_PAIR_UNPLACED'),
   },
   /* THE ABSENT ROW. Asked to grade a portion the record does not hold. Refused
      rather than answered UNDETERMINED, because those are opposite findings: an
@@ -143,10 +128,7 @@ export const CONNECTION_PAIR_CHECKS = {
        translation for "you passed no parameter" or a narrower span. The span is
        the honest answer. */
     where: 'src/connections/index.mjs portionGrade > pair-content-row-present',
-    translation: 'This record holds no passage with that address, so there is no part of a '
-      + 'document whose connections could be weighed. A content address is minted when a citation '
-      + 'first points at a passage — if you expected one here, the citation that would have made it '
-      + 'has not been written yet.',
+    translation: word('refusal.CONNECTION_PAIR_NO_CONTENT'),
   },
   /* REC-120 / D-161 act (1) / M-51 — THE UNCHOSEN MENTION. The pair is the
      STRONGEST-GRADED mention of the subject in each document (FW-17's collapse),
@@ -166,12 +148,7 @@ export const CONNECTION_PAIR_CHECKS = {
   CONNECTION_PAIR_MENTION_UNCHOSEN: {
     check: 'C-49.4',
     where: 'src/connections/pair.mjs checkConnectionMentionUnchosen > is-mention-unchosen',
-    translation: 'This document mentions the same subject in more than one place, and the record '
-      + 'linked the two documents through the strongest-graded mention without anyone choosing '
-      + 'which mention is the one on point. Because another mention bears on the part you cited, '
-      + 'whether this connection reaches your citation is undetermined rather than yes or no. A '
-      + 'citation of the document as a whole is answered today; a member may also choose which '
-      + 'mention is the on-point one for this connection, and the answer then follows that choice.',
+    translation: word('refusal.CONNECTION_PAIR_MENTION_UNCHOSEN'),
   },
 };
 
@@ -223,67 +200,52 @@ export const THEME_CHECKS = {
   THEME_NOT_EVIDENCE: {
     check: 'C-81.1',
     where: 'src/connections/checks.mjs themeLegFindings > is-theme-not-evidence',
-    translation: 'That leg rests on a THEME. A theme is one member\'s declared lens — an idea they use to '
-      + 'gather material — and it is never the basis of a claim, so nothing can rest on it or on a '
-      + 'document\'s membership in it. Cite the document or the passage itself: what a finding rests on '
-      + 'is content, whatever theme led you to it.',
+    translation: word('refusal.THEME_NOT_EVIDENCE'),
   },
   THEME_NOT_A_MEMBER: {
     check: 'C-81.2',
     where: 'src/connections/themes.mjs declare > is-theme-declare',
-    translation: 'A theme is declared by a person, in their own name, and every reading of it shows whose '
-      + 'lens it is. The credential that asked is an automated one, which has nobody behind it to hold '
-      + 'the idea. Sign in and declare it yourself.',
+    translation: word('refusal.THEME_NOT_A_MEMBER'),
   },
   THEME_NO_TEST: {
     check: 'C-81.3',
     where: 'src/connections/themes.mjs declare > is-theme-declare',
-    translation: 'A theme needs its TEST: one sentence a document or a passage either passes or fails, so '
-      + 'any member can check a placement against it. Without one the theme is a label anything could '
-      + 'wear, and it cannot be declared.',
+    translation: word('refusal.THEME_NO_TEST'),
   },
   THEME_NO_NAME: {
     check: 'C-81.4',
     where: 'src/connections/themes.mjs declare > is-theme-declare',
-    translation: 'A theme needs its idea in a few words — what you are calling it, such as "deferred '
-      + 'maintenance" — as well as its test. Nothing was declared.',
+    translation: word('refusal.THEME_NO_NAME'),
   },
   THEME_TOO_LONG: {
     check: 'C-81.5',
     where: 'src/connections/themes.mjs declare > is-theme-declare',
-    translation: 'The theme\'s name or its test is longer than the record stores in one passage. It was '
-      + 'refused rather than cut, so nothing you wrote is silently lost. Shorten it and declare it again.',
+    translation: word('refusal.THEME_TOO_LONG'),
   },
   THEME_NOT_FOUND: {
     check: 'C-81.6',
     where: 'src/connections/themes.mjs #themeFor > is-theme-source',
-    translation: 'No theme is recorded under that id. Use the id the declaration returned, or list the '
-      + 'themes to find it.',
+    translation: word('refusal.THEME_NOT_FOUND'),
   },
   THEME_PLACEMENT_NOT_A_MEMBER: {
     check: 'C-81.7',
     where: 'src/connections/themes.mjs place > is-theme-place',
-    translation: 'Placing a document in a theme is a member\'s judgement that it passes the theme\'s test, '
-      + 'recorded in their name. An automated credential may only PROPOSE a placement, which stays a hunch '
-      + 'until a member confirms it. Sign in to place it, or propose it instead.',
+    translation: localize('connections.checks.placing_a_document_in_a', 'Placing a document in a theme is a member\'s judgement that it passes the theme\'s test, recorded in their name. An automated credential may only PROPOSE a placement, which stays a hunch until a member confirms it. Sign in to place it, or propose it instead.'),
   },
   THEME_TARGET_NOT_FOUND: {
     check: 'C-81.8',
     where: 'src/connections/themes.mjs #targetFor > is-theme-target',
-    translation: 'Nothing you can see in the record answers to that document or passage id, so it cannot be '
-      + 'placed in a theme. Name a document by its id, or a passage by the content id it was minted under.',
+    translation: word('refusal.THEME_TARGET_NOT_FOUND'),
   },
   THEME_REASON_TOO_LONG: {
     check: 'C-81.9',
     where: 'src/connections/themes.mjs #targetFor > is-theme-target',
-    translation: 'The note on this placement is longer than the record stores in one passage. It was '
-      + 'refused rather than cut. Shorten it and try again.',
+    translation: word('refusal.THEME_REASON_TOO_LONG'),
   },
   THEME_NO_PROPOSER: {
     check: 'C-81.10',
     where: 'src/connections/themes.mjs propose > is-theme-propose',
-    translation: 'A proposal must say who proposed it, and this one arrived carrying nobody. The record '
-      + 'stamps the proposer from the credential that asked; nothing was written.',
+    translation: word('refusal.THEME_NO_PROPOSER'),
   },  /* connections R43, R62 (K152; T6, legacy-checks): TAKING A PLACEMENT BACK, OR TURNING A PROPOSAL DOWN
      (`op=themewithdraw`). CONNECTIONS #1 (T5) minted these four in `src/connections/themes.mjs`, in this family's
      shape; they are here word for word, and `THEME_WITHDRAW_CHECKS` there is a view of these four rows. The order
@@ -292,26 +254,22 @@ export const THEME_CHECKS = {
   THEME_WITHDRAW_NOT_A_MEMBER: {
     check: 'C-81.11',
     where: 'src/connections/themes.mjs withdraw > is-theme-withdraw',
-    translation: 'Taking a document or a passage out of a theme, or turning down a proposal, is a member\'s own '
-      + 'judgement, done in their name. A machine may propose a placement; it cannot take one back.',
+    translation: localize('connections.checks.taking_a_document_or_a', 'Taking a document or a passage out of a theme, or turning down a proposal, is a member\'s own judgement, done in their name. A machine may propose a placement; it cannot take one back.'),
   },
   THEME_WITHDRAW_NO_REASON: {
     check: 'C-81.12',
     where: 'src/connections/themes.mjs withdraw > is-theme-withdraw-standing',
-    translation: 'Say why. A placement taken back or a proposal turned down keeps its reason beside it, so the next '
-      + 'reader of the theme can see what was judged and on what ground.',
+    translation: word('refusal.THEME_WITHDRAW_NO_REASON'),
   },
   THEME_WITHDRAW_NOTHING_STANDING: {
     check: 'C-81.13',
     where: 'src/connections/themes.mjs withdraw > is-theme-withdraw-standing',
-    translation: 'Nothing stands in this theme at that document or passage: it was never placed or proposed there, '
-      + 'or it has already been taken back. There is nothing to withdraw.',
+    translation: word('refusal.THEME_WITHDRAW_NOTHING_STANDING'),
   },
   THEME_WITHDRAW_NOT_THE_PLACER: {
     check: 'C-81.14',
     where: 'src/connections/themes.mjs withdraw > is-theme-withdraw-standing',
-    translation: 'A membership is taken back by the member who placed it, or by an administrator. Any member may turn '
-      + 'down a proposal, but another member\'s placement stands on their judgement until they withdraw it.',
+    translation: localize('connections.checks.a_membership_is_taken_back', 'A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member\'s placement stands on their judgement until they withdraw it.'),
   },
 };
 

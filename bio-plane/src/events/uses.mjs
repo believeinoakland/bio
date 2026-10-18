@@ -11,7 +11,7 @@ import { readDate } from "./time.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { canonicalExtent } from "../content/index.mjs";
 import { isMachineIdentity } from "../record-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export const USE_KINDS = Object.freeze(["discretion", "waiver", "assessment"]);
 export const OUTCOMES = Object.freeze(["granted", "denied", "partly_granted", "other"]);
@@ -46,7 +46,7 @@ function citation(k, c, by, what) {
   if (!said(sha)) return noSha(`${what} names the captured document that states it, by its capture sha256`);
   const held = k.heldCapture(sha, by);
   if (!held) return refuse("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
-  if (!isObj(c.extent)) return refuse("NO_EXTENT", `${what} names the extent of the capture that states it`);
+  if (!isObj(c.extent)) return refuse("NO_EXTENT", localize("events.uses.what_names_the_extent_of", "{what} names the extent of the capture that states it", { what: String(what) }));
   const bad = k.extentRefusal(held.sha, c.extent);
   if (bad) return bad;
   return { ok: true, cite: { capture_sha: held.sha, bundle_id: held.bundleId, extent: canonicalExtent(c.extent), raw: c.extent } };
@@ -88,7 +88,7 @@ export function recordDiscretion(k, { kind, provision, statedReason, outcome, at
   let reason = null;
   if (statedReason !== "none") { reason = citation(k, statedReason, by, "the stated reason"); if (!reason.ok) return reason; }
   if (!isObj(outcome) || !OUTCOMES.includes(outcome.value))
-    return refuse("OUTCOME_UNKNOWN", `an outcome is one of ${OUTCOMES.join(", ")}, with the passage stating it`, { outcomes: [...OUTCOMES] });
+    return refuse("OUTCOME_UNKNOWN", localize("events.uses.an_outcome_is_one_of", "an outcome is one of {OUTCOMES}, with the passage stating it", { OUTCOMES: String(OUTCOMES.join(", ")) }), { outcomes: [...OUTCOMES] });
   const out = citation(k, passageOf(outcome), by, "the outcome");
   if (!out.ok) return out;
   const q = questionOf(k, question, by);
@@ -103,7 +103,7 @@ export function recordDiscretion(k, { kind, provision, statedReason, outcome, at
     if (given(expiry)) { const d = readDate(expiry, k.zone()); if (d.bad) return refuse("BAD_DATE", d.bad); exp = d; }
   } else {
     for (const [field, v] of [["scope", scope], ["conditions", conditions], ["expiry", expiry]])
-      if (given(v)) return refuse("FIELD_NOT_FOR_KIND", `${field} is a waiver's; an act of discretion holds none`, { field });
+      if (given(v)) return refuse("FIELD_NOT_FOR_KIND", localize("events.uses.field_is_a_waivers_an", "{field} is a waiver's; an act of discretion holds none", { field: String(field) }), { field });
   }
   return k.writeEvent(c, (eventId) => k.insert("event_uses", { event_id: eventId, kind,
     provision_standard: prov ? prov.standard : null, provision_portion: prov ? prov.portion : null,
@@ -222,7 +222,7 @@ export function usesOf(k, { provision = null, decider = null, subject = null, ki
   try {
     const ks = Array.isArray(kinds) && kinds.length ? kinds : typeof kinds === "string" && kinds ? kinds.split(",").map((x) => x.trim()) : [...USE_KINDS];
     const off = ks.find((x) => !USE_KINDS.includes(x));
-    if (off !== undefined) return refuse("KIND_NOT_DISCRETION", `a use is one of ${USE_KINDS.join(", ")}`, { kinds: [...USE_KINDS] });
+    if (off !== undefined) return refuse("KIND_NOT_DISCRETION", localize("events.uses.a_use_is_one_of", "a use is one of {USE_KINDS}", { USE_KINDS: String(USE_KINDS.join(", ")) }), { kinds: [...USE_KINDS] });
     let prov = null;
     if (given(provision)) { prov = provisionKey(provision); if (!prov) return malformed("the provision asked for"); }
     const where = [`e.alias_of IS NULL`, `u.withdrawn = 0`, `u.kind IN (${ks.map(() => "?").join(",")})`], args = [...ks];

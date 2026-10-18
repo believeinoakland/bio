@@ -31,6 +31,7 @@
 import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, readerView, practiceValue } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity, unescapeHtml } from "../site-profiles/index.mjs";
 import { evaluateRule, localDay } from "../bio-plane/src/civil-time/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* How long after a meeting minutes stop being merely late is the JURISDICTION'S
    practice, not this reader's: it is the view's `practice.minutes_due_days`, with the
@@ -49,7 +50,7 @@ function minutesDue(ctx, day) {
   /* The period and its unit through docprofile's shared reader (as docprofile's own seed
      reads it); the closure list it counts on from the view's same entry (jurisdictions R7). */
   const p = practiceValue(ctx, "minutes_due_days");
-  if (!p) return { due: null, why: "no active jurisdiction profile states how long minutes usually take" };
+  if (!p) return { due: null, why: localize("doctypes.meeting-calendar.no_practice", "no active jurisdiction profile states how long minutes usually take") };
   const entry = view.practice && view.practice.minutes_due_days;
   const closures = entry && typeof entry.closures === "string" ? entry.closures : null;
   const count = p.count === "business" ? "business" : "calendar";
@@ -60,10 +61,10 @@ function minutesDue(ctx, day) {
                  basis: p.basis || null, starts: "act", ...(closures ? { closures } : {}) };
   let r;
   try { r = evaluateRule({ rule, anchor: { value: day, precision: "day", zone }, view }); }
-  catch (e) { return { due: null, why: `the period could not be counted: ${String((e && e.message) || e)}` }; }
+  catch (e) { return { due: null, why: localize("doctypes.meeting-calendar.period_uncounted", "the period could not be counted: {reason}", { reason: String((e && e.message) || e) }) }; }
   const unit = count === "business" ? "business days" : "days";
   if (!r || r.refused || r.undetermined || !r.due)
-    return { due: null, unit, why: `the jurisdiction's ${p.value} ${unit} could not be counted from this meeting: ${(r && r.why) || "no due day"}` };
+    return { due: null, unit, why: localize("doctypes.meeting-calendar.period_not_counted_here", "the jurisdiction's {amount} {unit} could not be counted from this meeting: {reason}", { amount: String(p.value), unit, reason: String((r && r.why) || "no due day") }) };
   /* An uncertain due is the body's latest candidate: lateness is only raised after it (K1444 (i)). */
   const d = r.due.candidates ? r.due.candidates[r.due.candidates.length - 1] : r.due;
   return { due: String(d.value).slice(0, 10), unit, amount: p.value, zone };
@@ -191,8 +192,7 @@ export default {
     /* A read that found nothing is a failed reader, never an emptied calendar. */
     if (!a.entities.length || !b.entities.length)
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               why: "the meetings on this calendar could not be read this time, so nothing is "
-                  + "claimed about them either way" };
+               why: localize("doctypes.meeting-calendar.unread", "the meetings on this calendar could not be read this time, so nothing is claimed about them either way") };
 
     const d = diffEntities(a.entities, b.entities);
     const events = [];
@@ -218,9 +218,8 @@ export default {
       events.push(event(within === null ? "possibly_delisted" : "delisted",
                     { key: e.key, label: e.label,
                       why: within === null
-                        ? "a meeting is no longer listed, and this calendar's date range could not be "
-                        + "read, so whether it simply moved out of view is not established"
-                        : "a meeting dated inside the range this calendar shows is no longer listed" }));
+                        ? localize("doctypes.meeting-calendar.gone_unknown_range", "a meeting is no longer listed, and this calendar's date range could not be read, so whether it simply moved out of view is not established")
+                        : localize("doctypes.meeting-calendar.gone_in_range", "a meeting dated inside the range this calendar shows is no longer listed") }));
     }
 
     for (const alt of d.altered) {
@@ -229,7 +228,7 @@ export default {
         const now = f.get("status").now;
         events.push(event(now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
                       { key: alt.entity.key, label: alt.entity.label, was: f.get("status").was, now,
-                        why: `a meeting's status changed from ${f.get("status").was} to ${now}` }));
+                        why: localize("doctypes.meeting-calendar.status_changed", "a meeting's status changed from {was} to {now}", { was: String(f.get("status").was), now: String(now) }) }));
       }
       if (f.has("date"))
         events.push(event("moved", { key: alt.entity.key, label: alt.entity.label,
@@ -237,7 +236,7 @@ export default {
       if (f.has("body"))
         events.push(event("renamed", { key: alt.entity.key,
                       was: f.get("body").was, now: f.get("body").now,
-                      why: "the body holding a meeting is named differently" }));
+                      why: localize("doctypes.meeting-calendar.renamed", "the body holding a meeting is named differently") }));
       /* A document APPEARING is the normal course of business and is a routine
          event with a temporal connection attached. A document DISAPPEARING or being
          SWAPPED is not: a published agenda or set of minutes that stops being the
@@ -247,20 +246,20 @@ export default {
         const { was, now } = f.get(kind);
         if (!was && now)
           events.push(event(`${kind}_published`, { key: alt.entity.key, label: alt.entity.label,
-                        document: now, why: `${kind} were published for a meeting that had none` }));
+                        document: now, why: localize("doctypes.meeting-calendar.published", "{kind} were published for a meeting that had none", { kind }) }));
         else if (was && !now)
           events.push(event(`${kind}_withdrawn`, { key: alt.entity.key, label: alt.entity.label,
-                        why: `${kind} that this calendar previously offered are no longer offered` }));
+                        why: localize("doctypes.meeting-calendar.withdrawn", "{kind} that this calendar previously offered are no longer offered", { kind }) }));
         else
           events.push(event(`${kind}_replaced`, { key: alt.entity.key, label: alt.entity.label,
-                        was, now, why: `the ${kind} document for this meeting is a different document than before` }));
+                        was, now, why: localize("doctypes.meeting-calendar.replaced", "the {kind} document for this meeting is a different document than before", { kind }) }));
       }
     }
 
     /* A meeting appearing is the calendar doing its job. */
     for (const e of d.appeared)
       events.push(event("scheduled", { key: e.key, label: e.label,
-                    why: "a meeting was added to the calendar" }));
+                    why: localize("doctypes.meeting-calendar.added", "a meeting was added to the calendar") }));
 
     bySeverity(events);
     const worst = worstSignificance(events);
@@ -274,7 +273,7 @@ export default {
     const parts = [];
     if (events.some((e) => e.significance === "event"))
       parts.push(events.filter((e) => e.significance === "event").length + " needing attention");
-    if (scrolled) parts.push(`${scrolled} no longer in the range shown, which is this calendar moving its window`);
+    if (scrolled) parts.push(localize("doctypes.meeting-calendar.scrolled", "{count} no longer in the range shown, which is this calendar moving its window", { count: String(scrolled) }));
     if (d.appeared.length) parts.push(`${d.appeared.length} newly listed`);
 
     return {
@@ -283,8 +282,8 @@ export default {
       confirmed: intact ? { entries: b.entities.length, intact, window: w.named || null,
                             scrolled_out: scrolled } : null,
       why: events.length || scrolled
-        ? `${intact} of ${a.entities.length} meetings unchanged` + (parts.length ? "; " + parts.join(", ") : "")
-        : `all ${b.entities.length} meetings on this calendar are unchanged`,
+        ? localize("doctypes.meeting-calendar.unchanged_of", "{intact} of {total} meetings unchanged{parts}", { intact: String(intact), total: String(a.entities.length), parts: parts.length ? "; " + parts.join(", ") : "" })
+        : localize("doctypes.meeting-calendar.all_unchanged", "all {count} meetings on this calendar are unchanged", { count: String(b.entities.length) }),
     };
   },
 
@@ -298,13 +297,13 @@ export default {
          body. Claims about scope, followed to understand what a thing is part of. */
       if (m.facts.agenda)
         out.push(referential(`document:${m.facts.agenda}`, self, "is_the_agenda_for",
-          "this document is the agenda for that meeting"));
+          localize("doctypes.meeting-calendar.is_agenda", "this document is the agenda for that meeting")));
       if (m.facts.minutes)
         out.push(referential(`document:${m.facts.minutes}`, self, "is_the_minutes_of",
-          "this document records what happened at that meeting"));
+          localize("doctypes.meeting-calendar.is_minutes", "this document records what happened at that meeting")));
       if (m.facts.body)
         out.push(referential(self, `body:${m.facts.body}`, "held_by",
-          "this meeting was held by that body"));
+          localize("doctypes.meeting-calendar.held_by", "this meeting was held by that body")));
 
       /* TEMPORAL: a sequence, and its most useful form is an expected thing that
          has not arrived. A meeting whose date has passed with no minutes is a fact
@@ -314,23 +313,22 @@ export default {
       if (m.facts.status === "cancelled") continue;   // nothing is owed for a meeting that did not happen
       if (m.facts.minutes)
         out.push(temporal(self, `document:${m.facts.minutes}`, "minutes_published_after",
-          { at: m.facts.date, why: "minutes for this meeting exist, so the meeting was recorded" }));
+          { at: m.facts.date, why: localize("doctypes.meeting-calendar.minutes_exist", "minutes for this meeting exist, so the meeting was recorded") }));
       else if (when < now) {
         const due = minutesDue(ctx, m.facts.date);
         const today = due.due ? localDay(new Date(now).toISOString().replace(/\.\d{3}Z$/, "Z"), due.zone) : null;
         out.push(temporal(self, null, "minutes_not_yet_published",
           { at: m.facts.date, expected_by: due.due,
             why: !due.due
-              ? `this meeting has taken place and no minutes are offered yet; when they are due is not known, because ${due.why}`
+              ? localize("doctypes.meeting-calendar.due_unknown", "this meeting has taken place and no minutes are offered yet; when they are due is not known, because {why}", { why: String(due.why) })
               : typeof today === "string" && today > due.due
-              ? `this meeting was held more than ${due.amount} ${due.unit} ago, longer than minutes usually take here `
-                + "(the jurisdiction's measured practice), and this calendar still offers no minutes"
-              : "this meeting has taken place and no minutes are offered yet" }));
+              ? localize("doctypes.meeting-calendar.overdue", "this meeting was held more than {amount} {unit} ago, longer than minutes usually take here (the jurisdiction's measured practice), and this calendar still offers no minutes", { amount: String(due.amount), unit: String(due.unit) })
+              : localize("doctypes.meeting-calendar.taken_place", "this meeting has taken place and no minutes are offered yet") }));
       }
       if (!m.facts.agenda && when > now)
         out.push(temporal(self, null, "agenda_not_yet_published",
           { at: m.facts.date, expected_by: m.facts.date,
-            why: "this meeting is upcoming and no agenda is offered yet" }));
+            why: localize("doctypes.meeting-calendar.upcoming", "this meeting is upcoming and no agenda is offered yet") }));
     }
     return out;
   },

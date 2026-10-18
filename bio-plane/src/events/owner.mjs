@@ -9,7 +9,7 @@
 import { validAt } from "../civil-time/index.mjs";
 import { BOUNDS, LOWEST_GRADE, hubBoundOf } from "../connection-grammar/index.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const ROLE_WORDS = { actor: "acted in", organizer: "organised", mover: "moved", seconder: "seconded", voted: "voted in",
   present: word("events.present"), speaker: "spoke at", sender: "sent", recipient: "was sent", copied: word("events.copied"),
@@ -97,7 +97,7 @@ function answersFor(k, nodes, ctx, start, keep) {
     for (const c of live) perKind.set(c.kind, (perKind.get(c.kind) || 0) + 1);
     const over = [...perKind].filter(([kind, x]) => x > hubBoundOf(kind)).sort((p, q) => (p[0] < q[0] ? -1 : 1))[0];
     if (over) {
-      out.set(n, { items: [], hub: { set_size: over[1], why: `this node has ${over[1]} connections of the kind ${over[0]}, more than that kind's bound of ${hubBoundOf(over[0])}; it is named, never expanded` } });
+      out.set(n, { items: [], hub: { set_size: over[1], why: localize("events.owner.this_node_has_v1_connections", "this node has {v1} connections of the kind {v2}, more than that kind's bound of {hubBoundOf}; it is named, never expanded", { v1: String(over[1]), v2: String(over[0]), hubBoundOf: String(hubBoundOf(over[0])) }) } });
       continue;
     }
     pages.push([n, live.slice(start, start + BOUNDS.fanout), live.length]);

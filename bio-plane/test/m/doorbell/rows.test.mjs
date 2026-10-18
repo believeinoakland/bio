@@ -8,13 +8,14 @@ import { fresh, bucket } from "./fixture.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
 import * as CAPTURE from "../../../src/capture/checks.mjs";
 import { knockEnvelopeTooLarge, knockPayloadTooLarge, knockEmpty, knockerSecretWeak, knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const SEEN = "The team can see how often its doorbell turns people away.";
 /* The requirement's table (R21) for C-118's four rows. */
 const C118 = {
-  NO_SUCH_KNOCK: ["C-118.2", "No knock in the inbox answers to this id. Nothing was changed."],
+  NO_SUCH_KNOCK: ["C-118.2", word("refusal.NO_SUCH_KNOCK")],
   KNOCKER_SECRET_WEAK: ["C-118.3", "A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a longer one, or ask the doorbell to make one. Nothing was received. " + SEEN],
-  KNOCK_DISCARDED: ["C-118.4", "This knock was set aside. Move it back to new before bringing it in. Nothing was written."],
+  KNOCK_DISCARDED: ["C-118.4", word("refusal.KNOCK_DISCARDED")],
   RESOLVE_NO_REASON: ["C-118.7", "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."],
 };
 /* C-85's five rows, each number and translation as `capture` held them at T42's close (R21: kept as capture held them). */

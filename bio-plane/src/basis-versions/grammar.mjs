@@ -18,6 +18,7 @@ import { canonicalExtent } from "../textchain.mjs";
 import { fmSafe } from "./text.mjs";
 import { BASIS_VERSION_CHECKS, VERSION_KIND_CHECKS, VERSION_STATES, VERSION_REASON_REQUIRED, versionNeedsReason,
          VERSION_RELATIONSHIPS, VERSION_NAME_RE, SUGGEST_KINDS, SUFFICIENCY_UNCLAIMED, isSufficiencyUnclaimed } from "./checks.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 export { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_STATES,
          VERSION_MACHINE, VERSION_REASON_REQUIRED, versionNeedsReason, VERSION_RELATIONSHIPS, VERSION_NAME_RE, SUGGEST_KINDS,
@@ -130,9 +131,9 @@ export function basisVersionFindings(fm, findings) {
        version's legs with no version, which is the checkGrounds precedent for
        checking the attached arrays even when the anchor is absent. */
     for (let i = 0; i < legRows.length; i++)
-      push('VERSION_ORPHAN_ROW', `basis_version_legs[${i}] names version '${String(legRows[i]?.version).slice(0, 48)}' and there is no basis_versions[] block`);
+      push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_legs_i_names', 'basis_version_legs[{i}] names version \'{String}\' and there is no basis_versions[] block', { i: String(i), String: String(String(legRows[i]?.version).slice(0, 48)) }));
     for (let i = 0; i < groundRows.length; i++)
-      push('VERSION_ORPHAN_ROW', `basis_version_grounds[${i}] names version '${String(groundRows[i]?.version).slice(0, 48)}' and there is no basis_versions[] block`);
+      push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_grounds_i_names', 'basis_version_grounds[{i}] names version \'{String}\' and there is no basis_versions[] block', { i: String(i), String: String(String(groundRows[i]?.version).slice(0, 48)) }));
     return;
   }
   if (!Array.isArray(rows)) {
@@ -144,28 +145,28 @@ export function basisVersionFindings(fm, findings) {
   for (let i = 0; i < rows.length; i++) {
     const v = rows[i];
     if (!v || typeof v !== 'object' || Array.isArray(v)) {
-      push('VERSION_ORPHAN_ROW', `basis_versions[${i}] is not an object`);
+      push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_versions_i_is_not', 'basis_versions[{i}] is not an object', { i: String(i) }));
       continue;
     }
     const name = typeof v.name === 'string' ? v.name.trim() : '';
     if (!name || !VERSION_NAME_RE.test(name)) {
       /* R54: a name outside the form has a code of its own; NOT_UNIQUE is only for a name another version carries */
-      push('VERSION_NAME_MALFORMED', `basis_versions[${i}].name '${String(v.name).slice(0, 60)}' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name`);
+      push('VERSION_NAME_MALFORMED', localize('basis-versions.grammar.basis_versions_i_name_string', 'basis_versions[{i}].name \'{String}\' is not a version name: 1 to 64 characters of letters, digits, spaces, \'-\', \'_\' and \'.\', naming this account of the evidence so a member can ask for it by name', { i: String(i), String: String(String(v.name).slice(0, 60)) }));
       continue;
     }
     if (byName.has(name)) {
-      push('VERSION_NAME_NOT_UNIQUE', `basis_versions[${i}] names '${name}', which basis_versions[${byName.get(name)}] already names: a version name is unique WITHIN ITS INQUIRY (global uniqueness would make naming absurd), and derived_from reads by name`,
+      push('VERSION_NAME_NOT_UNIQUE', localize('basis-versions.grammar.basis_versions_i_names_name', 'basis_versions[{i}] names \'{name}\', which basis_versions[{get}] already names: a version name is unique WITHIN ITS INQUIRY (global uniqueness would make naming absurd), and derived_from reads by name', { i: String(i), name: String(name), get: String(byName.get(name)) }),
         ['rename this version', 'or, if this is an edit of the other, derive it: give it its own name and derived_from the original']);
       continue;
     }
     byName.set(name, i);
 
     if (typeof v.description !== 'string' || v.description.trim().length < 12) {
-      push('VERSION_NO_DESCRIPTION', `basis_versions[${i}] ('${name}') carries no description: every version carries a textual description of the composition, held to a commit message's standard — what changed and why — because it is what survives a conversation that was deliberately not kept`,
+      push('VERSION_NO_DESCRIPTION', localize('basis-versions.grammar.basis_versions_i_name_carries', 'basis_versions[{i}] (\'{name}\') carries no description: every version carries a textual description of the composition, held to a commit message\'s standard — what changed and why — because it is what survives a conversation that was deliberately not kept', { i: String(i), name: String(name) }),
         ['describe what this reading of the evidence is and why it differs from the others']);
     }
     if (!VERSION_STATES.includes(v.state)) {
-      push('VERSION_STATE_UNKNOWN', `basis_versions[${i}] ('${name}') is in state '${String(v.state).slice(0, 40)}': a version is one of ${VERSION_STATES.join(', ')}`);
+      push('VERSION_STATE_UNKNOWN', localize('basis-versions.grammar.basis_versions_i_name_is', 'basis_versions[{i}] (\'{name}\') is in state \'{String}\': a version is one of {VERSION_STATES}', { i: String(i), name: String(name), String: String(String(v.state).slice(0, 40)), VERSION_STATES: String(VERSION_STATES.join(', ')) }));
     }
     /* PL-3 / IS-4 — THE SUGGESTION KIND, checked at the DOCUMENT gate as well as
        at the endpoint. ABSENT IS LEGAL and always will be: every version a
@@ -175,11 +176,11 @@ export function basisVersionFindings(fm, findings) {
        be decides how it is read. */
     if (v.kind !== undefined && v.kind !== null && v.kind !== ''
         && !Object.prototype.hasOwnProperty.call(SUGGEST_KINDS, String(v.kind).trim())) {
-      pushSuggest('VERSION_KIND_UNKNOWN', `basis_versions[${i}] ('${name}').kind is '${String(v.kind).slice(0, 40)}': a suggestion is one of ${Object.keys(SUGGEST_KINDS).join(', ')} (section 9), and the set is closed so that a run reporting an empty search is distinguishable from a run that reported nothing`,
+      pushSuggest('VERSION_KIND_UNKNOWN', localize('basis-versions.grammar.basis_versions_i_name_kind', 'basis_versions[{i}] (\'{name}\').kind is \'{String}\': a suggestion is one of {keys} (section 9), and the set is closed so that a run reporting an empty search is distinguishable from a run that reported nothing', { i: String(i), name: String(name), String: String(String(v.kind).slice(0, 40)), keys: String(Object.keys(SUGGEST_KINDS).join(', ')) }),
         ['name one of the five kinds', 'or leave kind out entirely — a version a member composed is not a suggestion of any kind']);
     }
     if (v.hidden !== undefined && v.hidden !== null && typeof v.hidden !== 'boolean') {
-      push('VERSION_HIDDEN_NOT_BOOLEAN', `basis_versions[${i}] ('${name}').hidden is '${String(v.hidden).slice(0, 40)}': hiding a version is a boolean, because hiding it is ALL it does — the version stays in the record and stays queryable (DEC-29(b), D-214), so there is no third value for this field to hold`);
+      push('VERSION_HIDDEN_NOT_BOOLEAN', localize('basis-versions.grammar.basis_versions_i_name_hidden', 'basis_versions[{i}] (\'{name}\').hidden is \'{String}\': hiding a version is a boolean, because hiding it is ALL it does — the version stays in the record and stays queryable (DEC-29(b), D-214), so there is no third value for this field to hold', { i: String(i), name: String(name), String: String(String(v.hidden).slice(0, 40)) }));
     }
     /* PL-2 / IS-2, layer 2 of the reason rule. `versionNeedsReason` is the ONE
        predicate — imported by the six acts (`./index.mjs`) and called here — so the
@@ -188,11 +189,11 @@ export function basisVersionFindings(fm, findings) {
       const why = typeof v.state_reason === 'string' ? v.state_reason.trim() : '';
       const by = typeof v.state_by === 'string' ? v.state_by.trim() : '';
       if (why.length < 8 || !by || isMachineIdentity(by))
-        push('VERSION_DISPOSITION_UNATTRIBUTED', `basis_versions[${i}] ('${name}') is in state '${v.state}' and carries state_by '${String(v.state_by).slice(0, 40)}' with state_reason '${why.slice(0, 40)}': ${VERSION_REASON_REQUIRED.join(' and ')} are the two states a member enters WITH a recorded reason (§6 rule 4), and the reason carries the name of the member who authored it — never a machine's, because a machine may propose an account of the evidence and may never settle one`,
+        push('VERSION_DISPOSITION_UNATTRIBUTED', localize('basis-versions.grammar.basis_versions_i_name_is_2', 'basis_versions[{i}] (\'{name}\') is in state \'{state}\' and carries state_by \'{String}\' with state_reason \'{why}\': {VERSION_REASON_REQUIRED} are the two states a member enters WITH a recorded reason (§6 rule 4), and the reason carries the name of the member who authored it — never a machine\'s, because a machine may propose an account of the evidence and may never settle one', { i: String(i), name: String(name), state: String(v.state), String: String(String(v.state_by).slice(0, 40)), why: String(why.slice(0, 40)), VERSION_REASON_REQUIRED: String(VERSION_REASON_REQUIRED.join(' and ')) }),
           ['record state_by (a named member), state_at (an ISO timestamp) and state_reason on this version',
            'or leave the version suggested — a state nobody has moved it into needs no reason']);
       if (!ISO_TS_RE.test(String(v.state_at || '')))
-        push('VERSION_DISPOSITION_UNATTRIBUTED', `basis_versions[${i}] ('${name}') is in state '${v.state}' and requires 'state_at' as an ISO timestamp (got '${String(v.state_at).slice(0, 40)}'): a decision made before a strength was seen is a different act from one made after it, and only a date lets a reader tell`);
+        push('VERSION_DISPOSITION_UNATTRIBUTED', localize('basis-versions.grammar.basis_versions_i_name_is_3', 'basis_versions[{i}] (\'{name}\') is in state \'{state}\' and requires \'state_at\' as an ISO timestamp (got \'{String}\'): a decision made before a strength was seen is a different act from one made after it, and only a date lets a reader tell', { i: String(i), name: String(name), state: String(v.state), String: String(String(v.state_at).slice(0, 40)) }));
     }
   }
 
@@ -201,7 +202,7 @@ export function basisVersionFindings(fm, findings) {
     const df = rows[i].derived_from;
     if (df === undefined || df === null || df === '' || df === 'null') continue;
     if (typeof df !== 'string' || !byName.has(df.trim())) {
-      push('VERSION_DERIVED_FROM_UNKNOWN', `basis_versions[${i}] ('${name}') is derived_from '${String(df).slice(0, 60)}', which is not a version of this inquiry: the derivation edge is how alternatives read as a tree rather than a pile`,
+      push('VERSION_DERIVED_FROM_UNKNOWN', localize('basis-versions.grammar.basis_versions_i_name_is_4', 'basis_versions[{i}] (\'{name}\') is derived_from \'{String}\', which is not a version of this inquiry: the derivation edge is how alternatives read as a tree rather than a pile', { i: String(i), name: String(name), String: String(String(df).slice(0, 60)) }),
         ['name a version that exists in basis_versions[]', 'or set derived_from: null — a version a run composed fresh has no parent']);
     }
   }
@@ -211,7 +212,7 @@ export function basisVersionFindings(fm, findings) {
     while (typeof cur === 'string' && byName.has(cur.trim())) {
       const p = cur.trim();
       if (seen.has(p)) {
-        push('VERSION_DERIVATION_CYCLE', `basis_versions[${i}] ('${name}') sits in a derived_from cycle through '${p}': versions form a TREE, and a tree has a root — a cycle leaves no answer to which of these came first`);
+        push('VERSION_DERIVATION_CYCLE', localize('basis-versions.grammar.basis_versions_i_name_sits', 'basis_versions[{i}] (\'{name}\') sits in a derived_from cycle through \'{p}\': versions form a TREE, and a tree has a root — a cycle leaves no answer to which of these came first', { i: String(i), name: String(name), p: String(p) }));
         break;
       }
       seen.add(p);
@@ -226,7 +227,7 @@ export function basisVersionFindings(fm, findings) {
     const l = legRows[i];
     const vn = l && typeof l.version === 'string' ? l.version.trim() : '';
     if (!byName.has(vn)) {
-      push('VERSION_ORPHAN_ROW', `basis_version_legs[${i}] names version '${String(l?.version).slice(0, 60)}', which is not in basis_versions[]`);
+      push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_legs_i_names_2', 'basis_version_legs[{i}] names version \'{String}\', which is not in basis_versions[]', { i: String(i), String: String(String(l?.version).slice(0, 60)) }));
       continue;
     }
     if (!legsOf.has(vn)) legsOf.set(vn, []);
@@ -256,17 +257,17 @@ export function basisVersionFindings(fm, findings) {
     const g = groundRows[i];
     const vn = g && typeof g.version === 'string' ? g.version.trim() : '';
     if (!byName.has(vn)) {
-      push('VERSION_ORPHAN_ROW', `basis_version_grounds[${i}] names version '${String(g?.version).slice(0, 60)}', which is not in basis_versions[]`);
+      push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_grounds_i_names_2', 'basis_version_grounds[{i}] names version \'{String}\', which is not in basis_versions[]', { i: String(i), String: String(String(g?.version).slice(0, 60)) }));
       continue;
     }
     const label = typeof g.ground === 'string' ? g.ground.trim() : '';
     if (!label || !GROUND_LABEL_RE.test(label)) {
-      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}].ground '${String(g.ground).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`);
+      push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_grounds_i_ground', 'basis_version_grounds[{i}].ground \'{String}\' is not a ground label: up to 48 characters of letters, digits, spaces, \'-\' and \'_\'', { i: String(i), String: String(String(g.ground).slice(0, 60)) }));
       continue;
     }
     if (!groundsOf.has(vn)) groundsOf.set(vn, new Map());
     if (groundsOf.get(vn).has(label)) {
-      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}] declares '${label}' a second time for version '${vn}': one ground, one assertion, one member answering for it`);
+      push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_grounds_i_declares', 'basis_version_grounds[{i}] declares \'{label}\' a second time for version \'{vn}\': one ground, one assertion, one member answering for it', { i: String(i), label: String(label), vn: String(vn) }));
       continue;
     }
     groundsOf.get(vn).set(label, i);
@@ -309,18 +310,18 @@ export function basisVersionFindings(fm, findings) {
     const singlePart = (partsOf.get(vn)?.size ?? 0) === 1;
     const noClaim = typeof g.asserted_by === 'string' && isSufficiencyUnclaimed(g.asserted_by);
     if (noClaim && !singlePart) {
-      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}] declares '${label}' one of ${partsOf.get(vn).size} separately sufficient parts of version '${vn}' and records that nobody asserted it: a reading whose strength is the STRONGEST of its parts takes that maximum over a part somebody signed for, so the explicit no-claim value is open only to a version carrying exactly ONE part, where there is no maximum to take (DEC-65)`,
+      push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_grounds_i_declares_2', 'basis_version_grounds[{i}] declares \'{label}\' one of {size} separately sufficient parts of version \'{vn}\' and records that nobody asserted it: a reading whose strength is the STRONGEST of its parts takes that maximum over a part somebody signed for, so the explicit no-claim value is open only to a version carrying exactly ONE part, where there is no maximum to take (DEC-65)', { i: String(i), label: String(label), size: String(partsOf.get(vn).size), vn: String(vn) }),
         ['name the member asserting that this ground is independently sufficient',
-         `or put every leg of version '${vn}' in ONE part — a reading nobody has asserted the structure of is read as its weakest leg`]);
+         localize('basis-versions.grammar.or_put_every_leg_of', 'or put every leg of version \'{vn}\' in ONE part — a reading nobody has asserted the structure of is read as its weakest leg', { vn: String(vn) })]);
     }
     if (!noClaim
         && (typeof g.asserted_by !== 'string' || g.asserted_by.trim() === '' || isMachineIdentity(g.asserted_by))) {
-      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}].asserted_by '${String(g.asserted_by).slice(0, 40)}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's, and a machine-composed version PROPOSES the structure rather than asserting it`,
+      push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_grounds_i_asserted', 'basis_version_grounds[{i}].asserted_by \'{String}\' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine\'s, and a machine-composed version PROPOSES the structure rather than asserting it', { i: String(i), String: String(String(g.asserted_by).slice(0, 40)) }),
         ['name the member asserting that this ground is independently sufficient',
-         `or, on a version carrying exactly ONE part, record '${SUFFICIENCY_UNCLAIMED}' — the record saying outright that nobody claimed it, which is not the same as a machine's name standing where a member's has to be`]);
+         localize('basis-versions.grammar.or_on_a_version_carrying', 'or, on a version carrying exactly ONE part, record \'{SUFFICIENCY_UNCLAIMED}\' — the record saying outright that nobody claimed it, which is not the same as a machine\'s name standing where a member\'s has to be', { SUFFICIENCY_UNCLAIMED: String(SUFFICIENCY_UNCLAIMED) })]);
     }
     if (!ISO_TS_RE.test(String(g.at || ''))) {
-      push('VERSION_GROUND_UNASSERTED', `basis_version_grounds[${i}] requires 'at' as an ISO timestamp (got '${String(g.at).slice(0, 40)}'): a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`);
+      push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_grounds_i_requires', 'basis_version_grounds[{i}] requires \'at\' as an ISO timestamp (got \'{String}\'): a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell', { i: String(i), String: String(String(g.at).slice(0, 40)) }));
     }
   }
 
@@ -350,25 +351,25 @@ export function basisVersionFindings(fm, findings) {
       if (imported || derived) {
         /* judged by R11's arm, its findings C-21.3; or by the derived arm just run */
       } else if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
-        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical record id`);
+        push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version', 'basis_version_legs[{li}] (version \'{name}\').target \'{String}\' is not a canonical record id', { li: String(li), name: String(name), String: String(String(t).slice(0, 40)) }));
       } else if (typeof fm?.id === 'string' && t === fm.id) {
-        push('VERSION_LEG_SELF', `basis_version_legs[${li}] (version '${name}') rests on ${t}, which is this inquiry: a question is not evidence for its own answer, in any account of it`);
+        push('VERSION_LEG_SELF', localize('basis-versions.grammar.basis_version_legs_li_version_2', 'basis_version_legs[{li}] (version \'{name}\') rests on {t}, which is this inquiry: a question is not evidence for its own answer, in any account of it', { li: String(li), name: String(name), t: String(t) }));
       } else {
         const tt = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
         if (tt !== 'information' && tt !== 'inquiry')
-          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${t}' is a ${tt}: a leg rests on information, a calculation, a duty occurrence, a derived connection or another inquiry, nothing else (D-184)`);
+          push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_3', 'basis_version_legs[{li}] (version \'{name}\').target \'{t}\' is a {tt}: a leg rests on information, a calculation, a duty occurrence, a derived connection or another inquiry, nothing else (D-184)', { li: String(li), name: String(name), t: String(t), tt: String(tt) }));
       }
       if (!BASIS_ROLES.includes(leg.role))
-        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').role '${String(leg.role).slice(0, 40)}' is not one of: ${BASIS_ROLES.join(', ')}`);
+        push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_4', 'basis_version_legs[{li}] (version \'{name}\').role \'{String}\' is not one of: {BASIS_ROLES}', { li: String(li), name: String(name), String: String(String(leg.role).slice(0, 40)), BASIS_ROLES: String(BASIS_ROLES.join(', ')) }));
       /* the grade and extent arms do not ask a leg on another group's finding (R11's arm refuses either outright) or a
          derived one (its arm did) */
       if (!imported && !derived) {
         if (leg.grade !== undefined && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
-          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade '${String(leg.grade).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')} (absent or null means undetermined, and is STATED as such)`);
+          push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_5', 'basis_version_legs[{li}] (version \'{name}\').grade \'{String}\' is not one of: {BASIS_GRADES} (absent or null means undetermined, and is STATED as such)', { li: String(li), name: String(name), String: String(String(leg.grade).slice(0, 40)), BASIS_GRADES: String(BASIS_GRADES.join(', ')) }));
         if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))
-          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_axis '${String(leg.grade_axis).slice(0, 40)}' is not one of: ${GRADE_AXES.join(', ')}`);
+          push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_6', 'basis_version_legs[{li}] (version \'{name}\').grade_axis \'{String}\' is not one of: {GRADE_AXES}', { li: String(li), name: String(name), String: String(String(leg.grade_axis).slice(0, 40)), GRADE_AXES: String(GRADE_AXES.join(', ')) }));
         if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
-          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_source '${String(leg.grade_source).slice(0, 40)}' is not one of: ${GRADE_SOURCES.join(', ')}`);
+          push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_7', 'basis_version_legs[{li}] (version \'{name}\').grade_source \'{String}\' is not one of: {GRADE_SOURCES}', { li: String(li), name: String(name), String: String(String(leg.grade_source).slice(0, 40)), GRADE_SOURCES: String(GRADE_SOURCES.join(', ')) }));
         /* REC-84 / IC-84 (1): THE EXTENT AT THE VERSION'S OWN GRAIN, C-25.10,
            through the SAME function `basis[]` runs — and it is what retires bound
            (1) in this function's header, which said D-164 was unlanded so a
@@ -386,17 +387,17 @@ export function basisVersionFindings(fm, findings) {
       const g = typeof leg.ground === 'string' ? leg.ground.trim() : '';
       if (!g) { unlabelled++; continue; }
       if (!GROUND_LABEL_RE.test(g)) {
-        push('VERSION_GROUND_UNASSERTED', `basis_version_legs[${li}] (version '${name}').ground '${g.slice(0, 60)}' is not a ground label`);
+        push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_legs_li_version_8', 'basis_version_legs[{li}] (version \'{name}\').ground \'{g}\' is not a ground label', { li: String(li), name: String(name), g: String(g.slice(0, 60)) }));
         continue;
       }
       labels.add(g);
       if (!declared.has(g))
-        push('VERSION_GROUND_UNASSERTED', `basis_version_legs[${li}] (version '${name}') names ground '${g}', which no basis_version_grounds[] row declares: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for`,
-          [`add a basis_version_grounds[] row for version '${name}', ground '${g}', with asserted_by and at`]);
+        push('VERSION_GROUND_UNASSERTED', localize('basis-versions.grammar.basis_version_legs_li_version_9', 'basis_version_legs[{li}] (version \'{name}\') names ground \'{g}\', which no basis_version_grounds[] row declares: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for', { li: String(li), name: String(name), g: String(g) }),
+          [localize('basis-versions.grammar.add_a_basis_version_grounds', 'add a basis_version_grounds[] row for version \'{name}\', ground \'{g}\', with asserted_by and at', { name: String(name), g: String(g) })]);
     }
     for (const [label, gi] of declared) {
       if (!labels.has(label))
-        push('VERSION_ORPHAN_ROW', `basis_version_grounds[${gi}] declares '${label}' for version '${name}', which no leg of that version belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own`);
+        push('VERSION_ORPHAN_ROW', localize('basis-versions.grammar.basis_version_grounds_gi_declares', 'basis_version_grounds[{gi}] declares \'{label}\' for version \'{name}\', which no leg of that version belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own', { gi: String(gi), label: String(label), name: String(name) }));
     }
     /* THE PARTITION IS TOTAL. Not checkGrounds' whole-or-not-at-all — a version
        does not get the not-at-all arm, because §3 requires it to CARRY the
@@ -411,13 +412,13 @@ export function basisVersionFindings(fm, findings) {
     /* THE RELATIONSHIP: required, and checked AGAINST the partition. */
     const rel = typeof rows[i].relationship === 'string' ? rows[i].relationship.trim().toLowerCase() : '';
     if (!VERSION_RELATIONSHIPS.includes(rel)) {
-      push('VERSION_NO_RELATIONSHIP', `basis_versions[${i}] ('${name}').relationship is '${String(rows[i].relationship).slice(0, 40)}': every version states how its legs compose — ${VERSION_RELATIONSHIPS.join(' or ')} — because a version with no relationship field re-ships the flat implicit-AND basis REC-42 corrected, and the two readings give different strengths`,
+      push('VERSION_NO_RELATIONSHIP', localize('basis-versions.grammar.basis_versions_i_name_relationship', 'basis_versions[{i}] (\'{name}\').relationship is \'{String}\': every version states how its legs compose — {VERSION_RELATIONSHIPS} — because a version with no relationship field re-ships the flat implicit-AND basis REC-42 corrected, and the two readings give different strengths', { i: String(i), name: String(name), String: String(String(rows[i].relationship).slice(0, 40)), VERSION_RELATIONSHIPS: String(VERSION_RELATIONSHIPS.join(' or ')) }),
         ['relationship: and — every ground is necessary and the finding is no stronger than its weakest leg',
          'relationship: or — the grounds are alternatives, each claimed sufficient on its own by a named member']);
     } else if (labels.size) {
       const implied = labels.size > 1 ? 'or' : 'and';
       if (implied !== rel)
-        push('VERSION_RELATIONSHIP_DISAGREES', `basis_versions[${i}] ('${name}') states relationship '${rel}' and is grouped into ${labels.size} ground${labels.size === 1 ? '' : 's'}, which composes as '${implied}': the stated relationship is what a member affirms at the accept ceremony, so it must be the one the structure actually has — otherwise an accepter signs for a reading that is not written down`,
+        push('VERSION_RELATIONSHIP_DISAGREES', localize('basis-versions.grammar.basis_versions_i_name_states', 'basis_versions[{i}] (\'{name}\') states relationship \'{rel}\' and is grouped into {size} ground{v1}, which composes as \'{implied}\': the stated relationship is what a member affirms at the accept ceremony, so it must be the one the structure actually has — otherwise an accepter signs for a reading that is not written down', { i: String(i), name: String(name), rel: String(rel), size: String(labels.size), v1: String(labels.size === 1 ? '' : 's'), implied: String(implied) }),
           [`state relationship: ${implied}`,
            rel === 'or' ? 'or split the legs into the grounds you meant to be alternatives'
                         : 'or merge the grounds into one — legs in one ground are all necessary']);
@@ -439,7 +440,7 @@ export function basisVersionFindings(fm, findings) {
         if (typeof by !== 'string' || by.trim() === '' || isMachineIdentity(by)
             || !ISO_TS_RE.test(String(rows[i].regroup_at || ''))
             || typeof note !== 'string' || note.trim().length < 8)
-          push('VERSION_REGROUP_UNATTRIBUTED', `basis_versions[${i}] ('${name}') regroups the partition it inherited from '${parent}' and carries no attributed regroup act: DEC-50 licenses no unattributed structural edit, so the version records regroup_by (a named member, never a machine), regroup_at (an ISO timestamp) and regroup_note (the reason)`,
+          push('VERSION_REGROUP_UNATTRIBUTED', localize('basis-versions.grammar.basis_versions_i_name_regroups', 'basis_versions[{i}] (\'{name}\') regroups the partition it inherited from \'{parent}\' and carries no attributed regroup act: DEC-50 licenses no unattributed structural edit, so the version records regroup_by (a named member, never a machine), regroup_at (an ISO timestamp) and regroup_note (the reason)', { i: String(i), name: String(name), parent: String(parent) }),
             ['record regroup_by, regroup_at and regroup_note on this version',
              'or leave the partition as it was inherited — an edit that only changes the evidence is not a regroup']);
       }
@@ -615,8 +616,8 @@ export function compositionDiff(before, after) {
   for (let i = 0; i < n; i++) {
     if (a[i] === b[i]) continue;
     const field = String(a[i] ?? b[i]).split("\t")[0];
-    if (a[i] === undefined) return `a ${field} was added`;
-    if (b[i] === undefined) return `a ${field} was removed`;
+    if (a[i] === undefined) return word('basis-versions.text.added', { field: String(field) });
+    if (b[i] === undefined) return word('basis-versions.text.removed', { field: String(field) });
     return `${field} changed`;
   }
   return "nothing changed";

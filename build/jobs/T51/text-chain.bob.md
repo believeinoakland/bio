@@ -1,0 +1,22 @@
+# BOB to text-chain (T51)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the re-run of layer 1 (R1), text-chain: **T51-252** (read the entry line whole, and the plan's Sequence and rule 11). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/text-chain.md` (read whole). Your entry changes no requirement's meaning; BOB added `setup-words` (`word`, `localize`) to your requirements' Uses at this START where the pass added the import.
+BOB's notes for this job:
+1. Your findings are the section "Plain findings (K3957)" of `build/plan/words-pass/text-chain.md` (read the file whole): lowercase, unpunctuated strings of 5+ words the check's new `plain` arm counts (civicos-process 27aa50e; pull the process repository first). Fix every one by the words rule below; a string you judge no member ever reads (a diagnostic, wire grammar) is not hidden: list it in a REPORT with why, and BOB settles it with the design stream (K3944).
+2. The ids you assign are `text-chain.<file stem>.<slug>`, fixed once.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes, or that hold a finding; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+The words rule (K3930, K3943, K3949; setup-words R13, R14): a sentence people read is read through `word(key[, vars])` (a `words.json` row) or `localize('<module>.<area>.<name>', en[, vars])`, both arguments string literals at the call; the list always wins. A test never holds a sentence's text (K3810): it asserts the key (`hasWord`) or compares with `word`/`localize`. A hand-list of another module's ops, codes or words is assembled from that module's own declaration (K3268). `rows.mjs` and `words-unreviewed.json` are setup-words' generated artifacts: never edit or regenerate them; `localize` answers `en` until BOB regenerates them at the layer close. Your words file's findings, `plain` included, must all read zero in `node checks/run.mjs` before COMPLETE.
+Tests never copy a sentence people read; every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry. Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio text-chain tranche/T51 job/T51/text-chain`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3962, K3965): merge tranche/T51 and pull civicos-process (ea6cd83) first. The words check's testcopy arm now also counts a test string that copies the en of a product localize call (tag code). Your module's tests hold some: section 'Test copies of code sentences (K3962)' of build/plan/words-pass/text-chain.md (read it whole). Make each test compare with localize(id, en) / word(id) or assert the key, never the sentence's text (K3810); convert also any such copy written as a regular expression, which the check cannot read. Also (K3965, your J1 REPORT): the word table wins: R92 is amended on the tranche; read the six extent phrases through word('textchain.text.cell_spreadsheet') and its five siblings (the design's wording), and bring R92's tests in line. Run your tests, the checks and 'node bio-plane/src/setup-words/build.mjs --check' (read-only); record COMPLETE again.

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { SUGGEST_CHECKS } from "../../../src/run-productions/index.mjs";
 import { SUFFICIENCY_UNCLAIMED } from "../../../src/basis-versions/index.mjs";
 import { world, GRADED, Q, Q2, PROJ, HIDDEN_PROJ, DOC, DOC2, RUN, XRUN, ALICE, ALICE_TOKEN, BOB, MACHINE, sha } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const row = (code) => SUGGEST_CHECKS[code];
 function refusedAs(r, code) {
@@ -180,7 +181,7 @@ test("R3: C-27.12 names every field carrying filler, and a real sentence quoting
   refusedAs(r, "SUGGEST_BOILERPLATE");
   assert.deepEqual(r.fields, ["description", "claim", "a statement on 'paper'", "the note on leg 0"]);
   const echo = w.suggest({ name: "e", description: "the same words", claim: "The same words" });
-  assert.deepEqual(echo.fields, ["claim (repeats the description verbatim)"]);
+  assert.deepEqual(echo.fields, [word("run-productions.claim_repeats_description")]);
   assert.equal(w.suggest({ name: "q", description: "the contract names the counterparty as 'to be named', which is the defect" }).ok, true);
 });
 
@@ -191,8 +192,8 @@ test("R3: C-27.8 refuses a leg with no address, one not in the record or not rea
   const r = w.suggest({ name: "l", legs: [LEG(""), LEG("INFO-2026-0099-none"), LEG(HIDDEN_PROJ), LEG(DOC2), LEG(DOC)], grounds: PART });
   refusedAs(r, "SUGGEST_LEG_UNREACHABLE");
   assert.deepEqual(r.legs.map((l) => [l.ord, l.why]), [[0, "no address"],
-    [1, "not in the record, or not readable from here"], [2, "not in the record, or not readable from here"],
-    [3, "the record has RETIRED it"]]);
+    [1, word("run-productions.why.record_readable")], [2, word("run-productions.why.record_readable")],
+    [3, word("run-productions.why.record_retired")]]);
   assert.ok(w.calls.some((c) => c.name === "retiredNotCitable" && c.a.id === HIDDEN_PROJ),
             "asked of the hidden target too: citability is never viewer-gated");
 });

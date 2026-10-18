@@ -16,6 +16,7 @@ import { CASE_DISCLOSURE_CHECKS, carriesBodyLines, PHOTO_NOT_COVERABLE_WORDS, PH
          photoRead } from "../../../src/case-disclosures/index.mjs";
 import { OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -103,7 +104,7 @@ test("R6 (PHOTO_UNCHECKED): an unchecked photo (no standing mark) that any membe
     refused(r.refusals[0], "PHOTO_UNCHECKED");
     assert.deepEqual(r.refusals[0].unchecked, [{ ref: DOC, sha: a, members: [Q, Q2] }, { ref: DOC2, sha: b, members: [Q2] }]);
     assert.equal(r.refusals[0].photo, `${DOC}, ${DOC2}`);
-    assert.ok(r.refusals[0].detail.includes(a) && r.refusals[0].detail.endsWith("Nothing was written."));
+    assert.ok(r.refusals[0].detail.includes(a) && r.refusals[0].detail.endsWith(word("consequences.nothing")));
     assert.deepEqual(r.materials.map((m) => [m.ref, m.included, m.obscured]),
       [[DOC, false, null], [DOC3, false, OB(COPY)], [DOC2, false, null]]);
   }
@@ -134,7 +135,7 @@ test("R6 (PHOTO_NOT_COVERABLE): a photo whose cover image-cover refused, for eve
       { target: Q, materials: [{ ref: DOC, sha: p, refused: code }, { ref: DOC2, sha: p2, refused: code }] },
       { target: Q2, materials: [{ ref: DOC, sha: p, refused: code }] }], code);
     assert.equal(r.refusals[0].photo, `${DOC}, ${DOC2}`);
-    assert.ok(r.refusals[0].detail.includes(p) && r.refusals[0].detail.endsWith("Nothing was written."));
+    assert.ok(r.refusals[0].detail.includes(p) && r.refusals[0].detail.endsWith(word("consequences.nothing")));
     assert.deepEqual(r.materials.map((m) => [m.included, m.obscured]), [[false, null], [false, null]],
       `${code} ${state}: never whole, and a copy an earlier mark left is not carried`);
     assert.deepEqual(w.snapshot(), before, `${code}: nothing written`);
@@ -415,7 +416,7 @@ test("R7 (K2541; DEC-185 (1)): the case document's body prints a material carrie
     assert.equal(line(ref).includes("NOT INCLUDED"), false, ref);
   }
   /* negative control: supporting-only material not held whole, with no copy, is still NOT INCLUDED; a whole one travels whole */
-  assert.ok(line(DOC4).includes("NOT INCLUDED: only its fingerprint, origin and archived copy travel"));
+  assert.ok(line(DOC4).includes(word("case-disclosures.included_fingerprint_origin")));
   const plain = carriesBodyLines(null, { rows: out.materials.rows.map((r) => ({ ...r, obscured: null })), attestations: [] }, null);
   assert.ok(plain.filter((l) => l.startsWith("- ")).every((l) => !l.includes("as its copy")), "no obscured, no copy words");
 });

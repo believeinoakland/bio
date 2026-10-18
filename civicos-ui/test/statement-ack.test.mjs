@@ -74,6 +74,7 @@ import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
 import { until, budgetAssert } from "../../bio-plane/test/budget.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -149,7 +150,7 @@ const inquiryMd = ["---", `id: ${Q}`, "object_type: inquiry", "schema: inquiry@1
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""', "recheck_triggers: []",
   "---", "", "## Question", "", "Did the transfer follow the process the council adopted?", "",
-  "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+  word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
 await must(`promote ${Q}`, await POST(`op=promote&token=${IRIS}`, {
   bundleId: Q, base: null, snapKey: `${Q}-${++snapSeq}`,

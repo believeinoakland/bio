@@ -26,6 +26,7 @@ import { T45_RUNGS } from "../../../src/op-grades/t45.mjs";
 import { T46_RUNGS } from "../../../src/op-grades/t46.mjs";
 import { T47_RUNGS } from "../../../src/op-grades/t47.mjs";
 import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
   "line_kinds", "line_capacities", "line_roles", "money_kinds", "money_phases", "money_stages", "money_bases",
@@ -142,8 +143,8 @@ before(async () => {
       "basis_version_grounds:", '  - version: "v1"', ...sc("ground", "g1"), ...sc("asserted_by", "iris"), ...sc("at", NOW),
       "basis_version_legs:", '  - version: "v1"', ...sc("target", basis), ...sc("role", "supports"),
       ...sc("ground", "g1"), ...sc("grade", "B"), ...sc("grade_axis", "capture"), ...sc("grade_source", "capture")] : []),
-    "---", "", "## Question", "", "Did it?", "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", "Did it?", "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
   const actnMd = (id) => [...fm(id, "action", "planned", ["references: []"]), ...tail, "action_kind: records_request",
     "target_body:", "  name: The records office", "---", "", "## Request", "", "Records.", "", "## Session Log", "",
     "## Review Notes", ""].join("\n");

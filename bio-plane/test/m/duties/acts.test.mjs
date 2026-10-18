@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, E, BOB, CAROL, MACHINE, SHA, mny, ent, fictionalView } from "./fixture.mjs";
 import { DUTIES_CHECKS, MODALITIES, LIST_MAX } from "../../../src/duties/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const row = (r, code) => {
   assert.equal(r.ok, false, `${code}: ${JSON.stringify(r).slice(0, 300)}`);
@@ -255,8 +256,8 @@ test("R8 in_force is derived on each read, never stored: a standard's or court's
   const u = f(open.duty_id, "2026-06-01");
   assert.equal(u.state, "undetermined");
   assert.match(u.why, /does not state when it ceased to be in force/, "an undetermined answer carries its reason");
-  assert.equal(f(prac.duty_id, "2026-06-01").state, "held as practice");
-  assert.equal(f(dep.duty_id, "2026-06-01").state, "held as a dependency");
+  assert.equal(f(prac.duty_id, "2026-06-01").state, word("duties.state.held_practice"));
+  assert.equal(f(dep.duty_id, "2026-06-01").state, word("duties.state.held_dependency"));
   /* never stored: no column holds it, and no version holds it in its fields */
   assert.ok(!w.sqlRows(`PRAGMA table_info(duties)`).some((c) => /in_?force/.test(c.name)));
   assert.ok(w.sqlRows(`SELECT fields_json FROM duty_versions`).every((r) => !/in_force|not_in_force/.test(r.fields_json)));

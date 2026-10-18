@@ -48,12 +48,12 @@ export { BIAS_CHECKS, BIAS_STATEMENT_KINDS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT
          checkBiasSet, checkBiasImage, withBiasChecks } from "./checks.mjs";
 export { BIAS_SCHEMA, BIAS_TABLES, BIAS_ADDITIVE_COLUMNS } from "./schema.mjs";
 import { BIAS_SCHEMA, BIAS_ADDITIVE_COLUMNS } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R11 (N327, DEC-83): the instance-scope adoption's fixed act, and its next step, for `membership.notAnAdmin`. Its
    words say "the whole group", never "the instance" (DEC-149); the scope value stays `instance`. */
 export const INSTANCE_ADOPTION_ACT = "adopting a bias set for the whole team";
-export const INSTANCE_ADOPTION_REMEDY = "A project's owners set the lens over that project's work: adopt this set for "
-  + "a project you own, or ask an administrator to adopt it for the whole team.";
+export const INSTANCE_ADOPTION_REMEDY = word("bias.project_owners_set");
 
 /* The manifest's bound (R18). 200 is the common read, "what lens is in force", which a group's whole declared bias
    fits inside many times over; 2,000 is for a regrade, two lenses re-run against each other, where a lens silently
@@ -371,7 +371,7 @@ class Bias {
              /* REC-210: a fact about the pin, not a second spelling of `in_force` — they come apart at the read. */
              pins_proposed: h.currentState === "proposed",
              note: h.currentState === "adopted"
-               ? "this set is in force for that scope"
+               ? word("bias.note.set_force_scope")
                : "PINS A PROPOSED REVISION: this adoption froze bytes the team has offered and not "
                  + "yet accepted, so it REPLACES this scope's lens with them rather than "
                  + "pre-authorising whatever the proposal becomes; a lens is in force once the "
@@ -389,7 +389,7 @@ class Bias {
       return { answer: { ok: true, scope: st, scope_id: sid, in_force: false,
                bundles: [], statements: [], residue: [], lock_violations: [],
                statements_sha: null, count: 0, total: 0, limit: 0, offset: 0, truncated: false,
-               stated: "no manifest was in force" } };
+               stated: word("bias.manifest_force") } };
 
     const seen = Bias.#gate("a.bundle_id", viewer);
     const pinned = new Map();          // bundle id -> the pinned revision's front matter
@@ -447,7 +447,7 @@ class Bias {
                bundles: [], statements: [], residue: [], lock_violations: [],
                statements_sha: null, ...marker,
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
-               stated: "no manifest was in force" } };
+               stated: word("bias.manifest_force") } };
 
     /* The instance layer first, keyed by statement id so a project override can find what it names. */
     const effective = new Map();
@@ -561,20 +561,17 @@ class Bias {
         source_url: a.source_url ?? null, retrieved: a.retrieved ?? null, source_sha256: a.source_sha256 ?? null,
       })),
       statements_sha: statementsSha,
-      statements_sha_covers: "the whole effective set, before any bound was applied",
+      statements_sha_covers: word("bias.whole_effective_set"),
       ...marker,
       statements: page,
       residue,
       lock_violations: lockViolations,
       interactions,
-      interactions_stated: "each entry is a project statement on a subject a team statement in force also "
-        + "addresses, which names no statement it overrides: it must carry a justification addressing the "
-        + "team statement, and it is listed so a reviewer reads the two together (safeguard 3). It refuses nothing.",
+      interactions_stated: word("bias.entry_project_statement"),
       unregistered_subjects: unregistered,
       unregistered_subjects_stated: unregistered === null
-        ? "undetermined: the subject registry could not be asked, so whether every subject is registered is not known"
-        : "each entry is a statement in force whose subject the subject registry does not hold, listed for the same "
-          + "review (safeguard 4). It refuses nothing.",
+        ? word("bias.undetermined_subject_registry")
+        : word("bias.entry_statement_force"),
       count: page.length, total: all.length,
       limit: cap, offset: from,
       truncated: from + page.length < all.length,
@@ -613,7 +610,7 @@ class Bias {
       return { ok: true, statement: id, scope: where, in_force: true, kind: s.kind, text: s.text, bundle_id: s.bundle_id,
                level: s.scope === "project" ? "project" : "group", locked: s.locked,
                statements_sha: lens.statementsSha,
-               stated: "this statement is in the lens in force for this scope" };
+               stated: word("bias.statement_lens_force") };
     } catch {
       return absent(null, "undetermined: the lens in force could not be read, so whether this statement is in force "
                         + "is not known");
@@ -650,8 +647,7 @@ class Bias {
       /* (a) THE SPLIT, FIRST: a bar is recognised before anything else. */
       if (BIAS_BAR_PHRASING.some((re) => re.test(s))) {
         bars.push({ text: s, construct: "required_strength",
-                    detail: "a BAR — how strong support must be before you assert. It gates at "
-                          + "pre-flight (DEC-17); declared as bias it would refuse nothing." });
+                    detail: localize("bias.index.a_bar_how_strong_support", "a BAR — how strong support must be before you assert. It gates at pre-flight (DEC-17); declared as bias it would refuse nothing.") });
         continue;
       }
       if (BIAS_VERDICT_WHOLESALE.test(s) || BIAS_VERDICT_SPEAKER.some((re) => re.test(s))) {
@@ -672,11 +668,8 @@ class Bias {
       }
       residue.push({ text: s,
                      why: PATTERN_SHAPED.test(s)
-                       ? "this is a claim about how an organisation behaves, which is a PATTERN statement "
-                       + "and must cite evidence in THIS record — evidence a reader of somebody else's "
-                       + "policy does not have. It is left for a member to make, or not."
-                       : "this states a property BIO cannot count — the uncountable half of a policy, and "
-                       + "the half that does the protecting. It is named here rather than dropped.",
+                       ? localize("bias.index.this_is_a_claim_about", "this is a claim about how an organisation behaves, which is a PATTERN statement and must cite evidence in THIS record — evidence a reader of somebody else's policy does not have. It is left for a member to make, or not.")
+                       : word("bias.why.states_property_bio"),
                      check: null });
     }
 
@@ -684,9 +677,7 @@ class Bias {
     return {
       ok: true,
       installed: false, adopted: false, writes: 0,
-      proposes: "a member writes these into a bias record, justifies each one, points each subject at "
-              + "the registry, offers the set as 'proposed', and adopts it with their name on it. "
-              + "Nothing here is in force and nothing here has been written.",
+      proposes: word("bias.member_writes_bias"),
       bars: bars.slice(0, cap), bars_count: bars.length,
       statements: statements.slice(0, cap), statements_count: statements.length,
       residue: residue.slice(0, cap), residue_count: residue.length,
@@ -697,9 +688,7 @@ class Bias {
         input_limit: BIAS_INHALE_SENTENCES_MAX,
         mechanised: bars.length + statements.length,
         not_mechanised: residue.length,
-        note: "the not-mechanised list is the more important half: the extractable rules are the "
-            + "countable ones, and in four of five documented verification failures the countable "
-            + "rules were satisfied while the uncountable properties failed (DEC-54).",
+        note: localize("bias.index.the_not_mechanised_list_is", "the not-mechanised list is the more important half: the extractable rules are the countable ones, and in four of five documented verification failures the countable rules were satisfied while the uncountable properties failed (DEC-54)."),
       },
       pin: { source_url: source ? String(source) : null, retrieved: retrieved ? String(retrieved) : null },
       limit: cap,
@@ -752,12 +741,9 @@ class Bias {
     return {
       ok: true, description, offered: true, proposed: true, authored: false, statements: [],
       installed: false, adopted: false, writes: 0,
-      label: "what the team wrote about itself",
-      offers: "the opening text of a new bias set the member authors",
-      stated: "this is the team's own description of itself, offered as the opening text of a declared bias. "
-            + "Nothing here is a statement: a member writes each statement, names its subject in the registry and "
-            + "justifies it, offers the set as 'proposed', and the team adopts it with a member's name on it. "
-            + "Nothing has been written and no lens has changed.",
+      label: word("bias.label.group_wrote_itself"),
+      offers: word("bias.opening_text_new"),
+      stated: word("bias.group_description_itself"),
     };
   }
 
@@ -1104,7 +1090,7 @@ class Bias {
       return { debts, limit: cap, truncated: rows.length > cap };
     } catch {
       return { debts: [], limit: cap, truncated: false, undetermined: true,
-               stated: "the open bias debts could not be read, so none is listed" };
+               stated: word("bias.open_bias_debts") };
     }
   }
 
@@ -1122,7 +1108,7 @@ class Bias {
     const from = Bias.#wholeSecondFrom(since);
     if (from === null)
       return { debts: [], limit: cap, truncated: false, since: null,
-               stated: "since is not an instant, so no settled bias debt is listed" };
+               stated: word("bias.instant_settled_bias") };
     try {
       const seen = Bias.#gateOver("bd.context_id", gate);
       const rows = this.#rows(
@@ -1143,7 +1129,7 @@ class Bias {
       return { debts, limit: cap, truncated: rows.length > cap, since: from };
     } catch {
       return { debts: [], limit: cap, truncated: false, since: from, undetermined: true,
-               stated: "the settled bias debts could not be read, so none is listed" };
+               stated: word("bias.settled_bias_debts") };
     }
   }
 
@@ -1167,7 +1153,7 @@ class Bias {
     const debt = this.#one(`SELECT * FROM bias_debts WHERE run = ? AND cleared_at IS NULL`, target);
     if (!debt)
       return { re_ran: target, discharged: false, outcome: "no_open_debt",
-               stated: "no open bias debt stands against the work this one re-made" };
+               stated: word("bias.open_bias_debt") };
     const formed = typeof wp.ranUnder === "string" ? wp.ranUnder : null;
     const now = this.#lensNow(wp.context);
     const inForce = now.undetermined ? null : now.sha;

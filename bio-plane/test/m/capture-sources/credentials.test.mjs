@@ -20,6 +20,7 @@ import {
   credentialsOf, CaptureCredentials, CAPTURE_CREDENTIAL_CHECKS, CREDENTIAL_KINDS, CREDENTIAL_SCOPES, REVOCATION,
   CREDENTIALS_TABLE, CREDENTIAL_LIST_LIMIT, hostNameOf, principalMember,
 } from "../../../src/capture-sources/credentials.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const KEY = "test-instance-secret-not-a-real-one";
 const SECRET = "s3cret-Pa55word-for-the-source";
@@ -720,7 +721,7 @@ test("R55, R56 (DEC-149, credentials.mjs:60, :268, :302, :360, :368): the refusa
   const OLD = /\b(?:the|this) (?:plane|instance)\b|this instance's/i;
   /* :60, C-105.8's translation. */
   const row = CAPTURE_CREDENTIAL_CHECKS.CAPTURE_CREDENTIAL_NO_KEY;
-  assert.equal(row.translation, "No encryption key is set for your team's Civicsmith, so no credential is stored or used.");
+  assert.equal(row.translation, word("refusal.CAPTURE_CREDENTIAL_NO_KEY"));
   /* :268, the supplier who is not a member. */
   const w = await world();
   assert.equal((await w.supply({ by: "nobody" })).detail, "the supplier named is not an active member of your team");

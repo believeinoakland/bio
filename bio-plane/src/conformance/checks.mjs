@@ -38,7 +38,7 @@
  * (R40, DEC-232): the design stream gave `refusal.NO_FINDINGS`; C-113.6 now reads it by key, as do C-113.38–C-113.43,
  * all seven through `setup-words`' `word` (their copies are gone); awaiting T51's stamp (plan rule 5 (2)). */
 
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -59,38 +59,31 @@ const words = (code) => CONFORMANCE_WORDS[`refusal.${code}`];
 export const CONFORMANCE_CHECKS = Object.freeze({
   MACHINE_CANNOT_DETERMINE: {
     check: 'C-113.1', where: at("#refuseMachine", "is-determination-member"),
-    translation: 'Whether a government act complied is a member\'s judgment. An assistant may prepare the comparison; '
-      + 'it may not determine. Sign in as a member. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_DETERMINE'),
   },
   DETERMINATION_NOT_A_PARTICIPANT: {
     check: 'C-113.3', where: at("#participantRefusal", "is-project-joined"),
-    translation: 'Only a member who has joined this project records its determinations. Join the project first. '
-      + 'Nothing was written.',
+    translation: word('refusal.DETERMINATION_NOT_A_PARTICIPANT'),
   },
   DETERMINATION_TOO_LARGE: {
     check: 'C-113.4', where: at("#sizeRefusal", "is-within-bounds"),
-    translation: 'This names more than one determination or comparison may carry. Split it into several. Nothing was '
-      + 'written.',
+    translation: word('refusal.DETERMINATION_TOO_LARGE'),
   },
   ACT_INCOMPLETE: {
     check: 'C-113.5', where: at("#actOf", "is-act-complete"),
-    translation: 'A government act is named by its event, the office that did it (its role and body, never a '
-      + 'person), and the record that shows it. A part is missing or unreadable. Nothing was written.',
+    translation: word('refusal.ACT_INCOMPLETE'),
   },
   ACT_NO_EVENT: {
     check: 'C-113.29', where: at("#actEvent", "is-act-event-named"),
-    translation: 'A government act is the event that records what was done. Name the event. Nothing was written.',
+    translation: word('refusal.ACT_NO_EVENT'),
   },
   ACT_NOT_AN_EVENT: {
     check: 'C-113.31', where: at("#actEvent", "is-act-aliased"),
-    translation: 'That act was recorded before acts were events, and no event is linked to it yet. A member links it to '
-      + 'its event first; then it can be determined again. Nothing was written.',
+    translation: word('refusal.ACT_NOT_AN_EVENT'),
   },
   ACTOR_NOT_AN_OFFICE: {
     check: 'C-113.30', where: at("#actOf", "is-actor-office"),
-    translation: 'The actor of a government act is an office, named by its role and body. The entity named is not an '
-      + 'office. The people who decided, wrote, signed or carried out the act are recorded as its event\'s participants, '
-      + 'never as its actor. Nothing was written.',
+    translation: word('refusal.ACTOR_NOT_AN_OFFICE'),
   },
   NO_FINDINGS: {
     check: 'C-113.6', where: at("#pinFindings", "is-finding-named"),
@@ -98,114 +91,91 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   FINDING_NOT_PUBLISHED: {
     check: 'C-113.7', where: at("#pinFindings", "is-finding-published"),
-    translation: 'A determination rests on findings of three kinds: published by this project in a ratified case '
-      + 'edition; checked for publication and held unsigned by this project; or another team\'s finding this team has '
-      + 'accepted at the edition named. The finding named is none of these. Nothing was written.',
+    translation: localize('conformance.checks.a_determination_rests_on_findings', 'A determination rests on findings of three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by this project; or another team\'s finding this team has accepted at the edition named. The finding named is none of these. Nothing was written.'),
   },
   NO_STANDARDS: {
     check: 'C-113.8', where: at("#readStandards", "is-standard-named"),
-    translation: 'A determination measures the act against at least one standard the record holds. Name the '
-      + 'standards. Nothing was written.',
+    translation: word('refusal.NO_STANDARDS'),
   },
   STANDARD_NOT_IN_FORCE: {
     check: 'C-113.10', where: at("#readStandards", "is-standard-in-force"),
-    translation: 'A standard named was not in force when the act was done, by the period the record states for it. '
-      + 'An act is measured against the standards that applied to it. Nothing was written.',
+    translation: word('refusal.STANDARD_NOT_IN_FORCE'),
   },
   ROWS_INCOMPLETE: {
     check: 'C-113.11', where: at("#readRows", "is-comparison-complete"),
-    translation: 'Each standard is compared in rows: what it requires, what was done, and whether the two align, '
-      + 'diverge or are open. A standard has no row, or a row is missing a part. Nothing was written.',
+    translation: word('refusal.ROWS_INCOMPLETE'),
   },
   OUTCOME_UNKNOWN: {
     check: 'C-113.12', where: at("#determine", "is-outcome-stated"),
-    translation: 'Each standard carries the member\'s outcome: compliant, noncompliant or unclear. One is missing or '
-      + 'not one of the three. Nothing was written.',
+    translation: word('refusal.OUTCOME_UNKNOWN'),
   },
   UNCLEAR_NO_QUESTION: {
     check: 'C-113.13', where: at("#readQuestions", "is-question-named"),
-    translation: 'An unclear outcome names what is still open, each question sent back to an inquiry you can see or '
-      + 'to a new one. A question is missing or names no inquiry here. Nothing was written.',
+    translation: word('refusal.UNCLEAR_NO_QUESTION'),
   },
   SIGNIFICANCE_IS_A_MEMBERS_JUDGMENT: {
     check: 'C-113.14', where: at("#refuseSignificance", "is-significance-absent"),
-    translation: 'A determination records whether the act complied, not how much it matters. Significance, severity, '
-      + 'priority, urgency, rank and score are members\' judgments made with the consequences in front of them. '
-      + 'Nothing was written.',
+    translation: word('refusal.SIGNIFICANCE_IS_A_MEMBERS_JUDGMENT'),
   },
   NO_SUCH_DETERMINATION: {
     check: 'C-113.15', where: at("noSuchDetermination", "is-determination-seen"),
-    translation: 'No determination answers to that id here. One you cannot see is answered exactly as one that does '
-      + 'not exist.',
+    translation: word('refusal.NO_SUCH_DETERMINATION'),
   },
   SUPERSEDES_ANOTHER_ACT: {
     check: 'C-113.16', where: at("#supersession", "is-same-act"),
-    translation: 'A determination supersedes only an earlier determination of the same act. The one named is about '
-      + 'another act. Nothing was written.',
+    translation: word('refusal.SUPERSEDES_ANOTHER_ACT'),
   },
   CONFORMANCE_BAD_REASON: {
     check: 'C-113.17', where: at("#reasonRefusal", "is-reason-stated"),
-    translation: 'The reason for superseding a determination is not text of at most 500 characters. Say why, more '
-      + 'briefly. Nothing was written.',
+    translation: word('refusal.CONFORMANCE_BAD_REASON'),
   },
   CONFORMANCE_NO_REASON: {
     check: 'C-113.22', where: at("#reasonRefusal", "is-reason-given"),
-    translation: 'Superseding a determination says why it is superseded. Give the reason. Nothing was written.',
+    translation: word('refusal.CONFORMANCE_NO_REASON'),
   },
   PROPOSAL_CANNOT_DETERMINE: {
     check: 'C-113.19', where: at("#propose", "is-proposal-outcomeless"),
-    translation: 'A comparison sets out rows and questions for members; it never states whether the act complied. '
-      + 'Remove the outcome. Nothing was written.',
+    translation: word('refusal.PROPOSAL_CANNOT_DETERMINE'),
   },
   NO_SUCH_COMPARISON: {
     check: 'C-113.20', where: at("refuseNoSuchComparison", "is-comparison-seen"),
-    translation: 'No comparison answers to that id in this project. One you cannot see is answered exactly as one '
-      + 'that does not exist. Nothing was written.',
+    translation: word('refusal.NO_SUCH_COMPARISON'),
   },
   DETERMINATION_SUPERSEDED: {
     check: 'C-113.23', where: at("determinationSuperseded", "is-determination-live"),
-    translation: 'That determination has been superseded, and a superseded determination is not acted on or superseded '
-      + 'again. Use the determination that replaced it. Nothing was written.',
+    translation: word('refusal.DETERMINATION_SUPERSEDED'),
   },
   NO_SUCH_CONTRADICTION_INQUIRY: {
     check: 'C-113.24', where: at("#contradictionInquiry", "is-contradiction-inquiry-seen"),
-    translation: 'No question you can see answers to that id as one taken up from a contradiction, so no comparison '
-      + 'starts from it. Nothing was written.',
+    translation: word('refusal.NO_SUCH_CONTRADICTION_INQUIRY'),
   },
   CAUSE_NOT_EVIDENCED: {
     check: 'C-113.25', where: at("#causeRefusal", "is-cause-evidenced"),
-    translation: 'A cause is recorded on a determination only when evidence you can see shows it. A cause not yet shown '
-      + 'stays in the question where it is being worked out, and the determination says the cause is not established. '
-      + 'Nothing was written.',
+    translation: word('refusal.CAUSE_NOT_EVIDENCED'),
   },
   CAUSE_UNSTATED: {
     check: 'C-113.26', where: at("#causeRefusal", "is-cause-stated"),
-    translation: 'The cause is stated in a sentence of your own, of at most 2,000 characters. Nothing was written.',
+    translation: word('refusal.CAUSE_UNSTATED'),
   },
   RECOMMENDATION_IS_AN_ACTION: {
     check: 'C-113.27', where: at("#refuseRecommendation", "is-recommendation-absent"),
-    translation: 'A determination records what was required, what was done, and why, and never what should be done. '
-      + 'Propose an action instead. Nothing was written.',
+    translation: word('refusal.RECOMMENDATION_IS_AN_ACTION'),
   },
   STANDARD_SIDE_UNNAMED: {
     check: 'C-113.28', where: at("comparisonFacts", "is-standard-side-named"),
-    translation: 'Name which side of the question states what the standard requires, a or b. Your team\'s Civicsmith '
-      + 'never chooses it. Nothing was written.',
+    translation: word('refusal.STANDARD_SIDE_UNNAMED'),
   },
   STANDARD_NOT_BINDING: {
     check: 'C-113.32', where: at("#determine", "is-standard-binding"),
-    translation: 'This standard does not bind this body, so the act cannot be found nonconforming against it. Record it '
-      + 'as a benchmark comparison: below, slower than, or above. Nothing was written.',
+    translation: word('refusal.STANDARD_NOT_BINDING'),
   },
   BENCHMARK_CALLED_NONCONFORMING: {
     check: 'C-113.33', where: at("#benchmarkWords", "is-benchmark-worded"),
-    translation: 'A benchmark does not bind this body, so the comparison cannot call the act a violation or '
-      + 'nonconforming. Say how it compares: below, slower than, or above. Nothing was written.',
+    translation: word('refusal.BENCHMARK_CALLED_NONCONFORMING'),
   },
   ACTOR_IS_A_PERSON: {
     check: 'C-113.34', where: at("#comparedAct", "is-actor-not-a-person"),
-    translation: 'An act is compared as the act of an office or an organisation. The people who took part are recorded '
-      + 'on the act, never as the one who acted. Nothing was written.',
+    translation: localize('conformance.checks.an_act_is_compared_as', 'An act is compared as the act of an office or an organisation. The people who took part are recorded on the act, never as the one who acted. Nothing was written.'),
   },
   ACTOR_NOT_AN_OFFICE_OR_ORGANISATION: {
     check: 'C-113.35', where: at("#comparedAct", "is-actor-office-or-organisation"),
@@ -213,14 +183,11 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   MEASURE_NO_DENOMINATOR: {
     check: 'C-113.36', where: at("#measureOf", "is-measure-denominated"),
-    translation: 'A measure of what the office does is shown with what it counted and out of how many. This calculation '
-      + 'states no denominator or no population. Nothing was written.',
+    translation: word('refusal.MEASURE_NO_DENOMINATOR'),
   },
   DETERMINATION_VOID: {
     check: 'C-113.37', where: at("determinationVoided", "is-determination-standing"),
-    translation: 'That determination reads undetermined: a finding it rests on no longer stands (its check was voided, or '
-      + 'the other team withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a '
-      + 'determination resting on findings that stand. Nothing was written.',
+    translation: localize('conformance.checks.that_determination_reads_undetermined_a', 'That determination reads undetermined: a finding it rests on no longer stands (its check was voided, or the other team withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a determination resting on findings that stand. Nothing was written.'),
   },
   DETERMINATION_NOT_ADOPTABLE: {
     check: 'C-113.38', where: at("#refuseAdoption", "is-own-determination"),
@@ -248,8 +215,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   CURE_LINKED: {
     check: 'C-113.44', where: at("#cureRefusal", "is-cure-unlinked"),
-    translation: 'A cure is already recorded for that breach against that standard. End that link first, saying why. '
-      + 'Nothing was written.',
+    translation: localize('conformance.checks.a_cure_is_already_recorded', 'A cure is already recorded for that breach against that standard. End that link first, saying why. Nothing was written.'),
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: 'C-113.21', where: at("check", "is-determination-act"),

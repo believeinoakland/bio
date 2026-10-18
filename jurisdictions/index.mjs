@@ -10,6 +10,7 @@
 import FIRST from "./profiles/oakland-alameda.mjs";
 import TEST from "./profiles/test-port-ellery.mjs";
 import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ------------------------------------------------------------------------------------------------ */
 /* The profile's shape (R1–R7, R23–R26, R31–R33, R39–R44; `locale` and `systems[].links`, N77 and N96; T33's R46–R54, T34's
@@ -285,7 +286,7 @@ function validateInto(p, errors) {
   if (!isObj(p)) { err("", "NOT_A_PROFILE", "a profile is a plain object"); return; }
   const test = p.test === true;
 
-  for (const k of Object.keys(p)) if (!SECTIONS.includes(k)) err(k, "UNKNOWN_SECTION", `'${k}' is not a section of a profile`);
+  for (const k of Object.keys(p)) if (!SECTIONS.includes(k)) err(k, "UNKNOWN_SECTION", localize("jurisdictions.index.k_is_not_a_section", "'{k}' is not a section of a profile", { k: String(k) }));
   if (typeof p.id !== "string" || !ID_RE.test(p.id)) err("id", "ID_INVALID", "id matches ^[a-z0-9][a-z0-9-]*$");
   if (!isStr(p.name)) err("name", "NAME_MISSING", "a profile has a name");
   if (!Array.isArray(p.covers) || !p.covers.length || !p.covers.every(isStr))
@@ -299,7 +300,7 @@ function validateInto(p, errors) {
     }
     if (!basisValid(o.basis, test)) {
       err(`${path}.basis`, "BASIS_INVALID", o.basis === "TEST"
-        ? "TEST is a basis only in a test profile" : `'${String(o.basis)}' names no measurement or ruling`);
+        ? "TEST is a basis only in a test profile" : localize("jurisdictions.index.string_names_no_measurement_or", "'{String}' names no measurement or ruling", { String: String(String(o.basis)) }));
       return false;
     }
     return true;
@@ -310,7 +311,7 @@ function validateInto(p, errors) {
   const statusBasis = (path, o) => {
     const ok = basis(path, o);
     if (!FACT_STATUSES.includes(o.status)) {
-      err(`${path}.status`, "BASIS_INVALID", `status is ${FACT_STATUSES.join(" or ")}, naming what the fact rests on`);
+      err(`${path}.status`, "BASIS_INVALID", localize("jurisdictions.index.status_is_fact_statuses_naming", "status is {FACT_STATUSES}, naming what the fact rests on", { FACT_STATUSES: String(FACT_STATUSES.join(" or ")) }));
       return;
     }
     if (!ok || (test && o.basis === "TEST")) return;
@@ -332,7 +333,7 @@ function validateInto(p, errors) {
         if (!isObj(s)) { err(at, "HOURS_INVALID", "a span is {day, open, close}"); return; }
         fields(at, s, ["day", "open", "close"]);
         const day = WEEKDAYS.includes(s.day) ? s.day : null;
-        if (!day) err(`${at}.day`, "HOURS_INVALID", `day is one of ${WEEKDAYS.join(", ")}`);
+        if (!day) err(`${at}.day`, "HOURS_INVALID", localize("jurisdictions.index.day_is_one_of_weekdays", "day is one of {WEEKDAYS}", { WEEKDAYS: String(WEEKDAYS.join(", ")) }));
         const [o, c] = [minutes(s.open), minutes(s.close)];
         if (o === null) err(`${at}.open`, "HOURS_INVALID", "open is HH:MM, 24-hour");
         if (c === null) err(`${at}.close`, "HOURS_INVALID", "close is HH:MM, 24-hour");
@@ -377,7 +378,7 @@ function validateInto(p, errors) {
       if (!isObj(r)) err(ra, "CHANNEL_INVALID", "receipt is {rule, citation, status, basis}");
       else {
         fields(ra, r, ["rule", "citation", "status", "basis"]);
-        if (!RECEIPT_RULES.includes(r.rule)) err(`${ra}.rule`, "CHANNEL_INVALID", `rule is one of ${RECEIPT_RULES.join(", ")}`);
+        if (!RECEIPT_RULES.includes(r.rule)) err(`${ra}.rule`, "CHANNEL_INVALID", localize("jurisdictions.index.rule_is_one_of_receipt", "rule is one of {RECEIPT_RULES}", { RECEIPT_RULES: String(RECEIPT_RULES.join(", ")) }));
         if (!isStr(r.citation)) err(`${ra}.citation`, "CHANNEL_INVALID", "a receipt rule cites the local rule that states it");
         statusBasis(ra, r);
       }
@@ -402,9 +403,9 @@ function validateInto(p, errors) {
   };
   const pattern = (path, v) => { if (!compile(v)) err(path, "PATTERN_INVALID", "a pattern is {re, flags?}: a regular expression that compiles, flags from i and u"); };
   const fields = (path, o, allowed) => {
-    for (const k of Object.keys(o)) if (!allowed.includes(k)) err(`${path}.${k}`, "UNKNOWN_SECTION", `'${k}' is not a field here`);
+    for (const k of Object.keys(o)) if (!allowed.includes(k)) err(`${path}.${k}`, "UNKNOWN_SECTION", localize("jurisdictions.index.k_is_not_a_field", "'{k}' is not a field here", { k: String(k) }));
   };
-  const str = (path, v, what) => { if (!isStr(v)) err(path, "VALUE_INVALID", `${what} is a non-empty string`); };
+  const str = (path, v, what) => { if (!isStr(v)) err(path, "VALUE_INVALID", localize("jurisdictions.index.what_is_a_non_empty", "{what} is a non-empty string", { what: String(what) })); };
   const list = (path, v) => { if (!Array.isArray(v)) { err(path, "VALUE_INVALID", "a list"); return []; } return v; };
   const entry = (path, e) => { if (!isObj(e)) { err(path, "VALUE_INVALID", "an entry is an object"); return false; } return true; };
 
@@ -443,7 +444,7 @@ function validateInto(p, errors) {
     if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at}.host`, "VALUE_INVALID", "a lower-case host name");
     str(`${at}.why`, m.why, "why");
     if (typeof m.host === "string" && noPathHosts.has(m.host))
-      err(`${at}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
+      err(`${at}.host`, "HOST_CONFLICT", localize("jurisdictions.index.host_is_mixed_and_also", "{host} is mixed and also in {get}, which has no path", { host: String(m.host), get: String(noPathHosts.get(m.host)) }));
     basis(at, m);
   });
 
@@ -453,7 +454,7 @@ function validateInto(p, errors) {
     if (!isObj(p.spaces)) err("spaces", "VALUE_INVALID", "spaces is an object keyed by space");
     else for (const [name, s] of Object.entries(p.spaces)) {
       const at = `spaces.${name}`;
-      if (!SPACES.includes(name)) { err(at, "UNKNOWN_SPACE", `'${name}' is not one of ${SPACES.join(", ")}`); continue; }
+      if (!SPACES.includes(name)) { err(at, "UNKNOWN_SPACE", localize("jurisdictions.index.name_is_not_one_of", "'{name}' is not one of {SPACES}", { name: String(name), SPACES: String(SPACES.join(", ")) })); continue; }
       if (!entry(at, s)) continue;
       fields(at, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
       str(`${at}.label`, s.label, "label");
@@ -465,7 +466,7 @@ function validateInto(p, errors) {
         fields(fa, f, ["form", "pattern", "normal", "clean", "basis"]);
         str(`${fa}.form`, f.form, "form");
         if (isStr(f.form)) {
-          if (names.has(f.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f.form}' is named twice in ${name}`);
+          if (names.has(f.form)) err(`${fa}.form`, "DUPLICATE_FORM", localize("jurisdictions.index.form_is_named_twice_in", "'{form}' is named twice in {name}", { form: String(f.form), name: String(name) }));
           names.add(f.form);
         }
         const re = compile(f.pattern);
@@ -495,7 +496,7 @@ function validateInto(p, errors) {
           else {
             fields(`${ka}.floor`, fl, ["first", "system", "basis"]);
             if (!isPosInt(fl.first)) err(`${ka}.floor.first`, "VALUE_INVALID", "the first number is a positive integer");
-            if (!isStr(fl.system) || !origins.has(fl.system)) err(`${ka}.floor.system`, "SYSTEM_UNKNOWN", `no system of this profile has origin '${String(fl.system)}'`);
+            if (!isStr(fl.system) || !origins.has(fl.system)) err(`${ka}.floor.system`, "SYSTEM_UNKNOWN", localize("jurisdictions.index.no_system_of_this_profile", "no system of this profile has origin '{String}'", { String: String(String(fl.system)) }));
             basis(`${ka}.floor`, fl);
           }
         }
@@ -508,13 +509,13 @@ function validateInto(p, errors) {
     const at = `crosswalks[${i}]`;
     if (!entry(at, x)) return;
     fields(at, x, ["space", "forms", "pairs", "source", "basis"]);
-    if (!SPACES.includes(x.space)) err(`${at}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
+    if (!SPACES.includes(x.space)) err(`${at}.space`, "UNKNOWN_SPACE", localize("jurisdictions.index.string_is_not_a_space", "'{String}' is not a space", { String: String(String(x.space)) }));
     if (!own(x, "source") || x.source === "" || x.source == null) err(`${at}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
     else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
     const known = spaceForms[x.space] || new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
     if (!forms) err(`${at}.forms`, "VALUE_INVALID", "forms is [a, b]");
-    else forms.forEach((f, j) => { if (!known.has(f)) err(`${at}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f)}'`); });
+    else forms.forEach((f, j) => { if (!known.has(f)) err(`${at}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", localize("jurisdictions.index.the_space_has_no_form", "the space has no form '{String}'", { String: String(String(f)) })); });
     list(`${at}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
         err(`${at}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]"); return;
@@ -522,7 +523,7 @@ function validateInto(p, errors) {
       if (!forms) return;
       pair.forEach((v, n) => {
         const f = known.get(forms[n]);
-        if (f && applyForm(f, v) == null) err(`${at}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        if (f && applyForm(f, v) == null) err(`${at}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", localize("jurisdictions.index.v_is_not_a_value", "'{v}' is not a value in form '{v1}'", { v: String(v), v1: String(forms[n]) }));
       });
     });
     basis(at, x);
@@ -540,7 +541,7 @@ function validateInto(p, errors) {
     if (!isObj(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
       const at = `vocabulary.${key}`;
-      if (!VOCABULARY.includes(key)) { err(at, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`); continue; }
+      if (!VOCABULARY.includes(key)) { err(at, "UNKNOWN_VOCABULARY", localize("jurisdictions.index.key_is_not_one_of", "'{key}' is not one of {VOCABULARY}", { key: String(key), VOCABULARY: String(VOCABULARY.join(", ")) })); continue; }
       const once = new Set(); /* R58, R60: a value, status or member type once in the profile */
       list(at, entries).forEach((e, i) => {
         const ea = `${at}[${i}]`;
@@ -554,16 +555,16 @@ function validateInto(p, errors) {
           if (key === "member_types" ? !isStr(v) : (typeof v !== "string" || !KIND_RE.test(v)))
             err(`${ea}.${name}`, "VALUE_INVALID", key === "member_types" ? "member_type is the MemberType as written, non-empty" : `${name} matches ^[a-z][a-z0-9_]*$`);
           else if (once.has(k)) err(`${ea}.${name}`, "VALUE_INVALID", key === "member_types"
-            ? `'${v}' is given twice ${own(e, "organisation") ? `for ${String(e.organisation)}` : "for all bodies"}` : `'${v}' is given twice`);
+            ? localize("jurisdictions.index.v_is_given_twice_v1", "'{v}' is given twice {v1}", { v: String(v), v1: String(own(e, "organisation") ? `for ${String(e.organisation)}` : "for all bodies") }) : localize("jurisdictions.index.v_is_given_twice", "'{v}' is given twice", { v: String(v) }));
           else once.add(k);
           if (key === "member_types") {
             if (!MEMBER_CAPACITIES.includes(e.capacity)) err(`${ea}.capacity`, "VALUE_INVALID", `capacity is ${MEMBER_CAPACITIES.join(" or ")}`);
             if (own(e, "organisation") && !variantOrg(e.organisation))
-              err(`${ea}.organisation`, "VALUE_INVALID", `organisation is a key the body-variant map names, not '${String(e.organisation)}'`);
+              err(`${ea}.organisation`, "VALUE_INVALID", localize("jurisdictions.index.organisation_is_a_key_the", "organisation is a key the body-variant map names, not '{String}'", { String: String(String(e.organisation)) }));
           } else { str(`${ea}.label`, e.label, "label"); str(`${ea}.citation`, e.citation, "citation"); }
           /* R77 (T45): the statuses a venue of one kind reports in (a grand jury's required responses); absent, every kind */
           if (key === "response_statuses" && own(e, "applies_to") && !profileKinds.has(e.applies_to))
-            err(`${ea}.applies_to`, "KIND_INVALID", `'${String(e.applies_to)}' is no kind of this profile`);
+            err(`${ea}.applies_to`, "KIND_INVALID", localize("jurisdictions.index.string_is_no_kind_of", "'{String}' is no kind of this profile", { String: String(String(e.applies_to)) }));
           basis(ea, e);
           return;
         }
@@ -571,7 +572,7 @@ function validateInto(p, errors) {
           fields(ea, e, ["key", "label", "pattern", "copy", "sections", "basis"]);
           str(`${ea}.key`, e.key, "key"); str(`${ea}.label`, e.label, "label");
           /* T33 (K1446): which copy is served, and the shape of a section number and its subsection markers. */
-          if (own(e, "copy") && !CODE_COPIES.includes(e.copy)) err(`${ea}.copy`, "COPY_UNKNOWN", `copy is one of ${CODE_COPIES.join(", ")}`);
+          if (own(e, "copy") && !CODE_COPIES.includes(e.copy)) err(`${ea}.copy`, "COPY_UNKNOWN", localize("jurisdictions.index.copy_is_one_of_code", "copy is one of {CODE_COPIES}", { CODE_COPIES: String(CODE_COPIES.join(", ")) }));
           if (own(e, "sections")) {
             const sc = e.sections;
             if (!isObj(sc)) err(`${ea}.sections`, "VALUE_INVALID", "sections is {number, separators, markers}");
@@ -583,35 +584,35 @@ function validateInto(p, errors) {
                 err(`${ea}.sections.separators`, "VALUE_INVALID", "separators are the characters between a section number's parts, possibly none");
               /* the order of subsection levels; a kind may recur at a deeper level (`A.`, `1.`, `a.`: letter, numeral, letter; K1521) */
               if (!Array.isArray(sc.markers) || !sc.markers.every((m) => SECTION_MARKERS.includes(m)))
-                err(`${ea}.sections.markers`, "VALUE_INVALID", `markers is the order of subsection markers, from ${SECTION_MARKERS.join(", ")}`);
+                err(`${ea}.sections.markers`, "VALUE_INVALID", localize("jurisdictions.index.markers_is_the_order_of", "markers is the order of subsection markers, from {SECTION_MARKERS}", { SECTION_MARKERS: String(SECTION_MARKERS.join(", ")) }));
             }
           }
         } else if (key === "amending") {
           fields(ea, e, ["pattern", "relation", "basis"]);
-          if (!AMENDING_RELATIONS.includes(e.relation)) err(`${ea}.relation`, "VALUE_INVALID", `relation is one of ${AMENDING_RELATIONS.join(", ")}`);
+          if (!AMENDING_RELATIONS.includes(e.relation)) err(`${ea}.relation`, "VALUE_INVALID", localize("jurisdictions.index.relation_is_one_of_amending", "relation is one of {AMENDING_RELATIONS}", { AMENDING_RELATIONS: String(AMENDING_RELATIONS.join(", ")) }));
         } else if (key === "meeting_markers") {
           fields(ea, e, ["marker", "pattern", "basis"]);
-          if (!MEETING_MARKERS.includes(e.marker)) err(`${ea}.marker`, "VALUE_INVALID", `marker is one of ${MEETING_MARKERS.join(", ")}`);
+          if (!MEETING_MARKERS.includes(e.marker)) err(`${ea}.marker`, "VALUE_INVALID", localize("jurisdictions.index.marker_is_one_of_meeting", "marker is one of {MEETING_MARKERS}", { MEETING_MARKERS: String(MEETING_MARKERS.join(", ")) }));
         } else if (key === "body_variants") {
           fields(ea, e, ["pattern", "organisation", "basis"]);
           if (typeof e.organisation !== "string" || !KIND_RE.test(e.organisation))
             err(`${ea}.organisation`, "VALUE_INVALID", "organisation is a key matching ^[a-z][a-z0-9_]*$");
         } else if (key === "roster_words") {
           fields(ea, e, ["pattern", "kind", "basis"]);
-          if (own(e, "kind") && !ROSTER_KINDS.includes(e.kind)) err(`${ea}.kind`, "VALUE_INVALID", `kind is ${ROSTER_KINDS.join(" or ")} (absent: both)`);
+          if (own(e, "kind") && !ROSTER_KINDS.includes(e.kind)) err(`${ea}.kind`, "VALUE_INVALID", localize("jurisdictions.index.kind_is_roster_kinds_absent", "kind is {ROSTER_KINDS} (absent: both)", { ROSTER_KINDS: String(ROSTER_KINDS.join(" or ")) }));
         } else if (key === "roster_headers") {
           fields(ea, e, ["role", "pattern", "basis"]);
-          if (!ROSTER_ROLES.includes(e.role)) err(`${ea}.role`, "VALUE_INVALID", `role is one of ${ROSTER_ROLES.join(", ")}`);
+          if (!ROSTER_ROLES.includes(e.role)) err(`${ea}.role`, "VALUE_INVALID", localize("jurisdictions.index.role_is_one_of_roster", "role is one of {ROSTER_ROLES}", { ROSTER_ROLES: String(ROSTER_ROLES.join(", ")) }));
         } else if (key === "policy_headers") {
           /* R69: a label a policy document prints in its header block, and the field it names */
           fields(ea, e, ["field", "pattern", "basis"]);
-          if (!POLICY_HEADER_FIELDS.includes(e.field)) err(`${ea}.field`, "VALUE_INVALID", `field is one of ${POLICY_HEADER_FIELDS.join(", ")}`);
+          if (!POLICY_HEADER_FIELDS.includes(e.field)) err(`${ea}.field`, "VALUE_INVALID", localize("jurisdictions.index.field_is_one_of_policy", "field is one of {POLICY_HEADER_FIELDS}", { POLICY_HEADER_FIELDS: String(POLICY_HEADER_FIELDS.join(", ")) }));
         } else if (key === "budget_headers") {
           fields(ea, e, ["column", "pattern", "basis"]);
-          if (!BUDGET_COLUMNS.includes(e.column)) err(`${ea}.column`, "VALUE_INVALID", `column is one of ${BUDGET_COLUMNS.join(", ")}`);
+          if (!BUDGET_COLUMNS.includes(e.column)) err(`${ea}.column`, "VALUE_INVALID", localize("jurisdictions.index.column_is_one_of_budget", "column is one of {BUDGET_COLUMNS}", { BUDGET_COLUMNS: String(BUDGET_COLUMNS.join(", ")) }));
         } else if (key === "file_numbers") {
           fields(ea, e, ["pattern", "system", "basis"]);
-          if (!isStr(e.system) || !origins.has(e.system)) err(`${ea}.system`, "SYSTEM_UNKNOWN", `no system of this profile has origin '${String(e.system)}'`);
+          if (!isStr(e.system) || !origins.has(e.system)) err(`${ea}.system`, "SYSTEM_UNKNOWN", localize("jurisdictions.index.no_system_of_this_profile_2", "no system of this profile has origin '{String}'", { String: String(String(e.system)) }));
         } else fields(ea, e, ["pattern", "basis"]);
         pattern(`${ea}.pattern`, e.pattern);
         basis(ea, e);
@@ -630,7 +631,7 @@ function validateInto(p, errors) {
           fields("practice.minutes_due_days", m, ["value", "count", "closures", "basis"]);
           /* K1533: the closure list a business count skips; with none, the due is undetermined */
           if (own(m, "closures") && !(own(p, "holidays") && Array.isArray(p.holidays) && p.holidays.some((h) => isObj(h) && h.list === m.closures)))
-            err("practice.minutes_due_days.closures", "VALUE_INVALID", `no holidays entry of this profile is in a list named '${String(m.closures)}'`);
+            err("practice.minutes_due_days.closures", "VALUE_INVALID", localize("jurisdictions.index.no_holidays_entry_of_this", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(m.closures)) }));
           if (!isPosInt(m.value)) err("practice.minutes_due_days.value", "VALUE_INVALID", "a positive integer");
           if (own(m, "count") && !COUNTS.includes(m.count)) err("practice.minutes_due_days.count", "COUNT_UNKNOWN", "count is calendar or business");
           basis("practice.minutes_due_days", m);
@@ -650,7 +651,7 @@ function validateInto(p, errors) {
     const at = `records_laws[${i}]`;
     if (!entry(at, l)) return;
     fields(at, l, ["level", "name", "citation", "stages", "requesters", "basis"]);
-    if (!LAW_LEVELS.includes(l.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS.join(", ")}`);
+    if (!LAW_LEVELS.includes(l.level)) err(`${at}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_law", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
     str(`${at}.name`, l.name, "name"); str(`${at}.citation`, l.citation, "citation");
     /* R76 (T45): the stages the law has, in its order, each a product stage name with the law's own term; a stage the
        law lacks is absent. Whether action-grammar knows a stage is that module's check. */
@@ -662,7 +663,7 @@ function validateInto(p, errors) {
         if (!isObj(st)) { err(sa, "VALUE_INVALID", "a stage is {stage, label, citation}"); return; }
         fields(sa, st, ["stage", "label", "citation"]);
         if (typeof st.stage !== "string" || !KIND_RE.test(st.stage)) err(`${sa}.stage`, "VALUE_INVALID", "stage matches ^[a-z][a-z0-9_]*$");
-        else if (seen.has(st.stage)) err(`${sa}.stage`, "VALUE_INVALID", `the stage ${st.stage} is given twice`);
+        else if (seen.has(st.stage)) err(`${sa}.stage`, "VALUE_INVALID", localize("jurisdictions.index.the_stage_stage_is_given", "the stage {stage} is given twice", { stage: String(st.stage) }));
         else seen.add(st.stage);
         str(`${sa}.label`, st.label, "label"); str(`${sa}.citation`, st.citation, "citation");
       });
@@ -700,7 +701,7 @@ function validateInto(p, errors) {
   /* R82: an amount in R26's units */
   const amountOf = (path, a) => {
     if (!isObj(a) || Object.keys(a).some((k) => k !== "amount" && k !== "units") || !isPosInt(a.amount) || !UNITS.includes(a.units))
-      err(path, "VALUE_INVALID", `an amount is {amount, units}, a positive integer of one of ${UNITS.join(", ")}`);
+      err(path, "VALUE_INVALID", localize("jurisdictions.index.amount_is_amount_and_units", "an amount is {amount, units}, a positive integer of one of {units_list}", { units_list: UNITS.join(", ") }));
   };
 
   /* R46: how a day period is computed; R47: the named closure lists. Read first: rules name them. */
@@ -710,9 +711,9 @@ function validateInto(p, errors) {
     if (!entry(at, c)) return;
     fields(at, c, ["key", "rule", "citation", "status", "basis"]);
     if (typeof c.key !== "string" || !KIND_RE.test(c.key)) err(`${at}.key`, "VALUE_INVALID", "key matches ^[a-z][a-z0-9_]*$");
-    else if (computationKeys.has(c.key)) err(`${at}.key`, "VALUE_INVALID", `'${c.key}' is given twice`);
+    else if (computationKeys.has(c.key)) err(`${at}.key`, "VALUE_INVALID", localize("jurisdictions.index.key_is_given_twice", "'{key}' is given twice", { key: String(c.key) }));
     else computationKeys.add(c.key);
-    if (!COMPUTATION_RULES.includes(c.rule)) err(`${at}.rule`, "VALUE_INVALID", `rule is one of ${COMPUTATION_RULES.join(", ")}`);
+    if (!COMPUTATION_RULES.includes(c.rule)) err(`${at}.rule`, "VALUE_INVALID", localize("jurisdictions.index.rule_is_one_of_computation", "rule is one of {COMPUTATION_RULES}", { COMPUTATION_RULES: String(COMPUTATION_RULES.join(", ")) }));
     str(`${at}.citation`, c.citation, "citation");
     statusBasis(at, c);
   });
@@ -724,7 +725,7 @@ function validateInto(p, errors) {
     else {
       fields("weekend", w, ["days", "citation", "status", "basis"]);
       if (!Array.isArray(w.days) || !w.days.length || !w.days.every((d) => WEEKDAYS.includes(d)) || new Set(w.days).size !== w.days.length)
-        err("weekend.days", "WEEKEND_INVALID", `days is a non-empty list of ${WEEKDAYS.join(", ")}, each once`);
+        err("weekend.days", "WEEKEND_INVALID", localize("jurisdictions.index.days_is_a_non_empty", "days is a non-empty list of {WEEKDAYS}, each once", { WEEKDAYS: String(WEEKDAYS.join(", ")) }));
       else if (w.days.length === WEEKDAYS.length) err("weekend.days", "WEEKEND_INVALID", "a weekend leaves some day open");
       str("weekend.citation", w.citation, "citation");
       statusBasis("weekend", w);
@@ -742,23 +743,23 @@ function validateInto(p, errors) {
     if (own(s, "key") && (typeof s.key !== "string" || !ID_RE.test(s.key))) err(`${at}.key`, "VALUE_INVALID", "key is an issuer's segment, matching ^[a-z0-9][a-z0-9-]*$");
     str(`${at}.source`, s.source, "source"); str(`${at}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
-    if (!STANDARD_SOURCE_KINDS.includes(s.kind)) err(`${at}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${STANDARD_SOURCE_KINDS.join(", ")}`);
+    if (!STANDARD_SOURCE_KINDS.includes(s.kind)) err(`${at}.kind`, "SOURCE_KIND_UNKNOWN", localize("jurisdictions.index.kind_is_one_of_standard", "kind is one of {STANDARD_SOURCE_KINDS}", { STANDARD_SOURCE_KINDS: String(STANDARD_SOURCE_KINDS.join(", ")) }));
     /* R31, R64 (T35-1): a statute, regulation, ordinance or court entry carries a law level; a policy, commitment or
        standard carries one only when its issuer is a government at one of the four, and otherwise its sector. An entry
        with a level reads sector government; a level beside another sector is refused. */
     const levelled = !["policy", "commitment", "standard"].includes(s.kind);
     if (own(s, "level") || levelled) {
       if (!LAW_LEVELS.includes(s.level)) err(`${at}.level`, "LEVEL_UNKNOWN", levelled && !own(s, "level")
-        ? `a ${LEVELLED_KINDS.includes(s.kind) ? s.kind : "source"} entry carries a level, one of ${LAW_LEVELS.join(", ")}`
-        : `level is one of ${LAW_LEVELS.join(", ")}`);
+        ? localize("jurisdictions.index.a_v1_entry_carries_a", "a {v1} entry carries a level, one of {LAW_LEVELS}", { v1: String(LEVELLED_KINDS.includes(s.kind) ? s.kind : "source"), LAW_LEVELS: String(LAW_LEVELS.join(", ")) })
+        : localize("jurisdictions.index.level_is_one_of_law_2", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
     }
     if (own(s, "sector")) {
-      if (!SECTORS.includes(s.sector)) err(`${at}.sector`, "SECTOR_UNKNOWN", `sector is one of ${SECTORS.join(", ")}`);
+      if (!SECTORS.includes(s.sector)) err(`${at}.sector`, "SECTOR_UNKNOWN", localize("jurisdictions.index.sector_is_one_of_sectors", "sector is one of {SECTORS}", { SECTORS: String(SECTORS.join(", ")) }));
       else if (own(s, "level") && s.sector !== "government") err(`${at}.sector`, "VALUE_INVALID", "a law level is a government's: an entry with a level has sector government or none");
-    } else if (!levelled && !own(s, "level")) err(`${at}.sector`, "SECTOR_UNKNOWN", `an entry with no level names its issuer's sector, one of ${SECTORS.join(", ")}`);
+    } else if (!levelled && !own(s, "level")) err(`${at}.sector`, "SECTOR_UNKNOWN", localize("jurisdictions.index.an_entry_with_no_level", "an entry with no level names its issuer's sector, one of {SECTORS}", { SECTORS: String(SECTORS.join(", ")) }));
     const cite = compile(s.cite);
     pattern(`${at}.cite`, s.cite);
-    if (own(s, "code") && !codeKeys.has(s.code)) err(`${at}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
+    if (own(s, "code") && !codeKeys.has(s.code)) err(`${at}.code`, "CODE_UNKNOWN", localize("jurisdictions.index.no_vocabulary_codes_entry_has", "no vocabulary.codes entry has key '{String}'", { String: String(String(s.code)) }));
     /* R63, R65: one numbered family of the issuer's documents; its cite recognises one item of it */
     if (own(s, "series")) {
       const sr = s.series, sa = `${at}.series`;
@@ -770,7 +771,7 @@ function validateInto(p, errors) {
         if (!own(s, "key")) err(sa, "SERIES_INVALID", "an entry with a series carries its issuer's key");
         else if (typeof s.key === "string" && typeof sr.key === "string") {
           const k = `${s.key}\u0000${sr.key}`;
-          if (families.has(k)) err(sa, "SERIES_INVALID", `the family ${s.key}/${sr.key} is given twice`);
+          if (families.has(k)) err(sa, "SERIES_INVALID", localize("jurisdictions.index.the_family_key_key_2", "the family {key}/{key_2} is given twice", { key: String(s.key), key_2: String(sr.key) }));
           families.add(k);
         }
       }
@@ -797,8 +798,8 @@ function validateInto(p, errors) {
   const identifier = (path, x, kind) => {
     if (!isObj(x)) { err(path, "SCHEME_INVALID", "an identifier is {scheme, id}"); return; }
     fields(path, x, ["scheme", "id"]);
-    if (!schemeKinds.has(x.scheme)) err(`${path}.scheme`, "SCHEME_INVALID", `no identifier scheme of this profile is '${String(x.scheme)}'`);
-    else if (!schemeKinds.get(x.scheme).includes(kind)) err(`${path}.scheme`, "SCHEME_INVALID", `the scheme ${x.scheme} identifies no ${kind}`);
+    if (!schemeKinds.has(x.scheme)) err(`${path}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.no_identifier_scheme_of_this", "no identifier scheme of this profile is '{String}'", { String: String(String(x.scheme)) }));
+    else if (!schemeKinds.get(x.scheme).includes(kind)) err(`${path}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.the_scheme_scheme_identifies_no", "the scheme {scheme} identifies no {kind}", { scheme: String(x.scheme), kind: String(kind) }));
     if (!isStr(x.id)) err(`${path}.id`, "SCHEME_INVALID", "id is a non-empty string");
   };
   if (own(p, "counterparties")) list("counterparties", p.counterparties).forEach((c, i) => {
@@ -824,14 +825,14 @@ function validateInto(p, errors) {
     }
     if (own(c, "organisation")) {
       if (typeof c.organisation !== "string" || !KIND_RE.test(c.organisation)) err(`${at}.organisation`, "VALUE_INVALID", "organisation is a key matching ^[a-z][a-z0-9_]*$");
-      else if (!variantOrg(c.organisation)) err(`${at}.organisation`, "VALUE_INVALID", `the body-variant map names no organisation '${c.organisation}'`);
+      else if (!variantOrg(c.organisation)) err(`${at}.organisation`, "VALUE_INVALID", localize("jurisdictions.index.the_body_variant_map_names", "the body-variant map names no organisation '{organisation}'", { organisation: String(c.organisation) }));
     }
     str(`${at}.role`, c.role, "role"); str(`${at}.body`, c.body, "body");
     if (isStr(c.role)) roles.add(c.role);
     if (isStr(c.body)) bodies.add(c.body);
     if (isStr(c.role) && isStr(c.body)) offices.add(`${c.role}\u0000${c.body}`);
     if (own(c, "hours")) hours(`${at}.hours`, c.hours);
-    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
+    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_counterparty", "level is one of {COUNTERPARTY_LEVELS}", { COUNTERPARTY_LEVELS: String(COUNTERPARTY_LEVELS.join(", ")) }));
     if (typeof c.elected !== "boolean") err(`${at}.elected`, "VALUE_INVALID", "elected is true or false");
     if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at}.oversight`, "VALUE_INVALID", "oversight is true or false");
     basis(at, c);
@@ -843,14 +844,14 @@ function validateInto(p, errors) {
   /* R40, R81, R87 (b): one template, attributed; in a kind's `templates` it also carries its purpose (judged by the
      caller), its name and the public sources it was written from. */
   const templateOf = (ta, t, k, inList) => {
-    if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", `a template is {${TEMPLATE_FIELDS.join(", ")}}, never bare text`);
+    if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.a_template_is_fields_never_bare", "a template is {{fields}}, never bare text", { fields: TEMPLATE_FIELDS.join(", ") }));
     else {
       fields(ta, t, [...TEMPLATE_FIELDS, "name", "sources", ...(inList ? ["purpose"] : [])]);
       for (const f of TEMPLATE_FIELDS)
-        if (!own(t, f) || t[f] === undefined || t[f] === null) err(`${ta}.${f}`, "TEMPLATE_UNATTRIBUTED", `the template's ${f} is missing`);
+        if (!own(t, f) || t[f] === undefined || t[f] === null) err(`${ta}.${f}`, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.the_templates_f_is_missing", "the template's {f} is missing", { f: String(f) }));
       const bad = (f, why) => { if (own(t, f) && t[f] !== undefined && t[f] !== null) err(`${ta}.${f}`, "VALUE_INVALID", why); };
       if (!(typeof t.id === "string" && TEMPLATE_ID_RE.test(t.id))) bad("id", "id matches ^TPL-[a-z0-9][a-z0-9-]*$");
-      else if (templateIds.has(t.id)) err(`${ta}.id`, "VALUE_INVALID", `'${t.id}' is given twice in the profile`);
+      else if (templateIds.has(t.id)) err(`${ta}.id`, "VALUE_INVALID", localize("jurisdictions.index.id_is_given_twice_in", "'{id}' is given twice in the profile", { id: String(t.id) }));
       else templateIds.add(t.id);
       if (!isPosInt(t.version)) bad("version", "version is a positive integer");
       if (!TEMPLATE_USES.includes(t.use)) bad("use", `use is ${TEMPLATE_USES.join(" or ")}`);
@@ -868,12 +869,12 @@ function validateInto(p, errors) {
         if (!isObj(r)) { err(ra, "VALUE_INVALID", "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}"); return; }
         fields(ra, r, [...REVIEW_REQUIRED, "organisation", "credential"]);
         for (const f of REVIEW_REQUIRED)
-          if (!own(r, f) || r[f] === undefined || r[f] === null) err(`${ra}.${f}`, "TEMPLATE_UNATTRIBUTED", `the review's ${f} is missing`);
+          if (!own(r, f) || r[f] === undefined || r[f] === null) err(`${ra}.${f}`, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.the_reviews_f_is_missing", "the review's {f} is missing", { f: String(f) }));
         const rbad = (f, ok, why) => { if (own(r, f) && r[f] !== undefined && r[f] !== null && !ok) err(`${ra}.${f}`, "VALUE_INVALID", why); };
         rbad("reviewer", isStr(r.reviewer), "the reviewer is a non-empty name");
         rbad("kind", REVIEW_KINDS.includes(r.kind), `kind is ${REVIEW_KINDS.join(" or ")}`);
         rbad("scope", isStr(r.scope), "the scope is non-empty text");
-        rbad("outcome", REVIEW_OUTCOMES.includes(r.outcome), `outcome is one of ${REVIEW_OUTCOMES.join(", ")}`);
+        rbad("outcome", REVIEW_OUTCOMES.includes(r.outcome), localize("jurisdictions.index.outcome_is_one_of_review", "outcome is one of {REVIEW_OUTCOMES}", { REVIEW_OUTCOMES: String(REVIEW_OUTCOMES.join(", ")) }));
         rbad("at", isDate(r.at), "at is a real YYYY-MM-DD");
         rbad("organisation", isStr(r.organisation), "the organisation is a non-empty name");
         rbad("credential", isStr(r.credential), "the credential is non-empty text");
@@ -887,13 +888,13 @@ function validateInto(p, errors) {
     }
     if (isObj(t) && (inList || own(t, "name"))) {
       if (!isStr(t.name) || t.name.length > TEMPLATE_NAME_MAX || /[\r\n]/.test(t.name))
-        err(`${ta}.name`, "VALUE_INVALID", `name is a title of at most ${TEMPLATE_NAME_MAX} characters on one line`);
+        err(`${ta}.name`, "VALUE_INVALID", localize("jurisdictions.index.name_is_a_title_of", "name is a title of at most {TEMPLATE_NAME_MAX} characters on one line", { TEMPLATE_NAME_MAX: String(TEMPLATE_NAME_MAX) }));
     }
     if (isObj(t) && (inList || own(t, "sources"))) {
-      if (!Array.isArray(t.sources) || !t.sources.length) err(`${ta}.sources`, "VALUE_INVALID", "sources lists at least one public source {citation}");
+      if (!Array.isArray(t.sources) || !t.sources.length) err(`${ta}.sources`, "VALUE_INVALID", localize("jurisdictions.index.sources_lists_one_public_source", "sources lists at least one public source, each with a citation"));
       else t.sources.forEach((x, j) => {
         if (!isObj(x) || Object.keys(x).some((f) => f !== "citation") || !isStr(x.citation))
-          err(`${ta}.sources[${j}]`, "VALUE_INVALID", "a source is {citation}, non-empty");
+          err(`${ta}.sources[${j}]`, "VALUE_INVALID", localize("jurisdictions.index.a_source_has_a_citation", "a source has one field, citation, which is non-empty"));
       });
     }
   };
@@ -902,12 +903,12 @@ function validateInto(p, errors) {
     if (!entry(at, k)) return;
     fields(at, k, ["kind", "label", "tier", "laws", "venue", "template", "templates", "advisory", "evidence", "shape", "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (kinds.has(k.kind)) err(`${at}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
+    else if (kinds.has(k.kind)) err(`${at}.kind`, "DUPLICATE_KIND", localize("jurisdictions.index.kind_is_given_twice", "'{kind}' is given twice", { kind: String(k.kind) }));
     else { kinds.add(k.kind); if (k.tier === 2 || k.tier === 3) tier23.add(k.kind); }
     str(`${at}.label`, k.label, "label");
     if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
     if (own(k, "laws")) list(`${at}.laws`, k.laws).forEach((l, j) => {
-      if (!lawNames.has(l)) err(`${at}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
+      if (!lawNames.has(l)) err(`${at}.laws[${j}]`, "LAW_UNKNOWN", localize("jurisdictions.index.no_records_laws_or_standard", "no records_laws or standard_sources entry is named '{String}'", { String: String(String(l)) }));
     });
     if (own(k, "venue")) {
       const v = k.venue;
@@ -915,7 +916,7 @@ function validateInto(p, errors) {
       else {
         fields(`${at}.venue`, v, ["name", "how", "hours", "time_zone", "cutoff", "outages", "receipt", "facts", "basis"]);
         str(`${at}.venue.name`, v.name, "name");
-        if (!VENUE_HOW.includes(v.how)) err(`${at}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
+        if (!VENUE_HOW.includes(v.how)) err(`${at}.venue.how`, "VALUE_INVALID", localize("jurisdictions.index.how_is_one_of_venue", "how is one of {VENUE_HOW}", { VENUE_HOW: String(VENUE_HOW.join(", ")) }));
         if (own(v, "hours")) hours(`${at}.venue.hours`, v.hours);
         if (own(v, "time_zone")) zone(`${at}.venue.time_zone`, v.time_zone); /* R74 */
         /* R82 (T45): the venue's sourced facts, each named once */
@@ -925,10 +926,10 @@ function validateInto(p, errors) {
             const fa = `${at}.venue.facts[${j}]`;
             if (!entry(fa, f)) return;
             fields(fa, f, ["fact", "value", "amount", "citation", "status", "basis"]);
-            if (!VENUE_FACTS.includes(f.fact)) err(`${fa}.fact`, "VALUE_INVALID", `fact is one of ${VENUE_FACTS.join(", ")}`);
-            else if (named.has(f.fact)) err(`${fa}.fact`, "VALUE_INVALID", `${f.fact} is given twice for this venue`);
+            if (!VENUE_FACTS.includes(f.fact)) err(`${fa}.fact`, "VALUE_INVALID", localize("jurisdictions.index.fact_is_one_of_venue", "fact is one of {VENUE_FACTS}", { VENUE_FACTS: String(VENUE_FACTS.join(", ")) }));
+            else if (named.has(f.fact)) err(`${fa}.fact`, "VALUE_INVALID", localize("jurisdictions.index.fact_is_given_twice_for", "{fact} is given twice for this venue", { fact: String(f.fact) }));
             else named.add(f.fact);
-            if (!isStr(f.value) || f.value.length > VENUE_FACT_MAX) err(`${fa}.value`, "VALUE_INVALID", `value is text of at most ${VENUE_FACT_MAX} characters`);
+            if (!isStr(f.value) || f.value.length > VENUE_FACT_MAX) err(`${fa}.value`, "VALUE_INVALID", localize("jurisdictions.index.value_is_text_of_at", "value is text of at most {VENUE_FACT_MAX} characters", { VENUE_FACT_MAX: String(VENUE_FACT_MAX) }));
             if (own(f, "amount")) amountOf(`${fa}.amount`, f.amount);
             str(`${fa}.citation`, f.citation, "citation");
             statusBasis(fa, f);
@@ -954,13 +955,13 @@ function validateInto(p, errors) {
           templateOf(ta, t, k, true);
           if (!isObj(t)) return;
           if (typeof t.purpose !== "string" || !KIND_RE.test(t.purpose)) err(`${ta}.purpose`, "VALUE_INVALID", "purpose matches ^[a-z][a-z0-9_]*$");
-          else if (purposes.has(t.purpose)) err(`${ta}.purpose`, "VALUE_INVALID", `the purpose ${t.purpose} is given twice in ${String(k.kind)}`);
+          else if (purposes.has(t.purpose)) err(`${ta}.purpose`, "VALUE_INVALID", localize("jurisdictions.index.the_purpose_purpose_is_given", "the purpose {purpose} is given twice in {String}", { purpose: String(t.purpose), String: String(String(k.kind)) }));
           else purposes.add(t.purpose);
         });
       }
     }
     /* R87 (a) (T45): the kind's shape */
-    if (own(k, "shape") && !KIND_SHAPES.includes(k.shape)) err(`${at}.shape`, "KIND_INVALID", `shape is one of ${KIND_SHAPES.join(", ")}`);
+    if (own(k, "shape") && !KIND_SHAPES.includes(k.shape)) err(`${at}.shape`, "KIND_INVALID", localize("jurisdictions.index.shape_is_one_of_kind", "shape is one of {KIND_SHAPES}", { KIND_SHAPES: String(KIND_SHAPES.join(", ")) }));
     if (own(k, "advisory")) {
       if (!isStr(k.advisory)) err(`${at}.advisory`, "VALUE_INVALID", "an advisory note is text");
       if (k.tier !== 2) err(`${at}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
@@ -975,12 +976,12 @@ function validateInto(p, errors) {
         if (!own(ev, "standard") || ev.standard === undefined || ev.standard === null || ev.standard === "")
           err(`${ea}.standard`, "EVIDENCE_NO_STANDARD", "evidence names the venue's standard in words");
         else if (!isStr(ev.standard) || ev.standard.length > EVIDENCE_STANDARD_MAX)
-          err(`${ea}.standard`, "VALUE_INVALID", `the standard is text of at most ${EVIDENCE_STANDARD_MAX} characters`);
+          err(`${ea}.standard`, "VALUE_INVALID", localize("jurisdictions.index.the_standard_is_text_of", "the standard is text of at most {EVIDENCE_STANDARD_MAX} characters", { EVIDENCE_STANDARD_MAX: String(EVIDENCE_STANDARD_MAX) }));
         const grades = (path, v) => v.forEach((g, j) => {
           const ga = `${path}[${j}]`;
           if (!isObj(g)) { err(ga, "VALUE_INVALID", "an admitted grade is {grade, coattested?}"); return; }
           fields(ga, g, ["grade", "coattested"]);
-          if (!BASIS_GRADES.includes(g.grade)) err(`${ga}.grade`, "GRADE_UNKNOWN", `grade is one of ${BASIS_GRADES.join(", ")}`);
+          if (!BASIS_GRADES.includes(g.grade)) err(`${ga}.grade`, "GRADE_UNKNOWN", localize("jurisdictions.index.grade_is_one_of_basis", "grade is one of {BASIS_GRADES}", { BASIS_GRADES: String(BASIS_GRADES.join(", ")) }));
           if (own(g, "coattested") && typeof g.coattested !== "boolean") err(`${ga}.coattested`, "VALUE_INVALID", "coattested is true or false");
         });
         if (!own(ev, "accepts") || (Array.isArray(ev.accepts) && !ev.accepts.length))
@@ -1003,12 +1004,12 @@ function validateInto(p, errors) {
       "status", "basis"]);
     str(`${at}.rule`, d.rule, "rule");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
-      err(`${at}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
+      err(`${at}.applies_to`, "DEADLINE_KIND_UNKNOWN", localize("jurisdictions.index.string_is_neither_claim_nor", "'{String}' is neither claim nor a kind of this profile", { String: String(String(d.applies_to)) }));
     const legacy = own(d, "days") && !own(d, "units") && !own(d, "amount");
     if (legacy) { if (!isPosInt(d.days)) err(`${at}.days`, "VALUE_INVALID", "days is a positive integer"); }
     else {
       if (own(d, "days")) err(`${at}.days`, "VALUE_INVALID", "days is the pre-T33 form of units and amount; give one form, not both");
-      if (!UNITS.includes(d.units)) err(`${at}.units`, "UNIT_UNKNOWN", `units is one of ${UNITS.join(", ")}`);
+      if (!UNITS.includes(d.units)) err(`${at}.units`, "UNIT_UNKNOWN", localize("jurisdictions.index.units_is_one_of_units", "units is one of {UNITS}", { UNITS: String(UNITS.join(", ")) }));
       if (!isPosInt(d.amount)) err(`${at}.amount`, "VALUE_INVALID", "amount is a positive integer");
     }
     const units = legacy ? "days" : d.units;
@@ -1017,7 +1018,7 @@ function validateInto(p, errors) {
       else if (units !== "days") err(`${at}.count`, "UNIT_UNKNOWN", "count is given with units: days only");
     }
     if (own(d, "direction") && !DIRECTIONS.includes(d.direction)) err(`${at}.direction`, "DIRECTION_UNKNOWN", `direction is ${DIRECTIONS.join(" or ")}`);
-    if (!STARTS.includes(d.starts)) err(`${at}.starts`, "ANCHOR_UNKNOWN", `starts is one of ${STARTS.join(", ")}`);
+    if (!STARTS.includes(d.starts)) err(`${at}.starts`, "ANCHOR_UNKNOWN", localize("jurisdictions.index.starts_is_one_of_starts", "starts is one of {STARTS}", { STARTS: String(STARTS.join(", ")) }));
     /* R75 (T45): a third party's act starts the count: the counterparty, by role and body, whose act it is */
     if (d.starts === "third_party") {
       const st = d.starter;
@@ -1037,9 +1038,9 @@ function validateInto(p, errors) {
     if (own(d, "defends") && d.defends !== true) err(`${at}.defends`, "VALUE_INVALID", "defends is true, or absent");
     if (own(d, "roll") && typeof d.roll !== "boolean") err(`${at}.roll`, "VALUE_INVALID", "roll is true or false");
     if (own(d, "closures") && !closureLists.has(d.closures))
-      err(`${at}.closures`, "CLOSURES_UNKNOWN", `no holidays entry of this profile is in a list named '${String(d.closures)}'`);
+      err(`${at}.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_2", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(d.closures)) }));
     if (own(d, "computation") && !computationKeys.has(d.computation))
-      err(`${at}.computation`, "COMPUTATION_UNKNOWN", `no computation entry of this profile has key '${String(d.computation)}'`);
+      err(`${at}.computation`, "COMPUTATION_UNKNOWN", localize("jurisdictions.index.no_computation_entry_of_this", "no computation entry of this profile has key '{String}'", { String: String(String(d.computation)) }));
     if (own(d, "extension")) {
       const x = d.extension;
       if (!isObj(x)) err(`${at}.extension`, "VALUE_INVALID", "an extension is {days, count, when, citation?}");
@@ -1064,14 +1065,14 @@ function validateInto(p, errors) {
       else {
         fields(`${at}.observed`, o, ["closures", "status", "basis"]);
         if (!closureLists.has(o.closures))
-          err(`${at}.observed.closures`, "CLOSURES_UNKNOWN", `no holidays entry of this profile is in a list named '${String(o.closures)}'`);
+          err(`${at}.observed.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_3", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(o.closures)) }));
         statusBasis(`${at}.observed`, o);
       }
     }
     /* K1514: the anchor's weekdays a rule applies to, and the time of day it is due at */
     if (own(d, "applies_on") && (!Array.isArray(d.applies_on) || !d.applies_on.length
         || !d.applies_on.every((x) => WEEKDAYS.includes(x)) || new Set(d.applies_on).size !== d.applies_on.length))
-      err(`${at}.applies_on`, "VALUE_INVALID", `applies_on is a non-empty list of ${WEEKDAYS.join(", ")}, each once`);
+      err(`${at}.applies_on`, "VALUE_INVALID", localize("jurisdictions.index.applies_on_is_a_non", "applies_on is a non-empty list of {WEEKDAYS}, each once", { WEEKDAYS: String(WEEKDAYS.join(", ")) }));
     if (own(d, "due_at") && d.due_at !== "close_of_business" && minutes(d.due_at) === null)
       err(`${at}.due_at`, "VALUE_INVALID", "due_at is close_of_business or HH:MM");
     str(`${at}.citation`, d.citation, "citation");
@@ -1088,7 +1089,7 @@ function validateInto(p, errors) {
     if (own(o, "defends") && typeof o.defends !== "boolean") err(`${at}.defends`, "VALUE_INVALID", "defends is true or false");
     if (own(o, "evaluates") && !Array.isArray(o.evaluates)) err(`${at}.evaluates`, "VALUE_INVALID", "evaluates is a list of Tier 2 or 3 kinds");
     else if (Array.isArray(o.evaluates)) o.evaluates.forEach((k, j) => {
-      if (!tier23.has(k)) err(`${at}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 2 or 3 kind of this profile`);
+      if (!tier23.has(k)) err(`${at}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", localize("jurisdictions.index.string_is_not_a_tier", "'{String}' is not a Tier 2 or 3 kind of this profile", { String: String(String(k)) }));
     });
     if (!(Array.isArray(o.evaluates) && o.evaluates.length) && o.defends !== true)
       err(`${at}.evaluates`, "ORG_PURPOSE_MISSING", "a legal organisation evaluates at least one Tier 2 or 3 kind, or defends a group (defends: true)");
@@ -1097,7 +1098,7 @@ function validateInto(p, errors) {
       const ca = `${at}.contacts[${j}]`;
       if (!isObj(c)) { err(ca, "CONTACT_INVALID", "a contact is {how, value}"); return; }
       fields(ca, c, ["how", "value"]);
-      if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${CONTACT_HOW.join(", ")}`);
+      if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", localize("jurisdictions.index.how_is_one_of_contact", "how is one of {CONTACT_HOW}", { CONTACT_HOW: String(CONTACT_HOW.join(", ")) }));
       if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
     });
     basis(at, o);
@@ -1126,9 +1127,9 @@ function validateInto(p, errors) {
           h.offices.forEach((o, j) => {
             const oa = `${at}.offices[${j}]`;
             const k = officeKey(o);
-            if (typeof o === "string") { if (!roles.has(o)) err(oa, "HOLIDAY_INVALID", `no counterparty of this profile has role '${o}'`); }
+            if (typeof o === "string") { if (!roles.has(o)) err(oa, "HOLIDAY_INVALID", localize("jurisdictions.index.no_counterparty_of_this_profile", "no counterparty of this profile has role '{o}'", { o: String(o) })); }
             else if (isObj(o) && Object.keys(o).length === 1 && typeof o.venue === "string") {
-              if (!venueKinds.has(o.venue)) err(oa, "HOLIDAY_INVALID", `no kind of this profile with a venue is '${o.venue}'`);
+              if (!venueKinds.has(o.venue)) err(oa, "HOLIDAY_INVALID", localize("jurisdictions.index.no_kind_of_this_profile", "no kind of this profile with a venue is '{venue}'", { venue: String(o.venue) }));
             } else { err(oa, "HOLIDAY_INVALID", "an office is a counterparty role or {venue: <kind>}"); return; }
             if (seenOffices.has(k)) err(oa, "HOLIDAY_INVALID", "an office is named twice in one entry");
             seenOffices.add(k);
@@ -1139,7 +1140,13 @@ function validateInto(p, errors) {
       key = `${listKey(h)}\u0003${key}`;
       if (!isYear(h.year)) err(`${at}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
       else if (years.has(`${h.year}\u0000${key}`)) err(`${at}.year`, "HOLIDAY_INVALID",
-        `${h.year} is listed twice for ${own(h, "list") ? `the list ${String(h.list)} and ` : ""}${own(h, "offices") ? "the same offices" : "all offices"}`);
+        own(h, "list")
+          ? (own(h, "offices")
+            ? localize("jurisdictions.index.year_listed_twice_for_list_and_the_same_offices", "{year} is listed twice for the list {list} and the same offices", { year: String(h.year), list: String(h.list) })
+            : localize("jurisdictions.index.year_listed_twice_for_list_and_all_offices", "{year} is listed twice for the list {list} and all offices", { year: String(h.year), list: String(h.list) }))
+          : own(h, "offices")
+            ? localize("jurisdictions.index.year_listed_twice_for_the_same_offices", "{year} is listed twice for the same offices", { year: String(h.year) })
+            : localize("jurisdictions.index.year_listed_twice_for_all_offices", "{year} is listed twice for all offices", { year: String(h.year) }));
       else years.add(`${h.year}\u0000${key}`);
       const dates = new Set();
       list(`${at}.days`, h.days).forEach((d, j) => {
@@ -1148,7 +1155,7 @@ function validateInto(p, errors) {
         fields(da, d, ["date", "name"]);
         if (!isDate(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", "a date is a real YYYY-MM-DD");
         else if (isYear(h.year) && Number(d.date.slice(0, 4)) !== h.year) err(`${da}.date`, "HOLIDAY_INVALID", `${d.date} is outside ${h.year}`);
-        else if (dates.has(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", `${d.date} is given twice`);
+        else if (dates.has(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", localize("jurisdictions.index.date_is_given_twice", "{date} is given twice", { date: String(d.date) }));
         else dates.add(d.date);
         str(`${da}.name`, d.name, "name");
       });
@@ -1164,13 +1171,13 @@ function validateInto(p, errors) {
       if (!entry(at, f)) return;
       fields(at, f, ["body", "start", "named_by", "label", "status", "basis"]);
       if (f.body !== "*" && !bodies.has(f.body)) err(`${at}.body`, "FISCAL_YEAR_INVALID", `body is a counterparty body of this profile, or * for every body`);
-      else if (seen.has(f.body)) err(`${at}.body`, "FISCAL_YEAR_INVALID", `${f.body} keeps one fiscal year`);
+      else if (seen.has(f.body)) err(`${at}.body`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.body_keeps_one_fiscal_year", "{body} keeps one fiscal year", { body: String(f.body) }));
       else seen.add(f.body);
       if (!isMonthDay(f.start)) err(`${at}.start`, "FISCAL_YEAR_INVALID", "start is the first day, MM-DD");
       if (!FISCAL_NAMED_BY.includes(f.named_by)) err(`${at}.named_by`, "FISCAL_YEAR_INVALID", `named_by is ${FISCAL_NAMED_BY.join(" or ")}`);
       if (!isStr(f.label) || !FISCAL_PLACEHOLDERS.some((x) => f.label.includes(x))
           || (f.label.match(/\{[^}]*\}/g) || []).some((x) => !FISCAL_PLACEHOLDERS.includes(x)))
-        err(`${at}.label`, "FISCAL_YEAR_INVALID", `label is a template using ${FISCAL_PLACEHOLDERS.join(", ")}`);
+        err(`${at}.label`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.label_is_a_template_using", "label is a template using {FISCAL_PLACEHOLDERS}", { FISCAL_PLACEHOLDERS: String(FISCAL_PLACEHOLDERS.join(", ")) }));
       statusBasis(at, f);
     });
   }
@@ -1182,11 +1189,11 @@ function validateInto(p, errors) {
       const at = `law_ranks[${i}]`;
       if (!entry(at, r)) return;
       fields(at, r, ["kind", "level", "rank", "basis"]);
-      if (!STANDARD_SOURCE_KINDS.includes(r.kind)) err(`${at}.kind`, "RANK_INVALID", `kind is one of ${STANDARD_SOURCE_KINDS.join(", ")}`);
-      if (!LAW_LEVELS.includes(r.level)) err(`${at}.level`, "RANK_INVALID", `level is one of ${LAW_LEVELS.join(", ")}`);
+      if (!STANDARD_SOURCE_KINDS.includes(r.kind)) err(`${at}.kind`, "RANK_INVALID", localize("jurisdictions.index.kind_is_one_of_standard_2", "kind is one of {STANDARD_SOURCE_KINDS}", { STANDARD_SOURCE_KINDS: String(STANDARD_SOURCE_KINDS.join(", ")) }));
+      if (!LAW_LEVELS.includes(r.level)) err(`${at}.level`, "RANK_INVALID", localize("jurisdictions.index.level_is_one_of_law_3", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
       if (!isPosInt(r.rank)) err(`${at}.rank`, "RANK_INVALID", "rank is a positive integer, 1 the highest");
       const k = `${r.kind}\u0000${r.level}`;
-      if (seen.has(k)) err(at, "RANK_INVALID", `${r.kind} at ${r.level} is ranked twice`);
+      if (seen.has(k)) err(at, "RANK_INVALID", localize("jurisdictions.index.kind_at_level_is_ranked", "{kind} at {level} is ranked twice", { kind: String(r.kind), level: String(r.level) }));
       seen.add(k);
       basis(at, r);
     });
@@ -1209,10 +1216,10 @@ function validateInto(p, errors) {
     if (!entry(at, k)) return;
     fields(at, k, ["kind", "label", "forum_kind", "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (proceedingKinds.has(k.kind)) err(`${at}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
+    else if (proceedingKinds.has(k.kind)) err(`${at}.kind`, "DUPLICATE_KIND", localize("jurisdictions.index.kind_is_given_twice_2", "'{kind}' is given twice", { kind: String(k.kind) }));
     else proceedingKinds.add(k.kind);
     str(`${at}.label`, k.label, "label");
-    if (!FORUM_KINDS.includes(k.forum_kind)) err(`${at}.forum_kind`, "VALUE_INVALID", `forum_kind is one of ${FORUM_KINDS.join(", ")}`);
+    if (!FORUM_KINDS.includes(k.forum_kind)) err(`${at}.forum_kind`, "VALUE_INVALID", localize("jurisdictions.index.forum_kind_is_one_of", "forum_kind is one of {FORUM_KINDS}", { FORUM_KINDS: String(FORUM_KINDS.join(", ")) }));
     basis(at, k);
   });
   if (own(p, "proceeding_flows")) {
@@ -1221,8 +1228,8 @@ function validateInto(p, errors) {
       const at = `proceeding_flows[${i}]`;
       if (!entry(at, f)) return;
       fields(at, f, ["kind", "stages", "citation", "basis"]);
-      if (!proceedingKinds.has(f.kind)) err(`${at}.kind`, "FLOW_INVALID", `'${String(f.kind)}' is no kind of proceeding_kinds`);
-      else if (flowed.has(f.kind)) err(`${at}.kind`, "FLOW_INVALID", `${f.kind} has one flow`);
+      if (!proceedingKinds.has(f.kind)) err(`${at}.kind`, "FLOW_INVALID", localize("jurisdictions.index.string_is_no_kind_of_2", "'{String}' is no kind of proceeding_kinds", { String: String(String(f.kind)) }));
+      else if (flowed.has(f.kind)) err(`${at}.kind`, "FLOW_INVALID", localize("jurisdictions.index.kind_has_one_flow", "{kind} has one flow", { kind: String(f.kind) }));
       else flowed.add(f.kind);
       if (!Array.isArray(f.stages) || !f.stages.length) err(`${at}.stages`, "FLOW_INVALID", "stages is a non-empty ordered list of {stage, label, reached_by}");
       else {
@@ -1232,7 +1239,7 @@ function validateInto(p, errors) {
           if (!isObj(st)) { err(sa, "FLOW_INVALID", "a stage is {stage, label, reached_by}"); return; }
           fields(sa, st, ["stage", "label", "reached_by"]);
           if (typeof st.stage !== "string" || !KIND_RE.test(st.stage)) err(`${sa}.stage`, "FLOW_INVALID", "stage matches ^[a-z][a-z0-9_]*$");
-          else if (stages.has(st.stage)) err(`${sa}.stage`, "FLOW_INVALID", `the stage ${st.stage} is given twice`);
+          else if (stages.has(st.stage)) err(`${sa}.stage`, "FLOW_INVALID", localize("jurisdictions.index.the_stage_stage_is_given_2", "the stage {stage} is given twice", { stage: String(st.stage) }));
           else stages.add(st.stage);
           if (!isStr(st.label)) err(`${sa}.label`, "FLOW_INVALID", "a stage has a label");
           if (!Array.isArray(st.reached_by) || !st.reached_by.length || !st.reached_by.every((e) => typeof e === "string" && KIND_RE.test(e)))
@@ -1252,16 +1259,16 @@ function validateInto(p, errors) {
       if (!entry(at, x)) return;
       fields(at, x, ["scheme", "label", "entity_kinds", "space", "form", "systems", "basis"]);
       if (!isStr(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
-      else if (seen.has(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", `${x.scheme} is given twice`);
+      else if (seen.has(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.scheme_is_given_twice", "{scheme} is given twice", { scheme: String(x.scheme) }));
       else seen.add(x.scheme);
       str(`${at}.label`, x.label, "label");
       if (!Array.isArray(x.entity_kinds) || !x.entity_kinds.length || !x.entity_kinds.every((k) => typeof k === "string" && KIND_RE.test(k)))
         err(`${at}.entity_kinds`, "SCHEME_INVALID", "entity_kinds is a non-empty list of entity kinds");
-      if (!spaceForms[x.space]) err(`${at}.space`, "SCHEME_INVALID", `this profile has no space '${String(x.space)}'`);
-      else if (own(x, "form") && !spaceForms[x.space].has(x.form)) err(`${at}.form`, "SCHEME_INVALID", `the space ${x.space} has no form '${String(x.form)}'`);
+      if (!spaceForms[x.space]) err(`${at}.space`, "SCHEME_INVALID", localize("jurisdictions.index.this_profile_has_no_space", "this profile has no space '{String}'", { String: String(String(x.space)) }));
+      else if (own(x, "form") && !spaceForms[x.space].has(x.form)) err(`${at}.form`, "SCHEME_INVALID", localize("jurisdictions.index.the_space_space_has_no", "the space {space} has no form '{String}'", { space: String(x.space), String: String(String(x.form)) }));
       if (own(x, "systems")) {
         if (!Array.isArray(x.systems)) err(`${at}.systems`, "SCHEME_INVALID", "systems is a list of origins");
-        else x.systems.forEach((o, j) => { if (!origins.has(o)) err(`${at}.systems[${j}]`, "SCHEME_INVALID", `no system of this profile has origin '${String(o)}'`); });
+        else x.systems.forEach((o, j) => { if (!origins.has(o)) err(`${at}.systems[${j}]`, "SCHEME_INVALID", localize("jurisdictions.index.no_system_of_this_profile_3", "no system of this profile has origin '{String}'", { String: String(String(o)) })); });
       }
       basis(at, x);
     });
@@ -1277,10 +1284,10 @@ function validateInto(p, errors) {
         else x.forms.forEach((f, j) => { if (!compile(f)) err(`${at}.forms[${j}]`, "SCHEME_INVALID", "a form is a pattern {re, flags?}"); });
       }
       if (!isStr(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
-      else if (seen.has(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", `${x.scheme} is given twice`);
+      else if (seen.has(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.scheme_is_given_twice_2", "{scheme} is given twice", { scheme: String(x.scheme) }));
       else seen.add(x.scheme);
       str(`${at}.label`, x.label, "label");
-      if (!CLASSIFICATION_KINDS.includes(x.kind)) err(`${at}.kind`, "SCHEME_INVALID", `kind is one of ${CLASSIFICATION_KINDS.join(", ")}`);
+      if (!CLASSIFICATION_KINDS.includes(x.kind)) err(`${at}.kind`, "SCHEME_INVALID", localize("jurisdictions.index.kind_is_one_of_classification", "kind is one of {CLASSIFICATION_KINDS}", { CLASSIFICATION_KINDS: String(CLASSIFICATION_KINDS.join(", ")) }));
       if (own(x, "codes")) {
         if (!Array.isArray(x.codes)) err(`${at}.codes`, "SCHEME_INVALID", "codes is a list of {code, label}");
         else {
@@ -1289,7 +1296,7 @@ function validateInto(p, errors) {
             const ca = `${at}.codes[${j}]`;
             if (!isObj(c) || !isStr(c.code) || !isStr(c.label) || Object.keys(c).some((k) => k !== "code" && k !== "label"))
               { err(ca, "SCHEME_INVALID", "a code is {code, label}"); return; }
-            if (cs.has(c.code)) err(`${ca}.code`, "SCHEME_INVALID", `${c.code} is given twice`);
+            if (cs.has(c.code)) err(`${ca}.code`, "SCHEME_INVALID", localize("jurisdictions.index.code_is_given_twice", "{code} is given twice", { code: String(c.code) }));
             cs.add(c.code);
           });
         }
@@ -1306,14 +1313,14 @@ function validateInto(p, errors) {
       if (!entry(at, d)) return;
       fields(at, d, ["kind", "label", "covers", "within", "citation", "status", "basis"]);
       if (typeof d.kind !== "string" || !KIND_RE.test(d.kind)) err(`${at}.kind`, "DEMAND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-      else if (seen.has(d.kind)) err(`${at}.kind`, "DEMAND_INVALID", `'${d.kind}' is given twice`);
+      else if (seen.has(d.kind)) err(`${at}.kind`, "DEMAND_INVALID", localize("jurisdictions.index.kind_is_given_twice_3", "'{kind}' is given twice", { kind: String(d.kind) }));
       else seen.add(d.kind);
       str(`${at}.label`, d.label, "label");
       if (!Array.isArray(d.covers) || !d.covers.length || !d.covers.every((c) => DEMAND_COVERS.includes(c)) || new Set(d.covers).size !== d.covers.length)
-        err(`${at}.covers`, "DEMAND_INVALID", `covers is a non-empty list from ${DEMAND_COVERS.join(", ")}`);
+        err(`${at}.covers`, "DEMAND_INVALID", localize("jurisdictions.index.covers_is_a_non_empty", "covers is a non-empty list from {DEMAND_COVERS}", { DEMAND_COVERS: String(DEMAND_COVERS.join(", ")) }));
       const w = d.within;
       if (!isObj(w) || Object.keys(w).some((k) => k !== "amount" && k !== "units") || !isPosInt(w.amount) || !UNITS.includes(w.units))
-        err(`${at}.within`, "DEMAND_INVALID", `within is {amount, units}, units one of ${UNITS.join(", ")}`);
+        err(`${at}.within`, "DEMAND_INVALID", localize("jurisdictions.index.within_is_amount_and_units", "within is {amount, units}, units one of {units_list}", { units_list: UNITS.join(", ") }));
       str(`${at}.citation`, d.citation, "citation");
       statusBasis(at, d);
     });
@@ -1341,9 +1348,9 @@ function validateInto(p, errors) {
       if (!entry(at, f)) return;
       fields(at, f, ["key", "trigger", "statement", "citation", "threshold", "applies_to", "status", "basis"]);
       if (typeof f.key !== "string" || !KIND_RE.test(f.key)) err(`${at}.key`, "VALUE_INVALID", "key matches ^[a-z][a-z0-9_]*$");
-      else if (seen.has(f.key)) err(`${at}.key`, "VALUE_INVALID", `'${f.key}' is given twice`);
+      else if (seen.has(f.key)) err(`${at}.key`, "VALUE_INVALID", localize("jurisdictions.index.key_is_given_twice_2", "'{key}' is given twice", { key: String(f.key) }));
       else seen.add(f.key);
-      if (!LEGAL_FACT_TRIGGERS.includes(f.trigger)) err(`${at}.trigger`, "TRIGGER_UNKNOWN", `trigger is one of ${LEGAL_FACT_TRIGGERS.join(", ")}`);
+      if (!LEGAL_FACT_TRIGGERS.includes(f.trigger)) err(`${at}.trigger`, "TRIGGER_UNKNOWN", localize("jurisdictions.index.trigger_is_one_of_legal", "trigger is one of {LEGAL_FACT_TRIGGERS}", { LEGAL_FACT_TRIGGERS: String(LEGAL_FACT_TRIGGERS.join(", ")) }));
       str(`${at}.statement`, f.statement, "statement"); str(`${at}.citation`, f.citation, "citation");
       if (own(f, "threshold")) {
         const t = f.threshold;
@@ -1353,7 +1360,7 @@ function validateInto(p, errors) {
       }
       if (own(f, "applies_to")) {
         if (!Array.isArray(f.applies_to) || !f.applies_to.length) err(`${at}.applies_to`, "VALUE_INVALID", "applies_to is a non-empty list of kinds");
-        else f.applies_to.forEach((k, j) => { if (!profileKinds.has(k)) err(`${at}.applies_to[${j}]`, "VALUE_INVALID", `'${String(k)}' is no kind of this profile`); });
+        else f.applies_to.forEach((k, j) => { if (!profileKinds.has(k)) err(`${at}.applies_to[${j}]`, "VALUE_INVALID", localize("jurisdictions.index.string_is_no_kind_of_3", "'{String}' is no kind of this profile", { String: String(String(k)) })); });
       }
       statusBasis(at, f);
     });
@@ -1367,8 +1374,8 @@ function validateInto(p, errors) {
       const at = `procedure_guides[${i}]`;
       if (!entry(at, g)) return;
       fields(at, g, ["kind", "items", "status", "basis"]);
-      if (!profileKinds.has(g.kind)) err(`${at}.kind`, "KIND_INVALID", `'${String(g.kind)}' is no kind of this profile`);
-      else if (guided.has(g.kind)) err(`${at}.kind`, "VALUE_INVALID", `${g.kind} has one guide`);
+      if (!profileKinds.has(g.kind)) err(`${at}.kind`, "KIND_INVALID", localize("jurisdictions.index.string_is_no_kind_of_4", "'{String}' is no kind of this profile", { String: String(String(g.kind)) }));
+      else if (guided.has(g.kind)) err(`${at}.kind`, "VALUE_INVALID", localize("jurisdictions.index.kind_has_one_guide", "{kind} has one guide", { kind: String(g.kind) }));
       else guided.add(g.kind);
       if (!Array.isArray(g.items) || !g.items.length) err(`${at}.items`, "VALUE_INVALID", "items is a non-empty list of {route, expect?, citation, after?}");
       else g.items.forEach((it, j) => {
@@ -1393,9 +1400,9 @@ function validateInto(p, errors) {
     if (!entry(at, x)) return;
     fields(at, x, ["locale", "kind", "phrase", "basis"]);
     if (!isLocale(x.locale)) err(`${at}.locale`, "LOCALE_INVALID", "locale is one well-formed BCP 47 language tag");
-    if (!PHRASING_KINDS.includes(x.kind)) err(`${at}.kind`, "KIND_INVALID", `kind is one of ${PHRASING_KINDS.join(", ")}`);
+    if (!PHRASING_KINDS.includes(x.kind)) err(`${at}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_phrasing", "kind is one of {PHRASING_KINDS}", { PHRASING_KINDS: String(PHRASING_KINDS.join(", ")) }));
     if (typeof x.phrase !== "string" || x.phrase.trim().length < PHRASE_MIN || x.phrase.length > PHRASE_MAX || /[\r\n]/.test(x.phrase))
-      err(`${at}.phrase`, "VALUE_INVALID", `phrase is ${PHRASE_MIN}–${PHRASE_MAX} characters on one line`);
+      err(`${at}.phrase`, "VALUE_INVALID", localize("jurisdictions.index.phrase_is_phrase_min_phrase", "phrase is {PHRASE_MIN}–{PHRASE_MAX} characters on one line", { PHRASE_MIN: String(PHRASE_MIN), PHRASE_MAX: String(PHRASE_MAX) }));
     basis(at, x);
   });
 
@@ -1405,17 +1412,17 @@ function validateInto(p, errors) {
     const at = `pointers[${i}]`;
     if (!entry(at, x)) return;
     fields(at, x, ["kind", "name", "does", "contacts", "hours", "languages", "source", "status", "basis"]);
-    if (!POINTER_KINDS.includes(x.kind)) err(`${at}.kind`, "KIND_INVALID", `kind is one of ${POINTER_KINDS.join(", ")}`);
+    if (!POINTER_KINDS.includes(x.kind)) err(`${at}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_pointer", "kind is one of {POINTER_KINDS}", { POINTER_KINDS: String(POINTER_KINDS.join(", ")) }));
     if (!isStr(x.name) || x.name.length > POINTER_NAME_MAX || /[\r\n]/.test(x.name))
-      err(`${at}.name`, "VALUE_INVALID", `name is the body's own name, 1 to ${POINTER_NAME_MAX} characters on one line`);
+      err(`${at}.name`, "VALUE_INVALID", localize("jurisdictions.index.name_is_the_bodys_own", "name is the body's own name, 1 to {POINTER_NAME_MAX} characters on one line", { POINTER_NAME_MAX: String(POINTER_NAME_MAX) }));
     if (!isStr(x.does) || x.does.length > POINTER_DOES_MAX)
-      err(`${at}.does`, "VALUE_INVALID", `does says what the body does and for whom, 1 to ${POINTER_DOES_MAX} characters`);
+      err(`${at}.does`, "VALUE_INVALID", localize("jurisdictions.index.does_says_what_the_body", "does says what the body does and for whom, 1 to {POINTER_DOES_MAX} characters", { POINTER_DOES_MAX: String(POINTER_DOES_MAX) }));
     if (!Array.isArray(x.contacts) || !x.contacts.length) err(`${at}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
     else x.contacts.forEach((c, j) => {
       const ca = `${at}.contacts[${j}]`;
       if (!isObj(c)) { err(ca, "CONTACT_INVALID", "a contact is {how, value}"); return; }
       fields(ca, c, ["how", "value"]);
-      if (!POINTER_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${POINTER_HOW.join(", ")}`);
+      if (!POINTER_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", localize("jurisdictions.index.how_is_one_of_pointer", "how is one of {POINTER_HOW}", { POINTER_HOW: String(POINTER_HOW.join(", ")) }));
       if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
     });
     if (own(x, "hours")) hours(`${at}.hours`, x.hours);
@@ -1483,10 +1490,10 @@ function validateInto(p, errors) {
       if (!entry(at, f)) return;
       fields(at, f, ["label", "forum_kind", "ids", "basis"]);
       str(`${at}.label`, f.label, "label");
-      if (!FORUM_KINDS.includes(f.forum_kind)) err(`${at}.forum_kind`, "VALUE_INVALID", `forum_kind is one of ${FORUM_KINDS.join(", ")}`);
+      if (!FORUM_KINDS.includes(f.forum_kind)) err(`${at}.forum_kind`, "VALUE_INVALID", localize("jurisdictions.index.forum_kind_is_one_of_2", "forum_kind is one of {FORUM_KINDS}", { FORUM_KINDS: String(FORUM_KINDS.join(", ")) }));
       if (isStr(f.label)) {
         const k = `${f.forum_kind}\u0000${f.label}`;
-        if (seen.has(k)) err(`${at}.label`, "VALUE_INVALID", `the forum '${f.label}' is given twice`);
+        if (seen.has(k)) err(`${at}.label`, "VALUE_INVALID", localize("jurisdictions.index.the_forum_label_is_given", "the forum '{label}' is given twice", { label: String(f.label) }));
         seen.add(k);
       }
       if (own(f, "ids")) {
@@ -1508,10 +1515,10 @@ function validateInto(p, errors) {
       if (!entry(at, n)) return;
       fields(at, n, ["name", "kind", "explanations", "translations", "basis"]);
       str(`${at}.name`, n.name, "name");
-      if (!LOCAL_NAME_KINDS.includes(n.kind)) err(`${at}.kind`, "KIND_INVALID", `kind is one of ${LOCAL_NAME_KINDS.join(", ")}`);
+      if (!LOCAL_NAME_KINDS.includes(n.kind)) err(`${at}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_local", "kind is one of {LOCAL_NAME_KINDS}", { LOCAL_NAME_KINDS: String(LOCAL_NAME_KINDS.join(", ")) }));
       else if (isStr(n.name)) {
         const k = `${n.name}\u0000${n.kind}`;
-        if (seen.has(k)) err(`${at}.name`, "VALUE_INVALID", `the ${n.kind} '${n.name}' is given twice`);
+        if (seen.has(k)) err(`${at}.name`, "VALUE_INVALID", localize("jurisdictions.index.the_kind_name_is_given", "the {kind} '{name}' is given twice", { kind: String(n.kind), name: String(n.name) }));
         seen.add(k);
       }
       for (const [f, extra] of [["explanations", []], ["translations", ["source"]]]) {
@@ -1522,7 +1529,7 @@ function validateInto(p, errors) {
           if (!entry(xa, x)) return;
           fields(xa, x, ["locale", "text", ...extra, "basis"]);
           if (!isLocale(x.locale)) err(`${xa}.locale`, "LOCALE_INVALID", "locale is one well-formed BCP 47 language tag");
-          else if (locales.has(localeKey(x.locale))) err(`${xa}.locale`, "VALUE_INVALID", `${f === "explanations" ? "an explanation" : "a translation"} in ${x.locale} is given twice`);
+          else if (locales.has(localeKey(x.locale))) err(`${xa}.locale`, "VALUE_INVALID", localize("jurisdictions.index.v1_in_locale_is_given", "{v1} in {locale} is given twice", { v1: String(f === "explanations" ? "an explanation" : "a translation"), locale: String(x.locale) }));
           else locales.add(localeKey(x.locale));
           str(`${xa}.text`, x.text, "text");
           if (f === "translations") {
@@ -1548,11 +1555,11 @@ function rruleFault(v) {
   for (const kv of v.replace(/^RRULE:/, "").split(";")) {
     const m = /^([A-Z]+)=(.+)$/.exec(kv);
     if (!m) return `'${kv}' is not NAME=value`;
-    if (!RRULE_PARTS.includes(m[1])) return `${m[1]} is outside civil-time's subset (${RRULE_PARTS.join(", ")})`;
-    if (parts.has(m[1])) return `${m[1]} is given twice`;
+    if (!RRULE_PARTS.includes(m[1])) return localize("jurisdictions.index.v1_is_outside_civil_times", "{v1} is outside civil-time's subset ({RRULE_PARTS})", { v1: String(m[1]), RRULE_PARTS: String(RRULE_PARTS.join(", ")) });
+    if (parts.has(m[1])) return localize("jurisdictions.index.v1_is_given_twice", "{v1} is given twice", { v1: String(m[1]) });
     parts.set(m[1], m[2]);
   }
-  if (!RRULE_FREQS.includes(parts.get("FREQ"))) return `FREQ is one of ${RRULE_FREQS.join(", ")}`;
+  if (!RRULE_FREQS.includes(parts.get("FREQ"))) return localize("jurisdictions.index.freq_is_one_of_rrule", "FREQ is one of {RRULE_FREQS}", { RRULE_FREQS: String(RRULE_FREQS.join(", ")) });
   const ints = (x, lo, hi) => x.split(",").every((n) => /^[+-]?\d+$/.test(n) && Math.abs(Number(n)) >= lo && Math.abs(Number(n)) <= hi);
   if (parts.has("INTERVAL") && !/^[1-9]\d*$/.test(parts.get("INTERVAL"))) return "INTERVAL is a positive integer";
   if (parts.has("BYDAY") && !parts.get("BYDAY").split(",").every((d) => BYDAY_RE.test(d))) return "BYDAY lists days, each with an optional ordinal";
@@ -1651,7 +1658,7 @@ function combineInner(listIn) {
     let p;
     if (typeof item === "string") {
       p = get(item);
-      if (!p) { errors.push({ at: i, code: "UNKNOWN_PROFILE", detail: `no profile '${item}' is held` }); return; }
+      if (!p) { errors.push({ at: i, code: "UNKNOWN_PROFILE", detail: localize("jurisdictions.index.no_profile_item_is_held", "no profile '{item}' is held", { item: String(item) }) }); return; }
     } else {
       const v = validate(item);
       if (!v.ok) { errors.push({ at: i, code: "INVALID_PROFILE", detail: "the profile fails validate", errors: v.errors }); return; }
@@ -1661,7 +1668,7 @@ function combineInner(listIn) {
        apart in the view's `profile` tags, so that is refused rather than one of them chosen. */
     if (seen.has(p.id)) {
       if (stable(seen.get(p.id)) !== stable(p))
-        errors.push({ at: i, code: "INVALID_PROFILE", detail: `a different profile with id '${p.id}' was given earlier`, errors: [] });
+        errors.push({ at: i, code: "INVALID_PROFILE", detail: localize("jurisdictions.index.a_different_profile_with_id", "a different profile with id '{id}' was given earlier", { id: String(p.id) }), errors: [] });
       return;
     }
     seen.set(p.id, p);
@@ -1700,7 +1707,7 @@ function merge(profiles) {
         const vals = given.map((g) => ({ profile: g.profile, value: (({ basis, ...rest }) => rest)(g.value), basis: g.value.basis }));
         if (!agree(vals)) {
           conflict(`spaces.${space}.forms[${form}]`, vals,
-            `the active profiles define the ${space} form '${form}' differently, so it is withheld: a value in it is recognised by no profile until they agree`);
+            localize("jurisdictions.index.the_active_profiles_define_the", "the active profiles define the {space} form '{form}' differently, so it is withheld: a value in it is recognised by no profile until they agree", { space: String(space), form: String(form) }));
           continue;
         }
         const merged = [];
@@ -1716,7 +1723,7 @@ function merge(profiles) {
         for (const [kind, given] of floors) {
           if (!agree(given)) {
             conflict(`spaces.enactment.kinds[${kind}].floor`, given,
-              `the active profiles give different coverage floors for ${kind}, so no floor is given: whether a number is inside the record's reach is undetermined`);
+              localize("jurisdictions.index.the_active_profiles_give_different", "the active profiles give different coverage floors for {kind}, so no floor is given: whether a number is inside the record's reach is undetermined", { kind: String(kind) }));
             continue;
           }
           const floor = { ...given[0].value, basis: given[0].basis, profile: given[0].profile, bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
@@ -1749,7 +1756,7 @@ function merge(profiles) {
       withheld.add(k);
       conflict(`systems[host=${host}${ss[0].path ? ` path=${ss[0].path.re}` : ""}]`,
         ss.flatMap((s) => s.bases.map((b) => ({ profile: b.profile, value: s.origin, basis: b.basis }))),
-        `the active profiles say ${host} publishes different systems' material (${origins.join(", ")}), so an address there names no system`);
+        localize("jurisdictions.index.the_active_profiles_say_host", "the active profiles say {host} publishes different systems' material ({origins}), so an address there names no system", { host: String(host), origins: String(origins.join(", ")) }));
     }
     const mixedWithheld = new Set();
     for (const m of mixed) {
@@ -1762,7 +1769,7 @@ function merge(profiles) {
       conflict(`mixed_hosts[${m.host}]`,
         [...m.bases.map((b) => ({ profile: b.profile, value: "mixed", basis: b.basis })),
          ...others.flatMap((s) => s.bases.map((b) => ({ profile: b.profile, value: s.origin, basis: b.basis })))],
-        `one active profile says ${m.host} serves many offices' publications and another names a system for it, so an address there names no system`);
+        localize("jurisdictions.index.one_active_profile_says_host", "one active profile says {host} serves many offices' publications and another names a system for it, so an address there names no system", { host: String(m.host) }));
     }
     if (has("systems")) view.systems = strip(systems)
       .map((s) => ({ ...s, hosts: s.hosts.filter((h) => !withheld.has(`${h}\u0000${pathKey(s)}`)) }))
@@ -1785,7 +1792,7 @@ function merge(profiles) {
         if (given.length < 2) continue;
         const { member_type: t, organisation: o } = given[0];
         conflict(`vocabulary.member_types[${t}${o ? `/${o}` : ""}]`, given.flatMap((e) => e.bases.map((b) => ({ profile: b.profile, value: e.capacity, basis: b.basis }))),
-          `the active profiles map the MemberType '${t}'${o ? ` on ${o}` : ""} to different capacities, so it maps to none there: a seat's capacity is undetermined`);
+          localize("jurisdictions.index.the_active_profiles_map_the", "the active profiles map the MemberType '{t}'{v1} to different capacities, so it maps to none there: a seat's capacity is undetermined", { t: String(t), v1: String(o ? ` on ${o}` : "") }));
         for (const e of given) v.splice(v.indexOf(e), 1);
       }
       view.vocabulary[key] = strip(v);
@@ -1804,7 +1811,7 @@ function merge(profiles) {
         basis: given[0].basis, profile: given[0].profile, bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
     else if (given.length)
       conflict("practice.minutes_due_days", given.map(({ written, ...g }) => g),
-        "the active profiles give different periods after which absent minutes raise a question, so none is given");
+        localize("jurisdictions.index.minutes_due_conflict", "the active profiles give different periods after which absent minutes raise a question, so none is given"));
   }
 
   /* locale: one value (N77), as practice's. */
@@ -1813,14 +1820,14 @@ function merge(profiles) {
     if (agree(given))
       view.locale = { value: given[0].value, basis: given[0].basis, profile: given[0].profile,
         bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
-    else conflict("locale", given, "the active profiles name different locales, so none is given: a render asks for its fallback");
+    else conflict("locale", given, localize("jurisdictions.index.locale_conflict", "the active profiles name different locales, so none is given: a render asks for its fallback"));
   }
 
   /* time_zone: one value (R41), its status part of it (R44). */
   if (has("time_zone")) {
     const given = profiles.filter((p) => p.time_zone).map((p) => ({ profile: p.id, value: p.time_zone, basis: p.time_zone.basis }));
     if (agree(given)) view.time_zone = keep(given);
-    else conflict("time_zone", given, "the active profiles name different time zones, so none is given: a time of day there is undetermined");
+    else conflict("time_zone", given, localize("jurisdictions.index.time_zone_conflict", "the active profiles name different time zones, so none is given: a time of day there is undetermined"));
   }
 
   for (const sec of ["search_terms", "legal_organisations", "phrasings"])
@@ -1831,7 +1838,7 @@ function merge(profiles) {
   if (has("records_help")) {
     const given = profiles.filter((p) => p.records_help).map((p) => ({ profile: p.id, value: p.records_help, basis: p.records_help.basis }));
     if (agree(given)) view.records_help = keep(given);
-    else conflict("records_help", given, "the active profiles give different records-request help, so none is given: the page has no figure to show");
+    else conflict("records_help", given, localize("jurisdictions.index.records_help_conflict", "the active profiles give different records-request help, so none is given: the page has no figure to show"));
   }
   /* R94 (T50): forums are unioned (R14), a forum given twice once. */
   if (has("forums")) { const v = []; for (const p of profiles) union(v, p.forums, p.id); view.forums = strip(v); }
@@ -1865,8 +1872,8 @@ function merge(profiles) {
     for (const [f, m] of Object.entries(byName)) for (const [name, given] of m) {
       if (!agree(given)) {
         conflict(`records_laws[${name}].${f}`, given, f === "stages"
-          ? `the active profiles give ${name} different stages, so which stages it has is undetermined`
-          : `the active profiles say differently who may request under ${name}, so it is undetermined`);
+          ? localize("jurisdictions.index.the_active_profiles_give_name", "the active profiles give {name} different stages, so which stages it has is undetermined", { name: String(name) })
+          : localize("jurisdictions.index.the_active_profiles_say_differently", "the active profiles say differently who may request under {name}, so it is undetermined", { name: String(name) }));
         continue;
       }
       for (const l of v) if (l.name === name) l[f] = f === "requesters" ? keep(given) : clone(given[0].value);
@@ -1886,12 +1893,12 @@ function merge(profiles) {
         ["series.label", (e) => e.series.label, (e) => { delete e.series.label; }],
         ["cite", (e) => e.cite, (e) => { delete e.cite; }],
         ["normal", (e) => e.normal ?? null, (e) => { delete e.normal; }]],
-        FAMILY, "the family is dropped from the view: a citation of it is recognised by no profile until they agree"],
+        FAMILY, localize("jurisdictions.index.family_dropped_from_view", "the family is dropped from the view: a citation of it is recognised by no profile until they agree")],
       [(e) => `${e.source}\u0000${e.issuer}`, [
         ["level", (e) => e.level ?? null, (e) => { delete e.level; }],
         /* an entry with a level reads sector government when it gives none (R64) */
         ["sector", (e) => e.sector ?? (own(e, "level") ? "government" : null), (e) => { delete e.sector; }]],
-        "a standard source", "who issues it is undetermined"],
+        "a standard source", localize("jurisdictions.index.who_issues_undetermined", "who issues it is undetermined")],
     ];
     for (const [keyOf, facts, what, says] of ONE) {
       const groups = new Map();
@@ -1902,7 +1909,7 @@ function merge(profiles) {
           const vals = gs.map((g) => ({ profile: g.profile, value: read(g.e), basis: g.e.basis }));
           if (agree(vals)) continue;
           conflict(`standard_sources[${k.replace("\u0000", "/")}].${f}`, vals,
-            `the active profiles give ${what} (${k.replace("\u0000", ", ")}) different ${f === "series.label" ? "labels" : `${f}s`}, so it is withheld: ${says}`);
+            localize("jurisdictions.index.the_active_profiles_give_what", "the active profiles give {what} ({replace}) different {v1}, so it is withheld: {says}", { what: String(what), replace: String(k.replace("\u0000", ", ")), v1: String(f === "series.label" ? "labels" : `${f}s`), says: String(says) }));
           for (const g of gs) drop(g.e);
           if (what === FAMILY) for (const g of gs) g.dropped = true;
         }
@@ -1936,26 +1943,26 @@ function merge(profiles) {
       if (agree(given)) { each(k, (c) => { c.oversight = given[0].value; }); continue; }
       const [role, body] = k.split("\u0000");
       conflict(`counterparties[${role}/${body}].oversight`, given,
-        `the active profiles disagree on whether ${role} (${body}) is an oversight or audit body, so it is undetermined`);
+        localize("jurisdictions.index.the_active_profiles_disagree_on", "the active profiles disagree on whether {role} ({body}) is an oversight or audit body, so it is undetermined", { role: String(role), body: String(body) }));
     }
     for (const [k, given] of hoursOf) {
       if (agree(given)) { each(k, (c) => { c.hours = keep(given); }); continue; }
       const [role, body] = k.split("\u0000");
       conflict(`counterparties[${role}/${body}].hours`, given,
-        `the active profiles give different hours for ${role} (${body}), so its hours are undetermined`);
+        localize("jurisdictions.index.the_active_profiles_give_different_2", "the active profiles give different hours for {role} ({body}), so its hours are undetermined", { role: String(role), body: String(body) }));
     }
     for (const [k, given] of zones) {
       if (agree(given)) { each(k, (c) => { c.time_zone = keep(given); }); continue; }
       const [role, body] = k.split("\u0000");
       conflict(`counterparties[${role}/${body}].time_zone`, given,
-        `the active profiles give different time zones for ${role} (${body}), so its local day is undetermined`);
+        localize("jurisdictions.index.the_active_profiles_give_different_3", "the active profiles give different time zones for {role} ({body}), so its local day is undetermined", { role: String(role), body: String(body) }));
     }
-    const NAMED = { ids: "identifiers", within: "organisations it is part of", organisation: "body-variant keys" };
+    const NAMED = { ids: localize("jurisdictions.index.named_identifiers", "identifiers"), within: localize("jurisdictions.index.named_within", "organisations it is part of"), organisation: localize("jurisdictions.index.named_body_variants", "body-variant keys") };
     for (const [f, m] of Object.entries(named)) for (const [k, given] of m) {
       if (agree(given)) { each(k, (c) => { c[f] = clone(given[0].value); }); continue; }
       const [role, body] = k.split("\u0000");
       conflict(`counterparties[${role}/${body}].${f}`, given,
-        `the active profiles give different ${NAMED[f]} for ${role} (${body}), so none is given: it is undetermined`);
+        localize("jurisdictions.index.the_active_profiles_give_different_4", "the active profiles give different {v1} for {role} ({body}), so none is given: it is undetermined", { v1: String(NAMED[f]), role: String(role), body: String(body) }));
     }
     view.counterparties = strip(v);
   }
@@ -1986,20 +1993,19 @@ function merge(profiles) {
         });
         if (!vals.length) continue;
         if (agree(vals)) e[f] = !carriesBasis ? vals[0].value : keep(vals);
-        else conflict(`action_kinds[${kind}].${f}`, vals, `the active profiles give different ${WHAT[f]} for ${kind}, so none is given`
-          + (f === "evidence" ? ": the venue's standard is undetermined" : ""));
+        else conflict(`action_kinds[${kind}].${f}`, vals, localize("jurisdictions.index.the_active_profiles_give_different_5", "the active profiles give different {v1} for {kind}, so none is given{v2}", { v1: String(WHAT[f]), kind: String(kind), v2: String(f === "evidence" ? ": the venue's standard is undetermined" : "") }));
       }
       if (e.venue) {
         /* hours (R42), and the channel's cutoff and receipt rule (R48, R55), are one value each; outages are unioned. */
         const SAYS = { hours: "its hours are undetermined", cutoff: "its cutoff is undetermined",
-          receipt: "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined",
-          time_zone: "its local day is undetermined" };
+          receipt: localize("jurisdictions.index.receipt_on_closed_day", "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined"),
+          time_zone: localize("jurisdictions.index.local_day_undetermined", "its local day is undetermined") };
         for (const f of ["hours", "cutoff", "receipt", "time_zone"]) {
           const vs = given.filter((g) => isObj(g.k.venue) && own(g.k.venue, f))
             .map((g) => ({ profile: g.profile, value: g.k.venue[f], basis: g.k.venue[f].basis }));
           if (vs.length && agree(vs)) e.venue[f] = keep(vs);
           else if (vs.length) conflict(`action_kinds[${kind}].venue.${f}`, vs,
-            `the active profiles give different ${{ hours: "hours", cutoff: "cutoffs", receipt: "receipt rules", time_zone: "time zones" }[f]} for ${kind}'s venue, so ${SAYS[f]}`);
+            localize("jurisdictions.index.the_active_profiles_give_different_6", "the active profiles give different {v1} for {kind}'s venue, so {v2}", { v1: String({ hours: "hours", cutoff: "cutoffs", receipt: "receipt rules", time_zone: "time zones" }[f]), kind: String(kind), v2: String(SAYS[f]) }));
         }
         if (given.some((g) => isObj(g.k.venue) && own(g.k.venue, "outages"))) {
           const o = [];
@@ -2016,7 +2022,7 @@ function merge(profiles) {
           e.venue.facts = [];
           for (const [fact, vs] of byFact) {
             if (agree(vs)) e.venue.facts.push(keep(vs));
-            else conflict(`action_kinds[${kind}].venue.facts[${fact}]`, vs, `the active profiles state ${kind}'s venue's ${fact} differently, so it is undetermined`);
+            else conflict(`action_kinds[${kind}].venue.facts[${fact}]`, vs, localize("jurisdictions.index.the_active_profiles_state_kind", "the active profiles state {kind}'s venue's {fact} differently, so it is undetermined", { kind: String(kind), fact: String(fact) }));
           }
         }
       }
@@ -2033,7 +2039,7 @@ function merge(profiles) {
         e.templates = [];
         for (const [purpose, vs] of byPurpose) {
           if (agree(vs)) e.templates.push(keep(vs));
-          else conflict(`action_kinds[${kind}].templates[${purpose}]`, vs, `the active profiles give different ${purpose} templates for ${kind}, so none is given`);
+          else conflict(`action_kinds[${kind}].templates[${purpose}]`, vs, localize("jurisdictions.index.the_active_profiles_give_different_7", "the active profiles give different {purpose} templates for {kind}, so none is given", { purpose: String(purpose), kind: String(kind) }));
         }
       }
       e.basis = given[0].k.basis;
@@ -2060,7 +2066,7 @@ function merge(profiles) {
         const vals = given.filter((g) => own(g.d, f)).map((g) => ({ profile: g.profile, value: clone(g.d[f]), basis: g.d.basis }));
         if (!vals.length) continue;
         if (!agree(vals)) {
-          conflict(`deadlines[${rule}/${applies_to}].${f}`, vals, `the active profiles disagree on the ${f} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
+          conflict(`deadlines[${rule}/${applies_to}].${f}`, vals, localize("jurisdictions.index.the_active_profiles_disagree_on_2", "the active profiles disagree on the {f} of {rule} for {applies_to}, so it is withheld: the deadline is undetermined", { f: String(f), rule: String(rule), applies_to: String(applies_to) }));
           continue;
         }
         e[f] = f === "observed" ? keep(vals.map((v) => ({ ...v, basis: v.value.basis }))) : vals[0].value;
@@ -2091,7 +2097,7 @@ function merge(profiles) {
         const whose = offices ? ` for ${offices.map((o) => (typeof o === "string" ? o : `${o.venue}'s venue`)).join(", ")}` : "";
         conflict(`holidays[${year}${named ? ` list=${named}` : ""}${offices ? ` offices=${officesKey(offices).replace(/\u0001/g, ",")}` : ""}]`,
           given.map((g) => ({ profile: g.profile, value: g.value, status: g.status, basis: g.basis })),
-          `the active profiles list different closure days for ${year}${whose}, so the year is withheld there: a business-day count reaching into it is undetermined`);
+          localize("jurisdictions.index.the_active_profiles_list_different", "the active profiles list different closure days for {year}{whose}, so the year is withheld there: a business-day count reaching into it is undetermined", { year: String(year), whose: String(whose) }));
         continue;
       }
       view.holidays.push({ year, ...(named ? { list: named, citation: given[0].citation } : given[0].citation ? { citation: given[0].citation } : {}),
@@ -2108,8 +2114,8 @@ function merge(profiles) {
     const given = profiles.filter((p) => p[sec]).map((p) => ({ profile: p.id, value: p[sec], basis: p[sec].basis }));
     if (agree(given)) view[sec] = keep(given);
     else conflict(sec, given, sec === "weekend"
-      ? "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined"
-      : "the active profiles give different instrument-key segments, so no key is composed");
+      ? localize("jurisdictions.index.weekend_conflict", "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined")
+      : localize("jurisdictions.index.instrument_key_conflict", "the active profiles give different instrument-key segments, so no key is composed"));
   }
   for (const [sec, keyOf, what] of ONE_PER_KEY) {
     if (!has(sec)) continue;
@@ -2122,7 +2128,7 @@ function merge(profiles) {
     view[sec] = [];
     for (const [k, given] of byKey) {
       if (agree(given)) view[sec].push(keep(given));
-      else conflict(`${sec}[${k.replace(/\u0000/g, "/")}]`, given, `the active profiles give different ${what} for ${k.replace(/\u0000/g, " at ")}, so it is withheld: it is undetermined`);
+      else conflict(`${sec}[${k.replace(/\u0000/g, "/")}]`, given, localize("jurisdictions.index.the_active_profiles_give_different_8", "the active profiles give different {what} for {replace}, so it is withheld: it is undetermined", { what: String(what), replace: String(k.replace(/\u0000/g, " at ")) }));
     }
   }
   for (const sec of ["proceeding_kinds", "identifier_schemes", "classification_schemes", "recurrences"])
@@ -2155,8 +2161,8 @@ function merge(profiles) {
         for (const [l, vals] of byLocale) {
           if (!agree(vals)) {
             conflict(`local_names[${name}/${kind}].${f}[${l}]`, vals.map(({ x, ...v }) => v), f === "translations"
-              ? `the active profiles give different official translations of ${name} in ${l}, so none is given: the name is shown as it is`
-              : `the active profiles explain ${name} differently in ${l}, so no explanation is given there`);
+              ? localize("jurisdictions.index.the_active_profiles_give_different_9", "the active profiles give different official translations of {name} in {l}, so none is given: the name is shown as it is", { name: String(name), l: String(l) })
+              : localize("jurisdictions.index.the_active_profiles_explain_name", "the active profiles explain {name} differently in {l}, so no explanation is given there", { name: String(name), l: String(l) }));
             continue;
           }
           const kept = keep(vals.map((v) => ({ ...v, value: v.x })));

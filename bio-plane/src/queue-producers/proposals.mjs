@@ -19,6 +19,7 @@
  * PURE: no storage, no clock, no viewer. What needs them is the caller's, passed in: the subject bundles an instance
  * reaches through the viewer's gate, the homes of a set of subjects (queue R7) and the options on them (queue R12). */
 import { weakerGrade } from "../connections/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export const CARDINALITY_EXCEEDED = "cardinality_exceeded";
 
@@ -97,10 +98,8 @@ function groupSeen(g, seen) {
 
 /** The cardinality sentence, in this module's words: never "required and absent". */
 export function cardinalityDetail(g) {
-  const held = g.cardinality === "1" ? "exactly one" : "at most one";
-  return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at `
-       + `'${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held}: a finding, which decides `
-       + `nothing about which of them belongs (framework 8.2)`;
+  const held = g.cardinality === "1" ? "exactly one" : word("queue-producers.text.text");
+  return localize("queue-producers.proposals.n_plural_of_this_progression", "{n} {plural} of this progression thread more than one document at '{stageName}' ({document_count} in all), which is declared to hold {held}: a finding, which decides nothing about which of them belongs (framework 8.2)", { n: String(g.n), plural: String(plural(g.n, "instance", "instances")), stageName: String(stageName(g)), document_count: String(g.document_count), held: String(held) });
 }
 
 /** R2, R10: the FINDING items of `proposalsFeed`'s answer.
@@ -135,8 +134,7 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
     summary,
     detail,
     basis: { source: "proposalsFeed", progression_key: p.progression_key, stage_key: p.stage_key, ...basis,
-             detail: "a finding is DERIVED (D-79): the record's own question, aggregated one per "
-                   + "(progression, stage), graded the weakest instance and never averaged." },
+             detail: localize("queue-producers.proposals.a_finding_is_derived_d", "a finding is DERIVED (D-79): the record's own question, aggregated one per (progression, stage), graded the weakest instance and never averaged.") },
     /* A derived finding is recomputed on every read and has no creation instant to age from (U). */
     age: { state: "undetermined", reason: "derived_on_read",
            detail: "a derived finding is recomputed at read time and has no creation instant; "
@@ -156,10 +154,8 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
       key: p.key, p, subjects, prior: p.prior_disposition,
       /* The ESCALATED kind leads when the stage has also crossed a deadline: one kind, the full set on the basis. */
       kind: p.overdue ? "overdue_successor" : "missing_predecessor",
-      summary: `${p.progression_label}: the '${stageName(p)}' stage is ${p.required} required and absent`,
-      detail: `${p.n} ${plural(p.n, "instance", "instances")} of this progression reach${plural(p.n, "es", "")} `
-            + `'${stageName(p)}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : "")
-            + (g ? `; and ${cardinalityDetail(g)}` : ""),
+      summary: word("queue-producers.summary.stage_required_absent", { progression_label: String(p.progression_label), p: String(stageName(p)), required: String(p.required) }),
+      detail: localize("queue-producers.proposals.n_plural_of_this_progression_2", "{n} {plural} of this progression reach{plural_2} '{stageName}' without it{v1}{v2}", { n: String(p.n), plural: String(plural(p.n, "instance", "instances")), plural_2: String(plural(p.n, "es", "")), stageName: String(stageName(p)), v1: String(p.overdue ? `, ${p.overdue_count} past a declared deadline` : ""), v2: String(g ? `; and ${cardinalityDetail(g)}` : "") }),
       basis: { kinds: g ? [...p.kinds, CARDINALITY_EXCEEDED] : p.kinds, n: p.n, grade: p.grade,
                grade_determined: p.grade_determined, overdue_count: p.overdue_count, surfaced_by: p.surfaced_by,
                ...(g ? { cardinality_exceeded: { n: g.n, cardinality: g.cardinality, document_count: g.document_count,
@@ -170,7 +166,7 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
     items.push(item({
       key: g.key, p: g, subjects: subjectsFor(g.instances), prior: priorOf(feed.dispositions, g.key),
       kind: CARDINALITY_EXCEEDED,
-      summary: `${g.progression_label}: the '${stageName(g)}' stage holds more documents than it is declared to hold`,
+      summary: word("queue-producers.summary.stage_holds_documents", { progression_label: String(g.progression_label), g: String(stageName(g)) }),
       detail: cardinalityDetail(g),
       basis: { kinds: [CARDINALITY_EXCEEDED], n: g.n, grade: g.grade, grade_determined: g.grade_determined,
                overdue_count: 0, surfaced_by: "machine", cardinality: g.cardinality, document_count: g.document_count },

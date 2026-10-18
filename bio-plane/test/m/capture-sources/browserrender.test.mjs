@@ -17,6 +17,7 @@ import assert from "node:assert/strict";
 import { renderWithBinding, browserBindingRenderer } from "../../../src/browserrender.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX } from "../../../src/subresources.mjs";
 import { renderBlock } from "../../../src/render.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const HOST = "portal.example.gov";
 const SCALE = 20;
@@ -355,7 +356,7 @@ test("R25: each completed load's body is collected or its absence stated, nothin
   assert.match(by[`https://${HOST}/api.json`].body_unavailable, /the browser would not give the body: CDP No resource with given identifier found/);
   assert.ok(a.requests.every((r) => !("sha256" in r)));
   const m = await render("/mixed");
-  assert.equal(m.requests.find((r) => r.status === 301).body_unavailable, "a redirect hop, whose body the browser does not keep");
+  assert.equal(m.requests.find((r) => r.status === 301).body_unavailable, word("browserrender.body_unavailable.redirect_hop_whose"));
   assert.ok(!("body_unavailable" in m.requests.find((r) => r.outcome === "failed")));
 
   /* Past the count ceiling, over the size ceiling. */
@@ -375,7 +376,7 @@ test("R25: each completed load's body is collected or its absence stated, nothin
   const now2 = jumping();
   const reserved = await render("/two", { navigation_timeout_ms: 1000, wait: { until: "networkidle", timeout_ms: 1000 } },
     { binding: fakeBinding({ "/two": two }, {}, { "Network.getResponseBody": () => now2.jump(30000) }), now: now2 });
-  assert.equal(reserved.requests.at(-1).body_unavailable, "the render's reserved bound (navigation + wait) was spent before this body was collected");
+  assert.equal(reserved.requests.at(-1).body_unavailable, word("browserrender.text.render_reserved_bound"));
 
   /* Closed on the succeeding path and on the failing ones. */
   for (const page of ["/same", "/navfail", "/noserialise"]) {

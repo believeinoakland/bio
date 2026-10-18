@@ -13,7 +13,7 @@
  * re-pointed (rule 1) and was deleted with `legacy-checks`; this module reads only its own. */
 
 import { isMachineIdentity } from "../record-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* The site every row the grammar raises names (R1–R3, R6, R43). */
 const GRAMMAR_WHERE = "src/basis-versions/grammar.mjs basisVersionFindings, reached from op=promote through the step "
@@ -108,10 +108,10 @@ export const SUFFICIENCY_UNCLAIMED = 'none:independent-sufficiency';
  *  `groundInquiry`'s own receipt already speaks in ("each group's strength is
  *  its weakest leg, and this question's is its strongest group"). */
 export const SUFFICIENCY_CLAIM_STATES = {
-  claimed:        'a member said this group of reasons would carry the answer on its own, and the record holds their name and the date',
-  unclaimed:      'nobody said this group of reasons would carry the answer on its own, and the record states that outright rather than leaving it blank',
-  unstated:       'the record does not say whether anyone claimed this group of reasons would carry the answer on its own',
-  machine_stamped: 'a machine credential stands where the name of the member making that claim has to be, so no member has claimed anything here',
+  claimed:        word('basis-versions.claimed'),
+  unclaimed:      word('basis-versions.unclaimed'),
+  unstated:       word('basis-versions.unstated'),
+  machine_stamped: word('basis-versions.machine_stamped'),
 };
 
 /** Read a sufficiency `asserted_by` as ONE of the four states above.
@@ -196,9 +196,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_NO_DESCRIPTION: {
     check: 'C-25.1',
     where: GRAMMAR_WHERE,
-    translation: 'That version does not say what it is or why it differs. '
-      + 'A version is a whole alternative reading of the evidence, and the description is '
-      + 'what a member has left to compare it by once the conversation that produced it is gone.',
+    translation: word('refusal.VERSION_NO_DESCRIPTION'),
   },
   /* §6 rule 2. Unique PER INQUIRY, never globally — "global uniqueness would
      make naming absurd". Two versions of one inquiry sharing a name makes every
@@ -207,9 +205,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_NAME_NOT_UNIQUE: {
     check: 'C-25.2',
     where: GRAMMAR_WHERE,
-    translation: 'Two versions of this inquiry have the same name. '
-      + 'Names are how versions are compared and how one records what it was derived from, '
-      + 'so within one inquiry a name means exactly one version.',
+    translation: word('refusal.VERSION_NAME_NOT_UNIQUE'),
   },
   /* R54 (T50; N1136; K3402): a name outside the form (1 to 64 permitted characters, `VERSION_NAME_RE`) is not a
      duplicate, and a member told "two versions share a name" for a name that fits nowhere is told the wrong fact. Its
@@ -223,18 +219,13 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_NO_RELATIONSHIP: {
     check: 'C-25.3',
     where: GRAMMAR_WHERE,
-    translation: 'That version does not say how its evidence fits together — whether every part is needed, '
-      + 'or whether any one of its parts would carry the answer on its own. '
-      + 'Those two readings give different answers about how strong the finding is, '
-      + 'so the version says which one it is rather than letting the record assume.',
+    translation: word('refusal.VERSION_NO_RELATIONSHIP'),
   },
   /* The field is only a claim because it can be wrong. */
   VERSION_RELATIONSHIP_DISAGREES: {
     check: 'C-25.4',
     where: GRAMMAR_WHERE,
-    translation: 'That version says its evidence fits together one way and is grouped the other way. '
-      + 'The two cannot both be true, and a member accepting it would be signing for a reading '
-      + 'that is not the one written down.',
+    translation: word('refusal.VERSION_RELATIONSHIP_DISAGREES'),
   },
   /* §3: "A version that is a flat leg set cannot express plurality — the version
      IS the composition, and the partition is part of the composition." The
@@ -243,9 +234,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_PARTITION_INCOMPLETE: {
     check: 'C-25.5',
     where: GRAMMAR_WHERE,
-    translation: 'Some of that version\'s evidence has not been placed in the argument. '
-      + 'A part nobody placed sitting beside parts somebody did is a relationship the record '
-      + 'would have to guess at, and it would have to guess in the direction that makes the finding stronger.',
+    translation: word('refusal.VERSION_PARTITION_INCOMPLETE'),
   },
   /* REC-45 / DEC-32's attributed act, at the version's own grain. "These legs
      are enough on their own" is the one thing that makes a finding STRONGER, so
@@ -254,9 +243,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_GROUND_UNASSERTED: {
     check: 'C-25.6',
     where: GRAMMAR_WHERE,
-    translation: 'That version claims one part of its argument would carry the answer on its own, '
-      + 'and no member has said so. That claim is the one thing that makes a finding stronger, '
-      + 'so it carries the name of the person making it and the date they made it — never a machine\'s.',
+    translation: word('refusal.VERSION_GROUND_UNASSERTED'),
   },
   /* §6 rule 3a: "Each version records what it was derived from, null where a run
      composed it fresh." An edge naming a version that is not here points the
@@ -264,17 +251,14 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_DERIVED_FROM_UNKNOWN: {
     check: 'C-25.7',
     where: GRAMMAR_WHERE,
-    translation: 'That version says it came from a version this inquiry does not have. '
-      + 'Where a version came from is how the alternatives are read as a tree rather than a pile, '
-      + 'so it names one that exists or it names none.',
+    translation: word('refusal.VERSION_DERIVED_FROM_UNKNOWN'),
   },
   /* A derivation tree is a TREE. A cycle makes "what was this derived from"
      unanswerable and the prune walk non-terminating. */
   VERSION_DERIVATION_CYCLE: {
     check: 'C-25.8',
     where: GRAMMAR_WHERE,
-    translation: 'These versions say they were derived from each other in a loop, '
-      + 'so there is no answer to which came first. Versions form a tree, and a tree has a root.',
+    translation: word('refusal.VERSION_DERIVATION_CYCLE'),
   },
   /* DEC-50 / §6.7 — the clause the sweep added and the reason this is not merely
      a data check. "An edit that regroups the ground partition is the attributed
@@ -285,9 +269,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_REGROUP_UNATTRIBUTED: {
     check: 'C-25.9',
     where: GRAMMAR_WHERE,
-    translation: 'That version rearranges the argument it was derived from, and nobody has said who did it or why. '
-      + 'Rearranging which evidence is grouped with which changes how strong the finding reads, '
-      + 'so it is an act with a name on it rather than an edit.',
+    translation: word('refusal.VERSION_REGROUP_UNATTRIBUTED'),
   },
   /* D-184 / C-2.8, restated at the version's grain because a version's legs do
      not pass through checkInquiryBasis's own loop: a leg rests on information or
@@ -296,8 +278,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_LEG_NOT_CITABLE: {
     check: 'C-25.10',
     where: GRAMMAR_WHERE,
-    translation: 'One part of that version rests on something that cannot be evidence for a question — '
-      + 'the record admits a document or another question, and nothing else.',
+    translation: word('refusal.VERSION_LEG_NOT_CITABLE'),
   },
   /* §6 rule 3, AND IT IS THE ONE REFUSAL THIS FILE CANNOT REACH ON ITS OWN. A
      pure check over one document cannot see what the record already holds under
@@ -316,9 +297,7 @@ export const BASIS_VERSION_CHECKS = {
        it, so the guard widened the claim to the whole function and conscripted 32
        unrelated refusals. The span is now DECLARED at the site. */
     where: 'src/basis-versions/index.mjs check > basis-version-freeze, reached from op=promote through the step basis-versions registers with promotion (K31), NOT reachable from a pure document check',
-    translation: 'That version already exists and has been changed in place. '
-      + 'A version is frozen once written, because two people comparing it must be comparing the same thing — '
-      + 'so an edit becomes a NEW version derived from this one, and the original stays exactly as it was.',
+    translation: word('refusal.VERSION_FROZEN'),
   },
   /* §6 rule 4's vocabulary. This is the SIXTH state machine and IS-2 owns its
      transitions; PL-1 owns only that the word written is one of the four. An
@@ -327,8 +306,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_STATE_UNKNOWN: {
     check: 'C-25.12',
     where: GRAMMAR_WHERE,
-    translation: 'That version is in a state the record has no name for. '
-      + 'A version is suggested, being considered, accepted, or rejected — and nothing else.',
+    translation: word('refusal.VERSION_STATE_UNKNOWN'),
   },
   /* §6 rule 3a, DEC-29(b), D-214. PRUNE HIDES AND NEVER DELETES. The flag is a
      boolean and the refusal exists so that no caller can smuggle a third value
@@ -337,9 +315,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_HIDDEN_NOT_BOOLEAN: {
     check: 'C-25.13',
     where: GRAMMAR_WHERE,
-    translation: 'The setting that hides a version from the display is not a yes-or-no answer here. '
-      + 'Hiding a version removes it from view and nothing else — it stays in the record and stays '
-      + 'answerable — so there is no third thing for this to say.',
+    translation: word('refusal.VERSION_HIDDEN_NOT_BOOLEAN'),
   },
   /* A leg naming its own inquiry. checkInquiryBasis refuses the same thing on
      `basis[]` as SELF_BASIS at the store; a version is an account OF the
@@ -348,8 +324,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_LEG_SELF: {
     check: 'C-25.14',
     where: GRAMMAR_WHERE,
-    translation: 'That version rests on the question it is an answer to. '
-      + 'A question is not evidence for its own answer.',
+    translation: word('refusal.VERSION_LEG_SELF'),
   },
   /* A leg or a ground row that belongs to no version in the block — the mirror
      of DERIVED_FROM_UNKNOWN, one grain down. Three sibling arrays joined by name
@@ -358,8 +333,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_ORPHAN_ROW: {
     check: 'C-25.15',
     where: GRAMMAR_WHERE,
-    translation: 'Part of the version block names a version that is not there. '
-      + 'It would be material the record holds and never shows anybody, which is worse than not holding it.',
+    translation: word('refusal.VERSION_ORPHAN_ROW'),
   },
   /* THE SECOND REFUSAL A PURE CHECK CANNOT REACH. C-25.10 asks whether the leg
      COULD be evidence — a fact about the id's shape, which one document answers.
@@ -373,8 +347,7 @@ export const BASIS_VERSION_CHECKS = {
     check: 'C-25.16',
     /* A REGION `where` — see VERSION_FROZEN above. */
     where: 'src/basis-versions/index.mjs check > basis-version-resolve, reached from op=promote through the step basis-versions registers with promotion (K31), NOT reachable from a pure document check',
-    translation: 'One part of that version rests on something this record does not hold. '
-      + 'A reading of the evidence that points at a document nobody can open is a reading nobody can check.',
+    translation: word('refusal.VERSION_LEG_UNRESOLVED'),
   },
   /* THE READ'S TWO REFUSALS. Versions are versions OF an inquiry, so there is no
      default subject and there must not be one — VERSION_CHAIN_NO_ADDRESS'
@@ -385,24 +358,22 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_COMPARE_NO_INQUIRY: {
     check: 'C-25.37',
     where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
-    translation: 'That request did not name a question you can read, so there are no two readings of it to compare.',
+    translation: localize('basis-versions.checks.that_request_did_not_name', 'That request did not name a question you can read, so there are no two readings of it to compare.'),
   },
   VERSION_COMPARE_NO_VERSION: {
     check: 'C-25.38',
     where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
-    translation: 'Comparing needs two readings of the question, and one of them was not named.',
+    translation: localize('basis-versions.checks.comparing_needs_two_readings_of', 'Comparing needs two readings of the question, and one of them was not named.'),
   },
   VERSION_COMPARE_NO_SUCH_VERSION: {
     check: 'C-25.39',
     where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
-    translation: 'This question holds no reading by one of the names given, so the two cannot be compared.',
+    translation: localize('basis-versions.checks.this_question_holds_no_reading', 'This question holds no reading by one of the names given, so the two cannot be compared.'),
   },
   BASIS_VERSIONS_NO_INQUIRY: {
     check: 'C-25.17',
     where: 'src/basis-versions/index.mjs basisVersions, reached from op=basisversions',
-    translation: 'That request did not say which question to read the versions of. '
-      + 'A version is one reading of the evidence for one question, so it asks '
-      + 'rather than answering for a question you did not name.',
+    translation: word('refusal.BASIS_VERSIONS_NO_INQUIRY'),
   },
   /* And an id of the wrong CLASS is refused rather than answered with an empty
      list. "This project has no versions of its basis" is a confidently wrong
@@ -411,9 +382,7 @@ export const BASIS_VERSION_CHECKS = {
   BASIS_VERSIONS_NOT_AN_INQUIRY: {
     check: 'C-25.18',
     where: 'src/basis-versions/index.mjs basisVersions, reached from op=basisversions',
-    translation: 'Only a question carries versions of its evidence, and that is not a question. '
-      + 'Answering with an empty list would say this thing has no readings of its evidence, '
-      + 'when the truth is that it could not have any.',
+    translation: word('refusal.BASIS_VERSIONS_NOT_AN_INQUIRY'),
   },
   /* PL-2 / IS-2 — THE SECOND ENFORCEMENT LAYER of §6 rule 4's reason rule, and
      it is here rather than only at the write op because VERIFICATION rule 3a
@@ -431,9 +400,7 @@ export const BASIS_VERSION_CHECKS = {
   VERSION_DISPOSITION_UNATTRIBUTED: {
     check: 'C-25.19',
     where: GRAMMAR_WHERE,
-    translation: 'This reading of the evidence was set aside or turned down with no reason recorded, '
-      + 'or with a machine\'s name against it. What a member decided about a reading, and why, is '
-      + 'the record itself — a decision nobody signed and nobody explained leaves nothing to answer to.',
+    translation: word('refusal.VERSION_DISPOSITION_UNATTRIBUTED'),
   },
 };
 
@@ -529,28 +496,22 @@ export const VERSION_ACT_CHECKS = {
   VERSION_ACT_NO_INQUIRY: {
     check: 'C-25.20',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'That request did not say which question the reading belongs to. '
-      + 'A reading of the evidence always belongs to one question, so it asks rather than guessing.',
+    translation: word('refusal.VERSION_ACT_NO_INQUIRY'),
   },
   VERSION_ACT_NOT_AN_INQUIRY: {
     check: 'C-25.21',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'Only a question carries readings of its evidence, and that is not a question. '
-      + 'There is nothing here to accept, set aside or turn down.',
+    translation: word('refusal.VERSION_ACT_NOT_AN_INQUIRY'),
   },
   VERSION_ACT_NO_VERSION: {
     check: 'C-25.22',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'That request did not name which reading to act on. '
-      + 'A question can hold several readings of its evidence, and acting on the wrong one is '
-      + 'worse than being asked which you meant.',
+    translation: word('refusal.VERSION_ACT_NO_VERSION'),
   },
   VERSION_ACT_NO_SUCH_VERSION: {
     check: 'C-25.23',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'This question holds no reading by that name. '
-      + 'Readings are named so a member can ask for one by name, and a name nobody wrote is '
-      + 'refused rather than matched to whatever is nearest.',
+    translation: word('refusal.VERSION_ACT_NO_SUCH_VERSION'),
   },
   /* REC-46's ONE predicate, at the ONE transition site. §4: THE AI HOLDS NO OP
      THAT ACCEPTS. A machine may compose an account of the evidence and propose
@@ -559,23 +520,17 @@ export const VERSION_ACT_CHECKS = {
   MACHINE_CANNOT_MOVE_VERSION: {
     check: 'C-25.24',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'Deciding what to do with a reading of the evidence is a named member\'s call, '
-      + 'and this request came from an automated credential. A machine may put a reading forward '
-      + 'and may never settle it. Sign in as a member.',
+    translation: word('refusal.MACHINE_CANNOT_MOVE_VERSION'),
   },
   VERSION_ILLEGAL_TRANSITION: {
     check: 'C-25.25',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'That is not a move this reading can make from where it stands. '
-      + 'A reading a member has already accepted is corrected by turning it down or by putting it '
-      + 'back under consideration, never by returning it to something nobody had acted on.',
+    translation: word('refusal.VERSION_ILLEGAL_TRANSITION'),
   },
   VERSION_NO_REASON: {
     check: 'C-25.26',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'Setting a reading aside or turning it down carries the reason in the member\'s own '
-      + 'words. The record of what was turned down is the instrument that makes a pattern of '
-      + 'turning things down visible at all, and it is worth nothing without the reason.',
+    translation: word('refusal.VERSION_NO_REASON'),
   },
   /* A REASON THAT IS PRESENT AND UNWRITABLE IS NOT A MISSING REASON, and until
      2026-08-09 this plane said it was.
@@ -608,10 +563,7 @@ export const VERSION_ACT_CHECKS = {
   VERSION_REASON_MALFORMED: {
     check: 'C-25.32',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'That reason was given but could not be stored as written: it is either longer than '
-      + 'the record allows or it contains a character the record has no way to escape, such as a '
-      + 'double quote. Nothing was changed. Shorten it, or say it without the quotation marks, and '
-      + 'the words stay yours.',
+    translation: word('refusal.VERSION_REASON_MALFORMED'),
   },
   /* THE CHECK PL-1 RECORDED RATHER THAN HALF-BUILT. A version leg naming THIS
      inquiry is a fact about one document and C-25.14 refuses it there. A leg
@@ -622,9 +574,7 @@ export const VERSION_ACT_CHECKS = {
   VERSION_BASIS_CYCLE: {
     check: 'C-25.27',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'Accepting this reading would make the question rest, through a chain of other '
-      + 'questions, on itself. The answer would then be its own support, which is a circle rather '
-      + 'than a case, and the chain that closes it is named above.',
+    translation: word('refusal.VERSION_BASIS_CYCLE'),
   },
   VERSION_NOT_ACCEPTED: {
     check: 'C-25.28',
@@ -636,22 +586,17 @@ export const VERSION_ACT_CHECKS = {
   VERSION_CURRENT_NO_PROJECT: {
     check: 'C-25.29',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'Standing on a reading is something a PROJECT does, so this request has to name '
-      + 'which project. A question can be shared by several teams, and one team\'s decision must '
-      + 'never quietly move another team\'s.',
+    translation: localize('basis-versions.checks.standing_on_a_reading_is', 'Standing on a reading is something a PROJECT does, so this request has to name which project. A question can be shared by several teams, and one team\'s decision must never quietly move another team\'s.'),
   },
   VERSION_CURRENT_UNRELATED: {
     check: 'C-25.30',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'That project does not draw on this question, so it has no stance here to move. '
-      + 'Add the question to the project first, and then choose what the project stands on.',
+    translation: word('refusal.VERSION_CURRENT_UNRELATED'),
   },
   VERSION_ACT_UNWRITABLE: {
     check: 'C-25.31',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'This question\'s own file could not be rewritten in place, so nothing was changed. '
-      + 'Acting on a reading edits the record the reading lives in, and a half-written record is '
-      + 'worse than an unchanged one.',
+    translation: word('refusal.VERSION_ACT_UNWRITABLE'),
   },
   /* D-271 — DEC-32 RULE 4's ANTI-GAMING KEYSTONE, ENACTED AT THE ONE ACT THAT
      CASHES IT IN.
@@ -665,10 +610,7 @@ export const VERSION_ACT_CHECKS = {
   VERSION_AFFIRMATION_INCOMPLETE: {
     check: 'C-25.33',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'Accepting this reading claims that each of the parts it rests on would carry the '
-      + 'answer on its own. That is a claim only a named member can make, and it is made part by '
-      + 'part rather than assumed from silence, so every part has to be named before this reading '
-      + 'becomes what the record stands on.',
+    translation: localize('basis-versions.checks.accepting_this_reading_claims_that', 'Accepting this reading claims that each of the parts it rests on would carry the answer on its own. That is a claim only a named member can make, and it is made part by part rather than assumed from silence, so every part has to be named before this reading becomes what the record stands on.'),
   },
   /* CASE-3 — DEC-72 CLAUSE 3 AT THE READING DOOR. Bob: "Once published, the act
      of changing the findings (or any claims of any of the findings) results in
@@ -687,11 +629,7 @@ export const VERSION_ACT_CHECKS = {
   PUBLISHED_CANNOT_MOVE_VERSION: {
     check: 'C-25.34',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the four acts that move a state',
-    translation: 'This question has been published, and the case it went out in froze it as it '
-      + 'stood. Changing which reading of the evidence it stands on now would leave the published '
-      + 'version saying something the question no longer says. Pick it back up first, make the '
-      + 'change, and publish that as a new edition — the published one keeps its own signature and '
-      + 'goes on answering.',
+    translation: word('refusal.PUBLISHED_CANNOT_MOVE_VERSION'),
   },
 };
 /* The two ways a composition can compose, and DEC-32's own words for them. NOT a
@@ -751,7 +689,7 @@ export const SUGGEST_KINDS = {
  * the defect"* is a perfectly good description of a finding, and refusing it
  * would be the over-strictness arm this item's suite runs. */
 export const BOILERPLATE_FORMS = [
-  'to be named', 'tbd', 'to be determined', 'n/a', 'na', 'none', 'null', 'undefined',
+  word('action-grammar.named'), 'tbd', 'to be determined', 'n/a', 'na', 'none', 'null', 'undefined',
   'placeholder', 'todo', 'to do', 'tba', 'xxx', 'text', 'description', 'description here',
   'lorem ipsum', 'sample text', 'no description', 'see above', 'as above', 'same', 'ditto',
 ];
@@ -780,9 +718,7 @@ export const VERSION_KIND_CHECKS = {
   VERSION_KIND_UNKNOWN: {
     check: 'C-27.15',
     where: GRAMMAR_WHERE,
-    translation: 'This reading says it is a kind of suggestion nobody recognises. The kinds are a '
-      + 'closed set because what a suggestion CLAIMS to be decides how it is read, and a kind outside '
-      + 'the set is a claim with nothing behind it.',
+    translation: localize('basis-versions.checks.this_reading_says_it_is', 'This reading says it is a kind of suggestion nobody recognises. The kinds are a closed set because what a suggestion CLAIMS to be decides how it is read, and a kind outside the set is a claim with nothing behind it.'),
   },
 };
 
@@ -792,17 +728,12 @@ export const CONCLUDE_ACT_CHECKS = {
   MACHINE_CANNOT_CONCLUDE: {
     check: 'C-32.2',
     where: 'src/basis-versions/index.mjs conclude > is-machine-conclude',
-    translation: 'A conclusion is a person saying what they think the record shows, and it carries '
-      + 'their name for as long as the record lasts. The credential that asked here is an automated '
-      + 'one: it may raise the question, gather what bears on it and draft the answer, and it may '
-      + 'never be the one who answers. Sign in to conclude.',
+    translation: word('refusal.MACHINE_CANNOT_CONCLUDE'),
   },
   NO_CONCLUSION: {
     check: 'C-33.1',
     where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
-    translation: 'Concluding records what was concluded, and this one says nothing. If the honest '
-      + 'answer is that the team could not settle it, write that down — an answer of undetermined '
-      + 'is a real answer here and is stated rather than left blank.',
+    translation: word('refusal.NO_CONCLUSION'),
   },
   /* REC-117 / BOB 2026-09-17: the translation now NAMES THE DOOR, and that is
      the surfacing half of the ruling rather than a nicety. A member who is
@@ -812,11 +743,7 @@ export const CONCLUDE_ACT_CHECKS = {
   NO_FALSIFIER: {
     check: 'C-33.2',
     where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
-    translation: 'A conclusion has to say what would overturn it. Without that nobody can check the '
-      + 'finding, including the person who wrote it, and a finding that cannot be checked claims '
-      + 'more than the evidence behind it can carry. If no falsifier can honestly be named, say so '
-      + 'rather than inventing one: the record will carry that no falsifier was stated, in your '
-      + 'name and with the date, wherever this finding appears.',
+    translation: word('refusal.NO_FALSIFIER'),
   },
   /* REC-117. The one refusal the override ADDS, and it exists because the
      alternative is the plane choosing which of a member's two statements it
@@ -825,10 +752,7 @@ export const CONCLUDE_ACT_CHECKS = {
   FALSIFIER_AND_NONE_STATED: {
     check: 'C-33.33',
     where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
-    translation: 'You have written a falsifier and also asked to record that none could be stated. '
-      + 'Those are two different things to say about this finding, and choosing between them is not '
-      + 'something the record should do on your behalf. Keep the falsifier, or clear it and record '
-      + 'the absence.',
+    translation: word('refusal.FALSIFIER_AND_NONE_STATED'),
   },
   /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 (BOB #15, 2026-09-18): a conclusion
      ADOPTS the claim of the reading a project stands on, and the claim is what
@@ -850,20 +774,14 @@ export const CONCLUDE_ACT_CHECKS = {
   CONCLUSION_IS_THE_CLAIM: {
     check: 'C-33.35',
     where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
-    translation: 'When a project concludes, the claim it adopts is the conclusion, so a separate '
-      + 'conclusion text is not accepted — it could say something no claim said. Anything you want to '
-      + 'add beyond the claim can be sent as commentary: it is recorded in your name and is never '
-      + 'treated as evidence.',
+    translation: word('refusal.CONCLUSION_IS_THE_CLAIM'),
   },
   /* R48 (D59; K2479, K2491). A conclusion's bias applications, judged by inquiry-grammar R18's one shape check with a
      conclusion's own effects; refused before the lens is asked, nothing written. */
   BAD_BIAS_APPLIED: {
     check: 'C-25.35',
     where: 'src/basis-versions/index.mjs conclude > conclusionBiasApplied',
-    translation: 'A project\'s conclusion can record each statement of its declared bias that bore on it: the '
-      + 'statement, and whether it refused an inference or raised scrutiny. This list could not be recorded as sent '
-      + '(a missing or unwritable statement, another effect, a repeat, or more than 32), or it was sent with no '
-      + 'project. Nothing was recorded.',
+    translation: word('refusal.BAD_BIAS_APPLIED'),
   },
   /* REC-136 / §7.1 item 7. A project withdraws only a conclusion it currently
      stands on; a second withdrawal, or one with nothing concluded, would add
@@ -871,9 +789,7 @@ export const CONCLUDE_ACT_CHECKS = {
   NOTHING_TO_WITHDRAW: {
     check: 'C-33.37',
     where: 'src/basis-versions/index.mjs withdrawConclusion > is-withdraw-stance',
-    translation: 'There is no conclusion here to withdraw: this project has not concluded this question, or '
-      + 'has already withdrawn its latest conclusion. Everything it concluded and withdrew before stays in '
-      + 'the record.',
+    translation: word('refusal.NOTHING_TO_WITHDRAW'),
   },
   /* REC-124. The project's own frontmatter could not take the conclusion row
      in place, so nothing was written — the make-current writer's condition, on
@@ -881,9 +797,7 @@ export const CONCLUDE_ACT_CHECKS = {
   UNSPLICEABLE_CONCLUSIONS: {
     check: 'C-33.36',
     where: 'src/basis-versions/index.mjs #setProjectConclusion > is-conclusion-row',
-    translation: 'The project\'s own record is laid out in a way this act cannot add a conclusion to '
-      + 'without rewriting parts of it nobody asked to change, so nothing was recorded. The project\'s '
-      + 'file needs its list of conclusions tidied before it can conclude.',
+    translation: word('refusal.UNSPLICEABLE_CONCLUSIONS'),
   },
 };
 
@@ -915,79 +829,56 @@ export const NARROW_CHECKS = {
   NARROW_NO_INQUIRY: {
     check: 'C-50.1',
     where: 'src/basis-versions/index.mjs #narrowSource > is-narrow-source',
-    translation: 'That request does not name a question this record holds and you can read. Making '
-      + 'a citation more specific happens on a question\'s reading of its evidence, so it needs the '
-      + 'question first.',
+    translation: word('refusal.NARROW_NO_INQUIRY'),
   },
   NARROW_NO_SUCH_VERSION: {
     check: 'C-50.2',
     where: 'src/basis-versions/index.mjs #narrowSource > is-narrow-source',
-    translation: 'That question has no reading of its evidence by that name. A citation is made more '
-      + 'specific in a NEW reading taken from an existing one, so the reading it starts from has to '
-      + 'be named exactly as the question holds it.',
+    translation: word('refusal.NARROW_NO_SUCH_VERSION'),
   },
   NARROW_NO_SUCH_LEG: {
     check: 'C-50.3',
     where: 'src/basis-versions/index.mjs #narrowSource > is-narrow-source',
-    translation: 'That reading has no piece of evidence at the position named. Pieces are counted '
-      + 'from zero, in the order the reading lists them.',
+    translation: word('refusal.NARROW_NO_SUCH_LEG'),
   },
   NARROW_NO_PART: {
     check: 'C-50.4',
     where: 'src/basis-versions/index.mjs #narrowSource > is-narrow-source',
-    translation: 'That piece of evidence has no part to point at more precisely. It either rests on '
-      + 'another question, which has no pages or passages, or on a document this record holds no '
-      + 'copy of — and a part of something nobody captured cannot be named.',
+    translation: word('refusal.NARROW_NO_PART'),
   },
   NARROW_NOT_A_MEMBER: {
     check: 'C-50.5',
     where: 'src/basis-versions/index.mjs narrow > is-narrow-extent',
-    translation: 'Making a citation more specific is a member\'s own act, done in their name. A '
-      + 'machine may PROPOSE passages that look relevant, and they are listed for you to choose from, '
-      + 'but choosing which passage is on point is a judgment a person signs for.',
+    translation: word('refusal.NARROW_NOT_A_MEMBER'),
   },
   NARROW_NO_EXTENT: {
     check: 'C-50.6',
     where: 'src/basis-versions/index.mjs narrow > is-narrow-extent',
-    translation: 'That request does not say which part of the document the citation should point at. '
-      + 'Name the part — a page, a region of a page, a cell, a paragraph or a slide — or choose one of '
-      + 'the proposed passages by its content id.',
+    translation: word('refusal.NARROW_NO_EXTENT'),
   },
   NARROW_BAD_EXTENT: {
     check: 'C-50.7',
     where: 'src/basis-versions/index.mjs narrow > is-narrow-extent',
-    translation: 'The part named cannot be recorded as sent: it names a field this act does not take, '
-      + 'a value that cannot be written into the record, a content id this record does not hold, or '
-      + 'both a content id and a description of the same part. It is refused rather than guessed at, '
-      + 'because a citation quietly re-read would not be the one you made.',
+    translation: word('refusal.NARROW_BAD_EXTENT'),
   },
   NARROW_OTHER_CAPTURE: {
     check: 'C-50.8',
     where: 'src/basis-versions/index.mjs narrow > is-narrow-extent',
-    translation: 'The part named is not in the copy of the document this citation rests on. Pointing '
-      + 'the citation at a different document, or at a later copy of the same one, is not making it '
-      + 'more specific — it is moving it, and a citation is never moved except by its own separate act.',
+    translation: word('refusal.NARROW_OTHER_CAPTURE'),
   },
   NARROW_NOT_NARROWER: {
     check: 'C-50.9',
     where: 'src/basis-versions/index.mjs narrow > is-narrow-claim',
-    translation: 'The part named is not inside what the citation already points at — it is the same '
-      + 'part, a wider one, or a different place in the document. Making a citation more specific '
-      + 'can only ever point it at LESS of the document than before; anything else would claim a '
-      + 'precision nobody established.',
+    translation: word('refusal.NARROW_NOT_NARROWER'),
   },
   NARROW_NAME: {
     check: 'C-50.10',
     where: 'src/basis-versions/index.mjs narrow > is-narrow-claim',
-    translation: 'The new reading needs a name of its own, one the question does not already use. The '
-      + 'reading it starts from keeps its name and stays exactly as it was: changing an existing '
-      + 'reading in place would move a citation somebody else may be relying on.',
+    translation: word('refusal.NARROW_NAME'),
   },
   NARROW_NO_DESCRIPTION: {
     check: 'C-50.11',
     where: 'src/basis-versions/index.mjs narrow > is-narrow-claim',
-    translation: 'The new reading needs a short account of what changed and why — which citation now '
-      + 'points at less of its document, and what makes that part the one that matters. That account '
-      + 'is what a later reader has to go on.',
+    translation: word('refusal.NARROW_NO_DESCRIPTION'),
   },
 };

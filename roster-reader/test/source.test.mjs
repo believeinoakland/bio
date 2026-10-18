@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { rosterSource, LEVEL_READ, LEVEL_NOT_READ, staffRoster } from "../index.mjs";
 import { ROSTER_DOCS, FIRST, ctxOf, freeze } from "./fixtures.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 const D = ROSTER_DOCS.documents;
 const Q = { organisation: "ENT-7", at: "2025-03-01", viewer: "MBR-1" };
@@ -110,7 +111,7 @@ test("R12 with no held roster it answers rosters: [] with why; with reads absent
   for (const [reads, why] of cases) {
     const a = rosterSource(reads)(Q);
     assert.equal(a.level, LEVEL_NOT_READ);
-    assert.equal(a.level, "held as a table, not read");
+    assert.equal(a.level, word("people.held_as_a_table_not"));
     assert.deepEqual(a.rosters, []);
     assert.equal(a.organisation, "ENT-7");
     assert.match(a.why, why);

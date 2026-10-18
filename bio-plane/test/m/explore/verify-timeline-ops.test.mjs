@@ -5,6 +5,7 @@ import { exploreOf, exploreOps, INPUT_NOT_READ } from "../../../src/explore/inde
 import { derivedId } from "../../../src/connection-grammar/index.mjs";
 import { AT, INQUIRY, ent, conn, world, byOwner, makeStore } from "./fixtures/owners.mjs";
 import { seeded, ANN } from "../money/fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const V = "alice";
 const A = ent(1), B = ent(2), C = ent(3);
@@ -152,6 +153,6 @@ test("DEC-149 (T34-78) the timeline's member-facing refusal and note call the gr
   assert.equal(none.refused, "NOT_AVAILABLE");
   assert.equal(none.why, "your team's Civicsmith has no events record connected, so no timeline can be read");
   const noMoney = exploreOf(null, { events: { timeline: () => ({ ok: true, world: { items: [] }, ours: { sources: [] } }) } }).timelineOver({ set: [A], viewer: V });
-  assert.equal(noMoney.money_note, "your team's Civicsmith has no money record connected, so no payer or payee is shown");
+  assert.equal(noMoney.money_note, word("explore.money_note"));
   for (const t of [none.why, noMoney.money_note]) assert.doesNotMatch(t, /\b(this instance|the instance|copy|plane|server)\b/);
 });

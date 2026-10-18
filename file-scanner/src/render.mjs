@@ -2,6 +2,7 @@
  * `SafeViewRenderer` image (container/renderer.mjs), whose answer, a PDF of page images and its headers, passes through. */
 import { SAFE_VIEW_DPI, SAFE_VIEW_PAGES_MAX } from './limits.mjs';
 import { normaliseTarget, knownStore, sizeTarget, targetStream } from './store.mjs';
+import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 const STATUS = { NOT_FOUND: 404, DIGEST_MISMATCH: 409, TOO_LARGE: 413 };
 const refuse = (status, code, extra = {}) => new Response(JSON.stringify({ ok: false, code, ...extra }),
@@ -9,7 +10,7 @@ const refuse = (status, code, extra = {}) => new Response(JSON.stringify({ ok: f
 const KNOWN = new Set(['ENCRYPTED', 'NOT_RENDERABLE', 'TIME_LIMIT', 'RENDER_FAILED']);
 const PASSED = ['content-type', 'x-derived-sha256', 'x-pages', 'x-source-pages', 'x-truncated'];
 
-/** The target's check and copy, shared with the outside tools' routes: `{ok:true, t, bytes}` or a refusal Response. */
+/** The target's check, shared with the outside tools' routes: `{t, store}` once it passes, else `{refusal}`, a refusal Response. */
 export async function checkOne(deps, body) {
   if (!body || !knownStore(body.store)) return { refusal: refuse(400, 'NAMESPACE_UNKNOWN') };
   const t = normaliseTarget(body.target);
@@ -38,11 +39,11 @@ export async function render(deps, body) {
     o = { ok: true };
   }
   if (!o.ok) return refuse(STATUS[o.reason] || 409, o.reason in STATUS ? o.reason : 'DIGEST_MISMATCH');
-  if (!r) return refuse(503, 'RENDER_FAILED', { message: 'the renderer could not be reached' });
+  if (!r) return refuse(503, 'RENDER_FAILED', { message: localize('file-scanner.render.the_renderer_could_not', 'the renderer could not be reached') });
   if (r.status !== 200) {
     const e = await r.json().catch(() => ({}));
     const code = KNOWN.has(e.code) ? e.code : 'RENDER_FAILED';
-    const message = code === 'RENDER_FAILED' ? String(e.message || `the renderer answered ${r.status}`).slice(0, 300) : undefined;
+    const message = code === 'RENDER_FAILED' ? String(e.message || localize('file-scanner.render.the_renderer_answered_status', 'the renderer answered {status}', { status: String(r.status) })).slice(0, 300) : undefined;
     return refuse(code === 'TIME_LIMIT' ? 504 : code === 'RENDER_FAILED' ? 500 : 422, code, message ? { message } : {});
   }
   const headers = new Headers();

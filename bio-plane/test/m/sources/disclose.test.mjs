@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET } from "./fixture.mjs";
 import { SOURCES_CHECKS, KINDS, HOWS, AUDIENCES, ATTRIBUTES, NOT_RECORDED, claimSentence } from "../../../src/sources/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 const rowOf = (r, code) => { assert.equal(r.check, SOURCES_CHECKS[code].check); assert.equal(r.translation, SOURCES_CHECKS[code].translation); };
@@ -152,7 +153,7 @@ test("R4 recorded: false records a detail known to the group without its value: 
     assert.equal(e.value, undefined, viewer);
     assert.equal(e.withheld, undefined, "nothing is withheld: there is nothing to withhold");
     assert.equal(e.note, NOT_RECORDED);
-    assert.equal(e.note, "known to the team, not recorded");
+    assert.equal(e.note, word("sources.known_group_recorded"));
     const rung = w.s.rungOf({ source: sourceId, viewer });
     assert.ok(rung.basis.every((b) => b.value === undefined));
   }

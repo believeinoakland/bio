@@ -50,6 +50,7 @@ import { registerProjectGrammar } from "./grammar.mjs";
 import { ASPIRATION, GOAL, ASPIRATION_SCOPES, GRADES, TOKEN, quotable, q, parseFm, setField, removeBlock, setBlock,
          appendItem, appendHistory, readSection, setSection, appendSection, logEntry, deadEndsOf, aspirationDoc,
          goalDoc, pursuitId, CONDITION_KEY, AMOUNT_PERIOD_FIELDS, conditionLines, conditionOf } from "./doc.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { INTENT_CHECKS } from "./checks.mjs";
 export { INTENT_SCHEMA, INTENT_TABLES } from "./schema.mjs";
@@ -59,8 +60,7 @@ export { PROJECT_GRAMMAR, CLOSED_REASONS, checkProjectExtension, registerProject
 /** R9 (N327, DEC-83): the group aspiration's fixed act, and its next step, for `membership.notAnAdmin` (its R84), which
  *  answers `NOT_AN_ADMIN` in place of the retired `GROUP_ASPIRATION_NOT_ADMIN` (C-111.16, its number not reused). */
 export const GROUP_ASPIRATION_ACT = "declaring, revising or retiring an aspiration the whole team holds";
-export const GROUP_ASPIRATION_REMEDY = "Ask an active administrator: they declare, revise or retire an aspiration the "
-  + "whole team holds in their own name, and the act carries their name and date.";
+export const GROUP_ASPIRATION_REMEDY = word("intent.ask_active_administrator");
 /** R16: the four acts on a proposal. */
 export const TRIAGE_ACTS = Object.freeze(["adopt", "question", "defer", "dismiss"]);
 /** R17 (Suggestions): the ageing interval's setting in record-core, and its default in days (C-10.1's staleness age). */
@@ -73,7 +73,7 @@ export const GAP_KIND = "objective-gap";
 /** R16: a reason's bound, the restricted grammar's edge reason (a reason may travel into a document's front matter). */
 export const REASON_MAX = 160;
 /** R33: the words stated beside a required stage met by a records request answered that no such record exists. */
-export const NONE_EXISTS_SAYS = "answered: none exists";
+export const NONE_EXISTS_SAYS = word("intent.answered_none_exists");
 /** R32: the most entities an adopted proposal's warning asks about (its basis's entity and its instances'), the cap on
  *  persons one warning names elsewhere (K1881's 20). */
 export const WARNING_SUBJECTS_MAX = 20;
@@ -276,7 +276,7 @@ export class Intent {
       return refusePursuitUnstated(`a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, `
                      + "in its Statement section. Nothing was written.");
     if (type === GOAL) {
-      if (to === "closed" && from !== "closed" && !readSection(text, "Why It Closed"))
+      if (to === "closed" && from !== "closed" && !readSection(text, word("intent.closed")))
         return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
       return null;
     }
@@ -298,8 +298,7 @@ export class Intent {
                      + "which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
     if (scope === "member" && str(owner) !== who)
       /* DEC-49 REGION is-aspiration-yours */
-      return refusal("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. "
-                     + "Nothing was written.", { owner });
+      return refusal("NOT_YOURS", localize("intent.index.a_members_aspiration_is_declared", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written."), { owner });
       /* END DEC-49 REGION is-aspiration-yours */
     if (scope === "project") {
       const p = this.#project(owner, viewer);
@@ -441,8 +440,7 @@ export class Intent {
     /* R2 (DEC-88): why progress is measured this way, in the author's words; a removal too. Asked before the
        condition's shape, so nothing is written. */
     const why = reasonOf(reason);
-    if (!why) return refuseNoReason("setting, changing or removing an objective's measure records why, in your own words. "
-                                    + "Nothing was written.");
+    if (!why) return refuseNoReason(localize("intent.index.setting_changing_or_removing_an", "setting, changing or removing an objective's measure records why, in your own words. Nothing was written."));
     const c = condition == null ? null
       : { ...condition, required: isObj(condition.required) ? { grade: condition.required.grade ?? null,
                                                                stages: condition.required.stages ?? [] } : condition.required,
@@ -454,7 +452,7 @@ export class Intent {
     let text = removeBlock(p.doc.text, CONDITION_KEY);
     if (c) text = setBlock(text, CONDITION_KEY, conditionLines(c, str(author), at));
     text = setField(text, "last_updated", q(at));
-    text = logEntry(text, at, c ? "Objective condition set" : "Objective condition removed", str(author),
+    text = logEntry(text, at, c ? word("intent.objective_condition_set") : word("intent.objective_condition_removed"), str(author),
                     `${c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."}`
                     + `\nReason: ${bodyText(why)}`);
     /* R32: the promotion carries inquiry R59's warning when the condition names a person in no public role */
@@ -496,12 +494,12 @@ export class Intent {
       for (const [k, v] of Object.entries(filter)) {
         if (k === "entity_kind") { if (!inst.entity || inst.entity.kind !== String(v)) passes = false; }
         else if (k !== "amount" && unevaluable === null)
-          unevaluable = `the record cannot evaluate the filter '${k}' on this instance`;
+          unevaluable = word("intent.record_cannot_evaluate", { key: String(k) });
       }
       if (passes && "amount" in filter) {
         amount = this.#amount(eid, filter.amount, viewer);
         if (amount.passes === false) passes = false;
-        else if (amount.passes === null && unevaluable === null) unevaluable = `the amount filter is undetermined: ${amount.why}`;
+        else if (amount.passes === null && unevaluable === null) unevaluable = word("intent.amount_filter_undetermined", { why: String(amount.why) });
       }
       if (!passes) continue;
       const row = { entity_id: eid, entity_label: inst.entity ? inst.entity.label : null,
@@ -591,45 +589,44 @@ export class Intent {
                   limit: AMOUNT_FACTS_MAX };
     let read;
     try { read = this.money.moneyOf({ ...ask, viewer: PLANE_VIEWER }); }
-    catch (e) { return open(`money could not answer (${String(e && e.message || e).slice(0, 120)})`); }
+    catch (e) { return open(word("intent.money_answer", { entry: String(String(e && e.message || e).slice(0, 120)) })); }
     if (!read || read.ok === false)
-      return open(`money refuses the read (${read ? read.reason : "no answer"}${read && read.detail ? `: ${read.detail}` : ""})`,
+      return open(word("intent.money_refuses_read", { read: String(read ? read.reason : "no answer"), read_2: String(read && read.detail ? `: ${read.detail}` : "") }),
                   read && read.reason ? { code: read.reason } : {});
     const ids = (read.facts || []).map((f) => f.fact_id);
     const shown = this.#factsSeen(ask, ids, viewer);
     if (read.truncated)
-      return open(`more than ${AMOUNT_FACTS_MAX} money facts answer, and one read takes that many, so their total is not taken`,
+      return open(word("intent.money_facts_answer", { amount_facts_max: String(AMOUNT_FACTS_MAX) }),
                   { facts: shown });
     if ((read.undetermined || []).length)
-      return open(`${read.undetermined.length} money fact(s) state a period with no end, so whether they fall in the period `
-                  + "named is not settled", { facts: shown });
+      return open(word("intent.money_fact_state", { undetermined: String(read.undetermined.length) }), { facts: shown });
     if (!ids.length)
       return open("the record holds no money fact for this entity in the kinds, phases and period named, so its total is "
                   + "not known; it is never taken as zero");
     let sum;
     try { sum = this.money.summable({ factIds: ids, viewer: PLANE_VIEWER }); }
-    catch (e) { return open(`money could not answer (${String(e && e.message || e).slice(0, 120)})`, { facts: shown }); }
+    catch (e) { return open(word("intent.money_answer", { entry: String(String(e && e.message || e).slice(0, 120)) }), { facts: shown }); }
     if (!sum || sum.ok !== true)
-      return open(`these facts are not summed (${sum ? sum.reason : "no answer"}${sum && sum.detail ? `: ${sum.detail}` : ""})`,
+      return open(word("intent.facts_summed", { sum: String(sum ? sum.reason : "no answer"), sum_2: String(sum && sum.detail ? `: ${sum.detail}` : "") }),
                   { facts: shown, ...(sum && sum.reason ? { code: sum.reason } : {}) });
     let total = null;
     for (const f of read.facts) {
       const fig = figureOfFact(f);
       total = total === null ? fig : add(total, fig);
-      if (total && total.refused) return open(`the facts' amounts do not add (${total.refused}: ${total.why})`, { facts: shown });
+      if (total && total.refused) return open(word("intent.facts_amounts_add", { refused: String(total.refused), why: String(total.why) }), { facts: shown });
     }
     const out = { ...base, total, facts: shown };
     if (total.currency !== a.currency)
-      return open(`the facts are in ${total.currency} and the filter names ${a.currency}, so they are not compared`,
+      return open(word("intent.facts_filter_names", { currency: String(total.currency), currency_2: String(a.currency) }),
                   { total, facts: shown });
     if (total.approximate || total.precision === "approximate")
-      return open("the total is approximate, and an approximate figure settles no comparison", { total, facts: shown });
+      return open(word("intent.total_approximate_approximate"), { total, facts: shown });
     const r = readingOf(total);
     const below = a.min != null ? [cmpD(r.hi, dec(a.min)) < 0, cmpD(r.lo, dec(a.min)) >= 0] : [false, true];
     const above = a.max != null ? [cmpD(r.lo, dec(a.max)) > 0, cmpD(r.hi, dec(a.max)) <= 0] : [false, true];
     if (below[0] || above[0]) return { ...out, passes: false };
     if (below[1] && above[1]) return { ...out, passes: true };
-    return open("the total's reading (a rounded figure or a range) lies across a bound", { total, facts: shown });
+    return open(word("intent.total_reading_rounded"), { total, facts: shown });
   }
 
   /* R5, R31: the fact ids beside an instance, each null when the viewer may not see that fact. */
@@ -650,12 +647,12 @@ export class Intent {
     const computed_at = this.#when();
     if (!held)
       return { ok: true, project, objective, condition: null, computable: false,
-               why: "progress cannot be computed: the objective states no condition the record can be measured against",
+               why: word("intent.why.progress_cannot_computed"),
                matched: null, meeting: null, short: null, undetermined: null, satisfied: null, computed_at };
     const bad = this.#conditionRefusal(held.condition);
     if (bad)
       return { ok: true, project, objective, condition: held.condition, computable: false,
-               why: `progress cannot be computed: the condition no longer reads against the record (${bad.reason})`,
+               why: word("intent.why.progress_cannot_computed_condition", { reason: String(bad.reason) }),
                matched: null, meeting: null, short: null, undetermined: null, satisfied: null, computed_at };
     const m = this.#measure(held.condition, viewer);
     const n = m.matched.length, k = m.meeting.length, u = m.undetermined.length, share = held.condition.satisfied.share;
@@ -663,9 +660,8 @@ export class Intent {
        its bound (N181) decides nothing: the instances past the cut could move the share either way. */
     const satisfied = n === 0 || m.truncated ? null
       : k * 100 >= share * n ? true : (k + u) * 100 < share * n ? false : null;
-    const why = n === 0 ? "no instance matches the condition, so no share of them can be taken"
-      : m.truncated ? `more than ${MEASURE_MAX} instances match the condition and one read measures that many, so no `
-                    + "share of them is taken" : null;
+    const why = n === 0 ? word("intent.instance_matches_condition")
+      : m.truncated ? word("intent.instances_match_condition", { measure_max: String(MEASURE_MAX) }) : null;
     return { ok: true, project, objective, condition: held.condition, set_by: held.set_by, set_at: held.set_at,
              computable: true, matched: n, meeting: k, short: m.short, undetermined: m.undetermined, satisfied,
              ...(why ? { satisfied_why: why } : {}), limit: MEASURE_MAX, truncated: m.truncated,
@@ -685,11 +681,11 @@ export class Intent {
     const key = `${project}::${cond.progression}::${s.entity_id}`;
     const basis = s.why.stages_missing
       ? { project, progression: cond.progression, entity: s.entity_id, stages_missing: s.why.stages_missing,
-          says: `the records the stages ${s.why.stages_missing.join(", ")} would hold are to be requested`,
+          says: word("intent.says.records_stages_hold", { stages_missing: String(s.why.stages_missing.join(", ")) }),
           ...(s.none_exists ? { none_exists: s.none_exists } : {}) }
       : { project, progression: cond.progression, entity: s.entity_id, grade_reached: s.why.grade_reached,
           grade_required: s.why.grade_required, link: s.why.weakest_link,
-          says: "the weakest link of this instance is to be strengthened" };
+          says: word("intent.says.weakest_link_instance") };
     return { key: `intent::${key}`, source: "intent", kind: GAP_KIND, grade: s.grade_determined ? s.grade : null, basis,
              instances: [{ entity_id: s.entity_id, entity_label: s.entity_label, documents: s.documents }],
              surfaced_by: "machine" };
@@ -871,7 +867,7 @@ export class Intent {
     const at = this.#when();
     let text = appendItem(g.text, "objectives", { project, by: TOKEN.test(str(author)) ? str(author) : q(author), at: q(at) });
     text = setField(text, "last_updated", q(at));
-    text = logEntry(text, at, "Objective linked", str(author), `${project}'s objective serves this goal.`);
+    text = logEntry(text, at, "Objective linked", str(author), word("intent.objective_serves_goal", { project: String(project) }));
     const r = this.#revise(g, text, str(author), viewer);
     if (!r.ok) return r;
     return { ok: true, goal, project, by: str(author), at };
@@ -887,11 +883,11 @@ export class Intent {
     if (g.head.currentState === "closed")
       return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
     const at = this.#when();
-    let text = appendHistory(g.text, { at, from: "open", to: "closed", blurb: "closed; the reason is in its document",
+    let text = appendHistory(g.text, { at, from: "open", to: "closed", blurb: word("intent.blurb.closed_reason_document"),
                                        author: str(author) });
     text = setField(setField(setField(text, "prior_state", "open"), "current_state", "closed"), "last_updated", q(at));
-    text = setSection(text, "Why It Closed", bodyText(reason));
-    text = logEntry(text, at, "Closed", str(author), "open to closed.");
+    text = setSection(text, word("intent.closed"), bodyText(reason));
+    text = logEntry(text, at, "Closed", str(author), word("intent.open_closed"));
     const r = this.#revise(g, text, str(author), viewer);
     if (!r.ok) return r;
     return { ok: true, goal, state: "closed", reason: str(reason), author: str(author), at };
@@ -915,7 +911,7 @@ export class Intent {
     const aspiration = asp && (viewer == null || this.#pursuit(asp, ASPIRATION, viewer)) ? asp : null;
     return { id: g.id, statement: readSection(g.text, "Statement"), bounds: readSection(g.text, "Bounds"),
              aspiration, objectives, state: g.head.currentState,
-             closed_reason: g.head.currentState === "closed" ? readSection(g.text, "Why It Closed") : null,
+             closed_reason: g.head.currentState === "closed" ? readSection(g.text, word("intent.closed")) : null,
              author: g.fm.author ?? null, at: g.fm.created ?? null };
   }
 
@@ -964,9 +960,8 @@ export class Intent {
       return refuseBadScope("a project departs only from an aspiration the whole team holds; a project's or a "
                      + "member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
     if (a.head.currentState === "retired")
-      return refusePursuitEnded("a retired aspiration is held by no project, so there is nothing to depart from. "
-                     + "Nothing was written.", { aspiration });
-    if (!str(reason)) return refuseNoReason("a departure from the team's aspiration records why. Nothing was written.");
+      return refusePursuitEnded(localize("intent.index.a_retired_aspiration_is_held", "a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written."), { aspiration });
+    if (!str(reason)) return refuseNoReason(localize("intent.index.a_departure_from_the_teams", "a departure from the team's aspiration records why. Nothing was written."));
     const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
     if (denied) return denied;
     const at = this.#when();
@@ -993,7 +988,7 @@ export class Intent {
     let text = appendSection(a.text, "Dead Ends",
                              `### ${at} | ${str(author)}\n${bodyText(note)}`);
     text = setField(text, "last_updated", q(at));
-    text = logEntry(text, at, "Dead end recorded", str(author), "a dead end was appended to the pursuit record.");
+    text = logEntry(text, at, word("intent.dead_end_recorded"), str(author), word("intent.dead_end_appended"));
     const r = this.#revise(a, text, str(author), viewer);
     if (!r.ok) return r;
     return { ok: true, aspiration, note: str(note), author: str(author), at };
@@ -1013,11 +1008,11 @@ export class Intent {
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at = this.#when();
-    let text = appendHistory(a.text, { at, from: "held", to: "retired", blurb: "retired; what it taught is in its document",
+    let text = appendHistory(a.text, { at, from: "held", to: "retired", blurb: word("intent.blurb.retired_taught_document"),
                                        author: str(author) });
     text = setField(setField(setField(text, "prior_state", "held"), "current_state", "retired"), "last_updated", q(at));
     text = setSection(text, "Taught", bodyText(taught));
-    text = logEntry(text, at, "Retired", str(author), "held to retired.");
+    text = logEntry(text, at, "Retired", str(author), word("intent.held_retired"));
     const r = this.#revise(a, text, str(author), viewer);
     if (!r.ok) return r;
     return { ok: true, aspiration, state: "retired", taught: str(taught), author: str(author), at };
@@ -1084,7 +1079,7 @@ export class Intent {
     return { ok: true, project: project || null, member: member || null, aspirations: [...group, ...own, ...mine],
              limit: ASPIRATIONS_MAX, truncated, departures, departures_limit: DEPARTURES_MAX,
              departures_truncated: dep.truncated, precedence: null,
-             says: "these are held side by side; the record states no order among them and resolves nothing between them" };
+             says: word("intent.says.held_side_side") };
   }
 
   /** R13: each pair of held aspirations naming a common entity or progression, with what they share. The held ones
@@ -1103,7 +1098,7 @@ export class Intent {
         if (!entities.length && !progressions.length) continue;
         if (pairs.length === CONTACTS_MAX) { truncated = true; break outer; }
         pairs.push({ a: a.id, b: b.id, shared: { entities, progressions },
-                     says: "both name what is listed; the record does not say whether they agree" });
+                     says: word("intent.says.name_listed_record") });
       }
     return { ok: true, contacts: pairs, limit: CONTACTS_MAX, truncated };
   }
@@ -1157,7 +1152,7 @@ export class Intent {
     const capture_requests = named.map((id) => {
       let r = null;
       try { r = byId.requestById({ request: id, viewer }); } catch { r = null; }
-      if (!r) return { request: id, outcome: null, why: "no such request is held, or it is one you may not see" };
+      if (!r) return { request: id, outcome: null, why: word("intent.why.request_held_see") };
       return { request: id, outcome: { state: r.state, code: r.code ?? null, capture_sha: r.capture_sha ?? null,
                                        captured_at: r.captured_at ?? null } };
     });
@@ -1345,7 +1340,7 @@ export class Intent {
                                          + "shape this grammar can extend. Nothing was written.");
       /* END DEC-49 REGION is-adoptions-spliceable */
       text = setField(text, "last_updated", q(at));
-      text = logEntry(text, at, "Proposal adopted", str(author), `the proposal ${found.key} is adopted into the objective.`);
+      text = logEntry(text, at, "Proposal adopted", str(author), word("intent.proposal_adopted_objective", { key: String(found.key) }));
       const r = this.#revise(proj, text, str(author), viewer);
       if (!r.ok) return r;
     } else if (act === "question") {
@@ -1385,10 +1380,10 @@ export class Intent {
       "produced_by:", `  mode: ${machine(author) ? "agent" : "human"}`, "  capability_tier: session", "references: []",
       "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
       "visuals: []", `surfaced_by: ${machine(author) ? "agent" : "human"}`, 'disposition_reason: ""',
-      `surfaced_from: ${q(found.key)}`, "---", "", "## Question", "", question, "", "## What It Rests On", "",
-      `Surfaced from the proposal ${found.key} (${found.source}, ${found.kind ?? "finding"}): ${JSON.stringify(found.basis ?? null)}`,
-      "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
-      `### Session ${at} | Surfaced | ${who}`, `Changes: opened from the proposal ${found.key}.`, "", "## Review Notes", ""].join("\n");
+      `surfaced_from: ${q(found.key)}`, "---", "", "## Question", "", question, "", word("conformance.rests"), "",
+      word("intent.surfaced_proposal", { key: String(found.key), source: String(found.source), kind: String(found.kind ?? "finding"), basis: String(JSON.stringify(found.basis ?? null)) }),
+      "", "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
+      `### Session ${at} | Surfaced | ${who}`, word("intent.changes_opened_proposal", { key: String(found.key) }), "", "## Review Notes", ""].join("\n");
     return this.promotion.promote({ bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_${rand(4)}`, author: who,
       files: [{ path: "bundle.md", text }],
       meta: { object_type: "inquiry", current_state: "surfaced", created: at, last_updated: at },
@@ -1402,7 +1397,7 @@ export class Intent {
   async ageSurfaced(now) {
     const nowMs = this.#instantMs(now);
     const days = this.ageingDays();
-    const reason = `surfaced by an assistant; no member acted within ${days} days`;
+    const reason = word("intent.surfaced_assistant_member", { days: String(days) });
     const aged = [], refused = [];
     const read = this.#ageable();
     const due = read.list.filter((x) => x.at <= nowMs).map((x) => x.id);
@@ -1503,8 +1498,7 @@ export class Intent {
   async workObjective({ project, reason, author, viewer = null, run = {} } = {}) {
     /* DEC-49 REGION is-objective-member */
     if (machine(author))
-      return refusal("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act "
-                     + "(DEC-24 rule 2). No run was opened.");
+      return refusal("MACHINE_CANNOT_CHOOSE_THE_QUESTION", localize("intent.index.setting_an_assistant_to_work", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened."));
     /* END DEC-49 REGION is-objective-member */
     /* R18 (DEC-88 (4)): why the run is opened, in the member's words, asked before the project is read; no run opened. */
     const why = reasonOf(reason);
@@ -1692,12 +1686,12 @@ function figureOfFact(f) {
 function questionOf(p) {
   const b = isObj(p.basis) ? p.basis : {};
   if (p.source === "progressions")
-    return `Why is the '${b.stage_key}' stage of '${b.progression_key}' missing where the flow requires it?`;
+    return word("intent.stage_missing_flow", { stage_key: String(b.stage_key), progression_key: String(b.progression_key) });
   if (p.kind === GAP_KIND)
     return b.stages_missing
-      ? `What would fill the stages ${b.stages_missing.join(", ")} of '${b.progression}' for ${b.entity}?`
-      : `What would strengthen the weakest link of '${b.progression}' for ${b.entity}?`;
-  return `What does the finding ${p.key} show?`;
+      ? word("intent.fill_stages", { stages_missing: String(b.stages_missing.join(", ")), progression: String(b.progression), entity: String(b.entity) })
+      : word("intent.strengthen_weakest_link", { progression: String(b.progression), entity: String(b.entity) });
+  return word("intent.finding_show", { key: String(p.key) });
 }
 
 /** The ops whose handlers are this module's (K3): the control plane routes, authenticates and stamps them (`author`

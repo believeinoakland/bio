@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, WORDS } from "./fixture.mjs";
 import { AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, WHOSE_WORD, aiUseOps } from "../../../src/ai-use/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = "2026-10-09T12:00:00Z";
 
@@ -168,7 +169,7 @@ test("R13 (K2514) every refusal's sentence reaches its caller whole, no placehol
   /* negative control: the words file's own sentences carry placeholders, so the test can see one left */
   for (const key of ["ai.refused.limit", "ai.refused.limit.overall", "ai.refused.limit.member", "ai.refused.limitinvalid"])
     assert.match(WORDS[key], PLACEHOLDER, key);
-  const USE_WORD = { ask: "asking", draft: "drafting", run: "working through checks and plans", standing: "standing questions", explore: "exploring" };
+  const USE_WORD = { ask: "asking", draft: "drafting", run: word("ai.use.run.inline"), standing: word("ai.use.standing.inline"), explore: "exploring" };
   const PERIOD_WORD = { day: "daily", month: "monthly" };
   const expected = (scope, whose, use, period, when) => WORDS[scope === "overall" ? "ai.refused.limit.overall"
     : scope === "per_member" ? "ai.refused.limit.member" : "ai.refused.limit"]

@@ -9,6 +9,7 @@ import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer } from ".
 import { REEXTRACT_CHECKS } from "../../../src/extraction/index.mjs";
 import { deriveMembership } from "../../../src/extraction/filemembership.mjs";
 import { WORD } from "./words.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OLD = /\b(this|the) (instance|plane)\b|\binstance's\b|\bplane's\b/i;
 
@@ -67,7 +68,7 @@ test("R27 R21 (DEC-149): a reading's origin says your team's Civicsmith composed
   const asserted = w.x.readingFor("b".repeat(64)).origin;
   assert.equal(composed.state, "composed");
   assert.equal(composed.why, WORD("extraction.why.group_civicsmith_read"), "read by key (T50)");
-  assert.equal(composed.why, "your team's Civicsmith read the capture's bytes and composed this reading");
+  assert.equal(composed.why, word("extraction.why.group_civicsmith_read"));
   assert.equal(asserted.state, "asserted");
   assert.equal(asserted.why, WORD("extraction.why.group_civicsmith_did"), "read by key (T50)");
   assert.match(asserted.why, /^your team's Civicsmith did not compose this reading: a caller carried it in/);

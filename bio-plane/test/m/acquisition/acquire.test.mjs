@@ -12,6 +12,7 @@ import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, acquireGradeNote, ACQUIRE_GRADE_NOTE,
          civicsmithUserAgent, CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ROW = (table, code) => [table[code].check, table[code].translation];
 
@@ -104,7 +105,7 @@ test("R3 R32: the archive arm needs an eligible address, finds a memento through
   assert.equal(w.prov.receipts[0].via, "archive.org");
   assert.equal(w.prov.receipts[0].retrievalLocator, replay);
   const chain = r.body.document.provenance_chain;
-  assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, "Internet Archive Wayback Machine");
+  assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, word("capture-sources.name.internet_archive_wayback"));
   assert.equal(chain[1].document_address, addr);
   assert.match(chain[1].evidence, new RegExp(`SHA-256 ${sha("archived bytes")}, computed by your team's Civicsmith`));
   assert.equal(r.body.document.capture.authority, "Internet Archive");
@@ -557,8 +558,7 @@ test("R18: the grade is the ceiling for a direct fetch and the archive letter fo
 test("R18 (N80): every success answer carries the note composed from the enforced ceiling and the letter above it; no refusal carries one; the composer refuses a sentence it cannot make true", async () => {
   const w = world();
   assert.equal(ACQUIRE_GRADE_NOTE, acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE), "composed from the one definitions");
-  assert.equal(ACQUIRE_GRADE_NOTE, `Grade ${EARNED_CAPTURE_CEILING}: bytes as fetched, hashed at receipt. Grade ${UNREACHABLE_CAPTURE_GRADE} needs a `
-    + `chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${EARNED_CAPTURE_CEILING} toward evidentiary weight.`);
+  assert.equal(ACQUIRE_GRADE_NOTE, word("acquisition.text.grade_bytes_fetched", { ceiling: String(EARNED_CAPTURE_CEILING), unreachable: String(UNREACHABLE_CAPTURE_GRADE) }));
   assert.match(acquireGradeNote("C", "B"), /^Grade C: .* Grade B needs .* raises C toward/, "the letters are the arguments, never typed");
   for (const [c, u] of [[null, "A"], ["B", null], [undefined, undefined]]) assert.throws(() => acquireGradeNote(c, u), /cannot be composed truthfully/);
   const d = await run(w, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });

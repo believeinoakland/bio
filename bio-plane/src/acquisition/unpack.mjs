@@ -24,7 +24,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { detectFormat } from "../formats.mjs";
 import { ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
 import { profileOf, profileView, evidenceStorageAbsent } from "./index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R40: one call's share, and the day's for automatic opening, each exported by its name (K1940: BOB's, K1881). The
    per-call figures keep one call within the plane's subrequest and CPU limits: every part stored is a write. */
@@ -501,14 +501,14 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
     detail: "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened" };
   const core = st.core || inst.record;
   const rawEv = core && typeof core.evidenceStore === "function" ? core.evidenceStore() : null;
-  if (!rawEv) return evidenceStorageAbsent("unpack", "your team's Civicsmith has no evidence storage configured").body;
+  if (!rawEv) return evidenceStorageAbsent("unpack", word("capture.response.group_civicsmith_evidence")).body;
   const ev = readThrough(rawEv);
 
   /* DEC-49 REGION is-archive-held */
   if (!(await holds(st, inst, sha)))
     return refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: "no acquisition receipt or register row names this archive; nothing was opened" });
   const held = await heldParts(inst, st, ev, sha, internal && internal.parts);
-  if (!held.parts) return refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: `${held.why}; nothing was opened` });
+  if (!held.parts) return refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: localize("acquisition.unpack.why_nothing_was_opened", "{why}; nothing was opened", { why: String(held.why) }) });
   /* END DEC-49 REGION is-archive-held */
   /* DEC-49 REGION is-not-an-archive
      R38 (K2100): a held capture R17's rule does not profile as `zip` is refused as R41 refuses it, before any listing.
@@ -694,9 +694,8 @@ async function fileDocument(ctx, row, stored, receipt) {
     authority_basis: word("acquisition.authority_basis.file_cut_out", { at }),
     provenance_chain: [{
       who: firstHopWho(env.INSTANCE_NAME, env.VERSION),
-      asserts: `these bytes are entry ${row.index} (${path === null ? "a name that is not valid UTF-8" : path}, the archive's own `
-        + `claim) of the archive ${sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at ${at}`,
-      evidence: `the archive's capture ${sha}; its central directory and the entry's local header agree on this entry`,
+      asserts: localize("acquisition.unpack.these_bytes_are_entry_index", "these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}", { index: String(row.index), v1: String(path === null ? "a name that is not valid UTF-8" : path), sha: String(sha), at: String(at) }),
+      evidence: localize("acquisition.unpack.the_archives_capture_sha_its", "the archive's capture {sha}; its central directory and the entry's local header agree on this entry", { sha: String(sha) }),
       bound: false, via: UNPACKED_VIA, archive_sha256: sha,
     }],
     capture: {

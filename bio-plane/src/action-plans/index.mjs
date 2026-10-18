@@ -78,6 +78,7 @@ import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS
          SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
          checkPhases, phaseTimes, unbranched, dayOf, DUTY_STATES, OFFER_KINDS, INFRACTION_OUTCOMES, MARK_KINDS, CLOSE_NOTE_MAX,
          CLOSING_NOTES_MAX, MARKS_MAX } from "./values.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { ACTION_PLANS_SCHEMA, ACTION_PLANS_TABLES } from "./schema.mjs";
 export { ACTION_PLAN_CHECKS, PLAN_WORDS } from "./checks.mjs";
@@ -87,16 +88,14 @@ export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, 
 /** R1, R8: an inquiry still open is live; these states are closed. (`published` is read, never entered.) */
 export const CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", "published"]);
 /** R32: the disclosure every machine proposal, and every option adopted from one, answers. */
-export const DISCLOSURE = (run, skill) => `Suggested by the assistant (machine work) in run ${run}, under skill version `
-  + `${skill ?? "undetermined"}. It is not the team's decision; it becomes an option only when a member adopts it.`;
-const PROPOSAL_SAYS = "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only "
-  + "when a member adopts it, in their own words for any reason the plan asks.";
-const CHECK_SAYS = "a check informs; it never refuses or changes anything.";
+export const DISCLOSURE = (run, skill) => localize("action-plans.suggested_assistant_machine", "Suggested by the assistant (machine work) in run {run}, under skill version {skill}. It is not the team's decision; it becomes an option only when a member adopts it.", { run: String(run), skill: String(skill ?? "undetermined") });
+const PROPOSAL_SAYS = localize("action-plans.proposal_option_stored", "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only when a member adopts it, in their own words for any reason the plan asks.");
+const CHECK_SAYS = localize("action-plans.check_informs_refuses", "a check informs; it never refuses or changes anything.");
 /* R41: the offers' default words, which a member may change when adopting one; the surface's keyed sentences are the
    design stream's (`plan.offer.document_infraction`, `plan.offer.chance_to_fix`). */
 const OFFER_WORDS = Object.freeze({
-  document_infraction: Object.freeze({ summary: "Document the infraction", category: "other", key: "plan.offer.document_infraction" }),
-  chance_to_fix: Object.freeze({ summary: "Offer the chance to fix it", category: "mitigation", key: "plan.offer.chance_to_fix" }),
+  document_infraction: Object.freeze({ summary: localize("action-plans.summary.document_infraction", "Document the infraction"), category: "other", key: "plan.offer.document_infraction" }),
+  chance_to_fix: Object.freeze({ summary: localize("action-plans.summary.offer_chance_fix", "Offer the chance to fix it"), category: "mitigation", key: "plan.offer.chance_to_fix" }),
 });
 /* R20, R47: the closing note's prompt, its key and words.json's words for it, read by key (DEC-194). */
 const CLOSE_NOTE_PROMPT = Object.freeze({ key: "plan.close.lessons", en: PLAN_WORDS["plan.close.lessons"] });
@@ -107,12 +106,10 @@ const LOOK_AGAIN_UNDETERMINED = "no time zone is held for this place, so the day
 const DAY_UNDETERMINED = "no time zone is held for this place, so the plan's local day is undetermined and the date is not "
   + "compared with the UTC day in its place";
 /* R40: what a paused plan's read says of it. */
-const PAUSED_SAYS = "the plan is paused: what it set running continues (its actions' dates, escalations and watches), and "
-  + "its own checkpoints are not due until it is resumed. Every act stays open to members.";
+const PAUSED_SAYS = localize("action-plans.plan_paused_set", "the plan is paused: what it set running continues (its actions' dates, escalations and watches), and its own checkpoints are not due until it is resumed. Every act stays open to members.");
 /* R37: the preview's own mode of R18's path, and what it says. */
 const PREVIEW = Symbol("action-plans start preview");
-const PREVIEW_SAYS = "a preview of starting this option: what the action would be, the matters it would rest on and the "
-  + "reminders it would set. Nothing was written: no action, no id, no reminder.";
+const PREVIEW_SAYS = localize("action-plans.preview_starting_option", "a preview of starting this option: what the action would be, the matters it would rest on and the reminders it would set. Nothing was written: no action, no id, no reminder.");
 /* R51: the skill version and bounds a member's planning run is opened under (a planning run: no search, ai-runs R46). */
 const ASK_SKILL = "planning@1";
 const ASK_BOUNDS = Object.freeze([Object.freeze({ bound: "proposals", allowed: 20 }),
@@ -241,27 +238,27 @@ export class ActionPlans {
   /** Terms: a subject's support, with why. `established` and `short` for a determined subject (each finding's frozen
    *  pair against the project's bar, per declared axis); `hypothetical` for a suspected one. */
   #support(s, project, viewer) {
-    if (s.kind === "inquiry") return { support: "hypothetical", why: "a suspected matter: an inquiry still open, not a determination" };
+    if (s.kind === "inquiry") return { support: "hypothetical", why: localize("action-plans.why.suspected_matter_inquiry", "a suspected matter: an inquiry still open, not a determination") };
     const d = this.#determination(s.determination, viewer);
-    if (!d) return { support: "undetermined", why: "the determination does not answer to this reader" };
+    if (!d) return { support: "undetermined", why: localize("escalation.determination_answer_reader", "the determination does not answer to this reader") };
     /* R35: what conformance withheld (its R24) is not measured by its absence; support is never computed over the
        visible findings alone. */
     if (d.out_of_view === true)
-      return { support: "short", why: "a finding the determination rests on is not one you may see, so it is not shown to meet the project's bar" };
+      return { support: "short", why: localize("action-plans.why.finding_determination_rests", "a finding the determination rests on is not one you may see, so it is not shown to meet the project's bar") };
     const bar = this.strength.projectBar(project) || {};
     const axes = ["capture", "connection"].filter((a) => typeof bar[a] === "string" && bar[a] in GRADE_RANK);
-    if (!axes.length) return { support: "established", why: "determined; the project declares no bar, so nothing is measured against one" };
+    if (!axes.length) return { support: "established", why: localize("action-plans.why.determined_project_declares", "determined; the project declares no bar, so nothing is measured against one") };
     const findings = Array.isArray(d.findings) ? d.findings : [];
     for (const f of findings) {
       for (const a of axes) {
         const g = f && f.frozen && f.frozen[a] ? f.frozen[a].grade : null;
         if (!(g in GRADE_RANK))
-          return { support: "short", why: `a finding's ${a} grade is not graded, so it is not shown to meet the project's bar (${a} ${bar[a]})` };
+          return { support: "short", why: localize("action-plans.why.finding_grade_graded", "a finding's {first} grade is not graded, so it is not shown to meet the project's bar ({first_2} {bar})", { first: String(a), first_2: String(a), bar: String(bar[a]) }) };
         if (GRADE_RANK[g] > GRADE_RANK[bar[a]])
-          return { support: "short", why: `a finding's ${a} grade ${g} is short of the project's bar (${a} ${bar[a]})` };
+          return { support: "short", why: localize("action-plans.why.finding_grade_short", "a finding's {first} grade {grade} is short of the project's bar ({first_2} {bar})", { first: String(a), grade: String(g), first_2: String(a), bar: String(bar[a]) }) };
       }
     }
-    return { support: "established", why: "determined; every finding it rests on meets the project's bar on each declared axis" };
+    return { support: "established", why: localize("action-plans.why.determined_finding_rests", "determined; every finding it rests on meets the project's bar on each declared axis") };
   }
 
   /** R8: a subject's liveness, derived when read; null for a subject the viewer may not see, which R35 withholds whole.
@@ -408,8 +405,7 @@ export class ActionPlans {
                               ORDER BY s.plan_id LIMIT 1`, items[i].key, project);
       /* DEC-49 REGION is-subject-free */
       if (held)
-        return refusal("SUBJECT_IN_ACTIVE_PLAN", `matter ${i} is already in the open plan ${held.plan_id} of this project. `
-          + "Nothing was written.", { index: i, plan: held.plan_id, ...(plan && held.plan_id === plan ? { this_plan: true } : {}) });
+        return refusal("SUBJECT_IN_ACTIVE_PLAN", localize("action-plans.index.matter_i_is_already_in", "matter {i} is already in the open plan {plan_id} of this project. Nothing was written.", { i: String(i), plan_id: String(held.plan_id) }), { index: i, plan: held.plan_id, ...(plan && held.plan_id === plan ? { this_plan: true } : {}) });
       /* END DEC-49 REGION is-subject-free */
     }
     return { items };
@@ -739,8 +735,7 @@ export class ActionPlans {
       if (!key || !held.some((x) => x.key === key))
         return refuseMalformed("the plan is not about that matter, so it cannot be removed. Nothing was written.", 0);
       if (held.length === 1)
-        return refuseNoSubject("a plan is about at least one matter, and that is its last. Close the plan instead. "
-          + "Nothing was written.", 0);
+        return refuseNoSubject(localize("action-plans.index.a_plan_is_about_at", "a plan is about at least one matter, and that is its last. Close the plan instead. Nothing was written."), 0);
       entry = { kind: "subject_remove", key, subject: held.find((x) => x.key === key).subject };
     }
     Object.assign(entry, { reason: reason.trim(), author, at: this.now() });
@@ -812,8 +807,7 @@ export class ActionPlans {
     const who = str(proposer);
     /* DEC-49 REGION is-proposer-stamped */
     if (!who)
-      return refusal("PROPOSAL_NO_PROPOSER", "a proposal names who made it, and this one came with no stamped caller. "
-        + "Nothing was written.");
+      return refusal("PROPOSAL_NO_PROPOSER", localize("action-plans.index.a_proposal_names_who_made", "a proposal names who made it, and this one came with no stamped caller. Nothing was written."));
     /* END DEC-49 REGION is-proposer-stamped */
     const p = this.#plan(plan, viewer);
     if (!p) return noSuchPlan(plan);
@@ -897,8 +891,7 @@ export class ActionPlans {
     if (!named.length || named.length > SOURCES_MAX || hidden !== null)
       return refusal("PROPOSAL_NO_SOURCE", !named.length || named.length > SOURCES_MAX
         ? `a machine's proposal names 1 to ${SOURCES_MAX} sources it rests on. Nothing was written.`
-        : "a source named is not a finding, determination, standard, consequence, plan or option this caller can see. "
-          + "Nothing was written.", { max: SOURCES_MAX, ...(hidden !== null && typeof hidden === "string" ? { source: hidden.slice(0, 120) } : {}) });
+        : localize("action-plans.index.a_source_named_is_not", "a source named is not a finding, determination, standard, consequence, plan or option this caller can see. Nothing was written."), { max: SOURCES_MAX, ...(hidden !== null && typeof hidden === "string" ? { source: hidden.slice(0, 120) } : {}) });
     /* END DEC-49 REGION is-proposal-sourced */
     return { ok: true, sources: [...new Set(named)] };
   }
@@ -935,7 +928,7 @@ export class ActionPlans {
                              disclosure: DISCLOSURE(r.run, r.skill_version),
                              work_kinds: kinds && kinds.work_kinds_json !== null && kinds.work_kinds_json !== undefined
                                ? { state: "stated", kinds: unjson(kinds.work_kinds_json, []) }
-                               : { state: "undetermined", says: "the project's work_kinds when this run opened were not recorded" } }
+                               : { state: "undetermined", says: localize("action-plans.says.project_work_kinds", "the project's work_kinds when this run opened were not recorded") } }
                          : {}),
              at: r.at, adopted: !!r.adopted_option,
              ...(r.adopted_option ? { adopted_option: r.adopted_option, adopted_by: r.adopted_by, adopted_at: r.adopted_at } : {}) };
@@ -1041,7 +1034,7 @@ export class ActionPlans {
       if (fixed !== true) {
         const again = this.#laterStep(p, s.subject, held, viewer, see);
         offers.push({ kind: "chance_to_fix", ...OFFER_WORDS.chance_to_fix, adopted: from("chance_to_fix"),
-                      ...(fixed === null && s.subject.kind === "outcome" ? { fixed: { state: "undetermined", says: "whether a cure stands could not be read; the offer stands" } } : {}),
+                      ...(fixed === null && s.subject.kind === "outcome" ? { fixed: { state: "undetermined", says: localize("action-plans.says.whether_cure_stands", "whether a cure stands could not be read; the offer stands") } } : {}),
                       ...(again ? { offered_again: again } : {}) });
       }
       out.push({ subject: s.subject, key: s.key, offers });
@@ -1197,8 +1190,7 @@ export class ActionPlans {
     const held = this.#scenarios(o.p.id).some((x) => x.scenario === n);
     /* DEC-49 REGION is-scenario-held */
     if (!held)
-      return refusal("NO_SUCH_SCENARIO", `the plan holds no scenario ${String(scenario ?? "(none named)").slice(0, 40)}. `
-        + "Nothing was written.", { scenario: Number.isFinite(n) ? n : null });
+      return refusal("NO_SUCH_SCENARIO", localize("action-plans.index.the_plan_holds_no_scenario", "the plan holds no scenario {String}. Nothing was written.", { String: String(String(scenario ?? "(none named)").slice(0, 40)) }), { scenario: Number.isFinite(n) ? n : null });
     /* END DEC-49 REGION is-scenario-held */
     const bad = refuseReason(reason, true);
     if (bad) return bad;
@@ -1214,7 +1206,7 @@ export class ActionPlans {
     /* END DEC-49 REGION is-scenario-aside */
     const entry = { kind: kind === "aside" ? "scenario_set_aside" : "scenario_restore", scenario: n, reason: reason.trim(),
                     author, at: this.now() };
-    const w = this.#append(o.p, entry, { blurb: kind === "aside" ? `Scenario ${n} set aside` : `Scenario ${n} restored` });
+    const w = this.#append(o.p, entry, { blurb: kind === "aside" ? localize("action-plans.blurb.scenario_set_aside", "Scenario {n} set aside", { n: String(n) }) : `Scenario ${n} restored` });
     if (!w.ok) return w;
     return { ok: true, plan: o.p.id, scenario: n, set_aside: kind === "aside", reason: entry.reason, author, at: entry.at };
   }
@@ -1241,18 +1233,15 @@ export class ActionPlans {
     const at = { index: r.index, ...(r.phase ? { phase: r.phase } : {}), ...(r.option ? { option: r.option } : {}) };
     /* DEC-49 REGION is-phase-shaped */
     if (r.fault === "malformed")
-      return refusal("PHASE_MALFORMED", `phase ${r.index ?? "list"} is not a phase this scenario can hold: ${r.detail}. `
-        + "Nothing was written.", at);
+      return refusal("PHASE_MALFORMED", localize("action-plans.index.phase_v1_is_not_a", "phase {v1} is not a phase this scenario can hold: {detail}. Nothing was written.", { v1: String(r.index ?? "list"), detail: String(r.detail) }), at);
     /* END DEC-49 REGION is-phase-shaped */
     /* DEC-49 REGION is-phase-option-chosen */
     if (r.fault === "not_chosen")
-      return refusal("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the team has not chosen: ${r.detail}. `
-        + "Nothing was written.", at);
+      return refusal("PHASE_OPTION_NOT_CHOSEN", localize("action-plans.index.phase_index_holds_an_option", "phase {index} holds an option the team has not chosen: {detail}. Nothing was written.", { index: String(r.index), detail: String(r.detail) }), at);
     /* END DEC-49 REGION is-phase-option-chosen */
     /* DEC-49 REGION is-branch-known */
     if (r.fault === "branch")
-      return refusal("BRANCH_UNKNOWN", `phase ${r.index} names a phase or a matter this scenario does not hold: ${r.detail}. `
-        + "Nothing was written.", at);
+      return refusal("BRANCH_UNKNOWN", localize("action-plans.index.phase_index_names_a_phase", "phase {index} names a phase or a matter this scenario does not hold: {detail}. Nothing was written.", { index: String(r.index), detail: String(r.detail) }), at);
     /* END DEC-49 REGION is-branch-known */
     /* DEC-49 REGION is-phase-acyclic */
     return refusal("PHASE_CYCLE", `following when each phase starts leads back to where it began: ${r.detail}, and no `
@@ -1312,14 +1301,14 @@ export class ActionPlans {
     let r;
     try {
       r = this.duties.occurrencesOf({ dutyId: duty, asOf, ...(occurrence ? {} : { from: anchor.slice(0, 10) }), viewer: dutyViewer(viewer) });
-    } catch (e) { if (e instanceof ProviderAbsent) throw e; return none("the obligation's occurrences could not be read"); }
-    if (!ok(r)) return none("the obligation does not answer to this reader");
+    } catch (e) { if (e instanceof ProviderAbsent) throw e; return none(localize("action-plans.obligation_occurrences_read", "the obligation's occurrences could not be read")); }
+    if (!ok(r)) return none(localize("action-plans.obligation_answer_reader", "the obligation does not answer to this reader"));
     const list = Array.isArray(r.occurrences) ? r.occurrences : [];
     const occ = occurrence ? list.find((x) => x.key === occurrence)
       : list.filter((x) => dayIn(x.trigger && x.trigger.date) !== null && dayIn(x.trigger.date) >= anchor.slice(0, 10))
           .sort((a, b) => (dayIn(a.trigger.date) < dayIn(b.trigger.date) ? -1 : dayIn(a.trigger.date) > dayIn(b.trigger.date) ? 1 : 0))[0];
-    if (!occ) return none(occurrence ? "that occurrence of the obligation is not derived as of this read"
-      : "no occurrence of the obligation has been triggered since the phase began to wait");
+    if (!occ) return none(occurrence ? localize("action-plans.occurrence_obligation_derived", "that occurrence of the obligation is not derived as of this read")
+      : localize("action-plans.occurrence_obligation_triggered", "no occurrence of the obligation has been triggered since the phase began to wait"));
     const recorded = ((this.duties.transitionsOf({ dutyId: duty, occurrenceKey: occ.key, viewer: dutyViewer(viewer) }) || {}).transitions || [])
       .filter((t) => typeof t.at === "string" && msOf(t.at) <= nowMs);
     const last = recorded.at(-1) || null;
@@ -1402,8 +1391,7 @@ export class ActionPlans {
     /* END DEC-49 REGION is-checkpoint-due */
     /* DEC-49 REGION is-checkpoint-once */
     if (held.has(ph.id))
-      return refusal("CHECKPOINT_JUDGED", `that checkpoint was judged ${held.get(ph.id).judged} by ${held.get(ph.id).author}. `
-        + "Nothing was written.", { judged: held.get(ph.id).judged });
+      return refusal("CHECKPOINT_JUDGED", localize("action-plans.index.that_checkpoint_was_judged_judged", "that checkpoint was judged {judged} by {author}. Nothing was written.", { judged: String(held.get(ph.id).judged), author: String(held.get(ph.id).author) }), { judged: held.get(ph.id).judged });
     /* END DEC-49 REGION is-checkpoint-once */
     const entry = { kind: "checkpoint", scenario: sc.scenario, version: sc.version, phase: ph.id, judged,
                     note: typeof note === "string" && note.trim() ? note : null, author, at: this.now() };
@@ -1460,9 +1448,7 @@ export class ActionPlans {
     const givenWhy = whyFirst !== undefined && whyFirst !== null && whyFirst !== "";
     /* DEC-49 REGION is-document-first */
     if ((first.length && !givenWhy) || (givenWhy && !isLine(whyFirst, REASON_MAX)))
-      return done(refusal("DOCUMENT_FIRST_NO_REASON", `${opt.id} goes outside the team before the infraction it serves is `
-        + `documented; say why it goes first, in 1 to ${REASON_MAX} characters with no quotation mark, backslash or line break. `
-        + "Nothing was written.", { max: REASON_MAX, matters: first.length }));
+      return done(refusal("DOCUMENT_FIRST_NO_REASON", localize("action-plans.index.id_goes_outside_the_team", "{id} goes outside the team before the infraction it serves is documented; say why it goes first, in 1 to {REASON_MAX} characters with no quotation mark, backslash or line break. Nothing was written.", { id: String(opt.id), REASON_MAX: String(REASON_MAX) }), { max: REASON_MAX, matters: first.length }));
     /* END DEC-49 REGION is-document-first */
     const at = this.now();
     const doc = actionDocument({ fields: opt.fields, kind, project: p.project, plan: p.id, option: opt.id, contact: member,
@@ -1578,13 +1564,13 @@ export class ActionPlans {
      close. */
   #closeSummary(planId) {
     const h = this.#closeHolder;
-    if (!h) return { state: "undetermined", says: "no reader of where the plan stands is registered, so no summary was kept" };
+    if (!h) return { state: "undetermined", says: localize("action-plans.says.reader_plan_stands", "no reader of where the plan stands is registered, so no summary was kept") };
     try {
       const v = h.fn({ plan: planId });
       if (v === undefined) throw new Error("no answer");
       return { state: "stated", by: h.module, value: JSON.parse(JSON.stringify(v)) };
     } catch {
-      return { state: "undetermined", says: "where the plan stands could not be read at the close, so no summary was kept" };
+      return { state: "undetermined", says: localize("action-plans.says.plan_stands_read", "where the plan stands could not be read at the close, so no summary was kept") };
     }
   }
   /* R20, R50: a closed plan's close: `at` the instant the close was recorded (the one field naming the plan's closing
@@ -1593,7 +1579,7 @@ export class ActionPlans {
     const h = this.#one(`SELECT * FROM plan_history WHERE plan_id=? AND kind='close' ORDER BY seq DESC LIMIT 1`, p.id);
     const e = h ? unjson(h.entry_json, {}) : {};
     return { by: p.closedBy, at: p.closedAt, reason: p.closeReason, note: e.note ?? null,
-             summary: e.summary ?? { state: "undetermined", says: "this plan was closed before closing summaries were kept" } };
+             summary: e.summary ?? { state: "undetermined", says: localize("action-plans.says.plan_closed_closing", "this plan was closed before closing summaries were kept") } };
   }
 
   /** R45: the closing notes of the project's closed plans the viewer may see, newest first, at most 50; the planning run
@@ -1624,7 +1610,7 @@ export class ActionPlans {
       const why = c ? markFault(m) : "a mark names the response that caused it: {action, ord}";
       if (why) skipped.push({ index, why }); else good.push(normMark(m));
     });
-    if (Array.isArray(marks) && marks.length > MARKS_MAX) skipped.push({ index: MARKS_MAX, why: `at most ${MARKS_MAX} marks in one act` });
+    if (Array.isArray(marks) && marks.length > MARKS_MAX) skipped.push({ index: MARKS_MAX, why: localize("action-plans.why.marks_act", "at most {marks_max} marks in one act", { marks_max: String(MARKS_MAX) }) });
     const at = this.now();
     this.record.transact(() => {
       let n = (this.#one(`SELECT MAX(n) AS n FROM plan_marks WHERE plan_id=?`, p.id) || {}).n || 0;
@@ -1799,7 +1785,7 @@ export class ActionPlans {
   #workKinds(project) {
     const fm = parseFm(this.#text(project)) || {};
     return Array.isArray(fm.work_kinds) ? { state: "stated", kinds: fm.work_kinds }
-      : { state: "undetermined", says: "the project states no kinds of work" };
+      : { state: "undetermined", says: localize("action-plans.says.project_states_kinds", "the project states no kinds of work") };
   }
 
   /* R5: the outcomes of determinations recorded on a suspected subject's act, beside it; nothing is added without a member. */
@@ -1826,7 +1812,7 @@ export class ActionPlans {
   /* R6: a determined subject's escalation with its stage (escalation R22). */
   #escalationOf(s, viewer) {
     const l = this.escalation.escalationsFor({ determination: s.determination, viewer });
-    if (!ok(l)) return { state: "undetermined", says: "the escalations of that determination could not be read" };
+    if (!ok(l)) return { state: "undetermined", says: localize("action-plans.says.escalations_determination_read", "the escalations of that determination could not be read") };
     const items = l.items || [];
     const cur = items.filter((e) => e.state !== "ended").at(-1) || items.at(-1) || null;
     return cur ? { id: cur.id, state: cur.state, stage: cur.stage, stage_name: cur.stage_name ?? null } : null;
@@ -1846,7 +1832,7 @@ export class ActionPlans {
       .map((h) => ({ ...unjson(h.entry_json, {}), seq: h.seq })).filter((e) => (e.options || []).includes(o.id))
       .map((e) => ({ disposition: e.disposition, reason: e.reason ?? null, author: e.author, at: e.at }));
     const out = { id: o.id, ...f, disposition: o.disposition, dispositions, revisions, subjects_liveness: bound,
-                  ...(anyLive ? {} : { says: "every matter this option serves is no longer live" }),
+                  ...(anyLive ? {} : { says: localize("action-plans.says.matter_option_serves", "every matter this option serves is no longer live") }),
                   added_by: o.createdBy, added_at: o.createdAt, proposal: o.proposal,
                   reminders: o.disposition === "chosen" ? o.reminders ?? [] : null };
     Object.assign(out, this.#origin(o.proposal ? this.#proposalRow(o.proposal) : null));
@@ -1858,7 +1844,7 @@ export class ActionPlans {
     if (f.category === "legal") {
       out.available = (f.subjects || []).filter((s) => s.kind === "outcome").map((s) => {
         const av = this.filings.availableActions({ determination: s.determination, viewer });
-        return { determination: s.determination, ...(ok(av) ? { available: av } : { state: "undetermined", says: "the available actions could not be read" }) };
+        return { determination: s.determination, ...(ok(av) ? { available: av } : { state: "undetermined", says: localize("action-plans.says.available_actions_read", "the available actions could not be read") }) };
       });
     }
     return out;
@@ -1898,16 +1884,15 @@ export class ActionPlans {
       if (pending(o)) for (const d of o.dates || []) {
         if (today === null)
           out.push({ check: "date_past", option: o.id, date: d.date, state: "undetermined",
-                     says: `whether ${o.id}'s regulated date ${d.date} has passed cannot be told: ${DAY_UNDETERMINED}` });
-        else if (d.date < today) out.push({ check: "date_past", option: o.id, date: d.date, says: `${o.id}'s regulated date ${d.date} has passed (${d.basis})` });
+                     says: localize("action-plans.says.whether_regulated_date", "whether {id}'s regulated date {date} has passed cannot be told: {day_undetermined}", { id: String(o.id), date: String(d.date), day_undetermined: String(DAY_UNDETERMINED) }) });
+        else if (d.date < today) out.push({ check: "date_past", option: o.id, date: d.date, says: localize("action-plans.says.regulated_date_passed", "{id}'s regulated date {date} has passed ({basis})", { id: String(o.id), date: String(d.date), basis: String(d.basis) }) });
       }
       const states = (o.subjects_liveness || []).map((b) => b.liveness.state);
       if (states.length && !states.includes("live") && o.says)
-        out.push({ check: "subjects_not_live", option: o.id, says: `every matter ${o.id} serves is no longer live` });
+        out.push({ check: "subjects_not_live", option: o.id, says: localize("action-plans.says.matter_serves_longer", "every matter {id} serves is no longer live", { id: String(o.id) }) });
       const hypothetical = ((held.get(o.id) || o).subjects || []).every((s) => s.kind === "inquiry");
       if (outward(o) && hypothetical)
-        out.push({ check: "outward_on_hypothesis", option: o.id, says: `${o.id} addresses someone outside the team and rests `
-          + "only on suspected matters: nothing it serves is determined yet" });
+        out.push({ check: "outward_on_hypothesis", option: o.id, says: localize("action-plans.says.addresses_someone_outside", "{id} addresses someone outside the team and rests only on suspected matters: nothing it serves is determined yet", { id: String(o.id) }) });
       if (o.lobbying && o.enforces) {
         let superseded = false;
         if (o.enforces.standard) {
@@ -1917,7 +1902,7 @@ export class ActionPlans {
           const d = this.#determination(o.enforces.subject.determination, viewer);
           superseded = !!d && d.live === false;
         }
-        if (superseded) out.push({ check: "enforces_superseded", option: o.id, says: `the requirement ${o.id} seeks enforced has been superseded` });
+        if (superseded) out.push({ check: "enforces_superseded", option: o.id, says: localize("action-plans.says.requirement_seeks_enforced", "the requirement {id} seeks enforced has been superseded", { id: String(o.id) }) });
       }
     }
     const byId = new Map(options.map((o) => [o.id, o]));
@@ -1929,19 +1914,18 @@ export class ActionPlans {
           const o = byId.get(oid);
           if (o && ph.earliest && start === null) for (const d of o.dates || [])
             out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date, state: "undetermined",
-              says: `whether ${oid}'s regulated date ${d.date} falls before phase ${ph.id} can start cannot be told: ${DAY_UNDETERMINED}` });
+              says: localize("action-plans.says.whether_regulated_date_falls", "whether {oid}'s regulated date {date} falls before phase {id} can start cannot be told: {day_undetermined}", { oid: String(oid), date: String(d.date), id: String(ph.id), day_undetermined: String(DAY_UNDETERMINED) }) });
           if (o && start) for (const d of o.dates || [])
             if (d.date < start) out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date,
-              says: `${oid}'s regulated date ${d.date} falls before phase ${ph.id} can start (${start})` });
+              says: localize("action-plans.says.regulated_date_falls", "{oid}'s regulated date {date} falls before phase {id} can start ({start})", { oid: String(oid), date: String(d.date), id: String(ph.id), start: String(start) }) });
         }
         const miss = unbranched(ph, sc.phases);
         if (miss.length) out.push({ check: "unbranched", scenario: sc.scenario, phase: ph.id, outcomes: miss,
-          says: `phase ${ph.id}'s checkpoint leads nowhere when judged ${miss.join(" or ")}` });
+          says: localize("action-plans.says.phase_checkpoint_leads", "phase {id}'s checkpoint leads nowhere when judged {miss}", { id: String(ph.id), miss: String(miss.join(" or ")) }) });
         const hostile = ph.options.some((x) => byId.get(x) && outward(byId.get(x)));
         if (hostile && !(ph.checkpoint && !unbranched(ph, sc.phases).includes("not_met")))
           out.push({ check: "no_hostile_branch", scenario: sc.scenario, phase: ph.id,
-            says: `phase ${ph.id} addresses someone outside the team and has no branch for a hostile response (a refusal, `
-              + "obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere" });
+            says: localize("action-plans.index.phase_id_addresses_someone_outside", "phase {id} addresses someone outside the team and has no branch for a hostile response (a refusal, obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere", { id: String(ph.id) }) });
       }
     }
     return out.map((c) => ({ ...c, informs: CHECK_SAYS }));
@@ -2032,7 +2016,7 @@ export class ActionPlans {
     if (!r) return { ok: true, plan: p.id, run: null, proposals: [] };
     const see = this.#sight(viewer);
     return { ok: true, plan: p.id, run: r, proposals: this.#tray(p.id, r, see, viewer),
-             says: "every one of the assistant's proposals in its own order, strongest first; no score is recorded or answered",
+             says: localize("action-plans.says.assistant_proposals_order", "every one of the assistant's proposals in its own order, strongest first; no score is recorded or answered"),
              ...(see.withheld ? { out_of_view: true } : {}) };
   }
 
@@ -2062,7 +2046,7 @@ export class ActionPlans {
     const who = str(author);
     const run = `RUN-${hex8()}${hex8()}`;
     const opening = ai.open({ run, contextType: "project", contextId: p.project, mode: "plan", plan: p.id,
-      label: "asking the assistant for options on a plan", principalPlane: who, principalClaude: who, skillVersion: ASK_SKILL,
+      label: localize("action-plans.label.asking_assistant_options", "asking the assistant for options on a plan"), principalPlane: who, principalClaude: who, skillVersion: ASK_SKILL,
       bounds: ASK_BOUNDS.map((b) => ({ ...b })), actor: who, viewer: who });
     this.#asking.set(p.id, Promise.resolve(opening).then((r) => (r && r.started === true && r.ok !== false ? run : null), () => null));
     let r;
@@ -2333,8 +2317,7 @@ export function refuseNoSuchProposal(detail, extra = null) {
 /** R31, R34: a run that is not a planning run of this plan. */
 export function refuseRunOtherPlan(run) {
   /* DEC-49 REGION is-run-of-plan */
-  return refusal("PROPOSAL_RUN_OTHER_PLAN", `run ${String(run ?? "").slice(0, 80)} is not a planning run of this plan. `
-    + "Nothing was written.", { run: run ?? null });
+  return refusal("PROPOSAL_RUN_OTHER_PLAN", localize("action-plans.index.run_string_is_not_a", "run {String} is not a planning run of this plan. Nothing was written.", { String: String(String(run ?? "").slice(0, 80)) }), { run: run ?? null });
   /* END DEC-49 REGION is-run-of-plan */
 }
 
@@ -2348,7 +2331,7 @@ export function refuseProviderUnavailable(provider) {
 }
 
 class ProviderAbsent extends Error {
-  constructor(provider) { super(`action-plans: ${provider} was not given`); this.provider = provider; }
+  constructor(provider) { super(localize("action-plans.index.action_plans_provider_was_not", "action-plans: {provider} was not given", { provider: String(provider) })); this.provider = provider; }
 }
 
 /* Every service answers PROVIDER_UNAVAILABLE, rather than throwing or answering in part, when a provider it reads is

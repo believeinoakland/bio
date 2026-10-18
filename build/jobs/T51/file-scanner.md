@@ -1,6 +1,6 @@
 # file-scanner (T51)
 
-**Status** · session_017CLfp2cx6WQCCmCguGYJu2 · depth 2 · COMPLETE · handled B2
+**Status** · session_01CQsZuxrAShje62YCqQbMMf · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -17,3 +17,28 @@ COMPLETE. Entry T51-9 applied on the reading posted in J1 (no answer yet; bundle
 - Deferred: none. Found in other modules: none.
 - Ran: file-scanner tests 68 tests, 58 pass, 0 fail, 10 skipped (clamscan and sigtool not installed here, as before); format 0 failures; architecture 0 failures; coverage file-scanner 32 of 32 ids named; ownership 4 files changed, 0 failures; checks/run.mjs: only other modules' coverage reds (agent-harness R17, agent-runner R36 R37 R38 R40, bundler R36 R37, journey-check R19, office-readers R34, pdf-reader R39, project-roster R35 R36).
 - Size (session_017CLfp2cx6WQCCmCguGYJu2): test runs 4, module lines 2777
+
+## J3 · COMPLETE
+
+COMPLETE for B3 (CR-3, layer 1 re-run, R1), commit 51324ae678 on job/T51/file-scanner.
+
+- Entries applied: CR-3. (1) `src/store.mjs`: removed `targetBytes` and `captureKey`, which had no callers in the module, its tests, or the bundle (`dist/` holds no reference to either, so the bundle is not stale). (2) `src/render.mjs`:12 comment restated: `checkOne` returns `{t, store}` or `{refusal}`, not `{ok, t, bytes}`, and copies nothing. (3) The Uses line was already corrected by BOB (`runtime-limits` `sha256hex`; `setup-words` `word`, `localize`); no change. (4) `release/` not touched.
+- Deferred: none. Found in other modules: none.
+- Ran: `node --test test/` in file-scanner: 68 tests, 58 pass, 0 fail, 10 skipped (clamscan and sigtool not installed here, as before). `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words: 0 findings in file-scanner (remaining 2821 failures are other modules' testcopy/inline words and coverage, not this module). `checks/coverage.mjs /home/user/bio file-scanner`: 32 of 32 live ids named, 0 failures. `checks/architecture.mjs`: 0 failures. `checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`: 3 files changed by file-scanner, 0 failures.
+- Size (session_01CQsZuxrAShje62YCqQbMMf): test runs 1, module lines 4430 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)
+
+## J4 · REPORT
+
+REPORT for B4 (CHANGE, K3957). One plain finding of the file-scanner module is left unkeyed, for the design's unkeyed list (K3944):
+
+- `file-scanner/container/renderer.mjs:105` "route must be pdf or office". Why: a developer and wire string. The renderer's own refusal for a route it is never sent: `render.mjs` refuses any route other than `pdf` or `office` before the renderer is called, and the renderer's NOT_RENDERABLE message is not passed on to a member (`render.mjs` passes a container message only for RENDER_FAILED). No member reads it.
+
+## J5 · COMPLETE
+
+COMPLETE for B4 (CHANGE, K3957), commit 3cc0aed52e on job/T51/file-scanner (tranche/T51 merged in, civicos-process at 27aa50e).
+
+- Entries applied: the 49 plain findings of build/plan/words-pass/file-scanner.md, judged. 48 are member-readable and now read through `localize('file-scanner.<file>.<slug>', en)` with the en text unchanged: `src/providers/catalogue.mjs` 43 (the descriptors' handling statements, licence notes and mode descriptions, served whole by GET /providers to the Settings screens), `src/providers/routes.mjs` 4 (the test probe's details, /provider/test), `src/render.mjs` 1 (the refusal message, /render). The one test that copied a sentence (`test/words.test.mjs`, R32 probe detail) now compares with `localize`. 1 is REPORTed, not keyed: `container/renderer.mjs:105` (its reason is in the REPORT).
+- Deferred: none. Found in other modules: none.
+- Generated artifact made stale: `file-scanner/dist/file-scanner.bundled.mjs` and `dist/file-scanner.bundle.json` are built from the sources I changed (the keyed literals). Not regenerated here (manifest §14); the release's re-cut rebuilds them.
+- Ran: `node --test test/` in file-scanner: 68 tests, 58 pass, 0 fail, 10 skipped (clamscan and sigtool not installed here, as before). `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words: the only file-scanner finding is `container/renderer.mjs:105`, REPORTed above. `checks/coverage.mjs /home/user/bio file-scanner`: 32 of 32 live ids named, 0 failures. `checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`: 4 files changed by file-scanner, 0 failures.
+- Size (session_01CQsZuxrAShje62YCqQbMMf): test runs 2 (B3 and B4), module lines 4431 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)

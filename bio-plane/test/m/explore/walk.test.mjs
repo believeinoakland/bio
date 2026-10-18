@@ -5,6 +5,7 @@ import { exploreOf, HUB_WORDS, LEAD_SENTENCE } from "../../../src/explore/index.
 import { BOUNDS, LOWEST_GRADE, createRegistry, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 import { OBSERVATION_STATES } from "../../../src/observation-log/index.mjs";
 import { AT, INQUIRY, ZONE, valid, ent, evt, conn, world, byOwner, makeStore, makeOwner } from "./fixtures/owners.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const V = "alice";
 const A = ent(1), B = ent(2), C = ent(3), D = ent(4), E = ent(5), F = ent(6);
@@ -286,7 +287,7 @@ test("R7 a hop the owner withholds from the viewer is not walked, and nothing in
 });
 
 test("R8 an answer with no path states its level in observation-log's vocabulary, how far it searched, and what owners hold as tables not read", () => {
-  const unread = { [A]: [{ what: "a payroll table", why: "held as a table, not read" }] };
+  const unread = { [A]: [{ what: "a payroll table", why: word("people.held_as_a_table_not") }] };
   const { x } = make([conn("line:part_of", B, C)], { opts: { money: { unread } } });
   const r = ask(x, { to: D, depth: 3 });
   assert.deepEqual(r.paths, []);
@@ -296,7 +297,7 @@ test("R8 an answer with no path states its level in observation-log's vocabulary
   assert.match(r.absence.searched, /as of 2026-03-01/);
   assert.match(r.absence.searched, /to depth 3/);
   assert.match(r.absence.reach, /Only what the record holds/);
-  assert.deepEqual(r.absence.unread, [{ owner: "money", node: A, what: "a payroll table", why: "held as a table, not read" }]);
+  assert.deepEqual(r.absence.unread, [{ owner: "money", node: A, what: "a payroll table", why: word("people.held_as_a_table_not") }]);
   // A walk that was cut short cannot say the path is not there.
   const hub = [];
   for (let i = 0; i < 1001; i++) hub.push(conn("line:seat_on", ent(3000 + i), A));

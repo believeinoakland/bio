@@ -13,6 +13,7 @@ import { world, V, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, DOCUMENT_WORDS, DOCUMENT_STATES, documentRead } from "../../../src/case-disclosures/index.mjs";
 import { COPY_CLEANED_LABEL, OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const DOC5 = "INFO-2026-0005-e";
@@ -54,7 +55,7 @@ test("R22: DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CL
   assert.ok(Object.isFrozen(DOCUMENT_WORDS));
   assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_NOT_CLEANABLE.translation, DOCUMENT_WORDS["document.refused.clean"]);
   assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_COPY_PENDING.translation, DOCUMENT_WORDS["document.refused.pending"]);
-  assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_COPY_UNDETERMINED.translation, "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written.");
+  assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_COPY_UNDETERMINED.translation, word("refusal.DOCUMENT_COPY_UNDETERMINED"));
   assert.ok(typeof COPY_CLEANED_LABEL === "string" && COPY_CLEANED_LABEL.length > 0 && COPY_CLEANED_LABEL !== OBSCURED_LABEL,
     "the label is case-carriage's own, not a photo's");
 });
@@ -106,7 +107,7 @@ test("R6 (pending): a member document whose copy is still being made is refused 
     { target: Q, materials: [{ ref: DOC, sha: a }, { ref: DOC2, sha: b }] },
     { target: Q2, materials: [{ ref: DOC, sha: a }] }]);
   assert.equal(r.refusals[0].document, `${DOC}, ${DOC2}`);
-  assert.ok(r.refusals[0].detail.includes(a) && r.refusals[0].detail.endsWith("Nothing was written."));
+  assert.ok(r.refusals[0].detail.includes(a) && r.refusals[0].detail.endsWith(word("consequences.nothing")));
   assert.deepEqual(r.materials.map((m) => [m.included, m.obscured]), [[false, null], [false, null]], "never whole");
   assert.deepEqual(judged(w, [Q, Q2], [Q]).refusals[0].pending.map((x) => x.target), [Q2], "only the load-bearing named");
   const s = judged(w, [Q, Q2], [Q, Q2]);
@@ -134,7 +135,7 @@ test("R6 (refused): a member document doc-clean refused, for every code it refus
       { target: Q, materials: [{ ref: DOC, sha: a, refused: code }, { ref: DOC2, sha: b, refused: code }] },
       { target: Q2, materials: [{ ref: DOC, sha: a, refused: code }] }], code);
     assert.equal(r.refusals[0].document, `${DOC}, ${DOC2}`);
-    assert.ok(r.refusals[0].detail.includes(code) && r.refusals[0].detail.endsWith("Nothing was written."), code);
+    assert.ok(r.refusals[0].detail.includes(code) && r.refusals[0].detail.endsWith(word("consequences.nothing")), code);
     assert.deepEqual(r.materials.map((m) => [m.included, m.obscured]), [[false, null], [false, null]], code);
     assert.deepEqual(r.materials.map((m) => m.document.refused.code), [code, code]);
     assert.deepEqual(w.snapshot(), before, `${code}: nothing written`);

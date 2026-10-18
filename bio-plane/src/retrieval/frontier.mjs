@@ -12,6 +12,7 @@
 import { viewerPredicate } from "../membership/index.mjs";
 import { SELECTION_ID_CHUNK } from "./schema.mjs";
 import { say } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* R35: the bound, published on every answer including the empty one (REC-70, REC-30). */
 export const FRONTIER_LIMIT_DEFAULT = 200;
@@ -96,10 +97,7 @@ export class Frontier {
              looked: [], never_looked: [], tally: {},
              /* An empty list and "there is no such reader" are different facts, and answering the second with the
                 first inside the log's own reader would be the joke writing itself. */
-             note: `there is no ${level} level of the frontier. This is NOT an empty frontier: `
-                 + `this reader does not read a level called ${level}, which is a different fact `
-                 + `from having looked and found nothing. The levels are document, content, `
-                 + `meaning and internet (REC-93, REC-94, REC-95, REC-129)` };
+             note: localize("retrieval.frontier.there_is_no_level_level", "there is no {level} level of the frontier. This is NOT an empty frontier: this reader does not read a level called {level_2}, which is a different fact from having looked and found nothing. The levels are document, content, meaning and internet (REC-93, REC-94, REC-95, REC-129)", { level: String(level), level_2: String(level) }) };
   }
 
   /* ---- the document level (R40, R41) ---- */

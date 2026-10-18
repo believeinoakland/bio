@@ -18,6 +18,7 @@ import * as sshsig from "../../../src/sshsig.mjs";
 import * as signpage from "../../../src/signpage.mjs";
 import { renderSignpage, syncIdPattern, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../../scripts/embed-signpage.mjs";
 import { ID_TABLE, idPattern } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const {
   NS_RELEASE, NS_RATIFY, NS_FLEET, NS_NOTICE, NS_RELEASE_NOTICE, verifySshsig, ratifyStatement, caseRatifyStatement, fleetStatement,
@@ -516,10 +517,10 @@ test("R32 (DEC-149) the page sends a member to \"your team's Civicsmith\", never
   const markup = SIGN_HTML.replace(/<!--[\s\S]*?-->/g, "").replace(/<style>[\s\S]*?<\/style>/g, "")
     .replace(/<script>[\s\S]*?<\/script>/g, "");
   for (const s of [
-    "Copy the record id and its current hash from its page in your team's Civicsmith.",                     /* :146 */
-    "Copy the notice id, its revision number and its hash from its page in your team's Civicsmith.",         /* :164 */
-    "Copy the case id, the entry number and the entry hash from its page in your team's Civicsmith.",        /* :185 */
-  ]) assert.ok(markup.includes(s), s);
+    word("sign-release.ratify.intro"),                     /* :146 */
+    word("sign-release.notice.intro"),         /* :164 */
+    word("sign-release.docket.intro"),        /* :185 */
+  ]) assert.ok(markup.replace(/\s+/g, " ").includes(s), s);
   /* What the script writes, on every path of the ratify, notice and docket buttons. */
   const page = loadPage(SIGN_HTML);
   await page.generateAll();
@@ -534,15 +535,15 @@ test("R32 (DEC-149) the page sends a member to \"your team's Civicsmith\", never
     docket: (await pageSignsDocket(page, "CASE-2026-3091", "1", DOCKET_SHA)).out,
   };
   for (const [where, s] of [
-    ["ratify", "Signature: paste this into the ratify box in your team's Civicsmith"],                     /* :456 */
-    ["ratify", "you submit it, your team's Civicsmith refuses this signature and you sign the new hash."],  /* :458 */
-    ["noticeBadId", "Paste the notice id, as your team's Civicsmith shows it."],                            /* :472 */
-    ["notice", "Signature: paste this into the notice box in your team's Civicsmith"],                     /* :479 */
-    ["notice", "you post it, your team's Civicsmith refuses this signature and you sign the new hash."],   /* :481 */
-    ["docketBadId", "Paste the case id, as your team's Civicsmith shows it."],                              /* :491 */
-    ["docket", "Signature: paste this into the docket box in your team's Civicsmith"],                     /* :498 */
-    ["docket", "you post it, your team's Civicsmith refuses this signature and you prepare and sign it again."], /* :500 */
-  ]) assert.ok(said[where].includes(s), `${where}: ${s}`);
+    ["ratify", word("sign-release.ratify.signature")],                     /* :456 */
+    ["ratify", word("sign-release.ratify.covers", { id: "REC-2026-0001" })],  /* :458 */
+    ["noticeBadId", word("sign-release.notice.paste.id")],                            /* :472 */
+    ["notice", word("sign-release.notice.signature")],                     /* :479 */
+    ["notice", word("sign-release.notice.covers", { revision: "1", id: "NOTE-2026-4817" })],   /* :481 */
+    ["docketBadId", word("sign-release.docket.paste.id")],                              /* :491 */
+    ["docket", word("sign-release.docket.signature")],                     /* :498 */
+    ["docket", word("sign-release.docket.covers", { entry: "1", id: "CASE-2026-3091" })], /* :500 */
+  ]) assert.ok(said[where].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").includes(s), `${where}: ${s}`);
   /* Nothing a member reads, markup or written by the script on any path, says "instance" or "plane",
      save the release asset's file name, bio-plane.bundled.mjs, a wire name (R32). */
   await page.el("gen").onclick();

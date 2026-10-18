@@ -52,6 +52,7 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -119,7 +120,7 @@ const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: 
   "produced_by:", "  mode: human", "  capability_tier: member", "group: believe-in-oakland", "references: []",
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "surfaced_by: member", 'disposition_reason: ""', "---", "", "## Question", "", `Did ${id} happen?`, "",
-  "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+  word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
 /* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the project
    states one — its promote was refused NO_OBJECTIVE, so no project, no join and no project run. */

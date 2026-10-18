@@ -9,6 +9,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { FAIL } from "./walker.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const MOCK_PATH = "docs/development/ux-substrate/layouts.html";
@@ -178,22 +179,22 @@ export const JOURNEY_29_ORDER = Object.freeze([
   ["question", "new", "airunopen"], ["question", "running", null], ["question", "ended", "airunopen"], ["question", "new", "search"],
   ["capture", "question", "acquire"], ["document", "held", "release"], ["document", null, "cite"],
   ["question", "proposal", "versionaccept"], ["question", null, "conclude"], ["question", "concluded", null]].map(([s, v, act]) => Object.freeze({ s, v, act })));
-export const stepName = (journey, k, st) => `journey ${journey} step ${k + 1} (${st.s}${st.v ? ", " + st.v : ""}${st.act ? ", " + st.act : ""})`;
+export const stepName = (journey, k, st) => localize("journey-check.design.journey_journey_step_v1_s", "journey {journey} step {v1} ({s}{v2}{v3})", { journey: String(journey), v1: String(k + 1), s: String(st.s), v2: String(st.v ? ", " + st.v : ""), v3: String(st.act ? ", " + st.act : "") });
 export async function journeyPairs(walk, b, mock, { out, liveOf, journey = JOURNEY_29, width = 1280, notWalked = false, order = JOURNEY_29_ORDER }) {
   const written = [];
   const steps = await mock.allSteps(journey);
   if (journey === JOURNEY_29) for (const [k, want] of order.entries()) {
     const got = steps[k];
     if (!got || got.s !== want.s || got.v !== want.v || got.act !== want.act)
-      walk.fail(FAIL.DESIGN, `${stepName(journey, k, want)}: the design's file holds no such step there`);
+      walk.fail(FAIL.DESIGN, localize("journey-check.design.stepname_the_designs_file_holds", "{stepName}: the design's file holds no such step there", { stepName: String(stepName(journey, k, want)) }));
   }
   for (const [k, st] of steps.entries()) {
     const name = stepName(journey, k, st);
     const live = liveOf(st, k);
-    if (!live && notWalked && st.only === "ai") { walk.notes.push(`${name}: not walked, the assistant does not work (K3717)`); continue; }
+    if (!live && notWalked && st.only === "ai") { walk.notes.push(localize("journey-check.design.name_not_walked_the_assistant", "{name}: not walked, the assistant does not work (K3717)", { name: String(name) })); continue; }
     const design = await mock.drawStepAt(journey, k, width);
-    if (!live) { walk.fail(FAIL.DESIGN, `${name}: no LIVE screenshot of it, so no pair`); continue; }
-    if (!design) { walk.fail(FAIL.DESIGN, `${name}: the design mock at ${mock.commit} draws no such step`); continue; }
+    if (!live) { walk.fail(FAIL.DESIGN, localize("journey-check.design.name_no_live_screenshot_of", "{name}: no LIVE screenshot of it, so no pair", { name: String(name) })); continue; }
+    if (!design) { walk.fail(FAIL.DESIGN, localize("journey-check.design.name_the_design_mock_at", "{name}: the design mock at {commit} draws no such step", { name: String(name), commit: String(mock.commit) })); continue; }
     written.push(await pair(b, readFileSync(live), design, join(out, "pairs", `journey-${journey}-step-${String(k + 1).padStart(2, "0")}-${st.s}.png`), { title: name }));
   }
   return written;

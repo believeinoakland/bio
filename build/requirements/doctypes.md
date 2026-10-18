@@ -59,6 +59,7 @@ The content types: what kind of document a capture is (a meeting calendar, minut
 - `docprofile`: the registry seam (`register`), the shared helpers of `doctypes/index.mjs` (`readerView`, `vocabulary`, `vocabPatterns`, `vocabRegex`, `enactmentPatterns`, `enactmentNumber`, `codePatterns`, `practiceValue`, `flatten`, `selfNaming`, `alsoSatisfies`, `entity`, `readAgain`, `referential`, `temporal`, `diffEntities`, `CONTRACT`, `CONFIDENCE`) and `ctx.locate` as `readText` builds it (its R20, R25).
 - `site-profiles`: the event catalogue (`event`, `worstSignificance`, `isMeaningful`, `bySeverity`; its R13, R14), `CONFIDENCE` (R4), `unescapeHtml` (R15) for the calendar's keys.
 - `jurisdictions`: the combined view (`combine`): its identifier section (enactment forms, as `id-spaces` reads them), and the recogniser-vocabulary section, by kind of fact per type key, exactly as `docprofile`'s Uses lists them today (masthead phrases and the furniture floor, furniture lines, operative-voice and caption vocabulary, code-citation vocabulary, report-template headings, reference-line shapes, directory self-naming words, measured practice thresholds, publishing-system address shapes), plus, for R9–R11, a code's section-number forms and subsection-marker order (T33-2), and, for R25–R26 (T35-12), the `standard_sources` entries with `series` (`jurisdictions` R63: `label`, `cite`, `normal`) and `vocabulary.policy_headers` (R69).
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

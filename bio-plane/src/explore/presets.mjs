@@ -7,6 +7,7 @@ import { kindsByOwner, makeReader } from './reader.mjs';
 import { intersect, spanOfValidity, spanOfWindow } from './intervals.mjs';
 import { nameEnds } from './labels.mjs';
 import { refuse, isObj, viewerRefusal, nodeRefusal, dateRefusal, NOT_ASSERTED } from './answer.mjs';
+import { word } from '../setup-words/index.mjs';
 
 /** The rules of each preset's kind set (R10): an owner's kinds named, or every kind of an owner (K1563 (8): duties' power kind). */
 export const PRESET_RULES = Object.freeze({
@@ -18,7 +19,7 @@ export const PRESET_RULES = Object.freeze({
   relationsOf: Object.freeze({ words: 'event links', rules: [
     { owner: 'events', kinds: ['event_authorises', 'event_answers', 'event_amends', 'event_reverses', 'event_stated_cause', 'event_within'] },
   ] }),
-  pathBetween: Object.freeze({ words: 'the path between two records', rules: [{ every: true }] }),
+  pathBetween: Object.freeze({ words: word('explore.words.path_between_two'), rules: [{ every: true }] }),
   overlaps: Object.freeze({ words: 'overlaps', rules: [{ every: true }] }),
 });
 
@@ -46,7 +47,7 @@ function presetWalk(ctx, name, a, extra = {}) {
   const c = checkWalkArgs(ctx.registry, { ...a, kinds });
   if (c.refusal) return c.refusal;
   const ans = walk(ctx, { ...a, ...extra, kinds: /** @type {string[]} */ (c.kinds), depth: /** @type {number} */ (c.depth), scope: null });
-  return { preset: name, ...ans, ...(kinds.length ? {} : { preset_note: `no owner has registered a kind of ${name} yet` }) };
+  return { preset: name, ...ans, ...(kinds.length ? {} : { preset_note: word('explore.preset_note', { name: String(name) }) }) };
 }
 
 const argOf = (a) => (isObj(a) ? a : {});
@@ -74,7 +75,7 @@ export const pathBetween = (ctx, a) => {
 };
 
 /** The sentence every overlap carries (R11, R16). */
-export const OVERLAP_SENTENCE = 'An overlap is a cited fact: both held a connection of this kind to the same record in the same span. It does not say the two are acquainted.';
+export const OVERLAP_SENTENCE = word('explore.overlap_sentence');
 
 /**
  * overlaps({a, b, at | period, kinds?, viewer}) (R11): each record both reach in one step of the same kind whose two
@@ -139,7 +140,7 @@ export function overlaps(ctx, arg) {
     ok: true, a: a.a, b: a.b, ...(a.at !== undefined && a.at !== null ? { at: a.at } : { period: a.period }), kinds, overlaps: found,
     hubs: s.hubs, fanout_truncated: s.fanout, owner_refusals: s.refusals, owner_calls: s.calls,
     budget_ms: ctx.budget_ms, elapsed_ms: reader.elapsed(), complete: reader.complete(), note: NOT_ASSERTED,
-    ...(s.stop ? { truncated: true, undetermined: true, why: 'the read used its time budget before it was done' } : {}),
+    ...(s.stop ? { truncated: true, undetermined: true, why: word('explore.why.read_used_time') } : {}),
   };
 }
 
@@ -153,8 +154,8 @@ function sharedSet(ctx, reader, { kind, node, span, a, b }) {
   const items = reader.read(owner, node, [kind]);
   if (!items) {
     const hub = reader.s.hubs.length > hubsBefore ? reader.s.hubs[reader.s.hubs.length - 1] : null;
-    if (hub) return { hub: true, kind: hub.kind, bound: hub.bound, set_size: hub.set_size, words: `with ${hub.set_size} others held; ${hub.words}` };
-    return { held: null, why: 'the owner did not answer this record\'s set' };
+    if (hub) return { hub: true, kind: hub.kind, bound: hub.bound, set_size: hub.set_size, words: word('explore.words.others_held', { set_size: String(hub.set_size), words: String(hub.words) }) };
+    return { held: null, why: word('explore.why.owner_did_answer') };
   }
   const held = new Set(), undetermined = new Set();
   for (const h of items) {

@@ -9,6 +9,7 @@ import {
   citationExtent, citationContentId, extentRelation, checkContentExtent, mintUndetermined, ENVELOPE_ITEM_KINDS,
   CONTENT_EXTENT_OWN_CHECKS, pageBoxesOf, unitChainKind, unitTargetOf,
 } from "../../../src/content/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const H = "a".repeat(64);
 const ctxOf = (o = {}) => ({ chain: [{ step: "layer", tier: 1 }], pageCount: null, container: {}, ...o });
@@ -55,9 +56,9 @@ test("R2: one canonical form per extent (rect corners ordered, A1 $ and case rem
   assert.equal(describeExtent({ kind: "doc-para", para: 3 }), "¶4");
   assert.equal(describeExtent({ kind: "sheet-cell", sheet: "S", cell: "B2" }), "S!B2");
   assert.equal(describeExtent({ kind: "slide-shape", slide: 7, shape: 3 }), "slide 7");
-  assert.equal(describeExtent({ kind: "document" }), "the whole document");
+  assert.equal(describeExtent({ kind: "document" }), word("content.why.whole_document"));
   assert.equal(describeExtent({ kind: "pdf-page", page: 0, ref: "  the top half  " }), "the top half");
-  assert.equal(describeExtent({ kind: "document", ref: "   " }), "the whole document");
+  assert.equal(describeExtent({ kind: "document", ref: "   " }), word("content.why.whole_document"));
 });
 
 test("R3: the content id is SHA-256 over {v:1, capture_sha, canonical extent, canonical chain or null}; one passage under one chain has one id, another chain another", () => {

@@ -28,6 +28,7 @@ import { createSha256, sha256HexSync } from "../record-grammar/index.mjs";
 import { CORPUS_EXPORT_EXEMPT, migrateCorpusExport } from "./schema.mjs";
 import { TablePager, tableEntry, pageBytes, canonical, PAGE_ROWS, PAGE_BYTES } from "./tables.mjs";
 import { render, itemsOf, FORMATS, STANDARDS } from "./render.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { CORPUS_EXPORT_SCHEMA, CORPUS_EXPORT_EXEMPT } from "./schema.mjs";
 export { PAGE_ROWS, PAGE_BYTES, canonical, pageBytes } from "./tables.mjs";
@@ -123,10 +124,8 @@ export class CorpusExport {
       tables,
       counts: { bundles: bundles.length, files: fileCount, tables: tables.length, rows: rowCount },
       register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
-      recorded: "this export is in the append-only export log and is visible to every administrator",
-      verify: "every file carries its sha256 and every record its history chain and base links. Re-derive "
-            + "them on the way in and byte-compare every registered capture; every table page carries its sha256: "
-            + "fetch each page, re-derive its digest and its rows, and trust nothing this manifest asserts about itself." };
+      recorded: word("corpus-export.recorded.export_append_export"),
+      verify: word("corpus-export.verify") };
   }
 
   #declared() {
@@ -161,14 +160,14 @@ export class CorpusExport {
   exportRendering({ format = null, viewer = null } = {}) {
     if (!FORMATS.includes(format))
       return { ok: false, reason: "EXPORT_FORMAT_UNKNOWN", format, formats: [...FORMATS],
-               detail: `a rendering is one of ${FORMATS.join(", ")}; nothing was rendered or logged` };
+               detail: localize("corpus-export.index.a_rendering_is_one_of", "a rendering is one of {FORMATS}; nothing was rendered or logged", { FORMATS: String(FORMATS.join(", ")) }) };
     const at = this.#when();
     const { body, truncated } = render(format, { sql: this.sql, record: this.record, ...this.#ownerDeps() }, viewer, at);
     const items = itemsOf(format, body);
     this.sql.exec(`INSERT INTO export_log (at,scope,bundles,files,note,tables,rows,format) VALUES (?,'rendering',0,0,NULL,NULL,?,?)`,
                   at, items, format);
     return { ok: true, at, format, standard: STANDARDS[format], items, truncated, rendering: body,
-             recorded: "this rendering is in the append-only export log and is visible to every administrator" };
+             recorded: word("corpus-export.recorded.rendering_append_export") };
   }
 
   #ownerDeps() { return { ...this.owners }; }
@@ -302,8 +301,8 @@ export function verifyCorpusExport(input) {
         if (i === 0) {
           if ((base !== null && lower(base) !== CREATION_BASE) || under.length)
             failures.push({ reason: "CHAIN_START_UNANCHORED", bundle, snap_key: key,
-                            expected: `the creation base ${CREATION_BASE}, with nothing filed under this key`,
-                            found: under.length ? `${describe(base)}, with ${under.length} snapshot(s) filed` : describe(base) });
+                            expected: localize("corpus-export.index.the_creation_base_creation_base", "the creation base {CREATION_BASE}, with nothing filed under this key", { CREATION_BASE: String(CREATION_BASE) }),
+                            found: under.length ? localize("corpus-export.index.describe_with_length_snapshot_s", "{describe}, with {length} snapshot(s) filed", { describe: String(describe(base)), length: String(under.length) }) : describe(base) });
           return;
         }
         /* The bundle.md this promotion replaced, which commit filed under its key (the first file when there is none). */

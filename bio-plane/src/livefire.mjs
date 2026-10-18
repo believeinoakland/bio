@@ -17,6 +17,7 @@
  */
 
 import { PUBLISHED_TOKEN_HASHES } from "./tokens.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 const sha256 = async (s) => {
   const b = await crypto.subtle.digest("SHA-256", typeof s === "string" ? new TextEncoder().encode(s) : s);
@@ -182,7 +183,7 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
          failing branch, so a green run's assertion count is unmoved. */
       if (bytes !== buf.length) {
         r2.sizes.push({ sizeMB: mb, error: "length mismatch, NO NUMBER REPORTED" }); r2.ok = false;
-        assert(`R2 ${mb}MB round trip read back its own length`, bytes, buf.length);
+        assert(localize("instance-setup.livefire.r2_mb_mb_round_trip", "R2 {mb}MB round trip read back its own length", { mb: String(mb) }), bytes, buf.length);
         continue;
       }
       r2.sizes.push({ sizeMB: mb, putMs, getMs, putMBps: +(mb / (putMs / 1000)).toFixed(1), getMBps: +(mb / (getMs / 1000)).toFixed(1) });
@@ -244,6 +245,6 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
     assertions: A,
     r2,
     storeState: { ...stats, danglingRefs: dang.dangling.length, wholeStorePassMs: wholeMs },
-    note: "Confined to the scratch namespace. Live state is unreachable from this token class.",
+    note: localize("instance-setup.livefire.confined_to_the_scratch_namespace", "Confined to the scratch namespace. Live state is unreachable from this token class."),
   };
 }

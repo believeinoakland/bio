@@ -13,6 +13,7 @@ import { biasOf, BIAS_DEBT_DELAY_MS, BIAS_DEBT_BATCH } from "../../../src/bias/i
 import { inquiryFindings } from "../../../src/inquiry/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const GROUP = "lens-watch";
 const DOC = "INFO-2026-1201-doc", LENS = "BIAS-2026-1201-lens";
@@ -42,8 +43,8 @@ const inquiryMd = (id, P, concluded) => [...head, `id: ${id}`, "object_type: inq
   "    status: confirmed", "state_history: []", "surfaced_by: human", `disposition_reason: ""`, "basis:",
   `  - target: ${DOC}`, "    role: supports", `project: ${P}`,
   ...(concluded ? ['conclusion: "the transfer was made"', 'falsifier: "a ledger showing no transfer"'] : []),
-  "---", "", "## Question", "", "Was the transfer made?", "", "## What It Rests On", "", "## Conclusion", "",
-  "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  "---", "", "## Question", "", "Was the transfer made?", "", word("conformance.rests"), "", "## Conclusion", "",
+  word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
 /** The world on one composed object `x`: the group, member ruth, her project, one document, and helpers to promote the
  *  lens, adopt it for the project, read the lens in force and conclude a question under it. */

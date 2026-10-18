@@ -34,6 +34,7 @@ Reads rosters, organisation charts and staff directories for who is in an organi
 
 - `docprofile`: the registry seam, `CONTRACT`, `CONFIDENCE`, `entity`, `diffEntities`, `flatten`, `selfNaming`, the reader view and `ctx.locate`; through it `site-profiles`' event catalogue.
 - `jurisdictions` (through the view): roster self-naming words, roster header words and title vocabulary, under this module's keys.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

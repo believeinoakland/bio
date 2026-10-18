@@ -24,6 +24,7 @@ import { combine } from "../../../jurisdictions/index.mjs";
 import { LINES_SCHEMA, LINES_TABLES, LINES_ADDITIVE_COLUMNS } from "./schema.mjs";
 import { LINE_KINDS, STRUCTURE_KINDS, PEOPLE_KINDS, PROCEEDING_KINDS, CAPACITIES, ROLES, END_KINDS, OWNER,
          CONNECTION_KINDS, connectionKind, lineKindOf, PARTY_ROLES, OCDS_PARTY_ROLES } from "./vocab.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { LINE_KINDS, STRUCTURE_KINDS, PEOPLE_KINDS, PROCEEDING_KINDS, CAPACITIES, ROLES, PARTY_ROLES, OCDS_PARTY_ROLES,
          CONNECTION_KINDS, LINES_SCHEMA, LINES_TABLES };
@@ -172,13 +173,13 @@ export class Lines {
   static gateCheck(row) {
     if (!isObj(row)) return { code: "LINE_ROW_MALFORMED", detail: "a line row is an object" };
     const money = Object.keys(row).find((k) => /amount|currency|total|sum/i.test(k));
-    if (money) return { code: "LINE_HOLDS_NO_AMOUNT", detail: `a line holds no amount (${money}): money given or received is a money fact` };
+    if (money) return { code: "LINE_HOLDS_NO_AMOUNT", detail: localize("lines.index.a_line_holds_no_amount", "a line holds no amount ({money}): money given or received is a money fact", { money: String(money) }) };
     const ids = [row.from_entity, row.to_entity];
     const basis = typeof row.basis_json === "string" ? parse(row.basis_json) : row.basis;
     const walk = (v) => { if (typeof v === "string") ids.push(v); else if (isObj(v)) Object.values(v).forEach(walk); else if (Array.isArray(v)) v.forEach(walk); };
     walk(basis);
     const hyp = ids.find((v) => isHypothesisId(v));
-    if (hyp) return { code: "LINE_NO_HYPOTHESIS", detail: `${hyp} is a hypothesis: it is never an end or a basis of a line (K1467)` };
+    if (hyp) return { code: "LINE_NO_HYPOTHESIS", detail: localize("lines.index.hyp_is_a_hypothesis_it", "{hyp} is a hypothesis: it is never an end or a basis of a line (K1467)", { hyp: String(hyp) }) };
     return null;
   }
 
@@ -252,15 +253,15 @@ export class Lines {
   #bound(b, side, precision, zone) {
     if (b === undefined || b === null) return { b: null };
     if (typeof b === "string") return this.#value(b, side, precision, zone);
-    if (!isObj(b)) return { refusal: refuse("BAD_DATE", `the validity's ${side} is a date-time value, an event bound or null`) };
+    if (!isObj(b)) return { refusal: refuse("BAD_DATE", localize("lines.index.the_validitys_side_is_a", "the validity's {side} is a date-time value, an event bound or null", { side: String(side) })) };
     const hasValue = b.value !== undefined && b.value !== null;
     const hasEvent = b.event !== undefined && b.event !== null;
-    if (hasValue && hasEvent) return { refusal: refuse("BOUND_BOTH", `the validity's ${side} gives both a value and an event; a bound is one or the other` , { side }) };
+    if (hasValue && hasEvent) return { refusal: refuse("BOUND_BOTH", localize("lines.index.the_validitys_side_gives_both", "the validity's {side} gives both a value and an event; a bound is one or the other", { side: String(side) }) , { side }) };
     if (hasValue) return typeof b.value === "string" ? this.#value(b.value, side, precision, zone)
-      : { refusal: refuse("BAD_DATE", `the validity's ${side} value is a string`, { side }) };
+      : { refusal: refuse("BAD_DATE", localize("lines.index.the_validitys_side_value_is", "the validity's {side} value is a string", { side: String(side) }), { side }) };
     if (hasEvent) {
       if (!filled(b.event) || this.#when(b.event) === undefined)
-        return { refusal: refuse("NO_SUCH_EVENT", `the validity's ${side} names an event the record does not hold`, { side, event: b.event ?? null }) };
+        return { refusal: refuse("NO_SUCH_EVENT", localize("lines.index.the_validitys_side_names_an", "the validity's {side} names an event the record does not hold", { side: String(side) }), { side, event: b.event ?? null }) };
       if (!EDGES.includes(b.edge))
         return { refusal: refuse("BAD_EDGE", `an event bound names the edge start or end of the event's when`, { side }) };
       return { b: { event: b.event, edge: b.edge } };
@@ -270,7 +271,7 @@ export class Lines {
   #value(v, side, precision, zone) {
     let r;
     try { r = dtBounds({ value: v, precision, zone }); } catch (e) { r = { refused: "DATE_INVALID", why: String(e.message || e) }; }
-    if (r.refused) return { refusal: refuse("BAD_DATE", `the validity's ${side} ${v} is not a ${precision}-precision date-time in ${zone}: ${r.why}`, { side }) };
+    if (r.refused) return { refusal: refuse("BAD_DATE", localize("lines.index.the_validitys_side_v_is", "the validity's {side} {v} is not a {precision}-precision date-time in {zone}: {why}", { side: String(side), v: String(v), precision: String(precision), zone: String(zone), why: String(r.why) }), { side }) };
     return { b: v };
   }
 
@@ -355,8 +356,8 @@ export class Lines {
     if (r === "in" || r === "out") return { state: r };
     const ct = this.#currentThrough(line, viewer);
     if (ct && judge({ ...valid, to: ct.day, precision: "day" }) === "in") return { state: "in", current_through: ct.day };
-    const why = r.why || `the date could not be read: ${r.refused}`;
-    return { state: "undetermined", why: ct ? `${why}; it is stated current through ${ct.day}, and the date is after that` : why };
+    const why = r.why || word("lines.text.date_read", { refused: String(r.refused) });
+    return { state: "undetermined", why: ct ? word("lines.why.stated_current_through", { why: String(why), day: String(ct.day) }) : why };
   }
 
   /* ---- current through (R21) ---- */
@@ -436,7 +437,7 @@ export class Lines {
         const ctx = this.#content && typeof this.#content.contentContextFor === "function" ? this.#content.contentContextFor(sha) : {};
         bad = checkContentExtent(basis.extent, ctx);
       } catch (e) { bad = { reason: "CONTENT_EXTENT_UNREADABLE", detail: String(e.message || e) }; }
-      if (bad) return { refusal: refuse("EXTENT_NOT_IN_CAPTURE", `the extent is not a part of that capture: ${bad.detail || bad.reason || bad.code}`, { extent_refusal: bad.reason || bad.code || null }) };
+      if (bad) return { refusal: refuse("EXTENT_NOT_IN_CAPTURE", localize("lines.index.the_extent_is_not_a", "the extent is not a part of that capture: {v1}", { v1: String(bad.detail || bad.reason || bad.code) }), { extent_refusal: bad.reason || bad.code || null }) };
       return { form: "passage", basis: { captureSha: sha, extent: basis.extent }, captureSha: sha, sight: home.bundleId,
                assertion: this.#captureGrade(sha) };
     }
@@ -481,7 +482,7 @@ export class Lines {
   recordLine({ kind, from, to, role, capacity, title, valid, basis, by } = {}) {
     const k = typeof kind === "string" ? kind.trim() : "";
     if (!LINE_KINDS.includes(k))
-      return refuse("UNKNOWN_LINE_KIND", `a line's kind is one of ${LINE_KINDS.join(", ")}; money given or received is a money fact, never a line`,
+      return refuse("UNKNOWN_LINE_KIND", localize("lines.index.a_lines_kind_is_one", "a line's kind is one of {LINE_KINDS}; money given or received is a money fact, never a line", { LINE_KINDS: String(LINE_KINDS.join(", ")) }),
                     { kinds: [...LINE_KINDS] });
     if (!filled(from) || !filled(to)) return refuse("NO_ENDS", "a line names both its ends (from and to), each a registered entity");
     if (from === to) return refuse("SELF_LINE", "a line runs between two different entities");
@@ -490,16 +491,16 @@ export class Lines {
     const fk = this.#entityKind(from), tk = this.#entityKind(to);
     const ek = END_KINDS[k];
     if (ek && ((ek.from && !ek.from.includes(fk)) || (ek.to && !ek.to.includes(tk))))
-      return refuse(ek.code, `${k} runs from ${ek.from ? `an entity of kind ${ek.from.join(" or ")}` : "any registered entity"} to one of kind ${ek.to.join(" or ")}`,
+      return refuse(ek.code, localize("lines.index.k_runs_from_v1_to", "{k} runs from {v1} to one of kind {to}", { k: String(k), v1: String(ek.from ? `an entity of kind ${ek.from.join(" or ")}` : "any registered entity"), to: String(ek.to.join(" or ")) }),
                     { from_kind: fk, to_kind: tk });
     if (k === "holds" && fk !== "person")
       return refuse("HOLDER_NOT_A_PERSON", "a post is held by a person entity, the same entity across every role it has held (K1452)", { from_kind: fk });
     const allowed = ROLES[k];
     if (role !== undefined && role !== null && role !== "" && (!allowed || !allowed.includes(role)))
-      return refuse("BAD_ROLE", allowed ? `${k} takes a role of ${allowed.join(", ")}` : `${k} takes no role`, { roles: allowed ? [...allowed] : [] });
+      return refuse("BAD_ROLE", allowed ? localize("lines.index.k_takes_a_role_of", "{k} takes a role of {allowed}", { k: String(k), allowed: String(allowed.join(", ")) }) : localize("lines.index.k_takes_no_role", "{k} takes no role", { k: String(k) }), { roles: allowed ? [...allowed] : [] });
     if (k === "holds") {
-      if (!filled(capacity)) return refuse("NO_CAPACITY", `a post is held in a capacity: ${CAPACITIES.join(", ")}`);
-      if (!CAPACITIES.includes(capacity)) return refuse("UNKNOWN_CAPACITY", `a capacity is one of ${CAPACITIES.join(", ")}`, { capacities: [...CAPACITIES] });
+      if (!filled(capacity)) return refuse("NO_CAPACITY", localize("lines.index.a_post_is_held_in", "a post is held in a capacity: {CAPACITIES}", { CAPACITIES: String(CAPACITIES.join(", ")) }));
+      if (!CAPACITIES.includes(capacity)) return refuse("UNKNOWN_CAPACITY", localize("lines.index.a_capacity_is_one_of", "a capacity is one of {CAPACITIES}", { CAPACITIES: String(CAPACITIES.join(", ")) }), { capacities: [...CAPACITIES] });
     } else if (capacity !== undefined && capacity !== null && capacity !== "")
       return refuse("BAD_CAPACITY", "only a holds line carries a capacity");
     /* T34 (N573): a holds line's title as its basis words it, kept exactly as written, never normalised or mapped. */
@@ -512,7 +513,7 @@ export class Lines {
     /* R3 */
     const v = isObj(valid) ? valid : {};
     const precision = v.precision === undefined || v.precision === null ? "day" : v.precision;
-    if (!PRECISIONS.includes(precision)) return refuse("BAD_DATE", `a validity's precision is one of ${PRECISIONS.join(", ")}`);
+    if (!PRECISIONS.includes(precision)) return refuse("BAD_DATE", localize("lines.index.a_validitys_precision_is_one", "a validity's precision is one of {PRECISIONS}", { PRECISIONS: String(PRECISIONS.join(", ")) }));
     const zone = filled(v.zone) ? v.zone : this.#zone();
     const vf = this.#bound(v.from, "from", precision, zone ?? "UTC");
     if (vf.refusal) return vf.refusal;
@@ -582,7 +583,7 @@ export class Lines {
 
   /* R5: a register row's bounds are the source's account, labelled with its own record instant. */
   static #recordedLabel(basis, recordedAt) {
-    return basis && filled(basis.system) && recordedAt ? `as recorded by ${basis.system} on ${recordedAt}` : null;
+    return basis && filled(basis.system) && recordedAt ? word("lines.text.recorded", { system: String(basis.system), recorded_at: String(recordedAt) }) : null;
   }
 
   /* A line as every read answers it: its fields, basis and citation, both grade axes, its bounds as given and as
@@ -612,11 +613,11 @@ export class Lines {
     if (form === "passage") return `capture ${basis.captureSha}`;
     if (form === "rule") return typeof basis.source === "string" ? `${basis.rule}, capture ${basis.source}`
       : `${basis.rule}, profile ${basis.source.profile}`;
-    return "a member's testimony";
+    return word("events.text.member_testimony");
   }
 
   readLine({ lineId, viewer } = {}) {
-    if (!filled(lineId)) return refuse("NO_LINE", "a line is read by its id (LIN-...)");
+    if (!filled(lineId)) return refuse("NO_LINE", localize("lines.index.a_line_is_read_by", "a line is read by its id (LIN-...)"));
     const line = this.#visible(lineId, viewer);
     if (!line) return { ok: true, found: false, line_id: lineId };
     return { ok: true, found: true, line: this.#view(line, viewer) };
@@ -644,7 +645,7 @@ export class Lines {
     if (ks === undefined || ks === null || ks === "") return { list: [...within] };
     const list = Array.isArray(ks) ? ks : String(ks).split(",").map((s) => s.trim()).filter(Boolean);
     const bad = list.find((k) => !within.includes(k));
-    if (bad !== undefined) return { refusal: refuse("UNKNOWN_LINE_KIND", `${bad} is not one of ${within.join(", ")}`, { kinds: [...within] }) };
+    if (bad !== undefined) return { refusal: refuse("UNKNOWN_LINE_KIND", localize("lines.index.bad_is_not_one_of", "{bad} is not one of {within}", { bad: String(bad), within: String(within.join(", ")) }), { kinds: [...within] }) };
     return { list };
   }
 
@@ -696,9 +697,9 @@ export class Lines {
                assertion: v.assertion, ends: v.ends };
     }
     if (inn.length === 0 && und.length === 0 && !truncated)
-      return { ok: true, office, at, holder: null, undetermined: "no line covers the date", lines: [] };
-    const why = inn.length > 1 ? `${inn.length} lines hold the post at the date` : truncated ? "more lines than one read holds name this office"
-      : "a line naming this office may cover the date, and the record does not settle it";
+      return { ok: true, office, at, holder: null, undetermined: word("lines.undetermined.line_covers_date"), lines: [] };
+    const why = inn.length > 1 ? word("lines.text.lines_hold_post", { inn: String(inn.length) }) : truncated ? word("lines.text.lines_read_holds")
+      : word("lines.text.line_naming_office");
     return { ok: true, office, at, holder: null, undetermined: why,
              lines: [...inn.map((r) => ({ line_id: r.line_id, state: "in" })), ...und.map((u) => ({ ...u, state: "undetermined" }))] };
   }
@@ -770,7 +771,7 @@ export class Lines {
                                         + (SELECT COUNT(*) FROM lines l WHERE l.to_entity = ? AND ${where}) AS n`,
                                   node, ...kindArgs, ...g.args, node, ...kindArgs, ...g.args).n);
     if (size > BOUNDS.hub)
-      return { items: [], hub: { set_size: size, why: `this entity has more than ${BOUNDS.hub} lines of the kinds asked, so it is named, never expanded` } };
+      return { items: [], hub: { set_size: size, why: word("lines.why.entity_lines_kinds", { hub: String(BOUNDS.hub) }) } };
     const after = isObj(page) && filled(page.after) ? page.after : "";
     const per = isObj(page) && Number.isInteger(page.size) && page.size >= 1 ? Math.min(page.size, BOUNDS.fanout) : BOUNDS.fanout;
     const rows = this.#rows(`SELECT * FROM (SELECT l.* FROM lines l WHERE l.from_entity = ? AND ${where}
@@ -790,7 +791,7 @@ export class Lines {
         if (judge(within) === "in") { c.valid = within; c.current_through = ct.day; v = "in"; }
       }
       if (v === "out") continue;
-      if (v !== "in") c.undetermined = { why: cache.stale ? "cache stale" : v.why || `the date could not be read: ${v.refused}` };
+      if (v !== "in") c.undetermined = { why: cache.stale ? "cache stale" : v.why || word("lines.text.date_read", { refused: String(v.refused) }) };
       if (items.length === per) { next = { after: items[items.length - 1].id, size: per }; break; }
       items.push(c);
     }

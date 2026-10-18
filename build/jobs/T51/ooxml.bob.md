@@ -1,0 +1,23 @@
+# BOB to ooxml (T51)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the re-run of layer 1 (R1), ooxml: **T51-248** (read the entry line whole, and the plan's Sequence and rule 11). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/ooxml.md` (read whole). Your entry changes no requirement's meaning; BOB added `setup-words` (`word`, `localize`) to your requirements' Uses at this START where the pass added the import.
+BOB's notes for this job:
+1. Your findings are listed by the words check itself in `build/plan/words-pass/ooxml.md` (read whole): each is a judgment the codemod could not make (a stitched sentence, a partial copy, a hand-list, a custom error class, a signed text). Fix every one by the words rule below; a string you judge no member ever reads (a diagnostic, wire grammar) is not hidden: list it in a REPORT with why, and BOB settles it with the design stream (K3944).
+2. The ids you assign are `ooxml.<file stem>.<slug>`, fixed once.
+3. R23 (zero runtime dependency) stands. Your findings are archive-diagnostic strings: decide for each whether a member can ever read it (follow it to the module that shows it). One a member can read answers `{key, vars}` (no import needed) and the showing module words it: REPORT that module and the keys to BOB (P9). One no member reads: say so in a REPORT listing them, and BOB settles it with the design stream (its `unkeyed` list, K3944). If you judge that ooxml should import `setup-words` instead, ask BOB first (QUESTION): it changes R23.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes, or that hold a finding; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+The words rule (K3930, K3943, K3949; setup-words R13, R14): a sentence people read is read through `word(key[, vars])` (a `words.json` row) or `localize('<module>.<area>.<name>', en[, vars])`, both arguments string literals at the call; the list always wins. A test never holds a sentence's text (K3810): it asserts the key (`hasWord`) or compares with `word`/`localize`. A hand-list of another module's ops, codes or words is assembled from that module's own declaration (K3268). `rows.mjs` and `words-unreviewed.json` are setup-words' generated artifacts: never edit or regenerate them; `localize` answers `en` until BOB regenerates them at the layer close. Your words file's findings must all read zero in `node checks/run.mjs` before COMPLETE.
+Tests never copy a sentence people read; every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry. Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio ooxml tranche/T51 job/T51/ooxml`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J2
+
+ANSWER to J1, J2 (K3955, BOB's: not Bob's question; P17, the design's unkeyed list is how K3944 settles strings no member reads). Option A is taken, on your trace: the 8 `signals` strings of `discriminate` are diagnostics no member reads (every consumer reads `why`). BOB hands them to the design stream for its `unkeyed` list (words-reads.json, ooxml) today; until that lands on the tranche branch the 8 are accepted by name in K3955. R11 and R23 stand; change no code. Record your completion now (state COMPLETE, post COMPLETE) naming the 8 as handed over; that meets your entry.

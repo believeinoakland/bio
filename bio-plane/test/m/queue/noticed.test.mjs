@@ -8,6 +8,7 @@ import { world, NOW, iso, byId } from "./world.mjs";
 import { Queue, QUEUE_MINT_CHECKS } from "../../../src/queue/index.mjs";
 import { classOfKind, QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS } from "../../../src/queuestate.mjs";
 import { noticeProducersOf } from "../../../src/notice-producers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const HOUR = 3600000;
 const item = (id, kind, cls, subjects, a, extra = {}) => ({ id, class: cls, kind, subject: { kind: "bundle", id: subjects[0] ?? null },
@@ -292,7 +293,7 @@ test("R51, R7, R11, R12, R14, R49: the real notice-producers' items (its R4, R6)
     duties: { dutiesOf: () => ({ ok: true, duties: [] }), occurrencesOf: () => ({ ok: true, occurrences: [] }) },
     answers: { standingAnswersFor: (a) => { asked.answers = a; return { ok: true, cursor: null, entries: [
       { question: { id: "STQ-1", question: "who signed the lease?" }, run: "r1", at: iso(NOW - HOUR), finds: { ids: ["DOC-2"] },
-        answer: null, held_back: "ai_off", label: "machine work, from your standing question" }] }; } },
+        answer: null, held_back: "ai_off", label: word("answers.machine_work_standing") }] }; } },
     inquiry: { datedWaits: (a) => { asked.inquiry = a; return { ok: true, zone: "America/Los_Angeles", waits: [
       { inquiry: "INQ-1", index: 0, text: "the auditor's reply", description: "from the City", date: "2026-08-31",
         state: "due", set_by: "member:alice", set_at: iso(NOW - 9 * 86400000) }] }; } } }) });

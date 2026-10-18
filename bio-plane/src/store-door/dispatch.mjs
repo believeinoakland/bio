@@ -25,6 +25,7 @@ import { membershipOf, notAnAdmin } from "../membership/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
 import { DISPATCH_CHECKS } from "../answer-envelope/checks.mjs";
 import { pullAndFile } from "./pull.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* ===== REC-196 — A READ NAMING A DISCOVERABLE PROJECT'S OWN ID IS ANSWERED POSITIONALLY (Membership v2 §7, item
  * 7.14, RULED 2026-09-23 by BOB #32, (a)).
@@ -243,8 +244,8 @@ function purgeHoldRefusal(store, url) {
   return { ok: false, error: "purge refused: a litigation hold is in place", reason: "PURGE_HOLD_IN_PLACE",
            code: "PURGE_HOLD_IN_PLACE", check: row.check, translation: row.translation, bundleId,
            detail: bundleId === null
-             ? "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed."
-             : "this bundle is, or may be, material a litigation hold preserves. Nothing was removed." };
+             ? localize("store-door.dispatch.a_litigation_hold_is_in", "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.")
+             : localize("store-door.dispatch.this_bundle_is_or_may", "this bundle is, or may be, material a litigation hold preserves. Nothing was removed.") };
   /* END DEC-49 REGION is-purge-hold-in-place */
 }
 

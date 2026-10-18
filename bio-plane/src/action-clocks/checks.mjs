@@ -6,63 +6,56 @@
  * in this module's own family. New in T45 (R18): C-123.7 and C-123.8, the statement's refusals (C-123.8 also R13's
  * amended entry). `NO_SUCH_ACTION` is `actions`' row (its R43), answered through `actions.noSuchAction`. */
 
+import { word } from '../setup-words/index.mjs';
+
 export const ACTION_CLOCK_CHECKS = {
   /* R1: the date the pending-clock read looks before is a date; the condition is this read's own. */
   PENDING_CLOCKS_BAD_BEFORE: {
     check: 'C-117.5',
     where: 'src/action-clocks/index.mjs pendingClocks > is-pending-before',
-    translation: 'The deadlines are listed up to a date written year-month-day, and the date given was not one. '
-      + 'Nothing was read.',
+    translation: word('refusal.PENDING_CLOCKS_BAD_BEFORE'),
   },
   /* R4, R6, R8 (DEC-94, DEC-69): a reminder is a member's own request; a machine never sets, changes or answers one. */
   MACHINE_CANNOT_SET_REMINDER: {
     check: 'C-123.1',
     where: 'src/action-clocks/index.mjs #machineReminder > is-machine-reminder',
-    translation: 'A reminder is something a member asks for, for themselves. This request came from no signed-in '
-      + 'member, so nothing was set. Sign in as a member to ask for a reminder.',
+    translation: word('refusal.MACHINE_CANNOT_SET_REMINDER'),
   },
   /* R4, R6: the request's own shape: the entry, the day, the reminder it changes, and the action's bound. */
   REMINDER_REFUSED: {
     check: 'C-123.2',
     where: 'src/action-clocks/index.mjs reminderRefused > is-reminder-refused',
-    translation: 'A reminder is set on a deadline of the action that has a date, for a day written year-month-day; '
-      + 'it changes or removes only a reminder of your own; it is not set twice on one day; and an action holds at '
-      + 'most 50 reminders. This request did not meet one of those, so nothing was changed.',
+    translation: word('refusal.REMINDER_REFUSED'),
   },
   /* R6: an answer is to a reminder of the member's own that has come due and is not yet answered. */
   NO_SUCH_REMINDER: {
     check: 'C-123.3',
     where: 'src/action-clocks/index.mjs reminderAnswer > is-no-such-reminder',
-    translation: 'There is no reminder of yours on that deadline that has come due and is waiting for an answer, so '
-      + 'nothing was answered.',
+    translation: word('refusal.NO_SUCH_REMINDER'),
   },
   /* R13, R8 (K1440): adopting a computed deadline into an action's clock is a member's own act. */
   MACHINE_CANNOT_ADOPT_CLOCK: {
     check: 'C-123.4',
     where: 'src/action-clocks/index.mjs clockAdopt > is-machine-adopt',
-    translation: 'A deadline is put on an action by a member. This request came from no signed-in member, so the '
-      + 'proposed deadline was not adopted. Sign in as a member to adopt it.',
+    translation: word('refusal.MACHINE_CANNOT_ADOPT_CLOCK'),
   },
   /* R13: the proposal adopted is one that stands on this action. */
   NO_SUCH_CLOCK_PROPOSAL: {
     check: 'C-123.5',
     where: 'src/action-clocks/index.mjs clockAdopt > is-no-such-clock-proposal',
-    translation: 'There is no standing proposed deadline of that name on this action (it was never proposed, or it '
-      + 'has already been adopted), so nothing was adopted. Ask for the deadline to be computed again.',
+    translation: word('refusal.NO_SUCH_CLOCK_PROPOSAL'),
   },
   /* R13: an undetermined date is never adopted; a member states such an entry by their own revision. */
   CLOCK_PROPOSAL_UNDETERMINED: {
     check: 'C-123.6',
     where: 'src/action-clocks/index.mjs clockAdopt > is-clock-proposal-undetermined',
-    translation: 'The proposed deadline has no date: it could not be computed, for the reason it states. Nothing was '
-      + 'adopted. A member can state the deadline themselves by revising the action, with its basis.',
+    translation: word('refusal.CLOCK_PROPOSAL_UNDETERMINED'),
   },
   /* R18 (T45; reconciliation R7): stating a deadline on an action's clock is a member's own act. */
   MACHINE_CANNOT_STATE_CLOCK: {
     check: 'C-123.7',
     where: 'src/action-clocks/index.mjs clockState > is-machine-state-clock',
-    translation: 'A deadline is put on an action by a member. This request came from no signed-in member, so nothing '
-      + 'was written. Sign in as a member to state the deadline.',
+    translation: word('refusal.MACHINE_CANNOT_STATE_CLOCK'),
   },
   /* R13, R18 (T45): the entry's own shape, the arm naming the field: its words, a calendar date, one of the basis kinds
      with that kind's own fields, who owes it, and a time of day on its own date. */

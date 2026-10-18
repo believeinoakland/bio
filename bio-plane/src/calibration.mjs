@@ -106,6 +106,7 @@
    vocabulary, which is record-grammar's (its R16). */
 import { BASIS_GRADES } from "./record-grammar/index.mjs";
 import { CALIBRATION_CHECKS } from "./calibration/checks.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 
 /* ------------------------------------------------------------------ *
  * The declared constants
@@ -122,8 +123,7 @@ export const CALIBRATION_CADENCE_MS = 30 * 24 * 60 * 60 * 1000;
  *  same defect one altitude up. */
 export function cadenceSentence(ms = CALIBRATION_CADENCE_MS) {
   const days = ms / (24 * 60 * 60 * 1000);
-  return `one probe per calibratable engine every ${
-    Number.isInteger(days) ? days : days.toFixed(2)} day(s), which your team's Civicsmith runs on its own account`;
+  return word("calibration.probe_per_calibratable", { days: String(Number.isInteger(days) ? days : days.toFixed(2)) });
 }
 
 /** The verdicts `compare` can return. Named rather than spelled, because every
@@ -182,13 +182,10 @@ export function checkCalibration(cal) {
   /* DEC-49 REGION is-calibration-shape */
   const c = cal && typeof cal === "object" && !Array.isArray(cal) ? cal : null;
   if (!c)
-    return refusal("CAL_SHAPE", `a calibration is an object; got ${cal === null ? "null" : typeof cal}`);
+    return refusal("CAL_SHAPE", localize("calibration.calibration.a_calibration_is_an_object", "a calibration is an object; got {v1}", { v1: String(cal === null ? "null" : typeof cal) }));
   if (!(typeof c.engine === "string" && c.engine.trim()) || !(typeof c.version === "string" && c.version.trim()))
     return refusal("CAL_UNNAMED",
-      `a calibration names the ENGINE and the VERSION it measured. A measurement of "the OCR" is a `
-      + `measurement of nothing re-runnable: an external service retrains under an unchanged name `
-      + `(DEC-35's own argument against Textract), which is exactly why the pair is required and `
-      + `why neither half is enough alone`);
+      localize("calibration.calibration.a_calibration_names_the_engine", "a calibration names the ENGINE and the VERSION it measured. A measurement of \"the OCR\" is a measurement of nothing re-runnable: an external service retrains under an unchanged name (DEC-35's own argument against Textract), which is exactly why the pair is required and why neither half is enough alone"));
   if (!(typeof c.at === "string" && c.at.trim()))
     return refusal("CAL_UNDATED",
       `a calibration carries the date the probe RAN. A fidelity letter is a fact about an engine AT `
@@ -196,9 +193,7 @@ export function checkCalibration(cal) {
       + `reader whether anybody has looked recently`);
   if (c.cap != null && rank(c.cap) == null)
     return refusal("CAL_SHAPE",
-      `cap '${String(c.cap)}' is not one of ${BASIS_GRADES.join(", ")}, and a calibration does not `
-      + `invent a scale of its own — transcription fidelity bounds the capture axis and there is no `
-      + `third one (DEC-4)`);
+      localize("calibration.calibration.cap_string_is_not_one", "cap '{String}' is not one of {BASIS_GRADES}, and a calibration does not invent a scale of its own — transcription fidelity bounds the capture axis and there is no third one (DEC-4)", { String: String(String(c.cap)), BASIS_GRADES: String(BASIS_GRADES.join(", ")) }));
   /* RULE 1, and the three fields are checked TOGETHER because they are one
      fact: a probe ran, over these inputs, and produced these scores. */
   for (const field of PROBE_REQUIRED) {
@@ -207,10 +202,7 @@ export function checkCalibration(cal) {
                   : (v != null && typeof v === "object" ? Object.keys(v).length > 0 : false);
     if (!present)
       return refusal("CAL_NO_PROBE",
-        `this calibration carries no ${field}, so no probe run stands behind it. A CALIBRATION IS A `
-        + `MEASUREMENT, NEVER A CLAIM: a changelog, a release note, a model card and a version bump `
-        + `all say an engine changed, and none of them says what it now scores. The record stores the `
-        + `probe, its inputs and its scores precisely so a later reader can disagree with the letter`);
+        localize("calibration.calibration.this_calibration_carries_no_field", "this calibration carries no {field}, so no probe run stands behind it. A CALIBRATION IS A MEASUREMENT, NEVER A CLAIM: a changelog, a release note, a model card and a version bump all say an engine changed, and none of them says what it now scores. The record stores the probe, its inputs and its scores precisely so a later reader can disagree with the letter", { field: String(field) }));
   }
   /* D-668 / D-587 (R5): its own code. A calibration whose probe, inputs and scores are all present
      WAS measured, and C-42.4's "Nothing here was actually measured" was false of it (DEC-49, D-484).
@@ -283,9 +275,7 @@ export function drifted(verdict) {
                   + `stamp (DEC-4, no machine mints a grade)` };
     case DRIFT.BETTER:
       return { verdict, raises_obligation: false, regrades: false,
-               why: `this engine now measures BETTER. Nothing is raised and nothing moves: a grade `
-                  + `rises only by an authored act, so an automatic upgrade here would be your team's `
-                  + `Civicsmith making a claim nobody authored (DEC-4)` };
+               why: localize("calibration.calibration.this_engine_now_measures_better", "this engine now measures BETTER. Nothing is raised and nothing moves: a grade rises only by an authored act, so an automatic upgrade here would be your team's Civicsmith making a claim nobody authored (DEC-4)") };
     case DRIFT.SAME:
       return { verdict, raises_obligation: false, regrades: false,
                why: `this measurement agrees with the one it supersedes, so nothing rests on a `
@@ -344,7 +334,7 @@ export function nextProbeDue({ lastAt = null, signals = [], cadenceMs = CALIBRAT
                + `ACCELERATE a probe: it never stands in for one and it never itself changes a grade, `
                + `because absence of an announcement is not evidence of no change and a vendor's `
                + `documentation is a claim, not a measurement`
-             : `the declared cadence, ${cadenceSentence(cadenceMs)}` };
+             : word("calibration.why.declared_cadence", { cadence_ms: String(cadenceSentence(cadenceMs)) }) };
 }
 
 /** Is this announcement signal well-formed, and is it asking for something a
@@ -364,10 +354,7 @@ export function checkSignal(sig) {
      signal that carries a cap is a signal trying to be a calibration. */
   if (s.cap !== undefined || s.scores !== undefined)
     return refusal("CAL_SIGNAL_CLAIMS_MEASUREMENT",
-      `this announcement carries a fidelity (cap or scores). A VENDOR'S DOCUMENTATION IS A CLAIM, NOT `
-      + `A MEASUREMENT: an announcement may SHORTEN the interval to the next probe and may do nothing `
-      + `else — it may never stand in for a probe, and it may never itself set or change a grade. `
-      + `Record the announcement, then run the probe`);
+      localize("calibration.calibration.this_announcement_carries_a_fidelity", "this announcement carries a fidelity (cap or scores). A VENDOR'S DOCUMENTATION IS A CLAIM, NOT A MEASUREMENT: an announcement may SHORTEN the interval to the next probe and may do nothing else — it may never stand in for a probe, and it may never itself set or change a grade. Record the announcement, then run the probe"));
   /* END DEC-49 REGION is-calibration-signal */
   return null;
 }

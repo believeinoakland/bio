@@ -16,6 +16,8 @@
  * Object name is an exact string). The plane's set is not per instance (`namespaceGate` holds it in code), so "no such
  * namespace exists" is the same fact on every instance this member can be bound to. A COPY, because a fleet member
  * cannot import the plane; pinned to the plane's gate by the suites (R44) and by control-plane (N402). */
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+
 export const NAMESPACES = Object.freeze(["bio", "scratch"]);
 
 /* R37, R53 — THE OPS A RUN'S ROWS MAY NAME, AND WHY EACH ONE IS HERE. QUERY, NEVER LOAD (§14b.1): no op here returns
@@ -24,9 +26,9 @@ export const PLANE_OPS = {
   whoami:         { mutating: false, why: "who the plane says this credential is (FL-2's round trip, kept)" },
   airun:          { mutating: false, why: "the run object: its conditions, its live budget" },
   airunlog:       { mutating: false, why: "§14b.7 — a RESUMED run reads its own log and continues" },
-  airunspawn:     { mutating: false, why: "PL-12's spawn payload; the search half has no manifest field to read" },
+  airunspawn:     { mutating: false, why: localize("agent-worker.ops.pl_12s_spawn_payload_the", "PL-12's spawn payload; the search half has no manifest field to read") },
   meaningrows:    { mutating: false, why: "PL-9 / D-222 option C — the meaning-grain read. CONSUMED, never rebuilt" },
-  basisversions:  { mutating: false, why: "PL-1's version set — what DEDUP compares against, read before any write" },
+  basisversions:  { mutating: false, why: localize("agent-worker.ops.pl_1s_version_set_what", "PL-1's version set — what DEDUP compares against, read before any write") },
   search:         { mutating: false, why: "D-220 — which held record a citation names, and the source address its bytes name" },
   versionchain:   { mutating: false, why: "D-220 / PL-10 — every version at that address, so a document is counted ONCE" },
   agentpack:      { mutating: false, why: "R48 — the rendered skill pack and its fences, read apart from what else the plane publishes, before any model turn (N695)" },

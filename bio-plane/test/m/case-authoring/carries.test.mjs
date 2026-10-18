@@ -13,6 +13,7 @@ import { unnamedSourceStatement } from "../../../src/publication/index.mjs";
 import { GRADING_METHOD_VERSION, recomputePair } from "../../../src/strength/index.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -52,7 +53,7 @@ test("R55 (case-disclosures R7, R6): materials: lists every document a member's 
     { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false,
       rests_under: "supporting", obscured: null }]);
   const body = bodyOf(docOf(w, r));
-  assert.ok(body.includes("## What This Case Carries"));
+  assert.ok(body.includes(word("case-disclosures.case_carries")));
   assert.ok(body.includes(`- ${DOC2}, a document, fingerprint ${b}: NOT INCLUDED`));
 });
 

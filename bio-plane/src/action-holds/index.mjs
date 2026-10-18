@@ -41,6 +41,7 @@ import { parseFrontmatter, normalizeType, isMachineIdentity, BUNDLE_ID_RE } from
 import { ACTION_ACT_CHECKS, ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
 import { ACTION_HOLDS_CHECKS } from "./checks.mjs";
 import { ACTION_HOLDS_TABLES, migrateActionHolds } from "./schema.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { ACTION_HOLDS_SCHEMA, ACTION_HOLDS_TABLES } from "./schema.mjs";
 export { ACTION_HOLDS_CHECKS, ACTION_HOLDS_WORDS } from "./checks.mjs";
@@ -195,8 +196,7 @@ export class ActionHolds {
         + `1 to ${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`,
         { legal: PRESSURE_KINDS, max: NOTE_MAX });
     if (direction !== "received")
-      return refuse("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. `
-        + "Nothing was written.");
+      return refuse("PRESSURE_NOT_RECEIVED", localize("action-holds.index.pressure_is_marked_on_a", "pressure is marked on a received entry; this one is {v1}. Nothing was written.", { v1: String(direction || "not one") }));
     /* END DEC-49 REGION is-pressure */
     return null;
   }
@@ -227,8 +227,7 @@ export class ActionHolds {
     if (notReceived) return { ...notReceived, target, ord: n };
     /* DEC-49 REGION is-pressure-marked */
     if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) || entry.pressure_kind !== undefined)
-      return refuse("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. "
-        + "Nothing was written.", { target, ord: n });
+      return refuse("PRESSURE_MARKED", localize("action-holds.index.that_entry_is_already_marked", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written."), { target, ord: n });
     /* END DEC-49 REGION is-pressure-marked */
     const at = stampInstant("second", this.#nowMs());
     this.sql.exec(`INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
@@ -412,8 +411,7 @@ export class ActionHolds {
     }
     /* DEC-49 REGION is-hold-already-released */
     if (release && latest && latest.hold === "released")
-      return refuse("HOLD_ALREADY_RELEASED", "this place's hold is already released; a release ends a hold in place. "
-        + "Nothing was written.", where);
+      return refuse("HOLD_ALREADY_RELEASED", localize("action-holds.index.this_places_hold_is_already", "this place's hold is already released; a release ends a hold in place. Nothing was written."), where);
     /* END DEC-49 REGION is-hold-already-released */
     /* R2: the first named project the author may not name answers as membership answers it (its R77, R78). */
     for (const p of named) {

@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import * as R from "../../../src/case-catalogue/checks.mjs";
 import * as RG from "../../../src/record-grammar/index.mjs";
 import { isNoticeReference, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V7 } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 
 const PIN = "a".repeat(64);
@@ -32,7 +33,7 @@ function doc() {
     completeness_excluded: [{ target: null, description: "the 2019 permits", reason: "not yet requested" }],
     searched: { subject_source: "case_basis", subjects: 2 }, searched_levels: [],
     required_strength: { declared: true, capture: "B", connection: null },
-    bias_manifest: { in_force: false, stated: "no manifest was in force", pins_proposed: 0,
+    bias_manifest: { in_force: false, stated: word("bias.manifest_force"), pins_proposed: 0,
                      pins_proposed_stated: "no adoption pinned a proposed revision" },
     bias_manifest_bundles: [], bias_manifest_pins_proposed: [],
     case_citations: [{ target: "INFO-2026-0001-minutes", version: "pinned", capture: "c".repeat(64) },

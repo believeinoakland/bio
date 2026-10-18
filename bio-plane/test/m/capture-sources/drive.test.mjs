@@ -10,6 +10,7 @@ import {
 } from "../../../src/drive.mjs";
 import { archiveHop, selectCapture } from "../../../src/cdx.mjs";
 import { renderLocaleFor } from "../../../src/render.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ID = "1AbCdEfGhIjKlMnOpQrStUvWxYz_-0123456789";
 const DOC = `https://docs.google.com/document/d/${ID}/edit`;
@@ -22,7 +23,7 @@ test("R38: the Drive hosts, the three kinds with their OpenDocument types, the p
     ["spreadsheet", "spreadsheets", "ods", "application/vnd.oasis.opendocument.spreadsheet"],
     ["presentation", "presentation", "odp", "application/vnd.oasis.opendocument.presentation"],
   ]);
-  assert.equal(DRIVE_PRODUCER, "Google Drive export");
+  assert.equal(DRIVE_PRODUCER, word("drive.google_drive_export"));
   assert.equal(DRIVE_CONVERT_ENGINE, "google-export");
   /* An exact set: another Google property is not a Drive host. */
   for (const a of ["https://www.google.com/maps/x", "https://fonts.googleapis.com/css", "https://google.com/search?q=x",
@@ -109,7 +110,7 @@ test("R42: driveHop states Google's conversion, from the address and the fetch, 
   assert.deepEqual({ bound: h.bound, via: h.via, export_address: h.export_address, export_format: h.export_format, producer: h.producer,
                      drive_file_id: h.drive_file_id, drive_kind: h.drive_kind, document_address: h.document_address,
                      export_format_confirmed: h.export_format_confirmed },
-    { bound: false, via: "direct", export_address: exp, export_format: "ods", producer: "Google Drive export",
+    { bound: false, via: "direct", export_address: exp, export_format: "ods", producer: word("drive.google_drive_export"),
       drive_file_id: ID, drive_kind: "spreadsheet", document_address: d.address, export_format_confirmed: true });
   assert.match(h.unsigned_reason, /not the original file/);
   const doc = readDriveAddress(DOC);
@@ -234,6 +235,6 @@ test("R53: no jurisdiction: the recognisers name only the platforms, and the loc
   assert.equal(readDriveAddress(`https://docs.google.com/a/anytown.example/document/d/${ID}/edit`).shape, "document");
   const h = driveHop(readDriveAddress(DOC), { retrieved: "t" });
   const c = archiveHop(selectCapture([{ timestamp: "20260303120000", original: "https://records.anytown.example/x", statuscode: "200", digest: "D" }]).chosen, "r");
-  assert.deepEqual([h.who, c.who], ["Google Drive (Google Drive export)", "Internet Archive Wayback Machine"]);
+  assert.deepEqual([h.who, c.who], ["Google Drive (Google Drive export)", word("capture-sources.name.internet_archive_wayback")]);
   assert.equal(renderLocaleFor({ id: "test-anytown", locale: { value: "de-AT", basis: "TEST", profile: "test-anytown" } }), "de-AT");
 });

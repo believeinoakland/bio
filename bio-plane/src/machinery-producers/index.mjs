@@ -34,7 +34,7 @@ import { monitoringOf } from "../monitoring/index.mjs";
 import { linkSweepOf, SWEEP_CONDITION_KINDS } from "../link-sweep/index.mjs";
 import { actionsOf, zoneOf } from "../actions/index.mjs";
 import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { runPrincipalOf } from "../run-rules/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 
@@ -344,21 +344,14 @@ export class MachineryProducers {
         subject: { kind: "host", id: null, host: r.host,
                    bundles: subj.ids.slice(0, MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX) },
         summary: word("machinery-producers.summary.pacing_holding_captures", { host: r.host }),
-        detail: `the per-host governor is in cool-off for ${r.host} for another `
-              + `${Math.max(0, r.cooloff_until - now)}ms after `
-              + `${r.refusals} consecutive refusal${r.refusals === 1 ? "" : "s"}`
-              + (r.last_refusal_status ? ` (last status ${r.last_refusal_status})` : "")
-              + ". Nothing about the source is being claimed here.",
+        detail: localize("machinery-producers.index.the_per_host_governor_is", "the per-host governor is in cool-off for {host} for another {max}ms after {refusals} consecutive refusal{v1}{v2}. Nothing about the source is being claimed here.", { host: String(r.host), max: String(Math.max(0, r.cooloff_until - now)), refusals: String(r.refusals), v1: String(r.refusals === 1 ? "" : "s"), v2: String(r.last_refusal_status ? ` (last status ${r.last_refusal_status})` : "") }),
         basis: { source: "host_governor", host: r.host,
                  cooloff_until: r.cooloff_until, retry_in_ms: Math.max(0, r.cooloff_until - now),
                  refusals: r.refusals, last_refusal_status: r.last_refusal_status ?? null,
                  last_refusal_at: Number.isFinite(refusedAt) ? refusedAt : null,
                  appetite_per_min: r.appetite_per_min ?? null,
                  granted: r.granted, refused_total: r.refused_total,
-                 detail: "a status is a fact about OUR OWN machinery (D-103/D-95): this instance's "
-                       + "governor is holding the host, which is distinguishable from the source being "
-                       + "unreachable and must not be read as evidence about the publisher. It clears "
-                       + "for every member when the hold expires; there is no act that ends it." },
+                 detail: localize("machinery-producers.index.a_status_is_a_fact", "a status is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it.") },
         age: Number.isFinite(refusedAt) && refusedAt > 0
           ? { state: "determined", since: new Date(refusedAt).toISOString(),
               ms: Math.max(0, now - refusedAt) }
@@ -424,19 +417,14 @@ export class MachineryProducers {
           ? { kind: "bundle", id: bundleId, capture_sha: r.primary_sha, locator: r.locator }
           : { kind: "capture", id: null, capture_sha: r.primary_sha, locator: r.locator },
         summary: word("machinery-producers.summary.capture_did_finish", { locator: r.locator }),
-        detail: "the primary document is captured and its bytes are in the store; the platform's "
-              + "subrequest ceiling was reached before its support material was fetched, and the "
-              + `remainder is parked for another tick (tick ${r.ticks}, expires ${r.expires}).`,
+        detail: localize("machinery-producers.index.the_primary_document_is_captured", "the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick {ticks}, expires {expires}).", { ticks: String(r.ticks), expires: String(r.expires) }),
         basis: { source: "capture_sessions", session: r.session, locator: r.locator,
                  primary_sha: r.primary_sha, bundle_id: bundleId, ticks: r.ticks,
                  created: r.created, updated: r.updated, expires: r.expires,
                  outstanding: parsed ? outstanding : null,
                  discovered: parsed ? discovered : null, spent: parsed ? spent : null,
                  state_readable: parsed,
-                 detail: "the ledger is SCRATCH and not record: it names a work list with an expiry, "
-                       + "the primary capture is complete from the first tick, and the row is dropped "
-                       + "by the capture path itself when nothing is left. It therefore clears for "
-                       + "every member when the capture finishes or the session expires." },
+                 detail: localize("machinery-producers.index.the_ledger_is_scratch_and", "the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires.") },
         age: Number.isFinite(createdMs)
           ? { state: "determined", since: r.created, ms: Math.max(0, now - createdMs) }
           : { state: "undetermined", reason: "unparseable_created",
@@ -661,10 +649,7 @@ export class MachineryProducers {
                  address: r.address, host: r.host, purpose: r.purpose, ua_mode: r.ua_mode,
                  capture_sha: r.capture_sha, captured_at: r.captured_at, grade_notes: notes,
                  attribution,
-                 detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, "
-                       + "performed at the session's request, under the plane credential the run holds "
-                       + "and paid for by the level of the Claude-account cascade the run named. Never a "
-                       + "token value, and never a person's name on the act itself." },
+                 detail: localize("machinery-producers.index.both_principals_are_named_dec", "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself.") },
         age: Number.isFinite(capturedMs)
           ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) }
           : { state: "undetermined", reason: "unparseable_captured_at",
@@ -779,14 +764,12 @@ export class MachineryProducers {
         summary: word(overdue ? "machinery-producers.summary.overdue_check_interval" : "machinery-producers.summary.monitored_check_scheduled",
           { bundle: r.address || r.bundle }),
         detail: overdue
-          ? `it was due at ${r.due_at} and is checked every ${Math.round(r.interval_ms / 3600000)} hours; the check `
-            + "has not run since. Nothing about the source is claimed here."
-          : `no interval can be derived for it (${r.reason || "no reason recorded"}), so no check is scheduled.`,
+          ? localize("machinery-producers.index.it_was_due_at_due", "it was due at {due_at} and is checked every {round} hours; the check has not run since. Nothing about the source is claimed here.", { due_at: String(r.due_at), round: String(Math.round(r.interval_ms / 3600000)) })
+          : localize("machinery-producers.index.no_interval_can_be_derived", "no interval can be derived for it ({v1}), so no check is scheduled.", { v1: String(r.reason || "no reason recorded") }),
         basis: { source: "monitoring", state: r.state, bundle: r.bundle, address: r.address ?? null,
                  frequency: r.frequency ?? null, due_at: r.due_at ?? null, interval_ms: r.interval_ms ?? null,
                  reason: r.reason ?? null, truncated: plan.truncated === true,
-                 detail: "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind "
-                       + "or unable to schedule, and it clears when the check runs or a cadence is set." },
+                 detail: localize("machinery-producers.index.the_plan_is_monitorings_its", "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set.") },
         age: overdue
           ? { state: "determined", since: r.due_at, ms: Math.max(0, now - dueMs) }
           : { state: "undetermined", reason: "unscheduled",
@@ -856,10 +839,8 @@ export class MachineryProducers {
           ? word("machinery-producers.summary.render_performed_held", { address: r.address })
           : word("machinery-producers.summary.render_waiting", { address: r.address, words }),
         detail: released
-          ? `${words} The request expired at ${r.expires} and was released; nothing was filed in the `
-            + "render's place, and no conclusion about the page can rest on it."
-          : `${words} The request is held and asked again on every tick until ${r.expires}; if it `
-            + "cannot be rendered by then it is recorded UNDETERMINED and released.",
+          ? localize("machinery-producers.index.words_the_request_expired_at", "{words} The request expired at {expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.", { words: String(words), expires: String(r.expires) })
+          : localize("machinery-producers.index.words_the_request_is_held", "{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.", { words: String(words), expires: String(r.expires) }),
         basis: { source: "capture_requests", request: r.request, run: r.run, inquiry: r.target,
                  address: r.address, host: r.host,
                  render: released ? { state: "expired", content: "undetermined" }
@@ -867,10 +848,7 @@ export class MachineryProducers {
                  code: r.code, check: row.check, translation: row.translation,
                  attempts: r.attempts, expires: r.expires, updated: r.updated,
                  plane_detail: r.detail ?? null,
-                 detail: "a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's "
-                       + "renderer, render allowance or host pacing is what holds the render, which says "
-                       + "nothing about the page. The served frame is never filed as the content, so while it "
-                       + "waits and after it expires there is NO capture of what a visitor saw." },
+                 detail: localize("machinery-producers.index.a_status_is_a_fact_2", "a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw.") },
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: r.requested_at, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "unparseable_requested_at",
@@ -930,16 +908,13 @@ export class MachineryProducers {
     switch (kind) {
       case "sweep-held-backlog":
         return { summary: word("machinery-producers.summary.sweep_held_captures", { title }),
-                 detail: `${n(d.backlog)} of its captures are still awaiting review, at or over its backlog limit of `
-                       + `${n(d.limit)}. It runs again when members review or set aside enough of them.` };
+                 detail: localize("machinery-producers.index.n_of_its_captures_are", "{n} of its captures are still awaiting review, at or over its backlog limit of {n_2}. It runs again when members review or set aside enough of them.", { n: String(n(d.backlog)), n_2: String(n(d.limit)) }) };
       case "sweep-yield-anomaly":
         return { summary: word("machinery-producers.summary.sweep_filed_unusual", { title }),
-                 detail: `its last run filed ${n(d.filed)} against a median of ${n(d.median)} over its recent runs. `
-                       + "Nothing else changed: the run's note says only that the number was unusual." };
+                 detail: localize("machinery-producers.index.its_last_run_filed_n", "its last run filed {n} against a median of {n_2} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.", { n: String(n(d.filed)), n_2: String(n(d.median)) }) };
       case "sweep-seed-unreachable":
         return { summary: word("machinery-producers.summary.listing_page_sweep", { title }),
-                 detail: `on its last run these could not be fetched: ${list(d.seeds, (x) => String(x && x.seed))}. `
-                       + "The sweep's other pages were read; each one's reachability is on the basis." };
+                 detail: localize("machinery-producers.index.on_its_last_run_these", "on its last run these could not be fetched: {list}. The sweep's other pages were read; each one's reachability is on the basis.", { list: String(list(d.seeds, (x) => String(x && x.seed))) }) };
       case "sweep-redirect-out-of-scope":
         return { summary: word("machinery-producers.summary.sweep_met_redirect", { title }),
                  detail: `on its last run these addresses redirected outside the sweep's sources, and nothing at the target `
@@ -947,8 +922,7 @@ export class MachineryProducers {
                          ? `${x.address ?? "an address"} to ${x.target ?? "an undetermined target"}` : String(x)))}.` };
       default:
         return { summary: word("machinery-producers.summary.sweep_filed_last", { title, runs: n(d.runs) }),
-                 detail: `its last ${n(d.runs)} runs each filed nothing, and it is not held. Its seeds or its match may `
-                       + "no longer find what it was set up to find." };
+                 detail: localize("machinery-producers.index.its_last_n_runs_each", "its last {n} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.", { n: String(n(d.runs)) }) };
     }
   }
 
@@ -993,9 +967,7 @@ export class MachineryProducers {
         detail: words.detail,
         basis: { source: "link-sweep.sweepConditions", sweep: c.sweep, bundle, sweep_id: sweepId, project, kind: c.kind,
                  since: c.since ?? null, condition: d, recipients_rule: "project_members_who_see_the_bundle",
-                 detail: "a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and "
-                       + "backlog, read here and never restated. It goes to the members of the sweep's project who may "
-                       + "see its record, and it leaves on the first read after it stops holding." },
+                 detail: localize("machinery-producers.index.a_sweeps_status_is_link", "a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding.") },
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: c.since, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "no_condition_instant",
@@ -1044,9 +1016,7 @@ export class MachineryProducers {
           basis: { source: "network-notices.noticesOf", notice: n.notice, project, status: n.status, ...facts,
                    recipients_rule: "project_owners", zone,
                    bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
-                   detail: "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never "
-                         + "restated. It is told to the project's owners and to nobody else, and it leaves on the first "
-                         + "read after it stops holding." },
+                   detail: localize("machinery-producers.index.a_working_on_notices_state", "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding.") },
           age: MachineryProducers.#localAge(since, zone, now, "no_notice_instant", word("machinery-producers.age.notice_carries_instant")),
           assignee: null,
           assignee_role: null,
@@ -1069,9 +1039,7 @@ export class MachineryProducers {
             if (!since)
               item("notice-attestation-missed", n, { since: miss.at ?? null,
                 summary: word("machinery-producers.summary.monthly_attestation_working", { title, month: miss.month }),
-                detail: "no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity "
-                      + "level. The notice shows its last attested level with that level's date until an attestation "
-                      + "is issued; an administrator binds the key.",
+                detail: localize("machinery-producers.index.no_instance_key_was_bound", "no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key."),
                 facts: { month: miss.month, missed_at: miss.at ?? null, missed: misses.length },
                 options: this.#optionsOf([project]) });
           }
@@ -1081,8 +1049,7 @@ export class MachineryProducers {
           if (opens && reached && opens <= reached) {
             item("notice-lapse-near", n, { since: opens,
               summary: word("machinery-producers.summary.working_notice_will", { title, lapse_date: n.lapse_date.slice(0, 10) }),
-              detail: "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no "
-                    + "revision lapses it. A revision or a stop answers this; so does the lapse itself.",
+              detail: localize("machinery-producers.index.the_notice_has_been_dormant", "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself."),
               facts: { lapse_date: n.lapse_date.slice(0, 10), window_days: MachineryProducers.NOTICE_LAPSE_NEAR_DAYS,
                        level: n.level ?? null },
               options: [MachineryProducers.NOTICE_REVISE] });
@@ -1098,9 +1065,7 @@ export class MachineryProducers {
           if (stands) {
             item("notice-project-closed", n, { since,
               summary: word("machinery-producers.summary.closed_while_working", { title }),
-              detail: "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice "
-                    + "with a handoff naming another team or an open lead. This stands for 30 days from the closing, "
-                    + "or until an owner stops the notice.",
+              detail: localize("machinery-producers.index.your_teams_civicsmith_signed_the", "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice."),
               facts: { closed_at: since, window_days: MachineryProducers.NOTICE_CLOSED_DAYS },
               options: [MachineryProducers.NOTICE_STOP] });
           }
@@ -1195,9 +1160,7 @@ export class MachineryProducers {
       detail: { version, date: r.date, security },
       basis: { source: "instance-setup.updateNoticeState", version, date: r.date, security, found_at: r.found_at,
                running: st.running.version,
-               detail: "the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to "
-                     + "every administrator and leaves every administrator's queue when one of them updates, puts it aside "
-                     + "until a later day or skips it, or when your team is running that release or a newer one." },
+               detail: localize("machinery-producers.index.the_to_do_is_derived", "the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to every administrator and leaves every administrator's queue when one of them updates, puts it aside until a later day or skips it, or when your team is running that release or a newer one.") },
       age: MachineryProducers.#localAge(r.found_at, this.#instanceZone(), now, "no_release_instant",
         word("machinery-producers.age.notice_carries_instant_producer")),
       assignee: null,

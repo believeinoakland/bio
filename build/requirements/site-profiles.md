@@ -52,8 +52,7 @@ Recognises which host-technology stack served a captured document (`identify`) a
 ## Private
 
 ### Uses
-
-Nothing. The four stack handlers recognise technology and need no jurisdiction profile.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

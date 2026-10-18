@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 86400000;
 const page = (items, extra = {}) => ({ ok: true, items, limit: 500, truncated: false, cursor: null, ...extra });
@@ -121,7 +122,7 @@ test("R14: OBLIGATIONs signer-self-registered, one per active self-registered ke
   assert.deepEqual([it.class, it.kind, it.subject.kind, it.subject.id, it.subject.comment, it.subject.registered_by],
     ["OBLIGATION", "signer-self-registered", "signer_key", "KEY-A", "alice's laptop", "alice"], "naming the key's comment and its member");
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 3000), ms: 3000 }, "aged from its added instant");
-  assert.deepEqual(it.options, [{ id: "signerset", label: "Revoke this signing key", weight: "single" }]);
+  assert.deepEqual(it.options, [{ id: "signerset", label: word("queue-producers.label.revoke_signing_key"), weight: "single" }]);
   assert.deepEqual(it.basis.raised_to, ["ada"]);
   w.run(`UPDATE signers SET status='revoked' WHERE key_b64='KEY-A'`);
   assert.deepEqual(ids(w.read("ada")), [], "it leaves when the key is no longer active");

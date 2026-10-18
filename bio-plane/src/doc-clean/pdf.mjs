@@ -7,6 +7,7 @@
  * the walk no longer reaches (an earlier revision's, `/Info`, an XMP stream) is not written. */
 import { openPdf } from "../pdfstructure.mjs";
 import { CleanRefusal, cleanImage, imageKind, jbig2WithoutComments, latin1 } from "./images.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** Keys removed from every dictionary: document and object metadata, applications' private data, edit dates. */
 const DROP_EVERYWHERE = new Set(["Metadata", "PieceInfo", "LastModified"]);
@@ -40,12 +41,12 @@ export async function cleanPdf(d, maxInflated) {
   if (read.trailer.Encrypt) throw refusal("ENCRYPTED", "the PDF's trailer names an /Encrypt dictionary");
   if (read.unresolved.length) {
     const u = read.unresolved[0];
-    throw refusal("DOCUMENT_UNREADABLE", `object ${u.num} ${u.gen} is referred to and cannot be read`);
+    throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.object_num_gen_is_referred", "object {num} {gen} is referred to and cannot be read", { num: String(u.num), gen: String(u.gen) }));
   }
   const table = new Map(read.objects.map((o) => [o.num, o.value]));
   const root = read.trailer.Root;
   if (!root || root.t !== "ref" || !table.has(root.n) || table.get(root.n)?.t !== "dict")
-    throw refusal("DOCUMENT_UNREADABLE", "the trailer's /Root is not a catalog dictionary");
+    throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.the_trailer_s_root_is_not", "the trailer's /Root is not a catalog dictionary"));
 
   const ctx = context(table);
   const out = new Map(); // old number -> {value} or {dict, bytes}
@@ -57,17 +58,17 @@ export async function cleanPdf(d, maxInflated) {
 
   for (let next = 0; next < queue.length; next++) {
     const num = queue[next];
-    if (!table.has(num)) throw refusal("DOCUMENT_UNREADABLE", `object ${num} is referred to and cannot be read`);
+    if (!table.has(num)) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.object_num_is_referred_to", "object {num} is referred to and cannot be read", { num: String(num) }));
     const value = table.get(num);
     const ed = { removed: false, refs: enqueue, num };
     if (value && value.t === "stream") {
       const dict = rewrite({ t: "dict", map: value.dict }, ed).map;
       const type = nameOf(value.dict.Type);
-      if (type === "ObjStm" || type === "XRef") throw refusal("DOCUMENT_UNREADABLE", `object ${num} is a ${type} stream reached from the catalog`);
-      if (type === "EmbeddedFile") throw refusal("EMBEDDED_FILE", `object ${num} is an embedded file`);
+      if (type === "ObjStm" || type === "XRef") throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.object_num_is_a_type", "object {num} is a {type} stream reached from the catalog", { num: String(num), type: String(type) }));
+      if (type === "EmbeddedFile") throw refusal("EMBEDDED_FILE", localize("doc-clean.pdf.object_num_is_an_embedded", "object {num} is an embedded file", { num: String(num) }));
       const raw = doc.streamRawBytes(value);
       let bytes = raw;
-      if (!bytes) throw refusal("DOCUMENT_UNREADABLE", `object ${num}'s stream cannot be read`);
+      if (!bytes) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.object_num_s_stream_cannot", "object {num}'s stream cannot be read", { num: String(num) }));
       if (ctx.content.has(num) || nameOf(value.dict.Subtype) === "Form" || value.dict.PatternType === 1) await inlineImages(doc, value, num);
       const filters = filtersOf(value.dict);
       const isImage = nameOf(value.dict.Subtype) === "Image" || ctx.thumbs.has(num) || filters.includes("DCTDecode") || filters.includes("DCT") || filters.includes("JPXDecode");
@@ -75,14 +76,14 @@ export async function cleanPdf(d, maxInflated) {
         let changed = Boolean(value.dict.Metadata);
         const coded = filters.at(-1);
         if (coded === "JBIG2Decode") {
-          if (filters.length > 1) throw refusal("IMAGE_NOT_CLEANABLE", `object ${num}: a JBIG2 image under another filter`);
+          if (filters.length > 1) throw refusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.pdf.object_num_a_jbig2_image", "object {num}: a JBIG2 image under another filter", { num: String(num) }));
           const r = jbig2WithoutComments(bytes, `object ${num}`);
           if (r.changed) { bytes = r.bytes; changed = true; }
         }
         if (coded === "DCTDecode" || coded === "DCT" || coded === "JPXDecode") {
-          if (filters.length > 1) throw refusal("IMAGE_NOT_CLEANABLE", `object ${num}: a ${coded === "JPXDecode" ? "JPEG 2000" : "JPEG"} image under another filter`);
+          if (filters.length > 1) throw refusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.pdf.object_num_a_v1_image", "object {num}: a {v1} image under another filter", { num: String(num), v1: String(coded === "JPXDecode" ? "JPEG 2000" : "JPEG") }));
           const kind = imageKind(bytes);
-          if (!kind) throw refusal("IMAGE_DATA_CORRUPT", `object ${num}: its ${coded} data is not an image file`);
+          if (!kind) throw refusal("IMAGE_DATA_CORRUPT", localize("doc-clean.pdf.object_num_its_coded_data", "object {num}: its {coded} data is not an image file", { num: String(num), coded: String(coded) }));
           const r = await cleanImage(bytes, kind, `object ${num}`, maxInflated);
           if (r.changed) { bytes = r.bytes; changed = true; }
         }
@@ -91,7 +92,7 @@ export async function cleanPdf(d, maxInflated) {
       let streamDict = dict;
       if (ctx.globals.has(num)) {
         const plain = filters.length ? await doc.streamDecoded(value) : raw;
-        if (!plain) throw refusal("IMAGE_NOT_CLEANABLE", `object ${num}: JBIG2 globals that cannot be decoded`);
+        if (!plain) throw refusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.pdf.object_num_jbig2_globals_that", "object {num}: JBIG2 globals that cannot be decoded", { num: String(num) }));
         const r = jbig2WithoutComments(plain, `object ${num}`);
         if (r.changed) {
           bytes = r.bytes;
@@ -163,8 +164,8 @@ function rewrite(v, ed, annot = false) {
     case "dict": {
       const type = nameOf(v.map.Type), sub = nameOf(v.map.Subtype);
       if (MEDIA_SUBTYPES.has(sub) || MEDIA_TYPES.has(type) || v.map.RichMediaContent)
-        throw refusal("EMBEDDED_MEDIA", `object ${ed.num}: ${sub ? `a ${sub}` : `a ${type ?? "RichMedia"}`} object`);
-      if (v.map.EF) throw refusal("EMBEDDED_FILE", `object ${ed.num}: a file specification carrying an embedded file`);
+        throw refusal("EMBEDDED_MEDIA", localize("doc-clean.pdf.object_num_v1_object", "object {num}: {v1} object", { num: String(ed.num), v1: String(sub ? `a ${sub}` : `a ${type ?? "RichMedia"}`) }));
+      if (v.map.EF) throw refusal("EMBEDDED_FILE", localize("doc-clean.pdf.object_num_a_file_specification", "object {num}: a file specification carrying an embedded file", { num: String(ed.num) }));
       const isAnnot = annot || type === "Annot", isSig = type === "Sig" || type === "DocTimeStamp";
       const keys = Object.keys(v.map);
       let map = null;
@@ -180,14 +181,14 @@ function rewrite(v, ed, annot = false) {
       return map ? { t: "dict", map } : v;
     }
   }
-  throw refusal("DOCUMENT_UNREADABLE", `a value the PDF reader could not read (${String(v.t).slice(0, 20)})`);
+  throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.a_value_the_pdf_reader", "a value the PDF reader could not read ({String})", { String: String(String(v.t).slice(0, 20)) }));
 }
 
 /** Refuse a content stream that paints a JPEG inline (R3), or one that cannot be decoded and so cannot be read for
  *  them. */
 async function inlineImages(doc, stream, num) {
   const d = await doc.streamDecoded(stream);
-  if (!d) throw refusal("DOCUMENT_UNREADABLE", `object ${num}'s content stream cannot be decoded`);
+  if (!d) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.object_num_s_content_stream", "object {num}'s content stream cannot be decoded", { num: String(num) }));
   const ws = (c) => c === 0x20 || c === 0x0a || c === 0x0d || c === 0x09 || c === 0x0c || c === 0;
   const delim = (c) => ws(c) || c === 0x5d || c === 0x29 || c === 0x3e || c === 0x7d;
   for (let i = 0; i + 2 < d.length; i++) {
@@ -196,7 +197,7 @@ async function inlineImages(doc, stream, num) {
     while (j + 2 < d.length && !(ws(d[j - 1]) && d[j] === 0x49 && d[j + 1] === 0x44 && ws(d[j + 2]))) j++;
     const head = latin1(d, i + 2, j - i - 2);
     if (/\/(?:F|Filter)\s*(?:\[[^\]]*)?\/(?:DCT|DCTDecode)\b/.test(head))
-      throw refusal("IMAGE_NOT_CLEANABLE", `object ${num}: an inline JPEG image`);
+      throw refusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.pdf.object_num_an_inline_jpeg", "object {num}: an inline JPEG image", { num: String(num) }));
     i = j + 2;
   }
 }
@@ -289,7 +290,7 @@ function write(d, out, rootNum) {
       buf.set(o.bytes, at);
       at += o.bytes.length;
       put("\nendstream\nendobj\n");
-    } else put(`${renum.get(n)} 0 obj\n${ser(o.value, renum)}\nendobj\n`);
+    } else put(localize("doc-clean.pdf.get_0_obj_ser_endobj", "{get} 0 obj\n{ser}\nendobj\n", { get: String(renum.get(n)), ser: String(ser(o.value, renum)) }));
   }
   const start = at;
   put(`xref\n0 ${order.length + 1}\n0000000000 65535 f\r\n`);

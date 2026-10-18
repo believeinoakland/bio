@@ -10,6 +10,7 @@
  * own drain runs it over every candidate task. */
 
 import { isPublicHttpsLocator, ISO_TS_RE, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 const at = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
 
@@ -19,18 +20,12 @@ export const QUEUE_MACHINE_CHECKS = Object.freeze({
   MACHINE_CANNOT_FORWARD: Object.freeze({
     check: 'C-32.10',
     where: at("taskForward", "is-machine-forward"),
-    translation: 'Forwarding hands an obligation to a named person, and deciding who is better '
-      + 'placed to answer it is a judgement about people rather than about records. The credential '
-      + 'that asked here is an automated one: it can surface the work and route it as it arrives, '
-      + 'and cannot re-address it. Sign in to forward it.',
+    translation: localize('tasks.checks.forwarding_hands_an_obligation_to', 'Forwarding hands an obligation to a named person, and deciding who is better placed to answer it is a judgement about people rather than about records. The credential that asked here is an automated one: it can surface the work and route it as it arrives, and cannot re-address it. Sign in to forward it.'),
   }),
   MACHINE_CANNOT_RESOLVE: Object.freeze({
     check: 'C-32.11',
     where: at("taskResolve", "is-machine-resolve"),
-    translation: 'Closing an obligation says the thing the record asked for has been answered, and '
-      + 'somebody has to be willing to say that. The credential that asked here is an automated '
-      + 'one — it may surface the work and prepare what it needs, and closing work that is '
-      + 'nobody\'s is still closing it. Sign in to resolve it.',
+    translation: word('refusal.MACHINE_CANNOT_RESOLVE'),
   }),
 });
 
@@ -44,8 +39,7 @@ export const TASK_ACTOR_CHECKS = Object.freeze({
   TASK_NOT_YOURS: Object.freeze({
     check: 'C-76.1',
     where: at("#refuseNotYours", "is-task-actor-fence"),
-    translation: 'This task is not yours to act on: it is with another member now, so nothing was done to it. '
-      + 'The record says below who holds it. Ask them, or an administrator, if it still needs you.',
+    translation: word('refusal.TASK_NOT_YOURS'),
   }),
 });
 
@@ -56,9 +50,7 @@ export const QUEUE_INBOX_CHECKS = Object.freeze({
   INBOX_REFUSED: Object.freeze({
     check: 'C-19.2',
     where: at("inboxCheck", "is-inbox-refused"),
-    translation: 'This was not saved: the list of tasks it carries is not written the way the record writes tasks, '
-      + 'so a member could be shown something in it that the record cannot vouch for. The findings beside this say '
-      + 'which entries and what is wrong with each. Nothing was changed.',
+    translation: word('refusal.INBOX_REFUSED'),
   }),
 });
 
@@ -221,48 +213,37 @@ const checkRow = (n, fn, region, translation) => Object.freeze({ check: `C-138.$
 
 export const CHECK_REQUEST_CHECKS = Object.freeze({
   MACHINE_CANNOT_CHECK: checkRow(1, "#refuseMachineCheck", "is-machine-check",
-    'Asking for a check, taking one and recording one are each a person\'s act, and the credential that asked here is '
-    + 'an automated one. Nothing was written. Sign in as a member to do this.'),
+    word('refusal.MACHINE_CANNOT_CHECK')),
   NO_SUCH_CHECK_TARGET: checkRow(2, "checkRequest", "is-check-target",
-    'There is nothing here you can ask a check on: the item is not in the team\'s record, or it is not one you can see. '
-    + 'Nothing was written.'),
+    word('refusal.NO_SUCH_CHECK_TARGET')),
   CHECK_NOT_AN_OWNER: checkRow(3, "checkRequest", "is-check-owner",
-    'Only an owner of the project this item belongs to can ask for a check on it. Nothing was written. Ask one of the '
-    + 'project\'s owners to ask for it.'),
+    word('refusal.CHECK_NOT_AN_OWNER')),
   CHECK_ADDRESS_ONE: checkRow(4, "checkRequest", "is-check-address",
-    'A check is asked either of everyone who has declared an expertise, or of one member you name, and this request '
-    + 'named neither or both. Nothing was written. Choose one.'),
+    word('refusal.CHECK_ADDRESS_ONE')),
   CHECK_MEMBER_REFUSED: checkRow(5, "checkRequest", "is-check-member",
-    'The member you named cannot be asked: they are not an active member, or they cannot see this item. Nothing was '
-    + 'written. Ask by expertise, or name another member.'),
+    word('refusal.CHECK_MEMBER_REFUSED')),
   CHECK_NOTE_TOO_LONG: checkRow(6, "checkRequest", "is-check-note",
-    'The note is longer than 1,000 characters. Nothing was written. Shorten it and ask again.'),
+    word('refusal.CHECK_NOTE_TOO_LONG')),
   NO_SUCH_CHECK_REQUEST: checkRow(7, "#requestFor", "is-check-request",
-    'There is no request for a check here that you can act on. Nothing was written.'),
+    word('refusal.NO_SUCH_CHECK_REQUEST')),
   CHECK_ALREADY_TAKEN: checkRow(8, "checkTake", "is-check-taken",
-    'Someone else has already taken this check, so it is theirs now. Nothing was written. The answer says who took it '
-    + 'and when.'),
+    word('refusal.CHECK_ALREADY_TAKEN')),
   CHECK_NOT_YOURS: checkRow(9, "checkRecord", "is-check-taker",
-    'Only the member who took this check can record it. Nothing was written. Take it first if no one has.'),
+    word('refusal.CHECK_NOT_YOURS')),
   CHECK_VERDICT_UNKNOWN: checkRow(10, "checkRecord", "is-check-verdict",
-    'A check is recorded either as checked or as a concern, and this was neither. Nothing was written.'),
+    word('refusal.CHECK_VERDICT_UNKNOWN')),
   CHECK_NO_REASON: checkRow(11, "checkRecord", "is-check-reason",
-    'A concern needs its reason, so the owner and the team can see what to look at. Nothing was written. Say what '
-    + 'concerns you and record it again.'),
+    word('refusal.CHECK_NO_REASON')),
   CHECK_REASON_TOO_LONG: checkRow(12, "checkRecord", "is-check-reason-length",
-    'The reason is longer than 4,000 characters. Nothing was written. Shorten it and record it again.'),
+    word('refusal.CHECK_REASON_TOO_LONG')),
   CHECK_ALREADY_RECORDED: checkRow(13, "checkRecord", "is-check-recorded",
-    'This check has already been recorded, and a request holds one check. Nothing was written. The answer shows the '
-    + 'record that stands.'),
+    word('refusal.CHECK_ALREADY_RECORDED')),
   CHECK_NOT_FORWARDED: checkRow(14, "taskForward", "is-check-not-forwarded",
-    'A request for a check is not handed on: it goes to everyone with the expertise who can see the item, or to the '
-    + 'member its owner named. Nothing was changed. Anyone who can see the item may take it.'),
+    word('refusal.CHECK_NOT_FORWARDED')),
   CHECK_CLOSES_BY_RECORD: checkRow(15, "taskResolve", "is-check-closes-by-record",
-    'You took this check, so this To do closes when you record the check or a concern. Nothing was changed.'),
+    word('refusal.CHECK_CLOSES_BY_RECORD')),
   MACHINE_CANNOT_ASK_SIGN: checkRow(16, "signRequest", "is-machine-sign",
-    'Asking the project\'s owners to sign is a person\'s act, and the credential that asked here is an automated one. '
-    + 'Nothing was written. Sign in as a member to ask.'),
+    word('refusal.MACHINE_CANNOT_ASK_SIGN')),
   SIGN_ALREADY_ASKED: checkRow(17, "signRequest", "is-sign-asked",
-    'The owners have already been asked to sign this edition, and it is in their queues. Nothing was written. The '
-    + 'answer shows who asked and when.'),
+    word('refusal.SIGN_ALREADY_ASKED')),
 });

@@ -9,7 +9,7 @@
  * DEC-149 (T34-86; K1784): a translation a member reads names the group's Civicsmith as "your group's Civicsmith", never
  * "this instance", "the copy" or "the plane" (C-33.29, C-109.1; C-109.9 until its retirement, R20). */
 
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R31 (T46; DEC-194; N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's
  * rows answer, each read by key through `setup-words`' `word(key)` (plan rule 6; K3632) as `membership`'s `HANDLE_WORDS` and
@@ -40,9 +40,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_BOUND_UNNAMED: {
     check: 'C-22.5',
     where: 'src/run-rules/rules.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate',
-    translation: 'The run stopped without saying what stopped it. '
-      + 'Not finding something and not finishing the search are different facts, '
-      + 'and only one of them licenses a conclusion.',
+    translation: word('refusal.AI_RUN_BOUND_UNNAMED'),
   },
   /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
      bias manifest in force, the launching project's standard pair, and THE
@@ -67,9 +65,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_SKILL_VERSION_UNNAMED: {
     check: 'C-22.7',
     where: 'src/run-rules/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open',
-    translation: 'This run did not say which version of its instructions it was working under. '
-      + 'What a run found can only be read against the instructions it was given, so the record '
-      + 'asks for that version before the run starts rather than guessing at it afterwards.',
+    translation: localize('run-rules.checks.this_run_did_not_say', 'This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards.'),
   },
   /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
      THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.
@@ -102,10 +98,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_NOT_PROJECT_MEMBER: {
     check: 'C-22.8',
     where: 'src/run-rules/rules.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close',
-    translation: 'Asking the system to look into a project is work inside that project, and this '
-      + 'account is not one of that project\'s participants. This is not about '
-      + 'what the account is allowed to do in general — it is about which piece of work it is part '
-      + 'of. Someone who owns that project can invite you to it.',
+    translation: word('refusal.AI_RUN_NOT_PROJECT_MEMBER'),
   },
   /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
      DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
@@ -133,11 +126,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_NO_SUCH_CONTEXT: {
     check: 'C-22.11',
     where: 'src/run-rules/rules.mjs checkRunContextKind, called from src/ai-runs/index.mjs open',
-    translation: 'Nothing of the kind this run names answers to that id here. A run is over a question or a '
-      + 'project, nothing else; a run over a question has to '
-      + 'name a question, and a run over a project has to name a project. Something you cannot see is '
-      + 'answered exactly as something that does not exist, so this says nothing about whether anything '
-      + 'else goes by that id.',
+    translation: word('refusal.AI_RUN_NO_SUCH_CONTEXT'),
   },
   /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
      AND CLOSE A RUN", BOB #16). C-22.12 and not C-22.11: CONDUCT #6 assigned C-22.11 to REC-153, which is
@@ -156,10 +145,7 @@ export const AI_RUN_OWN_CHECKS = {
     check: 'C-22.12',
     /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
     where: 'src/run-rules/rules.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions',
-    translation: 'Only the person who started this investigation — or an AI credential they created '
-      + 'for it — can continue it or end it. It is not about which projects you belong to or what '
-      + 'you are allowed to do in general: an investigation nobody continues ends by itself when '
-      + 'its time or budget runs out.',
+    translation: localize('run-rules.checks.only_the_person_who_started', 'Only the person who started this investigation — or an AI credential they created for it — can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out.'),
   },
   /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
      wrote `consumed + Number(v)` for any figure, so the run's own principal could REFUND a bound its member set
@@ -172,8 +158,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_CONSUME_INVALID: {
     check: 'C-22.13',
     where: 'src/run-rules/rules.mjs checkConsume, called from src/ai-runs/index.mjs tick and open',
-    translation: 'The investigation gave an amount for its budget that is not a whole number of zero or more. '
-      + 'A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step.',
+    translation: word('refusal.AI_RUN_CONSUME_INVALID'),
   },
   /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
      counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
@@ -186,9 +171,7 @@ export const AI_RUN_OWN_CHECKS = {
     check: 'C-22.14',
     where: 'src/run-rules/rules.mjs checkConsume, called from src/ai-runs/index.mjs tick and open',
     /* R26 (T41-21): `pages` joins the plane-counted bounds, so the sentence names pages read beside the rest. */
-    translation: 'This part of the investigation\'s budget is kept by the record itself — passages marked citable, '
-      + 'questions opened and pages read are counted as the work lands, and whether the investigation is still alive is read '
-      + 'off the clock — so the investigation cannot report it, up or down. Nothing was recorded for this step.',
+    translation: word('refusal.AI_RUN_BOUND_PLANE_COUNTED'),
   },
   /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
      that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
@@ -199,8 +182,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_BOUND_UNKNOWN: {
     check: 'C-22.15',
     where: 'src/run-rules/rules.mjs checkConsume (the tick\'s map, the open\'s list, and every key in either), called from src/ai-runs/index.mjs tick and open',
-    translation: 'The investigation named a part of its budget that does not exist, or did not say which part '
-      + 'it meant. Nothing was recorded, so no budget was spent or set that nobody could account for.',
+    translation: word('refusal.AI_RUN_BOUND_UNKNOWN'),
   },
   /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
      ABSENT or ZERO `allowed` was opened at 0, and `finishedBound` reads 0 as NO CEILING — so the run recorded a bound
@@ -210,9 +192,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_BOUND_NO_ALLOWANCE: {
     check: 'C-22.16',
     where: 'src/run-rules/rules.mjs checkConsume (the open\'s list, its allowance arm), called from src/ai-runs/index.mjs open',
-    translation: 'The investigation was given a limit on part of its budget without saying how much it may use. '
-      + 'A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, '
-      + 'or leave that part out.',
+    translation: localize('run-rules.checks.the_investigation_was_given_a', 'The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out.'),
   },
   /* N293 (AGENT-WORKER #2 J1; REC-169's rule, one figure over), R45 — THE RUN'S SCRATCH IS BOUNDED. `state` is the
      run's resumable work list (R12, DEC-61: never a transcript), and it was stored with no bound on its size: the run's
@@ -224,9 +204,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_STATE_TOO_LARGE: {
     check: 'C-22.18',
     where: 'src/run-rules/rules.mjs checkRunState, called from src/ai-runs/index.mjs open and tick',
-    translation: 'The investigation tried to keep more working notes than one investigation may hold, so nothing it '
-      + 'sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it '
-      + 'has left to do, not everything it has read.',
+    translation: word('refusal.AI_RUN_STATE_TOO_LARGE'),
   },
   /* R18 (K1481; T33-49): AN AI RUN OR ASK STARTS ONLY AT A MEMBER'S ACT, with one exception: the AI half of a standing
      question a member wrote, which reads only, asks only, and runs on its author's own account. `startAllowed` makes the
@@ -235,9 +213,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_NOT_A_MEMBER_ACT: {
     check: 'C-22.19',
     where: 'src/run-rules/rules.mjs startAllowed, called from src/ai-runs/index.mjs open and by answers',
-    translation: 'Nothing was started, because the assistant starts work only when a member asks for it. The one '
-      + 'exception is a standing question a member wrote themselves, which may only read and only answer that '
-      + 'question. Nothing here asked on a member\'s behalf, so nothing ran.',
+    translation: word('refusal.AI_RUN_NOT_A_MEMBER_ACT'),
   },
   /* R19 (VF-4; T33-49): THE ACT THAT RECORDS A MODE'S FIRST LIVE RUN VERIFIED is judged here and written by `ai-runs`.
      One code for every way the act is unfit (a mode outside the order, no run, no person verifying, a machine
@@ -246,9 +222,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_VERIFICATION_UNFIT: {
     check: 'C-22.20',
     where: 'src/run-rules/deployment.mjs checkVerification, called from src/ai-runs/index.mjs',
-    translation: 'This record of a kind of work checked in real use was not kept, because it does not say all it must: '
-      + 'which kind of work, which run was checked, which person checked it, and what they saw. A machine cannot '
-      + 'record that its own work was checked. Until such a record is kept, the next kind of work stays switched off.',
+    translation: word('refusal.AI_RUN_VERIFICATION_UNFIT'),
   },
   /* R17 (Q0-5; T33-49): A PER-ASK BOUND DECLARED ABOVE ITS CEILING. R3's codes say the rest of R17's refusals (an
      unknown name, an absent or zero figure, a figure that is not a whole number); none of them says this truthfully —
@@ -256,8 +230,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_ASK_BOUND_ABOVE_CEILING: {
     check: 'C-22.21',
     where: 'src/run-rules/rules.mjs checkAskBounds, called from agent-worker and answers when an ask starts',
-    translation: 'Nothing was asked, because the question was given more room than one question may have — more '
-      + 'turns, more reading or more time than the most allowed. Ask again within those limits.',
+    translation: word('refusal.AI_ASK_BOUND_ABOVE_CEILING'),
   },
   /* R19 as amended (T41-21; D11, D14): AN AI PART'S RESULT ON THE TEST INVESTIGATIONS, `ai-runs` R75's record, judged
      here as `verification_recorded` is: one code for every way the record is unfit (a part this module does not name, no
@@ -267,9 +240,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_TEST_BAR_UNFIT: {
     check: 'C-22.22',
     where: 'src/run-rules/test-bar.mjs checkTestBarRecord, called from src/ai-runs/index.mjs testBarRecord',
-    translation: 'This result on the test investigations was not kept, because it does not say all it must: which part '
-      + 'of the assistant was tested, on which set and which version of it, how often it raised a false alarm, whether '
-      + 'it passed, who graded it and when. Until such a result is kept, that part stays switched off.',
+    translation: word('refusal.AI_TEST_BAR_UNFIT'),
   },
   /* R26 (T41-21; D2): A READ INSIDE A DOCUMENT KEPT FROM THE ASSISTANT. A material limit that covers reading (`ai-accounts`
      R22) refuses the read whatever the run's `pages` bound allows: the bound counts pages a run may read, it never
@@ -277,8 +248,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_READ_NO_AI: {
     check: 'C-22.23',
     where: 'src/run-rules/rules.mjs checkPagesRead, called from the run\'s read inside a held document',
-    translation: 'Nothing was read, because this document is kept away from the assistant by a limit your team put on '
-      + 'its material. The investigation goes on without it; a person can still read it.',
+    translation: word('refusal.AI_RUN_READ_NO_AI'),
   },
   /* B3 (K2482; AI-RUNS #14 J1): A GROUP'S OWN TEST MATTER THAT IS MALFORMED, refused by `ai-runs` R75's `groupTestSet`
      and read here by key. Its own code and not C-22.22's: that one is a graded result on a set; this is a matter a member
@@ -287,33 +257,28 @@ export const AI_RUN_OWN_CHECKS = {
   AI_GROUP_TEST_INVALID: {
     check: 'C-22.24',
     where: 'src/ai-runs/index.mjs groupTestSet, reached from the team\'s test investigations',
-    translation: 'This test investigation was not added, because it does not say all it must: which part of the '
-      + 'assistant it tests, the matter itself, and the answers people wrote for it. Your team\'s own tests show how '
-      + 'the assistant does on your matters; they never switch a part on or off.',
+    translation: word('refusal.AI_GROUP_TEST_INVALID'),
   },
   /* R23 (T41-21; N820; B4, K2485): A RUN'S ORIGIN outside RUN_ORIGINS, or none. Minted by `originAllowed`, the one site,
      which `ai-runs` R73's open relays. An origin is said, never assumed. */
   AI_RUN_ORIGIN_UNKNOWN: {
     check: 'C-22.25',
     where: 'src/run-rules/rules.mjs originAllowed, called from src/ai-runs/index.mjs open',
-    translation: 'Nothing was started, because this investigation did not say where it came from in a way the record '
-      + 'knows: an investigation is started by a member or by exploring a question, and nothing else.',
+    translation: localize('run-rules.checks.nothing_was_started_because_this', 'Nothing was started, because this investigation did not say where it came from in a way the record knows: an investigation is started by a member or by exploring a question, and nothing else.'),
   },
   /* B4 (K2485): `ai-runs` R73 — an exploring run works as a system step of its own, by its place and work and naming no
      step; minted by `ai-runs` (open's step region, only for an `explore` origin; B6, K2514), read here by key. */
   AI_RUN_EXPLORE_NEEDS_STEP: {
     check: 'C-22.26',
     where: 'src/ai-runs/index.mjs open > is-airun-open-step, reached from op=airunopen with origin explore',
-    translation: 'Nothing was started, because exploring a question unasked is always done as one step of the work, '
-      + 'and this did not say which step. The step is what records why it ran and what it found.',
+    translation: word('refusal.AI_RUN_EXPLORE_NEEDS_STEP'),
   },
   /* R23 (B4, K2485): an `explore`-origin run while `investigate` is not deployable (R19: its chain and its test bar).
      Minted by `originAllowed`, which `ai-runs` R73's open relays. */
   AI_RUN_EXPLORE_NOT_DEPLOYABLE: {
     check: 'C-22.27',
     where: 'src/run-rules/rules.mjs originAllowed, called from src/ai-runs/index.mjs open',
-    translation: 'Nothing was started, because exploring a question unasked is switched on only after investigating has '
-      + 'been checked in real use and has passed its test investigations.',
+    translation: word('refusal.AI_RUN_EXPLORE_NOT_DEPLOYABLE'),
   },
   /* B4 (K2485): `ai-runs` R73, R74 — the step a run names is not one the record holds for it; minted by `ai-runs`, read
      here by key (B6, K2514): a member's step run naming a step unseen or both a step and its own, a run of its own step
@@ -322,8 +287,7 @@ export const AI_RUN_OWN_CHECKS = {
     check: 'C-22.28',
     where: 'src/ai-runs/index.mjs open > is-airun-open-step and its own step\'s steps check, reached from op=airunopen; '
       + 'and openMany, for each step of a member\'s batch she cannot see',
-    translation: 'Nothing was started, because the step this investigation names is not one the record holds here. '
-      + 'Something you cannot see is answered exactly as something that does not exist.',
+    translation: word('refusal.AI_RUN_STEP_UNKNOWN'),
   },
   /* R30 (T46; K231; K2816 (2)): AN AI PART NOT ADMITTED by the one deploy gate, `partAdmittedOn` (R29): its test bar is
      not held on Civicsmith's set and the instance is not a test instance, or the chain before it is not verified. Minted
@@ -335,8 +299,7 @@ export const AI_RUN_OWN_CHECKS = {
     check: 'C-22.29',
     where: 'src/run-rules/test-bar.mjs partRefusal, called from the doors partAdmittedOn does not admit (plane R40\'s ask '
       + 'and drafts)',
-    translation: 'This part of the assistant has not yet passed Civicsmith\'s tests, so it is not switched on in your '
-      + 'team\'s Civicsmith. Everything else works without it.',
+    translation: word('refusal.AI_PART_NOT_DEPLOYED'),
   },
   /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
      a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
@@ -431,9 +394,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
   AI_RUN_CAPABILITY_UNAVAILABLE: {
     check: 'C-33.29',
     where: 'src/ai-runs/index.mjs open > is-airun-open-capability, reached from op=airunopen',
-    translation: 'Nothing was run, because your team\'s Civicsmith could not find an account to run it under. '
-      + 'That is a fact about our setup and not an answer about your question: no searching '
-      + 'happened, so nothing here should be read as having looked and found nothing.',
+    translation: word('refusal.AI_RUN_CAPABILITY_UNAVAILABLE'),
   },
 
   /* ---------------------------------------------------------------------------
@@ -449,16 +410,12 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
   AI_RUN_NO_CONTEXT: {
     check: 'C-33.30',
     where: 'src/ai-runs/index.mjs open > is-airun-open-context, reached from op=airunopen',
-    translation: 'Nothing was run, because the request did not say what the run is for or what it '
-      + 'belongs to. A run has to sit inside a question or a project so that the people working on '
-      + 'that question can see it happened; one belonging to nothing would be invisible to everybody.',
+    translation: word('refusal.AI_RUN_NO_CONTEXT'),
   },
   AI_RUN_ALREADY_OPEN: {
     check: 'C-33.31',
     where: 'src/ai-runs/index.mjs open > is-airun-open-already, reached from op=airunopen',
-    translation: 'Nothing was run, because a run with this name is already on record here. The record '
-      + 'keeps what each run did under its own name, so starting a second one under a name already in '
-      + 'use would write two different histories into one place. Give this one a name of its own.',
+    translation: word('refusal.AI_RUN_ALREADY_OPEN'),
   },
 
   /* ---------------------------------------------------------------------------
@@ -492,24 +449,17 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
   AI_RUN_RERUN_SELF: {
     check: 'C-33.45',
     where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
-    translation: 'Nothing was run, because this run was told it is a re-run of itself. A re-run says '
-      + 'which EARLIER piece of work it repeats, and a run pointing at itself would be able to clear its '
-      + 'own outstanding re-run. Name the earlier run, or leave the field out.',
+    translation: word('refusal.AI_RUN_RERUN_SELF'),
   },
   AI_RUN_RERUN_UNKNOWN: {
     check: 'C-33.46',
     where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
-    translation: 'Nothing was run, because the earlier run it says it repeats is not one this record '
-      + 'holds for you. It may never have existed, it may have been removed, or it may belong to work '
-      + 'you have not been brought into. Check the name.',
+    translation: word('refusal.AI_RUN_RERUN_UNKNOWN'),
   },
   AI_RUN_RERUN_OTHER_CONTEXT: {
     check: 'C-33.47',
     where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
-    translation: 'Nothing was run, because the earlier run it says it repeats belongs to a different '
-      + 'question or project. Repeating work means asking the same question again under the lens that is '
-      + 'in force for it — somewhere else the team\'s declared lens can be a different one, so the two '
-      + 'runs would not be comparable and settling anything on that basis would be wrong.',
+    translation: word('refusal.AI_RUN_RERUN_OTHER_CONTEXT'),
   },
 };
 
@@ -573,9 +523,7 @@ export const AI_RUNS_CONTEXT_CHECKS = {
   AI_RUNS_NO_CONTEXT_TYPE: {
     check: 'C-36.1',
     where: 'src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns',
-    translation: 'That request did not say what kind of thing to look in. '
-      + 'Background work is attached either to a question or to a project, and those are '
-      + 'different places — so the record asks which rather than choosing one for you.',
+    translation: word('refusal.AI_RUNS_NO_CONTEXT_TYPE'),
   },
   /* A kind was named and the record has no such context. Refused rather than
      answered empty: see the header — an empty answer here would be the record
@@ -583,9 +531,7 @@ export const AI_RUNS_CONTEXT_CHECKS = {
   AI_RUNS_UNKNOWN_CONTEXT_TYPE: {
     check: 'C-36.2',
     where: 'src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns',
-    translation: 'Background work is not attached to anything of that kind. '
-      + 'Rather than answer as though nothing were running there, the record says so '
-      + 'and names the kinds of thing it does attach work to.',
+    translation: word('refusal.AI_RUNS_UNKNOWN_CONTEXT_TYPE'),
   },
   /* A kind but no id. The gate is compiled over the CONTEXT ID, so a blank one
      would ask the record about every context at once — which is not a wider
@@ -593,9 +539,7 @@ export const AI_RUNS_CONTEXT_CHECKS = {
   AI_RUNS_NO_CONTEXT_ID: {
     check: 'C-36.3',
     where: 'src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns',
-    translation: 'That request named a kind of thing but not which one. '
-      + 'Background work belongs to a particular question or a particular project, '
-      + 'and the record answers for the one you are looking at rather than for all of them.',
+    translation: word('refusal.AI_RUNS_NO_CONTEXT_ID'),
   },
 };
 
@@ -611,30 +555,22 @@ export const SURFACE_RUN_CHECKS = {
   SURFACE_NO_RUN: {
     check: 'C-66.1',
     where: 'src/ai-runs/index.mjs #surfacingGate > is-surface-run',
-    translation: 'An assistant opens a question only inside an investigation it is running, and this one '
-      + 'named none that can be read here. The investigation is what records the lens and the purpose the '
-      + 'question was opened under, so without one nothing could say why it exists. Nothing was created.',
+    translation: word('refusal.SURFACE_NO_RUN'),
   },
   SURFACE_RUN_NOT_RUNNING: {
     check: 'C-66.2',
     where: 'src/ai-runs/index.mjs #surfacingGate > is-surface-run',
-    translation: 'The investigation this question was to be opened inside has ended. A question is read '
-      + 'against the conditions of the investigation that opened it, and those stopped being current when '
-      + 'it stopped. Nothing was created; a member can start a new investigation.',
+    translation: word('refusal.SURFACE_RUN_NOT_RUNNING'),
   },
   SURFACE_NO_BOUND: {
     check: 'C-66.3',
     where: 'src/ai-runs/index.mjs #surfacingGate > is-surface-run',
-    translation: 'This investigation was not given a limit on how many questions it may open, so it may '
-      + 'open none: an assistant opening questions without a limit fills the record with questions nobody '
-      + 'asked for. The limit is set by the member who starts the investigation. Nothing was created.',
+    translation: word('refusal.SURFACE_NO_BOUND'),
   },
   SURFACE_BOUND_REACHED: {
     check: 'C-66.4',
     where: 'src/ai-runs/index.mjs #surfacingGate > is-surface-run',
-    translation: 'This investigation has already opened as many questions as the member who started it '
-      + 'allowed. Nothing was created. The investigation ends at its next step and says which limit '
-      + 'stopped it.',
+    translation: word('refusal.SURFACE_BOUND_REACHED'),
   },
 };
 
@@ -649,9 +585,7 @@ export const AI_RUN_OPEN_CHECKS = {
   AI_RUN_MODE_NOT_DEPLOYED: {
     check: 'C-109.1',
     where: 'src/ai-runs/index.mjs open > is-airun-open-mode, reached from op=airunopen',
-    translation: 'Nothing was run, because the kind of work this run asked for is not switched on for your '
-      + 'team\'s Civicsmith yet. Kinds of work are switched on one at a time, each only after the one before it has been '
-      + 'checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is.',
+    translation: word('refusal.AI_RUN_MODE_NOT_DEPLOYED'),
   },
 };
 
@@ -666,44 +600,37 @@ export const AI_RUN_PLAN_CHECKS = {
   AI_RUN_PLAN_REQUIRED: {
     check: 'C-109.2',
     where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
-    translation: 'Nothing was run, because a planning run was asked for without saying which plan it is for. A '
-      + 'planning run works on one plan at a time, so it names that plan before it starts.',
+    translation: word('refusal.AI_RUN_PLAN_REQUIRED'),
   },
   /* R46: only a planning run carries a plan, so no other run's record suggests it worked on one. */
   AI_RUN_PLAN_UNEXPECTED: {
     check: 'C-109.3',
     where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
-    translation: 'Nothing was run, because this run named a plan but is not a planning run. Only a planning run '
-      + 'works on a plan, so any other run is started without one and its record does not suggest otherwise.',
+    translation: word('refusal.AI_RUN_PLAN_UNEXPECTED'),
   },
   /* R46: a plan belongs to the project that will act on it. */
   AI_RUN_PLAN_NEEDS_PROJECT: {
     check: 'C-109.4',
     where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
-    translation: 'Nothing was run, because a planning run was asked for outside a project. A plan belongs to the '
-      + 'project whose members will decide what to do, so a planning run is started from inside that project.',
+    translation: word('refusal.AI_RUN_PLAN_NEEDS_PROJECT'),
   },
   /* R46: only a member starts a planning run, for one plan at a time; nothing schedules, wakes or starts one. */
   AI_RUN_PLAN_NEEDS_MEMBER: {
     check: 'C-109.5',
     where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
-    translation: 'Nothing was run, because a planning run is started only by a member of the team, for one plan '
-      + 'at a time. Nothing starts one by itself, so a request that has no member behind it cannot start one.',
+    translation: word('refusal.AI_RUN_PLAN_NEEDS_MEMBER'),
   },
   /* R46: a planning run declares `fetches` 0 and `subsessions` 0; it works from the record and does not search. */
   AI_RUN_PLAN_NO_SEARCH: {
     check: 'C-109.6',
     where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
-    translation: 'Nothing was run, because this planning run was allowed to fetch new material or to start further '
-      + 'searches. A planning run proposes options from what the record already holds and does not go looking, so '
-      + 'those parts of its budget are left out.',
+    translation: word('refusal.AI_RUN_PLAN_NO_SEARCH'),
   },
   /* R47: fail closed. The check a later module registers for the mode is what judges the plan; with none, no run. */
   AI_RUN_MODE_UNCHECKED: {
     check: 'C-109.7',
     where: 'src/ai-runs/index.mjs open > is-airun-open-check, reached from op=airunopen',
-    translation: 'Nothing was run, because this kind of work has nothing in place yet to check what it is asked to '
-      + 'work on. Rather than start without that check, the run is refused until the part that provides it is running.',
+    translation: word('refusal.AI_RUN_MODE_UNCHECKED'),
   },
   /* R28 (T45; K2820, K2822; ai-runs R77): A RE-EXAMINATION RUN, the planning run started inside the member's act that
      records a response (v0.2 rule 16). Minted by ai-runs at its open after R46 and the origin (`originAllowed`, R23 as
@@ -737,9 +664,7 @@ export const AI_USE_CHECKS = {
   AI_NO_ACCOUNT: {
     check: 'C-109.10',
     where: 'src/ai-runs/index.mjs open and the ask\'s account, reached from op=airunopen and an ask',
-    translation: 'Nothing was run, because no account serves your request: you have not connected a Claude account or '
-      + 'an API key of your own, and your team has no API key of its own switched on, or the account that would serve '
-      + 'has this use switched off. Connect yours, or ask an administrator about the team\'s.',
+    translation: word('refusal.AI_NO_ACCOUNT'),
   },
   /* R50 (K1601, K1610): a member's ceiling is that member's own to set and read. The copy's ceiling is an
      administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. Stays at T40 (`ai-use` R2),
@@ -749,8 +674,7 @@ export const AI_USE_CHECKS = {
     where: 'src/ai-use/index.mjs aiLimitSet, aiUsage, exploreApprove, estimate and aiLimits (a member\'s account, its '
       + 'owner bar) and aiUsageMine, reached from op=ailimitset, op=aiusage, '
       + 'op=exploreapprove, op=ailimits and ai-runs\' batch estimate',
-    translation: 'Nothing was changed, because a member\'s daily limit on the assistant is theirs alone to set or look '
-      + 'at.',
+    translation: word('refusal.NOT_YOUR_CEILING'),
   },
 };
 

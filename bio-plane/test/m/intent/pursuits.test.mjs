@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { checkBundle } from "../../../src/record-grammar/index.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { seeded, V, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const strip = (r) => { const { detail, goal, aspiration, project, ...rest } = r; return rest; };
 /* R9 (N327): the one answer membership's R84 gives, with R9's fixed act and its next step: code, row (C-96.1), `by` as
@@ -174,7 +175,7 @@ test("R12 aspirationsFor answers those in force — the group's less departures 
   const w = seeded();
   const g1 = w.i.declareAspiration({ scope: "group", statement: "Publish quickly", author: V("alice") }).aspiration;
   const g2 = w.i.declareAspiration({ scope: "group", statement: "Publish only when certain", author: V("alice") }).aspiration;
-  const pr = w.i.declareAspiration({ scope: "project", owner: w.P, statement: "Follow the money", author: V("bob") }).aspiration;
+  const pr = w.i.declareAspiration({ scope: "project", owner: w.P, statement: word("wizard.WIZ-df0b5c4d0ffcdde7.name"), author: V("bob") }).aspiration;
   const mb = w.i.declareAspiration({ scope: "member", owner: "bob", statement: "Learn the codes", author: V("bob") }).aspiration;
   const other = w.i.declareAspiration({ scope: "member", owner: "carol", statement: "Carol's", author: V("carol") }).aspiration;
   const retired = w.i.declareAspiration({ scope: "group", statement: "Old", author: V("alice") }).aspiration;

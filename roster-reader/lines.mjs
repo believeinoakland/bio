@@ -16,6 +16,7 @@
  * not, and both look alike) is. So nothing in this module asserts that a span IS a person: a span is
  * "name-shaped", and every reading built on one says so (R10). */
 import { vocabPatterns, vocabulary, vocabRegex, IN_PROSE, flatten } from "../docprofile/registry.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* A word that, opening or ending a span, makes it a phrase rather than a name: function words, the
    kinds of unit an organisation is divided into, the words of a schedule and of a blank form, and the
@@ -231,7 +232,7 @@ export function statedDate(lines) {
     if (m[4]) {
       const y = m[6].length === 4 ? m[6] : null;
       return { text, date: y ? `${y}-${pad(m[4])}-${pad(m[5])}` : null, precision: y ? "day" : null, offset,
-               ...(y ? {} : { why: "the line states a two-digit year, which is not expanded" }) };
+               ...(y ? {} : { why: localize("roster-reader.lines.the_line_states_a_two_digit", "the line states a two-digit year, which is not expanded") }) };
     }
     const mo = MONTHS.indexOf(m[7].slice(0, 3).toLowerCase()) + 1;
     return { text, date: `${m[8]}-${pad(mo)}`, precision: "month", offset };

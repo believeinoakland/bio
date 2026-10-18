@@ -8,10 +8,11 @@ import { world, V, AUTHORED, T0, readingLines, currentLines } from "./fixture.mj
 import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, caseDocumentText,
          searchedSection } from "../../../src/case-authoring/index.mjs";
 import { calculationBodyLines } from "../../../src/case-authoring/document.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", C1 = "CALC-2026-0001";
 const ALICE = "member:alice";
-const YOURS = "your team's Civicsmith";
+const YOURS = word("queue.capture-completed-unattended.who");
 /* the names DEC-149 retires for the group's Civicsmith, in any of this module's member-facing words */
 const RETIRED = /\b(this|the) (plane|instance|copy)\b|\binstance statement\b/i;
 const says = (text, ...wanted) => { for (const s of wanted) assert.ok(String(text).includes(s), `says: ${s}`);

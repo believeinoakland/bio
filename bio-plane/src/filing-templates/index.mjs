@@ -41,7 +41,7 @@ import { proposalLabel } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { RISK_TIERS, PRODUCT_KINDS } from "../action-grammar/index.mjs";
 import { FILING_BLANKS, FILING_TEXT_MAX, blanksOf } from "./blanks.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { FILING_TEMPLATE_CHECKS, rowOf } from "./checks.mjs";
 import { FILING_TEMPLATES_TABLES, FILING_TEMPLATES_MINT_SEED, migrateFilingTemplates } from "./schema.mjs";
 
@@ -110,8 +110,7 @@ export function noTemplateGrant() {
   const row = FILING_TEMPLATE_CHECKS.NO_TEMPLATE_GRANT;
   /* DEC-49 REGION is-no-template-grant */
   return { ok: false, reason: "NO_TEMPLATE_GRANT", code: "NO_TEMPLATE_GRANT", check: row.check, translation: row.translation,
-           detail: "nothing answers to this review link: a link is read only while its grant is open and its version is "
-                 + "in draft or in review; any other answers exactly as one that never existed." };
+           detail: localize("filing-templates.index.nothing_answers_to_this_review", "nothing answers to this review link: a link is read only while its grant is open and its version is in draft or in review; any other answers exactly as one that never existed.") };
   /* END DEC-49 REGION is-no-template-grant */
 }
 
@@ -210,7 +209,7 @@ export class FilingTemplates {
     const code = act === "review" ? "MACHINE_CANNOT_REVIEW_TEMPLATE"
       : act === "approve" ? "MACHINE_CANNOT_APPROVE_TEMPLATE" : "MACHINE_CANNOT_DRAFT_TEMPLATE";
     return refuse(code, str(who)
-      ? `'${String(who).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labeled, and nothing else`
+      ? localize("filing-templates.index.string_is_a_machine_identity", "'{String}' is a machine identity: a machine proposes wording and comments, labeled, and nothing else", { String: String(String(who).trim().slice(0, 60)) })
       : "no member is named as the one acting: this call carries nobody");
     /* END DEC-49 REGION is-template-member */
   }
@@ -231,18 +230,18 @@ export class FilingTemplates {
   }
   #retired(t) {
     /* DEC-49 REGION is-template-retired */
-    return refuse("TEMPLATE_RETIRED", `the template was retired: ${t.retired.reason}`,
+    return refuse("TEMPLATE_RETIRED", localize("filing-templates.index.the_template_was_retired_reason", "the template was retired: {reason}", { reason: String(t.retired.reason) }),
                   { template: t.id, retired: t.retired });
     /* END DEC-49 REGION is-template-retired */
   }
   #notADraft(t, n, state) {
     /* DEC-49 REGION is-not-a-draft */
-    return refuse("NOT_A_DRAFT", `the version is ${state}, past draft: its text is fixed`, { version: versionId(t.id, n), state });
+    return refuse("NOT_A_DRAFT", localize("filing-templates.index.the_version_is_state_past", "the version is {state}, past draft: its text is fixed", { state: String(state) }), { version: versionId(t.id, n), state });
     /* END DEC-49 REGION is-not-a-draft */
   }
   #notInReview(t, n, state) {
     /* DEC-49 REGION is-not-in-review */
-    return refuse("NOT_IN_REVIEW", `the version is ${state}, not in review`, { version: versionId(t.id, n), state });
+    return refuse("NOT_IN_REVIEW", localize("filing-templates.index.the_version_is_state_not", "the version is {state}, not in review", { state: String(state) }), { version: versionId(t.id, n), state });
     /* END DEC-49 REGION is-not-in-review */
   }
   #notAnApprover(t, detail) {
@@ -314,8 +313,7 @@ export class FilingTemplates {
   }
   #courtPetition(kind, profile, extra = {}) {
     /* DEC-49 REGION is-court-petition */
-    return refuse("TEMPLATE_COURT_PETITION", `the kind's venue in the profile '${String(profile).slice(0, 60)}' is a court: no template the `
-      + "team files in its own name is kept for it until a licensed professional can certify one; a brief template may serve it",
+    return refuse("TEMPLATE_COURT_PETITION", localize("filing-templates.index.the_kinds_venue_in_the", "the kind's venue in the profile '{String}' is a court: no template the team files in its own name is kept for it until a licensed professional can certify one; a brief template may serve it", { String: String(String(profile).slice(0, 60)) }),
       { kind, profile, ...extra });
     /* END DEC-49 REGION is-court-petition */
   }
@@ -341,7 +339,7 @@ export class FilingTemplates {
     const lacks = FilingTemplates.#lacks(t.profileTemplate);
     /* DEC-49 REGION is-profile-offered */
     if (lacks.length)
-      return refuse("TEMPLATE_NOT_REVIEWED", `the profile's template is not offered: its attribution lacks ${lacks.join(", ")}`,
+      return refuse("TEMPLATE_NOT_REVIEWED", localize("filing-templates.index.the_profiles_template_is_not", "the profile's template is not offered: its attribution lacks {lacks}", { lacks: String(lacks.join(", ")) }),
                     { template: t.id, lacks });
     /* END DEC-49 REGION is-profile-offered */
     /* R33: a file template of the request-for-comment kind lacking the quoting sentence is not offered either */
@@ -439,7 +437,7 @@ export class FilingTemplates {
       kind: r.kind, outcome: r.outcome, scope: r.scope, comment: r.comment ?? null, sha: r.sha, at: r.at,
       reviewer: r.kind === "professional"
         ? { grant: r.reviewer, name: r.reviewer_name, organisation: r.organisation, credential: r.credential ?? null,
-            credential_says: "as the reviewer stated it; never verified" }
+            credential_says: word("filing-templates.credential_says.reviewer_stated_verified") }
         : { id: r.reviewer, name: r.reviewer_name, expertise: parse(r.expertise) || [] },
       stands: latest.get(`${r.kind}|${r.reviewer}|${r.sha}`) === r.rvid }));
   }
@@ -494,7 +492,7 @@ export class FilingTemplates {
     const reviews = (Array.isArray(p.reviews) ? p.reviews : []).map((r) => ({
       kind: r.kind, outcome: r.outcome, scope: r.scope, comment: null, at: r.at ?? null, stands: true,
       reviewer: { name: r.reviewer, ...(r.organisation ? { organisation: r.organisation } : {}),
-                  ...(r.credential ? { credential: r.credential, credential_says: "as the profile states it; never verified" } : {}) } }));
+                  ...(r.credential ? { credential: r.credential, credential_says: word("filing-templates.credential_says.profile_states_verified") } : {}) } }));
     const n = Number(p.version);
     return {
       id: versionId(t.id, n), template: t.id, version: n, text: p.text, sha: sha256HexSync(p.text), state: "approved",
@@ -540,21 +538,21 @@ export class FilingTemplates {
     for (const p of listed) {
       const held = this.#profile(p);
       if (held && !this.#kindIn(held, kind))
-        return refuse("TEMPLATE_KIND_UNKNOWN", `the profile '${p}' holds no action kind '${kind}'`, { kind, profile: p });
+        return refuse("TEMPLATE_KIND_UNKNOWN", localize("filing-templates.index.the_profile_p_holds_no", "the profile '{p}' holds no action kind '{kind}'", { p: String(p), kind: String(kind) }), { kind, profile: p });
     }
     if (!TEMPLATE_USES.includes(use))
       return refuse("TEMPLATE_USE_REFUSED", "a template's use is file or brief", { use: typeof use === "string" ? use.slice(0, 20) : null });
     if (profiles !== "general") {
       if (!listed.length) return refuse("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
       const missing = listed.find((p) => !this.#profile(p));
-      if (missing) return refuse("TEMPLATE_PROFILE_UNKNOWN", `no profile '${missing.slice(0, 60)}' is held`, { profile: missing.slice(0, 60) });
+      if (missing) return refuse("TEMPLATE_PROFILE_UNKNOWN", localize("filing-templates.index.no_profile_missing_is_held", "no profile '{missing}' is held", { missing: String(missing.slice(0, 60)) }), { profile: missing.slice(0, 60) });
     }
     if (use === "file" && this.#tierOf(kind, profiles) === 3)
       return refuse("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind });
     const court = use === "file" ? this.#courtIn(kind, profiles) : null;
     if (court) return this.#courtPetition(kind, court);
     if (!oneLine(name, TEMPLATE_NAME_MAX))
-      return refuse("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX} characters`, { max: TEMPLATE_NAME_MAX });
+      return refuse("TEMPLATE_NAME_REFUSED", localize("filing-templates.index.a_template_is_named_in", "a template is named in one line of 1 to {TEMPLATE_NAME_MAX} characters", { TEMPLATE_NAME_MAX: String(TEMPLATE_NAME_MAX) }), { max: TEMPLATE_NAME_MAX });
     const taken = this.#rows(`SELECT template_id FROM tpl_templates WHERE project IS ? AND name=?`, project, name.trim())
       .map((r) => this.#groupTemplate(r.template_id)).find((t) => t && !t.retired && !t.widened);
     if (taken) return refuse("TEMPLATE_NAME_TAKEN", "the scope's library already holds a template by this name", { name: name.trim() });
@@ -565,12 +563,12 @@ export class FilingTemplates {
   #textRefusal(text, notes) {
     /* DEC-49 REGION is-template-text */
     if (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX)
-      return refuse("TEMPLATE_TEXT_REFUSED", `a template's words are non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`,
+      return refuse("TEMPLATE_TEXT_REFUSED", localize("filing-templates.index.a_templates_words_are_non", "a template's words are non-empty UTF-8 text of at most {FILING_TEXT_MAX} bytes", { FILING_TEXT_MAX: String(FILING_TEXT_MAX) }),
                     { max_bytes: FILING_TEXT_MAX });
     const blank = blankUnknownRefusal(text, { blanks: Object.keys(FILING_BLANKS) });
     if (blank) return blank;
     if (notes !== undefined && notes !== null && (typeof notes !== "string" || notes.length > TEMPLATE_NOTES_MAX || WELL_FORMED.test(notes)))
-      return refuse("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });
+      return refuse("TEMPLATE_NOTES_REFUSED", localize("filing-templates.index.a_versions_notes_are_text", "a version's notes are text of at most {TEMPLATE_NOTES_MAX} characters", { TEMPLATE_NOTES_MAX: String(TEMPLATE_NOTES_MAX) }), { max: TEMPLATE_NOTES_MAX });
     /* END DEC-49 REGION is-template-text */
     return null;
   }
@@ -625,7 +623,7 @@ export class FilingTemplates {
       events = this.#events(t.id);
       const open = this.#openVersion(t, events);
       if (open !== null)
-        return refuse("TEMPLATE_DRAFT_OPEN", `version ${open} is ${this.#stateOf(events, open)}: finish or withdraw it first`,
+        return refuse("TEMPLATE_DRAFT_OPEN", localize("filing-templates.index.version_open_is_stateof_finish", "version {open} is {stateOf}: finish or withdraw it first", { open: String(open), stateOf: String(this.#stateOf(events, open)) }),
                       { version: versionId(t.id, open), state: this.#stateOf(events, open) });
       if (t.retired) return this.#retired(t);
     }
@@ -687,7 +685,7 @@ export class FilingTemplates {
                        VALUES (?,?,?,?,?,?,0,?)`, tid, n, bundle, notes, member, name_, at);
       return { ok: true, template: tid, version: versionId(tid, n), sha, state: "draft",
                ...(source ? { derived_from: source.derived } : {}),
-               says: "a draft: it is not offered for a filing until it is reviewed and approved" };
+               says: word("filing-templates.says.draft_offered_filing") };
     });
   }
 
@@ -753,7 +751,7 @@ export class FilingTemplates {
     const bad = this.#textRefusal(text);
     if (bad) return bad;
     if (!textUpTo(why, PROPOSAL_WHY_MAX))
-      return refuse("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
+      return refuse("TEMPLATE_WHY_REFUSED", localize("filing-templates.index.say_why_in_1_to", "say why in 1 to {PROPOSAL_WHY_MAX} characters", { PROPOSAL_WHY_MAX: String(PROPOSAL_WHY_MAX) }), { max: PROPOSAL_WHY_MAX });
     /* END DEC-49 REGION is-template-propose */
     const at = this.#when();
     const cut = (v) => (str(v) ? String(v).trim().slice(0, 200) : null);
@@ -767,7 +765,7 @@ export class FilingTemplates {
         id, t ? t.bundle_id : null, t ? t.id : null, k, text, sha, why.trim(), who, cut(run), cut(model), cut(skill_pack), at);
       return { ok: true, proposal: { id, template: t ? t.id : null, kind: k, sha, why: why.trim(), at,
                                      label: proposalLabel(who, "template") },
-               evidence: false, says: "proposed wording, stored apart: it is not a template's text until a member adopts it into a draft" };
+               evidence: false, says: word("filing-templates.says.proposed_wording_stored") };
     });
   }
 
@@ -801,7 +799,7 @@ export class FilingTemplates {
       const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
       const standing = id && ((facts && facts.status === "active") || this.#call(() => this.membership.isAdministrator(id)) === true);
       if (!standing || !this.#canSee(t, `member:${id}`))
-        return refuse("REVIEWER_UNKNOWN", `'${a.slice(0, 80)}' is not a member who can read the template`, { reviewer: a.slice(0, 80) });
+        return refuse("REVIEWER_UNKNOWN", localize("filing-templates.index.a_is_not_a_member", "'{a}' is not a member who can read the template", { a: String(a.slice(0, 80)) }), { reviewer: a.slice(0, 80) });
       ids.push(id);
     }
     if (!ids.length && !this.#liveGrants(t.id, n, events).length)
@@ -839,7 +837,7 @@ export class FilingTemplates {
     if (!["draft", "in_review"].includes(state)) return this.#notInReview(t, n, state);
     /* DEC-49 REGION is-template-grant */
     if (!oneLine(recipient, GRANT_FIELD_MAX) || !oneLine(organisation, GRANT_FIELD_MAX))
-      return refuse("GRANT_RECIPIENT_REFUSED", `the reviewer and their organisation, each one line of 1 to ${GRANT_FIELD_MAX} characters`,
+      return refuse("GRANT_RECIPIENT_REFUSED", localize("filing-templates.index.the_reviewer_and_their_organisation", "the reviewer and their organisation, each one line of 1 to {GRANT_FIELD_MAX} characters", { GRANT_FIELD_MAX: String(GRANT_FIELD_MAX) }),
                     { max: GRANT_FIELD_MAX });
     const s = typeof secretSha === "string" ? secretSha.trim() : "";
     if (!SHA_RE.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
@@ -855,7 +853,7 @@ export class FilingTemplates {
         id, t.id, n, t.bundle_id, recipient.trim(), organisation.trim(), s, member, name_, at);
       return { ok: true, grant: id, version: versionId(t.id, n), recipient: recipient.trim(), organisation: organisation.trim(),
                by: { id: member, name: name_ }, at,
-               says: "the reviewer reads, comments on and reviews this one version through the link while it is a draft or in review" };
+               says: word("filing-templates.says.reviewer_reads_comments") };
     });
   }
 
@@ -930,8 +928,7 @@ export class FilingTemplates {
     if (!REVIEW_OUTCOMES.includes(outcome) || !oneLine(scope, REVIEW_SCOPE_MAX)
         || (comment !== null && comment !== undefined && !textUpTo(comment, REVIEW_COMMENT_MAX, 0))
         || (reviewer.kind === "professional" && credential !== null && credential !== undefined && !oneLine(credential, REVIEW_CREDENTIAL_MAX)))
-      return refuse("REVIEW_REFUSED", `outcome is one of ${REVIEW_OUTCOMES.join(", ")}; scope 1 to ${REVIEW_SCOPE_MAX} characters; `
-        + `comment at most ${REVIEW_COMMENT_MAX}; credential at most ${REVIEW_CREDENTIAL_MAX}`, { outcomes: REVIEW_OUTCOMES });
+      return refuse("REVIEW_REFUSED", localize("filing-templates.index.outcome_is_one_of_review", "outcome is one of {REVIEW_OUTCOMES}; scope 1 to {REVIEW_SCOPE_MAX} characters; comment at most {REVIEW_COMMENT_MAX}; credential at most {REVIEW_CREDENTIAL_MAX}", { REVIEW_OUTCOMES: String(REVIEW_OUTCOMES.join(", ")), REVIEW_SCOPE_MAX: String(REVIEW_SCOPE_MAX), REVIEW_COMMENT_MAX: String(REVIEW_COMMENT_MAX), REVIEW_CREDENTIAL_MAX: String(REVIEW_CREDENTIAL_MAX) }), { outcomes: REVIEW_OUTCOMES });
     if (sha !== null && sha !== undefined && sha !== "" && sha !== present)
       return refuse("REVIEW_STALE", "the text reviewed is not the version's present text", { sha: present });
     /* END DEC-49 REGION is-template-review */
@@ -944,7 +941,7 @@ export class FilingTemplates {
     return { ok: true, version: versionId(t.id, n), review: {
       kind: reviewer.kind, outcome, scope: scope.trim(), sha: present, at,
       reviewer: reviewer.kind === "professional"
-        ? { grant: reviewer.id, name: reviewer.name, organisation: reviewer.organisation, credential: cred, credential_says: "as stated; never verified" }
+        ? { grant: reviewer.id, name: reviewer.name, organisation: reviewer.organisation, credential: cred, credential_says: word("filing-templates.credential_says.stated_verified") }
         : { id: reviewer.id, name: reviewer.name, expertise: reviewer.expertise } } };
   }
 
@@ -968,7 +965,7 @@ export class FilingTemplates {
     if (widening) {
       if (t.origin === "profile") return this.#notAnApprover(t, "a profile's template is already offered to the whole team");
       if (!OFFERED.includes(state) || t.retired)
-        return refuse("TEMPLATE_NOT_APPROVED", `the version is ${t.retired ? "of a retired template" : state}: only an approved project template is widened`,
+        return refuse("TEMPLATE_NOT_APPROVED", localize("filing-templates.index.the_version_is_v1_only", "the version is {v1}: only an approved project template is widened", { v1: String(t.retired ? "of a retired template" : state) }),
                       { version: versionId(t.id, n), state });
       if (!member || this.#call(() => this.membership.isAdministrator(member)) !== true)
         return this.#notAnApprover(t, "an administrator makes a template team-wide");
@@ -996,8 +993,7 @@ export class FilingTemplates {
     if (blocking.length || !met)
       return refuse("REVIEWS_INSUFFICIENT", blocking.length ? "a review requesting changes stands"
         : tier === 1 ? "a Tier 1 kind needs one member's review with no concerns"
-        : `${tier === "undetermined" ? "an undetermined tier" : `Tier ${tier}`} needs a professional's review with no concerns, `
-          + `or the approver's reason for going without one (1 to ${APPROVAL_REASON_MAX} characters)`,
+        : localize("filing-templates.index.v1_needs_a_professionals_review", "{v1} needs a professional's review with no concerns, or the approver's reason for going without one (1 to {APPROVAL_REASON_MAX} characters)", { v1: String(tier === "undetermined" ? "an undetermined tier" : `Tier ${tier}`), APPROVAL_REASON_MAX: String(APPROVAL_REASON_MAX) }),
         { version: versionId(t.id, n), tier, needs, reviews: FilingTemplates.#summary(standing, sha) });
     /* END DEC-49 REGION is-template-approve */
     /* R33: after the reviews, a file version of the request-for-comment kind must hold the quoting sentence */
@@ -1015,7 +1011,7 @@ export class FilingTemplates {
       return { ok: true, version: versionId(t.id, n), state: "approved",
                approved: { by: { id: member, name: name_ }, at, ...detail },
                updated: prev !== null && prev !== n ? versionId(t.id, prev) : null,
-               says: "approved: offered for a filing as the template's default; an earlier approved version stays offered, as updated" };
+               says: word("filing-templates.says.approved_offered_filing") };
     });
   }
 
@@ -1038,7 +1034,7 @@ export class FilingTemplates {
       if (!approver) return this.#notAnApprover(t, t.origin === "profile" ? "a profile's template is read-only here"
         : t.widened ? "an administrator retires a team-wide template" : "an owner of the template's project retires it");
       /* DEC-49 REGION is-template-retire */
-      if (!why) return refuse("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+      if (!why) return refuse("TEMPLATE_REASON_REFUSED", localize("filing-templates.index.give_the_reason_in_1", "give the reason in 1 to {ENDING_REASON_MAX} characters", { ENDING_REASON_MAX: String(ENDING_REASON_MAX) }), { max: ENDING_REASON_MAX });
       if (t.retired) return refuse("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t.id, ended: { ending: "retired", ...t.retired } });
       /* END DEC-49 REGION is-template-retire */
       const at = this.#when();
@@ -1046,7 +1042,7 @@ export class FilingTemplates {
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
                      VALUES (?,NULL,?,?,?,?,?,?)`, t.id, t.bundle_id, "retired", member, name_, json({ reason: reason.trim() }), at);
       return { ok: true, template: t.id, retired: { by: { id: member, name: name_ }, at, reason: reason.trim() },
-               says: "retired: none of its versions is offered again; each stays readable with this reason" };
+               says: word("filing-templates.says.retired_versions_offered") };
     }
     const n = this.#versionOf(t, version);
     if (n === null) return this.#noTemplate(named);
@@ -1056,7 +1052,7 @@ export class FilingTemplates {
     const state = this.#stateOf(events, n);
     if (OFFERED.includes(state)) return this.#notADraft(t, n, state);
     /* DEC-49 REGION is-template-retire */
-    if (!why) return refuse("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+    if (!why) return refuse("TEMPLATE_REASON_REFUSED", localize("filing-templates.index.give_the_reason_in_1_2", "give the reason in 1 to {ENDING_REASON_MAX} characters", { ENDING_REASON_MAX: String(ENDING_REASON_MAX) }), { max: ENDING_REASON_MAX });
     if (state === "withdrawn") {
       const e = events.find((x) => x.version === n && x.event === "withdrawn");
       return refuse("TEMPLATE_ALREADY_ENDED", "the version was already withdrawn", { version: versionId(t.id, n),
@@ -1093,7 +1089,7 @@ export class FilingTemplates {
     const isNote = note === true || note === "true" || note === "1" || note === 1;
     /* DEC-49 REGION is-template-comment */
     if (!by || !textUpTo(text, COMMENT_MAX))
-      return refuse("COMMENT_REFUSED", by ? `a comment is 1 to ${COMMENT_MAX} characters` : "a comment names who wrote it: this call carries nobody",
+      return refuse("COMMENT_REFUSED", by ? localize("filing-templates.index.a_comment_is_1_to", "a comment is 1 to {COMMENT_MAX} characters", { COMMENT_MAX: String(COMMENT_MAX) }) : "a comment names who wrote it: this call carries nobody",
                     { max: COMMENT_MAX });
     if (isNote) {
       if (by.kind !== "member" || !t.project || !this.#call(() => this.membership.isJoinedParticipant(t.project, by.id)))
@@ -1150,7 +1146,7 @@ export class FilingTemplates {
     const st = str(state);
     /* DEC-49 REGION is-templates-state */
     if (st && st !== "offered" && !TEMPLATES_STATES_LISTED.includes(st))
-      return refuse("TEMPLATES_STATE_REFUSED", `state is offered or one of ${TEMPLATES_STATES_LISTED.join(", ")}`, { states: TEMPLATES_STATES_LISTED });
+      return refuse("TEMPLATES_STATE_REFUSED", localize("filing-templates.index.state_is_offered_or_one", "state is offered or one of {TEMPLATES_STATES_LISTED}", { TEMPLATES_STATES_LISTED: String(TEMPLATES_STATES_LISTED.join(", ")) }), { states: TEMPLATES_STATES_LISTED });
     /* END DEC-49 REGION is-templates-state */
     const k = str(kind), p = str(profile), u = str(use);
     if (st === "proposed") {
@@ -1160,7 +1156,7 @@ export class FilingTemplates {
       return { ok: true, state: "proposed", kind: k, truncated: rows.length > TEMPLATES_FOR_MAX,
                proposals: rows.slice(0, TEMPLATES_FOR_MAX).map((x) => ({ id: x.proposal_id, template: x.template_id ?? null, kind: x.kind,
                  text: x.text, sha: x.sha, why: x.why, at: x.at, label: proposalLabel(x.proposer, "template") })),
-               says: "proposed wording: none of it is offered, and none is a template's text until a member adopts it" };
+               says: word("filing-templates.says.proposed_wording_offered") };
     }
     const out = [];
     for (const t of this.#visibleTemplates(viewer)) {
@@ -1274,7 +1270,7 @@ export class FilingTemplates {
     /* DEC-49 REGION is-offered-version */
     if (n === null || !OFFERED.includes(state))
       return refuse("TEMPLATE_NOT_OFFERED", n === null ? (version ? "no such version of this template" : "the template has no approved version")
-        : `the version is ${state}: only an approved or updated version is offered`,
+        : localize("filing-templates.index.the_version_is_state_only", "the version is {state}: only an approved or updated version is offered", { state: String(state) }),
         { template: t.id, ...(n !== null ? { version: versionId(t.id, n), state } : {}) });
     /* END DEC-49 REGION is-offered-version */
     const view = this.#versionView(t, n, events);

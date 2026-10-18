@@ -7,6 +7,7 @@ import { StepFailed, settle } from "./walker.mjs";
 import { drawnState, sweepScreens, addressOf, adminAsName, ADMIN_WORDS } from "./screens.mjs";
 import { FAIL } from "./walker.mjs";
 import { requireWord, wordPattern, byWord } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
 export const SLUG = "lakeshore-tenants";
@@ -440,6 +441,6 @@ export function sweepAsFounder(walk, page, base, { handle, screens = undefined }
     each: async (p, s, drawn) => {
       if (!drawn) return;
       const at = adminAsName(await p.locator("body").innerText(), { except });
-      if (at.length) walk.fail(FAIL.ADMIN_NAME, `${s.id} draws admin as a name: ${at.map((a) => `…${a.at}…`).join(" | ")}`);
+      if (at.length) walk.fail(FAIL.ADMIN_NAME, localize("journey-check.journeys.id_draws_admin_as_a", "{id} draws admin as a name: {map}", { id: String(s.id), map: String(at.map((a) => `…${a.at}…`).join(" | ")) }));
     } });
 }

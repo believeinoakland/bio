@@ -9,6 +9,7 @@ import * as provenance from "../../../src/provenance/index.mjs";
 import { registerChecks, withRegisterChecks } from "../../../src/provenance/index.mjs";
 import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/checks.mjs";
 import { checkBundle, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const run = (docs, { md = infoMd("INFO-2026-0001-x"), files = {}, reg = null } = {}) => registerChecks({
   files: new Map([["bundle.md", md], ["data/provenance.json", reg ?? JSON.stringify({ documents: docs })], ...Object.entries(files)]),
@@ -189,7 +190,7 @@ function pulledKnock({ knockId = "KNOCK-20260930-0a1b2c3d", bytes = "handed in a
     file: `snapshots/${knockId}`, locator, retrieved: at,
     profile: { digests: { determined: false, evidentiary: null } },
     authority_state: "undetermined",
-    authority_basis: `material handed to the team through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
+    authority_basis: word("doorbell.authority_basis", { at: String(at) }),
     provenance_chain: [{
       who: "instance test-instance (CivicOS/0.0.0)",
       asserts: `these bytes were received at the doorbell of your team's Civicsmith as knock ${knockId} at ${received}, `

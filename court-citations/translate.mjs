@@ -4,6 +4,8 @@
  * a newline, and `$` the end or just before a final newline. A construct with no JavaScript equivalent throws
  * `Untranslatable`, which the build lists (R5); nothing is approximated silently. */
 
+import { localize } from "../bio-plane/src/setup-words/index.mjs"
+
 export class Untranslatable extends Error {}
 
 const WORD = "\\p{L}\\p{N}_";
@@ -92,7 +94,7 @@ export function translate(src, { ignoreCase = false } = {}) {
       let m;
       if ((m = /^\(\?P<([A-Za-z_][A-Za-z0-9_]*)>/.exec(rest))) { groups++; names.push(m[1]); out += `(?<${m[1]}>`; i += m[0].length; }
       else if ((m = /^\(\?P=([A-Za-z_][A-Za-z0-9_]*)\)/.exec(rest))) {
-        if (!names.includes(m[1])) throw new Untranslatable(`back-reference to ${m[1]} before its group`);
+        if (!names.includes(m[1])) throw new Untranslatable(localize("court-citations.translate.back_reference_to_v1_before", "back-reference to {v1} before its group", { v1: String(m[1]) }));
         out += `\\k<${m[1]}>`; i += m[0].length;
       }
       else if ((m = /^\(\?(?::|=|!|<=|<!)/.exec(rest))) { out += m[0]; i += m[0].length; }
@@ -119,7 +121,7 @@ export function translate(src, { ignoreCase = false } = {}) {
     else { const ch = String.fromCodePoint(src.codePointAt(i)); out += ch; i += ch.length; }
   }
   const flags = "u" + (fl.i ? "i" : "");
-  try { new RegExp(out, flags); } catch (e) { throw new Untranslatable(`does not compile in JavaScript: ${e.message}`); }
+  try { new RegExp(out, flags); } catch (e) { throw new Untranslatable(localize("court-citations.translate.does_not_compile_in_javascript", "does not compile in JavaScript: {message}", { message: String(e.message) })); }
   return { source: out, flags };
 }
 

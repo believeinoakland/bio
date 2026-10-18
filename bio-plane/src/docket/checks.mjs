@@ -20,6 +20,8 @@
  * by key (`DOCKET_WORDS` below), its code, number and `where` unmoved; the row reads changed until T48's stamp. K3110:
  * C-129.13 `DOCKET_PRESSURE_REFUSED` reads `refusal.DOCKET_PRESSURE_REFUSED` by key the same way, its sentence unchanged. */
 
+import { word } from "../setup-words/index.mjs";
+
 const at = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 const FILER = at("#filerRefusal", "is-docket-filer");
 const FORM = at("#formRefusal", "is-docket-form");
@@ -35,76 +37,63 @@ const ORDER = at("#orderRefusal", "is-docket-order");
    extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row
    never holds a copy of its sentence. DEC-199's sentence is true of every arm R1 refuses with it. */
 export const DOCKET_WORDS = Object.freeze({
-  "refusal.DOCKET_OUTCOME_UNREADABLE": "An outcome is stated only on an outcome entry, with what it was (corrected by the "
-    + "office, or a harm addressed) and the date it happened, no later than the day it is filed. This entry's outcome is "
-    + "missing, isn't one of those, or is on another kind of entry. Nothing was written.",
+  "refusal.DOCKET_OUTCOME_UNREADABLE": word("refusal.DOCKET_OUTCOME_UNREADABLE"),
   /* K3110: C-129.13 likewise, its sentence unchanged by the taking */
-  "refusal.DOCKET_PRESSURE_REFUSED": "A threat is marked as legal, retaliation, discrediting or other, with a note of at "
-    + "most 500 characters. Nothing was marked.",
+  "refusal.DOCKET_PRESSURE_REFUSED": word("refusal.DOCKET_PRESSURE_REFUSED"),
 });
 
 export const DOCKET_CHECKS = Object.freeze({
   MACHINE_CANNOT_FILE_DOCKET: {
     check: "C-129.1", where: FILER,
-    translation: "Only a member, signed in as themselves, files to a case's docket. A machine, the assistant or an "
-      + "operator token cannot. Nothing was filed.",
+    translation: word("refusal.MACHINE_CANNOT_FILE_DOCKET"),
   },
   DOCKET_NOT_A_PARTICIPANT: {
     check: "C-129.2", where: FILER,
-    translation: "Only a joined participant of the case's project files to its docket. Nothing was filed.",
+    translation: word("refusal.DOCKET_NOT_A_PARTICIPANT"),
   },
   DOCKET_NO_EDITION: {
     check: "C-129.3", where: FORM,
-    translation: "Every docket entry names the edition of the case it concerns, and the edition named is not one this "
-      + "case has published. Name a published edition. Nothing was written.",
+    translation: word("refusal.DOCKET_NO_EDITION"),
   },
   DOCKET_NOT_ATTRIBUTED: {
     check: "C-129.4", where: FORM,
-    translation: "Every docket entry says who it is from: the case's subject, someone granted standing, or the "
-      + "source's name, in at most 200 characters. This one names nobody. Nothing was written.",
+    translation: word("refusal.DOCKET_NOT_ATTRIBUTED"),
   },
   DOCKET_NOT_THE_SUBJECT: {
     check: "C-129.5", where: FORM,
-    translation: "The entry says it is from the case's subject, and the one it names is not a subject of the "
-      + "edition named. Nothing was written.",
+    translation: word("refusal.DOCKET_NOT_THE_SUBJECT"),
   },
   DOCKET_NO_STANDING: {
     check: "C-129.6", where: FORM,
-    translation: "The entry relies on a grant of standing that is not in force: it was never made on this case's "
-      + "docket, or it has ended. Nothing was written.",
+    translation: word("refusal.DOCKET_NO_STANDING"),
   },
   DOCKET_NO_CAPTURE: {
     check: "C-129.7", where: FORM,
-    translation: "Every docket entry has a captured copy with its origin, and the capture named is not one this "
-      + "record holds with the address it came from. Capture it first. Nothing was written.",
+    translation: word("refusal.DOCKET_NO_CAPTURE"),
   },
   DOCKET_KIND_UNKNOWN: {
     check: "C-129.8", where: FORM,
-    translation: "The entry's kind is not one the docket takes, or does not fit who it is from: a response or a "
-      + "statement comes from the subject or someone granted standing, a reaction from anyone else, and an outcome "
-      + "from anyone. Nothing was written.",
+    translation: word("refusal.DOCKET_KIND_UNKNOWN"),
   },
   DOCKET_NO_REASON: {
     check: "C-129.9", where: FORM,
-    translation: "Say, in your own words and at most 2,000 characters, why, and choose whether the entry is for the "
-      + "record, for the public docket, or both. Nothing was written.",
+    translation: word("refusal.DOCKET_NO_REASON"),
   },
   /* R2, R22 (N526): this module's own code; `action-grammar`'s `MACHINE_CANNOT_MARK_PRESSURE` (C-117.14) is `actions`'
      and is never answered here (DEC-49: one code, one row). */
   MACHINE_CANNOT_MARK_DOCKET_PRESSURE: {
     check: "C-129.10", where: PRESSURE,
-    translation: "Only a member, signed in as themselves, marks a docket entry as a threat. Nothing was marked.",
+    translation: word("refusal.MACHINE_CANNOT_MARK_DOCKET_PRESSURE"),
   },
   NO_SUCH_DOCKET_ENTRY: {
     check: "C-129.11", where: ENTRY,
-    translation: "There is no docket entry here by that name for you: it does not exist, or it belongs to a case "
-      + "you do not see. Nothing was written.",
+    translation: word("refusal.NO_SUCH_DOCKET_ENTRY"),
   },
   /* R2, R22 (N533): this module's own codes; `action-grammar`'s `PRESSURE_MARKED` (C-117.17) and `PRESSURE_REFUSED`
      (C-117.15) are `actions`' and are never answered here. */
   DOCKET_PRESSURE_MARKED: {
     check: "C-129.12", where: PRESSURE,
-    translation: "This docket entry is already marked as a threat; a mark is never rewritten. Nothing was marked.",
+    translation: word("refusal.DOCKET_PRESSURE_MARKED"),
   },
   DOCKET_PRESSURE_REFUSED: {
     check: "C-129.13", where: PRESSURE,
@@ -112,53 +101,43 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   MACHINE_CANNOT_PLACE_DOCKET: {
     check: "C-129.14", where: MANAGER,
-    translation: "Only the case's manager, signed in as themselves, places, declines or signs a public docket entry. "
-      + "A machine, the assistant or an operator token cannot. Nothing was published.",
+    translation: word("refusal.MACHINE_CANNOT_PLACE_DOCKET"),
   },
   DOCKET_NOT_THE_MANAGER: {
     check: "C-129.15", where: MANAGER,
-    translation: "Only an owner of the case's project manages its public docket. Nothing was published.",
+    translation: word("refusal.DOCKET_NOT_THE_MANAGER"),
   },
   DOCKET_NO_GROUP_SLUG: {
     check: "C-129.16", where: MANAGER,
-    translation: "Your team has no name recorded yet, and a docket entry is never anonymous. Record the team's "
-      + "name first. Nothing was published.",
+    translation: word("refusal.DOCKET_NO_GROUP_SLUG"),
   },
   DOCKET_ENTRY_SETTLED: {
     check: "C-129.17", where: ENTRY,
-    translation: "That entry is already settled: placed in public, declined, listed as received, or taken back. A "
-      + "later entry says what changed. Nothing was written.",
+    translation: word("refusal.DOCKET_ENTRY_SETTLED"),
   },
   DOCKET_WRONG_SHELF: {
     check: "C-129.18", where: KIND,
-    translation: "A reaction goes only under reactions elsewhere, and every other public entry only on the listed "
-      + "shelf. Nothing was published.",
+    translation: word("refusal.DOCKET_WRONG_SHELF"),
   },
   DOCKET_NO_SUMMARY: {
     check: "C-129.19", where: KIND,
-    translation: "A summary is one paragraph of at most 600 characters: a reaction elsewhere is shown with one in the "
-      + "team's own words, and an outcome is filed with one in yours. Nothing was written.",
+    translation: word("refusal.DOCKET_NO_SUMMARY"),
   },
   DOCKET_NO_ARCHIVE_COPY: {
     check: "C-129.20", where: KIND,
-    translation: "A reaction elsewhere links to an independent archive's copy, and this capture has none. Ask for "
-      + "the archive copy again, then place it. Nothing was published.",
+    translation: word("refusal.DOCKET_NO_ARCHIVE_COPY"),
   },
   DOCKET_WARNING_NOT_ACKNOWLEDGED: {
     check: "C-129.21", where: POST,
-    translation: "A public docket entry is permanent: a later entry can take it back but never unsay it, and "
-      + "posting it says you have read that. Nothing was published.",
+    translation: word("refusal.DOCKET_WARNING_NOT_ACKNOWLEDGED"),
   },
   DOCKET_STALE: {
     check: "C-129.22", where: POST,
-    translation: "Your team's Civicsmith holds no prepared docket entry from you with this fingerprint, it was "
-      + "prepared more than an hour ago, or the docket has moved since. Prepare it again and sign what it shows. "
-      + "Nothing was published.",
+    translation: word("refusal.DOCKET_STALE"),
   },
   DOCKET_SIGNATURE_REFUSED: {
     check: "C-129.23", where: POST,
-    translation: "The signature is not a valid signature of this docket entry by one of your own registered signing "
-      + "keys, for the reason named. Nothing was published.",
+    translation: word("refusal.DOCKET_SIGNATURE_REFUSED"),
   },
   DOCKET_WITHDRAWAL_FINAL: {
     check: "C-129.24", where: KIND,
@@ -172,8 +151,7 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_ALREADY_WITHDRAWN: {
     check: "C-129.26", where: KIND,
-    translation: "That edition is already withdrawn, and a withdrawal is never repeated or lifted. Nothing was "
-      + "published.",
+    translation: word("refusal.DOCKET_ALREADY_WITHDRAWN"),
   },
   /* R25 (K1480, T33-64): a court order's own refusals; rows awaiting promotion's stamp. */
   DOCKET_ORDER_UNREADABLE: {
@@ -184,8 +162,7 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_NOTHING_SEALED: {
     check: "C-129.28", where: ORDER,
-    translation: "An unsealing order names a part that no sealing order on this case's docket names. Nothing was "
-      + "published.",
+    translation: word("refusal.DOCKET_NOTHING_SEALED"),
   },
   /* R1 (T45; N855, N880): an outcome entry's own statement; R29 (T47): its words read by key, the row awaiting T48's stamp. */
   DOCKET_OUTCOME_UNREADABLE: {

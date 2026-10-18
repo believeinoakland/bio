@@ -10,6 +10,8 @@
  * T41 (D60), C-58.11. A row's `where` names the region in this module that mints it. */
 
 /* R8, R9 (K1824): the pure catalogue, never an index that imports store-bound code (K1317). */
+import { word, localize } from '../setup-words/index.mjs';
+
 export * from "../case-catalogue/checks.mjs";
 
 /* ===========================================================================
@@ -37,18 +39,12 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
   MACHINE_CANNOT_RATIFY: {
     check: 'C-32.12',
     where: 'src/ratification/ops.mjs ratifyOp > is-machine-ratify-bundle',
-    translation: 'Ratifying puts a finding into the published record under a member\'s signature, '
-      + 'and the member whose key signed it has to be the one who does it. The credential that asked '
-      + 'here is an assistant\'s: it can prepare the finding and lay out what will be signed, and it '
-      + 'cannot carry the signature in for you. Sign in and ratify it yourself.',
+    translation: word('refusal.MACHINE_CANNOT_RATIFY'),
   },
   MACHINE_CANNOT_RATIFY_CASE: {
     check: 'C-32.13',
     where: 'src/ratification/refusals.mjs machineCaseRefusal > is-machine-ratify-case',
-    translation: 'Ratifying a case commits the team\'s own assertions about it — its scope, its '
-      + 'completeness, its position on the people it concerns — under a member\'s signature. The '
-      + 'credential that asked here is an assistant\'s: it can assemble the case document, and it '
-      + 'cannot be the one who commits it. Sign in and ratify it yourself.',
+    translation: word('refusal.MACHINE_CANNOT_RATIFY_CASE'),
   },
   /* REC-125 / IC-137 — D-421, DECIDED by BOB #14 applying
      `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (no new doctrine): an
@@ -64,19 +60,12 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
   OPERATOR_TOKEN_CANNOT_RATIFY: {
     check: 'C-32.14',
     where: 'src/ratification/ops.mjs ratifyOp > is-operator-ratify-bundle',
-    translation: 'Ratifying puts a finding into the published record under a member\'s signature, '
-      + 'and it is delivered by that member signed in as themselves. The credential that asked here '
-      + 'is one of the operator\'s access tokens for your team\'s Civicsmith, not a person: a valid signature does '
-      + 'not change that, because the credential that carries it in decides when the record changes. '
-      + 'Sign in as the member whose key signed it and ratify it there.',
+    translation: word('refusal.OPERATOR_TOKEN_CANNOT_RATIFY'),
   },
   OPERATOR_TOKEN_CANNOT_RATIFY_CASE: {
     check: 'C-32.15',
     where: 'src/ratification/refusals.mjs operatorCaseRefusal > is-operator-ratify-case',
-    translation: 'Ratifying a case commits the team\'s own assertions about it under a member\'s '
-      + 'signature, and it is delivered by that member signed in as themselves. The credential that '
-      + 'asked here is one of the operator\'s access tokens for your team\'s Civicsmith, not a person, and a valid '
-      + 'signature does not change that. Sign in as the member whose key signed it and ratify it there.',
+    translation: word('refusal.OPERATOR_TOKEN_CANNOT_RATIFY_CASE'),
   },
 };
 
@@ -99,26 +88,17 @@ export const RATIFY_TESTIMONY_CHECKS = {
   TESTIMONY_UNPUBLISHABLE: {
     check: 'C-53.10',
     where: 'src/ratification/ops.mjs ratifyOp > is-testimony-publish-bundle',
-    translation: 'This document is a member\'s own firsthand observation, recorded before the record stopped '
-      + 'writing its author\'s name into the observation\'s own files. Publishing it would publish that name '
-      + 'whatever level its author chose, so it is not published. Its author can record it again as a new '
-      + 'observation, which names nobody in its files.',
+    translation: word('refusal.TESTIMONY_UNPUBLISHABLE'),
   },
   TESTIMONY_CITED_UNPUBLISHABLE: {
     check: 'C-53.11',
     where: 'src/ratification/ops.mjs ratifyOp > is-testimony-publish-bundle',
-    translation: 'This finding rests, directly or through another finding, on a member\'s firsthand '
-      + 'observation recorded before the record stopped writing its author\'s name into the observation\'s '
-      + 'own files, so it is not published. Rest the finding on a newer observation of the same thing, or '
-      + 'publish it without that observation in its basis.',
+    translation: word('refusal.TESTIMONY_CITED_UNPUBLISHABLE'),
   },
   TESTIMONY_CASE_UNPUBLISHABLE: {
     check: 'C-53.12',
     where: 'src/ratification/refusals.mjs testimonyCaseRefusal > is-testimony-publish-case',
-    translation: 'A finding in this case rests, directly or through another finding, on a member\'s '
-      + 'firsthand observation recorded before the record stopped writing its author\'s name into the '
-      + 'observation\'s own files, so the case is not published: that name would be published whatever '
-      + 'level its author chose. Rest the finding on a newer observation, or leave it out of this edition.',
+    translation: word('refusal.TESTIMONY_CASE_UNPUBLISHABLE'),
   },
 };
 
@@ -132,22 +112,17 @@ export const RATIFY_ATTRIBUTION_CHECKS = {
     check: 'C-92.10',
     where: 'src/ratification/refusals.mjs attributionUnchosenRefusal > is-attribution-unchosen',
     /* Re-worded at T28 (N523; DEC-119 (3), K1275): awaiting the T29 stamp. */
-    translation: 'This case edition uses a member\'s firsthand observation, or material from an unnamed source a '
-      + 'member attests, and that member has not yet chosen how they are credited, so it cannot be signed. Publishing '
-      + 'it at any level would be choosing for them. Ask that member to choose, or prepare the edition without the '
-      + 'finding that rests on it.',
+    translation: word('refusal.ATTRIBUTION_UNCHOSEN'),
   },
   ATTRIBUTION_STATEMENT_STALE: {
     check: 'C-92.11',
     where: 'src/ratification/refusals.mjs attributionStaleRefusal > is-attribution-stale',
-    translation: 'This case document states an attribution for an observation that its author\'s choices no '
-      + 'longer give. Prepare the case document again so it states what the authors chose, then sign that.',
+    translation: word('refusal.ATTRIBUTION_STATEMENT_STALE'),
   },
   ATTRIBUTION_UNSTATED: {
     check: 'C-92.12',
     where: 'src/ratification/ops.mjs ratifyOp > is-attribution-ratify',
-    translation: 'This observation\'s words are published only beside a signed case that states whose they '
-      + 'are, and no signed case does yet. Sign the case document that uses it first.',
+    translation: word('refusal.ATTRIBUTION_UNSTATED'),
   },
 };
 
@@ -164,10 +139,7 @@ export const CASE_CONCLUSION_CHECKS = {
   CASE_CONCLUSION_MOVED: {
     check: 'C-65.1',
     where: 'src/ratification/refusals.mjs conclusionMovedRefusal > is-caseratify-conclusion-moved',
-    translation: 'This case document records a conclusion its project no longer stands on: since the '
-      + 'document was prepared, the project withdrew that conclusion or concluded again differently. '
-      + 'Signing it would publish a conclusion nobody holds. Nothing was committed. Publish the case '
-      + 'again from the project, so the document records what the project stands on now, and sign that.',
+    translation: word('refusal.CASE_CONCLUSION_MOVED'),
   },
 };
 
@@ -185,9 +157,7 @@ export const RATIFY_SCOPE_CHECKS = {
   RATIFY_PROJECT_BUNDLE: {
     check: 'C-58.1',
     where: 'src/ratification/ops.mjs ratifyOp > is-ratify-project-bundle',
-    translation: 'A project\'s own document is not published. A project publishes through its cases: '
-      + 'publish a case from the project, have an owner sign the case document, and then ratify the '
-      + 'findings in it. Nothing was published.',
+    translation: word('refusal.RATIFY_PROJECT_BUNDLE'),
   },
   /* D-431 (2026-09-19, IC-161): `op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE
    * (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16). REC-140 measured three
@@ -200,80 +170,59 @@ export const RATIFY_SCOPE_CHECKS = {
   RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE: {
     check: 'C-58.2',
     where: 'src/ratification/index.mjs publish > is-ratify-outside-a-case',
-    translation: 'A finding is published only as part of a case its project has ratified, and no ratified '
-      + 'case holds this version of it. Publish it into a case from its project, have an owner of the '
-      + 'project sign the case document first, and then ratify this finding at the version the case '
-      + 'holds. Nothing was published.',
+    translation: word('refusal.RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE'),
   },
   RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: {
     check: 'C-58.3',
     where: 'src/ratification/index.mjs publish > is-ratify-outside-a-case',
-    translation: 'This is published only as evidence for a case, and no finding in any ratified case '
-      + 'rests on it. Cite it from a finding, publish that finding\'s case and have an owner of the '
-      + 'project sign the case document; an owner of that project can then sign this. Nothing was '
-      + 'published.',
+    translation: word('refusal.RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE'),
   },
   /* DEC-97 (3), K1058: R22's contested arm. Stamped in `CATALOG_VERSION` 1.53.0 (promotion, T23 layer 2). */
   CONTESTED_IN_BATCH: {
     check: 'C-58.4',
     where: 'src/ratification/release.mjs release > is-release-contested',
-    translation: 'Some of these documents are contested: a contradiction touching each is not yet resolved, and '
-      + 'contested material is never released in a batch. They are named. Nothing was released.',
+    translation: word('refusal.CONTESTED_IN_BATCH'),
   },
   /* DEC-102 items 1 and 2, K1058: R35, testimony credited only to the group or the project. Stamped in 1.53.0. */
   ANONYMOUS_TESTIMONY_UNCORROBORATED: {
     check: 'C-58.5',
     where: 'src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony',
     /* Re-worded at T28 (N523; DEC-119 (3), K1275): awaiting the T29 stamp. */
-    translation: 'This edition rests on testimony, or on material from an unnamed source attested by a member, '
-      + 'credited only to the team or the project, with no independent leg corroborating it. Such testimony or '
-      + 'evidence counts as an anonymous tip and supports a finding only beside an independent corroborating leg. '
-      + 'Each such member, observation and document is named. Corroborate the claim with an independent leg, ask '
-      + 'the author or the attesting member to choose cover or name, or drop the finding that rests on it. Nothing '
-      + 'was signed.',
+    translation: word('refusal.ANONYMOUS_TESTIMONY_UNCORROBORATED'),
   },
   /* R46 (DEC-147 (3); T34-85): publishing at a set time. BOB's drafts, which the UX stream may re-word.
      C-58.6 is `op=publishat`'s (R40); C-58.7–C-58.10 are the scheduled publisher's stops (R42). */
   SCHEDULE_UNCHECKABLE: {
     check: 'C-58.6',
     where: 'src/ratification/schedule.mjs scheduleUncheckableRefusal > is-schedule-uncheckable',
-    translation: 'Publishing at a set time means checking again at that time everything checked now, and part of it '
-      + 'cannot be read now. It is named. Nothing was signed. You can publish now, or try again later.',
+    translation: word('refusal.SCHEDULE_UNCHECKABLE'),
   },
   SCHEDULED_SOURCES_CHANGED: {
     check: 'C-58.7',
     where: 'src/ratification/schedule.mjs scheduledStop > is-scheduled-stop',
-    translation: 'This edition was not published at its set time: a source it rests on changed since it was signed. '
-      + 'It is named. Nothing was published. Prepare and sign the edition again to publish it.',
+    translation: word('refusal.SCHEDULED_SOURCES_CHANGED'),
   },
   SCHEDULED_TIES_CHANGED: {
     check: 'C-58.8',
     where: 'src/ratification/schedule.mjs scheduledStop > is-scheduled-stop',
-    translation: 'This edition was not published at its set time: a member who signed it has declared or withdrawn a '
-      + 'tie to someone the case names since signing, so their confirmation of no undeclared tie may no longer hold. '
-      + 'Nothing was published. Prepare and sign the edition again to publish it.',
+    translation: word('refusal.SCHEDULED_TIES_CHANGED'),
   },
   SCHEDULED_HOLD_CHANGED: {
     check: 'C-58.9',
     where: 'src/ratification/schedule.mjs scheduledStop > is-scheduled-stop',
-    translation: 'This edition was not published at its set time: a hold on the case or its project changed since it '
-      + 'was signed. It is named. Nothing was published. Prepare and sign the edition again to publish it.',
+    translation: word('refusal.SCHEDULED_HOLD_CHANGED'),
   },
   SCHEDULED_CHECK_REFUSED: {
     check: 'C-58.10',
     where: 'src/ratification/schedule.mjs scheduledStop > is-scheduled-stop',
-    translation: 'This edition was not published at its set time: a check made when it was signed no longer passes, '
-      + 'or could not be made. The reason is given. Nothing was published. Prepare and sign the edition again to '
-      + 'publish it.',
+    translation: word('refusal.SCHEDULED_CHECK_REFUSED'),
   },
   /* R49 (T41; D60, N820): the group's approvals before signing. BOB's draft, which the UX stream may re-word; a change
      moves `CATALOG_VERSION` (rule 17). Awaiting T42's stamp (plan rule 4 (2)). */
   APPROVAL_MISSING: {
     check: 'C-58.11',
     where: 'src/ratification/refusals.mjs approvalMissingRefusal > is-approval-missing',
-    translation: 'This case edition can\'t be signed yet: the team requires named members to approve a case before '
-      + 'it is signed, and some of them have not approved this version of it. They are named. Ask them to approve it, '
-      + 'then sign. Nothing was signed.',
+    translation: word('refusal.APPROVAL_MISSING'),
   },
 };
 
@@ -284,31 +233,22 @@ export const RELEASE_CHECKS = {
   MACHINE_CANNOT_RELEASE: {
     check: 'C-32.1',
     where: 'src/ratification/release.mjs release > is-machine-release',
-    translation: 'Moving documents from collected to verified is a decision a named person makes '
-      + 'and signs. The credential that asked here is an automated one, so it can gather the batch '
-      + 'and lay out the review, and cannot be the one who says the batch is good. Sign in and '
-      + 'release it yourself.',
+    translation: word('refusal.MACHINE_CANNOT_RELEASE'),
   },
   NO_ACKNOWLEDGMENT: {
     check: 'C-33.10',
     where: 'src/ratification/release.mjs release > is-release-account',
-    translation: 'Releasing a batch at once records your explicit acknowledgment that the batch is '
-      + 'of a piece and that you weighed the risk of doing them together. Without it the record '
-      + 'shows only that a button was pressed.',
+    translation: word('refusal.NO_ACKNOWLEDGMENT'),
   },
   NO_MITIGATION: {
     check: 'C-33.11',
     where: 'src/ratification/release.mjs release > is-release-account',
-    translation: 'Releasing a batch at once records what you actually did to check it — what was '
-      + 'sampled and what was verified. A concrete note can be audited by somebody later; silence '
-      + 'cannot be audited at all.',
+    translation: word('refusal.NO_MITIGATION'),
   },
   ENTRY_REQUIREMENTS: {
     check: 'C-33.12',
     where: 'src/ratification/release.mjs release > is-release-entry',
-    translation: 'Some of these documents are missing something the verified state requires, and '
-      + 'releasing them as they stand would produce records the catalog rejects the moment they '
-      + 'exist. The offending documents are named so they can be fixed rather than guessed at.',
+    translation: localize('ratification.checks.some_of_these_documents_are', 'Some of these documents are missing something the verified state requires, and releasing them as they stand would produce records the catalog rejects the moment they exist. The offending documents are named so they can be fixed rather than guessed at.'),
   },
 };
 
@@ -318,9 +258,7 @@ export const RATIFY_REGISTRATION_CHECKS = {
   CASE_MEMBER_REFUSED: {
     check: 'C-102.10',
     where: 'src/ratification/index.mjs check',
-    translation: 'This document claims to be part of a published case, and it does not carry what a part of '
-      + 'a published case must carry, so it was not written. Each problem is named beside this message. '
-      + 'Nothing in the record changed.',
+    translation: word('refusal.CASE_MEMBER_REFUSED'),
   },
 };
 

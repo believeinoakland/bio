@@ -72,6 +72,7 @@ Every service takes `view`: the combined view of the active jurisdiction profile
 
 - `jurisdictions`: the combined view's shape (`combine`), and its identifier spaces, systems, floors, crosswalks and conflicts; since T35-7, its `standard_sources` entries with `series` (R63) and their conflicts (R66), for R30–R33.
 - `court-citations` (T33-8; K1506): its reporter and variant data for R27.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

@@ -5,6 +5,7 @@
  * when the bytes are not an image this module knows. Nothing here reads a name or a declared type. */
 import { stripMetadata } from "../image-cover/index.mjs";
 import { editXml } from "./xml.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export class CleanRefusal extends Error {
   constructor(code, detail) {
@@ -53,15 +54,15 @@ export function imageKind(d) {
 
 /** What kind of video or audio `d` is, from its leading bytes, or `null` (R3 `EMBEDDED_MEDIA`, K2351). */
 export function mediaKind(d) {
-  if (d.length >= 12 && ascii(d, 4, 4) === "ftyp" && !imageKind(d)) return "a video or audio file (ISO media)";
+  if (d.length >= 12 && ascii(d, 4, 4) === "ftyp" && !imageKind(d)) return word("doc-clean.text.video_audio_file");
   if (d.length >= 12 && ascii(d, 0, 4) === "RIFF" && ["AVI ", "WAVE", "RMID", "CDXA"].includes(ascii(d, 8, 4))) return `a ${ascii(d, 8, 4).trim()} file`;
   if (d.length >= 12 && ascii(d, 0, 4) === "FORM" && ["AIFF", "AIFC"].includes(ascii(d, 8, 4))) return "an AIFF file";
-  if (at(d, 0, 0x1a, 0x45, 0xdf, 0xa3)) return "a Matroska or WebM file";
-  if (at(d, 0, 0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11)) return "a Windows Media file";
-  if (at(d, 0, 0x49, 0x44, 0x33) || (d[0] === 0xff && (d[1] & 0xe0) === 0xe0 && d[1] < 0xfe && (d[1] & 0x06) !== 0 && d[2] >> 4 !== 15 && ((d[2] >> 2) & 3) !== 3)) return "an MPEG audio file";
-  if (d.length >= 4 && ["OggS", "fLaC", "MThd", ".snd", "FLV\x01"].includes(ascii(d, 0, 4))) return "an audio or video file";
-  if (at(d, 0, 0, 0, 1, 0xba) || at(d, 0, 0, 0, 1, 0xb3) || (d[0] === 0x47 && d[188] === 0x47 && d.length > 376 && d[376] === 0x47)) return "an MPEG video file";
-  if (at(d, 0, 0x23, 0x21, 0x41, 0x4d, 0x52)) return "an AMR audio file";
+  if (at(d, 0, 0x1a, 0x45, 0xdf, 0xa3)) return word("doc-clean.text.matroska_webm_file");
+  if (at(d, 0, 0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11)) return word("doc-clean.text.windows_media_file");
+  if (at(d, 0, 0x49, 0x44, 0x33) || (d[0] === 0xff && (d[1] & 0xe0) === 0xe0 && d[1] < 0xfe && (d[1] & 0x06) !== 0 && d[2] >> 4 !== 15 && ((d[2] >> 2) & 3) !== 3)) return word("doc-clean.text.mpeg_audio_file");
+  if (d.length >= 4 && ["OggS", "fLaC", "MThd", ".snd", "FLV\x01"].includes(ascii(d, 0, 4))) return word("doc-clean.text.audio_video_file");
+  if (at(d, 0, 0, 0, 1, 0xba) || at(d, 0, 0, 0, 1, 0xb3) || (d[0] === 0x47 && d[188] === 0x47 && d.length > 376 && d[376] === 0x47)) return word("doc-clean.text.mpeg_video_file");
+  if (at(d, 0, 0x23, 0x21, 0x41, 0x4d, 0x52)) return word("doc-clean.text.amr_audio_file");
   return null;
 }
 
@@ -139,7 +140,7 @@ const SVG_RULES = { removeNs: ["editor"] };
 export function jbig2WithoutComments(d, where) {
   const keep = [];
   let o = 0, changed = false;
-  const bad = (why) => new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a JBIG2 stream whose segments cannot be walked (${why})`);
+  const bad = (why) => new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_a_jbig2_stream_whose", "{where}: a JBIG2 stream whose segments cannot be walked ({why})", { where: String(where), why: String(why) }));
   while (o < d.length) {
     const start = o;
     if (o + 6 > d.length) throw bad("a truncated segment header");
@@ -192,19 +193,19 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
       return { bytes: r.bytes, changed: r.changed };
     }
     case "tiff": case "heif": case "jxl":
-      throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: ${NAMES[kind]} image, whose metadata this module cannot strip`);
+      throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_v1_image_whose_metadata", "{where}: {v1} image, whose metadata this module cannot strip", { where: String(where), v1: String(NAMES[kind]) }));
     case "bmp": {
       const header = u32le(bytes, 14), compression = bytes.length >= 34 ? u32le(bytes, 30) : 0;
       if (header >= 40 && (compression === 4 || compression === 5))
-        throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a BMP image holding ${compression === 4 ? "a JPEG" : "a PNG"} image`);
+        throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_a_bmp_image_holding", "{where}: a BMP image holding {v1} image", { where: String(where), v1: String(compression === 4 ? "a JPEG" : "a PNG") }));
       const cs = header >= 108 && bytes.length >= 14 + 60 ? ascii(bytes, 14 + 56, 4) : "";
       if (cs === "DEBM" || cs === "KNIL")
-        throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a BMP image carrying a colour profile`);
+        throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_a_bmp_image_carrying", "{where}: a BMP image carrying a colour profile", { where: String(where) }));
       return { bytes, changed: false };
     }
     case "emf": case "wmf": case "svm": {
       const held = holdsRaster(bytes);
-      if (held) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: ${NAMES[kind]} image holding ${held} image`);
+      if (held) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_v1_image_holding_held", "{where}: {v1} image holding {held} image", { where: String(where), v1: String(NAMES[kind]), held: String(held) }));
       return kind === "emf" ? emfWithoutDescription(bytes) : { bytes, changed: false };
     }
     case "svg": {
@@ -216,7 +217,7 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
     }
     case "gzip": {
       const inner = await gunzip(bytes, maxInflated);
-      if (!inner) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a compressed image that cannot be read whole`);
+      if (!inner) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_a_compressed_image_that", "{where}: a compressed image that cannot be read whole", { where: String(where) }));
       const k = imageKind(inner);
       const media = k ? null : mediaKind(inner);
       if (media) throw new CleanRefusal("EMBEDDED_MEDIA", `${where}: ${media}, compressed`);
@@ -225,9 +226,9 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
         if (r.changed) return { bytes: await gzip(r.bytes), changed: true };
       }
       const bare = bareGzip(bytes);
-      if (!bare) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a compressed image whose header cannot be read`);
+      if (!bare) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_a_compressed_image_whose", "{where}: a compressed image whose header cannot be read", { where: String(where) }));
       return { bytes: bare, changed: bare !== bytes };
     }
   }
-  throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: an image of no format this module knows`);
+  throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_an_image_of_no", "{where}: an image of no format this module knows", { where: String(where) }));
 }

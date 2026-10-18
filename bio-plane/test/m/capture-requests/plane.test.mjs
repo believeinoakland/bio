@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 import { planeEntry } from "./plane-world.mjs";
 import { CAPTURE_REQUEST_CHECKS } from "../../../src/capture-requests/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CAPTURE_FETCH_FAILED_CHECK = CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED.check;
 
@@ -116,7 +117,7 @@ async function world() {
     "produced_by:", "  mode: agent", "  capability_tier: high", "group: g", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
     "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "", "What?", "",
-    "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+    word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
     "## Review Notes", ""].join("\n");
   const create = async (id, headers) => {
     const text = md(id);

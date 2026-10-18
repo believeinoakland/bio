@@ -8,6 +8,7 @@ import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
 import { FILING_TEMPLATE_CHECKS, rfcQuotingRefusal } from "../../../src/filing-templates/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 R54 R55 R57 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
   const x = world();
@@ -145,7 +146,7 @@ test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states
                              now: () => x.clock.now });
   const A = x.action();
   const r = bare.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
-  assert.deepEqual(r, noSuchAction(A, { why: "no module answers an action's read here, so no action is readable" }),
+  assert.deepEqual(r, noSuchAction(A, { why: word("filings.why.module_answers_action") }),
                    "actions' answer, the reason riding as an extra field (K351)");
   assert.equal(bare.availableActions({ determination: x.D, viewer: V("bo") }).reason, "DETERMINATION_UNREADABLE");
   const noConformance = new Filings({ storage: x.st, record: x.record, publication: x.p, provenance: x.prov, content: x.content,

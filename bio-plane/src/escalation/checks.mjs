@@ -19,13 +19,13 @@
    names every act an escalation changes through, stop pursuing and reopen among them, and C-116.14's, which names no
    escalation, so R34's one answer to a viewer who may not see it holds in its translation as in its fields. A row's
    `translation` is the word itself, never a copy. `refusal.NOT_OPEN` is not taken (R35). */
+import { word, localize } from '../setup-words/index.mjs';
+
 export const ESCALATION_WORDS = Object.freeze({
-  'refusal.MACHINE_CANNOT_STOP': 'Only a member stops or reopens an escalation. Nothing was written.',
-  'refusal.NOT_STOPPED': 'Only an escalation your team stopped pursuing can be reopened. Nothing was written.',
-  'refusal.ESCALATION_BY_ACT_ONLY': 'An escalation changes only through its own acts: open, attach, evaluate, advance, decline, '
-    + 'suspend, resume, stop pursuing, reopen and end, so its record never disagrees with itself. Nothing was written.',
-  'refusal.ALREADY_ATTACHED': 'This action is already attached to an escalation. An action is attached to one escalation, at '
-    + 'one stage. Nothing was written.',
+  'refusal.MACHINE_CANNOT_STOP': word('refusal.MACHINE_CANNOT_STOP'),
+  'refusal.NOT_STOPPED': word('refusal.NOT_STOPPED'),
+  'refusal.ESCALATION_BY_ACT_ONLY': word('refusal.ESCALATION_BY_ACT_ONLY'),
+  'refusal.ALREADY_ATTACHED': word('refusal.ALREADY_ATTACHED'),
 });
 
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
@@ -33,58 +33,47 @@ const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 export const ESCALATION_CHECKS = Object.freeze({
   MACHINE_CANNOT_OPEN: {
     check: 'C-116.1', where: at("escalationOpen", "is-open-member"),
-    translation: 'Opening an escalation is a member\'s act. An assistant may point out a breach worth pursuing; it may '
-      + 'not open one. Sign in as a member. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_OPEN'),
   },
   ESCALATION_CARRIES_NO_JUDGMENT: {
     check: 'C-116.2', where: at("refuseJudgment", "is-no-judgment"),
-    translation: 'An escalation records no significance, severity, priority, urgency, rank or score. Whether a breach '
-      + 'warrants action, and how urgently, is the members\' judgment, made with the consequences in front of them. '
-      + 'Send the act without it. Nothing was written.',
+    translation: word('refusal.ESCALATION_CARRIES_NO_JUDGMENT'),
   },
   NOT_NONCOMPLIANT: {
     check: 'C-116.5', where: at("#pursuable", "is-determination-noncompliant"),
-    translation: 'That determination finds no standard breached, so there is nothing to escalate. Nothing was written.',
+    translation: word('refusal.NOT_NONCOMPLIANT'),
   },
   ESCALATION_NOT_A_PARTICIPANT: {
     check: 'C-116.6', where: at("#pursuable", "is-open-joined"),
-    translation: 'An escalation is opened by a member who has joined the project that made the determination. Join '
-      + 'the project first. Nothing was written.',
+    translation: word('refusal.ESCALATION_NOT_A_PARTICIPANT'),
   },
   ALREADY_OPEN: {
     check: 'C-116.7', where: at("#pursuable", "is-one-escalation"),
-    translation: 'This determination already has an escalation that has not ended; there is one at a time. Work in '
-      + 'that one. Nothing was written.',
+    translation: word('refusal.ALREADY_OPEN'),
   },
   NO_SUCH_ESCALATION: {
     check: 'C-116.8', where: at("refuseNoSuchEscalation", "is-escalation-seen"),
-    translation: 'No escalation answers to that here. One in a project you may not see is answered exactly as one '
-      + 'that does not exist. Nothing was written.',
+    translation: word('refusal.NO_SUCH_ESCALATION'),
   },
   MACHINE_CANNOT_ATTACH: {
     check: 'C-116.9', where: at("escalationAttach", "is-attach-member"),
-    translation: 'Attaching an action to an escalation is a member\'s act. An assistant may prepare the action; it may '
-      + 'not attach it. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_ATTACH'),
   },
   ESCALATION_ENDED: {
     check: 'C-116.10', where: at("refuseEnded", "is-escalation-ended"),
-    translation: 'This escalation has ended: compliance was restored and the consequences addressed. An ended '
-      + 'escalation is never reopened; a new breach is a new determination. Nothing was written.',
+    translation: word('refusal.ESCALATION_ENDED'),
   },
   NOT_A_BREACH_ACTION: {
     check: 'C-116.12', where: at("escalationAttach", "is-breach-action"),
-    translation: 'An escalation\'s acts are actions recorded for the breach: the action states that it is one and rests '
-      + 'on the escalation\'s determination. Record it so, then attach it. Nothing was written.',
+    translation: word('refusal.NOT_A_BREACH_ACTION'),
   },
   ACTION_PREMISE_OVERRIDDEN: {
     check: 'C-116.45', where: at("escalationAttach", "is-premise-established"),
-    translation: 'That action was recorded with its premise overridden: it does not rest on a determined breach. An '
-      + 'escalation pursues a determined breach only, so the action cannot be attached to one. Nothing was written.',
+    translation: word('refusal.ACTION_PREMISE_OVERRIDDEN'),
   },
   STAGE_TAKES_NO_ACTION: {
     check: 'C-116.13', where: at("escalationAttach", "is-attaching-stage"),
-    translation: 'Actions are attached at notification, legal tools and political accountability. The escalation\'s '
-      + 'stage now takes none. Nothing was written.',
+    translation: word('refusal.STAGE_TAKES_NO_ACTION'),
   },
   ALREADY_ATTACHED: {
     check: 'C-116.14', where: at("escalationAttach", "is-attached-once"),
@@ -92,131 +81,110 @@ export const ESCALATION_CHECKS = Object.freeze({
   },
   NOT_ACCOUNTABILITY: {
     check: 'C-116.15', where: at("escalationAttach", "is-accountability-purpose"),
-    translation: 'An act of political accountability states its purpose: asking an elected office to act on the breach, '
-      + 'an oversight request, an audit request, testimony, or legislation that restores or enforces an existing '
-      + 'requirement. Policy advocacy and candidate support are not among them. Nothing was written.',
+    translation: word('refusal.NOT_ACCOUNTABILITY'),
   },
   NOT_THE_BREACH: {
     check: 'C-116.16', where: at("escalationAttach", "is-pursued-standard"),
-    translation: 'An act of political accountability names the requirement it seeks enforced, from the standards this '
-      + 'escalation pursues, and no other. Nothing was written.',
+    translation: word('refusal.NOT_THE_BREACH'),
   },
   COUNTERPARTY_NOT_ELECTED: {
     check: 'C-116.17', where: at("escalationAttach", "is-elected-office"),
-    translation: 'An official request asks an elected office to act. The jurisdiction profile marks the office this '
-      + 'action is addressed to as not elected. Address it to an elected office. Nothing was written.',
+    translation: word('refusal.COUNTERPARTY_NOT_ELECTED'),
   },
   COUNTERPARTY_NOT_OVERSIGHT: {
     check: 'C-116.18', where: at("escalationAttach", "is-oversight-office"),
-    translation: 'An oversight or audit request goes to an oversight or audit body. The jurisdiction profile marks the '
-      + 'office this action is addressed to as not one. Nothing was written.',
+    translation: word('refusal.COUNTERPARTY_NOT_OVERSIGHT'),
   },
   MACHINE_CANNOT_EVALUATE: {
     check: 'C-116.19', where: at("escalationEvaluate", "is-evaluate-member"),
-    translation: 'Reading what the government answered is a member\'s judgment. An assistant may summarise the response; '
-      + 'it may not evaluate it. Nothing was written.',
+    translation: localize('escalation.checks.reading_what_the_government_answered', 'Reading what the government answered is a member\'s judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written.'),
   },
   NOT_IN_EVALUATION: {
     check: 'C-116.20', where: at("escalationEvaluate", "is-evaluation-stage"),
-    translation: 'A response is evaluated at the response-evaluation stage, and this escalation is at another. '
-      + 'Nothing was written.',
+    translation: word('refusal.NOT_IN_EVALUATION'),
   },
   READING_UNKNOWN: {
     check: 'C-116.21', where: at("escalationEvaluate", "is-reading-known"),
-    translation: 'A reading of a response is one of: complied, partial, denied, or none (nothing came back in time). '
-      + 'Nothing was written.',
+    translation: word('refusal.READING_UNKNOWN'),
   },
   NO_SUCH_RESPONSE: {
     check: 'C-116.22', where: at("refuseNoSuchResponse", "is-named-response"),
-    translation: 'The evaluation names the reply it reads: a received entry of an action attached to this escalation. '
-      + 'Nothing was written.',
+    translation: word('refusal.NO_SUCH_RESPONSE'),
   },
   RESPONSE_FOR_NONE: {
     check: 'C-116.23', where: at("escalationEvaluate", "is-none-unnamed"),
-    translation: 'A reading of none says nothing came back in time, so it names no reply. Nothing was written.',
+    translation: word('refusal.RESPONSE_FOR_NONE'),
   },
   ESCALATION_NO_REASON: {
     check: 'C-116.24', where: at("refuseReason", "is-reason-given"),
-    translation: 'This act needs a reason, in your own words, of up to 2,000 characters. Nothing was written.',
+    translation: word('refusal.ESCALATION_NO_REASON'),
   },
   MACHINE_CANNOT_ADVANCE: {
     check: 'C-116.25', where: at("#edgeArgs", "is-edge-member"),
-    translation: 'Moving an escalation to its next stage is a member\'s act. The protocol proposes a stage when its '
-      + 'trigger is met; a member advances it. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_ADVANCE'),
   },
   MACHINE_CANNOT_DECLINE: {
     check: 'C-116.26', where: at("#edgeArgs", "is-edge-member"),
-    translation: 'Choosing not to move an escalation now is a member\'s act, with the member\'s reason. Nothing was '
-      + 'written.',
+    translation: word('refusal.MACHINE_CANNOT_DECLINE'),
   },
   NOT_OPEN: {
     /* R35 (T46; DEC-194, N913, K2953): the translation is kept. `words.json`'s `refusal.NOT_OPEN` says a suspended one
        is resumed first, while R31 lets a suspended escalation be stopped directly, so that sentence is not adopted
        until it and R31 agree (returned to BOB). Minted at one site, `refuseNotOpen`, for R13's edges and R31's stop. */
     check: 'C-116.27', where: at("refuseNotOpen", "is-escalation-open"),
-    translation: 'The escalation\'s stage moves only while it is open. A suspended one is resumed first; an ended one '
-      + 'never moves again. Nothing was written.',
+    translation: localize('escalation.checks.the_escalations_stage_moves_only', 'The escalation\'s stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written.'),
   },
   ILLEGAL_STAGE: {
     check: 'C-116.28', where: at("#edgeArgs", "is-edge-legal"),
-    translation: 'The escalation cannot move from its stage to that one. The stages it can move to are listed. '
-      + 'Nothing was written.',
+    translation: word('refusal.ILLEGAL_STAGE'),
   },
   TRIGGER_NOT_MET: {
     check: 'C-116.29', where: at("escalationAdvance", "is-trigger-met"),
-    translation: 'That stage\'s trigger is not met in the record yet; what is missing is named. When it is met the '
-      + 'stage is proposed, and a member advances it. Nothing was written.',
+    translation: word('refusal.TRIGGER_NOT_MET'),
   },
   EDGE_NOT_PROPOSED: {
     check: 'C-116.30', where: at("escalationDecline", "is-edge-proposed"),
-    translation: 'That stage is not proposed, so there is nothing to decline. Nothing was written.',
+    translation: word('refusal.EDGE_NOT_PROPOSED'),
   },
   MACHINE_CANNOT_END: {
     check: 'C-116.31', where: at("escalationEnd", "is-end-member"),
-    translation: 'Ending an escalation is a member\'s act, and only once compliance is restored and the consequences '
-      + 'are addressed. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_END'),
   },
   ALREADY_ENDED: {
     check: 'C-116.32', where: at("escalationEnd", "is-end-once"),
-    translation: 'This escalation has already ended. Nothing was written.',
+    translation: word('refusal.ALREADY_ENDED'),
   },
   COMPLIANCE_NOT_RESTORED: {
     check: 'C-116.33', where: at("escalationEnd", "is-compliance-restored"),
-    translation: 'An escalation ends only when compliance is restored: for every standard it pursues, a later '
-      + 'determination of the same act finds the government compliant. The standards still lacking one are named. '
-      + 'Nothing was written.',
+    translation: word('refusal.COMPLIANCE_NOT_RESTORED'),
   },
   CONSEQUENCES_NOT_ADDRESSED: {
     check: 'C-116.34', where: at("escalationEnd", "is-consequences-addressed"),
-    translation: 'An escalation ends only when the consequences of the breach are addressed, and a recorded '
-      + 'consequence is not. Nothing was written.',
+    translation: word('refusal.CONSEQUENCES_NOT_ADDRESSED'),
   },
   CONSEQUENCES_UNDETERMINED: {
     check: 'C-116.35', where: at("escalationEnd", "is-consequences-determined"),
-    translation: 'Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is '
-      + 'undetermined or unproven. If the team judges the breach had no consequence, record that as an assessed '
-      + 'consequence and address it. Nothing was written.',
+    translation: word('refusal.CONSEQUENCES_UNDETERMINED'),
   },
   MACHINE_CANNOT_SUSPEND: {
     check: 'C-116.36', where: at("escalationSuspend", "is-suspend-member"),
-    translation: 'Suspending an escalation is a member\'s act, with a reason. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_SUSPEND'),
   },
   ALREADY_SUSPENDED: {
     check: 'C-116.37', where: at("escalationSuspend", "is-suspend-once"),
-    translation: 'This escalation is already suspended. Nothing was written.',
+    translation: word('refusal.ALREADY_SUSPENDED'),
   },
   MACHINE_CANNOT_RESUME: {
     check: 'C-116.38', where: at("escalationResume", "is-resume-member"),
-    translation: 'Resuming an escalation is a member\'s act. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_RESUME'),
   },
   NOT_SUSPENDED: {
     check: 'C-116.39', where: at("escalationResume", "is-resume-suspended"),
-    translation: 'This escalation is not suspended, so there is nothing to resume. Nothing was written.',
+    translation: word('refusal.NOT_SUSPENDED'),
   },
   MACHINE_CANNOT_WRITE_ESCALATION: {
     check: 'C-116.40', where: at("check", "is-escalation-member"),
-    translation: 'An escalation\'s record is written by members\' acts only. An automated credential cannot write it. '
-      + 'Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_WRITE_ESCALATION'),
   },
   ESCALATION_BY_ACT_ONLY: {
     check: 'C-116.41', where: at("check", "is-escalation-act"),
@@ -224,16 +192,15 @@ export const ESCALATION_CHECKS = Object.freeze({
   },
   ESCALATION_HISTORY_REWRITTEN: {
     check: 'C-116.42', where: at("check", "is-escalation-append-only"),
-    translation: 'An escalation\'s history is never edited; each act adds to it. Nothing was written.',
+    translation: word('refusal.ESCALATION_HISTORY_REWRITTEN'),
   },
   UNSPLICEABLE_ESCALATION: {
     check: 'C-116.43', where: at("#append", "is-escalation-spliceable"),
-    translation: 'The escalation\'s record cannot be extended in place. Nothing was written.',
+    translation: word('refusal.UNSPLICEABLE_ESCALATION'),
   },
   MACHINE_CANNOT_DECLINE_TO_ESCALATE: {
     check: 'C-116.46', where: at("declineToEscalate", "is-decline-member"),
-    translation: 'Recording that the team is not pursuing a breach is a member\'s act, in the member\'s own words. An '
-      + 'assistant may point out a breach; it may not decline it. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_DECLINE_TO_ESCALATE'),
   },
   MACHINE_CANNOT_STOP: {
     check: 'C-116.47', where: at("#stopArgs", "is-stop-member"),
@@ -245,8 +212,7 @@ export const ESCALATION_CHECKS = Object.freeze({
   },
   PROVIDER_UNAVAILABLE: {
     check: 'C-116.44', where: at("refuseProviderUnavailable", "is-provider-present"),
-    translation: 'Part of the record this answer depends on cannot be read by your team\'s Civicsmith yet, so nothing '
-      + 'is answered in its place. Nothing was written.',
+    translation: word('refusal.PROVIDER_UNAVAILABLE'),
   },
 });
 

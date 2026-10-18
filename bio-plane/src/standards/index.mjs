@@ -83,7 +83,7 @@ import { STANDARDS_TABLES, migrateStandards } from "./schema.mjs";
 import { instrumentKey, matchSource, referenceKey, sourceCopy, foldCite, isPortionPath } from "./instrument.mjs";
 import { COPY_STATES, HELD_STATES, ACCESS_STATES, FORCES, POLICY_FORCES, ownerWords, forceWords, bindingWords, heldWords,
          accessWords, notPublicWords, copyWords, captureWords, textWithheldWords, noteWords, inForceKnownWords } from "./words.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { LawRecords, LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD,
          weakestCeiling, machineRelate, refuseNoCitation } from "../law-relations/index.mjs";
 
@@ -127,8 +127,7 @@ const PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "ac
 export const PROPOSAL_STATES = Object.freeze(["open", "adopted", "all"]);
 export const PROPOSALS_LIMIT_DEFAULT = 50;
 /* R9, R57: the sentence every proposal is answered with. */
-const PROPOSAL_SAYS = "this is a proposal and not a standard: it is not in the record's standards and no list of "
-  + "standards shows it. Only a member recording a standard, or adopting this proposal, enters one.";
+const PROPOSAL_SAYS = word("standards.proposal_standard_record");
 /* R35, R40: the fields of the T35 acts. */
 const FORCE_KEYS = Object.freeze(["standard", "portion", "force", "holder", "criteria", "citation", "reason", "author", "viewer"]);
 const FORCE_PROPOSE_KEYS = Object.freeze(["standard", "portion", "force", "holder", "criteria", "citation", "why", "proposer",
@@ -157,7 +156,7 @@ const bodyText = (s) => String(s).trim().replace(/^#/gm, " #");
 /* R1 (DEC-88): what is wrong with a declarer's reason, or null when it is one: a string with something other than white
    space in it, at most `REASON_MAX` characters. */
 const reasonFault = (reason) =>
-  reason === undefined || reason === null ? "carries no reason"
+  reason === undefined || reason === null ? word("law-relations.carries_reason")
   : typeof reason !== "string" ? `carries a reason that is not text (${Array.isArray(reason) ? "a list" : typeof reason})`
   : !reason.trim() ? "carries a reason with nothing in it"
   : [...reason].length > REASON_MAX ? `carries a reason of ${[...reason].length} characters, over the ${REASON_MAX} kept`
@@ -176,15 +175,15 @@ export function isDate(v) {
 export function periodInForce(period, date) {
   const from = period ? period.from ?? null : null, to = period ? period.to ?? null : null;
   if (from !== null && date < from)
-    return { state: "not_in_force", why: `the period in force starts ${from}, after ${date}` };
+    return { state: "not_in_force", why: word("standards.why.period_force_starts", { from: String(from), date: String(date) }) };
   if (to !== null && date > to)
-    return { state: "not_in_force", why: `the period in force ended ${to}, before ${date}` };
+    return { state: "not_in_force", why: word("standards.why.period_force_ended", { to: String(to), date: String(date) }) };
   if (from !== null && to !== null)
-    return { state: "in_force", why: `${date} lies within the period in force, ${from} to ${to}` };
-  const missing = [from === null ? "when it came into force" : null, to === null ? "when it ceased to be in force" : null]
+    return { state: "in_force", why: word("standards.why.lies_within_period", { date: String(date), from: String(from), to: String(to) }) };
+  const missing = [from === null ? word("standards.came_force") : null, to === null ? word("standards.ceased_force") : null]
     .filter(Boolean).join(" or ");
   return { state: "undetermined",
-           why: `the record does not state ${missing}, so whether it was in force on ${date} is undetermined` };
+           why: word("standards.why.record_state_whether", { missing: String(missing), date: String(date) }) };
 }
 
 export class Standards {
@@ -278,12 +277,10 @@ export class Standards {
   #view() {
     const ids = this.record.getSetting("jurisdiction_profiles");
     if (!Array.isArray(ids) || !ids.length)
-      return { view: null, why: "your team's Civicsmith has no active jurisdiction profile, so no source of standards is known" };
+      return { view: null, why: word("standards.why.group_civicsmith_active") };
     const c = this.combine(ids);
     if (!c || !c.ok)
-      return { view: null, why: "the active jurisdiction profiles of your team's Civicsmith could not be combined ("
-               + `${[...new Set(((c && c.errors) || []).map((e) => e.code))].join(", ") || "unreadable"}), so no source `
-               + "of standards is known" };
+      return { view: null, why: word("standards.why.active_jurisdiction_profiles", { set: String([...new Set(((c && c.errors) || []).map((e) => e.code))].join(", ") || "unreadable") }) };
     return { view: c.view, why: null };
   }
 
@@ -296,7 +293,7 @@ export class Standards {
     const { view, why } = this.#view();
     if (!view) return undetermined(why);
     const entries = Array.isArray(view.standard_sources) ? view.standard_sources : [];
-    if (!entries.length) return undetermined("the active jurisdiction profiles list no source of standards");
+    if (!entries.length) return undetermined(word("standards.active_jurisdiction_profiles"));
     const text = String(cite ?? "");
     const matches = entries.filter((e) => {
       try { return !!e.cite && new RegExp(e.cite.re, e.cite.flags || "").test(text); } catch { return false; }
@@ -317,9 +314,9 @@ export class Standards {
     for (const f of ["kind", "issuer"])
       if (str(declared[f]) && str(declared[f]) !== first[f])
         differs.push({ field: f, declared: str(declared[f]), source: first[f],
-                       says: `recorded as declared; the matched source says ${f} '${first[f]}'` });
+                       says: word("standards.says.recorded_declared_matched", { finding: String(f), first: String(first[f]) }) });
     return { state: "matched", source: first.source, kind: first.kind, issuer: first.issuer, level,
-             ...(level === "undetermined" ? { level_why: "the matched source states no level" } : {}),
+             ...(level === "undetermined" ? { level_why: word("standards.matched_source_states") } : {}),
              profile: first.profile, basis: first.basis, ...(differs.length ? { differs } : {}) };
   }
 
@@ -395,8 +392,7 @@ export class Standards {
     if (supersedes !== null) {
       /* DEC-49 REGION is-superseded-held */
       if (!this.#row(supersedes))
-        return refusal("STANDARD_SUPERSEDES_UNKNOWN", "no standard answers to the id this one is said to supersede. "
-                       + "Nothing was written.", { supersedes });
+        return refusal("STANDARD_SUPERSEDES_UNKNOWN", localize("standards.index.no_standard_answers_to_the", "no standard answers to the id this one is said to supersede. Nothing was written."), { supersedes });
       /* END DEC-49 REGION is-superseded-held */
       const later = this.#successorOf(supersedes);
       /* DEC-49 REGION is-supersession-once */
@@ -442,8 +438,7 @@ export class Standards {
     const named = a.text != null && !(Array.isArray(a.text) && !a.text.length) && a.text !== "";
     /* DEC-49 REGION is-held-text */
     if (named)
-      return refusal("STANDARD_TEXT_NOT_HELD_AS", `a standard held ${held} holds none of its own words, so it names no text. `
-                     + "Nothing was written.", { held });
+      return refusal("STANDARD_TEXT_NOT_HELD_AS", localize("standards.index.a_standard_held_held_holds", "a standard held {held} holds none of its own words, so it names no text. Nothing was written.", { held: String(held) }), { held });
     /* END DEC-49 REGION is-held-text */
     if (held === "cited") {
       const c = a.cited_by;
@@ -628,7 +623,7 @@ export class Standards {
       if (read) return { ok: true, recognised, family: { state: "matched", ...read, family_key: familyKey(read),
                                                          label: recognised.label ?? null } };
       return { ok: true, recognised, family: { state: "undetermined", key: null, family_key: null,
-        why: view ? "the citation matches no series the active jurisdiction profiles list, and none was declared"
+        why: view ? word("standards.why.citation_matches_series")
                   : why } };
     }
     const d = a.family;
@@ -645,7 +640,7 @@ export class Standards {
     /* END DEC-49 REGION is-family-known */
     const fam = { key: d.key.trim(), series: d.series.trim(), number: d.number.trim() };
     const differs = read && (read.key !== fam.key || read.series !== fam.series || read.number !== fam.number)
-      ? { differs: { read, says: `recorded as declared; the citation reads as ${read.key}/${read.series} ${read.number}` } } : {};
+      ? { differs: { read, says: word("standards.says.recorded_declared_citation", { key: String(read.key), series: String(read.series), number: String(read.number) }) } } : {};
     return { ok: true, recognised, family: { state: "declared", ...fam, family_key: familyKey(fam),
                                              label: held.series.label ?? null, ...differs } };
   }
@@ -675,7 +670,7 @@ export class Standards {
     if (claimed) {
       copy.claimed = claimed;
       if (claimed.says !== copy.copy)
-        copy.claim_differs = `the copy says it is ${claimed.says}; it is recorded as ${copy.copy}, and neither is resolved`;
+        copy.claim_differs = word("standards.copy_says_recorded", { says: String(claimed.says), copy: String(copy.copy) });
     }
     return { ok: true, copy };
   }
@@ -733,9 +728,9 @@ export class Standards {
     if (!isObj(v) || Object.keys(v).some((k) => k !== "captures") || !Array.isArray(v.captures) || v.captures.length !== 2
         || !v.captures.every((c) => typeof c === "string" && /^[0-9a-f]{64}$/.test(c.trim().toLowerCase())))
       return { ok: false, why: "version_basis is {captures: [earlier, later]}, two capture digests" };
-    if (!f.supersedes) return { ok: false, why: "a version read from two captures names the version it supersedes" };
+    if (!f.supersedes) return { ok: false, why: word("standards.why.version_read_two") };
     const [e, l] = v.captures.map((c) => c.trim().toLowerCase());
-    if (e === l) return { ok: false, why: "the two captures are one; their texts do not differ" };
+    if (e === l) return { ok: false, why: word("standards.why.two_captures_texts") };
     /* T36 (N725): each named capture's own receipts (`provenance.receiptsOfCapture`, its R60), never every receipt */
     const rows = [e, l].flatMap((c) => this.#receiptsOf(c));
     const pairs = [];
@@ -743,8 +738,8 @@ export class Standards {
       for (const rl of rows.filter((r) => r.capture_sha === l && r.address_norm === re.address_norm))
         pairs.push({ address: re.address_norm, after: re.first_retrieved, through: rl.first_retrieved });
     const pair = pairs.find((p) => Date.parse(p.after) < Date.parse(p.through));
-    if (!pair) return { ok: false, why: pairs.length ? "the earlier capture was not retrieved before the later one"
-                                                     : "the two captures are not both held as retrieved from one address" };
+    if (!pair) return { ok: false, why: pairs.length ? word("standards.why.earlier_capture_retrieved")
+                                                     : word("standards.why.two_captures_held") };
     return { ok: true, basis: { captures: [e, l], address: pair.address, after: pair.after, through: pair.through,
                                 says: "the period starts after the earlier capture and on or before the later one: it rests on "
                                     + "the captures, never on an enactment date" } };
@@ -773,9 +768,9 @@ export class Standards {
       const value = d != null ? d.trim() : read[field];
       out[field] = { value, declared: d != null, read: read[field],
                      ...(d != null && read[field] !== null && read[field] !== value
-                       ? { says: `recorded as declared; the citation reads ${read[field]}` } : {}),
-                     ...(value === null ? { why: field === "edition" ? "no edition is stated, and none is assumed"
-                                                                     : "the citation states no designation" } : {}) };
+                       ? { says: word("standards.says.recorded_declared_citation_reads", { read: String(read[field]) }) } : {}),
+                     ...(value === null ? { why: field === "edition" ? word("standards.why.edition_stated_none")
+                                                                     : word("standards.why.citation_states_designation") } : {}) };
     }
     let issuerEntity = null;
     if (/^ENT-/.test(f.issuer)) {
@@ -867,7 +862,7 @@ export class Standards {
                                  threshold: { comparator: th.comparator, value: `${fig.sign === "-" ? "-" : ""}${fig.value}`, unit: th.unit.trim(),
                                               as_read: th.value },
                                  period, definition: d === "none" ? "none" : d.trim(),
-                                 ...(d === "none" ? { definition_says: "no definition stated" } : {}) } };
+                                 ...(d === "none" ? { definition_says: word("standards.definition_stated") } : {}) } };
   }
 
   /* R47: the question beside a declaration, an inquiry's bundle the author may see. */
@@ -877,8 +872,7 @@ export class Standards {
     const b = q ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, q) : null;
     /* DEC-49 REGION is-question-held */
     if (!b || b.object_type !== "inquiry" || !this.membership.inSight(q, str(a.author)))
-      return refusal("QUESTION_NOT_HELD", "no question your team's record holds that you may see answers to that id. "
-                     + "Nothing was written.", { question: q.slice(0, 80) || null });
+      return refusal("QUESTION_NOT_HELD", localize("standards.index.no_question_your_teams_record", "no question your team's record holds that you may see answers to that id. Nothing was written."), { question: q.slice(0, 80) || null });
     /* END DEC-49 REGION is-question-held */
     return { ok: true, question: q };
   }
@@ -947,7 +941,7 @@ export class Standards {
     const copy = a.copy ?? sourceCopyIs;
     const copyAnswer = { copy, source_copy: sourceCopyIs, declared: a.copy != null,
                          ...(a.copy != null && a.copy !== sourceCopyIs
-                           ? { says: `recorded as declared; the matched source's code states ${sourceCopyIs}` } : {}) };
+                           ? { says: word("standards.says.recorded_declared_matched_source", { source_copy_is: String(sourceCopyIs) }) } : {}) };
     let currentThrough = null;
     if (a.current_through != null) {
       const c = a.current_through;
@@ -1091,7 +1085,7 @@ export class Standards {
                    ...(notPublic ? notPublicWords(notPublic.release_by) : {}) };
     return {
       family: safeJson(row.family_json) || { state: "undetermined", key: null, family_key: null,
-                                             why: "recorded before a family was read" },
+                                             why: word("standards.why.recorded_family_read") },
       owner: { issuer: row.issuer, label: issuerLabel, entity: row.issuer_entity ?? null,
                sector: issuerEntity ? issuerEntity.sector ?? null : null },
       held, ...(held === "cited" ? { cited_by: heldDetail } : {}), ...(held === "absent" ? { search: heldDetail } : {}),
@@ -1099,9 +1093,9 @@ export class Standards {
       force_source: safeJson(row.force_source_json),
       designation: row.designation ?? null, edition: row.edition ?? null,
       designation_read: (safeJson(row.designation_json) || {}).designation
-        || { value: null, declared: false, read: null, why: "recorded before a designation was read" },
+        || { value: null, declared: false, read: null, why: word("standards.why.recorded_designation_read") },
       edition_read: (safeJson(row.designation_json) || {}).edition
-        || { value: null, declared: false, read: null, why: "recorded before an edition was read" },
+        || { value: null, declared: false, read: null, why: word("standards.why.recorded_edition_read") },
       access, target: safeJson(row.target_json), question: qn,
       sight: sight.class === "bundle" ? { class: sight.released ? "group" : "bundle", released: sight.released || null }
                                       : { class: "group" },
@@ -1142,12 +1136,12 @@ export class Standards {
   /* R18, R19 as read back: a standard recorded before them states none (its key undetermined, said so). */
   #lawAnswer(row) {
     const instrument = safeJson(row.instrument_json)
-      || { state: "undetermined", key: null, why: "recorded before instrument keys were composed" };
+      || { state: "undetermined", key: null, why: word("standards.why.recorded_instrument_keys") };
     return { instrument,
              portion: row.portion_path ? { path: row.portion_path, content_id: row.portion_content } : null,
              requires: safeJson(row.requires_json) || [],
              copy: safeJson(row.copy_json) || { copy: "undetermined", source_copy: null, declared: false,
-                                                 says: "recorded before a copy status was recorded" },
+                                                 says: word("standards.says.recorded_copy_status") },
              current_through: row.current_through ? { date: row.current_through, basis: row.current_through_basis } : null,
              period_basis: safeJson(row.period_basis_json) };
   }
@@ -1207,20 +1201,20 @@ export class Standards {
   #eventDay(eventId, edge, viewer) {
     const ev = this.events;
     if (!ev || typeof ev.readEvent !== "function")
-      return { day: null, why: `the event ${eventId} cannot be read here: the events module is not wired to standards` };
+      return { day: null, why: word("standards.why.event_cannot_read", { event_id: String(eventId) }) };
     let r;
     /* a caller that names no viewer is internal and is not asked sight (membership's terms); events fails closed on an
        absent viewer, so the internal read is asked as the machine's stamp, which sees every bundle (membership R43) and
        only reads */
     try { r = ev.readEvent({ eventId, viewer: viewer ?? INTERNAL_READER }); } catch { r = null; }
     if (!r || r.ok === false || r.found === false)
-      return { day: null, why: `the event ${eventId} is not held, or may not be read` };
+      return { day: null, why: word("standards.why.event_held_read", { event_id: String(eventId) }) };
     const w = r.when !== undefined ? r.when : r.event ? r.event.when : undefined;
     if (!w || w === "undetermined" || w.undetermined)
-      return { day: null, why: `the event ${eventId} has no when the record can read (${w && w.why ? w.why : "placed nowhere"})` };
-    if (w.precision === "edtf") return { day: null, why: `the event ${eventId}'s when is a band (${w.value ?? w.start}), not a day` };
+      return { day: null, why: word("standards.why.event_record_read", { event_id: String(eventId), words: String(w && w.why ? w.why : "placed nowhere") }) };
+    if (w.precision === "edtf") return { day: null, why: word("standards.why.event_band_day", { event_id: String(eventId), value: String(w.value ?? w.start) }) };
     if (w.precision === "upper_bound")
-      return { day: null, why: `the event ${eventId}'s when is an upper bound only ("on or before"), not a day` };
+      return { day: null, why: word("standards.why.event_upper_bound", { event_id: String(eventId) }) };
     /* events R9: `start` and `end` are the half-open span of instants the when covers, in its zone; the edge's day is
        the local day of its first or last instant */
     let d = null;
@@ -1229,7 +1223,7 @@ export class Standards {
         : w.start;
       d = typeof at === "string" && typeof w.zone === "string" ? localDay(at, w.zone) : null;
     } catch { d = null; }
-    return isDate(d) ? { day: d, why: null } : { day: null, why: `the event ${eventId}'s when states no day at its ${edge}` };
+    return isDate(d) ? { day: d, why: null } : { day: null, why: word("standards.why.event_states_day", { event_id: String(eventId), edge: String(edge) }) };
   }
 
   /* R20: a version's period as the record states it: its stated bounds, a bound given as an event read from that
@@ -1247,7 +1241,7 @@ export class Standards {
     }
     for (const r of this.#law.boundsOn(row.standard_id)) {
       const eff = r.effective_date ? { day: r.effective_date } : this.#eventDay(r.effective_event, r.effective_edge, viewer);
-      if (!eff.day) { out.why.to = `${r.relation_id} (${r.type}) bounds it, and ${eff.why}`; out.unread = true; continue; }
+      if (!eff.day) { out.why.to = word("standards.bounds", { relation_id: String(r.relation_id), type: String(r.type), why: String(eff.why) }); out.unread = true; continue; }
       const end = new Date(Date.parse(`${eff.day}T00:00:00Z`) - 86400000).toISOString().slice(0, 10);
       if (out.to === null || end < out.to) out.to = end;
       out.bound_by.push({ relation: r.relation_id, type: r.type, effective: eff.day });
@@ -1259,7 +1253,7 @@ export class Standards {
   #versionAt(row, date, viewer) {
     /* R34: a standard whose text is not held is never a measure, and never in force */
     if ((row.held || "text") !== "text")
-      return { state: "undetermined", why: "its text is not held, so it is not a measure",
+      return { state: "undetermined", why: word("standards.why.text_held_measure"),
                period: { from: row.period_from ?? null, to: row.period_to ?? null }, bound_by: [] };
     const v0 = this.#versionAtPeriod(row, date, viewer);
     if (v0.state === "not_in_force") return v0;
@@ -1269,11 +1263,9 @@ export class Standards {
       const zone = this.#zone();
       const after = localDay(vb.after, zone), through = localDay(vb.through, zone);
       if (date < after)
-        return { ...v0, state: "not_in_force", why: `this version was first captured after ${after}: the capture of ${after} `
-                 + "holds the text it superseded" };
+        return { ...v0, state: "not_in_force", why: word("standards.why.version_first_captured", { after: String(after), after_2: String(after) }) };
       if (date < through)
-        return { ...v0, state: "undetermined", why: `this version's text changed between the captures of ${after} and `
-                 + `${through}, so whether it was in force on ${date} is undetermined` };
+        return { ...v0, state: "undetermined", why: word("standards.why.version_text_changed", { after: String(after), through: String(through), date: String(date) }) };
     }
     /* R38: a portion another held standard overrides on the date */
     const ov = this.#overriddenAt(row, date, viewer);
@@ -1301,16 +1293,15 @@ export class Standards {
         const next = by.instrument ? this.#one(`SELECT period_from FROM standards WHERE instrument=? AND supersedes=?`,
                                                by.instrument, by.standard_id) : null;
         until = next ? next.period_from ?? null : undefined;
-        if (until === null) why = "the revision that ends it states no start";
+        if (until === null) why = word("standards.why.revision_ends_states");
       }
       const overriding = { overridden_by: { standard: by.standard_id, portion: by.portion_path ?? null } };
       if (until === null || own.state === "undetermined")
         return { state: "undetermined", ...overriding,
-                 why: `${by.standard_id} overrides this portion, and ${why || own.why}, so whether it was overridden on ${date} is undetermined` };
+                 why: word("standards.why.overrides_portion_whether", { standard_id: String(by.standard_id), why: String(why || own.why), date: String(date) }) };
       if (until === undefined || date < until)
         return { state: "overridden", ...overriding,
-                 why: `${by.standard_id}${by.portion_path ? ` (${by.portion_path})` : ""} displaces this portion on ${date}`
-                    + (until ? `, until ${until}` : ", until its own key's next revision") };
+                 why: word("standards.why.displaces_portion", { standard_id: String(by.standard_id), portion_path: String(by.portion_path ? ` (${by.portion_path})` : ""), date: String(date), until: String(until ? `, until ${until}` : ", until its own key's next revision") }) };
     }
     return null;
   }
@@ -1323,24 +1314,24 @@ export class Standards {
     try {
       v = validAt({ valid: { from: bound("from"), to: p.unread && p.to === null ? { event: "unread", edge: "to" } : bound("to"),
                              precision: "day", zone } }, { value: date, precision: "day", zone });
-    } catch { v = { undetermined: true, why: "the period could not be read" }; }
+    } catch { v = { undetermined: true, why: word("standards.why.period_read") }; }
     const by = p.bound_by.length ? ` (bounded by ${p.bound_by.map((b) => `${b.relation}, which ${b.type.replace(/s$/, "s")} it `
                                                      + `effective ${b.effective}`).join("; ")})` : "";
     let state, why;
     if (v === "out") {
       state = "not_in_force";
-      why = p.from !== null && date < p.from ? `the period in force starts ${p.from}, after ${date}${by}`
-        : `the period in force ended ${p.to}, before ${date}${by}`;
+      why = p.from !== null && date < p.from ? word("standards.period_force_starts", { from: String(p.from), date: String(date), by: String(by) })
+        : word("standards.period_force_ended", { to: String(p.to), date: String(date), by: String(by) });
     } else if (v === "in") {
-      state = "in_force"; why = `${date} lies within the period in force, ${p.from} to ${p.to}${by}`;
+      state = "in_force"; why = word("standards.why.lies_within_period_force", { date: String(date), from: String(p.from), to: String(p.to), by: String(by) });
     } else {
       state = "undetermined";
-      const missing = [p.from === null ? p.why.from || "when it came into force" : null,
-                       p.to === null ? p.why.to || "when it ceased to be in force" : null].filter(Boolean);
+      const missing = [p.from === null ? p.why.from || word("standards.came_force") : null,
+                       p.to === null ? p.why.to || word("standards.ceased_force") : null].filter(Boolean);
       why = missing.length && !p.why.from && !p.why.to
-        ? `the record does not state ${missing.join(" or ")}, so whether it was in force on ${date} is undetermined`
-        : missing.length ? `${missing.join("; ")}, so whether it was in force on ${date} is undetermined`
-        : (v && v.why) || `whether it was in force on ${date} is undetermined`;
+        ? word("standards.why.record_state_whether", { missing: String(missing.join(" or ")), date: String(date) })
+        : missing.length ? word("standards.whether_force_undetermined", { missing: String(missing.join("; ")), date: String(date) })
+        : (v && v.why) || word("standards.whether_it_was_in_force", { date: String(date) });
     }
     /* R51: a version whose end is not stated (a null `to`, or an end event with no when), known in force through a date
        by a member's standing record (R50): a date within {from, to: through} is in force, naming the record; any other
@@ -1359,8 +1350,7 @@ export class Standards {
       const later = row.instrument ? this.#one(`SELECT standard_id FROM standards WHERE instrument=? AND standard_id<>?
                                                  AND period_from IS NOT NULL AND period_from > ? LIMIT 1`,
                                                row.instrument, row.standard_id, row.current_through) : null;
-      if (!later) { state = "undetermined"; why = `versions after ${row.current_through} not held: this copy is a codifier's, `
-                                                 + `current through ${row.current_through}, and ${date} is after it`; }
+      if (!later) { state = "undetermined"; why = word("standards.why.versions_held_copy", { current_through: String(row.current_through), current_through_2: String(row.current_through), date: String(date) }); }
     }
     return { state, why, period: { from: p.from, to: p.to }, bound_by: p.bound_by, ...(known ? { known_through: known } : {}) };
   }
@@ -1400,7 +1390,7 @@ export class Standards {
       const base = { ok: true, date, key: str(key), portion: p };
       if (!rows.length)
         return { ...base, state: "undetermined", standard: null, version: null,
-                 why: `no version of ${str(key)}${p !== null ? ` at ${p}` : ""} is held, so whether it was in force is undetermined` };
+                 why: word("standards.why.version_held_whether", { key: String(str(key)), item: String(p !== null ? ` at ${p}` : "") }) };
       const vs = rows.slice(0, PAGE_MAX).map((r) => ({ id: r.standard_id, ...this.#versionAt(r, date, viewer) }));
       const inn = vs.filter((v) => v.state === "in_force" || v.state === "overridden"), unsure = vs.filter((v) => v.state === "undetermined");
       if (inn.length === 1 && !unsure.length)
@@ -1409,15 +1399,15 @@ export class Standards {
                  ...(inn[0].known_through ? { in_force_through: inn[0].known_through } : {}) };
       if (inn.length > 1)
         return { ...base, state: "undetermined", standard: null, version: null, versions: inn.map((v) => v.id),
-                 why: `${inn.map((v) => v.id).join(" and ")} each cover ${date}; none is preferred, so which was in force is undetermined` };
+                 why: word("standards.why.cover_none_preferred", { inn: String(inn.map((v) => v.id).join(" and ")), date: String(date) }) };
       if (unsure.length)
         return { ...base, state: "undetermined", standard: null, version: null, versions: [...inn, ...unsure].map((v) => v.id),
-                 why: `no held version decides ${date}: ${unsure.map((v) => `${v.id}: ${v.why}`).join("; ")}` };
+                 why: word("standards.why.held_version_decides", { date: String(date), unsure: String(unsure.map((v) => `${v.id}: ${v.why}`).join("; ")) }) };
       return { ...base, state: "not_in_force", standard: null, version: null, versions: vs.map((v) => v.id),
-               why: `every held version's period excludes ${date}: ${vs.map((v) => `${v.id}: ${v.why}`).join("; ")}`,
+               why: word("standards.why.held_version_period", { date: String(date), vs: String(vs.map((v) => `${v.id}: ${v.why}`).join("; ")) }),
                ...(rows.length > PAGE_MAX ? { truncated: true } : {}) };
     } catch {
-      return { ok: true, date, state: "undetermined", standard: null, version: null, why: "the versions could not be read" };
+      return { ok: true, date, state: "undetermined", standard: null, version: null, why: word("standards.why.versions_read") };
     }
   }
 
@@ -1464,8 +1454,7 @@ export class Standards {
     const items = page.map(({ r, f }) => ({ ...this.#answer(r, viewer), ...(f ? { in_force: { state: f.state, why: f.why } } : {}) }));
     return { ok: true, items, count: items.length, limit: n, truncated,
              cursor: truncated ? page[page.length - 1].r.standard_id : null,
-             ...(date ? { at: date, says: `standards in force on ${date}, or whose period does not decide it (stated `
-                                          + "undetermined); a standard whose period excludes the date is left out" }
+             ...(date ? { at: date, says: word("standards.says.standards_force_period", { date: String(date) }) }
                       : {}) };
   }
 
@@ -1573,11 +1562,11 @@ export class Standards {
       const items = all.slice(0, n).map((e) => ({ ...e, cite: this.#row(e.standard).cite }));
       return { ok: true, target: t, of: "document", items, count: items.length, limit: n,
                truncated: all.length > n || refs.length >= SCAN_FOR,
-               says: visible.length || !refs.length ? "the held standards this document's readings cite"
-                 : "no document you may see answers to that id" };
+               says: visible.length || !refs.length ? word("standards.says.held_standards_document")
+                 : word("standards.says.document_see_answers") };
     } catch {
       return { ok: true, target: t, items: [], count: 0, limit: n, truncated: false,
-               undetermined: { why: "the readings' references could not be read here, so what cites what is undetermined" } };
+               undetermined: { why: word("standards.why.readings_references_read") } };
     }
   }
 
@@ -1650,8 +1639,7 @@ export class Standards {
                      + "words that state it. Nothing was written.");
     /* END DEC-49 REGION is-force-cited */
     if (!this.#texts(sid).includes(citation))
-      return refusal("STANDARD_PORTION_NOT_IN_TEXT", `${citation.slice(0, 80)} is not one of this standard's text passages. `
-                     + "Nothing was written.", { content_id: citation.slice(0, 80) });
+      return refusal("STANDARD_PORTION_NOT_IN_TEXT", localize("standards.index.citation_is_not_one_of", "{citation} is not one of this standard's text passages. Nothing was written.", { citation: String(citation.slice(0, 80)) }), { content_id: citation.slice(0, 80) });
     return { ok: true, fields: { standard: sid, portion, force: a.force, holder, criteria, citation } };
   }
 
@@ -1774,7 +1762,7 @@ export class Standards {
       this.sql.exec(`INSERT INTO standard_force_withdrawals (force_id, standard_id, reason, withdrawn_by, withdrawn_at)
                      VALUES (?,?,?,?,?)`, f.force_id, f.standard_id, reason, str(author), at);
       return { ok: true, force: f.force_id, withdrawn: { by: str(author), at, reason },
-               says: "withdrawn, never deleted: the row stays, read as withdrawn" };
+               says: word("standards.says.withdrawn_deleted_row") };
     });
   }
 
@@ -1804,15 +1792,13 @@ export class Standards {
     const s = this.#sight(row);
     /* DEC-49 REGION is-held-from-source */
     if (s.class !== "bundle" || s.released)
-      return refusal("NOT_HELD_FROM_SOURCE", `${sid} is ${s.released ? "already released and " : ""}seen by every member of `
-                     + "your team. Nothing was written.", { standard: sid });
+      return refusal("NOT_HELD_FROM_SOURCE", localize("standards.index.sid_is_v1_seen_by", "{sid} is {v1}seen by every member of your team. Nothing was written.", { sid: String(sid), v1: String(s.released ? "already released and " : "") }), { standard: sid });
     /* END DEC-49 REGION is-held-from-source */
     const who = str(author).replace(/^member:/, "");
     const owners = this.#releaseBy(s);
     /* DEC-49 REGION is-release-owner */
     if (!owners.length || !owners.every((p) => p.owners.includes(who)))
-      return refusal("RELEASE_NOT_OWNER", "only an owner of the project its source material is filed in may release it. "
-                     + "Nothing was written.", { release_by: owners });
+      return refusal("RELEASE_NOT_OWNER", localize("standards.index.only_an_owner_of_the", "only an owner of the project its source material is filed in may release it. Nothing was written."), { release_by: owners });
     /* END DEC-49 REGION is-release-owner */
     const fault = reasonFault(reason);
     if (fault) return refuseReason(fault);
@@ -1821,7 +1807,7 @@ export class Standards {
       this.sql.exec(`INSERT INTO standard_releases (standard_id, reason, released_by, released_at) VALUES (?,?,?,?)`,
                     sid, reason, str(author), at);
       return { ok: true, standard: sid, released: { by: str(author), at, reason },
-               says: "released to every member of your team from now on; a release is never undone" };
+               says: word("standards.says.released_member_group") };
     });
   }
 
@@ -1863,8 +1849,7 @@ export class Standards {
     const edition = typeof a.edition === "string" ? a.edition.trim() : "";
     /* DEC-49 REGION is-adoption-edition */
     if (!edition || [...edition].length > EDITION_MAX)
-      return refusal("ADOPTION_NO_EDITION", `an adoption names the edition adopted, at most ${EDITION_MAX} characters. `
-                     + "Nothing was written.", { max: EDITION_MAX });
+      return refusal("ADOPTION_NO_EDITION", localize("standards.index.an_adoption_names_the_edition", "an adoption names the edition adopted, at most {EDITION_MAX} characters. Nothing was written.", { EDITION_MAX: String(EDITION_MAX) }), { max: EDITION_MAX });
     /* END DEC-49 REGION is-adoption-edition */
     const citation = typeof a.citation === "string" ? a.citation.trim() : "";
     /* DEC-49 REGION is-adoption-cited */
@@ -1941,28 +1926,27 @@ export class Standards {
       const base = { ok: true, body: b, date, designation: str(designation) || null, standard: str(standard) || null };
       if (unread.length)
         return { ...base, state: "undetermined", adoptions: unread.map((d) => d.r.adoption_id),
-                 why: `when ${unread.map((d) => d.r.adoption_id).join(", ")} took effect is not read: ${unread.map((d) => d.from.why).join("; ")}` };
+                 why: word("standards.why.took_effect_read", { unread: String(unread.map((d) => d.r.adoption_id).join(", ")), unread_2: String(unread.map((d) => d.from.why).join("; ")) }) };
       const sorted = dated.sort((x, y) => (x.from.day < y.from.day ? -1 : x.from.day > y.from.day ? 1 : 0));
       const before = sorted.filter((d) => d.from.day <= date);
       if (!before.length)
         return { ...base, state: "undetermined", edition: null, adoptions: [],
-                 why: `no adoption by ${b} held takes effect on or before ${date}` };
+                 why: word("standards.why.adoption_held_takes", { second: String(b), date: String(date) }) };
       const lastDay = before[before.length - 1].from.day;
       const deciding = before.filter((d) => d.from.day === lastDay);
       if (deciding.length > 1 && new Set(deciding.map((d) => d.r.edition)).size > 1)
         return { ...base, state: "undetermined", edition: null, adoptions: deciding.map((d) => d.r.adoption_id),
-                 why: `${deciding.map((d) => d.r.adoption_id).join(" and ")} each take effect ${lastDay}; none is preferred` };
+                 why: word("standards.why.take_effect_none", { deciding: String(deciding.map((d) => d.r.adoption_id).join(" and ")), last_day: String(lastDay) }) };
       const d = deciding[0];
       const own = this.#row(d.r.standard_id);
       const editionDate = own && own.period_from ? own.period_from : null;
       const lag = editionDate ? Math.round((Date.parse(`${d.from.day}T00:00:00Z`) - Date.parse(`${editionDate}T00:00:00Z`)) / 86400000) : null;
       return { ...base, state: "in_force", edition: d.r.edition, adoption: this.#adoptionAnswer(d.r),
-               lag: lag === null ? { days: null, why: "the edition's own date is not held" }
+               lag: lag === null ? { days: null, why: word("standards.why.edition_date_held") }
                                  : { days: lag, edition_from: editionDate, adopted_from: d.from.day },
-               why: `${b} adopted edition ${d.r.edition} effective ${d.from.day} (${d.r.adoption_id}), and no later adoption `
-                  + `by it takes effect by ${date}` };
+               why: word("standards.why.adopted_edition_effective", { second: String(b), edition: String(d.r.edition), day: String(d.from.day), adoption_id: String(d.r.adoption_id), date: String(date) }) };
     } catch {
-      return { ok: true, state: "undetermined", why: "the adoptions could not be read" };
+      return { ok: true, state: "undetermined", why: word("filings.why.adoptions_read") };
     }
   }
 
@@ -2010,7 +1994,7 @@ export class Standards {
       this.sql.exec(`INSERT INTO standard_benchmarks (benchmark_id, standard_id, body, reason, author, at) VALUES (?,?,?,?,?,?)`,
                     id, sid, body, a.reason, str(a.author), at);
       return { ok: true, benchmark: { id, standard: sid, body, reason: a.reason, by: str(a.author), at },
-               says: "declared a benchmark: a comparison, never a finding that the body is bound" };
+               says: word("standards.says.declared_benchmark_comparison") };
     });
   }
 
@@ -2034,12 +2018,11 @@ export class Standards {
       if (r.state === "binds") return answer("binds", r.why, r.rests_on);
       if (r.state === "undetermined") return answer("undetermined", r.why, r.rests_on);
       if (BENCHMARK_KINDS.includes(row.kind))
-        return answer("benchmark", `nothing held puts ${sid} in force on ${bodyLabel} on ${date}: it is a benchmark, not `
-                      + "binding on the body", r.rests_on);
-      return answer("undetermined", "whether this law binds the body is not recorded", r.rests_on);
+        return answer("benchmark", word("standards.nothing_held_puts", { sid: String(sid), body_label: String(bodyLabel), date: String(date) }), r.rests_on);
+      return answer("undetermined", word("standards.whether_law_binds"), r.rests_on);
     } catch {
       return { ok: true, standard: str(standard), body: str(body) || null, date, state: "undetermined",
-               why: "what binds the body could not be read", rests_on: [] };
+               why: word("standards.why.binds_body_read"), rests_on: [] };
     }
   }
 
@@ -2052,8 +2035,8 @@ export class Standards {
     const inForce = this.#versionAt(row, date, viewer);
     if ((row.issuer_entity && row.issuer_entity === body) || (!row.issuer_entity && row.issuer === body)) {
       rests.push({ issuer: body });
-      if (inForce.state === "in_force") return { state: "binds", why: `${body} issued it, and it is in force on ${date}`, rests_on: rests };
-      if (inForce.state === "undetermined") unsure.push(`it is ${body}'s own, and ${inForce.why}`);
+      if (inForce.state === "in_force") return { state: "binds", why: word("standards.why.issued_force", { body: String(body), date: String(date) }), rests_on: rests };
+      if (inForce.state === "undetermined") unsure.push(word("standards.text", { body: String(body), why: String(inForce.why) }));
     }
     /* an adoption by the body puts it in force (R40) only while this version is itself in force on the date (R20, R51):
        adopted, then ended, binds no longer; adopted with no end stated and no record of it in force through the date
@@ -2062,12 +2045,12 @@ export class Standards {
     for (const ad of this.#rows(`SELECT * FROM standard_body_adoptions WHERE standard_id=? AND body=? ORDER BY adoption_id`, sid, body)) {
       const f = this.#adoptionFrom(ad, viewer);
       rests.push({ adoption: ad.adoption_id });
-      if (!f.day) { unsure.push(`${ad.adoption_id}'s start is not read: ${f.why}`); continue; }
+      if (!f.day) { unsure.push(word("standards.start_read", { adoption_id: String(ad.adoption_id), why: String(f.why) })); continue; }
       if (f.day <= date && (!started || f.day < started.day)) started = { ad, day: f.day };
     }
     if (started) {
-      const by = `${body} adopted it (${started.ad.adoption_id}), effective ${started.day}`;
-      if (inForce.state === "in_force") return { state: "binds", why: `${by}, and it is in force on ${date} (${inForce.why})`, rests_on: rests };
+      const by = word("standards.adopted_effective", { body: String(body), adoption_id: String(started.ad.adoption_id), day: String(started.day) });
+      if (inForce.state === "in_force") return { state: "binds", why: word("standards.why.force", { by: String(by), date: String(date), why: String(inForce.why) }), rests_on: rests };
       if (inForce.state === "undetermined") unsure.push(`${by}, and ${inForce.why}`);
     }
     for (const im of this.#rows(`SELECT * FROM standard_impositions WHERE standard_id=? AND body=? ORDER BY imposition_id`, sid, body)) {
@@ -2077,10 +2060,10 @@ export class Standards {
       const lf = this.#versionAt(law, date, viewer);
       /* the imposing law binds from its own in-force date (R20), and puts in force only a version itself in force (R43) */
       if (lf.state === "in_force" && inForce.state === "in_force")
-        return { state: "binds", why: `${im.law} imposes it on ${body} and is in force on ${date}, and it is in force on ${date} (${inForce.why})`,
+        return { state: "binds", why: word("standards.why.imposes_force_force", { law: String(im.law), body: String(body), date: String(date), date_2: String(date), why: String(inForce.why) }),
                  rests_on: rests };
-      if (lf.state === "undetermined") unsure.push(`${im.law} imposes it, and ${lf.why}`);
-      else if (lf.state === "in_force" && inForce.state === "undetermined") unsure.push(`${im.law} imposes it, and ${inForce.why}`);
+      if (lf.state === "undetermined") unsure.push(word("standards.imposes", { law: String(im.law), why: String(lf.why) }));
+      else if (lf.state === "in_force" && inForce.state === "undetermined") unsure.push(word("standards.imposes", { law: String(im.law), why: String(inForce.why) }));
     }
     for (const inc of this.#incorporatedBy(sid, viewer)) {
       if (seen.has(inc.from)) continue;
@@ -2090,10 +2073,10 @@ export class Standards {
       rests.push({ incorporated_by: inc.from, relation: inc.id });
       /* an incorporating standard that binds the body puts in force only a version itself in force (R43, R20) */
       if (r.state === "binds" && inForce.state === "in_force")
-        return { state: "binds", why: `${inc.from} incorporates it and binds ${body} (${r.why}), and it is in force on ${date} (${inForce.why})`,
+        return { state: "binds", why: word("standards.why.incorporates_binds_force", { from: String(inc.from), body: String(body), why: String(r.why), date: String(date), why_2: String(inForce.why) }),
                  rests_on: rests };
-      if (r.state === "undetermined") unsure.push(`${inc.from} incorporates it, and ${r.why}`);
-      else if (r.state === "binds" && inForce.state === "undetermined") unsure.push(`${inc.from} incorporates it and binds ${body}, and ${inForce.why}`);
+      if (r.state === "undetermined") unsure.push(word("standards.incorporates", { from: String(inc.from), why: String(r.why) }));
+      else if (r.state === "binds" && inForce.state === "undetermined") unsure.push(word("standards.incorporates_binds", { from: String(inc.from), body: String(body), why: String(inForce.why) }));
     }
     return unsure.length ? { state: "undetermined", why: unsure.join("; "), rests_on: rests } : { state: "none", why: null, rests_on: rests };
   }
@@ -2152,8 +2135,7 @@ export class Standards {
       if (checkedDay === null) checkedDay = last.slice(0, 10);
       /* DEC-49 REGION is-through-checked */
       if (a.through > checkedDay)
-        return refusal("THROUGH_AFTER_CHECK", `the source was last retrieved on ${checkedDay}, and ${a.through} is after it. `
-                       + "Nothing was written.", { through: a.through, last_retrieved: checkedDay });
+        return refusal("THROUGH_AFTER_CHECK", localize("standards.index.the_source_was_last_retrieved", "the source was last retrieved on {checkedDay}, and {through} is after it. Nothing was written.", { checkedDay: String(checkedDay), through: String(a.through) }), { through: a.through, last_retrieved: checkedDay });
       /* END DEC-49 REGION is-through-checked */
     }
     const fault = reasonFault(a.reason);
@@ -2186,8 +2168,7 @@ export class Standards {
     const r = typeof record === "string" && record ? this.#one(`SELECT * FROM standard_in_force_through WHERE record_id=?`, record) : null;
     /* DEC-49 REGION is-through-record-held */
     if (!r || !this.#readable(r.standard_id, viewer ?? str(author)))
-      return refusal("NO_SUCH_RECORD", "no record of a version known in force through a date answers to that id here. "
-                     + "Nothing was written.", { record: str(record) || null });
+      return refusal("NO_SUCH_RECORD", localize("standards.index.no_record_of_a_version", "no record of a version known in force through a date answers to that id here. Nothing was written."), { record: str(record) || null });
     /* END DEC-49 REGION is-through-record-held */
     const fault = reasonFault(reason);
     if (fault) return refuseReason(fault);
@@ -2199,7 +2180,7 @@ export class Standards {
       this.sql.exec(`INSERT INTO standard_in_force_through_withdrawals (record_id, standard_id, reason, withdrawn_by, withdrawn_at)
                      VALUES (?,?,?,?,?)`, r.record_id, r.standard_id, reason, str(author), at);
       return { ok: true, record: r.record_id, withdrawn: { by: str(author), at, reason },
-               says: "withdrawn, never deleted: the record stays, read as withdrawn" };
+               says: word("standards.says.withdrawn_deleted_record") };
     });
   }
 
@@ -2292,7 +2273,7 @@ export class Standards {
       return { ...base, items: all.slice(0, n), truncated: all.length > n };
     } catch {
       return { ok: true, module: CONNECTION_OWNER, capture_sha: typeof captureSha === "string" ? captureSha.trim().toLowerCase() : null,
-               items: [], truncated: false, undetermined: { why: "the rows citing this capture could not be read here" } };
+               items: [], truncated: false, undetermined: { why: word("standards.why.rows_citing_capture") } };
     }
   }
 
@@ -2396,8 +2377,7 @@ export class Standards {
     const act = a.act == null || a.act === "" ? null : a.act;
     /* DEC-49 REGION is-proposal-act */
     if (act !== null && (typeof act !== "string" || !act.trim() || act.length > ACT_MAX))
-      return refusal("STANDARD_ACT_INVALID", `the act a proposal names is an id of at most ${ACT_MAX} characters. `
-                     + "Nothing was written.", { max: ACT_MAX });
+      return refusal("STANDARD_ACT_INVALID", localize("standards.index.the_act_a_proposal_names", "the act a proposal names is an id of at most {ACT_MAX} characters. Nothing was written.", { ACT_MAX: String(ACT_MAX) }), { max: ACT_MAX });
     /* END DEC-49 REGION is-proposal-act */
     return this.record.transact(() => {
       const at = this.#when();
@@ -2511,7 +2491,7 @@ export class Standards {
                cursor: truncated ? items[items.length - 1].id : null };
     } catch {
       return { ok: true, project: typeof project === "string" ? project.trim() : null, items: [], count: 0, truncated: false,
-               cursor: null, undetermined: { why: "the proposals could not be read here" } };
+               cursor: null, undetermined: { why: word("standards.why.proposals_read") } };
     }
   }
 
@@ -2547,8 +2527,8 @@ export class Standards {
     });
     if (!r || !r.ok) return r;
     return { ...r, adopted: { proposal: p.proposal_id, from_proposal: fromProposal, why: p.why, why_by: p.proposed_by,
-                              says: fromProposal.length ? `${fromProposal.join(", ")} taken from the proposal as it was made`
-                                                        : "every field stated by the adopting member" } };
+                              says: fromProposal.length ? word("standards.says.taken_proposal_made", { from_proposal: String(fromProposal.join(", ")) })
+                                                        : word("standards.says.field_stated_adopting") } };
   }
 
   /* R10: a proposal is adopted at most once. */
@@ -2578,8 +2558,7 @@ const CORE_TAIL = Object.freeze(["produced_by:", "  mode: human", "  capability_
  *  character, are kept whole in body sections; the front matter holds what the grammar holds bare. */
 function standardDoc({ id, cite, kind, issuer, reason, texts, period, supersedes, source, proposal, author, at }) {
   const src = source && source.state === "matched"
-    ? `Matched: ${source.source} (${source.kind}, ${source.issuer}, level ${source.level}), from the profile `
-      + `${source.profile} (basis ${source.basis}).`
+    ? word("standards.matched_level_profile", { source: String(source.source), kind: String(source.kind), issuer: String(source.issuer), level: String(source.level), profile: String(source.profile), basis: String(source.basis) })
     : `Undetermined: ${source ? source.why : "not read"}.`;
   return ["---", `id: ${id}`, `object_type: ${STANDARD}`, `schema: ${STANDARD}@1`, `title: ${q(titleOf(cite))}`,
     "current_state: recorded", "prior_state: null", `created: ${q(at)}`, `last_updated: ${q(at)}`, `kind: ${kind}`,
@@ -2643,8 +2622,7 @@ export function familyKey(family) {
 /* R35, R50: a standard held without its text, so nothing is read from its words (minted here, DEC-49). */
 function refuseTextNotHeld(sid, held) {
   /* DEC-49 REGION is-force-text-held */
-  return refusal("FORCE_TEXT_NOT_HELD", `${sid} is held ${held}, without its text, so nothing is read from its words. `
-                 + "Nothing was written.", { standard: sid, held });
+  return refusal("FORCE_TEXT_NOT_HELD", localize("standards.index.sid_is_held_held_without", "{sid} is held {held}, without its text, so nothing is read from its words. Nothing was written.", { sid: String(sid), held: String(held) }), { standard: sid, held });
   /* END DEC-49 REGION is-force-text-held */
 }
 
@@ -2715,8 +2693,7 @@ function refuseWhyInvalid() {
 
 function refuseNoCite(length) {
   /* DEC-49 REGION is-standard-cited */
-  return refusal("STANDARD_NO_CITE", length ? `a citation is at most ${CITE_MAX} characters, and this one is ${length}. `
-                 + "Nothing was written." : "a standard is recorded with its citation. Nothing was written.",
+  return refusal("STANDARD_NO_CITE", length ? localize("standards.index.a_citation_is_at_most", "a citation is at most {CITE_MAX} characters, and this one is {length}. Nothing was written.", { CITE_MAX: String(CITE_MAX), length: String(length) }) : "a standard is recorded with its citation. Nothing was written.",
                  { max: CITE_MAX });
   /* END DEC-49 REGION is-standard-cited */
 }
@@ -2856,9 +2833,9 @@ function ownerRead(a) {
   const s = host !== undefined && host !== null ? instances.get(host) : constructed === 1 ? current : null;
   if (s) return s.neighbours(rest);
   return host !== undefined && host !== null
-    ? { refused: "OWNER_NOT_READY", why: "no standards instance is constructed on this host yet" }
-    : constructed === 0 ? { refused: "OWNER_NOT_READY", why: "no standards instance is constructed yet" }
-    : { refused: "OWNER_HOST_AMBIGUOUS", why: `${constructed} standards instances are held here and the read names no host` };
+    ? { refused: "OWNER_NOT_READY", why: word("standards.why.standards_instance_constructed") }
+    : constructed === 0 ? { refused: "OWNER_NOT_READY", why: word("standards.why.no_standards_instance_is_constructed") }
+    : { refused: "OWNER_HOST_AMBIGUOUS", why: word("standards.why.standards_instances_held", { constructed: String(constructed) }) };
 }
 /** R48: the owner's registration (`connection-grammar` R2), over an instance, for a registry a caller holds. */
 export const connectionOwnerOf = (s) => ({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),

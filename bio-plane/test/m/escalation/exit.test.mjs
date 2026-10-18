@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, MACHINE, ms } from "./fixture.mjs";
 import { noSuchDetermination } from "../../../src/conformance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const end = (w, extra = {}) => w.esc.escalationEnd({ id: w.E, author: V("bob"), viewer: V("bob"), ...extra });
 const actOf = (w) => w.determinations.get(w.D).act.id;
@@ -182,7 +183,7 @@ test("R3 R14 consequences, merged (K250), is reached through consequencesModule 
   w.clock.now = "2026-09-20T00:00:00Z";
   opened(w);
   const x = w.esc.escalationRead({ id: w.E, viewer: V("bob") }).exit.consequences;
-  assert.deepEqual([x.state, x.ids, x.why], ["undetermined", [], "no consequence recorded"]);
+  assert.deepEqual([x.state, x.ids, x.why], ["undetermined", [], word("escalation.consequence_recorded")]);
   w.determine({ project: w.P, act: actOf(w), outcomes: bothCompliant, at: "2026-09-21T00:00:00Z" });
   const r = end(w);
   assert.equal(r.reason, "CONSEQUENCES_UNDETERMINED");

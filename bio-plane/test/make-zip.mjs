@@ -9,6 +9,7 @@
  * record will state (true values, then the entry's overrides), and only then
  * laid out, so an override changes the field it names and nothing else. */
 import { deflateRawSync } from "node:zlib";
+import { localize } from "../src/setup-words/index.mjs";
 
 const SIG = { local: 0x04034b50, central: 0x02014b50, descriptor: 0x08074b50, eocd: 0x06054b50, zip64Eocd: 0x06064b50, zip64Locator: 0x07064b50 };
 const MAX16 = 0xffff, MAX32 = 0xffffffff;
@@ -195,7 +196,7 @@ export function makeZip(entries, options = {}) {
     out.u32(sentinel("compressedSize"), `${at}.local.compressedSize`);
     out.u32(sentinel("uncompressedSize"), `${at}.local.uncompressedSize`);
     out.u16(l.name.length, `${at}.local.name length`);
-    out.u16(extraBytes.length, `${at} local extra length`);
+    out.u16(extraBytes.length, localize("test-support.make-zip.at_local_extra_length", "{at} local extra length", { at: String(at) }));
     out.bytes(l.name);
     out.bytes(extraBytes);
     r.dataOffset = out.length;
@@ -228,7 +229,7 @@ export function makeZip(entries, options = {}) {
     const t = r.overlay ? resolved[r.target] : r;
     const sentinel = (field, v) => (r.zip64 && own[field] === undefined ? MAX32 : v);
     out.u32(SIG.central);
-    out.u16(r.versionNeeded, `${at} version made by`);
+    out.u16(r.versionNeeded, localize("test-support.make-zip.at_version_made_by", "{at} version made by", { at: String(at) }));
     out.u16(r.versionNeeded, `${at} version`);
     out.u16(c.flags, `${at}.central.flags`);
     out.u16(c.method, `${at}.central.method`);
@@ -238,7 +239,7 @@ export function makeZip(entries, options = {}) {
     out.u32(sentinel("compressedSize", c.compressedSize), `${at}.central.compressedSize`);
     out.u32(sentinel("uncompressedSize", c.uncompressedSize), `${at}.central.uncompressedSize`);
     out.u16(c.name.length, `${at}.central.name length`);
-    out.u16(extraBytes.length, `${at} central extra length`);
+    out.u16(extraBytes.length, localize("test-support.make-zip.at_central_extra_length", "{at} central extra length", { at: String(at) }));
     out.u16(0, "comment length");
     out.u16(0, "disk number");
     out.u16(0, "internal attributes");

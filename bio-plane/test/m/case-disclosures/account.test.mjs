@@ -11,6 +11,7 @@ import { world, V } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, ACCOUNT_ARMS, checkerCited } from "../../../src/case-disclosures/index.mjs";
 import { INQUIRY_BIAS_CHECKS } from "../../../src/inquiry/checks.mjs";
 import { CASE_DOCUMENT_FORMAT, accountLines, accountOf, biasApplicationsLines, biasApplicationsOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -85,7 +86,7 @@ test("R30 (ACCOUNT_SENTENCE_UNSUPPORTED, ACCOUNT_FACT_NOT_IN_CITED, ACCOUNT_CONT
     if (code !== "ACCOUNT_SENTENCE_UNSUPPORTED")
       assert.deepEqual(judge(setup([{ ord: 6, code }]).w).refusals[0].sentences.map((x) => x.kind), ["excluded"],
         `${code} judges a statement's sentence too`);
-    assert.ok(r.refusals[0].detail.includes("sentence 3") && r.refusals[0].detail.endsWith("Nothing was written."), code);
+    assert.ok(r.refusals[0].detail.includes("sentence 3") && r.refusals[0].detail.endsWith(word("consequences.nothing")), code);
     /* negative control: the same account, nothing departing */
     assert.deepEqual(judge(setup([]).w).refusals, [], code);
   }

@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import * as M from "../../../src/idspaces.mjs";
 import * as CC from "../../../../court-citations/index.mjs";
 import { HARBOR, LAKESHORE, DISSENT, UNMEASURED, NEW_SPACES, REPORTERS, combine, viewOf, withNewSpaces } from "./fixtures.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const { spaces, recognise, reach, parcelStanding, systemOf, judgePair, recogniseCitations } = M;
 const H = viewOf(HARBOR);
@@ -489,10 +490,10 @@ test("R21 otherwise the referent: unread, disagrees, or SHARED on the caller's r
   assert.deepEqual([dis.verdict, dis.counts, dis.referent.agrees], ["REFERENT_DISAGREES", false, false]);
   const ok = judgePair(H, "project", ...e(), "agrees");
   assert.deepEqual([ok.verdict, ok.counts, ok.referent.agrees], ["SHARED", true, true]);
-  assert.equal(ok.referent.by, "the caller's reading");
+  assert.equal(ok.referent.by, word("idspaces.by.caller_reading"));
   assert.match(ok.says, /caller's reading — a reading this module did not make and cannot check/);
   const fund = judgePair(H, "fund", end(H, "fund", "3100", A.legis, "Sewer Fund"), end(H, "fund", "3100", A.budget, "Rate Fund"), "agrees");
-  assert.deepEqual([fund.verdict, fund.referent.by.startsWith("the caller's reading")], ["SHARED", true]);
+  assert.deepEqual([fund.verdict, fund.referent.by.startsWith(word("idspaces.by.caller_reading"))], ["SHARED", true]);
 });
 
 test("R22 counts is true only for SHARED", () => {

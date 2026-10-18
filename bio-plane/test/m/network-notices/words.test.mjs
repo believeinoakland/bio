@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, prepare, post, sign, V, NOW } from "./fixture.mjs";
 import * as nn from "../../../src/network-notices/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice");
 /* "this/the/your … copy|instance|plane", and "server", as DEC-149's grep reads them (`plan/draft-T34-dec149.md`). */
@@ -73,13 +74,13 @@ test("R21 (DEC-149) groupKeysPublic labels each key of the group's own Civicsmit
   const w = seeded();
   await post(w);
   const keys = w.nn.groupKeysPublic();
-  assert.equal(nn.COPY_KEY_LABEL, "this team's Civicsmith key");
+  assert.equal(nn.COPY_KEY_LABEL, word("network-notices.group_civicsmith_key"));
   assert.equal(keys.copy.length, 1);
-  assert.equal(keys.copy[0].label, "this team's Civicsmith key");
+  assert.equal(keys.copy[0].label, word("network-notices.group_civicsmith_key"));
   for (const k of keys.copy) assert.doesNotMatch(k.label, /copy|instance|plane|server|your/i);
   noOldName(keys, "groupkeyspublic");
   /* served the same with no credential (public-read R18) */
-  assert.deepEqual(w.publicRead.publicRead("groupkeyspublic", {}).result.copy.map((k) => k.label), ["this team's Civicsmith key"]);
+  assert.deepEqual(w.publicRead.publicRead("groupkeyspublic", {}).result.copy.map((k) => k.label), [word("network-notices.group_civicsmith_key")]);
 });
 
 test("R1 R4 R21 (DEC-149) no row, refusal or answer of this module calls the group's Civicsmith this copy, this instance or the plane", async () => {
@@ -96,6 +97,6 @@ test("R1 R4 R21 (DEC-149) no row, refusal or answer of this module calls the gro
   /* negative control: the pattern catches the old words wherever they sit */
   for (const old of ["This copy holds no prepared notice", "this copy's key", "no key of this instance", "the plane signs", "a server"])
     assert.throws(() => noOldName({ nested: [old] }, "control"), /control/);
-  assert.doesNotThrow(() => noOldName(["nothing: copy these fields, or open them", "a review copy"], "control"),
+  assert.doesNotThrow(() => noOldName([word("network-notices.nothing_copy_fields"), "a review copy"], "control"),
                       "copy in its other meanings stays");
 });

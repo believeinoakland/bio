@@ -22,6 +22,7 @@ import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/
 import { checkCaseDocument, CASE_DOCUMENT_FAMILY, caseConclusionRowLines } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* ================================================================ a /6 case document, in op=publish's shape */
 
@@ -77,15 +78,15 @@ function publishedCaseText({ caseId, edition = 1, project, members, conclusions 
   const body = [
     `# Case ${caseId} — edition ${edition}`, "", "## Scope", "", SCOPE, "", "## Findings In This Case", "",
     ...members.map((m, i) => `${i + 1}. ${m.id} — ${m.role === "load_bearing" ? "LOAD-BEARING" : "supporting"}, frozen at version ${m.pin}`),
-    "", "A LOAD-BEARING finding is one this case rests on, and the standard of evidence below was asked of it.",
-    "A SUPPORTING finding travels with the case and is not presented as carrying it.", "",
+    "", word("case-authoring.body.load_bearing_finding"),
+    word("case-authoring.body.supporting_finding_travels"), "",
     "## What This Excludes", "", STMT, "", `- ${LEFT} — ${EXCL_D}: ${EXCL_R}`, "",
     `Position on putting this case to its subject: sought_and_answered. ${JUST}`, "",
     "## What Was Searched", "", "- **document level** (referent): PARTIAL.", "",
     "## What Each Finding Reached, As Read For This Case", "",
     ...members.map((m) => `- **${m.id}** (its edition 1): capture UNRATED; connection grade D, no stronger than ${MEMO}.`), "",
     "## Bias Manifest", "", `NO MANIFEST WAS IN FORCE for ${project} when this case was published.`, "",
-    "## Citations", "", "This case's project cited nothing when it was published.", "",
+    "## Citations", "", word("case-authoring.body.case_project_cited"), "",
     "## Bias Acknowledgement", "", BACK, "",
     "## Standard Of Evidence", "", `This case is ${project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. `
       + "An absent bar is not a bar of zero.", "",
@@ -221,8 +222,8 @@ function findingMd(id, refs = []) {
           "state_history: []", "annotations_open: 0", "reeval_pending: false", "visuals: []",
           "recheck_triggers:", "  - text: Revisit after the next budget cycle",
           "    description: The adopted budget may restate the transfer basis.",
-          "---", "", "## Question", "", "Was the transfer authorised?", "", "## What It Rests On", "", "## Conclusion", "",
-          "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+          "---", "", "## Question", "", "Was the transfer authorised?", "", word("conformance.rests"), "", "## Conclusion", "",
+          word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 function pinned(w, P, id, caseId = "CASE-2026-0001") {
   w.st.sql.exec(`INSERT OR IGNORE INTO cases (case_id, project_id, opened) VALUES (?, ?, ?)`, caseId, P, NOW);

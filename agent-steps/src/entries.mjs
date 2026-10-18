@@ -3,6 +3,7 @@
 import { LEVELS } from "../../agent-harness/src/harness.mjs";
 import { spawnContract } from "../../agent-harness/src/subsession.mjs";
 import { checkCondition, DEFINITIVE_STATES } from "../../bio-plane/src/run-rules/index.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* R92 (R085-8; K3477; WALK-085 F2, cause B) — AN ENTRY THIS MEMBER SENDS IS IN THE RECORD'S OWN WORDS.
  *
@@ -27,15 +28,13 @@ export function loggable(entry) {
   const out = { ...entry };
   const said = [];
   if (out.condition != null && out.condition !== "" && checkCondition(out.condition) !== null) {
-    said.push(`condition stated as ${JSON.stringify(String(out.condition).slice(0, 160))}, `
-              + "which is not a word of the record's condition vocabulary, so none is recorded");
+    said.push(localize("agent-steps.entries.condition_stated_as_stringify_which", "condition stated as {stringify}, which is not a word of the record's condition vocabulary, so none is recorded", { stringify: String(JSON.stringify(String(out.condition).slice(0, 160))) }));
     out.condition = null;
   }
   let governedDowngrade = null;
   if (out.governed === true && DEFINITIVE_STATES.has(String(out.state))) {
     governedDowngrade = String(out.state);
-    said.push(`stated ${governedDowngrade} while our own pacing governed the look, which supports only `
-              + "LOOKED_INDETERMINATE (D-104)");
+    said.push(localize("agent-steps.entries.stated_governeddowngrade_while_our_own", "stated {governedDowngrade} while our own pacing governed the look, which supports only LOOKED_INDETERMINATE (D-104)", { governedDowngrade: String(governedDowngrade) }));
     out.state = "LOOKED_INDETERMINATE";
   }
   if (said.length) out.detail = [...said, String(out.detail ?? "")].filter(Boolean).join("; ").slice(0, LOG_DETAIL_MAX);
@@ -57,6 +56,5 @@ export function conditionFault(input) {
   const stated = input?.condition;
   if (stated == null || stated === "" || checkCondition(stated) === null) return null;
   return { code: "AI_RUN_CONDITION_UNKNOWN",
-           detail: `'${String(stated).slice(0, 80)}' is not one of the record's conditions (${CONDITIONS.join(", ")}); name one `
-                   + "of them, or leave condition out" };
+           detail: localize("agent-steps.entries.string_is_not_one_of", "'{String}' is not one of the record's conditions ({CONDITIONS}); name one of them, or leave condition out", { String: String(String(stated).slice(0, 80)), CONDITIONS: String(CONDITIONS.join(", ")) }) };
 }

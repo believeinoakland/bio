@@ -12,6 +12,7 @@ import { MODES } from "../../agent-harness/src/harness.mjs";
 import { MEMBER } from "./account.mjs";
 import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
 import { remoteBindings } from "./remote.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -265,7 +266,7 @@ await withPlanDeployed(async () => {
 /* ================================================================================================ R76 · statusreportdraft */
 
 const ITEMS = [
-  { section: "waits", action: "ACT-1", waiting: "response", basis: "the action awaits a response", source: { module: "actions", id: "ACT-1" } },
+  { section: "waits", action: "ACT-1", waiting: "response", basis: word("plan-work.basis.action_awaits_response"), source: { module: "actions", id: "ACT-1" } },
   { section: "next", date: "2026-11-01", text: "the board meets", source: { module: "plan-work", read: "timeline" } },
   { section: "holds", state: "read", project: [], due: [], source: { module: "action-holds" } },
 ];

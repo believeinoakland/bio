@@ -12,6 +12,7 @@ import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
 import { checkContentExtent, canonicalExtent, CONTENT_EXTENT_DOCUMENT_ONLY } from "../content/index.mjs";
 import { BOUNDS, LOWEST_GRADE } from "../connection-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R69: the kind, its class and its members' word (provisional until the design stream gives one; K1486, K1469). */
 export const STEP_SOURCE_KIND = "step_source";
@@ -90,7 +91,7 @@ export class StepSources {
     const held = this.#one(`SELECT * FROM step_sources WHERE relation_id=? AND capture_sha=? AND extent=? AND withdrawn_at IS NULL
                              ORDER BY source_id LIMIT 1`, rel.relation_id, sha, key);
     if (held) return { ok: true, wrote: false, step_source: this.view(held),
-                       says: "this passage already backs this step; nothing was written" };
+                       says: word("connections.says.passage_already_backs") };
     const at = this.k.now();
     this.sql.exec(`INSERT INTO step_sources (relation_id, from_entity, to_entity, capture_sha, bundle_id, extent, basis, member, at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -98,9 +99,7 @@ export class StepSources {
     const row = this.#one(`SELECT * FROM step_sources WHERE relation_id=? AND capture_sha=? AND extent=? AND withdrawn_at IS NULL
                             ORDER BY source_id DESC LIMIT 1`, rel.relation_id, sha, key);
     return { ok: true, wrote: true, step_source: this.view(row),
-             says: `recorded: ${who} backs the declared step ${rel.relation_id} (${rel.relation}) with a passage of a held `
-                 + `capture. The step itself stays declared; this source is its own evidenced fact, graded no higher than `
-                 + `the capture it cites` };
+             says: word("connections.says.recorded_backs_declared", { who: String(who), relation_id: String(rel.relation_id), relation: String(rel.relation) }) };
   }
 
   /** R68 (`op=stepsourcewithdraw`): the member who attached a source withdraws it, saying why; it stays recorded. */
@@ -124,8 +123,7 @@ export class StepSources {
     this.sql.exec(`UPDATE step_sources SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE source_id=? AND withdrawn_at IS NULL`,
                   who, at, why.slice(0, STEP_SOURCE_BASIS_MAX), row.source_id);
     return { ok: true, step_source: this.view(this.#one(`SELECT * FROM step_sources WHERE source_id=?`, row.source_id)),
-             says: `${who} withdrew this source, saying why; it stays recorded, and the step reads as declared, not evidenced, `
-                 + `unless another source backs it` };
+             says: word("connections.says.withdrew_source_saying", { who: String(who) }) };
   }
 
   /** R69: `neighbours` for an entity node: each standing source of a standing relation the node is an end of, whose
@@ -147,7 +145,7 @@ export class StepSources {
       .sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
     if (items.length > BOUNDS.hub)
       return { items: [], hub: { set_size: items.length,
-               why: `${items.length} sources back the declared steps at this entity, more than ${BOUNDS.hub}; it is named, never expanded` } };
+               why: word("connections.why.sources_back_declared", { items: String(items.length), hub: String(BOUNDS.hub) }) } };
     const after = isObj(page) && typeof page.after === "string" ? page.after : null;
     const rest = after ? items.filter((i) => i.id > after) : items;
     const shown = rest.slice(0, BOUNDS.fanout);
@@ -163,9 +161,8 @@ export class StepSources {
     try { g = p && typeof p.captureGrade === "function" ? p.captureGrade(sha) : null; } catch { g = null; }
     const letter = g && BASIS_GRADES.includes(g.grade) ? g.grade : null;
     const out = letter
-      ? { grade: letter, says: `the cited capture's grade, ${letter}` }
-      : { grade: LOWEST_GRADE, says: `the cited capture's grade is not determined`
-          + (g && g.why ? ` (${String(g.why).slice(0, 200)})` : ``) + `, so this source is read at the lowest grade, ${LOWEST_GRADE}` };
+      ? { grade: letter, says: word("connections.says.cited_capture_grade", { letter: String(letter) }) }
+      : { grade: LOWEST_GRADE, says: word("connections.says.cited_capture_grade_determined", { why: String(g && g.why ? ` (${String(g.why).slice(0, 200)})` : ``), lowest_grade: String(LOWEST_GRADE) }) };
     memo.set(sha, out);
     return out;
   }

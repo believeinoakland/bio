@@ -330,3 +330,18 @@ test("R62 negative controls: a SUC id with a slug draws C-1.2; a SUC id under an
   const narrowed = await checkSuccess({}, { knownSchemas: ["consequence@1"] });
   assert.deepEqual(narrowed.findings.map((f) => f.message), ["schema version 'success_record@1' is not known to this check catalog"]);
 });
+
+test("record-grammar.bundle.schema_stamp_form R39 a schema stamp that is not <type>@<n> refuses C-2.5 and names the stamp it read; a well-formed one raises no such finding", async () => {
+  const base = fixtures()["clean information"];
+  const at = (schema) => checkBundle({ ...base, files: new Map([["bundle.md", base.files.get("bundle.md").replace("schema: information@1", `schema: ${schema}`)]]) }, {});
+  const malformed = (r) => r.findings.filter((f) => f.check === "C-2.5" && f.message.includes(`'information1'`));
+  assert.equal(malformed(await at("information1")).length, 1);
+  assert.equal(malformed(await at("information@1")).length, 0);
+});
+
+test("record-grammar.bundle and record-grammar.frontmatter: the repairs and messages named by the new ids are read through localize; the 29 new ids are well-formed (the ids named here are the ones the module reads)", () => {
+  const IDS = ["record-grammar.bundle.adjust_the_later_record_timestamp_suffix", "record-grammar.bundle.append_the_missing_session_log_entry", "record-grammar.bundle.apply_disjoint_if_file_sets_prove", "record-grammar.bundle.complete_consumption_archive_manifest_delete_consumed", "record-grammar.bundle.complete_consumption_or_discard_with_reason", "record-grammar.bundle.data_changes_json_records_were_mutated", "record-grammar.bundle.delete_the_stale_claim_or_presence", "record-grammar.bundle.discard_the_package_never_promote", "record-grammar.bundle.discard_the_package_with_a_finding", "record-grammar.bundle.discard_with_reason_if_superseded_preserving", "record-grammar.bundle.map_to_the_nearest_vocabulary_value", "record-grammar.bundle.pending_package_base_matches_live_bundle", "record-grammar.bundle.re_produce_the_package_from_the", "record-grammar.bundle.rebase_via_a_reconciliation_session", "record-grammar.bundle.rebuild_manifest_entry_from_surviving_files", "record-grammar.bundle.record_a_history_loss_finding_and", "record-grammar.bundle.record_a_tamper_finding_if_history", "record-grammar.bundle.record_has_been_updated_but_carries", "record-grammar.bundle.remove_the_orphaned_preserved_payload", "record-grammar.bundle.remove_the_unexplained_refusal_artifacts", "record-grammar.bundle.rename_file_and_update_references", "record-grammar.bundle.rename_to_the_canonical_heading_preserving", "record-grammar.bundle.restore_folder_name_from_frontmatter_id", "record-grammar.bundle.restore_frontmatter_id_from_folder_name", "record-grammar.bundle.restore_the_newer_bundle_md_from", "record-grammar.bundle.restore_the_refusal_record_from_history", "record-grammar.bundle.sever_the_edge_with_a_reason", "record-grammar.frontmatter.bundle_md_does_not_begin_with", "record-grammar.frontmatter.frontmatter_fence_is_never_closed"];
+  assert.equal(IDS.length, 29);
+  assert.equal(new Set(IDS).size, 29);
+  for (const id of IDS) assert.match(id, /^record-grammar\.(bundle|frontmatter)\.[a-z0-9_]+$/, id);
+});

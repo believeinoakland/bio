@@ -26,6 +26,7 @@
 import wasmModule from "../assets/tesseract-core.wasm";
 import MODEL from "../assets/eng.traineddata";
 import { createOCREngine } from "./tesslib.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /** The engine, named exactly. "tesseract" is not a version, and the chain step
  *  this member produces carries both because a calibration is OF a pair and a
@@ -59,9 +60,7 @@ export function engineCheck() {
     return "the wasm core did not arrive as a compiled module — a one-part upload cannot carry it, "
          + "and this member must be installed with its `assets/tesseract-core.wasm` part";
   if (!MODEL || typeof MODEL.byteLength !== "number" || MODEL.byteLength !== MODEL_BYTES)
-    return `the language model is ${MODEL && MODEL.byteLength} B, the measured pair is ${MODEL_BYTES} B `
-         + `(tessdata_fast eng) — a different model is a different measurement and this member's `
-         + `stated fidelity would not be about it`;
+    return localize("ocr-worker.tessengine.the_language_model_is_v1", "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) — a different model is a different measurement and this member's stated fidelity would not be about it", { v1: String(MODEL && MODEL.byteLength), MODEL_BYTES: String(MODEL_BYTES) });
   return null;
 }
 

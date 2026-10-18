@@ -15,10 +15,11 @@
  * Nothing is followed; a paid document link is marked `fee`. */
 import { CONFIDENCE, CONTRACT, TAG, feeBearing, written, element, elements, linksIn, sourceAt,
   proceedingNumber, row, reading, pageOf, assessRegister, detectAnswer } from "./common.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 const KEY = "ecourt_roa";
-const LABEL = "an eCourt register of actions";
-const MEMBER_ONLY = "an account-gated register is read only from a member's own capture";
+const LABEL = localize("court-doctypes.ecourt.label", "an eCourt register of actions");
+const MEMBER_ONLY = localize("court-doctypes.ecourt.member_only", "an account-gated register is read only from a member's own capture");
 const HEADING = /<(h[1-6]|caption|legend)\b[^>]*>\s*(?:<[^>]+>\s*)*Register\s+of\s+Actions\s*(?:<[^>]+>\s*)*<\/\1\s*>/i;
 
 /** Whether `ctx.origin` says this is a member's own capture made in their own browser (R2). */
@@ -48,10 +49,10 @@ function detect(ctx) {
   const html = String((ctx && ctx.text) || "");
   const t = registerTable(html);
   if (t && !memberCapture(ctx))
-    return { match: false, confidence: CONFIDENCE.NONE, signals: ["a register of actions"],
-      why: `${MEMBER_ONLY}; this capture is not one (its origin is ${JSON.stringify((ctx && ctx.origin) ?? null)})` };
-  return detectAnswer({ ctx, key: KEY, label: LABEL, what: "an eCourt register of actions",
-    structure: !!t, structureSignals: ["a Register of Actions table (date, description)", "a member's own capture"] });
+    return { match: false, confidence: CONFIDENCE.NONE, signals: [localize("court-doctypes.ecourt.a_register_of_actions", "a register of actions")],
+      why: localize("court-doctypes.ecourt.member_only_this_capture_is", "{MEMBER_ONLY}; this capture is not one (its origin is {stringify})", { MEMBER_ONLY: String(MEMBER_ONLY), stringify: String(JSON.stringify((ctx && ctx.origin) ?? null)) }) };
+  return detectAnswer({ ctx, key: KEY, label: LABEL, what: LABEL,
+    structure: !!t, structureSignals: [localize("court-doctypes.ecourt.a_register_of_actions_table", "a Register of Actions table (date, description)"), localize("court-doctypes.ecourt.a_member_s_own_capture", "a member's own capture")] });
 }
 
 /** The case's labelled fields, as `<dt>`/`<dd>` pairs or two-cell table rows: label → `{value, at}`. */
@@ -134,11 +135,9 @@ function parse(ctx) {
     type: KEY, proceeding, parties: member ? partiesOf(ctx, html) : [], rows, provisional: true,
     at: (ctx && ctx.at) || null,
     pagination: pm ? pageOf(Number(pm[1]), Number(pm[2])) : pageOf(null, null),
-    failed: !member ? `${MEMBER_ONLY}, and this capture is not one`
-      : !t ? "the page holds no Register of Actions table with a date and a description" : null,
-    key_basis: "ecourt_roa (PROVISIONAL): a row is keyed by its date as written and its order among the rows of "
-      + "that date; the row shape and this key are assumed from the portal's own description of a case page and "
-      + "are not yet verified on a member's capture",
+    failed: !member ? localize("court-doctypes.ecourt.member_only_and_this_capture", "{MEMBER_ONLY}, and this capture is not one", { MEMBER_ONLY: String(MEMBER_ONLY) })
+      : !t ? localize("court-doctypes.ecourt.the_page_holds_no_register", "the page holds no Register of Actions table with a date and a description") : null,
+    key_basis: localize("court-doctypes.ecourt.key_basis", "ecourt_roa (PROVISIONAL): a row is keyed by its date as written and its order among the rows of that date; the row shape and this key are assumed from the portal's own description of a case page and are not yet verified on a member's capture"),
   });
 }
 

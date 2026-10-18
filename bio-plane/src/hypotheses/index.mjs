@@ -33,6 +33,7 @@ import { inquiryOf, personWarning as inquiryPersonWarning } from "../inquiry/ind
 import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTES_ADDED_COLUMNS, NOTE_NUMBERS_TABLE,
          PROPOSALS_SCHEMA, PROPOSALS_TABLE, SHARES_SCHEMA, SHARES_TABLE } from "./schema.mjs";
 import { HYPOTHESES_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTE_NUMBERS_TABLE, HYPOTHESES_CHECKS,
          PROPOSALS_TABLE, SHARES_TABLE };
@@ -46,13 +47,13 @@ export const PAIRED_KINDS = Object.freeze(["cause", "identity", "relation"]);
 /** R3: the label every read carries. */
 export const HYPOTHESIS_LABEL = "hypothesis";
 /** R4: the one kind this module owns, of class `hunch`, with the members' word. */
-export const HUNCH_KINDS = Object.freeze([Object.freeze({ kind: "hunch", word: "a member's hunch", class: "hunch" })]);
+export const HUNCH_KINDS = Object.freeze([Object.freeze({ kind: "hunch", word: word("hypotheses.member_hunch"), class: "hunch" })]);
 /** R1: a statement, a reason, at most; the nodes of one hypothesis, at most. */
 export const STATEMENT_MAX = 4000;
 export const REASON_MAX = 2000;
 export const ABOUT_MAX = 50;
 /** R4: why a hunch hop is undetermined at every date: a hunch states no period (K1563 (2), an undated kind). */
-export const UNDATED_WHY = "a hunch states no period of its own, so whether it holds at a date is not determined";
+export const UNDATED_WHY = word("hypotheses.hunch_states_period");
 /** R6: the form of a derived connection's id (`connection-grammar.derivedId`, a SHA-256 in lowercase hex). */
 export const DERIVED_ID_RE = /^[0-9a-f]{64}$/;
 /** R6 (K1728): a calculation's id, in either form `record-grammar` reads (opaque, and the earlier sequential). */
@@ -69,7 +70,7 @@ export const NOTE_TURNS = Object.freeze(["observation", "hunch", "question"]);
 export const NOTES_LIMIT = Object.freeze({ default: 200, max: 1000 });
 /** R16: the label every proposal of the system's carries, and the heading it is answered under. */
 export const SYSTEM_LABEL = "the system's";
-export const PROPOSALS_HEADING = "The system's proposals";
+export const PROPOSALS_HEADING = word("hypotheses.system_proposals");
 /** R16: a proposal's `how` and `run`, at most. */
 export const HOW_MAX = 4000;
 export const RUN_MAX = 200;
@@ -505,7 +506,7 @@ export class Hypotheses {
     const where = `bundle_id = ? AND withdrawn = 0 AND from_node IS NOT NULL AND to_node IS NOT NULL AND (from_node = ? OR to_node = ?)`;
     const size = Number(this.#one(`SELECT COUNT(*) AS n FROM hypotheses WHERE ${where}`, scope, node, node).n);
     if (size > BOUNDS.hub)
-      return { items: [], hub: { set_size: size, why: `this node is in more than ${BOUNDS.hub} hunches of this inquiry, so it is named, never expanded` } };
+      return { items: [], hub: { set_size: size, why: word("hypotheses.why.node_hunches_inquiry", { hub: String(BOUNDS.hub) }) } };
     const after = isObj(page) && filled(page.after) ? page.after : "";
     const per = isObj(page) && Number.isInteger(page.size) && page.size >= 1 ? Math.min(page.size, BOUNDS.fanout) : BOUNDS.fanout;
     const rows = this.#rows(`SELECT * FROM hypotheses WHERE ${where} AND hypothesis_id > ? ORDER BY hypothesis_id LIMIT ?`,
@@ -755,11 +756,11 @@ export class Hypotheses {
   #judgeLeg(target, leg, viewer, scope) {
     /* DEC-49 REGION is-hypothesis-leg */
     if (isHypothesisId(target))
-      return finding("HYPOTHESIS_NOT_A_LEG", `the leg rests on ${target}, a hypothesis: hypotheses are held in the working inquiry, never as a leg (K1467)`);
+      return finding("HYPOTHESIS_NOT_A_LEG", localize("hypotheses.index.the_leg_rests_on_target", "the leg rests on {target}, a hypothesis: hypotheses are held in the working inquiry, never as a leg (K1467)", { target: String(target) }));
     /* END DEC-49 REGION is-hypothesis-leg */
     /* DEC-49 REGION is-narrative-leg */
     if (typeof target === "string" && SHARE_ID_RE.test(target))
-      return finding("NARRATIVE_NOT_A_LEG", `the leg rests on ${target}, a member's shared note: narrative, never a leg (D18)`);
+      return finding("NARRATIVE_NOT_A_LEG", localize("hypotheses.index.the_leg_rests_on_target_2", "the leg rests on {target}, a member's shared note: narrative, never a leg (D18)", { target: String(target) }));
     /* END DEC-49 REGION is-narrative-leg */
     if (typeof target === "string" && DERIVED_ID_RE.test(target)) return this.#judgeDerived(target, derivationOf(leg), viewer, scope, "the leg");
     if (typeof target === "string" && CALC_RE && CALC_RE.test(target)) return this.#judgeCalculation(target, viewer, scope);
@@ -775,7 +776,7 @@ export class Hypotheses {
     const calc = this.#calculationsOf();
     if (!calc || typeof calc.gradeFactsOf !== "function") return cannot("no calculation read is reachable");
     let facts = null;
-    try { facts = calc.gradeFactsOf({ calcId, viewer }); } catch { return cannot("the read failed"); }
+    try { facts = calc.gradeFactsOf({ calcId, viewer }); } catch { return cannot(word("case-disclosures.why.read_failed")); }
     if (isThenable(facts)) { Promise.resolve(facts).catch(() => {}); return cannot("the read did not answer synchronously"); }
     if (!isObj(facts) || facts.found !== true || !Array.isArray(facts.inputs))
       return cannot(isObj(facts) && facts.found === false ? "it is not held, or not one this author may see" : "the read answered no grade facts");
@@ -784,7 +785,7 @@ export class Hypotheses {
       const refs = stringsIn(inp.ref);
       const hyp = refs.find((x) => isHypothesisId(x.trim()));
       if (hyp !== undefined)
-        return finding("HYPOTHESIS_NOT_A_LEG", `the calculation ${calcId} names ${hyp.trim()}, a hypothesis, among its inputs (K1467)`, { calculation: calcId });
+        return finding("HYPOTHESIS_NOT_A_LEG", localize("hypotheses.index.the_calculation_calcid_names_hyp", "the calculation {calcId} names {hyp}, a hypothesis, among its inputs (K1467)", { calcId: String(calcId), hyp: String(hyp.trim()) }), { calculation: calcId });
     }
     for (const inp of facts.inputs) {
       if (!isObj(inp) || NOT_A_CONNECTION_REF.includes(inp.kind)) continue;
@@ -817,7 +818,7 @@ export class Hypotheses {
     if (r.declared_or_hunch === true) {
       const hop = (Array.isArray(r.rests_on) ? r.rests_on : []).find((x) => isObj(x) && (x.class === "declared" || x.class === "hunch"));
       const hopId = hop ? (isObj(hop.connection) && filled(hop.connection.id) ? hop.connection.id : hop.input) : null;
-      return finding("LEAD_NOT_A_LEG", `${what} cites the derived connection ${id}, whose chain carries a ${hop ? hop.class : "declared or hunch"} hop${hopId ? ` (${hopId})` : ""}: a lead, never a basis for a finding (K1487)`,
+      return finding("LEAD_NOT_A_LEG", localize("hypotheses.index.what_cites_the_derived_connection", "{what} cites the derived connection {id}, whose chain carries a {v1} hop{v2}: a lead, never a basis for a finding (K1487)", { what: String(what), id: String(id), v1: String(hop ? hop.class : "declared or hunch"), v2: String(hopId ? ` (${hopId})` : "") }),
                      { connection: id, hop: hopId ?? null });
     }
     /* END DEC-49 REGION is-lead-leg */

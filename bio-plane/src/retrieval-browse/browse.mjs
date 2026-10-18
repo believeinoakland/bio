@@ -9,6 +9,7 @@
  * entities are team-wide (`entities` R51) but are not listed to a viewer the gate does not recognise either. A hidden
  * bundle is neither listed nor counted (R15), and a flagged one the viewer cannot see is not shown through its flag. */
 import { viewerPredicate } from "../membership/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* R10: the kinds a browse is narrowed to, the bundle types behind the four that are bundles, and the entity kinds behind
    `entity` (a person; an organisation is an institution, a body or a movement). */
@@ -60,12 +61,12 @@ export class Browser {
     const named = [...new Set(asked.map((k) => String(k).trim()).filter(Boolean))];
     const unknown = named.filter((k) => k !== "all" && !BROWSE_KINDS.includes(k));
     if (unknown.length)
-      return refuse("KIND_UNKNOWN", `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; the kinds are ${BROWSE_KINDS.join(", ")}`,
+      return refuse("KIND_UNKNOWN", localize("retrieval-browse.browse.no_kind_called_map_the", "no kind called {map}; the kinds are {BROWSE_KINDS}", { map: String(unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")), BROWSE_KINDS: String(BROWSE_KINDS.join(", ")) }),
         { kinds: BROWSE_KINDS });
     const wanted = !named.length || named.includes("all") ? [...BROWSE_KINDS] : BROWSE_KINDS.filter((k) => named.includes(k));
     const mode = only == null || only === "" ? null : String(only).trim();
     if (mode !== null && !BROWSE_ONLY.includes(mode))
-      return refuse("ONLY_UNKNOWN", `no filter called ${JSON.stringify(mode.slice(0, 40))}; the filters are ${BROWSE_ONLY.join(", ")}`, { only: BROWSE_ONLY });
+      return refuse("ONLY_UNKNOWN", localize("retrieval-browse.browse.no_filter_called_stringify_the", "no filter called {stringify}; the filters are {BROWSE_ONLY}", { stringify: String(JSON.stringify(mode.slice(0, 40))), BROWSE_ONLY: String(BROWSE_ONLY.join(", ")) }), { only: BROWSE_ONLY });
     const hasSince = since !== null && since !== undefined && since !== "";
     if (mode === "new_since" && !hasSince) return refuse("NO_SINCE", "new_since counts from an instant, and none was given");
     if (hasSince && (typeof since !== "string" || !Number.isFinite(Date.parse(since))))
@@ -120,7 +121,7 @@ export class Browser {
       return refuse("VIEWER_MISSING", "a scope is read only for a stamped viewer, and this request carries none");
     const def = BROWSE_SCOPES.find((s) => s.key === scope);
     if (!def)
-      return refuse("SCOPE_KEY_UNKNOWN", `no scope called ${JSON.stringify(String(scope).slice(0, 40))}; the scopes are ${BROWSE_SCOPES.map((s) => s.key).join(", ")}`,
+      return refuse("SCOPE_KEY_UNKNOWN", localize("retrieval-browse.browse.no_scope_called_stringify_the", "no scope called {stringify}; the scopes are {map}", { stringify: String(JSON.stringify(String(scope).slice(0, 40))), map: String(BROWSE_SCOPES.map((s) => s.key).join(", ")) }),
         { scopes: BROWSE_SCOPES.map((s) => s.key) });
     const n = Number(limit);
     const cap = limit == null || limit === "" || !Number.isFinite(n) ? BROWSE_MARKS_MAX : Math.max(1, Math.min(BROWSE_MARKS_MAX, Math.floor(n)));
@@ -171,7 +172,7 @@ export class Browser {
   /* R11: one call of the registered read; a throw, a promise (its rejection caught) or a non-object is no answer. */
   #call(reg, arg) {
     let a;
-    try { a = reg.fn(arg); } catch (e) { return { ok: false, why: `the registered read of watches and flags threw: ${String((e && e.message) || e).slice(0, 200)}` }; }
+    try { a = reg.fn(arg); } catch (e) { return { ok: false, why: localize("retrieval-browse.browse.the_registered_read_of_watches", "the registered read of watches and flags threw: {String}", { String: String(String((e && e.message) || e).slice(0, 200)) }) }; }
     if (a && typeof a.then === "function") {
       Promise.resolve(a).catch(() => {});
       return { ok: false, why: "the registered read of watches and flags answered a promise: it is called in process, synchronously" };

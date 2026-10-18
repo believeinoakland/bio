@@ -98,6 +98,7 @@ import { LEVELS } from "./harness.mjs";
    from observation-log, its owner (modules.json `uses`, K3491), so the kinds offered to a sub-session are the kinds the
    plane admits. */
 import { CONDITION_KINDS } from "../../bio-plane/src/observation-log/vocabulary.mjs";
+import { word, localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* D-129's five, and this is a COPY of the plane's `OBSERVATION_STATES`, pinned
    to run-rules' export in `test/fanout.test.mjs` and the requirements suite (R44) — the same
@@ -116,7 +117,7 @@ export const REPORT_STATES = {
   LOOKED_ABSENT:        "we looked and it is positively not there",
   LOOKED_INDETERMINATE: "we looked and could not tell",
   PRESENT:              "we looked and it is there",
-  partial:              "we looked and got part of it",
+  partial:              word("observation-log.partial.looked_got_part"),
 };
 
 /* THE TWO STATES THAT CLAIM SOMETHING IS THERE, and therefore the two that owe a
@@ -250,25 +251,18 @@ function subjectsFor(payload, targets) {
 export function spawnContract({ level, payload, arms, targets } = {}) {
   if (!LEVELS.includes(String(level)))
     return refusal("SPAWN_LEVEL_UNKNOWN",
-      `'${String(level)}' is not one of the four levels a run searches: ${LEVELS.join(", ")}. `
-      + "A fan-out that spawned a level nobody declared would be searching somewhere the "
-      + "observation log has no word for.");
+      localize("agent-harness.subsession.string_is_not_one_of", "'{String}' is not one of the four levels a run searches: {LEVELS}. A fan-out that spawned a level nobody declared would be searching somewhere the observation log has no word for.", { String: String(String(level)), LEVELS: String(LEVELS.join(", ")) }));
 
   if (payload == null || typeof payload !== "object")
     return refusal("SPAWN_PAYLOAD_MISSING",
-      "the plane returned no search-half payload for this run, and this member composes none of its "
-      + "own: a run's conditions are the record's. There is nothing to brief a sub-session with.");
+      localize("agent-harness.subsession.the_plane_returned_no_search", "the plane returned no search-half payload for this run, and this member composes none of its own: a run's conditions are the record's. There is nothing to brief a sub-session with."));
 
   /* THE LENS, REFUSED BY NAME AND BY SHAPE. `bias` is the key the plane's
      composing half uses, so it is named — but the arm that actually protects the
      contract is the EXACT KEY SET below, which admits no unnamed field at all. */
   if (Object.prototype.hasOwnProperty.call(payload, "bias"))
     return refusal("SPAWN_PAYLOAD_CARRIES_LENS",
-      "the search-half payload arrived carrying the run's bias manifest. §14: the search half never "
-      + "receives the lens — bias never shapes what is captured or searched, only how conclusions are "
-      + "weighed — and the spawn contract omits it BY CONSTRUCTION, so there should be no field here "
-      + "to read. This member refuses rather than ignoring it: a search half that has been handed the "
-      + "lens has been handed it, and a run that continued could not later prove it did not use it.");
+      localize("agent-harness.subsession.the_search_half_payload_arrived", "the search-half payload arrived carrying the run's bias manifest. §14: the search half never receives the lens — bias never shapes what is captured or searched, only how conclusions are weighed — and the spawn contract omits it BY CONSTRUCTION, so there should be no field here to read. This member refuses rather than ignoring it: a search half that has been handed the lens has been handed it, and a run that continued could not later prove it did not use it."));
 
   const contract = deepFreeze({
     /* THE ONE THING THAT DIFFERS BETWEEN THE FOUR, and the reason each
@@ -320,7 +314,7 @@ export function spawnContract({ level, payload, arms, targets } = {}) {
       conditions: Object.keys(CONDITION_KINDS),
       citations_max: CITATIONS_MAX,
       address_max: ADDRESS_MAX,
-      rule: "return a REPORT with a citation, never documents. The parent re-reads by address.",
+      rule: localize("agent-harness.subsession.return_a_report_with_a", "return a REPORT with a citation, never documents. The parent re-reads by address."),
     },
   });
 
@@ -357,7 +351,7 @@ const size = (v) => JSON.stringify(v ?? null).length;
 export function checkReport(report) {
   if (report == null || typeof report !== "object" || Array.isArray(report))
     return refusal("REPORT_NOT_AN_OBJECT",
-      "a sub-session returns a REPORT object. What arrived is not one.");
+      localize("agent-harness.subsession.a_sub_session_returns_a", "a sub-session returns a REPORT object. What arrived is not one."));
 
   /* (1) THE EXACT KEY SET. This is the arm that makes "never documents"
      independent of what a document is called: `bytes`, `body`, `raw`, `pdf`,
@@ -366,30 +360,22 @@ export function checkReport(report) {
   const unknown = Object.keys(report).filter((k) => !(k in REPORT_KEYS));
   if (unknown.length)
     return refusal("REPORT_UNKNOWN_FIELD",
-      `a REPORT carries exactly ${Object.keys(REPORT_KEYS).join(", ")} — ${unknown.join(", ")} `
-      + `${unknown.length === 1 ? "is not one of them" : "are not among them"}. §14b.1: a sub-session `
-      + "hands back what it FOUND and never the documents; the parent re-reads by address. The "
-      + "contract is an exact key set rather than a list of banned spellings, because a list of "
-      + "spellings goes stale the moment a fourth is written.",
+      localize("agent-harness.subsession.a_report_carries_exactly_keys", "a REPORT carries exactly {keys} — {unknown} {v1}. §14b.1: a sub-session hands back what it FOUND and never the documents; the parent re-reads by address. The contract is an exact key set rather than a list of banned spellings, because a list of spellings goes stale the moment a fourth is written.", { keys: String(Object.keys(REPORT_KEYS).join(", ")), unknown: String(unknown.join(", ")), v1: String(unknown.length === 1 ? "is not one of them" : "are not among them") }),
       { fields: unknown });
 
   const missing = Object.keys(REPORT_KEYS).filter((k) => REPORT_KEYS[k]
     && (report[k] == null || report[k] === ""));
   if (missing.length)
     return refusal("REPORT_INCOMPLETE",
-      `a REPORT must name ${missing.join(" and ")}: which level was searched and what the search `
-      + "ESTABLISHED are the two things a parent cannot derive for itself.", { fields: missing });
+      localize("agent-harness.subsession.a_report_must_name_missing", "a REPORT must name {missing}: which level was searched and what the search ESTABLISHED are the two things a parent cannot derive for itself.", { missing: String(missing.join(" and ")) }), { fields: missing });
 
   if (!LEVELS.includes(String(report.level)))
     return refusal("REPORT_LEVEL_UNKNOWN",
-      `'${String(report.level)}' is not one of ${LEVELS.join(", ")}. Absence at one level is not `
-      + "evidence of absence at the next, so a report that cannot say which level it is about "
-      + "establishes nothing at any of them.");
+      localize("agent-harness.subsession.string_is_not_one_of_2", "'{String}' is not one of {LEVELS}. Absence at one level is not evidence of absence at the next, so a report that cannot say which level it is about establishes nothing at any of them.", { String: String(String(report.level)), LEVELS: String(LEVELS.join(", ")) }));
 
   if (!Object.prototype.hasOwnProperty.call(REPORT_STATES, String(report.state)))
     return refusal("REPORT_STATE_UNKNOWN",
-      `'${String(report.state)}' is not one of ${Object.keys(REPORT_STATES).join(", ")} (D-129). `
-      + "A report that cannot say what it ESTABLISHED is a report a later reader cannot check.");
+      localize("agent-harness.subsession.string_is_not_one_of_3", "'{String}' is not one of {keys} (D-129). A report that cannot say what it ESTABLISHED is a report a later reader cannot check.", { String: String(String(report.state)), keys: String(Object.keys(REPORT_STATES).join(", ")) }));
 
   /* (2) WHERE THE SEARCH WAS WRITTEN DOWN. Not a citation of evidence — the
      address in the run's own log that lets somebody who was not there check the
@@ -397,49 +383,40 @@ export function checkReport(report) {
   if (LOOKED_STATES.has(String(report.state))
       && !(typeof report.observed_at === "string" && report.observed_at.trim() !== ""))
     return refusal("REPORT_UNLOCATED",
-      `a '${String(report.state)}' report claims something about the world and must say WHERE the `
-      + "search that establishes it was written in the run's observation log. A claim nobody can "
-      + "locate is a claim nobody can check, which is the whole reason the log exists (§11).");
+      localize("agent-harness.subsession.a_string_report_claims_something", "a '{String}' report claims something about the world and must say WHERE the search that establishes it was written in the run's observation log. A claim nobody can locate is a claim nobody can check, which is the whole reason the log exists (§11).", { String: String(String(report.state)) }));
 
   const cites = report.citations == null ? [] : report.citations;
   if (!Array.isArray(cites))
     return refusal("REPORT_CITATIONS_NOT_A_LIST",
-      "`citations` is a list of addresses the parent can re-read. What arrived is not a list.");
+      localize("agent-harness.subsession.citations_is_a_list_of", "`citations` is a list of addresses the parent can re-read. What arrived is not a list."));
 
   /* (3) A REPORT THAT FOUND SOMETHING OWES AN ADDRESS — and one that found
      NOTHING owes none, because an absence has nothing to cite and a gate that
      pressured it into inventing one would be a bug in the gate. */
   if (FOUND_STATES.has(String(report.state)) && cites.length === 0)
     return refusal("REPORT_NO_CITATION",
-      `a '${String(report.state)}' report says something IS there and must cite where, by address. `
-      + "§14b.1: the contract is a REPORT with a citation and the parent re-reads by address. An "
-      + "absence cites nothing and is not held to this, because there would be nothing to cite.");
+      localize("agent-harness.subsession.a_string_report_says_something", "a '{String}' report says something IS there and must cite where, by address. §14b.1: the contract is a REPORT with a citation and the parent re-reads by address. An absence cites nothing and is not held to this, because there would be nothing to cite.", { String: String(String(report.state)) }));
 
   if (cites.length > CITATIONS_MAX)
     return refusal("REPORT_OVER_BOUND",
-      `${cites.length} citations exceed the ${CITATIONS_MAX} a single report may carry. A report is `
-      + "a conclusion with addresses, and a list long enough to be the reading itself is the reading.",
+      localize("agent-harness.subsession.length_citations_exceed_the_citations", "{length} citations exceed the {CITATIONS_MAX} a single report may carry. A report is a conclusion with addresses, and a list long enough to be the reading itself is the reading.", { length: String(cites.length), CITATIONS_MAX: String(CITATIONS_MAX) }),
       { bound: "citations", limit: CITATIONS_MAX, got: cites.length });
 
   for (const c of cites) {
     if (c == null || typeof c !== "object" || Array.isArray(c))
       return refusal("REPORT_CITATION_NOT_AN_ADDRESS",
-        "a citation is an object carrying the address the parent re-reads by. What arrived is not one.");
+        localize("agent-harness.subsession.a_citation_is_an_object", "a citation is an object carrying the address the parent re-reads by. What arrived is not one."));
     const extra = Object.keys(c).filter((k) => !(k in CITATION_KEYS));
     if (extra.length)
       return refusal("REPORT_CITATION_NOT_AN_ADDRESS",
-        `a citation carries exactly ${Object.keys(CITATION_KEYS).join(", ")} — ${extra.join(", ")} `
-        + "is not part of it. The parent re-reads BY ADDRESS; a citation that carried the content "
-        + "would be the document arriving inside the thing that exists to replace it.",
+        localize("agent-harness.subsession.a_citation_carries_exactly_keys", "a citation carries exactly {keys} — {extra} is not part of it. The parent re-reads BY ADDRESS; a citation that carried the content would be the document arriving inside the thing that exists to replace it.", { keys: String(Object.keys(CITATION_KEYS).join(", ")), extra: String(extra.join(", ")) }),
         { fields: extra });
     if (!(typeof c.address === "string" && c.address.trim() !== ""))
       return refusal("REPORT_CITATION_NOT_AN_ADDRESS",
-        "a citation must carry a non-empty address. An address the parent cannot re-read by is not "
-        + "a citation, it is a claim.");
+        localize("agent-harness.subsession.a_citation_must_carry_a", "a citation must carry a non-empty address. An address the parent cannot re-read by is not a citation, it is a claim."));
     if (c.address.length > ADDRESS_MAX)
       return refusal("REPORT_OVER_BOUND",
-        `an address of ${c.address.length} characters exceeds ${ADDRESS_MAX}. An address is how the `
-        + "parent re-reads; something this long is content wearing an address's field.",
+        localize("agent-harness.subsession.an_address_of_length_characters", "an address of {length} characters exceeds {ADDRESS_MAX}. An address is how the parent re-reads; something this long is content wearing an address's field.", { length: String(c.address.length), ADDRESS_MAX: String(ADDRESS_MAX) }),
         { bound: "address", limit: ADDRESS_MAX, got: c.address.length });
   }
 
@@ -447,13 +424,10 @@ export function checkReport(report) {
      document fits inside a field called `summary`. */
   if (report.summary != null && typeof report.summary !== "string")
     return refusal("REPORT_SUMMARY_NOT_PROSE",
-      "`summary` is what the sub-session concluded, in prose. A structure here is the reading itself "
-      + "arriving under the field that exists to replace it.");
+      localize("agent-harness.subsession.summary_is_what_the_sub", "`summary` is what the sub-session concluded, in prose. A structure here is the reading itself arriving under the field that exists to replace it."));
   if (typeof report.summary === "string" && report.summary.length > SUMMARY_MAX)
     return refusal("REPORT_OVER_BOUND",
-      `a summary of ${report.summary.length} characters exceeds ${SUMMARY_MAX}. §14b.1: a sub-session `
-      + "hands back what it FOUND, never the documents — and a prose field with no ceiling is where a "
-      + "document arrives when every other door is shut.",
+      localize("agent-harness.subsession.a_summary_of_length_characters", "a summary of {length} characters exceeds {SUMMARY_MAX}. §14b.1: a sub-session hands back what it FOUND, never the documents — and a prose field with no ceiling is where a document arrives when every other door is shut.", { length: String(report.summary.length), SUMMARY_MAX: String(SUMMARY_MAX) }),
       { bound: "summary", limit: SUMMARY_MAX, got: report.summary.length });
 
   /* (5) THE WHOLE-REPORT BELT, computed from the parts above rather than typed,
@@ -461,8 +435,7 @@ export function checkReport(report) {
      escaping it. */
   if (size(report) > REPORT_MAX_BYTES)
     return refusal("REPORT_OVER_BOUND",
-      `this report serialises to ${size(report)} bytes against a ${REPORT_MAX_BYTES}-byte ceiling `
-      + "computed from the contract's own fields. Whatever it is carrying, it is not a conclusion.",
+      localize("agent-harness.subsession.this_report_serialises_to_size", "this report serialises to {size} bytes against a {REPORT_MAX_BYTES}-byte ceiling computed from the contract's own fields. Whatever it is carrying, it is not a conclusion.", { size: String(size(report)), REPORT_MAX_BYTES: String(REPORT_MAX_BYTES) }),
       { bound: "report", limit: REPORT_MAX_BYTES, got: size(report) });
 
   return null;
@@ -614,8 +587,7 @@ export function documentHoldings(resolved) {
  *  citations whose document is UNDETERMINED because the plane refused. */
 export function holdingsNote(h) {
   if (!h) return "";
-  let s = `${h.documents} document(s) held across ${h.citations} citation(s), each counted ONCE with its `
-        + `versions (${h.versions_cited} of ${h.versions_held} held version(s) cited, read through op=versionchain)`;
+  let s = localize("agent-harness.subsession.documents_document_s_held_across", "{documents} document(s) held across {citations} citation(s), each counted ONCE with its versions ({versions_cited} of {versions_held} held version(s) cited, read through op=versionchain)", { documents: String(h.documents), citations: String(h.citations), versions_cited: String(h.versions_cited), versions_held: String(h.versions_held) });
   if (h.unchained) s += `; ${h.unchained} cited item(s) in no version chain, each counted as itself`;
   if (h.undetermined) s += `; ${h.undetermined} citation(s) whose document is UNDETERMINED — the plane refused `
                          + `a read, so they are counted as neither a document nor an item`;

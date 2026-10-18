@@ -13,6 +13,7 @@ import {
   renderBlock, renderedAuthority, rendererFor,
 } from "../../../src/render.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "../../../src/subresources.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const HOST = "portal.example.gov";
 const PAGE = `https://${HOST}/agenda`;
@@ -58,8 +59,8 @@ test("R1: RENDER_DEFAULTS, RENDERED_METHOD and NON_DATA_TYPES are exactly as sta
 });
 
 test("R2: the tick's sentence and the incomplete reading are the one copy of each", () => {
-  assert.equal(RENDER_TICK_UNDETERMINED, "content undetermined — not watched: this source renders its content in the browser");
-  assert.equal(RENDER_INCOMPLETE_READING, "render may be incomplete (wait timed out)");
+  assert.equal(RENDER_TICK_UNDETERMINED, word("render.content_undetermined_watched"));
+  assert.equal(RENDER_INCOMPLETE_READING, word("render.render_incomplete_wait"));
   /* The record and the reading use this copy (R14, R4). */
   const r = block(answer({ wait: { fired: "timeout" } })).render;
   assert.equal(completenessReading(r), RENDER_INCOMPLETE_READING);
@@ -98,9 +99,9 @@ test("R4: completenessReading answers each completeness its reading; never throw
   assert.equal(completenessReading({ completeness: "condition_met", wait: { fired_class: "condition" } }), null);
   assert.equal(completenessReading({ completeness: "undetermined", wait: { fired_class: "timeout" } }), RENDER_INCOMPLETE_READING);
   assert.equal(completenessReading({ completeness: "undetermined", wait: { fired_class: "undetermined" } }),
-    "render completeness is undetermined (which wait ended the render was not established)");
+    word("render.render_completeness_undetermined"));
   assert.equal(completenessReading({ completeness: "undetermined" }),
-    "render completeness is undetermined (which wait ended the render was not established)");
+    word("render.render_completeness_undetermined"));
   assert.equal(completenessReading({ completeness: "settled_with_open_requests", wait: { fired_class: "settled", long_lived: { count: 2 } } }),
     "settled; 2 long-lived request(s) still open were not waited for");
   assert.equal(completenessReading({ completeness: "settled_with_open_requests", wait: { fired_class: "settled" } }),
@@ -262,7 +263,7 @@ test("R12: requests counted by outcome; subresources and data carry the plane's 
   const claim = "e".repeat(64);
   const n = block(answer({ requests: [{ url: PAGE, type: "document", outcome: "completed", sha256: claim }] })).render;
   assert.deepEqual(n.subresources[0], { address: PAGE, type: "document", sha256: "undetermined",
-    digest_reason: "your team's Civicsmith did not keep this render's subresource bytes", renderer_sha256: claim });
+    digest_reason: word("render.group_civicsmith_keep_render"), renderer_sha256: claim });
   assert.equal(n.data[0].sha256, "undetermined");
   /* The page host is navigated_to's, else pageUrl's. */
   const moved = block(answer({ navigated_to: "https://moved.example.org/p",
@@ -329,7 +330,7 @@ test("R15: the render's facts are the renderer's or null with their absence stat
   const bare = block({ ok: true, html: "<html></html>", viewport: { width: "1280", height: 800 }, dpr: "1", elapsed_ms: NaN }, { at: undefined }).render;
   for (const k of ["engine", "engine_version", "viewport", "dpr", "locale", "timezone", "elapsed_ms"]) {
     assert.equal(bare[k], null, k);
-    assert.ok(bare.undetermined.includes(`${k}: not reported by the renderer`), k);
+    assert.ok(bare.undetermined.includes(word("render.reported_renderer", { key: String(k) })), k);
   }
   assert.deepEqual([bare.navigated_to, bare.status, bare.at], [null, null, null]);
 });

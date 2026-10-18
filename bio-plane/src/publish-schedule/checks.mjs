@@ -7,14 +7,15 @@
  * deletes its copy, so no row id is held twice once both have merged. A change to the row moves `CATALOG_VERSION`
  * (rule 17). */
 
+import { word } from '../setup-words/index.mjs';
+
 export const PUBLISH_SCHEDULE_CHECKS = {
   /* C-122.5 (R2, R9; N687, K1839): a waiting edition taken at its time with no publisher able to check it (none
      registered, one that throws, or one giving neither answer) is stopped, never published unchecked. */
   SCHEDULED_CHECK_UNAVAILABLE: {
     check: 'C-122.5',
     where: 'src/publish-schedule/schedule.mjs unchecked > is-scheduled-check-available',
-    translation: 'This edition was not published at its set time, because the checks it needed then could not be run. '
-      + 'Nothing was published. Sign it again to publish it.',
+    translation: word('refusal.SCHEDULED_CHECK_UNAVAILABLE'),
   },
 };
 
