@@ -43,3 +43,27 @@ Layer 3. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/acquisition/unpack.mjs:509` "no acquisition receipt or register row names this archive; nothing was opened"
 - plain `bio-plane/src/acquisition/unpack.mjs:786` "no acquisition instance holds this storage's archive records"
 - plain `bio-plane/src/acquisition/unpack.mjs:788` "no archive your team holds and you may see answers to that digest"
+
+## Test copies of code sentences (K3962)
+
+19 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/acquisition/acquire.test.mjs:110` "\", computed by your team's Civicsmith\""
+- testcopy `bio-plane/test/m/acquisition/acquire.test.mjs:593` "\"data/snapshot-manifest.json\""
+- testcopy `bio-plane/test/m/acquisition/memento-at.test.mjs:51` "\"these bytes were served for\""
+- testcopy `bio-plane/test/m/acquisition/memento.test.mjs:34` "\"these bytes were served for\""
+- testcopy `bio-plane/test/m/acquisition/memento.test.mjs:36` "\", computed by your team's Civicsmith over the bytes it received\""
+- testcopy `bio-plane/test/m/acquisition/memento.test.mjs:144` "\"these bytes were served for\""
+- testcopy `bio-plane/test/m/acquisition/origin.test.mjs:24` "\"an account-gated register is read only from a member's own capture\""
+- testcopy `bio-plane/test/m/acquisition/origin.test.mjs:29` "\"a register of actions\""
+- testcopy `bio-plane/test/m/acquisition/origin.test.mjs:30` "\"a register of actions\""
+- testcopy `bio-plane/test/m/acquisition/origin.test.mjs:30` "\"a member's own capture\""
+- testcopy `bio-plane/test/m/acquisition/origin.test.mjs:95` "\"a register of actions\""
+- testcopy `bio-plane/test/m/acquisition/origin.test.mjs:95` "\"a member's own capture\""
+- testcopy `bio-plane/test/m/acquisition/profile.test.mjs:28` "\"a document of no recognised type\""
+- testcopy `bio-plane/test/m/acquisition/reputation.test.mjs:92` "\"the document itself is unchanged\""
+- testcopy `bio-plane/test/m/acquisition/selflink-render.test.mjs:51` "\"data/snapshot-manifest.json\""
+- testcopy `bio-plane/test/m/acquisition/subresources-walk.test.mjs:71` "\"data/snapshot-manifest.json\""
+- testcopy `bio-plane/test/m/acquisition/subresources-walk.test.mjs:75` "\"data/snapshot-manifest.json\""
+- testcopy `bio-plane/test/m/acquisition/unpack.test.mjs:110` "\"held by your team's Civicsmith, cut out and verified by size and CR...\""
+- testcopy `bio-plane/test/m/acquisition/unpack.test.mjs:112` "\"these bytes were served for\""

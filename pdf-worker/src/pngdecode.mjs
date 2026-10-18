@@ -58,8 +58,8 @@ const truncated = (note, extra = {}) => new PngRefusal("TRUNCATED", { note, ...e
 /** Every `feature` an UNSUPPORTED refusal can carry. */
 export const PNG_REFUSES = Object.freeze({
   "interlaced": "the image is stored Adam7-interlaced (IHDR interlace method 1), whose seven passes are not reassembled here",
-  "an unknown critical chunk": "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image",
+  "an unknown critical chunk": localize("image-codecs.pngdecode.a_chunk_the_decoder_must", "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines"),
+  [localize("image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound")]: localize("image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image"),
 });
 
 /* THE MEMORY BOUND, a workload size (N34, D-312), the same figure as the JPEG
@@ -193,7 +193,7 @@ export async function decodePng(bytes) {
   const rowBytes = Math.ceil((W * ch * depth) / 8);
   const need = W * H * comps + 2 * (rowBytes + 1);
   if (need > MEMORY_BOUND)
-    throw unsupported("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: comps });
+    throw unsupported(localize("image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound"), { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: comps });
 
   /* The palette and transparency, as the colour type reads them. */
   let palette = null, alphaOf = null, key = null, transparency = colourType === 4 || colourType === 6 ? "alpha channel" : null;
@@ -302,12 +302,12 @@ export async function decodePng(bytes) {
      * words, which differ between platforms, so all are CORRUPT here; a file cut
      * short is TRUNCATED by its chunks, and a whole stream of too few rows below. */
     const why = String((e && e.message) || (e && e.code) || e);
-    throw corrupt(y < H ? localize("image-codecs.pngdecode.the_image_data_does_not", "the image data does not inflate (row {y} of {H})", { y: String(y), H: String(H) }) : "the image data's zlib trailer is damaged or missing",
+    throw corrupt(y < H ? localize("image-codecs.pngdecode.the_image_data_does_not", "the image data does not inflate (row {y} of {H})", { y: String(y), H: String(H) }) : localize("image-codecs.pngdecode.the_image_data_s_zlib", "the image data's zlib trailer is damaged or missing"),
       { rows: y, height: H, inflater: why });
   }
   if (extra) {
     reader.cancel().catch(() => {});
-    throw corrupt("the image data inflates past the frame", { height: H, row_bytes: rowBytes });
+    throw corrupt(localize("image-codecs.pngdecode.the_image_data_inflates_past", "the image data inflates past the frame"), { height: H, row_bytes: rowBytes });
   }
   if (y < H) throw truncated(localize("image-codecs.pngdecode.the_image_data_ends_after", "the image data ends after {y} of {H} rows", { y: String(y), H: String(H) }), { rows: y, height: H });
   return { width: W, height: H, comps, samples: out, detail: { colour_type: colourType, bit_depth: depth, transparency } };

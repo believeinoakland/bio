@@ -75,3 +75,15 @@ Layer 11. 35 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - plain `bio-plane/src/queue-producers/index.mjs:2449` "the read of a named place's arrivals is registered once at start, and it was"
 - plain `bio-plane/src/queue-producers/index.mjs:2599` "the member's row carries no instant this producer can read"
 - plain `bio-plane/src/queue-producers/index.mjs:2647` "the request carries no instant this producer can read"
+
+## Test copies of code sentences (K3962)
+
+7 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/queue-producers/action.test.mjs:128` "\"it leaves when the key is no longer active\""
+- testcopy `bio-plane/test/m/queue-producers/cited.test.mjs:104` "\"the signature does not verify\""
+- testcopy `bio-plane/test/m/queue-producers/feeditems.test.mjs:110` "\"new-version-arrived-from-another-team\""
+- testcopy `bio-plane/test/m/queue-producers/scheduled.test.mjs:167` "\"the member who set the time\""
+- testcopy `bio-plane/test/m/queue-producers/shared.test.mjs:88` "\"new-version-arrived-from-another-team\""
+- testcopy `bio-plane/test/m/queue-producers/shared.test.mjs:144` "\"new-version-arrived-from-another-team\""
+- testcopy `bio-plane/test/m/queue-producers/wizard.test.mjs:42` "\"the script's project owner\""

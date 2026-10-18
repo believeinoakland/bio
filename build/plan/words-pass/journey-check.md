@@ -19,3 +19,10 @@ Layer 11. 4 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/journey-check/runner.mjs:94` "no token was handed down"
 - plain `bio-plane/src/journey-check/runner.mjs:99` "the token is not one this sign-in minted"
 - plain `bio-plane/src/journey-check/runner.mjs:100` "the local arm's runner has no fake model bound"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/journey-check/live.test.mjs:55` "\"pairs, LIVE beside DESIGN\""
+- testcopy `bio-plane/test/m/journey-check/runner.test.mjs:120` "\"Search with the meaningrows tool, then call report once.\""

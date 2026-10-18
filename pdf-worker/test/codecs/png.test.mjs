@@ -14,6 +14,7 @@
  * node's own `zlib.crc32`, and image data with node's own `zlib`, so a damaged
  * file is damaged only where the test says. */
 import "../../../bio-plane/test/sandbox.mjs";
+import { localize } from "../../../bio-plane/src/setup-words/index.mjs";
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -249,7 +250,7 @@ test("R10 R7 every other refusal, each as the bytes require; every code and ever
 
 test("R10 R7 a frame past the memory bound is refused from its header, before any sample, and the bound counts the output", async () => {
   const sized = (name, w, h) => edited(name, (cs) => withIhdr(cs, [[0, be32(w)], [4, be32(h)]]));
-  const memory = async (d) => { const r = await refusal(d); return r.detail.feature === "an image past the memory bound" ? r : null; };
+  const memory = async (d) => { const r = await refusal(d); return r.detail.feature === localize("image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound") ? r : null; };
   const r = await memory(sized("basn2c08.png", 6000, 6000));
   assert.ok(r, "a 6000x6000 colour frame");
   assert.deepEqual([r.code, r.detail.width, r.detail.height, r.detail.components, r.detail.bound_bytes], ["UNSUPPORTED", 6000, 6000, 3, 61_300_000]);

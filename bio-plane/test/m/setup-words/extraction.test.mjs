@@ -24,7 +24,7 @@ function tree(files, wordsList) {
     { id: "mod-one", layer: 1, paths: ["src/one/"], tests: ["test/one/"], uses: [] },
     { id: "mod-two", layer: 1, paths: ["src/two/"], tests: ["test/two/"], uses: [] },
   ] }));
-  put("docs/development/ux-substrate/screens/words.json", JSON.stringify({ counts: { total: wordsList.length }, words: wordsList }));
+  put(join("docs", "development", "ux-substrate", "screens", "words.json"), JSON.stringify({ counts: { total: wordsList.length }, words: wordsList }));
   for (const [p, text] of Object.entries(files)) put(p, text);
   execFileSync("git", ["init", "-q"], { cwd: dir });
   execFileSync("git", ["add", "-A"], { cwd: dir });
@@ -181,8 +181,8 @@ test("R17 over the whole real list: every sentence is transformed, every placeho
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("R18 a row whose en holds a plural, select or other formatted argument fails the generator, naming the id; so does a code row; a plain {name} placeholder does not", () => {
-  const forms = ["{n, plural, one {a thing} other {things}}", "{who, select, a {x} other {y}}", "{ n , number}"];
+test("R18 a row whose en holds a plural, select or other formatted argument fails the generator, naming the id; so does a code row; a plain {name} placeholder does not, nor braces with a comma that name no ICU argument type", () => {
+  const forms = ["{n, plural, one {a thing} other {things}}", "{who, select, a {x} other {y}}", "{ n , number}", "{d, date, short}"];
   for (const form of forms) {
     const root = tree({}, [...DESIGN, { key: "fix.held.formatted", en: `Has ${form}` }]);
     try {
@@ -197,7 +197,8 @@ test("R18 a row whose en holds a plural, select or other formatted argument fail
     assert.notEqual(r.code, 0);
     assert.match(r.out, /one\.area\.formatted/);
   } finally { rmSync(root, { recursive: true, force: true }); }
-  const ok = tree({ "src/one/a.mjs": 'localize("one.area.plain", "{n} and {m}");' }, DESIGN);
+  /* braces with a comma that name no ICU argument type are text */
+  const ok = tree({ "src/one/a.mjs": 'localize("one.area.plain", "{n} and {m}: a shape {amount, units}");' }, DESIGN);
   try { assert.equal(run(ok, "--out", join(ok, "rows.mjs")).code, 0); } finally { rmSync(ok, { recursive: true, force: true }); }
 });
 

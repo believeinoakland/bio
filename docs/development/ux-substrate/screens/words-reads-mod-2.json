@@ -11314,6 +11314,30 @@
    },
    {
     "file": "ooxml.mjs",
+    "line": 927,
+    "text": "odf:${…} present but NOT the first archive member",
+    "why": "a diagnostic signal of discriminate, which every consumer passes on unread; a member reads only its why code (B341, K3955)"
+   },
+   {
+    "file": "ooxml.mjs",
+    "line": 929,
+    "text": " local-header offset ${…}, earliest ${…})",
+    "why": "a diagnostic signal of discriminate, which every consumer passes on unread; a member reads only its why code (B341, K3955)"
+   },
+   {
+    "file": "ooxml.mjs",
+    "line": 933,
+    "text": "odf:${…} is first but COMPRESSED (method ${…}, ODF requires stored)",
+    "why": "a diagnostic signal of discriminate, which every consumer passes on unread; a member reads only its why code (B341, K3955)"
+   },
+   {
+    "file": "ooxml.mjs",
+    "line": 965,
+    "text": "odf:${…} ${…} (first member, stored)",
+    "why": "a diagnostic signal of discriminate, which every consumer passes on unread; a member reads only its why code (B341, K3955)"
+   },
+   {
+    "file": "ooxml.mjs",
     "line": 978,
     "text": "odf:mimetype declares ${…}, but ${…} is ABSENT",
     "why": "a diagnostic for builders (module registration, release history, file-structure signals, an HTTP user agent); no member reads it"

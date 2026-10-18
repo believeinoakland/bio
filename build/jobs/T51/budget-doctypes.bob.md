@@ -1,6 +1,6 @@
 # BOB to budget-doctypes (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -16,3 +16,18 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio budget-doctypes tranche/T51 job/T51/budget-doctypes`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3957, K3959): merge tranche/T51 into your branch and pull civicos-process (27aa50e) first. The words check gained a `plain` arm: lowercase, unpunctuated strings of 5+ words that it missed before (e.g. a `why:` reason a member reads). Your module has 20 of them, listed in the section "Plain findings (K3957)" of build/plan/words-pass/budget-doctypes.md (read it whole). Judge each by the words rule of your START: a sentence a member can read is read through localize('budget-doctypes.<file stem>.<slug>', en, vars) (or word(key) where a row exists), a test copying it compares with localize/word; text no member ever reads goes in a REPORT to BOB, each with why, for the design's unkeyed list (K3944). Then run your tests and checks again (the words check must show no finding in your module but those you REPORTed) and record COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K3962, K3965): merge tranche/T51 and pull civicos-process (ea6cd83) first. The words check's testcopy arm now also counts a test string that copies the en of a product localize call (tag code). Your module's tests hold some: section 'Test copies of code sentences (K3962)' of build/plan/words-pass/budget-doctypes.md (read it whole). Make each test compare with localize(id, en) / word(id) or assert the key, never the sentence's text (K3810); convert also any such copy written as a regular expression, which the check cannot read. Run your tests, the checks and 'node bio-plane/src/setup-words/build.mjs --check' (read-only); record COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K3967; setup-words R13, K3964). Merge `tranche/T51` first. Your J3 is merged; two items remain in your module:
+1. `budget-doctypes/index.mjs`:107 "not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells" is a sentence a member reads (it is a refusal's reason). Read it by `localize("budget-doctypes.index.<slug>", en)`, whatever the check counts (R13 binds every sentence a member reads).
+2. The regex copies you left (the R1 case table near line 97, the floor reason, and the code-form reason near line 287): compare each with `localize(id, en, vars)`, the vars computed in the test from the fixture it reads (the line count, the column), never a copied sentence. A fragment the test cannot express that way is asked of me, naming the line.
+Then the module's tests, `node bio-plane/src/setup-words/build.mjs --check` (read-only; the jurisdictions note is gone since setup-words' R18 fix merged), the checks, and COMPLETE.

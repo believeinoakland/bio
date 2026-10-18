@@ -10,6 +10,7 @@ import { CONTRACT } from "../../docprofile/doctypes/index.mjs";
 import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { EMPTY, HELD, PE, PE_POLICY } from "./fixtures.mjs";
 import { CASES } from "./golden-cases.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { readWith } from "./read.mjs";
 import { POLICIES, ANSWERS, SECTION_ANSWERS, FRESH, FRESH_ANSWERS, score, scoreSections, same } from "./policies.mjs";
 
@@ -41,7 +42,7 @@ test("R1 R25 policy is registered after regulation, matches CERTAIN only on a he
   for (const v of [EMPTY, { ...PE, vocabulary: { ...PE.vocabulary, policy_headers: [] } }, { ...PE, standard_sources: [] }]) {
     const r = policy.detect({ text: PE_POLICY, view: v });
     assert.equal(r.confidence, CONFIDENCE.NONE);
-    assert.match(r.why, /supply no policy series or no policy header labels/);
+    assert.equal(r.why, localize("doctypes.policy.no_series_supplied", "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy"));
   }
   // a standard's designation opening a line is never the series a header names (K1933): the test profile's MHSI standard
   const standard = PE_POLICY.replace("HARBOUR STANDING ORDER\nOrder No. 07/24", "MHSI Standard 101\nOrder No. 07/24");
@@ -229,8 +230,8 @@ test("R34 assess: a header field or a section that moved, or one read on one sid
   const r2 = policy.assess(none, none);
   assert.equal(r2.meaningful, null);
   assert.deepEqual(r2.events, []);
-  assert.match(r2.header_why, /neither reading gave a header/);
-  assert.match(r2.sections_why, /neither reading gave sections/);
+  assert.equal(r2.header_why, localize("doctypes.policy.header_neither", "neither reading gave a header, so nothing is said about the header"));
+  assert.equal(r2.sections_why, localize("doctypes.policy.sections_neither", "neither reading gave sections, so nothing is said about sections: {why}", { why: none.sections_why }));
 });
 
 /* ------------------------------------------------------------------- R35, R3 */

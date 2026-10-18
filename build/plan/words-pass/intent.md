@@ -18,3 +18,9 @@ Layer 7. 8 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/intent/index.mjs:62` "declaring, revising or retiring an aspiration the whole team holds"
 - plain `bio-plane/src/intent/index.mjs:529` "stage's grade unknown), so whether it reaches the required grade is not known"
 - plain `bio-plane/src/intent/index.mjs:605` "not known; it is never taken as zero"
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/intent/pursuits.test.mjs:24` "\"is an administrator's act\""

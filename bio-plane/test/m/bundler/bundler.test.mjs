@@ -18,7 +18,9 @@ import {
   isContainer, isGuarded, containerDescriptor, imageReference, containerClasses, containerParts, classPackages,
   statementPackages, markerIsContainer, workerPart, WORKER_PART_PATH, BUCKET_ROLES,
   SOURCE_FIELD, containerSourceHash, containerImageStates, containerImageFindings, recordContainerDigest,
+  planeMember, wordKeysOf,
 } from "../../../scripts/fleet-bundle.mjs";
+import { build as esbuildBuild } from "esbuild";
 import { parseJsonc } from "../../../scripts/jsonc.mjs";
 import {
   readGitProvenance, stateOf, contentStateOf, classifyDiscovered, reportProvenance, repoPath,
@@ -1026,4 +1028,260 @@ test("R36: a digest that is not sha256:<64 hex> (CONTAINER_DIGEST_INVALID), a cl
     writeFileSync(join(root, "runner/Dockerfile"), `FROM docker.io/library/node@${IMG_BASE}\nCOPY package.json ./\nCOPY container ./container/\nCOPY --from=build /out ./out\n`);
     assert.deepEqual(files(), before, "nothing was written by any refusal");
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+/* ------------------------------------------------------- R36 (T51-144): the two digests agree */
+
+/** T51-144: each container class whose marker `image.digest` is not the digest its `wrangler.jsonc` container block
+ *  (matched by class) names, as text naming the member and the class; `[]` when every class agrees. */
+const digestDisagreements = (members) => members.filter(isContainer).flatMap((m) => {
+  const cfg = parseJsonc(readFileSync(join(m.abs, "wrangler.jsonc"), "utf8"), `${m.dir}/wrangler.jsonc`);
+  const blocks = Array.isArray(cfg.containers) ? cfg.containers : [];
+  return containerClasses(m).classes.flatMap((cls) => {
+    const marked = cls.image && cls.image.digest;
+    const block = blocks.find((b) => b.class_name === cls.class_name);
+    const named = block && typeof block.image === "string" ? block.image.split("@")[1] : null;
+    return marked && marked === named ? [] : [`${m.name} ${cls.class_name}: fleet-member.json names ${marked}, wrangler.jsonc names ${named}`];
+  });
+});
+
+test("R36 (T51-144): over the real fleet, each container class's fleet-member.json image.digest is the digest its wrangler.jsonc containers[] entry names, so a cut cannot leave one stale", () => {
+  const members = discoverMembers();
+  assert.equal(members.filter(isContainer).flatMap((m) => containerClasses(m).classes).length, 3, "agent-runner's class and file-scanner's two, no other");
+  assert.deepEqual(digestDisagreements(members), []);
+});
+
+test("R36 (T51-144): control: a fixture whose two digests differ fails the agreement test naming the member and the class; the same fixture with them equal passes", () => {
+  const root = tmp("t144");
+  try {
+    imageMember(root);
+    const members = () => discoverMembers(root);
+    assert.deepEqual(digestDisagreements(members()), [], "the fixture's two digests agree");
+    const wrangler = join(root, "runner/wrangler.jsonc");
+    writeFileSync(wrangler, readFileSync(wrangler, "utf8").replace(DIGEST, NEW_DIGEST));
+    assert.deepEqual(digestDisagreements(members()),
+      [`runner Runner: fleet-member.json names ${DIGEST}, wrangler.jsonc names ${NEW_DIGEST}`]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+/* ------------------------------------------------------------------------- R38 */
+
+/* A fixture member that reads a small word table through the same three calls the product's `setup-words` serves. The
+   table's rows are the product's own shape, [key, en, note, means, protected, origin]. */
+const FIXTURE_ROWS = [
+  ["refusal.ALPHA", "a", null, null, false, "design"], ["refusal.BETA", "b", null, null, false, "design"],
+  ["plain.one", "o", null, null, false, "design"], ["plain.two", "t", null, null, false, "design"],
+  ["plain.three", "h", null, null, false, "code"], ["other.x", "x", null, null, false, "design"],
+  ["tpl.a", "p", null, null, false, "design"], ["tpl.b", "q", null, null, false, "design"],
+];
+const FIXTURE_INDEX = `import { WORD_ROWS, WORDS_COMMIT } from "./rows.mjs";
+export { WORD_ROWS, WORDS_COMMIT };
+const by = () => new Map(WORD_ROWS.map((r) => [r[0], r]));
+export const hasWord = (key) => by().has(key);
+export const word = (key) => by().get(key)[1];
+export const localize = (id, en) => (by().get(id) ? by().get(id)[1] : en);
+`;
+
+/** A fixture member under `root/dir` whose `src/index.mjs` is `body`, with the table at `src/setup-words/`. */
+function wordsFixture(root, body, { dir = "w", extra = {} } = {}) {
+  const m = fixture(root, dir, { vendored: false });
+  mkdirSync(join(m.abs, "src/setup-words"), { recursive: true });
+  writeFileSync(join(m.abs, "src/setup-words/rows.mjs"),
+    `export const WORDS_COMMIT = "abc";\nexport const WORD_ROWS = Object.freeze(${JSON.stringify(FIXTURE_ROWS)});\n`);
+  writeFileSync(join(m.abs, "src/setup-words/index.mjs"), FIXTURE_INDEX);
+  writeFileSync(join(m.abs, "src/index.mjs"),
+    'import { word, localize, hasWord } from "./setup-words/index.mjs";\n' + body
+    + "\nexport default { fetch() { return new Response(String(KEYS)); } };\n");
+  for (const [rel, text] of Object.entries(extra)) writeFileSync(join(m.abs, rel), text);
+  return m;
+}
+
+/** The keys of the rows a built bundle carries, read from its `WORD_ROWS` literal. */
+function keptKeys(bytes) {
+  const text = bytes.toString("utf8");
+  const at = text.indexOf("WORD_ROWS = Object.freeze([");
+  if (at < 0) return null;
+  const end = text.indexOf("\n]);", at);
+  return [...text.slice(at, end).matchAll(/^\s*\[("(?:[^"\\]|\\.)*"),/gm)].map((m) => JSON.parse(m[1]));
+}
+
+test("R38: a member's bundle carries exactly the rows its inputs name at word, localize and hasWord calls, in the table's order, and its manifest records their count and digest", async () => {
+  const root = tmp("r38a");
+  try {
+    const m = wordsFixture(root,
+      'const KEYS = [word("plain.two"), localize("plain.one", "fallback"), hasWord("other.x"), localize("not.in.table", "only here"),\n'
+      + '  word(`tpl.a`), (KEYS_FLAG ? word("tpl.b") : word("plain.three"))];\nvar KEYS_FLAG = true;');
+    const built = await buildMember(m);
+    const want = FIXTURE_ROWS.map((r) => r[0]).filter((k) => ["plain.one", "plain.two", "plain.three", "other.x", "tpl.a", "tpl.b"].includes(k));
+    assert.deepEqual(keptKeys(built.bytes), want, "the named rows, no other, in the table's own order");
+    assert.ok(!built.bytes.toString("utf8").includes("refusal.ALPHA"), "a row nothing names is not in the bundle");
+    assert.equal(built.words.rows, want.length);
+    const kept = FIXTURE_ROWS.filter((r) => want.includes(r[0]));
+    assert.equal(built.words.sha256, hex(JSON.stringify(kept)), "the digest is of the kept rows");
+    assert.deepEqual(manifestFrom(m, built).words, { rows: want.length, sha256: hex(JSON.stringify(kept)) });
+    /* the module's own rows import is replaced, so the bundle still answers every call */
+    const out = join(root, "out.mjs"); writeFileSync(out, built.bytes);
+    assert.equal((await import(`file://${out}`)).default.fetch().constructor, Response);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R38: control: a key built from a literal prefix ('refusal.' + code, or a template) keeps every row under that prefix", async () => {
+  const root = tmp("r38b");
+  try {
+    const m = wordsFixture(root,
+      "const code = process.argv.length ? 'ALPHA' : 'BETA';\nconst KEYS = [word('refusal.' + code), word(`tpl.${code}`)];");
+    const built = await buildMember(m);
+    assert.deepEqual(keptKeys(built.bytes), ["refusal.ALPHA", "refusal.BETA", "tpl.a", "tpl.b"], "all of refusal.*, all of tpl.*, nothing else");
+    assert.equal(built.words.rows, 4);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R38: control: a key read from a bare variable keeps the whole table for that member, names every such site by file and line in its manifest (words: all), and the build does not fail", async () => {
+  const root = tmp("r38c");
+  try {
+    const m = wordsFixture(root, "function say(k) {\n  return word(k);\n}\nconst KEYS = [say('plain.one'), hasWord(String(1))];");
+    const built = await buildMember(m, { write: true });
+    for (const [k] of FIXTURE_ROWS) assert.ok(built.bytes.toString("utf8").includes(`"${k}"`), `the whole table is kept: ${k}`);
+    assert.deepEqual(built.words, { rows: "all", total: FIXTURE_ROWS.length, text: null, sha256: null, sites: ["src/index.mjs:3", "src/index.mjs:5"] });
+    const man = manifestFrom(m, built);
+    assert.equal(man.words, "all");
+    assert.deepEqual(man.wordSites, ["src/index.mjs:3", "src/index.mjs:5"], "every site, by file and line");
+    /* the build equals one with no trimming at all: the bytes of the table are the table's */
+    const untrimmed = await buildMember({ ...m, wholeWordTable: true });
+    assert.ok(Buffer.compare(built.bytes, untrimmed.bytes) === 0, "a member that keeps the whole table is built as the whole table is");
+    /* a key with no literal head is the same: a template that starts with its variable, a call's result, no key, a spread */
+    for (const body of ["const k = 'a';\nconst KEYS = word(`${k}.x`);", "const KEYS = word(String(1));", "const KEYS = word();", "const KEYS = word(...['plain.one']);"]) {
+      const b = await buildMember(wordsFixture(root, body, { dir: "w2" }));
+      assert.equal(b.words.rows, "all", body);
+      assert.match(b.words.sites[0], /^src\/index\.mjs:\d+$/, body);
+    }
+    /* one literal site among bare ones does not trim: any unbounded site keeps every row */
+    const mixed = await buildMember(wordsFixture(root, "const KEYS = [word('plain.one'), word(String(2))];", { dir: "w3" }));
+    assert.equal(mixed.words.rows, "all");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R38: control: a read that is not a call (word used as a value, the whole table imported, a dynamic import) keeps the whole table naming the site; a word, localize or hasWord the file declares itself is not the call", async () => {
+  const root = tmp("r38d");
+  try {
+    const all = async (body, dir) => (await buildMember(wordsFixture(root, body, { dir }))).words;
+    assert.deepEqual((await all("const KEYS = ['plain.one'].map(word);", "v")).sites, ["src/index.mjs:2"]);
+    assert.deepEqual((await all("import { WORD_ROWS } from './setup-words/index.mjs';\nconst KEYS = WORD_ROWS.length;", "t")).sites, ["src/index.mjs:2"]);
+    assert.deepEqual((await all("const KEYS = await import('./' + 'setup-words/rows.mjs');", "d")).sites, ["src/index.mjs:2"]);
+    /* a local function named word is that function's own call (setup-words' build uses the same rule) */
+    const m = wordsFixture(root, "function pick(word) { return word(somethingElse()); }\nconst somethingElse = () => 'x';\nconst KEYS = [pick(() => 1), word('plain.one')];", { dir: "s" });
+    assert.deepEqual(keptKeys((await buildMember(m)).bytes), ["plain.one"]);
+    /* wordKeysOf, at the parser: sites are listed, not thrown, and the keys still gathered */
+    const got = wordKeysOf("import {word} from 'x';\nword('a.b'); word(v); word('c.' + v);", "f.mjs");
+    assert.deepEqual([[...got.exact], [...got.prefixes], got.sites.length], [["a.b"], ["c."], 1]);
+    assert.match(got.sites[0], /^f\.mjs:2: /);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R38: the plane's bundle is unchanged: the plane carries the whole table, records no word rows, and is built by the plain recipe; a member whose inputs do not reach the table builds as before and records none", async () => {
+  const plane = planeMember();
+  assert.equal(plane.wholeWordTable, true);
+  const built = await buildMember(plane);
+  assert.equal(built.words, null);
+  assert.equal(manifestFrom(plane, built).words, undefined, "the plane's manifest has no words field");
+  /* the plane is built by the recipe alone (R2), as before R38: no plugin stands between it and the table */
+  const recipe = await esbuildBuild({ ...optionsFor(plane), write: false, logLevel: "silent" });
+  assert.ok(Buffer.compare(built.bytes, Buffer.from(recipe.outputFiles[0].contents)) === 0, "byte-identical to the plain recipe's build");
+  assert.ok(built.bytes.toString("utf8").includes("WORDS_COMMIT"), "with the whole table in it");
+  const root = tmp("r38e");
+  try {
+    const none = fixture(root, "plain", { vendored: false });
+    const b = await buildMember(none);
+    assert.equal(b.words, null);
+    assert.equal(manifestFrom(none, b).words, undefined);
+    const whole = wordsFixture(root, "const KEYS = [word('plain.one')];", { dir: "all" });
+    const wholeBuilt = await buildMember({ ...whole, wholeWordTable: true });
+    /* a build that is no fleet member's (a descriptor with no marker, as the standalone case checker's) is not trimmed */
+    const { marker: _marker, ...adHoc } = whole;
+    const adHocBuilt = await buildMember(adHoc);
+    assert.equal(adHocBuilt.words, null);
+    assert.ok(Buffer.compare(adHocBuilt.bytes, wholeBuilt.bytes) === 0, "built whole");
+    assert.equal(wholeBuilt.words, null);
+    for (const [k] of FIXTURE_ROWS) assert.ok(wholeBuilt.bytes.toString("utf8").includes(`"${k}"`), `a member marked wholeWordTable keeps ${k}`);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R38: verifyFresh covers the rows kept: a manifest that records other rows than a fresh build keeps is stale, and one that records them is fresh", async () => {
+  const root = tmp("r38f");
+  try {
+    const m = wordsFixture(root, "const KEYS = [word('plain.one'), word('plain.two')];");
+    await writeMember(m);
+    const committed = readFileSync(join(m.abs, m.bundle.outfile));
+    const ok = await verifyFresh(m, committed);
+    assert.equal(ok.checked, true); assert.deepEqual(ok.findings, []);
+    const mf = join(m.abs, m.bundle.manifest);
+    const man = JSON.parse(readFileSync(mf, "utf8"));
+    assert.equal(man.words.rows, 2);
+    for (const bad of [{ ...man.words, rows: 3 }, { ...man.words, sha256: "0".repeat(64) }, undefined, "all"]) {
+      writeFileSync(mf, JSON.stringify({ ...man, words: bad }, null, 2));
+      const r = await verifyFresh(m, committed);
+      assert.equal(r.findings.length, 1, JSON.stringify(bad));
+      assert.match(r.findings[0], /^w: STALE BUNDLE .*word rows/);
+    }
+    /* a member that keeps the whole table: its manifest's sites are covered the same way */
+    const whole = wordsFixture(root, "const KEYS = [word(String(1))];", { dir: "wa" });
+    await writeMember(whole);
+    const wholeBytes = readFileSync(join(whole.abs, whole.bundle.outfile));
+    assert.deepEqual((await verifyFresh(whole, wholeBytes)).findings, []);
+    const wm = join(whole.abs, whole.bundle.manifest);
+    const wman = JSON.parse(readFileSync(wm, "utf8"));
+    assert.equal(wman.words, "all");
+    writeFileSync(wm, JSON.stringify({ ...wman, wordSites: ["src/index.mjs:9"] }, null, 2));
+    assert.equal((await verifyFresh(whole, wholeBytes)).findings.length, 1, "a moved site is stale");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+/** The rows the real fleet's members keep, stated by member in the test output. */
+const REAL_WORDS = [];
+const realBuildable = async (m) => {
+  const manifest = (() => { try { return JSON.parse(readFileSync(join(m.abs, m.bundle.manifest), "utf8")); } catch { return null; } })();
+  return manifest ? freshBuildRunnable(m, manifest).runnable : true;
+};
+
+test("R38: over the real fleet, each member that builds carries only the rows its inputs name (each member's row count stated); the bundles' keys are all named by literal at a call or under a literal prefix of its inputs", async () => {
+  for (const m of discoverMembers().filter((x) => x.bundle)) {
+    if (!(await realBuildable(m))) continue;     /* dependencies not installed here: freshBuildRunnable says so, as the fleet gate does */
+    const built = await buildMember(m);
+    if (built.words?.rows === "all") continue;     /* keeps the whole table for a site of another module: the next test */
+    const keys = keptKeys(built.bytes);
+    assert.ok(keys && keys.length > 0 && keys.length === built.words.rows, `${m.name}: carries a word table of ${built.words?.rows} rows`);
+    assert.ok(keys.length < 200, `${m.name}: ${keys.length} rows of ${built.words.total}, not the whole table`);
+    const table = (await import(`file://${join(m.abs, Object.keys(built.metafile.inputs).find((p) => /setup-words\/rows\.mjs$/.test(p)))}`)).WORD_ROWS;
+    assert.deepEqual(keys, table.map((r) => r[0]).filter((k) => new Set(keys).has(k)), `${m.name}: in the table's order`);
+    /* independent of the parser: the sources of the member's bundled first-party inputs name every kept key as a
+       quoted literal, or begin it with a literal prefix followed by a join (a `+` or a `${`) */
+    const sources = Object.keys(built.metafile.inputs).filter((p) => !p.split("/").includes("node_modules") && /\.(mjs|js)$/.test(p) && !/setup-words\/rows/.test(p))
+      .map((p) => readFileSync(join(m.abs, p), "utf8")).join("\n");
+    const prefixes = [...sources.matchAll(/["'`]([A-Za-z0-9_.-]+\.)["'`]\s*\+|`([A-Za-z0-9_.-]+\.)\$\{/g)].map((x) => x[1] ?? x[2]);
+    for (const k of keys)
+      assert.ok(["\"", "'", "`"].some((q) => sources.includes(q + k + q)) || prefixes.some((p) => k.startsWith(p)), `${m.name}: ${k} is named by its inputs`);
+    REAL_WORDS.push(`${m.name} ${keys.length} of ${built.words.total}`);
+  }
+  assert.ok(REAL_WORDS.length >= 3, `the members built here: ${REAL_WORDS.join("; ")}`);
+  console.log(`# R38 real fleet: ${REAL_WORDS.join("; ")}`);
+});
+
+test("R38: over the real fleet, a member whose inputs hold a word read with a variable key keeps the whole table and its manifest names the sites by file and line (agent-worker today; K3958)", async () => {
+  const keepsWhole = [];
+  for (const m of discoverMembers().filter((x) => x.bundle)) {
+    if (!(await realBuildable(m))) continue;
+    const built = await buildMember(m);
+    if (built.words?.rows !== "all") continue;
+    keepsWhole.push(m.name);
+    const man = manifestFrom(m, built);
+    assert.equal(man.words, "all");
+    assert.ok(man.wordSites.length > 0 && man.wordSites.every((s) => /^\S+\.mjs:\d+$/.test(s)), `${m.name}: each site is a file and a line`);
+    assert.deepEqual(man.wordSites, [...man.wordSites].sort(), "in code-point order");
+    for (const site of man.wordSites) {
+      const [file, line] = [site.slice(0, site.lastIndexOf(":")), Number(site.slice(site.lastIndexOf(":") + 1))];
+      assert.ok(readFileSync(join(m.abs, file), "utf8").split("\n").length >= line, `${site} is a line of its file`);
+    }
+    console.log(`# R38 real fleet: ${m.name} keeps the whole table (${built.words.total} rows) for ${man.wordSites.length} site(s): ${man.wordSites.join(", ")}`);
+  }
+  assert.ok(!keepsWhole.includes("pdf-worker") && !keepsWhole.includes("ocr-worker") && !keepsWhole.includes("sheet-worker"), `the members that keep the whole table: ${keepsWhole.join(", ")}`);
 });

@@ -2,6 +2,7 @@
    aliases it recovers buried keys by. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { parseFrontmatter, CORE_FIELDS, FORBIDDEN_ALIASES } from "../../../src/record-grammar/index.mjs";
 
 const doc = (...fm) => ["---", ...fm, "---", "body line 1", "body line 2"].join("\n");
@@ -111,12 +112,12 @@ test("R9 every line outside the grammar is a C-2.1 error naming its line, and pa
     ["C-2.1", "error", "3"], ["C-2.1", "error", "4"], ["C-2.1", "error", "6"], ["C-2.1", "error", "9"],
     ["C-2.1", "error", "10"], ["C-2.1", "error", "11"]]);
   assert.deepEqual(r.data, { a: 2, b: ["deep"], c: { k: "v" }, d: "ok" });
-  assert.match(r.findings[0].message, /duplicate top-level key 'a'/);
-  assert.match(r.findings[1].message, /outside any block/);
-  assert.match(r.findings[2].message, /indented 4 \(expected 2\)/);
-  assert.match(r.findings[3].message, /inside a map block 'c'/);
-  assert.match(r.findings[4].message, /key 'odd' indented 6/);
-  assert.match(r.findings[5].message, /does not fit the restricted grammar/);
+  assert.equal(r.findings[0].message, localize("record-grammar.frontmatter.duplicate_top_level_key_key", "duplicate top-level key '{key}' at line {v1}", { key: "a", v1: "3" }));
+  assert.equal(r.findings[1].message, localize("record-grammar.frontmatter.array_item_outside_any_block", "array item outside any block at line {v1}", { v1: "4" }));
+  assert.equal(r.findings[2].message, localize("record-grammar.frontmatter.array_item_indented_indent_expected", "array item indented {indent} (expected 2) at line {v1}", { indent: "4", v1: "6" }));
+  assert.equal(r.findings[3].message, localize("record-grammar.frontmatter.array_item_inside_a_map", "array item inside a map block '{topKey}' at line {v1}", { topKey: "c", v1: "9" }));
+  assert.equal(r.findings[4].message, localize("record-grammar.frontmatter.key_key_indented_indent_does", "key '{key}' indented {indent} does not fit the restricted grammar at line {v1}", { key: "odd", indent: "6", v1: "10" }));
+  assert.equal(r.findings[5].message, localize("record-grammar.frontmatter.line_v1_does_not_fit", "line {v1} does not fit the restricted grammar: {line}", { v1: "11", line: "not a line" }));
   /* An object element's key at the wrong indent, and a key under a scalar element, are unfit keys too. */
   const s = parseFrontmatter(doc("x:", "  - k: v", "   j: 1", "y:", "  - plain", "    j: 2"));
   assert.deepEqual(s.findings.map((x) => x.check), ["C-2.1", "C-2.1"]);

@@ -86,13 +86,13 @@ export function parseFrontmatter(text) {
   const findings = [];
   const lines = text.split(/\r?\n/);
   if (lines[0] !== '---') {
-    findings.push(f('C-2.1', 'error', 'bundle.md does not begin with a --- frontmatter fence'));
+    findings.push(f('C-2.1', 'error', localize('record-grammar.frontmatter.bundle_md_does_not_begin_with', 'bundle.md does not begin with a --- frontmatter fence')));
     return { data: null, findings, body: text };
   }
   let end = -1;
   for (let i = 1; i < lines.length; i++) if (lines[i] === '---') { end = i; break; }
   if (end === -1) {
-    findings.push(f('C-2.1', 'error', 'frontmatter fence is never closed'));
+    findings.push(f('C-2.1', 'error', localize('record-grammar.frontmatter.frontmatter_fence_is_never_closed', 'frontmatter fence is never closed')));
     return { data: null, findings, body: text };
   }
 

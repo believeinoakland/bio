@@ -22,6 +22,7 @@
  */
 import { CONFIDENCE } from "../recogniser.mjs";
 import { REGION } from "../region.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const VIEWSTATE_FIELDS = "__VIEWSTATE|__VIEWSTATEGENERATOR|__VIEWSTATEENCRYPTED|__EVENTVALIDATION"
                        + "|__PREVIOUSPAGE|__SCROLLPOSITIONX|__SCROLLPOSITIONY|__LASTFOCUS";
@@ -73,7 +74,7 @@ export default {
   rules() {
     return [
       { key: "webforms_page_state", region: REGION.MECHANICAL,
-        label: "page state this site rebuilds on every visit",
+        label: localize("site-profiles.aspnet-webforms.page_state_this_site_rebuilds", "page state this site rebuilds on every visit"),
         patterns: [
           new RegExp(`(<input[^>]*\\bname="(?:${VIEWSTATE_FIELDS})"[^>]*\\bvalue=")([^"]*)(")`, "gi"),
           /* Some skins emit the field with value= before name=. Measured absent on
@@ -92,7 +93,7 @@ export default {
       /* Ad and analytics slots. Legistar carries GPT and Google Analytics, and per
          the standing ruling a third party's script output is that third party's,
          never the publisher's, so it is machinery here and not decoration. */
-      { key: "ad_slots", region: REGION.MECHANICAL, label: "an advertising or analytics slot",
+      { key: "ad_slots", region: REGION.MECHANICAL, label: localize("site-profiles.aspnet-webforms.an_advertising_or_analytics", "an advertising or analytics slot"),
         patterns: [
           /(\bdata-google-query-id=")([^"]*)(")/gi,
           /(["'&](?:correlator|cachebuster|ord|gclid|_ga|_gid)=)([^"'&\s]+)()/gi,

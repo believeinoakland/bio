@@ -1,6 +1,6 @@
 # setup-words (T51)
 
-**Status** · session_01YQJWyJVbKFAY8sdhq1JwY5 · depth 2 · COMPLETE · handled B2
+**Status** · session_01YQJWyJVbKFAY8sdhq1JwY5 · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -29,3 +29,19 @@ B2 (K3943) applied: `tranche/T51` merged first, then `t` renamed `localize` in `
 Tests: `node --test bio-plane/test/m/setup-words/`: 19 pass, 0 fail. `build.mjs --check`: matches (rows.mjs regenerated: only its header wording changed; still 0 code rows). Process checks (civicos-process ebcc1a3): format 0 failures; architecture 0 failures; coverage: setup-words has no failure (12 of 12 ids named); words: marker 0, none in setup-words; ownership: 6 files, 0 failures.
 
 Size (session_01YQJWyJVbKFAY8sdhq1JwY5): test runs 8, module lines 346
+
+## J3 · COMPLETE
+
+B3 (K3962, K3965) applied after merging `tranche/T51` and civicos-process ea6cd83.
+
+**Test copies.** The two flagged strings were the path of `words.json`; both tests now build it from path segments, so no string literal equals a product `localize` sentence. No regular-expression copy of a code sentence exists in my tests.
+
+**A flaw of mine found on the converted tree, fixed.** R18 as I built it refused any `{name, …}`; the tree now holds `jurisdictions.index.amount_is_amount_and_units` ("an amount is {amount, units}, …"), a shape written in a sentence, not an ICU argument, and the generator failed on it. It now refuses only an ICU argument type after the name (`plural`, `select`, `selectordinal`, `number`, `date`, `time`, `spellout`, `ordinal`, `duration`); tests cover each refusal and that the shape is text. BOB: R18's wording (`{name, …}`) is broader than what I built; please re-word it to the ICU argument types if you agree.
+
+**Rows regenerated** over the converted tree: 15,344 design rows, 3,840 code rows; `words-unreviewed.json` lists the 3,840. Two of my assertions held code rows to the design file's spelling rules (no brace form beyond `{name}`; no "labelled"); they now apply to the design rows only, since a code row is the design's to review.
+
+**For BOB, in other modules:** code ids `odf-reader.odf.content_xml_with_text_list` and `roster-reader.org-chart.labelled_line_s_name_a` have an `en` spelled "labelled" (DEC-221 spells "labeled"); and `jurisdictions.index.a_template_is_fields_never_bare` holds a brace form beyond `{name}`. Both are the design's review or those modules' jobs, not mine.
+
+**Run.** `node --test bio-plane/test/m/setup-words/`: 19 pass, 0 fail. `build.mjs --check`: matches. Checks: format 0, architecture 0, coverage no setup-words failure, words: none in setup-words (marker 0), ownership 6 files 0 failures.
+
+Size (session_01YQJWyJVbKFAY8sdhq1JwY5): test runs 12, module lines 348

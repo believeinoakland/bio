@@ -28,20 +28,21 @@
  * paints several, and choosing one would be inventing the citation's referent.
  */
 
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { loadPdf, decodeImage, imageOf } from "./pagepixels.mjs";
 
 export const CROP_REFUSALS = Object.freeze({
   NOT_AN_IMAGE_EXTENT: "the extent is not an `image` extent in its PDF form ({kind:'image', page, rect})",
-  RECT_REQUIRED: "the extent names a page and no rectangle, so it names no one image to crop",
+  RECT_REQUIRED: localize("pdf-pixels.imagecrop.the_extent_names_a_page", "the extent names a page and no rectangle, so it names no one image to crop"),
   NOT_A_PDF: "the bytes do not carry a %PDF- header",
-  ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
-  NO_SUCH_PAGE: "the page index is outside the document",
-  PAGE_UNWALKABLE: "the page's content could not be interpreted, so what it paints is undetermined",
-  NO_IMAGE_AT_RECT: "the page paints no image at exactly that rectangle",
-  AMBIGUOUS_RECT: "the page paints more than one image at exactly that rectangle",
-  INLINE_IMAGE: "the image at that rectangle is inline in the content stream; extracting inline images is not built",
-  DECODE_REFUSED: "the image was found and its samples could not be decoded here",
+  ENCRYPTED: localize("pdf-pixels.imagecrop.the_document_is_encrypted_streams", "the document is encrypted; streams are ciphertext to this reader"),
+  NO_SUCH_PAGE: localize("pdf-pixels.imagecrop.the_page_index_is_outside", "the page index is outside the document"),
+  PAGE_UNWALKABLE: localize("pdf-pixels.imagecrop.the_page_s_content_could", "the page's content could not be interpreted, so what it paints is undetermined"),
+  NO_IMAGE_AT_RECT: localize("pdf-pixels.imagecrop.the_page_paints_no_image", "the page paints no image at exactly that rectangle"),
+  AMBIGUOUS_RECT: localize("pdf-pixels.imagecrop.the_page_paints_more_than", "the page paints more than one image at exactly that rectangle"),
+  INLINE_IMAGE: localize("pdf-pixels.imagecrop.the_image_at_that_rectangle", "the image at that rectangle is inline in the content stream; extracting inline images is not built"),
+  DECODE_REFUSED: localize("pdf-pixels.imagecrop.the_image_was_found_and", "the image was found and its samples could not be decoded here"),
 });
 
 const refuse = (reason, detail = {}) => {
