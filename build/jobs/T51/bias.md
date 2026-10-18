@@ -1,6 +1,6 @@
 # bias (T51)
 
-**Status** · session_01MPXaun9Zr2jsVgEGKTcKBp · depth 2 · WORKING · handled B0
+**Status** · session_01MPXaun9Zr2jsVgEGKTcKBp · depth 2 · COMPLETE · handled B0
 
 ## Completion (T51-40)
 
