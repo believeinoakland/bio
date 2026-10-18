@@ -25,3 +25,16 @@
 - `node checks/ownership.mjs /home/user/bio image-cover tranche/T51 job/T51/image-cover`: run after the push (see the record's last line).
 
 Size (session_01CSjPbRFbq35fHhD3md1yuV): test runs 1, module lines 1288
+
+## J1 · COMPLETE
+
+T51-258 (image-cover) is done; the 24 plain findings read zero (`checks/words.mjs image-cover`: 0 failures), and the module's 15 tests pass.
+
+Judgement (details in the record, `build/jobs/T51/image-cover.md`, Completion record):
+- The refusal tables (`COVER_REFUSALS`, `STRIP_REFUSALS`) read `word("refusal.<CODE>")` for the codes whose member row exists in words.json.
+- 21 refusal `detail` strings are localized, as this module already does for its other details. They are diagnostics a member does not read (the member sees the code's word), so you may move them to the design's unkeyed list (K3944).
+- Two decisions for you: (1) K874 asks that each new id be named by a test; the 21 new ids are not, because no test can check a localized sentence without holding its text (K3810), and the existing refusal tests cover every code. (2) The English of four codes with no member row (`NOT_A_COVERABLE_FORMAT`, `UNSUPPORTED_JPEG_PROCESS`, `PNG_INTERLACED`, `AREA_MALFORMED`) stays in `COVER_REFUSALS`; they need a row from the design.
+
+Checks: format 0 and architecture 0 (module and tree-wide); coverage 9 of 9 for image-cover; ownership 3 files, 0 failures. Tree-wide `run.mjs` shows 4820 words failures and 33 coverage failures, none in image-cover.
+
+Size (session_01CSjPbRFbq35fHhD3md1yuV): test runs 1, module lines 1288
