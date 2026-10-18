@@ -1,6 +1,6 @@
 # calc-grammar (T51)
 
-**Status** · session_01B2mwmPfGCqYRdkGsmH36wC · depth 2 · WORKING · handled B1
+**Status** · session_01B2mwmPfGCqYRdkGsmH36wC · depth 2 · COMPLETE · handled B1
 
 ## Completion (T51-165, words pass)
 
