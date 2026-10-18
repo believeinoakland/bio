@@ -4880,6 +4880,13 @@
       "line": 85
     },
     {
+      "id": "budget-doctypes.index.not_a_csv_or_workbook_sheet",
+      "en": "not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells",
+      "module": "budget-doctypes",
+      "file": "budget-doctypes/index.mjs",
+      "line": 107
+    },
+    {
       "id": "budget-doctypes.index.not_a_pdf_a_what",
       "en": "not a PDF: a {what} is read from a PDF's text",
       "module": "budget-doctypes",
@@ -7302,32 +7309,165 @@
       "line": 182
     },
     {
-      "id": "civil-time.calendar.cannot_read",
-      "en": "{list_words} for {year}{offices} cannot be read in your team's Civicsmith",
+      "id": "civil-time.calendar.list_cannot_read",
+      "en": "the closure list '{list}' for {year}{offices} cannot be read in your team's Civicsmith",
       "module": "civil-time",
-      "file": "bio-plane/src/civil-time/calendar.mjs",
-      "line": 81
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 39
     },
     {
-      "id": "civil-time.calendar.cannot_read_why",
-      "en": "{list_words} for {year}{offices} cannot be read in your team's Civicsmith: {why}",
+      "id": "civil-time.calendar.list_cannot_read_why",
+      "en": "the closure list '{list}' for {year}{offices} cannot be read in your team's Civicsmith: {why}",
       "module": "civil-time",
-      "file": "bio-plane/src/civil-time/calendar.mjs",
-      "line": 80
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 41
     },
     {
-      "id": "civil-time.calendar.disputed",
-      "en": "{list_words} for {year}{offices} is disputed in your team's Civicsmith",
+      "id": "civil-time.calendar.list_disputed",
+      "en": "the closure list '{list}' for {year}{offices} is disputed in your team's Civicsmith",
       "module": "civil-time",
-      "file": "bio-plane/src/civil-time/calendar.mjs",
-      "line": 79
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 37
+    },
+    {
+      "id": "civil-time.calendar.list_year_withheld",
+      "en": "the closure list '{list}' for {year} is withheld: the active profiles disagree on it",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 31
     },
     {
       "id": "civil-time.calendar.no_source_stated",
       "en": "no source stated",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/calendar.mjs",
-      "line": 113
+      "line": 119
+    },
+    {
+      "id": "civil-time.calendar.office_cannot_read",
+      "en": "the office calendar for {year}{offices} cannot be read in your team's Civicsmith",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 40
+    },
+    {
+      "id": "civil-time.calendar.office_cannot_read_why",
+      "en": "the office calendar for {year}{offices} cannot be read in your team's Civicsmith: {why}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 42
+    },
+    {
+      "id": "civil-time.calendar.office_disputed",
+      "en": "the office calendar for {year}{offices} is disputed in your team's Civicsmith",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 38
+    },
+    {
+      "id": "civil-time.calendar.office_year_withheld",
+      "en": "the office calendar for {year} is withheld: the active profiles disagree on it",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 32
+    },
+    {
+      "id": "civil-time.calendar.uncovered_list",
+      "en": "the count reaches {year}, a year the closure list '{list}' does not cover for every office",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 33
+    },
+    {
+      "id": "civil-time.calendar.uncovered_list_office",
+      "en": "the count reaches {year}, a year the closure list '{list}' does not cover for {office}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 34
+    },
+    {
+      "id": "civil-time.calendar.uncovered_office",
+      "en": "the count reaches {year}, a year the office calendar does not cover for every office",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 35
+    },
+    {
+      "id": "civil-time.calendar.uncovered_office_office",
+      "en": "the count reaches {year}, a year the office calendar does not cover for {office}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 36
+    },
+    {
+      "id": "civil-time.missing.closure_list_absent",
+      "en": "the closure list '{list}', which the rule names, is not held by the jurisdiction view",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 30
+    },
+    {
+      "id": "civil-time.missing.closure_list_withheld",
+      "en": "the closure list '{list}', which the rule names, is withheld: the active profiles disagree on it ({at})",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 29
+    },
+    {
+      "id": "civil-time.missing.computation_absent",
+      "en": "the computation '{computation}' the rule names is not held by the jurisdiction view",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 26
+    },
+    {
+      "id": "civil-time.missing.computation_withheld",
+      "en": "the computation '{computation}' the rule names is withheld: the active profiles disagree on it ({at})",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 25
+    },
+    {
+      "id": "civil-time.missing.fiscal_year_absent",
+      "en": "a fiscal year for {body} is not held by the jurisdiction view",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 28
+    },
+    {
+      "id": "civil-time.missing.fiscal_year_withheld",
+      "en": "a fiscal year for {body} is withheld: the active profiles disagree on it ({at})",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 27
+    },
+    {
+      "id": "civil-time.missing.weekend_absent",
+      "en": "the weekend is not held by the jurisdiction view",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 22
+    },
+    {
+      "id": "civil-time.missing.weekend_counting_absent",
+      "en": "the weekend is not held by the jurisdiction view; a business count or a roll needs it (the weekend is never assumed)",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 24
+    },
+    {
+      "id": "civil-time.missing.weekend_counting_withheld",
+      "en": "the weekend is withheld: the active profiles disagree on it ({at}); a business count or a roll needs it (the weekend is never assumed)",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 23
+    },
+    {
+      "id": "civil-time.missing.weekend_withheld",
+      "en": "the weekend is withheld: the active profiles disagree on it ({at})",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 21
     },
     {
       "id": "civil-time.recurrence.fiscal_year_form",
@@ -7337,81 +7477,270 @@
       "line": 20
     },
     {
+      "id": "civil-time.rules.anchor_hours_precision",
+      "en": "an hours rule counts from the anchor's time, and {value} is held at {precision} precision",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 59
+    },
+    {
+      "id": "civil-time.rules.anchor_open_end",
+      "en": "the anchor {value} has an open or unknown end",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 58
+    },
+    {
+      "id": "civil-time.rules.anchor_undetermined",
+      "en": "the anchor is undetermined: {why}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 60
+    },
+    {
+      "id": "civil-time.rules.anchor_undetermined_unsaid",
+      "en": "the anchor is undetermined: no why given",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 61
+    },
+    {
       "id": "civil-time.rules.daytext_has_no_such_day",
       "en": "{dayText} has no such day {v1}: both readings are kept (K1504 (4))",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/rules.mjs",
-      "line": 207
+      "line": 209
     },
     {
-      "id": "civil-time.rules.possibly_overdue_undetermined_because_the",
-      "en": "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {words} lies after the first and not after the second (K1444 (i))",
+      "id": "civil-time.rules.due_open_end",
+      "en": "the due {value} has an open end",
       "module": "civil-time",
-      "file": "bio-plane/src/civil-time/rules.mjs",
-      "line": 450
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 66
+    },
+    {
+      "id": "civil-time.rules.due_undetermined",
+      "en": "the due date is undetermined: {why}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 64
+    },
+    {
+      "id": "civil-time.rules.due_undetermined_unsaid",
+      "en": "the due date is undetermined: no why given",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 65
+    },
+    {
+      "id": "civil-time.rules.invalid_amount",
+      "en": "the rule's amount is not a positive whole number",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 44
+    },
+    {
+      "id": "civil-time.rules.invalid_applies_on",
+      "en": "the rule's applies_on is not a list of day names",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 52
+    },
+    {
+      "id": "civil-time.rules.invalid_closures",
+      "en": "the rule's closures is not a list's name",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 50
+    },
+    {
+      "id": "civil-time.rules.invalid_computation",
+      "en": "the rule's computation names '{rule}', a computation this module does not count",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 56
+    },
+    {
+      "id": "civil-time.rules.invalid_count",
+      "en": "the rule's count '{count}' is neither calendar nor business",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 47
+    },
+    {
+      "id": "civil-time.rules.invalid_count_unstated",
+      "en": "the rule's count is not stated (calendar or business)",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 46
+    },
+    {
+      "id": "civil-time.rules.invalid_count_with_units",
+      "en": "the rule's count is given with units '{units}'",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 48
+    },
+    {
+      "id": "civil-time.rules.invalid_direction",
+      "en": "the rule's direction '{direction}' is neither forward nor backward",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 45
+    },
+    {
+      "id": "civil-time.rules.invalid_due_at",
+      "en": "the rule's due_at is neither close_of_business nor HH:MM",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 51
+    },
+    {
+      "id": "civil-time.rules.invalid_extension_count",
+      "en": "the rule's extension count '{count}' is neither calendar nor business",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 54
+    },
+    {
+      "id": "civil-time.rules.invalid_extension_days",
+      "en": "the rule's extension has no positive whole number of days",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 53
+    },
+    {
+      "id": "civil-time.rules.invalid_receipt",
+      "en": "the rule's venue receipt '{rule}' is not a receipt rule this module counts",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 55
+    },
+    {
+      "id": "civil-time.rules.invalid_roll",
+      "en": "the rule's roll is not true or false",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 49
+    },
+    {
+      "id": "civil-time.rules.invalid_units",
+      "en": "the rule's units '{units}' is not one of {allowed}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 43
+    },
+    {
+      "id": "civil-time.rules.not_applicable_day",
+      "en": "the rule applies only to an event on {days}, and the anchor is a {weekday}",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 62
+    },
+    {
+      "id": "civil-time.rules.not_applicable_span",
+      "en": "the rule applies only to an event on {days}, and the anchor is not a single day",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 63
+    },
+    {
+      "id": "civil-time.rules.possibly_overdue_day",
+      "en": "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {day} in {zone} lies after the first and not after the second (K1444 (i))",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 67
+    },
+    {
+      "id": "civil-time.rules.possibly_overdue_instant",
+      "en": "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {instant} lies after the first and not after the second (K1444 (i))",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 68
+    },
+    {
+      "id": "civil-time.rules.span_needs_view",
+      "en": "a span in business days needs the jurisdiction view",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 70
+    },
+    {
+      "id": "civil-time.rules.span_open_end",
+      "en": "{value} has an open or unknown end",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 69
+    },
+    {
+      "id": "civil-time.rules.unmeasured",
+      "en": "the rule's basis is UNMEASURED: no measurement or ruling sources it (K1445)",
+      "module": "civil-time",
+      "file": "bio-plane/src/civil-time/reasons.mjs",
+      "line": 57
     },
     {
       "id": "civil-time.values.end_open",
       "en": "{value} has an open end, so which comes first is not settled",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 23
+      "line": 73
     },
     {
       "id": "civil-time.values.end_unknown",
       "en": "{value} has an unknown end, so which comes first is not settled",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 24
+      "line": 74
     },
     {
       "id": "civil-time.values.event_unresolved",
       "en": "the bounding event {event} ({edge}) is not resolved",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 28
+      "line": 78
     },
     {
       "id": "civil-time.values.event_unresolved_edgeless",
       "en": "the bounding event {event} is not resolved",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 29
+      "line": 79
     },
     {
       "id": "civil-time.values.overlap",
       "en": "{value} ({precision} precision, {zone}) and {value_2} ({precision_2} precision, {zone_2}) overlap, so the precision held does not say which came first",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 25
+      "line": 75
     },
     {
       "id": "civil-time.values.overlaps_end",
       "en": "{value} overlaps the end {bound} at the precision held",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 27
+      "line": 77
     },
     {
       "id": "civil-time.values.overlaps_start",
       "en": "{value} overlaps the start {bound} at the precision held",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 26
+      "line": 76
     },
     {
       "id": "civil-time.values.start_open",
       "en": "{value} has an open start, so which comes first is not settled",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 21
+      "line": 71
     },
     {
       "id": "civil-time.values.start_unknown",
       "en": "{value} has an unknown start, so which comes first is not settled",
       "module": "civil-time",
       "file": "bio-plane/src/civil-time/reasons.mjs",
-      "line": 22
+      "line": 72
     },
     {
       "id": "conformance.checks.a_cure_is_already_recorded",
@@ -9066,60 +9395,151 @@
       "line": 1133
     },
     {
+      "id": "doc-clean.images.a_malformed_referred_to_count",
+      "en": "a malformed referred-to count",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 158
+    },
+    {
+      "id": "doc-clean.images.a_segment_longer_than_the_stream",
+      "en": "a segment longer than the stream",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 165
+    },
+    {
+      "id": "doc-clean.images.a_segment_of_unstated_length",
+      "en": "a segment of unstated length",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 164
+    },
+    {
+      "id": "doc-clean.images.a_truncated_segment_header",
+      "en": "a truncated segment header",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 153
+    },
+    {
+      "id": "doc-clean.images.name_emf",
+      "en": "an EMF",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 90
+    },
+    {
+      "id": "doc-clean.images.name_heif",
+      "en": "a HEIC or AVIF",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 88
+    },
+    {
+      "id": "doc-clean.images.name_jxl",
+      "en": "a JPEG XL",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 89
+    },
+    {
+      "id": "doc-clean.images.name_svm",
+      "en": "an SVM",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 92
+    },
+    {
+      "id": "doc-clean.images.name_tiff",
+      "en": "a TIFF",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 87
+    },
+    {
+      "id": "doc-clean.images.name_wmf",
+      "en": "a WMF",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 91
+    },
+    {
+      "id": "doc-clean.images.the_image_could_not_be_stripped",
+      "en": "the image could not be stripped",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 199
+    },
+    {
       "id": "doc-clean.images.where_a_bmp_image_carrying",
       "en": "{where}: a BMP image carrying a colour profile",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 203
+      "line": 210
     },
     {
       "id": "doc-clean.images.where_a_bmp_image_holding",
       "en": "{where}: a BMP image holding {v1} image",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 200
+      "line": 207
     },
     {
       "id": "doc-clean.images.where_a_compressed_image_that",
       "en": "{where}: a compressed image that cannot be read whole",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 220
+      "line": 227
     },
     {
       "id": "doc-clean.images.where_a_compressed_image_whose",
       "en": "{where}: a compressed image whose header cannot be read",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 229
+      "line": 236
     },
     {
       "id": "doc-clean.images.where_a_jbig2_stream_whose",
       "en": "{where}: a JBIG2 stream whose segments cannot be walked ({why})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 143
+      "line": 150
     },
     {
       "id": "doc-clean.images.where_an_image_of_no",
       "en": "{where}: an image of no format this module knows",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 233
+      "line": 240
+    },
+    {
+      "id": "doc-clean.images.where_an_svg_image_with_an",
+      "en": "{where}: an SVG image with an <{tag}> element",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 221
+    },
+    {
+      "id": "doc-clean.images.where_media_compressed",
+      "en": "{where}: {media}, compressed",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/images.mjs",
+      "line": 230
     },
     {
       "id": "doc-clean.images.where_v1_image_holding_held",
       "en": "{where}: {v1} image holding {held} image",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 208
+      "line": 215
     },
     {
       "id": "doc-clean.images.where_v1_image_whose_metadata",
       "en": "{where}: {v1} image, whose metadata this module cannot strip",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/images.mjs",
-      "line": 196
+      "line": 203
     },
     {
       "id": "doc-clean.index.a_compound_file_a_legacy",
@@ -9136,11 +9556,25 @@
       "line": 92
     },
     {
+      "id": "doc-clean.index.a_mime_message_not_a",
+      "en": "a MIME message, not a format this module cleans",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 86
+    },
+    {
       "id": "doc-clean.index.a_postscript_document_not",
       "en": "a PostScript document, not a format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
       "line": 85
+    },
+    {
+      "id": "doc-clean.index.a_zip_archive_that_is_neither",
+      "en": "a ZIP archive that is neither an OOXML nor an ODF package",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 66
     },
     {
       "id": "doc-clean.index.a_zip_package_of_no",
@@ -9164,6 +9598,20 @@
       "line": 78
     },
     {
+      "id": "doc-clean.index.an_rtf_document_not_a_format",
+      "en": "an RTF document, not a format this module cleans",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 84
+    },
+    {
+      "id": "doc-clean.index.an_xml_or_svg_document",
+      "en": "an XML or SVG document, not a format this module cleans",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 88
+    },
+    {
       "id": "doc-clean.index.the_document_carries_a_video_audio",
       "en": "the document carries a video, audio, RichMedia or 3D part, whose own metadata can hold a time and place",
       "module": "doc-clean",
@@ -9171,11 +9619,25 @@
       "line": 27
     },
     {
+      "id": "doc-clean.index.the_document_carries_an_embedded",
+      "en": "the document carries an embedded file: a PDF attachment, an office file's embedding or macro project, or an ODF embedded object",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 24
+    },
+    {
       "id": "doc-clean.index.the_document_could_not_be",
       "en": "the document could not be read whole ({String})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
       "line": 57
+    },
+    {
+      "id": "doc-clean.index.the_document_is_encrypted",
+      "en": "the document is encrypted",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 23
     },
     {
       "id": "doc-clean.index.the_document_is_length_bytes",
@@ -9206,11 +9668,32 @@
       "line": 31
     },
     {
+      "id": "doc-clean.index.the_file_is_a_zip_archive",
+      "en": "the file is a ZIP archive, not an office package; a member-supplied archive is never carried",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 28
+    },
+    {
+      "id": "doc-clean.index.the_file_is_neither_a_pdf",
+      "en": "the file is neither a PDF, an office package nor text",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 82
+    },
+    {
       "id": "doc-clean.index.the_file_is_of_no_format",
       "en": "the file is of no format this module cleans",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
       "line": 29
+    },
+    {
+      "id": "doc-clean.index.the_html_document_embeds_an",
+      "en": "the HTML document embeds an image as a data: URI",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/index.mjs",
+      "line": 26
     },
     {
       "id": "doc-clean.index.the_package_cannot_be_read",
@@ -9225,6 +9708,13 @@
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/index.mjs",
       "line": 65
+    },
+    {
+      "id": "doc-clean.package.part_cannot_be_read_why",
+      "en": "part {name} cannot be read ({why})",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/package.mjs",
+      "line": 150
     },
     {
       "id": "doc-clean.package.part_n_appears_twice",
@@ -9255,6 +9745,13 @@
       "line": 192
     },
     {
+      "id": "doc-clean.package.part_n_media",
+      "en": "part {n}: {media}",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/package.mjs",
+      "line": 218
+    },
+    {
       "id": "doc-clean.package.part_path_is_an_embedded",
       "en": "part {path} is an embedded object",
       "module": "doc-clean",
@@ -9276,11 +9773,32 @@
       "line": 182
     },
     {
+      "id": "doc-clean.pdf.a_number_the_pdf_writer",
+      "en": "a number the PDF writer cannot write",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/pdf.mjs",
+      "line": 237
+    },
+    {
+      "id": "doc-clean.pdf.a_string_the_pdf_reader",
+      "en": "a string the PDF reader answered without its bytes",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/pdf.mjs",
+      "line": 253
+    },
+    {
       "id": "doc-clean.pdf.a_value_the_pdf_reader",
       "en": "a value the PDF reader could not read ({String})",
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
       "line": 184
+    },
+    {
+      "id": "doc-clean.pdf.a_value_the_pdf_writer_cannot",
+      "en": "a value the PDF writer cannot write",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/pdf.mjs",
+      "line": 269
     },
     {
       "id": "doc-clean.pdf.get_0_obj_ser_endobj",
@@ -9379,6 +9897,34 @@
       "module": "doc-clean",
       "file": "bio-plane/src/doc-clean/pdf.mjs",
       "line": 167
+    },
+    {
+      "id": "doc-clean.pdf.the_pdf_cannot_be_opened",
+      "en": "the PDF cannot be opened",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/pdf.mjs",
+      "line": 37
+    },
+    {
+      "id": "doc-clean.pdf.the_pdf_has_no_readable",
+      "en": "the PDF has no readable trailer",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/pdf.mjs",
+      "line": 40
+    },
+    {
+      "id": "doc-clean.pdf.the_pdf_is_encrypted_a",
+      "en": "the PDF is encrypted (a Standard security handler)",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/pdf.mjs",
+      "line": 38
+    },
+    {
+      "id": "doc-clean.pdf.the_pdf_s_trailer_names_an",
+      "en": "the PDF's trailer names an /Encrypt dictionary",
+      "module": "doc-clean",
+      "file": "bio-plane/src/doc-clean/pdf.mjs",
+      "line": 41
     },
     {
       "id": "doc-clean.pdf.the_trailer_s_root_is_not",
@@ -12465,35 +13011,35 @@
       "en": "a test record of zero counts was accepted",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 333
+      "line": 334
     },
     {
       "id": "file-scanner.routes.the_safe_view_reported_nothing",
       "en": "the safe view reported nothing removed",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 319
+      "line": 320
     },
     {
       "id": "file-scanner.routes.the_sandbox_was_still_running",
       "en": "the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 311
+      "line": 312
     },
     {
       "id": "file-scanner.routes.the_test_address_answered",
       "en": "the test address answered listed",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 330
+      "line": 331
     },
     {
       "id": "file-scanner.routes.the_test_address_did",
       "en": "the test address did not answer listed",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 330
+      "line": 331
     },
     {
       "id": "file-scanner.scanners.malware_scanning_scan_result",
@@ -13070,6 +13616,13 @@
       "line": 490
     },
     {
+      "id": "image-codecs.dctdecode.libjpeg_s_default_for_three",
+      "en": "libjpeg's default for three components",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/dctdecode.mjs",
+      "line": 390
+    },
+    {
       "id": "image-codecs.dctdecode.marker_0x_m_runs_past",
       "en": "marker 0x{m} runs past end",
       "module": "image-codecs",
@@ -13091,11 +13644,137 @@
       "line": 188
     },
     {
+      "id": "image-codecs.jbig2decode.a_custom_huffman_table_the",
+      "en": "a custom Huffman table the segment does not refer to",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 858
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_custom_huffman_table_with",
+      "en": "a custom Huffman table with no end",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 250
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_generic_region_of_unknown",
+      "en": "a generic region of unknown length never ends",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 674
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_halftone_region_with_no",
+      "en": "a halftone region with no pattern dictionary",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 1034
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_huffman_code_no_table",
+      "en": "a Huffman code no table line holds",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 233
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_huffman_coded_symbol_dictionary",
+      "en": "a Huffman-coded symbol dictionary or text region refines its symbols",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 60
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_page_of_unknown_height",
+      "en": "a page of unknown height that is not striped",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 715
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_pattern_of_no_size",
+      "en": "a pattern of no size",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 1007
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_refined_symbol_of_negative",
+      "en": "a refined symbol of negative size",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 569
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_refinement_aggregate_symbol_of",
+      "en": "a refinement/aggregate symbol of no instances",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 901
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_region_s_colour_extension",
+      "en": "a region's colour-extension flag (T.88 Amendment 3) is set",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 57
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_repeated_symbol_id_length",
+      "en": "a repeated symbol-id length with nothing before it",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 608
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_segment_type_t_88",
+      "en": "a segment type T.88 does not define",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 62
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_symbol_dictionary_reuses_a",
+      "en": "a symbol dictionary reuses a previous dictionary's arithmetic contexts",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 59
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_symbol_id_length_code",
+      "en": "a symbol-id length code outside the run table",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 603
+    },
+    {
+      "id": "image-codecs.jbig2decode.a_text_region_with_no",
+      "en": "a text region with no end",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 588
+    },
+    {
       "id": "image-codecs.jbig2decode.adaptive_template_pixel_ax_ay",
       "en": "adaptive template pixel ({ax},{ay}) is not yet decoded",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
       "line": 277
+    },
+    {
+      "id": "image-codecs.jbig2decode.an_export_run_past_the",
+      "en": "an export run past the symbols",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 946
+    },
+    {
+      "id": "image-codecs.jbig2decode.an_extension_segment_the_decoder",
+      "en": "an extension segment the decoder must understand and does not",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 61
     },
     {
       "id": "image-codecs.jbig2decode.bitmap_of_w_x_h",
@@ -13175,11 +13854,25 @@
       "line": 463
     },
     {
+      "id": "image-codecs.jbig2decode.more_symbol_id_lengths_than",
+      "en": "more symbol-id lengths than symbols",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 612
+    },
+    {
       "id": "image-codecs.jbig2decode.oob_where_what_is_required",
       "en": "OOB where {what} is required",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
       "line": 145
+    },
+    {
+      "id": "image-codecs.jbig2decode.refinement_adaptive_pixel_is_not",
+      "en": "refinement adaptive pixel is not yet decoded",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 488
     },
     {
       "id": "image-codecs.jbig2decode.refinement_of_symbol_id_of",
@@ -13210,11 +13903,39 @@
       "line": 815
     },
     {
+      "id": "image-codecs.jbig2decode.the_halftone_region_s_arithmetic",
+      "en": "the halftone region's arithmetic data ran out",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 1061
+    },
+    {
+      "id": "image-codecs.jbig2decode.the_pattern_dictionary_s_arithmetic",
+      "en": "the pattern dictionary's arithmetic data ran out",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 1016
+    },
+    {
       "id": "image-codecs.jbig2decode.the_refinement_regions_arithmetic_data",
       "en": "the refinement region's arithmetic data ran out ({overrun} bytes short)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jbig2decode.mjs",
       "line": 838
+    },
+    {
+      "id": "image-codecs.jbig2decode.the_stream_holds_more_than",
+      "en": "the stream holds more than one page",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 63
+    },
+    {
+      "id": "image-codecs.jbig2decode.the_stream_holds_no_page",
+      "en": "the stream holds no page information segment",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jbig2decode.mjs",
+      "line": 64
     },
     {
       "id": "image-codecs.jbig2decode.the_symbol_dictionarys_arithmetic_data",
@@ -13238,11 +13959,53 @@
       "line": 102
     },
     {
+      "id": "image-codecs.jpxdecode.a_code_block_larger_than",
+      "en": "a code-block larger than 4096 samples",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 179
+    },
+    {
+      "id": "image-codecs.jpxdecode.a_code_block_of_31",
+      "en": "a code-block of 31 or more bit-planes",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 804
+    },
+    {
+      "id": "image-codecs.jpxdecode.a_colour_transform_over_mixed",
+      "en": "a colour transform over mixed wavelets",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 964
+    },
+    {
+      "id": "image-codecs.jpxdecode.a_marker_segment_length_under",
+      "en": "a marker segment length under 2",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 245
+    },
+    {
       "id": "image-codecs.jpxdecode.a_packets_code_block_data",
       "en": "a packet's code-block data runs past the tile ({v1} bytes)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
       "line": 727
+    },
+    {
+      "id": "image-codecs.jpxdecode.an_image_and_tile_geometry",
+      "en": "an image and tile geometry the standard does not allow",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 168
+    },
+    {
+      "id": "image-codecs.jpxdecode.an_image_past_the_memory",
+      "en": "an image past the memory bound",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 64
     },
     {
       "id": "image-codecs.jpxdecode.marker_0x_m_where_sot",
@@ -13280,11 +14043,53 @@
       "line": 947
     },
     {
+      "id": "image-codecs.jpxdecode.the_codestream_ends_before_any",
+      "en": "the codestream ends before any tile",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 242
+    },
+    {
+      "id": "image-codecs.jpxdecode.the_codestream_uses_part_15",
+      "en": "the codestream uses Part 15 (HTJ2K) block coding",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 59
+    },
+    {
+      "id": "image-codecs.jpxdecode.the_decode_would_hold_more",
+      "en": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 64
+    },
+    {
+      "id": "image-codecs.jpxdecode.the_image_s_samples_index",
+      "en": "the image's samples index a palette (pclr box)",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 60
+    },
+    {
       "id": "image-codecs.jpxdecode.the_jp2_box_type_runs",
       "en": "the JP2 box '{type}' runs past the data",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
       "line": 113
+    },
+    {
+      "id": "image-codecs.jpxdecode.the_jp2_colour_specification_is",
+      "en": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 61
+    },
+    {
+      "id": "image-codecs.jpxdecode.the_jp2_file_holds_no",
+      "en": "the JP2 file holds no codestream (jp2c box)",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/jpxdecode.mjs",
+      "line": 140
     },
     {
       "id": "image-codecs.jpxdecode.the_tiles_packets_run_out",
@@ -13308,6 +14113,13 @@
       "line": 150
     },
     {
+      "id": "image-codecs.pngdecode.a_chunk_the_decoder_must",
+      "en": "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/pngdecode.mjs",
+      "line": 61
+    },
+    {
       "id": "image-codecs.pngdecode.a_chunk_type_that_is",
       "en": "a chunk type that is not four letters at byte {p}",
       "module": "image-codecs",
@@ -13327,6 +14139,13 @@
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
       "line": 151
+    },
+    {
+      "id": "image-codecs.pngdecode.an_image_past_the_memory",
+      "en": "an image past the memory bound",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/pngdecode.mjs",
+      "line": 62
     },
     {
       "id": "image-codecs.pngdecode.bit_depth_depth_with_colour",
@@ -13357,6 +14176,13 @@
       "line": 110
     },
     {
+      "id": "image-codecs.pngdecode.the_decode_would_hold_more",
+      "en": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/pngdecode.mjs",
+      "line": 62
+    },
+    {
       "id": "image-codecs.pngdecode.the_first_chunk_is_type",
       "en": "the first chunk is {type}, not IHDR",
       "module": "image-codecs",
@@ -13376,6 +14202,20 @@
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
       "line": 312
+    },
+    {
+      "id": "image-codecs.pngdecode.the_image_data_inflates_past",
+      "en": "the image data inflates past the frame",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/pngdecode.mjs",
+      "line": 310
+    },
+    {
+      "id": "image-codecs.pngdecode.the_image_data_s_zlib",
+      "en": "the image data's zlib trailer is damaged or missing",
+      "module": "image-codecs",
+      "file": "pdf-worker/src/pngdecode.mjs",
+      "line": 305
     },
     {
       "id": "image-codecs.pngdecode.the_type_chunk_at_byte",
@@ -19545,11 +20385,81 @@
       "line": 1171
     },
     {
+      "id": "ocr-worker.contract.a_picture_is_a_one",
+      "en": "a picture is a one-page document (page 0); the page asked for does not exist",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 102
+    },
+    {
       "id": "ocr-worker.contract.measurements_md_2026_09_10",
       "en": "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy — and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.",
       "module": "ocr-worker",
       "file": "ocr-worker/src/contract.mjs",
       "line": 42
+    },
+    {
+      "id": "ocr-worker.contract.no_capture_with_that",
+      "en": "no capture with that sha in that store",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 93
+    },
+    {
+      "id": "ocr-worker.contract.no_namespace_by_that_name",
+      "en": "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 91
+    },
+    {
+      "id": "ocr-worker.contract.pages_must_be_a_non",
+      "en": "pages must be a non-empty array of 0-based page numbers",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 92
+    },
+    {
+      "id": "ocr-worker.contract.store_must_be_named_this",
+      "en": "store must be named: this member reads a capture from one namespace and guesses none",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 87
+    },
+    {
+      "id": "ocr-worker.contract.the_engine_refused_or_failed",
+      "en": "the engine refused or failed on this frame",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 98
+    },
+    {
+      "id": "ocr-worker.contract.the_engine_returned_no_anchorable",
+      "en": "the engine returned no anchorable word for this page",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 99
+    },
+    {
+      "id": "ocr-worker.contract.the_page_could_not",
+      "en": "the page could not be turned into pixels, and the renderer says why",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 95
+    },
+    {
+      "id": "ocr-worker.contract.the_rendered_container_could_not",
+      "en": "the rendered container could not be read back to samples",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 97
+    },
+    {
+      "id": "ocr-worker.contract.this_page_s_frame_is",
+      "en": "this page's frame is larger than the largest frame measured to complete",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/contract.mjs",
+      "line": 96
     },
     {
       "id": "ocr-worker.member.a_width_x_height_page",
@@ -19592,6 +20502,20 @@
       "module": "ocr-worker",
       "file": "ocr-worker/src/member.mjs",
       "line": 206
+    },
+    {
+      "id": "ocr-worker.pngsamples.a_scanline_uses_a_filter",
+      "en": "a scanline uses a filter type this reader does not implement",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/pngsamples.mjs",
+      "line": 46
+    },
+    {
+      "id": "ocr-worker.pngsamples.the_inflated_raster_is_shorter",
+      "en": "the inflated raster is shorter than the header's dimensions require",
+      "module": "ocr-worker",
+      "file": "ocr-worker/src/pngsamples.mjs",
+      "line": 47
     },
     {
       "id": "ocr-worker.tessengine.the_language_model_is_v1",
@@ -19727,6 +20651,20 @@
       "line": 713
     },
     {
+      "id": "office-readers.csv.declared_by_the_producer_in_the_bytes",
+      "en": "declared by the producer in the bytes",
+      "module": "office-readers",
+      "file": "bio-plane/src/csv.mjs",
+      "line": 272
+    },
+    {
+      "id": "office-readers.csv.every_multi_byte_sequence_in_the_signature_window",
+      "en": "every multi-byte sequence in the signature window is valid utf-8",
+      "module": "office-readers",
+      "file": "bio-plane/src/csv.mjs",
+      "line": 283
+    },
+    {
       "id": "office-readers.csv.length_candidates_are_equally_consistent",
       "en": "{length} candidates are equally consistent over {length_2} lines: {map}",
       "module": "office-readers",
@@ -19739,6 +20677,20 @@
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
       "line": 321
+    },
+    {
+      "id": "office-readers.csv.likely_not_certain_a_declared_type_is_a_claim",
+      "en": "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
+      "module": "office-readers",
+      "file": "bio-plane/src/csv.mjs",
+      "line": 688
+    },
+    {
+      "id": "office-readers.csv.likely_not_certain_validity_is_evidence",
+      "en": "likely, not certain: validity is evidence, not the producer's declaration",
+      "module": "office-readers",
+      "file": "bio-plane/src/csv.mjs",
+      "line": 284
     },
     {
       "id": "office-readers.csv.name_occurs_v1_time_s",
@@ -19755,11 +20707,32 @@
       "line": 343
     },
     {
+      "id": "office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset",
+      "en": "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically",
+      "module": "office-readers",
+      "file": "bio-plane/src/csv.mjs",
+      "line": 278
+    },
+    {
       "id": "office-readers.docx.the_macro_enabled_flavour_variant",
       "en": "the macro-enabled flavour {variant}, read as {format} (R33)",
       "module": "office-readers",
       "file": "bio-plane/src/docx.mjs",
       "line": 1048
+    },
+    {
+      "id": "office-readers.docx.word_document_xml_not_read_over_the_size_bound",
+      "en": "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())",
+      "module": "office-readers",
+      "file": "bio-plane/src/docx.mjs",
+      "line": 727
+    },
+    {
+      "id": "office-readers.docx.word_document_xml_unreadable_element_references",
+      "en": "word/document.xml unreadable: element references unavailable (stated)",
+      "module": "office-readers",
+      "file": "bio-plane/src/docx.mjs",
+      "line": 728
     },
     {
       "id": "office-readers.formats-xlsx.parts_content_types_part_and",
@@ -24172,6 +25145,13 @@
       "line": 116
     },
     {
+      "id": "roster-reader.source.the_held_table_states_no",
+      "en": "the held table states no date of its own; a row's own `as_of` column, where it has one, is kept on the row",
+      "module": "roster-reader",
+      "file": "roster-reader/source.mjs",
+      "line": 141
+    },
+    {
       "id": "roster-reader.source.the_item_is_not_a",
       "en": "the item is not a held roster: it is not an object",
       "module": "roster-reader",
@@ -26475,13 +27455,6 @@
       "line": 23
     },
     {
-      "id": "text-chain.textchain.a_cell_of_a_spreadsheet",
-      "en": "a cell of a spreadsheet",
-      "module": "text-chain",
-      "file": "bio-plane/src/textchain.mjs",
-      "line": 1503
-    },
-    {
       "id": "text-chain.textchain.a_machine_reading_carries_its_anchor",
       "en": "text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from",
       "module": "text-chain",
@@ -26496,20 +27469,6 @@
       "line": 1152
     },
     {
-      "id": "text-chain.textchain.a_paragraph_of_a_document",
-      "en": "a paragraph of a document",
-      "module": "text-chain",
-      "file": "bio-plane/src/textchain.mjs",
-      "line": 1505
-    },
-    {
-      "id": "text-chain.textchain.a_range_of_cells_in_a_spreadsheet",
-      "en": "a range of cells in a spreadsheet",
-      "module": "text-chain",
-      "file": "bio-plane/src/textchain.mjs",
-      "line": 1506
-    },
-    {
       "id": "text-chain.textchain.a_region_confidence_is_either",
       "en": "a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one",
       "module": "text-chain",
@@ -26522,20 +27481,6 @@
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
       "line": 1156
-    },
-    {
-      "id": "text-chain.textchain.a_shape_on_a_slide",
-      "en": "a shape on a slide",
-      "module": "text-chain",
-      "file": "bio-plane/src/textchain.mjs",
-      "line": 1504
-    },
-    {
-      "id": "text-chain.textchain.a_table_in_a_document",
-      "en": "a table in a document",
-      "module": "text-chain",
-      "file": "bio-plane/src/textchain.mjs",
-      "line": 1507
     },
     {
       "id": "text-chain.textchain.a_transcription_must_name_at",
@@ -26564,13 +27509,6 @@
       "module": "text-chain",
       "file": "bio-plane/src/textchain.mjs",
       "line": 1144
-    },
-    {
-      "id": "text-chain.textchain.an_image_in_a_document",
-      "en": "an image in a document",
-      "module": "text-chain",
-      "file": "bio-plane/src/textchain.mjs",
-      "line": 1508
     },
     {
       "id": "text-chain.textchain.confidence_basis_v1_is_not",
