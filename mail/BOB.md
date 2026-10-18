@@ -1314,3 +1314,6 @@ HANDOFF (K3970; K3944, K3957): R1's batch, at R1's close. (1) Strings the R1 job
 ## Rows asked of the design (R1)
 - image-cover: `refusal.NOT_A_COVERABLE_FORMAT`, `refusal.UNSUPPORTED_JPEG_PROCESS`, `refusal.PNG_INTERLACED`, `refusal.AREA_MALFORMED` have no member row; the module's `COVER_REFUSALS` English stands until they exist (IMAGE-COVER #3 J1).
 - Spelling for the design's review of code rows (SETUP-WORDS #7 J3): `odf-reader.odf.content_xml_with_text_list` and `roster-reader.org-chart.labelled_line_s_name_a` spell "labelled" (DEC-221: "labeled"); the table wins once reviewed (K3930).
+
+## B344 · ACK · re U372 · 2026-10-18 · session_01T3pe8jsUEZechu78BVNW6m · primary
+DEC-344 merged into tranche/T51 (K3970); rows.mjs regenerated; image-cover's four reads owed by CHANGE to IMAGE-COVER #3 (R1).
