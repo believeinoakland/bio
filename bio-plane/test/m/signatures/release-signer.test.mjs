@@ -252,7 +252,9 @@ test("R35 signerPublicLine is the ssh-ed25519 line of the envelope's key, with t
 
 test("R35 the public line agrees with an independent node:crypto derivation of the same seed", () => {
   for (const seed of [SEED, seedOf(13), RFC8032.seed, Buffer.from(new Uint8Array(32).map((_, i) => (i * 19 + 2) % 256))]) {
-    const priv = createPrivateKey({ key: { kty: "OKP", crv: "Ed25519", d: Buffer.from(seed).toString("base64url") }, format: "jwk" });
+    /* RFC 8410's PKCS#8 wrapper of a 32-byte Ed25519 seed. */
+    const pkcs8 = Buffer.concat([Buffer.from("302e020100300506032b657004220420", "hex"), Buffer.from(seed)]);
+    const priv = createPrivateKey({ key: pkcs8, format: "der", type: "pkcs8" });
     const x = Buffer.from(createPublicKey(priv).export({ format: "jwk" }).x, "base64url");
     const wire = Buffer.concat([Buffer.from([0, 0, 0, 11]), Buffer.from("ssh-ed25519"), Buffer.from([0, 0, 0, 32]), x]);
     assert.equal(signerPublicLine(envelope(seed)), `ssh-ed25519 ${b64(wire)} bio-release`);
