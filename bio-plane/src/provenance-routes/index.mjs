@@ -253,8 +253,8 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
  * published is not recorded for anybody who was not there. So the finding is
  * driven out through the reads a member actually uses:
  *
- *   op=list             every row carries `route`. 14 call sites in app.html —
- *                       the most-used bundle read there is.
+ *   op=list             every row carries `route`, read through `routeFinding` in
+ *                       retrieval's own statement (R8).
  *   op=audit            a `route` block: the tally over the page, the marked
  *                       bundles named with their STATE beside the finding, and
  *                       the standing sentence that says the two disagree ON
