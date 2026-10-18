@@ -7,6 +7,7 @@
 import { BOUNDS, chainGrade, chainLabel, orderPaths, exhausted } from '../connection-grammar/index.mjs';
 import { OBSERVATION_STATES } from '../observation-log/index.mjs';
 import { kindsByOwner, makeReader } from './reader.mjs';
+import { nameEnds } from './labels.mjs';
 import {
   refuse, isObj, filled, viewerRefusal, nodeRefusal, dateRefusal, depthOrRefusal, dateText,
   LEAD_SENTENCE, DECLARED_MARK, HUNCH_MARK, NOT_ASSERTED,
@@ -179,6 +180,9 @@ export function walk(ctx, w) {
     if (!stated) return refuse('UNKNOWN_QUANTITY', `no step in the walk states the quantity ${w.sortBy}`);
   }
   paths = /** @type {any[]} */ (orderPaths(paths, w.sortBy ? { by: w.sortBy } : {}));
+  // Each hop of each path answered carries its two ends' names, read once for the distinct ends (R26).
+  const named = nameEnds(ctx, paths.flatMap((p) => p.hops), w.viewer);
+  paths = paths.map((p) => ({ ...p, hops: p.hops.map(named) }));
   const complete = r.complete();
   const answer = {
     ok: true, from: w.from, ...(w.to ? { to: w.to } : {}), at: w.at, kinds: w.kinds, scope: w.scope ?? null,

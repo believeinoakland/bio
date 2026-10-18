@@ -83,7 +83,7 @@ test("R3 each path's hops as their owners answered them, its grade the weakest h
   const { x } = make(conns);
   const r = ask(x, { to: C });
   const p = r.paths[0];
-  assert.deepEqual(p.hops, conns.filter((c) => c.id === "h-ab" || c.id === "h-bc"), "each hop exactly as its owner answered it");
+  assert.deepEqual(p.hops.map(({ from_label, to_label, ...h }) => h), conns.filter((c) => c.id === "h-ab" || c.id === "h-bc"), "each hop exactly as its owner answered it, beside its two ends' names (R26)");
   assert.deepEqual(p.grade, { assertion: "C", end: "D" }, "the weakest on each axis, never an average");
   const all = ask(x).paths;
   assert.deepEqual(all.map((q) => q.hops.length), [...all.map((q) => q.hops.length)].sort((a, b) => a - b), "fewest hops first");
