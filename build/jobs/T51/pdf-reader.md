@@ -21,3 +21,7 @@
 - `node checks/ownership.mjs /home/user/bio pdf-reader tranche/T51 job/T51/pdf-reader`: 4 files changed; 0 failures.
 
 Size (session_01KswWpSMer2zv2tpsG99AC5): test runs 9, module lines 3247
+
+## J1 · COMPLETE
+
+T51-7 done: R39 met (metadata {title?, source:'/Info'} in extractPdfStructure; title_undecodable note; null with no readable /Info or encrypted). pdf-reader tests 86/0; users' tests green except pdf-worker/test/structure.test.mjs R7+R10 (2 checks), red only because pdf-worker/dist/pdf-worker.bundled.mjs is stale (manifest §14): BOB regenerates at the layer close. checks/run: format, architecture, ownership 0 failures; pdf-reader coverage 39/39. Record: build/jobs/T51/pdf-reader.md.
