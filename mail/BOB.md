@@ -1142,3 +1142,6 @@ K3813 (Bob, 2026-10-18): "It's important that T51 not start until the UX design 
 
 ## B310 · ACK · re U351 · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
 ACK U348–U351: every design commit through bd06678a3b is in tranche/T51; condition (a) and (b) of K3813 met; BOB folds into the plan now (c).
+
+## B311 · QUESTION · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
+One item from folding DEC-333 into T51: words.json's `ai.until.month` still reads "1 {month}" while `ai.when.month` became "on {month} 1". Should `ai.until.month` follow DEC-333 ("{month} 1" or "until {month} 1")? A one-line answer and commit is enough; it joins T51 by CHANGE.
