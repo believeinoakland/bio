@@ -2,6 +2,8 @@
 
 **Status** · BOB #214, 2026-10-18. Bob's ruling K3930 ("B with the four conditions. Be smart about implementing this change. Do it correctly given the long-term objectives for Civicsmith development."); everything below is BOB's detail (P17), folded into `setup-words` R14–R19, R13 restated, and the words check (`checks/words.mjs`, civicos-process). Long-term aims it serves: no wording change ever touches a module or its tests (Bob, K3919: the tree's fragility); translation into other languages without rework (N1094, Bob's to schedule); scale to tens of thousands of sentences and many languages.
 
+**Since K3943** the marker written `t` below is named `localize` (1,450 files of the tree bind `t`); since K3944 the design's `unkeyed` list (`words-reads.json`, DEC-258, DEC-260) is not counted by the check.
+
 ## 1. Two ways to read a sentence, one table
 
 - **`word(key, vars)`** (R11, unchanged): a row the design stream wrote first. The key must be in `words.json`; a missing key fails the check (`missingkey`). This is how drawn screens read their words (condition 3).

@@ -5,8 +5,8 @@
 //   node build/tools/words-convert.mjs --verify <report>
 // Candidates are exactly the sites checks/words.mjs reports as `inline` (untagged, copy, table) and `testcopy` (exact),
 // taken from the check itself (its module list included). Each is mapped to its AST node (acorn) and replaced by exact
-// source range, back to front. Rules: (a) word('key'[, vars]) for a row-equal sentence; (b) t('id','en'[, vars]);
-// (c) t(...) for a hand-written table's value; (d) word('key'[, vars]) for a test copy of a row. Everything else is
+// source range, back to front. Rules: (a) word('key'[, vars]) for a row-equal sentence; (b) localize('id','en'[, vars]);
+// (c) localize(...) for a hand-written table's value; (d) word('key'[, vars]) for a test copy of a row. Everything else is
 // listed for judgment with its reason. Without --write nothing is written. Never commits.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname, relative, resolve, basename, extname, posix, sep } from 'node:path';
@@ -20,6 +20,7 @@ const { readModules, ownerIndex } = await import(pathToFileURL(`${CHECKS}/lib.mj
 
 const SIGNED = new Set(['case-grammar', 'case-checker', 'publication', 'contradiction', 'strength']);
 const OWN = 'setup-words';
+const MARKER = 'localize'; // setup-words R14's marker, named so no file of the tree binds it already (K3943)
 const WORDS_INDEX = 'bio-plane/src/setup-words/index.mjs';
 const PH = /\{([A-Za-z0-9_]+)\}/g;
 const HAS_PH = /\{[A-Za-z0-9_]+\}/;
@@ -265,10 +266,10 @@ export async function convert(root, { write = false, coerce = true, leaves = LEA
     const dir = dirname(abs);
     const imports = ast.body.filter((s) => s.type === 'ImportDeclaration');
     const existing = imports.find((d) => { const r = d.source.value.startsWith('.') ? resolve(dir, d.source.value) : null; return r === target; });
-    const local = { word: 'word', t: 't' };
+    const local = { word: 'word', t: MARKER };
     const have = { word: false, t: false };
-    if (existing) for (const s of existing.specifiers) if (s.type === 'ImportSpecifier' && (s.imported.name === 'word' || s.imported.name === 't')) { local[s.imported.name] = s.local.name; have[s.imported.name] = true; }
-    const skip = new Set(existing ? existing.specifiers.filter((s) => s.type === 'ImportSpecifier' && have[s.imported.name]) : []);
+    if (existing) for (const s of existing.specifiers) if (s.type === 'ImportSpecifier' && (s.imported.name === 'word' || s.imported.name === MARKER)) { const k = s.imported.name === MARKER ? 't' : 'word'; local[k] = s.local.name; have[k] = true; }
+    const skip = new Set(existing ? existing.specifiers.filter((s) => s.type === 'ImportSpecifier' && (s.imported.name === 'word' || s.imported.name === MARKER)) : []);
     const bound = boundNames(ast, skip);
     const boundFn = { word: bound.has(local.word), t: bound.has(local.t) };
     const q1 = (() => { let s = 0, d = 0; for (const n of nodes) if (n.type === 'Literal') { if (n.raw[0] === "'") s++; else if (n.raw[0] === '"') d++; } return d > s ? '"' : "'"; })();
@@ -361,7 +362,7 @@ export async function convert(root, { write = false, coerce = true, leaves = LEA
         if (BANNED.test(cooked.join(' '))) { jj('spelling: fix in the module\'s job'); continue; }
         rule = it.tag === 'table' ? 'c' : 'b'; fn = 't';
       }
-      if (boundFn[fn]) { jj(`${fn} already bound`); continue; }
+      if (boundFn[fn]) { jj(`${local[fn]} already bound`); continue; }
       const quote = node.type === 'Literal' ? node.raw[0] : q1;
       let id = null, enArg = null, enText = null;
       if (fn === 't') {
@@ -413,7 +414,7 @@ export async function convert(root, { write = false, coerce = true, leaves = LEA
     const dir = dirname(abs);
     const edits = sites.map((s) => ({ start: s.start, end: s.end, text: s.call, site: s }));
     const need = new Set(sites.map((s) => s.fn));
-    const add = ['word', 't'].filter((n) => need.has(n) && !have[n]);
+    const add = ['word', 't'].filter((n) => need.has(n) && !have[n]).map((n) => (n === 't' ? MARKER : n));
     if (add.length) {
       const named = existing?.specifiers.filter((s) => s.type === 'ImportSpecifier');
       if (existing && named.length) edits.push({ start: named[named.length - 1].end, end: named[named.length - 1].end, text: add.map((n) => `, ${n}`).join('') });
