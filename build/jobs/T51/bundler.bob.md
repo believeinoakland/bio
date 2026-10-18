@@ -17,3 +17,10 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3835). Your job re-opens for one item, in your own tests, following your R16 (the build renders and embeds no signing page). The signing page's files (`bio-plane/src/signpage.mjs`, `sign-release.html`, `scripts/embed-signpage.mjs`) move from signatures to control-plane at layer 11's START and are deleted there; a later module's file may not be imported by your tests (P4: the architecture check fails today on `bio-plane/test/system/fleetbundles.test.mjs` importing `embed-signpage.mjs` once they move). So:
+1. `fleetbundles.test.mjs`: remove the import of `../../scripts/embed-signpage.mjs` and the "GENERATED-INPUT LOOP" assertion (the render of `src/signpage.mjs` against `sign-release.html`, ~line 620–626, and its header note at :13); with R16 there is no generated input left to guard. `bio-plane/test/fleetbundles.control.mjs`: remove control (7) for the same reason, keeping every other control.
+2. `bio-plane/test/m/bundler/repo.mjs`:231, 235: stop copying `embed-signpage.mjs` and `sign-release.html` into the scratch repository (the build no longer needs them); `release.test.mjs`:211–222 may keep proving R16 by an absent or stale `signpage.mjs` without importing it.
+3. Nothing else changes; rerun your tests and `fleetbundles`, then COMPLETE again.
