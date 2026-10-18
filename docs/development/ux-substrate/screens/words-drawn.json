@@ -18260,7 +18260,7 @@
   },
   {
    "key": "refusal.ACCOUNT_UNREADABLE",
-   "en": "The account that would pay for this request could not be read. Nothing was used.",
+   "en": "The account your team uses for the assistant could not be read, so nothing was used. Try again.",
    "protected": false,
    "note": "DEC-342: paying account failed to read before an ask"
   },
@@ -18452,7 +18452,7 @@
   },
   {
    "key": "refusal.BAD_CAPABILITY",
-   "en": "Capabilities must be a list of names Civicsmith knows. Nothing was written.",
+   "en": "Each capability must be one Civicsmith knows, given by name. Nothing was written.",
    "protected": false,
    "note": "DEC-342: capability list malformed or has unknown names"
   },
@@ -18542,7 +18542,7 @@
   },
   {
    "key": "refusal.BAD_KIND",
-   "en": "Civicsmith could not tell what you meant: the request mixed up its options. Ask for one thing at a time and try again. Nothing was written.",
+   "en": "Civicsmith could not tell which kind this asked for, because the options conflict. Ask for one thing at a time and try again. Nothing was written.",
    "protected": false,
    "note": "DEC-342: selection, or mute request, names a conflicting or unknown kind"
   },
@@ -18584,7 +18584,7 @@
   },
   {
    "key": "refusal.BAD_PLACE",
-   "en": "Duties are listed for an entity as obligor, obligee or enforcer, and the role asked for was none of these. Nothing was read.",
+   "en": "Duties are listed for an entity as the one bound, the one owed, or the one who enforces, and the role asked for was none of these. Nothing was read.",
    "protected": false,
    "note": "DEC-342: duties listed with an unknown role"
   },
@@ -18596,7 +18596,7 @@
   },
   {
    "key": "refusal.BAD_RANGE",
-   "en": "A range needs a low and a high, with the low not above the high, and only a range amount carries them. For workbooks, a binding must be one rectangle on one sheet. Nothing was written.",
+   "en": "A range needs a low and a high, with the low not above the high, and only a range amount carries them. A workbook cell reference must be one block of cells on one sheet. Nothing was written.",
    "protected": false,
    "note": "DEC-342: range amount inconsistent or workbook range unusable"
   },
@@ -18608,7 +18608,7 @@
   },
   {
    "key": "refusal.BAD_ROLES",
-   "en": "Give each finding in the case its designation, as a map from finding to load-bearing or supporting, not a list. Nothing was published.",
+   "en": "Mark each finding in the case as load-bearing or supporting, one mark per finding. Nothing was published.",
    "protected": false,
    "note": "DEC-342: case roles given as a list instead of a map"
   },
@@ -18698,7 +18698,7 @@
   },
   {
    "key": "refusal.BAD_UNTIL",
-   "en": "That snooze date could not be read. Use a real calendar date or a full date and time. Your team's Civicsmith may also need a time zone set before it can read a bare date. Nothing was written.",
+   "en": "That snooze date could not be read. Use a real calendar date, or a full date and time; a bare date also needs a time zone set for your team's Civicsmith. Nothing was written.",
    "protected": false,
    "note": "DEC-342: snooze until value unreadable or no time zone held"
   },
@@ -18728,7 +18728,7 @@
   },
   {
    "key": "refusal.BASIS_IN_PAYLOAD",
-   "en": "Basis legs must come from the document itself, not from the request. Remove them from the request and try again. Nothing was written.",
+   "en": "The basis for each piece of evidence must come from the document itself, not from the request. Remove it from the request and try again. Nothing was written.",
    "protected": false,
    "note": "DEC-342: promote request carries basis"
   },
@@ -18836,7 +18836,7 @@
   },
   {
    "key": "refusal.CASE_ASSERTION_DIVERGED",
-   "en": "This finding's signed text states a different completeness for the case than the case document your team signed. Make them agree. Nothing was published.",
+   "en": "The completeness statement in the signed finding differs from the one in the case document your team signed. Make them agree. Nothing was published.",
    "protected": false,
    "note": "DEC-342: finding completeness differs from case document"
   },
@@ -18848,13 +18848,13 @@
   },
   {
    "key": "refusal.CASE_EDITION_ALREADY_RATIFIED",
-   "en": "This case edition is already signed by someone else's signature, and an edition cannot be signed twice. To change it, publish a new edition. Nothing was written.",
+   "en": "This case edition is already signed, and an edition cannot be signed twice. To change it, publish a new edition. Nothing was written.",
    "protected": false,
    "note": "DEC-342: case edition already ratified under another signature"
   },
   {
    "key": "refusal.CASE_FIELD_NOT_ALLOWED",
-   "en": "A case has no field with that name. Only the set statements, scope, bias acknowledgement and account are allowed. Nothing was written.",
+   "en": "That is not a part of a case that can be set here. Only its statements, scope, bias acknowledgement and account can. Nothing was written.",
    "protected": false,
    "note": "DEC-342: case publish carries unrecognised field"
   },
@@ -18968,7 +18968,7 @@
   },
   {
    "key": "refusal.CONCERNS_UNKNOWN",
-   "en": "This figure points at something Civicsmith cannot place. A figure can concern events, contracts, funds, programs, proceedings or lines. Nothing was written.",
+   "en": "This figure points at something Civicsmith cannot place. A figure can concern a contract, fund, program or proceeding. Nothing was written.",
    "protected": false,
    "note": "DEC-342: money figure concerns list malformed or unrecognized id"
   },
@@ -19028,7 +19028,7 @@
   },
   {
    "key": "refusal.CREDENTIALS_UNAVAILABLE",
-   "en": "The scanner's credentials are not available to your team's Civicsmith, so the file could not be tested or made safe. Nothing was written.",
+   "en": "Your team's Civicsmith has no safety-check service connected, so the file could not be tested or made safe. Nothing was written.",
    "protected": false,
    "note": "DEC-342: file-safety tool credentials missing during test or copy"
   },
@@ -19100,7 +19100,7 @@
   },
   {
    "key": "refusal.DRAW_TOO_LARGE",
-   "en": "A draw cannot take more items than the list it draws from holds, or fewer than none. Nothing was written.",
+   "en": "A draw cannot take more items than the list holds, and it must take at least one. Nothing was written.",
    "protected": false,
    "note": "DEC-342: draw size outside the frame's size"
   },
@@ -19136,7 +19136,7 @@
   },
   {
    "key": "refusal.EMPTY_SELECTION",
-   "en": "The selection no longer holds anything to use. Its items may have been removed or hidden since you made it. Choose again. Nothing was written.",
+   "en": "The selection no longer holds anything to use, because its items may have been removed or hidden since you made it. Choose again. Nothing was written.",
    "protected": false,
    "note": "DEC-342: selection resolves to no members"
   },
@@ -19208,13 +19208,13 @@
   },
   {
    "key": "refusal.EXPLORE_NOT_ENABLED",
-   "en": "Exploring is turned off on this account, so it will not pay for exploring. Nothing was started.",
+   "en": "Exploring is turned off for your team. Nothing was started.",
    "protected": false,
    "note": "DEC-342: exploring asked on account where it is off"
   },
   {
    "key": "refusal.EXPLORE_OUT_OF_SCOPE",
-   "en": "That question is not one this account pays to explore. Nothing was started.",
+   "en": "That question is not one your team's settings allow exploring. Nothing was started.",
    "protected": false,
    "note": "DEC-342: exploring asked outside the account's allowed scope"
   },
@@ -19328,7 +19328,7 @@
   },
   {
    "key": "refusal.FIXED_KEY_ONLY",
-   "en": "A passage is looked up by its id alone and takes no filters or paging. Remove the extra settings and try again.",
+   "en": "A passage is looked up by its number alone, so it takes no filters or paging. Remove the extra settings and try again.",
    "protected": false,
    "note": "DEC-342: content read with extra parameters"
   },
@@ -19340,7 +19340,7 @@
   },
   {
    "key": "refusal.FRAME_INVALID",
-   "en": "The list of items to sample from must be unique text keys with no repeats. Nothing was written.",
+   "en": "The list of items to draw from cannot name the same item twice. Remove the repeats. Nothing was written.",
    "protected": false,
    "note": "DEC-342: draw frame has non-text or repeated keys"
   },
@@ -19502,13 +19502,13 @@
   },
   {
    "key": "refusal.LIMITS_UNREADABLE",
-   "en": "The limits on the account that would pay for this request could not be read. Nothing was used.",
+   "en": "The limits on your team's assistant use could not be read, so nothing was used. Try again.",
    "protected": false,
    "note": "DEC-342: account limits failed to read before an ask"
   },
   {
    "key": "refusal.LIMIT_UNIT_UNAVAILABLE",
-   "en": "This account is a sign-in, which reports no cost, so a limit in dollars cannot be set. Use tokens or calls. Nothing was changed.",
+   "en": "Your team signs in to the assistant with an account that reports no cost, so a limit in dollars cannot be set. Use tokens or calls. Nothing was changed.",
    "protected": false,
    "note": "DEC-342: dollar limit set on sign-in account"
   },
@@ -19520,13 +19520,13 @@
   },
   {
    "key": "refusal.LISTENER_FAILED",
-   "en": "Another part of Civicsmith that follows this change failed, so the change was undone. Try again, and tell your team's admin if it keeps happening. Nothing was written.",
+   "en": "Another part of Civicsmith that follows this change failed, so the change was undone. Try again, and tell your team's administrator if it keeps happening. Nothing was written.",
    "protected": false,
    "note": "DEC-342: downstream listener threw, write rolled back"
   },
   {
    "key": "refusal.MACHINE_CANNOT_LOOK",
-   "en": "Recording a look at a dated wait is the person who set it acting while signed in, never the assistant. Nothing was written.",
+   "en": "Only the signed-in member who set a dated wait can record that they looked at it, not the assistant. Nothing was written.",
    "protected": false,
    "note": "DEC-342: look at a wait attempted by a machine credential"
   },
@@ -19568,7 +19568,7 @@
   },
   {
    "key": "refusal.MANIFEST_NOT_RECORDED",
-   "en": "The case was published, but its case file could not be recorded. Tell your team's admin.",
+   "en": "The case was published, but its case file could not be recorded. Tell your team's administrator.",
    "protected": false,
    "note": "DEC-342: case container not recorded after commit"
   },
@@ -19652,7 +19652,7 @@
   },
   {
    "key": "refusal.NEED_CAPTURE",
-   "en": "Projecting links needs a captured document, and none was given. Choose a capture and try again.",
+   "en": "Showing the links in a document needs a captured document, and none was given. Choose a capture and try again.",
    "protected": false,
    "note": "DEC-342: link projection without a valid capture digest"
   },
@@ -19898,7 +19898,7 @@
   },
   {
    "key": "refusal.NOT_THIS_MEMBER",
-   "en": "This sign-in belongs to a different member, so Civicsmith did not keep it. Nothing was written.",
+   "en": "This sign-in belongs to a different member, so the change was not kept. Nothing was written.",
    "protected": false,
    "note": "DEC-342: sign-in token returned for a different member"
   },
@@ -19928,7 +19928,7 @@
   },
   {
    "key": "refusal.NO_ACT",
-   "en": "An act has to be named by its act id, and none valid was given. Nothing was written.",
+   "en": "An act has to be named by its number, and none valid was given. Nothing was written.",
    "protected": false,
    "note": "DEC-342: act alias without a valid act id"
   },
@@ -19994,7 +19994,7 @@
   },
   {
    "key": "refusal.NO_BIAS_ACKNOWLEDGEMENT",
-   "en": "Acknowledge the bias this case was produced under, freshly for this edition. Declaring it won't block publishing. Nothing was published.",
+   "en": "Say what bias this case was produced under, written for this edition. A declared bias never stops a case from publishing; a missing statement does. Nothing was published.",
    "protected": false,
    "note": "DEC-342: case lacks a bias acknowledgement"
   },
@@ -20066,7 +20066,7 @@
   },
   {
    "key": "refusal.NO_CLASSES",
-   "en": "Choosing which readings' dates are held takes a list of capture classes, which may be empty. Nothing was written.",
+   "en": "Choosing which readings' dates are held needs a list of kinds of captured document, which may be empty. Nothing was written.",
    "protected": false,
    "note": "DEC-342: opt-in set not given as a list of classes"
   },
@@ -20540,7 +20540,7 @@
   },
   {
    "key": "refusal.NO_SUCH_LINE",
-   "en": "That line is not one your team's record holds, or you cannot see it. Check the line and try again. Nothing was written.",
+   "en": "That connection is not one your team's record holds, or you cannot see it. Check the connection and try again. Nothing was written.",
    "protected": false,
    "note": "DEC-342: line id unknown or invisible to writer"
   },
@@ -20582,7 +20582,7 @@
   },
   {
    "key": "refusal.NO_SUCH_RULE",
-   "en": "No active rules profile states that deadline for this kind of action, so none was set. Name a deadline the profile lists. Nothing was written.",
+   "en": "No active rule in your places' rules states that deadline for this kind of action, so none was set. Name a deadline those rules list. Nothing was written.",
    "protected": false,
    "note": "DEC-342: deadline rule missing or unknown for the action's kind"
   },
@@ -20594,7 +20594,7 @@
   },
   {
    "key": "refusal.NO_SUCH_STEP_SOURCE",
-   "en": "No attached source by that number is standing and visible to you, so none was withdrawn. Nothing was written.",
+   "en": "No source by that number is attached to that step where you can see it, so none was withdrawn. Nothing was written.",
    "protected": false,
    "note": "DEC-342: withdraw step source unknown, withdrawn or unseen"
   },
@@ -20840,7 +20840,7 @@
   },
   {
    "key": "refusal.PROPOSAL_ABOVE_CEILING",
-   "en": "The grade this reading earned is stronger than a machine reading can reach, so it was declined. Nothing was written.",
+   "en": "The grade this reading earned is stronger than the assistant's reading can reach, so it was declined. Nothing was written.",
    "protected": false,
    "note": "DEC-342: assistant proposal graded above its allowed ceiling"
   },
@@ -21182,7 +21182,7 @@
   },
   {
    "key": "refusal.SERVICE_THROTTLED",
-   "en": "The citation service is holding lookups from your team's key for now. Nothing was looked up; try again later.",
+   "en": "The citation service is limiting lookups from your team for now. Nothing was looked up; try again later.",
    "protected": false,
    "note": "DEC-342: outside citation service rate-limited the key"
   },
@@ -21338,7 +21338,7 @@
   },
   {
    "key": "refusal.TEXT_ANCHOR_MISSING",
-   "en": "Text read by a machine has to point to the page region it came from, and this did not, so it was declined. Nothing was written.",
+   "en": "Text read by the assistant has to point to the page region it came from, and this did not, so it was declined. Nothing was written.",
    "protected": false,
    "note": "DEC-342: machine transcription missing a valid page-region anchor"
   },
@@ -21488,7 +21488,7 @@
   },
   {
    "key": "refusal.UNKNOWN_KIND",
-   "en": "Civicsmith does not recognize that kind or item, so it was declined. Choose one from the list. Nothing was written.",
+   "en": "Civicsmith does not recognize that kind of item, so it was declined. Choose one from the list. Nothing was written.",
    "protected": false,
    "note": "DEC-342: queue mute of unknown item or calculation of unknown kind"
   },
@@ -21614,37 +21614,37 @@
   },
   {
    "key": "refusal.UNSPLICEABLE_BASIS",
-   "en": "This question's basis section is not in a form Civicsmith can edit in place, so nothing was changed. Nothing was written.",
+   "en": "Civicsmith could not edit this question's basis section, so it was left as it was. Nothing was written.",
    "protected": false,
    "note": "DEC-342: basis block cannot be edited in place"
   },
   {
    "key": "refusal.UNSPLICEABLE_CLOCK",
-   "en": "This action's deadline block is in a shape Civicsmith cannot extend in place, so it was left alone. Nothing was written.",
+   "en": "Civicsmith could not add to this action's deadline block, so it was left as it was. Nothing was written.",
    "protected": false,
    "note": "DEC-342: clock append to oddly shaped action document"
   },
   {
    "key": "refusal.UNSPLICEABLE_CORRESPONDENCE",
-   "en": "This action's correspondence section could not be extended in place, so nothing was written.",
+   "en": "Civicsmith could not add to this action's correspondence record, so it was left as it was. Nothing was written.",
    "protected": false,
    "note": "DEC-342: correspondence block not in extendable shape"
   },
   {
    "key": "refusal.UNSPLICEABLE_GOVERNING_LAWS",
-   "en": "This action's list of governing laws could not be replaced in place, so nothing was written.",
+   "en": "Civicsmith could not update this action's list of governing laws, so it was left as it was. Nothing was written.",
    "protected": false,
    "note": "DEC-342: governing laws block not in replaceable shape"
   },
   {
    "key": "refusal.UNSPLICEABLE_REFERENCES",
-   "en": "This document's references section is not in a form Civicsmith can edit in place, so nothing was changed. Nothing was written.",
+   "en": "Civicsmith could not edit this document's references section, so it was left as it was. Nothing was written.",
    "protected": false,
    "note": "DEC-342: references block cannot be edited in place"
   },
   {
    "key": "refusal.UNSPLICEABLE_STATE_HISTORY",
-   "en": "This document's history of states could not be extended in place, so the move was not made. Nothing was written.",
+   "en": "Civicsmith could not add to this document's history of states, so the move was not made. Nothing was written.",
    "protected": false,
    "note": "DEC-342: document state history block cannot be extended"
   },
