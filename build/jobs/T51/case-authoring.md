@@ -21,7 +21,7 @@
 - `node checks/ownership.mjs` (run before COMPLETE on the final commit): see the COMPLETE body.
 - `node checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; coverage 23 failures, all in modules other than case-authoring.
 
-**Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 7, module lines 3008** (`bio-plane/src/case-authoring/*.mjs`, all lines; this job changed no source).
+**Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 7, module lines 3010** (`bio-plane/src/case-authoring/*.mjs`, all lines; this job changed no source).
 
 ## J1 · COMPLETE
 
@@ -39,4 +39,4 @@ R61 tests now read case-checker R26's says shape (test-only; the source relays r
 - All 30 files of `bio-plane/test/m/case-authoring/`: 190 of 190 pass.
 - `format`: 0 failures. `architecture` (case-authoring): 0 failures; across all product files 0 failures. `coverage` (case-authoring): 48 of 48. `ownership`: 0 failures. `channels`: 0 failures.
 
-**Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 3, module lines 3008**, `bio-plane/src/case-authoring/*.mjs` (all lines; `index.mjs` changes are a net few lines).
+**Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 3, module lines 3010**, `bio-plane/src/case-authoring/*.mjs` (all lines).
