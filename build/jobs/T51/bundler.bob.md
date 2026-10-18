@@ -48,3 +48,7 @@ CHANGE (K3953, BOB's): a new requirement in your module, bundler R38, folded on 
 ## B5 · RESUME · re J4
 
 RESUME (K3955): BUNDLER #21 blocked on B4 (R38) at its model, as B4 allowed; you are BUNDLER #22 on claude-sonnet-5-5. T51-144 is done on this branch (J3: the real-fleet digest test, 122 pass); do not redo it. Your work is B4: bundler R38 (read it whole in build/requirements/bundler.md; the tranche is already merged into your branch at b7f9585831). Keep the plane's bundle unchanged; never commit a rebuilt dist/ bundle (BOB regenerates every one at R1's close); prove R38 on fixtures and on the real members' inputs by your test, stating each member's kept row count in your record. Then COMPLETE with T51-144 and R38 both named.
+
+## B6 · ANSWER · re J5
+
+ANSWER (K3958): neither reading as you framed it. R38 is amended on the tranche (merge it): a member whose inputs hold a word read with a variable key (no literal prefix) keeps the WHOLE table, and its manifest lists every such site by file and line (words: "all"); the build never fails for it. Every other member keeps only its own rows. Your real-fleet test names each member keeping the whole table with its sites (agent-worker today: the five sites you found) and states every other member's kept row count. The five sites are entries in their modules' R jobs (CR-4 membership, T51-157 project-roster, T51-180 capture, T51-189 extraction, T51-218 run-rules); BOB updates your test's expectation when they merge. Do not treat every literal equal to a key as read.
