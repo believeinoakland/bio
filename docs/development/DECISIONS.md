@@ -5179,3 +5179,18 @@ decided: 2026-10-18 · the design session (P17)
 the design: `date.daymonthyear` "{month} {day}, {year}" ("October 8, 2026"), `date.daymonth` "{month} {day}" ("October 8"), `ai.when.month` "on {month} 1", `ai.until.month` "{month} 1" (B311); a range is "June 21 to 30". Every date drawn on the screens page, its journeys and its notes follows (about 500).
 reasoning recorded in: this entry; DEC-192's `amended:` line; `screens/build_words.mjs`, `mock-*.js`, `words-drawn.src.py`, `page.src.html`.
 owed: (BOB, T51) interface-shell's `date()` reads the keys as before (R6), so only the words change; any module that writes a day and month in its own English (not through the keys) follows.
+
+### DEC-334 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (owed since B312 (2) and B313; `build/extraction/retrieval-browse.md`, K3841, its doubts 3 and 5)
+for: design
+question: The word list's split for the new module `retrieval-browse`, which takes `findin.mjs` and `browse.mjs` whole out of `retrieval` (T51-29, T51-42).
+why it is Bob's: it is not (P17): which module reads which key, beneath the split BOB planned.
+provisional: as below.
+alternative: wait for BOB to send the fifteen keys; the split map already names them, and T51-29's words test needs the list before it runs.
+recommendation: as below.
+reversal cost: low (one generated list).
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: `words-reads-mod-3.json` gains `retrieval-browse`, reading the split map's fifteen keys (`monitoring.reason_given`, `retrieval.column_why`, `retrieval.extent_why`, `retrieval.recorded_none_registered`, `retrieval.unread.read_followed_people`, `retrieval.unread.read_followed_people_offices`, `retrieval.why.names_day_calendar`, `retrieval.why.offers_recordedby_read`, `retrieval.why.reachable`, `retrieval.why.read_answered_promise`, `retrieval.why.read_refused`, `retrieval.why.read_threw`, `retrieval.why.words_name_month`, `retrieval.why.words_write_day`, `state.empty`), with `findin.mjs`'s eight matching-lexicon phrases stated unkeyed under `retrieval-browse/findin.mjs`; `retrieval` keeps the other 49 keys and 7 unkeyed strings. No key is renamed and no word changes; `words-reads.json` lists 172 modules.
+reasoning recorded in: this entry; `screens/words-reads-mod-3.json`, `screens/words-reads.json`.
+owed: (BOB, T51-29) retrieval-browse's words test asserts `WORD_KEYS` equals `modules["retrieval-browse"].reads`; (T51-42) retrieval's equals its 49.
