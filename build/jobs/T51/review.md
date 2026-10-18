@@ -23,3 +23,7 @@ Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` and `rele
 - format: 174 modules, 173 requirements files; 0 failures. architecture: 11 product files, 57 relative imports; 0 failures. coverage: 36 of 36 live requirement ids named by a test; 0 failures. ownership: 0 failures.
 
 Size (session_01DDca1CLodht7Fy36DU9DUp): test runs 6, module lines 1430
+
+## J1 · COMPLETE
+
+T51-84 review complete on job/T51/review. R35 top-level zone on the member door met, with own tests and controls; stale checks.mjs comment restated; A81 needs no new read (reviewcopy carries date, author, floors; hash in-band). Details in my record's Completion record. Dependent-module test failures (29) are identical with and without my change. Bundles under bio-plane/dist and release are stale until regenerated. review.md line 3 still marks R35 not yet met: BOB's.
