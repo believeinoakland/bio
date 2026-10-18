@@ -32,10 +32,10 @@ test('R12 the Worker exports the Container Durable Object class AgentRunner and 
     assert.deepEqual(Object.keys(h.mod.default), ['fetch'], 'the default export adds no handler but R15\'s fetch');
     assert.equal(typeof h.mod.AgentRunner, 'function');
     assert.equal(h.mod.AgentRunner.name, 'AgentRunner');
-    // agent-worker's RUNNER binding names this class in this script
+    // agent-worker no longer declares the local container's RUNNER binding (its R109): nothing binds this class there
     const aw = parseJsonc(readFileSync(new URL('../../agent-worker/wrangler.jsonc', import.meta.url), 'utf8'), 'agent-worker');
-    assert.deepEqual(aw.durable_objects.bindings.find((b) => b.name === 'RUNNER'),
-      { name: 'RUNNER', class_name: 'AgentRunner', script_name: wrangler().name });
+    assert.equal(aw.durable_objects.bindings.find((b) => b.name === 'RUNNER'), undefined);
+    assert.equal(aw.durable_objects.bindings.find((b) => b.class_name === 'AgentRunner'), undefined);
   } finally { await h.stop(); }
 });
 
