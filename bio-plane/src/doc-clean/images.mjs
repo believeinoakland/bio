@@ -83,7 +83,14 @@ function holdsRaster(d) {
   return null;
 }
 
-const NAMES = { tiff: "a TIFF", heif: "a HEIC or AVIF", jxl: "a JPEG XL", emf: "an EMF", wmf: "a WMF", svm: "an SVM" };
+const NAMES = {
+  tiff: localize("doc-clean.images.name_tiff", "a TIFF"),
+  heif: localize("doc-clean.images.name_heif", "a HEIC or AVIF"),
+  jxl: localize("doc-clean.images.name_jxl", "a JPEG XL"),
+  emf: localize("doc-clean.images.name_emf", "an EMF"),
+  wmf: localize("doc-clean.images.name_wmf", "a WMF"),
+  svm: localize("doc-clean.images.name_svm", "an SVM"),
+};
 
 /** Gunzip `d` whole, capped at `max` bytes out; `null` when it cannot be read or runs over. */
 async function gunzip(d, max) {
@@ -143,19 +150,19 @@ export function jbig2WithoutComments(d, where) {
   const bad = (why) => new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_a_jbig2_stream_whose", "{where}: a JBIG2 stream whose segments cannot be walked ({why})", { where: String(where), why: String(why) }));
   while (o < d.length) {
     const start = o;
-    if (o + 6 > d.length) throw bad("a truncated segment header");
+    if (o + 6 > d.length) throw bad(localize("doc-clean.images.a_truncated_segment_header", "a truncated segment header"));
     const num = ((d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0, flags = d[o + 4];
     o += 5;
     let count = d[o] >> 5;
     if (count === 7) { count = ((d[o] & 0x1f) << 24 | d[o + 1] << 16 | d[o + 2] << 8 | d[o + 3]) >>> 0; o += 4 + Math.ceil((count + 1) / 8); }
-    else if (count > 4) throw bad("a malformed referred-to count");
+    else if (count > 4) throw bad(localize("doc-clean.images.a_malformed_referred_to_count", "a malformed referred-to count"));
     else o += 1;
     o += count * (num <= 256 ? 1 : num <= 65536 ? 2 : 4) + (flags & 0x40 ? 4 : 1);
-    if (o + 4 > d.length) throw bad("a truncated segment header");
+    if (o + 4 > d.length) throw bad(localize("doc-clean.images.a_truncated_segment_header", "a truncated segment header"));
     const len = ((d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0;
     o += 4;
-    if (len === 0xffffffff) throw bad("a segment of unstated length");
-    if (o + len > d.length) throw bad("a segment longer than the stream");
+    if (len === 0xffffffff) throw bad(localize("doc-clean.images.a_segment_of_unstated_length", "a segment of unstated length"));
+    if (o + len > d.length) throw bad(localize("doc-clean.images.a_segment_longer_than_the_stream", "a segment longer than the stream"));
     const ext = (flags & 0x3f) === 62 && len >= 4 ? (((d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0) & 0x7fffffff : null;
     o += len;
     if (ext === 0x20000000 || ext === 0x20000002) { changed = true; continue; }
@@ -189,7 +196,7 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
   switch (kind) {
     case "jpeg": case "png": case "gif": case "webp": case "jp2": case "j2k": {
       const r = stripMetadata(bytes);
-      if (!r || !r.ok) throw new CleanRefusal(r?.code ?? "IMAGE_NOT_CLEANABLE", `${where}: ${r?.detail ?? "the image could not be stripped"}`);
+      if (!r || !r.ok) throw new CleanRefusal(r?.code ?? "IMAGE_NOT_CLEANABLE", `${where}: ${r?.detail ?? localize("doc-clean.images.the_image_could_not_be_stripped", "the image could not be stripped")}`);
       return { bytes: r.bytes, changed: r.changed };
     }
     case "tiff": case "heif": case "jxl":
@@ -211,7 +218,7 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
     case "svg": {
       const s = ascii(bytes, 0, bytes.length);
       const m = /<([\w.-]+:)?(image|metadata)(?=[\s/>])/i.exec(s);
-      if (m) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: an SVG image with an <${m[2].toLowerCase()}> element`);
+      if (m) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_an_svg_image_with_an", "{where}: an SVG image with an <{tag}> element", { where: String(where), tag: m[2].toLowerCase() }));
       const out = editXml(bytes, SVG_RULES);
       return { bytes: out, changed: out !== bytes };
     }
@@ -220,7 +227,7 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
       if (!inner) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", localize("doc-clean.images.where_a_compressed_image_that", "{where}: a compressed image that cannot be read whole", { where: String(where) }));
       const k = imageKind(inner);
       const media = k ? null : mediaKind(inner);
-      if (media) throw new CleanRefusal("EMBEDDED_MEDIA", `${where}: ${media}, compressed`);
+      if (media) throw new CleanRefusal("EMBEDDED_MEDIA", localize("doc-clean.images.where_media_compressed", "{where}: {media}, compressed", { where: String(where), media: String(media) }));
       if (k && k !== "gzip") {
         const r = await cleanImage(inner, k, where, maxInflated);
         if (r.changed) return { bytes: await gzip(r.bytes), changed: true };
