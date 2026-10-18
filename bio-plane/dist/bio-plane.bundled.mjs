@@ -19782,6 +19782,99 @@ function launchTarget(doc, action2) {
   }
   return null;
 }
+var PDFDOC_HIGH = Object.freeze({
+  24: 728,
+  25: 711,
+  26: 710,
+  27: 729,
+  28: 733,
+  29: 731,
+  30: 730,
+  31: 732,
+  128: 8226,
+  129: 8224,
+  130: 8225,
+  131: 8230,
+  132: 8212,
+  133: 8211,
+  134: 402,
+  135: 8260,
+  136: 8249,
+  137: 8250,
+  138: 8722,
+  139: 8240,
+  140: 8222,
+  141: 8220,
+  142: 8221,
+  143: 8216,
+  144: 8217,
+  145: 8218,
+  146: 8482,
+  147: 64257,
+  148: 64258,
+  149: 321,
+  150: 338,
+  151: 352,
+  152: 376,
+  153: 381,
+  154: 305,
+  155: 322,
+  156: 339,
+  157: 353,
+  158: 382,
+  160: 8364
+});
+function decodePdfTextStrict(raw) {
+  if (raw[0] === 254 && raw[1] === 255) {
+    if (raw.length % 2) return null;
+    const units = [];
+    for (let i = 2; i < raw.length; i += 2) units.push(raw[i] << 8 | raw[i + 1]);
+    let out2 = "";
+    for (let i = 0; i < units.length; i++) {
+      const u = units[i];
+      if (u === 27) {
+        const close = units.indexOf(27, i + 1);
+        if (close === -1) return null;
+        i = close;
+      } else if (u >= 55296 && u <= 56319) {
+        const lo = units[i + 1];
+        if (!(lo >= 56320 && lo <= 57343)) return null;
+        out2 += String.fromCharCode(u, lo);
+        i++;
+      } else if (u >= 56320 && u <= 57343) {
+        return null;
+      } else out2 += String.fromCharCode(u);
+    }
+    return out2;
+  }
+  let out = "";
+  for (const b of raw) {
+    if (b === 9 || b === 10 || b === 13 || b >= 32 && b < 127 || b >= 161 && b <= 255 && b !== 173) {
+      out += String.fromCharCode(b);
+    } else if (b in PDFDOC_HIGH) {
+      out += String.fromCharCode(PDFDOC_HIGH[b]);
+    } else return null;
+  }
+  return out;
+}
+function extractMetadata(doc) {
+  try {
+    if (doc.isEncrypted()) return null;
+    const info = doc.infoDict();
+    if (!info) return null;
+    const metadata = {};
+    const t2 = doc.resolve(info.Title);
+    if (t2 && t2.t === "str") {
+      const text8 = decodePdfTextStrict(t2.raw);
+      if (text8 === null) doc.note("title_undecodable");
+      else if (text8.trim().length) metadata.title = text8;
+    }
+    metadata.source = "/Info";
+    return metadata;
+  } catch {
+    return null;
+  }
+}
 async function loadPdf(bytes2) {
   const doc = new PdfDoc(bytes2);
   doc.scanTopLevel();
@@ -19858,6 +19951,7 @@ async function extractPdfStructure(bytes2) {
   const imgs = await extractImages(doc);
   if (imgs.images) markImageContent(doc, text8, imgs.images);
   if (imgs.images) markImagesUnread(doc, text8, imgs.images);
+  const metadata = extractMetadata(doc);
   return {
     ok: true,
     container: "pdf",
@@ -19874,6 +19968,8 @@ async function extractPdfStructure(bytes2) {
     /* R36 (K1888): every place the file can act when opened, read and never
        run; top-level for the same reason. */
     active: extractActive(doc),
+    /* R39: the title, top-level for the same reason. */
+    metadata,
     notes: doc.notes
   };
 }
@@ -22987,16 +23083,18 @@ async function docxText(parts) {
     counts: { chars: document.length, undetermined: 0 }
   };
 }
-function coreMetadata(parts) {
+function coreMetadata(parts, withTitle = false) {
   if (parts?.core) {
     const c = parts.core;
-    return { metadata: {
+    const metadata = {
       author: c.creator ?? null,
       lastModifiedBy: c.lastModifiedBy ?? null,
       created: c.created ?? null,
       modified: c.modified ?? null,
       source: CORE_PROPERTIES_PART
-    }, marker: null };
+    };
+    if (withTitle && typeof c.title === "string" && c.title.trim() !== "") metadata.title = c.title;
+    return { metadata, marker: null };
   }
   const stated3 = Array.isArray(parts?.undetermined) ? parts.undetermined.find((u) => u.part === CORE_PROPERTIES_PART) : null;
   return {
@@ -23004,9 +23102,9 @@ function coreMetadata(parts) {
     marker: stated3 ? { reason: "metadata_unreadable", part: CORE_PROPERTIES_PART, why: stated3.why } : null
   };
 }
-function withMetadata(out, parts) {
+function withMetadata(out, parts, withTitle = false) {
   if (!out || !out.ok) return out;
-  const { metadata, marker } = coreMetadata(parts);
+  const { metadata, marker } = coreMetadata(parts, withTitle);
   if (!marker) return { ...out, metadata };
   return {
     ...out,
@@ -23118,7 +23216,7 @@ var docxEntry = {
   },
   text: async (partsOrBytes) => {
     const parts = isBytes2(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(withActive(withMetadata(await docxText(parts), parts), parts), parts, "word/media/");
+    return withContainerImages(withActive(withMetadata(await docxText(parts), parts, true), parts), parts, "word/media/");
   }
 };
 
@@ -23719,7 +23817,7 @@ var pptxEntry = {
   },
   text: async (partsOrBytes) => {
     const parts = isBytes3(partsOrBytes) ? await pptxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(withActive(withMetadata(await pptxText(parts), parts), parts), parts, "ppt/media/");
+    return withContainerImages(withActive(withMetadata(await pptxText(parts), parts, true), parts), parts, "ppt/media/");
   }
 };
 

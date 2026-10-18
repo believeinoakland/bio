@@ -1514,8 +1514,8 @@ var fleet_member_default = {
     {
       class_name: "FileScanner",
       image: {
-        repository: "ghcr.io/believeinoakland/file-scanner-scanner",
-        digest: "sha256:2af812a3bde157731a05a827c035f49e8faf83ad29e6cbbf4ff440844b6e5db8",
+        repository: "docker.io/civicsmith/file-scanner-scanner",
+        digest: "sha256:38d314ed955e0af0c3f5379ecb609c718b562911af80e34cd787d0c3bc0a76fd",
         platform: "linux/amd64",
         port: 8080,
         schedulingPolicy: "default",
@@ -1543,8 +1543,8 @@ var fleet_member_default = {
     {
       class_name: "SafeViewRenderer",
       image: {
-        repository: "ghcr.io/believeinoakland/file-scanner-renderer",
-        digest: "sha256:90385aeddbc05b66882506a0ae6ec48dfb635119bae8c20cfba3c31e4afb974b",
+        repository: "docker.io/civicsmith/file-scanner-renderer",
+        digest: "sha256:27941d2aab6f9fd11e308ff4d3715674d38f268be7a6dcf3d7be8e398fa5ae9c",
         platform: "linux/amd64",
         port: 8080,
         schedulingPolicy: "default",
@@ -1596,7 +1596,7 @@ var fleet_member_default = {
     containers: [],
     worker: "database.clamav.net (R6), and per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
   },
-  note: "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the group's bucket and hands them copies.",
+  note: "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the team's bucket and hands them copies.",
   callers: [
     {
       member: "bio-plane",

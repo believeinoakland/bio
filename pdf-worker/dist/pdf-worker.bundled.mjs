@@ -41831,6 +41831,99 @@ function launchTarget(doc, action) {
   }
   return null;
 }
+var PDFDOC_HIGH = Object.freeze({
+  24: 728,
+  25: 711,
+  26: 710,
+  27: 729,
+  28: 733,
+  29: 731,
+  30: 730,
+  31: 732,
+  128: 8226,
+  129: 8224,
+  130: 8225,
+  131: 8230,
+  132: 8212,
+  133: 8211,
+  134: 402,
+  135: 8260,
+  136: 8249,
+  137: 8250,
+  138: 8722,
+  139: 8240,
+  140: 8222,
+  141: 8220,
+  142: 8221,
+  143: 8216,
+  144: 8217,
+  145: 8218,
+  146: 8482,
+  147: 64257,
+  148: 64258,
+  149: 321,
+  150: 338,
+  151: 352,
+  152: 376,
+  153: 381,
+  154: 305,
+  155: 322,
+  156: 339,
+  157: 353,
+  158: 382,
+  160: 8364
+});
+function decodePdfTextStrict(raw) {
+  if (raw[0] === 254 && raw[1] === 255) {
+    if (raw.length % 2) return null;
+    const units = [];
+    for (let i2 = 2; i2 < raw.length; i2 += 2) units.push(raw[i2] << 8 | raw[i2 + 1]);
+    let out2 = "";
+    for (let i2 = 0; i2 < units.length; i2++) {
+      const u2 = units[i2];
+      if (u2 === 27) {
+        const close = units.indexOf(27, i2 + 1);
+        if (close === -1) return null;
+        i2 = close;
+      } else if (u2 >= 55296 && u2 <= 56319) {
+        const lo2 = units[i2 + 1];
+        if (!(lo2 >= 56320 && lo2 <= 57343)) return null;
+        out2 += String.fromCharCode(u2, lo2);
+        i2++;
+      } else if (u2 >= 56320 && u2 <= 57343) {
+        return null;
+      } else out2 += String.fromCharCode(u2);
+    }
+    return out2;
+  }
+  let out = "";
+  for (const b2 of raw) {
+    if (b2 === 9 || b2 === 10 || b2 === 13 || b2 >= 32 && b2 < 127 || b2 >= 161 && b2 <= 255 && b2 !== 173) {
+      out += String.fromCharCode(b2);
+    } else if (b2 in PDFDOC_HIGH) {
+      out += String.fromCharCode(PDFDOC_HIGH[b2]);
+    } else return null;
+  }
+  return out;
+}
+function extractMetadata(doc) {
+  try {
+    if (doc.isEncrypted()) return null;
+    const info2 = doc.infoDict();
+    if (!info2) return null;
+    const metadata = {};
+    const t2 = doc.resolve(info2.Title);
+    if (t2 && t2.t === "str") {
+      const text = decodePdfTextStrict(t2.raw);
+      if (text === null) doc.note("title_undecodable");
+      else if (text.trim().length) metadata.title = text;
+    }
+    metadata.source = "/Info";
+    return metadata;
+  } catch {
+    return null;
+  }
+}
 async function loadPdf(bytes) {
   const doc = new PdfDoc(bytes);
   doc.scanTopLevel();
@@ -41902,6 +41995,7 @@ async function extractPdfStructure(bytes) {
   const imgs = await extractImages(doc);
   if (imgs.images) markImageContent(doc, text, imgs.images);
   if (imgs.images) markImagesUnread(doc, text, imgs.images);
+  const metadata = extractMetadata(doc);
   return {
     ok: true,
     container: "pdf",
@@ -41918,6 +42012,8 @@ async function extractPdfStructure(bytes) {
     /* R36 (K1888): every place the file can act when opened, read and never
        run; top-level for the same reason. */
     active: extractActive(doc),
+    /* R39: the title, top-level for the same reason. */
+    metadata,
     notes: doc.notes
   };
 }
