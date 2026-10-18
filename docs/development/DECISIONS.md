@@ -5285,3 +5285,18 @@ the design: N1184: the person page with no connections draws no graph and no Exp
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-*.js`, `screens/page.src.html`, `screens/registry.src.py`.
 folded after: the consistency read (number-safe counts; "hold" throughout, "litigation hold" only in the hold screen's title; "lawyer" in sentences, "counsel matter" the one named term; "No profile for {state} yet"; a drafted rule "does not take effect until a member other than its drafter confirms it"; the hold notice says the reason is included) and the 390 px walk (at phone width every button, summary row, sort header, breadcrumb, avatar, menu link, standalone link and checkbox row is at least 44 px; inline links in sentences exempt; the connections graph pans inside its frame, accepted like the tables).
 owed: (BOB, T51 L11) the four new screens' jobs and the drawn states; (Bob) the two records-request templates' review under filing-templates R15, and the sample legal facts drawn as data (Sunshine Ordinance route, anti-SLAPP fact) are placeholders, never offered until a profile carries them with sources.
+
+### DEC-341 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (BOB's HANDOFF B335, K3936: four gaps from folding DEC-340)
+for: design
+question: Naming challenged statements before a counsel packet is assembled; a drafted team rule's fields; the minutes' passage on a public-comment reply; an unreadable minutes source at signing.
+why it is Bob's: it is not (P17): drawing detail beneath filings R9, local-facts R10/R18 and actions R108.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) `counsel`'s defense state draws "The statements challenged" before the matters: the statement as the team made it and where it was said, "Add another statement" (`screen.counsel.chal.*`). (2) `grouprules`' draft takes a profile entry's fields: kind (a deadline or a legal fact), what sets it off (the deadline starts of jurisdictions R26 and the legal-fact triggers of R79), what it requires, its citation, an optional link, its source capture, the day it takes effect; each drafted or in-force row shows them (`screen.grouprules.kind.*`, `.trigger.*`, `.cite.*`, `.link.*`, `.eff.*`, `.row.*`). (3) `action`'s state e records a reply to a request for comment with "Where the minutes record your team's comment" (meeting, its date, the document, the passage; `screen.action.minutes.*`), refused for a reply that is not to a public comment. (4) `ceremony`'s state l: `signing.minutes.unread` "The minutes this case relies on can't be read right now, so the comparison with the team's public comment is not shown." 53 keys.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: (BOB, T51) local-facts R18 gains the effective date the drawing asks for, or BOB says it is not a profile fact (the profile entry has none today); filings R9's "where it was said" is the design's reading of what the member names.
