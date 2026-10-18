@@ -35,8 +35,8 @@ export const CONTENT_EXTENT_KIND_NO_PRODUCER = 'dom';
 
 /** DEC-49's refusal helper for this family. Its spelling, the name exactly `refusal` and the code a DOUBLE-QUOTED
  *  STRING LITERAL at every call site below inside the `is-content-extent` region, is the catalogue's, kept line for
- *  line (R48); it is what the old guard `civicos-ui/check-refusal-codes.mjs` matched (deleted in T20). Every refusal
- *  it answers carries its row's `check` and `translation` from this module's own table, which
+ *  line (R48); the DEC-49 guard that matched that spelling was retired in T20, and the region marker names where each
+ *  site sits. Every refusal it answers carries its row's `check` and `translation` from this module's own table, which
  *  `test/m/content/seams.test.mjs` (R48) proves for every C-45 row at the grammar, the mint and a citation;
  *  DEC-49's totality across the plane is control-plane's `test/m/control-plane/families.test.mjs` (its R22). */
 function refusal(key, detail, extra = null) {
@@ -603,8 +603,8 @@ export function checkContentExtent(extent, ctx = {}) {
  * not read is how one shipped `translation: undefined` to a member. Minting
  * C-45.1 in here would have put three of its four sites OUTSIDE
  * `is-content-extent` while the row's `where` went on naming that region alone
- * (the MULTI-SITE-CODE condition the old guard `civicos-ui/check-refusal-codes.mjs`,
- * deleted in T20, documented and could not close). So these functions answer
+ * (the MULTI-SITE-CODE condition: the DEC-49 guard, retired in T20, documented it and
+ * could not close). So these functions answer
  * WHAT IS WRONG and `checkContentExtent` answers WHICH CODE THAT IS, which keeps
  * all four C-45.1 sites inside the one span the row claims. That every C-45.1
  * this module answers carries its row's check and translation is
