@@ -127,8 +127,8 @@ function holder(sections, offset) {
   return best;
 }
 const UNPLACED = (sections) => (sections.length
-  ? "no section read from this policy holds this passage (it stands before the first outline heading)"
-  : "this policy's text was not divided into sections, so no section can be named for this passage");
+  ? localize("doctypes.policy.unplaced", "no section read from this policy holds this passage (it stands before the first outline heading)")
+  : localize("doctypes.policy.not_divided", "this policy's text was not divided into sections, so no section can be named for this passage"));
 function placed(sections, item) {
   const s = holder(sections, item.start);
   return s ? { ...item, section: s.path } : { ...item, section: null, why: UNPLACED(sections) };
@@ -246,9 +246,9 @@ export function readResponsibilities(raw, sections, from, locate) {
           if (cur && k > 0) cur.lastEnd = pending[k - 1].end;
           if (cur && carried) cur.lastEnd = l.start + indentOf(l) + carried;
           pending = inline ? [] : pending.slice(k);
-          if (!inline && !pending.length) { ok = false; why = "a numbering that starts again at 1 has no party beside it or above it that can be told from the action before"; break; }
+          if (!inline && !pending.length) { ok = false; why = localize("doctypes.policy.no_party_numbering", "a numbering that starts again at 1 has no party beside it or above it that can be told from the action before"); break; }
           if (cur && !inline && !/[.;:]\s*$/.test(raw.slice(cur.start, cur.lastEnd))) {
-            ok = false; why = "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told"; break;
+            ok = false; why = localize("doctypes.policy.action_unbounded", "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told"); break;
           }
           finish();
           const pStart = pending.length ? pending[0].start + indentOf(pending[0]) : l.start + indentOf(l);
@@ -278,7 +278,7 @@ export function readResponsibilities(raw, sections, from, locate) {
     extents.push({ start, end: stop });
     if (!ok || !table.length) {
       unread.push(placed(sections, { start, end: stop, source: locate(start) || null,
-        why: why || "the table's header is printed but no numbered action under a party is read below it" }));
+        why: why || localize("doctypes.policy.table_no_action", "the table's header is printed but no numbered action under a party is read below it") }));
       continue;
     }
     for (const r of table) {
@@ -349,7 +349,7 @@ export function readPolicy(ctx, raw, locate = () => null) {
   return {
     header: h.header, header_why: h.why,
     sections, sections_why: sections.length ? null
-      : "no outline heading (I., A., 1.) opens a line of this policy after its header, so its text is not divided into sections",
+      : localize("doctypes.policy.no_outline", "no outline heading (I., A., 1.) opens a line of this policy after its header, so its text is not divided into sections"),
     section_digests: digests,
     definitions, applicability, responsibilities: responsibilities.rows, responsibilities_unread: responsibilities.unread,
     timeframes, counts,
@@ -358,7 +358,7 @@ export function readPolicy(ctx, raw, locate = () => null) {
 
 export default {
   key: "policy",
-  label: "a policy of a numbered series",
+  label: localize("doctypes.policy.label", "a policy of a numbered series"),
   version: 1,
   /* A policy says what it says: its substance is the unit (R25, R4). */
   contract: CONTRACT.SUBSTANCE,
@@ -369,12 +369,12 @@ export default {
     const series = policySeries(ctx);
     if (!series.length || !headerLabels(ctx).length)
       return { match: false, confidence: CONFIDENCE.NONE,
-               why: "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy" };
+               why: localize("doctypes.policy.no_series_supplied", "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy") };
     const h = readHeader(ctx, String(ctx.text || ""));
     const hd = h.header;
     if (!hd || !hd.type)
       return { match: false, confidence: CONFIDENCE.NONE,
-               why: "no line of this text opens with a policy series the active profiles name, beside the header labels they give" };
+               why: localize("doctypes.policy.no_series_line", "no line of this text opens with a policy series the active profiles name, beside the header labels they give") };
     if (!hd.number)
       return { match: false, confidence: CONFIDENCE.NONE,
                why: localize("doctypes.policy.no_series_number", "the header names {type} but carries no number that series reads, so it is not read as one of its items", { type: String(hd.type.text) }) };
@@ -437,13 +437,13 @@ export default {
     }
     if (headerWhy && sectionsWhy)
       return { meaningful: null, significance: null, events: [], confirmed: null, header_why: headerWhy, sections_why: sectionsWhy,
-               why: "nothing could be read from this policy on one side or the other, so nothing is claimed about it either way" };
+               why: localize("doctypes.policy.unread", "nothing could be read from this policy on one side or the other, so nothing is claimed about it either way") };
     bySeverity(events);
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events, confirmed: null,
       header_compared: !headerWhy, header_why: headerWhy, sections_compared: !sectionsWhy, sections_why: sectionsWhy,
       why: events.length ? localize("doctypes.policy.changes", "{count} change(s) between two readings of a policy at the same address", { count: String(events.length) })
-        : "this policy reads as it read: the same header and the same sections",
+        : localize("doctypes.policy.unchanged", "this policy reads as it read: the same header and the same sections"),
     };
   },
 };

@@ -175,7 +175,7 @@ function reportConfirmed(a, b) {
 
 export default {
   key: "staff_report",
-  label: "a staff report to a public body",
+  label: localize("doctypes.staff-report.label", "a staff report to a public body"),
   version: 1,
   /* A narrative document making a case, not a list, so what matters is its SUBSTANCE.
      Declared on the content type (CONSTRUCTS Step 0 #4). */
@@ -205,7 +205,7 @@ export default {
     if (signoff) signals.push("a staff sign-off");
     const titles = reportTitlePatterns(ctx);
     const titled = String(t).split(/\r?\n/).some((l) => titles.some((re) => re.test(l.trim())));
-    if (titled) signals.push("names itself as a report on a line of its own");
+    if (titled) signals.push(localize("doctypes.staff-report.titled", "names itself as a report on a line of its own"));
 
     if (memo && secs.length >= 3) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     /* LIKELY on the evidence a report in a house style this type has not met can still
@@ -334,7 +334,7 @@ export default {
     if (String(a.recommendation || "") !== String(b.recommendation || ""))
       events.push(event("recommendation_changed", {
         was: a.recommendation || null, now: b.recommendation || null,
-        why: "what this report recommends the body do is not what it recommended before" }));
+        why: localize("doctypes.staff-report.recommendation_changed", "what this report recommends the body do is not what it recommended before") }));
     /* The memorandum header moving is worth showing and is not the same fact. */
     for (const k of ["to", "from", "subject", "date"])
       if (String(a[k] || "") !== String(b[k] || ""))
@@ -344,10 +344,10 @@ export default {
     const d = diffEntities(a.entities || [], b.entities || []);
     for (const e of d.gone)
       events.push(event("item_pulled", { key: e.key, label: e.label,
-        why: "an instrument or code section this report pointed at is no longer cited in it" }));
+        why: localize("doctypes.staff-report.pulled", "an instrument or code section this report pointed at is no longer cited in it") }));
     for (const e of d.appeared)
       events.push(event("item_added", { key: e.key, label: e.label,
-        why: "this report now points at an instrument or code section it did not cite before" }));
+        why: localize("doctypes.staff-report.added", "this report now points at an instrument or code section it did not cite before") }));
 
     bySeverity(events);
     return {
@@ -357,7 +357,7 @@ export default {
         ? (String(a.recommendation || "") !== String(b.recommendation || "")
           ? localize("doctypes.staff-report.changes_and_recommendation", "{count} change(s): {gone} citation(s) gone, {added} added, and the recommendation moved", { count: String(events.length), gone: String(d.gone.length), added: String(d.appeared.length) })
           : localize("doctypes.staff-report.changes", "{count} change(s): {gone} citation(s) gone, {added} added", { count: String(events.length), gone: String(d.gone.length), added: String(d.appeared.length) }))
-        : "this report says what it said, and points at the same instruments",
+        : localize("doctypes.staff-report.unchanged", "this report says what it said, and points at the same instruments"),
     };
   },
 };
