@@ -1,6 +1,6 @@
 # test-support (T51)
 
-**Status** · session_01KsgH5RfwYGuB5JXagtzuu5 · depth 2 · COMPLETE · handled B1
+**Status** · session_01EFMiVNACxY3XDRbufBuqk3 · depth 2 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -28,3 +28,26 @@ T51-3 · test-support: applied. Red #10 (R2, `test-support.test.mjs` "a tree a t
 - `node checks/run.mjs /home/user/bio`: format 0, architecture 0 (3533 product files), channels 0; coverage has the three failures above, none in test-support.
 
 Size (session_01KsgH5RfwYGuB5JXagtzuu5): test runs 6, module lines 721
+
+## J2 · COMPLETE
+
+CR-2 · test-support: applied. Commit b7ee6bb68f on job/T51/test-support (test files only; no module code changed).
+
+**Entries applied.** CR-2 (the only entry).
+
+**Change.** The child runs that R3 and R6 start are handed the environment without NODE_EXTRA_CA_CERTS (`childEnv()`, used by `child()` and by R6's flood spawn). A new test, named R3 and R6, sets the variable to an unreadable path, checks the child runs silent and does not see the variable, and runs an unstripped control child that does warn, so the silence is the strip's doing. make-zip.test.mjs's R13 had the same defect in its two spawns (the non-root failure below), and is stripped the same way, so the suite is green as non-root.
+
+**Deferred.** None. Not changed, because no assertion reads their stderr: the R2 non-root child (`childNotRoot`), the R2 exit-listener spawn, and R7's and R8's spawns.
+
+**Found in another module (not changed).** `checks/run.mjs` on bio, run from the process repository, reports coverage failures in 33 places and words failures (2,821: 1,841 inline, 798 testcopy, 182 handlist) in other modules; none is in test-support. Named here for BOB to route.
+
+**Tests and checks.**
+- `node --test test/m/test-support/test-support.test.mjs`, as root: 26 pass, 0 fail. As uid 65534 before the change: 23 pass, 2 fail (R3 "nothing thrown or warned"; R6 byte count off by the warning's 125 bytes). As uid 65534 after: 26 pass, 0 fail.
+- `node --test test/m/test-support/make-zip.test.mjs`, as root: 17 pass, 0 fail. As uid 65534 before: 16 pass, 1 fail (R13, stderr warning). After: 17 pass, 0 fail.
+- `node checks/format.mjs /home/user/bio`: 174 modules, 173 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio test-support`: 6 product files, 6 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio test-support`: 14 of 14 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio test-support tranche/T51 job/T51/test-support`: 2 files changed by test-support; 0 failures.
+- `node checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; coverage and words findings all in other modules (above); none in test-support.
+
+Size (session_01EFMiVNACxY3XDRbufBuqk3): test runs 10, module lines 723
