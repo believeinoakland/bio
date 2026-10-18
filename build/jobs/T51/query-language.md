@@ -23,3 +23,15 @@ Tests and checks:
 - `checks/run.mjs /home/user/bio`: architecture 0 failures; coverage 13 failures, all in other modules (above); channels 0 failures.
 
 Size (session_01FS8FKWSy2DYXTK38z1ksz2): test runs 1, module lines 3030
+
+## J2 · QUESTION
+
+T51-41 · query-language · CHANGE B2 (K3872): one question on wording.
+
+The ids arm now binds the list once, as a single JSON argument read through json_each, so a statement binds one variable at any count (commit a1cc6dbb39). Measured before the fix, with the fixture's SQLite capped at 100 bound variables (the plane's ceiling, D-36): 100 ids run, 101 are refused "too many SQL variables", so 5,000 ids failed. The new test "R14 an ids list binds one variable whatever its count" passes after the change and fails before it.
+
+No requirement states the bound. R12 bounds the select-all count at IDS_MAX (50,000) and R14 says an ids list is an arm; neither names the bound-variable ceiling, and the number is only in the code comments and the measurement records (about 100). Proposed wording for R14, to add:
+
+"An `ids` list of any length is bound as one statement argument (a JSON array read through `json_each`), so every statement stays within the plane's bound-variable ceiling (D-36, about 100) however many ids a scope holds."
+
+Please word it, or tell me the wording you want; I will then name it in the test title and post COMPLETE again.
