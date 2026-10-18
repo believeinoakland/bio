@@ -1,6 +1,6 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R143; T48's R143 `lookedSince`, the Home mark (N1036, K3189), R44's
+ * Requirements: build/requirements/membership.md (R4–R152; T50's R146–R152, N1115–N1186; T48's R143 `lookedSince`, the Home mark (N1036, K3189), R44's
  * sight strings (N1019) and R83 order (`ai-accounts`, `signin-door`, `journey-check`; `setup-page` gone; N1014, N1055); T47's R142 (K3078: the viewer's own handles taken, C-56.6 read
  * by key, the census of project acts), R141, the handle `admin` reserved for the founder
  * (K3076); T47-82's R140, `screens-entry` after `interface-shell` in
@@ -253,8 +253,8 @@ export function notAParticipant(projectId, by, extra = null) {
 
 /* N793 (K231; T38-4). THE ONE ANSWER TO ONE CONDITION: no member answers to the id (or name) a caller was given. This
    module owns `members`, so `NO_SUCH_MEMBER` is minted here alone and its one row is this module's (C-96.47; K2279); every act
-   of any module refusing that condition answers through here (this module's eight; credentials, tasks, setup-page,
-   instance-setup and control-plane in their own jobs). `member` is the id as asked (null when none); the detail is one
+   of any module refusing that condition answers through here (this module's eight; credentials, tasks,
+   instance-setup and control-plane in their own jobs; `setup-page` retired at T48). `member` is the id as asked (null when none); the detail is one
    fixed sentence, the same for every caller. `extra` adds a caller's own fields beside these and never replaces one of
    them. Writes nothing and never throws. */
 const NO_SUCH_MEMBER_DETAIL = "no member of your team answers to that id here. Nothing was changed.";
@@ -638,7 +638,8 @@ export class Membership {
   }
 
   /* R11 (section 4.8; DEC-134 (3)): the group's answer to who holds hosting access. It is asked at setup
-     (the setup page's act, `setup-page` R15; K1851), never on adding an administrator, so `memberAdd` asks nothing about it. The group's answer, recorded by an administrator; append-only, the latest record is the answer. */
+     (the setup screen's act, `screens-entry` R6, and the group's settings, `screens-settings` R18; the setup page's
+     `setup-page` R15 is retired, K1851), never on adding an administrator, so `memberAdd` asks nothing about it. The group's answer, recorded by an administrator; append-only, the latest record is the answer. */
   hostingAccessSet({ holders = null, note = null, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "recording who holds hosting access (4.8)");   /* R84 */
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.11 */
