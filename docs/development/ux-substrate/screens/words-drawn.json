@@ -17030,7 +17030,7 @@
   },
   {
    "key": "screen.places.noprofile.heading",
-   "en": "Your state has no profile",
+   "en": "No profile for {state} yet",
    "protected": false,
    "note": "DEC-340: B330 N858 D8: places, a state with no profile: heading"
   },
@@ -17054,7 +17054,7 @@
   },
   {
    "key": "screen.places.noprofile.asks",
-   "en": "A profile for your state is added when a team there asks for it.",
+   "en": "A profile can be added when a team there asks for one.",
    "protected": false,
    "note": "DEC-340: B330 N858 D8: v0.2 rule 11, a real profile for another state only when a team there asks"
   },
@@ -17180,13 +17180,13 @@
   },
   {
    "key": "screen.action.holdnone",
-   "en": "No litigation hold is stated for it yet.",
+   "en": "No hold is placed for it yet.",
    "protected": false,
    "note": "DEC-340: B330 N858 D10: action, pressure on this action"
   },
   {
    "key": "screen.action.hold.link",
-   "en": "Place a litigation hold",
+   "en": "Place a hold",
    "protected": false,
    "note": "DEC-340: B330 N858 D10: the entry point to the hold, from the action, the docket and the packet"
   },
@@ -17210,7 +17210,7 @@
   },
   {
    "key": "screen.grouprules.note",
-   "en": "A drafted rule counts for nothing until a member other than its drafter confirms it.",
+   "en": "A drafted rule does not take effect until a member other than its drafter confirms it.",
    "protected": false,
    "note": "DEC-340: B330 N858 D8: local-facts R11"
   },
@@ -17258,7 +17258,7 @@
   },
   {
    "key": "screen.grouprules.applies",
-   "en": "Applies in your team since then",
+   "en": "In effect for your team since then",
    "protected": false,
    "note": "DEC-340: B330 N858 D8: a rule in force"
   },
@@ -17402,7 +17402,7 @@
   },
   {
    "key": "screen.counsel.who.required",
-   "en": "Naming counsel is required when the action's tier is 3 or not yet judged.",
+   "en": "You must name a lawyer when the action is tier 3 or has no tier yet.",
    "protected": false,
    "note": "DEC-340: B330 N858 D9: filings R8, NO_COUNSEL"
   },
@@ -17420,13 +17420,13 @@
   },
   {
    "key": "screen.counsel.purpose.claim",
-   "en": "Our claim: a case the team may bring",
+   "en": "Claim: a case the team may bring",
    "protected": false,
    "note": "DEC-340: B330 N858 D9: option"
   },
   {
    "key": "screen.counsel.purpose.defense",
-   "en": "Our defense: pressure or a claim against the team",
+   "en": "Defense: pressure or a claim against the team",
    "protected": false,
    "note": "DEC-340: B330 N858 D9: option"
   },
@@ -17480,13 +17480,13 @@
   },
   {
    "key": "screen.counsel.matters.undetermined",
-   "en": "A matter without one shows its question and its findings, each with how far it has gone and its grade, and is stated as not determined.",
+   "en": "A matter without one shows its question and its findings, each with how far it has gone and its grade, and is stated as undetermined.",
    "protected": false,
    "note": "DEC-340: B330 N858 D9: NO_DETERMINATION retired"
   },
   {
    "key": "screen.counsel.matters.nothing",
-   "en": "Nothing here stops the packet.",
+   "en": "A matter without a determination does not stop the packet.",
    "protected": false,
    "note": "DEC-340: B330 N858 D9: no refusal for lack of a determination"
   },
@@ -17498,7 +17498,7 @@
   },
   {
    "key": "screen.counsel.matters.findings",
-   "en": "{n} findings: {checked} checked and held, {unpublished} unpublished",
+   "en": "Findings: {n} (checked and held: {checked}; unpublished: {unpublished})",
    "protected": false,
    "note": "DEC-340: B330 N858 D9: findings by kind"
   },
@@ -17522,7 +17522,7 @@
   },
   {
    "key": "screen.counsel.defense.restson",
-   "en": "rests on {findings} findings and {sources} source",
+   "en": "rests on findings: {findings}; sources: {sources}",
    "protected": false,
    "note": "DEC-340: B330 N858 D9"
   },
@@ -17564,7 +17564,7 @@
   },
   {
    "key": "screen.counsel.matter.hold",
-   "en": "The packet then carries the privilege marking too, and a legal threat on the matter can still carry a hold.",
+   "en": "The packet is then also marked as privileged, and a legal threat on the matter can still have a hold placed on it.",
    "protected": false,
    "note": "DEC-340: B330 N858 D10"
   },
@@ -17600,7 +17600,7 @@
   },
   {
    "key": "screen.docket.pressure.counsel",
-   "en": "If this case belongs to a counsel matter, its entries are not published, but a legal mark on it can still carry a hold.",
+   "en": "If this case belongs to a counsel matter, its entries are not published, but a legal mark on it can still have a hold placed on it.",
    "protected": false,
    "note": "DEC-340: B330 N858 D10: docket R28"
   },
@@ -17612,7 +17612,7 @@
   },
   {
    "key": "screen.hold.sub1",
-   "en": "Says the team is keeping what a legal matter may reach.",
+   "en": "A hold records that the team is keeping what a legal matter may reach.",
    "protected": false,
    "note": "DEC-340: B330 N858 D10: action-holds R2"
   },
@@ -17642,7 +17642,7 @@
   },
   {
    "key": "screen.hold.counsel.row",
-   "en": "Its entries are never published, but a legal mark on its docket can still carry a hold.",
+   "en": "Its entries are never published, but a legal mark on its docket can still have a hold placed on it.",
    "protected": false,
    "note": "DEC-340: B330 N858 D10: a counsel matter"
   },
@@ -17702,7 +17702,7 @@
   },
   {
    "key": "screen.hold.who",
-   "en": "Any member who can see the action or the case may place a hold, and release it later with a reason.",
+   "en": "Any member who can see the action or the case may place a hold.",
    "protected": false,
    "note": "DEC-340: B330 N858 D10: any member who can see it"
   },
@@ -17762,7 +17762,7 @@
   },
   {
    "key": "screen.hold.release",
-   "en": "Any member who can see the matter can release a hold, with a reason.",
+   "en": "Any member who can see the action or the case can release a hold, with a reason.",
    "protected": false,
    "note": "DEC-340: B330 N858 D10: action-holds R5"
   },
@@ -17792,7 +17792,7 @@
   },
   {
    "key": "screen.holdnotice.help1",
-   "en": "Assembled from the record: the place the hold is for, your reason, the date and the kinds of material to keep.",
+   "en": "Assembled from the record: the place the hold is for, your reason, the date and the kinds of material to keep. Your reason is included, so write it with that in mind.",
    "protected": false,
    "note": "DEC-340: B330 N858 D10: filings R47"
   },

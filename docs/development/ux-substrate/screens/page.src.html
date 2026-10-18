@@ -374,6 +374,19 @@ button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; 
 .mk-device[data-device="phone"] .cs-band { font-size: var(--t-xs); padding: 4px 12px; }
 .mk-device[data-device="phone"] .mk-plain.with-dock { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
 .mk-device[data-device="phone"] .mk-plainmain { padding: 20px 16px; }
+
+/* R84 on a phone: every tappable control is 44 px tall at least (WCAG 2.5.8 exempts a link inside a running sentence, left as it is) */
+.mk-device[data-device="phone"] button.cs-btn, .mk-device[data-device="phone"] a.cs-btn { min-height: 44px; min-width: 44px; }
+.mk-device[data-device="phone"] .mk-page summary:not(.mk-avatar) { display: list-item; box-sizing: border-box; min-height: 44px; padding-block: 10px; }
+.mk-device[data-device="phone"] .mk-usermenu > summary.mk-avatar { width: 44px; height: 44px; }
+.mk-device[data-device="phone"] .mk-menu a { display: flex; align-items: center; min-height: 44px; }
+.mk-device[data-device="phone"] .mk-sort { min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; }
+.mk-device[data-device="phone"] .mk-trailbtn { min-height: 44px; min-width: 44px; }
+.mk-device[data-device="phone"] .mk-crumbs { display: flex; flex-wrap: wrap; align-items: center; }
+.mk-device[data-device="phone"] .mk-crumbs a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.mk-device[data-device="phone"] .mk-rows td > a.cs-ref:only-child, .mk-device[data-device="phone"] .mk-acts > a.cs-ref, .mk-device[data-device="phone"] td > a:only-child, .mk-device[data-device="phone"] td > b > a.cs-ref:only-child, .mk-device[data-device="phone"] .mk-steps li > a.cs-ref:only-child, .mk-device[data-device="phone"] .cs-row > span > a.cs-ref.mk-data:only-child, .mk-device[data-device="phone"] .cs-due > a.cs-ref, .mk-device[data-device="phone"] p.mk-small > a.cs-ref:only-child { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.mk-device[data-device="phone"] fieldset.mk-checks label { min-height: 44px; box-sizing: border-box; }
+.mk-device[data-device="phone"] fieldset.mk-checks input { width: 24px; height: 24px; flex: none; }
 .mk-device[data-device="phone"] .mk-plain .cs-dock { border-left: 0; border-top: 3px solid var(--c-ink); max-height: 300px; }
 .mk-device[data-device="phone"] .mk-lanes { grid-template-columns: 1fr; }
 .mk-device[data-device="phone"] .mk-grid2 { grid-template-columns: 1fr; }
