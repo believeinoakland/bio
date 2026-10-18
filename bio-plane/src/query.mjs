@@ -2924,8 +2924,9 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        `op=searchfields`** — `meaningVocabulary()` above emits
        `rows: { grain, identity, columns, refs }` from this same registry, and
        `op=searchfields` is the vocabulary route a surface already composes from
-       (`civicos-ui` calls it; it calls `op=meaningrows` nowhere — measured
-       2026-08-09, zero non-test consumers). So publishing these two again in the
+       (measured 2026-08-09: nothing outside the tests called `op=meaningrows`,
+       and the surface that called `op=searchfields` has since been removed).
+       So publishing these two again in the
        answer envelope would have added a SECOND spelling of a fact the plane
        already answers, on behalf of a consumer that does not exist, and it would
        have been worse than redundant: `columns` restates the keys the returned
