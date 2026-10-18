@@ -195,8 +195,8 @@ function loadRows(root) {
   return { keys, byEn, byNorm, en };
 }
 
-// files the module's tests require to load nothing (found from the red tests of the dry runs): never given an import
-export const LEAVES = new Set(['bio-plane/src/duties/vocab.mjs']);
+// files the module's tests require to load nothing, or to import only a named leaf (found from the red tests of the dry runs): never given an import; a trailing / is a directory
+export const LEAVES = new Set(['bio-plane/src/duties/vocab.mjs', 'bio-plane/src/setup-fleet.mjs', 'doctypes/staff-directory.mjs', 'stewards/src/']);
 // a word the setup-words tests ban in any row (bio-plane/test/m/setup-words/word-list.test.mjs: R8's control)
 const BANNED = /labelled/i;
 
@@ -228,7 +228,7 @@ export async function convert(root, { write = false, coerce = true, leaves = LEA
     if (cand && DRAWN_MODULES(it.module)) { J(it.module, it.file, it.line, 'drawn module: its L11 job', it.raw); continue; }
     if (cand && SIGNED.has(it.module)) { J(it.module, it.file, it.line, 'signed or pinned text', it.raw); continue; }
     if (cand && it.module === OWN) { J(it.module, it.file, it.line, 'setup-words own module (its job)', it.raw); continue; }
-    if (cand && leaves.has(it.file)) { J(it.module, it.file, it.line, 'leaf: loads nothing', it.raw); continue; }
+    if (cand && [...leaves].some((l) => it.file === l || (l.endsWith('/') && it.file.startsWith(l)))) { J(it.module, it.file, it.line, 'leaf: loads nothing', it.raw); continue; }
     if (!cand) { J(it.module, it.file, it.line, reason, it.raw); continue; }
     if (!byFile.has(it.file)) byFile.set(it.file, []);
     byFile.get(it.file).push(it);
