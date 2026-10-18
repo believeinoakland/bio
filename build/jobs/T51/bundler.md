@@ -71,3 +71,21 @@ COMPLETE. T51-144 applied in commit 616cc3718f (job/T51/bundler): a real-fleet t
 ## J4 · BLOCKED
 
 BLOCKED (cause: tests). B4 (CHANGE, R38: a member's bundle carries only the word rows its inputs read) is more than I can do at my model, as B4 itself allows. Why: R38 changes what every fleet member's bundle contains and how the byte-freshness guard sees it. It needs a parser pass over every bundled input to collect the literal keys at word/localize/hasWord calls and the literal prefixes of built keys, a refusal for a bare variable key, an esbuild substitution of the trimmed rows, manifest fields for the kept rows (count and digest) that verifyFresh checks, and real-fleet count tests with fixture controls. Getting every member's test suite green on that is a Sonnet-level pass, and I have not started writing code for it. Merged: tranche/T51 is merged into job/T51/bundler (b7f9585831, pushed), no conflicts. Nothing else changed. Next step for BOB: restart this job one model up (sonnet) to take B4; the merge is already on the branch. Size is unchanged from COMPLETE.
+
+## J5 · QUESTION
+
+QUESTION (R38 on the real agent-worker; my best reading below, I carry on with it).
+
+R38 as written (a call whose key has no literal prefix fails the build) cannot be met by the real agent-worker today: its bundled inputs hold 7 sites in OTHER modules, which I may not change. Built with R38, agent-worker's `buildMember` refuses (so `verifyFresh` says "not checked", and R1's regeneration of its bundle would fail) until each site is literal. The other members build: pdf-worker keeps 10 of 18,680 rows, ocr-worker 74, sheet-worker 15, agent-runner 2, file-scanner 45; the plane is unchanged (whole table).
+
+Sites, all found by the vendored parser (my build lists them at once):
+1. `bio-plane/src/run-rules/checks.mjs:26` — `[...four 'refusal.X' literals].map((key) => [key, word(key)])` (run-rules).
+2. `bio-plane/src/membership/words.mjs:11` — `keyed(key, names)` wraps `word(key, …)`; its callers pass `rowKey(code)` / `SENTENCE_KEYS` (membership).
+3. `bio-plane/src/project-roster/checks.mjs:14` — `said(code, key = `refusal.${code}`)`: `hasWord(key)` / `word(key)` (project-roster).
+4. `bio-plane/src/extraction/words.mjs:7` imports `WORD_ROWS` (the whole table) and `:67` `say(key)` calls `word(key, vars)` (extraction).
+5. `bio-plane/src/capture/words.mjs:78` — `say(key)` calls `word(key, vars)` (capture).
+These modules each hold their vocabulary as a list of string literals (`WORD_KEYS`, `SENTENCE_KEYS`) and read it through a wrapper with a variable key.
+
+My best reading: R38 stands as written, so those five modules' jobs make their reads literal (or each wrapper's reads literal prefixes, as `` `refusal.${code}` `` is accepted: a template or `'refusal.' + code` with a literal head is a prefix and keeps every `refusal.` row). A prefix-wrapper fix is small for 3 and 4/5's refusal reads; the rest must name their keys at the call.
+The alternative, if BOB prefers it (a requirement change, yours): treat every string literal in the member's inputs that equals a row key as read (a list of literal keys then counts), keeping the bare-variable refusal only for calls whose key could come from a non-literal source. I do NOT build that unless told: R38's own control (a bare variable fails the build naming the site) means the strict reading.
+Until then: my real-fleet test states each of the five buildable members' kept row count and, for agent-worker, asserts the build refuses naming exactly these sites by file (a control that turns green-for-the-right-reason when the five modules are fixed, then BOB changes it to a count).
