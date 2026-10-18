@@ -147,6 +147,27 @@ Each entry: id · module · what (N ids, rulings, census row ids) · Text · mod
 - **T51-137 · op-grades** · (K3820) its 2 reds after the design merge at T51's opening diagnosed and fixed against DEC-329–DEC-333 · Text: none · claude-haiku-5-5
 - **T51-138 · site** · (K3820) its red after the design merge (1 test; `pages.mjs` regenerated at the opening) diagnosed and fixed against the design's `SCR.site` · Text: none · claude-haiku-5-5
 
+### L11 additions (P10 as amended, K3915, K3916)
+- **T51-143 · store-door** · (N1211, K3674) calls `translations` directly where it calls instance-setup's eleven translation delegates, so they can go (instance-setup's removal is CR-12) · Text: none · claude-haiku-5-5
+- plane (T51-125) also: (N1211) its nine route lines call `translations` directly; (N1073) `t41.test.mjs` R31's op lists read the owning modules' declarations. affordances (T51-99) also: (N1073) `t33.test.mjs` R12's op map reads the owner's declaration. Both carried in their STARTs.
+
+### Completion round (P10 as amended by Bob, K3915; after L11, before the release is cut)
+One job per module, concurrently, lower layers first where one uses another (a provider merges before its users). Entries (CR-n; the N ids leave `next.md` for here):
+- **CR-1 · civil-time** (L1) · (N1249) a local clock read (hour, minute) of an instant in a zone beside `localDay`; (N1250) `validAt`/`undetermined(why)` answer `{key, vars}`, not English · claude-sonnet-5-5
+- **CR-2 · test-support** (L1) · (N1245) R3, R6's child runs strip `NODE_EXTRA_CA_CERTS` · claude-haiku-5-5
+- **CR-3 · file-scanner** (L1) · (N1061) `targetBytes`, `captureKey` removed or stated, `render.mjs`:12 comment · claude-haiku-5-5
+- **CR-4 · membership** (L2) · (N1248) a read of the administrator removals under way (target, each voter and day, who has not voted), its op declared · claude-sonnet-5-5
+- **CR-5 · promotion** (L2) · (N1073) its tests' hand-lists read the owners' declarations · claude-haiku-5-5
+- **CR-6 · provenance-routes** (L3), **ai-runs** (L6) · (N1252) stale comments naming `check-refusal-codes.mjs` · claude-haiku-5-5 each
+- **CR-7 · lines** (L5), **events** (L5) · (N1250) undetermined reasons as `{key, vars}`; events also (N1108) its vocabularies read DEC-253's keys (a raw slug fails journey-check R6) · claude-sonnet-5-5 each
+- **CR-8 · inquiry-grammar** (L6) · (N1251) exports `standardLegFindings`; (N1216) `golden.json` and corpus regenerated for `VERSION_NAME_MALFORMED` · claude-sonnet-5-5
+- **CR-9 · basis-versions** (L6) · (N1253, P6) split by copy (4,199 lines), the new module first, its map BOB's before the round; (N1251) a standard leg judged by `standardLegFindings`; (N1216) `amended()` goes; (N1070) relays `DIVIDED_CANNOT_RESTRUCTURE` · claude-sonnet-5-5
+- **CR-10 · run-productions** (L6), **reevaluation** (L7) · (N1070) relay `DIVIDED_CANNOT_RESTRUCTURE`, named and tested · claude-haiku-5-5 each
+- **CR-11 · citation** (L6) · (N1071) the sever relay test against the real answer · claude-haiku-5-5
+- **CR-12 · instance-setup** (L11) · (N1211) the eleven delegates and nine route lines go, after store-door and plane re-point · claude-haiku-5-5
+- **CR-13 · people** (L5), **notice-producers**, **queue-producers**, **screens-settings** (L11) · the users of CR-1, CR-4, CR-7: people passes `{key, vars}` on (N1250); notice-producers R25 and queue-producers R43 read CR-1's clock (N1249); screens-settings R56 draws the removals block from CR-4 (N1248) · claude-haiku-5-5 / claude-sonnet-5-5 (screens-settings)
+- **Pending Bob (K3915, question 2):** the words-by-key sweeps (the left-out table's first two rows; N1068, N1075, N1116, N1206, N1213, N1217, N1222, N1223, N1228, N1247), one pass (A), jobs here (B) or T52 (C).
+
 **Withdrawn by K3811** (their only item was the team clause, now the pass's; 58 ids, none reused): T51-2, T51-4, T51-10, T51-13, T51-16, T51-17, T51-19, T51-20, T51-22, T51-23, T51-24, T51-25, T51-26, T51-27, T51-31, T51-32, T51-33, T51-35, T51-43, T51-44, T51-46, T51-47, T51-48, T51-49, T51-51, T51-52, T51-55, T51-58, T51-60, T51-61, T51-62, T51-66, T51-67, T51-68, T51-69, T51-71, T51-72, T51-73, T51-74, T51-76, T51-77, T51-78, T51-79, T51-81, T51-88, T51-91, T51-92, T51-93, T51-95, T51-96, T51-97, T51-98, T51-100, T51-103, T51-110, T51-111, T51-129, T51-130.
 
 **Kept by K3811 with their other items** (the team clause removed): the entries above with a red, a provider read, a stale comment, a key read or a split. T51-57 (ai-use) is kept for DEC-333's date rule alone; T51-107 (op-declarations) now declares the browser acts. T51-124 (signatures) is listed in L1, where K3814 runs it.
