@@ -26,3 +26,25 @@
 - words: 0 `image-codecs` findings. The repo-wide words total is still 4799 failures from other modules, so `checks/run.mjs` exits 1 for that reason and not mine.
 
 Size (session_01YPCgAZ8Ga6MXdTiGufjUD7): test runs 19, module lines 3423.
+
+## J2 · COMPLETE
+
+**T51-256 image-codecs: COMPLETE again after CHANGE B2 (K3962, K3965)** (commit c8fa11a20e on job/T51/image-codecs; tranche/T51 merged; civicos-process at ea6cd83).
+
+**Converted test copies.** Each test that copied a localized `en` now compares with `localize(id, en)` using the decoder's own id, or asserts the key:
+- `dct.test.mjs`: the colour-transform reason is compared with `localize("image-codecs.dctdecode.libjpeg_s_default_for_three", …)`.
+- `invariants.test.mjs`: the memory-bound feature keys in `JPX_REFUSES` and `PNG_REFUSES` are compared with their localize calls.
+- `jpx.test.mjs`: `MEMORY` is a `localize` call.
+- `png.test.mjs`: the memory-bound feature is compared with `localize("image-codecs.pngdecode.…")`.
+- `jbig2.test.mjs` R3: the localized generic-region and refinement details are matched by prefix against `localize` with the decoder's ids. The regex copies are gone, and the assertion messages hold no sentence text.
+
+**Checks (after the conversions).**
+- Codec tests: ccitt 7/7, dct 16/16, invariants 12/12, jbig2 6/6, jpx 8/8, mq 6/6, png 10/10.
+- pdf-worker: structure, pagepixels, imagecrop, jbig2, jpx all exit 0.
+- format 0 failures; architecture 0 failures; coverage 11 of 11 live ids; ownership 10 files, 0 failures.
+- words: 0 `image-codecs` findings.
+- `node bio-plane/src/setup-words/build.mjs --check` exits 1, with one warning about `jurisdictions.index.amount_is_amount_and_units` (a formatted argument, R18). It is not in my module, so I have not touched it. Please route it to its owner.
+
+**Still open (unchanged from J1).** K874: no test names the 45 new ids. Please rule whether you want a test per id or whether the words check is enough.
+
+Size (session_01YPCgAZ8Ga6MXdTiGufjUD7): test runs 33, module lines 3423.
