@@ -27,10 +27,10 @@ export const COVER_MAX_PIXELS = 120_000_000;
 
 /** Every refusal code, with what it means (R3). */
 export const COVER_REFUSALS = Object.freeze({
-  NOT_A_COVERABLE_FORMAT: "the photo is neither a JPEG nor an 8-bit PNG this module covers",
-  UNSUPPORTED_JPEG_PROCESS: "the JPEG is progressive, arithmetic-coded, lossless, 12-bit, or otherwise not a baseline or extended-sequential Huffman 8-bit JPEG in one scan",
-  PNG_INTERLACED: "the PNG is interlaced (Adam7)",
-  AREA_MALFORMED: "an area is not four integers [x0, y0, x1, y1] with x0 < x1 and y0 < y1",
+  NOT_A_COVERABLE_FORMAT: word("refusal.NOT_A_COVERABLE_FORMAT"),
+  UNSUPPORTED_JPEG_PROCESS: word("refusal.UNSUPPORTED_JPEG_PROCESS"),
+  PNG_INTERLACED: word("refusal.PNG_INTERLACED"),
+  AREA_MALFORMED: word("refusal.AREA_MALFORMED"),
   AREA_OUTSIDE: word("refusal.AREA_OUTSIDE"),
   PHOTO_TOO_LARGE: word("refusal.PHOTO_TOO_LARGE"),
   TRUNCATED_IMAGE_DATA: word("refusal.TRUNCATED_IMAGE_DATA"),
