@@ -56,12 +56,12 @@ const truncated = (note, extra = {}) => new JpxRefusal("TRUNCATED", { note, ...e
 
 /** Every `feature` an UNSUPPORTED refusal can carry. */
 export const JPX_REFUSES = Object.freeze({
-  "high-throughput coding": "the codestream uses Part 15 (HTJ2K) block coding",
-  "a JP2 palette": "the image's samples index a palette (pclr box)",
-  "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
+  "high-throughput coding": localize("image-codecs.jpxdecode.the_codestream_uses_part_15", "the codestream uses Part 15 (HTJ2K) block coding"),
+  "a JP2 palette": localize("image-codecs.jpxdecode.the_image_s_samples_index", "the image's samples index a palette (pclr box)"),
+  "sYCC colour": localize("image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined"),
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile",
+  [localize("image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound")]: localize("image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"),
 });
 
 /* THE MEMORY BOUND (N34), a workload size and never a share of 128 MB (D-312).
@@ -137,7 +137,7 @@ function container(d) {
       }
     }
   }
-  if (!cs) throw truncated("the JP2 file holds no codestream (jp2c box)");
+  if (!cs) throw truncated(localize("image-codecs.jpxdecode.the_jp2_file_holds_no", "the JP2 file holds no codestream (jp2c box)"));
   if (palette) throw unsupported("a JP2 palette");
   if (colour && colour.method === "enumerated" && colour.enumCs === 18) throw unsupported("sYCC colour");
   return { cs, colour, jp2: true };
@@ -165,7 +165,7 @@ function readSiz(r, len) {
   }
   r.p = end;
   if (!s.XT || !s.YT || s.X <= s.XO || s.Y <= s.YO || s.XTO > s.XO || s.YTO > s.YO || s.XTO + s.XT <= s.XO || s.YTO + s.YT <= s.YO)
-    throw corrupt("an image and tile geometry the standard does not allow");
+    throw corrupt(localize("image-codecs.jpxdecode.an_image_and_tile_geometry", "an image and tile geometry the standard does not allow"));
   if (rsiz & 0x4000) throw unsupported("high-throughput coding");
   if (rsiz & 0x8000) throw unsupported("an extended capability", { rsiz });
   return s;
@@ -176,7 +176,7 @@ function readSpcod(r, precincts) {
   const c = { nl: r.u8("decomposition levels"), xcb: (r.u8("code-block width") & 0xf) + 2, ycb: (r.u8("code-block height") & 0xf) + 2,
               cblksty: r.u8("code-block style"), qmfbid: r.u8("the wavelet") };
   if (c.nl > 32) throw corrupt(`${c.nl} decomposition levels`);
-  if (c.xcb + c.ycb > 12 || c.xcb > 10 || c.ycb > 10) throw corrupt("a code-block larger than 4096 samples");
+  if (c.xcb + c.ycb > 12 || c.xcb > 10 || c.ycb > 10) throw corrupt(localize("image-codecs.jpxdecode.a_code_block_larger_than", "a code-block larger than 4096 samples"));
   if (c.cblksty & 0x40) throw unsupported("high-throughput coding");
   c.prc = [];
   for (let i = 0; i <= c.nl; i++) {
@@ -239,10 +239,10 @@ function parseCodestream(d, start, end) {
   for (;;) {
     const m = r.u16("a main-header marker");
     if (m === 0xff90) { r.p -= 2; break; }
-    if (m === 0xffd9) throw truncated("the codestream ends before any tile");
+    if (m === 0xffd9) throw truncated(localize("image-codecs.jpxdecode.the_codestream_ends_before_any", "the codestream ends before any tile"));
     if ((m & 0xff00) !== 0xff00) throw corrupt("a main-header marker expected");
     const len = r.u16("a marker segment length");
-    if (len < 2) throw corrupt("a marker segment length under 2");
+    if (len < 2) throw corrupt(localize("image-codecs.jpxdecode.a_marker_segment_length_under", "a marker segment length under 2"));
     r.need(len - 2, "a marker segment");
     if (m === 0xff51) { siz = readSiz(r, len); continue; }
     if (!siz) throw corrupt("a marker before SIZ");
@@ -801,7 +801,7 @@ class BandRows {
       cb.segs = null;                                // read once; its bytes can go
       if (!segs.length) continue;
       const bpn = x.roi + cb.numbps;
-      if (bpn >= 31) throw corrupt("a code-block of 31 or more bit-planes");
+      if (bpn >= 31) throw corrupt(localize("image-codecs.jpxdecode.a_code_block_of_31", "a code-block of 31 or more bit-planes"));
       tmp.fill(0, 0, cw * ch);
       decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, this.t1.flags);
       if (x.roi) {
@@ -942,7 +942,7 @@ export function decodeJpx(d) {
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
   const need = workingSet(cs, nTiles);
   if (need > MEMORY_BOUND) {
-    throw unsupported("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: nc });
+    throw unsupported(localize("image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound"), { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: nc });
   }
   if (cs.tiles.size < nTiles) throw truncated(localize("image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", { size: String(cs.tiles.size), nTiles: String(nTiles) }));
   let out = null;
@@ -961,7 +961,7 @@ export function decodeJpx(d) {
     const irreversible = tc.map((x) => x.sp.qmfbid === 0);
     transform ??= irreversible[0] ? "9/7" : "5/3";
     const mct = cod.mct && nc >= 3;
-    if (mct && (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2])) throw corrupt("a colour transform over mixed wavelets");
+    if (mct && (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2])) throw corrupt(localize("image-codecs.jpxdecode.a_colour_transform_over_mixed", "a colour transform over mixed wavelets"));
     pool.i = 0;
     const src = tc.map((x, c) => componentRows(x, irreversible[c], t1, pool));
     const w = tile.x1 - tile.x0, h = tile.y1 - tile.y0;
