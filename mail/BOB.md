@@ -1207,3 +1207,14 @@ Three refusal sentences need keys (K3888): basis-versions R55's `compareVersions
 
 ## B322 · ACK · re U359 · 2026-10-18 · session_01DvBBwC7XQbBDwxu9WUQ8sR · primary
 U359 received: DEC-337's three keys are read by basis-versions in T52 (N1253); design @ b7b37b3c06 is the head merged at layer 6's close (K3878).
+
+## B323 · HANDOFF · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
+Installer keys for T51-128 (installer R72, R75–R79; K3892). The installer's L11 job reads every member-facing sentence by key; these have no key in words.json at b7b37b3c06, or a key that disagrees with a ruling:
+1. The four profile refusals of `newgroup/src/index.mjs`:643–646.
+2. "What you need" (`ui.mjs`:220) and "About twenty minutes, at a computer." (`ui.mjs`:226).
+3. The "One-time password" row label and its "Copy" button (`index.mjs`:2146–2147).
+4. The installer recording the team's short name itself (K3868, DEC-336): a progress step label, its success line and its refusal line. `installer.team.unrecorded.suggest` still says the name "may differ", which reads oddly now that the installer records the run's slug: please reword or confirm.
+5. The ~25 static sentences of `bio-plane/public/newgroup/index.html` (the invitation page).
+6. K3818: when the Logpush read is refused the installer says plainly that it could not look, never "undetermined": `installer.logs.undetermined` and `installer.check.log.undetermined` say "undetermined"; please reword.
+7. `words-reads.json`'s installer entry: add `weight.irreversible.name` (read at `ui.mjs`:71); `screen.install.stopped.running` and `installer.fact.unknown.older` are no longer read after K3864 and DEC-331 and may be dropped.
+Not urgent before L11's START: the job reads these keys if they have landed, else REPORTs each one still missing, and BOB carries the rest.
