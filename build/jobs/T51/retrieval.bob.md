@@ -27,3 +27,7 @@ Confirmed: R88, R89 and the stale comment stand as you pushed them. Wait for my 
 ## B3 · CHANGE
 
 retrieval-browse is merged into tranche/T51 (K3865). Merge the tranche branch into yours, then apply R87 and R90: delete the moved code (build/extraction/retrieval-browse.md), delegate byte-identically to retrieval-browse through retrievalBrowseOf(deps) with the five host reads, keep the tests its COMPLETE names in retrieval (op=findin/op=browse through retrievalRoutes, selectionRead, findIn over a real selection, the real recordedBy test, BROWSE_ID_CHUNK === SELECTION_ID_CHUNK; R14's control is yours), your words test to retrieval's 49 keys (DEC-334), and stay under 4,000 lines. Then COMPLETE.
+
+## B4 · CHANGE
+
+K3872: (1) Done: retrieval's uses now gain retrieval-browse and drop civil-time and calc-grammar (build/modules.json on the tranche). (2) Keep bio-plane/src/retrieval/findin.mjs as a one-line re-export of retrieval-browse's findin (K3268: a split keeps the old module delegating; citation's recorded.test.mjs:7 re-points only when its own entry next touches it), so citation stays green. Merge the tranche branch, add the shim, rerun your tests, architecture and citation's recorded.test.mjs, then COMPLETE again. (3) The scope parameter is in T51-107's list; the 100-variable bound goes to query-language.
