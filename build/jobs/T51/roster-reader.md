@@ -56,3 +56,26 @@ Size (session_01PVypQMNUHxqcGtP1kD7qN2): test runs 2, module lines 965
 ## J3 · COMPLETE
 
 B2 done: the 38 plain findings are judged (36 localized with the same wording; lines.mjs:24 and :40, the recognition vocabulary lists, REPORTed for the unkeyed list). Module tests 22/22; format, architecture, coverage (12/12) and ownership pass; the words check shows only the two REPORTed findings in roster-reader. Record: build/jobs/T51/roster-reader.md.
+
+## Completion again (T51, B3 CHANGE, K3962)
+
+**Applied.** The test copies of product sentences are now compared with `localize(id, en[, vars])`, or with the exact value that `localize` gives, never with a sentence's text or a regular expression on it. The two copies the check named (`source.test.mjs`: the level text, and the no-column refusal) are converted, and so are the other copies of localized sentences in `roster-reader.test.mjs` and `source.test.mjs` that the same rule covers, including the regular-expression ones. Assertions now test exact strings (for example the `pairs_why` for a chart with no stated relation, the `dated events` and `contact point` refusals with their counts). In `source.mjs`, the held-table "no date" sentence (previously plain code text) is now a `localize` call, so its test compares with `localize` too.
+
+Test titles and comments that mention a sentence's words are not copies a test asserts, and are unchanged.
+
+**Deferred.** None.
+
+**Reported earlier (B2 REPORT, still open).** `lines.mjs:24` (NOT_NAME_WORDS) and `lines.mjs:40` (UNIT_WORDS): recognition vocabulary, no member reads them; for the design's unkeyed list (K3944). They are the only words findings left in this module.
+
+**Found in another module.** `node bio-plane/src/setup-words/build.mjs --check` exits 1 with one message: `jurisdictions.index.amount_is_amount_and_units holds a formatted argument ({name, …}); word and localize do not render these yet (R18)`. It names jurisdictions, not roster-reader; it is BOB's to settle.
+
+**Checks run**
+- `node --test roster-reader/test/`: `tests 22, pass 22, fail 0`.
+- `node checks/words.mjs /home/user/bio roster-reader`: `961 string literals read … inline 2, plain 2, testcopy 0, … 2 failures` (the two REPORTed lists only).
+- `node bio-plane/src/setup-words/build.mjs --check`: exit 1, the jurisdictions message above; nothing in roster-reader.
+- `node checks/format.mjs /home/user/bio`: `174 modules, 173 requirements files; 0 failures`.
+- `node checks/architecture.mjs /home/user/bio roster-reader`: `15 product files, 39 relative imports (0 naming no tracked file, not judged); 0 failures`.
+- `node checks/coverage.mjs /home/user/bio roster-reader`: `1 modules, 12 of 12 live requirement ids named by a test; 0 failures`.
+- `node checks/ownership.mjs /home/user/bio roster-reader tranche/T51 job/T51/roster-reader`: `0 files changed by roster-reader between tranche/T51 and job/T51/roster-reader; 0 failures` (run before this commit; the ownership count reads committed changes).
+
+Size (session_01PVypQMNUHxqcGtP1kD7qN2): test runs 3, module lines 965
