@@ -10,7 +10,7 @@ const refuse = (status, code, extra = {}) => new Response(JSON.stringify({ ok: f
 const KNOWN = new Set(['ENCRYPTED', 'NOT_RENDERABLE', 'TIME_LIMIT', 'RENDER_FAILED']);
 const PASSED = ['content-type', 'x-derived-sha256', 'x-pages', 'x-source-pages', 'x-truncated'];
 
-/** The target's check and copy, shared with the outside tools' routes: `{ok:true, t, bytes}` or a refusal Response. */
+/** The target's check, shared with the outside tools' routes: `{t, store}` once it passes, else `{refusal}`, a refusal Response. */
 export async function checkOne(deps, body) {
   if (!body || !knownStore(body.store)) return { refusal: refuse(400, 'NAMESPACE_UNKNOWN') };
   const t = normaliseTarget(body.target);
