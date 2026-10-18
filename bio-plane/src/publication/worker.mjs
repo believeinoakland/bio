@@ -319,7 +319,7 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
                told a stranger to check a signature over a statement it printed
                as 47 numbered integers, and the one thing they had to have in
                ASCII was the one thing they had to decode. Nothing consumed it —
-               measured across `civicos-ui`, the test battery of the day and this file — so this
+               measured across the interface's screens, the tests of the day and this file — so this
                is a correction and not a withdrawal, and it rides the /4 bump
                with the rest of what the flip adds. Decoded here rather than by
                changing `ratifyStatement`, whose Uint8Array return is exactly

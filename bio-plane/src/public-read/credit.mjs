@@ -7,8 +7,8 @@
  * retyping them; no other line describing Civicsmith is served on the public path.
  *
  * It reads nothing of the group's record and takes no argument, so its answer is the same bytes for every group's
- * Civicsmith and every caller; it names no place (R15) and writes nothing. How the page is drawn is the UX stream's
- * (`legacy-ui`, K633): this gives it the words. */
+ * Civicsmith and every caller; it names no place (R15) and writes nothing. How the page is drawn is the interface's,
+ * not this module's: this gives it the words. */
 
 import { word } from "../setup-words/index.mjs";
 

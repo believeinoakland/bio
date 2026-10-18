@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseDoc, inquiryMd, V, NOW } from "./fixture.mjs";
-import { whatChangedBlockLines, whatChangedSectionLines, lensBlockLines, lensSectionLines, LENS_CLOSING_SENTENCES,
+import { whatChangedBlockLines, whatChangedSectionLines, lensBlockLines, lensSectionLines, lensClosingSentencesOf,
          LENS_HEAD } from "../../../src/case-grammar/index.mjs";
 import { LENS_FINGERPRINT_SENTENCE, LENS_NONE_IN_FORCE_SENTENCE, LENS_NO_DOCUMENT_SENTENCE,
          LENS_FINGERPRINT_UNDETERMINED_SENTENCE }
@@ -35,7 +35,7 @@ function docWith(caseId, edition, opts, { whatChanged = null, lens = null, manif
     ...(whatChanged ? whatChangedBlockLines(whatChanged) : []),
     ...(lens ? lensBlockLines(lens.statements) : [])];
   const body = [...(whatChanged ? ["", ...whatChangedSectionLines(whatChanged.statement)] : []),
-    ...(lens ? ["", ...lensSectionLines({ acknowledgement: ACK, statements: lens.statements, inForce: lens.inForce ?? true })] : [])];
+    ...(lens ? ["", ...lensSectionLines({ acknowledgement: ACK, statements: lens.statements, inForce: lens.inForce ?? true, format: "bio-case-document/5" })] : [])];
   return [...lines.slice(0, close), ...fm, "---", ...body, ...lines.slice(close + 1)].join("\n");
 }
 
@@ -60,6 +60,8 @@ function published(n, per) {
 }
 const both = (ed) => ({ whatChanged: ed > 1 ? { statement: STMT(ed), began_as: "member" } : null,
                         lens: { statements: STATEMENTS }, manifest: { in_force: true, sha: FP } });
+/* these editions are signed in `/5`, so they print `/5`'s words (`case-grammar` R33) */
+const FIVE_CLOSING = lensClosingSentencesOf({ format: "bio-case-document/5" });
 const read = (w, edition = null) => w.read("publishedcase", { id: CASE, ...(edition ? { edition } : {}) });
 
 test("R3 a /5 edition 2 with both blocks answers `what_changed` at the top and `lens` as signed, through case-grammar's readers", () => {
@@ -75,9 +77,9 @@ test("R3 a /5 edition 2 with both blocks answers `what_changed` at the top and `
      "Two releases were corrected after publication.", ["INFO-2026-0009", "INFO-2026-0010"], 1],
     ["s2", "inference", "budget lines", "We do not infer intent from a cut.", "A cut has many causes.", [], 1]],
     "each statement with its justification, its printed citations and its withheld count, in the document's order");
-  assert.deepEqual(c.lens.closing, [...LENS_CLOSING_SENTENCES], "then the two sentences the document prints");
+  assert.deepEqual(c.lens.closing, [...FIVE_CLOSING], "then the two sentences the document prints");
   /* The print form is the signed body section, whole: exactly the lines case-grammar wrote. */
-  const section = lensSectionLines({ acknowledgement: ACK, statements: STATEMENTS, inForce: true }).join("\n").replace(/\s+$/, "");
+  const section = lensSectionLines({ acknowledgement: ACK, statements: STATEMENTS, inForce: true, format: "bio-case-document/5" }).join("\n").replace(/\s+$/, "");
   assert.equal(c.lens.print, section);
   assert.ok(c.lens.print.startsWith(LENS_HEAD));
   assert.ok(c.document.text.includes(c.lens.print), "the section as the signed bytes hold it");
@@ -156,7 +158,7 @@ test("R3 DEC-103 a document without the lens blocks answers `lens: null`, says i
   const empty = read(published(1, () => ({ lens: { statements: [], inForce: false }, manifest: { in_force: false } })), 1);
   assert.deepEqual(empty.lens.statements, []);
   assert.match(empty.lens.print, /No manifest was in force/);
-  assert.deepEqual(empty.lens.closing, [...LENS_CLOSING_SENTENCES]);
+  assert.deepEqual(empty.lens.closing, [...FIVE_CLOSING]);
   /* a ratified bundle in no case states no lens and no statement */
   w.signFinding(DOC);
   const loose = w.read("publishedcase", { id: DOC });
