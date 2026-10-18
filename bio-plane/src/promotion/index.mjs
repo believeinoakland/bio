@@ -62,6 +62,8 @@ export const RETIRE_CITED_DETAIL = "these are still cited by live edges. Retirin
   + "sever the edge with a reason. Sever first, then retire.";
 /** The edge-reason bound a reopening's reason is held to (R22). */
 export const EDGE_REASON_MAX = 160;
+/* R58: the most revisions, and the most state entries, `bundleHistory` answers (the newest kept). */
+const HISTORY_MAX = 200;
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const has = (o, k) => isObj(o) && Object.prototype.hasOwnProperty.call(o, k);
@@ -209,6 +211,52 @@ class Promotion {
     this.#rosterOf = typeof rosterOf === "function" ? rosterOf : null;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
     this.#order = Array.isArray(order) ? order : MODULE_ORDER;
+  }
+
+  /* ---------------------------------------------------------------- R58: the record of this copy */
+
+  /** R58 (T51; K3826; DEC-330 A27, B7): how a bundle came to be what it is, as facts only: its manifest entries newest
+   *  first in write order (R30), each file with its digest and size, and the document's own `state_history` as stored.
+   *  Sight first (R20, R23): a viewer not admitted, an unknown id and a missing viewer answer one `NO_SUCH_BUNDLE`.
+   *  Reads; writes nothing; never throws. */
+  bundleHistory(args = {}) {
+    try { const { bundle, viewer = null } = args || {}; return this.#history(bundle, viewer); }
+    catch { return { ok: false, reason: "HISTORY_FAILED" }; }
+  }
+
+  #history(bundle, viewer) {
+    if (typeof bundle !== "string" || !bundle) return { ok: false, reason: "NO_BUNDLE" };
+    const record = this.#record;
+    if (!viewer || !record.head(bundle) || !this.#membership.inSight(bundle, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE" };
+    const image = record.readImage(bundle) || {};
+    const read = (path) => {
+      try { return JSON.parse(String(image[path])); } catch { return null; }
+    };
+    const man = read("_history/manifest.json");
+    const entries = man && Array.isArray(man.entries) ? man.entries.filter(isObj) : [];
+    /* A stored file's size is known from the bytes held under any path that carries its digest. */
+    const sizes = new Map();
+    for (const v of Object.values(image)) {
+      const sha = typeof v === "string" ? fileDigestOf({ text: v }) : isObj(v) ? v.sha256 : null;
+      const bytes = typeof v === "string" ? inlineBytesOf({ text: v }) : isObj(v) ? v.bytes : null;
+      if (typeof sha === "string" && Number.isSafeInteger(bytes) && !sizes.has(sha)) sizes.set(sha, bytes);
+    }
+    const all = entries.map((e) => {
+      const rec = read(`_history/promotion_${e.key}.json`);
+      const written = rec && Array.isArray(rec.files) ? rec.files.filter(isObj) : [];
+      const files = written.map((f) => ({ path: f.name, sha256: f.sha256 ?? null, bytes: sizes.get(f.sha256) ?? null }));
+      const md = files.find((f) => f.path === "bundle.md");
+      return { seq: e.seq, snapKey: e.key, kind: e.kind, author: e.author ?? null, at: e.created ?? null,
+               sha256: md ? md.sha256 : null, files };
+    }).sort((a, b) => b.seq - a.seq);
+    const live = record.readFile(bundle, "bundle.md");
+    const fm = live && typeof live.text === "string" ? parseFrontmatter(live.text).data : null;
+    const stored = fm && Array.isArray(fm.state_history) ? fm.state_history.filter(isObj) : [];
+    const states = stored.map((x) => ({ at: x.timestamp ?? null, from: x.from_state ?? null, to: x.to_state ?? null,
+                                        author: x.author ?? null, blurb: x.blurb ?? null }));
+    return { ok: true, bundle, revisions: all.slice(0, HISTORY_MAX), states: states.slice(-HISTORY_MAX),
+             truncated: all.length > HISTORY_MAX || states.length > HISTORY_MAX };
   }
 
   /* ---------------------------------------------------------------- R39, R40: the registry */
@@ -1214,6 +1262,8 @@ export function promotionOps(promotion, url, body) {
     /* REC-138, REC-197: an absent visibility is null, which is hidden. */
     projectfork: () => promotion.forkProject({ projectId: q("projectId"), newId: q("newId"), title: q("title"),
                                                visibility: q("visibility"), by: q("by"), viewer: q("viewer") }),
+    /* R58 (K3826): a read of the bundle's own record, sight-gated by the viewer stamp. */
+    bundlehistory: () => promotion.bundleHistory({ bundle: q("bundle"), viewer: q("viewer") }),
   };
 }
 
