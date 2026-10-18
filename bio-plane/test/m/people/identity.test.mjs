@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, doc, ANN, OUT, MACHINE } from "./fixture.mjs";
 import { CLAIM_KINDS, CLAIM_BASES, IDENTITY_KIND_WORDS, peopleOf } from "../../../src/people/index.mjs";
 import { ownerConformance, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 
 const day = (from, to) => ({ from, to, precision: "day", zone: "UTC" });
 
@@ -169,7 +170,8 @@ test("R5 identityOf answers the transitive same_as cluster the viewer may see, e
   const und = w.p.identityOf({ entityId: y, viewer: ANN });
   assert.equal(und.state, "undetermined");
   assert.deepEqual(und.not_same_as.map((c) => c.claim_id), [apart.claim_id]);
-  assert.ok(und.why.includes(apart.claim_id));
+  assert.deepEqual(und.why, { key: "people.why.claim_joins_two", vars: { apart: apart.claim_id } }, "R40: a key with its fills");
+  assert.ok(hasWord(und.why.key));
   assert.deepEqual(w.p.identityOf({ entityId: "ENT-2026-7777", viewer: ANN }), { ok: true, found: false, entity_id: "ENT-2026-7777" });
   assert.equal(w.p.identityOf({ entityId: "", viewer: ANN }).reason, "NO_ENTITY");
   assert.equal(w.p.identityOf({ entityId: x, viewer: null }).ok, false, "an absent viewer fails closed");
@@ -196,14 +198,16 @@ test("R6 the cluster is a derived cache rebuilt in each claim's and withdrawal's
   assert.equal(w.record.rebuildAndCompare("people", "identity_cluster").same, false);
   const d = w.p.identityOf({ entityId: z, viewer: ANN });
   assert.equal(d.state, "undetermined");
-  assert.match(d.why, /differs from its rebuild/);
+  assert.deepEqual(d.why, { key: "people.identity_cluster_cache_differs", vars: {} }, "R40");
+  assert.ok(hasWord(d.why.key));
   assert.deepEqual(d.members, [z]);
   /* a stale mark */
   w.record.rebuildDerived("people", "identity_cluster");
   w.record.transact(() => w.record.markStale("people", "identity_cluster", y));
   const s = w.p.identityOf({ entityId: y, viewer: ANN });
   assert.equal(s.state, "undetermined");
-  assert.match(s.why, /stale/);
+  assert.deepEqual(s.why, { key: "people.identity_cluster_cache", vars: {} }, "R40");
+  assert.ok(hasWord(s.why.key));
 });
 
 test("R26 people registers as the owner of same_as, not_same_as and unsure; neighbours presents each visible unwithdrawn claim as one evidentiary hop with the claim's evidence and grade; it passes connection-grammar's owner-conformance battery", () => {
