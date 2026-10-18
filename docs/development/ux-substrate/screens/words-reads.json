@@ -48253,7 +48253,6 @@
     "installer.step.storage",
     "installer.stopped.unexpected",
     "installer.tryagain.install",
-    "installer.tryagain.update",
     "installer.update.back",
     "installer.update.checked",
     "installer.update.chosen",
@@ -48380,7 +48379,7 @@
     "setup-fleet.name.replace_time_password"
    ],
    "counts": {
-    "reads": 228,
+    "reads": 227,
     "unkeyed": 0
    },
    "unkeyed": [],

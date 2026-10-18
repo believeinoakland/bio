@@ -104,7 +104,6 @@
    "installer.step.storage",
    "installer.stopped.unexpected",
    "installer.tryagain.install",
-   "installer.tryagain.update",
    "installer.update.back",
    "installer.update.checked",
    "installer.update.chosen",

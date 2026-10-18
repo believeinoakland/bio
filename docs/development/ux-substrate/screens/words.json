@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 332,
+  "queue": 330,
   "transcribe": 19,
   "capture": 71,
   "document": 62,
@@ -49,7 +49,7 @@
   "session": 11,
   "updates": 34,
   "home": 19,
-  "installer": 132,
+  "installer": 131,
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
@@ -223,7 +223,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13474,
+  "total": 13471,
   "protected": 905
  },
  "words": [
@@ -41917,7 +41917,7 @@
   },
   {
    "key": "instance-setup.domain.detail.held",
-   "en": "Civicsmith waited its turn before asking {domain} ({reason}). This says nothing about the website.",
+   "en": "Civicsmith waited its turn before asking {domain}: {reason}. This says nothing about the website.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (11): detail of a website check, setup.mjs:1209"
@@ -41959,14 +41959,14 @@
   },
   {
    "key": "instance-setup.domain.detail.not_json",
-   "en": "{path} is not the kind of file your team's Civicsmith reads: a JSON object with two fields, its address and its short name.",
+   "en": "{path} is not the kind of file your team's Civicsmith reads: a file with two fields, its address and its short name.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (11): detail of a website check that did not match, setup.mjs:1238"
   },
   {
    "key": "instance-setup.domain.detail.mismatch",
-   "en": "{path} gives the address {found_address} and the team name {found_team}. Your team's Civicsmith is {address} and its short name is {slug}.",
+   "en": "{path} gives the address {found_address} and the short name {found_team}. Your team's Civicsmith is {address} and its short name is {slug}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (11): detail of a website check that did not match, setup.mjs:1239"
@@ -42176,7 +42176,7 @@
   },
   {
    "key": "progression.steps.help",
-   "en": "One line for each step, in order, with its parts separated by a bar ( | ): short name | name | comes after | due within | required | documents held. \"Comes after\" is the short name of an earlier step, or empty. \"Due within\" is a span such as 10 days, or empty. \"Required\" is always, usually, sometimes, unless_exception or never. \"Documents held\" is 1, 0..1 or 0..n. Example: determination | Determination | request | 10 days | unless_exception | 1",
+   "en": "One line for each step, in order, with its parts separated by a bar ( | ): short name | name | comes after | due within | required | documents held. \"Comes after\" is the short name of an earlier step, or empty. \"Due within\" is a span such as 10 days, or empty. \"Required\" is always, usually, sometimes, unless an exception applies (typed unless_exception) or never; type each exactly as shown. \"Documents held\" is 1, 0..1 or 0..n. Example: determination | Determination | request | 10 days | unless_exception | 1",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (3): help of the steps field in Define and Revise (replaces screen.timeline.progression.steps.note as the field help); timeline-parts.mjs:96,114,119"
@@ -42610,7 +42610,7 @@
   },
   {
    "key": "installer.update.stopped.permission",
-   "en": "Stopped: Cloudflare didn't confirm the permission. Your team's Civicsmith runs as before; nothing changed. Run the update again from the update page; this is usually temporary. (Cloudflare said: {said})",
+   "en": "Stopped: Cloudflare didn't confirm the permission. Your team's Civicsmith runs as before; nothing changed. Run the update again from the update page in a minute; this is usually temporary. (Cloudflare said: {said})",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (7c): index.mjs:2257 with tryAgain('update'), index.mjs:1647"
@@ -42635,13 +42635,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (7c): index.mjs:1626-1629 (any run, update included)"
-  },
-  {
-   "key": "installer.tryagain.update",
-   "en": "To continue, run the update again from the update page in a minute; this is usually temporary. (Cloudflare said: {said})",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-329: B303 (7c): index.mjs:1647 tryAgain, where a stop has no key of its own"
   },
   {
    "key": "installer.tryagain.install",
@@ -42778,14 +42771,14 @@
   },
   {
    "key": "installer.remove.refused.permission",
-   "en": "Nothing was deleted: Cloudflare didn't confirm the permission. Start again from the first page in a minute. (Cloudflare said: {said})",
+   "en": "Nothing was deleted: Cloudflare didn't confirm the permission. Start again from the first page in a minute; this is usually temporary. (Cloudflare said: {said})",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (7f): index.mjs:2475 and 2508"
   },
   {
    "key": "installer.remove.refused.account",
-   "en": "Nothing was deleted: the installer couldn't read your Cloudflare account. Start again in a minute. (Cloudflare said: {said})",
+   "en": "Nothing was deleted: the installer couldn't read your Cloudflare account. Start again in a minute; this is usually temporary. (Cloudflare said: {said})",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (7f): index.mjs:2478 and 2511"
@@ -43027,20 +43020,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (7j): no source line yet: R69 owes an update that resumes; screen.install.resumed (index.mjs:1841) covers the install"
-  },
-  {
-   "key": "queue.told-once",
-   "en": "You are told this once.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-329: B303 (10): closing sentence of many items, queue-producers/index.mjs:2543,2551,2559,2430,2202,2255,1935,2379; no placeholder"
-  },
-  {
-   "key": "queue.reevaluation-tail",
-   "en": "Whether this still stands is for the members to decide. A recorded re-evaluation closes this.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-329: B303 (10): closing sentence of edition-withdrawn, edition-contested, cited-newer-edition, cited-edition-withdrawn, queue-producers/index.mjs:2011,2118"
   },
   {
    "key": "queue.cited-case.both",
@@ -43289,7 +43268,7 @@
   },
   {
    "key": "queue.export-performed.detail",
-   "en": "An export of the {scope} left your team's Civicsmith using the team's root credential. Every administrator is told; nobody else is. The export log is the record of it, and nothing here changes the log.",
+   "en": "An export of the {scope} left your team's Civicsmith using the team's master key. Every administrator is told; nobody else is. The export log is the record of it, and nothing here changes the log.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1150; {scope}"
@@ -43443,7 +43422,7 @@
   },
   {
    "key": "queue.contradiction-lead.detail",
-   "en": "A machine judged that these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up.",
+   "en": "The assistant judged that these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1519"
@@ -43590,7 +43569,7 @@
   },
   {
    "key": "queue.docket-core-due.what.tension",
-   "en": "an undisclosed tension",
+   "en": "an undisclosed conflict",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1890"
@@ -43639,7 +43618,7 @@
   },
   {
    "key": "queue.docket-core-due.detail.tail",
-   "en": "This is a to do for the case's managers. You are told this once, and it leaves when the item is placed, declined, receipted or disclosed.",
+   "en": "This is a to-do for the owners of the case's project. You are told this once, and it leaves when the item is placed, declined, receipted or disclosed.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1943 (appended after the sentence above)"
@@ -43779,10 +43758,10 @@
   },
   {
    "key": "queue.cited-docket.detail.tail",
-   "en": "The cited edition still opens as it was signed, and nothing here has moved or been regraded.",
+   "en": "The cited edition still opens as it was signed, and nothing here has moved or been regraded. Whether this still stands is for the members to decide. A recorded re-evaluation closes this.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2121 (then queue.reevaluation-tail)"
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2121"
   },
   {
    "key": "queue.followed-case-entry.summary.edition",
@@ -43849,7 +43828,7 @@
   },
   {
    "key": "queue.followed-case-entry.detail.unkeyed",
-   "en": "Its signing key is not among the keys the imported case file lists.",
+   "en": "The entry's signing key is not among the keys the imported case file lists.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:2203"
@@ -43989,7 +43968,7 @@
   },
   {
    "key": "queue.edition-scheduled.summary",
-   "en": "Signed - publishes {when} - case {case}, edition {edition}",
+   "en": "Signed, to publish {when}: case {case}, edition {edition}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:2542; {when} {case} {edition} (when is the date and time as 'YYYY-MM-DD, HH:MM', else see NOTES)"
@@ -44136,42 +44115,42 @@
   },
   {
    "key": "queue.missing_predecessor.summary",
-   "en": "{progression}: the '{stage}' stage is required and absent",
+   "en": "{progression}: the “{stage}” stage is required and absent",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:159; {progression} {stage} (source also inserts {required}, see NOTES)"
   },
   {
    "key": "queue.overdue_successor.summary",
-   "en": "{progression}: the '{stage}' stage is required and absent",
+   "en": "{progression}: the “{stage}” stage is past its deadline and still absent",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:159 (same text as missing_predecessor; the kind is overdue_successor when p.overdue); {progression} {stage}"
   },
   {
    "key": "queue.missing_predecessor.detail.one",
-   "en": "1 instance of this progression reaches '{stage}' without it.",
+   "en": "1 instance of this progression reaches “{stage}” without it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:160; {stage}"
   },
   {
    "key": "queue.missing_predecessor.detail.other",
-   "en": "{n} instances of this progression reach '{stage}' without it.",
+   "en": "{n} instances of this progression reach “{stage}” without it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:160; {n} {stage}"
   },
   {
    "key": "queue.overdue_successor.detail.one",
-   "en": "1 instance of this progression reaches '{stage}' without it, and {overdue} is past a declared deadline.",
+   "en": "1 instance of this progression reaches “{stage}” without it, and {overdue} is past a declared deadline.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:160-161; {stage} {overdue}"
   },
   {
    "key": "queue.overdue_successor.detail.other",
-   "en": "{n} instances of this progression reach '{stage}' without it, and {overdue} of them are past a declared deadline.",
+   "en": "{n} instances of this progression reach “{stage}” without it, and {overdue} of them are past a declared deadline.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:160-161; {n} {stage} {overdue}"
@@ -44185,35 +44164,35 @@
   },
   {
    "key": "queue.cardinality_exceeded.summary",
-   "en": "{progression}: the '{stage}' stage holds more documents than it is declared to hold",
+   "en": "{progression}: the “{stage}” stage holds more documents than it is declared to hold",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:173; {progression} {stage}"
   },
   {
    "key": "queue.cardinality_exceeded.detail.exactly.one",
-   "en": "1 instance of this progression holds more than one document at '{stage}' ({documents} in all), which is declared to hold exactly one. This is a finding; it decides nothing about which of them belongs.",
+   "en": "1 instance of this progression holds more than one document at “{stage}” ({documents} in all), which is declared to hold exactly one. This is a finding; it decides nothing about which of them belongs.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:99-103; {stage} {documents}"
   },
   {
    "key": "queue.cardinality_exceeded.detail.exactly.other",
-   "en": "{n} instances of this progression hold more than one document at '{stage}' ({documents} in all), which is declared to hold exactly one. This is a finding; it decides nothing about which of them belongs.",
+   "en": "{n} instances of this progression hold more than one document at “{stage}” ({documents} in all), which is declared to hold exactly one. This is a finding; it decides nothing about which of them belongs.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:99-103; {n} {stage} {documents}"
   },
   {
    "key": "queue.cardinality_exceeded.detail.atmost.one",
-   "en": "1 instance of this progression holds more than one document at '{stage}' ({documents} in all), which is declared to hold at most one. This is a finding; it decides nothing about which of them belongs.",
+   "en": "1 instance of this progression holds more than one document at “{stage}” ({documents} in all), which is declared to hold at most one. This is a finding; it decides nothing about which of them belongs.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:99-103; {stage} {documents}"
   },
   {
    "key": "queue.cardinality_exceeded.detail.atmost.other",
-   "en": "{n} instances of this progression hold more than one document at '{stage}' ({documents} in all), which is declared to hold at most one. This is a finding; it decides nothing about which of them belongs.",
+   "en": "{n} instances of this progression hold more than one document at “{stage}” ({documents} in all), which is declared to hold at most one. This is a finding; it decides nothing about which of them belongs.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:99-103; {n} {stage} {documents}"
