@@ -23,3 +23,7 @@ B. Give them keys as `{key, vars}`. This changes R11's contract ("an array of st
 C. Import setup-words `localize`. This changes R23 (zero runtime dependency). Not recommended.
 
 The job cannot reach COMPLETE on the words check until option A (or B/C) is settled, because the check counts these as findings until they are on the list. Everything else in ooxml is unchanged and the format, architecture and ownership checks read 0 failures.
+
+## J2 · BLOCKED
+
+Cause: needs Bob. The 8 ooxml words findings (see J1) are unread diagnostic strings. Their settlement is Bob's: option A (add the 8 ids to the design's unkeyed list, K3944) clears them; B or C changes R11 or R23. Until then checks/run.mjs keeps 8 ooxml findings and my COMPLETE would not meet the words rule. No code is changed; format, architecture and ownership read 0 failures. Waiting on your choice.
