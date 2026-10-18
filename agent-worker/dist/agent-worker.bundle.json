@@ -358,8 +358,8 @@
     },
     {
       "path": "../bio-plane/src/observation-log/vocabulary.mjs",
-      "bytes": 113154,
-      "sha256": "8470d8fc2bb98afdfebc08f09a27c1abe225e35a934689bb74ddf9395161fe56"
+      "bytes": 113113,
+      "sha256": "ab30d1747aa730c507a97cb311a2bb057ea01bd93e3288f5c80a42fcdce228a5"
     },
     {
       "path": "../bio-plane/src/odf.mjs",
@@ -458,8 +458,8 @@
     },
     {
       "path": "../bio-plane/src/query.mjs",
-      "bytes": 189281,
-      "sha256": "ae5fe6ada93f39f38affa02b7f5a3e91845ef85aad4d915b5d9f913e9fc5cfb7"
+      "bytes": 189450,
+      "sha256": "effadd8f5a00bff3a9f3cd3e119d641a17d1c72398e63ef174b4b1676e421576"
     },
     {
       "path": "../bio-plane/src/reading-pipeline/hooks.mjs",

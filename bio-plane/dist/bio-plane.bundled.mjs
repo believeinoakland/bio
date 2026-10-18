@@ -18366,8 +18366,8 @@ function anchorRecord(doc, targetPage, source2, destName) {
     source: source2
   };
 }
-function undeterminedRecord(source2, why2, extra = {}) {
-  return { partition: "undetermined", wrapper: null, target: { why: why2, ...extra }, source: source2 };
+function undeterminedRecord(source2, why3, extra = {}) {
+  return { partition: "undetermined", wrapper: null, target: { why: why3, ...extra }, source: source2 };
 }
 function tokenizeContent(s, opts = {}) {
   const skipInline = opts.inlineImages === true;
@@ -19654,21 +19654,21 @@ function extractPageBoxes(doc) {
 }
 var ACTIVE_WALK_DEPTH = 64;
 function extractActive(doc) {
-  const pageOf5 = /* @__PURE__ */ new Map();
+  const pageOf6 = /* @__PURE__ */ new Map();
   for (let idx = 0; idx < doc.pageCount; idx++) {
     const num3 = doc._pageOrder[idx];
-    if (!pageOf5.has(num3)) pageOf5.set(num3, idx);
+    if (!pageOf6.has(num3)) pageOf6.set(num3, idx);
   }
   for (let idx = 0; idx < doc.pageCount; idx++) {
     const pm = doc.pageDict(idx);
     const annots = pm ? doc.resolve(pm.Annots) : null;
     if (!annots || annots.t !== "arr") continue;
-    for (const a of annots.items) if (a && a.t === "ref" && !pageOf5.has(a.n)) pageOf5.set(a.n, idx);
+    for (const a of annots.items) if (a && a.t === "ref" && !pageOf6.has(a.n)) pageOf6.set(a.n, idx);
   }
   const efNodes = embeddedTreeNodes(doc);
   const items = [];
   for (const num3 of [...doc._objs.keys()].sort((a, b) => a - b)) {
-    const page2 = pageOf5.has(num3) ? pageOf5.get(num3) : null;
+    const page2 = pageOf6.has(num3) ? pageOf6.get(num3) : null;
     walkActive(
       doc,
       doc._objs.get(num3),
@@ -20765,7 +20765,7 @@ async function listArchive(source2) {
     return { ok: false, why: "source_unreadable", entries: null };
   }
 }
-var refusal = (why2, extra = {}) => ({ ok: false, why: why2, ...extra, entries: null });
+var refusal = (why3, extra = {}) => ({ ok: false, why: why3, ...extra, entries: null });
 var ambiguous = (detail, entries) => ({ ok: false, why: "ARCHIVE_AMBIGUOUS", detail, entries });
 async function listFrom(src) {
   const { size } = src;
@@ -21609,9 +21609,9 @@ async function readVbaProject(bytes2, container2, partName) {
       const entry4 = m.stream == null ? null : childNamed(cfb, vba, m.stream, 2);
       const source2 = entry4 && Number.isSafeInteger(m.offset) ? decompressOvba(cfb.data.get(entry4), m.offset) : null;
       if (!source2) {
-        const why2 = entry4 ? "module_source_undecompressable" : "module_stream_absent";
-        modules.push({ name: m.name, stream: m.stream, read: false, why: why2, autoRun: [], suspicious: [] });
-        undetermined3.push({ module: m.name, why: why2 });
+        const why3 = entry4 ? "module_source_undecompressable" : "module_stream_absent";
+        modules.push({ name: m.name, stream: m.stream, read: false, why: why3, autoRun: [], suspicious: [] });
+        undetermined3.push({ module: m.name, why: why3 });
         continue;
       }
       const code = dir.text.decode(source2);
@@ -22003,11 +22003,11 @@ var CELL_TYPES = { n: "number", s: "text", str: "text", inlineStr: "text", b: "b
 function typedCell(c, sheetName2, sharedStrings) {
   const type = c.t == null ? "number" : CELL_TYPES[c.t] ?? null;
   let value = c.t === "inlineStr" ? c.is ?? c.v : c.v;
-  let why2 = type == null ? "cell_type_unknown" : null;
+  let why3 = type == null ? "cell_type_unknown" : null;
   if (c.t === "s") {
     const r = cellValue(c, sharedStrings);
     value = r.undetermined ? null : r.value;
-    if (r.undetermined) why2 = r.undetermined;
+    if (r.undetermined) why3 = r.undetermined;
   }
   const formula = c.f != null;
   return {
@@ -22019,7 +22019,7 @@ function typedCell(c, sheetName2, sharedStrings) {
       cached: formula ? c.v : null,
       formula: formula ? c.f : null
     },
-    why: why2
+    why: why3
   };
 }
 function rowColumnOrder(entries) {
@@ -22047,7 +22047,7 @@ async function xlsxStructure(parts) {
       for (const r of sheet.rels.relationships) if (r.id) relTargets.set(r.id, r);
     }
     if (sheet.xml == null) {
-      const why2 = guard == null ? sheet.why ?? "sheet_unreadable" : "over_size_bound";
+      const why3 = guard == null ? sheet.why ?? "sheet_unreadable" : "over_size_bound";
       for (const [, r] of relTargets) {
         if (!r.external) continue;
         const partition = classifyUrl(r.target);
@@ -22056,7 +22056,7 @@ async function xlsxStructure(parts) {
           wrapper: partition === "deferred" ? linkWrapper.deferred(r.target) : linkWrapper.refused(),
           target: { url: r.target },
           source: null,
-          note: `cell_join_unavailable:${why2}`
+          note: `cell_join_unavailable:${why3}`
         });
       }
       continue;
@@ -22632,8 +22632,8 @@ function deferredOrRefusedRecord2(uri, source2) {
     source: source2
   };
 }
-function undeterminedRecord2(source2, why2, extra = {}) {
-  return { partition: "undetermined", wrapper: null, target: { why: why2, ...extra }, source: source2 };
+function undeterminedRecord2(source2, why3, extra = {}) {
+  return { partition: "undetermined", wrapper: null, target: { why: why3, ...extra }, source: source2 };
 }
 var HEX3 = "0123456789abcdef";
 async function sha256Hex3(u8) {
@@ -23357,8 +23357,8 @@ function deferredOrRefusedRecord3(uri, source2) {
     source: source2
   };
 }
-function undeterminedRecord3(source2, why2, extra = {}) {
-  return { partition: "undetermined", wrapper: null, target: { why: why2, ...extra }, source: source2 };
+function undeterminedRecord3(source2, why3, extra = {}) {
+  return { partition: "undetermined", wrapper: null, target: { why: why3, ...extra }, source: source2 };
 }
 var HEX4 = "0123456789abcdef";
 async function sha256Hex4(u8) {
@@ -24340,10 +24340,10 @@ async function manifestIntraLinks(bytes2, container2, contentXml, undetermined3)
     if (fonts.has(name3)) continue;
     listed.push({ name: name3, encrypted: elementsNested(fe.inner, "encryption-data", 1).length > 0 });
   }
-  const undeterminedLink = (why2, name3) => ({
+  const undeterminedLink = (why3, name3) => ({
     partition: "undetermined",
     wrapper: null,
-    target: { why: why2, name: name3 },
+    target: { why: why3, name: name3 },
     source: null
   });
   let total2 = 0;
@@ -30750,8 +30750,8 @@ function validateInto(p3, errors) {
       fields(ta, t2, [...TEMPLATE_FIELDS, "name", "sources", ...inList ? ["purpose"] : []]);
       for (const f17 of TEMPLATE_FIELDS)
         if (!own3(t2, f17) || t2[f17] === void 0 || t2[f17] === null) err(`${ta}.${f17}`, "TEMPLATE_UNATTRIBUTED", `the template's ${f17} is missing`);
-      const bad2 = (f17, why2) => {
-        if (own3(t2, f17) && t2[f17] !== void 0 && t2[f17] !== null) err(`${ta}.${f17}`, "VALUE_INVALID", why2);
+      const bad2 = (f17, why3) => {
+        if (own3(t2, f17) && t2[f17] !== void 0 && t2[f17] !== null) err(`${ta}.${f17}`, "VALUE_INVALID", why3);
       };
       if (!(typeof t2.id === "string" && TEMPLATE_ID_RE.test(t2.id))) bad2("id", "id matches ^TPL-[a-z0-9][a-z0-9-]*$");
       else if (templateIds.has(t2.id)) err(`${ta}.id`, "VALUE_INVALID", `'${t2.id}' is given twice in the profile`);
@@ -30776,8 +30776,8 @@ function validateInto(p3, errors) {
         fields(ra, r, [...REVIEW_REQUIRED, "organisation", "credential"]);
         for (const f17 of REVIEW_REQUIRED)
           if (!own3(r, f17) || r[f17] === void 0 || r[f17] === null) err(`${ra}.${f17}`, "TEMPLATE_UNATTRIBUTED", `the review's ${f17} is missing`);
-        const rbad = (f17, ok3, why2) => {
-          if (own3(r, f17) && r[f17] !== void 0 && r[f17] !== null && !ok3) err(`${ra}.${f17}`, "VALUE_INVALID", why2);
+        const rbad = (f17, ok3, why3) => {
+          if (own3(r, f17) && r[f17] !== void 0 && r[f17] !== null && !ok3) err(`${ra}.${f17}`, "VALUE_INVALID", why3);
         };
         rbad("reviewer", isStr(r.reviewer), "the reviewer is a non-empty name");
         rbad("kind", REVIEW_KINDS.includes(r.kind), `kind is ${REVIEW_KINDS.join(" or ")}`);
@@ -31249,8 +31249,8 @@ function validateInto(p3, errors) {
     if (!entry4(at50, r)) return;
     fields(at50, r, ["body", "rrule", "dtstart", "citation", "status", "basis"]);
     str55(`${at50}.body`, r.body, "body");
-    const why2 = rruleFault(r.rrule);
-    if (why2) err(`${at50}.rrule`, "RECURRENCE_INVALID", why2);
+    const why3 = rruleFault(r.rrule);
+    if (why3) err(`${at50}.rrule`, "RECURRENCE_INVALID", why3);
     if (!isLocalDateTime(r.dtstart)) err(`${at50}.dtstart`, "RECURRENCE_INVALID", "dtstart is a local date-time YYYY-MM-DDTHH:MM[:SS], read in the profile's time_zone");
     str55(`${at50}.citation`, r.citation, "citation");
     statusBasis(at50, r);
@@ -32358,10 +32358,10 @@ function readAgain(e2, source2) {
   return e2;
 }
 var CONNECTION = { REFERENTIAL: "referential", TEMPORAL: "temporal" };
-function referential(from, to, relation2, why2) {
-  return { connection: CONNECTION.REFERENTIAL, from, to, relation: relation2, why: why2 };
+function referential(from, to, relation2, why3) {
+  return { connection: CONNECTION.REFERENTIAL, from, to, relation: relation2, why: why3 };
 }
-function temporal(from, to, relation2, { at: at50, expected_by, why: why2 } = {}) {
+function temporal(from, to, relation2, { at: at50, expected_by, why: why3 } = {}) {
   return {
     connection: CONNECTION.TEMPORAL,
     from,
@@ -32369,7 +32369,7 @@ function temporal(from, to, relation2, { at: at50, expected_by, why: why2 } = {}
     relation: relation2,
     at: at50 || null,
     expected_by: expected_by || null,
-    why: why2
+    why: why3
   };
 }
 function diffEntities(before3, after2) {
@@ -32589,15 +32589,15 @@ async function assess(before3, after2, ctx) {
     { type: dt2.type.key, confidence: dt2.confidence, signals: dt2.signals }
   );
   const content_type = dt2.type.key;
-  const unread = (why2) => {
-    note(LAYER.MEANING, "nothing is claimed about the content: " + why2);
+  const unread = (why3) => {
+    note(LAYER.MEANING, "nothing is claimed about the content: " + why3);
     return out({
       verdict: "changed",
       meaningful: null,
       events: [],
       connections: [],
       content_type,
-      why: "the substance differs and " + why2 + ", so what changed is not described"
+      why: "the substance differs and " + why3 + ", so what changed is not described"
     });
   };
   if (typeof dt2.type.parse !== "function" || typeof dt2.type.assess !== "function")
@@ -33099,9 +33099,9 @@ function rowRefusal(row13) {
 function selectCapture(rows4, { notAfter = null } = {}) {
   const considered = [], usable = [];
   for (const r of Array.isArray(rows4) ? rows4 : []) {
-    const why2 = rowRefusal(r);
-    if (why2) {
-      considered.push({ timestamp: r && r.timestamp, refused: why2 });
+    const why3 = rowRefusal(r);
+    if (why3) {
+      considered.push({ timestamp: r && r.timestamp, refused: why3 });
       continue;
     }
     if (notAfter && String(r.timestamp) > String(notAfter)) {
@@ -33613,13 +33613,13 @@ function cdpConnection(ws) {
 }
 var resourceType = (t2) => typeof t2 === "string" && t2 ? t2.toLowerCase() : "other";
 async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) {
-  const asked6 = req || {};
-  const timeoutMs = Math.max(1e3, Number(asked6.wait?.timeout_ms) || 15e3);
-  const navMs = Math.max(1e3, Number(asked6.navigation_timeout_ms) || 3e4);
-  const until = typeof asked6.wait?.until === "string" ? asked6.wait.until : "networkidle";
-  const ownHosts = Array.isArray(asked6.own_hosts) ? asked6.own_hosts : [];
-  const refusedAddress = requestRefusal(String(asked6.url || ""), ownHosts);
-  if (refusedAddress) return { ok: false, error: `the browser could not navigate to ${String(asked6.url || "")}: ${refusedSentence(String(asked6.url || ""), refusedAddress)}` };
+  const asked7 = req || {};
+  const timeoutMs = Math.max(1e3, Number(asked7.wait?.timeout_ms) || 15e3);
+  const navMs = Math.max(1e3, Number(asked7.navigation_timeout_ms) || 3e4);
+  const until = typeof asked7.wait?.until === "string" ? asked7.wait.until : "networkidle";
+  const ownHosts = Array.isArray(asked7.own_hosts) ? asked7.own_hosts : [];
+  const refusedAddress = requestRefusal(String(asked7.url || ""), ownHosts);
+  if (refusedAddress) return { ok: false, error: `the browser could not navigate to ${String(asked7.url || "")}: ${refusedSentence(String(asked7.url || ""), refusedAddress)}` };
   let sess = null, conn = null, targetId = null;
   const started = now();
   const navDeadline = started + navMs;
@@ -33659,28 +33659,28 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     if (!targetId) throw new Error("the browser gave this render no page target");
     const { sessionId } = await conn.send("Target.attachToTarget", { targetId, flatten: true }, void 0, navLeft());
     if (!sessionId) throw new Error(`the browser did not attach a session to target ${targetId}`);
-    const vp = asked6.viewport || {};
+    const vp = asked7.viewport || {};
     const envOk = { viewport: false, dpr: false, locale: false, timezone: false };
     try {
       await conn.send("Emulation.setDeviceMetricsOverride", {
         width: Math.round(Number(vp.width) || 1280),
         height: Math.round(Number(vp.height) || 800),
-        deviceScaleFactor: Number(asked6.dpr) || 1,
+        deviceScaleFactor: Number(asked7.dpr) || 1,
         mobile: false
       }, sessionId, navLeft());
       envOk.viewport = true;
       envOk.dpr = true;
     } catch {
     }
-    if (typeof asked6.locale === "string" && asked6.locale)
+    if (typeof asked7.locale === "string" && asked7.locale)
       try {
-        await conn.send("Emulation.setLocaleOverride", { locale: asked6.locale }, sessionId, navLeft());
+        await conn.send("Emulation.setLocaleOverride", { locale: asked7.locale }, sessionId, navLeft());
         envOk.locale = true;
       } catch {
       }
-    if (typeof asked6.timezone === "string" && asked6.timezone)
+    if (typeof asked7.timezone === "string" && asked7.timezone)
       try {
-        await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked6.timezone }, sessionId, navLeft());
+        await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked7.timezone }, sessionId, navLeft());
         envOk.timezone = true;
       } catch {
       }
@@ -33835,10 +33835,10 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     } catch (e2) {
       throw new Error(`the browser would not hold this render's requests (request interception could not be enabled: ${String(e2 && e2.message || e2).slice(0, 200)}), so nothing was rendered`);
     }
-    const nav = await conn.send("Page.navigate", { url: String(asked6.url || "") }, sessionId, navLeft());
+    const nav = await conn.send("Page.navigate", { url: String(asked7.url || "") }, sessionId, navLeft());
     if (nav.errorText) {
       const doc = refusedDocuments.find((d) => d.frameId && d.frameId === nav.frameId) || refusedDocuments[0];
-      throw new Error(`the browser could not navigate to ${asked6.url}: ${nav.errorText}${doc ? `; ${refusedSentence(doc.url, doc.reason)}` : ""}`);
+      throw new Error(`the browser could not navigate to ${asked7.url}: ${nav.errorText}${doc ? `; ${refusedSentence(doc.url, doc.reason)}` : ""}`);
     }
     mainFrameId = nav.frameId || null;
     const overall = started + navMs + timeoutMs;
@@ -33897,10 +33897,10 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
          "not reported by the renderer" — the honest reading, since the browser
          then rendered at whatever IT had and we do not know what that was. */
       viewport: envOk.viewport ? { width: Math.round(Number(vp.width) || 1280), height: Math.round(Number(vp.height) || 800) } : null,
-      dpr: envOk.dpr ? Number(asked6.dpr) || 1 : null,
-      locale: envOk.locale ? asked6.locale : null,
-      timezone: envOk.timezone ? asked6.timezone : null,
-      wait: { condition: asked6.wait || null, fired, ...longLivedReport ? { long_lived: longLivedReport } : {} },
+      dpr: envOk.dpr ? Number(asked7.dpr) || 1 : null,
+      locale: envOk.locale ? asked7.locale : null,
+      timezone: envOk.timezone ? asked7.timezone : null,
+      wait: { condition: asked7.wait || null, fired, ...longLivedReport ? { long_lived: longLivedReport } : {} },
       elapsed_ms: elapsed,
       navigated_to: navigatedTo,
       status: mainStatus,
@@ -34026,13 +34026,13 @@ function renderConcurrencyCap(env) {
   const n2 = figure(env && env.RENDER_CONCURRENCY_CAP);
   return Number.isInteger(n2) && n2 > 0 ? n2 : RENDER_CONCURRENCY_CAP_DEFAULT;
 }
-function renderReserveMs(asked6 = RENDER_DEFAULTS) {
+function renderReserveMs(asked7 = RENDER_DEFAULTS) {
   const pos = (v, fallback) => {
     const n2 = figure(v);
     return Number.isFinite(n2) && n2 >= 0 ? n2 : fallback;
   };
-  const wait = pos(asked6 && asked6.wait && asked6.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
-  const nav = pos(asked6 && asked6.navigation_timeout_ms, RENDER_DEFAULTS.navigation_timeout_ms);
+  const wait = pos(asked7 && asked7.wait && asked7.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
+  const nav = pos(asked7 && asked7.navigation_timeout_ms, RENDER_DEFAULTS.navigation_timeout_ms);
   return Math.ceil(wait + nav);
 }
 var NON_DATA_TYPES = Object.freeze({
@@ -34064,7 +34064,7 @@ async function keepRenderBodies(answer2, { put: put2, sha256: sha2562 }) {
       continue;
     }
     const claim = HEX643.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {};
-    const undet = (why2) => ({ sha256: "undetermined", digest_reason: why2, ...claim });
+    const undet = (why3) => ({ sha256: "undetermined", digest_reason: why3, ...claim });
     let bytes2 = null, as = null;
     if (typeof r.body_base64 === "string") {
       bytes2 = b64bytes(r.body_base64);
@@ -34114,7 +34114,7 @@ function originKey(u) {
     return null;
   }
 }
-function renderBlock(answer2, { pageUrl, shellSha, asked: asked6 = RENDER_DEFAULTS, at: at50, digests: digests2 = null }) {
+function renderBlock(answer2, { pageUrl, shellSha, asked: asked7 = RENDER_DEFAULTS, at: at50, digests: digests2 = null }) {
   if (!answer2 || typeof answer2 !== "object" || answer2.ok !== true)
     return { ok: false, problem: `the renderer did not answer ok (${answer2 && answer2.error ? String(answer2.error).slice(0, 200) : "no answer"})` };
   if (typeof answer2.html !== "string" || answer2.html.length === 0)
@@ -34207,7 +34207,7 @@ function renderBlock(answer2, { pageUrl, shellSha, asked: asked6 = RENDER_DEFAUL
     return v ?? null;
   };
   const waitFired = pick4("wait.fired", answer2.wait && isStr2(answer2.wait.fired) ? answer2.wait.fired : null);
-  const firedClass = waitFiredClass(waitFired, asked6.wait);
+  const firedClass = waitFiredClass(waitFired, asked7.wait);
   const completeness = firedClass === "condition" ? "condition_met" : firedClass === "settled" ? "settled_with_open_requests" : "undetermined";
   const ll = answer2.wait && answer2.wait.long_lived && typeof answer2.wait.long_lived === "object" ? answer2.wait.long_lived : null;
   const longLived = ll ? {
@@ -34218,9 +34218,9 @@ function renderBlock(answer2, { pageUrl, shellSha, asked: asked6 = RENDER_DEFAUL
   if (firedClass === "settled")
     undetermined3.push(`completeness: ${settledReading(longLived ? longLived.count : null)}${longLived && longLived.older_than_s !== null ? ` (requests open longer than ${longLived.older_than_s} s)` : ""} \u2014 the renderer's wait ended on its quiet window, which does not wait for them, so what they would have brought is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (D-570, BOB #34, 2026-09-25).`);
   else if (firedClass === "timeout")
-    undetermined3.push(`completeness: ${RENDER_INCOMPLETE_READING} \u2014 the renderer's wait ended on its timeout${num(asked6.wait && asked6.wait.timeout_ms) !== null ? ` (${asked6.wait.timeout_ms} ms asked)` : ""}${isStr2(asked6.wait && asked6.wait.until) ? ` rather than on the \`${asked6.wait.until}\` condition` : ""}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
+    undetermined3.push(`completeness: ${RENDER_INCOMPLETE_READING} \u2014 the renderer's wait ended on its timeout${num(asked7.wait && asked7.wait.timeout_ms) !== null ? ` (${asked7.wait.timeout_ms} ms asked)` : ""}${isStr2(asked7.wait && asked7.wait.until) ? ` rather than on the \`${asked7.wait.until}\` condition` : ""}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
   else if (firedClass === "undetermined")
-    undetermined3.push(`completeness: ${isStr2(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked6.wait && asked6.wait.until || "(none asked)"}\` condition your team's Civicsmith asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
+    undetermined3.push(`completeness: ${isStr2(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked7.wait && asked7.wait.until || "(none asked)"}\` condition your team's Civicsmith asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
   const render18 = {
     of: shellSha,
     engine: pick4("engine", isStr2(answer2.engine) ? answer2.engine : null),
@@ -34230,7 +34230,7 @@ function renderBlock(answer2, { pageUrl, shellSha, asked: asked6 = RENDER_DEFAUL
     locale: pick4("locale", isStr2(answer2.locale) ? answer2.locale : null),
     timezone: pick4("timezone", isStr2(answer2.timezone) ? answer2.timezone : null),
     /* D-499: the renderer's own word, and the plane's three-valued reading of it. */
-    wait: { asked: asked6.wait, fired: waitFired, fired_class: firedClass, ...longLived ? { long_lived: longLived } : {} },
+    wait: { asked: asked7.wait, fired: waitFired, fired_class: firedClass, ...longLived ? { long_lived: longLived } : {} },
     /* D-499 / BOB #32: `condition_met` says the wait ended on the condition ASKED —
        not that the page was finished, which no renderer reports. `undetermined`
        carries its reason in `undetermined[]` above. The GRADE is untouched either
@@ -34244,7 +34244,7 @@ function renderBlock(answer2, { pageUrl, shellSha, asked: asked6 = RENDER_DEFAUL
     data,
     scripts_executed: scriptsExecuted,
     third_party_executed: thirdParty,
-    asked: { viewport: asked6.viewport, dpr: asked6.dpr, locale: asked6.locale, timezone: asked6.timezone },
+    asked: { viewport: asked7.viewport, dpr: asked7.dpr, locale: asked7.locale, timezone: asked7.timezone },
     at: at50 || null,
     undetermined: undetermined3
   };
@@ -34710,8 +34710,8 @@ function inlineBytesOf(f17) {
   return f17 && typeof f17.text === "string" ? te.encode(f17.text).length : null;
 }
 function censusCap(limit) {
-  const asked6 = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
-  return Math.max(0, Math.min(Number.isInteger(asked6) ? asked6 : 50, 500));
+  const asked7 = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+  return Math.max(0, Math.min(Number.isInteger(asked7) ? asked7 : 50, 500));
 }
 function manifestFiles(filesJson) {
   let arr2;
@@ -34748,8 +34748,8 @@ var OPAQUE_PREFIXES = new Set(ID_TABLE.filter((e2) => e2.form === "opaque").map(
 var TAIL_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 var TAIL_LENGTH = 16;
 function mintExhausted(prefix, extra) {
-  const asked6 = typeof prefix === "string" ? prefix : "";
-  const what = Object.hasOwn(MINTED_ID_FOR, asked6) ? `id for ${MINTED_ID_FOR[asked6]}` : Object.hasOwn(MINTED_OBJECT, asked6) ? `${MINTED_OBJECT[asked6]} id` : "id";
+  const asked7 = typeof prefix === "string" ? prefix : "";
+  const what = Object.hasOwn(MINTED_ID_FOR, asked7) ? `id for ${MINTED_ID_FOR[asked7]}` : Object.hasOwn(MINTED_OBJECT, asked7) ? `${MINTED_OBJECT[asked7]} id` : "id";
   let own10 = {};
   try {
     if (extra && typeof extra === "object" && !Array.isArray(extra)) own10 = { ...extra };
@@ -34764,7 +34764,7 @@ function mintExhausted(prefix, extra) {
     code: "MINT_EXHAUSTED",
     check: row13.check,
     translation: row13.translation,
-    prefix: asked6,
+    prefix: asked7,
     detail: `your team's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.`
   };
 }
@@ -38640,8 +38640,8 @@ var Membership = class _Membership {
    *  EVERY positional question a viewer-carrying read asks in this file goes through
    *  here, and a visibility question never does. */
   positionalMember(viewer, identity2 = null) {
-    const asked6 = typeof identity2 === "string" && identity2 !== "" ? identity2 : viewer;
-    const g = viewerPredicate(asked6);
+    const asked7 = typeof identity2 === "string" && identity2 !== "" ? identity2 : viewer;
+    const g = viewerPredicate(asked7);
     return g.scope === "DENY" ? null : g.member;
   }
   static #enc = new TextEncoder();
@@ -39290,14 +39290,14 @@ var Membership = class _Membership {
       const guarded = this.#projectActGuarded("visibility", projectId, by, want);
       if (guarded) return guarded;
     }
-    const why2 = reason2 === null || reason2 === void 0 || String(reason2).trim() === "" ? null : String(reason2).slice(0, 280);
+    const why3 = reason2 === null || reason2 === void 0 || String(reason2).trim() === "" ? null : String(reason2).slice(0, 280);
     const at50 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
       projectId,
       want,
       by,
-      why2,
+      why3,
       at50
     );
     this.reindexProjectSight(projectId);
@@ -39307,7 +39307,7 @@ var Membership = class _Membership {
       projectId,
       setting: want,
       set_by: by,
-      reason: why2,
+      reason: why3,
       at: at50,
       ...want === "hidden" ? { requests_lapsed: lapsed } : {}
     };
@@ -39557,7 +39557,7 @@ var Membership = class _Membership {
       reason: "OWNER",
       detail: "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner."
     };
-    const why2 = comment === null || comment === void 0 ? null : String(comment).slice(0, 280);
+    const why3 = comment === null || comment === void 0 ? null : String(comment).slice(0, 280);
     const at50 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     this.sql.exec(
@@ -39565,10 +39565,10 @@ var Membership = class _Membership {
       projectId,
       target.member_id,
       by,
-      why2,
+      why3,
       at50
     );
-    return { ok: true, projectId, handle, removed: true, comment: why2, by, at: at50 };
+    return { ok: true, projectId, handle, removed: true, comment: why3, by, at: at50 };
   }
   /** D-311: THE RESCUE'S CALLER-AND-PROJECT CONDITIONS, extracted from `projectOwnerRescue` (now `project-roster`'s, its R5) so
    *  `op=affordances` asks the SAME predicate the act refuses on (the `#citesInto` discipline):
@@ -40022,8 +40022,8 @@ var Membership = class _Membership {
       reason: "TARGET_CANNOT_VOTE",
       detail: "the target is counted in the denominator but does not vote"
     };
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2) return { ok: false, reason: "NO_REASON", detail: "removals are recorded with a reason" };
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3) return { ok: false, reason: "NO_REASON", detail: "removals are recorded with a reason" };
     const math = _Membership.adminMath(admins.length);
     if (!math.possible)
       return {
@@ -40039,7 +40039,7 @@ var Membership = class _Membership {
       `INSERT INTO admin_votes (kind,target,voter,reason,created) VALUES ('remove',?,?,?,?)`,
       memberId,
       by,
-      why2,
+      why3,
       now
     );
     const votes = this.#rows(`SELECT voter, reason FROM admin_votes WHERE kind='remove' AND target=?`, memberId).filter((v) => admins.includes(v.voter) && v.voter !== memberId);
@@ -41864,8 +41864,8 @@ var ProjectRoster = class _ProjectRoster {
     };
     if (this.projectScope(projectId).scope === "own") return this.#scopeOwn(projectId, "rescue");
     if (blocked) return named3(blocked);
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
     const target = this.m.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
@@ -41876,17 +41876,17 @@ var ProjectRoster = class _ProjectRoster {
       projectId,
       target.member_id,
       by,
-      why2,
+      why3,
       now
     );
-    this.m.participationWrite("rescue", { projectId, memberId: target.member_id, by, comment: why2, at: now });
-    this.#recordOwnerDecision(projectId, "rescue", target.member_id, [by], [why2], now);
+    this.m.participationWrite("rescue", { projectId, memberId: target.member_id, by, comment: why3, at: now });
+    this.#recordOwnerDecision(projectId, "rescue", target.member_id, [by], [why3], now);
     return {
       ok: true,
       projectId,
       handle,
       by: this.#nm(by),
-      reason: why2,
+      reason: why3,
       owner: true,
       owners: this.m.projectOwners(projectId).sort().map((x) => this.#nm(x)),
       addedNotReplaced: true,
@@ -41910,8 +41910,8 @@ var ProjectRoster = class _ProjectRoster {
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (!this.m.isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
     const owners2 = this.m.projectOwners(projectId);
     const math = Membership.ownerMath(owners2.length);
     if (!math.possible)
@@ -41951,7 +41951,7 @@ var ProjectRoster = class _ProjectRoster {
       projectId,
       target.member_id,
       by,
-      why2,
+      why3,
       now
     );
     const counted = this.#ownerVotes(projectId, "remove", target.member_id, owners2).filter((v) => math.targetMayVote || v.voter !== target.member_id);
@@ -42091,8 +42091,8 @@ var ProjectRoster = class _ProjectRoster {
   /* R21, R24: a reason is required, and bounded. Answers the trimmed reason, or null for absent, blank or too long. */
   static #reason(reason2) {
     if (typeof reason2 !== "string") return null;
-    const why2 = reason2.trim();
-    return why2 && why2.length <= _ProjectRoster.REASON_MAX ? why2 : null;
+    const why3 = reason2.trim();
+    return why3 && why3.length <= _ProjectRoster.REASON_MAX ? why3 : null;
   }
   static #noReason(detail) {
     return { ok: false, reason: "NO_REASON", detail };
@@ -42151,8 +42151,8 @@ var ProjectRoster = class _ProjectRoster {
         "PROJECT_SCOPE_UNKNOWN",
         `${JSON.stringify(String(scope ?? "").slice(0, 40))} is not a scope: a project is a counsel matter (counsel_matter), a member's own project (own), or neither (none). Nothing was written.`
       );
-    const why2 = _ProjectRoster.#reason(reason2);
-    if (!why2) return _ProjectRoster.#noReason(
+    const why3 = _ProjectRoster.#reason(reason2);
+    if (!why3) return _ProjectRoster.#noReason(
       `a project's scope is set with a reason of at most ${_ProjectRoster.REASON_MAX} characters. Nothing was written.`
     );
     if (this.m.visibilityOf(projectId) !== "hidden")
@@ -42175,7 +42175,7 @@ var ProjectRoster = class _ProjectRoster {
       `INSERT INTO project_scopes (project_id, scope, reason, set_by, at) VALUES (?,?,?,?,?)`,
       projectId,
       scope,
-      why2,
+      why3,
       by,
       at50
     );
@@ -42184,7 +42184,7 @@ var ProjectRoster = class _ProjectRoster {
       projectId,
       scope,
       previous: current2,
-      reason: why2,
+      reason: why3,
       by,
       at: at50,
       detail: "the scope applies from now on, to every act that would publish, cite or send; nothing already published, sent or cited changes."
@@ -42240,8 +42240,8 @@ var ProjectRoster = class _ProjectRoster {
     for (const [i, n2] of clean3.entries())
       if (n2.kind && !held3.has(n2.kind))
         return refusal40("APPROVAL_KIND_UNKNOWN", `${JSON.stringify(n2.kind)} is not a kind of action in your team's active jurisdiction profiles. Nothing was written.`, { entry: n2, index: i });
-    const why2 = _ProjectRoster.#reason(reason2);
-    if (!why2) return _ProjectRoster.#noReason(
+    const why3 = _ProjectRoster.#reason(reason2);
+    if (!why3) return _ProjectRoster.#noReason(
       `a project's approval setting is set with a reason of at most ${_ProjectRoster.REASON_MAX} characters. Nothing was written.`
     );
     const at50 = (/* @__PURE__ */ new Date()).toISOString();
@@ -42249,7 +42249,7 @@ var ProjectRoster = class _ProjectRoster {
       `INSERT INTO project_approval_settings (project_id, needs, reason, set_by, at) VALUES (?,?,?,?,?)`,
       projectId,
       JSON.stringify(clean3),
-      why2,
+      why3,
       by,
       at50
     );
@@ -42257,7 +42257,7 @@ var ProjectRoster = class _ProjectRoster {
       ok: true,
       projectId,
       needs: clean3,
-      reason: why2,
+      reason: why3,
       by,
       at: at50,
       detail: clean3.length ? "the acts these rules match need a second member's approval before sending." : "one member approves every act, the default."
@@ -42453,8 +42453,8 @@ var ProjectRoster = class _ProjectRoster {
    *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
-  projectList(asked6 = {}) {
-    const { viewer = null, limit = null, after: after2 = null } = asked6 && typeof asked6 === "object" ? asked6 : {};
+  projectList(asked7 = {}) {
+    const { viewer = null, limit = null, after: after2 = null } = asked7 && typeof asked7 === "object" ? asked7 : {};
     const gate = viewerPredicate(viewer);
     const cursor = typeof after2 === "string" && after2 !== "" ? after2 : null;
     const cap = _ProjectRoster.#cap(limit, _ProjectRoster.PROJECT_LIST_LIMIT);
@@ -42506,8 +42506,8 @@ var ProjectRoster = class _ProjectRoster {
    *  invited_by, invited_at}` in project id order; `invited_by` is `{member, handle}` (the founder as R29 names her) or
    *  null when none was recorded or it names no member. Only her own rows; a viewer naming no active member gets an empty
    *  list. Paged as R36 pages (`after`, `next`). Writes nothing, never throws. */
-  projectInvitations(asked6 = {}) {
-    const { viewer = null, limit = null, after: after2 = null } = asked6 && typeof asked6 === "object" ? asked6 : {};
+  projectInvitations(asked7 = {}) {
+    const { viewer = null, limit = null, after: after2 = null } = asked7 && typeof asked7 === "object" ? asked7 : {};
     const cap = _ProjectRoster.#cap(limit, _ProjectRoster.PROJECT_INVITATIONS_LIMIT);
     const empty2 = { ok: true, invitations: [], count: 0, limit: cap, truncated: false, next: null };
     try {
@@ -43583,7 +43583,7 @@ function recordedMoves(files) {
     const b = r.value && Array.isArray(r.value.files) ? r.value.files.find((x) => x && x.name === "bundle.md") : null;
     return b && typeof b.sha256 === "string" && b.sha256 ? b.sha256.toLowerCase() : null;
   };
-  const stateOf2 = (raw) => {
+  const stateOf3 = (raw) => {
     if (typeof raw !== "string") return null;
     const fm = parseFrontmatter(raw).data;
     return fm && typeof fm === "object" && typeof fm.current_state === "string" ? fm.current_state : null;
@@ -43593,7 +43593,7 @@ function recordedMoves(files) {
   for (let j = 1; j < entries.length; j++) {
     const w = wrote(entries[j - 1]);
     if (w === null || w !== String(entries[j].base ?? "").toLowerCase()) continue;
-    const a = stateOf2(after2[j - 1]), z = stateOf2(after2[j]);
+    const a = stateOf3(after2[j - 1]), z = stateOf3(after2[j]);
     if (a && z && a !== z) moves.push({ from: a, to: z, date: entries[j].created ?? null, key: entries[j].key });
   }
   return moves;
@@ -44469,13 +44469,13 @@ async function runGate({
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
     if (!probe.present && probe.parts) {
-      const { named: named3, missing: missing2, disagree, unverified, why: why2 } = probe.parts;
+      const { named: named3, missing: missing2, disagree, unverified, why: why3 } = probe.parts;
       const sum = (named3 || []).reduce((n2, p3) => n2 + p3.bytes, 0);
       const label = (ps) => ps.map((p3) => p3.file || p3.sha256).join(", ");
-      if (why2)
+      if (why3)
         errors.push({
           check: "PLANE_PART_UNVERIFIED",
-          detail: `registered capture is held in parts, and ${why2}, so no part could be verified`,
+          detail: `registered capture is held in parts, and ${why3}, so no part could be verified`,
           where: { path: r.path, sha256: r.capture_sha }
         });
       else if (missing2.length)
@@ -45293,20 +45293,20 @@ var Promotion = class {
           }
         }
         if (stateContradiction) {
-          const [field3, said12, asked6] = stateContradiction;
+          const [field3, said12, asked7] = stateContradiction;
           return refusal2(
             "ENVELOPE_STATE_DISAGREES",
-            `the document being promoted says ${field3} '${said12 === null ? "null" : cut2(said12, 40)}' and this request's meta says '${asked6 === null ? "null" : cut2(asked6, 40)}'. The record goes by the document. Nothing was written.`,
-            { field: field3, document_value: said12 === null ? null : cut2(said12, 80), envelope_value: asked6 === null ? null : cut2(asked6, 80) }
+            `the document being promoted says ${field3} '${said12 === null ? "null" : cut2(said12, 40)}' and this request's meta says '${asked7 === null ? "null" : cut2(asked7, 40)}'. The record goes by the document. Nothing was written.`,
+            { field: field3, document_value: said12 === null ? null : cut2(said12, 80), envelope_value: asked7 === null ? null : cut2(asked7, 80) }
           );
         }
         const dateContradiction = envelopeCreated !== null && documentCreated !== null && !sameInstant(envelopeCreated, documentCreated) ? ["created", documentCreated, envelopeCreated] : envelopeLastUpdated !== null && documentLastUpdated !== null && !sameInstant(envelopeLastUpdated, documentLastUpdated) ? ["last_updated", documentLastUpdated, envelopeLastUpdated] : null;
         if (dateContradiction) {
-          const [field3, said12, asked6] = dateContradiction;
+          const [field3, said12, asked7] = dateContradiction;
           return refusal2(
             "ENVELOPE_DATES_DISAGREE",
-            `the document being promoted says ${field3} '${cut2(said12, 40)}' and this request's meta says '${cut2(asked6, 40)}'. The record goes by the document. Nothing was written.`,
-            { field: field3, document_value: cut2(said12, 80), envelope_value: cut2(asked6, 80) }
+            `the document being promoted says ${field3} '${cut2(said12, 40)}' and this request's meta says '${cut2(asked7, 40)}'. The record goes by the document. Nothing was written.`,
+            { field: field3, document_value: cut2(said12, 80), envelope_value: cut2(asked7, 80) }
           );
         }
       }
@@ -45666,14 +45666,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         "MACHINE_CANNOT_REOPEN",
         "reopening is a named member's judgement that a question the team set down has to be worked again. A machine credential may surface a question and pursue one, and may not overturn the team's own disposition. Sign in as a member."
       );
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2)
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3)
       return {
         ok: false,
         reason: "NO_REASON",
         detail: "reopening records WHY the disposition no longer holds. Nothing here is prefilled."
       };
-    if (why2.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why2))
+    if (why3.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why3))
       return {
         ok: false,
         reason: "BAD_REASON",
@@ -45732,7 +45732,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       timestamp: when,
       from_state: head.currentState,
       to_state: "open",
-      blurb: why2,
+      blurb: why3,
       author: who4
     });
     if (!withHistory)
@@ -45749,7 +45749,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     text8 = setScalar(text8, "last_updated", `"${when}"`);
     text8 = appendSessionLog(text8, `### Session ${when} | Reopened | ${who4}
 Trigger: op=reopen on ${target}
-Changes: state ${head.currentState} to open. Reason: ${why2}.
+Changes: state ${head.currentState} to open. Reason: ${why3}.
 `);
     const carried = [];
     for (const path of record.livePaths(target)) {
@@ -45775,7 +45775,7 @@ Changes: state ${head.currentState} to open. Reason: ${why2}.
       }
     });
     if (!promoted.ok) return { ...promoted, target };
-    const answer2 = { ok: true, target, from: head.currentState, to: "open", why: why2, author: who4, at: when, weight: "single" };
+    const answer2 = { ok: true, target, from: head.currentState, to: "open", why: why3, author: who4, at: when, weight: "single" };
     for (const l2 of this.#reopenListeners) {
       let out;
       try {
@@ -47148,8 +47148,8 @@ var Provenance = class {
      both sides, so a spelling difference is not a second identity. Bounded by `limit` shas listed (the counts are
      always whole). */
   homeCensus({ limit } = {}) {
-    const asked6 = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
-    const cap = Math.max(0, Math.min(Number.isInteger(asked6) ? asked6 : 50, 500));
+    const asked7 = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked7) ? asked7 : 50, 500));
     const homes = /* @__PURE__ */ new Map();
     const reg = { rows: 0, home_absent: 0 };
     for (const r of this.#sql.exec(`SELECT r.capture_sha, r.bundle_id, r.path, b.bundle_id AS present
@@ -47368,9 +47368,9 @@ var Provenance = class {
     const rep = isObj4(reputation) ? reputation : null;
     const upload = v === UPLOAD_VIA;
     const sighting = upload ? { by: typeof by === "string" ? by : null, statement: typeof statement === "string" ? statement : null } : { by: null, statement: null };
-    const asked6 = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
+    const asked7 = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
     const clock2 = Date.parse(this.#now());
-    const when = stampInstant("second", Number.isFinite(asked6) ? asked6 : Number.isFinite(clock2) ? clock2 : Date.now());
+    const when = stampInstant("second", Number.isFinite(asked7) ? asked7 : Number.isFinite(clock2) ? clock2 : Date.now());
     return this.#record.transact(() => {
       const seen = this.#one(
         `SELECT COUNT(*) AS n, SUM(CASE WHEN capture_sha = ? THEN 1 ELSE 0 END) AS same
@@ -47556,7 +47556,7 @@ var Provenance = class {
      at most `ARCHIVE_DEPTH_MAX` archives (`ooxml` R30); past that, or with a locator not of that form, the answer is
      undetermined and says why. */
   #unpacked(locator, depth) {
-    const unresolved = (why3) => ({ grade: null, route: "unpacked", determined: false, basis: UNPACKED_UNRESOLVED, why: why3 });
+    const unresolved = (why4) => ({ grade: null, route: "unpacked", determined: false, basis: UNPACKED_UNRESOLVED, why: why4 });
     const m = UNPACKED_LOCATOR.exec(typeof locator === "string" ? locator : "");
     const index2 = m ? Number(m[2]) : NaN;
     if (!m || !Number.isSafeInteger(index2))
@@ -47566,14 +47566,14 @@ var Provenance = class {
     const archiveSha = m[1].toLowerCase();
     const a = this.#grade(archiveSha, depth + 1);
     if (a.basis === UNPACKED_UNRESOLVED) return unresolved(a.why);
-    const { route, basis, why: why2, archive: inner, ...rest } = a;
+    const { route, basis, why: why3, archive: inner, ...rest } = a;
     const archive = route === "unpacked" ? { sha256: inner.sha256, through: [...inner.through, index2], route: inner.route, basis: inner.basis } : { sha256: archiveSha, through: [index2], route, basis };
     return {
       ...rest,
       route: "unpacked",
       basis: UNPACKED_FROM_ARCHIVE,
       archive,
-      why: `these bytes are entry ${index2} of an archive the record holds (${archiveSha.slice(0, 16)}\u2026), cut out of it, so on the capture axis they earn exactly what that archive earns, never more and never less. Of the archive: ${why2}`
+      why: `these bytes are entry ${index2} of an archive the record holds (${archiveSha.slice(0, 16)}\u2026), cut out of it, so on the capture axis they earn exactly what that archive earns, never more and never less. Of the archive: ${why3}`
     };
   }
   /** R62 · N806 (K2333): whether this copy fetched the capture itself, the one definition of the source condition
@@ -47875,14 +47875,14 @@ var Provenance = class {
     }
     const shaOf10 = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
     const regs = Array.isArray(register3) ? register3.filter((c) => c && typeof c.sha256 === "string") : [];
-    const asked6 = [.../* @__PURE__ */ new Set([...docs.map(shaOf10).filter(Boolean), ...regs.map((c) => c.sha256)])];
+    const asked7 = [.../* @__PURE__ */ new Set([...docs.map(shaOf10).filter(Boolean), ...regs.map((c) => c.sha256)])];
     const held3 = this.#rows(
       `SELECT capture_sha, bundle_id FROM register
         WHERE authored = 1 AND (bundle_id = ? OR capture_sha IN (SELECT value FROM json_each(?)))
         LIMIT ?`,
       bundleId,
-      JSON.stringify(asked6),
-      asked6.length + 1
+      JSON.stringify(asked7),
+      asked7.length + 1
     );
     const here = new Set(held3.filter((r) => r.bundle_id === bundleId).map((r) => r.capture_sha));
     const elsewhere2 = new Set(held3.filter((r) => r.bundle_id !== bundleId).map((r) => r.capture_sha));
@@ -48591,7 +48591,7 @@ var Attestation = class {
       return { ok: false, reason: "BAD_SHA", detail: "attestationsOf takes the sha256 of a capture: 64 hex characters" };
     const own10 = this.#recordedFor(s);
     const out = [...own10.attestations];
-    const why2 = own10.why ? [own10.why] : [];
+    const why3 = own10.why ? [own10.why] : [];
     let unpacked = false;
     const climb2 = (entries, through, depth) => {
       for (const d of entries) {
@@ -48602,17 +48602,17 @@ var Attestation = class {
         const index2 = c ? c.index : null;
         const named3 = through.length ? `the archive above it (through entries ${through.join(", ")})` : "this capture";
         if (!archive || !/^[0-9a-f]{64}$/.test(archive) || !Number.isInteger(index2) || index2 < 0) {
-          why2.push(`the record states ${named3} was cut out of an archive, but its container block names no archive digest of 64 hex and whole entry index, so whose attestations it carries cannot be read`);
+          why3.push(`the record states ${named3} was cut out of an archive, but its container block names no archive digest of 64 hex and whole entry index, so whose attestations it carries cannot be read`);
           continue;
         }
         const path = [index2, ...through];
         if (depth >= ARCHIVE_DEPTH_MAX) {
-          why2.push(`the archives it was cut out of nest deeper than ARCHIVE_DEPTH_MAX (${ARCHIVE_DEPTH_MAX}): the archive ${archive} (through entries ${path.join(", ")}) was not read, so its attestations are not here`);
+          why3.push(`the archives it was cut out of nest deeper than ARCHIVE_DEPTH_MAX (${ARCHIVE_DEPTH_MAX}): the archive ${archive} (through entries ${path.join(", ")}) was not read, so its attestations are not here`);
           continue;
         }
         const above = this.#recordedFor(archive);
         for (const a of above.attestations) out.push({ ...a, inherited: { from: archive, through: path } });
-        if (above.why) why2.push(`for the archive ${archive} it was cut out of (through entries ${path.join(", ")}): ${above.why}`);
+        if (above.why) why3.push(`for the archive ${archive} it was cut out of (through entries ${path.join(", ")}): ${above.why}`);
         climb2(above.entries, path, depth + 1);
       }
     };
@@ -48623,7 +48623,7 @@ var Attestation = class {
       sha256: s,
       registered: own10.registered,
       attestations: out,
-      ...why2.length ? { undetermined: why2.join("; ") } : {},
+      ...why3.length ? { undetermined: why3.join("; ") } : {},
       note
     };
   }
@@ -48632,7 +48632,7 @@ var Attestation = class {
      each naming its bundle and path, and why the answer is undetermined, when it is. Reads only; never throws. */
   #recordedFor(s) {
     const home2 = this.#provenance.homeOf(s);
-    const none = (why2) => ({ registered: !!home2, entries: [], attestations: [], why: why2 });
+    const none = (why3) => ({ registered: !!home2, entries: [], attestations: [], why: why3 });
     if (!home2)
       return none("no register row names this capture under a record that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
     const PATH = "data/provenance.json";
@@ -50195,18 +50195,18 @@ function askedInstant(at50) {
     } };
   return { ok: true, at: at50, ms: ms6, timestamp: at50.replace(/[-:TZ]/g, "") };
 }
-function askedReading(asked6, chosen) {
-  if (!asked6 || !asked6.at) return null;
-  const apart = Math.round(Math.abs(Date.parse(chosen.archived_at) - asked6.ms) / 1e3);
+function askedReading(asked7, chosen) {
+  if (!asked7 || !asked7.at) return null;
+  const apart = Math.round(Math.abs(Date.parse(chosen.archived_at) - asked7.ms) / 1e3);
   return {
-    asked_at: asked6.at,
+    asked_at: asked7.at,
     memento_datetime: chosen.archived_at,
     apart_seconds: apart,
     asked_note: apart === 0 ? word("acquisition.asked_note.memento_instant_asked", { archived_at: chosen.archived_at }) : word("acquisition.asked_note.memento_seconds_instant", {
       archived_at: chosen.archived_at,
       apart,
-      after: Date.parse(chosen.archived_at) < asked6.ms ? "before" : "after",
-      at: asked6.at
+      after: Date.parse(chosen.archived_at) < asked7.ms ? "before" : "after",
+      at: asked7.at
     })
   };
 }
@@ -50272,16 +50272,16 @@ async function peekBody(res) {
 }
 function replayed(res, ahead, reader) {
   const read3 = async () => ahead.length ? { done: false, value: ahead.shift() } : reader.read();
-  const cancel = async (why2) => {
+  const cancel = async (why3) => {
     ahead.length = 0;
     try {
-      await reader.cancel(why2);
+      await reader.cancel(why3);
     } catch {
     }
   };
   return { status: res.status, ok: res.ok, url: res.url, headers: res.headers, body: { getReader: () => ({ read: read3, cancel }), cancel } };
 }
-async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", asked: asked6 = null, take } = {}) {
+async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", asked: asked7 = null, take } = {}) {
   const ends = mementoEndpoints(ARCHIVE, address);
   if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
   const considered = [], rows4 = [], tried = /* @__PURE__ */ new Set();
@@ -50352,7 +50352,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
       return { next: true };
     }
   };
-  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(asked6 && asked6.at ? asked6.ms : Date.now()) });
+  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(asked7 && asked7.at ? asked7.ms : Date.now()) });
   if (tg.fail) return tg.fail;
   if (tg.res.status === 429 || tg.res.status >= 500) {
     cancelBody(tg.res);
@@ -50376,8 +50376,8 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
   if (!map.ok) return { ok: false, status: 502, payload: { ok: false, reason: map.reason, detail: map.detail, considered, address } };
   const cands = timeMapCandidates(map);
   considered.push(...cands.considered);
-  const near = (m) => Math.abs(Date.parse(m.archived_at) - asked6.ms);
-  const ordered2 = !cands.ok ? [] : asked6 && asked6.at ? [...cands.candidates].sort((a, b) => near(a) - near(b) || (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)) : cands.candidates;
+  const near = (m) => Math.abs(Date.parse(m.archived_at) - asked7.ms);
+  const ordered2 = !cands.ok ? [] : asked7 && asked7.at ? [...cands.candidates].sort((a, b) => near(a) - near(b) || (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)) : cands.candidates;
   for (const cand of ordered2.slice(0, MEMENTO_TRIES)) {
     const m = await tryMemento(cand.uri);
     if (!m.next) return m.fail || m;
@@ -50394,10 +50394,10 @@ function nothingUsable(sel, considered, address) {
     address
   } };
 }
-function chooseMemento(m, sha2, bytes2, address, asked6 = null) {
+function chooseMemento(m, sha2, bytes2, address, asked7 = null) {
   const sel = selectCapture([mementoRow(m.answer, { sha256: sha2, bytes: bytes2 }), ...m.rows]);
   if (!sel.ok) return nothingUsable(sel, m.considered, address);
-  const reading3 = askedReading(asked6, sel.chosen);
+  const reading3 = askedReading(asked7, sel.chosen);
   return {
     ok: true,
     chosen: sel.chosen,
@@ -50410,11 +50410,11 @@ function chooseMemento(m, sha2, bytes2, address, asked6 = null) {
 async function archiveLookup(cap, { address, at: at50 } = {}) {
   if (typeof address !== "string" || !isPublicHttpsLocator(address))
     return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
-  const asked6 = askedInstant(at50);
-  if (!asked6.ok) return { status: asked6.status, body: asked6.payload };
+  const asked7 = askedInstant(at50);
+  if (!asked7.ok) return { status: asked7.status, body: asked7.payload };
   const el = await archiveEligibility(cap, address);
   if (!el.ok) return { status: el.status, body: el.payload };
-  const m = await mementoLookup(cap, address, { asked: asked6, take: async ({ res, answer: answer2, locator }) => {
+  const m = await mementoLookup(cap, address, { asked: asked7, take: async ({ res, answer: answer2, locator }) => {
     const h = await hashBody(res);
     if (h.failed) return { fail: archiveBroke(h.failed) };
     if (h.oversize)
@@ -50430,7 +50430,7 @@ async function archiveLookup(cap, { address, at: at50 } = {}) {
     return selectCapture([row13]).ok ? { sha: h.sha, bytes: h.bytes } : { row: row13 };
   } });
   if (!m.ok) return { status: m.status, body: m.payload };
-  const c = chooseMemento(m, m.sha, m.bytes, address, asked6);
+  const c = chooseMemento(m, m.sha, m.bytes, address, asked7);
   if (!c.ok) return { status: c.status, body: c.payload };
   return { status: 200, body: {
     ok: true,
@@ -50443,7 +50443,7 @@ async function archiveLookup(cap, { address, at: at50 } = {}) {
     usable_count: c.usable_count,
     retrieval_locator: m.locator,
     provenance_hop: c.hop,
-    capture_with: { op: "acquire", via: "archive.org", address, ...asked6.at ? { at: asked6.at } : {} },
+    capture_with: { op: "acquire", via: "archive.org", address, ...asked7.at ? { at: asked7.at } : {} },
     note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, because the hop that reaches the record must be built by the same call that fetched the memento"
   } };
 }
@@ -50485,7 +50485,7 @@ async function coAttest(cap, { sha: sha2, locator, via, ev, coArchive = { on: tr
     ok: a.ok === true,
     ...typeof a.attempted === "string" ? { at: a.attempted } : {}
   });
-  const notAsked = (why2) => [{ service: "attest", attempted: false, ok: false, at: stampSecond2(), note: why2 }];
+  const notAsked = (why3) => [{ service: "attest", attempted: false, ok: false, at: stampSecond2(), note: why3 }];
   const coNotAsked = via !== "archive.org" && !coArchive.on ? [{
     service: "co_archive",
     kind: "co_archive",
@@ -51154,8 +51154,8 @@ async function acquire(cap, body0, {
       cap.renderSpend({ ms: answerR && answerR.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved });
     } catch {
     }
-    const asked6 = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
-    rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked: asked6, at: retrieved });
+    const asked7 = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
+    rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked: asked7, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX)
       return answer2(502, {
@@ -51173,7 +51173,7 @@ async function acquire(cap, body0, {
         if (!await ev.head(s)) await ev.put(s, b);
       }
     });
-    rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked: asked6, at: retrieved, digests: renderDigests });
+    rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked: asked7, at: retrieved, digests: renderDigests });
     const rsha = await sha256Hex6(rbytes);
     const renderedExisted = !!await ev.head(rsha);
     if (!renderedExisted) await ev.put(rsha, rbytes);
@@ -52026,8 +52026,8 @@ function runtimeVersions() {
 }
 
 // src/civil-time/edtf.mjs
-var refused = (refused5, why2) => ({ refused: refused5, why: why2 });
-var invalid = (s, why2) => refused("DATE_INVALID", `'${s}' is not an EDTF date: ${why2}`);
+var refused = (refused5, why3) => ({ refused: refused5, why: why3 });
+var invalid = (s, why3) => refused("DATE_INVALID", `'${s}' is not an EDTF date: ${why3}`);
 var level2 = (feature) => refused("EDTF_UNSUPPORTED", `EDTF level 2 is not read here: ${feature}`);
 var SEASONS = { 21: ["spring", 3, 1, 5, 31], 22: ["summer", 6, 1, 8, 31], 23: ["autumn", 9, 1, 11, 30] };
 function level2Feature(s) {
@@ -52137,8 +52137,8 @@ function parseEdtf(s) {
 }
 
 // src/civil-time/values.mjs
-var refuse3 = (code, why2) => ({ refused: code, why: why2 });
-var undetermined = (why2, candidates) => candidates ? { undetermined: true, why: why2, candidates } : { undetermined: true, why: why2 };
+var refuse3 = (code, why3) => ({ refused: code, why: why3 });
+var undetermined = (why3, candidates) => candidates ? { undetermined: true, why: why3, candidates } : { undetermined: true, why: why3 };
 var isNo = (r) => !!(r && (r.refused || r.undetermined));
 var PRECISIONS = ["day", "minute", "second", "edtf"];
 var MINUTE_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/;
@@ -52164,7 +52164,7 @@ function spanOf(x) {
   const z = zoneRefusal(zone);
   if (z) return z;
   if (!PRECISIONS.includes(precision)) return refuse3("DATE_INVALID", `'${precision}' is not a precision (day, minute, second, edtf)`);
-  const bad2 = (why2) => refuse3("DATE_INVALID", `'${value}' is not a ${precision}-precision value: ${why2}`);
+  const bad2 = (why3) => refuse3("DATE_INVALID", `'${value}' is not a ${precision}-precision value: ${why3}`);
   if (precision === "day") {
     const n2 = parseDay(value);
     if (n2 === null) return bad2(DAY_RE.test(value) ? "no such day" : "a day is YYYY-MM-DD");
@@ -52304,7 +52304,7 @@ function validAt(validity, date, { view } = {}) {
 }
 
 // src/civil-time/calendar.mjs
-var no = (code, why2) => ({ undetermined: true, code, why: why2 });
+var no = (code, why3) => ({ undetermined: true, code, why: why3 });
 function conflictsAbout(view, key2) {
   const cs = view && Array.isArray(view.conflicts) ? view.conflicts : [];
   return cs.filter((c) => c && typeof c.at === "string" && (c.at === key2 || c.at.startsWith(`${key2}.`) || c.at.startsWith(`${key2}[`)));
@@ -52407,8 +52407,8 @@ function calendarStated(cal) {
 
 // src/civil-time/rules.mjs
 var UNITS2 = ["days", "hours", "business_hours", "months", "years"];
-var no2 = (code, why2, extra) => ({ undetermined: true, code, why: why2, ...extra || {} });
-var ruleInvalid = (field3, why2) => no2("RULE_INVALID", `the rule's ${field3} ${why2}`, { field: field3 });
+var no2 = (code, why3, extra) => ({ undetermined: true, code, why: why3, ...extra || {} });
+var ruleInvalid = (field3, why3) => no2("RULE_INVALID", `the rule's ${field3} ${why3}`, { field: field3 });
 var dayDt = (n2, zone) => ({ value: dayText(n2), precision: "day", zone });
 var p22 = (n2) => String(n2).padStart(2, "0");
 function minuteDt(t2, zone) {
@@ -52799,7 +52799,7 @@ function due(args) {
     };
     return { due: date, basis_kind: basis, law_set: false, trace };
   }
-  const { precedes, lead, why: why2 } = args;
+  const { precedes, lead, why: why3 } = args;
   if (precedes === void 0 || precedes === null || lead === void 0 || lead === null) throw new TypeError("a dependency due needs precedes and lead");
   const l2 = typeof lead === "number" ? { amount: lead, count: "calendar" } : lead;
   if (typeof l2 !== "object") throw new TypeError("a dependency's lead is a number of days or {amount, count, units?}");
@@ -52811,7 +52811,7 @@ function due(args) {
     direction: "backward",
     roll: l2.roll === true,
     closures: l2.closures,
-    citation: why2 ?? null,
+    citation: why3 ?? null,
     starts: "act"
   };
   const view = args.view || {};
@@ -52819,7 +52819,7 @@ function due(args) {
   if (r.refused || r.undetermined) return { ...r, basis_kind: "dependency", law_set: false };
   r.trace.basis_kind = "dependency";
   r.trace.precedes = precedes;
-  r.trace.why = why2 ?? null;
+  r.trace.why = why3 ?? null;
   return { due: r.due, basis_kind: "dependency", law_set: false, trace: r.trace };
 }
 function overdueOn(args) {
@@ -52916,7 +52916,7 @@ var MAX_INSTANCES = 500;
 var MAX_MONTHS = 24;
 var RRDAY = { SU: "sun", MO: "mon", TU: "tue", WE: "wed", TH: "thu", FR: "fri", SA: "sat" };
 var unsupported = (part) => refuse3("RRULE_UNSUPPORTED", `${part} is outside the RFC 5545 subset this module expands (${SUBSET.join(", ")})`);
-var bad = (why2) => refuse3("DATE_INVALID", `the recurrence is malformed: ${why2}`);
+var bad = (why3) => refuse3("DATE_INVALID", `the recurrence is malformed: ${why3}`);
 function readStamp(s) {
   const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(s);
   if (!m) return null;
@@ -53106,7 +53106,7 @@ function expandRecurrence(args) {
   let k = 0;
   const span3 = r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 28 * r.interval : 365 * r.interval;
   if (fromDay - dtDay > 2 * span3) k = Math.max(0, Math.floor((fromDay - dtDay) / (r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 31 * r.interval : 366 * r.interval)) - 1);
-  const instances80 = [];
+  const instances81 = [];
   const notes2 = [];
   let truncated6 = false;
   for (let guard = 0; guard < 1e5; guard++, k++) {
@@ -53135,7 +53135,7 @@ function expandRecurrence(args) {
         notes2.push(`${dayText(n2)} excluded (EXDATE)`);
         continue;
       }
-      if (instances80.length >= MAX_INSTANCES) {
+      if (instances81.length >= MAX_INSTANCES) {
         truncated6 = true;
         stop2 = true;
         break;
@@ -53143,7 +53143,7 @@ function expandRecurrence(args) {
       if (it.shifted) notes2.push(`${dayText(n2)}: the wall time does not occur in ${zone}; the instance is the time after the gap`);
       const w = it.t + offsetAt(it.t, zone), wn = Math.floor(w / 86400), ws = w - wn * 86400;
       const p24 = (x) => String(x).padStart(2, "0");
-      instances80.push({
+      instances81.push({
         value: ds.dt.precision === "day" ? dayText(wn) : `${dayText(wn)}T${p24(Math.floor(ws / 3600))}:${p24(Math.floor(ws / 60) % 60)}`,
         precision: ds.dt.precision === "day" ? "day" : "minute",
         zone,
@@ -53153,8 +53153,8 @@ function expandRecurrence(args) {
     if (stop2) break;
   }
   const trace = { rrule, dtstart, zone, from, to, limits: { months: MAX_MONTHS, instances: MAX_INSTANCES }, notes: notes2, runtime: runtimeVersions() };
-  if (truncated6) trace.notes.push(`stopped at ${instances80.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
-  return { instances: instances80, truncated: truncated6, trace };
+  if (truncated6) trace.notes.push(`stopped at ${instances81.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
+  return { instances: instances81, truncated: truncated6, trace };
 }
 function periodFor(y, f17) {
   const [mm, dd] = f17.start.split("-").map(Number);
@@ -53811,9 +53811,9 @@ function applyConfidenceFloor(regions, floor) {
   }
   return { regions: out, floored, undetermined: undetermined3 };
 }
-function undeterminedRegion(region, why2) {
+function undeterminedRegion(region, why3) {
   const { text: text8, confidence, ...rest } = region;
-  return { ...rest, text: null, undetermined: true, why: why2, confidence: "none" };
+  return { ...rest, text: null, undetermined: true, why: why3, confidence: "none" };
 }
 function checkAnchor(source2) {
   if (!source2 || typeof source2 !== "object")
@@ -54247,12 +54247,12 @@ function mergeTier2Text(base2, t2) {
 function tier2Note(m) {
   if (!m || !m.ok) return m && m.why ? m.why : null;
   if (m.wholesale) return null;
-  const say7 = [];
+  const say8 = [];
   if (m.replaced.length)
-    say7.push(`${m.replaced.length} page(s) were re-read by the tier-2 decoder, which recovered text tier 1 could not map and more of it; the other ${m.kept.length} page(s) kept tier 1's reading`);
+    say8.push(`${m.replaced.length} page(s) were re-read by the tier-2 decoder, which recovered text tier 1 could not map and more of it; the other ${m.kept.length} page(s) kept tier 1's reading`);
   if (m.replaced.length && m.kept.length)
-    say7.push(`this document's text layer is a merge of two decodes and its chain names the tier per page`);
-  return say7.length ? say7.join("; ") : null;
+    say8.push(`this document's text layer is a merge of two decodes and its chain names the tier per page`);
+  return say8.length ? say8.join("; ") : null;
 }
 
 // src/content/checks.mjs
@@ -55417,12 +55417,12 @@ function derivedId(f17) {
 function connectionErrors(c, kindOf4) {
   if (!isObj7(c)) return [{ field: "connection", why: "a connection is an object" }];
   const errors = [];
-  const err = (field3, why2) => errors.push({ field: field3, why: why2 });
+  const err = (field3, why3) => errors.push({ field: field3, why: why3 });
   for (const f17 of FIELDS) if (!(f17 in c)) err(f17, `${f17} is absent; every field of the shape is present`);
   if ("id" in c && !filled(c.id)) err("id", "id is not a non-empty string");
   for (const end2 of ["from", "to"]) if (end2 in c && !isRecordId(c[end2])) err(end2, `${end2} is not a record id of the id grammar`);
   if ("owner" in c && !filled(c.owner)) err("owner", "owner is not a non-empty string");
-  if ("valid" in c) for (const why2 of validErrors(c.valid)) err("valid", why2);
+  if ("valid" in c) for (const why3 of validErrors(c.valid)) err("valid", why3);
   const entry4 = filled(c.kind) ? kindOf4(c.kind) : null;
   if ("kind" in c) {
     if (!filled(c.kind)) err("kind", "kind is not a non-empty string");
@@ -56508,11 +56508,11 @@ function standardLegRefusal(message2, repairs) {
   return refusal40("STANDARD_LEG_AXIS");
 }
 var DERIVED_LEG_GRADE = ["grade", "grade_axis", "grade_source"];
-function derivedLegDepartures(label, l2, what, why2, refusal40) {
+function derivedLegDepartures(label, l2, what, why3, refusal40) {
   for (const field3 of DERIVED_LEG_GRADE) {
     if (carries(l2[field3])) {
       refusal40(
-        `${label}.${field3} is set on a leg on ${what}: ${why2}, so the leg states none of its own`,
+        `${label}.${field3} is set on a leg on ${what}: ${why3}, so the leg states none of its own`,
         [`remove ${field3} from ${label}`]
       );
     }
@@ -57093,11 +57093,11 @@ function readJpegHeader(d) {
         if (total2 > 256 || q10 + 17 + total2 > seg.length)
           throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table of ${total2} symbols ${total2 > 256 ? "past 256" : "runs past its DHT"}`, table: table5 });
         const symbols = seg.subarray(q10 + 17, q10 + 17 + total2);
-        const why2 = bogusHuffman(counts, symbols, tc === 0);
+        const why3 = bogusHuffman(counts, symbols, tc === 0);
         const list6 = tc === 0 ? hts.dc : hts.ac;
-        if (why2) {
+        if (why3) {
           delete list6[th];
-          bogus.set(table5, why2);
+          bogus.set(table5, why3);
         } else {
           list6[th] = buildHuffman(counts, symbols);
           bogus.delete(table5);
@@ -63780,19 +63780,19 @@ var REFUSAL_SAYS = {
   carries_glyphs: "it already carries text of its own, which a transcription may not replace"
 };
 function tier3Note(m, memberNote, layerPages) {
-  const say7 = [];
+  const say8 = [];
   const kept = Array.isArray(layerPages) ? layerPages.length : 0;
   if (!m.wholesale && m.filled.length)
-    say7.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into this document's own text` + (kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : ""));
+    say8.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into this document's own text` + (kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : ""));
   if (!m.wholesale && Array.isArray(m.appended) && m.appended.length)
-    say7.push(`${m.appended.length} of those page(s) already held a little text of their own (an image fills the page and its text is a folio), and kept it: the transcription was appended after it, so ${m.appended.length === 1 ? "that page is" : "those pages are"} credited to both the text layer and the OCR member`);
+    say8.push(`${m.appended.length} of those page(s) already held a little text of their own (an image fills the page and its text is a folio), and kept it: the transcription was appended after it, so ${m.appended.length === 1 ? "that page is" : "those pages are"} credited to both the text layer and the OCR member`);
   if (m.unanswered.length)
-    say7.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay honestly unread`);
-  const why2 = Array.isArray(m.refusedWhy) ? m.refusedWhy : [];
-  if (why2.length)
-    say7.push(`${why2.length} page(s) the OCR member returned were not merged: ` + why2.map((r) => `${describePages([r.page])} (${REFUSAL_SAYS[r.reason] || r.reason})`).join(", "));
-  if (memberNote) say7.push(memberNote);
-  return say7.length ? say7.join("; ") : null;
+    say8.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay honestly unread`);
+  const why3 = Array.isArray(m.refusedWhy) ? m.refusedWhy : [];
+  if (why3.length)
+    say8.push(`${why3.length} page(s) the OCR member returned were not merged: ` + why3.map((r) => `${describePages([r.page])} (${REFUSAL_SAYS[r.reason] || r.reason})`).join(", "));
+  if (memberNote) say8.push(memberNote);
+  return say8.length ? say8.join("; ") : null;
 }
 var OCR_INVOCATIONS_PER_REQUEST = 24;
 var OCR_SAME_PROVENANCE = ["engine", "version", "cap", "measured_by", "confidence_floor"];
@@ -63852,19 +63852,19 @@ async function askMemberPerPage(env, { sha: sha2, storeName, wantPages }) {
 }
 function tier3LoopNote(loop) {
   if (!loop) return null;
-  const say7 = [];
+  const say8 = [];
   const named3 = (ps) => describePages(ps.filter(Number.isInteger));
   if (loop.notAsked.length)
-    say7.push(`${loop.notAsked.length} of them (${named3(loop.notAsked)}) were not asked for in this request: the OCR member reads one page per call and one request may make at most ${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next`);
+    say8.push(`${loop.notAsked.length} of them (${named3(loop.notAsked)}) were not asked for in this request: the OCR member reads one page per call and one request may make at most ${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next`);
   if (loop.threw)
-    say7.push(`the call for ${named3([loop.threw.at])} failed, so ${loop.threw.rest.length} page(s) from it on (${named3(loop.threw.rest)}) were not transcribed in this request`);
+    say8.push(`the call for ${named3([loop.threw.at])} failed, so ${loop.threw.rest.length} page(s) from it on (${named3(loop.threw.rest)}) were not transcribed in this request`);
   if (loop.refused.length)
-    say7.push(`the OCR member declined ${loop.refused.length} page(s) it was asked for one at a time (${named3(loop.refused)})`);
+    say8.push(`the OCR member declined ${loop.refused.length} page(s) it was asked for one at a time (${named3(loop.refused)})`);
   if (loop.mismatched.length)
-    say7.push(`${loop.mismatched.length} page(s) (${named3(loop.mismatched)}) were answered under a different engine build than the first and were not merged, so no page is filed under another build's provenance`);
+    say8.push(`${loop.mismatched.length} page(s) (${named3(loop.mismatched)}) were answered under a different engine build than the first and were not merged, so no page is filed under another build's provenance`);
   if (loop.strays.length)
-    say7.push(`${loop.strays.length} page(s) the OCR member returned were not the page that call asked for, and were dropped`);
-  return say7.length ? say7.join("; ") : null;
+    say8.push(`${loop.strays.length} page(s) the OCR member returned were not the page that call asked for, and were dropped`);
+  return say8.length ? say8.join("; ") : null;
 }
 var withLoopNote = (note, loop) => {
   const extra = tier3LoopNote(loop);
@@ -64052,12 +64052,12 @@ async function tier3Extend(env, {
     } else if (env && env.OCR_WORKER) {
       let failure2 = null;
       try {
-        const asked6 = await askMemberPerPage(env, { sha: sha2, storeName, wantPages: askPages });
-        loop = asked6.loop || null;
-        if (!(asked6.status >= 200 && asked6.status < 300)) {
-          failure2 = `the OCR member answered ${asked6.status}, so this document stays unread`;
+        const asked7 = await askMemberPerPage(env, { sha: sha2, storeName, wantPages: askPages });
+        loop = asked7.loop || null;
+        if (!(asked7.status >= 200 && asked7.status < 300)) {
+          failure2 = `the OCR member answered ${asked7.status}, so this document stays unread`;
         } else {
-          const ocrAnswer = asked6.answer;
+          const ocrAnswer = asked7.answer;
           let calRef = null;
           try {
             const live7 = typeof liveCalibration === "function" ? await liveCalibration({
@@ -64138,8 +64138,8 @@ async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain:
   const out = { i2text, chain: chain3, wiredTier, aiNote: null, filled: [], engine: null };
   if (!transcription || typeof transcription !== "object") return out;
   const pages = tier4Pages(i2text);
-  const not = (why2) => {
-    out.aiNote = `the AI was not asked to transcribe ${describePages(pages)}: ${why2}`;
+  const not = (why3) => {
+    out.aiNote = `the AI was not asked to transcribe ${describePages(pages)}: ${why3}`;
     return out;
   };
   const refused5 = (r2) => {
@@ -64188,8 +64188,8 @@ async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain:
   const engine = typeof r.engine === "string" ? r.engine.trim() : "";
   if (!engine) return not("the AI's answer did not name the model that read the pages, so nothing it produced could be re-run or measured later");
   const version = typeof r.version === "string" && r.version.trim() ? r.version.trim() : null;
-  const answered = (Array.isArray(r.pages) ? r.pages : []).filter((p3) => p3 && Number.isInteger(p3.page) && typeof p3.text === "string" && glyphCount(p3.text) > 0).map((p3) => ({ page: p3.page, text: p3.text, undetermined: [] }));
-  const m = mergeTier3Text(i2text, { pages: answered }, pages);
+  const answered2 = (Array.isArray(r.pages) ? r.pages : []).filter((p3) => p3 && Number.isInteger(p3.page) && typeof p3.text === "string" && glyphCount(p3.text) > 0).map((p3) => ({ page: p3.page, text: p3.text, undetermined: [] }));
+  const m = mergeTier3Text(i2text, { pages: answered2 }, pages);
   if (!m.ok) return not(m.why);
   if (!m.filled.length) return not("the AI returned no text for any page it was asked for");
   const part = appendStep(
@@ -64215,13 +64215,13 @@ async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain:
   out.wiredTier = 4;
   out.filled = m.filled;
   out.engine = { engine, version };
-  const say7 = [`${describePages(m.filled)} that Civicsmith's own text recognition could not read ${m.filled.length === 1 ? "was" : "were"} transcribed by the AI (${engine}${version ? ` ${version}` : ""}) at a member's request, on the account that pays for it: this text is ${AI_READING_LABEL}, not yet determined until its accuracy is measured or a member checks a passage against the page`];
+  const say8 = [`${describePages(m.filled)} that Civicsmith's own text recognition could not read ${m.filled.length === 1 ? "was" : "were"} transcribed by the AI (${engine}${version ? ` ${version}` : ""}) at a member's request, on the account that pays for it: this text is ${AI_READING_LABEL}, not yet determined until its accuracy is measured or a member checks a passage against the page`];
   if (m.appended.length)
-    say7.push(`${describePages(m.appended)} already held a little text of its own (a folio), which was kept, and the AI's reading was appended after it`);
-  if (m.unanswered.length) say7.push(`${describePages(m.unanswered)} the AI did not transcribe, and ${m.unanswered.length === 1 ? "it stays" : "they stay"} unread`);
+    say8.push(`${describePages(m.appended)} already held a little text of its own (a folio), which was kept, and the AI's reading was appended after it`);
+  if (m.unanswered.length) say8.push(`${describePages(m.unanswered)} the AI did not transcribe, and ${m.unanswered.length === 1 ? "it stays" : "they stay"} unread`);
   if (m.refusedWhy.length)
-    say7.push(`${m.refusedWhy.length} page(s) the AI returned were not merged: ` + m.refusedWhy.map((x) => `${describePages([x.page])} (${AI_REFUSAL_SAYS[x.reason] || x.reason})`).join(", "));
-  out.aiNote = say7.join("; ");
+    say8.push(`${m.refusedWhy.length} page(s) the AI returned were not merged: ` + m.refusedWhy.map((x) => `${describePages([x.page])} (${AI_REFUSAL_SAYS[x.reason] || x.reason})`).join(", "));
+  out.aiNote = say8.join("; ");
   return out;
 }
 var sheetRangeOf = (u) => {
@@ -66285,15 +66285,15 @@ var Extraction = class _Extraction {
     );
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     for (const row13 of page2.slice(0, cap)) {
-      const why2 = await this.#migrateOne(m, row13, st.cutoff, ev);
+      const why3 = await this.#migrateOne(m, row13, st.cutoff, ev);
       out.examined++;
-      if (why2 && why2.migrated) out.migrated.push({ capture_sha: row13.capture_sha, moved: why2.moved });
-      else if (why2 === "unmoved") out.unmoved++;
-      else if (why2) out.skipped.push({ capture_sha: row13.capture_sha, why: why2 });
+      if (why3 && why3.migrated) out.migrated.push({ capture_sha: row13.capture_sha, moved: why3.moved });
+      else if (why3 === "unmoved") out.unmoved++;
+      else if (why3) out.skipped.push({ capture_sha: row13.capture_sha, why: why3 });
       this.#sql.exec(
         `UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
         row13.capture_sha,
-        why2 && why2.migrated ? 1 : 0,
+        why3 && why3.migrated ? 1 : 0,
         stampInstant("second"),
         m.name
       );
@@ -66751,12 +66751,12 @@ var Extraction = class _Extraction {
     const bytes2 = new Uint8Array(await obj.arrayBuffer());
     const fmt = detectFormat(bytes2, null).format;
     const entry4 = getFormat(fmt);
-    const unread = (why2) => ({ status: 200, body: {
+    const unread = (why3) => ({ status: 200, body: {
       ok: true,
       op,
       sha256: sha2,
       format: fmt,
-      transcription: { performed: false, written: false, why: why2 }
+      transcription: { performed: false, written: false, why: why3 }
     } });
     if (!entry4 || typeof entry4.structure !== "function")
       return unread(say("extraction.unread.stored_bytes_read", {
@@ -66803,25 +66803,25 @@ var Extraction = class _Extraction {
     } catch {
       tx = null;
     }
-    const asked6 = { pages: null, answer: null };
+    const asked7 = { pages: null, answer: null };
     const handed = tx && typeof tx === "object" && typeof tx.transcribe === "function" ? { ...tx, transcribe: async (q10) => {
-      asked6.pages = Array.isArray(q10 && q10.pages) ? [...q10.pages] : [];
-      asked6.answer = await tx.transcribe(q10);
-      return asked6.answer;
+      asked7.pages = Array.isArray(q10 && q10.pages) ? [...q10.pages] : [];
+      asked7.answer = await tx.transcribe(q10);
+      return asked7.answer;
     } } : tx;
     const t4 = await tier4Extend(handed, { sha: sha2, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
     const refusal40 = t4.aiRefusal && typeof t4.aiRefusal === "object" ? t4.aiRefusal : null;
     if (refusal40 && !t4.filled.length) return { status: refusalStatus(refusal40), body: withRefusedSays(refusal40) };
     if (!t4.filled.length) {
-      const why2 = t4.aiNote || say("extraction.text.ai_asked_transcribe");
-      const outcome = asked6.pages === null ? null : unfilledOutcome(asked6.answer, fmt);
+      const why3 = t4.aiNote || say("extraction.text.ai_asked_transcribe");
+      const outcome = asked7.pages === null ? null : unfilledOutcome(asked7.answer, fmt);
       if (outcome && outcome.refusal) return { status: refusalStatus(outcome.refusal), body: withRefusedSays(outcome.refusal) };
-      const says = !outcome ? null : outcome.none ? fillWords("transcribe.none", { pages: pagesSaid(asked6.pages), why: why2 }) : fillWords(outcome.key, { why: fillWords(outcome.why) });
+      const says = !outcome ? null : outcome.none ? fillWords("transcribe.none", { pages: pagesSaid(asked7.pages), why: why3 }) : fillWords(outcome.key, { why: fillWords(outcome.why) });
       return { status: 200, body: {
         ok: true,
         op,
         sha256: sha2,
-        transcription: { performed: false, written: false, why: why2 },
+        transcription: { performed: false, written: false, why: why3 },
         ...says ? { says } : {}
       } };
     }
@@ -66912,7 +66912,7 @@ var Extraction = class _Extraction {
         compared: w.compared ?? null,
         after_read: w.afterRead ?? null
       },
-      ...w.ok === true ? { says: fillWords("transcribe.done", { pages: pagesSaid(asked6.pages ?? t4.filled) }) } : {}
+      ...w.ok === true ? { says: fillWords("transcribe.done", { pages: pagesSaid(asked7.pages ?? t4.filled) }) } : {}
     } };
   }
   /* ---- drift obligations (R38–R40) ---- */
@@ -67319,7 +67319,7 @@ function containerBoundUndetermined(extent, ctx = {}) {
   const e2 = isObj8(extent) ? extent : null;
   if (!e2 || !ctx || ctx.known === false) return null;
   const c = isObj8(ctx.container) ? ctx.container : {};
-  const u = (level, why2) => ({ level, why: `${why2}, so whether ${describeExtent2({ ...e2, ref: void 0 })} lies inside the document is UNDETERMINED, admitted and stated rather than guessed` });
+  const u = (level, why3) => ({ level, why: `${why3}, so whether ${describeExtent2({ ...e2, ref: void 0 })} lies inside the document is UNDETERMINED, admitted and stated rather than guessed` });
   const pages = Number.isInteger(ctx.pageCount) && ctx.pageCount > 0;
   switch (e2.kind) {
     case "pdf-page":
@@ -67858,8 +67858,8 @@ function typedCellsAt(extent, sheetCells2) {
 }
 function gradeAcross(row13, extent, older, newer) {
   const G = VERSION_NOTICE_GRADES;
-  const out = (grade2, reason2, why2, found_at = null, similarity = null) => ({ grade: grade2, affects: G[grade2].affects, reason: reason2, why: why2, found_at, similarity });
-  const U = (reason2, why2) => out("UNDETERMINED", reason2, why2);
+  const out = (grade2, reason2, why3, found_at = null, similarity = null) => ({ grade: grade2, affects: G[grade2].affects, reason: reason2, why: why3, found_at, similarity });
+  const U = (reason2, why3) => out("UNDETERMINED", reason2, why3);
   const safeJson31 = (s) => {
     try {
       return s == null ? null : JSON.parse(s);
@@ -69432,7 +69432,7 @@ var Content = class {
    *  typed cells for that sheet. No viewer (R46's terms): a caller that shows them asks sight first (R37). Writes
    *  nothing; never throws. */
   cellsAt(contentId) {
-    const no9 = (reason2, why2) => ({ cells: null, reason: reason2, why: why2 });
+    const no9 = (reason2, why3) => ({ cells: null, reason: reason2, why: why3 });
     try {
       const id = typeof contentId === "string" ? contentId.trim() : "";
       const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, stale FROM content WHERE content_id=?`, id) : null;
@@ -69455,7 +69455,7 @@ var Content = class {
    *  the capture was never read, is not an office document, or its reading holds none. What the file states about
    *  itself, read by `events` for an edit act; it is never a fact here. Writes nothing; never throws. */
   officeMetadataOf(captureSha) {
-    const no9 = (reason2, why2) => ({ metadata: null, reason: reason2, why: why2 });
+    const no9 = (reason2, why3) => ({ metadata: null, reason: reason2, why: why3 });
     try {
       const sha2 = typeof captureSha === "string" ? captureSha.trim() : "";
       const held3 = this.#officeOf(sha2);
@@ -70752,16 +70752,16 @@ var AiAccounts = class _AiAccounts {
      and cleared, with whether a reference of hers still serves her: `credentials` R73 revokes her run segments'
      credentials (its R63) and, when no reference serves her, ends the standing grants her sign-in served (its R32), as
      credentials' own clearing did. */
-  #signinCleared(id, by, why2) {
+  #signinCleared(id, by, why3) {
     const held3 = !!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id);
     if (held3) {
       this.sql.exec(`DELETE FROM subscription_connections WHERE member_id=?`, id);
-      this.#change(`member:${id}`, "removed", { account: "signin", why: why2 }, by);
+      this.#change(`member:${id}`, "removed", { account: "signin", why: why3 }, by);
       this.#cleared({
         member: id,
         account: "signin",
         by: by ?? null,
-        why: why2,
+        why: why3,
         reference_held: !!this.#reference(id, "member_id")
       });
     }
@@ -70880,8 +70880,8 @@ var AiAccounts = class _AiAccounts {
     try {
       const bar = this.#ownerBar(owner, viewer);
       if (bar) return bar;
-      const asked6 = Number(limit);
-      const cap = Number.isFinite(asked6) && asked6 > 0 ? Math.min(500, Math.floor(asked6)) : 200;
+      const asked7 = Number(limit);
+      const cap = Number.isFinite(asked7) && asked7 > 0 ? Math.min(500, Math.floor(asked7)) : 200;
       const found3 = this.#rows(
         `SELECT at, by, change, detail FROM account_changes WHERE owner=? ORDER BY seq LIMIT ?`,
         owner,
@@ -73683,8 +73683,8 @@ var Credentials = class _Credentials {
      (REC-57 / D-225): `limit` is the cap applied (default 200, at most 500), and `truncated` is measured by reading
      one row past it. */
   aiCredentials({ limit = null } = {}) {
-    const asked6 = Number(limit);
-    const cap = Number.isFinite(asked6) && asked6 > 0 ? Math.min(500, Math.floor(asked6)) : 200;
+    const asked7 = Number(limit);
+    const cap = Number.isFinite(asked7) && asked7 > 0 ? Math.min(500, Math.floor(asked7)) : 200;
     const found3 = this.#rows(
       `SELECT * FROM ai_credentials ORDER BY minted_at, token_id LIMIT ?`,
       cap + 1
@@ -74325,8 +74325,8 @@ var Credentials = class _Credentials {
   /* R47: reached without a credential. (T47; R67; T49 R75) `handle` names the role as `login`'s does, and `role` is no
      longer read; (R68) any active member's role recovers. */
   async recover({ handle = null, code = null, password = null, source: source2 = null, country = null } = {}) {
-    const asked6 = this.#roleByHandle(handle);
-    const gate = await this.#gate({ role: asked6, source: source2, country, password });
+    const asked7 = this.#roleByHandle(handle);
+    const gate = await this.#gate({ role: asked7, source: source2, country, password });
     if (gate.paused) return gate.paused;
     if (typeof password !== "string" || password.length < 12) {
       this.#refusedAttempt(gate, country);
@@ -74336,10 +74336,10 @@ var Credentials = class _Credentials {
     const unspent = (r) => this.#rows(`SELECT code_sha FROM recovery_codes WHERE role=? AND spent_at IS NULL`, r);
     const matches2 = () => {
       let hit = null;
-      for (const r of unspent(asked6)) if (_Credentials.#same(presented, r.code_sha, { digests: true })) hit = r.code_sha;
+      for (const r of unspent(asked7)) if (_Credentials.#same(presented, r.code_sha, { digests: true })) hit = r.code_sha;
       return hit;
     };
-    const admin = this.#roleIsActive(asked6);
+    const admin = this.#roleIsActive(asked7);
     const given6 = typeof code === "string" && code.trim() !== "";
     const refuse31 = () => {
       this.#refusedAttempt(gate, country);
@@ -74352,13 +74352,13 @@ var Credentials = class _Credentials {
     const hashed = await _Credentials.#hashFor(password);
     const done = this.#tx(() => {
       const hit = matches2();
-      if (hit === null || !this.#roleIsActive(asked6)) return null;
+      if (hit === null || !this.#roleIsActive(asked7)) return null;
       const at50 = stampSecond4();
-      this.#storePassword(asked6, hashed);
+      this.#storePassword(asked7, hashed);
       this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE code_sha=?`, at50, hit);
-      this.#endSessions(this.#rows(`SELECT token_sha FROM sessions WHERE role=?`, asked6).map((r) => r.token_sha));
-      this.sql.exec(`INSERT INTO recoveries (role, at) VALUES (?,?)`, asked6, at50);
-      return { ok: true, role: asked6, remaining: unspent(asked6).length };
+      this.#endSessions(this.#rows(`SELECT token_sha FROM sessions WHERE role=?`, asked7).map((r) => r.token_sha));
+      this.sql.exec(`INSERT INTO recoveries (role, at) VALUES (?,?)`, asked7, at50);
+      return { ok: true, role: asked7, remaining: unspent(asked7).length };
     });
     if (!done) return refuse31();
     this.#succeeded(gate);
@@ -75262,9 +75262,9 @@ var REACHABILITY_SETTINGS = Object.freeze({
 var SUBRESOURCE_STAGGER_SETTING = "subresource_stagger_ms";
 var PROBE_EVERY = 25;
 var READ_LIMIT = Object.freeze({ default: 200, max: 1e3 });
-var limitOf = (asked6) => {
-  const n2 = Math.floor(Number(asked6));
-  return asked6 != null && asked6 !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT.max, n2) : READ_LIMIT.default;
+var limitOf = (asked7) => {
+  const n2 = Math.floor(Number(asked7));
+  return asked7 != null && asked7 !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT.max, n2) : READ_LIMIT.default;
 };
 var cursorOf = (parts) => btoa(String.fromCharCode(...te5.encode(JSON.stringify(parts)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 var keyOf = (cursor, n2) => {
@@ -76654,7 +76654,7 @@ var Capture = class _Capture {
     const rows4 = [];
     for (const r of page2) {
       const since = Date.parse(r.since);
-      const asked6 = this.#questionsOf(r.bundle_id, viewer);
+      const asked7 = this.#questionsOf(r.bundle_id, viewer);
       const { eligibility, grouped } = answers2.get(r.bundle_id);
       rows4.push({
         bundle_id: r.bundle_id,
@@ -76664,7 +76664,7 @@ var Capture = class _Capture {
         collected_since: r.since,
         age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at50 - since) / 864e5)) : null,
         ...eligibility,
-        ...asked6.questions ? { captured_for: _Capture.#shown(asked6.questions) } : { captured_for: null, captured_for_basis: asked6.basis },
+        ...asked7.questions ? { captured_for: _Capture.#shown(asked7.questions) } : { captured_for: null, captured_for_basis: asked7.basis },
         ...grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {}),
         capture: this.#captureOfDocument(r.bundle_id),
         ...this.#captureFacts(r.bundle_id),
@@ -76958,13 +76958,13 @@ var Capture = class _Capture {
     if (wait.over()) return tooLate();
     let v;
     try {
-      const asked6 = reader.fn(bundleId);
-      if (asked6 && typeof asked6.then === "function") {
-        Promise.resolve(asked6).catch(() => {
+      const asked7 = reader.fn(bundleId);
+      if (asked7 && typeof asked7.then === "function") {
+        Promise.resolve(asked7).catch(() => {
         });
-        v = await wait.within(asked6);
+        v = await wait.within(asked7);
         if (v === TOO_LATE) return tooLate();
-      } else v = asked6;
+      } else v = asked7;
     } catch {
       v = null;
     }
@@ -77123,15 +77123,15 @@ var Capture = class _Capture {
     };
     const no9 = named3("NO_SUCH_DOCUMENT", (r) => !r, "no document you may see answers to these ids; nothing was written") || named3("NOT_INFORMATION", (r) => r.object_type !== "information", "only Information documents are held; nothing was written") || named3("NOT_COLLECTED", (r) => r.current_state !== "collected", "only documents at collected are held; nothing was written") || named3("ALREADY_SET_ASIDE", (r) => !r.standing, "these documents are already set aside; nothing was written");
     if (no9) return no9;
-    const asked6 = new Map([...standing.keys()].map((id) => [id, this.#questionsOf(id, viewer)]));
+    const asked7 = new Map([...standing.keys()].map((id) => [id, this.#questionsOf(id, viewer)]));
     const at50 = this.#appendHeld(
       [...standing.keys()],
       "set_aside",
       reason2,
       author,
-      (id) => (asked6.get(id).questions || []).filter((q10) => q10.waiting).map((q10) => q10.question)
+      (id) => (asked7.get(id).questions || []).filter((q10) => q10.waiting).map((q10) => q10.question)
     );
-    const documents = [...asked6].map(([document, a]) => a.questions ? { document, captured_for: _Capture.#shown(a.questions), waiting: _Capture.#shown(a.questions.filter((q10) => q10.waiting)) } : {
+    const documents = [...asked7].map(([document, a]) => a.questions ? { document, captured_for: _Capture.#shown(a.questions), waiting: _Capture.#shown(a.questions.filter((q10) => q10.waiting)) } : {
       document,
       captured_for: null,
       captured_for_basis: a.basis,
@@ -77285,7 +77285,7 @@ var Capture = class _Capture {
       const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day2);
       const spent = cur ? cur.spent_ms : 0;
       const reserved = cur ? cur.reserved_ms || 0 : 0;
-      const defer = (why2) => {
+      const defer = (why3) => {
         if (cur) this.#sql.exec(`UPDATE render_allowance SET deferred = deferred + 1, last_at = ? WHERE day = ?`, now, day2);
         else this.#sql.exec(`INSERT INTO render_allowance (day, spent_ms, reserved_ms, renders, deferred, last_at) VALUES (?, 0, 0, 0, 1, ?)`, day2, now);
         return {
@@ -77297,7 +77297,7 @@ var Capture = class _Capture {
           allowance_ms: allowance,
           deferred: (cur ? cur.deferred : 0) + 1,
           renders: cur ? cur.renders : 0,
-          why: why2
+          why: why3
         };
       };
       if (!(reserve > 0)) return defer("no reservation was offered, and an unreserved admission is the overrun D-492 closed");
@@ -77760,8 +77760,8 @@ var Capture = class _Capture {
   deriveSiteChrome({ host, limit = null, after: after2 = null } = {}) {
     return this.#tx(() => {
       const h = String(host || "").trim().toLowerCase();
-      const asked6 = Number(limit);
-      const cap = Number.isFinite(asked6) && asked6 > 0 ? Math.min(2e3, Math.floor(asked6)) : 500;
+      const asked7 = Number(limit);
+      const cap = Number.isFinite(asked7) && asked7 > 0 ? Math.min(2e3, Math.floor(asked7)) : 500;
       if (!h) return { host: null, captures: 0, derived: [], limit: cap, truncated: false, next: null };
       const from = String(after2 || "");
       if (!from) for (const t2 of ["site_chrome_refs", "site_chrome", "link_chrome"]) this.#sql.exec(`DELETE FROM ${t2} WHERE host = ?`, h);
@@ -77798,8 +77798,8 @@ var Capture = class _Capture {
    *  on one page only is `undetermined`, with its reason, never lost. */
   navChanges({ host, limit = null, viewer = void 0 } = {}) {
     const h = String(host || "").trim().toLowerCase();
-    const asked6 = Number(limit);
-    const cap = Number.isFinite(asked6) && asked6 > 0 ? Math.min(500, Math.floor(asked6)) : 200;
+    const asked7 = Number(limit);
+    const cap = Number.isFinite(asked7) && asked7 > 0 ? Math.min(500, Math.floor(asked7)) : 200;
     const seen = this.#captureGate("s.source_capture", viewer);
     const found3 = this.#rows(
       `SELECT s.source_capture, s.page, s.first_observed, s.last_observed, s.fingerprint, s.basis
@@ -79040,8 +79040,8 @@ function systemOf(v, addresses) {
     const { origin, name: name3, republication, provenance_stated, basis } = each3[0];
     return { origin, name: name3, republication, provenance_stated, basis, addresses: list6 };
   }
-  const why2 = list6.length === 1 ? each3[0].why : each3.every((e2) => !e2.origin) ? `unknown systems: none of these ${list6.length} addresses names a system (${[...new Set(each3.map((e2) => e2.why))].join("; ")})` : each3.some((e2) => !e2.origin) ? "unknown systems: some of these addresses name no system, so which one published the bytes is undetermined" : `different systems (${origins.join(", ")}): the record located these bytes at addresses of more than one system, so which one published them is undetermined`;
-  return { origin: null, addresses: list6, why: why2, each: each3.map(({ unknown, ...e2 }) => e2) };
+  const why3 = list6.length === 1 ? each3[0].why : each3.every((e2) => !e2.origin) ? `unknown systems: none of these ${list6.length} addresses names a system (${[...new Set(each3.map((e2) => e2.why))].join("; ")})` : each3.some((e2) => !e2.origin) ? "unknown systems: some of these addresses name no system, so which one published the bytes is undetermined" : `different systems (${origins.join(", ")}): the record located these bytes at addresses of more than one system, so which one published them is undetermined`;
+  return { origin: null, addresses: list6, why: why3, each: each3.map(({ unknown, ...e2 }) => e2) };
 }
 function normName(n2) {
   return String(n2 == null ? "" : n2).toLowerCase().replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\bfund\b/gu, " ").replace(/\s+/g, " ").trim();
@@ -79206,9 +79206,9 @@ function recogniseCitations(text8, reporters = void 0) {
     if (typeof text8 !== "string")
       return { citations: [], undetermined: { why: "no text was given (not a string), so nothing was read: whether it cites anything is undetermined" } };
     if (!data) {
-      const why2 = passed ? "no reporter data is held for this reading: the data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS)" : "no reporter data is held (court-citations' data is not readable here, and none was passed)";
+      const why3 = passed ? "no reporter data is held for this reading: the data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS)" : "no reporter data is held (court-citations' data is not readable here, and none was passed)";
       const unrecognised2 = shapes(t2);
-      return { citations: [], undetermined: { why: `${why2}: no citation can be recognised, and finding none says nothing about what the text cites`, ...unrecognised2.length ? { unrecognised: unrecognised2 } : {} } };
+      return { citations: [], undetermined: { why: `${why3}: no citation can be recognised, and finding none says nothing about what the text cites`, ...unrecognised2.length ? { unrecognised: unrecognised2 } : {} } };
     }
     const citations = [], ambiguous2 = [], taken = [];
     for (const f17 of findCitations(t2, data)) {
@@ -79275,9 +79275,9 @@ function seriesOf(view, conflicts) {
   const sig = (s) => JSON.stringify([s.series.label ?? null, s.cite ?? null, s.normal ?? null]);
   for (const [k, list6] of byFam) {
     const { key: key2, series } = { key: list6[0].key, series: list6[0].series.key };
-    const withheldHere = (why2) => {
+    const withheldHere = (why3) => {
       if (!withheld.has(k)) withheld.set(k, { key: key2, series, at: [], says: [] });
-      withheld.get(k).says.push(why2);
+      withheld.get(k).says.push(why3);
     };
     if (withheld.has(k)) continue;
     if (new Set(list6.map(sig)).size > 1) {
@@ -79337,7 +79337,7 @@ function readMatch(s, m) {
   out.profile = s.profile ?? null;
   return out;
 }
-var noSeries = (why2, extra = {}) => ({ citations: [], undetermined: { why: why2, ...extra } });
+var noSeries = (why3, extra = {}) => ({ citations: [], undetermined: { why: why3, ...extra } });
 function recogniseSeries(v, text8) {
   try {
     const { view, conflicts } = viewOf(v);
@@ -79387,13 +79387,13 @@ function recogniseSeries(v, text8) {
       }
       ambiguous2.push({ text: text8.slice(g.start, g.end), start: g.start, end: g.end, readings: [...readings.values()] });
     }
-    const why2 = [];
-    if (ambiguous2.length) why2.push(`${ambiguous2.length} run(s) of text are read by more than one family or number: listed with every reading, never one chosen`);
-    if (named3.length) why2.push(`${named3.length} famil(ies) are withheld because the active profiles disagree on them, so a citation of one is not read: whether the text cites them is undetermined`);
-    if (unreadable2.length) why2.push(`${unreadable2.length} series cannot be read from the view, so a citation of one is not recognised`);
-    if (!readable.length && !why2.length) why2.push("no series in the view can be read");
-    if (!why2.length) return { citations };
-    return { citations, undetermined: { why: why2.join("; "), ...ambiguous2.length ? { ambiguous: ambiguous2 } : {}, ...extra } };
+    const why3 = [];
+    if (ambiguous2.length) why3.push(`${ambiguous2.length} run(s) of text are read by more than one family or number: listed with every reading, never one chosen`);
+    if (named3.length) why3.push(`${named3.length} famil(ies) are withheld because the active profiles disagree on them, so a citation of one is not read: whether the text cites them is undetermined`);
+    if (unreadable2.length) why3.push(`${unreadable2.length} series cannot be read from the view, so a citation of one is not recognised`);
+    if (!readable.length && !why3.length) why3.push("no series in the view can be read");
+    if (!why3.length) return { citations };
+    return { citations, undetermined: { why: why3.join("; "), ...ambiguous2.length ? { ambiguous: ambiguous2 } : {}, ...extra } };
   } catch {
     return noSeries("the text could not be read for policy or standard citations, so whether it cites one is undetermined");
   }
@@ -79454,7 +79454,7 @@ var isThenable = (v) => v !== null && (typeof v === "object" || typeof v === "fu
 var isRefusal = (a) => isObj11(a) && filled2(a.refused);
 function answerFailures(answer2, ctx) {
   const out = [];
-  const fail2 = (check2, why2) => out.push({ check: check2, why: why2 });
+  const fail2 = (check2, why3) => out.push({ check: check2, why: why3 });
   if (isThenable(answer2)) return [{ check: "answer", why: "neighbours must answer synchronously" }];
   if (!isObj11(answer2) || !Array.isArray(answer2.items)) return [{ check: "answer", why: "an answer is {items, next?, truncated?, hub?, unread?}" }];
   const { items } = answer2;
@@ -79465,10 +79465,10 @@ function answerFailures(answer2, ctx) {
     }
   }
   if (items.length > BOUNDS.fanout) fail2("fanout", `a page holds at most ${BOUNDS.fanout} items; this one holds ${items.length}`);
-  const asked6 = Array.isArray(ctx.kinds) ? ctx.kinds : null;
+  const asked7 = Array.isArray(ctx.kinds) ? ctx.kinds : null;
   if (answer2.hub !== void 0) {
     const h = answer2.hub;
-    const mine = ctx.ownKinds.filter((k) => !asked6 || asked6.includes(k));
+    const mine = ctx.ownKinds.filter((k) => !asked7 || asked7.includes(k));
     const pool = mine.length ? mine : ctx.ownKinds;
     const bound = pool.length ? Math.min(...pool.map(hubBoundOf)) : BOUNDS.hub;
     if (!isObj11(h) || !Number.isInteger(h.set_size) || !filled2(h.why)) fail2("hub", "a hub is answered {set_size, why}");
@@ -79487,7 +79487,7 @@ function answerFailures(answer2, ctx) {
     if (seen.has(item3.id)) fail2("paging", `${name3} is answered twice on one page`);
     seen.add(item3.id);
     if (item3.owner !== ctx.owner || !ctx.ownKinds.includes(item3.kind)) fail2("kinds", `${name3} is not of ${ctx.owner}'s own kinds`);
-    else if (asked6 && !asked6.includes(item3.kind)) fail2("kinds", `${name3} is of kind ${item3.kind}, which was not asked`);
+    else if (asked7 && !asked7.includes(item3.kind)) fail2("kinds", `${name3} is of kind ${item3.kind}, which was not asked`);
     if (item3.from !== ctx.node && item3.to !== ctx.node) fail2("node", `${name3} does not have the node at either end`);
     if (errors.some((e2) => e2.field === "valid")) continue;
     let v;
@@ -79510,7 +79510,7 @@ function answerFailures(answer2, ctx) {
 // src/connection-grammar/registry.mjs
 var FORBIDDEN_WORDS = Object.freeze(["knows", "network", "conflict", "suspicious", "most connected", "centrality", "score"]);
 var filled3 = (v) => typeof v === "string" && v.trim() !== "";
-var refuse6 = (refused5, why2) => ({ refused: refused5, why: why2 });
+var refuse6 = (refused5, why3) => ({ refused: refused5, why: why3 });
 function createRegistry() {
   const byOwner = /* @__PURE__ */ new Map();
   const byKind = /* @__PURE__ */ new Map();
@@ -79826,6 +79826,7 @@ CREATE TABLE IF NOT EXISTS resolutions (
   raised_from  TEXT,
   resolved_by  TEXT,
   at           TEXT,
+  matched_by   TEXT,
   PRIMARY KEY (capture_sha, ref, entity_id)
 );
 CREATE INDEX IF NOT EXISTS resolutions_entity ON resolutions(entity_id);
@@ -79857,6 +79858,8 @@ CREATE INDEX IF NOT EXISTS resolution_defects_bundle ON resolution_defects(bundl
 `;
 var BASIS_NORM_COLUMN = Object.freeze(["resolutions", "basis_norm"]);
 var BASIS_NORM_INDEX = "CREATE INDEX IF NOT EXISTS resolutions_entity_basis ON resolutions(entity_id, basis_norm)";
+var MATCHED_BY_COLUMN = Object.freeze(["resolutions", "matched_by"]);
+var MATCHED_BY = Object.freeze(["identifier", "reference", "reference_key", "label", "testimony"]);
 var SECTOR_COLUMN = Object.freeze(["entities", "sector"]);
 var FORUM_KIND_COLUMN = Object.freeze(["entities", "forum_kind"]);
 var WITHDRAWAL_COLUMNS = Object.freeze([
@@ -79925,7 +79928,7 @@ var ENTITY_CHECKS = Object.freeze({
      here once. */
   NO_ALIAS: Object.freeze({
     check: "C-33.25",
-    where: "src/entities/index.mjs addAlias > is-alias-named",
+    where: "src/entities/index.mjs noAlias > is-alias-named",
     translation: rowWord4("NO_ALIAS")
   }),
   /* R29, R38 (N345, DEC-76 item 3): a defect report names a resolution (capture, reference, subject) the record does
@@ -80022,6 +80025,12 @@ var FORUM_ENTITY_KINDS = Object.freeze(["body", "institution"]);
 var ALIASES_LIMIT_DEFAULT = 1e3;
 var ALIASES_LIMIT_MAX = 5e3;
 var LABELS_IDS_MAX = 500;
+var ONLY_BY_IDENTIFIER_IDS_MAX = 500;
+var SUBJECTS_LIMIT_DEFAULT = 50;
+var SUBJECTS_LIMIT_MAX = 200;
+var SIMILAR_LIMIT_DEFAULT = 10;
+var SIMILAR_LIMIT_MAX = 50;
+var SIMILAR_SPELLING_MIN = 6;
 var IDMATCH_ADDRESS_LIMIT = 32;
 var WITHDRAW_REASON_MAX = 2e3;
 var ENTITY_COLLECTION_LIMIT = 500;
@@ -80113,6 +80122,10 @@ function notAProceeding(detail = null, extra = null) {
     ...Object.fromEntries(own10),
     detail: typeof detail === "string" && detail.trim() ? detail : NOT_A_PROCEEDING_DETAIL
   };
+}
+function noAlias(detail) {
+  const row13 = ENTITY_CHECKS.NO_ALIAS;
+  return { ok: false, reason: "NO_ALIAS", code: "NO_ALIAS", check: row13.check, translation: row13.translation, detail };
 }
 var cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
 var notAnOrganisation = (kind2) => ({
@@ -80242,7 +80255,7 @@ function candOrderCmp(x, y) {
 }
 var isUninformative = (reach3, corpus) => corpus > 1 && reach3 >= corpus;
 function refTermsSql(nTerms, gateSql) {
-  return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type
+  return `SELECT t.capture_sha, t.ref, t.src, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label, r.content_type, rr.pos_kind, rr.pos
             FROM reading_ref_terms t
             JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref AND rr.seq = 0
             LEFT JOIN readings r ON r.capture_sha = t.capture_sha
@@ -80251,6 +80264,36 @@ function refTermsSql(nTerms, gateSql) {
           HAVING COUNT(DISTINCT t.term) = ?
            ORDER BY t.bundle_id, t.capture_sha, t.ref, t.src
            LIMIT ?`;
+}
+function pageOf(posKind, pos) {
+  if (posKind !== "pdf-page" || typeof pos !== "string") return null;
+  try {
+    const p3 = JSON.parse(pos).page;
+    return Number.isInteger(p3) && p3 >= 0 ? p3 + 1 : null;
+  } catch {
+    return null;
+  }
+}
+function oneEdit(a, b) {
+  if (a === b || Math.abs(a.length - b.length) > 1) return false;
+  if (a.length === b.length) {
+    const at50 = [];
+    for (let i2 = 0; i2 < a.length && at50.length < 3; i2++) if (a[i2] !== b[i2]) at50.push(i2);
+    return at50.length === 1 || at50.length === 2 && at50[1] === at50[0] + 1 && a[at50[0]] === b[at50[1]] && a[at50[1]] === b[at50[0]];
+  }
+  const [s, l2] = a.length < b.length ? [a, b] : [b, a];
+  let i = 0;
+  while (i < s.length && s[i] === l2[i]) i++;
+  return s.slice(i) === l2.slice(i + 1);
+}
+var CLOSENESS = Object.freeze(["same", "contains", "spelling"]);
+function closeness(nameFold, nameTerms, otherFold, otherTerms) {
+  if (!nameFold || !otherFold) return null;
+  if (nameFold === otherFold) return "same";
+  const [short, long] = nameTerms.length <= otherTerms.length ? [nameTerms, otherTerms] : [otherTerms, nameTerms];
+  if (short.length >= 2 && short.every((t2) => long.includes(t2))) return "contains";
+  if (nameFold.length >= SIMILAR_SPELLING_MIN && otherFold.length >= SIMILAR_SPELLING_MIN && oneEdit(nameFold, otherFold)) return "spelling";
+  return null;
 }
 var refReachSql = (nTerms, gateSql) => `SELECT src, COUNT(*) AS n FROM (${refTermsSql(nTerms, gateSql)}) GROUP BY src`;
 var instances10 = /* @__PURE__ */ new WeakMap();
@@ -80342,6 +80385,16 @@ var Entities = class _Entities {
         );
     }
     this.#sql.exec(BASIS_NORM_INDEX);
+    const [mt, mc] = MATCHED_BY_COLUMN;
+    if (!this.#cols(mt).includes(mc)) {
+      this.#sql.exec(`ALTER TABLE ${mt} ADD COLUMN ${mc} TEXT`);
+      this.#sql.exec(`UPDATE ${mt} SET ${mc} = CASE
+          WHEN method LIKE 'scheme identifier --%' THEN 'identifier'
+          WHEN method LIKE 'source identifier in content --%' THEN 'reference_key'
+          WHEN method LIKE 'source identifier --%' THEN 'reference'
+          WHEN method LIKE 'correspondence --%' THEN 'label'
+          WHEN method LIKE 'testimony --%' THEN 'testimony' END`);
+    }
     this.declareTables();
   }
   /** R49, R30 (K23, record-core R21/R46): every table declared explicitly with its classes (`TABLE_DECLARATIONS`):
@@ -80557,17 +80610,8 @@ var Entities = class _Entities {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an alias is attached to an entity by its id");
     const norm3 = normAlias(alias);
-    if (!norm3) {
-      const row13 = ENTITY_CHECKS.NO_ALIAS;
-      return {
-        ok: false,
-        reason: "NO_ALIAS",
-        code: "NO_ALIAS",
-        check: row13.check,
-        translation: row13.translation,
-        detail: "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written."
-      };
-    }
+    if (!norm3)
+      return noAlias("an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written.");
     if (!this.has(entityId)) return noSuchEntity(entityId);
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm3);
     if (dup) return {
@@ -80814,15 +80858,163 @@ var Entities = class _Entities {
           max: LABELS_IDS_MAX,
           detail: `labels are read for at most ${LABELS_IDS_MAX} entity ids at once; ${ids.length} were named. Nothing was read.`
         };
-      const asked6 = ids.filter((id) => typeof id === "string" && id);
+      const asked7 = ids.filter((id) => typeof id === "string" && id);
       const found3 = /* @__PURE__ */ new Map();
-      if (asked6.length && viewerPredicate(viewer).scope !== "DENY") {
-        const uniq = [...new Set(asked6)];
+      if (asked7.length && viewerPredicate(viewer).scope !== "DENY") {
+        const uniq = [...new Set(asked7)];
         for (const r of this.#rows(`SELECT entity_id, kind, label FROM entities WHERE entity_id IN (${uniq.map(() => "?").join(",")})`, ...uniq))
           found3.set(r.entity_id, { label: r.label, kind: r.kind });
       }
       const labels2 = Object.fromEntries(ids.filter((id) => typeof id === "string").map((id) => [id, found3.get(id) ?? null]));
       return { ok: true, labels: labels2, count: Object.keys(labels2).length };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+    }
+  }
+  /** R57 (T51; N1207, K3665, DEC-308 (3); `op=entityidonly`): for at most 500 entity ids, how many documents name each
+   *  only by an identifier, `[{entity_id, documents}]`, so the graph's unnamed node draws its sentence with the count. A
+   *  capture counts for an entity when the viewer may see it (R32), one of its resolutions to the entity was matched by
+   *  `identifier` (R58) and none by `reference`, `reference_key` or `label`; testimony neither counts nor disqualifies, a
+   *  resolution held before `matched_by` (null) is neither, and a capture counts once. Reads only the resolutions held.
+   *  `NO_ENTITY` for no ids, `TOO_MANY_IDS` beyond 500; a viewer `membership` does not recognise is answered every one 0.
+   *  Writes nothing and never throws. */
+  onlyByIdentifier({ ids, viewer } = {}) {
+    try {
+      const asked7 = Array.isArray(ids) ? [...new Set(ids.filter((id) => typeof id === "string" && id))] : [];
+      if (!asked7.length) return noEntity("the documents naming a subject only by an identifier are counted for entity ids, a list of them");
+      if (ids.length > ONLY_BY_IDENTIFIER_IDS_MAX)
+        return {
+          ok: false,
+          reason: "TOO_MANY_IDS",
+          count: ids.length,
+          max: ONLY_BY_IDENTIFIER_IDS_MAX,
+          detail: `documents are counted for at most ${ONLY_BY_IDENTIFIER_IDS_MAX} entity ids at once; ${ids.length} were named. Nothing was read.`
+        };
+      const deny = viewerPredicate(viewer).scope === "DENY";
+      const g = this.#gate("r.bundle_id", viewer), x = this.#gate("x.bundle_id", viewer);
+      const entities2 = asked7.map((entityId) => ({ entity_id: entityId, documents: deny ? 0 : Number(this.#one(
+        `SELECT COUNT(DISTINCT r.capture_sha) AS n FROM resolutions r
+          WHERE r.entity_id=? AND r.matched_by='identifier' AND (${g.sql})
+            AND NOT EXISTS (SELECT 1 FROM resolutions x WHERE x.capture_sha = r.capture_sha AND x.entity_id = r.entity_id
+                              AND x.matched_by IN ('reference','reference_key','label') AND (${x.sql}))`,
+        entityId,
+        ...g.args,
+        ...x.args
+      ).n) }));
+      return { ok: true, entities: entities2, count: entities2.length };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: `the resolutions could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+    }
+  }
+  /** R59 (T51; DEC-330 A15; `op=subjectsnamed`): Find's subjects route, answered apart from the text and passage routes:
+   *  the registered entities of the given `kinds` (any kind when none is given) whose label or a standing alias carries every
+   *  term of `q` (R17's fold and term bounds), each `{entity_id, kind, label, note, matched, documents}`, `matched` the label
+   *  or alias that carried the terms and `documents` the distinct captures the viewer may see resolving to the entity.
+   *  `count` is the whole number of subjects matching; the page is `limit` (1-200, default 50) after `after` (the previous
+   *  `next`), ordered by label fold then entity id, never ranked. `NO_QUERY` for a `q` that folds to no term; a kind is
+   *  refused as R51 refuses it; a viewer `membership` does not recognise answers `count: 0`. The registry is read whole
+   *  (it is the group's, a few thousand rows at most) because no index serves a term test over names. Writes nothing and
+   *  never throws. */
+  subjectsNamed({ q: q10, kinds: kinds3 = null, limit = null, after: after2 = null, viewer } = {}) {
+    try {
+      const terms = typeof q10 === "string" ? labelTerms(q10) : [];
+      if (!terms.length) return {
+        ok: false,
+        reason: "NO_QUERY",
+        detail: "a subject is looked for by words of its name, and the query given folds to none. Nothing was read."
+      };
+      const asked7 = Array.isArray(kinds3) ? kinds3 : kinds3 == null || kinds3 === "" ? [] : [kinds3];
+      const want = asked7.length ? this.#kindsWanted(asked7) : [...ENTITY_KINDS];
+      if (!Array.isArray(want)) return want;
+      const n2 = Number(limit);
+      const cap = limit == null || limit === "" || !Number.isFinite(n2) ? SUBJECTS_LIMIT_DEFAULT : Math.max(1, Math.min(Math.trunc(n2), SUBJECTS_LIMIT_MAX));
+      const empty2 = { ok: true, q: q10, kinds: want, subjects: [], count: 0, limit: cap, truncated: false, next: null };
+      if (viewerPredicate(viewer).scope === "DENY") return empty2;
+      const carries2 = (name3) => {
+        const have = labelTerms(name3);
+        return terms.every((t2) => have.includes(t2));
+      };
+      const marks2 = want.map(() => "?").join(",");
+      const aliasOf = /* @__PURE__ */ new Map();
+      for (const a of this.#rows(`SELECT a.entity_id, a.alias FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
+                                   WHERE e.kind IN (${marks2}) AND a.withdrawn_at IS NULL ORDER BY a.entity_id, a.alias_norm`, ...want)) {
+        if (!aliasOf.has(a.entity_id)) aliasOf.set(a.entity_id, []);
+        aliasOf.get(a.entity_id).push(a.alias);
+      }
+      const hits = [];
+      for (const e2 of this.#rows(`SELECT entity_id, kind, label, note FROM entities WHERE kind IN (${marks2})`, ...want)) {
+        const matched = carries2(e2.label) ? e2.label : (aliasOf.get(e2.entity_id) || []).find(carries2);
+        if (matched !== void 0) hits.push({ ...e2, matched, fold: normAlias(e2.label) });
+      }
+      hits.sort((x, y) => x.fold < y.fold ? -1 : x.fold > y.fold ? 1 : x.entity_id < y.entity_id ? -1 : x.entity_id > y.entity_id ? 1 : 0);
+      const cursor = typeof after2 === "string" ? after2 : "";
+      const bar = cursor.lastIndexOf("|");
+      const [afterFold, afterId] = bar === -1 ? [cursor, ""] : [cursor.slice(0, bar), cursor.slice(bar + 1)];
+      const rest = cursor ? hits.filter((h) => h.fold > afterFold || h.fold === afterFold && h.entity_id > afterId) : hits;
+      const truncated6 = rest.length > cap;
+      const page2 = truncated6 ? rest.slice(0, cap) : rest;
+      const g = this.#gate("r.bundle_id", viewer);
+      const subjects = page2.map((h) => ({
+        entity_id: h.entity_id,
+        kind: h.kind,
+        label: h.label,
+        note: h.note,
+        matched: h.matched,
+        documents: Number(this.#one(
+          `SELECT COUNT(DISTINCT r.capture_sha) AS n FROM resolutions r WHERE r.entity_id=? AND (${g.sql})`,
+          h.entity_id,
+          ...g.args
+        ).n)
+      }));
+      const last = page2[page2.length - 1];
+      return { ...empty2, subjects, count: hits.length, truncated: truncated6, next: truncated6 ? `${last.fold}|${last.entity_id}` : null };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+    }
+  }
+  /** R60 (T51; DEC-330 A51; `op=entitysimilar`): the near-match check made before `createEntity`: the registered entities
+   *  of any kind (`kind` narrows) whose label or a standing alias is close to `name`, each `{entity_id, kind, label, note,
+   *  alias, closeness}`, `alias` the name that is close and `closeness` `same` (equal folds), `contains` (the distinct
+   *  terms of one name include all those of the other, the shorter having two or more) or `spelling` (folds of six or more
+   *  characters one edit apart), a fact and no score. The entity's closest name is the one reported. Ordered `same`,
+   *  `contains`, `spelling`, then label fold, then entity id; `limit` 1-50 (default 10), `truncated` by reading one past.
+   *  `NO_ALIAS` for a name that folds to nothing (R2's); a kind is refused as R51 refuses it; a viewer `membership` does not
+   *  recognise answers none. Refuses nothing else: whether to register is the member's. Writes nothing and never throws. */
+  similarSubjects({ name: name3, kind: kind2 = null, limit = null, viewer } = {}) {
+    try {
+      const fold7 = normAlias(name3);
+      if (!fold7) return noAlias("a near match is looked for by a name, and the one given folds to nothing (it is empty, or only whitespace). Nothing was read.");
+      const want = kind2 == null || kind2 === "" ? [...ENTITY_KINDS] : this.#kindsWanted([kind2]);
+      if (!Array.isArray(want)) return want;
+      const n2 = Number(limit);
+      const cap = limit == null || limit === "" || !Number.isFinite(n2) ? SIMILAR_LIMIT_DEFAULT : Math.max(1, Math.min(Math.trunc(n2), SIMILAR_LIMIT_MAX));
+      const empty2 = { ok: true, name: cleanLabel(name3), kinds: want, similar: [], count: 0, limit: cap, truncated: false };
+      if (viewerPredicate(viewer).scope === "DENY") return empty2;
+      const terms = labelTerms(name3);
+      const marks2 = want.map(() => "?").join(",");
+      const aliasOf = /* @__PURE__ */ new Map();
+      for (const a of this.#rows(`SELECT a.entity_id, a.alias FROM entity_aliases a JOIN entities e ON e.entity_id = a.entity_id
+                                   WHERE e.kind IN (${marks2}) AND a.withdrawn_at IS NULL ORDER BY a.entity_id, a.alias_norm`, ...want)) {
+        if (!aliasOf.has(a.entity_id)) aliasOf.set(a.entity_id, []);
+        aliasOf.get(a.entity_id).push(a.alias);
+      }
+      const found3 = [];
+      for (const e2 of this.#rows(`SELECT entity_id, kind, label, note FROM entities WHERE kind IN (${marks2})`, ...want)) {
+        let best = null;
+        for (const other of [e2.label, ...aliasOf.get(e2.entity_id) || []]) {
+          const c = closeness(fold7, terms, normAlias(other), labelTerms(other));
+          if (c && (best === null || CLOSENESS.indexOf(c) < CLOSENESS.indexOf(best.closeness))) best = { alias: other, closeness: c };
+        }
+        if (best) found3.push({ entity_id: e2.entity_id, kind: e2.kind, label: e2.label, note: e2.note, alias: best.alias, closeness: best.closeness });
+      }
+      const byLabel = (x, y) => {
+        const a = normAlias(x.label), b = normAlias(y.label);
+        return a < b ? -1 : a > b ? 1 : 0;
+      };
+      found3.sort((x, y) => CLOSENESS.indexOf(x.closeness) - CLOSENESS.indexOf(y.closeness) || byLabel(x, y) || (x.entity_id < y.entity_id ? -1 : x.entity_id > y.entity_id ? 1 : 0));
+      const truncated6 = found3.length > cap;
+      const similar = truncated6 ? found3.slice(0, cap) : found3;
+      return { ...empty2, similar, count: similar.length, truncated: truncated6 };
     } catch (err) {
       return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
     }
@@ -80833,8 +81025,8 @@ var Entities = class _Entities {
     if (typeof entityId !== "string" || !entityId)
       return noEntity("an alias is withdrawn from an entity named by its id");
     const norm3 = normAlias(alias);
-    const why2 = typeof reason2 === "string" ? reason2.trim().slice(0, WITHDRAW_REASON_MAX) : "";
-    if (!why2) return {
+    const why3 = typeof reason2 === "string" ? reason2.trim().slice(0, WITHDRAW_REASON_MAX) : "";
+    if (!why3) return {
       ok: false,
       reason: "NO_REASON",
       detail: "a withdrawal says why the name was wrong; it is kept beside the name for as long as the record lasts"
@@ -80859,13 +81051,13 @@ var Entities = class _Entities {
     const at50 = this.#now();
     const by = withdrawnBy == null ? null : String(withdrawnBy);
     this.#sql.exec(`UPDATE entity_aliases SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=?
-                     WHERE entity_id=? AND alias_norm=?`, by, at50, why2, entityId, norm3);
+                     WHERE entity_id=? AND alias_norm=?`, by, at50, why3, entityId, norm3);
     const resting = this.#restingOn(entityId, norm3);
     return {
       ok: true,
       entity_id: entityId,
       alias: a.alias,
-      withdrawn: { by, at: at50, reason: why2 },
+      withdrawn: { by, at: at50, reason: why3 },
       resolutions_resting: resting.rows,
       resolutions_resting_truncated: resting.truncated,
       limit: ENTITY_COLLECTION_LIMIT,
@@ -80876,8 +81068,8 @@ var Entities = class _Entities {
   withdrawRelation({ relationId, reason: reason2, withdrawnBy = null } = {}) {
     if (typeof relationId !== "string" || !relationId)
       return { ok: false, reason: "NO_RELATION", detail: "a relation is withdrawn by its id" };
-    const why2 = typeof reason2 === "string" ? reason2.trim().slice(0, WITHDRAW_REASON_MAX) : "";
-    if (!why2) return {
+    const why3 = typeof reason2 === "string" ? reason2.trim().slice(0, WITHDRAW_REASON_MAX) : "";
+    if (!why3) return {
       ok: false,
       reason: "NO_REASON",
       detail: "a withdrawal says why the relation was wrong; it is kept beside it for as long as the record lasts"
@@ -80891,7 +81083,7 @@ var Entities = class _Entities {
       `UPDATE entity_relations SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE relation_id=?`,
       by,
       at50,
-      why2,
+      why3,
       relationId
     );
     return { ok: true, relation: this.#relationView(this.#one(`SELECT * FROM entity_relations WHERE relation_id=?`, relationId)) };
@@ -80912,8 +81104,8 @@ var Entities = class _Entities {
     if (!e2) return noSuchEntity(entityId);
     if (!ORGANISATION_KINDS2.includes(e2.kind)) return notAnOrganisation(e2.kind);
     if (!SECTORS.includes(sector)) return unknownSector(sector);
-    const why2 = typeof note === "string" ? note.trim().slice(0, WITHDRAW_REASON_MAX) : "";
-    if (!why2) return {
+    const why3 = typeof note === "string" ? note.trim().slice(0, WITHDRAW_REASON_MAX) : "";
+    if (!why3) return {
       ok: false,
       reason: "NO_REASON",
       detail: "a sector is set with a note saying why; it is kept beside the value for as long as the record lasts. Nothing was written."
@@ -80929,11 +81121,11 @@ var Entities = class _Entities {
         entityId,
         sector,
         prior,
-        why2,
+        why3,
         who4,
         at50
       );
-      return { ok: true, entity_id: entityId, sector, prior, note: why2, by: who4, at: at50 };
+      return { ok: true, entity_id: entityId, sector, prior, note: why3, by: who4, at: at50 };
     });
   }
   /* R43, R45: the scheme an identifier is in, from the active profiles' `identifier_schemes` (jurisdictions R52), or the
@@ -81057,8 +81249,8 @@ var Entities = class _Entities {
   /** R43: an identifier withdrawn as R8 withdraws an alias: it matches nothing new and stays listed, withdrawn. */
   withdrawIdentifier({ entityId, scheme, id, reason: reason2, by = null } = {}) {
     if (typeof entityId !== "string" || !entityId) return noEntity("an identifier is withdrawn from an entity named by its id");
-    const why2 = typeof reason2 === "string" ? reason2.trim().slice(0, WITHDRAW_REASON_MAX) : "";
-    if (!why2) return {
+    const why3 = typeof reason2 === "string" ? reason2.trim().slice(0, WITHDRAW_REASON_MAX) : "";
+    if (!why3) return {
       ok: false,
       reason: "NO_REASON",
       detail: "a withdrawal says why the identifier was wrong; it is kept beside it for as long as the record lasts"
@@ -81080,10 +81272,10 @@ var Entities = class _Entities {
     const at50 = this.#now();
     const who4 = by == null ? null : String(by);
     this.#sql.exec(`UPDATE entity_identifiers SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=?
-                     WHERE entity_id=? AND scheme=? AND scope=? AND normal=?`, who4, at50, why2, r.entity_id, r.scheme, r.scope, r.normal);
+                     WHERE entity_id=? AND scheme=? AND scope=? AND normal=?`, who4, at50, why3, r.entity_id, r.scheme, r.scope, r.normal);
     return {
       ok: true,
-      identifier: identifierView({ ...r, withdrawn_by: who4, withdrawn_at: at50, withdrawn_reason: why2 }),
+      identifier: identifierView({ ...r, withdrawn_by: who4, withdrawn_at: at50, withdrawn_reason: why3 }),
       detail: "the identifier matches nothing new; resolutions already made through it are kept"
     };
   }
@@ -81486,13 +81678,13 @@ var Entities = class _Entities {
   /* R10: the improvable-grade rule, inside the caller's transaction. A stronger grade raises in place
      (`raised_from`); an equal or weaker one is kept; a grade never falls. R13: each insert or raise runs the
      `onResolved` listeners. */
-  #upsert({ captureSha, bundleId, ref, entityId, grade: grade2, method, basis, resolvedBy }) {
+  #upsert({ captureSha, bundleId, ref, entityId, grade: grade2, method, basis, resolvedBy, matchedBy }) {
     const at50 = this.#now();
     const est = isEstablished(grade2) ? 1 : 0;
     const b = basis == null ? null : String(basis).slice(0, 400);
     const bn = grade2 === "D" || b == null ? null : normAlias(b) || null;
     const by = resolvedBy == null ? null : String(resolvedBy).slice(0, 200);
-    const existing = this.#one(`SELECT grade FROM resolutions WHERE capture_sha=? AND ref=? AND entity_id=?`, captureSha, ref, entityId);
+    const existing = this.#one(`SELECT grade, matched_by FROM resolutions WHERE capture_sha=? AND ref=? AND entity_id=?`, captureSha, ref, entityId);
     if (existing && !(gradeRank[grade2] > (gradeRank[existing.grade] || 0)))
       return {
         capture_sha: captureSha,
@@ -81500,17 +81692,19 @@ var Entities = class _Entities {
         ref,
         entity_id: entityId,
         grade: existing.grade,
+        matched_by: existing.matched_by ?? null,
         established: isEstablished(existing.grade),
         needs_confirmation: existing.grade === "C",
         raised: false,
         kept: true
       };
+    const mb = MATCHED_BY.includes(matchedBy) ? matchedBy : null;
     if (!existing)
-      this.#sql.exec(`INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,basis_norm,established,raised_from,resolved_by,at)
-                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`, captureSha, bundleId, ref, entityId, grade2, method, b, bn, est, null, by, at50);
+      this.#sql.exec(`INSERT INTO resolutions (capture_sha,bundle_id,ref,entity_id,grade,method,basis,basis_norm,established,raised_from,resolved_by,at,matched_by)
+                      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, captureSha, bundleId, ref, entityId, grade2, method, b, bn, est, null, by, at50, mb);
     else
       this.#sql.exec(
-        `UPDATE resolutions SET grade=?, method=?, basis=?, basis_norm=?, established=?, raised_from=?, resolved_by=?, at=?
+        `UPDATE resolutions SET grade=?, method=?, basis=?, basis_norm=?, established=?, raised_from=?, resolved_by=?, at=?, matched_by=?
                        WHERE capture_sha=? AND ref=? AND entity_id=?`,
         grade2,
         method,
@@ -81520,6 +81714,7 @@ var Entities = class _Entities {
         existing.grade,
         by,
         at50,
+        mb,
         captureSha,
         ref,
         entityId
@@ -81534,6 +81729,7 @@ var Entities = class _Entities {
       grade: grade2,
       method,
       basis: b,
+      matched_by: mb,
       established: !!est,
       needs_confirmation: grade2 === "C",
       raised,
@@ -81591,7 +81787,8 @@ var Entities = class _Entities {
             grade: tier.grade,
             method: own10 ? own10.method : tier.method,
             basis: own10 ? own10.basis : tier.basis,
-            resolvedBy
+            resolvedBy,
+            matchedBy: own10 ? "identifier" : tier.grade === "A" ? "reference" : tier.grade === "B" ? "reference_key" : "label"
           });
         });
         const considered = [
@@ -81648,7 +81845,8 @@ var Entities = class _Entities {
       grade: "D",
       method,
       basis: b,
-      resolvedBy
+      resolvedBy,
+      matchedBy: "testimony"
     }));
     return { ok: true, grade_declared: "D", ...m };
   }
@@ -81688,8 +81886,8 @@ var Entities = class _Entities {
       return { ok: false, reason: "NO_REF", detail: "a defect report names the resolution's raw reference (kind:key)" };
     if (typeof entityId !== "string" || !entityId)
       return noEntity("a defect report names the subject the reference was resolved to, by its entity id");
-    const why2 = typeof reason2 === "string" ? reason2.trim().slice(0, DEFECT_REASON_MAX) : "";
-    if (!why2) return {
+    const why3 = typeof reason2 === "string" ? reason2.trim().slice(0, DEFECT_REASON_MAX) : "";
+    if (!why3) return {
       ok: false,
       reason: "NO_REASON",
       detail: "a defect report says why the match is wrong; it is kept beside the resolution for as long as the record lasts"
@@ -81734,7 +81932,7 @@ var Entities = class _Entities {
         held3.bundle_id,
         ref,
         entityId,
-        why2,
+        why3,
         src ? src.module : null,
         src ? src.id : null,
         reporter,
@@ -81742,7 +81940,7 @@ var Entities = class _Entities {
       );
       return {
         ...answer2,
-        defect: { reason: why2, source: src, by: reporter, at: at50 },
+        defect: { reason: why3, source: src, by: reporter, at: at50 },
         defect_count: count2(),
         detail: "the report is kept beside the resolution; the grade, the resolution and every connection are unchanged"
       };
@@ -81800,12 +81998,13 @@ var Entities = class _Entities {
     return Math.max(1, Math.min(Number(limit) || MEANING_LIMIT_DEFAULT, MEANING_LIMIT_MAX));
   }
   /** R14: a capture's resolutions, ordered by reference then entity, bounded, `truncated` measured by reading one
-   *  more; R32's withholding; R8's `withdrawn_name`; R38's reports beside each. */
+   *  more; R32's withholding; R8's `withdrawn_name`; R38's reports beside each; R58's `matched_by` on each and `names`,
+   *  what the document names, one entry per entity its resolutions name. */
   resolutionsFor({ captureSha, limit = null, viewer = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return noSha("resolutions are read for a captured document, by its capture sha256");
     const cap = this.#clamp(limit);
-    const scan = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
+    const scan = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at, matched_by
                     FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`;
     const rows4 = this.#rows(scan, captureSha, cap + 1);
     const truncated6 = rows4.length > cap;
@@ -81813,12 +82012,15 @@ var Entities = class _Entities {
     const keep3 = this.#redactor(viewer);
     const withdrawn = this.#withdrawnNames(page2.map((r) => r.entity_id));
     const defects = this.#defectsOf(scan, [captureSha, cap], keep3);
+    const names2 = this.#namesOf(captureSha, cap);
     return {
       ok: true,
       capture_sha: captureSha,
       count: page2.length,
       limit: cap,
       truncated: truncated6,
+      names: names2.names,
+      names_truncated: names2.truncated,
       resolutions: page2.map((r) => {
         const bundle = keep3(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
         return {
@@ -81827,6 +82029,7 @@ var Entities = class _Entities {
           ref: r.ref,
           entity_id: r.entity_id,
           grade: r.grade,
+          matched_by: r.matched_by ?? null,
           established: !!r.established,
           needs_confirmation: r.grade === "C",
           method: hidden && r.grade === "D" ? _Entities.#TESTIMONY_WITHHELD : r.method,
@@ -81839,6 +82042,49 @@ var Entities = class _Entities {
         };
       })
     };
+  }
+  /* R58: what a capture names, one entry per entity its resolutions name: the strongest resolution's grade and
+     `matched_by` (a tie at one grade takes the way a name is least in doubt, `MATCHED_BY`'s order), `mentions` the distinct
+     references resolving to the entity, `label` and `kind` as R56 reads them (`null` when the entity holds none), strongest
+     grade first, then label fold, then entity id; at most `cap`, `truncated` when more remain. One read of the capture's
+     resolutions with the registry joined in. */
+  #namesOf(captureSha, cap) {
+    const by = /* @__PURE__ */ new Map();
+    for (const r of this.#rows(`SELECT r.entity_id, r.ref, r.grade, r.matched_by, e.kind, e.label
+                                  FROM resolutions r LEFT JOIN entities e ON e.entity_id = r.entity_id
+                                 WHERE r.capture_sha=? ORDER BY r.entity_id, r.ref`, captureSha)) {
+      let n2 = by.get(r.entity_id);
+      if (!n2) by.set(r.entity_id, n2 = {
+        entity_id: r.entity_id,
+        label: r.label ?? null,
+        kind: r.kind ?? null,
+        grade: r.grade,
+        matched_by: r.matched_by ?? null,
+        refs: /* @__PURE__ */ new Set()
+      });
+      n2.refs.add(r.ref);
+      const stronger = (gradeRank[r.grade] || 0) - (gradeRank[n2.grade] || 0);
+      const rank7 = (m) => {
+        const i = MATCHED_BY.indexOf(m);
+        return i === -1 ? MATCHED_BY.length : i;
+      };
+      if (stronger > 0 || stronger === 0 && rank7(r.matched_by) < rank7(n2.matched_by)) {
+        n2.grade = r.grade;
+        n2.matched_by = r.matched_by ?? null;
+      }
+    }
+    const fold7 = (n2) => n2.label == null ? null : normAlias(n2.label);
+    const all = [...by.values()].sort((x, y) => (gradeRank[y.grade] || 0) - (gradeRank[x.grade] || 0) || (fold7(x) === null) - (fold7(y) === null) || (fold7(x) < fold7(y) ? -1 : fold7(x) > fold7(y) ? 1 : 0) || (x.entity_id < y.entity_id ? -1 : x.entity_id > y.entity_id ? 1 : 0));
+    return { truncated: all.length > cap, names: all.slice(0, cap).map((n2) => ({
+      entity_id: n2.entity_id,
+      label: n2.label,
+      kind: n2.kind,
+      grade: n2.grade,
+      established: isEstablished(n2.grade),
+      needs_confirmation: n2.grade === "C",
+      matched_by: n2.matched_by,
+      mentions: n2.refs.size
+    })) };
   }
   /* R15, R16: the per-capture collapse, keeping each capture's strongest resolution. It joins on entity_id ONLY:
      a declared relation is NEVER traversed (D-83, R26). */
@@ -82002,6 +82248,7 @@ var Entities = class _Entities {
           key: r.ref_key,
           label: r.label,
           content_type: r.content_type,
+          page: pageOf(r.pos_kind, r.pos),
           matched_alias: a.alias,
           canonical_name: !!a.canonical,
           correspondence,
@@ -82055,7 +82302,7 @@ var Entities = class _Entities {
     const gate = this.#gate("t.bundle_id", viewer);
     const terms = this.#rows(
       `SELECT t.capture_sha, t.ref, t.src, t.term, t.bundle_id, rr.ref_kind, rr.ref_key, rr.label,
-                                     r.content_type, rr.ref IS NOT NULL AS placed
+                                     r.content_type, rr.pos_kind, rr.pos, rr.ref IS NOT NULL AS placed
                                 FROM reading_ref_terms t
                                 LEFT JOIN reading_refs rr ON rr.capture_sha = t.capture_sha AND rr.ref = t.ref AND rr.seq = 0
                                 LEFT JOIN readings r ON r.capture_sha = t.capture_sha
@@ -82083,7 +82330,9 @@ var Entities = class _Entities {
       ref_kind: g.row.ref_kind,
       ref_key: g.row.ref_key,
       label: g.row.label,
-      content_type: g.row.content_type
+      content_type: g.row.content_type,
+      pos_kind: g.row.pos_kind,
+      pos: g.row.pos
     });
     const source2 = {
       matches: (ts) => matching(ts).filter((g) => g.row.placed).map(shape),
@@ -82325,6 +82574,18 @@ function entitiesOps(e2, url, body) {
       viewer: q10("viewer"),
       forum_kind: (q10("forum_kind") || "").split(",").map((v) => v.trim()).filter(Boolean)
     }),
+    /* R57 (T51): `ids`, a comma-separated list of entity ids. */
+    entityidonly: () => e2.onlyByIdentifier({ ids: (q10("ids") || "").split(",").map((v) => v.trim()).filter(Boolean), viewer: q10("viewer") }),
+    /* R59 (T51): Find's subject route; `kinds`, a comma-separated list, narrows it. */
+    subjectsnamed: () => e2.subjectsNamed({
+      q: q10("q"),
+      kinds: (q10("kinds") || "").split(",").map((v) => v.trim()).filter(Boolean),
+      limit: q10("limit"),
+      after: q10("after"),
+      viewer: q10("viewer")
+    }),
+    /* R60 (T51): the near-match check made before `entitycreate`. */
+    entitysimilar: () => e2.similarSubjects({ name: q10("name"), kind: q10("kind"), limit: q10("limit"), viewer: q10("viewer") }),
     relation: () => e2.readRelation({ relationId: q10("id") }),
     resolutions: () => e2.resolutionsFor({ captureSha: q10("sha256"), limit: q10("limit"), viewer: q10("viewer") }),
     concerns: () => e2.concerns({ entityId: q10("id"), limit: q10("limit"), viewer: q10("viewer") }),
@@ -83060,12 +83321,12 @@ var Themes = class _Themes {
     const src = this.#themeFor(theme, viewer);
     if (!src.ok) return src;
     const T = src.row;
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
-    const tgt = this.#targetFor(target, why2 || null, viewer);
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
+    const tgt = this.#targetFor(target, why3 || null, viewer);
     if (!tgt.ok) return tgt;
     const row13 = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`, T.theme_id, tgt.target);
     const admin = administer === true || administer === "1";
-    if (!why2)
+    if (!why3)
       return refusal40(
         "THEME_WITHDRAW_NO_REASON",
         `a placement taken back, or a proposal turned down, keeps its reason; none was given, so nothing changed`
@@ -83103,7 +83364,7 @@ var Themes = class _Themes {
         row13.placement_note,
         who4,
         at50,
-        why2
+        why3
       );
       this.sql.exec(`DELETE FROM theme_placements WHERE theme_id = ? AND target = ?`, row13.theme_id, row13.target);
       return { ok: true };
@@ -83511,8 +83772,8 @@ var StepSources = class {
         reason: "STEP_SOURCE_NOT_A_MEMBER",
         detail: who4 ? `'${who4.slice(0, 60)}' is a machine credential; withdrawing an attached source is a member's act` : "this act names no member; the plane stamps the member from the credential that asked"
       };
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
-    if (!why2) return { ok: false, reason: "NO_REASON", detail: "a withdrawn source keeps its reason beside it; none was given" };
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
+    if (!why3) return { ok: false, reason: "NO_REASON", detail: "a withdrawn source keeps its reason beside it; none was given" };
     const n2 = numOf3(id);
     const row13 = n2 == null ? null : this.#one(`SELECT * FROM step_sources WHERE source_id=?`, n2);
     if (!row13 || row13.withdrawn_at != null || !this.k.sees(row13.bundle_id, viewer))
@@ -83534,7 +83795,7 @@ var StepSources = class {
       `UPDATE step_sources SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE source_id=? AND withdrawn_at IS NULL`,
       who4,
       at50,
-      why2.slice(0, STEP_SOURCE_BASIS_MAX),
+      why3.slice(0, STEP_SOURCE_BASIS_MAX),
       row13.source_id
     );
     return {
@@ -84391,8 +84652,8 @@ var Connections = class _Connections {
     let grade2 = null;
     for (const r2 of reaching) if (grade2 == null || rank4(r2.grade) > rank4(grade2)) grade2 = r2.grade;
     const unchosenN = undetermined3.filter((u) => u.code === "CONNECTION_PAIR_MENTION_UNCHOSEN").length;
-    const why2 = grade2 != null ? `${reaching.length} connection(s) were established by a reference read inside ${row13.ref}; the grade is the strongest of them (${grade2}), which states how that connection was established and nothing about how credible either document is` : conns.length === 0 ? `this document is an end of no connection, so there is nothing for ${row13.ref} to earn from` : unchosenN ? `no connection is established to reach ${row13.ref}: ${unchosenN} rest on a pair that is this document's strongest-graded mention of the subject while another mention bears on ${row13.ref}, and nobody has chosen which mention is on point` + (undetermined3.length > unchosenN ? `; ${undetermined3.length - unchosenN} cannot be placed` : ``) + `; ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none` : undetermined3.length ? `no connection is established to reach ${row13.ref}: ${undetermined3.length} cannot be placed (the record does not hold where the determining reference was read) and ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none \u2014 reading this document with positions is what would settle it` : `all ${outside.length} of this document's connections were established by references read outside ${row13.ref}, so none of them reaches this citation`;
-    return { grade: grade2, reaching, undetermined: undetermined3, outside, why: why2 };
+    const why3 = grade2 != null ? `${reaching.length} connection(s) were established by a reference read inside ${row13.ref}; the grade is the strongest of them (${grade2}), which states how that connection was established and nothing about how credible either document is` : conns.length === 0 ? `this document is an end of no connection, so there is nothing for ${row13.ref} to earn from` : unchosenN ? `no connection is established to reach ${row13.ref}: ${unchosenN} rest on a pair that is this document's strongest-graded mention of the subject while another mention bears on ${row13.ref}, and nobody has chosen which mention is on point` + (undetermined3.length > unchosenN ? `; ${undetermined3.length - unchosenN} cannot be placed` : ``) + `; ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none` : undetermined3.length ? `no connection is established to reach ${row13.ref}: ${undetermined3.length} cannot be placed (the record does not hold where the determining reference was read) and ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none \u2014 reading this document with positions is what would settle it` : `all ${outside.length} of this document's connections were established by references read outside ${row13.ref}, so none of them reaches this citation`;
+    return { grade: grade2, reaching, undetermined: undetermined3, outside, why: why3 };
   }
   /* ================================================================ the choice (R14–R16, R38) */
   /** R14–R16 (`op=connectionchoose`): a member chooses the on-point mention on ONE end of ONE connection. `capture` is
@@ -85186,8 +85447,8 @@ Changes: links_to edges added to ${add2.map((e2) => e2.to).join(", ")}, each the
     const v = str3(verdict).toLowerCase();
     const word3 = v === "confirm" || v === "confirmed" ? "confirmed" : v === "reject" || v === "rejected" ? "rejected" : null;
     if (!word3) return { ok: false, reason: "FILE_MEMBERSHIP_BAD_VERDICT", detail: "verdict is confirm or reject" };
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
-    if (!why2) return { ok: false, reason: "FILE_MEMBERSHIP_NO_REASON", detail: "a judgement carries its reason" };
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
+    if (!why3) return { ok: false, reason: "FILE_MEMBERSHIP_NO_REASON", detail: "a judgement carries its reason" };
     const row13 = this.#one(`SELECT * FROM asserted_connections WHERE connection_id=? AND kind='containment'`, Number(id) || -1);
     if (!row13 || !this.sees(row13.a_bundle_id, viewer) || !this.sees(row13.b_bundle_id, viewer))
       return {
@@ -85204,7 +85465,7 @@ Changes: links_to edges added to ${add2.map((e2) => e2.to).join(", ")}, each the
       word3,
       who4,
       at50,
-      cut3(why2, ASSERT_BASIS_MAX),
+      cut3(why3, ASSERT_BASIS_MAX),
       row13.a_bundle_id,
       row13.b_bundle_id
     );
@@ -86410,7 +86671,7 @@ var ObservationLog = class _ObservationLog {
       `SELECT ${cols} FROM observation_log WHERE level = ? AND subject_kind = ? AND subject = ? ORDER BY seq DESC LIMIT 1`,
       ...key2
     );
-    const answered = this.#one(
+    const answered2 = this.#one(
       `SELECT MAX(seq) AS s FROM observation_log WHERE level = ? AND subject_kind = ? AND subject = ? AND seq < ?
           AND state = 'PRESENT'`,
       ...key2,
@@ -86420,7 +86681,7 @@ var ObservationLog = class _ObservationLog {
       `SELECT ${cols} FROM observation_log WHERE level = ? AND subject_kind = ? AND subject = ? AND seq > ? AND seq < ?
           AND state IN (${UNANSWERED_STATES.map(() => "?").join(", ")}) ORDER BY seq`,
       ...key2,
-      answered && answered.s != null ? Number(answered.s) : 0,
+      answered2 && answered2.s != null ? Number(answered2.s) : 0,
       observation.seq,
       ...UNANSWERED_STATES
     );
@@ -87177,12 +87438,12 @@ var ObservationLog = class _ObservationLog {
         pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}` : `pass project=<PROJ-\u2026>: the project to share this lead to`,
         { lead: L3.lead_id, project: pid || null }
       );
-    const why2 = typeof reason2 === "string" ? reason2 : null;
-    const chars3 = why2 == null ? 0 : [...why2].length;
-    if (why2 == null || !why2.trim() || chars3 > LEAD_SHARE_REASON_MAX)
+    const why3 = typeof reason2 === "string" ? reason2 : null;
+    const chars3 = why3 == null ? 0 : [...why3].length;
+    if (why3 == null || !why3.trim() || chars3 > LEAD_SHARE_REASON_MAX)
       return refusal40(
         "LEAD_SHARE_NO_REASON",
-        why2 == null ? reason2 === void 0 || reason2 === null ? `pass reason=<your words>: why this lead is disclosed to ${pid.slice(0, 60)}` : `the reason must be your words, as text; a ${typeof reason2} was sent` : !why2.trim() ? `the reason is blank. Say why this lead is disclosed to ${pid.slice(0, 60)}` : `the reason is ${chars3} characters, over the ${LEAD_SHARE_REASON_MAX} a share's reason is kept to. Refused rather than cut`,
+        why3 == null ? reason2 === void 0 || reason2 === null ? `pass reason=<your words>: why this lead is disclosed to ${pid.slice(0, 60)}` : `the reason must be your words, as text; a ${typeof reason2} was sent` : !why3.trim() ? `the reason is blank. Say why this lead is disclosed to ${pid.slice(0, 60)}` : `the reason is ${chars3} characters, over the ${LEAD_SHARE_REASON_MAX} a share's reason is kept to. Refused rather than cut`,
         { lead: L3.lead_id, project: pid, limit: LEAD_SHARE_REASON_MAX }
       );
     const prior = this.#one(`SELECT sharer, at, reason FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L3.lead_id, pid);
@@ -87193,7 +87454,7 @@ var ObservationLog = class _ObservationLog {
         pid,
         who4,
         stampInstant("second", this.now()),
-        why2
+        why3
       );
     const r = prior || this.#one(`SELECT sharer, at, reason FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L3.lead_id, pid);
     return {
@@ -88490,16 +88751,16 @@ function nearGroup(body, closed) {
     terms.push({ value: t2, quoted: false });
   }
   const kept = terms.filter((t2) => /[\p{L}\p{N}]/u.test(t2.quoted ? t2.value : t2.value.replace(/\*$/, "")));
-  let n2 = NEAR_DEFAULT, clamped = null, why2 = null;
-  if (!closed) why2 = "it has no closing parenthesis";
-  else if (kept.length < 2) why2 = `it has ${kept.length === 1 ? "one term" : "no term"}, and a proximity needs two`;
-  else if (sawComma && !/^[+-]?\d+$/.test(dist)) why2 = `its distance ${JSON.stringify(dist)} is not a whole number`;
+  let n2 = NEAR_DEFAULT, clamped = null, why3 = null;
+  if (!closed) why3 = "it has no closing parenthesis";
+  else if (kept.length < 2) why3 = `it has ${kept.length === 1 ? "one term" : "no term"}, and a proximity needs two`;
+  else if (sawComma && !/^[+-]?\d+$/.test(dist)) why3 = `its distance ${JSON.stringify(dist)} is not a whole number`;
   else if (sawComma) {
     const v = Number(dist);
     n2 = Math.max(0, Math.min(NEAR_MAX, v));
     if (n2 !== v) clamped = v;
   }
-  return { terms: kept, n: n2, clamped, why: why2, source: `NEAR(${body}${closed ? ")" : ""}` };
+  return { terms: kept, n: n2, clamped, why: why3, source: `NEAR(${body}${closed ? ")" : ""}` };
 }
 function parseTokens(tokens3, implicitOp, ctx) {
   let p3 = 0;
@@ -89210,7 +89471,10 @@ function compile4({
   const mLim = Math.max(1, Math.min(MEANING_LIMIT_MAX2, Math.floor(Number(rowLimit) || MEANING_LIMIT_DEFAULT2)));
   const mOff = Math.max(0, Math.floor(Number(rowOffset) || 0));
   const cte = (withRanked, overrideSet = null) => {
-    const idArm = Array.isArray(ids) && ids.length ? { sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE ${rel.key} IN (${ids.map(() => "?").join(",")})` : `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids } : null;
+    const idArm = Array.isArray(ids) && ids.length ? {
+      sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE ${rel.key} IN (SELECT value FROM json_each(?))` : `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`,
+      args: [JSON.stringify(ids)]
+    } : null;
     const use = overrideSet || set;
     const parts = [`hits(fid) AS (${use.sql})`];
     if (idArm) {
@@ -89441,8 +89705,9 @@ WHERE ${gate.sql}`,
            `op=searchfields`** — `meaningVocabulary()` above emits
            `rows: { grain, identity, columns, refs }` from this same registry, and
            `op=searchfields` is the vocabulary route a surface already composes from
-           (`civicos-ui` calls it; it calls `op=meaningrows` nowhere — measured
-           2026-08-09, zero non-test consumers). So publishing these two again in the
+           (measured 2026-08-09: nothing outside the tests called `op=meaningrows`,
+           and the surface that called `op=searchfields` has since been removed).
+           So publishing these two again in the
            answer envelope would have added a SECOND spelling of a fact the plane
            already answers, on behalf of a consumer that does not exist, and it would
            have been worse than redundant: `columns` restates the keys the returned
@@ -89804,8 +90069,8 @@ function sequenceOf(a, b) {
   if (a.precision === "upper_bound" || b.precision === "upper_bound" || !a.zone || !b.zone) {
     if (a.end && b.start && a.end <= b.start) return "before";
     if (b.end && a.start && b.end <= a.start) return "after";
-    const why2 = !a.zone || !b.zone ? word("events.text.held_zone_span") : word("events.text.upper_bound_says");
-    return { undetermined: true, why: why2 };
+    const why3 = !a.zone || !b.zone ? word("events.text.held_zone_span") : word("events.text.upper_bound_says");
+    return { undetermined: true, why: why3 };
   }
   const c = compare2(dt(a), dt(b));
   if (c === "before" || c === "after") return c;
@@ -90020,15 +90285,15 @@ function meeting(k, held3, row13, f17, scope, out) {
     out.outside++;
     return;
   }
-  let date = null, why2 = null;
-  if (!scope.zone) why2 = word("events.why.active_profile_gives");
+  let date = null, why3 = null;
+  if (!scope.zone) why3 = word("events.why.active_profile_gives");
   else if (said3(f17.time)) {
     const j = joinLocal(day2, f17.time, scope.zone);
-    if (j.refused || j.undetermined) why2 = j.why;
+    if (j.refused || j.undetermined) why3 = j.why;
     else date = { value: j.value, precision: "minute", zone: j.zone };
   } else date = readDate2(day2, scope.zone);
   if (date && date.bad) {
-    why2 = date.bad;
+    why3 = date.bad;
     date = null;
   }
   const status = f17.status === "cancelled" ? "EventCancelled" : "EventScheduled";
@@ -90049,7 +90314,7 @@ function meeting(k, held3, row13, f17, scope, out) {
     eventId3 = newEvent(k, "meeting", status);
     rowAttestation(k, eventId3, held3, row13, fact);
     k.setWhen(eventId3);
-    out.written.push({ key: row13.key, event_id: eventId3, ...why2 ? { when_why: why2 } : {} });
+    out.written.push({ key: row13.key, event_id: eventId3, ...why3 ? { when_why: why3 } : {} });
   } else {
     eventId3 = k.resolve(prior.target_id);
     const was = JSON.parse(prior.facts);
@@ -90291,19 +90556,19 @@ function neighboursOf(k, args) {
   const ctx = { kinds: kinds3, at: a.at, viewer: a.viewer, view: k.view(), zone: k.zone() };
   const kept = typeof k.kept === "function" ? k.kept() : null;
   if (!kept) return answersFor(k, [node], ctx, start, null).get(node);
-  const asked6 = JSON.stringify([kinds3, a.at ?? null, a.viewer, ctx.zone]);
-  const key2 = (n2, p3) => `${asked6}\0${n2}\0${p3}`;
+  const asked7 = JSON.stringify([kinds3, a.at ?? null, a.viewer, ctx.zone]);
+  const key2 = (n2, p3) => `${asked7}\0${n2}\0${p3}`;
   if (!kept.answers.has(key2(node, start))) {
     const batch = start === 0 && kept.pending.get(node);
-    const nodes = batch && batch.asked === asked6 ? batch.nodes.filter((n2) => !kept.answers.has(key2(n2, 0))) : [node];
+    const nodes = batch && batch.asked === asked7 ? batch.nodes.filter((n2) => !kept.answers.has(key2(n2, 0))) : [node];
     for (const n2 of nodes) kept.pending.delete(n2);
     if (!nodes.includes(node)) nodes.push(node);
-    const got = answersFor(k, nodes, ctx, start, { sets: kept.sets, asked: asked6 });
+    const got = answersFor(k, nodes, ctx, start, { sets: kept.sets, asked: asked7 });
     for (const [n2, ans] of got) {
       kept.answers.set(key2(n2, start), ans);
       const ends = [...new Set((ans.items || []).flatMap((i) => [i.from, i.to]).filter((e2) => e2 !== n2 && isEvt(e2) && !kept.answers.has(key2(e2, 0))))];
       if (ends.length > 1) {
-        const b = { asked: asked6, nodes: ends };
+        const b = { asked: asked7, nodes: ends };
         for (const e2 of ends) if (!kept.pending.has(e2)) kept.pending.set(e2, b);
       }
     }
@@ -90674,9 +90939,9 @@ function withdrawUse(k, { eventId: eventId3, reason: reason2, by = null } = {}) 
   const u = k.one(`SELECT * FROM event_uses WHERE event_id=?`, id);
   if (!u) return refuse8("KIND_NOT_DISCRETION", "only a use of a power (discretion, waiver, assessment) is withdrawn this way", { event_id: id });
   if (u.withdrawn) return { ok: true, already: true, event_id: id, withdrawn: { by: u.withdrawn_actor, at: u.withdrawn_at, reason: u.withdrawn_why } };
-  const at50 = k.now(), why2 = reason2.trim().slice(0, 2e3);
-  k.rows(`UPDATE event_uses SET withdrawn=1, withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE event_id=?`, k.stamp(by), at50, why2, id);
-  return { ok: true, event_id: id, withdrawn: { by: k.stamp(by), at: at50, reason: why2 } };
+  const at50 = k.now(), why3 = reason2.trim().slice(0, 2e3);
+  k.rows(`UPDATE event_uses SET withdrawn=1, withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE event_id=?`, k.stamp(by), at50, why3, id);
+  return { ok: true, event_id: id, withdrawn: { by: k.stamp(by), at: at50, reason: why3 } };
 }
 var cut4 = (s) => s.length <= WORDS_MAX ? s : `${s.slice(0, WORDS_MAX).replace(/\s+\S*$/, "")}\u2026`;
 var OUTCOME_WORDS = { granted: "granted", denied: "denied", partly_granted: "partly granted", other: "decided" };
@@ -90720,9 +90985,9 @@ function facetOf(k, eventId3, viewer, view) {
   } else {
     const reason2 = u.reason_stated ? cite(u.reason) : "none";
     const outcome = { value: u.outcome, extent: cite(u.outcome_cite) };
-    const why2 = reason2 === "none" ? word("events.text.reason_stated") : `stated reason: ${quoted6(reason2)}`;
+    const why3 = reason2 === "none" ? word("events.text.reason_stated") : `stated reason: ${quoted6(reason2)}`;
     Object.assign(facet, { stated_reason: reason2, outcome });
-    if (u.kind === "discretion") facet.says = word("events.says.discretion_used", { by, date, why: why2 });
+    if (u.kind === "discretion") facet.says = word("events.says.discretion_used", { by, date, why: why3 });
     else {
       const scope = cite(u.scope), conditions = (json2(u.conditions) || []).map(cite), expiry = json2(u.expiry);
       Object.assign(facet, { scope, conditions, expiry });
@@ -90730,7 +90995,7 @@ function facetOf(k, eventId3, viewer, view) {
         outcome: OUTCOME_WORDS[u.outcome] || "decided",
         by,
         date,
-        why: why2,
+        why: why3,
         scope: quoted6(scope),
         conditions: conditions.length ? `conditions: ${conditions.map(quoted6).join("; ")}` : word("events.text.conditions_stated"),
         expiry: expiry ? `expires ${expiry.value}` : word("events.text.expiry_stated")
@@ -90807,7 +91072,7 @@ var RELATIONS = ["same", "narrower", "wider"];
 var isObj18 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var said5 = (v) => typeof v === "string" && v.trim() !== "";
 var refuse9 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, detail, ...extra });
-var refused2 = (code, why2) => ({ ok: false, refused: code, code, reason: code, why: why2 });
+var refused2 = (code, why3) => ({ ok: false, refused: code, code, reason: code, why: why3 });
 var json3 = (s) => {
   try {
     return typeof s === "string" ? JSON.parse(s) : s;
@@ -90828,11 +91093,11 @@ function recordedBy(k, args) {
     if (a.viewer === void 0 || a.viewer === null || a.viewer === "")
       return refused2("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
     if (!said5(a.captureSha)) return noSha("who recorded something is read for one captured document, named by its capture sha256");
-    let asked6 = null;
+    let asked7 = null;
     if (a.extent !== void 0 && a.extent !== null) {
       if (!known(a.extent))
         return refused2("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS2).join(", ")}`);
-      asked6 = JSON.parse(canonicalExtent2(a.extent));
+      asked7 = JSON.parse(canonicalExtent2(a.extent));
     }
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp2(a.limit);
@@ -90903,8 +91168,8 @@ function recordedBy(k, args) {
       for (const c of cites(n2.cite)) useItem(n2, "unmet", c);
     const kept = [], once = /* @__PURE__ */ new Set();
     for (const r of rows4) {
-      const relation2 = asked6 ? extentRelation2(asked6, r.extent) : null;
-      if (asked6 && !RELATIONS.includes(relation2)) continue;
+      const relation2 = asked7 ? extentRelation2(asked7, r.extent) : null;
+      if (asked7 && !RELATIONS.includes(relation2)) continue;
       const item3 = {
         module: "events",
         record: r.record,
@@ -91981,7 +92246,7 @@ var Events = class _Events {
     if (!a) return noSuchEvent(absorb ?? null, { end: "absorb" });
     if (k === a) return refuse10("SAME_EVENT", "an event is not merged into itself");
     return this.#tx(() => {
-      const at50 = this.#instant(), why2 = reason2.trim().slice(0, REASON_MAX2);
+      const at50 = this.#instant(), why3 = reason2.trim().slice(0, REASON_MAX2);
       const g = this.#governing(k);
       if (g) this.#sql.exec(
         `INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
@@ -92012,7 +92277,7 @@ var Events = class _Events {
       this.#sql.exec(`UPDATE events SET alias_of=? WHERE event_id=?`, k, a);
       this.#sql.exec(`DELETE FROM event_when_cache WHERE event_id=?`, a);
       for (const [e2, o, kind2] of [[k, a, "merged_in"], [a, k, "merged_into"]])
-        this.#sql.exec(`INSERT INTO event_changes (event_id, kind, other, reason, by_actor, at) VALUES (?,?,?,?,?,?)`, e2, kind2, o, why2, stamp(by), at50);
+        this.#sql.exec(`INSERT INTO event_changes (event_id, kind, other, reason, by_actor, at) VALUES (?,?,?,?,?,?)`, e2, kind2, o, why3, stamp(by), at50);
       this.#setWhen(k);
       for (const r of this.#rows(`SELECT DISTINCT from_event FROM event_relations WHERE to_event=? AND kind='within'`, k)) this.#setWhen(r.from_event);
       this.#tell({ eventId: k, change: "merged", absorbed: a });
@@ -92035,7 +92300,7 @@ var Events = class _Events {
     if (left2 <= ids.length) return refuse10("SPLIT_EMPTIES", "a split leaves at least one attestation on the event it splits");
     const ev = this.#one(`SELECT * FROM events WHERE event_id=?`, id);
     return this.#tx(() => {
-      const at50 = this.#instant(), why2 = reason2.trim().slice(0, REASON_MAX2);
+      const at50 = this.#instant(), why3 = reason2.trim().slice(0, REASON_MAX2);
       const nid = this.#record.allocId("EVT", at50.slice(0, 4));
       if (!nid || !nid.id) return nid;
       this.#insert("events", { event_id: nid.id, kind: ev.kind, status: ev.status, where_text: ev.where_text, by_actor: stamp(by), at: at50, alias_of: null });
@@ -92055,7 +92320,7 @@ var Events = class _Events {
           kind2,
           o,
           JSON.stringify({ attestations: ids }),
-          why2,
+          why3,
           stamp(by),
           at50
         );
@@ -92288,12 +92553,12 @@ var Events = class _Events {
     if (!atts.length) return null;
     const attById = new Map(atts.map((a) => [Number(a.attestation_id), a]));
     const w = this.#whenRead(id);
-    let when = w.when, why2 = w.why ?? null;
+    let when = w.when, why3 = w.why ?? null;
     if (when !== "undetermined" && w.governing != null && !attById.has(Number(w.governing))) {
       when = null;
-      why2 = word("events.why.dated_attestation_see");
+      why3 = word("events.why.dated_attestation_see");
     }
-    if (when === null && !why2) why2 = word("events.why.placed_nowhere_attestation");
+    if (when === null && !why3) why3 = word("events.why.placed_nowhere_attestation");
     const parts = this.#rows(`SELECT * FROM event_participants WHERE event_id=? ORDER BY participant_id`, id).filter((p3) => attById.has(Number(p3.attestation_id))).map((p3) => this.#participantView(p3, viewer, attById));
     const sees = this.#seer(viewer);
     const relVisible = (r) => {
@@ -92311,7 +92576,7 @@ var Events = class _Events {
       status: ev.status,
       where: ev.where_text,
       when,
-      ...why2 ? { why: why2 } : {},
+      ...why3 ? { why: why3 } : {},
       governing: when && when !== "undetermined" ? Number(w.governing) : null,
       concerns,
       within: within3,
@@ -92625,7 +92890,7 @@ var Events = class _Events {
     const e2 = ents.readEntity({ entityId: proceeding, viewer: "class:admin" });
     if (!e2 || !e2.entity || e2.entity.kind !== "proceeding")
       return notAProceeding("status as of a date is read of an entity of kind proceeding", { entity_id: proceeding });
-    const und = (why2, extra = {}) => ({ ok: true, proceeding, at: at50 ?? null, stage: "undetermined", why: why2, ...extra });
+    const und = (why3, extra = {}) => ({ ok: true, proceeding, at: at50 ?? null, stage: "undetermined", why: why3, ...extra });
     const facet = typeof ents.proceedingOf === "function" ? ents.proceedingOf(proceeding) : e2.entity.proceeding || null;
     const kind2 = facet && facet.kind;
     if (!kind2) return und(word("events.und.proceeding_kind_held"));
@@ -93404,8 +93669,8 @@ var Lines = class _Lines {
     if (r === "in" || r === "out") return { state: r };
     const ct = this.#currentThrough(line2, viewer);
     if (ct && judge5({ ...valid, to: ct.day, precision: "day" }) === "in") return { state: "in", current_through: ct.day };
-    const why2 = r.why || `the date could not be read: ${r.refused}`;
-    return { state: "undetermined", why: ct ? `${why2}; it is stated current through ${ct.day}, and the date is after that` : why2 };
+    const why3 = r.why || `the date could not be read: ${r.refused}`;
+    return { state: "undetermined", why: ct ? `${why3}; it is stated current through ${ct.day}, and the date is after that` : why3 };
   }
   /* ---- current through (R21) ---- */
   /* The latest current-through statement on an open-ended `holds` line that `viewer` may see, or null. */
@@ -93814,13 +94079,13 @@ var Lines = class _Lines {
     }
     if (inn.length === 0 && und.length === 0 && !truncated6)
       return { ok: true, office, at: at50, holder: null, undetermined: "no line covers the date", lines: [] };
-    const why2 = inn.length > 1 ? `${inn.length} lines hold the post at the date` : truncated6 ? "more lines than one read holds name this office" : "a line naming this office may cover the date, and the record does not settle it";
+    const why3 = inn.length > 1 ? `${inn.length} lines hold the post at the date` : truncated6 ? "more lines than one read holds name this office" : "a line naming this office may cover the date, and the record does not settle it";
     return {
       ok: true,
       office,
       at: at50,
       holder: null,
-      undetermined: why2,
+      undetermined: why3,
       lines: [...inn.map((r) => ({ line_id: r.line_id, state: "in" })), ...und.map((u) => ({ ...u, state: "undetermined" }))]
     };
   }
@@ -93894,8 +94159,8 @@ var Lines = class _Lines {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
     if (!filled4(node)) return { items: [] };
-    const asked6 = Array.isArray(ks) ? ks : CONNECTION_KINDS3.map((k) => k.kind);
-    const pairs = asked6.map(lineKindOf).filter(Boolean);
+    const asked7 = Array.isArray(ks) ? ks : CONNECTION_KINDS3.map((k) => k.kind);
+    const pairs = asked7.map(lineKindOf).filter(Boolean);
     if (!pairs.length) return { items: [] };
     const g = this.#gate(viewer);
     const kindSql = pairs.map((p3) => p3.capacity ? "(l.kind = ? AND l.capacity = ?)" : "l.kind = ?").join(" OR ");
@@ -95159,9 +95424,9 @@ var LocalFacts = class _LocalFacts {
       const due3 = blind ? [] : this.#all(active).filter(pick4).map(shape);
       return { ok: true, due: due3, unknown: [], absent: [] };
     }
-    const asked6 = [...new Set(Array.isArray(b.paths) ? b.paths : [b.paths])];
+    const asked7 = [...new Set(Array.isArray(b.paths) ? b.paths : [b.paths])];
     const due2 = [], unknown = [], absent = [];
-    for (const path of asked6) {
+    for (const path of asked7) {
       const r = !blind && typeof path === "string" ? this.#resolve(path, active) : { named: false };
       if (!r.named) {
         unknown.push(typeof path === "string" ? path.slice(0, 1e3) : null);
@@ -95237,7 +95502,7 @@ var LocalFacts = class _LocalFacts {
       const entries = factsOf(p3).filter((f17) => f17.fact === "holidays" && f17.year === year && !f17.list && f17.offices && (officesToken(f17.offices) || "").split(",").includes(tok3)).map((f17) => factPath(f17)).filter(Boolean).sort();
       return entries[0] || null;
     };
-    const fallback = (why2, followed2 = []) => {
+    const fallback = (why3, followed2 = []) => {
       if (fact === "holidays") {
         const parts = { profile, fact, year };
         const path = factIn(p3, parts, profile) ? factPath(parts) : null;
@@ -95246,10 +95511,10 @@ var LocalFacts = class _LocalFacts {
           path,
           via: path ? "fallback" : "none",
           lines: followed2,
-          why: path ? `${why2}; the profile's entry for every office governs (its \`offices\` grouping)` : `${why2}; the profile holds no entry for every office in ${year}, so it is undetermined`
+          why: path ? `${why3}; the profile's entry for every office governs (its \`offices\` grouping)` : `${why3}; the profile holds no entry for every office in ${year}, so it is undetermined`
         };
       }
-      return { ok: true, path: null, via: "none", lines: followed2, why: `${why2}; the profile holds no hours that govern this office, so they are undetermined` };
+      return { ok: true, path: null, via: "none", lines: followed2, why: `${why3}; the profile holds no hours that govern this office, so they are undetermined` };
     };
     const mine = own10(b.office);
     if (mine) return { ok: true, path: mine, via: "own", lines: [], why: "the profile holds this office's own fact" };
@@ -96113,7 +96378,7 @@ var ProvenanceRoutes = class {
    * restates it. */
   provenanceRoutesMarked({ after: after2 = "", limit = null, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);
-    const asked6 = ROUTE_MARKED_FINDING;
+    const asked7 = ROUTE_MARKED_FINDING;
     const after0 = String(after2 ?? "");
     const want = Number(limit);
     const n2 = Number.isFinite(want) && want > 0 ? Math.min(Math.floor(want), ROUTE_MARKED_LIMIT_MAX) : ROUTE_MARKED_LIMIT_DEFAULT;
@@ -96124,7 +96389,7 @@ var ProvenanceRoutes = class {
           AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
         ORDER BY m.bundle_id
         LIMIT ?`,
-      asked6,
+      asked7,
       after0,
       n2 + 1
     );
@@ -96167,7 +96432,7 @@ var ProvenanceRoutes = class {
       ...gate.args
     ).n;
     const assessed = Object.values(standing).reduce((a, b) => a + b, 0);
-    const marked = standing[asked6] || 0;
+    const marked = standing[asked7] || 0;
     const neverAssessed = Math.max(0, documentsVisible - assessed);
     let cause = null;
     if (!documents.length) {
@@ -96175,8 +96440,8 @@ var ProvenanceRoutes = class {
     }
     return {
       ok: true,
-      finding: asked6,
-      means: FINDING_MEANS[asked6],
+      finding: asked7,
+      means: FINDING_MEANS[asked7],
       documents,
       returned: documents.length,
       limit: n2,
@@ -96227,19 +96492,15 @@ __export(checks_exports21, {
 
 // src/retrieval/words.mjs
 var WORD_KEYS5 = Object.freeze([
-  "monitoring.reason_given",
   "refusal.MEANING_ROWS_NO_ARM",
   "refusal.MEANING_ROWS_UNKNOWN_ARM",
   "refusal.NO_SUCH_SELECTION",
   "refusal.SET_MOVED",
   "retrieval.capture_text_skipped_says",
-  "retrieval.column_why",
-  "retrieval.extent_why",
   "retrieval.lead",
   "retrieval.note.content_axis_read",
   "retrieval.note.read_level_failed",
   "retrieval.note.record_holds_capture",
-  "retrieval.recorded_none_registered",
   "retrieval.syntax.bare_field_leg",
   "retrieval.syntax.bare_words_ranked",
   "retrieval.syntax.content_cap_apply",
@@ -96270,8 +96531,6 @@ var WORD_KEYS5 = Object.freeze([
   "retrieval.text.passage_matched_over",
   "retrieval.text.row_over_document",
   "retrieval.text.tally_covers_first",
-  "retrieval.unread.read_followed_people",
-  "retrieval.unread.read_followed_people_offices",
   "retrieval.why.answer_lists_indexed",
   "retrieval.why.anybody_looked_all",
   "retrieval.why.arm_answers_meaning",
@@ -96281,16 +96540,7 @@ var WORD_KEYS5 = Object.freeze([
   "retrieval.why.document_scope_hold_rows",
   "retrieval.why.document_scope_holds",
   "retrieval.why.finding_rests_rows",
-  "retrieval.why.matching_unit_over",
-  "retrieval.why.names_day_calendar",
-  "retrieval.why.offers_recordedby_read",
-  "retrieval.why.reachable",
-  "retrieval.why.read_answered_promise",
-  "retrieval.why.read_refused",
-  "retrieval.why.read_threw",
-  "retrieval.why.words_name_month",
-  "retrieval.why.words_write_day",
-  "state.empty"
+  "retrieval.why.matching_unit_over"
 ]);
 var KEYS3 = new Set(WORD_KEYS5);
 var asked3 = /* @__PURE__ */ new Set();
@@ -96341,8 +96591,8 @@ var SELECTION_CHECKS = {
        graded refusals by the literal `ok: false`, so a region `where` around it
        would have judged zero and failed as a drifted marker — and REC-64 therefore
        could not give this code a region, and so could not give it a row, and so
-       could not give it a translation. The surface has keyed on `SET_MOVED` in
-       `app.html` since long before that.
+       could not give it a translation. The member surfaces have keyed on
+       `SET_MOVED` since long before that.
   
        THE TRANSLATION SAYS WHAT THE MEMBER MUST DO, because this refusal is one of
        the few in the plane with a remedy the member can actually take: look again
@@ -97336,6 +97586,265 @@ function termRows(bundleId, providers, input) {
   return out;
 }
 
+// src/retrieval-browse/browse.mjs
+var BROWSE_KINDS = Object.freeze(["document", "question", "action", "plan", "entity"]);
+var BROWSE_ONLY = Object.freeze(["new_since", "watched", "flagged", "awaiting_review"]);
+var BUNDLE_TYPES2 = Object.freeze({ document: "information", question: "inquiry", action: "action", plan: "action_plan" });
+var ORGANISATION_KINDS3 = Object.freeze(["institution", "body", "movement"]);
+var ENTITY_KINDS2 = Object.freeze(["person", ...ORGANISATION_KINDS3]);
+var ITEM_KIND_OF_TYPE = Object.freeze(Object.fromEntries(Object.entries(BUNDLE_TYPES2).map(([k, t2]) => [t2, k])));
+var AWAITING_REVIEW_STATE = "collected";
+var BROWSE_LIMIT_DEFAULT = 50;
+var BROWSE_LIMIT_MAX = 200;
+var BROWSE_MARKS_MAX = 5e3;
+var BROWSE_ID_CHUNK = 64;
+var BROWSE_SCOPES = Object.freeze([
+  { key: "everything", kinds: BROWSE_KINDS, only: null },
+  { key: "question", kinds: Object.freeze(["question"]), only: null },
+  { key: "document", kinds: Object.freeze(["document"]), only: null },
+  { key: "action", kinds: Object.freeze(["action"]), only: null },
+  { key: "awaiting_review", kinds: Object.freeze(["document"]), only: "awaiting_review" },
+  { key: "watched", kinds: BROWSE_KINDS, only: "watched" },
+  { key: "flagged", kinds: BROWSE_KINDS, only: "flagged" }
+].map((s) => Object.freeze(s)));
+var text3 = (v) => typeof v === "string" ? v : null;
+var ms = (iso8) => {
+  const t2 = typeof iso8 === "string" ? Date.parse(iso8) : NaN;
+  return Number.isFinite(t2) ? t2 : -Infinity;
+};
+var refuse12 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, code: reason2, detail, ...extra });
+var idOf2 = (v) => typeof v === "string" ? v : v && typeof v === "object" && typeof v.id === "string" ? v.id : null;
+var flagOf = (f17) => ({ by: text3(f17.by), at: text3(f17.at), note: text3(f17.note) });
+var Browser = class {
+  /** `r` is the module's context (`index.mjs`): `rowsOf` and `browseMarks`. */
+  constructor(r) {
+    this.r = r;
+  }
+  /** R10, R12, R13: `op=browse`. Refusals in order, each reading nothing: VIEWER_MISSING, KIND_UNKNOWN, ONLY_UNKNOWN,
+   *  NO_SINCE, BAD_SINCE. Answers `{ok, kinds, only, items, count, total, awaiting_review, limit, truncated, next}`, each
+   *  item `{kind, id, title, state, last_changed, new, watched, flagged}`, newest first, ties by id; `undetermined` when
+   *  the marks could not be read. */
+  read({ kinds: kinds3 = null, only = null, since = null, after: after2 = null, limit = null, viewer = null } = {}) {
+    if (typeof viewer !== "string" || !viewer)
+      return refuse12("VIEWER_MISSING", "a browse answers only to a stamped viewer, and this request carries none");
+    const asked7 = Array.isArray(kinds3) ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : [];
+    const named3 = [...new Set(asked7.map((k) => String(k).trim()).filter(Boolean))];
+    const unknown = named3.filter((k) => k !== "all" && !BROWSE_KINDS.includes(k));
+    if (unknown.length)
+      return refuse12(
+        "KIND_UNKNOWN",
+        `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; the kinds are ${BROWSE_KINDS.join(", ")}`,
+        { kinds: BROWSE_KINDS }
+      );
+    const wanted = !named3.length || named3.includes("all") ? [...BROWSE_KINDS] : BROWSE_KINDS.filter((k) => named3.includes(k));
+    const mode = only == null || only === "" ? null : String(only).trim();
+    if (mode !== null && !BROWSE_ONLY.includes(mode))
+      return refuse12("ONLY_UNKNOWN", `no filter called ${JSON.stringify(mode.slice(0, 40))}; the filters are ${BROWSE_ONLY.join(", ")}`, { only: BROWSE_ONLY });
+    const hasSince = since !== null && since !== void 0 && since !== "";
+    if (mode === "new_since" && !hasSince) return refuse12("NO_SINCE", "new_since counts from an instant, and none was given");
+    if (hasSince && (typeof since !== "string" || !Number.isFinite(Date.parse(since))))
+      return refuse12("BAD_SINCE", "since is an instant, as 2026-10-01T00:00:00Z");
+    const sinceMs = hasSince ? Date.parse(since) : null;
+    const n2 = Number(limit);
+    const cap = limit == null || limit === "" || !Number.isFinite(n2) ? BROWSE_LIMIT_DEFAULT : Math.max(1, Math.min(BROWSE_LIMIT_MAX, Math.floor(n2)));
+    const out = { ok: true, kinds: wanted, only: mode };
+    const set = this.#set({ wanted, mode, sinceMs, viewer });
+    if (set.empty)
+      return {
+        ...out,
+        items: [],
+        count: 0,
+        total: 0,
+        awaiting_review: 0,
+        limit: cap,
+        truncated: false,
+        next: null,
+        undetermined: { why: set.empty }
+      };
+    let items = set.items;
+    const total2 = items.length;
+    const awaiting = items.filter((r) => r.awaiting).length;
+    const cursor = parseCursor(after2);
+    if (cursor) items = items.filter((r) => r.ms < cursor.ms || r.ms === cursor.ms && r.id > cursor.id);
+    const page2 = items.slice(0, cap);
+    const truncated6 = items.length > cap || set.markedTruncated;
+    const reg = this.r.browseMarks();
+    const undetermined3 = [];
+    let marks2 = { watched: /* @__PURE__ */ new Set(), flagged: /* @__PURE__ */ new Map() };
+    if (!reg) undetermined3.push("no module has registered the watches and flags, so watched and flagged are not read");
+    else if (page2.length) {
+      const got = this.#call(reg, { viewer, ids: page2.map((r) => r.id) });
+      const v = got.ok ? got.value : null;
+      if (v && Array.isArray(v.watched) && Array.isArray(v.flagged)) {
+        marks2 = {
+          watched: new Set(v.watched.filter((x) => typeof x === "string")),
+          flagged: new Map(v.flagged.filter((f17) => f17 && typeof f17 === "object" && typeof f17.id === "string").map((f17) => [f17.id, flagOf(f17)]))
+        };
+      } else undetermined3.push(got.why || "the registered read of watches and flags answered another shape than its contract's");
+    }
+    const shown3 = page2.map((r) => ({
+      kind: r.kind,
+      id: r.id,
+      title: r.title,
+      state: r.state,
+      last_changed: r.last_changed,
+      new: sinceMs !== null && r.ms > sinceMs,
+      watched: marks2.watched.has(r.id) || set.fromList.watched.has(r.id),
+      flagged: marks2.flagged.get(r.id) || set.fromList.flagged.get(r.id) || null
+    }));
+    return {
+      ...out,
+      items: shown3,
+      count: shown3.length,
+      total: total2,
+      awaiting_review: awaiting,
+      limit: cap,
+      truncated: truncated6,
+      next: truncated6 && page2.length ? cursorOf2(page2[page2.length - 1]) : null,
+      ...undetermined3.length ? { undetermined: { why: undetermined3[0] } } : {}
+    };
+  }
+  /** R13: the ids of the bundles the viewer may see that a scope of `BROWSE_SCOPES` holds, under the same gate and the same
+   *  marks read as `read`, at most `BROWSE_MARKS_MAX` (or `limit`) with `truncated`; `entities_in_scope` counts the
+   *  entities matched, which are not bundles and are not in `ids`. */
+  scopeMembers({ scope = null, viewer = null, limit = null } = {}) {
+    if (typeof viewer !== "string" || !viewer)
+      return refuse12("VIEWER_MISSING", "a scope is read only for a stamped viewer, and this request carries none");
+    const def = BROWSE_SCOPES.find((s) => s.key === scope);
+    if (!def)
+      return refuse12(
+        "SCOPE_KEY_UNKNOWN",
+        `no scope called ${JSON.stringify(String(scope).slice(0, 40))}; the scopes are ${BROWSE_SCOPES.map((s) => s.key).join(", ")}`,
+        { scopes: BROWSE_SCOPES.map((s) => s.key) }
+      );
+    const n2 = Number(limit);
+    const cap = limit == null || limit === "" || !Number.isFinite(n2) ? BROWSE_MARKS_MAX : Math.max(1, Math.min(BROWSE_MARKS_MAX, Math.floor(n2)));
+    const set = this.#set({ wanted: [...def.kinds], mode: def.only, sinceMs: null, viewer });
+    if (set.empty)
+      return { ok: true, scope: def.key, ids: [], count: 0, truncated: false, entities_in_scope: 0, undetermined: { why: set.empty } };
+    const bundles = set.items.filter((r) => r.kind !== "person" && r.kind !== "organization");
+    const ids = bundles.slice(0, cap).map((r) => r.id);
+    return {
+      ok: true,
+      scope: def.key,
+      ids,
+      count: ids.length,
+      truncated: bundles.length > cap || set.markedTruncated,
+      entities_in_scope: set.items.length - bundles.length
+    };
+  }
+  /* The whole set of items the viewer may see of the kinds `wanted` under `mode` (and `new_since`'s instant), newest first,
+     ties by id, unpaged, with the ids the marks list named. `empty` is the reason when `watched` or `flagged` cannot be read. */
+  #set({ wanted, mode, sinceMs, viewer }) {
+    const reg = this.r.browseMarks();
+    const gate = viewerPredicate(viewer);
+    const recognised = gate.scope !== "DENY";
+    const fromList = { watched: /* @__PURE__ */ new Set(), flagged: /* @__PURE__ */ new Map() };
+    let markedTruncated = false;
+    let rows4;
+    if (!recognised) rows4 = [];
+    else if (mode === "watched" || mode === "flagged") {
+      if (!reg) return { empty: "no module has registered the watches and flags, so which items are watched or flagged is not read" };
+      const got = this.#call(reg, { viewer, only: mode, limit: BROWSE_MARKS_MAX });
+      const list6 = got.ok && got.value && Array.isArray(got.value.items) && typeof got.value.truncated === "boolean" ? got.value : null;
+      if (!list6) return { empty: got.why || "the registered read of watches and flags answered another shape than its contract's" };
+      const ids = [];
+      for (const entry4 of list6.items.slice(0, BROWSE_MARKS_MAX)) {
+        const id = idOf2(entry4);
+        if (!id) continue;
+        ids.push(id);
+        if (mode === "watched") fromList.watched.add(id);
+        else if (entry4 && typeof entry4 === "object") fromList.flagged.set(id, flagOf(entry4));
+      }
+      rows4 = this.#byIds([...new Set(ids)], wanted, gate);
+      markedTruncated = list6.truncated;
+    } else rows4 = this.#all(wanted, gate);
+    let items = rows4.map((r) => ({ ...r, ms: ms(r.last_changed), awaiting: r.kind === "document" && r.state === AWAITING_REVIEW_STATE }));
+    if (mode === "new_since") items = items.filter((r) => r.ms > sinceMs);
+    if (mode === "awaiting_review") items = items.filter((r) => r.awaiting);
+    items.sort((a, b) => a.ms === b.ms ? a.id < b.id ? -1 : a.id > b.id ? 1 : 0 : a.ms > b.ms ? -1 : 1);
+    return { items, fromList, markedTruncated };
+  }
+  /* R11: one call of the registered read; a throw, a promise (its rejection caught) or a non-object is no answer. */
+  #call(reg, arg) {
+    let a;
+    try {
+      a = reg.fn(arg);
+    } catch (e2) {
+      return { ok: false, why: `the registered read of watches and flags threw: ${String(e2 && e2.message || e2).slice(0, 200)}` };
+    }
+    if (a && typeof a.then === "function") {
+      Promise.resolve(a).catch(() => {
+      });
+      return { ok: false, why: "the registered read of watches and flags answered a promise: it is called in process, synchronously" };
+    }
+    return a && typeof a === "object" && !Array.isArray(a) ? { ok: true, value: a } : { ok: false, why: "the registered read of watches and flags answered another shape than its contract's" };
+  }
+  /* Every bundle of the kinds asked that the gate passes, and every entity of them, as `{kind, id, title, state, last_changed}`. */
+  #all(wanted, gate) {
+    const rows4 = [];
+    const types2 = wanted.filter((k) => BUNDLE_TYPES2[k]).map((k) => BUNDLE_TYPES2[k]);
+    if (types2.length)
+      for (const b of this.r.rowsOf(`SELECT b.bundle_id, b.object_type, b.title, b.current_state, b.last_updated FROM bundles b
+                                      WHERE (${gate.sql}) AND b.object_type IN (${types2.map(() => "?").join(",")})`, ...gate.args, ...types2))
+        rows4.push(bundleRow(b));
+    if (wanted.includes("entity"))
+      for (const e2 of this.#entities(`SELECT entity_id, kind, label, at FROM entities WHERE kind IN (${ENTITY_KINDS2.map(() => "?").join(",")})`, ENTITY_KINDS2))
+        rows4.push(entityRow(e2));
+    return rows4;
+  }
+  /* The same for named ids only, in chunks under the variable bound; an id the gate does not pass is simply absent. */
+  #byIds(ids, wanted, gate) {
+    const rows4 = [];
+    const types2 = wanted.filter((k) => BUNDLE_TYPES2[k]).map((k) => BUNDLE_TYPES2[k]);
+    for (let i = 0; i < ids.length; i += BROWSE_ID_CHUNK) {
+      const part = ids.slice(i, i + BROWSE_ID_CHUNK);
+      const marks2 = part.map(() => "?").join(",");
+      if (types2.length)
+        for (const b of this.r.rowsOf(`SELECT b.bundle_id, b.object_type, b.title, b.current_state, b.last_updated FROM bundles b
+                                        WHERE b.bundle_id IN (${marks2}) AND (${gate.sql})
+                                          AND b.object_type IN (${types2.map(() => "?").join(",")})`, ...part, ...gate.args, ...types2))
+          rows4.push(bundleRow(b));
+      if (wanted.includes("entity"))
+        for (const e2 of this.#entities(`SELECT entity_id, kind, label, at FROM entities WHERE entity_id IN (${marks2})
+                                          AND kind IN (${ENTITY_KINDS2.map(() => "?").join(",")})`, [...part, ...ENTITY_KINDS2]))
+          rows4.push(entityRow(e2));
+    }
+    return rows4;
+  }
+  /* The registry's table is another module's: a store that has not made it holds no entity to list. */
+  #entities(sql, args) {
+    try {
+      return this.r.rowsOf(sql, ...args);
+    } catch {
+      return [];
+    }
+  }
+};
+var bundleRow = (b) => ({
+  kind: ITEM_KIND_OF_TYPE[b.object_type] || "document",
+  id: b.bundle_id,
+  title: text3(b.title) || null,
+  state: text3(b.current_state) || null,
+  last_changed: text3(b.last_updated)
+});
+var entityRow = (e2) => ({
+  kind: e2.kind === "person" ? "person" : "organization",
+  id: e2.entity_id,
+  title: text3(e2.label) || null,
+  state: null,
+  last_changed: text3(e2.at)
+});
+var cursorOf2 = (r) => `${Number.isFinite(r.ms) ? r.ms : "-"}|${r.id}`;
+function parseCursor(after2) {
+  if (typeof after2 !== "string" || !after2) return null;
+  const at50 = after2.indexOf("|");
+  if (at50 < 1) return null;
+  const head = after2.slice(0, at50);
+  const t2 = head === "-" ? -Infinity : Number(head);
+  return Number.isNaN(t2) ? null : { ms: t2, id: after2.slice(at50 + 1) };
+}
+
 // src/calc-grammar/decimal.mjs
 var MODES2 = Object.freeze(["half_even", "half_up", "down", "up"]);
 var PRECISIONS6 = Object.freeze(["exact", "rounded", "approximate", "range"]);
@@ -97344,8 +97853,8 @@ var UNSIGNED = /^\d+(?:\.\d+)?$/;
 var SIGNED = /^-?\d+(?:\.\d+)?$/;
 var TEN = 10n;
 var pow10 = (k) => TEN ** BigInt(k);
-var refusal10 = (code, why2) => ({ refused: code, why: why2 });
-var undetermined2 = (why2) => ({ undetermined: true, why: why2 });
+var refusal10 = (code, why3) => ({ refused: code, why: why3 });
+var undetermined2 = (why3) => ({ undetermined: true, why: why3 });
 var isRefusal2 = (x) => x != null && typeof x === "object" && typeof x.refused === "string";
 var isUndetermined = (x) => x != null && typeof x === "object" && x.undetermined === true;
 function dec2(str55) {
@@ -97506,8 +98015,8 @@ function operands(list6) {
   const rs = [];
   for (const f17 of list6) {
     if (f17 === null || typeof f17 !== "object") throw new TypeError("an operand must be a figure object");
-    const why2 = figureFault(f17);
-    if (why2) return refusal10("FIGURE_INVALID", why2);
+    const why3 = figureFault(f17);
+    if (why3) return refusal10("FIGURE_INVALID", why3);
     rs.push(readFigure(f17));
   }
   return rs;
@@ -97594,8 +98103,8 @@ function round(a, opts) {
 function relate(a, b) {
   for (const f17 of [a, b]) {
     if (f17 === null || typeof f17 !== "object") throw new TypeError("an operand must be a figure object");
-    const why2 = figureFault(f17);
-    if (why2) return refusal10("FIGURE_INVALID", why2);
+    const why3 = figureFault(f17);
+    if (why3) return refusal10("FIGURE_INVALID", why3);
   }
   const x = readingOf2(a);
   const y = readingOf2(b);
@@ -97631,7 +98140,7 @@ var QUALIFIER = /^(?:(?:about|approximately|approx\.|nearly|over)\s+|~\s*)/i;
 var FIGURE = /^(-|\()?\s*(?:([$€£¥])|([A-Z]{3})\s)?\s*(-|\()?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)\s*([A-Za-z]+)?\s*(%)?\s*(?:([$€£¥])|([A-Z]{3}))?\s*(\))?$/;
 var CODE = /^[A-Z]{3}$/;
 var fold3 = (s) => s.replace(/[   \s]+/g, " ").replace(/[−–—]/g, "-").trim();
-var invalid2 = (why2) => refusal10("FIGURE_INVALID", why2);
+var invalid2 = (why3) => refusal10("FIGURE_INVALID", why3);
 function single(t2) {
   const m = FIGURE.exec(t2);
   if (!m) return invalid2(`"${t2.slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or code, a minus sign or parentheses, % or a scale word)`);
@@ -97742,8 +98251,8 @@ var Refused = class {
     this.r = r;
   }
 };
-var stop = (code, why2, step) => {
-  throw new Refused({ refused: code, why: why2, step });
+var stop = (code, why3, step) => {
+  throw new Refused({ refused: code, why: why3, step });
 };
 function readers(fields) {
   const at50 = new Map(fields.map((f17, k) => [f17.name, k]));
@@ -97806,7 +98315,7 @@ function streamFault(input, name3) {
 }
 function streamTable(fields, input, size, name3) {
   const width = fields.length;
-  const bad2 = (why2) => stop("INPUT_INVALID", `the input "${name3}": ${why2}`, null);
+  const bad2 = (why3) => stop("INPUT_INVALID", `the input "${name3}": ${why3}`, null);
   function* scan() {
     let it;
     try {
@@ -98060,7 +98569,7 @@ function checkShape(kind2, v, bad2, field3) {
 }
 function checkRecipe(recipe2) {
   const errors = [];
-  const err = (code, step, field3, why2) => errors.push({ code, step, field: field3, why: why2 });
+  const err = (code, step, field3, why3) => errors.push({ code, step, field: field3, why: why3 });
   if (!plain(recipe2)) return { ok: false, errors: [{ code: "RECIPE_INVALID", step: null, field: null, why: "a recipe is an object" }] };
   for (const k of Object.keys(recipe2))
     if (!["method", "inputs", "steps", "output"].includes(k)) err("RECIPE_INVALID", null, k, "not a field of a recipe");
@@ -98080,7 +98589,7 @@ function checkRecipe(recipe2) {
   if (!Array.isArray(recipe2.steps) || !recipe2.steps.length) err("RECIPE_INVALID", null, "steps", "a list of one or more steps");
   else recipe2.steps.forEach((st, i) => {
     const label = plain(st) && typeof st.as === "string" ? st.as : i;
-    const bad2 = (field3, why2) => err("RECIPE_INVALID", label, field3, why2);
+    const bad2 = (field3, why3) => err("RECIPE_INVALID", label, field3, why3);
     if (!plain(st)) return bad2(null, "a step is an object");
     if (!OPS.includes(st.op)) {
       if (typeof st.as === "string" && NAME.test(st.as) && !kinds3.has(st.as)) kinds3.set(st.as, "unknown");
@@ -98656,8 +99165,8 @@ function evaluate(recipe2, bound, opts = {}) {
   for (const inp of recipe2.inputs) {
     if (!Object.prototype.hasOwnProperty.call(bound, inp.name)) return refusal10("INPUT_UNBOUND", `the input "${inp.name}" is not bound`);
     const v = bound[inp.name];
-    const why2 = inp.kind === "table" ? tableFault(v) : figureFault(v);
-    if (why2) return { refused: "INPUT_INVALID", why: `the input "${inp.name}": ${why2}` };
+    const why3 = inp.kind === "table" ? tableFault(v) : figureFault(v);
+    if (why3) return { refused: "INPUT_INVALID", why: `the input "${inp.name}": ${why3}` };
     if (inp.kind !== "table") {
       env.set(inp.name, { kind: inp.kind, value: v });
       continue;
@@ -98792,6 +99301,1051 @@ function interval({ frame_size: N2, sample_size: n2, successes: x, confidence } 
     else hi = m - 1;
   }
   return { low, high: lo, method: INTERVAL_METHOD };
+}
+
+// src/retrieval-browse/words.mjs
+var WORD_KEYS6 = Object.freeze([
+  "monitoring.reason_given",
+  "retrieval.column_why",
+  "retrieval.extent_why",
+  "retrieval.recorded_none_registered",
+  "retrieval.unread.read_followed_people",
+  "retrieval.unread.read_followed_people_offices",
+  "retrieval.why.names_day_calendar",
+  "retrieval.why.offers_recordedby_read",
+  "retrieval.why.reachable",
+  "retrieval.why.read_answered_promise",
+  "retrieval.why.read_refused",
+  "retrieval.why.read_threw",
+  "retrieval.why.words_name_month",
+  "retrieval.why.words_write_day",
+  "state.empty"
+]);
+var KEYS4 = new Set(WORD_KEYS6);
+var asked4 = /* @__PURE__ */ new Set();
+function say4(key2, vars = {}) {
+  if (!KEYS4.has(key2)) throw new Error(`retrieval-browse: ${key2} is not one of this module's word keys`);
+  asked4.add(key2);
+  return word(key2, vars);
+}
+
+// src/retrieval-browse/findin.mjs
+var FIND_KINDS = Object.freeze(["people", "money", "dates", "requirements", "events", "term"]);
+var FIND_CAPTURES_PER_CALL = 200;
+var FIND_IDS_MAX = 200;
+var FIND_ITEMS_DEFAULT = 50;
+var FIND_ITEMS_MAX = 500;
+var FIND_WORDS_MAX = 500;
+var FIND_TERM_MAX = 200;
+var FIND_EVENT_TYPES = Object.freeze(["meeting_minutes", "meeting_agenda"]);
+var FIND_PEOPLE_KINDS = Object.freeze(["person", "office"]);
+var ALIAS_PAGE = 5e3;
+var ALIAS_PAGES_MAX = 4;
+var FIND_ORIGIN = "search";
+var RECORDED_BY_MODULES = Object.freeze(["events", "standards", "money", "people"]);
+var RECORDED_BY_LIMIT = 500;
+var RECORDED_NONE_REGISTERED = say4("retrieval.recorded_none_registered");
+var RECORDED_RELATIONS = Object.freeze(["same", "narrower"]);
+var deepFreeze3 = (o) => {
+  for (const v of Object.values(o)) if (v && typeof v === "object") deepFreeze3(v);
+  return Object.freeze(o);
+};
+var FIND_MATCHERS = deepFreeze3({
+  en: {
+    money: {
+      /* Each sign and code with the code the figure parser reads it as; a word names a currency without saying which
+         (a "dollar" is not one currency), so a word is matched and never turned into a code. */
+      signs: ["$", "\u20AC", "\xA3", "\xA5"],
+      codes: ["USD", "EUR", "GBP", "CAD", "AUD", "NZD", "JPY", "CHF", "MXN"],
+      words: ["dollars", "dollar", "cents", "cent", "euros", "euro", "pounds sterling", "pounds", "pound"],
+      multipliers: ["thousand", "million", "billion", "trillion", "bn", "mn", "k", "m"]
+    },
+    dates: {
+      months: [
+        ["january", "jan"],
+        ["february", "feb"],
+        ["march", "mar"],
+        ["april", "apr"],
+        ["may"],
+        ["june", "jun"],
+        ["july", "jul"],
+        ["august", "aug"],
+        ["september", "sept", "sep"],
+        ["october", "oct"],
+        ["november", "nov"],
+        ["december", "dec"]
+      ],
+      ordinals: ["st", "nd", "rd", "th"],
+      /* A period counted from something: its lead words, the units (each as it is said and the unit it states), the
+         qualifier of a day count, and the numbers written as words. */
+      period_lead: ["within", "no later than", "not later than", "not more than", "no more than"],
+      period_units: {
+        day: "days",
+        days: "days",
+        week: "weeks",
+        weeks: "weeks",
+        month: "months",
+        months: "months",
+        year: "years",
+        years: "years",
+        hour: "hours",
+        hours: "hours"
+      },
+      period_qualifiers: ["calendar", "business", "working", "court"],
+      numbers: {
+        one: 1,
+        two: 2,
+        three: 3,
+        four: 4,
+        five: 5,
+        six: 6,
+        seven: 7,
+        eight: 8,
+        nine: 9,
+        ten: 10,
+        eleven: 11,
+        twelve: 12,
+        thirteen: 13,
+        fourteen: 14,
+        fifteen: 15,
+        sixteen: 16,
+        seventeen: 17,
+        eighteen: 18,
+        nineteen: 19,
+        twenty: 20,
+        "twenty-one": 21,
+        "twenty-four": 24,
+        thirty: 30,
+        "forty-five": 45,
+        forty: 40,
+        sixty: 60,
+        ninety: 90,
+        "one hundred twenty": 120,
+        "one hundred eighty": 180
+      }
+    },
+    /* The requirement words, longest first so "shall not" is read before "shall". A sentence carrying one is found;
+       it is never labeled a force (standards R35; K1722). */
+    requirements: ["is required to", "are required to", "shall not", "must not", "may not", "shall", "must"]
+  }
+});
+var esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+var alt = (list6) => [...list6].sort((a, b) => b.length - a.length).map(esc).join("|");
+var NUMBER = String.raw`\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?`;
+var compiled2 = /* @__PURE__ */ new WeakMap();
+function patterns(set) {
+  let p3 = compiled2.get(set);
+  if (p3) return p3;
+  const m = set.money, d = set.dates;
+  const mult = `(?:\\s?(?:${alt(m.multipliers)})(?![\\p{L}\\p{N}]))?`;
+  const before3 = `(?:${alt(m.signs)})\\s?|(?:${alt(m.codes)})\\s`;
+  const after2 = `\\s?(?:${alt(m.signs)})|\\s(?:${alt(m.codes)})(?![\\p{L}])|\\s(?:${alt(m.words)})(?![\\p{L}])`;
+  const money = new RegExp(`(?<![\\p{L}\\p{N}])(?:(?:${before3})(?:${NUMBER})${mult}|(?:${NUMBER})${mult}(?:${after2}))`, "giu");
+  const months = d.months.flatMap((names2, i) => names2.map((n2) => [n2, i + 1]));
+  const monthWord = `(${alt(months.map(([n2]) => n2))})\\.?`;
+  const ord = `(?:${alt(d.ordinals)})?`;
+  const date = new RegExp([
+    `(?<![\\p{L}\\p{N}])${monthWord}\\s+(\\d{1,2})${ord},?\\s+(\\d{4})(?![\\p{N}])`,
+    /* March 5, 2026 */
+    `(?<![\\p{L}\\p{N}])(\\d{1,2})${ord}\\s+${monthWord},?\\s+(\\d{4})(?![\\p{N}])`,
+    /* 5 March 2026 */
+    `(?<![\\p{L}\\p{N}])(\\d{4})-(\\d{2})-(\\d{2})(?![\\p{N}])`,
+    /* 2026-03-05 */
+    `(?<![\\p{L}\\p{N}/])(\\d{1,2})/(\\d{1,2})/(\\d{4})(?![\\p{N}/])`,
+    /* 5/3/2026: order not said */
+    `(?<![\\p{L}\\p{N}])${monthWord}\\s+(\\d{4})(?![\\p{N}])`
+    /* March 2026: no day */
+  ].map((s) => `(?:${s})`).join("|"), "giu");
+  const numWords = alt(Object.keys(d.numbers));
+  const period = new RegExp(`(?<![\\p{L}])(?:${alt(d.period_lead)})\\s+(?:(${numWords})\\s+\\((\\d{1,4})\\)|(${numWords})|(\\d{1,4}))\\s+(?:(${alt(d.period_qualifiers)})\\s+)?(${alt(Object.keys(d.period_units))})(?![\\p{L}])`, "giu");
+  const requirement = new RegExp(`(?<![\\p{L}])(${alt(set.requirements)})(?![\\p{L}])`, "iu");
+  const currencyMark = new RegExp(`(?:${alt(m.signs)})|(?<![\\p{L}])(?:${alt([...m.codes, ...m.words])})(?![\\p{L}])`, "iu");
+  p3 = {
+    money,
+    date,
+    period,
+    requirement,
+    monthOf: new Map(months),
+    currencyMark,
+    currencyWords: new RegExp(`\\s(?:${alt(m.words)})$`, "iu")
+  };
+  compiled2.set(set, p3);
+  return p3;
+}
+function sentenceAround(text8, start, end2) {
+  let a = start, b = end2;
+  while (a > 0 && !/[.!?;\n]/.test(text8[a - 1])) a--;
+  while (b < text8.length && !/[.!?;\n]/.test(text8[b])) b++;
+  if (b < text8.length && /[.!?;]/.test(text8[b])) b++;
+  return text8.slice(a, b).trim();
+}
+function cutWords(s) {
+  const t2 = String(s ?? "").replace(/\s+/gu, (run2) => /[\n\r\u2028\u2029\u0085]/u.test(run2) ? "\n" : " ").trim();
+  if (t2.length <= FIND_WORDS_MAX) return t2;
+  const head = t2.slice(0, FIND_WORDS_MAX - 1);
+  const at50 = Math.max(head.lastIndexOf(" "), head.lastIndexOf("\n"));
+  return `${(at50 > 0 ? head.slice(0, at50) : head).trimEnd()}\u2026`;
+}
+function matchMoney(text8, set) {
+  const p3 = patterns(set), out = [];
+  for (const m of String(text8 ?? "").matchAll(p3.money)) {
+    const as_read = m[0];
+    const figure3 = parseFigure(as_read.replace(p3.currencyWords, ""));
+    out.push({
+      index: m.index,
+      end: m.index + as_read.length,
+      as_read,
+      ...figure3 && typeof figure3.refused === "string" ? { figure: null, figure_why: figure3.why } : { figure: figure3 }
+    });
+  }
+  return out;
+}
+function matchDates(text8, set) {
+  const p3 = patterns(set), t2 = String(text8 ?? ""), out = [];
+  const two = (n2) => String(n2).padStart(2, "0");
+  for (const m of t2.matchAll(p3.date)) {
+    const g = m.slice(1);
+    let date = null, why3 = null;
+    if (g[0] !== void 0) date = `${g[2]}-${two(p3.monthOf.get(g[0].toLowerCase()))}-${two(g[1])}`;
+    else if (g[3] !== void 0) date = `${g[5]}-${two(p3.monthOf.get(g[4].toLowerCase()))}-${two(g[3])}`;
+    else if (g[6] !== void 0) date = `${g[6]}-${g[7]}-${g[8]}`;
+    else if (g[9] !== void 0) why3 = say4("retrieval.why.words_write_day");
+    else why3 = say4("retrieval.why.words_name_month");
+    if (date && !isCalendarDate(date)) {
+      why3 = say4("retrieval.why.names_day_calendar", { date });
+      date = null;
+    }
+    out.push({ index: m.index, end: m.index + m[0].length, as_read: m[0], date, ...why3 ? { date_why: why3 } : {} });
+  }
+  for (const m of t2.matchAll(p3.period)) {
+    const [, word3, digits, word22, plain20, qualifier, unit] = m;
+    const amount = digits ? Number(digits) : plain20 ? Number(plain20) : set.dates.numbers[String(word3 || word22).toLowerCase()];
+    const units = `${qualifier ? `${qualifier.toLowerCase()} ` : ""}${set.dates.period_units[unit.toLowerCase()]}`;
+    out.push({
+      index: m.index,
+      end: m.index + m[0].length,
+      as_read: m[0],
+      date: null,
+      deadline: true,
+      period: Number.isInteger(amount) ? { amount, units } : null
+    });
+  }
+  return out.sort((a, b) => a.index - b.index || a.end - b.end);
+}
+function matchRequirements(text8, set) {
+  const p3 = patterns(set), t2 = String(text8 ?? ""), out = [];
+  const re = /[^.!?;\n]+[.!?;]?/g;
+  for (const s of t2.matchAll(re)) {
+    const m = p3.requirement.exec(s[0]);
+    if (!m) continue;
+    const lead = s[0].length - s[0].trimStart().length;
+    out.push({
+      index: s.index + lead,
+      end: s.index + s[0].trimEnd().length,
+      sentence: s[0].trim(),
+      requirement_word: m[1].toLowerCase()
+    });
+  }
+  return out;
+}
+var safeJson11 = (s) => {
+  try {
+    return s == null ? null : JSON.parse(s);
+  } catch {
+    return null;
+  }
+};
+var A1 = /^\$?([A-Z]{1,3})\$?(\d{1,7})$/i;
+var PLAIN_NUMBER = new RegExp(`^(?:${NUMBER})$`);
+var colNum = (c) => [...c.toUpperCase()].reduce((n2, ch) => n2 * 26 + ch.charCodeAt(0) - 64, 0);
+var Finder = class {
+  /** `r` is the module's context (`index.mjs`): its reads (`rowsOf`, `oneOf`), the host reads it was handed (`sight`,
+   *  `planOf`, `runQuery`, `localeOf`, R14) and the services it reaches (`entitiesFor`, `recordedReads`). */
+  constructor(r) {
+    this.r = r;
+  }
+  /** R1–R3 over `captures` (`[{capture_sha, bundle_id}]`, every one in the viewer's sight, in capture-sha order, at
+   *  most `FIND_CAPTURES_PER_CALL`): one `{kind, items, count, truncated, nothing, not_read}` per kind asked. `whole` is
+   *  true when these captures are the whole scope, so a kind with no match and nothing unread may say "Nothing here". */
+  find({ captures, kinds: kinds3, term, limit, viewer, whole: whole2 }) {
+    const data = new Map(captures.map((c) => [c.capture_sha, this.#load(c)]));
+    const language = this.r.localeOf();
+    return kinds3.map((kind2) => {
+      const acc = { items: [], not_read: [], truncated: false };
+      const add2 = (item3) => {
+        if (acc.items.length > limit) return;
+        acc.items.push(placed(item3, data.get(item3.capture_sha)));
+      };
+      const skip = (c, why3) => acc.not_read.push({ capture_sha: c.capture_sha, why: why3 });
+      if (kind2 === "people") this.#people(captures, data, add2, skip, viewer, acc, limit);
+      else if (kind2 === "term") this.#term(captures, data, add2, skip, term, viewer, acc);
+      else for (const c of captures) {
+        const d = data.get(c.capture_sha);
+        if (kind2 === "events") {
+          this.#events(c, d, add2, skip);
+          continue;
+        }
+        if (!d.reading && !d.units.length && !d.cells) {
+          skip(c, "not extracted: no reading of this capture is held");
+          continue;
+        }
+        if (!d.units.length && !d.cells) {
+          skip(c, "no text: this capture's reading holds no text to search");
+          continue;
+        }
+        const lang = d.language || language;
+        const set = lang && Object.hasOwn(FIND_MATCHERS, lang) ? FIND_MATCHERS[lang] : null;
+        if (!set) {
+          skip(c, lang ? `no matcher for ${lang} yet` : "no matcher for this capture's language yet: neither its reading nor the active profiles state a language");
+          continue;
+        }
+        if (kind2 === "requirements") {
+          if (!d.units.length) skip(c, "no text: this capture's reading holds typed cells but no text unit to read sentences from");
+          else this.#requirements(c, d, set, add2);
+        } else this.#figures(kind2, c, d, set, add2);
+      }
+      const truncated6 = acc.truncated || acc.items.length > limit;
+      const items = acc.items.slice(0, limit);
+      const nothing = whole2 && items.length === 0 && acc.not_read.length === 0 && !truncated6;
+      return {
+        kind: kind2,
+        items,
+        count: items.length,
+        truncated: truncated6,
+        nothing,
+        ...nothing ? { says: say4("state.empty") } : {},
+        not_read: acc.not_read
+      };
+    });
+  }
+  /** R1, R4 (N715; K1941, K2063): who recorded each match. Every read (`r.recordedReads()`: the four recording
+   *  modules' `recordedBy`, then each registered one) is called once per capture of `captures`, under `viewer`, with
+   *  `limit` RECORDED_BY_LIMIT; each item whose extent stands to the match's (a table item's `table.extent`) as `same`
+   *  or `narrower` (`content.extentRelation`; T50: never `wider`, R1) is in the match's `recorded`, `relation` that answer. A read
+   *  that throws, rejects, refuses or answers another shape is in `not_read` with why and changes nothing else; a
+   *  promise is never awaited (a find is synchronous), and its rejection is caught. Answers `{read, not_read}`. */
+  recorded(kinds3, captures, viewer) {
+    const reads18 = this.r.recordedReads();
+    const got = new Map(captures.map((c) => [c.capture_sha, []]));
+    const read3 = [], not_read = [];
+    for (const rd of reads18) {
+      if (!rd.read) {
+        not_read.push({ module: rd.module, why: rd.why, captures: captures.length });
+        continue;
+      }
+      let failed3 = null, n2 = 0;
+      for (const c of captures) {
+        const a = callRead(rd.read, c.capture_sha, viewer);
+        if (a.why) {
+          n2++;
+          failed3 = failed3 || a.why;
+          continue;
+        }
+        got.get(c.capture_sha).push({ module: rd.module, items: a.items, truncated: a.truncated });
+      }
+      if (failed3) not_read.push({ module: rd.module, why: failed3, captures: n2 });
+      else if (captures.length) read3.push(rd.module);
+    }
+    if (!reads18.some((rd) => rd.registered)) not_read.push({ module: null, why: RECORDED_NONE_REGISTERED });
+    for (const k of kinds3)
+      for (const m of k.items) {
+        const answers2 = got.get(m.capture_sha) || [];
+        const at50 = m.table ? m.table.extent : m.extent;
+        m.recorded = [];
+        for (const a of answers2)
+          for (const it of a.items) {
+            const relation2 = relationOf2(at50, it.extent);
+            if (!RECORDED_RELATIONS.includes(relation2)) continue;
+            m.recorded.push({
+              module: a.module,
+              record: it.record ?? null,
+              kind: it.kind ?? null,
+              field: it.field ?? null,
+              extent: it.extent ?? null,
+              relation: relation2,
+              by: it.by ?? null,
+              at: it.at ?? null,
+              withdrawn: it.withdrawn === true
+            });
+          }
+        if (answers2.some((a) => a.truncated)) m.recorded_truncated = true;
+      }
+    return { read: read3, not_read };
+  }
+  /** R5, R6 (T50; N1123, N1177): every match carries `title`, the title of the bundle R1 attributes its capture to (null
+   *  when that bundle states none), and, with an extent (a table item's `table.extent`), `content_id`, the id of the row
+   *  `content` holds for exactly that capture and extent, or null with `content_held: false`. A find mints nothing, so a
+   *  passage nobody has marked citable answers null. A row held in a bundle the viewer may not see is no row to them. */
+  annotate(kinds3, captures, viewer) {
+    const bundleOf2 = new Map(captures.map((c) => [c.capture_sha, c.bundle_id]));
+    const sees = this.r.sight(viewer);
+    const titles = /* @__PURE__ */ new Map(), held3 = /* @__PURE__ */ new Map();
+    const titleOf6 = (id) => {
+      if (!titles.has(id)) {
+        const row13 = id ? this.r.oneOf(`SELECT title FROM bundles WHERE bundle_id = ?`, id) : null;
+        titles.set(id, row13 && typeof row13.title === "string" && row13.title.trim() ? row13.title : null);
+      }
+      return titles.get(id);
+    };
+    const contentOf2 = (sha2, extent) => {
+      let canon6 = null;
+      try {
+        canon6 = canonicalExtent2(extent);
+      } catch {
+        canon6 = null;
+      }
+      if (canon6 === null) return null;
+      const key2 = `${sha2}\0${canon6}`;
+      if (!held3.has(key2)) {
+        const row13 = this.r.rowsOf(`SELECT content_id, bundle_id FROM content WHERE capture_sha = ? AND extent = ?
+                                    ORDER BY stale, at, content_id`, sha2, canon6).find((r) => sees(r.bundle_id));
+        held3.set(key2, row13 ? row13.content_id : null);
+      }
+      return held3.get(key2);
+    };
+    for (const k of kinds3)
+      for (const m of k.items) {
+        m.title = titleOf6(bundleOf2.get(m.capture_sha) ?? null);
+        const at50 = m.table ? m.table.extent : m.extent;
+        if (at50) {
+          m.content_id = contentOf2(m.capture_sha, at50);
+          m.content_held = m.content_id !== null;
+        }
+      }
+  }
+  /* One capture's reading (content type, language, typed cells, items) and its text units in reading order. */
+  #load(c) {
+    const row13 = this.r.oneOf(`SELECT content_type, reading FROM readings WHERE capture_sha = ?`, c.capture_sha);
+    const reading3 = row13 ? safeJson11(row13.reading) : null;
+    const units = this.r.rowsOf(`SELECT seq, extent_kind, extent, ref, text FROM capture_text WHERE capture_sha = ?
+                                  ORDER BY seq, extent_kind, extent`, c.capture_sha).map((u) => ({ ...u, extentObj: safeJson11(u.extent) }));
+    const lang = reading3 && typeof reading3.language === "string" && reading3.language ? reading3.language.split("-")[0].toLowerCase() : null;
+    const cells = reading3 && reading3.cells && typeof reading3.cells === "object" && !Array.isArray(reading3.cells) ? reading3.cells : null;
+    return {
+      reading: row13 ? { content_type: row13.content_type, value: reading3 } : null,
+      units,
+      language: lang,
+      cells,
+      grids: /* @__PURE__ */ new Map()
+    };
+  }
+  /* `money` and `dates`: over the text units, and over a workbook's typed cells where the reading holds them. A
+     table's date or amount column is ONE result naming the table (K1468), never one per row. */
+  #figures(kind2, c, d, set, add2) {
+    const match = kind2 === "money" ? matchMoney : matchDates;
+    const item3 = (m, text8, extent) => ({
+      kind: kind2,
+      words: cutWords(sentenceAround(text8, m.index, m.end)),
+      capture_sha: c.capture_sha,
+      extent,
+      origin: FIND_ORIGIN,
+      as_read: m.as_read,
+      ...kind2 === "money" ? { figure: m.figure, ...m.figure ? {} : { figure_why: m.figure_why } } : {
+        date: m.date,
+        ...m.date_why ? { date_why: m.date_why } : {},
+        ...m.deadline ? { deadline: true, period: m.period } : {}
+      }
+    });
+    const { sheets, tables } = heldCells(d.cells);
+    const docTables = tables.map((t2) => ({ ...t2, ...this.#columns(kind2, t2.cells, set) }));
+    const skipped = paragraphsOf(docTables, d.units);
+    for (const u of d.units) {
+      const e2 = u.extentObj;
+      if (e2 && e2.kind === "sheet-range" && sheets.has(e2.sheet)) continue;
+      if (e2 && e2.kind === "doc-table" && docTables.some((t2) => t2.table === e2.table)) continue;
+      if (skipped.has(u)) continue;
+      const found3 = match(u.text, set);
+      if (!found3.length) continue;
+      if (u.extent_kind === "doc-table") {
+        add2({
+          kind: kind2,
+          table: {
+            capture_sha: c.capture_sha,
+            extent: e2,
+            column: null,
+            rows: null,
+            column_why: say4("retrieval.column_why")
+          },
+          words: cutWords(String(u.text).split("\n")[0]),
+          capture_sha: c.capture_sha,
+          extent: e2,
+          origin: FIND_ORIGIN
+        });
+        continue;
+      }
+      for (const m of found3) add2(item3(m, u.text, e2));
+    }
+    for (const t2 of docTables)
+      for (const col of t2.columns) {
+        const extent = { kind: "doc-table", table: t2.table };
+        add2({
+          kind: kind2,
+          table: { capture_sha: c.capture_sha, extent, column: col.col, rows: col.rows },
+          words: col.words,
+          capture_sha: c.capture_sha,
+          extent,
+          origin: FIND_ORIGIN
+        });
+      }
+    for (const sheet of [...sheets].sort()) this.#sheet(kind2, c, sheet, d.cells[sheet], set, match, add2, item3);
+  }
+  /* One sheet's typed cells: each date or amount column (`#columns`) is one table result; every other cell is matched
+     on its own words. */
+  #sheet(kind2, c, sheet, cells, set, match, add2, item3) {
+    const { held: held3, columns, done } = this.#columns(kind2, cells, set);
+    for (const col of columns) {
+      const extent = { kind: "sheet-range", sheet, range: `${col.col}${col.first}:${col.col}${col.last}` };
+      add2({
+        kind: kind2,
+        table: { capture_sha: c.capture_sha, extent, column: col.col, rows: col.rows },
+        words: col.words,
+        capture_sha: c.capture_sha,
+        extent,
+        origin: FIND_ORIGIN
+      });
+    }
+    for (const x of held3) {
+      if (done.has(x) || x.cell.value == null) continue;
+      const text8 = String(x.cell.value);
+      for (const m of match(text8, set)) add2(item3(m, text8, { kind: "sheet-cell", sheet, cell: `${x.at.col}${x.at.row}` }));
+    }
+  }
+  /* A grid's typed cells (a sheet's, or a document table's, each cell's `source.cell` in A1): the first row read is its
+     header; a column every one of whose other cells is a date (or an amount: a number, or a value written as a plain
+     number, under a header naming a currency, or a value the money matcher reads whole) is one result. Answers the
+     cells placed (`held`), the columns (`{col, words, rows, first, last}`) and the cells they take (`done`). */
+  #columns(kind2, cells, set) {
+    const at50 = (cell) => {
+      const m = cell && cell.source && typeof cell.source.cell === "string" ? A1.exec(cell.source.cell) : null;
+      return m ? { col: m[1].toUpperCase(), row: Number(m[2]) } : null;
+    };
+    const held3 = cells.map((cell) => ({ cell, at: at50(cell) })).filter((x) => x.at);
+    const columns = [], done = /* @__PURE__ */ new Set();
+    if (!held3.length) return { held: held3, columns, done };
+    const top2 = Math.min(...held3.map((x) => x.at.row));
+    const cols = /* @__PURE__ */ new Map();
+    for (const x of held3) {
+      if (!cols.has(x.at.col)) cols.set(x.at.col, { header: null, body: [] });
+      if (x.at.row === top2) cols.get(x.at.col).header = x.cell;
+      else cols.get(x.at.col).body.push(x);
+    }
+    const whole2 = (s, m) => m.length === 1 && m[0].index === 0 && m[0].end === String(s).trim().length;
+    const isDate7 = (x) => x.cell.type === "date" || x.cell.type === "text" && whole2(x.cell.value, matchDates(String(x.cell.value ?? "").trim(), set).filter((m) => m.date));
+    const headerMoney = (h) => !!h && patterns(set).currencyMark.test(String(h.value ?? ""));
+    const isAmount = (x, h) => x.cell.type === "number" && headerMoney(h) || x.cell.type === "text" && headerMoney(h) && PLAIN_NUMBER.test(String(x.cell.value ?? "").trim()) || x.cell.type === "text" && whole2(x.cell.value, matchMoney(String(x.cell.value ?? "").trim(), set));
+    for (const col of [...cols.keys()].sort((a, b) => colNum(a) - colNum(b))) {
+      const { header: header2, body } = cols.get(col);
+      const filled21 = body.filter((x) => x.cell.value != null && String(x.cell.value).trim() !== "");
+      if (!filled21.length) continue;
+      const fits = kind2 === "dates" ? filled21.every(isDate7) : filled21.every((x) => isAmount(x, header2));
+      if (!fits) continue;
+      const rows4 = filled21.map((x) => x.at.row);
+      columns.push({
+        col,
+        rows: filled21.length,
+        first: Math.min(...rows4),
+        last: Math.max(...rows4),
+        words: cutWords(header2 && header2.value != null && String(header2.value).trim() ? header2.value : `column ${col}`)
+      });
+      for (const x of body) done.add(x);
+    }
+    return { held: held3, columns, done };
+  }
+  #requirements(c, d, set, add2) {
+    for (const u of d.units)
+      for (const m of matchRequirements(u.text, set))
+        add2({
+          kind: "requirements",
+          words: cutWords(m.sentence),
+          capture_sha: c.capture_sha,
+          extent: u.extentObj,
+          origin: FIND_ORIGIN,
+          requirement_word: m.requirement_word
+        });
+  }
+  /* `events`: the items, motions and votes the minutes and agenda readers read, as `extraction` holds the reading. */
+  #events(c, d, add2, skip) {
+    if (!d.reading) {
+      skip(c, "not extracted: no reading of this capture is held");
+      return;
+    }
+    if (!FIND_EVENT_TYPES.includes(d.reading.content_type)) {
+      skip(c, "not minutes or an agenda");
+      return;
+    }
+    const list6 = d.reading.value && Array.isArray(d.reading.value.entities) ? d.reading.value.entities : [];
+    for (const e2 of list6) {
+      if (!e2 || typeof e2 !== "object") continue;
+      const { extent, extent_why } = extentOfSource(e2.source);
+      add2({
+        kind: "events",
+        words: cutWords(e2.label ?? e2.key ?? e2.ref ?? ""),
+        capture_sha: c.capture_sha,
+        extent,
+        ...extent_why ? { extent_why } : {},
+        origin: FIND_ORIGIN,
+        item: {
+          key: e2.key ?? null,
+          kind: e2.kind ?? null,
+          label: e2.label ?? null,
+          ref: e2.ref ?? null,
+          facts: e2.facts && typeof e2.facts === "object" ? e2.facts : {}
+        },
+        content_type: d.reading.content_type
+      });
+    }
+  }
+  /* `people`: each reference of the captures' readings that corresponds to a held name of a registered person or
+     office, as `entities.namingDocuments` corresponds them (its R17); nothing is resolved (entities R9). */
+  #people(captures, data, add2, skip, viewer, acc, limit) {
+    const read3 = [];
+    for (const c of captures) {
+      if (data.get(c.capture_sha).reading) read3.push(c.capture_sha);
+      else skip(c, "not extracted: no reading of this capture is held");
+    }
+    if (!read3.length) return;
+    const unread = (why3) => {
+      for (const c of captures) if (read3.includes(c.capture_sha)) skip(c, why3);
+    };
+    const entities2 = this.r.entitiesFor();
+    if (!entities2) {
+      unread(say4("retrieval.unread.read_followed_people"));
+      return;
+    }
+    const ans = entities2.namingIn({ captureShas: read3, kinds: [...FIND_PEOPLE_KINDS], limit, viewer });
+    if (!ans || ans.ok !== true) {
+      unread(say4("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
+      return;
+    }
+    if (ans.truncated) acc.truncated = true;
+    const byId = new Map((ans.entities || []).map((e2) => [e2.entity_id, { entity_id: e2.entity_id, kind: e2.entity_kind, label: e2.entity_label }]));
+    const found3 = (ans.candidates || []).filter((cand) => byId.has(cand.entity_id)).map((cand) => ({ ent: byId.get(cand.entity_id), cand }));
+    found3.sort((a, b) => a.cand.capture_sha.localeCompare(b.cand.capture_sha) || String(a.cand.ref).localeCompare(String(b.cand.ref)) || a.ent.entity_id.localeCompare(b.ent.entity_id));
+    const refs = [];
+    for (const { ent, cand } of found3) {
+      const pos = this.r.oneOf(`SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha = ? AND ref = ?
+                                 ORDER BY seq LIMIT 1`, cand.capture_sha, cand.ref);
+      const { extent, extent_why } = pos && pos.pos_kind ? { extent: { kind: pos.pos_kind, ...safeJson11(pos.pos) || {} }, extent_why: null } : extentOfSource(null);
+      refs.push({ entity_id: ent.entity_id, capture_sha: cand.capture_sha, extent });
+      add2({
+        kind: "people",
+        words: cutWords(cand.label ?? cand.key ?? cand.ref),
+        capture_sha: cand.capture_sha,
+        extent,
+        ...extent_why ? { extent_why } : {},
+        origin: FIND_ORIGIN,
+        entity: { entity_id: ent.entity_id, kind: ent.kind, label: ent.label },
+        correspondence: cand.correspondence,
+        matched_alias: cand.matched_alias,
+        ref: cand.ref
+      });
+    }
+    this.#aliasPeople(captures, read3, data, entities2, add2, skip, acc, viewer, refs);
+  }
+  /* R9 (N1193): a held alias of a registered person or office is also found in the words of the scope's text units. Each
+     standing alias (`entities.aliasesOf`, its R55) is folded as `entities` folds a name (R17) and matched as a whole
+     phrase, its terms in order and adjacent between non-letters, against each unit's folded text: one item per (unit,
+     entity), however many aliases or occurrences match, its `matched_alias` the first in entity then alias order. A name
+     two entities hold lists each and nothing is resolved (entities R9). A reference already found for the same entity
+     in the same unit stands as it is (the stronger correspondence); a capture with no text unit is in `not_read`. */
+  #aliasPeople(captures, read3, data, entities2, add2, skip, acc, viewer, refs) {
+    const unreadAll = (why3) => {
+      for (const c of captures) if (read3.includes(c.capture_sha)) skip(c, why3);
+    };
+    if (typeof entities2.aliasesOf !== "function") {
+      unreadAll(say4("retrieval.unread.read_followed_people"));
+      return;
+    }
+    const held3 = [];
+    let after2 = null;
+    for (let page2 = 0; page2 < ALIAS_PAGES_MAX; page2++) {
+      let ans = null;
+      try {
+        ans = entities2.aliasesOf({ kinds: [...FIND_PEOPLE_KINDS], limit: ALIAS_PAGE, after: after2, viewer });
+      } catch {
+        ans = null;
+      }
+      const list6 = ans && ans.ok === true && Array.isArray(ans.aliases) ? ans.aliases : null;
+      if (!list6) {
+        unreadAll(say4("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
+        return;
+      }
+      held3.push(...list6);
+      if (!(ans && ans.truncated === true)) {
+        after2 = null;
+        break;
+      }
+      after2 = ans.next ?? null;
+      if (after2 === null || page2 === ALIAS_PAGES_MAX - 1) {
+        acc.truncated = true;
+        break;
+      }
+    }
+    const phrases = [];
+    for (const a of held3) {
+      const phrase = foldTokens(normAlias(a && a.alias));
+      if (a && typeof a.entity_id === "string" && phrase.length) phrases.push({ ...a, phrase });
+    }
+    for (const c of captures) {
+      if (!read3.includes(c.capture_sha)) continue;
+      const d = data.get(c.capture_sha);
+      if (!d.units.length) {
+        skip(c, "no text: this capture's reading holds no text unit to find a held name in");
+        continue;
+      }
+      if (!phrases.length) continue;
+      for (const u of d.units) {
+        const tokens3 = foldTokens(u.text);
+        if (!tokens3.length) continue;
+        const at50 = /* @__PURE__ */ new Map();
+        tokens3.forEach((t2, i) => {
+          if (!at50.has(t2)) at50.set(t2, []);
+          at50.get(t2).push(i);
+        });
+        const seen = /* @__PURE__ */ new Map();
+        for (const p3 of phrases) {
+          if (seen.has(p3.entity_id) || !phraseIn(tokens3, at50, p3.phrase)) continue;
+          seen.set(p3.entity_id, p3);
+        }
+        for (const [id, p3] of [...seen].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)) {
+          const stands = refs.some((r) => r.entity_id === id && r.capture_sha === c.capture_sha && r.extent && u.extentObj && ["same", "narrower"].includes(relationOf2(u.extentObj, r.extent)));
+          if (stands) continue;
+          const { extent, extent_why } = u.extentObj ? { extent: u.extentObj, extent_why: null } : extentOfSource(null);
+          add2({
+            kind: "people",
+            words: cutWords(u.text),
+            capture_sha: c.capture_sha,
+            extent,
+            ...extent_why ? { extent_why } : {},
+            origin: FIND_ORIGIN,
+            entity: { entity_id: id, kind: p3.kind ?? null, label: p3.label ?? null },
+            correspondence: "name_in_passage",
+            matched_alias: String(p3.alias)
+          });
+        }
+      }
+    }
+  }
+  /* R8: the rows of one sheet holding `phrase` in a cell's value, in row order: each the first matching cell's words, the
+     row's `sheet-range`, its cells and the addresses of its formulas the file never calculated. Empty where the reading
+     holds no typed cells for the sheet, or no one cell holds the phrase. */
+  #sheetRows(d, sheet, phrase) {
+    const grid = gridOf(d, sheet);
+    if (!grid || !phrase.length) return [];
+    const out = [];
+    for (const row13 of [...grid.keys()].sort((a, b) => a - b)) {
+      const hit = grid.get(row13).find(({ cell }) => cell.value != null && !uncalculated(cell) && hasPhrase(tokensOf(cell.value), phrase));
+      if (!hit) continue;
+      const r = rowOf3(d, sheet, row13);
+      out.push({
+        words: String(hit.cell.value),
+        range: r.range,
+        cells: r.cells,
+        cells_truncated: r.cells_truncated,
+        not_calculated: r.not_calculated
+      });
+    }
+    return out;
+  }
+  /* `term`: the term as written, matched as `search` matches words in a passage (query-language's `passage:` arm,
+     through the compiler and the gated executor, R18), each passage one item. */
+  #term(captures, data, add2, skip, term, viewer, acc) {
+    const shas = /* @__PURE__ */ new Set();
+    for (const c of captures) {
+      const d = data.get(c.capture_sha);
+      if (!d.reading && !d.units.length) skip(c, "not extracted: no reading of this capture is held");
+      else if (!d.units.length) skip(c, "no text: this capture's reading holds no text to search");
+      else shas.add(c.capture_sha);
+    }
+    const bundles = [...new Set(captures.filter((c) => shas.has(c.capture_sha)).map((c) => c.bundle_id))].sort();
+    const phrase = tokensOf(term);
+    const query = `passage:"${String(term).replace(/"/g, " ").trim()}"`;
+    const rows4 = [];
+    const tally = { applied: 0 };
+    for (let i = 0; i < bundles.length; i += 64) {
+      const plan2 = this.r.planOf({
+        q: query,
+        viewer,
+        ids: bundles.slice(i, i + 64),
+        rows: "passage",
+        rowLimit: 1e3,
+        rowOffset: 0
+      });
+      const got = this.r.runQuery(plan2.statements.meaning(), tally);
+      if (got.length >= 1e3) acc.truncated = true;
+      for (const r of got) if (shas.has(r.capture_sha)) rows4.push(r);
+    }
+    rows4.sort((a, b) => a.capture_sha.localeCompare(b.capture_sha) || a.seq - b.seq);
+    const seen = /* @__PURE__ */ new Set();
+    for (const r of rows4) {
+      const k = `${r.capture_sha}\0${r.seq}\0${r.extent}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      const d = data.get(r.capture_sha);
+      const u = d.units.find((x) => x.seq === r.seq && x.extent === r.extent);
+      const extent = safeJson11(r.extent);
+      const rows5 = extent && SHEET_EXTENTS.includes(extent.kind) && typeof extent.sheet === "string" ? this.#sheetRows(d, extent.sheet, phrase) : [];
+      if (rows5.length) {
+        for (const x of rows5)
+          add2({
+            kind: "term",
+            words: cutWords(x.words),
+            capture_sha: r.capture_sha,
+            extent: x.range,
+            origin: FIND_ORIGIN,
+            term: String(term),
+            sheet: extent.sheet,
+            cells: x.cells,
+            cells_truncated: x.cells_truncated,
+            not_calculated: x.not_calculated
+          });
+        continue;
+      }
+      add2({
+        kind: "term",
+        words: cutWords(u ? u.text : r.snippet ?? ""),
+        capture_sha: r.capture_sha,
+        extent,
+        origin: FIND_ORIGIN,
+        term: String(term)
+      });
+    }
+  }
+};
+var FIND_ROW_CELLS_MAX = 50;
+var SHEET_EXTENTS = Object.freeze(["sheet-cell", "sheet-range"]);
+var NO_CELLS_WHY = "the reading holds no typed cells for this sheet, or the words found run across cells, so no row of cells is named";
+function gridOf(d, sheet) {
+  if (d.grids.has(sheet)) return d.grids.get(sheet);
+  const list6 = d.cells && Array.isArray(d.cells[sheet]) ? d.cells[sheet] : null;
+  let grid = null;
+  if (list6) {
+    grid = /* @__PURE__ */ new Map();
+    for (const cell of list6) {
+      const m = cell && cell.source && typeof cell.source.cell === "string" ? A1.exec(cell.source.cell) : null;
+      if (!m) continue;
+      const row13 = Number(m[2]), col = m[1].toUpperCase();
+      if (!grid.has(row13)) grid.set(row13, []);
+      grid.get(row13).push({ col, n: colNum(col), at: `${col}${row13}`, cell });
+    }
+    for (const r of grid.values()) r.sort((a, b) => a.n - b.n);
+  }
+  d.grids.set(sheet, grid);
+  return grid;
+}
+var uncalculated = (cell) => cell.formula != null && cell.formula !== "" && (cell.cached === null || cell.cached === void 0);
+function rowOf3(d, sheet, row13) {
+  const grid = gridOf(d, sheet), held3 = grid ? grid.get(row13) : null;
+  if (!held3) return null;
+  const cells = held3.slice(0, FIND_ROW_CELLS_MAX).map(({ at: at50, cell }) => uncalculated(cell) ? { cell: at50, value: null, type: cell.type ?? null, formula: cell.formula, cached: null } : { cell: at50, value: cell.value ?? cell.cached ?? null, type: cell.type ?? null });
+  return {
+    cells,
+    cells_truncated: held3.length > FIND_ROW_CELLS_MAX,
+    not_calculated: held3.filter(({ cell }) => uncalculated(cell)).map((x) => x.at),
+    range: { kind: "sheet-range", sheet, range: `A${row13}:${held3[held3.length - 1].col}${row13}` }
+  };
+}
+function placed(item3, d) {
+  const e2 = item3.table ? item3.table.extent : item3.extent;
+  if (!e2 || !SHEET_EXTENTS.includes(e2.kind) || typeof e2.sheet !== "string") return item3;
+  if (item3.cells !== void 0) return { ...item3, row: rowNumberOf(e2) };
+  const out = { ...item3, sheet: e2.sheet };
+  if (item3.table) return { ...out, row: null };
+  const m = e2.kind === "sheet-cell" && typeof e2.cell === "string" ? A1.exec(e2.cell) : null;
+  const row13 = m && d ? rowOf3(d, e2.sheet, Number(m[2])) : null;
+  return row13 ? { ...out, cells: row13.cells, cells_truncated: row13.cells_truncated, not_calculated: row13.not_calculated, row: Number(m[2]) } : { ...out, cells: null, cells_why: NO_CELLS_WHY, row: null };
+}
+function rowNumberOf(e2) {
+  if (e2.kind === "sheet-cell") {
+    const m2 = typeof e2.cell === "string" ? A1.exec(e2.cell) : null;
+    return m2 ? Number(m2[2]) : null;
+  }
+  const m = typeof e2.range === "string" ? /^\$?[A-Z]{1,3}\$?(\d{1,7}):\$?[A-Z]{1,3}\$?(\d{1,7})$/i.exec(e2.range) : null;
+  return m && m[1] === m[2] ? Number(m[1]) : null;
+}
+var foldTokens = (s) => String(s ?? "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+function phraseIn(tokens3, at50, phrase) {
+  for (const i of at50.get(phrase[0]) || []) {
+    let k = 1;
+    while (k < phrase.length && tokens3[i + k] === phrase[k]) k++;
+    if (k === phrase.length) return true;
+  }
+  return false;
+}
+var tokensOf = (s) => String(s ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+function hasPhrase(tokens3, phrase) {
+  if (!phrase.length || tokens3.length < phrase.length) return false;
+  for (let i = 0; i + phrase.length <= tokens3.length; i++) {
+    let k = 0;
+    while (k < phrase.length && tokens3[i + k] === phrase[k]) k++;
+    if (k === phrase.length) return true;
+  }
+  return false;
+}
+function extentOfSource(source2) {
+  if (source2 && typeof source2 === "object" && typeof source2.kind === "string" && source2.kind) {
+    const { ref, ...extent } = source2;
+    return { extent, extent_why: null };
+  }
+  return { extent: null, extent_why: say4("retrieval.extent_why") };
+}
+function callRead(read3, captureSha, viewer) {
+  let a;
+  try {
+    a = read3({ captureSha, limit: RECORDED_BY_LIMIT, viewer });
+  } catch (e2) {
+    return { why: say4("retrieval.why.read_threw", { e: String(e2 && e2.message || e2).slice(0, 200) }) };
+  }
+  if (a && typeof a.then === "function") {
+    Promise.resolve(a).catch(() => {
+    });
+    return { why: say4("retrieval.why.read_answered_promise") };
+  }
+  if (a && typeof a === "object" && a.ok === false)
+    return { why: say4("retrieval.why.read_refused", { given: String(a.code ?? a.reason ?? say4("monitoring.reason_given")).slice(0, 200) }) };
+  if (!a || typeof a !== "object" || a.ok !== true || !Array.isArray(a.items) || !a.items.every((it) => it && typeof it === "object" && !Array.isArray(it)))
+    return { why: "the read answered another shape than events R49's" };
+  return { items: a.items, truncated: a.truncated === true };
+}
+function relationOf2(match, extent) {
+  const e2 = typeof extent === "string" ? safeJson11(extent) : extent;
+  try {
+    return extentRelation2(match, e2);
+  } catch {
+    return "unreadable";
+  }
+}
+function heldCells(cells) {
+  const sheets = /* @__PURE__ */ new Set(), tables = [];
+  for (const [name3, list6] of Object.entries(cells || {})) {
+    if (!Array.isArray(list6)) continue;
+    const src = list6.map((c) => c && c.source && typeof c.source === "object" ? c.source : null);
+    const table5 = src.length && src[0] && src[0].kind === "doc-table" && Number.isInteger(src[0].table) ? src[0].table : null;
+    if (table5 !== null && src.every((x) => x && x.kind === "doc-table" && x.table === table5)) tables.push({ table: table5, ref: name3, cells: list6 });
+    else sheets.add(name3);
+  }
+  return { sheets, tables: tables.sort((a, b) => a.table - b.table) };
+}
+function paragraphsOf(docTables, units) {
+  const taken = /* @__PURE__ */ new Set();
+  for (const t2 of docTables)
+    for (const x of t2.done)
+      for (const p3 of Array.isArray(x.cell.paras) ? x.cell.paras : []) if (Number.isInteger(p3)) taken.add(p3);
+  return new Set(units.filter((u) => u.extentObj && u.extentObj.kind === "doc-para" && taken.has(u.extentObj.para)));
+}
+
+// src/retrieval-browse/find.mjs
+function findIn(r, { scope = null, kinds: kinds3 = null, term = null, limit = null, cursor = null, viewer = null, owner = null } = {}) {
+  const no9 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, code: reason2, detail, ...extra });
+  if (typeof viewer !== "string" || !viewer)
+    return no9("VIEWER_MISSING", "a find answers only to a stamped viewer, and this request carries none");
+  if (scope == null || typeof scope === "object" && !Array.isArray(scope) && !Object.keys(scope).length)
+    return no9("NO_SCOPE", "a find runs over one scope: a capture, a selection, a set of ids or a project");
+  const forms2 = ["capture", "selection", "ids", "project"];
+  const keys = scope && typeof scope === "object" && !Array.isArray(scope) ? Object.keys(scope) : null;
+  if (!keys || keys.length !== 1 || !forms2.includes(keys[0]))
+    return no9("SCOPE_UNKNOWN", `a scope is exactly one of ${forms2.map((f17) => `{${f17}}`).join(", ")}`, { forms: forms2 });
+  const form = keys[0], value = scope[form];
+  const absent = r.missing(["sight", "localeOf", ...form === "selection" ? ["selectionRead"] : []]);
+  if (absent.length) return unavailable(absent);
+  const resolved = scopeOf(r, form, value, viewer, typeof owner === "string" && owner ? owner : viewer);
+  if (resolved.ok === false) return resolved;
+  const asked7 = Array.isArray(kinds3) ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : [];
+  const wanted = [...new Set(asked7.map((k) => String(k).trim()).filter(Boolean))];
+  if (!wanted.length) return no9("NO_KINDS", `a find names the kinds it looks for: ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
+  const unknown = wanted.filter((k) => !FIND_KINDS.includes(k));
+  if (unknown.length)
+    return no9("KIND_UNKNOWN", `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; the kinds are ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
+  const words24 = typeof term === "string" ? term.trim() : "";
+  if (wanted.includes("term") && !words24) return no9("NO_TERM", "the kind term finds a name or term as written, and none was given");
+  const termAbsent = wanted.includes("term") ? r.missing(["planOf", "runQuery"]) : [];
+  if (termAbsent.length) return unavailable(termAbsent);
+  if (words24.length > FIND_TERM_MAX)
+    return no9("TERM_TOO_LONG", `a term is at most ${FIND_TERM_MAX} characters`, { limit: FIND_TERM_MAX, got: words24.length });
+  const n2 = Number(limit);
+  const cap = limit == null || limit === "" || !Number.isFinite(n2) ? FIND_ITEMS_DEFAULT : Math.max(1, Math.min(FIND_ITEMS_MAX, Math.floor(n2)));
+  const after2 = typeof cursor === "string" && cursor ? cursor : null;
+  const remaining = resolved.captures.filter((c) => after2 === null || c.capture_sha > after2);
+  const page2 = remaining.slice(0, FIND_CAPTURES_PER_CALL);
+  const next = remaining.length > page2.length ? page2[page2.length - 1].capture_sha : null;
+  const finder2 = r.finder;
+  const found3 = finder2.find({
+    captures: page2,
+    kinds: wanted,
+    term: words24,
+    limit: cap,
+    viewer,
+    whole: after2 === null && next === null
+  });
+  finder2.annotate(found3, page2, viewer);
+  const recorded = finder2.recorded(found3, page2, viewer);
+  return {
+    ok: true,
+    scope: { form, [form]: value, captures: resolved.captures.length, title: resolved.title ?? null },
+    kinds: found3,
+    captures_read: page2.length,
+    limit: cap,
+    captures_limit: FIND_CAPTURES_PER_CALL,
+    next,
+    recorded_read: recorded.read,
+    recorded_not_read: recorded.not_read
+  };
+}
+var unavailable = (missing2) => ({
+  ok: false,
+  reason: "HOST_READ_MISSING",
+  code: "HOST_READ_MISSING",
+  detail: `this find needs ${missing2.join(", ")} from the host, and the module was not handed it`,
+  missing: missing2
+});
+function scopeOf(r, form, value, viewer, owner) {
+  const no9 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, code: reason2, detail, ...extra });
+  const sees = r.sight(viewer);
+  const byCapture = /* @__PURE__ */ new Map();
+  const keep3 = (row13) => {
+    const b = byCapture.get(row13.capture_sha);
+    if (!b || row13.bundle_id < b) byCapture.set(row13.capture_sha, row13.bundle_id);
+  };
+  const holdOf = (bundleIds) => {
+    for (let i = 0; i < bundleIds.length; i += BROWSE_ID_CHUNK) {
+      const part = bundleIds.slice(i, i + BROWSE_ID_CHUNK);
+      for (const row13 of r.rowsOf(`SELECT DISTINCT capture_sha, bundle_id FROM register
+                                   WHERE bundle_id IN (${part.map(() => "?").join(",")})`, ...part))
+        if (sees(row13.bundle_id)) keep3(row13);
+    }
+  };
+  const ownersOf = (sha2) => r.rowsOf(`SELECT DISTINCT capture_sha, bundle_id FROM register WHERE capture_sha = ?`, sha2).filter((row13) => sees(row13.bundle_id));
+  const SHA3 = /^[0-9a-f]{64}$/;
+  if (form === "capture") {
+    const sha2 = typeof value === "string" ? value.trim() : "";
+    const held3 = sha2 ? ownersOf(sha2) : [];
+    if (!held3.length)
+      return no9("CAPTURE_NOT_HELD", "this record holds no capture with that fingerprint that you may see");
+    held3.forEach(keep3);
+  } else if (form === "selection") {
+    const sel = r.selectionRead({ handle: typeof value === "string" ? value : "", viewer, owner });
+    if (!sel || sel.ok !== true) return { ok: false, reason: sel && sel.reason, detail: sel && sel.detail };
+    holdOf(sel.members);
+  } else if (form === "ids") {
+    const list6 = Array.isArray(value) ? [...new Set(value.filter((v) => typeof v === "string" && v).map((v) => v.trim()))] : [];
+    if (list6.length > FIND_IDS_MAX)
+      return no9("SCOPE_TOO_LARGE", `an enumerated scope holds at most ${FIND_IDS_MAX} ids`, { limit: FIND_IDS_MAX, got: list6.length });
+    for (const id of list6.filter((v) => SHA3.test(v))) ownersOf(id).forEach(keep3);
+    holdOf(list6.filter((v) => !SHA3.test(v)));
+  } else {
+    const id = typeof value === "string" ? value.trim() : "";
+    const proj = id ? r.oneOf(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id = ?`, id) : null;
+    if (!proj || normalizeType(proj.object_type) !== "project" || !sees(id))
+      return no9("NO_SUCH_PROJECT", "this record holds no project by that id that you may see");
+    holdOf([id, ...r.rowsOf(`SELECT bundle_id FROM bundles WHERE project = ? ORDER BY bundle_id`, id).map((row13) => row13.bundle_id)]);
+  }
+  const captures = [...byCapture].map(([capture_sha, bundle_id]) => ({ capture_sha, bundle_id })).sort((a, b) => a.capture_sha < b.capture_sha ? -1 : a.capture_sha > b.capture_sha ? 1 : 0);
+  const titleOf6 = (id) => {
+    const row13 = id ? r.oneOf(`SELECT title FROM bundles WHERE bundle_id = ?`, id) : null;
+    return row13 && typeof row13.title === "string" && row13.title.trim() ? row13.title : null;
+  };
+  const title = form === "capture" ? titleOf6(captures[0] ? captures[0].bundle_id : null) : form === "project" ? titleOf6(String(value).trim()) : null;
+  return { ok: true, captures, title };
 }
 
 // src/standards/checks.mjs
@@ -99626,7 +101180,7 @@ var PROPOSAL_FIELDS = Object.freeze({ relation: RELATE_KEYS, link: LINK_KEYS, tr
 var str6 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj25 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
-var safeJson11 = (s) => {
+var safeJson12 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -99721,7 +101275,7 @@ var LawRecords = class {
     if (!p3) return { refused: this.k.refuseNoSuchProposal(String(id).slice(0, 80)) };
     const held3 = this.#adoption(p3.proposal_id);
     if (held3) return { refused: this.k.refuseProposalAdopted(p3.proposal_id, held3) };
-    return { fields: safeJson11(p3.fields_json) || {}, id: p3.proposal_id };
+    return { fields: safeJson12(p3.fields_json) || {}, id: p3.proposal_id };
   }
   #adoption(proposalId) {
     for (const [t2, col] of [["law_relations", "relation_id"], ["court_links", "link_id"], ["court_treatments", "treatment_id"]]) {
@@ -99920,14 +101474,14 @@ var LawRecords = class {
     if (unknown) return unknown;
     const who4 = str6(a.proposer);
     if (!who4) return this.k.refuseProposerUnnamed();
-    const why2 = str6(a.why);
-    if (!why2 || why2.length > WHY_MAX) return this.k.refuseWhyInvalid();
+    const why3 = str6(a.why);
+    if (!why3 || why3.length > WHY_MAX) return this.k.refuseWhyInvalid();
     const fields = Object.fromEntries(Object.entries(a).filter(([k]) => !["what", "why", "proposer", "viewer"].includes(k)));
     return this.k.record.transact(() => {
       const at50 = this.k.when();
       const id = this.#id("lprop", { what, fields, at: at50 });
       this.k.sql.exec(`INSERT INTO law_proposals (proposal_id, what, fields_json, why, proposed_by, proposed_at)
-                       VALUES (?,?,?,?,?,?)`, id, what, JSON.stringify(fields), why2, who4, at50);
+                       VALUES (?,?,?,?,?,?)`, id, what, JSON.stringify(fields), why3, who4, at50);
       const label = proposalLabel(who4, "law_relation");
       return {
         ok: true,
@@ -99935,7 +101489,7 @@ var LawRecords = class {
           id,
           what,
           fields,
-          why: why2,
+          why: why3,
           at: at50,
           by: label.by,
           state: label.state,
@@ -100290,7 +101844,7 @@ var LawRecords = class {
           content_id: cid,
           capture_sha: row13.capture_sha,
           bundle_id: row13.bundle_id,
-          extent: { kind: row13.extent_kind, ...safeJson11(row13.extent) || {} },
+          extent: { kind: row13.extent_kind, ...safeJson12(row13.extent) || {} },
           at: { start: hit.start, end: hit.end }
         });
       }
@@ -100308,9 +101862,9 @@ var LawRecords = class {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
     const own10 = CONNECTION_KINDS4.map((k) => k.kind);
-    const asked6 = Array.isArray(kinds3) ? kinds3.filter((k) => own10.includes(k)) : own10;
+    const asked7 = Array.isArray(kinds3) ? kinds3.filter((k) => own10.includes(k)) : own10;
     const id = typeof node === "string" ? node : "";
-    const all = /^EVT-/.test(id) ? this.#eventItems(id, asked6, viewer) : this.#standardItems(id, asked6, viewer);
+    const all = /^EVT-/.test(id) ? this.#eventItems(id, asked7, viewer) : this.#standardItems(id, asked7, viewer);
     const live7 = [];
     for (const item3 of all) {
       let v;
@@ -100331,13 +101885,13 @@ var LawRecords = class {
     return rest.length > BOUNDS.fanout ? { items, next: { after: items[items.length - 1].id }, truncated: true } : { items };
   }
   /* The relations and links with `id` at one end, not withdrawn, whose passage and ends the viewer may read. */
-  #standardItems(id, asked6, viewer) {
+  #standardItems(id, asked7, viewer) {
     if (!this.k.row(id)) return [];
     const out = [];
     const rels = this.k.rows(`SELECT r.* FROM law_relations r WHERE (r.from_standard=? OR r.to_standard=?) AND NOT EXISTS
                                 (SELECT 1 FROM law_withdrawals w WHERE w.item_id=r.relation_id)`, id, id);
     for (const r of rels) {
-      if (!asked6.includes(`law_${r.type}`) || !this.#sees(r.citation, viewer) || !this.#endsSeen(r.from_standard, r.to_standard, viewer)) continue;
+      if (!asked7.includes(`law_${r.type}`) || !this.#sees(r.citation, viewer) || !this.#endsSeen(r.from_standard, r.to_standard, viewer)) continue;
       out.push(this.#item({
         id: r.relation_id,
         kind: `law_${r.type}`,
@@ -100352,7 +101906,7 @@ var LawRecords = class {
     const links = this.k.rows(`SELECT l.* FROM court_links l WHERE (l.from_standard=? OR l.to_standard=?) AND NOT EXISTS
                                  (SELECT 1 FROM law_withdrawals w WHERE w.item_id=l.link_id)`, id, id);
     for (const l2 of links) {
-      if (!asked6.includes(`court_${l2.type}`) || !this.#sees(l2.citation, viewer) || !this.#endsSeen(l2.from_standard, l2.to_standard, viewer)) continue;
+      if (!asked7.includes(`court_${l2.type}`) || !this.#sees(l2.citation, viewer) || !this.#endsSeen(l2.from_standard, l2.to_standard, viewer)) continue;
       out.push(this.#item({
         id: l2.link_id,
         kind: `court_${l2.type}`,
@@ -100388,8 +101942,8 @@ var LawRecords = class {
   }
   /* The held standards in force at the event's `when` (`standards` R20, the host's), each a derived item; nothing for
      an event the viewer may not read or with no `when` (each said in the item's absence, never a guess). */
-  #eventItems(eventId3, asked6, viewer) {
-    if (!asked6.includes("in_force_at_event")) return [];
+  #eventItems(eventId3, asked7, viewer) {
+    if (!asked7.includes("in_force_at_event")) return [];
     const ev = this.k.eventWhen(eventId3, viewer);
     if (!ev || !ev.day) return [];
     const ids = [...this.k.idsCovering(ev.day)];
@@ -100538,7 +102092,7 @@ var THROUGH_KEYS = Object.freeze(["standard", "through", "source", "reason", "au
 var str7 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj26 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand4 = (n2) => [...crypto.getRandomValues(new Uint8Array(n2))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var safeJson12 = (s) => {
+var safeJson13 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -100708,9 +102262,9 @@ var Standards = class {
    *  (jurisdictions R15: nothing chooses between profiles that disagree), so the answer is undetermined. A declared
    *  kind or issuer that differs from the match's is stated beside it, never corrected. Never throws. */
   sourceOf(cite, declared2 = {}) {
-    const undetermined3 = (why3, extra) => ({ state: "undetermined", why: why3, ...extra || {} });
-    const { view, why: why2 } = this.#view();
-    if (!view) return undetermined3(why2);
+    const undetermined3 = (why4, extra) => ({ state: "undetermined", why: why4, ...extra || {} });
+    const { view, why: why3 } = this.#view();
+    if (!view) return undetermined3(why3);
     const entries = Array.isArray(view.standard_sources) ? view.standard_sources : [];
     if (!entries.length) return undetermined3("the active jurisdiction profiles list no source of standards");
     const text8 = String(cite ?? "");
@@ -101031,7 +102585,7 @@ var Standards = class {
   /* R33: the family, from the cite's series reading (`id-spaces.recogniseSeries` over the active view), a declared one
      kept as declared with the difference stated; a declared key/series pair no active profile holds is refused. */
   #familyField(a, cite) {
-    const { view, why: why2 } = this.#view();
+    const { view, why: why3 } = this.#view();
     let recognised = null;
     try {
       const r = view ? recogniseSeries(view, cite) : null;
@@ -101055,7 +102609,7 @@ var Standards = class {
         state: "undetermined",
         key: null,
         family_key: null,
-        why: view ? "the citation matches no series the active jurisdiction profiles list, and none was declared" : why2
+        why: view ? "the citation matches no series the active jurisdiction profiles list, and none was declared" : why3
       } };
     }
     const d = a.family;
@@ -101113,8 +102667,8 @@ var Standards = class {
     }
     if (a.overrides != null) {
       const list6 = Array.isArray(a.overrides) ? a.overrides : null;
-      const bad2 = (field3, why2) => {
-        return refusal11("OVERRIDE_INVALID", `an override's ${field3} ${why2}. Nothing was written.`, { field: field3 });
+      const bad2 = (field3, why3) => {
+        return refusal11("OVERRIDE_INVALID", `an override's ${field3} ${why3}. Nothing was written.`, { field: field3 });
       };
       if (!list6 || !list6.length || list6.length > TEXTS_MAX) return bad2("list", `is a list of 1 to ${TEXTS_MAX} overrides`);
       for (const o of list6) {
@@ -101243,8 +102797,8 @@ var Standards = class {
   /* R42: a target of a commitment, policy or standard: metric, threshold, period and definition. */
   #targetField(a, f17) {
     if (a.target == null) return { ok: true, target: null };
-    const bad2 = (field3, why2) => {
-      return refusal11("TARGET_INVALID", `a target's ${field3} ${why2}. Nothing was written.`, { field: field3 });
+    const bad2 = (field3, why3) => {
+      return refusal11("TARGET_INVALID", `a target's ${field3} ${why3}. Nothing was written.`, { field: field3 });
     };
     const t2 = a.target;
     if (!BENCHMARK_KINDS.includes(f17.kind)) return bad2("kind", `is held only by a ${BENCHMARK_KINDS.join(", ")}`);
@@ -101519,7 +103073,7 @@ var Standards = class {
       reason: row13.reason ?? null,
       text: texts,
       period: { from: row13.period_from ?? null, to: row13.period_to ?? null },
-      source: safeJson12(row13.source_json),
+      source: safeJson13(row13.source_json),
       declared_by: row13.declared_by,
       declared_at: row13.declared_at,
       supersedes: row13.supersedes ?? null,
@@ -101533,7 +103087,7 @@ var Standards = class {
      edition, target or question stated (each said so, never invented). */
   #t35Answer(row13, viewer) {
     const held3 = row13.held || "text";
-    const heldDetail = safeJson12(row13.held_json);
+    const heldDetail = safeJson13(row13.held_json);
     const issuerEntity = row13.issuer_entity ? this.#entity(row13.issuer_entity, viewer) : null;
     const issuerLabel = issuerEntity ? issuerEntity.label : row13.issuer;
     const access = row13.access ?? (row13.kind === "standard" ? "undetermined" : null);
@@ -101548,7 +103102,7 @@ var Standards = class {
       ...notPublic ? notPublicWords(notPublic.release_by) : {}
     };
     return {
-      family: safeJson12(row13.family_json) || {
+      family: safeJson13(row13.family_json) || {
         state: "undetermined",
         key: null,
         family_key: null,
@@ -101563,15 +103117,15 @@ var Standards = class {
       held: held3,
       ...held3 === "cited" ? { cited_by: heldDetail } : {},
       ...held3 === "absent" ? { search: heldDetail } : {},
-      version_basis: safeJson12(row13.version_basis_json),
+      version_basis: safeJson13(row13.version_basis_json),
       overrides: this.#overridesBy(row13.standard_id),
-      force_source: safeJson12(row13.force_source_json),
+      force_source: safeJson13(row13.force_source_json),
       designation: row13.designation ?? null,
       edition: row13.edition ?? null,
-      designation_read: (safeJson12(row13.designation_json) || {}).designation || { value: null, declared: false, read: null, why: "recorded before a designation was read" },
-      edition_read: (safeJson12(row13.designation_json) || {}).edition || { value: null, declared: false, read: null, why: "recorded before an edition was read" },
+      designation_read: (safeJson13(row13.designation_json) || {}).designation || { value: null, declared: false, read: null, why: "recorded before a designation was read" },
+      edition_read: (safeJson13(row13.designation_json) || {}).edition || { value: null, declared: false, read: null, why: "recorded before an edition was read" },
       access,
-      target: safeJson12(row13.target_json),
+      target: safeJson13(row13.target_json),
       question: qn,
       sight: sight.class === "bundle" ? { class: sight.released ? "group" : "bundle", released: sight.released || null } : { class: "group" },
       ...notPublic ? { not_public: notPublic } : {},
@@ -101580,7 +103134,7 @@ var Standards = class {
   }
   /* R37: a standard's sight as recorded, with its release. */
   #sight(row13) {
-    const s = safeJson12(row13.sight_json) || { class: "group" };
+    const s = safeJson13(row13.sight_json) || { class: "group" };
     if (s.class !== "bundle") return { class: "group" };
     const rel = this.#one(`SELECT reason, released_by, released_at FROM standard_releases WHERE standard_id=?`, row13.standard_id);
     return {
@@ -101608,23 +103162,23 @@ var Standards = class {
   }
   /* R38: the overrides a standard makes. */
   #overridesBy(id) {
-    return this.#rows(`SELECT target, portion, until_json FROM standard_overrides WHERE standard_id=? ORDER BY ord`, id).map((o) => ({ target: o.target, portion: o.portion, until: safeJson12(o.until_json) }));
+    return this.#rows(`SELECT target, portion, until_json FROM standard_overrides WHERE standard_id=? ORDER BY ord`, id).map((o) => ({ target: o.target, portion: o.portion, until: safeJson13(o.until_json) }));
   }
   /* R18, R19 as read back: a standard recorded before them states none (its key undetermined, said so). */
   #lawAnswer(row13) {
-    const instrument = safeJson12(row13.instrument_json) || { state: "undetermined", key: null, why: "recorded before instrument keys were composed" };
+    const instrument = safeJson13(row13.instrument_json) || { state: "undetermined", key: null, why: "recorded before instrument keys were composed" };
     return {
       instrument,
       portion: row13.portion_path ? { path: row13.portion_path, content_id: row13.portion_content } : null,
-      requires: safeJson12(row13.requires_json) || [],
-      copy: safeJson12(row13.copy_json) || {
+      requires: safeJson13(row13.requires_json) || [],
+      copy: safeJson13(row13.copy_json) || {
         copy: "undetermined",
         source_copy: null,
         declared: false,
         says: "recorded before a copy status was recorded"
       },
       current_through: row13.current_through ? { date: row13.current_through, basis: row13.current_through_basis } : null,
-      period_basis: safeJson12(row13.period_basis_json)
+      period_basis: safeJson13(row13.period_basis_json)
     };
   }
   /** R5: one standard, with each text passage's standing and whether a newer capture of its document holds it. */
@@ -101716,7 +103270,7 @@ var Standards = class {
      null with why. */
   #periodOf(row13, viewer) {
     const out = { from: row13.period_from ?? null, to: row13.period_to ?? null, why: {}, bound_by: [] };
-    const basis = safeJson12(row13.period_basis_json) || {};
+    const basis = safeJson13(row13.period_basis_json) || {};
     for (const side of ["from", "to"]) {
       const b = basis[side];
       if (!b || !b.event) continue;
@@ -101748,7 +103302,7 @@ var Standards = class {
       };
     const v0 = this.#versionAtPeriod(row13, date, viewer);
     if (v0.state === "not_in_force") return v0;
-    const vb = safeJson12(row13.version_basis_json);
+    const vb = safeJson13(row13.version_basis_json);
     if (vb) {
       const zone = this.#zone();
       const after2 = localDay(vb.after, zone), through = localDay(vb.through, zone);
@@ -101774,12 +103328,12 @@ var Standards = class {
       if (!by || viewer !== null && !this.#sightAdmits(by, viewer)) continue;
       const own10 = this.#versionAtPeriod(by, date, viewer);
       if (own10.state === "not_in_force") continue;
-      const u = safeJson12(o.until_json) || {};
-      let until = null, why2 = null;
+      const u = safeJson13(o.until_json) || {};
+      let until = null, why3 = null;
       if (u.event) {
         const d = this.#eventDay(u.event, "start", viewer);
         until = d.day;
-        why2 = d.why;
+        why3 = d.why;
       } else if (u.revision) {
         const next = by.instrument ? this.#one(
           `SELECT period_from FROM standards WHERE instrument=? AND supersedes=?`,
@@ -101787,14 +103341,14 @@ var Standards = class {
           by.standard_id
         ) : null;
         until = next ? next.period_from ?? null : void 0;
-        if (until === null) why2 = "the revision that ends it states no start";
+        if (until === null) why3 = "the revision that ends it states no start";
       }
       const overriding = { overridden_by: { standard: by.standard_id, portion: by.portion_path ?? null } };
       if (until === null || own10.state === "undetermined")
         return {
           state: "undetermined",
           ...overriding,
-          why: `${by.standard_id} overrides this portion, and ${why2 || own10.why}, so whether it was overridden on ${date} is undetermined`
+          why: `${by.standard_id} overrides this portion, and ${why3 || own10.why}, so whether it was overridden on ${date} is undetermined`
         };
       if (until === void 0 || date < until)
         return {
@@ -101821,20 +103375,20 @@ var Standards = class {
       v = { undetermined: true, why: "the period could not be read" };
     }
     const by = p3.bound_by.length ? ` (bounded by ${p3.bound_by.map((b) => `${b.relation}, which ${b.type.replace(/s$/, "s")} it effective ${b.effective}`).join("; ")})` : "";
-    let state, why2;
+    let state, why3;
     if (v === "out") {
       state = "not_in_force";
-      why2 = p3.from !== null && date < p3.from ? `the period in force starts ${p3.from}, after ${date}${by}` : `the period in force ended ${p3.to}, before ${date}${by}`;
+      why3 = p3.from !== null && date < p3.from ? `the period in force starts ${p3.from}, after ${date}${by}` : `the period in force ended ${p3.to}, before ${date}${by}`;
     } else if (v === "in") {
       state = "in_force";
-      why2 = `${date} lies within the period in force, ${p3.from} to ${p3.to}${by}`;
+      why3 = `${date} lies within the period in force, ${p3.from} to ${p3.to}${by}`;
     } else {
       state = "undetermined";
       const missing2 = [
         p3.from === null ? p3.why.from || "when it came into force" : null,
         p3.to === null ? p3.why.to || "when it ceased to be in force" : null
       ].filter(Boolean);
-      why2 = missing2.length && !p3.why.from && !p3.why.to ? `the record does not state ${missing2.join(" or ")}, so whether it was in force on ${date} is undetermined` : missing2.length ? `${missing2.join("; ")}, so whether it was in force on ${date} is undetermined` : v && v.why || `whether it was in force on ${date} is undetermined`;
+      why3 = missing2.length && !p3.why.from && !p3.why.to ? `the record does not state ${missing2.join(" or ")}, so whether it was in force on ${date} is undetermined` : missing2.length ? `${missing2.join("; ")}, so whether it was in force on ${date} is undetermined` : v && v.why || `whether it was in force on ${date} is undetermined`;
     }
     const known3 = this.#throughOf(row13.standard_id);
     if (known3 && state === "undetermined" && p3.to === null && !p3.unread) {
@@ -101846,7 +103400,7 @@ var Standards = class {
       }
       if (k === "in") {
         state = "in_force";
-        why2 = known3.says;
+        why3 = known3.says;
       }
     }
     if (state !== "not_in_force" && row13.copy === "codifier" && row13.current_through && date > row13.current_through) {
@@ -101859,10 +103413,10 @@ var Standards = class {
       ) : null;
       if (!later3) {
         state = "undetermined";
-        why2 = `versions after ${row13.current_through} not held: this copy is a codifier's, current through ${row13.current_through}, and ${date} is after it`;
+        why3 = `versions after ${row13.current_through} not held: this copy is a codifier's, current through ${row13.current_through}, and ${date} is after it`;
       }
     }
-    return { state, why: why2, period: { from: p3.from, to: p3.to }, bound_by: p3.bound_by, ...known3 ? { known_through: known3 } : {} };
+    return { state, why: why3, period: { from: p3.from, to: p3.to }, bound_by: p3.bound_by, ...known3 ? { known_through: known3 } : {} };
   }
   /* R51: the latest `through` among a version's standing records (R50), with its source, author and the words naming it;
      null when none stands. */
@@ -101871,7 +103425,7 @@ var Standards = class {
                            (SELECT 1 FROM standard_in_force_through_withdrawals w WHERE w.record_id=t.record_id)
                          ORDER BY t.through DESC, t.record_id DESC LIMIT 1`, standardId);
     if (!r) return null;
-    const source2 = sourceWords(r.capture_sha, safeJson12(r.extent_json));
+    const source2 = sourceWords(r.capture_sha, safeJson13(r.extent_json));
     return {
       record: r.record_id,
       through: r.through,
@@ -102066,7 +103620,7 @@ var Standards = class {
       period: { from: r.period_from ?? null, to: r.period_to ?? null },
       supersedes: r.supersedes ?? null,
       superseded_by: this.#successorOf(r.standard_id),
-      family: safeJson12(r.family_json),
+      family: safeJson13(r.family_json),
       says: this.#t35Answer(r, viewer).says
     }));
     return { ok: true, items, truncated: rows4.length > PAGE_MAX };
@@ -102331,15 +103885,15 @@ var Standards = class {
     if (unknown) return unknown;
     const who4 = str7(a.proposer);
     if (!who4) return refuseProposerUnnamed();
-    const why2 = str7(a.why);
-    if (!why2 || why2.length > WHY_MAX2) return refuseWhyInvalid();
+    const why3 = str7(a.why);
+    if (!why3 || why3.length > WHY_MAX2) return refuseWhyInvalid();
     const r = this.#forceRefusal({ ...a, viewer: a.viewer ?? null });
     if (r.ok === false) return r;
     return this.record.transact(() => {
       const at50 = this.#when();
       const id = `fprop-${rand4(12)}`;
       this.sql.exec(`INSERT INTO standard_force_proposals (proposal_id, standard_id, fields_json, why, proposed_by, proposed_at)
-                     VALUES (?,?,?,?,?,?)`, id, r.fields.standard, JSON.stringify(r.fields), why2, who4, at50);
+                     VALUES (?,?,?,?,?,?)`, id, r.fields.standard, JSON.stringify(r.fields), why3, who4, at50);
       return {
         ok: true,
         proposal: this.#forceProposalAnswer(this.#one(`SELECT * FROM standard_force_proposals WHERE proposal_id=?`, id)),
@@ -102352,7 +103906,7 @@ var Standards = class {
     const adopted = this.#one(`SELECT force_id FROM standard_forces WHERE proposal_id=?`, p3.proposal_id);
     return {
       id: p3.proposal_id,
-      ...safeJson12(p3.fields_json),
+      ...safeJson13(p3.fields_json),
       why: p3.why,
       at: p3.proposed_at,
       ...proposalLabel(p3.proposed_by, STANDARD),
@@ -102371,7 +103925,7 @@ var Standards = class {
     const done = this.#one(`SELECT force_id FROM standard_forces WHERE proposal_id=?`, p3.proposal_id);
     if (done) return refuseProposalAdopted(p3.proposal_id, done.force_id);
     return this.#forceWrite(
-      { ...safeJson12(p3.fields_json), reason: a.reason, author: a.author, viewer: a.viewer ?? null },
+      { ...safeJson13(p3.fields_json), reason: a.reason, author: a.author, viewer: a.viewer ?? null },
       p3.proposal_id
     );
   }
@@ -102461,7 +104015,7 @@ var Standards = class {
     if (!this.#row(sid) || !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
     const made3 = this.#overridesBy(sid);
     const naming = this.#rows(`SELECT standard_id, target, portion, until_json FROM standard_overrides WHERE target=?
-                               ORDER BY standard_id, ord`, sid).filter((o) => this.#readable(o.standard_id, viewer)).map((o) => ({ by: o.standard_id, portion: o.portion, until: safeJson12(o.until_json) }));
+                               ORDER BY standard_id, ord`, sid).filter((o) => this.#readable(o.standard_id, viewer)).map((o) => ({ by: o.standard_id, portion: o.portion, until: safeJson13(o.until_json) }));
     return { ok: true, standard: sid, makes: made3, overridden_by: naming };
   }
   /** R40: `adoptionRecord` (`op=standardadoption`): by a member's act, that a body adopted an edition of a held standard,
@@ -102547,8 +104101,8 @@ var Standards = class {
       act: r.act,
       body: r.body ?? null,
       edition: r.edition,
-      from: safeJson12(r.from_json),
-      amendments: safeJson12(r.amendments_json) || [],
+      from: safeJson13(r.from_json),
+      amendments: safeJson13(r.amendments_json) || [],
       mode: r.mode,
       citation: r.citation,
       reason: r.reason,
@@ -102558,7 +104112,7 @@ var Standards = class {
   }
   /* R40: an adoption's start as a day, or why there is none. */
   #adoptionFrom(r, viewer) {
-    const f17 = safeJson12(r.from_json) || {};
+    const f17 = safeJson13(r.from_json) || {};
     if (f17.date) return { day: f17.date };
     return this.#eventDay(f17.event, f17.edge, viewer);
   }
@@ -102696,13 +104250,13 @@ var Standards = class {
       if (!row13 || viewer !== null && !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
       const ent = this.#entity(b, viewer);
       const bodyLabel = ent ? ent.label : b || word("standard.binding.body.none");
-      const answer2 = (state, why2, rests_on) => ({
+      const answer2 = (state, why3, rests_on) => ({
         ok: true,
         standard: sid,
         body: b || null,
         date,
         state,
-        why: why2,
+        why: why3,
         rests_on,
         says: {
           binding: bindingWords(state, bodyLabel),
@@ -102862,7 +104416,7 @@ var Standards = class {
   }
   #throughAnswer(r) {
     const w = this.#one(`SELECT * FROM standard_in_force_through_withdrawals WHERE record_id=?`, r.record_id);
-    const extent = safeJson12(r.extent_json);
+    const extent = safeJson13(r.extent_json);
     return {
       id: r.record_id,
       standard: r.standard_id,
@@ -102926,11 +104480,11 @@ var Standards = class {
         return readRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
       if (typeof captureSha !== "string" || !captureSha.trim())
         return noSha("who recorded something from a passage is read for a captured document, by its capture sha256");
-      let asked6 = null;
+      let asked7 = null;
       if (extent !== null && extent !== void 0) {
         if (!isObj26(extent) || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, extent.kind))
           return readRefusal("EXTENT_MALFORMED", "the extent named is not one the record can read");
-        asked6 = extent;
+        asked7 = extent;
       }
       const n2 = Number.isInteger(Number(limit)) && limit !== null && limit !== "" ? Math.min(FOR_LIMIT_MAX, Math.max(1, Number(limit))) : FOR_LIMIT_DEFAULT;
       const sha2 = captureSha.trim().replace(/^sha256:/i, "").toLowerCase();
@@ -102946,10 +104500,10 @@ var Standards = class {
       const add2 = (record, kind2, field3, sid, ext2, by, at50, withdrawn) => {
         if (!may(sid)) return;
         const canon6 = typeof ext2 === "string" ? ext2 : canonicalExtent2(ext2);
-        const object = safeJson12(canon6);
+        const object = safeJson13(canon6);
         let relation2 = null;
-        if (asked6) {
-          relation2 = extentRelation2(asked6, object);
+        if (asked7) {
+          relation2 = extentRelation2(asked7, object);
           if (!["same", "narrower", "wider"].includes(relation2)) return;
         }
         const key2 = JSON.stringify([canon6, record, field3]);
@@ -102993,7 +104547,7 @@ var Standards = class {
           "in_force_through",
           "source",
           r.standard_id,
-          ext.get(r.content_id) ?? safeJson12(r.extent_json),
+          ext.get(r.content_id) ?? safeJson13(r.extent_json),
           r.author,
           r.at,
           r.gone
@@ -103051,25 +104605,25 @@ var Standards = class {
     };
     for (const c of this.#texts(row13.standard_id)) id("text", c);
     id("portion", row13.portion_content);
-    for (const c of safeJson12(row13.requires_json) || []) id("requires", c);
-    const held3 = safeJson12(row13.held_json);
+    for (const c of safeJson13(row13.requires_json) || []) id("requires", c);
+    const held3 = safeJson13(row13.held_json);
     if (row13.held === "cited") at50("cited_by", held3);
     if (row13.held === "absent" && held3) {
       for (const p3 of held3.places || []) at50("search", p3);
       at50("search", held3.answer);
     }
-    id("copy_claimed", (safeJson12(row13.copy_claimed_json) || {}).extent);
-    const vb = safeJson12(row13.version_basis_json);
+    id("copy_claimed", (safeJson13(row13.copy_claimed_json) || {}).extent);
+    const vb = safeJson13(row13.version_basis_json);
     if (vb && Array.isArray(vb.captures) && vb.captures.includes(sha2)) out.push(["version_basis", { kind: "document" }]);
-    id("force_source", (safeJson12(row13.force_source_json) || {}).citation);
-    const t2 = safeJson12(row13.target_json);
+    id("force_source", (safeJson13(row13.force_source_json) || {}).citation);
+    const t2 = safeJson13(row13.target_json);
     if (t2) {
       id("target.metric", t2.metric && t2.metric.content_id);
       id("target.definition", t2.definition);
       id("target.period", t2.period && t2.period.content_id);
     }
     id("current_through.basis", row13.current_through_basis);
-    const pb = safeJson12(row13.period_basis_json) || {};
+    const pb = safeJson13(row13.period_basis_json) || {};
     for (const side of ["from", "to"]) id(`period_basis.${side}`, pb[side] && pb[side].passage);
     return out;
   }
@@ -103096,8 +104650,8 @@ var Standards = class {
     if (texts === null || texts.length > TEXTS_MAX) return refuseTextUnresolved(null);
     const unresolved = this.#unresolvedText(texts, a.viewer ?? null);
     if (unresolved) return refuseTextUnresolved(unresolved);
-    const why2 = str7(a.why);
-    if (!why2 || why2.length > WHY_MAX2)
+    const why3 = str7(a.why);
+    if (!why3 || why3.length > WHY_MAX2)
       return refusal11(
         "STANDARD_WHY_INVALID",
         `a proposal says why, in 1 to ${WHY_MAX2} characters. Nothing was written.`,
@@ -103118,7 +104672,7 @@ var Standards = class {
         kind2,
         issuer,
         JSON.stringify(texts),
-        why2,
+        why3,
         act2 === null ? null : act2.trim(),
         who4,
         at50,
@@ -103146,7 +104700,7 @@ var Standards = class {
       cite: p3.cite,
       kind: p3.kind ?? null,
       issuer: p3.issuer ?? null,
-      text: safeJson12(p3.text_json) || [],
+      text: safeJson13(p3.text_json) || [],
       why: p3.why,
       act: p3.act ?? null,
       project: p3.project ?? null,
@@ -103238,7 +104792,7 @@ var Standards = class {
           project: p3.project,
           proposed_by: p3.proposed_by,
           proposed_at: p3.proposed_at,
-          has_text: (safeJson12(p3.text_json) || []).length > 0,
+          has_text: (safeJson13(p3.text_json) || []).length > 0,
           adoption,
           standard: false,
           says: PROPOSAL_SAYS
@@ -103295,7 +104849,7 @@ var Standards = class {
       kind: take("kind", p3.kind),
       issuer: take("issuer", p3.issuer),
       /* R9: a proposal adopted as cited (or absent) takes no text from it: it is held without its words */
-      text: a.held === "cited" || a.held === "absent" ? a.text : take("text", (safeJson12(p3.text_json) || []).length ? safeJson12(p3.text_json) : null)
+      text: a.held === "cited" || a.held === "absent" ? a.text : take("text", (safeJson13(p3.text_json) || []).length ? safeJson13(p3.text_json) : null)
     };
     const r = this.record.transact(() => {
       const d = this.#declareRefusal(fields);
@@ -103413,7 +104967,7 @@ function familyKey(family) {
 function refuseTextNotHeld(sid, held3) {
   return refusal11("FORCE_TEXT_NOT_HELD", `${sid} is held ${held3}, without its text, so nothing is read from its words. Nothing was written.`, { standard: sid, held: held3 });
 }
-var readRefusal = (code, why2) => ({ ok: false, refused: code, reason: code, code, why: why2 });
+var readRefusal = (code, why3) => ({ ok: false, refused: code, reason: code, code, why: why3 });
 var OWN = "SELECT content_id FROM content WHERE capture_sha=?";
 var cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 function refuseProposalsArgument(argument, shape, given6) {
@@ -103437,8 +104991,8 @@ function sourceWords(captureSha, extent) {
   }
   return captureWords(captureSha, where);
 }
-function refuseFieldInvalid(field3, why2) {
-  return refusal11("STANDARD_FIELD_INVALID", `${field3} ${why2}. Nothing was written.`, { field: field3 });
+function refuseFieldInvalid(field3, why3) {
+  return refusal11("STANDARD_FIELD_INVALID", `${field3} ${why3}. Nothing was written.`, { field: field3 });
 }
 var refuseReason = (fault) => refuseLawReason(fault);
 function refuseLawReason(fault) {
@@ -104553,8 +106107,8 @@ var Money = class _Money {
       if (viewer === void 0 || viewer === null || viewer === "")
         return shapeRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
       if (!filled5(captureSha)) return refusal13("NO_SHA", "who recorded from a passage is read for one capture, by its sha256");
-      const asked6 = extent === void 0 || extent === null ? null : extent;
-      if (asked6 !== null && !(isObj27(asked6) && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, asked6.kind)))
+      const asked7 = extent === void 0 || extent === null ? null : extent;
+      if (asked7 !== null && !(isObj27(asked7) && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, asked7.kind)))
         return shapeRefusal("EXTENT_MALFORMED", `an extent is one of content's kinds (${list2(Object.keys(CONTENT_EXTENT_KINDS2))})`);
       const n2 = Number.parseInt(limit ?? LIST_LIMIT_DEFAULT, 10);
       const lim = Number.isFinite(n2) ? Math.min(Math.max(n2, 1), LIST_LIMIT_MAX) : LIST_LIMIT_DEFAULT;
@@ -104564,8 +106118,8 @@ var Money = class _Money {
       for (const r of this.#rows(`SELECT f.fact_id, f.source_extent, f.by, f.at, f.withdrawn_at FROM money_facts f
            WHERE f.source_capture_sha=? AND f.source_fact IS NULL AND (${g.sql})`, capture2, ...g.args)) {
         const own10 = r.source_extent ? JSON.parse(r.source_extent) : { kind: "document" };
-        const relation2 = asked6 === null ? null : extentRelation2(asked6, own10);
-        if (asked6 !== null && !["same", "narrower", "wider"].includes(relation2)) continue;
+        const relation2 = asked7 === null ? null : extentRelation2(asked7, own10);
+        if (asked7 !== null && !["same", "narrower", "wider"].includes(relation2)) continue;
         items.push({
           module: "money",
           record: r.fact_id,
@@ -104601,7 +106155,7 @@ var Money = class _Money {
     for (const p3 of ps) if (!PHASES.includes(p3)) return refusal13("UNKNOWN_PHASE", `phase is one of ${list2(PHASES)}`);
     let q10 = null;
     if (period !== void 0 && period !== null && period !== "") {
-      q10 = this.#period(typeof period === "string" ? safeJson13(period) : period, this.#view());
+      q10 = this.#period(typeof period === "string" ? safeJson14(period) : period, this.#view());
       if (q10.ok === false) return q10;
     }
     const g = this.#gate("f.sight_bundle", viewer ?? "");
@@ -104867,7 +106421,7 @@ var Money = class _Money {
       const d = events.filter(dated);
       return { state: "did_not_move", phase: row13.phase, when: d.length === 1 ? d[0].when : null, ...d.length === 1 ? { event: d[0].event_id } : {} };
     }
-    const undetermined3 = (why2, extra = {}) => ({ state: "undetermined", why: why2, ...extra });
+    const undetermined3 = (why3, extra = {}) => ({ state: "undetermined", why: why3, ...extra });
     if (!ev) return undetermined3("events is not wired here, so no event the fact concerns is read");
     if (!events.length) return undetermined3("the fact concerns no event, so when the money moved is not stated; its accounting period does not date it");
     let one4 = events.length === 1 ? events[0] : null;
@@ -105135,13 +106689,13 @@ var Money = class _Money {
     return PRECISIONS4;
   }
 };
-var shapeRefusal = (code, why2) => ({ ok: false, refused: code, code, reason: code, why: why2 });
+var shapeRefusal = (code, why3) => ({ ok: false, refused: code, code, reason: code, why: why3 });
 var exactFigure = (value) => ({ value: value.replace(/,/g, ""), sign: "+", precision: "exact" });
 function toList(v) {
   if (v === void 0 || v === null || v === "") return [];
   return (Array.isArray(v) ? v : String(v).split(",")).map((x) => String(x).trim()).filter(Boolean);
 }
-function safeJson13(s) {
+function safeJson14(s) {
   try {
     return JSON.parse(s);
   } catch {
@@ -105594,11 +107148,11 @@ var pseudonymOf = (digestHex) => `knocker-${base32Of(Uint8Array.from(String(dige
 var WITHIN_FAULT2 = Symbol("within's fault");
 var PULL_WITHIN_FAILED_DETAIL = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
 var READ_LIMIT2 = Object.freeze({ default: 200, max: 1e3 });
-var limitOf2 = (asked6) => {
-  const n2 = Math.floor(Number(asked6));
-  return asked6 != null && asked6 !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT2.max, n2) : READ_LIMIT2.default;
+var limitOf2 = (asked7) => {
+  const n2 = Math.floor(Number(asked7));
+  return asked7 != null && asked7 !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT2.max, n2) : READ_LIMIT2.default;
 };
-var cursorOf2 = (parts) => btoa(String.fromCharCode(...te7.encode(JSON.stringify(parts)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+var cursorOf3 = (parts) => btoa(String.fromCharCode(...te7.encode(JSON.stringify(parts)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 var keyOf3 = (cursor, n2) => {
   try {
     const bytes2 = Uint8Array.from(atob(String(cursor).replace(/-/g, "+").replace(/_/g, "/")), (ch) => ch.charCodeAt(0));
@@ -106067,7 +107621,7 @@ var Doorbell = class _Doorbell {
       dir: way,
       limit: cap,
       truncated: truncated6,
-      next: truncated6 ? cursorOf2([String(last.k0), String(last.k1), last.received, last.knock_id]) : null
+      next: truncated6 ? cursorOf3([String(last.k0), String(last.k1), last.received, last.knock_id]) : null
     };
   }
   /* R3 (DEC-108 (2)): the required-argument refusal for an argument this module reads that names nothing it knows
@@ -106444,7 +107998,7 @@ var Doorbell = class _Doorbell {
       count: knocks.length,
       limit: cap,
       truncated: truncated6,
-      next: truncated6 ? cursorOf2([last.received, last.knock_id]) : null
+      next: truncated6 ? cursorOf3([last.received, last.knock_id]) : null
     };
   }
   /** R18 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
@@ -106787,7 +108341,7 @@ var DATE = /^\d{4}-\d{2}-\d{2}$/;
 var str8 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj28 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rank5 = (a) => AUDIENCES.indexOf(a);
-var safeJson14 = (s) => {
+var safeJson15 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -107017,7 +108571,7 @@ var Sources = class _Sources {
       how: e2.how,
       knownTo: e2.known_to,
       recorded: !!e2.recorded,
-      evidence: safeJson14(e2.evidence_json),
+      evidence: safeJson15(e2.evidence_json),
       by: e2.by,
       at: e2.at,
       superseded_by: supersededBy.get(e2.entry_id) ?? null
@@ -107443,7 +108997,7 @@ var Sources = class _Sources {
       const out = [];
       for (const e2 of entries) {
         if (sup.has(e2.entry_id)) continue;
-        const ev = safeJson14(e2.evidence_json);
+        const ev = safeJson15(e2.evidence_json);
         let basis = null;
         if (this.#standing(e2.entry_id, when) >= rank5(audience)) basis = "consent";
         else if (e2.known_to === "public" && ev && typeof ev.cite === "string" && !e2.confirms) basis = "public_elsewhere";
@@ -107576,7 +109130,7 @@ var Sources = class _Sources {
     const home2 = this.#provenance.homeOf(captureSha);
     if (!home2 || typeof home2.bundleId !== "string") return null;
     const f17 = this.#record.readFile(home2.bundleId, "data/provenance.json");
-    const reg = f17 && typeof f17.text === "string" ? safeJson14(f17.text) : null;
+    const reg = f17 && typeof f17.text === "string" ? safeJson15(f17.text) : null;
     const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
     const doc = docs.find((d) => isObj28(d) && isObj28(d.capture) && String(d.capture.sha256 ?? "").toLowerCase().replace(/^sha256:/, "") === captureSha);
     return doc ? { actor: typeof doc.capture.actor === "string" ? doc.capture.actor : null } : null;
@@ -108106,7 +109660,7 @@ var isObj29 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var str9 = (v) => typeof v === "string" ? v.trim() : "";
 var said7 = (v) => typeof v === "string" && v.trim() !== "";
 var clone4 = (v) => v === void 0 ? void 0 : JSON.parse(JSON.stringify(v));
-var safeJson15 = (s) => {
+var safeJson16 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
   } catch {
@@ -108528,7 +110082,7 @@ var Duties = class _Duties {
   oneHome(row13, { op } = {}) {
     if (op !== "insert" && (row13 && (row13.table === "duty_transitions" || row13.table === "duty_versions" || row13.table === "duty_matches" || row13.table === "duty_use_links")))
       return refusal14("APPEND_ONLY", `${row13.table} is appended to and never ${op === "delete" ? "deleted from" : "updated"}.`);
-    const fields = row13 && row13.fields_json ? safeJson15(row13.fields_json) : null;
+    const fields = row13 && row13.fields_json ? safeJson16(row13.fields_json) : null;
     let hyp = null, dueKey = null, amount = null;
     walk(row13, (k, v) => {
       if (!hyp && typeof v === "string") {
@@ -108857,7 +110411,7 @@ var Duties = class _Duties {
     const p3 = this.#one(`SELECT * FROM duty_proposals WHERE proposal_id=?`, Number(b.proposalId));
     if (!p3) return refusal14("DUTY_NO_SUCH_PROPOSAL", "no proposal answers to that id.", { proposal_id: b.proposalId ?? null });
     if (p3.adopted_duty) return refusal14("ALREADY_ADOPTED", "the proposal was adopted.", { duty_id: p3.adopted_duty });
-    const fields = safeJson15(p3.fields_json);
+    const fields = safeJson16(p3.fields_json);
     const held3 = this.#heldSource(fields);
     if (held3) return held3;
     const r = this.fieldRefusal(fields);
@@ -108994,7 +110548,7 @@ var Duties = class _Duties {
   }
   #fieldsOf(dutyId, version) {
     const v = this.#one(`SELECT fields_json FROM duty_versions WHERE duty_id=? AND version=?`, dutyId, version);
-    return v ? safeJson15(v.fields_json) : null;
+    return v ? safeJson16(v.fields_json) : null;
   }
   /* ===================================================================== *
    * R7, R8, R22: reads, sight, in force
@@ -109035,7 +110589,7 @@ var Duties = class _Duties {
   }
   #dutyView(d, viewer, date, memo = {}) {
     const fields = this.#fieldsOf(d.duty_id, d.version);
-    const versions = this.#rows(`SELECT version, fields_json, reason, by_member, at FROM duty_versions WHERE duty_id=? ORDER BY version`, d.duty_id).map((v) => ({ version: v.version, fields: safeJson15(v.fields_json), reason: v.reason, by: v.by_member, at: v.at }));
+    const versions = this.#rows(`SELECT version, fields_json, reason, by_member, at FROM duty_versions WHERE duty_id=? ORDER BY version`, d.duty_id).map((v) => ({ version: v.version, fields: safeJson16(v.fields_json), reason: v.reason, by: v.by_member, at: v.at }));
     const p3 = d.proposal_id === null ? null : this.#one(`SELECT * FROM duty_proposals WHERE proposal_id=?`, d.proposal_id);
     return {
       duty_id: d.duty_id,
@@ -109241,10 +110795,10 @@ var Duties = class _Duties {
   }
   #derive(d, fields, from, to, asOf, viewer) {
     const view = this.view();
-    const { instances: instances80, errors } = this.#instances(d.duty_id, d.version, fields, from, to, viewer);
+    const { instances: instances81, errors } = this.#instances(d.duty_id, d.version, fields, from, to, viewer);
     const occurrences2 = [];
     const inForce = this.inForce(fields, asOf.slice(0, 10), viewer);
-    for (const inst of instances80) {
+    for (const inst of instances81) {
       if (d.withdrawn_at && inst.date && !isUndet(inst.date) && compare2(inst.date, d.withdrawn_at) === "after") continue;
       const key2 = _Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref);
       occurrences2.push(this.#occurrence(d, fields, inst, key2, asOf, view, inForce, viewer));
@@ -109344,8 +110898,8 @@ var Duties = class _Duties {
   /* An occurrence key the duty derives in a broad window around `asOf` (two years either side), or null. */
   #occurrenceAt(d, fields, key2, asOf) {
     const day2 = asOf.slice(0, 10);
-    const { instances: instances80 } = this.#instances(d.duty_id, d.version, fields, addDays2(day2, -731), addDays2(day2, 731), INTERNAL);
-    for (const inst of instances80) if (_Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref) === key2) return inst;
+    const { instances: instances81 } = this.#instances(d.duty_id, d.version, fields, addDays2(day2, -731), addDays2(day2, 731), INTERNAL);
+    for (const inst of instances81) if (_Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref) === key2) return inst;
     return null;
   }
   /** R12: a member matches an event (or a held exception) to an occurrence, recorded with who, when and why, and
@@ -109404,7 +110958,7 @@ var Duties = class _Duties {
       as_of: t2.as_of,
       at: t2.at,
       cause: t2.cause,
-      evidence: safeJson15(t2.evidence_json),
+      evidence: safeJson16(t2.evidence_json),
       by: t2.by_member,
       seq: t2.seq
     };
@@ -109611,19 +111165,19 @@ var Duties = class _Duties {
     if (!deciders.length) return { value: "undetermined", why: "decider not recorded" };
     if (deciders.includes(obligor)) return { value: true };
     const obl = this.#entity(obligor);
-    let why2 = null;
+    let why3 = null;
     for (const dec3 of deciders) {
       const e2 = this.#entity(dec3);
       if (!e2 || e2.kind !== "person") continue;
       if (!obl || obl.kind !== "office") continue;
       if (!this.lines || typeof this.lines.holderAt !== "function") {
-        why2 = "the holder of the office cannot be read here";
+        why3 = "the holder of the office cannot be read here";
         continue;
       }
       let h = null;
       const at50 = ev.when && ev.when !== "undetermined" && !isUndet(ev.when) ? ev.when : null;
       if (!at50) {
-        why2 = "the event's date is not recorded, so who held the office is not read";
+        why3 = "the event's date is not recorded, so who held the office is not read";
         continue;
       }
       try {
@@ -109635,9 +111189,9 @@ var Duties = class _Duties {
         if (h.holder === dec3) return { value: true, holding: h.line ? h.line.line_id ?? null : null };
         continue;
       }
-      why2 = h && h.ok !== false && Array.isArray(h.lines) && h.lines.length && said7(h.undetermined) ? `the decider is a person, and who held the office at the event's date is undetermined: ${h.undetermined}` : `the decider is a person, and no holding of the office at the event's date is held${h && said7(h.undetermined) ? ` (${h.undetermined})` : ""}`;
+      why3 = h && h.ok !== false && Array.isArray(h.lines) && h.lines.length && said7(h.undetermined) ? `the decider is a person, and who held the office at the event's date is undetermined: ${h.undetermined}` : `the decider is a person, and no holding of the office at the event's date is held${h && said7(h.undetermined) ? ` (${h.undetermined})` : ""}`;
     }
-    return why2 ? { value: "undetermined", why: why2 } : { value: false };
+    return why3 ? { value: "undetermined", why: why3 } : { value: false };
   }
   /* R27: the uses of one power from a scan, each `{event, linked, link?, decider_is_obligor, decider_why?}`. */
   #usesFrom(d, fields, scan, viewer) {
@@ -110559,9 +112113,21 @@ var RECORDED_BY_MAX = 500;
 var DIRECTORY_DEFAULT = 50;
 var DIRECTORY_MAX = 200;
 var DIRECTORY_Q_MAX = 200;
-var DIRECTORY_SHOW = Object.freeze(["both", "people", "organisations"]);
+var DIRECTORY_SHOW = Object.freeze(["both", "people", "organisations", "offices", "ordinances", "contracts", "funds", "sources", "everything"]);
+var DIRECTORY_HOLDERS_MAX = 5;
 var DIRECTORY_SINCE = Object.freeze([30, 90, 365]);
 var ORG_KINDS = ORGANISATION_KINDS2;
+var SHOW_KINDS = Object.freeze({
+  people: ["person"],
+  organisations: [...ORG_KINDS],
+  both: ["person", ...ORG_KINDS],
+  offices: ["office"],
+  ordinances: ["ordinance"],
+  contracts: ["contract"],
+  funds: ["fund", "program"],
+  sources: ["source"],
+  everything: ENTITY_KINDS.filter((k) => k !== "proceeding")
+});
 var GATE_RATE_MAX = 0.2;
 var HINT_MARK = "Hint \xB7 machine work";
 var HINT_DETAIL = `${HINT_MARK}. A check noticed this hint, a pattern in held facts, worth a look. It is not a finding and says nothing about anyone.`;
@@ -110571,8 +112137,18 @@ var MACHINE_VIEWER2 = "class:daemon";
 var filled7 = (v) => typeof v === "string" && v.trim() !== "";
 var isObj31 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var clean = (v, max = TEXT_MAX2) => typeof v === "string" ? v.trim().slice(0, max) : "";
-var refuse12 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, detail, ...extra });
-var noBy = (what) => refuse12("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
+var refuse13 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, detail, ...extra });
+var why = (key2, vars = {}) => ({ key: key2, vars });
+var answered = (w) => filled7(w) || isObj31(w) && filled7(w.key);
+var sentenceOf = (w) => {
+  if (filled7(w)) return w;
+  try {
+    return isObj31(w) && filled7(w.key) ? word(w.key, w.vars ?? {}) : null;
+  } catch {
+    return null;
+  }
+};
+var noBy = (what) => refuse13("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
 var json6 = (v) => {
   try {
     return JSON.parse(v);
@@ -110764,7 +112340,7 @@ var People = class _People {
     return viewerPredicate(viewer).scope === "DENY";
   }
   static #noViewer() {
-    return refuse12("NO_VIEWER", "a read names the member reading, stamped by the control plane; with none, nothing is answered");
+    return refuse13("NO_VIEWER", "a read names the member reading, stamped by the control plane; with none, nothing is answered");
   }
   #seesProject(project, viewer) {
     if (!filled7(project)) return !this.#denied(viewer);
@@ -110823,7 +112399,7 @@ var People = class _People {
     if (!filled7(id) || !this.#entities.has(id)) return noSuchEntity(id ?? null, extra);
     const e2 = this.#entity(id);
     if (!e2 || e2.kind !== "person")
-      return refuse12("NOT_A_PERSON", `${id} is registered as ${e2 ? `a ${e2.kind}` : "something"}, not a person`, { entity_id: id, ...extra });
+      return refuse13("NOT_A_PERSON", `${id} is registered as ${e2 ? `a ${e2.kind}` : "something"}, not a person`, { entity_id: id, ...extra });
     return null;
   }
   /* The live names of a person, as their aliases stand in the registry. */
@@ -110881,23 +112457,24 @@ var People = class _People {
      a date no later than it the line is `in`, and after it stays undetermined. Event bounds are read as their owner
      answers them, with the resolved edge as their `at`. */
   static #judge(valid, at50, currentThrough = null) {
-    if (!isObj31(valid)) return { undetermined: true, why: "no validity is stated" };
-    if (valid.undetermined) return { undetermined: true, why: filled7(valid.why) ? valid.why : "its owner does not settle its validity" };
+    if (!isObj31(valid)) return { undetermined: true, why: why("people.why.validity_stated") };
+    if (valid.undetermined) return { undetermined: true, why: answered(valid.why) ? valid.why : why("people.why.owner_settle_validity") };
     const v = { from: valid.from ?? null, to: valid.to ?? null, precision: valid.precision || "day", zone: valid.zone || "UTC" };
     const judge5 = (x) => {
       try {
         const r2 = validAt({ valid: x, basis: null }, _People.#dateOf(at50, x.zone));
         if (r2 === "in" || r2 === "out") return r2;
-        if (r2 && r2.refused) return { undetermined: true, why: r2.why };
-        return { undetermined: true, why: r2 && r2.why || "undetermined" };
-      } catch (e2) {
-        return { undetermined: true, why: String(e2 && e2.message || e2) };
+        if (r2 && r2.refused) return { undetermined: true, why: answered(r2.why) ? r2.why : why("people.why.owner_settle_validity") };
+        return { undetermined: true, why: r2 && answered(r2.why) ? r2.why : why("people.why.owner_settle_validity") };
+      } catch {
+        return { undetermined: true, why: why("people.why.owner_settle_validity") };
       }
     };
     const r = judge5(v);
     if (r === "in" || r === "out" || !filled7(currentThrough) || v.to !== null) return r;
     if (judge5({ ...v, to: currentThrough, precision: "day" }) === "in") return "in";
-    return { undetermined: true, why: `${r.why}; it is stated current through ${currentThrough}, and the date is after that` };
+    const owner = sentenceOf(r.why);
+    return { undetermined: true, why: owner !== null ? why("lines.why.stated_current_through", { why: owner, day: currentThrough }) : r.why };
   }
   /* R9: a validity as civil-time's value, or the bound it refuses. */
   static #validity(valid) {
@@ -110965,36 +112542,36 @@ var People = class _People {
    * ===================================================================== */
   /** R1–R3. */
   claimIdentity({ a, b, kind: kind2, basis, evidence = null, project = null, note, by = null } = {}) {
-    if (!filled7(a) || !filled7(b)) return refuse12("NO_ENDS", "a claim names two person records by id: a and b");
-    if (a === b) return refuse12("SELF_CLAIM", "a claim is between two distinct person records");
+    if (!filled7(a) || !filled7(b)) return refuse13("NO_ENDS", "a claim names two person records by id: a and b");
+    if (a === b) return refuse13("SELF_CLAIM", "a claim is between two distinct person records");
     for (const [id, end2] of [[a, "a"], [b, "b"]]) {
       const r = this.#personRefusal(id, end2);
       if (r) return r;
     }
     if (!CLAIM_KINDS.includes(kind2))
-      return refuse12("UNKNOWN_CLAIM_KIND", `a claim's kind is one of ${CLAIM_KINDS.join(", ")}`, { kinds: [...CLAIM_KINDS] });
+      return refuse13("UNKNOWN_CLAIM_KIND", `a claim's kind is one of ${CLAIM_KINDS.join(", ")}`, { kinds: [...CLAIM_KINDS] });
     if (!CLAIM_BASES.includes(basis))
-      return refuse12("UNKNOWN_BASIS", `a claim's basis is one of ${CLAIM_BASES.join(", ")}; its grade is earned from it`, { bases: [...CLAIM_BASES] });
+      return refuse13("UNKNOWN_BASIS", `a claim's basis is one of ${CLAIM_BASES.join(", ")}; its grade is earned from it`, { bases: [...CLAIM_BASES] });
     const machine3 = isMachineIdentity(by);
     if (machine3 && (basis !== "identifier" || !isObj31(evidence) || !isObj31(evidence.a) || !isObj31(evidence.b) || !filled7(evidence.a.captureSha) || !filled7(evidence.b.captureSha)))
-      return refuse12("MACHINE_CLAIM_REFUSED", "the machine records only an identifier claim from source-native data with identifiers at both ends; any other claim is a member's act");
+      return refuse13("MACHINE_CLAIM_REFUSED", "the machine records only an identifier claim from source-native data with identifiers at both ends; any other claim is a member's act");
     const hasEvidence = isObj31(evidence) && Object.keys(evidence).length > 0;
     if (basis !== "testimony" && !hasEvidence)
-      return refuse12("NO_EVIDENCE", `a ${basis} claim carries its evidence: each end's cited record and what it rests on`);
-    const why2 = clean(note);
-    if (!why2) return refuse12("NO_NOTE", "a claim carries a note in the claimant's own words");
+      return refuse13("NO_EVIDENCE", `a ${basis} claim carries its evidence: each end's cited record and what it rests on`);
+    const why3 = clean(note);
+    if (!why3) return refuse13("NO_NOTE", "a claim carries a note in the claimant's own words");
     if (filled7(project) && !(this.#record.bundleInfo(project) && this.#record.bundleInfo(project).type === "project"))
       return noSuchProject(project);
     for (const end2 of ["a", "b"]) {
       if (!hasEvidence || evidence[end2] === void 0) continue;
       const bad2 = this.#citationRefusal(evidence[end2], `the evidence for ${end2}`);
-      if (bad2) return refuse12("NO_EVIDENCE", bad2.detail || `the evidence for ${end2} is not a citation the record holds`, { end: end2, cause: bad2.reason });
+      if (bad2) return refuse13("NO_EVIDENCE", bad2.detail || `the evidence for ${end2} is not a citation the record holds`, { end: end2, cause: bad2.reason });
       if (evidence[end2].date !== void 0 && !isCalendarDate(evidence[end2].date))
-        return refuse12("NO_EVIDENCE", `the evidence for ${end2} states a date that is not a calendar day`, { end: end2 });
+        return refuse13("NO_EVIDENCE", `the evidence for ${end2} states a date that is not a calendar day`, { end: end2 });
     }
     const earned = this.#earn(basis, a, b, hasEvidence ? evidence : {});
     if (earned.failed)
-      return refuse12(
+      return refuse13(
         "IDENTITY_GRADE_UNEARNED",
         `a ${basis} claim earns grade ${BASIS_GRADE[basis]} only when ${earned.failed}; nothing was written`,
         { condition: earned.failed, basis }
@@ -111020,7 +112597,7 @@ var People = class _People {
         grade2,
         sentence2,
         hasEvidence ? JSON.stringify(evidence) : null,
-        why2,
+        why3,
         filled7(project) ? project : null,
         vf,
         vt,
@@ -111085,18 +112662,18 @@ var People = class _People {
   }
   /** R4: a claim withdrawn, never edited or deleted; it links nothing after. No entities row moves (R28). */
   withdrawIdentityClaim({ claimId, reason: reason2, by = null } = {}) {
-    const why2 = clean(reason2);
-    if (!why2) return refuse12("NO_REASON", "a withdrawal says why the claim was wrong; it is kept beside the claim");
+    const why3 = clean(reason2);
+    if (!why3) return refuse13("NO_REASON", "a withdrawal says why the claim was wrong; it is kept beside the claim");
     const c = filled7(claimId) ? this.#one(`SELECT claim_id, withdrawn_by, withdrawn_at, withdrawn_reason FROM identity_claims WHERE claim_id=?`, claimId) : null;
-    if (!c) return refuse12("NO_SUCH_CLAIM", "no identity claim with that id is held", { claim_id: claimId ?? null });
+    if (!c) return refuse13("NO_SUCH_CLAIM", "no identity claim with that id is held", { claim_id: claimId ?? null });
     if (c.withdrawn_at)
       return { ok: true, already: true, claim_id: claimId, withdrawn: { by: c.withdrawn_by, at: c.withdrawn_at, reason: c.withdrawn_reason } };
     if (!filled7(by)) return noBy("a withdrawal");
     const at50 = this.#now(), stamp4 = String(by);
     return this.#record.transact(() => {
-      this.#sql.exec(`UPDATE identity_claims SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE claim_id=?`, stamp4, at50, why2, claimId);
+      this.#sql.exec(`UPDATE identity_claims SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE claim_id=?`, stamp4, at50, why3, claimId);
       this.#rebuildCluster();
-      return { ok: true, claim_id: claimId, withdrawn: { by: stamp4, at: at50, reason: why2 } };
+      return { ok: true, claim_id: claimId, withdrawn: { by: stamp4, at: at50, reason: why3 } };
     });
   }
   /* ===================================================================== *
@@ -111136,9 +112713,9 @@ var People = class _People {
   /* R5, R6: the cluster `entityId` sits in, as `viewer` sees it. Fail-closed: a stale or missing cache row, or one whose
      component differs from the claims' own, answers `undetermined` with why, never a stale cluster. */
   #cluster(entityId, viewer) {
-    const alone = (state, why2 = null) => ({
+    const alone = (state, why3 = null) => ({
       state,
-      ...why2 ? { why: why2 } : {},
+      ...why3 ? { why: why3 } : {},
       members: [entityId],
       links: [],
       unsure: [],
@@ -111148,7 +112725,7 @@ var People = class _People {
     if (!this.#one(`SELECT 1 AS x FROM identity_claims WHERE (a=? OR b=?) AND withdrawn_at IS NULL LIMIT 1`, entityId, entityId))
       return alone("linked");
     const held3 = this.#record.readDerived(MODULE3, CLUSTER_TABLE, entityId);
-    if (!held3 || held3.stale) return alone("undetermined", "the identity cluster's cache is stale or missing, so no cluster is answered until it is rebuilt");
+    if (!held3 || held3.stale) return alone("undetermined", why("people.identity_cluster_cache"));
     const cached = new Set(this.#rows(`SELECT entity_id FROM identity_cluster WHERE component=?`, held3.row.component).map((r) => r.entity_id));
     const live7 = /* @__PURE__ */ new Set([entityId]);
     for (let frontier = [entityId]; frontier.length; ) {
@@ -111162,7 +112739,7 @@ var People = class _People {
       frontier = next;
     }
     const sameAs = cached.size === live7.size && [...live7].every((x) => cached.has(x));
-    if (!sameAs) return alone("undetermined", "the identity cluster's cache differs from its rebuild, so no cluster is answered until it is rebuilt");
+    if (!sameAs) return alone("undetermined", why("people.identity_cluster_cache_differs"));
     const seen = (c) => this.#seesProject(c.project, viewer);
     const members3 = /* @__PURE__ */ new Set([entityId]), links = [], claimIds = /* @__PURE__ */ new Set();
     let truncated6 = false;
@@ -111206,7 +112783,7 @@ var People = class _People {
     const unsure = touching("unsure").map(_People.#claimView);
     return {
       state: apart.length ? "undetermined" : "linked",
-      ...apart.length ? { why: `a not_same_as claim (${apart.map((c) => c.claim_id).join(", ")}) joins two members of this component, so the cluster is undetermined` } : {},
+      ...apart.length ? { why: why("people.why.claim_joins_two", { apart: apart.map((c) => c.claim_id).join(", ") }) } : {},
       members: ids,
       links,
       unsure,
@@ -111338,19 +112915,19 @@ var People = class _People {
     if (!filled7(person2)) return noSuchEntity(person2 ?? null);
     const bad2 = this.#personRefusal(person2);
     if (bad2) return bad2;
-    if (!FACT_KINDS.includes(kind2)) return refuse12("UNKNOWN_FACT_KIND", `a person fact is one of ${FACT_KINDS.join(", ")}`, { kinds: [...FACT_KINDS] });
+    if (!FACT_KINDS.includes(kind2)) return refuse13("UNKNOWN_FACT_KIND", `a person fact is one of ${FACT_KINDS.join(", ")}`, { kinds: [...FACT_KINDS] });
     const contact = CONTACT_KINDS.includes(kind2);
     if (contact && (isMachineIdentity(by) || !memberOf2(by)))
-      return refuse12("CONTACT_NOT_IMPORTED", "an address or contact is recorded only by a member's own act from a cited document; the machine never imports one");
+      return refuse13("CONTACT_NOT_IMPORTED", "an address or contact is recorded only by a member's own act from a cited document; the machine never imports one");
     const v = clean(value, 400);
-    if (!v) return refuse12("NO_VALUE", "a person fact carries its value as the cited document states it");
+    if (!v) return refuse13("NO_VALUE", "a person fact carries its value as the cited document states it");
     const cite = this.#citationRefusal(citation2, "a person fact");
-    if (cite) return refuse12(cite.reason, cite.detail, cite.code ? { code: cite.code, check: cite.check, translation: cite.translation } : {});
+    if (cite) return refuse13(cite.reason, cite.detail, cite.code ? { code: cite.code, check: cite.check, translation: cite.translation } : {});
     const vv = _People.#validity(valid);
-    if (vv.refused) return refuse12("BAD_VALIDITY", `the validity's ${vv.refused} is refused: ${vv.why}`, { bound: vv.refused });
-    const asked6 = question === null || question === void 0 || question === "" ? null : question;
-    if (asked6 !== null && !this.#questionSeen(asked6, _People.#actorViewer(by)))
-      return refuse12("QUESTION_NOT_HELD", "the question names no inquiry the record holds that you may see; the fact can be recorded without one", { question: typeof asked6 === "string" ? asked6 : null });
+    if (vv.refused) return refuse13("BAD_VALIDITY", `the validity's ${vv.refused} is refused: ${vv.why}`, { bound: vv.refused });
+    const asked7 = question === null || question === void 0 || question === "" ? null : question;
+    if (asked7 !== null && !this.#questionSeen(asked7, _People.#actorViewer(by)))
+      return refuse13("QUESTION_NOT_HELD", "the question names no inquiry the record holds that you may see; the fact can be recorded without one", { question: typeof asked7 === "string" ? asked7 : null });
     if (!filled7(by)) return noBy("a person fact");
     const at50 = this.#now(), stamp4 = String(by);
     const table5 = contact ? "person_contacts" : "person_facts";
@@ -111369,24 +112946,24 @@ var People = class _People {
         JSON.stringify(citation2.extent),
         stamp4,
         at50,
-        asked6
+        asked7
       );
-      return { ok: true, fact_id: r.id, person: person2, kind: kind2, value: v, valid: vv.valid, question: asked6, at: at50, ...contact ? { publishable: false } : {} };
+      return { ok: true, fact_id: r.id, person: person2, kind: kind2, value: v, valid: vv.valid, question: asked7, at: at50, ...contact ? { publishable: false } : {} };
     });
   }
   /** R11 (DEC-19): a wrong fact corrected forward: kept, marked withdrawn with who, when and why. */
   withdrawPersonFact({ factId: factId2, reason: reason2, by = null } = {}) {
-    const why2 = clean(reason2);
-    if (!why2) return refuse12("NO_REASON", "a withdrawal says why the fact was wrong; it is kept beside the fact");
+    const why3 = clean(reason2);
+    if (!why3) return refuse13("NO_REASON", "a withdrawal says why the fact was wrong; it is kept beside the fact");
     const table5 = this.#factTable(factId2);
-    if (!table5) return refuse12("NO_SUCH_FACT", "no person fact with that id is held", { fact_id: factId2 ?? null });
+    if (!table5) return refuse13("NO_SUCH_FACT", "no person fact with that id is held", { fact_id: factId2 ?? null });
     const f17 = this.#one(`SELECT * FROM ${table5} WHERE fact_id=?`, factId2);
     if (f17.withdrawn_at)
       return { ok: true, already: true, fact_id: factId2, withdrawn: { by: f17.withdrawn_by, at: f17.withdrawn_at, reason: f17.withdrawn_reason } };
     if (!filled7(by)) return noBy("a withdrawal");
     const at50 = this.#now(), stamp4 = String(by);
-    this.#sql.exec(`UPDATE ${table5} SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE fact_id=?`, stamp4, at50, why2, factId2);
-    return { ok: true, fact_id: factId2, withdrawn: { by: stamp4, at: at50, reason: why2 } };
+    this.#sql.exec(`UPDATE ${table5} SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE fact_id=?`, stamp4, at50, why3, factId2);
+    return { ok: true, fact_id: factId2, withdrawn: { by: stamp4, at: at50, reason: why3 } };
   }
   /* R9: the viewer an act's stamp reads as: a member's session, or the machine's own credential. */
   static #actorViewer(by) {
@@ -111441,16 +113018,16 @@ var People = class _People {
     const who4 = memberOf2(by);
     if (!who4 || !this.#isAdmin(who4)) return notAnAdmin(by ?? null, "removing a person fact, claim, tie or source link");
     if (!EXPUNGE_GROUNDS.includes(ground) || ground === "court_order" && !filled7(order4))
-      return refuse12("EXPUNGE_GROUND_REFUSED", `a value is removed only as unlawful to hold, confidential, under a recorded court order (naming it) or under a lawful demand the jurisdiction lists; anything else is corrected forward by withdrawing it (op=personfactwithdraw, op=identitywithdraw, op=membertiewithdraw)`, { grounds: [...EXPUNGE_GROUNDS], correction: "withdraw" });
+      return refuse13("EXPUNGE_GROUND_REFUSED", `a value is removed only as unlawful to hold, confidential, under a recorded court order (naming it) or under a lawful demand the jurisdiction lists; anything else is corrected forward by withdrawing it (op=personfactwithdraw, op=identitywithdraw, op=membertiewithdraw)`, { grounds: [...EXPUNGE_GROUNDS], correction: "withdraw" });
     if (ground === "lawful_demand") {
       const kinds3 = (Array.isArray(this.#view().lawful_demands) ? this.#view().lawful_demands : []).map((d) => d && d.kind).filter(filled7);
       if (!kinds3.includes(demandKind))
-        return refuse12("DEMAND_KIND_UNLISTED", `the active jurisdiction profiles list no lawful demand of that kind; they list ${kinds3.length ? kinds3.join(", ") : "none"}`, { demand_kinds: kinds3 });
+        return refuse13("DEMAND_KIND_UNLISTED", `the active jurisdiction profiles list no lawful demand of that kind; they list ${kinds3.length ? kinds3.join(", ") : "none"}`, { demand_kinds: kinds3 });
     }
-    const why2 = clean(reason2);
-    if (!why2) return refuse12("NO_REASON", "a removal states its reason");
+    const why3 = clean(reason2);
+    if (!why3) return refuse13("NO_REASON", "a removal states its reason");
     const target = this.#expungeTarget(id);
-    if (!target) return refuse12("NO_SUCH_ITEM", "no person fact, identity claim, member tie or source link answers to that id", { id: id ?? null });
+    if (!target) return refuse13("NO_SUCH_ITEM", "no person fact, identity claim, member tie or source link answers to that id", { id: id ?? null });
     return this.#record.transact(() => {
       const r = this.#record.expunge({
         module: MODULE3,
@@ -111477,7 +113054,7 @@ var People = class _People {
         if (!h || h.ok === false) throw new Error(`people: record-core refused the link's history: ${h && h.reason}`);
         removed += h.removed;
       }
-      return { ok: true, removed, tombstone: r.tombstone, reason: why2 };
+      return { ok: true, removed, tombstone: r.tombstone, reason: why3 };
     });
   }
   #expungeTarget(id) {
@@ -111502,13 +113079,13 @@ var People = class _People {
    *  gone; a member's tie, the protected source link and a check's result cite no capture and are never items, so a
    *  held link answers exactly as none. Writes nothing; never throws; an in-process read, not an op. */
   /* events R49 (K2116, K231): the shape's two own refusals, carrying their code and no catalogue row. */
-  static #shapeRefusal(code, why2) {
-    return { ok: false, refused: code, code, reason: code, why: why2 };
+  static #shapeRefusal(code, why3) {
+    return { ok: false, refused: code, code, reason: code, why: why3 };
   }
   recordedBy({ captureSha, extent = null, limit = null, viewer = null } = {}) {
     if (viewer === void 0 || viewer === null || typeof viewer === "string" && viewer.trim() === "")
       return _People.#shapeRefusal("VIEWER_MISSING", "a read names the member reading, stamped by the control plane; with none, nothing is answered");
-    if (!filled7(captureSha)) return refuse12("NO_SHA", "the read names the capture whose passages were cited (captureSha)");
+    if (!filled7(captureSha)) return refuse13("NO_SHA", "the read names the capture whose passages were cited (captureSha)");
     const want = extent === void 0 || extent === null ? null : extent;
     if (want !== null && !(isObj31(want) && typeof want.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, want.kind)))
       return _People.#shapeRefusal("EXTENT_MALFORMED", `an extent is one of content's kinds (${Object.keys(CONTENT_EXTENT_KINDS2).join(", ")}) with its fields`);
@@ -111640,7 +113217,7 @@ var People = class _People {
   personAt({ entityId, at: at50, viewer = null } = {}) {
     const o = this.#readOpen(entityId, viewer, "a person as of a date");
     if (o) return o.refusal;
-    if (at50 === void 0 || at50 === null || at50 === "") return refuse12("NO_DATE", "a person is read as of a date (at)");
+    if (at50 === void 0 || at50 === null || at50 === "") return refuse13("NO_DATE", "a person is read as of a date (at)");
     const { cluster, members: members3 } = this.#over(entityId, viewer);
     const names2 = members3.flatMap((m) => this.#names(m).map((name3) => ({ member: m, name: name3, from: "registry" })));
     const facts = _People.#atDate(members3.flatMap((m) => this.#factsOf(m, viewer)), at50);
@@ -111657,7 +113234,7 @@ var People = class _People {
         const state = isObj31(x.in_force) ? x.in_force.state : null;
         if (state === "not_in_force") continue;
         if (state === "in_force") duties2.push({ member: m, ...x });
-        else dutiesUnsettled.push({ member: m, ...x, undetermined: { why: isObj31(x.in_force) && filled7(x.in_force.why) ? x.in_force.why : "whether its source is in force at the date is not settled" } });
+        else dutiesUnsettled.push({ member: m, ...x, undetermined: { why: isObj31(x.in_force) && answered(x.in_force.why) ? x.in_force.why : why("people.why.whether_source_force") } });
       }
     }
     const n2 = bounded(names2), f17 = bounded(facts.held), p3 = bounded(postsAt.held, READ_LIST_MAX, posts.truncated);
@@ -111838,8 +113415,8 @@ var People = class _People {
     const seq = (a, b3) => {
       try {
         return this.#events.sequence({ a: a.event_id, b: b3.event_id });
-      } catch (e2) {
-        return { undetermined: true, why: String(e2 && e2.message || e2) };
+      } catch {
+        return { undetermined: true, why: why("people.why.record_settle_order") };
       }
     };
     const memo = /* @__PURE__ */ new Map();
@@ -111860,7 +113437,7 @@ var People = class _People {
       const s = order4(items[i - 1], items[i]);
       const v = typeof s === "string" ? s : isObj31(s) ? s.order ?? s.answer ?? null : null;
       if (v !== "before" && v !== "after")
-        unsettled.push({ a: items[i - 1].event_id, b: items[i].event_id, why: isObj31(s) && filled7(s.why) ? s.why : "the record does not settle their order" });
+        unsettled.push({ a: items[i - 1].event_id, b: items[i].event_id, why: isObj31(s) && answered(s.why) ? s.why : why("people.why.record_settle_order") });
     }
     const b = bounded(items, READ_LIST_MAX, truncated6);
     return {
@@ -111885,7 +113462,7 @@ var People = class _People {
   peopleDirectory({ q: q10 = null, show: show2 = null, office = null, namedIn = null, since = null, cursor = null, limit = null, viewer = null } = {}) {
     if (this.#denied(viewer)) return _People.#noViewer();
     const absent = (v) => v === null || v === void 0 || v === "";
-    const bad2 = (argument, why2) => refuse12("BAD_ARGUMENT", `${argument}: ${why2}; nothing was read`, { argument });
+    const bad2 = (argument, why3) => refuse13("BAD_ARGUMENT", `${argument}: ${why3}; nothing was read`, { argument });
     if (!absent(q10) && (typeof q10 !== "string" || q10.length > DIRECTORY_Q_MAX)) return bad2("q", `a name or office, at most ${DIRECTORY_Q_MAX} characters`);
     const shown3 = absent(show2) ? "both" : show2;
     if (!DIRECTORY_SHOW.includes(shown3)) return bad2("show", `one of ${DIRECTORY_SHOW.join(", ")}`);
@@ -111902,7 +113479,7 @@ var People = class _People {
     const nowIso = this.#now();
     const today2 = nowIso.slice(0, 10);
     const member2 = viewerPredicate(viewer).member;
-    const kinds3 = shown3 === "people" ? ["person"] : shown3 === "organisations" ? [...ORG_KINDS] : ["person", ...ORG_KINDS];
+    const kinds3 = SHOW_KINDS[shown3];
     const marks2 = kinds3.map(() => "?").join(",");
     const followed = this.#rows(`SELECT entity_id, kind FROM entities WHERE kind IN (${marks2}) ORDER BY entity_id`, ...kinds3);
     const hid = hiddenBundles(viewer);
@@ -111972,7 +113549,8 @@ var People = class _People {
         questions: r.t.questions.size,
         projects: r.t.projects.size,
         newest_added: r.newest_added,
-        mine: r.mine
+        mine: r.mine,
+        ...r.kind === "office" ? { holders: look.holders } : {}
       };
     });
     const last = page2.length ? rest[page2.length - 1] : null;
@@ -112021,13 +113599,19 @@ var People = class _People {
     const words24 = [name3, ...Array.isArray(ent.aliases) ? ent.aliases.filter((a) => !a.withdrawn).map((a) => a.alias) : []].filter(filled7).map((s) => s.trim().replace(/\s+/g, " ").toLowerCase());
     if (e2.kind !== "person") {
       const noteBy = filled7(ent.declared_by) ? ent.declared_by : null;
-      return { name: name3, words: words24, posts: [], today: {
-        kind: e2.kind,
-        sector: ent.sector ?? null,
-        note: ent.note ?? null,
-        note_by: noteBy,
-        machine: isMachineIdentity(noteBy) === true
-      } };
+      return {
+        name: name3,
+        words: words24,
+        posts: [],
+        today: {
+          kind: e2.kind,
+          sector: ent.sector ?? null,
+          note: ent.note ?? null,
+          note_by: noteBy,
+          machine: isMachineIdentity(noteBy) === true
+        },
+        ...e2.kind === "office" ? { holders: this.#holdersOf(e2.entity_id, today2, viewer) } : {}
+      };
     }
     const label = (id) => {
       const x = filled7(id) ? this.#entity(id) : null;
@@ -112048,6 +113632,19 @@ var People = class _People {
     }
     for (const x of posts) for (const s of [x.office.label, x.body?.label, x.title]) if (filled7(s)) words24.push(s.trim().replace(/\s+/g, " ").toLowerCase());
     return { name: name3, words: words24, posts, today: { posts } };
+  }
+  /* R41: the persons holding an office today, at most DIRECTORY_HOLDERS_MAX, by entity id: a `holds` line to it whose
+     validity civil-time does not rule `out` at `today` (an open end is not out), as the viewer sees the line. */
+  #holdersOf(office, today2, viewer) {
+    const found3 = /* @__PURE__ */ new Map();
+    for (const l2 of listOf3(this.#lines ? this.#lines.linesOf({ entity: office, kinds: ["holds"], direction: "to", limit: READ_LIST_MAX, viewer }) : null)) {
+      const who4 = lineFrom(l2);
+      if (l2.withdrawn || l2.kind !== "holds" || lineTo(l2) !== office || !filled7(who4) || found3.has(who4)) continue;
+      if (_People.#judge(l2.valid, today2, _People.#through(l2)) === "out") continue;
+      const e2 = this.#entity(who4);
+      if (e2 && e2.kind === "person") found3.set(who4, { entity: who4, label: e2.label ?? null });
+    }
+    return [...found3.values()].sort((a, b) => a.entity < b.entity ? -1 : a.entity > b.entity ? 1 : 0).slice(0, DIRECTORY_HOLDERS_MAX);
   }
   /* ===================================================================== *
    * STAFFING (R18, R19)
@@ -112077,7 +113674,7 @@ var People = class _People {
     if (!filled7(organisation)) return noEntity("staffing is read for one organisation, by its entity id");
     if (this.#denied(viewer)) return _People.#noViewer();
     if (!this.#entities.has(organisation)) return noSuchEntity(organisation);
-    if (at50 === void 0 || at50 === null || at50 === "") return refuse12("NO_DATE", "staffing is read as of a date (at)");
+    if (at50 === void 0 || at50 === null || at50 === "") return refuse13("NO_DATE", "staffing is read as of a date (at)");
     const units = [organisation];
     const s = this.#lines.structureAt({ entity: organisation, at: at50, kinds: ["part_of"], viewer });
     const parts = isObj31(s) ? Array.isArray(s.held) ? s.held : listOf3(s) : [];
@@ -112129,14 +113726,14 @@ var People = class _People {
   /** R20: a member's own tie, by their own act; there is no field naming another member. */
   declareTie({ entity: entity2, kind: kind2, note, attribution, by = null } = {}) {
     const member2 = memberOf2(by);
-    if (!member2) return refuse12("MEMBER_ACT_ONLY", "a tie is declared by the member it is theirs, stamped from their session; the machine declares none");
+    if (!member2) return refuse13("MEMBER_ACT_ONLY", "a tie is declared by the member it is theirs, stamped from their session; the machine declares none");
     if (!filled7(entity2)) return noEntity("a tie names the registered entity it is to, by its id");
     if (!this.#entities.has(entity2)) return noSuchEntity(entity2);
-    if (!TIE_KINDS.includes(kind2)) return refuse12("UNKNOWN_TIE_KIND", `a tie is one of ${TIE_KINDS.join(", ")}`, { kinds: [...TIE_KINDS] });
+    if (!TIE_KINDS.includes(kind2)) return refuse13("UNKNOWN_TIE_KIND", `a tie is one of ${TIE_KINDS.join(", ")}`, { kinds: [...TIE_KINDS] });
     const n2 = clean(note);
-    if (!n2) return refuse12("NO_NOTE", "a tie carries a note in the member's own words");
+    if (!n2) return refuse13("NO_NOTE", "a tie carries a note in the member's own words");
     if (!ATTRIBUTION_LEVELS.includes(attribution))
-      return refuse12("UNKNOWN_ATTRIBUTION", `a tie's disclosure is at one of ${ATTRIBUTION_LEVELS.join(", ")}`, { levels: [...ATTRIBUTION_LEVELS] });
+      return refuse13("UNKNOWN_ATTRIBUTION", `a tie's disclosure is at one of ${ATTRIBUTION_LEVELS.join(", ")}`, { levels: [...ATTRIBUTION_LEVELS] });
     const at50 = this.#now();
     return this.#record.transact(() => {
       const r = this.#record.allocId("MTI", at50.slice(0, 4));
@@ -112156,15 +113753,15 @@ var People = class _People {
   }
   /** R20: a tie withdrawn by its member (or an administrator); kept, marked withdrawn. Another's tie answers as absent. */
   withdrawTie({ tieId, reason: reason2, by = null } = {}) {
-    const why2 = clean(reason2);
-    if (!why2) return refuse12("NO_REASON", "a withdrawal says why; it is kept beside the tie");
+    const why3 = clean(reason2);
+    if (!why3) return refuse13("NO_REASON", "a withdrawal says why; it is kept beside the tie");
     const t2 = filled7(tieId) ? this.#one(`SELECT * FROM member_ties WHERE tie_id=?`, tieId) : null;
     const who4 = memberOf2(by);
-    if (!t2 || !who4 || t2.member !== who4 && !this.#isAdmin(who4)) return refuse12("NO_SUCH_TIE", "no tie of yours answers to that id", { tie_id: tieId ?? null });
+    if (!t2 || !who4 || t2.member !== who4 && !this.#isAdmin(who4)) return refuse13("NO_SUCH_TIE", "no tie of yours answers to that id", { tie_id: tieId ?? null });
     if (t2.withdrawn_at) return { ok: true, already: true, tie_id: tieId, withdrawn: { by: t2.withdrawn_by, at: t2.withdrawn_at, reason: t2.withdrawn_reason } };
     const at50 = this.#now();
-    this.#sql.exec(`UPDATE member_ties SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE tie_id=?`, String(by), at50, why2, tieId);
-    return { ok: true, tie_id: tieId, withdrawn: { by: String(by), at: at50, reason: why2 } };
+    this.#sql.exec(`UPDATE member_ties SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE tie_id=?`, String(by), at50, why3, tieId);
+    return { ok: true, tie_id: tieId, withdrawn: { by: String(by), at: at50, reason: why3 } };
   }
   /* R20: may this viewer read `member`'s ties: that member, or an administrator. */
   #seesTies(member2, viewer) {
@@ -112209,14 +113806,14 @@ var People = class _People {
    * ===================================================================== */
   /** R21. */
   linkSourceToPerson({ source: source2, person: person2, evidence, sight, by = null } = {}) {
-    if (!memberOf2(by)) return refuse12("MEMBER_ACT_ONLY", "a source is linked to a person only by a member's own act");
-    if (!filled7(source2) || !this.#sourceHeld(source2, by)) return refuse12("NO_SUCH_SOURCE", "no source with that id is held", { source: source2 ?? null });
+    if (!memberOf2(by)) return refuse13("MEMBER_ACT_ONLY", "a source is linked to a person only by a member's own act");
+    if (!filled7(source2) || !this.#sourceHeld(source2, by)) return refuse13("NO_SUCH_SOURCE", "no source with that id is held", { source: source2 ?? null });
     const bad2 = this.#personRefusal(person2);
     if (bad2) return bad2;
     const ev = clean(evidence);
-    if (!ev) return refuse12("NO_EVIDENCE", "a link from a source to a person carries its evidence");
+    if (!ev) return refuse13("NO_EVIDENCE", "a link from a source to a person carries its evidence");
     const list6 = Array.isArray(sight) ? [...new Set(sight.filter(filled7).map((s) => s.startsWith("member:") ? s.slice(7) : s))] : [];
-    if (!list6.length) return refuse12("NO_SIGHT_LIST", "a link from a source to a person names the members who may read it");
+    if (!list6.length) return refuse13("NO_SIGHT_LIST", "a link from a source to a person names the members who may read it");
     const at50 = this.#now(), stamp4 = String(by);
     return this.#record.transact(() => {
       const prior = this.#one(`SELECT * FROM source_person_links WHERE source=? AND person=?`, source2, person2);
@@ -112279,13 +113876,13 @@ var People = class _People {
   /** R22: a member's own check, a new check or a new version of one. */
   defineCheck({ name: name3, condition, denominator, project = null, check: check2 = null, by = null } = {}) {
     const n2 = clean(name3, 200);
-    if (!n2) return refuse12("NO_NAME", "a check carries a name");
+    if (!n2) return refuse13("NO_NAME", "a check carries a name");
     const hyp = hypothesisNamed(name3, condition, denominator);
-    if (hyp) return refuse12("HYPOTHESIS_NOT_A_FACT", `a check rests on held facts, never on a hypothesis (${hyp} is one)`, { hypothesis: hyp });
+    if (hyp) return refuse13("HYPOTHESIS_NOT_A_FACT", `a check rests on held facts, never on a hypothesis (${hyp} is one)`, { hypothesis: hyp });
     const err = conditionError(condition);
-    if (err) return refuse12("BAD_CONDITION", err);
+    if (err) return refuse13("BAD_CONDITION", err);
     const den = clean(denominator, 400);
-    if (!den) return refuse12("NO_DENOMINATOR", "a check names the set it counts against");
+    if (!den) return refuse13("NO_DENOMINATOR", "a check names the set it counts against");
     if (filled7(project) && !(this.#record.bundleInfo(project) && this.#record.bundleInfo(project).type === "project")) return noSuchProject(project);
     if (!filled7(by)) return noBy("a check");
     const machine3 = isMachineIdentity(by) ? 1 : 0;
@@ -112293,7 +113890,7 @@ var People = class _People {
     const proj = filled7(project) ? project : null;
     if (filled7(check2)) {
       const prior = this.#one(`SELECT MAX(version) AS v, MAX(machine) AS m FROM interest_checks WHERE check_id=?`, check2);
-      if (!prior || prior.v == null) return refuse12("NO_SUCH_CHECK", "no check with that id is held", { check: check2 });
+      if (!prior || prior.v == null) return refuse13("NO_SUCH_CHECK", "no check with that id is held", { check: check2 });
       const v = Number(prior.v) + 1;
       this.#sql.exec(
         `INSERT INTO interest_checks (check_id,version,name,condition_json,denominator,project,machine,by_actor,at)
@@ -112346,10 +113943,10 @@ var People = class _People {
   /** R22: any check switched off (or on again) in one project by a member of that project. */
   switchCheck({ check: check2, project, on, by = null } = {}) {
     if (!filled7(check2) || !this.#one(`SELECT 1 AS x FROM interest_checks WHERE check_id=?`, check2))
-      return refuse12("NO_SUCH_CHECK", "no check with that id is held", { check: check2 ?? null });
+      return refuse13("NO_SUCH_CHECK", "no check with that id is held", { check: check2 ?? null });
     const who4 = memberOf2(by);
     if (!filled7(project) || !who4 || !this.#membership.inSight(project, `member:${who4}`)) return noSuchProject(project ?? null);
-    if (typeof on !== "boolean") return refuse12("NO_SWITCH", "a switch says on: true or on: false");
+    if (typeof on !== "boolean") return refuse13("NO_SWITCH", "a switch says on: true or on: false");
     const at50 = this.#now();
     this.#sql.exec(`INSERT INTO interest_check_switches (check_id,project,is_on,by_actor,at) VALUES (?,?,?,?,?)`, check2, project, on ? 1 : 0, String(by), at50);
     this.#changed(check2, project);
@@ -112491,12 +114088,12 @@ var People = class _People {
     const who4 = memberOf2(by);
     if (!who4 || !this.#isAdmin(who4)) return notAnAdmin(by ?? null, "recording a check's measured gate");
     const c = filled7(check2) ? this.#one(`SELECT * FROM interest_checks WHERE check_id=? AND version=?`, check2, Number(version)) : null;
-    if (!c) return refuse12("NO_SUCH_CHECK", "no check version with that id is held", { check: check2 ?? null, version: version ?? null });
+    if (!c) return refuse13("NO_SUCH_CHECK", "no check version with that id is held", { check: check2 ?? null, version: version ?? null });
     const gold = clean(goldSet);
-    if (!gold) return refuse12("NO_GOLD_SET", "a gate names the gold set the false-alarm rate was measured on");
+    if (!gold) return refuse13("NO_GOLD_SET", "a gate names the gold set the false-alarm rate was measured on");
     const rate = Number(falseAlarmRate);
     if (falseAlarmRate === null || falseAlarmRate === "" || !Number.isFinite(rate) || rate < 0 || rate > 1)
-      return refuse12("BAD_RATE", "a false-alarm rate is a number from 0 to 1");
+      return refuse13("BAD_RATE", "a false-alarm rate is a number from 0 to 1");
     const at50 = this.#now(), stamp4 = String(by), v = Number(version);
     this.#record.transact(() => {
       const prior = this.#one(`SELECT * FROM interest_check_gates WHERE check_id=? AND version=?`, check2, v);
@@ -112615,11 +114212,18 @@ var People = class _People {
         grade: { assertion: c.grade, ends: [c.grade, c.grade] },
         derived: null,
         why: c.why,
-        ...j === "in" ? {} : { undetermined: { why: j.why } }
+        ...j === "in" ? {} : { undetermined: {
+          why: sentenceOf(j.why) ?? word("people.why.owner_settle_validity"),
+          why_key: isObj31(j.why) ? j.why : null
+        } }
       });
     }
     if (items.length > BOUNDS.hub)
-      return { items: [], hub: { set_size: items.length, why: `this person is an end of more than ${BOUNDS.hub} identity claims you can see` } };
+      return { items: [], hub: {
+        set_size: items.length,
+        why: word("people.why.person_end_identity", { hub: BOUNDS.hub }),
+        why_key: why("people.why.person_end_identity", { hub: BOUNDS.hub })
+      } };
     const start = Number.isInteger(page2) && page2 > 0 ? page2 : 0;
     const slice = items.slice(start, start + BOUNDS.fanout);
     return { items: slice, ...start + BOUNDS.fanout < items.length ? { next: start + BOUNDS.fanout } : {} };
@@ -112672,1105 +114276,180 @@ function peopleOps(p3, url, body) {
   };
 }
 
-// src/retrieval/browse.mjs
-var BROWSE_KINDS = Object.freeze(["document", "question", "action", "plan", "entity"]);
-var BROWSE_ONLY = Object.freeze(["new_since", "watched", "flagged"]);
-var BUNDLE_TYPES2 = Object.freeze({ document: "information", question: "inquiry", action: "action", plan: "action_plan" });
-var ORGANISATION_KINDS3 = Object.freeze(["institution", "body", "movement"]);
-var ENTITY_KINDS2 = Object.freeze(["person", ...ORGANISATION_KINDS3]);
-var ITEM_KIND_OF_TYPE = Object.freeze(Object.fromEntries(Object.entries(BUNDLE_TYPES2).map(([k, t2]) => [t2, k])));
-var BROWSE_LIMIT_DEFAULT = 50;
-var BROWSE_LIMIT_MAX = 200;
-var BROWSE_MARKS_MAX = 5e3;
-var text3 = (v) => typeof v === "string" ? v : null;
-var ms = (iso8) => {
-  const t2 = typeof iso8 === "string" ? Date.parse(iso8) : NaN;
-  return Number.isFinite(t2) ? t2 : -Infinity;
-};
-var refuse13 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, code: reason2, detail, ...extra });
-var idOf2 = (v) => typeof v === "string" ? v : v && typeof v === "object" && typeof v.id === "string" ? v.id : null;
-var flagOf = (f17) => ({ by: text3(f17.by), at: text3(f17.at), note: text3(f17.note) });
-var Browser = class {
-  constructor(r) {
-    this.r = r;
+// src/retrieval-browse/marks.mjs
+var Marks = class {
+  #recordedBy = [];
+  // R4: {module, fn, seq}
+  #browseMarks = null;
+  // R11: {module, fn}
+  #order;
+  #host;
+  #entities;
+  #recorders;
+  /** `order` is the modules' total order (`MODULE_ORDER` unless a test hands its own); `host` makes `events`, `standards`,
+   *  `money`, `people` and `entities` when first asked unless handed (`recorders`, `entities`). */
+  constructor({ order: order4 = null, host = null, entities: entities2 = void 0, recorders = null } = {}) {
+    this.#order = Array.isArray(order4) ? order4 : MODULE_ORDER;
+    this.#host = host;
+    this.#entities = entities2;
+    this.#recorders = new Map(RECORDED_BY_MODULES.map((m) => [m, recorders && typeof recorders === "object" && recorders[m] !== void 0 ? recorders[m] : void 0]));
   }
-  /** R85: `op=browse`. Refusals in order, each reading nothing: VIEWER_MISSING, KIND_UNKNOWN, ONLY_UNKNOWN, NO_SINCE,
-   *  BAD_SINCE. Answers `{ok, kinds, only, items, count, limit, truncated, next}`, each item `{kind, id, title,
-   *  last_changed, new, watched, flagged}`, newest first, ties by id; `undetermined` when the marks could not be read. */
-  read({ kinds: kinds3 = null, only = null, since = null, after: after2 = null, limit = null, viewer = null } = {}) {
-    if (typeof viewer !== "string" || !viewer)
-      return refuse13("VIEWER_MISSING", "a browse answers only to a stamped viewer, and this request carries none");
-    const asked6 = Array.isArray(kinds3) ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : [];
-    const named3 = [...new Set(asked6.map((k) => String(k).trim()).filter(Boolean))];
-    const unknown = named3.filter((k) => k !== "all" && !BROWSE_KINDS.includes(k));
-    if (unknown.length)
-      return refuse13(
-        "KIND_UNKNOWN",
-        `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; the kinds are ${BROWSE_KINDS.join(", ")}`,
-        { kinds: BROWSE_KINDS }
-      );
-    const wanted = !named3.length || named3.includes("all") ? [...BROWSE_KINDS] : BROWSE_KINDS.filter((k) => named3.includes(k));
-    const mode = only == null || only === "" ? null : String(only).trim();
-    if (mode !== null && !BROWSE_ONLY.includes(mode))
-      return refuse13("ONLY_UNKNOWN", `no filter called ${JSON.stringify(mode.slice(0, 40))}; the filters are ${BROWSE_ONLY.join(", ")}`, { only: BROWSE_ONLY });
-    const hasSince = since !== null && since !== void 0 && since !== "";
-    if (mode === "new_since" && !hasSince) return refuse13("NO_SINCE", "new_since counts from an instant, and none was given");
-    if (hasSince && (typeof since !== "string" || !Number.isFinite(Date.parse(since))))
-      return refuse13("BAD_SINCE", "since is an instant, as 2026-10-01T00:00:00Z");
-    const sinceMs = hasSince ? Date.parse(since) : null;
-    const n2 = Number(limit);
-    const cap = limit == null || limit === "" || !Number.isFinite(n2) ? BROWSE_LIMIT_DEFAULT : Math.max(1, Math.min(BROWSE_LIMIT_MAX, Math.floor(n2)));
-    const out = { ok: true, kinds: wanted, only: mode };
-    const reg = this.r.browseMarks();
-    const gate = viewerPredicate(viewer);
-    const recognised = gate.scope !== "DENY";
-    const undetermined3 = [];
-    const fromList = { watched: /* @__PURE__ */ new Set(), flagged: /* @__PURE__ */ new Map() };
-    let rows4;
-    if (!recognised) rows4 = [];
-    else if (mode === "watched" || mode === "flagged") {
-      if (!reg) return {
-        ...out,
-        items: [],
-        count: 0,
-        limit: cap,
-        truncated: false,
-        next: null,
-        undetermined: { why: "no module has registered the watches and flags, so which items are watched or flagged is not read" }
-      };
-      const got = this.#call(reg, { viewer, only: mode, limit: BROWSE_MARKS_MAX });
-      const list6 = got.ok && got.value && Array.isArray(got.value.items) && typeof got.value.truncated === "boolean" ? got.value : null;
-      if (!list6) return {
-        ...out,
-        items: [],
-        count: 0,
-        limit: cap,
-        truncated: false,
-        next: null,
-        undetermined: { why: got.why || "the registered read of watches and flags answered another shape than its contract's" }
-      };
-      const ids = [];
-      for (const entry4 of list6.items.slice(0, BROWSE_MARKS_MAX)) {
-        const id = idOf2(entry4);
-        if (!id) continue;
-        ids.push(id);
-        if (mode === "watched") fromList.watched.add(id);
-        else if (entry4 && typeof entry4 === "object") fromList.flagged.set(id, flagOf(entry4));
+  #rank(m) {
+    const i = this.#order.indexOf(m);
+    return i === -1 ? Infinity : i;
+  }
+  /** R4 (N715; K31, K2063): a later module's read by capture and extent, `fn({captureSha, extent?, limit, viewer})`
+   *  answering in `events` R49's shape, which R1 calls for every capture a find reads, after the four it names. A
+   *  malformed registration, or a second by the same module, is refused by membership's `listenerRefusal` (its R81); the
+   *  four R1 names are held already, so none of them registers here. Reads run in the modules' total order. */
+  registerRecordedBy(module, fn) {
+    const held3 = [...RECORDED_BY_MODULES.map((m) => ({ module: m })), ...this.#recordedBy];
+    const refused5 = listenerRefusal(held3, module, fn);
+    if (refused5) return refused5;
+    this.#recordedBy.push({ module, fn, seq: this.#recordedBy.length });
+    this.#recordedBy.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  /** R11 (N1092; DEC-238 S23 "A"; K31's pattern, as R4): the one later module (`following`) that holds a member's watches
+   *  and the team's second-look flags registers its read once at start: `fn({viewer, only, limit})` answers
+   *  `{items, truncated}` (the ids marked) and `fn({viewer, ids})` answers `{watched, flagged}` for those ids. A malformed
+   *  registration, or a second whoever makes it (the slot takes one), is refused by membership's `listenerRefusal`. */
+  registerBrowseMarks(module, fn) {
+    const refused5 = listenerRefusal(this.#browseMarks, module, fn);
+    if (refused5) return refused5;
+    this.#browseMarks = { module, fn };
+    return { ok: true, module };
+  }
+  /** R10, R11: the registered read of marks, or null. */
+  browseMarks() {
+    return this.#browseMarks;
+  }
+  /** R1, R4: the reads a find calls, in order: `events`, `standards`, `money` and `people`'s `recordedBy`, then each
+   *  registered one. `read` is null, with why, for a module whose instance offers none; `registered` says which. */
+  recordedReads() {
+    const own10 = RECORDED_BY_MODULES.map((m) => {
+      let inst = this.#recorders.get(m);
+      if (inst === void 0) {
+        inst = null;
+        const make = { events: eventsOf, standards: standardsOf, money: moneyOf2, people: peopleOf }[m];
+        try {
+          if (this.#host) inst = make(this.#host);
+        } catch {
+          inst = null;
+        }
+        this.#recorders.set(m, inst);
       }
-      rows4 = this.#byIds([...new Set(ids)], wanted, gate);
-      if (list6.truncated) out.markedTruncated = true;
-    } else rows4 = this.#all(wanted, gate);
-    let items = rows4.map((r) => ({ ...r, ms: ms(r.last_changed) }));
-    if (mode === "new_since") items = items.filter((r) => r.ms > sinceMs);
-    items.sort((a, b) => a.ms === b.ms ? a.id < b.id ? -1 : a.id > b.id ? 1 : 0 : a.ms > b.ms ? -1 : 1);
-    const cursor = parseCursor(after2);
-    if (cursor) items = items.filter((r) => r.ms < cursor.ms || r.ms === cursor.ms && r.id > cursor.id);
-    const page2 = items.slice(0, cap);
-    const truncated6 = items.length > cap || out.markedTruncated === true;
-    delete out.markedTruncated;
-    let marks2 = { watched: /* @__PURE__ */ new Set(), flagged: /* @__PURE__ */ new Map() };
-    if (!reg) undetermined3.push("no module has registered the watches and flags, so watched and flagged are not read");
-    else if (page2.length) {
-      const got = this.#call(reg, { viewer, ids: page2.map((r) => r.id) });
-      const v = got.ok ? got.value : null;
-      if (v && Array.isArray(v.watched) && Array.isArray(v.flagged)) {
-        marks2 = {
-          watched: new Set(v.watched.filter((x) => typeof x === "string")),
-          flagged: new Map(v.flagged.filter((f17) => f17 && typeof f17 === "object" && typeof f17.id === "string").map((f17) => [f17.id, flagOf(f17)]))
-        };
-      } else undetermined3.push(got.why || "the registered read of watches and flags answered another shape than its contract's");
-    }
-    const shown3 = page2.map((r) => ({
-      kind: r.kind,
-      id: r.id,
-      title: r.title,
-      last_changed: r.last_changed,
-      new: sinceMs !== null && r.ms > sinceMs,
-      watched: marks2.watched.has(r.id) || fromList.watched.has(r.id),
-      flagged: marks2.flagged.get(r.id) || fromList.flagged.get(r.id) || null
-    }));
-    return {
-      ...out,
-      items: shown3,
-      count: shown3.length,
-      limit: cap,
-      truncated: truncated6,
-      next: truncated6 && page2.length ? cursorOf3(page2[page2.length - 1]) : null,
-      ...undetermined3.length ? { undetermined: { why: undetermined3[0] } } : {}
-    };
+      if (typeof inst === "function") {
+        try {
+          inst = inst();
+        } catch {
+          inst = null;
+        }
+        this.#recorders.set(m, inst);
+      }
+      return inst && typeof inst.recordedBy === "function" ? { module: m, read: (a) => inst.recordedBy(a), registered: false } : {
+        module: m,
+        read: null,
+        registered: false,
+        why: inst ? say4("retrieval.why.offers_recordedby_read", { m }) : say4("retrieval.why.reachable", { m })
+      };
+    });
+    return [...own10, ...this.#recordedBy.map((r) => ({ module: r.module, read: r.fn, registered: true }))];
   }
-  /* R86: one call of the registered read; a throw, a promise (its rejection caught) or a non-object is no answer. */
-  #call(reg, arg) {
-    let a;
-    try {
-      a = reg.fn(arg);
-    } catch (e2) {
-      return { ok: false, why: `the registered read of watches and flags threw: ${String(e2 && e2.message || e2).slice(0, 200)}` };
+  /** R2's `people`: entities' name lookup (its R17), the host's own unless a caller handed one; null when none. */
+  entitiesFor() {
+    if (this.#entities === void 0) {
+      this.#entities = null;
+      try {
+        if (this.#host) this.#entities = entitiesOf(this.#host);
+      } catch {
+        this.#entities = null;
+      }
     }
-    if (a && typeof a.then === "function") {
-      Promise.resolve(a).catch(() => {
-      });
-      return { ok: false, why: "the registered read of watches and flags answered a promise: it is called in process, synchronously" };
-    }
-    return a && typeof a === "object" && !Array.isArray(a) ? { ok: true, value: a } : { ok: false, why: "the registered read of watches and flags answered another shape than its contract's" };
-  }
-  /* Every bundle of the kinds asked that the gate passes, and every entity of them, as `{kind, id, title, last_changed}`. */
-  #all(wanted, gate) {
-    const rows4 = [];
-    const types2 = wanted.filter((k) => BUNDLE_TYPES2[k]).map((k) => BUNDLE_TYPES2[k]);
-    if (types2.length)
-      for (const b of this.r.rowsOf(`SELECT b.bundle_id, b.object_type, b.title, b.last_updated FROM bundles b
-                                      WHERE (${gate.sql}) AND b.object_type IN (${types2.map(() => "?").join(",")})`, ...gate.args, ...types2))
-        rows4.push(bundleRow(b));
-    if (wanted.includes("entity"))
-      for (const e2 of this.#entities(`SELECT entity_id, kind, label, at FROM entities WHERE kind IN (${ENTITY_KINDS2.map(() => "?").join(",")})`, ENTITY_KINDS2))
-        rows4.push(entityRow(e2));
-    return rows4;
-  }
-  /* The same for named ids only, in chunks under the variable bound; an id the gate does not pass is simply absent. */
-  #byIds(ids, wanted, gate) {
-    const rows4 = [];
-    const types2 = wanted.filter((k) => BUNDLE_TYPES2[k]).map((k) => BUNDLE_TYPES2[k]);
-    for (let i = 0; i < ids.length; i += SELECTION_ID_CHUNK) {
-      const part = ids.slice(i, i + SELECTION_ID_CHUNK);
-      const marks2 = part.map(() => "?").join(",");
-      if (types2.length)
-        for (const b of this.r.rowsOf(`SELECT b.bundle_id, b.object_type, b.title, b.last_updated FROM bundles b
-                                        WHERE b.bundle_id IN (${marks2}) AND (${gate.sql})
-                                          AND b.object_type IN (${types2.map(() => "?").join(",")})`, ...part, ...gate.args, ...types2))
-          rows4.push(bundleRow(b));
-      if (wanted.includes("entity"))
-        for (const e2 of this.#entities(`SELECT entity_id, kind, label, at FROM entities WHERE entity_id IN (${marks2})
-                                          AND kind IN (${ENTITY_KINDS2.map(() => "?").join(",")})`, [...part, ...ENTITY_KINDS2]))
-          rows4.push(entityRow(e2));
-    }
-    return rows4;
-  }
-  /* The registry's table is another module's: a store that has not made it holds no entity to list. */
-  #entities(sql, args) {
-    try {
-      return this.r.rowsOf(sql, ...args);
-    } catch {
-      return [];
-    }
+    return this.#entities;
   }
 };
-var bundleRow = (b) => ({
-  kind: ITEM_KIND_OF_TYPE[b.object_type] || "document",
-  id: b.bundle_id,
-  title: text3(b.title) || null,
-  last_changed: text3(b.last_updated)
-});
-var entityRow = (e2) => ({
-  kind: e2.kind === "person" ? "person" : "organization",
-  id: e2.entity_id,
-  title: text3(e2.label) || null,
-  last_changed: text3(e2.at)
-});
-var cursorOf3 = (r) => `${Number.isFinite(r.ms) ? r.ms : "-"}|${r.id}`;
-function parseCursor(after2) {
-  if (typeof after2 !== "string" || !after2) return null;
-  const at50 = after2.indexOf("|");
-  if (at50 < 1) return null;
-  const head = after2.slice(0, at50);
-  const t2 = head === "-" ? -Infinity : Number(head);
-  return Number.isNaN(t2) ? null : { ms: t2, id: after2.slice(at50 + 1) };
-}
 
-// src/retrieval/findin.mjs
-var FIND_KINDS = Object.freeze(["people", "money", "dates", "requirements", "events", "term"]);
-var FIND_CAPTURES_PER_CALL = 200;
-var FIND_IDS_MAX = 200;
-var FIND_ITEMS_DEFAULT = 50;
-var FIND_ITEMS_MAX = 500;
-var FIND_WORDS_MAX = 500;
-var FIND_TERM_MAX = 200;
-var FIND_EVENT_TYPES = Object.freeze(["meeting_minutes", "meeting_agenda"]);
-var FIND_PEOPLE_KINDS = Object.freeze(["person", "office"]);
-var ALIAS_PAGE = 5e3;
-var ALIAS_PAGES_MAX = 4;
-var FIND_ORIGIN = "search";
-var RECORDED_BY_MODULES = Object.freeze(["events", "standards", "money", "people"]);
-var RECORDED_BY_LIMIT = 500;
-var RECORDED_NONE_REGISTERED = say3("retrieval.recorded_none_registered");
-var RECORDED_RELATIONS = Object.freeze(["same", "narrower"]);
-var deepFreeze3 = (o) => {
-  for (const v of Object.values(o)) if (v && typeof v === "object") deepFreeze3(v);
-  return Object.freeze(o);
-};
-var FIND_MATCHERS = deepFreeze3({
-  en: {
-    money: {
-      /* Each sign and code with the code the figure parser reads it as; a word names a currency without saying which
-         (a "dollar" is not one currency), so a word is matched and never turned into a code. */
-      signs: ["$", "\u20AC", "\xA3", "\xA5"],
-      codes: ["USD", "EUR", "GBP", "CAD", "AUD", "NZD", "JPY", "CHF", "MXN"],
-      words: ["dollars", "dollar", "cents", "cent", "euros", "euro", "pounds sterling", "pounds", "pound"],
-      multipliers: ["thousand", "million", "billion", "trillion", "bn", "mn", "k", "m"]
-    },
-    dates: {
-      months: [
-        ["january", "jan"],
-        ["february", "feb"],
-        ["march", "mar"],
-        ["april", "apr"],
-        ["may"],
-        ["june", "jun"],
-        ["july", "jul"],
-        ["august", "aug"],
-        ["september", "sept", "sep"],
-        ["october", "oct"],
-        ["november", "nov"],
-        ["december", "dec"]
-      ],
-      ordinals: ["st", "nd", "rd", "th"],
-      /* A period counted from something: its lead words, the units (each as it is said and the unit it states), the
-         qualifier of a day count, and the numbers written as words. */
-      period_lead: ["within", "no later than", "not later than", "not more than", "no more than"],
-      period_units: {
-        day: "days",
-        days: "days",
-        week: "weeks",
-        weeks: "weeks",
-        month: "months",
-        months: "months",
-        year: "years",
-        years: "years",
-        hour: "hours",
-        hours: "hours"
-      },
-      period_qualifiers: ["calendar", "business", "working", "court"],
-      numbers: {
-        one: 1,
-        two: 2,
-        three: 3,
-        four: 4,
-        five: 5,
-        six: 6,
-        seven: 7,
-        eight: 8,
-        nine: 9,
-        ten: 10,
-        eleven: 11,
-        twelve: 12,
-        thirteen: 13,
-        fourteen: 14,
-        fifteen: 15,
-        sixteen: 16,
-        seventeen: 17,
-        eighteen: 18,
-        nineteen: 19,
-        twenty: 20,
-        "twenty-one": 21,
-        "twenty-four": 24,
-        thirty: 30,
-        "forty-five": 45,
-        forty: 40,
-        sixty: 60,
-        ninety: 90,
-        "one hundred twenty": 120,
-        "one hundred eighty": 180
-      }
-    },
-    /* The requirement words, longest first so "shall not" is read before "shall". A sentence carrying one is found;
-       it is never labeled a force (standards R35; K1722). */
-    requirements: ["is required to", "are required to", "shall not", "must not", "may not", "shall", "must"]
+// src/retrieval-browse/index.mjs
+var HOST_READS2 = Object.freeze(["sight", "planOf", "runQuery", "localeOf", "selectionRead"]);
+var instances22 = /* @__PURE__ */ new WeakMap();
+var RetrievalBrowse = class {
+  #sql;
+  #marks;
+  constructor({ sql, membership = null, host = null, order: order4 = null, entities: entities2 = void 0, recorders = null, ...reads18 }) {
+    if (!sql || typeof sql.exec !== "function") throw new Error("retrieval-browse: deps.sql is the Durable Object's sql");
+    this.#sql = sql;
+    this.membership = membership;
+    this.reads = Object.freeze(Object.fromEntries(HOST_READS2.filter((n2) => typeof reads18[n2] === "function").map((n2) => [n2, reads18[n2]])));
+    this.#marks = new Marks({ order: order4, host, entities: entities2, recorders });
+    this.finder = new Finder(this);
+    this.browser = new Browser(this);
   }
-});
-var esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-var alt = (list6) => [...list6].sort((a, b) => b.length - a.length).map(esc).join("|");
-var NUMBER = String.raw`\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?`;
-var compiled2 = /* @__PURE__ */ new WeakMap();
-function patterns(set) {
-  let p3 = compiled2.get(set);
-  if (p3) return p3;
-  const m = set.money, d = set.dates;
-  const mult = `(?:\\s?(?:${alt(m.multipliers)})(?![\\p{L}\\p{N}]))?`;
-  const before3 = `(?:${alt(m.signs)})\\s?|(?:${alt(m.codes)})\\s`;
-  const after2 = `\\s?(?:${alt(m.signs)})|\\s(?:${alt(m.codes)})(?![\\p{L}])|\\s(?:${alt(m.words)})(?![\\p{L}])`;
-  const money = new RegExp(`(?<![\\p{L}\\p{N}])(?:(?:${before3})(?:${NUMBER})${mult}|(?:${NUMBER})${mult}(?:${after2}))`, "giu");
-  const months = d.months.flatMap((names2, i) => names2.map((n2) => [n2, i + 1]));
-  const monthWord = `(${alt(months.map(([n2]) => n2))})\\.?`;
-  const ord = `(?:${alt(d.ordinals)})?`;
-  const date = new RegExp([
-    `(?<![\\p{L}\\p{N}])${monthWord}\\s+(\\d{1,2})${ord},?\\s+(\\d{4})(?![\\p{N}])`,
-    /* March 5, 2026 */
-    `(?<![\\p{L}\\p{N}])(\\d{1,2})${ord}\\s+${monthWord},?\\s+(\\d{4})(?![\\p{N}])`,
-    /* 5 March 2026 */
-    `(?<![\\p{L}\\p{N}])(\\d{4})-(\\d{2})-(\\d{2})(?![\\p{N}])`,
-    /* 2026-03-05 */
-    `(?<![\\p{L}\\p{N}/])(\\d{1,2})/(\\d{1,2})/(\\d{4})(?![\\p{N}/])`,
-    /* 5/3/2026: order not said */
-    `(?<![\\p{L}\\p{N}])${monthWord}\\s+(\\d{4})(?![\\p{N}])`
-    /* March 2026: no day */
-  ].map((s) => `(?:${s})`).join("|"), "giu");
-  const numWords = alt(Object.keys(d.numbers));
-  const period = new RegExp(`(?<![\\p{L}])(?:${alt(d.period_lead)})\\s+(?:(${numWords})\\s+\\((\\d{1,4})\\)|(${numWords})|(\\d{1,4}))\\s+(?:(${alt(d.period_qualifiers)})\\s+)?(${alt(Object.keys(d.period_units))})(?![\\p{L}])`, "giu");
-  const requirement = new RegExp(`(?<![\\p{L}])(${alt(set.requirements)})(?![\\p{L}])`, "iu");
-  const currencyMark = new RegExp(`(?:${alt(m.signs)})|(?<![\\p{L}])(?:${alt([...m.codes, ...m.words])})(?![\\p{L}])`, "iu");
-  p3 = {
-    money,
-    date,
-    period,
-    requirement,
-    monthOf: new Map(months),
-    currencyMark,
-    currencyWords: new RegExp(`\\s(?:${alt(m.words)})$`, "iu")
-  };
-  compiled2.set(set, p3);
-  return p3;
-}
-function sentenceAround(text8, start, end2) {
-  let a = start, b = end2;
-  while (a > 0 && !/[.!?;\n]/.test(text8[a - 1])) a--;
-  while (b < text8.length && !/[.!?;\n]/.test(text8[b])) b++;
-  if (b < text8.length && /[.!?;]/.test(text8[b])) b++;
-  return text8.slice(a, b).trim();
-}
-function cutWords(s) {
-  const t2 = String(s ?? "").replace(/\s+/gu, (run2) => /[\n\r\u2028\u2029\u0085]/u.test(run2) ? "\n" : " ").trim();
-  if (t2.length <= FIND_WORDS_MAX) return t2;
-  const head = t2.slice(0, FIND_WORDS_MAX - 1);
-  const at50 = Math.max(head.lastIndexOf(" "), head.lastIndexOf("\n"));
-  return `${(at50 > 0 ? head.slice(0, at50) : head).trimEnd()}\u2026`;
-}
-function matchMoney(text8, set) {
-  const p3 = patterns(set), out = [];
-  for (const m of String(text8 ?? "").matchAll(p3.money)) {
-    const as_read = m[0];
-    const figure3 = parseFigure(as_read.replace(p3.currencyWords, ""));
-    out.push({
-      index: m.index,
-      end: m.index + as_read.length,
-      as_read,
-      ...figure3 && typeof figure3.refused === "string" ? { figure: null, figure_why: figure3.why } : { figure: figure3 }
-    });
+  /* The module's own two reads over the Durable Object's sql (other modules' read contracts only). */
+  rowsOf(q10, ...a) {
+    return [...this.#sql.exec(q10, ...a)];
   }
-  return out;
-}
-function matchDates(text8, set) {
-  const p3 = patterns(set), t2 = String(text8 ?? ""), out = [];
-  const two = (n2) => String(n2).padStart(2, "0");
-  for (const m of t2.matchAll(p3.date)) {
-    const g = m.slice(1);
-    let date = null, why2 = null;
-    if (g[0] !== void 0) date = `${g[2]}-${two(p3.monthOf.get(g[0].toLowerCase()))}-${two(g[1])}`;
-    else if (g[3] !== void 0) date = `${g[5]}-${two(p3.monthOf.get(g[4].toLowerCase()))}-${two(g[3])}`;
-    else if (g[6] !== void 0) date = `${g[6]}-${g[7]}-${g[8]}`;
-    else if (g[9] !== void 0) why2 = say3("retrieval.why.words_write_day");
-    else why2 = say3("retrieval.why.words_name_month");
-    if (date && !isCalendarDate(date)) {
-      why2 = say3("retrieval.why.names_day_calendar", { date });
-      date = null;
-    }
-    out.push({ index: m.index, end: m.index + m[0].length, as_read: m[0], date, ...why2 ? { date_why: why2 } : {} });
+  oneOf(q10, ...a) {
+    const r = this.rowsOf(q10, ...a);
+    return r.length ? r[0] : null;
   }
-  for (const m of t2.matchAll(p3.period)) {
-    const [, word3, digits, word22, plain20, qualifier, unit] = m;
-    const amount = digits ? Number(digits) : plain20 ? Number(plain20) : set.dates.numbers[String(word3 || word22).toLowerCase()];
-    const units = `${qualifier ? `${qualifier.toLowerCase()} ` : ""}${set.dates.period_units[unit.toLowerCase()]}`;
-    out.push({
-      index: m.index,
-      end: m.index + m[0].length,
-      as_read: m[0],
-      date: null,
-      deadline: true,
-      period: Number.isInteger(amount) ? { amount, units } : null
-    });
+  /* The host reads, as the moved code calls them. */
+  sight(viewer) {
+    return this.reads.sight(viewer);
   }
-  return out.sort((a, b) => a.index - b.index || a.end - b.end);
-}
-function matchRequirements(text8, set) {
-  const p3 = patterns(set), t2 = String(text8 ?? ""), out = [];
-  const re = /[^.!?;\n]+[.!?;]?/g;
-  for (const s of t2.matchAll(re)) {
-    const m = p3.requirement.exec(s[0]);
-    if (!m) continue;
-    const lead = s[0].length - s[0].trimStart().length;
-    out.push({
-      index: s.index + lead,
-      end: s.index + s[0].trimEnd().length,
-      sentence: s[0].trim(),
-      requirement_word: m[1].toLowerCase()
-    });
+  planOf(input) {
+    return this.reads.planOf(input);
   }
-  return out;
-}
-var safeJson16 = (s) => {
-  try {
-    return s == null ? null : JSON.parse(s);
-  } catch {
-    return null;
+  runQuery(statement, tally) {
+    return this.reads.runQuery(statement, tally);
+  }
+  localeOf() {
+    return this.reads.localeOf();
+  }
+  selectionRead(args) {
+    return this.reads.selectionRead(args);
+  }
+  /** R14: which of `names` the host did not hand. */
+  missing(names2) {
+    return names2.filter((n2) => !this.reads[n2]);
+  }
+  entitiesFor() {
+    return this.#marks.entitiesFor();
+  }
+  recordedReads() {
+    return this.#marks.recordedReads();
+  }
+  browseMarks() {
+    return this.#marks.browseMarks();
+  }
+  /** R1–R9: `op=findin` (`find.mjs`). */
+  findIn(args = {}) {
+    return findIn(this, args);
+  }
+  /** R10–R12: `op=browse` (`browse.mjs`). */
+  browse(args = {}) {
+    return this.browser.read(args);
+  }
+  /** R13: the ids a scope of `BROWSE_SCOPES` holds. */
+  scopeMembers(args = {}) {
+    return this.browser.scopeMembers(args);
+  }
+  /** R4, R11. */
+  registerRecordedBy(module, fn) {
+    return this.#marks.registerRecordedBy(module, fn);
+  }
+  registerBrowseMarks(module, fn) {
+    return this.#marks.registerBrowseMarks(module, fn);
   }
 };
-var A1 = /^\$?([A-Z]{1,3})\$?(\d{1,7})$/i;
-var PLAIN_NUMBER = new RegExp(`^(?:${NUMBER})$`);
-var colNum = (c) => [...c.toUpperCase()].reduce((n2, ch) => n2 * 26 + ch.charCodeAt(0) - 64, 0);
-var Finder = class {
-  /** `r` is the Retrieval this find runs in: its reads (`rowsOf`, `oneOf`), its compile and its gated executor
-   *  (`planOf`, `runQuery`), and the services it reaches (`entitiesFor`, `localeOf`). */
-  constructor(r) {
-    this.r = r;
+function retrievalBrowseOf(deps) {
+  const key2 = deps && deps.sql;
+  let r = key2 && typeof key2 === "object" ? instances22.get(key2) : void 0;
+  if (!r) {
+    r = new RetrievalBrowse(deps || {});
+    if (key2 && typeof key2 === "object") instances22.set(key2, r);
   }
-  /** R73–R75 over `captures` (`[{capture_sha, bundle_id}]`, every one in the viewer's sight, in capture-sha order, at
-   *  most `FIND_CAPTURES_PER_CALL`): one `{kind, items, count, truncated, nothing, not_read}` per kind asked. `whole` is
-   *  true when these captures are the whole scope, so a kind with no match and nothing unread may say "Nothing here". */
-  find({ captures, kinds: kinds3, term, limit, viewer, whole: whole2 }) {
-    const data = new Map(captures.map((c) => [c.capture_sha, this.#load(c)]));
-    const language = this.r.localeOf();
-    return kinds3.map((kind2) => {
-      const acc = { items: [], not_read: [], truncated: false };
-      const add2 = (item3) => {
-        if (acc.items.length > limit) return;
-        acc.items.push(placed(item3, data.get(item3.capture_sha)));
-      };
-      const skip = (c, why2) => acc.not_read.push({ capture_sha: c.capture_sha, why: why2 });
-      if (kind2 === "people") this.#people(captures, data, add2, skip, viewer, acc, limit);
-      else if (kind2 === "term") this.#term(captures, data, add2, skip, term, viewer, acc);
-      else for (const c of captures) {
-        const d = data.get(c.capture_sha);
-        if (kind2 === "events") {
-          this.#events(c, d, add2, skip);
-          continue;
-        }
-        if (!d.reading && !d.units.length && !d.cells) {
-          skip(c, "not extracted: no reading of this capture is held");
-          continue;
-        }
-        if (!d.units.length && !d.cells) {
-          skip(c, "no text: this capture's reading holds no text to search");
-          continue;
-        }
-        const lang = d.language || language;
-        const set = lang && Object.hasOwn(FIND_MATCHERS, lang) ? FIND_MATCHERS[lang] : null;
-        if (!set) {
-          skip(c, lang ? `no matcher for ${lang} yet` : "no matcher for this capture's language yet: neither its reading nor the active profiles state a language");
-          continue;
-        }
-        if (kind2 === "requirements") {
-          if (!d.units.length) skip(c, "no text: this capture's reading holds typed cells but no text unit to read sentences from");
-          else this.#requirements(c, d, set, add2);
-        } else this.#figures(kind2, c, d, set, add2);
-      }
-      const truncated6 = acc.truncated || acc.items.length > limit;
-      const items = acc.items.slice(0, limit);
-      const nothing = whole2 && items.length === 0 && acc.not_read.length === 0 && !truncated6;
-      return {
-        kind: kind2,
-        items,
-        count: items.length,
-        truncated: truncated6,
-        nothing,
-        ...nothing ? { says: say3("state.empty") } : {},
-        not_read: acc.not_read
-      };
-    });
-  }
-  /** R73, R76 (N715; K1941, K2063): who recorded each match. Every read (`r.recordedReads()`: the four recording
-   *  modules' `recordedBy`, then each registered one) is called once per capture of `captures`, under `viewer`, with
-   *  `limit` RECORDED_BY_LIMIT; each item whose extent stands to the match's (a table item's `table.extent`) as `same`
-   *  or `narrower` (`content.extentRelation`; T50: never `wider`, R73) is in the match's `recorded`, `relation` that answer. A read
-   *  that throws, rejects, refuses or answers another shape is in `not_read` with why and changes nothing else; a
-   *  promise is never awaited (a find is synchronous), and its rejection is caught. Answers `{read, not_read}`. */
-  recorded(kinds3, captures, viewer) {
-    const reads18 = this.r.recordedReads();
-    const got = new Map(captures.map((c) => [c.capture_sha, []]));
-    const read3 = [], not_read = [];
-    for (const rd of reads18) {
-      if (!rd.read) {
-        not_read.push({ module: rd.module, why: rd.why, captures: captures.length });
-        continue;
-      }
-      let failed3 = null, n2 = 0;
-      for (const c of captures) {
-        const a = callRead(rd.read, c.capture_sha, viewer);
-        if (a.why) {
-          n2++;
-          failed3 = failed3 || a.why;
-          continue;
-        }
-        got.get(c.capture_sha).push({ module: rd.module, items: a.items, truncated: a.truncated });
-      }
-      if (failed3) not_read.push({ module: rd.module, why: failed3, captures: n2 });
-      else if (captures.length) read3.push(rd.module);
-    }
-    if (!reads18.some((rd) => rd.registered)) not_read.push({ module: null, why: RECORDED_NONE_REGISTERED });
-    for (const k of kinds3)
-      for (const m of k.items) {
-        const answers2 = got.get(m.capture_sha) || [];
-        const at50 = m.table ? m.table.extent : m.extent;
-        m.recorded = [];
-        for (const a of answers2)
-          for (const it of a.items) {
-            const relation2 = relationOf2(at50, it.extent);
-            if (!RECORDED_RELATIONS.includes(relation2)) continue;
-            m.recorded.push({
-              module: a.module,
-              record: it.record ?? null,
-              kind: it.kind ?? null,
-              field: it.field ?? null,
-              extent: it.extent ?? null,
-              relation: relation2,
-              by: it.by ?? null,
-              at: it.at ?? null,
-              withdrawn: it.withdrawn === true
-            });
-          }
-        if (answers2.some((a) => a.truncated)) m.recorded_truncated = true;
-      }
-    return { read: read3, not_read };
-  }
-  /** R80, R81 (T50; N1123, N1177): every match carries `title`, the title of the bundle R73 attributes its capture to (null
-   *  when that bundle states none), and, with an extent (a table item's `table.extent`), `content_id`, the id of the row
-   *  `content` holds for exactly that capture and extent, or null with `content_held: false`. A find mints nothing, so a
-   *  passage nobody has marked citable answers null. A row held in a bundle the viewer may not see is no row to them. */
-  annotate(kinds3, captures, viewer) {
-    const bundleOf2 = new Map(captures.map((c) => [c.capture_sha, c.bundle_id]));
-    const sees = this.r.sight(viewer);
-    const titles = /* @__PURE__ */ new Map(), held3 = /* @__PURE__ */ new Map();
-    const titleOf6 = (id) => {
-      if (!titles.has(id)) {
-        const row13 = id ? this.r.oneOf(`SELECT title FROM bundles WHERE bundle_id = ?`, id) : null;
-        titles.set(id, row13 && typeof row13.title === "string" && row13.title.trim() ? row13.title : null);
-      }
-      return titles.get(id);
-    };
-    const contentOf2 = (sha2, extent) => {
-      let canon6 = null;
-      try {
-        canon6 = canonicalExtent2(extent);
-      } catch {
-        canon6 = null;
-      }
-      if (canon6 === null) return null;
-      const key2 = `${sha2}\0${canon6}`;
-      if (!held3.has(key2)) {
-        const row13 = this.r.rowsOf(`SELECT content_id, bundle_id FROM content WHERE capture_sha = ? AND extent = ?
-                                    ORDER BY stale, at, content_id`, sha2, canon6).find((r) => sees(r.bundle_id));
-        held3.set(key2, row13 ? row13.content_id : null);
-      }
-      return held3.get(key2);
-    };
-    for (const k of kinds3)
-      for (const m of k.items) {
-        m.title = titleOf6(bundleOf2.get(m.capture_sha) ?? null);
-        const at50 = m.table ? m.table.extent : m.extent;
-        if (at50) {
-          m.content_id = contentOf2(m.capture_sha, at50);
-          m.content_held = m.content_id !== null;
-        }
-      }
-  }
-  /* One capture's reading (content type, language, typed cells, items) and its text units in reading order. */
-  #load(c) {
-    const row13 = this.r.oneOf(`SELECT content_type, reading FROM readings WHERE capture_sha = ?`, c.capture_sha);
-    const reading3 = row13 ? safeJson16(row13.reading) : null;
-    const units = this.r.rowsOf(`SELECT seq, extent_kind, extent, ref, text FROM capture_text WHERE capture_sha = ?
-                                  ORDER BY seq, extent_kind, extent`, c.capture_sha).map((u) => ({ ...u, extentObj: safeJson16(u.extent) }));
-    const lang = reading3 && typeof reading3.language === "string" && reading3.language ? reading3.language.split("-")[0].toLowerCase() : null;
-    const cells = reading3 && reading3.cells && typeof reading3.cells === "object" && !Array.isArray(reading3.cells) ? reading3.cells : null;
-    return {
-      reading: row13 ? { content_type: row13.content_type, value: reading3 } : null,
-      units,
-      language: lang,
-      cells,
-      grids: /* @__PURE__ */ new Map()
-    };
-  }
-  /* `money` and `dates`: over the text units, and over a workbook's typed cells where the reading holds them. A
-     table's date or amount column is ONE result naming the table (K1468), never one per row. */
-  #figures(kind2, c, d, set, add2) {
-    const match = kind2 === "money" ? matchMoney : matchDates;
-    const item3 = (m, text8, extent) => ({
-      kind: kind2,
-      words: cutWords(sentenceAround(text8, m.index, m.end)),
-      capture_sha: c.capture_sha,
-      extent,
-      origin: FIND_ORIGIN,
-      as_read: m.as_read,
-      ...kind2 === "money" ? { figure: m.figure, ...m.figure ? {} : { figure_why: m.figure_why } } : {
-        date: m.date,
-        ...m.date_why ? { date_why: m.date_why } : {},
-        ...m.deadline ? { deadline: true, period: m.period } : {}
-      }
-    });
-    const { sheets, tables } = heldCells(d.cells);
-    const docTables = tables.map((t2) => ({ ...t2, ...this.#columns(kind2, t2.cells, set) }));
-    const skipped = paragraphsOf(docTables, d.units);
-    for (const u of d.units) {
-      const e2 = u.extentObj;
-      if (e2 && e2.kind === "sheet-range" && sheets.has(e2.sheet)) continue;
-      if (e2 && e2.kind === "doc-table" && docTables.some((t2) => t2.table === e2.table)) continue;
-      if (skipped.has(u)) continue;
-      const found3 = match(u.text, set);
-      if (!found3.length) continue;
-      if (u.extent_kind === "doc-table") {
-        add2({
-          kind: kind2,
-          table: {
-            capture_sha: c.capture_sha,
-            extent: e2,
-            column: null,
-            rows: null,
-            column_why: say3("retrieval.column_why")
-          },
-          words: cutWords(String(u.text).split("\n")[0]),
-          capture_sha: c.capture_sha,
-          extent: e2,
-          origin: FIND_ORIGIN
-        });
-        continue;
-      }
-      for (const m of found3) add2(item3(m, u.text, e2));
-    }
-    for (const t2 of docTables)
-      for (const col of t2.columns) {
-        const extent = { kind: "doc-table", table: t2.table };
-        add2({
-          kind: kind2,
-          table: { capture_sha: c.capture_sha, extent, column: col.col, rows: col.rows },
-          words: col.words,
-          capture_sha: c.capture_sha,
-          extent,
-          origin: FIND_ORIGIN
-        });
-      }
-    for (const sheet of [...sheets].sort()) this.#sheet(kind2, c, sheet, d.cells[sheet], set, match, add2, item3);
-  }
-  /* One sheet's typed cells: each date or amount column (`#columns`) is one table result; every other cell is matched
-     on its own words. */
-  #sheet(kind2, c, sheet, cells, set, match, add2, item3) {
-    const { held: held3, columns, done } = this.#columns(kind2, cells, set);
-    for (const col of columns) {
-      const extent = { kind: "sheet-range", sheet, range: `${col.col}${col.first}:${col.col}${col.last}` };
-      add2({
-        kind: kind2,
-        table: { capture_sha: c.capture_sha, extent, column: col.col, rows: col.rows },
-        words: col.words,
-        capture_sha: c.capture_sha,
-        extent,
-        origin: FIND_ORIGIN
-      });
-    }
-    for (const x of held3) {
-      if (done.has(x) || x.cell.value == null) continue;
-      const text8 = String(x.cell.value);
-      for (const m of match(text8, set)) add2(item3(m, text8, { kind: "sheet-cell", sheet, cell: `${x.at.col}${x.at.row}` }));
-    }
-  }
-  /* A grid's typed cells (a sheet's, or a document table's, each cell's `source.cell` in A1): the first row read is its
-     header; a column every one of whose other cells is a date (or an amount: a number, or a value written as a plain
-     number, under a header naming a currency, or a value the money matcher reads whole) is one result. Answers the
-     cells placed (`held`), the columns (`{col, words, rows, first, last}`) and the cells they take (`done`). */
-  #columns(kind2, cells, set) {
-    const at50 = (cell) => {
-      const m = cell && cell.source && typeof cell.source.cell === "string" ? A1.exec(cell.source.cell) : null;
-      return m ? { col: m[1].toUpperCase(), row: Number(m[2]) } : null;
-    };
-    const held3 = cells.map((cell) => ({ cell, at: at50(cell) })).filter((x) => x.at);
-    const columns = [], done = /* @__PURE__ */ new Set();
-    if (!held3.length) return { held: held3, columns, done };
-    const top2 = Math.min(...held3.map((x) => x.at.row));
-    const cols = /* @__PURE__ */ new Map();
-    for (const x of held3) {
-      if (!cols.has(x.at.col)) cols.set(x.at.col, { header: null, body: [] });
-      if (x.at.row === top2) cols.get(x.at.col).header = x.cell;
-      else cols.get(x.at.col).body.push(x);
-    }
-    const whole2 = (s, m) => m.length === 1 && m[0].index === 0 && m[0].end === String(s).trim().length;
-    const isDate7 = (x) => x.cell.type === "date" || x.cell.type === "text" && whole2(x.cell.value, matchDates(String(x.cell.value ?? "").trim(), set).filter((m) => m.date));
-    const headerMoney = (h) => !!h && patterns(set).currencyMark.test(String(h.value ?? ""));
-    const isAmount = (x, h) => x.cell.type === "number" && headerMoney(h) || x.cell.type === "text" && headerMoney(h) && PLAIN_NUMBER.test(String(x.cell.value ?? "").trim()) || x.cell.type === "text" && whole2(x.cell.value, matchMoney(String(x.cell.value ?? "").trim(), set));
-    for (const col of [...cols.keys()].sort((a, b) => colNum(a) - colNum(b))) {
-      const { header: header2, body } = cols.get(col);
-      const filled21 = body.filter((x) => x.cell.value != null && String(x.cell.value).trim() !== "");
-      if (!filled21.length) continue;
-      const fits = kind2 === "dates" ? filled21.every(isDate7) : filled21.every((x) => isAmount(x, header2));
-      if (!fits) continue;
-      const rows4 = filled21.map((x) => x.at.row);
-      columns.push({
-        col,
-        rows: filled21.length,
-        first: Math.min(...rows4),
-        last: Math.max(...rows4),
-        words: cutWords(header2 && header2.value != null && String(header2.value).trim() ? header2.value : `column ${col}`)
-      });
-      for (const x of body) done.add(x);
-    }
-    return { held: held3, columns, done };
-  }
-  #requirements(c, d, set, add2) {
-    for (const u of d.units)
-      for (const m of matchRequirements(u.text, set))
-        add2({
-          kind: "requirements",
-          words: cutWords(m.sentence),
-          capture_sha: c.capture_sha,
-          extent: u.extentObj,
-          origin: FIND_ORIGIN,
-          requirement_word: m.requirement_word
-        });
-  }
-  /* `events`: the items, motions and votes the minutes and agenda readers read, as `extraction` holds the reading. */
-  #events(c, d, add2, skip) {
-    if (!d.reading) {
-      skip(c, "not extracted: no reading of this capture is held");
-      return;
-    }
-    if (!FIND_EVENT_TYPES.includes(d.reading.content_type)) {
-      skip(c, "not minutes or an agenda");
-      return;
-    }
-    const list6 = d.reading.value && Array.isArray(d.reading.value.entities) ? d.reading.value.entities : [];
-    for (const e2 of list6) {
-      if (!e2 || typeof e2 !== "object") continue;
-      const { extent, extent_why } = extentOfSource(e2.source);
-      add2({
-        kind: "events",
-        words: cutWords(e2.label ?? e2.key ?? e2.ref ?? ""),
-        capture_sha: c.capture_sha,
-        extent,
-        ...extent_why ? { extent_why } : {},
-        origin: FIND_ORIGIN,
-        item: {
-          key: e2.key ?? null,
-          kind: e2.kind ?? null,
-          label: e2.label ?? null,
-          ref: e2.ref ?? null,
-          facts: e2.facts && typeof e2.facts === "object" ? e2.facts : {}
-        },
-        content_type: d.reading.content_type
-      });
-    }
-  }
-  /* `people`: each reference of the captures' readings that corresponds to a held name of a registered person or
-     office, as `entities.namingDocuments` corresponds them (its R17); nothing is resolved (entities R9). */
-  #people(captures, data, add2, skip, viewer, acc, limit) {
-    const read3 = [];
-    for (const c of captures) {
-      if (data.get(c.capture_sha).reading) read3.push(c.capture_sha);
-      else skip(c, "not extracted: no reading of this capture is held");
-    }
-    if (!read3.length) return;
-    const unread = (why2) => {
-      for (const c of captures) if (read3.includes(c.capture_sha)) skip(c, why2);
-    };
-    const entities2 = this.r.entitiesFor();
-    if (!entities2) {
-      unread(say3("retrieval.unread.read_followed_people"));
-      return;
-    }
-    const ans = entities2.namingIn({ captureShas: read3, kinds: [...FIND_PEOPLE_KINDS], limit, viewer });
-    if (!ans || ans.ok !== true) {
-      unread(say3("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
-      return;
-    }
-    if (ans.truncated) acc.truncated = true;
-    const byId = new Map((ans.entities || []).map((e2) => [e2.entity_id, { entity_id: e2.entity_id, kind: e2.entity_kind, label: e2.entity_label }]));
-    const found3 = (ans.candidates || []).filter((cand) => byId.has(cand.entity_id)).map((cand) => ({ ent: byId.get(cand.entity_id), cand }));
-    found3.sort((a, b) => a.cand.capture_sha.localeCompare(b.cand.capture_sha) || String(a.cand.ref).localeCompare(String(b.cand.ref)) || a.ent.entity_id.localeCompare(b.ent.entity_id));
-    const refs = [];
-    for (const { ent, cand } of found3) {
-      const pos = this.r.oneOf(`SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha = ? AND ref = ?
-                                 ORDER BY seq LIMIT 1`, cand.capture_sha, cand.ref);
-      const { extent, extent_why } = pos && pos.pos_kind ? { extent: { kind: pos.pos_kind, ...safeJson16(pos.pos) || {} }, extent_why: null } : extentOfSource(null);
-      refs.push({ entity_id: ent.entity_id, capture_sha: cand.capture_sha, extent });
-      add2({
-        kind: "people",
-        words: cutWords(cand.label ?? cand.key ?? cand.ref),
-        capture_sha: cand.capture_sha,
-        extent,
-        ...extent_why ? { extent_why } : {},
-        origin: FIND_ORIGIN,
-        entity: { entity_id: ent.entity_id, kind: ent.kind, label: ent.label },
-        correspondence: cand.correspondence,
-        matched_alias: cand.matched_alias,
-        ref: cand.ref
-      });
-    }
-    this.#aliasPeople(captures, read3, data, entities2, add2, skip, acc, viewer, refs);
-  }
-  /* R84 (N1193): a held alias of a registered person or office is also found in the words of the scope's text units. Each
-     standing alias (`entities.aliasesOf`, its R55) is folded as `entities` folds a name (R17) and matched as a whole
-     phrase, its terms in order and adjacent between non-letters, against each unit's folded text: one item per (unit,
-     entity), however many aliases or occurrences match, its `matched_alias` the first in entity then alias order. A name
-     two entities hold lists each and nothing is resolved (entities R9). A reference already found for the same entity
-     in the same unit stands as it is (the stronger correspondence); a capture with no text unit is in `not_read`. */
-  #aliasPeople(captures, read3, data, entities2, add2, skip, acc, viewer, refs) {
-    const unreadAll = (why2) => {
-      for (const c of captures) if (read3.includes(c.capture_sha)) skip(c, why2);
-    };
-    if (typeof entities2.aliasesOf !== "function") {
-      unreadAll(say3("retrieval.unread.read_followed_people"));
-      return;
-    }
-    const held3 = [];
-    let after2 = null;
-    for (let page2 = 0; page2 < ALIAS_PAGES_MAX; page2++) {
-      let ans = null;
-      try {
-        ans = entities2.aliasesOf({ kinds: [...FIND_PEOPLE_KINDS], limit: ALIAS_PAGE, after: after2, viewer });
-      } catch {
-        ans = null;
-      }
-      const list6 = ans && ans.ok === true && Array.isArray(ans.aliases) ? ans.aliases : null;
-      if (!list6) {
-        unreadAll(say3("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
-        return;
-      }
-      held3.push(...list6);
-      if (!(ans && ans.truncated === true)) {
-        after2 = null;
-        break;
-      }
-      after2 = ans.next ?? null;
-      if (after2 === null || page2 === ALIAS_PAGES_MAX - 1) {
-        acc.truncated = true;
-        break;
-      }
-    }
-    const phrases = [];
-    for (const a of held3) {
-      const phrase = foldTokens(normAlias(a && a.alias));
-      if (a && typeof a.entity_id === "string" && phrase.length) phrases.push({ ...a, phrase });
-    }
-    for (const c of captures) {
-      if (!read3.includes(c.capture_sha)) continue;
-      const d = data.get(c.capture_sha);
-      if (!d.units.length) {
-        skip(c, "no text: this capture's reading holds no text unit to find a held name in");
-        continue;
-      }
-      if (!phrases.length) continue;
-      for (const u of d.units) {
-        const tokens3 = foldTokens(u.text);
-        if (!tokens3.length) continue;
-        const at50 = /* @__PURE__ */ new Map();
-        tokens3.forEach((t2, i) => {
-          if (!at50.has(t2)) at50.set(t2, []);
-          at50.get(t2).push(i);
-        });
-        const seen = /* @__PURE__ */ new Map();
-        for (const p3 of phrases) {
-          if (seen.has(p3.entity_id) || !phraseIn(tokens3, at50, p3.phrase)) continue;
-          seen.set(p3.entity_id, p3);
-        }
-        for (const [id, p3] of [...seen].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)) {
-          const stands = refs.some((r) => r.entity_id === id && r.capture_sha === c.capture_sha && r.extent && u.extentObj && ["same", "narrower"].includes(relationOf2(u.extentObj, r.extent)));
-          if (stands) continue;
-          const { extent, extent_why } = u.extentObj ? { extent: u.extentObj, extent_why: null } : extentOfSource(null);
-          add2({
-            kind: "people",
-            words: cutWords(u.text),
-            capture_sha: c.capture_sha,
-            extent,
-            ...extent_why ? { extent_why } : {},
-            origin: FIND_ORIGIN,
-            entity: { entity_id: id, kind: p3.kind ?? null, label: p3.label ?? null },
-            correspondence: "name_in_passage",
-            matched_alias: String(p3.alias)
-          });
-        }
-      }
-    }
-  }
-  /* R83: the rows of one sheet holding `phrase` in a cell's value, in row order: each the first matching cell's words, the
-     row's `sheet-range`, its cells and the addresses of its formulas the file never calculated. Empty where the reading
-     holds no typed cells for the sheet, or no one cell holds the phrase. */
-  #sheetRows(d, sheet, phrase) {
-    const grid = gridOf(d, sheet);
-    if (!grid || !phrase.length) return [];
-    const out = [];
-    for (const row13 of [...grid.keys()].sort((a, b) => a - b)) {
-      const hit = grid.get(row13).find(({ cell }) => cell.value != null && !uncalculated(cell) && hasPhrase(tokensOf(cell.value), phrase));
-      if (!hit) continue;
-      const r = rowOf3(d, sheet, row13);
-      out.push({
-        words: String(hit.cell.value),
-        range: r.range,
-        cells: r.cells,
-        cells_truncated: r.cells_truncated,
-        not_calculated: r.not_calculated
-      });
-    }
-    return out;
-  }
-  /* `term`: the term as written, matched as `search` matches words in a passage (query-language's `passage:` arm,
-     through the compiler and the gated executor, R28), each passage one item. */
-  #term(captures, data, add2, skip, term, viewer, acc) {
-    const shas = /* @__PURE__ */ new Set();
-    for (const c of captures) {
-      const d = data.get(c.capture_sha);
-      if (!d.reading && !d.units.length) skip(c, "not extracted: no reading of this capture is held");
-      else if (!d.units.length) skip(c, "no text: this capture's reading holds no text to search");
-      else shas.add(c.capture_sha);
-    }
-    const bundles = [...new Set(captures.filter((c) => shas.has(c.capture_sha)).map((c) => c.bundle_id))].sort();
-    const phrase = tokensOf(term);
-    const query = `passage:"${String(term).replace(/"/g, " ").trim()}"`;
-    const rows4 = [];
-    const tally = { applied: 0 };
-    for (let i = 0; i < bundles.length; i += 64) {
-      const plan2 = this.r.planOf({
-        q: query,
-        viewer,
-        ids: bundles.slice(i, i + 64),
-        rows: "passage",
-        rowLimit: 1e3,
-        rowOffset: 0
-      });
-      const got = this.r.runQuery(plan2.statements.meaning(), tally);
-      if (got.length >= 1e3) acc.truncated = true;
-      for (const r of got) if (shas.has(r.capture_sha)) rows4.push(r);
-    }
-    rows4.sort((a, b) => a.capture_sha.localeCompare(b.capture_sha) || a.seq - b.seq);
-    const seen = /* @__PURE__ */ new Set();
-    for (const r of rows4) {
-      const k = `${r.capture_sha}\0${r.seq}\0${r.extent}`;
-      if (seen.has(k)) continue;
-      seen.add(k);
-      const d = data.get(r.capture_sha);
-      const u = d.units.find((x) => x.seq === r.seq && x.extent === r.extent);
-      const extent = safeJson16(r.extent);
-      const rows5 = extent && SHEET_EXTENTS.includes(extent.kind) && typeof extent.sheet === "string" ? this.#sheetRows(d, extent.sheet, phrase) : [];
-      if (rows5.length) {
-        for (const x of rows5)
-          add2({
-            kind: "term",
-            words: cutWords(x.words),
-            capture_sha: r.capture_sha,
-            extent: x.range,
-            origin: FIND_ORIGIN,
-            term: String(term),
-            sheet: extent.sheet,
-            cells: x.cells,
-            cells_truncated: x.cells_truncated,
-            not_calculated: x.not_calculated
-          });
-        continue;
-      }
-      add2({
-        kind: "term",
-        words: cutWords(u ? u.text : r.snippet ?? ""),
-        capture_sha: r.capture_sha,
-        extent,
-        origin: FIND_ORIGIN,
-        term: String(term)
-      });
-    }
-  }
-};
-var FIND_ROW_CELLS_MAX = 50;
-var SHEET_EXTENTS = Object.freeze(["sheet-cell", "sheet-range"]);
-var NO_CELLS_WHY = "the reading holds no typed cells for this sheet, or the words found run across cells, so no row of cells is named";
-function gridOf(d, sheet) {
-  if (d.grids.has(sheet)) return d.grids.get(sheet);
-  const list6 = d.cells && Array.isArray(d.cells[sheet]) ? d.cells[sheet] : null;
-  let grid = null;
-  if (list6) {
-    grid = /* @__PURE__ */ new Map();
-    for (const cell of list6) {
-      const m = cell && cell.source && typeof cell.source.cell === "string" ? A1.exec(cell.source.cell) : null;
-      if (!m) continue;
-      const row13 = Number(m[2]), col = m[1].toUpperCase();
-      if (!grid.has(row13)) grid.set(row13, []);
-      grid.get(row13).push({ col, n: colNum(col), at: `${col}${row13}`, cell });
-    }
-    for (const r of grid.values()) r.sort((a, b) => a.n - b.n);
-  }
-  d.grids.set(sheet, grid);
-  return grid;
-}
-var uncalculated = (cell) => cell.formula != null && cell.formula !== "" && (cell.cached === null || cell.cached === void 0);
-function rowOf3(d, sheet, row13) {
-  const grid = gridOf(d, sheet), held3 = grid ? grid.get(row13) : null;
-  if (!held3) return null;
-  const cells = held3.slice(0, FIND_ROW_CELLS_MAX).map(({ at: at50, cell }) => uncalculated(cell) ? { cell: at50, value: null, type: cell.type ?? null, formula: cell.formula, cached: null } : { cell: at50, value: cell.value ?? cell.cached ?? null, type: cell.type ?? null });
-  return {
-    cells,
-    cells_truncated: held3.length > FIND_ROW_CELLS_MAX,
-    not_calculated: held3.filter(({ cell }) => uncalculated(cell)).map((x) => x.at),
-    range: { kind: "sheet-range", sheet, range: `A${row13}:${held3[held3.length - 1].col}${row13}` }
-  };
-}
-function placed(item3, d) {
-  const e2 = item3.table ? item3.table.extent : item3.extent;
-  if (!e2 || !SHEET_EXTENTS.includes(e2.kind) || typeof e2.sheet !== "string" || item3.cells !== void 0) return item3;
-  const out = { ...item3, sheet: e2.sheet };
-  if (item3.table) return out;
-  const m = e2.kind === "sheet-cell" && typeof e2.cell === "string" ? A1.exec(e2.cell) : null;
-  const row13 = m && d ? rowOf3(d, e2.sheet, Number(m[2])) : null;
-  return row13 ? { ...out, cells: row13.cells, cells_truncated: row13.cells_truncated, not_calculated: row13.not_calculated } : { ...out, cells: null, cells_why: NO_CELLS_WHY };
-}
-var foldTokens = (s) => String(s ?? "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-function phraseIn(tokens3, at50, phrase) {
-  for (const i of at50.get(phrase[0]) || []) {
-    let k = 1;
-    while (k < phrase.length && tokens3[i + k] === phrase[k]) k++;
-    if (k === phrase.length) return true;
-  }
-  return false;
-}
-var tokensOf = (s) => String(s ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-function hasPhrase(tokens3, phrase) {
-  if (!phrase.length || tokens3.length < phrase.length) return false;
-  for (let i = 0; i + phrase.length <= tokens3.length; i++) {
-    let k = 0;
-    while (k < phrase.length && tokens3[i + k] === phrase[k]) k++;
-    if (k === phrase.length) return true;
-  }
-  return false;
-}
-function extentOfSource(source2) {
-  if (source2 && typeof source2 === "object" && typeof source2.kind === "string" && source2.kind) {
-    const { ref, ...extent } = source2;
-    return { extent, extent_why: null };
-  }
-  return { extent: null, extent_why: say3("retrieval.extent_why") };
-}
-function callRead(read3, captureSha, viewer) {
-  let a;
-  try {
-    a = read3({ captureSha, limit: RECORDED_BY_LIMIT, viewer });
-  } catch (e2) {
-    return { why: say3("retrieval.why.read_threw", { e: String(e2 && e2.message || e2).slice(0, 200) }) };
-  }
-  if (a && typeof a.then === "function") {
-    Promise.resolve(a).catch(() => {
-    });
-    return { why: say3("retrieval.why.read_answered_promise") };
-  }
-  if (a && typeof a === "object" && a.ok === false)
-    return { why: say3("retrieval.why.read_refused", { given: String(a.code ?? a.reason ?? say3("monitoring.reason_given")).slice(0, 200) }) };
-  if (!a || typeof a !== "object" || a.ok !== true || !Array.isArray(a.items) || !a.items.every((it) => it && typeof it === "object" && !Array.isArray(it)))
-    return { why: "the read answered another shape than events R49's" };
-  return { items: a.items, truncated: a.truncated === true };
-}
-function relationOf2(match, extent) {
-  const e2 = typeof extent === "string" ? safeJson16(extent) : extent;
-  try {
-    return extentRelation2(match, e2);
-  } catch {
-    return "unreadable";
-  }
-}
-function heldCells(cells) {
-  const sheets = /* @__PURE__ */ new Set(), tables = [];
-  for (const [name3, list6] of Object.entries(cells || {})) {
-    if (!Array.isArray(list6)) continue;
-    const src = list6.map((c) => c && c.source && typeof c.source === "object" ? c.source : null);
-    const table5 = src.length && src[0] && src[0].kind === "doc-table" && Number.isInteger(src[0].table) ? src[0].table : null;
-    if (table5 !== null && src.every((x) => x && x.kind === "doc-table" && x.table === table5)) tables.push({ table: table5, ref: name3, cells: list6 });
-    else sheets.add(name3);
-  }
-  return { sheets, tables: tables.sort((a, b) => a.table - b.table) };
-}
-function paragraphsOf(docTables, units) {
-  const taken = /* @__PURE__ */ new Set();
-  for (const t2 of docTables)
-    for (const x of t2.done)
-      for (const p3 of Array.isArray(x.cell.paras) ? x.cell.paras : []) if (Number.isInteger(p3)) taken.add(p3);
-  return new Set(units.filter((u) => u.extentObj && u.extentObj.kind === "doc-para" && taken.has(u.extentObj.para)));
+  return r;
 }
 
 // src/retrieval/index.mjs
@@ -113812,6 +114491,30 @@ function digestOf(ids) {
   }
   return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
 }
+var ROUTES = Object.freeze(["fields", "passages"]);
+function routesCrossed(ast) {
+  const routesOf = (n2) => !n2 || typeof n2 !== "object" ? /* @__PURE__ */ new Set() : n2.op === "not" ? routesOf(n2.kid) : Array.isArray(n2.kids) ? new Set(n2.kids.flatMap((k) => [...routesOf(k)])) : /* @__PURE__ */ new Set([n2.op === "meaning" && n2.arm === "passage" ? "passages" : "fields"]);
+  const walk3 = (n2) => {
+    if (!n2 || typeof n2 !== "object") return false;
+    if (n2.op === "not") return walk3(n2.kid);
+    if (!Array.isArray(n2.kids)) return false;
+    if (n2.op === "or") {
+      const sets = n2.kids.map(routesOf);
+      if (sets.some((s, i) => s.has("passages") && sets.some((t2, j) => j !== i && t2.has("fields")))) return true;
+    }
+    return n2.kids.some(walk3);
+  };
+  return walk3(ast);
+}
+var crossedRefusal = () => ({
+  ok: false,
+  reason: "ROUTES_CROSSED",
+  code: "ROUTES_CROSSED",
+  routes: [...ROUTES],
+  detail: "an OR joins a passage: term (the passages route) to a term of another route (the fields route: the record's own text and fields); each route is counted by its own read, so ask them apart or join them with AND"
+});
+var SCOPE_KEYS = Object.freeze(BROWSE_SCOPES.map((s) => s.key));
+var SCOPE_NONE = Object.freeze([""]);
 var rand5 = (n2 = 12) => [...crypto.getRandomValues(new Uint8Array(n2))].map((b) => b.toString(16).padStart(2, "0")).join("");
 function answerChanged(drift, moved) {
   if (moved === true) return true;
@@ -113841,10 +114544,6 @@ var Retrieval = class _Retrieval {
   // R52: {module, fn, seq}
   #fields = [];
   // R62: {module, field, table, key, col, seq}
-  #recordedBy = [];
-  // R76: {module, fn, seq}
-  #browseMarks = null;
-  // R86: {module, fn}
   /* R61, R62: the second argument of every `compile` this module runs: the projection through this module's own
      relation (query-language R25), and each registered field through its owner's (its R26). */
   #via = Object.freeze({ projection: PROJECTION_RELATION });
@@ -113860,11 +114559,6 @@ var Retrieval = class _Retrieval {
   #host;
   /* query-language's money words (its R28), injected until it reads `money` itself (K1563 (1); its J2). */
   #money = null;
-  /* R74's `people`: entities' name lookup (its R17). `undefined`: the host's own, made when first asked. */
-  #entities;
-  /* R73's `recorded`: the four recording modules whose `recordedBy` reads it calls, each an instance or a function
-     answering one; a module not handed is the host's own, made when first asked. */
-  #recorders;
   constructor({
     storage,
     record,
@@ -113898,11 +114592,20 @@ var Retrieval = class _Retrieval {
     this.#host = host;
     this.#money = money && typeof money === "object" ? money : null;
     this.#combine = typeof combine2 === "function" ? combine2 : null;
-    this.#entities = entities2;
-    this.#recorders = new Map(RECORDED_BY_MODULES.map((m) => [m, recorders && typeof recorders === "object" && recorders[m] !== void 0 ? recorders[m] : void 0]));
     this.frontierReader = new Frontier(this);
-    this.finder = new Finder(this);
-    this.browser = new Browser(this);
+    this.browseModule = retrievalBrowseOf({
+      sql: this.#sql,
+      membership,
+      host,
+      order: order4,
+      entities: entities2,
+      recorders,
+      sight: (viewer) => this.sight(viewer),
+      planOf: (input) => this.planOf(input),
+      runQuery: (statement, tally) => this.runQuery(statement, tally),
+      localeOf: () => this.localeOf(),
+      selectionRead: (args) => this.selectionRead(args)
+    });
   }
   #rows(q10, ...a) {
     return [...this.#sql.exec(q10, ...a)];
@@ -114139,63 +114842,16 @@ var Retrieval = class _Retrieval {
     this.#selectionListeners.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
   }
-  /** R76 (N715; K31, K2063): a later module's read by capture and extent, `fn({captureSha, extent?, limit, viewer})`
-   *  answering in `events` R49's shape, which R73 calls for every capture a find reads, after the four it names. A
-   *  malformed registration, or a second by the same module, is refused by membership's `listenerRefusal` (its R81);
-   *  the four R73 names are held already, so none of them registers here. Reads run in the modules' total order. */
+  /** R76, R86 (R90): the two registrations are `retrieval-browse`'s (its R4, R11); the slot is the module's. */
   registerRecordedBy(module, fn) {
-    const held3 = [...RECORDED_BY_MODULES.map((m) => ({ module: m })), ...this.#recordedBy];
-    const refused5 = listenerRefusal(held3, module, fn);
-    if (refused5) return refused5;
-    this.#recordedBy.push({ module, fn, seq: this.#recordedBy.length });
-    this.#recordedBy.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
-    return { ok: true, module };
+    return this.browseModule.registerRecordedBy(module, fn);
   }
-  /** R86 (N1092; DEC-238 S23 "A"; K31's pattern, as R52, R76): the one later module (`following`) that holds a member's
-   *  watches and the team's second-look flags registers its read once at start: `fn({viewer, only, limit})` answers
-   *  `{items, truncated}` (the ids marked) and `fn({viewer, ids})` answers `{watched, flagged}` for those ids. A malformed
-   *  registration, or a second whoever makes it (the slot takes one), is refused by membership's `listenerRefusal`. */
   registerBrowseMarks(module, fn) {
-    const refused5 = listenerRefusal(this.#browseMarks, module, fn);
-    if (refused5) return refused5;
-    this.#browseMarks = { module, fn };
-    return { ok: true, module };
+    return this.browseModule.registerBrowseMarks(module, fn);
   }
-  /** R85, R86: the registered read of marks, or null. */
-  browseMarks() {
-    return this.#browseMarks;
-  }
-  /** R73, R76: the reads a find calls, in order: `events`, `standards`, `money` and `people`'s `recordedBy`, then each
-   *  registered one. `read` is null, with why, for a module whose instance offers none; `registered` says which. */
+  /** R90: the reads a find calls, in order, as `retrieval-browse` holds them (`answers`' and `citation`'s tests read it). */
   recordedReads() {
-    const own10 = RECORDED_BY_MODULES.map((m) => {
-      let inst = this.#recorders.get(m);
-      if (inst === void 0) {
-        inst = null;
-        const make = { events: eventsOf, standards: standardsOf, money: moneyOf2, people: peopleOf }[m];
-        try {
-          if (this.#host) inst = make(this.#host);
-        } catch {
-          inst = null;
-        }
-        this.#recorders.set(m, inst);
-      }
-      if (typeof inst === "function") {
-        try {
-          inst = inst();
-        } catch {
-          inst = null;
-        }
-        this.#recorders.set(m, inst);
-      }
-      return inst && typeof inst.recordedBy === "function" ? { module: m, read: (a) => inst.recordedBy(a), registered: false } : {
-        module: m,
-        read: null,
-        registered: false,
-        why: inst ? say3("retrieval.why.offers_recordedby_read", { m }) : say3("retrieval.why.reachable", { m })
-      };
-    });
-    return [...own10, ...this.#recordedBy.map((r) => ({ module: r.module, read: r.fn, registered: true }))];
+    return this.browseModule.recordedReads();
   }
   /* ---- the T33 fields, the local day, the compile (R68, R69) ---- */
   /** R68: makes the view of every T33 field whose relation can now exist, and answers the fields that are live. A
@@ -114536,8 +115192,8 @@ var Retrieval = class _Retrieval {
       const merge2 = (vals) => vals.reduce((acc, v) => v && typeof v === "object" ? { ...acc, ...v } : acc, { ...row13 });
       return parts.some((v) => v && typeof v.then === "function") ? Promise.all(parts.map((v) => Promise.resolve(v).catch(() => null))).then(merge2) : merge2(parts);
     }
-    const asked6 = Number(limit);
-    const cap = Number.isFinite(asked6) && asked6 > 0 ? Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked6)) : PROJECTION_LIMIT_DEFAULT;
+    const asked7 = Number(limit);
+    const cap = Number.isFinite(asked7) && asked7 > 0 ? Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked7)) : PROJECTION_LIMIT_DEFAULT;
     const filtered = jsonPath !== null && jsonEquals !== null;
     const base2 = [`(${gate.sql})`], baseArgs = [...gate.args];
     if (filtered) {
@@ -114572,10 +115228,52 @@ var Retrieval = class _Retrieval {
     tally.applied++;
     return this.#rows(stmt.sql, ...stmt.args);
   }
-  /** R6–R9, R78: `op=search`. Synchronous: a page's decorations (R78) answer synchronously too. */
-  search(input = {}) {
+  /* R87: `input.scope`, a key of `BROWSE_SCOPES`, as the ids `retrieval-browse`'s `scopeMembers` names for the viewer (its
+     R13: bundles the viewer's gate passes, at most 5,000), intersected with any `ids` the caller gave. `null` scope: the
+     input as it is. An unknown key is refused SCOPE_UNKNOWN naming `scopes`. The compile gates the same ids again (R28). */
+  #scoped(input) {
+    const asked7 = input.scope;
+    if (asked7 === void 0 || asked7 === null || asked7 === "") return { key: null, input };
+    const key2 = String(asked7);
+    if (!SCOPE_KEYS.includes(key2))
+      return { refusal: {
+        ok: false,
+        reason: "SCOPE_UNKNOWN",
+        code: "SCOPE_UNKNOWN",
+        scopes: [...SCOPE_KEYS],
+        detail: `no scope called ${JSON.stringify(key2.slice(0, 40))}; the scopes are ${SCOPE_KEYS.join(", ")}`
+      } };
+    const held3 = this.browseModule.scopeMembers({ scope: key2, viewer: input.viewer ?? null });
+    let ids = held3 && held3.ok === true && Array.isArray(held3.ids) ? held3.ids : [];
+    if (Array.isArray(input.ids) && input.ids.length) {
+      const given6 = new Set(input.ids);
+      ids = ids.filter((id) => given6.has(id));
+    }
+    return {
+      key: key2,
+      truncated: !!(held3 && held3.truncated),
+      undetermined: held3 && held3.undetermined && typeof held3.undetermined.why === "string" ? held3.undetermined.why : null,
+      input: { ...input, ids: ids.length ? ids : SCOPE_NONE }
+    };
+  }
+  /* R87: what the answer says of the scope applied: the key (or null), `scope_truncated` only when the scope held more ids
+     than the bound, and `scope_undetermined` (why) when its marks could not be read, so an empty answer is not read as a
+     fact about the record. */
+  #scopeSaid(sc) {
+    return {
+      scope: sc.key,
+      ...sc.truncated ? { scope_truncated: true } : {},
+      ...sc.undetermined ? { scope_undetermined: sc.undetermined } : {}
+    };
+  }
+  /** R6–R9, R78, R87: `op=search`. Synchronous: a page's decorations (R78) answer synchronously too. */
+  search(given6 = {}) {
+    const sc = this.#scoped(given6);
+    if (sc.refusal) return sc.refusal;
+    const input = sc.input;
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
     const plan2 = this.#compile(input);
+    if (routesCrossed(plan2.ast)) return crossedRefusal();
     const tally = { applied: 0 };
     const total2 = this.runQuery(plan2.statements.count(), tally)[0]?.n ?? 0;
     const out = {
@@ -114585,7 +115283,8 @@ var Retrieval = class _Retrieval {
         match: plan2.match,
         sort: plan2.sort,
         warnings: plan2.warnings,
-        mode
+        mode,
+        ...this.#scopeSaid(sc)
       },
       /* The gate is reported, not assumed. `scope` is DENY when the caller presented no recognisable viewer, which is
          the fail-closed answer, and `applied` counts the statements that carried the gate. */
@@ -114607,7 +115306,7 @@ var Retrieval = class _Retrieval {
     out.widen = null;
     if (total2 === 0 && plan2.widenable && input.widen !== false) {
       const or = this.#compile({ ...input, implicitOp: "or" });
-      const n2 = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
+      const n2 = routesCrossed(or.ast) ? 0 : this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n2 > 0) out.widen = {
         interpretation: "OR",
         total: n2,
@@ -114652,33 +115351,37 @@ var Retrieval = class _Retrieval {
    *  THROWS if it arrives without the gate. `total` IS COUNTED THROUGH THE SAME JOINS AND THE SAME PREDICATE as the
    *  rows, which is what makes hidden identical to absent here, and NOTHING publishes how many rows the gate removed
    *  (REC-36). THE REFUSALS ARE DEC-49's SHAPE, from this module's own rows (C-23.1, C-23.2). */
-  meaningRows(input = {}) {
+  meaningRows(given6 = {}) {
     const known3 = Object.keys(MEANING);
     const refuse31 = (key2, detail) => {
       const row13 = MEANING_READ_CHECKS[key2];
       return { ok: false, reason: key2, check: row13.check, translation: row13.translation, detail };
     };
-    const asked6 = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
-    if (!asked6)
+    const sc = this.#scoped(given6);
+    if (sc.refusal) return sc.refusal;
+    const input = sc.input;
+    const asked7 = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
+    if (!asked7)
       return refuse31(
         "MEANING_ROWS_NO_ARM",
         `op=meaningrows answers at MEANING grain and must be told which: rows=${known3.join("|")}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.`
       );
-    if (!known3.includes(asked6))
+    if (!known3.includes(asked7))
       return refuse31(
         "MEANING_ROWS_UNKNOWN_ARM",
-        `no meaning of the kind ${JSON.stringify(asked6)} is held. The kinds that are: ` + known3.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")
+        `no meaning of the kind ${JSON.stringify(asked7)} is held. The kinds that are: ` + known3.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")
       );
     const plan2 = this.#compile({
       q: String(input.q ?? ""),
       viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
-      rows: asked6,
+      rows: asked7,
       rowLimit: input.limit,
       rowOffset: input.offset,
       /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
       snippetChars: Number(input.snippetChars) || void 0
     });
+    if (routesCrossed(plan2.ast)) return crossedRefusal();
     const tally = { applied: 0 };
     const total2 = this.runQuery(plan2.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
     const rows4 = this.#legEarnedCapture(plan2.meaning.arm, this.runQuery(plan2.statements.meaning(), tally));
@@ -114693,7 +115396,7 @@ var Retrieval = class _Retrieval {
       table: plan2.meaning.table,
       grain: plan2.meaning.grain,
       identity: plan2.meaning.identity,
-      query: { q: String(input.q ?? ""), warnings: plan2.warnings, meaningArms: plan2.meaningArms },
+      query: { q: String(input.q ?? ""), warnings: plan2.warnings, meaningArms: plan2.meaningArms, ...this.#scopeSaid(sc) },
       gate: { scope: plan2.gate, applied: tally.applied },
       /* REC-108 / D-379: only the FILTER route can run at this grain. */
       cached: cachedNotes(plan2.cached, { facets: false, ordered: false }),
@@ -114702,7 +115405,7 @@ var Retrieval = class _Retrieval {
       limit: plan2.meaning.limit,
       offset: plan2.meaning.offset,
       total: total2,
-      ...meaningLevels(
+      ...this.#withExistenceOnly(meaningLevels(
         plan2.meaning.level,
         Number(lv.documents || 0),
         Number(lv.documents_with_rows || 0),
@@ -114716,8 +115419,24 @@ var Retrieval = class _Retrieval {
             undetermined: obs.vocabulary.CONTENT_AXIS_UNDETERMINED
           } : null
         }
-      )
+      ), input.viewer ?? null)
     };
+  }
+  /* R89: R13's `scope` also names the projects the viewer's sight of is existence only (`membership` R44), each
+     `{project, name}` as R77 gives them (never its `owners`), and their count: the projects, never a count of the
+     documents in them, and never a project the viewer has no sight of at all (R29's exception). */
+  #withExistenceOnly(levels, viewer) {
+    const seen = [];
+    try {
+      if (typeof this.membership.existenceAct === "function")
+        for (const { bundle_id: id } of this.#rows(`SELECT bundle_id FROM bundles WHERE object_type = 'project' ORDER BY bundle_id`)) {
+          const act2 = this.membership.existenceAct(id, viewer);
+          if (act2 && act2.project === id) seen.push({ project: act2.project, name: act2.name ?? null });
+        }
+    } catch {
+      seen.length = 0;
+    }
+    return { ...levels, scope: { ...levels.scope, existence_only_projects: seen, existence_only_count: seen.length } };
   }
   /** REC-114 / D-383 (R12) — A LEG LISTING'S CAPTURE LETTER, RESOLVED AGAINST WHAT THE RECORD CAN EARN FOR THAT LEG'S
    *  TARGET, WITH THE AUTHORED LETTER BESIDE IT. DEC-4 bounds the capture axis by transcription fidelity, and this is a
@@ -114808,6 +115527,8 @@ var Retrieval = class _Retrieval {
       ftsColumns: FTS_COLUMNS,
       defaultFacets: DEFAULT_FACETS,
       idsMax: IDS_MAX,
+      /* R87: the scopes a search is narrowed to, `retrieval-browse`'s (its R13), named in no language. */
+      scopes: BROWSE_SCOPES.map((s) => ({ key: s.key, kinds: [...s.kinds], only: s.only })),
       meaning: meaningVocabulary(),
       syntax: [
         say3("retrieval.syntax.bare_words_ranked"),
@@ -114980,10 +115701,10 @@ var Retrieval = class _Retrieval {
       a.push(after2);
     }
     q10 += ` WHERE ${w.join(" AND ")} ORDER BY b.bundle_id`;
-    const asked6 = Number(limit);
-    if (!Number.isFinite(asked6) || asked6 <= 0)
+    const asked7 = Number(limit);
+    if (!Number.isFinite(asked7) || asked7 <= 0)
       return this.#rows(q10, ...a).map(_Retrieval.#withRoute);
-    const cap = Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked6));
+    const cap = Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked7));
     const rows4 = this.#rows(`${q10} LIMIT ?`, ...a, cap).map(_Retrieval.#withRoute);
     return {
       bundles: rows4,
@@ -115313,8 +116034,8 @@ var Retrieval = class _Retrieval {
     const zone = this.zone(), relations2 = this.relations();
     const saved = typeof savedForm === "function" ? savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir, zone }, relations2) : { ok: true };
     if (!saved || saved.ok !== true) return saved && typeof saved === "object" ? saved : notYours;
-    const asked6 = Number(limit);
-    const cap = limit == null || !Number.isFinite(asked6) || asked6 < 1 ? SAVED_LIMIT_DEFAULT : Math.min(IDS_MAX, Math.floor(asked6));
+    const asked7 = Number(limit);
+    const cap = limit == null || !Number.isFinite(asked7) || asked7 < 1 ? SAVED_LIMIT_DEFAULT : Math.min(IDS_MAX, Math.floor(asked7));
     const plan2 = this.#compile({
       q: form.q,
       implicitOp: form.implicitOp === "or" ? "or" : void 0,
@@ -115451,134 +116172,15 @@ var Retrieval = class _Retrieval {
       states: Object.keys(V.OBSERVATION_STATES)
     };
   }
-  /* ---- "Find in this" (R73–R75; T35-37, N698, DEC-164) ---- */
-  /** R73: a find over one scope, by kind, that records nothing. The scope is resolved here under the viewer's sight
-   *  (every capture the viewer may not see is left out and counted nowhere, R29); the kinds are answered by
-   *  `findin.mjs`'s matchers over at most `FIND_CAPTURES_PER_CALL` captures, in capture-sha order, `next` naming where
-   *  to continue. `owner` is the control plane's owner stamp, which a selection scope is read under (R19: a selection
-   *  is its maker's); it defaults to the viewer. It writes nothing: a selection named as the scope is read through
-   *  `selectionRead` (R77), never extending its life, and no observation, fact or reading is written; it calls no
-   *  model. Each match carries `recorded`, who recorded it (R76's reads; `findin.mjs`). */
-  findIn({ scope = null, kinds: kinds3 = null, term = null, limit = null, cursor = null, viewer = null, owner = null } = {}) {
-    const no9 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, code: reason2, detail, ...extra });
-    if (typeof viewer !== "string" || !viewer)
-      return no9("VIEWER_MISSING", "a find answers only to a stamped viewer, and this request carries none");
-    if (scope == null || typeof scope === "object" && !Array.isArray(scope) && !Object.keys(scope).length)
-      return no9("NO_SCOPE", "a find runs over one scope: a capture, a selection, a set of ids or a project");
-    const forms2 = ["capture", "selection", "ids", "project"];
-    const keys = scope && typeof scope === "object" && !Array.isArray(scope) ? Object.keys(scope) : null;
-    if (!keys || keys.length !== 1 || !forms2.includes(keys[0]))
-      return no9("SCOPE_UNKNOWN", `a scope is exactly one of ${forms2.map((f17) => `{${f17}}`).join(", ")}`, { forms: forms2 });
-    const form = keys[0], value = scope[form];
-    const resolved = this.#findScope(form, value, viewer, typeof owner === "string" && owner ? owner : viewer);
-    if (resolved.ok === false) return resolved;
-    const asked6 = Array.isArray(kinds3) ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : [];
-    const wanted = [...new Set(asked6.map((k) => String(k).trim()).filter(Boolean))];
-    if (!wanted.length) return no9("NO_KINDS", `a find names the kinds it looks for: ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
-    const unknown = wanted.filter((k) => !FIND_KINDS.includes(k));
-    if (unknown.length)
-      return no9("KIND_UNKNOWN", `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; the kinds are ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
-    const words24 = typeof term === "string" ? term.trim() : "";
-    if (wanted.includes("term") && !words24) return no9("NO_TERM", "the kind term finds a name or term as written, and none was given");
-    if (words24.length > FIND_TERM_MAX)
-      return no9("TERM_TOO_LONG", `a term is at most ${FIND_TERM_MAX} characters`, { limit: FIND_TERM_MAX, got: words24.length });
-    const n2 = Number(limit);
-    const cap = limit == null || limit === "" || !Number.isFinite(n2) ? FIND_ITEMS_DEFAULT : Math.max(1, Math.min(FIND_ITEMS_MAX, Math.floor(n2)));
-    const after2 = typeof cursor === "string" && cursor ? cursor : null;
-    const remaining = resolved.captures.filter((c) => after2 === null || c.capture_sha > after2);
-    const page2 = remaining.slice(0, FIND_CAPTURES_PER_CALL);
-    const next = remaining.length > page2.length ? page2[page2.length - 1].capture_sha : null;
-    const found3 = this.finder.find({
-      captures: page2,
-      kinds: wanted,
-      term: words24,
-      limit: cap,
-      viewer,
-      whole: after2 === null && next === null
-    });
-    this.finder.annotate(found3, page2, viewer);
-    const recorded = this.finder.recorded(found3, page2, viewer);
-    return {
-      ok: true,
-      scope: { form, [form]: value, captures: resolved.captures.length, title: resolved.title ?? null },
-      kinds: found3,
-      captures_read: page2.length,
-      limit: cap,
-      captures_limit: FIND_CAPTURES_PER_CALL,
-      next,
-      recorded_read: recorded.read,
-      recorded_not_read: recorded.not_read
-    };
+  /** R90: `op=findin` (`retrieval-browse` R1–R9). */
+  findIn(args = {}) {
+    return this.browseModule.findIn(args);
   }
-  /* R73's scope, resolved under the viewer's sight to the captures it holds (`[{capture_sha, bundle_id}]`, one entry
-     per capture under its first visible bundle, in capture-sha order), or the scope's refusal. A capture is held by
-     the bundles that register it (provenance's `register`, its R48). */
-  #findScope(form, value, viewer, owner) {
-    const no9 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, code: reason2, detail, ...extra });
-    const sees = this.sight(viewer);
-    const byCapture = /* @__PURE__ */ new Map();
-    const holdOf = (bundleIds) => {
-      for (let i = 0; i < bundleIds.length; i += SELECTION_ID_CHUNK) {
-        const part = bundleIds.slice(i, i + SELECTION_ID_CHUNK);
-        for (const r of this.#rows(`SELECT DISTINCT capture_sha, bundle_id FROM register
-                                     WHERE bundle_id IN (${part.map(() => "?").join(",")})`, ...part))
-          if (sees(r.bundle_id)) keep3(r);
-      }
-    };
-    const keep3 = (r) => {
-      const b = byCapture.get(r.capture_sha);
-      if (!b || r.bundle_id < b) byCapture.set(r.capture_sha, r.bundle_id);
-    };
-    const ownersOf = (sha2) => this.#rows(`SELECT DISTINCT capture_sha, bundle_id FROM register WHERE capture_sha = ?`, sha2).filter((r) => sees(r.bundle_id));
-    const SHA3 = /^[0-9a-f]{64}$/;
-    if (form === "capture") {
-      const sha2 = typeof value === "string" ? value.trim() : "";
-      const held3 = sha2 ? ownersOf(sha2) : [];
-      if (!held3.length)
-        return no9("CAPTURE_NOT_HELD", "this record holds no capture with that fingerprint that you may see");
-      held3.forEach(keep3);
-    } else if (form === "selection") {
-      const sel = this.selectionRead({ handle: typeof value === "string" ? value : "", viewer, owner });
-      if (sel.ok !== true) return { ok: false, reason: sel.reason, detail: sel.detail };
-      holdOf(sel.members);
-    } else if (form === "ids") {
-      const list6 = Array.isArray(value) ? [...new Set(value.filter((v) => typeof v === "string" && v).map((v) => v.trim()))] : [];
-      if (list6.length > FIND_IDS_MAX)
-        return no9("SCOPE_TOO_LARGE", `an enumerated scope holds at most ${FIND_IDS_MAX} ids`, { limit: FIND_IDS_MAX, got: list6.length });
-      for (const id of list6.filter((v) => SHA3.test(v))) ownersOf(id).forEach(keep3);
-      holdOf(list6.filter((v) => !SHA3.test(v)));
-    } else {
-      const id = typeof value === "string" ? value.trim() : "";
-      const proj = id ? this.#one(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id = ?`, id) : null;
-      if (!proj || normalizeType(proj.object_type) !== "project" || !sees(id))
-        return no9("NO_SUCH_PROJECT", "this record holds no project by that id that you may see");
-      holdOf([id, ...this.#rows(`SELECT bundle_id FROM bundles WHERE project = ? ORDER BY bundle_id`, id).map((r) => r.bundle_id)]);
-    }
-    const captures = [...byCapture].map(([capture_sha, bundle_id]) => ({ capture_sha, bundle_id })).sort((a, b) => a.capture_sha < b.capture_sha ? -1 : a.capture_sha > b.capture_sha ? 1 : 0);
-    const titleOf6 = (id) => {
-      const row13 = id ? this.#one(`SELECT title FROM bundles WHERE bundle_id = ?`, id) : null;
-      return row13 && typeof row13.title === "string" && row13.title.trim() ? row13.title : null;
-    };
-    const title = form === "capture" ? titleOf6(captures[0] ? captures[0].bundle_id : null) : form === "project" ? titleOf6(String(value).trim()) : null;
-    return { ok: true, captures, title };
-  }
-  /** R74's `term`, through the compiler (R28): a compile with this module's relations and zone. */
+  /** R90: a host read of `retrieval-browse` (its R14): a compile for its `term` kind, through the compiler (R28): a compile with this module's relations and zone. */
   planOf(input) {
     return this.#compile(input);
   }
-  /** R74's `people`: entities' name lookup (its R17), the host's own unless a caller handed one; null when none. */
-  entitiesFor() {
-    if (this.#entities === void 0) {
-      this.#entities = null;
-      try {
-        if (this.#host) this.#entities = entitiesOf(this.#host);
-      } catch {
-        this.#entities = null;
-      }
-    }
-    return this.#entities;
-  }
-  /** R75: the primary language subtag of the active profiles' `locale` (`jurisdictions` R37), lower-cased, or null
+  /** R90: a host read of `retrieval-browse`, R69's source. The primary language subtag of the active profiles' `locale` (`jurisdictions` R37), lower-cased, or null
    *  when no profile is active or none states one (profiles that disagree have it withheld, its R15). */
   localeOf() {
     let ids = null;
@@ -115596,9 +116198,9 @@ var Retrieval = class _Retrieval {
       return null;
     }
   }
-  /** R85, R86: `op=browse` (`browse.mjs`). */
+  /** R90: `op=browse` (`retrieval-browse` R10–R12). */
   browse(args = {}) {
-    return this.browser.read(args);
+    return this.browseModule.browse(args);
   }
   /** R35–R50: `op=frontier` (`frontier.mjs`). */
   frontier(args = {}) {
@@ -115653,9 +116255,9 @@ function observationOf(o, sql) {
     leadReferentVisible: (kind2, ref, viewer) => o.referentVisible(kind2, ref, viewer)
   };
 }
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function retrievalOf(host, deps) {
-  let r = instances22.get(host);
+  let r = instances23.get(host);
   if (!r) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -115665,7 +116267,7 @@ function retrievalOf(host, deps) {
     const storage = d.storage || (host.storage ?? host);
     const observation = d.observation || observationOf(observationLogOf(host), storage.sql);
     r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation, host });
-    instances22.set(host, r);
+    instances23.set(host, r);
     const answer2 = typeof record.declareTable === "function" ? record.declareTable("retrieval", retrievalTables(r)) : record.declarePurge("retrieval", RETRIEVAL_PURGE);
     if (answer2 && answer2.ok === false)
       throw new Error(`retrieval: record-core refused its table declaration: ${answer2.reason} (${answer2.table})`);
@@ -115732,7 +116334,8 @@ function retrievalRoutes(r, url, body) {
       /* D-32: which facet strategy ran, so the bench can drive BOTH through the real op. */
       facetMode: q10.get("facetmode"),
       widen: q10.get("widen") !== "0",
-      snippetChars: Number(q10.get("snippet")) || 12
+      snippetChars: Number(q10.get("snippet")) || 12,
+      scope: q10.get("scope")
     }),
     meaningrows: () => r.meaningRows({
       q: q10.get("q") ?? "",
@@ -115741,6 +116344,7 @@ function retrievalRoutes(r, url, body) {
       limit: q10.get("limit"),
       offset: q10.get("offset"),
       snippetChars: Number(q10.get("snippet")) || void 0,
+      scope: q10.get("scope"),
       ids: Array.isArray(body?.ids) ? body.ids : null
     }),
     searchfields: () => r.searchFields(),
@@ -116444,10 +117048,10 @@ var LegEarning = class {
    *  disagree, which is the same reason this is ONE function with three
    *  consumers in the first place. */
   earned(subjectEntity, targetIds = [], contentIds = []) {
-    const asked6 = [...new Set((Array.isArray(targetIds) ? targetIds : []).filter((t2) => typeof t2 === "string" && t2))];
-    const standardIds = asked6.filter(isStandardId);
-    const occurrenceIds = asked6.filter((t2) => !isStandardId(t2) && parseOccurrenceRef(t2) !== null);
-    const ids = asked6.filter((t2) => !standardIds.includes(t2) && !occurrenceIds.includes(t2));
+    const asked7 = [...new Set((Array.isArray(targetIds) ? targetIds : []).filter((t2) => typeof t2 === "string" && t2))];
+    const standardIds = asked7.filter(isStandardId);
+    const occurrenceIds = asked7.filter((t2) => !isStandardId(t2) && parseOccurrenceRef(t2) !== null);
+    const ids = asked7.filter((t2) => !standardIds.includes(t2) && !occurrenceIds.includes(t2));
     const ent = subjectEntity ? (() => {
       const r = this.entities.readEntity({ entityId: subjectEntity });
       return r && r.found && r.entity ? r.entity : null;
@@ -116731,14 +117335,14 @@ var LegEarning = class {
    *  with `NO_SUCH_STANDARD`. Never throws. */
   #standardCeiling(id) {
     const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
-    const undetermined3 = (because, why2, extra = {}) => ({
+    const undetermined3 = (because, why3, extra = {}) => ({
       mode: "ceiling",
       axis: "capture",
       standard: id,
       grade: null,
       determined: false,
       undetermined_because: because,
-      why: why2,
+      why: why3,
       ...extra,
       ceiling
     });
@@ -116811,11 +117415,11 @@ var LegEarning = class {
   #occurrenceDerivation(ref) {
     const parsed = parseOccurrenceRef(ref) || {};
     const base2 = { mode: "derived", grade: null, duty: parsed.duty ?? null, key: parsed.key ?? null };
-    const undetermined3 = (because, why2, extra = {}) => ({
+    const undetermined3 = (because, why3, extra = {}) => ({
       ...base2,
       determined: false,
       undetermined_because: because,
-      why: why2,
+      why: why3,
       ...extra
     });
     let r;
@@ -117017,10 +117621,10 @@ var LegEarning = class {
         target: id,
         detail: `${id} is a ${normalizeType(b.object_type)}. An earned basis grade is a fact about an INQUIRY's legs \u2014 what each candidate target earns against the question's subject \u2014 and only an inquiry has a basis.`
       };
-    const asked6 = targets ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, EARNED_TARGETS_MAX) : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id).map((r) => r.target_id);
+    const asked7 = targets ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, EARNED_TARGETS_MAX) : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id).map((r) => r.target_id);
     const sees = (t2) => isImportedRef(t2) || this.membership.inSight(t2, viewer);
-    const visible = asked6.filter(sees);
-    const withheld = visible.length !== asked6.length;
+    const visible = asked7.filter(sees);
+    const withheld = visible.length !== asked7.length;
     const legRows = this.#rows(
       `SELECT ord, target_id, target_type, content_id FROM inquiry_basis
         WHERE bundle_id=? ORDER BY ord`,
@@ -117065,9 +117669,9 @@ var LegEarning = class {
     };
   }
 };
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function legEarningOf(host, deps) {
-  let k = instances23.get(host);
+  let k = instances24.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -117075,7 +117679,7 @@ function legEarningOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new LegEarning({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances23.set(host, k);
+    instances24.set(host, k);
     if (typeof record.declareTable === "function")
       record.declareTable("leg-earning", LEG_EARNING_TABLES.map((t2) => ({ ...t2, keys: [...t2.keys] })));
   }
@@ -117556,10 +118160,10 @@ function tableBuilder(header2, fields, { maxCells = TABLE_MAX_CELLS, maxBytes = 
     const row13 = new Array(width);
     for (let k = 0; k < width; k++) row13[k] = r[k] ?? "";
     for (let k = 0; k < width; k++) {
-      const why2 = cellFault(fields[k], row13[k]);
-      if (why2) {
+      const why3 = cellFault(fields[k], row13[k]);
+      if (why3) {
         count2++;
-        if (undetermined3.length < UNDETERMINED_LISTED) undetermined3.push({ row: rows4, column: fields[k].name, why: why2 });
+        if (undetermined3.length < UNDETERMINED_LISTED) undetermined3.push({ row: rows4, column: fields[k].name, why: why3 });
       }
     }
     cells += width;
@@ -117725,8 +118329,8 @@ var EVALUATORS = {
     const p3 = deps.progressions;
     if (!p3 || typeof p3.proposalsFeed !== "function") return { results: [], denominator: { n: null, why: "the progressions module is not reachable here" }, evaluated: 0 };
     const feed = await p3.proposalsFeed(Date.parse(deps.now));
-    const instances80 = list3(feed, "instances").filter(plain3).slice(0, UNITS_MAX);
-    const rows4 = instances80.map((x) => {
+    const instances81 = list3(feed, "instances").filter(plain3).slice(0, UNITS_MAX);
+    const rows4 = instances81.map((x) => {
       const ooo = list3(x.findings, "findings").filter((f17) => plain3(f17) && f17.kind === "out_of_order");
       return { x, ooo, row: { instance: `${x.progression_key ?? x.progressionKey}\0${x.entity_id ?? x.entityId}`, late: ooo.length ? "true" : "false" } };
     });
@@ -118936,8 +119540,8 @@ var Calculations = class {
     const open = judged.filter((j) => j.answer !== "in" && j.answer !== "out");
     const listed = judged.map((j) => ({ sha: j.sha, valid: j.valid, superseded_by: j.superseded_by, at: typeof j.answer === "string" ? j.answer : "undetermined", ...typeof j.answer === "string" ? {} : { why: j.answer.why } }));
     if (inside.length === 1 && !open.length) return { ok: true, key: str10(key2), at: at50, state: "determined", table: inside[0].sha, vintages: listed };
-    const why2 = inside.length > 1 ? `${inside.length} vintages are each valid on ${at50}, and none is chosen between them` : open.length ? `whether ${open.map((j) => j.sha.slice(0, 12)).join(", ")} ${open.length > 1 ? "were" : "was"} valid on ${at50} is undetermined: ${open.map((j) => j.answer.why).join("; ")}` : `no vintage under "${str10(key2)}" is valid on ${at50}`;
-    return { ok: true, key: str10(key2), at: at50, state: "undetermined", table: null, why: why2, vintages: listed };
+    const why3 = inside.length > 1 ? `${inside.length} vintages are each valid on ${at50}, and none is chosen between them` : open.length ? `whether ${open.map((j) => j.sha.slice(0, 12)).join(", ")} ${open.length > 1 ? "were" : "was"} valid on ${at50} is undetermined: ${open.map((j) => j.answer.why).join("; ")}` : `no vintage under "${str10(key2)}" is valid on ${at50}`;
+    return { ok: true, key: str10(key2), at: at50, state: "undetermined", table: null, why: why3, vintages: listed };
   }
   /* ===================================================================== *
    * BINDING INPUTS (R4, R5, R9, R10, R12)
@@ -119033,7 +119637,7 @@ var Calculations = class {
   }
   /* A content row's capture grade, capped by its derivation (K1447 (ii)). */
   #contentGrade(row13) {
-    let g = null, why2 = "";
+    let g = null, why3 = "";
     try {
       g = this.provenance.captureGrade(row13.capture_sha);
     } catch {
@@ -119043,8 +119647,8 @@ var Calculations = class {
     const cap = isGrade(row13.derivation_cap) ? row13.derivation_cap : null;
     if (!capture2) return { grade: null, why: `the capture grade is undetermined${g && g.why ? `: ${g.why}` : ""}` };
     const grade2 = cap ? weaker4(capture2, cap) : capture2;
-    why2 = cap && grade2 !== capture2 ? `capture ${capture2}, capped by its derivation at ${cap}` : `capture ${capture2}${cap ? `, its derivation capped at ${cap}` : ""}`;
-    return { grade: grade2, why: why2 };
+    why3 = cap && grade2 !== capture2 ? `capture ${capture2}, capped by its derivation at ${cap}` : `capture ${capture2}${cap ? `, its derivation capped at ${cap}` : ""}`;
+    return { grade: grade2, why: why3 };
   }
   /* R4, R9: each input bound for `viewer`. `{ok: false}` with NO_SUCH_INPUT or HYPOTHESIS_NOT_A_FACT, or
      `{bound, hashes, canon, refs, inputs, apart}`: `hashes` each input's SHA-256 of its canonical bytes as it was
@@ -119370,14 +119974,14 @@ var Calculations = class {
       const draws = described.filter((d) => d.kind === "draw");
       if (!draws.length)
         return no4("ESTIMATE_WITHOUT_DRAW", "a population estimate is answered only over a recorded draw (a seeded draw over a frozen set), with its exact interval (K1448). Nothing was written.");
-      const asked6 = draws.find((d) => d.draw.question !== null);
-      if (asked6) {
+      const asked7 = draws.find((d) => d.draw.question !== null);
+      if (asked7) {
         if (described.length !== 1)
           return no4("ESTIMATE_INPUTS", "an estimate over visits takes one input: the draw, carrying its question, whose items members visited. Nothing was written.");
-        const composed = visitRecipe(asked6.name);
+        const composed = visitRecipe(asked7.name);
         if (recipe2 !== null && recipe2 !== void 0 && canonicalJson(recipe2) !== canonicalJson(composed))
           return no4("RECIPE_NOT_TEMPLATE", "an estimate over visits runs the recipe composed over its draw's standings (the share of judged items found yes, and those not judged counted by their reason); the recipe given is not it. Nothing was written.");
-        return { ok: true, recipe: composed, visits: { input: asked6.name, draw: asked6.draw } };
+        return { ok: true, recipe: composed, visits: { input: asked7.name, draw: asked7.draw } };
       }
     }
     if (kind2 === "unit_cost") {
@@ -120481,12 +121085,12 @@ var Calculations = class {
     if (!Number.isSafeInteger(n2)) return no4("BAD_N", "a draw names how many to draw, a whole number. Nothing was written.");
     const usedSeed = seed === null || seed === void 0 ? randomSeed() : seed;
     if (typeof usedSeed !== "string") return no4("BAD_SEED", "a seed is text. Nothing was written.");
-    const asked6 = question === null || question === void 0 ? null : typeof question === "string" ? question.trim() : "";
-    if (asked6 !== null && !(asked6.length && [...asked6].length <= QUESTION_MAX))
+    const asked7 = question === null || question === void 0 ? null : typeof question === "string" ? question.trim() : "";
+    if (asked7 !== null && !(asked7.length && [...asked7].length <= QUESTION_MAX))
       return no4("BAD_QUESTION", `a draw's question is the words each drawn item is judged by: text of 1 to ${QUESTION_MAX} characters. Nothing was written.`);
     const d = draw({ frame, n: n2, seed: usedSeed });
     if (d.refused) return no4(d.refused, `${d.why}. Nothing was written.`);
-    const key2 = sha({ set: ref, kind: kind2, seed: usedSeed, n: n2, method: d.method, ...asked6 !== null ? { question: asked6 } : {} });
+    const key2 = sha({ set: ref, kind: kind2, seed: usedSeed, n: n2, method: d.method, ...asked7 !== null ? { question: asked7 } : {} });
     const held3 = this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key2);
     const answer2 = (r) => ({
       ok: true,
@@ -120522,7 +121126,7 @@ var Calculations = class {
         json7(d.sample),
         by,
         at50,
-        asked6
+        asked7
       );
       return { ok: true };
     });
@@ -121244,9 +121848,9 @@ var Calculations = class {
     }
   }
 };
-var instances24 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function calculationsOf(host, deps) {
-  let c = instances24.get(host);
+  let c = instances25.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -121254,7 +121858,7 @@ function calculationsOf(host, deps) {
     const content = d.content || contentOf(host, { record, membership });
     const provenance = d.provenance || content.provenance || provenanceOf(host, { record, membership });
     c = new Calculations({ ...d, storage: d.storage || host.storage, host, record, membership, content, provenance });
-    instances24.set(host, c);
+    instances25.set(host, c);
     const declared2 = record.declareTable("calculations", CALCULATIONS_TABLES);
     if (!declared2 || declared2.ok === false) throw new Error(`calculations' tables could not be declared: ${JSON.stringify(declared2)}`);
     joinUpstream(c);
@@ -121835,6 +122439,8 @@ function dispositionVersionView(d, cur) {
     applies_because: because
   };
 }
+var stateOf = (disposition) => disposition && disposition.applies ? disposition.state : "open";
+var withState = (f17, disposition) => ({ ...f17, disposition, state: stateOf(disposition) });
 function dispositionOnFinding(d, cur) {
   const v = dispositionVersionView(d, cur);
   return {
@@ -122340,8 +122946,8 @@ var Progressions = class _Progressions {
       a = { state: "undetermined", why: word("progressions.why.standards_answer", { entry: String(e2 && e2.message || e2).slice(0, 200) }) };
     }
     const state = a && a.ok !== false && typeof a.state === "string" ? a.state : "undetermined";
-    const why2 = a && a.ok !== false && typeof a.why === "string" ? a.why : `standards gave no answer${a && a.reason ? ` (${a.reason})` : ""}`;
-    return { ...b, standard: { ...b.standard, in_force: { date, state, why: why2 } } };
+    const why3 = a && a.ok !== false && typeof a.why === "string" ? a.why : `standards gave no answer${a && a.reason ? ` (${a.reason})` : ""}`;
+    return { ...b, standard: { ...b.standard, in_force: { date, state, why: why3 } } };
   }
   /** R5 (`op=progression`): a definition, the current version by default or any held one, with every version held. */
   readProgression({ progressionKey, version = null, viewer = null } = {}) {
@@ -122685,9 +123291,9 @@ var Progressions = class _Progressions {
     const term = this.#deadline(predDocs, s.within_interval, iv);
     for (const d of docs) {
       const pair2 = [...predDocs.map((p3) => show2(p3, s.after_stage)), show2(d, s.stage_key)];
-      const why2 = !d.own_date ? word("progressions.document_date", { stage_key: s.stage_key, capture_sha: d.capture_sha, own_date_why: d.own_date_why }) : term.undetermined ? term.why : null;
-      if (why2) {
-        undetermined3.push({ kind: "term_undetermined", ...base2, within_interval: s.within_interval, placements: pair2, why: why2 });
+      const why3 = !d.own_date ? word("progressions.document_date", { stage_key: s.stage_key, capture_sha: d.capture_sha, own_date_why: d.own_date_why }) : term.undetermined ? term.why : null;
+      if (why3) {
+        undetermined3.push({ kind: "term_undetermined", ...base2, within_interval: s.within_interval, placements: pair2, why: why3 });
         continue;
       }
       const db = bounds(d.own_date);
@@ -122730,8 +123336,8 @@ var Progressions = class _Progressions {
   #withDecisions(inst, byStage = null) {
     if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
     const decided = byStage || this.#decisionsByStage(inst.progression_key);
-    const findings = inst.findings.map((f17) => ({ ...f17, disposition: decided.get(f17.stage_key) ?? null }));
-    return { ...inst, findings, open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length };
+    const findings = inst.findings.map((f17) => withState(f17, decided.get(f17.stage_key) ?? null));
+    return { ...inst, findings, open_finding_count: findings.filter((f17) => f17.state === "open").length };
   }
   /* R13: the whole derivation stands for every reader; only the back-references to bundles the viewer may not see are
      withheld. Capture shas, grades, findings and counts are the same for everyone. */
@@ -123185,7 +123791,7 @@ var Progressions = class _Progressions {
      reading or retrieval instant. `{own_date: {value, precision, zone} | null, own_date_source, own_date_ref,
      own_date_why}`. */
   #ownDate(p3, zone) {
-    const none = (why2, source2 = "none", ref = null) => ({ own_date: null, own_date_source: source2, own_date_ref: ref, own_date_why: why2 });
+    const none = (why3, source2 = "none", ref = null) => ({ own_date: null, own_date_source: source2, own_date_ref: ref, own_date_why: why3 });
     try {
       if (p3.event_id) {
         const e2 = this.events.readEvent({ eventId: p3.event_id, viewer: GROUP_SIGHT });
@@ -123413,7 +124019,7 @@ var Progressions = class _Progressions {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances80 = [];
+    const instances81 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p3 of this.#pairs()) {
       const inst = this.#assemble(p3.progression_key, p3.entity_id);
@@ -123422,10 +124028,10 @@ var Progressions = class _Progressions {
       const overdueF = this.#overdue(inst, now).filter(open);
       const others = (inst.findings || []).filter((f17) => f17.kind !== "missing_predecessor" && open(f17));
       const overdueByStage = new Map(overdueF.map((f17) => [f17.stage_key, f17]));
-      const findings = [...missing2, ...overdueF, ...others];
+      const findings = [...missing2, ...overdueF, ...others].map((f17) => ({ ...f17, state: "open" }));
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances80.push({
+      instances81.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -123505,10 +124111,10 @@ var Progressions = class _Progressions {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances80,
+      instances: instances81,
       proposals,
       dispositions,
-      instance_count: instances80.length,
+      instance_count: instances81.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -123532,7 +124138,7 @@ var Progressions = class _Progressions {
       established: f17.grade_determined === true && isEstablished(f17.grade),
       needs_confirmation: f17.grade === "C"
     });
-    const instances80 = [];
+    const instances81 = [];
     for (const r of rows4) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -123550,8 +124156,8 @@ var Progressions = class _Progressions {
       const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
       const missing2 = inst.findings.filter((f17) => f17.kind === "missing_predecessor");
       const others = inst.findings.filter((f17) => f17.kind !== "missing_predecessor");
-      const findings = [...missing2, ...a.overdue, ...others].map(project).map((f17) => ({ ...f17, disposition: a.decided.get(f17.stage_key) ?? null }));
-      instances80.push({
+      const findings = [...missing2, ...a.overdue, ...others].map(project).map((f17) => withState(f17, a.decided.get(f17.stage_key) ?? null));
+      instances81.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -123561,10 +124167,10 @@ var Progressions = class _Progressions {
         stage_label: stage ? stage.label : r.stage_key,
         findings,
         finding_count: findings.length,
-        open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length
+        open_finding_count: findings.filter((f17) => f17.state === "open").length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances80.length, instances: instances80 };
+    return { ok: true, capture_sha: captureSha, count: instances81.length, instances: instances81 };
   }
   /* ===================================================================== *
    * THE CONNECTION OWNER (R40; connection-grammar R2, R6–R9; B1a.8).
@@ -123656,10 +124262,10 @@ var Progressions = class _Progressions {
     const st = str11(to) || str11(state);
     const undisposed = notADisposition(st);
     if (undisposed) return undisposed;
-    const why2 = String(reason2 ?? "").trim();
-    const unreasoned = this.#reasonStated(why2, "deferring or dismissing the record's own question is recorded with a reason, in the member's own words \u2014 a disposition with no reason ages a finding with no account of why");
+    const why3 = String(reason2 ?? "").trim();
+    const unreasoned = this.#reasonStated(why3, "deferring or dismissing the record's own question is recorded with a reason, in the member's own words \u2014 a disposition with no reason ages a finding with no account of why");
     if (unreasoned) return unreasoned;
-    if (why2.length > DISPOSITION_REASON_MAX || /["\\\r\n]/.test(why2))
+    if (why3.length > DISPOSITION_REASON_MAX || /["\\\r\n]/.test(why3))
       return refusal15("BAD_REASON", `a reason is at most ${DISPOSITION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
     const by = decidedBy == null ? "" : String(decidedBy).trim();
     if (!by)
@@ -123701,7 +124307,7 @@ var Progressions = class _Progressions {
       pk,
       sk,
       st,
-      why2.slice(0, DISPOSITION_REASON_MAX),
+      why3.slice(0, DISPOSITION_REASON_MAX),
       by.slice(0, 200),
       at50,
       currentVersion
@@ -123713,7 +124319,7 @@ var Progressions = class _Progressions {
       stage_key: sk,
       to: st,
       state: st,
-      reason: why2,
+      reason: why3,
       decided_by: by,
       at: at50,
       bundle: null,
@@ -123743,9 +124349,9 @@ function progressionOps(p3, url, body) {
     captureprogressions: () => p3.captureProgressions({ captureSha: q10("sha256") })
   };
 }
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 function progressionsOf(host, deps) {
-  let p3 = instances25.get(host);
+  let p3 = instances26.get(host);
   if (!p3) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -123766,7 +124372,7 @@ function progressionsOf(host, deps) {
     if (declared2 && declared2.ok === false)
       throw new Error(`progressions: record-core refused its tables: ${declared2.reason} ${declared2.table || ""}`.trim());
     registerFigures5(p3);
-    instances25.set(host, p3);
+    instances26.set(host, p3);
   }
   made2.add(p3);
   return p3;
@@ -123785,7 +124391,7 @@ var OWNER_REGISTRATION2 = registerOwner({
     const { host = null, ...args } = a && typeof a === "object" ? a : {};
     if (args.viewer === void 0 || args.viewer === null || args.viewer === "")
       return { refused: "VIEWER_MISSING", why: word("duties.why.read_names_member") };
-    const p3 = host ? instances25.get(host) : made2.size === 1 ? [...made2][0] : null;
+    const p3 = host ? instances26.get(host) : made2.size === 1 ? [...made2][0] : null;
     if (!p3) return { refused: "OWNER_HOST_AMBIGUOUS", why: host ? word("progressions.why.progressions_holds_instance") : word("progressions.why.progressions_holds_instances", { size: made2.size }) };
     return p3.neighbours(args);
   }
@@ -124918,26 +125524,26 @@ var Inquiry = class _Inquiry {
         const k = passageKey(passageOf2(l2, i));
         held3.set(k, (held3.get(k) || 0) + 1);
       }
-    const asked6 = [];
+    const asked7 = [];
     legs.forEach((l2, i) => {
       const p3 = passageOf2(l2, i), k = passageKey(p3);
       if (held3.get(k)) held3.set(k, held3.get(k) - 1);
-      else asked6.push(p3);
+      else asked7.push(p3);
     });
-    if (!asked6.length) return null;
+    if (!asked7.length) return null;
     const who4 = typeof author === "string" ? author : null;
     let r;
     try {
-      r = this.#onMachinePassage.fn({ legs: asked6, author: who4, viewer: who4 });
+      r = this.#onMachinePassage.fn({ legs: asked7, author: who4, viewer: who4 });
     } catch (e2) {
       return machinePassageUnchecked(
         `the read of whether these passages were taken up (${this.#onMachinePassage.module}) failed: ${fmSafe(e2 && e2.message ? e2.message : e2).slice(0, 200)}. Nothing was written.`,
-        { legs: asked6.map((p3) => p3.ord) }
+        { legs: asked7.map((p3) => p3.ord) }
       );
     }
     if (r === null) return null;
     if (r && typeof r === "object" && !Array.isArray(r) && typeof r.then !== "function" && r.ok === false && typeof r.reason === "string" && r.reason) return r;
-    return machinePassageUnchecked(`the read of whether these passages were taken up (${this.#onMachinePassage.module}) answered neither null nor a refusal. Nothing was written.`, { legs: asked6.map((p3) => p3.ord) });
+    return machinePassageUnchecked(`the read of whether these passages were taken up (${this.#onMachinePassage.module}) answered neither null nor a refusal. Nothing was written.`, { legs: asked7.map((p3) => p3.ord) });
   }
   /* The re-evaluation an act raised, `{raised, failed, answer}`, or null when no module is registered to raise it. The
      listener answers the dependents (an array), or an object `{raised, listeners_failed?}` (reevaluation R8), which is
@@ -125519,15 +126125,15 @@ var Inquiry = class _Inquiry {
       const next = Array.isArray(c.files) ? c.files.find((f17) => f17 && f17.path === "bundle.md") : null;
       const nextQ = questionOf3(next && next.text);
       const subject = typeof fm.subject_entity === "string" && fm.subject_entity.trim() ? fm.subject_entity.trim() : null;
-      let asked6 = !cur;
+      let asked7 = !cur;
       if (cur) {
         const held3 = c.state && c.state.inquiry ? c.state.inquiry.priorText : void 0;
         const was = typeof held3 === "string" ? held3 : null;
         const wasFm = was ? parseFrontmatter(was).data || {} : {};
         const wasSubject = typeof wasFm.subject_entity === "string" && wasFm.subject_entity.trim() ? wasFm.subject_entity.trim() : null;
-        asked6 = questionOf3(was) !== nextQ || wasSubject !== subject;
+        asked7 = questionOf3(was) !== nextQ || wasSubject !== subject;
       }
-      let warning = asked6 ? personWarning({
+      let warning = asked7 ? personWarning({
         text: nextQ,
         entities: this.personFacts({ text: nextQ, subject, viewer: author }),
         viewer: machine3 ? null : author
@@ -126170,13 +126776,13 @@ var Inquiry = class _Inquiry {
   }
   /* R58: one question's wait and history, read whole from capture page by page (its R84's bound). */
   #documentWait(id, inquiryState, viewer) {
-    const undetermined3 = (why2) => ({
+    const undetermined3 = (why3) => ({
       question: id,
       inquiry_state: inquiryState,
       state: "undetermined",
       waits: null,
       history: null,
-      why: why2
+      why: why3
     });
     let capture2 = null;
     try {
@@ -126378,14 +126984,14 @@ var Inquiry = class _Inquiry {
       };
     const undisposed = notADisposition(to);
     if (undisposed) return undisposed;
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2)
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3)
       return {
         ok: false,
         reason: "NO_REASON",
         detail: "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a disposition with no reason would produce a record the catalog rejects."
       };
-    if (why2.length > EDGE_REASON_MAX2 || /["\\\r\n]/.test(why2))
+    if (why3.length > EDGE_REASON_MAX2 || /["\\\r\n]/.test(why3))
       return {
         ok: false,
         reason: "BAD_REASON",
@@ -126496,7 +127102,7 @@ var Inquiry = class _Inquiry {
           timestamp: when,
           from_state: cur.current_state,
           to_state: to,
-          blurb: why2,
+          blurb: why3,
           author: author || "member"
         });
         if (!text8)
@@ -126508,13 +127114,13 @@ var Inquiry = class _Inquiry {
           };
         text8 = setScalar3(text8, "prior_state", cur.current_state);
         text8 = setScalar3(text8, "current_state", to);
-        text8 = setOrAddScalar2(text8, "disposition_reason", `"${why2}"`);
+        text8 = setOrAddScalar2(text8, "disposition_reason", `"${why3}"`);
         text8 = setScalar3(text8, "last_updated", `"${when}"`);
         text8 = appendSessionLog2(
           text8,
           `### Session ${when} | ${to === "deferred" ? "Deferred" : "Dismissed"} | ${author || "member"}
 Trigger: selection ${handle}
-Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
+Changes: state ${cur.current_state} to ${to}. Reason: ${why3}.
 `
         );
         const fm = parseFrontmatter(text8).data || {};
@@ -126556,7 +127162,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
     return {
       ok: true,
       to,
-      reason: why2,
+      reason: why3,
       handle,
       disposed: disposed.sort(),
       weight: "refuse",
@@ -126675,14 +127281,14 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
         reason: "MACHINE_CANNOT_DIVIDE",
         detail: "dividing is a named member's judgement that the team's own question was malformed \u2014 that it was two questions \u2014 and that judgement carries a name. A machine credential may surface a question and gather what it rests on; it may not restructure the record's questions. Sign in as a member."
       };
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2)
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3)
       return {
         ok: false,
         reason: "NO_REASON",
         detail: "a division records WHY the question was two questions. One authored reason covers the whole restructuring (DEC-29) and nothing is derived, defaulted or proposed: 'divided' with no account of why is a state change wearing a correction's clothes."
       };
-    if (why2.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(why2))
+    if (why3.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(why3))
       return {
         ok: false,
         reason: "BAD_REASON",
@@ -126912,7 +127518,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
         `  - target: ${target}`,
         "    rel: supersedes",
         "    status: confirmed",
-        `    reason: "${fmSafe(why2)}"`
+        `    reason: "${fmSafe(why3)}"`
       ]);
       const grouped = ordGround.some((g) => g !== null);
       const keepGroups = grouped && !!rawGrounds && mine.every((ord) => ordGround[ord] !== null && groupOrds.get(ordGround[ord]).every((o) => mine.includes(o)) && rawGrounds.some((r) => r.label === ordGround[ord]));
@@ -126934,7 +127540,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
       text9 = setSection(text9, "## What It Rests On", [
         word("inquiry.set_section.divided_out", { target, when, who: who4 }),
         "",
-        why2,
+        why3,
         "",
         word("inquiry.set_section.half_question_stays", { sibs: sibs.join(", "), target })
       ]);
@@ -126946,7 +127552,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
         `Changes: created from ${target}, ${childLegs.length} leg(s) apportioned here.`,
         `Parent: ${target}`,
         `Siblings: ${sibs.join(", ")}`,
-        `Reason: ${why2}`
+        `Reason: ${why3}`
       ]);
       plans.push({ id, q: q10, sibs, mine, legs: childLegs, text: text9 });
     }
@@ -126985,7 +127591,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
       timestamp: when,
       from_state: b.current_state,
       to_state: "divided",
-      blurb: why2,
+      blurb: why3,
       author: who4
     });
     if (!withHistory)
@@ -126999,7 +127605,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
     text8 = setScalar3(text8, "prior_state", b.current_state);
     text8 = setScalar3(text8, "current_state", "divided");
     text8 = setOrAddBlock(text8, "division", [
-      `  reason: "${fmSafe(why2)}"`,
+      `  reason: "${fmSafe(why3)}"`,
       `  apportioned_by: ${who4}`,
       `  at: "${when}"`,
       `  into: [${ids.join(", ")}]`
@@ -127017,7 +127623,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
     text8 = setScalar3(text8, "last_updated", `"${when}"`);
     text8 = setSection(text8, "## Conclusion", [
       ...typeof fm.conclusion === "string" && fm.conclusion.trim() ? [fm.conclusion, ""] : [],
-      word("inquiry.set_section.divided", { when, who: who4, ids: ids.join(", "), why: why2 }),
+      word("inquiry.set_section.divided", { when, who: who4, ids: ids.join(", "), why: why3 }),
       "",
       word("inquiry.set_section.where_leg_went"),
       "",
@@ -127027,7 +127633,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
 Trigger: op=inquirydivide on ${target}
 Changes: state ${b.current_state} to divided (terminal).
 Into: ${ids.join(", ")}
-Reason: ${why2}
+Reason: ${why3}
 Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter((l2) => l2.role === "cuts_against").length} cutting against.
 `;
     const at50 = text8.indexOf("## Session Log");
@@ -127104,7 +127710,7 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
         to: homes.get(i)
       })),
       cuts_against: legs.filter((l2) => l2.role === "cuts_against").length,
-      reason: why2,
+      reason: why3,
       apportioned_by: who4,
       at: when,
       weight: "single",
@@ -127290,8 +127896,8 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
       if (r && typeof r === "object" && typeof r.ground === "string" && !standingByLabel.has(r.ground))
         standingByLabel.set(r.ground, r);
     const restructure = standingLabel.some((g) => g !== null) || fm.grounds !== void 0 && fm.grounds !== null;
-    const why2 = String(reason2 ?? "").trim();
-    if (restructure && !why2)
+    const why3 = String(reason2 ?? "").trim();
+    if (restructure && !why3)
       return {
         ok: false,
         reason: "NO_REASON",
@@ -127299,7 +127905,7 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
         restructure: true,
         detail: "this question already carries an authored structure, so changing it is a REVISION and records WHY. Restructuring after seeing a strength is legal and is never blocked (DEC-32) \u2014 the defence is that it is visible, which it is not without an account of it. Nothing here is derived, defaulted or prefilled. A FIRST grouping needs no reason: there is no earlier structure for it to be a revision of."
       };
-    if (why2 && (why2.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(why2)))
+    if (why3 && (why3.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(why3)))
       return {
         ok: false,
         reason: "BAD_REASON",
@@ -127315,7 +127921,7 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
       };
     const nextLabel = new Array(legs.length).fill(null);
     const claimed = /* @__PURE__ */ new Map();
-    const asked6 = [];
+    const asked7 = [];
     for (let i = 0; i < grounds.length; i++) {
       const row13 = grounds[i];
       if (!row13 || typeof row13 !== "object" || Array.isArray(row13))
@@ -127368,12 +127974,12 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
         claimed.set(raw, label);
         nextLabel[raw] = label;
       }
-      asked6.push({ label, ords: [...ords].sort((x, y) => x - y), statement: stmt });
+      asked7.push({ label, ords: [...ords].sort((x, y) => x - y), statement: stmt });
     }
     const when = this.#when();
     const ordsOf = (label) => standingLabel.reduce((a, g, i) => g === label ? [...a, i] : a, []);
     const same3 = (a, c) => a.length === c.length && a.every((v, i) => v === c[i]);
-    const rowsOut = asked6.map((a) => {
+    const rowsOut = asked7.map((a) => {
       const prior = typeof a.label === "string" ? standingByLabel.get(a.label) : void 0;
       const priorStmt = prior && typeof prior.statement === "string" ? prior.statement : null;
       const carry = !!prior && same3(a.ords, ordsOf(a.label)) && priorStmt === a.statement && typeof prior.asserted_by === "string" && prior.asserted_by.trim() !== "" && typeof prior.at === "string" && prior.at.trim() !== "";
@@ -127459,7 +128065,7 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
       `### Session ${when} | ${restructure ? "Restructured" : "Grouped"} | ${who4}
 Trigger: op=inquiryground on ${target}
 Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(s) \u2014 ` + rowsOut.map((r) => `${r.ground}: ${r.legs.join(", ")}`).join("; ") : `grouping removed; ${legs.length} leg(s) read as necessary again`}.
-` + (restructure ? `Reason: ${why2}
+` + (restructure ? `Reason: ${why3}
 ` : "First grouping: no earlier structure to revise.\n") + (before3 ? `Strength before: ${w(before3)}.
 ` : "Strength before: not stated (no module answers it here).\n")
     );
@@ -127494,7 +128100,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
         when,
         who4,
         restructure ? "restructured" : "authored",
-        restructure ? why2 : null,
+        restructure ? why3 : null,
         JSON.stringify(rowsOut.map((r) => ({
           ground: r.ground,
           statement: r.statement,
@@ -127515,7 +128121,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
       grouped,
       grounds: rowsOut,
       legs: legs.length,
-      reason: restructure ? why2 : null,
+      reason: restructure ? why3 : null,
       asserted_by: who4,
       at: when,
       weight: "single",
@@ -127589,9 +128195,9 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     }
   }
 };
-var instances26 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 function inquiryOf(host, deps) {
-  let k = instances26.get(host);
+  let k = instances27.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -127599,7 +128205,7 @@ function inquiryOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances26.set(host, k);
+    instances27.set(host, k);
     void k.legEarning;
     record.declareTable("inquiry", INQUIRY_DECLARATIONS.map((d2) => ({ ...d2 })));
     if (typeof record.registerAuditContext === "function")
@@ -127948,9 +128554,9 @@ var BIAS_CHECKS = {
   },
   /* ---------------------------------------------------------------------------
        REC-207 — SETTLING A BIAS DEBT (BOB #32, 2026-09-23 23:42Z). Seven rows, in
-       the EXISTING family rather than a new one, on SK-1's rule (made when the
-       legacy `civicos-ui/check-refusal-codes.mjs`, since deleted, walked every
-       `*_CHECKS` family), because these refusals are bias's in the plainest sense —
+       the EXISTING family rather than a new one, on SK-1's rule (made when a guard
+       walked every `*_CHECKS` family, deleted at T20), because these refusals are
+       bias's in the plainest sense —
        they are the conditions under which the record declines to record that a
        member has settled the obligation a lens change raised.
   
@@ -128460,17 +129066,17 @@ var Bias = class _Bias {
       if (!member2 || !this.#membership.isAdministrator(member2))
         return notAnAdmin(member2, INSTANCE_ADOPTION_ACT, { remedy: INSTANCE_ADOPTION_REMEDY, scope: "instance" });
     }
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
-    if (!why2)
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
+    if (!why3)
       return this.#refuse(
         "BIAS_ADOPTION_NO_REASON",
         "op=biasadopt carries the adopter's reason for adopting this lens: pass reason=<why>. Nothing was adopted."
       );
-    if (why2.length > BIAS_ADOPTION_REASON_MAX)
+    if (why3.length > BIAS_ADOPTION_REASON_MAX)
       return this.#refuse(
         "BIAS_ADOPTION_NO_REASON",
-        `the reason is ${why2.length} characters and an adoption keeps at most ${BIAS_ADOPTION_REASON_MAX}. Nothing was adopted.`,
-        { limit: BIAS_ADOPTION_REASON_MAX, length: why2.length }
+        `the reason is ${why3.length} characters and an adoption keeps at most ${BIAS_ADOPTION_REASON_MAX}. Nothing was adopted.`,
+        { limit: BIAS_ADOPTION_REASON_MAX, length: why3.length }
       );
     const md = this.#record.readFile(String(bundleId), "bundle.md");
     const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data || {} : {};
@@ -128488,7 +129094,7 @@ var Bias = class _Bias {
       str12(fm.policy_source),
       str12(fm.policy_retrieved),
       str12(fm.policy_sha256) ? str12(fm.policy_sha256).toLowerCase() : null,
-      why2
+      why3
     );
     this.#notify();
     return {
@@ -128499,7 +129105,7 @@ var Bias = class _Bias {
       scope_id: sid,
       author: who4,
       at: now,
-      reason: why2,
+      reason: why3,
       pinned: {
         bundle_sha: h.bundleSha,
         source_url: str12(fm.policy_source),
@@ -129712,15 +130318,15 @@ var AcceptedWork = class {
     try {
       const { legs, viewer } = argsOf(args);
       const list6 = Array.isArray(legs) ? legs : [];
-      const asked6 = /* @__PURE__ */ new Map();
+      const asked7 = /* @__PURE__ */ new Map();
       list6.forEach((leg2, i) => {
         const ref = isObj33(leg2) ? refOf(leg2.target) : null;
         if (!ref) return;
         const ord = Number.isInteger(leg2.ord) ? leg2.ord : i;
         const edition = leg2.target_edition;
         const key2 = `${ref}\0${typeof edition}\0${String(edition)}`;
-        if (!asked6.has(key2)) asked6.set(key2, this.#judge(ref, edition, viewer));
-        const verdict = asked6.get(key2);
+        if (!asked7.has(key2)) asked7.set(key2, this.#judge(ref, edition, viewer));
+        const verdict = asked7.get(key2);
         if (verdict) out.push(legFinding(verdict, ord, ref, edition));
       });
     } catch {
@@ -129745,15 +130351,15 @@ var AcceptedWork = class {
     if (!isObj33(c) || c.replay || c.promotedType !== "inquiry") return null;
     const legs = basisOf(isObj33(c.docFm) ? c.docFm : fmOfFiles(c.files)).filter(isObj33);
     const held3 = c.head ? this.#heldPairs(c.bundleId) : /* @__PURE__ */ new Set();
-    const asked6 = [];
+    const asked7 = [];
     legs.forEach((leg2, ord) => {
       if (!refOf(leg2.target)) return;
       if (held3.has(pairKey(leg2))) return;
-      asked6.push({ ...leg2, ord });
+      asked7.push({ ...leg2, ord });
     });
-    if (!asked6.length) return null;
+    if (!asked7.length) return null;
     const viewer = typeof c.author === "string" && c.author ? c.author : c.writer ?? null;
-    const findings = this.acceptedLegRefusals({ legs: asked6, viewer });
+    const findings = this.acceptedLegRefusals({ legs: asked7, viewer });
     if (!findings.length) return null;
     return {
       ok: false,
@@ -129778,8 +130384,8 @@ var AcceptedWork = class {
     return out;
   }
 };
-function unreadable(why2) {
-  return { unreadable: true, reason: ACCEPTED_WORK_UNREADABLE_WHY, detail: `${UNREADABLE_DETAIL}: ${cut5(why2, DETAIL_MAX)}` };
+function unreadable(why3) {
+  return { unreadable: true, reason: ACCEPTED_WORK_UNREADABLE_WHY, detail: `${UNREADABLE_DETAIL}: ${cut5(why3, DETAIL_MAX)}` };
 }
 function legFinding(code, ord, ref, edition) {
   const row13 = ACCEPTED_WORK_CHECKS[code];
@@ -129812,15 +130418,15 @@ function refOf(target) {
   return parseImportedFindingRef(t2) ? t2 : null;
 }
 var pairKey = (leg2) => `${refOf(leg2.target)}\0${typeof leg2.target_edition}\0${String(leg2.target_edition)}`;
-var instances27 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 function acceptedWorkOf(host, deps) {
-  let w = instances27.get(host);
+  let w = instances28.get(host);
   if (!w) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const promotion = d.promotion || promotionOf(host, { record });
     w = new AcceptedWork({ record });
-    instances27.set(host, w);
+    instances28.set(host, w);
     promotion.registerStep("accepted-work", { check: (c) => w.check(c) });
   }
   return w;
@@ -130614,12 +131220,12 @@ function basisVersionFindings(fm, findings) {
       push("VERSION_HIDDEN_NOT_BOOLEAN", `basis_versions[${i}] ('${name3}').hidden is '${String(v.hidden).slice(0, 40)}': hiding a version is a boolean, because hiding it is ALL it does \u2014 the version stays in the record and stays queryable (DEC-29(b), D-214), so there is no third value for this field to hold`);
     }
     if (versionNeedsReason(v.state)) {
-      const why2 = typeof v.state_reason === "string" ? v.state_reason.trim() : "";
+      const why3 = typeof v.state_reason === "string" ? v.state_reason.trim() : "";
       const by = typeof v.state_by === "string" ? v.state_by.trim() : "";
-      if (why2.length < 8 || !by || isMachineIdentity(by))
+      if (why3.length < 8 || !by || isMachineIdentity(by))
         push(
           "VERSION_DISPOSITION_UNATTRIBUTED",
-          `basis_versions[${i}] ('${name3}') is in state '${v.state}' and carries state_by '${String(v.state_by).slice(0, 40)}' with state_reason '${why2.slice(0, 40)}': ${VERSION_REASON_REQUIRED.join(" and ")} are the two states a member enters WITH a recorded reason (\xA76 rule 4), and the reason carries the name of the member who authored it \u2014 never a machine's, because a machine may propose an account of the evidence and may never settle one`,
+          `basis_versions[${i}] ('${name3}') is in state '${v.state}' and carries state_by '${String(v.state_by).slice(0, 40)}' with state_reason '${why3.slice(0, 40)}': ${VERSION_REASON_REQUIRED.join(" and ")} are the two states a member enters WITH a recorded reason (\xA76 rule 4), and the reason carries the name of the member who authored it \u2014 never a machine's, because a machine may propose an account of the evidence and may never settle one`,
           [
             "record state_by (a named member), state_at (an ISO timestamp) and state_reason on this version",
             "or leave the version suggested \u2014 a state nobody has moved it into needs no reason"
@@ -131438,15 +132044,15 @@ var BasisVersions = class _BasisVersions {
     }
     const author = typeof c.author === "string" ? c.author.trim() : "";
     if (this.#machinePassage && !(author && isMachineIdentity(author))) {
-      const asked6 = [];
+      const asked7 = [];
       for (const v of offered) {
         const held3 = this.#one(`SELECT state FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name);
         const accepting = !!held3 && held3.state !== "accepted" && v.state === "accepted" && typeof v.author === "string" && isMachineIdentity(v.author.trim());
         if (held3 && !accepting) continue;
-        for (const l2 of v.legs) asked6.push(passageLeg(v.name, l2.src_ord, docLegs[l2.src_ord]));
+        for (const l2 of v.legs) asked7.push(passageLeg(v.name, l2.src_ord, docLegs[l2.src_ord]));
       }
-      if (asked6.length) {
-        const refused5 = this.#machinePassageRefusal(asked6, author);
+      if (asked7.length) {
+        const refused5 = this.#machinePassageRefusal(asked7, author);
         if (refused5) return refused5;
       }
     }
@@ -131794,12 +132400,12 @@ var BasisVersions = class _BasisVersions {
     return stance && stance.act === "concluded" ? stance : null;
   }
   /* §7.1 item 5: the one sentence every read gives for a conclusion that adopted no claim a reader can check. */
-  static undeterminedClaim(why2 = null) {
+  static undeterminedClaim(why3 = null) {
     return {
       state: "undetermined",
       text: null,
       version: null,
-      detail: why2 ? why2 : "this conclusion adopted no claim a reader can check. It was written before a conclusion named the reading whose claim it adopts (INVESTIGATIVE-SESSION.md \xA77.1 items 5-6), so WHICH claim it concluded is undetermined \u2014 never back-filled from its conclusion text, which is the member's words and not a claim any reading stated."
+      detail: why3 ? why3 : "this conclusion adopted no claim a reader can check. It was written before a conclusion named the reading whose claim it adopts (INVESTIGATIVE-SESSION.md \xA77.1 items 5-6), so WHICH claim it concluded is undetermined \u2014 never back-filled from its conclusion text, which is the member's words and not a claim any reading stated."
     };
   }
   /** R23: the inquiry's own conclusion, the no-project relationship's (null when its state is not `concluded`). Its
@@ -132135,18 +132741,18 @@ var BasisVersions = class _BasisVersions {
           { target, version: vname, from, to, state: b.current_state }
         );
     }
-    const why2 = String(a.reason ?? "").trim();
-    if (versionNeedsReason(to) && !why2)
+    const why3 = String(a.reason ?? "").trim();
+    if (versionNeedsReason(to) && !why3)
       return refuse31(
         "VERSION_NO_REASON",
         `op=version${act2} records WHY. ${to === "rejected" ? "The record of what was turned down is the anti-omission instrument (\xA76 rule 4) and it is worthless without the reason" : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement from an oversight"}.`,
         { target, version: vname, from, to }
       );
-    if (why2.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why2) || versionNeedsReason(to) && why2.length < VERSION_REASON_MIN)
+    if (why3.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why3) || versionNeedsReason(to) && why3.length < VERSION_REASON_MIN)
       return refuse31(
         "VERSION_REASON_MALFORMED",
         `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a reading aside or turning it down is at least ${VERSION_REASON_MIN} characters, the shortest the record keeps.`,
-        { target, version: vname, reason_length: why2.length }
+        { target, version: vname, reason_length: why3.length }
       );
     if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
       return refuse31(
@@ -132233,7 +132839,7 @@ var BasisVersions = class _BasisVersions {
       to: to ?? from,
       moves_state: to !== null,
       hidden,
-      reason: why2 || null,
+      reason: why3 || null,
       author: who4,
       at: when,
       weight: "single",
@@ -132243,17 +132849,17 @@ var BasisVersions = class _BasisVersions {
     if (preview) {
       if (to === "accepted" && from !== "accepted" && typeof row13.author === "string" && isMachineIdentity(row13.author.trim())) {
         const vlegs = Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [];
-        const asked6 = [];
+        const asked7 = [];
         vlegs.forEach((l2, i) => {
-          if (l2 && typeof l2 === "object" && String(l2.version ?? "").trim() === vname) asked6.push(passageLeg(vname, i, l2));
+          if (l2 && typeof l2 === "object" && String(l2.version ?? "").trim() === vname) asked7.push(passageLeg(vname, i, l2));
         });
-        const refused5 = this.#machinePassageRefusal(asked6, who4);
+        const refused5 = this.#machinePassageRefusal(asked7, who4);
         if (refused5) return { ...refused5, act: act2, target, version: vname, preview: true, wrote: false };
       }
       return { ...receipt, preview: true, would: act2, wrote: false };
     }
     if (act2 === "current") {
-      const p3 = this.#setProjectCurrentVersion(projectRow, target, vname, who4, when, why2);
+      const p3 = this.#setProjectCurrentVersion(projectRow, target, vname, who4, when, why3);
       if (!p3.ok) return { ...p3, ok: false, reason: p3.reason, act: act2, target, version: vname, project: projectId };
       return receipt;
     }
@@ -132261,7 +132867,7 @@ var BasisVersions = class _BasisVersions {
     if (to !== null && text8 !== null) {
       text8 = setVersionField(text8, vname, "state_by", who4);
       if (text8 !== null) text8 = setVersionField(text8, vname, "state_at", when);
-      if (text8 !== null) text8 = setVersionField(text8, vname, "state_reason", why2);
+      if (text8 !== null) text8 = setVersionField(text8, vname, "state_reason", why3);
       if (text8 !== null) text8 = setVersionField(text8, vname, "affirmed_parts", affirmedParts ?? "");
     }
     if (act2 === "hide" && text8 !== null) text8 = setVersionField(text8, vname, "hidden", hidden);
@@ -132277,7 +132883,7 @@ var BasisVersions = class _BasisVersions {
       `### Session ${when} | Version ${act2} | ${who4}
 Trigger: op=version${act2} on ${target}
 Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returned to"} the display` : `${from} to ${to}`}.
-` + (why2 ? `Reason: ${why2}
+` + (why3 ? `Reason: ${why3}
 ` : "")
     );
     const promoted = this.#repromote({
@@ -132332,7 +132938,7 @@ Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returne
   }
   /* The make-current pointer's ONE writer (R15): the pointer, `last_updated` and a Session Log entry with the reason,
      in one promotion of the PROJECT. */
-  #setProjectCurrentVersion(projectRow, inquiryId, vname, who4, when, why2 = "") {
+  #setProjectCurrentVersion(projectRow, inquiryId, vname, who4, when, why3 = "") {
     const pid = projectRow.bundle_id;
     const unwritable = (detail) => {
       const row13 = VERSION_ACT_CHECKS.VERSION_ACT_UNWRITABLE;
@@ -132356,7 +132962,7 @@ Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returne
       `### Session ${when} | Stands on | ${who4}
 Trigger: op=versioncurrent on ${inquiryId}
 Changes: this project now stands on reading '${vname}' of ${inquiryId}.
-` + (why2 ? `Reason: ${why2}
+` + (why3 ? `Reason: ${why3}
 ` : "")
     );
     return this.#repromote({
@@ -133076,14 +133682,14 @@ Claim: ${f17.claim}
     const actor = String(who4 ?? "").trim();
     if (!actor || isMachineIdentity(actor))
       return this.conclude({ target, project, reason: reason2, withdraw: true, viewer, author: actor, identity: identity2 });
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2)
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3)
       return {
         ok: false,
         reason: "NO_REASON",
         detail: "withdrawing a conclusion records WHY the project no longer stands on it. The conclusion stays in the record beside the withdrawal, and a withdrawal with no account would leave a reader unable to tell a correction from a change of mind. Nothing here is prefilled."
       };
-    if (why2.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why2))
+    if (why3.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why3))
       return {
         ok: false,
         reason: "BAD_REASON",
@@ -133133,7 +133739,7 @@ Claim: ${f17.claim}
       act: "withdrawn",
       version: rec.stance.version,
       withdrawsAt: rec.stance.at,
-      reason: why2,
+      reason: why3,
       who: actor,
       when
     });
@@ -133147,7 +133753,7 @@ Claim: ${f17.claim}
       to: "withdrawn",
       inquiry_moved: false,
       withdraws: { version: rec.stance.version, claim: rec.stance.claim, at: rec.stance.at, by: rec.stance.by },
-      reason: why2,
+      reason: why3,
       history_length: rec.history.length + 1,
       author: actor,
       at: when,
@@ -133665,9 +134271,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     };
   }
 };
-var instances28 = /* @__PURE__ */ new WeakMap();
+var instances29 = /* @__PURE__ */ new WeakMap();
 function basisVersionsOf(host, deps) {
-  let bv = instances28.get(host);
+  let bv = instances29.get(host);
   if (!bv) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -133695,7 +134301,7 @@ function basisVersionsOf(host, deps) {
       promotion,
       content
     });
-    instances28.set(host, bv);
+    instances29.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
@@ -135094,8 +135700,8 @@ function overrideGroundFindings(override, findings) {
     return;
   }
   const parts = g.kind === "legal_deadline" ? ["kind", "citation", "date"] : ["kind", "what", "when"];
-  const refuse31 = (part, why2) => findings.push(coded(
-    `premise_override.ground.${part} ${why2} (R15)`,
+  const refuse31 = (part, why3) => findings.push(coded(
+    `premise_override.ground.${part} ${why3} (R15)`,
     "OVERRIDE_GROUND_REFUSED",
     [`state the ${g.kind} ground's ${parts.slice(1).join(" and ")}, and nothing else`]
   ));
@@ -137348,7 +137954,7 @@ var Strength = class _Strength {
      leg-earning R8) and the trigger date's attestation (`events`); the state is named beside it, never grading it. */
   #deriveOccurrence(ref) {
     const parts = parseOccurrenceRef(ref);
-    const unknown = (why2) => ({ stopped: `${ref}: ${why2}, so what this leg rests on is unknown` });
+    const unknown = (why3) => ({ stopped: `${ref}: ${why3}, so what this leg rests on is unknown` });
     const d = this.duties;
     if (!parts || !d) return unknown("the obligation cannot be read here");
     const duty = (() => {
@@ -137646,7 +138252,7 @@ var Strength = class _Strength {
         grade_source: source2,
         ...r.target_edition != null ? { target_edition: r.target_edition } : {}
       };
-      const inert = (why2, bucket) => {
+      const inert = (why3, bucket) => {
         placed3.push([bucket, {
           target_id: r.target_id,
           ord: r.ord,
@@ -137654,11 +138260,11 @@ var Strength = class _Strength {
           role: r.role,
           grade_axis: axis,
           grade_source: source2,
-          why: why2
+          why: why3
         }]);
-        return { ...base2, grade: null, why: why2 };
+        return { ...base2, grade: null, why: why3 };
       };
-      const carries2 = (grade2, why2) => {
+      const carries2 = (grade2, why3) => {
         placed3.push(["graded", {
           target_id: r.target_id,
           ord: r.ord,
@@ -137667,7 +138273,7 @@ var Strength = class _Strength {
           grade_source: source2,
           grade: grade2,
           authored,
-          why: why2
+          why: why3
         }]);
         return { ...base2, grade: grade2 };
       };
@@ -137762,21 +138368,21 @@ var Strength = class _Strength {
         { inquiry: inq }
       );
     const rawStates = args.states == null || args.states === "" ? null : Array.isArray(args.states) ? args.states : String(args.states).split(",");
-    const asked6 = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
-    if (asked6 && asked6.length > VERSION_STRENGTH_STATES_MAX)
+    const asked7 = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
+    if (asked7 && asked7.length > VERSION_STRENGTH_STATES_MAX)
       return refusal40(
         "VERSION_STRENGTH_TOO_MANY_STATES",
-        `${asked6.length} kinds of reading were named and this record has ${VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.`,
+        `${asked7.length} kinds of reading were named and this record has ${VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.`,
         { inquiry: inq, limit: VERSION_STRENGTH_STATES_MAX }
       );
-    const unknown = asked6 ? asked6.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
+    const unknown = asked7 ? asked7.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
     if (unknown.length)
       return refusal40(
         "VERSION_STRENGTH_UNKNOWN_STATE",
         `'${unknown[0].slice(0, 40)}' is not one of the states a reading can be in: ${VERSION_MACHINE.legal.join(", ")}. The set is closed, because a strength that quietly counted readings in states nobody recognises is a number no reader could check.`,
         { inquiry: inq, unknown, legal: VERSION_MACHINE.legal }
       );
-    const stateSet = asked6 ? VERSION_MACHINE.legal.filter((s) => asked6.includes(s)) : [...VERSION_STRENGTH_DEFAULT_STATES];
+    const stateSet = asked7 ? VERSION_MACHINE.legal.filter((s) => asked7.includes(s)) : [...VERSION_STRENGTH_DEFAULT_STATES];
     if (!this.#visible(inq, args.viewer ?? null))
       return refusal40(
         "VERSION_STRENGTH_NOT_AN_INQUIRY",
@@ -137950,7 +138556,7 @@ var Strength = class _Strength {
           raw = void 0;
         }
       }
-      const unreadable2 = (why2) => refusal40("PARTITION_INDEPENDENCE_UNREADABLE", why2, { inquiry: inq });
+      const unreadable2 = (why3) => refusal40("PARTITION_INDEPENDENCE_UNREADABLE", why3, { inquiry: inq });
       if (!Array.isArray(raw) || !raw.length)
         return unreadable2(`pass partition=<JSON>: a non-empty list of groups, each a list of reason positions (e.g. [[0,1],[2]]) or {"label":\u2026,"legs":[\u2026]} \u2014 or version=<name> to read a written reading's groups instead.`);
       if (raw.length > BASIS_VERSION_LEGS_MAX)
@@ -138116,14 +138722,14 @@ var Strength = class _Strength {
     const keep3 = this.#redactor(viewer);
     const seen = (t2) => !(t2 && keep3(t2) === null);
     let withheld = false;
-    const answered = [];
+    const answered2 = [];
     for (const [i, a] of this.#anonymousOf(legs, lv, captureBounds, seen)) {
       const leg2 = legs[i];
       if (!seen(leg2.target_id)) {
         withheld = true;
         continue;
       }
-      answered.push({
+      answered2.push({
         ord: leg2.ord,
         target_id: leg2.target_id,
         level: a.level,
@@ -138137,7 +138743,7 @@ var Strength = class _Strength {
       inquiry: id,
       ...name3 ? { version: name3 } : {},
       levels: lv,
-      legs: answered,
+      legs: answered2,
       wrote: false,
       ...withheld ? { out_of_view: true } : {}
     };
@@ -138330,11 +138936,11 @@ var Strength = class _Strength {
         reason: "NO_BAR",
         detail: "declare at least one axis. Withdrawing a bar entirely is a different act from setting one, and an absent bar is stated as absent rather than written as a blank row."
       };
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
-    if (!why2 || why2.length > BAR_REASON_MAX)
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
+    if (!why3 || why3.length > BAR_REASON_MAX)
       return barRefusal(
         "BAR_NO_REASON",
-        typeof reason2 !== "string" ? "give the reason the team sets this bar, as text in your own words (reason=\u2026). Nothing was declared." : !why2 ? "the reason given is blank; say in your own words why the team sets this bar. Nothing was declared." : `the reason given is ${why2.length} characters, and a reason is at most ${BAR_REASON_MAX}. Nothing was declared.`,
+        typeof reason2 !== "string" ? "give the reason the team sets this bar, as text in your own words (reason=\u2026). Nothing was declared." : !why3 ? "the reason given is blank; say in your own words why the team sets this bar. Nothing was declared." : `the reason given is ${why3.length} characters, and a reason is at most ${BAR_REASON_MAX}. Nothing was declared.`,
         { limit: BAR_REASON_MAX }
       );
     const at50 = this.now();
@@ -138347,7 +138953,7 @@ var Strength = class _Strength {
       connection,
       who4,
       at50,
-      why2
+      why3
     );
     return {
       ok: true,
@@ -138356,7 +138962,7 @@ var Strength = class _Strength {
       connection,
       author: who4,
       at: at50,
-      reason: why2,
+      reason: why3,
       note: `this is the DEFAULT a project starts from; a project may declare its own by its own act, written into the project's document as an authored, dated, on-the-record entry visible in every case it governs. It gates nothing. ${BAR_HONEST_NOTE}`
     };
   }
@@ -138401,16 +139007,16 @@ var Strength = class _Strength {
     const pid = String(project ?? "").trim();
     const unseen = this.#projectUnseen(pid, viewer);
     if (unseen) return unseen;
-    const asked6 = str14(identity2) ?? `member:${who4}`;
-    const fence4 = this.membership.projectAuthority(pid, asked6, "joined", "projectBarSet");
+    const asked7 = str14(identity2) ?? `member:${who4}`;
+    const fence4 = this.membership.projectAuthority(pid, asked7, "joined", "projectBarSet");
     if (fence4) return fence4;
     const bad2 = badGrade(capture2, connection);
     if (bad2) return bad2;
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
-    if (!why2 || why2.length > BAR_REASON_MAX)
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
+    if (!why3 || why3.length > BAR_REASON_MAX)
       return barRefusal(
         "PROJECT_BAR_NO_REASON",
-        typeof reason2 !== "string" ? "give the reason the project sets this bar, as text in your own words (reason=\u2026). Nothing was changed." : !why2 ? "the reason given is blank; say in your own words why the project sets this bar. Nothing was changed." : `the reason given is ${why2.length} characters, and a reason is at most ${BAR_REASON_MAX}. Nothing was changed.`,
+        typeof reason2 !== "string" ? "give the reason the project sets this bar, as text in your own words (reason=\u2026). Nothing was changed." : !why3 ? "the reason given is blank; say in your own words why the project sets this bar. Nothing was changed." : `the reason given is ${why3.length} characters, and a reason is at most ${BAR_REASON_MAX}. Nothing was changed.`,
         { limit: BAR_REASON_MAX }
       );
     const head = this.record.head(pid);
@@ -138434,7 +139040,7 @@ var Strength = class _Strength {
       `### Session ${at50} | ${withdrawing ? "Withdrew" : "Set"} the project's bar | ${who4}
 Trigger: op=projectbarset on ${pid}
 Changes: the project's standard of evidence from ${barLogWords(previous)} to ${after2}.
-Reason: ${why2.replace(/\s+/g, " ")}
+Reason: ${why3.replace(/\s+/g, " ")}
 `
     );
     const fm = parseFrontmatter(text8).data || {};
@@ -138457,9 +139063,9 @@ Reason: ${why2.replace(/\s+/g, " ")}
         created: fm.created,
         last_updated: at50
       },
-      actorIdentity: asked6,
+      actorIdentity: asked7,
       actorViewer: viewer,
-      actorMemberId: this.membership.positionalMember(viewer, asked6)
+      actorMemberId: this.membership.positionalMember(viewer, asked7)
     });
     if (!r || r.ok !== true) return r;
     return {
@@ -138469,7 +139075,7 @@ Reason: ${why2.replace(/\s+/g, " ")}
       previous,
       author: who4,
       at: at50,
-      reason: why2,
+      reason: why3,
       bundleSha: r.bundleSha
     };
   }
@@ -138657,7 +139263,7 @@ function strengthOps(s, url, body) {
     })
   };
 }
-var instances29 = /* @__PURE__ */ new WeakMap();
+var instances30 = /* @__PURE__ */ new WeakMap();
 function strengthTables(s) {
   const rest = { expunge: "none", export: "admin-only", version_chain: false };
   return [
@@ -138674,7 +139280,7 @@ function strengthTables(s) {
   ];
 }
 function strengthOf(host, deps) {
-  let s = instances29.get(host);
+  let s = instances30.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -138686,7 +139292,7 @@ function strengthOf(host, deps) {
       return f17 && f17.ok ? f17.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, promotion, producingGroup });
-    instances29.set(host, s);
+    instances30.set(host, s);
     s.migrate();
     const declared2 = record.declareTable("strength", strengthTables(s));
     if (!declared2 || declared2.ok === false) throw new Error(`strength's tables could not be declared: ${JSON.stringify(declared2)}`);
@@ -139082,7 +139688,7 @@ function weightOf(label, key2, noDifference = false) {
   if (label === "record") return { weight: "duty", why: null };
   return { weight: "not_shown", why: null };
 }
-function stateOf(acts19, link, inquiryId = null) {
+function stateOf2(acts19, link, inquiryId = null) {
   if (inquiryId) {
     const res = link && link.resolution && typeof link.resolution === "object" ? link.resolution : null;
     if (res && typeof res.kind === "string")
@@ -139285,11 +139891,11 @@ var STORED_ROW = `candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind,
   proposed_by, label, reason, state, origin, at, a_side, b_side`;
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances30 = /* @__PURE__ */ new WeakMap();
+var instances31 = /* @__PURE__ */ new WeakMap();
 var live5 = /* @__PURE__ */ new Set();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances30.get(storage);
+  let c = instances31.get(storage);
   if (!c) {
     const record = opts.record ?? recordOf(ctx);
     const lazy3 = (given6, make) => given6 ?? make;
@@ -139305,7 +139911,7 @@ function contradictionOf(ctx, opts = {}) {
       money: lazy3(opts.money, () => moneyOf2(ctx, { record })),
       inquiry: lazy3(opts.inquiry, () => inquiryServices(ctx))
     });
-    instances30.set(storage, c);
+    instances31.set(storage, c);
     live5.add(c);
     const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
     if (promotion && typeof promotion.registerStep === "function")
@@ -139345,7 +139951,7 @@ function ownerNeighbours3(args) {
   const a = args && typeof args === "object" && !Array.isArray(args) ? args : {};
   const { host, ...rest } = a;
   let c = null;
-  if (host !== void 0 && host !== null) c = instances30.get(host.storage ? host.storage : host) ?? null;
+  if (host !== void 0 && host !== null) c = instances31.get(host.storage ? host.storage : host) ?? null;
   else if (live5.size === 1) c = [...live5][0];
   if (!c) return {
     refused: "OWNER_HOST_AMBIGUOUS",
@@ -140180,8 +140786,8 @@ var Contradiction = class _Contradiction {
    *  of one key over a store written between them would publish a `formed` figure that does not match the pairs. */
   pairs({ key: key2 = null, limit = null, viewer = null } = {}) {
     const names2 = Object.keys(CONTRADICTION_KEYS);
-    const asked6 = key2 == null || String(key2).trim() === "" ? null : String(key2).trim().toUpperCase();
-    if (asked6 !== null && !Object.prototype.hasOwnProperty.call(CONTRADICTION_KEYS, asked6)) {
+    const asked7 = key2 == null || String(key2).trim() === "" ? null : String(key2).trim().toUpperCase();
+    if (asked7 !== null && !Object.prototype.hasOwnProperty.call(CONTRADICTION_KEYS, asked7)) {
       const row13 = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
       return {
         ok: false,
@@ -140198,7 +140804,7 @@ var Contradiction = class _Contradiction {
     const cap = Number.isFinite(n2) && n2 >= 1 ? Math.min(Math.floor(n2), max) : max;
     const scope = viewerPredicate(viewer).scope;
     const denied = scope === "DENY";
-    const run2 = new Set(asked6 ? [asked6] : names2);
+    const run2 = new Set(asked7 ? [asked7] : names2);
     const pairs = [];
     const keys = names2.map((name3) => {
       const spec = CONTRADICTION_KEYS[name3];
@@ -140213,7 +140819,7 @@ var Contradiction = class _Contradiction {
           notes: [],
           absence: {
             level: "not_run",
-            says: `this key was not run: the request named ${asked6}. Nothing here is a statement about what ${name3} would have found`
+            says: `this key was not run: the request named ${asked7}. Nothing here is a statement about what ${name3} would have found`
           }
         };
       const out = denied ? { pairs: [], truncated: false, notes: [] } : name3 === "K1" ? this.#k1(viewer, cap) : name3 === "K2" ? this.#k2(viewer, cap) : name3 === "K3" ? this.#k3(viewer, cap) : name3 === "K4" ? this.#k4(viewer, cap) : name3 === "K6" ? this.#k6(viewer, cap) : this.#k5(viewer, cap);
@@ -140534,10 +141140,10 @@ var Contradiction = class _Contradiction {
   #view(row13) {
     const acts19 = this.#acts(row13.candidate);
     const noDifference = acts19.some((a) => a.act === "clarify" && a.choice === "no_difference");
-    const { weight, why: why2 } = weightOf(row13.label, row13.key, noDifference);
+    const { weight, why: why3 } = weightOf(row13.label, row13.key, noDifference);
     const { inquiry, link } = this.#linkOf(row13.candidate);
-    const st = stateOf(acts19, link, inquiry);
-    return { weight, unshown_why: why2, ...st, acts: acts19, no_difference: noDifference };
+    const st = stateOf2(acts19, link, inquiry);
+    return { weight, unshown_why: why3, ...st, acts: acts19, no_difference: noDifference };
   }
   /** The family of a resolution kind, through `inquiry` R46; null when it is not a kind or cannot be read. */
   #family(kind2) {
@@ -141410,8 +142016,8 @@ var Contradiction = class _Contradiction {
           truncated6 = true;
           break;
         }
-        const asked6 = viewer !== void 0 && viewer !== null;
-        const seenA = !asked6 || this.#sideSeen(row13.a, viewer), seenB = !asked6 || this.#sideSeen(row13.b, viewer);
+        const asked7 = viewer !== void 0 && viewer !== null;
+        const seenA = !asked7 || this.#sideSeen(row13.a, viewer), seenB = !asked7 || this.#sideSeen(row13.b, viewer);
         const explanation = view.state === "explained_not_shown" ? view.act?.explanation ?? null : null;
         if (seenA && seenB)
           out.push({
@@ -144109,8 +144715,8 @@ var Reevaluation = class {
       const pk = `${l2.bundle_id}\0${l2.target_id}`;
       if (!byPair.has(pk)) byPair.set(pk, []);
       if (byPair.get(pk).some((c) => c.ord === l2.ord && c.move === m.move)) continue;
-      const say7 = named3(l2.target_id);
-      const group2 = say7 ? m.group : null, kase = say7 ? m.case : null;
+      const say8 = named3(l2.target_id);
+      const group2 = say8 ? m.group : null, kase = say8 ? m.case : null;
       byPair.get(pk).push({
         source: CITED_CASE_MOVED,
         since: m.at,
@@ -144235,12 +144841,12 @@ var Reevaluation = class {
       claims.get(v.bundle_id).push({ name: v.name, ref: `${v.bundle_id}|${v.name}`, version: sha256HexSync(String(v.claim)) });
     }
     const key2 = (ref, version) => `${ref}\0${version}`;
-    const asked6 = /* @__PURE__ */ new Map();
-    for (const [cid, cap] of caps3) asked6.set(key2(cid, cap), { ref: cid, version: cap });
-    for (const list6 of claims.values()) for (const c of list6) asked6.set(key2(c.ref, c.version), { ref: c.ref, version: c.version });
+    const asked7 = /* @__PURE__ */ new Map();
+    for (const [cid, cap] of caps3) asked7.set(key2(cid, cap), { ref: cid, version: cap });
+    for (const list6 of claims.values()) for (const c of list6) asked7.set(key2(c.ref, c.version), { ref: c.ref, version: c.version });
     const stale = /* @__PURE__ */ new Map();
     let read3 = true;
-    const all = [...asked6.entries()];
+    const all = [...asked7.entries()];
     for (let i = 0; i < all.length; i += TENSIONS_REFERENTS_MAX) {
       const chunk2 = all.slice(i, i + TENSIONS_REFERENTS_MAX);
       let t2 = null;
@@ -145701,7 +146307,7 @@ var Reevaluation = class {
     const all = rows4.map((r) => {
       const ids = [...new Set([...String(r.content).matchAll(named3)].map((m) => m[1]))];
       const base2 = { bundle_id: r.bundle_id, named: ids.length === 1 ? ids[0] : null };
-      const undetermined3 = (why2, extra = {}) => ({ ...base2, verdict: "undetermined", why: why2, predecessor: null, ...extra });
+      const undetermined3 = (why3, extra = {}) => ({ ...base2, verdict: "undetermined", why: why3, predecessor: null, ...extra });
       if (ids.length !== 1) return undetermined3(ids.length ? "several_named" : "no_named_id", { named_all: ids });
       const pairs = this.#rows(
         `SELECT DISTINCT cl.address_norm AS address_norm, cl.capture_sha AS capture_sha
@@ -146341,17 +146947,17 @@ var Reevaluation = class {
   }
   /* R15: the notice an act names, seen through its holder; a machine is refused first. Answers the refusal itself, or
      `{ok: true, who, r}`, so every outcome carries its verdict (DEC-49; N242). */
-  #choiceSubject(machineCode, notice, author, viewer, why2 = void 0) {
+  #choiceSubject(machineCode, notice, author, viewer, why3 = void 0) {
     const who4 = String(author ?? "").trim();
     if (!who4 || isMachineIdentity(who4))
       return this.#refuse(
         machineCode,
         who4 ? `'${who4.slice(0, 60)}' is a machine identity.` : "no member is named as the one choosing."
       );
-    if (machineCode === "MACHINE_CANNOT_ADOPT_VERSION" && (typeof why2 !== "string" || !why2.trim() || why2.trim().length > ADOPT_WHY_MAX))
+    if (machineCode === "MACHINE_CANNOT_ADOPT_VERSION" && (typeof why3 !== "string" || !why3.trim() || why3.trim().length > ADOPT_WHY_MAX))
       return this.#refuse(
         "VERSION_ADOPT_NO_REASON",
-        typeof why2 !== "string" || !why2.trim() ? "pass why=<your words on why the finding should rest on the newer version>." : `the reason is ${why2.trim().length} characters; at most ${ADOPT_WHY_MAX}.`,
+        typeof why3 !== "string" || !why3.trim() ? "pass why=<your words on why the finding should rest on the newer version>." : `the reason is ${why3.trim().length} characters; at most ${ADOPT_WHY_MAX}.`,
         { notice: String(notice ?? "").trim() || null, limit: ADOPT_WHY_MAX }
       );
     const id = String(notice ?? "").trim();
@@ -146379,11 +146985,11 @@ var Reevaluation = class {
    *  The version and the notice's closing land together or neither does. It requires `why`, the member's words on why
    *  the newer version is adopted (DEC-88), asked after the machine refusal and before anything is read for writing;
    *  the why is recorded with the new version (its description and Session Log entry) and on the notice's closure. */
-  adoptVersion({ notice = null, why: why2 = null, author = null, viewer = null } = {}) {
-    const s = this.#choiceSubject("MACHINE_CANNOT_ADOPT_VERSION", notice, author, viewer, why2);
+  adoptVersion({ notice = null, why: why3 = null, author = null, viewer = null } = {}) {
+    const s = this.#choiceSubject("MACHINE_CANNOT_ADOPT_VERSION", notice, author, viewer, why3);
     if (!s.ok) return s;
     const { who: who4, r } = s;
-    const text8 = why2.trim();
+    const text8 = why3.trim();
     if (r.kind === "case")
       return this.#refuse(
         "VERSION_ADOPT_UNWRITABLE",
@@ -146517,11 +147123,11 @@ Why: ${line2}
     };
   }
   /** R15: KEEP records "stays on the earlier version" with who, when, the optional why and both captures. */
-  keepVersion({ notice = null, why: why2 = null, author = null, viewer = null } = {}) {
+  keepVersion({ notice = null, why: why3 = null, author = null, viewer = null } = {}) {
     const s = this.#choiceSubject("MACHINE_CANNOT_KEEP_VERSION", notice, author, viewer);
     if (!s.ok) return s;
     const { who: who4, r } = s;
-    const text8 = why2 == null ? null : String(why2).trim() || null;
+    const text8 = why3 == null ? null : String(why3).trim() || null;
     if (text8 !== null && (text8.length > NOTE_MAX2 || UNSTORABLE.test(text8)))
       return this.#refuse(
         "VERSION_CHOICE_WHY_MALFORMED",
@@ -146645,9 +147251,9 @@ Why: ${line2}
     return fm ? checkReevalPending(fm) : [];
   }
 };
-var instances31 = /* @__PURE__ */ new WeakMap();
+var instances32 = /* @__PURE__ */ new WeakMap();
 function reevaluationOf(host, deps) {
-  let r = instances31.get(host);
+  let r = instances32.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -146655,7 +147261,7 @@ function reevaluationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Reevaluation({ ...d, host, storage, record, membership, promotion });
-    instances31.set(host, r);
+    instances32.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
@@ -150835,9 +151441,9 @@ function corpusExportOps(ce, q10) {
     exportrender: () => ce.exportRendering({ format: q10("format"), viewer: q10("viewer") })
   };
 }
-var instances32 = /* @__PURE__ */ new WeakMap();
+var instances33 = /* @__PURE__ */ new WeakMap();
 function corpusExportOf(host, deps) {
-  let c = instances32.get(host);
+  let c = instances33.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -150849,7 +151455,7 @@ function corpusExportOf(host, deps) {
       money: d.money ?? (() => moneyOf2(host, { record }))
     };
     c = new CorpusExport({ ...d, ...owners2, storage, record });
-    instances32.set(host, c);
+    instances33.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });
   }
@@ -151481,8 +152087,8 @@ function crc323(...parts) {
   return (c ^ 4294967295) >>> 0;
 }
 var u322 = (d, p3) => d[p3] * 16777216 + (d[p3 + 1] << 16 | d[p3 + 2] << 8 | d[p3 + 3]);
-var truncated3 = (why2) => new CoverRefusal("TRUNCATED_IMAGE_DATA", `the PNG data ends before the image does: ${why2}`);
-var corrupt3 = (why2) => new CoverRefusal("IMAGE_DATA_CORRUPT", `the PNG data cannot be read: ${why2}`);
+var truncated3 = (why3) => new CoverRefusal("TRUNCATED_IMAGE_DATA", `the PNG data ends before the image does: ${why3}`);
+var corrupt3 = (why3) => new CoverRefusal("IMAGE_DATA_CORRUPT", `the PNG data cannot be read: ${why3}`);
 function put32(d, p3, v) {
   d[p3] = v >>> 24;
   d[p3 + 1] = v >>> 16 & 255;
@@ -151697,10 +152303,10 @@ async function coverPng(d, areas, maxPixels) {
 }
 
 // src/image-cover/strip.mjs
-var truncated4 = (fmt, why2) => new CoverRefusal("TRUNCATED_IMAGE_DATA", `the ${fmt} data ends before the image does: ${why2}`);
-var corrupt4 = (fmt, why2) => new CoverRefusal("IMAGE_DATA_CORRUPT", `the ${fmt}'s structure cannot be walked: ${why2}`);
-var notStrippable = (why2) => new CoverRefusal("NOT_A_STRIPPABLE_FORMAT", why2);
-var animated = (why2) => new CoverRefusal("ANIMATED_IMAGE", why2);
+var truncated4 = (fmt, why3) => new CoverRefusal("TRUNCATED_IMAGE_DATA", `the ${fmt} data ends before the image does: ${why3}`);
+var corrupt4 = (fmt, why3) => new CoverRefusal("IMAGE_DATA_CORRUPT", `the ${fmt}'s structure cannot be walked: ${why3}`);
+var notStrippable = (why3) => new CoverRefusal("NOT_A_STRIPPABLE_FORMAT", why3);
+var animated = (why3) => new CoverRefusal("ANIMATED_IMAGE", why3);
 var u162 = (d, p3) => d[p3] << 8 | d[p3 + 1];
 var u323 = (d, p3) => d[p3] * 16777216 + (d[p3 + 1] << 16 | d[p3 + 2] << 8 | d[p3 + 3]);
 var le32 = (d, p3) => (d[p3] | d[p3 + 1] << 8 | d[p3 + 2] << 16) + d[p3 + 3] * 16777216;
@@ -152512,7 +153118,7 @@ var SVG_RULES = { removeNs: ["editor"] };
 function jbig2WithoutComments(d, where) {
   const keep3 = [];
   let o = 0, changed = false;
-  const bad2 = (why2) => new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a JBIG2 stream whose segments cannot be walked (${why2})`);
+  const bad2 = (why3) => new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a JBIG2 stream whose segments cannot be walked (${why3})`);
   while (o < d.length) {
     const start = o;
     if (o + 6 > d.length) throw bad2("a truncated segment header");
@@ -153053,14 +153659,14 @@ function plainZip(d, entries) {
   return true;
 }
 var refusal17 = (code, detail) => new CleanRefusal(code, detail);
-var why = (r) => `part ${r.name ?? "?"} cannot be read (${r.why})`;
+var why2 = (r) => `part ${r.name ?? "?"} cannot be read (${r.why})`;
 async function relsToRemoved(d, c, names2, removed) {
   const out = /* @__PURE__ */ new Map();
   for (const n2 of names2) {
     const m = /^(.*?)_rels\/([^/]*)\.rels$/.exec(n2);
     if (!m || removed.has(n2)) continue;
     const r = await readPart(d, c, n2);
-    if (!r.ok) throw refusal17("DOCUMENT_UNREADABLE", why(r));
+    if (!r.ok) throw refusal17("DOCUMENT_UNREADABLE", why2(r));
     const ids = /* @__PURE__ */ new Set();
     for (const t2 of latin12(r.bytes).matchAll(/<(?:[\w.-]+:)?Relationship(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*)>/g)) {
       const attr2 = (k) => new RegExp(`\\s${k}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`).exec(t2[1])?.slice(1).find((x) => x !== void 0);
@@ -153100,7 +153706,7 @@ async function cleanPackage(d, family) {
   }
   if (family === "odf") {
     const m = await readPart(d, c, ODF_MANIFEST_PART);
-    if (!m.ok) throw refusal17("DOCUMENT_UNREADABLE", why(m));
+    if (!m.ok) throw refusal17("DOCUMENT_UNREADABLE", why2(m));
     const s = latin12(m.bytes);
     if (/<([\w.-]+:)?encryption-data(?=[\s/>])/.test(s)) throw refusal17("ENCRYPTED", "the package's manifest lists encrypted parts");
     for (const t2 of s.matchAll(/<(?:[\w.-]+:)?file-entry(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/g)) {
@@ -153119,7 +153725,7 @@ async function cleanPackage(d, family) {
     const n2 = normalizePartName(e2.name);
     if (removed.has(n2)) continue;
     const r = await readPart(d, c, e2.name);
-    if (!r.ok) throw refusal17(r.why === "ARCHIVE_TOTAL_MAX" || r.why === "MEMBER_MAX" ? "DOCUMENT_TOO_LARGE" : "DOCUMENT_UNREADABLE", why(r));
+    if (!r.ok) throw refusal17(r.why === "ARCHIVE_TOTAL_MAX" || r.why === "MEMBER_MAX" ? "DOCUMENT_TOO_LARGE" : "DOCUMENT_UNREADABLE", why2(r));
     let bytes2 = r.bytes;
     const media = n2.endsWith("/") ? null : mediaKind(bytes2);
     if (media) throw refusal17("EMBEDDED_MEDIA", `part ${n2}: ${media}`);
@@ -153671,11 +154277,11 @@ var CaseCarriage = class _CaseCarriage {
         if (ob) this.#holdCopy(ref, sha2, ob, hold, unheld);
         continue;
       }
-      const miss = (what, why2) => unheld.push({
+      const miss = (what, why3) => unheld.push({
         ref: ref || null,
         kind: what,
         sha256: what === "extracted_text" ? str23(m.text_sha).toLowerCase() || null : sha2 || null,
-        why: why2
+        why: why3
       });
       if (!HEX6412.test(sha2)) {
         miss(kind2 === "observation" ? "observation" : "document", "the row names no SHA-256");
@@ -153889,13 +154495,13 @@ var CaseCarriage = class _CaseCarriage {
       }
     };
     const withdrawn = [], undisclosed = [];
-    const asked6 = /* @__PURE__ */ new Set();
+    const asked7 = /* @__PURE__ */ new Set();
     for (const r of rows4) {
       if (!r || typeof r !== "object") continue;
       const ref = str23(r.ref), edition = Number(r.edition);
       const key2 = `${ref}\0${edition}`;
-      if (asked6.has(key2)) continue;
-      asked6.add(key2);
+      if (asked7.has(key2)) continue;
+      asked7.add(key2);
       const named3 = { ref: ref || null, edition: Number.isInteger(edition) ? edition : null };
       const f17 = ask3("acceptedFinding", { ref, edition, viewer });
       const inForce = !!f17 && typeof f17 === "object" && !f17.absent && !f17.unreadable && !!f17.acceptance && typeof f17.acceptance === "object" && (f17.edition === void 0 || Number(f17.edition) === edition);
@@ -153937,9 +154543,9 @@ var CaseCarriage = class _CaseCarriage {
      source behind it (its pulled knocks, first received first), or null when no knock stands behind it or a source
      cannot be read (fail closed). Each capture is asked once per function made. */
   #publishable(at50) {
-    const asked6 = /* @__PURE__ */ new Map();
+    const asked7 = /* @__PURE__ */ new Map();
     return (capture2) => {
-      if (asked6.has(capture2)) return asked6.get(capture2);
+      if (asked7.has(capture2)) return asked7.get(capture2);
       let knocks = [];
       try {
         knocks = this.#rows(`SELECT source_id, received FROM source_knocks WHERE capture_sha=?
@@ -153965,7 +154571,7 @@ var CaseCarriage = class _CaseCarriage {
           entries.push(...r.entries);
         }
       }
-      asked6.set(capture2, answer2);
+      asked7.set(capture2, answer2);
       return answer2;
     };
   }
@@ -154956,9 +155562,9 @@ var CaseCarriage = class _CaseCarriage {
     }
   }
 };
-var instances33 = /* @__PURE__ */ new WeakMap();
+var instances34 = /* @__PURE__ */ new WeakMap();
 function caseCarriageOf(host, deps) {
-  let c = instances33.get(host);
+  let c = instances34.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -154967,7 +155573,7 @@ function caseCarriageOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
     c = new CaseCarriage({ ...d, host, storage, record, membership, promotion, provenance });
-    instances33.set(host, c);
+    instances34.set(host, c);
     c.migrate();
     const declared2 = record.declareTable("case-carriage", [
       ...CASE_CARRIAGE_EXEMPT.map((name3) => ({
@@ -155198,7 +155804,7 @@ var PUBLICATION_DOORS = Object.freeze([
   "signedDocumentsNaming",
   "reauthorSection"
 ]);
-var pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
+var pageOf2 = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
 var HEX6413 = /^[0-9a-f]{64}$/;
 var str24 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var NO_PROVIDER = "no module has registered the publication provider, so this module reads no case";
@@ -155331,7 +155937,7 @@ var CaseTensions = class {
    *  throws and composes no strength (R8); the signed edition never changes (publication R24). */
   caseTensions({ project = null, after: after2 = null, limit = null } = {}) {
     try {
-      const cap = pageOf(limit, CASE_TENSIONS_MAX);
+      const cap = pageOf2(limit, CASE_TENSIONS_MAX);
       const pid = str24(project);
       if (!this.#provider)
         return {
@@ -155368,7 +155974,7 @@ var CaseTensions = class {
         wrote: false,
         project: str24(project) || null,
         cases: [],
-        limit: pageOf(limit, CASE_TENSIONS_MAX),
+        limit: pageOf2(limit, CASE_TENSIONS_MAX),
         cursor: null,
         undetermined: true,
         why: String(e2 && e2.message || e2).slice(0, 160)
@@ -155390,7 +155996,7 @@ var CaseTensions = class {
     const members3 = this.#provider.members(caseId, edition);
     if (!Array.isArray(members3)) throw new Error("the provider answered no roster");
     const tensions = [], resolvedSince = [], unread = [];
-    const answered = /* @__PURE__ */ new Set();
+    const answered2 = /* @__PURE__ */ new Set();
     for (const m of members3) {
       if (!m.version_sha) {
         unread.push({ member: m.bundle_id, undetermined: true, why: "no version was pinned" });
@@ -155423,7 +156029,7 @@ var CaseTensions = class {
           ...truncated6 ? { truncated: true } : {}
         });
       for (const [id, c] of byCandidate) {
-        answered.add(id);
+        answered2.add(id);
         if (disclosed.has(id)) continue;
         tensions.push({
           case: caseId,
@@ -155442,7 +156048,7 @@ var CaseTensions = class {
       }
     }
     if (!unread.length) {
-      for (const id of disclosed) if (!answered.has(id)) resolvedSince.push({ case: caseId, edition, candidate: id, resolved_since: true });
+      for (const id of disclosed) if (!answered2.has(id)) resolvedSince.push({ case: caseId, edition, candidate: id, resolved_since: true });
     }
     return {
       case: caseId,
@@ -155588,7 +156194,7 @@ var CaseTensions = class {
       args.push(String(target).trim());
     }
     if (outstandingOnly) where.push(`acted_at IS NULL`);
-    const cap = pageOf(limit, CASE_FLAGS_LIMIT);
+    const cap = pageOf2(limit, CASE_FLAGS_LIMIT);
     const rows4 = this.#rows(
       `SELECT case_id, edition, bundle_id, pinned_sha, revised_sha, project_id, since,
               acted_at, acted_by, acted_edition
@@ -155840,12 +156446,12 @@ var CaseTensions = class {
         `no level was chosen. There is no default (MEMBER-KNOWLEDGE-DESIGN.md \xA74): choose one of ${ATTRIBUTION_LEVELS2.join(", ")}`,
         { allowed: ATTRIBUTION_LEVELS2 }
       );
-    const why2 = typeof reason2 === "string" ? reason2 : null;
-    const chars3 = why2 == null ? 0 : [...why2].length;
-    if (why2 == null || !why2.trim() || chars3 > ATTRIBUTION_REASON_MAX)
+    const why3 = typeof reason2 === "string" ? reason2 : null;
+    const chars3 = why3 == null ? 0 : [...why3].length;
+    if (why3 == null || !why3.trim() || chars3 > ATTRIBUTION_REASON_MAX)
       return refusal40(
         "ATTRIBUTION_NO_REASON",
-        why2 == null ? reason2 === void 0 || reason2 === null ? "give the reason you choose this level, in your own words (reason=\u2026)" : `the reason must be your words, as text; a ${typeof reason2} was sent` : !why2.trim() ? "the reason is blank. Say in your own words why you choose this level" : `the reason is ${chars3} characters, over the ${ATTRIBUTION_REASON_MAX} a choice's reason is kept to. Refused rather than cut`,
+        why3 == null ? reason2 === void 0 || reason2 === null ? "give the reason you choose this level, in your own words (reason=\u2026)" : `the reason must be your words, as text; a ${typeof reason2} was sent` : !why3.trim() ? "the reason is blank. Say in your own words why you choose this level" : `the reason is ${chars3} characters, over the ${ATTRIBUTION_REASON_MAX} a choice's reason is kept to. Refused rather than cut`,
         { limit: ATTRIBUTION_REASON_MAX }
       );
     if (!ATTRIBUTION_LEVELS2.includes(lv))
@@ -155936,7 +156542,7 @@ var CaseTensions = class {
         lv,
         who4,
         when,
-        why2
+        why3
       );
     else if (!same3)
       this.sql.exec(
@@ -155950,7 +156556,7 @@ var CaseTensions = class {
         lv,
         who4,
         when,
-        why2
+        why3
       );
     const held3 = this.attributionInForce(cid, ed, subject);
     const reauthored = this.#reauthorAttributions(doc);
@@ -156015,9 +156621,9 @@ var CaseTensions = class {
     });
   }
 };
-var instances34 = /* @__PURE__ */ new WeakMap();
+var instances35 = /* @__PURE__ */ new WeakMap();
 function caseTensionsOf2(host, deps) {
-  let c = instances34.get(host);
+  let c = instances35.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -156025,7 +156631,7 @@ function caseTensionsOf2(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new CaseTensions({ ...d, host, storage, record, membership, promotion });
-    instances34.set(host, c);
+    instances35.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declareTable("case-tensions", CASE_TENSIONS_TABLES.map((t2) => ({ ...t2, keys: [...t2.keys] })));
     promotion.registerFact("caseMember", "case-tensions", (id) => {
@@ -156075,7 +156681,7 @@ var RATIFIED_CASES_MAX = 1e3;
 var RESTING_FINDINGS_PER_CAPTURE = 200;
 var RESTING_FINDINGS_PER_PAGE = 1e4;
 var RESTING_PINS_MAX = 1e3;
-var pageOf2 = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
+var pageOf3 = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
 function pinCursor(after2) {
   const s = typeof after2 === "string" ? after2 : "";
   const i = s.indexOf("#"), j = s.lastIndexOf("#");
@@ -156882,8 +157488,8 @@ var Publication = class {
         detail: `${lapsed.length} statement(s) this case document makes about a source are no longer what may be published of that source, so nothing was committed. What is published under a consent stays published; this edition was not, and a new preparation leaves the detail out.`
       };
     }
-    const answered = this.caseCarriage.marksLapsed(docFm);
-    const lapses = Array.isArray(answered) ? answered : [{ ref: null, sha: null, why: "the photos' marks could not be read" }];
+    const answered2 = this.caseCarriage.marksLapsed(docFm);
+    const lapses = Array.isArray(answered2) ? answered2 : [{ ref: null, sha: null, why: "the photos' marks could not be read" }];
     const named3 = (m) => ({ ref: m?.ref ?? null, sha: m?.sha ?? null, why: m?.why ?? null });
     const docs = lapses.filter((m) => m?.kind === "document"), marks2 = lapses.filter((m) => m?.kind !== "document");
     const refusals = [];
@@ -156999,11 +157605,11 @@ var Publication = class {
      read), it answers so. Null when neither. Another project is never named: a member's project may be one the signer
      cannot see. Each project is asked once; a scope that cannot be read is R23's (`none`). */
   #counselMatterIn(owning, members3) {
-    const asked6 = /* @__PURE__ */ new Map();
+    const asked7 = /* @__PURE__ */ new Map();
     const counsel = (p3) => {
       const id = str25(p3);
       if (!id) return false;
-      if (!asked6.has(id)) {
+      if (!asked7.has(id)) {
         let scope = null;
         try {
           const a = this.roster.projectScope(id);
@@ -157011,9 +157617,9 @@ var Publication = class {
         } catch {
           scope = null;
         }
-        asked6.set(id, scope === "counsel_matter");
+        asked7.set(id, scope === "counsel_matter");
       }
-      return asked6.get(id);
+      return asked7.get(id);
     };
     const project = counsel(owning) ? str25(owning) : null;
     const findings = [];
@@ -157495,7 +158101,7 @@ var Publication = class {
    *  answered when more follow, else null, so reevaluation pages through them (a case is no bundle; only this module
    *  can list them). Viewer-free; writes nothing. */
   ratifiedCases({ after: after2 = null, limit = null } = {}) {
-    const cap = pageOf2(limit, RATIFIED_CASES_MAX);
+    const cap = pageOf3(limit, RATIFIED_CASES_MAX);
     const rows4 = this.#rows(
       `SELECT DISTINCT case_id FROM published_cases WHERE ratified_at IS NOT NULL AND case_id > ?
         ORDER BY case_id LIMIT ?`,
@@ -157602,7 +158208,7 @@ var Publication = class {
    *  owning projects are those cases' (`cases`), null for a case older than DEC-72. `published_bundles` names no
    *  capture, and the published basis files would be a parse per finding, unpageable in capture order. */
   restingCapturesOf({ after: after2 = null, limit = null } = {}) {
-    const cap = pageOf2(limit, RESTING_CAPTURES_MAX);
+    const cap = pageOf3(limit, RESTING_CAPTURES_MAX);
     const rests = `WITH rests(finding, target) AS (
         SELECT e.from_bundle, e.to_bundle FROM published_edges e WHERE e.disclosure='serve'
         UNION SELECT h.from_bundle, h.to_bundle FROM published_held_references h WHERE h.linked_at IS NULL),
@@ -157625,7 +158231,7 @@ var Publication = class {
     );
     let truncated6 = page2.length > cap;
     if (truncated6) page2.length = cap;
-    const answered = [];
+    const answered2 = [];
     let total2 = 0;
     for (const c of page2) {
       const n2 = Math.min(Number(c.n) || 0, RESTING_FINDINGS_PER_CAPTURE);
@@ -157634,10 +158240,10 @@ var Publication = class {
         break;
       }
       total2 += n2;
-      answered.push({ capture_sha: c.capture_sha, cut: Number(c.n) > RESTING_FINDINGS_PER_CAPTURE });
+      answered2.push({ capture_sha: c.capture_sha, cut: Number(c.n) > RESTING_FINDINGS_PER_CAPTURE });
     }
-    const by = new Map(answered.map((c) => [c.capture_sha, /* @__PURE__ */ new Map()]));
-    if (answered.length)
+    const by = new Map(answered2.map((c) => [c.capture_sha, /* @__PURE__ */ new Map()]));
+    if (answered2.length)
       for (const r of this.#rows(
         `${rests}, picked(capture_sha, finding) AS (
             SELECT capture_sha, finding FROM (
@@ -157646,7 +158252,7 @@ var Publication = class {
          SELECT DISTINCT r.capture_sha, f.finding, f.project ${held3}
            JOIN picked q ON q.capture_sha=r.capture_sha AND q.finding=f.finding
           ORDER BY r.capture_sha, f.finding, f.project`,
-        JSON.stringify(answered.map((c) => c.capture_sha)),
+        JSON.stringify(answered2.map((c) => c.capture_sha)),
         RESTING_FINDINGS_PER_CAPTURE
       )) {
         const fs = by.get(r.capture_sha);
@@ -157656,14 +158262,14 @@ var Publication = class {
       }
     return {
       ok: true,
-      captures: answered.map((c) => ({
+      captures: answered2.map((c) => ({
         capture_sha: c.capture_sha,
         findings: [...by.get(c.capture_sha)].map(([bundle_id, projects2]) => ({ bundle_id, projects: projects2 })),
         findings_truncated: c.cut
       })),
       limit: cap,
       truncated: truncated6,
-      cursor: truncated6 && answered.length ? answered[answered.length - 1].capture_sha : null
+      cursor: truncated6 && answered2.length ? answered2[answered2.length - 1].capture_sha : null
     };
   }
   /* ---------------------------------------------------------------- moved from the store */
@@ -158382,7 +158988,7 @@ var Publication = class {
      part of the pins (a truncated list would change who may sign, K380). */
   ratifiedFindingsRestingOn(bundleId, { after: after2 = null, limit = null } = {}) {
     const id = String(bundleId ?? "");
-    const cap = pageOf2(limit, RESTING_PINS_MAX);
+    const cap = pageOf3(limit, RESTING_PINS_MAX);
     const [aCase, aMember, aSha] = pinCursor(after2);
     const pins = this.#rows(
       `SELECT DISTINCT m.case_id, m.bundle_id, m.version_sha, cs.project_id
@@ -158595,9 +159201,9 @@ var Publication = class {
     return reg;
   }
 };
-var instances35 = /* @__PURE__ */ new WeakMap();
+var instances36 = /* @__PURE__ */ new WeakMap();
 function publicationOf(host, deps) {
-  let p3 = instances35.get(host);
+  let p3 = instances36.get(host);
   if (!p3) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -158605,7 +159211,7 @@ function publicationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     p3 = new Publication({ ...d, host, storage, record, membership, promotion });
-    instances35.set(host, p3);
+    instances36.set(host, p3);
     p3.migrate();
     p3.purgeDeclaration = record.declareTable("publication", PUBLICATION_DECLARATIONS.map((t2) => ({ ...t2 })));
     void p3.corpusExport;
@@ -159296,9 +159902,9 @@ var PublishSchedule = class {
     };
   }
 };
-var instances36 = /* @__PURE__ */ new WeakMap();
+var instances37 = /* @__PURE__ */ new WeakMap();
 function publishScheduleOf(host, deps) {
-  let ps = instances36.get(host);
+  let ps = instances37.get(host);
   if (!ps) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -159307,7 +159913,7 @@ function publishScheduleOf(host, deps) {
     const publication = d.publication || publicationOf(host, { record, membership });
     const localFacts = d.localFacts !== void 0 ? () => d.localFacts : () => localFactsOf(host, { storage, record, membership });
     ps = new PublishSchedule({ storage, record, membership, publication, localFacts, now: d.now });
-    instances36.set(host, ps);
+    instances37.set(host, ps);
     ps.migrate();
     ps.purgeDeclaration = record.declareTable("publish-schedule", PUBLISH_SCHEDULE_DECLARATIONS.map((t2) => ({ ...t2 })));
     if (publication && typeof publication.registerWaitingEditions === "function") {
@@ -159732,16 +160338,16 @@ case_project: ${pid}
     };
   }
 };
-var instances37 = /* @__PURE__ */ new WeakMap();
+var instances38 = /* @__PURE__ */ new WeakMap();
 function projectStageOf(host, deps) {
-  let s = instances37.get(host);
+  let s = instances38.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ProjectStage({ ...d, host, storage, record, membership });
-    instances37.set(host, s);
+    instances38.set(host, s);
   }
   return s;
 }
@@ -161428,16 +162034,16 @@ for (const m of ["docketFile", "docketPressure", "docketPrepare", "docketDecline
     return withRow2(await fn.apply(this, a));
   };
 }
-var instances38 = /* @__PURE__ */ new WeakMap();
+var instances39 = /* @__PURE__ */ new WeakMap();
 function docketOf(host, deps) {
-  let k = instances38.get(host);
+  let k = instances39.get(host);
   if (!k) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     k = new Docket({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances38.set(host, k);
+    instances39.set(host, k);
     k.migrate();
     k.purgeDeclaration = record.declarePurge("docket", DOCKET_TABLES.map((name3) => ({ name: name3, keys: [] })));
     k.countsRegistration = record.registerCounts("docket", ["docketRecordEntries", "docketPublicEntries", "docketMarks"], () => {
@@ -162421,7 +163027,7 @@ var PublicRead = class {
        answer is asserted by `published.test.mjs`' R3 and R11 arms rather than
        left to review. */
   publishedCase({ id = null, edition = null, sha256: sha2562 = null, caseId = null } = {}) {
-    let theCase = caseId ? String(caseId).trim() : null, ed = null, asked6 = null;
+    let theCase = caseId ? String(caseId).trim() : null, ed = null, asked7 = null;
     let askedEdition = null;
     sha2562 = lowerSha(sha2562);
     if (sha2562) {
@@ -162430,7 +163036,7 @@ var PublicRead = class {
         sha2562
       );
       if (r) {
-        asked6 = r.bundle_id;
+        asked7 = r.bundle_id;
         askedEdition = Number(r.edition);
         const cms = this.#casesOfSha(r.bundle_id, sha2562, askedEdition);
         const got = this.#resolveOneCase(r.bundle_id, cms, caseId);
@@ -162452,7 +163058,7 @@ var PublicRead = class {
         if (!got.ok) return got;
         if (got.pick) {
           theCase = got.pick.case_id;
-          asked6 = id;
+          asked7 = id;
         }
       }
       if (want != null) ed = want;
@@ -162462,8 +163068,8 @@ var PublicRead = class {
       ed = top2 && top2.m != null ? Number(top2.m) : null;
     }
     let state = theCase && ed != null ? this.publication.caseEditionState(theCase, ed) : null;
-    if (!state && (asked6 || sha2562 || id)) {
-      const who4 = asked6 || id;
+    if (!state && (asked7 || sha2562 || id)) {
+      const who4 = asked7 || id;
       const want = askedEdition != null ? askedEdition : sha2562 == null && id != null && edition != null && Number.isInteger(Number(edition)) ? Number(edition) : null;
       const r = sha2562 ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`, sha2562) : want != null ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? AND edition=?`, who4, want) : this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, who4);
       if (r && this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition).length === 0) {
@@ -162718,7 +163324,7 @@ var PublicRead = class {
       published_at: cRow ? cRow.published_at ?? null : null,
       complete: state.complete,
       awaiting: state.awaiting,
-      ...asked6 ? { asked: asked6 } : {},
+      ...asked7 ? { asked: asked7 } : {},
       findings,
       tensions: disclosed.tensions,
       highlighted: disclosed.highlighted,
@@ -163406,9 +164012,9 @@ var PublicRead = class {
     return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
 };
-var instances39 = /* @__PURE__ */ new WeakMap();
+var instances40 = /* @__PURE__ */ new WeakMap();
 function publicReadOf(host, deps) {
-  let r = instances39.get(host);
+  let r = instances40.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -163417,7 +164023,7 @@ function publicReadOf(host, deps) {
     const record = d.record || (() => recordOf(host));
     const roster = d.roster || (() => projectRosterOf(host));
     r = new PublicRead({ storage, publication, docket, record, roster });
-    instances39.set(host, r);
+    instances40.set(host, r);
   }
   return r;
 }
@@ -164896,16 +165502,16 @@ for (const m of ["prepareNotice", "postNotice"]) {
     return withRow3(await fn.apply(this, a));
   };
 }
-var instances40 = /* @__PURE__ */ new WeakMap();
+var instances41 = /* @__PURE__ */ new WeakMap();
 function networkNoticesOf(host, deps) {
-  let n2 = instances40.get(host);
+  let n2 = instances41.get(host);
   if (!n2) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     n2 = new NetworkNotices({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances40.set(host, n2);
+    instances41.set(host, n2);
     n2.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name3) => ({ name: name3, keys: [] })));
     const publicRead = d.publicRead || publicReadOf(host);
@@ -166290,14 +166896,14 @@ function setScalar4(text8, key2, value) {
 var EDGE_REASON_MAX3 = 160;
 var one3 = (sql, q10, ...a) => [...sql.exec(q10, ...a)][0] ?? null;
 function retire({ sql, promotion, retrieval, connections }, { handle, reason: reason2 = "", viewer = null, owner = null, author = null } = {}) {
-  const why2 = String(reason2 ?? "").trim();
-  if (!why2)
+  const why3 = String(reason2 ?? "").trim();
+  if (!why3)
     return {
       ok: false,
       reason: "NO_REASON",
       detail: "retirement is terminal in the state machine, so it records WHY. There is no move back out of retired, and an unexplained one-way change is not a record."
     };
-  if (why2.length > EDGE_REASON_MAX3 || /["\\\r\n]/.test(why2))
+  if (why3.length > EDGE_REASON_MAX3 || /["\\\r\n]/.test(why3))
     return {
       ok: false,
       reason: "BAD_REASON",
@@ -166358,10 +166964,10 @@ function retire({ sql, promotion, retrieval, connections }, { handle, reason: re
       when,
       author: who4,
       to: "retired",
-      blurb: why2,
+      blurb: why3,
       sessionEntry: (from) => `### Session ${when} | Retired | ${who4}
 Trigger: selection ${handle}
-Changes: state ${from} to retired. Reason: ${why2}.
+Changes: state ${from} to retired. Reason: ${why3}.
 `
     });
     if (moved.stop === "NO_DOCUMENT")
@@ -166377,7 +166983,7 @@ Changes: state ${from} to retired. Reason: ${why2}.
     if (!moved.promoted.ok) return { ...moved.promoted, bundleId: id, retiredSoFar: retired };
     retired.push(id);
   }
-  return { ok: true, reason: why2, handle, retired: retired.sort(), weight: "refuse", drift: sel.drift };
+  return { ok: true, reason: why3, handle, retired: retired.sort(), weight: "refuse", drift: sel.drift };
 }
 
 // src/ratification/schedule.mjs
@@ -167457,8 +168063,8 @@ async function publishedRoutes({ op, url, env, stub }) {
     }
     let source2 = manifest, read3 = pubBytes, part = null;
     if (isCaseFileManifest(manifest)) {
-      const asked6 = url.searchParams.get("part");
-      part = asked6 == null || asked6 === "" ? 1 : /^[1-9][0-9]{0,5}$/.test(asked6) ? Number(asked6) : NaN;
+      const asked7 = url.searchParams.get("part");
+      part = asked7 == null || asked7 === "" ? 1 : /^[1-9][0-9]{0,5}$/.test(asked7) ? Number(asked7) : NaN;
       source2 = Number.isInteger(part) ? caseFilePartLayout(manifest, part) : null;
       if (!source2)
         return P.json({ ok: false, ...P.requiredArgument(
@@ -168218,12 +168824,12 @@ async function caseCeremony(req, stub, ctx, later3) {
   }));
   if (out.refused) return storeRefused(out, relay2);
   if (!out.answered) return storeSilent2("caseratify/commit", out.correlation);
-  const answered = out.result;
-  const { completedCase, evidenceMaterials, memberCommits, ...r } = answered || {};
-  if (!answered || !r.ok)
+  const answered2 = out.result;
+  const { completedCase, evidenceMaterials, memberCommits, ...r } = answered2 || {};
+  if (!answered2 || !r.ok)
     return json24({
       ok: false,
-      ...r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered },
+      ...r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered2 },
       store: storeName,
       tokenClass: cls3
     }, 409);
@@ -168740,7 +169346,7 @@ var Ratification = class _Ratification {
       };
     const rec = pid ? this.basisVersions.conclusionRecordOf(pid, inq, viewer) : { history: [], stance: null };
     const st = rec.stance;
-    const why2 = !bearing ? "question_not_case_bearing" : !pid ? "no_project_named" : !st ? "project_has_never_concluded" : st.act === "withdrawn" ? "project_withdrew_its_conclusion" : st.act === "concluded" ? "project_has_never_concluded" : "project_stance_undetermined";
+    const why3 = !bearing ? "question_not_case_bearing" : !pid ? "no_project_named" : !st ? "project_has_never_concluded" : st.act === "withdrawn" ? "project_withdrew_its_conclusion" : st.act === "concluded" ? "project_has_never_concluded" : "project_stance_undetermined";
     const others = [];
     let othersBound = null, othersTruncated = null;
     if (bearing) {
@@ -168758,7 +169364,7 @@ var Ratification = class _Ratification {
       relationship: pid ? "project" : "no_project",
       project: pid || null,
       inquiry: inq,
-      why: why2,
+      why: why3,
       claim: { state: "undetermined", text: null, version: null, detail: null },
       stance: st ? { act: st.act, version: st.version ?? null, at: st.at ?? null } : null,
       history_length: rec.history.length,
@@ -170187,13 +170793,13 @@ var askDoor = (stub) => async (path, init) => {
     return { answered: false };
   }
 };
-var instances41 = /* @__PURE__ */ new WeakMap();
+var instances42 = /* @__PURE__ */ new WeakMap();
 var MINT_SEED = Object.freeze([
   Object.freeze(["CASE", "cases", "case_id"]),
   Object.freeze(["CASE", "case_documents", "case_id"])
 ]);
 function ratificationOf(host, deps) {
-  let r = instances41.get(host);
+  let r = instances42.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -170201,7 +170807,7 @@ function ratificationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
-    instances41.set(host, r);
+    instances42.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
@@ -171039,8 +171645,8 @@ var ASK_BOUNDS = Object.freeze({
   wall_ms: Object.freeze({ default: 18e4, means: "milliseconds from the ask's start to its answer" }),
   reads: Object.freeze({ default: 40, means: "reads of the record one ask may make" })
 });
-function startAllowed(asked6) {
-  const { startedBy = null, mode = null, standing = null } = asked6 && typeof asked6 === "object" ? asked6 : {};
+function startAllowed(asked7) {
+  const { startedBy = null, mode = null, standing = null } = asked7 && typeof asked7 === "object" ? asked7 : {};
   const memberOf9 = (who4) => {
     const p3 = runPrincipalOf(who4);
     return /^member:\S/.test(p3) ? p3 : "";
@@ -171056,8 +171662,8 @@ function startAllowed(asked6) {
 }
 var RUN_ORIGINS = Object.freeze(["member", "explore"]);
 var PLAN_ORIGINS = Object.freeze(["member", "reexamination"]);
-function originAllowed(asked6) {
-  const { origin = null, mode = null, investigateDeployable = false } = asked6 && typeof asked6 === "object" ? asked6 : {};
+function originAllowed(asked7) {
+  const { origin = null, mode = null, investigateDeployable = false } = asked7 && typeof asked7 === "object" ? asked7 : {};
   const o = typeof origin === "string" ? origin : "";
   if (mode === "plan")
     return PLAN_ORIGINS.includes(o) ? { ok: true } : refusal20(
@@ -171078,8 +171684,8 @@ function originAllowed(asked6) {
     { origin: o || null }
   );
 }
-function checkPagesRead(asked6) {
-  const { limits = null } = asked6 && typeof asked6 === "object" ? asked6 : {};
+function checkPagesRead(asked7) {
+  const { limits = null } = asked7 && typeof asked7 === "object" ? asked7 : {};
   const keeps = (l2) => l2 != null && typeof l2 === "object" && !Array.isArray(l2) && l2.on !== false && (l2.uses == null || Array.isArray(l2.uses) && l2.uses.includes("read"));
   if (!(Array.isArray(limits) && limits.some(keeps))) return null;
   return refusal20(
@@ -171115,8 +171721,8 @@ var PROJECT_GATE_GROUNDS = {
 function runConsultsProjects(contextType) {
   return String(contextType ?? "") === "project";
 }
-function projectGate2(asked6) {
-  const { actor = null, contextType = null, contextId = null, projects: projects2 = [], projectsJoined = [] } = asked6 && typeof asked6 === "object" ? asked6 : {};
+function projectGate2(asked7) {
+  const { actor = null, contextType = null, contextId = null, projects: projects2 = [], projectsJoined = [] } = asked7 && typeof asked7 === "object" ? asked7 : {};
   const who4 = actor == null ? "" : String(actor).trim();
   const all = Array.isArray(projects2) ? projects2.map(String) : [];
   const mine = Array.isArray(projectsJoined) ? projectsJoined.map(String) : [];
@@ -171150,8 +171756,8 @@ function projectGate2(asked6) {
     `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
   );
 }
-function checkRunContextKind(asked6) {
-  const { contextType = null, contextId = null, found: found3 = null } = asked6 && typeof asked6 === "object" ? asked6 : {};
+function checkRunContextKind(asked7) {
+  const { contextType = null, contextId = null, found: found3 = null } = asked7 && typeof asked7 === "object" ? asked7 : {};
   const said12 = String(contextType ?? "");
   const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
   if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said12))
@@ -171171,8 +171777,8 @@ function runPrincipalOf(principal) {
   const i = s.indexOf("/");
   return i < 0 ? s : s.slice(0, i);
 }
-function runPrincipalGate(asked6) {
-  const { caller = null, principal = null, act: act2 = null } = asked6 && typeof asked6 === "object" ? asked6 : {};
+function runPrincipalGate(asked7) {
+  const { caller = null, principal = null, act: act2 = null } = asked7 && typeof asked7 === "object" ? asked7 : {};
   const who4 = runPrincipalOf(caller), owner = runPrincipalOf(principal);
   if (who4 && owner && who4 === owner) return null;
   const doing = typeof act2 === "string" && act2.trim() ? act2.trim() : "ticking or closing a run";
@@ -171356,16 +171962,16 @@ var ENQUIRE_MODE = Object.freeze({
   when: "only by a reviewed change of its own that sets this flag, once R19's test bar is held for it, whatever the run modes' state and whatever ask's or draft's flag",
   bounds: "ASK_BOUNDS (R17), declared when the interview starts"
 });
-function draftMayRead(asked6) {
-  const at50 = (k) => own7(asked6, k) ? asked6[k] : null;
+function draftMayRead(asked7) {
+  const at50 = (k) => own7(asked7, k) ? asked7[k] : null;
   const firsthand = at50("firsthand");
   if (!(firsthand == null || firsthand === false)) return false;
   const kind2 = at50("kind");
   return kind2 === "own_words" && at50("suggestions") === true || kind2 === "infractiondraft" || kind2 === "bearingdraft";
 }
-function draftKindDeployed(asked6) {
-  const kind2 = own7(asked6, "kind") ? asked6.kind : null;
-  const f17 = own7(asked6, "flags") && asked6.flags != null && typeof asked6.flags === "object" ? asked6.flags : {};
+function draftKindDeployed(asked7) {
+  const kind2 = own7(asked7, "kind") ? asked7.kind : null;
+  const f17 = own7(asked7, "flags") && asked7.flags != null && typeof asked7.flags === "object" ? asked7.flags : {};
   const on = (name3, held3) => (own7(f17, name3) ? f17[name3] : held3) === true;
   if (typeof kind2 !== "string" || !DRAFT_KINDS.includes(kind2)) return false;
   const draft = on(DRAFT_MODE.mode, DRAFT_MODE.deployed);
@@ -171988,12 +172594,12 @@ var AiUse = class _AiUse {
    *  use not a `USE_KINDS` entry, or the counter unreadable): still the refusal, failing closed, but `unjudged: true` and
    *  no `scope`, `unit` or `period`, since nothing was reached; its sentence `ai.refused.limit.unjudged` with `{whose}`
    *  only (the group's words when no account is named, `whose` then null; K2720). */
-  #limitReached(p3, lim, use, start, why2 = null) {
+  #limitReached(p3, lim, use, start, why3 = null) {
     const whose = p3 ? whoseOf(p3) : null;
     if (!lim) {
       const translation = fillWords2(AI_USE_WORDS[UNJUDGED_WORD], { whose: AI_USE_WORDS[WHOSE_WORD[whose || "group"]] });
       return {
-        ...this.#refuse("AI_LIMIT_REACHED", `${why2} Nothing was started.`),
+        ...this.#refuse("AI_LIMIT_REACHED", `${why3} Nothing was started.`),
         translation,
         word: UNJUDGED_WORD,
         unjudged: true,
@@ -172544,7 +173150,7 @@ var AiUse = class _AiUse {
    *  be judged answers the refusal, unjudged (fail closed; T43, DEC-189 (5)). */
   useCheck({ owner = null, member: member2 = null, use = null, at: at50 = null } = {}) {
     const p3 = parseOwner(owner);
-    const failClosed = (why2) => this.#limitReached(p3, null, use, null, why2);
+    const failClosed = (why3) => this.#limitReached(p3, null, use, null, why3);
     if (!p3) return failClosed("the use names no paying account, so its limits cannot be judged.");
     if (!USE_KINDS2.includes(use)) return failClosed(`'${String(use).slice(0, 40)}' is not a kind of use, so its limits cannot be judged.`);
     try {
@@ -173435,18 +174041,18 @@ function likeness(a, b) {
 }
 var LIKE_THRESHOLD = 0.5;
 var dayNumber3 = (d) => Date.UTC(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10))) / 864e5;
-var instances42 = /* @__PURE__ */ new WeakMap();
+var instances43 = /* @__PURE__ */ new WeakMap();
 var storageOf2 = (host) => host && host.storage ? host.storage : host;
 function stepsOf(host, deps = {}) {
   const storage = storageOf2(host);
-  let s = instances42.get(storage);
+  let s = instances43.get(storage);
   if (!s) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
     const promotion = deps.promotion ?? promotionOf(host, { record, membership });
     const observationLog = deps.observationLog ?? observationLogOf(host, { record, membership });
     s = new Steps(storage, { ...deps, record, membership, observationLog, host });
-    instances42.set(storage, s);
+    instances43.set(storage, s);
     s.migrate();
     const fail2 = (what, r) => {
       if (r && r.ok === false) throw new Error(`steps: ${what} refused: ${r.reason || r.code}`);
@@ -174257,7 +174863,7 @@ var Steps = class _Steps {
   /* ---- products (R9) ---- */
   /* R9: what a product names, read: `{kind, id, derivation?}` or a refusal. A bare string is a record id or a lead. */
   static #product(record) {
-    const bad2 = (why2) => ({ refusal: refuse16("STEP_BAD_PRODUCT", why2) });
+    const bad2 = (why3) => ({ refusal: refuse16("STEP_BAD_PRODUCT", why3) });
     let p3 = record;
     if (typeof record === "string") p3 = { kind: /^LEAD-/.test(record.trim()) ? "lead" : "record", id: record };
     if (!isObj37(p3) || !PRODUCT_KINDS2.includes(p3.kind) || !filled8(p3.id)) return bad2(`a product is {kind: ${PRODUCT_KINDS2.join(" | ")}, id}`);
@@ -174741,12 +175347,12 @@ var Steps = class _Steps {
   /* ---- a proposed step, accepted (R24, R26) ---- */
   /** R24: `stepPropose({place, work, why, run, by})`: a machine's or an assistant's proposed step, held apart and
    *  labelled the system's; never a step until a member accepts it. */
-  stepPropose({ place: place9 = null, work = null, why: why2 = null, run: run2 = null, by = null } = {}) {
+  stepPropose({ place: place9 = null, work = null, why: why3 = null, run: run2 = null, by = null } = {}) {
     if (!isMachineIdentity(by)) return refuse16("STEP_PROPOSE_NOT_A_MACHINE", "a proposal is the system's or an assistant's; a member creates a step themselves");
     const c = this.#creator(by, run2);
     if (c.refusal) return c.refusal;
     if (!filled8(work) || chars(work.trim()) > WORK_MAX) return refuse16("STEP_NO_WORK", `the work is 1\u2013${WORK_MAX} characters`);
-    if (!filled8(why2) || chars(why2) > WHY_MAX3) return refuse16("STEP_BAD_TEXT", `why is 1\u2013${WHY_MAX3} characters`);
+    if (!filled8(why3) || chars(why3) > WHY_MAX3) return refuse16("STEP_BAD_TEXT", `why is 1\u2013${WHY_MAX3} characters`);
     const p3 = this.#place(place9, c.viewer, "stepPropose");
     if (p3.refusal) return p3.refusal;
     const at50 = this.#at();
@@ -174757,7 +175363,7 @@ var Steps = class _Steps {
         p3.kind,
         p3.project ?? null,
         work.trim(),
-        why2.trim(),
+        why3.trim(),
         run2,
         by,
         state,
@@ -175878,9 +176484,9 @@ var AiRuns = class _AiRuns {
   #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects2 = this.#runContextProjects(contextType, contextId);
     const who4 = actor == null ? "" : String(actor).trim();
-    const asked6 = memberIdOf3(who4) ?? who4;
+    const asked7 = memberIdOf3(who4) ?? who4;
     const joined2 = who4 && runConsultsProjects(contextType) ? projects2.filter((p3) => {
-      const part = this.#membership().participation(p3, asked6);
+      const part = this.#membership().participation(p3, asked7);
       return !!part && part.state === "joined";
     }) : [];
     const g = projectGate2({ actor: who4, contextType, contextId, projects: projects2, projectsJoined: joined2 });
@@ -177103,8 +177709,8 @@ var AiRuns = class _AiRuns {
       };
     const member2 = principal.startsWith("member:");
     const withheld = member2 ? "MEMBER_PRINCIPAL_RUN" : resumer && !resumer.ready ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
-    const why2 = member2 ? "a member's credential opened it, and your team's Civicsmith resumes only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the team's key would re-attribute its acts). It waits for its own principal" : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN" ? word("ai-runs.text.principal_opened_organization") : word("ai-runs.text.group_civicsmith_resume", { withheld });
-    return { dispatch: false, withheld, says: word("ai-runs.says.resumption_dispatched", { why: why2 }) };
+    const why3 = member2 ? "a member's credential opened it, and your team's Civicsmith resumes only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the team's key would re-attribute its acts). It waits for its own principal" : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN" ? word("ai-runs.text.principal_opened_organization") : word("ai-runs.text.group_civicsmith_resume", { withheld });
+    return { dispatch: false, withheld, says: word("ai-runs.says.resumption_dispatched", { why: why3 }) };
   }
   /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
    *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
@@ -178596,7 +179202,7 @@ __export(checks_exports46, {
 });
 
 // src/case-import/words.mjs
-var WORD_KEYS6 = Object.freeze([
+var WORD_KEYS7 = Object.freeze([
   "case-checker.lens_limit_statement",
   "case-import.call.manifest_checked",
   "case-import.departures",
@@ -178648,14 +179254,14 @@ var WORD_KEYS6 = Object.freeze([
   "refusal.IMPORT_WATCH_BAD_ADDRESS",
   "refusal.MACHINE_CANNOT_IMPORT"
 ]);
-var KEYS4 = new Set(WORD_KEYS6);
-var asked4 = /* @__PURE__ */ new Set();
-function say4(key2, vars = {}) {
-  if (!KEYS4.has(key2)) throw new Error(`case-import: ${key2} is not one of this module's word keys`);
-  asked4.add(key2);
+var KEYS5 = new Set(WORD_KEYS7);
+var asked5 = /* @__PURE__ */ new Set();
+function say5(key2, vars = {}) {
+  if (!KEYS5.has(key2)) throw new Error(`case-import: ${key2} is not one of this module's word keys`);
+  asked5.add(key2);
   return word(key2, vars);
 }
-var rowWord5 = (code) => say4(`refusal.${code}`);
+var rowWord5 = (code) => say5(`refusal.${code}`);
 
 // src/case-import/checks.mjs
 var at22 = (fn, region) => `src/case-import/index.mjs ${fn} > ${region}`;
@@ -180243,7 +180849,7 @@ function legOf(cite, cited, concl) {
 var unnegated = (s) => lower2(s).replace(/n['’]t\b/g, "").replace(/\b(?:not|never|no)\b/g, " ").replace(/\s+/g, " ").trim();
 function judgeSentence(row13, cited, printed2, concl) {
   const out = [];
-  const say7 = (code, detail) => out.push({ ord: row13.ord, code, detail });
+  const say8 = (code, detail) => out.push({ ord: row13.ord, code, detail });
   const w = (k) => row13.words[k] ?? k;
   const read3 = row13.cites.filter((x) => cited.has(x));
   const texts = read3.map((x) => cited.get(x).text);
@@ -180258,9 +180864,9 @@ function judgeSentence(row13, cited, printed2, concl) {
     const code = j && j.ok ? j.withheld[0]?.code ?? null : null;
     const unread = row13.cites.filter((x) => !cited.has(x));
     if (!row13.cites.length) {
-      if (row13.account) say7("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row13.ord} cites nothing, and is not marked as following a printed bias statement`);
+      if (row13.account) say8("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row13.ord} cites nothing, and is not marked as following a printed bias statement`);
     } else if (code === "ANSWER_CITES_UNREAD" || j && !j.ok)
-      say7("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row13.ord} cites ${(unread.length ? unread : row13.cites).map(w).join(", ")}, which is not among what it may cite`);
+      say8("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row13.ord} cites ${(unread.length ? unread : row13.cites).map(w).join(", ")}, which is not among what it may cite`);
     else {
       const missing2 = [];
       if (code === "ANSWER_FIGURE_UNSOURCED") {
@@ -180272,25 +180878,25 @@ function judgeSentence(row13, cited, printed2, concl) {
       for (const n2 of facts.names) if (!texts.some((x) => lower2(x).includes(lower2(n2)))) missing2.push({ kind: "name", said: n2 });
       for (const q10 of facts.quotations) if (!texts.some((x) => squash(x).includes(squash(q10)))) missing2.push({ kind: "quotation", said: q10 });
       if (missing2.length)
-        say7("ACCOUNT_FACT_NOT_IN_CITED", `sentence ${row13.ord} states ${missing2.map((m) => `the ${m.kind} ${m.kind === "quotation" ? `"${m.said}"` : m.said}`).join(", ")}, which ${missing2.length === 1 ? "is" : "are"} not in what it cites`);
+        say8("ACCOUNT_FACT_NOT_IN_CITED", `sentence ${row13.ord} states ${missing2.map((m) => `the ${m.kind} ${m.kind === "quotation" ? `"${m.said}"` : m.said}`).join(", ")}, which ${missing2.length === 1 ? "is" : "are"} not in what it cites`);
     }
   }
   for (const cite of row13.cites) {
     const k = concl.get(cite);
     if (k && !k.adopted && DETERMINATION_RE.test(unquoted(row13.text)))
-      say7("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row13.ord} states finding ${cite} as determined, where the record holds no adopted conclusion for it`);
+      say8("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row13.ord} states finding ${cite} as determined, where the record holds no adopted conclusion for it`);
     else if (k && k.adopted && k.claim) {
       const s = lower2(unquoted(row13.text)), claim = lower2(k.claim);
       if (!s.includes(claim) && unnegated(s).includes(unnegated(claim)) && unnegated(claim))
-        say7("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row13.ord} states finding ${cite}'s conclusion other than the record holds it ("${k.claim}")`);
+        say8("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row13.ord} states finding ${cite}'s conclusion other than the record holds it ("${k.claim}")`);
     }
     const leg2 = legOf(cite, cited, concl);
     if (leg2 && leg2.role === "cuts_against" && SUPPORT_RE.test(unquoted(row13.text)) && !CONTRARY_RE.test(unquoted(row13.text)))
-      say7("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row13.ord} reads ${w(cite)} as supporting finding ${leg2.finding}, where it cuts against it`);
+      say8("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row13.ord} reads ${w(cite)} as supporting finding ${leg2.finding}, where it cuts against it`);
   }
   if (row13.bias) {
     if (!printed2.has(row13.bias))
-      say7("ACCOUNT_BIAS_NOT_PRINTED", `sentence ${row13.ord} is marked as following bias statement ${row13.bias}, which this case does not print in its lens`);
+      say8("ACCOUNT_BIAS_NOT_PRINTED", `sentence ${row13.ord} is marked as following bias statement ${row13.bias}, which this case does not print in its lens`);
     const stated3 = [
       ...facts.figures.map((f17) => `the figure ${f17}`),
       ...facts.dates.map((d) => `the date ${d}`),
@@ -180303,7 +180909,7 @@ function judgeSentence(row13, cited, printed2, concl) {
       break;
     }
     if (stated3.length)
-      say7("ACCOUNT_CLAIM_NOT_BIAS", `sentence ${row13.ord} is marked as bias and states ${stated3.join(", ")}: a fact is never bias`);
+      say8("ACCOUNT_CLAIM_NOT_BIAS", `sentence ${row13.ord} is marked as bias and states ${stated3.join(", ")}: a fact is never bias`);
   }
   return out;
 }
@@ -181470,7 +182076,7 @@ var SAYS_WORDS = Object.freeze({
 });
 
 // src/case-checker/main.mjs
-var sentenceOf = (says) => {
+var sentenceOf2 = (says) => {
   const en = says && Object.hasOwn(SAYS_WORDS, says.key) ? SAYS_WORDS[says.key] : null;
   return en === null ? null : en.replace(/\{([A-Za-z0-9_]+)\}/g, (_, n2) => String(says.vars?.[n2] ?? ""));
 };
@@ -181499,7 +182105,7 @@ ${usage}
   const answer2 = await checkCaseFile({ parts, documents, ...keys ? { keys } : {}, ...lens !== void 0 ? { lens } : {} });
   const lines2 = answer2.findings.map((f17) => `${f17.finding}: ${RESULT_WORDS2[f17.result] ?? f17.result}`);
   for (const r of answer2.standards_use?.refusals ?? []) {
-    const s = sentenceOf(r.says);
+    const s = sentenceOf2(r.says);
     if (s) lines2.push(s);
   }
   return { text: [...lines2, "", answer2.statement, "", JSON.stringify(answer2, null, 2), ""].join("\n"), status: 0 };
@@ -181570,18 +182176,18 @@ var PART_MAX2 = 64 * 1024 * 1024;
 var WORDS_MAX3 = 2e3;
 var WITHDRAWALS_PAGE_MAX = 1e3;
 var WITHDRAWALS_PAGE = 200;
-var SOURCE_BAR = say4("case-import.source_bar");
-var SOURCE_LENS = say4("case-import.source_lens");
-var OWN_LENS = say4("case-import.own_lens");
-var LENS_LIMIT = say4("case-checker.lens_limit_statement");
-var LENS_UNDETERMINED = say4("case-import.lens_undetermined");
-var LENS_NOT_REWEIGHED = say4("case-import.lens_not_reweighed");
-var NO_OWN_BAR = say4("case-import.no_own_bar");
-var STATEMENT = say4("case-import.statement");
+var SOURCE_BAR = say5("case-import.source_bar");
+var SOURCE_LENS = say5("case-import.source_lens");
+var OWN_LENS = say5("case-import.own_lens");
+var LENS_LIMIT = say5("case-checker.lens_limit_statement");
+var LENS_UNDETERMINED = say5("case-import.lens_undetermined");
+var LENS_NOT_REWEIGHED = say5("case-import.lens_not_reweighed");
+var NO_OWN_BAR = say5("case-import.no_own_bar");
+var STATEMENT = say5("case-import.statement");
 var ALL_FINDINGS = "all";
 var NOT_ACCEPTED_WHY = Object.freeze({
-  did_not_recreate: say4("case-import.did_not_recreate"),
-  gaps_unstated: say4("case-import.gaps_unstated")
+  did_not_recreate: say5("case-import.did_not_recreate"),
+  gaps_unstated: say5("case-import.gaps_unstated")
 });
 var AXES = Object.freeze(["capture", "connection", "testimony"]);
 var ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF", move: "IMM" };
@@ -181591,10 +182197,10 @@ var MOVE_KINDS = Object.freeze(["edition", "withdrawal"]);
 var READ_OUTCOMES = Object.freeze(["read", "unreadable"]);
 var ENTRY_CHECKS = Object.freeze(["digest", "form", "signature", "chain", "seq"]);
 var WATCH_PAGE_MAX = 200;
-var NO_MOVE_SEEN = say4("case-import.no_move_seen");
+var NO_MOVE_SEEN = say5("case-import.no_move_seen");
 var GROUP_FIELD_KEYS = Object.freeze(["group", "name", "domain", "domain_verified_at", "stake", "detail"]);
-var GROUP_FIELDS_LABEL = say4("case-import.group_fields_label");
-var GROUP_FIELDS_NONE = say4("case-import.group_fields_none");
+var GROUP_FIELDS_LABEL = say5("case-import.group_fields_label");
+var GROUP_FIELDS_NONE = say5("case-import.group_fields_none");
 var GROUP_TEXT_MAX = 2e3;
 var GROUP_STAKE_MAX = 8192;
 var MATTER_STAKE_KEYS = Object.freeze(["stake", "set_by", "set_at", "source"]);
@@ -181724,7 +182330,7 @@ function fingerprintsOf(entry4, out = /* @__PURE__ */ new Set(), depth = 0) {
   if (isObj40(entry4)) for (const v of Object.values(entry4)) fingerprintsOf(v, out, depth + 1);
   return out;
 }
-var SOURCE_CALCULATION = say4("case-import.source_calculation");
+var SOURCE_CALCULATION = say5("case-import.source_calculation");
 var CALC_RESULTS = Object.freeze(["recreated", "differs", "not_recreated"]);
 var CHECKER_CALC = { agrees: "recreated", differs: "differs", not_recomputed: "not_recreated" };
 var CALC_INPUT_MAX = 20 * 1024 * 1024;
@@ -181772,7 +182378,7 @@ function recreateCalculations({ rows: rows4 = [], files = [], documents = [] } =
         result: "not_recreated",
         differs: [],
         recomputed: null,
-        missing: [{ what: "evaluation", why: say4("case-import.why.evaluated", { e: String(e2 && e2.message || e2).slice(0, 200) }) }],
+        missing: [{ what: "evaluation", why: say5("case-import.why.evaluated", { e: String(e2 && e2.message || e2).slice(0, 200) }) }],
         stated: statedOf(row13)
       });
     }
@@ -181797,16 +182403,16 @@ function recreateOne(row13, ord, byContent, byStated) {
   const missing2 = [];
   const done = (result2, differs2 = [], recomputed2 = null) => ({ calc, result: result2, missing: missing2, differs: differs2, recomputed: recomputed2, stated: stated3 });
   if (!isObj40(row13)) {
-    missing2.push({ what: "row", why: say4("case-import.why.case_states_calculation") });
+    missing2.push({ what: "row", why: say5("case-import.why.case_states_calculation") });
     return done("not_recreated");
   }
   const method = str35(row13.method_version);
   if (method !== METHOD)
-    missing2.push({ what: "method_version", method_version: method, why: method ? say4("case-import.why.group_civicsmith_hold", { method, calc_method: METHOD }) : say4("case-import.why.case_states_method") });
+    missing2.push({ what: "method_version", method_version: method, why: method ? say5("case-import.why.group_civicsmith_hold", { method, calc_method: METHOD }) : say5("case-import.why.case_states_method") });
   const recipe2 = isObj40(row13.recipe) ? row13.recipe : null;
-  if (!recipe2) missing2.push({ what: "recipe", why: say4("case-import.why.case_states_recipe") });
+  if (!recipe2) missing2.push({ what: "recipe", why: say5("case-import.why.case_states_recipe") });
   const inputs = inputsOfRow(row13.inputs);
-  if (!inputs) missing2.push({ what: "inputs", why: say4("case-import.why.case_states_list") });
+  if (!inputs) missing2.push({ what: "inputs", why: say5("case-import.why.case_states_list") });
   const bound = {}, hashes = {};
   for (const inp of inputs || []) {
     hashes[inp.name] = inp.sha;
@@ -181822,13 +182428,13 @@ function recreateOne(row13, ord, byContent, byStated) {
         sha: inp.sha,
         carried: listed.got,
         path: listed.path,
-        why: say4("case-import.why.file_carried_input"),
+        why: say5("case-import.why.file_carried_input"),
         ...listed.detail ? { detail: listed.detail } : {}
       } : { input: inp.name, sha: inp.sha, why: "the case file does not carry this input; bytes with this SHA-256 complete it" });
       continue;
     }
     if (b.length > CALC_INPUT_MAX) {
-      missing2.push({ input: inp.name, sha: inp.sha, why: say4("case-import.why.input_over_bytes", { calc_input_max: CALC_INPUT_MAX }) });
+      missing2.push({ input: inp.name, sha: inp.sha, why: say5("case-import.why.input_over_bytes", { calc_input_max: CALC_INPUT_MAX }) });
       continue;
     }
     const v = (() => {
@@ -181839,7 +182445,7 @@ function recreateOne(row13, ord, byContent, byStated) {
       }
     })();
     if (v === void 0) {
-      missing2.push({ input: inp.name, sha: inp.sha, why: say4("case-import.why.input_bytes_canonical") });
+      missing2.push({ input: inp.name, sha: inp.sha, why: say5("case-import.why.input_bytes_canonical") });
       continue;
     }
     bound[inp.name] = v;
@@ -181850,7 +182456,7 @@ function recreateOne(row13, ord, byContent, byStated) {
     missing2.push({
       what: "evaluation",
       refused: isObj40(e2) ? e2.refused : null,
-      why: say4("case-import.why.calc_grammar_evaluate", { why: isObj40(e2) && e2.why ? `: ${e2.why}` : "" })
+      why: say5("case-import.why.calc_grammar_evaluate", { why: isObj40(e2) && e2.why ? `: ${e2.why}` : "" })
     });
     return done("not_recreated");
   }
@@ -181863,7 +182469,7 @@ function recreateOne(row13, ord, byContent, byStated) {
     differs.push({ result: "result_key", source: row13.result_key, recomputed: key2 });
   const values = statedValues(row13.results, row13.result_key);
   if (!values && (row13.result_key === null || row13.result_key === void 0)) {
-    missing2.push({ what: "results", why: say4("case-import.why.case_states_result") });
+    missing2.push({ what: "results", why: say5("case-import.why.case_states_result") });
     return done("not_recreated", [], recomputed);
   }
   for (const [name3, v] of values || []) {
@@ -182024,11 +182630,11 @@ var CaseImport = class _CaseImport {
   async #recreate(parts, documents) {
     const fn = this.#checkCaseFile;
     try {
-      if (typeof fn !== "function") return { findings: [], unread: say4("case-import.unread.case_checker_composed") };
+      if (typeof fn !== "function") return { findings: [], unread: say5("case-import.unread.case_checker_composed") };
       const a = await fn({ parts, documents });
-      return isObj40(a) ? a : { findings: [], unread: say4("case-import.unread.case_checker_gave") };
+      return isObj40(a) ? a : { findings: [], unread: say5("case-import.unread.case_checker_gave") };
     } catch (e2) {
-      return { findings: [], unread: say4("case-import.unread.case_checker_failed", { e: String(e2 && e2.message ? e2.message : e2).slice(0, 200) }) };
+      return { findings: [], unread: say5("case-import.unread.case_checker_failed", { e: String(e2 && e2.message ? e2.message : e2).slice(0, 200) }) };
     }
   }
   /* R3, R12: records one recreation, inside the caller's transaction: its run, and each finding's result with what is
@@ -182147,9 +182753,9 @@ var CaseImport = class _CaseImport {
         "parts are the case file's parts, each as bytes",
         { departures: [!list6.length ? "no part was given" : `part ${list6.findIndex((p3) => !p3)} is not bytes`] }
       );
-    const read3 = this.#call(() => readCaseFile2(list6), { manifest: null, files: [], departures: [say4("case-import.departures")] });
+    const read3 = this.#call(() => readCaseFile2(list6), { manifest: null, files: [], departures: [say5("case-import.departures")] });
     const check2 = this.#manifestCheck;
-    const checked = !isObj40(read3.manifest) ? Array.isArray(read3.departures) && read3.departures.length ? read3.departures : [say4("case-import.text.manifest_found")] : typeof check2 === "function" ? this.#call(() => check2(read3.manifest), [say4("case-import.call.manifest_checked")]) : [say4("case-import.text.copy_holds_check")];
+    const checked = !isObj40(read3.manifest) ? Array.isArray(read3.departures) && read3.departures.length ? read3.departures : [say5("case-import.text.manifest_found")] : typeof check2 === "function" ? this.#call(() => check2(read3.manifest), [say5("case-import.call.manifest_checked")]) : [say5("case-import.text.copy_holds_check")];
     const named3 = Array.isArray(checked) ? checked : checked ? [checked] : [];
     if (named3.length)
       return refuse17("IMPORT_NOT_A_CASE_FILE", "the parts do not carry a manifest that meets the case-file format", { departures: named3 });
@@ -182483,7 +183089,7 @@ var CaseImport = class _CaseImport {
     return {
       group_fields: { ...out, read_at: r.read_at },
       group_fields_label: GROUP_FIELDS_LABEL,
-      ...f17.matter_stake_malformed === true ? { group_fields_note: say4("caseimport.stake.unreadable") } : {}
+      ...f17.matter_stake_malformed === true ? { group_fields_note: say5("caseimport.stake.unreadable") } : {}
     };
   }
   /* R4: one edition in full. */
@@ -182587,20 +183193,20 @@ var CaseImport = class _CaseImport {
       if (!isObj40(fm) || typeof readApps !== "function") return none(LENS_NOT_REWEIGHED);
       const read3 = this.#call(() => readApps(fm), null);
       const apps = (Array.isArray(read3) ? read3 : []).filter((a) => isObj40(a) && str35(a.finding) && str35(a.statement));
-      const asked6 = /* @__PURE__ */ new Map();
+      const asked7 = /* @__PURE__ */ new Map();
       for (const id of [...new Set(apps.map((a) => str35(a.statement)))].sort())
-        asked6.set(id, this.#call(
+        asked7.set(id, this.#call(
           () => this.bias.statementInForce({ statement: id, scope: "instance", viewer }),
           { ok: true, statement: id, in_force: null, stated: "undetermined: the lens in force could not be read" }
         ));
-      const stateOf2 = (a) => {
-        const v = asked6.get(str35(a.statement));
+      const stateOf3 = (a) => {
+        const v = asked7.get(str35(a.statement));
         return v && (v.in_force === true || v.in_force === false) ? v.in_force : null;
       };
-      const inForce = [...asked6.values()].filter((v) => v && v.in_force === true);
+      const inForce = [...asked7.values()].filter((v) => v && v.in_force === true);
       const reader = { statements: inForce.map((v) => v.statement), applications: [] };
-      const sha2 = [...asked6.values()].map((v) => v && isSha2(v.statements_sha) ? v.statements_sha : null).find(Boolean) ?? null;
-      const undeterminedIds = [...asked6.values()].filter((v) => !v || v.in_force === null).map((v) => v?.statement ?? null);
+      const sha2 = [...asked7.values()].map((v) => v && isSha2(v.statements_sha) ? v.statements_sha : null).find(Boolean) ?? null;
+      const undeterminedIds = [...asked7.values()].filter((v) => !v || v.in_force === null).map((v) => v?.statement ?? null);
       const undetermined3 = new Set(undeterminedIds);
       const fn = this.#reweigh;
       let out = null, failed3 = null;
@@ -182631,7 +183237,7 @@ var CaseImport = class _CaseImport {
           label: OWN_LENS,
           determined: !failed3 && !undeterminedIds.length,
           ...failed3 ? { stated: failed3 } : undeterminedIds.length ? { stated: LENS_UNDETERMINED } : {},
-          statements: [...asked6.values()].map((v) => ({
+          statements: [...asked7.values()].map((v) => ({
             statement: v?.statement ?? null,
             in_force: v ? v.in_force ?? null : null,
             kind: v?.kind ?? null,
@@ -182645,9 +183251,9 @@ var CaseImport = class _CaseImport {
         finding: (f17) => {
           const mine = apps.filter((a) => a.finding === f17.finding);
           const applications = {
-            in_force: mine.filter((a) => stateOf2(a) === true),
-            removed: mine.filter((a) => stateOf2(a) === false),
-            undetermined: mine.filter((a) => stateOf2(a) === null)
+            in_force: mine.filter((a) => stateOf3(a) === true),
+            removed: mine.filter((a) => stateOf3(a) === false),
+            undetermined: mine.filter((a) => stateOf3(a) === null)
           };
           const head = { whose: "this_group", applications };
           const r = byFinding2.get(f17.finding);
@@ -182813,8 +183419,8 @@ var CaseImport = class _CaseImport {
           { import: e2.import_id, edition: ed, findings: notAccepted.map((x) => x.finding), not_accepted: notAccepted }
         );
     } else {
-      const asked6 = typeof findings === "string" ? findings.trim().startsWith("[") ? parse7(findings, null) : [findings] : findings;
-      named3 = Array.isArray(asked6) ? [...new Set(asked6.map((f17) => typeof f17 === "string" ? f17.trim() : f17))] : [];
+      const asked7 = typeof findings === "string" ? findings.trim().startsWith("[") ? parse7(findings, null) : [findings] : findings;
+      named3 = Array.isArray(asked7) ? [...new Set(asked7.map((f17) => typeof f17 === "string" ? f17.trim() : f17))] : [];
       const unknown = named3.filter((f17) => typeof f17 !== "string" || !results.has(f17));
       if (!named3.length || unknown.length)
         return refuse17(
@@ -182866,7 +183472,7 @@ var CaseImport = class _CaseImport {
       gaps: kept,
       findings: named3.map((f17) => ({ finding: f17, ref: importedFindingRef(e2.import_id, f17), result: results.get(f17).result })),
       ...all ? { scope: ALL_FINDINGS, not_accepted: notAccepted } : {},
-      grades: say4("case-import.grades")
+      grades: say5("case-import.grades")
     };
   }
   /** R7: withdraws every acceptance of the edition in force, with a reason; each stays in the history. After the
@@ -183253,15 +183859,15 @@ var CaseImport = class _CaseImport {
       const atMs = typeof at50 === "string" ? Date.parse(at50) : NaN;
       const readAt3 = Number.isFinite(atMs) ? stampInstant("second", atMs) : this.#stamp();
       let out = READ_OUTCOMES.includes(outcome) ? outcome : "unreadable";
-      let why2 = outcome === "unreadable" ? typeof reason2 === "string" ? reason2.slice(0, 200) : null : out === "read" ? null : "outcome_unknown";
+      let why3 = outcome === "unreadable" ? typeof reason2 === "string" ? reason2.slice(0, 200) : null : out === "read" ? null : "outcome_unknown";
       let list6 = null;
       if (out === "read") {
         if (!isObj40(answer2) || !Array.isArray(answer2.entries)) {
           out = "unreadable";
-          why2 = "not_a_docket";
+          why3 = "not_a_docket";
         } else if (answer2.group !== i.source_group || answer2.case !== i.case_id) {
           out = "unreadable";
-          why2 = "not_this_case";
+          why3 = "not_this_case";
         } else list6 = answer2.entries;
       }
       const checked = list6 ? await this.#checkEntries(i, list6) : [];
@@ -183278,7 +183884,7 @@ var CaseImport = class _CaseImport {
           w.docket,
           readAt3,
           out,
-          why2,
+          why3,
           isObj40(answer2) && Array.isArray(answer2.entries) ? answer2.entries.length : 0,
           isObj40(answer2) && typeof answer2.last_entry === "string" ? answer2.last_entry.slice(0, 64) : null,
           recordedAt
@@ -183339,7 +183945,7 @@ var CaseImport = class _CaseImport {
         import: i.import_id,
         at: readAt3,
         outcome: out,
-        ...why2 ? { reason: why2 } : {},
+        ...why3 ? { reason: why3 } : {},
         new_entries: rows4.length,
         new_moves: moves.length,
         new_refused: rows4.filter((r) => r.status === "refused").length,
@@ -183665,16 +184271,16 @@ for (const m of ["importCaseFile", "completeImportedDocument", "recordDocketRead
     return withRow4(await fn.apply(this, a));
   };
 }
-var instances43 = /* @__PURE__ */ new WeakMap();
+var instances44 = /* @__PURE__ */ new WeakMap();
 function caseImportOf(host, deps) {
-  let c = instances43.get(host);
+  let c = instances44.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseImport({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances43.set(host, c);
+    instances44.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("case-import", CASE_IMPORT_TABLES.map((name3) => ({ name: name3, keys: [] })));
     c.countsRegistration = record.registerCounts(
@@ -184165,7 +184771,7 @@ var PHOTO_NOT_COVERABLE_WORDS = PHOTO_WORDS["photo.refused.format"];
 var PHOTO_UNCHECKED_WORDS = PHOTO_WORDS["photo.refused.unchecked"];
 var HEX6419 = /^[0-9a-f]{64}$/i;
 function photoRead(read3) {
-  const unread = (why2) => ({ photo: null, unread: true, why: why2 });
+  const unread = (why3) => ({ photo: null, unread: true, why: why3 });
   let a = null;
   try {
     a = read3();
@@ -184201,7 +184807,7 @@ function obscuredRead2(o, copy2, kind2) {
 }
 var DOCUMENT_STATES = Object.freeze(["public", "clean", "copy", "refused", "pending", "undetermined", "photo"]);
 function documentRead(read3) {
-  const unread = (why2) => ({ state: "undetermined", copy: null, refused: null, why: why2 });
+  const unread = (why3) => ({ state: "undetermined", copy: null, refused: null, why: why3 });
   let a = null;
   try {
     a = read3();
@@ -185423,9 +186029,9 @@ var CaseDisclosures = class {
     for (const p3 of persons) {
       const d = basisOf2.get(p3.person);
       if (!d) continue;
-      const why2 = this.#basisStanding(p3, d, viewer);
-      if (why2 === null) standing.set(p3.person, d);
-      else notStanding.push({ person: p3.person, ord: d.ord, basis: d.basis, ref: d.ref, why: why2 });
+      const why3 = this.#basisStanding(p3, d, viewer);
+      if (why3 === null) standing.set(p3.person, d);
+      else notStanding.push({ person: p3.person, ord: d.ord, basis: d.basis, ref: d.ref, why: why3 });
     }
     const refusals = [];
     if (unrecorded.length)
@@ -185775,32 +186381,32 @@ var CaseDisclosures = class {
         }));
     } else {
       const named3 = (code) => marked([...new Set(departures.filter((d) => d.code === code).map((d) => d.ord))].map((o) => byOrd2.get(o)));
-      const say7 = (list6) => list6.map((x) => `sentence ${x.ord} ("${x.text.slice(0, 80)}")`).join("; ");
+      const say8 = (list6) => list6.map((x) => `sentence ${x.ord} ("${x.text.slice(0, 80)}")`).join("; ");
       let n2;
       if ((n2 = named3("ACCOUNT_SENTENCE_UNSUPPORTED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_SENTENCE_UNSUPPORTED", {
           sentences: n2,
-          detail: `${say7(n2)} cites nothing and is not marked as following a printed bias statement. Cite what it rests on, or take it out. Nothing was written.`
+          detail: `${say8(n2)} cites nothing and is not marked as following a printed bias statement. Cite what it rests on, or take it out. Nothing was written.`
         }));
       if ((n2 = named3("ACCOUNT_FACT_NOT_IN_CITED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_FACT_NOT_IN_CITED", {
           sentences: n2,
-          detail: `${say7(n2)} states a figure, date, name or quotation that what it cites does not hold. Nothing was written.`
+          detail: `${say8(n2)} states a figure, date, name or quotation that what it cites does not hold. Nothing was written.`
         }));
       if ((n2 = named3("ACCOUNT_CONTRADICTED_BY_RECORD")).length)
         refusals.push(disclosureRefusal("ACCOUNT_CONTRADICTED_BY_RECORD", {
           sentences: n2,
-          detail: `${say7(n2)} says other than the record holds, and cannot be tied to evidence. Nothing was written.`
+          detail: `${say8(n2)} says other than the record holds, and cannot be tied to evidence. Nothing was written.`
         }));
       if ((n2 = named3("ACCOUNT_BIAS_NOT_PRINTED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_BIAS_NOT_PRINTED", {
           sentences: n2,
-          detail: `${say7(n2)} is framed by a bias statement this case's lens does not print. Nothing was written.`
+          detail: `${say8(n2)} is framed by a bias statement this case's lens does not print. Nothing was written.`
         }));
       if ((n2 = named3("ACCOUNT_CLAIM_NOT_BIAS")).length)
         refusals.push(disclosureRefusal("ACCOUNT_CLAIM_NOT_BIAS", {
           sentences: n2,
-          detail: `${say7(n2)} is marked as following a bias statement and states a fact. Lying is not bias. Nothing was written.`
+          detail: `${say8(n2)} is marked as following a bias statement and states a fact. Lying is not bias. Nothing was written.`
         }));
     }
     if (flags2 != null) {
@@ -186064,15 +186670,15 @@ function marksDecide(m) {
   const whole2 = m.held && typeof m.held === "object" ? m.held.whole !== false : true;
   return whole2 || m.rests_under !== "supporting";
 }
-var instances44 = /* @__PURE__ */ new WeakMap();
+var instances45 = /* @__PURE__ */ new WeakMap();
 function caseDisclosuresOf(host, deps) {
-  let c = instances44.get(host);
+  let c = instances45.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     c = new CaseDisclosures({ ...d, host, storage, record });
-    instances44.set(host, c);
+    instances45.set(host, c);
   }
   return c;
 }
@@ -187058,15 +187664,15 @@ function caseAccountOps(c, url, body) {
     advocacychecks: () => c.advocacyChecksOf({ project: project(), viewer: qp("viewer") })
   };
 }
-var instances45 = /* @__PURE__ */ new WeakMap();
+var instances46 = /* @__PURE__ */ new WeakMap();
 function caseAccountOf(host, deps) {
-  let c = instances45.get(host);
+  let c = instances46.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     c = new CaseAccount({ ...d, host, storage, record });
-    instances45.set(host, c);
+    instances46.set(host, c);
     c.migrate();
     record.declarePurge("case-account", CASE_ACCOUNT_TABLES);
   }
@@ -187359,8 +187965,8 @@ var isCount = (n2) => Number.isInteger(n2) && n2 >= 0;
 function openRequestRow(r) {
   if (!r || typeof r !== "object" || Array.isArray(r)) return null;
   const whom = typeof r.whom === "string" ? r.whom.trim() : "";
-  const asked6 = typeof r.asked_at === "string" ? r.asked_at.trim() : "";
-  if (!whom || !asked6) return null;
+  const asked7 = typeof r.asked_at === "string" ? r.asked_at.trim() : "";
+  if (!whom || !asked7) return null;
   if (r.window_closes !== null && (typeof r.window_closes !== "string" || !r.window_closes.trim())) return null;
   const a = r.answers;
   if (a !== null && !(a && typeof a === "object" && !Array.isArray(a) && isCount(a.answered) && isCount(a.claims) && a.answered <= a.claims)) return null;
@@ -187370,7 +187976,7 @@ function openRequestRow(r) {
   if (r.quotable !== void 0 && typeof r.quotable !== "boolean") return null;
   return {
     whom,
-    asked_at: asked6,
+    asked_at: asked7,
     window_closes: r.window_closes === null ? null : r.window_closes.trim(),
     answers: a === null ? null : { answered: a.answered, claims: a.claims },
     /* stated only where the source states it, so a row of a source that does not reads as before */
@@ -187517,9 +188123,9 @@ var CaseInputs = class {
     if (!ratified) return this.#noSuchCase();
     if (!this.membership.isJoinedParticipant(ratified.project, who4))
       return refusal24(C2, "CARRY_NOT_A_PARTICIPANT", { case: ratified.caseId, detail: `${who4} has not joined ${ratified.project}, the project that makes this case. Nothing was written.` });
-    const bad2 = (field3, why2) => refusal24(C2, "BAD_CARRIED_OUTCOME", {
+    const bad2 = (field3, why3) => refusal24(C2, "BAD_CARRIED_OUTCOME", {
       field: field3,
-      detail: `${field3}: ${why2} Nothing was written.`,
+      detail: `${field3}: ${why3} Nothing was written.`,
       translation: fillWords3("refusal.BAD_CARRIED_OUTCOME", { field: field3 })
     });
     const shaped = this.account.accountShaped([{ text: "cites", cites }], null, 0);
@@ -188210,9 +188816,9 @@ case_project: ${project}
     };
   }
 };
-var instances46 = /* @__PURE__ */ new WeakMap();
+var instances47 = /* @__PURE__ */ new WeakMap();
 function caseInputsOf(host, deps) {
-  let c = instances46.get(host);
+  let c = instances47.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -188223,7 +188829,7 @@ function caseInputsOf(host, deps) {
     const declared2 = record.declarePurge("case-inputs", CASE_INPUTS_TABLES);
     if (declared2 && declared2.ok === false)
       throw new Error(`case-inputs: record-core refused its table declaration: ${declared2.reason} (${declared2.table})`);
-    instances46.set(host, c);
+    instances47.set(host, c);
   }
   return c;
 }
@@ -189238,13 +189844,13 @@ function calculationFrom(answer2) {
   const c = answer2.calculation && typeof answer2.calculation === "object" ? answer2.calculation : answer2;
   return c && c.recipe && Array.isArray(c.inputs) ? c : null;
 }
-var instances47 = /* @__PURE__ */ new WeakMap();
+var instances48 = /* @__PURE__ */ new WeakMap();
 function workbooksOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let w = instances47.get(storage);
+  let w = instances48.get(storage);
   if (!w) {
     w = new Workbooks({ storage, recompute: ctx && typeof ctx.recompute === "function" ? ctx.recompute : null, ...deps });
-    instances47.set(storage, w);
+    instances48.set(storage, w);
   }
   return w;
 }
@@ -189365,8 +189971,8 @@ var Workbooks = class {
     const sheets = text8 && text8.ok && Array.isArray(text8.sheets) ? text8.sheets : null;
     if (!sheets || !sheets.length || sheets.some((s) => !Array.isArray(s.cells))) {
       const marks2 = (sheets || []).flatMap((s) => s.undetermined || []).concat(text8 && Array.isArray(text8.undetermined) ? text8.undetermined : []);
-      const why2 = !text8 || !text8.ok ? text8?.reason || "not an xlsx workbook" : marks2.map((m) => m && typeof m === "object" ? m.why || JSON.stringify(m) : String(m))[0] || "no cells were read";
-      return refusal25("NOT_A_WORKBOOK", "office-readers gives no cells for this capture", { why: why2 });
+      const why3 = !text8 || !text8.ok ? text8?.reason || "not an xlsx workbook" : marks2.map((m) => m && typeof m === "object" ? m.why || JSON.stringify(m) : String(m))[0] || "no cells were read";
+      return refusal25("NOT_A_WORKBOOK", "office-readers gives no cells for this capture", { why: why3 });
     }
     if (!str39(question)) return refusal25("NO_QUESTION", "a workbook answers a question; state it");
     if (period === void 0 || period === null || typeof period === "string" && !period.trim() || typeof period === "object" && !Object.values(period).some((v) => typeof v === "string" && v.trim()))
@@ -189633,28 +190239,28 @@ var Workbooks = class {
   async recompute({ captureSha, project, by } = {}) {
     const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
-    let answer2 = null, why2 = null, reason2 = null;
+    let answer2 = null, why3 = null, reason2 = null;
     if (!this.engine) {
       reason2 = "NO_ENGINE";
-      why2 = "no engine bound";
+      why3 = "no engine bound";
     } else {
       try {
         answer2 = await this.engine(wb.capture_sha);
       } catch (e2) {
         answer2 = null;
-        why2 = `no answer: ${e2 && e2.message ? e2.message : e2}`;
+        why3 = `no answer: ${e2 && e2.message ? e2.message : e2}`;
       }
       if (!answer2 || typeof answer2 !== "object") {
         reason2 = "NO_ANSWER";
-        why2 = why2 || "no answer";
+        why3 = why3 || "no answer";
         answer2 = null;
       } else if (answer2.ok !== true) {
         reason2 = typeof answer2.reason === "string" ? answer2.reason : "NO_ANSWER";
-        why2 = typeof answer2.why === "string" ? answer2.why : reason2;
+        why3 = typeof answer2.why === "string" ? answer2.why : reason2;
         answer2 = null;
       } else if (!Array.isArray(answer2.cells)) {
         reason2 = "NO_ANSWER";
-        why2 = "the engine's answer holds no cells";
+        why3 = "the engine's answer holds no cells";
         answer2 = null;
       }
     }
@@ -189665,7 +190271,7 @@ var Workbooks = class {
       engine: null,
       engine_version: null,
       reason: reason2,
-      why: why2,
+      why: why3,
       body: {
         counts: { compared: 0, agreed: 0, differed: 0, not_recomputed: 0, volatile: 0, cache_stale: 0 },
         differing: [],
@@ -189980,8 +190586,8 @@ function pair(answer2, cells) {
 }
 function disclosure(rec) {
   if (!rec || rec.status === NOT_RECOMPUTED) {
-    const why2 = rec ? rec.why || rec.reason : "no recompute is recorded";
-    return { text: `${NOT_RECOMPUTED}: ${why2}; open it in any spreadsheet program`, status: NOT_RECOMPUTED };
+    const why3 = rec ? rec.why || rec.reason : "no recompute is recorded";
+    return { text: `${NOT_RECOMPUTED}: ${why3}; open it in any spreadsheet program`, status: NOT_RECOMPUTED };
   }
   const measured = rec.engine === ENGINE_MEASURE.engine && rec.engine_version === ENGINE_MEASURE.engine_version;
   return {
@@ -190710,9 +191316,9 @@ function standardsUseWords(r) {
   }
 }
 var membersOf = (targets, target) => [...new Set((Array.isArray(targets) ? targets : typeof targets === "string" && targets.trim() ? targets.split(",") : target ? [target] : []).map((x) => str40(x)).filter(Boolean))];
-function whenWords(when, why2) {
+function whenWords(when, why3) {
   if (when && typeof when === "object" && when.value != null) return String(when.value);
-  if (when === "undetermined" || why2) return when && when.start ? `undetermined ${when.start}..${when.end}` : "undetermined";
+  if (when === "undetermined" || why3) return when && when.start ? `undetermined ${when.start}..${when.end}` : "undetermined";
   return "nowhere";
 }
 var PREFLIGHT_ROLLBACK = Symbol("case-authoring pre-flight rollback");
@@ -191263,7 +191869,7 @@ var CaseAuthoring = class {
         return { ok: false, reason: "BAD_EXCLUSION", ord: i, detail: `excluded[${i}] is not an object` };
       const tgt = typeof r.target === "string" && r.target.trim() !== "" ? r.target.trim() : null;
       const desc = str40(r.description);
-      const why2 = str40(r.reason);
+      const why3 = str40(r.reason);
       if (!tgt && !desc)
         return {
           ok: false,
@@ -191271,14 +191877,14 @@ var CaseAuthoring = class {
           ord: i,
           detail: `excluded[${i}] names neither a target nor a description. Every exclusion row carries a target id OR prose, never neither \u2014 otherwise the row asserts nothing and the index cannot answer "which published cases excluded this document".`
         };
-      if (!why2)
+      if (!why3)
         return {
           ok: false,
           reason: "BAD_EXCLUSION",
           ord: i,
           detail: `excluded[${i}] carries no reason. WHAT was left out and WHY are two statements and one does not stand in for the other.`
         };
-      rows4.push({ target: tgt, description: desc, reason: why2 });
+      rows4.push({ target: tgt, description: desc, reason: why3 });
     }
     for (const [name3, v] of [
       ["statement", stmt],
@@ -192611,8 +193217,8 @@ var CaseAuthoring = class {
       all.push(...Array.isArray(page2.statements) ? page2.statements : []);
     }
     const cited = (s) => (Array.isArray(s.citations) ? s.citations : []).map((c) => c == null ? "" : String(c).trim()).filter(Boolean);
-    const asked6 = [...new Set(all.flatMap(cited).filter((c) => !isPublicHttpsLocator(c)))];
-    const hashes = asked6.filter((c) => /^[0-9a-f]{64}$/i.test(c)).map((c) => c.toLowerCase());
+    const asked7 = [...new Set(all.flatMap(cited).filter((c) => !isPublicHttpsLocator(c)))];
+    const hashes = asked7.filter((c) => /^[0-9a-f]{64}$/i.test(c)).map((c) => c.toLowerCase());
     const published = /* @__PURE__ */ new Set();
     const half = Math.floor(SEARCHED_CHUNK2 / 2);
     for (let i = 0; i < hashes.length; i += half) {
@@ -192624,7 +193230,7 @@ var CaseAuthoring = class {
         ...part
       )) published.add(String(r.h).toLowerCase());
     }
-    const ids = asked6.filter((c) => !/^[0-9a-f]{64}$/i.test(c));
+    const ids = asked7.filter((c) => !/^[0-9a-f]{64}$/i.test(c));
     for (let i = 0; i < ids.length; i += PUBLISHED_TARGETS_CHUNK) {
       const t2 = this.publication.publishedTargets(ids.slice(i, i + PUBLISHED_TARGETS_CHUNK));
       for (const [id, e2] of Object.entries(t2 && t2.registry || {}))
@@ -192771,9 +193377,9 @@ var CaseAuthoring = class {
     return this.observations.missingCauseAt("meaning", { hasArtifact: hasReading, registeredAt: enteredAt });
   }
 };
-var instances48 = /* @__PURE__ */ new WeakMap();
+var instances49 = /* @__PURE__ */ new WeakMap();
 function caseAuthoringOf(host, deps) {
-  let c = instances48.get(host);
+  let c = instances49.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -192782,7 +193388,7 @@ function caseAuthoringOf(host, deps) {
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
     void c.account;
     void c.inputs;
-    instances48.set(host, c);
+    instances49.set(host, c);
   }
   return c;
 }
@@ -192909,7 +193515,7 @@ var VOID_CAUSES = Object.freeze([
   "accepted_work_lapsed",
   "marks_lapsed"
 ]);
-var stateKey = (state, why2 = null) => state === "void" ? `case.check.void.${why2}` : state === "held" || state === "undetermined" ? `case.check.${state}` : null;
+var stateKey = (state, why3 = null) => state === "void" ? `case.check.void.${why3}` : state === "held" || state === "undetermined" ? `case.check.${state}` : null;
 var str41 = (v) => typeof v === "string" ? v.trim() : "";
 var ROLLBACK = Symbol("case-check dry run");
 function refusal27(code, detail, extra) {
@@ -193065,10 +193671,10 @@ var CaseCheck = class {
       const ed = Number(row13.edition);
       if (this.#one(`SELECT 1 AS x FROM published_cases WHERE case_id=? AND edition=?`, row13.case_id, ed))
         return { state: "published", published_edition: ed };
-      const why2 = [], extra = {};
+      const why3 = [], extra = {};
       const doc = this.#one(`SELECT doc_sha, text FROM case_documents WHERE case_id=? AND edition=?`, row13.case_id, ed);
       const replaced = !doc || doc.doc_sha !== row13.doc_sha;
-      if (replaced) why2.push("document_replaced");
+      if (replaced) why3.push("document_replaced");
       const moved = [];
       const counts = JSON.parse(row13.member_rows);
       for (const m of JSON.parse(row13.members)) {
@@ -193078,7 +193684,7 @@ var CaseCheck = class {
           moved.push({ bundle_id: m.bundle_id, pinned: m.version_sha, current: current2 });
       }
       if (moved.length) {
-        why2.push("member_moved");
+        why3.push("member_moved");
         extra.moved = moved;
       }
       if (!replaced) {
@@ -193087,17 +193693,17 @@ var CaseCheck = class {
         if (!fm || typeof fm !== "object") throw new Error("the checked preparation's front matter could not be read");
         const sources = C2.sourcesLapsedSince(doc.text, since);
         if (!Array.isArray(sources)) throw new Error("case-carriage's sources read gave no list");
-        if (sources.length) why2.push("source_lapsed");
+        if (sources.length) why3.push("source_lapsed");
         const accepted = C2.acceptedWorkLapsedSince(fm, row13.by, since);
         if (accepted !== null && accepted !== void 0) {
           if (typeof accepted !== "object") throw new Error("case-carriage's accepted-work read gave no answer");
-          why2.push("accepted_work_lapsed");
+          why3.push("accepted_work_lapsed");
         }
         const marks2 = C2.marksLapsedSince(fm, since);
         if (!Array.isArray(marks2)) throw new Error("case-carriage's marks read gave no list");
-        if (marks2.length) why2.push("marks_lapsed");
+        if (marks2.length) why3.push("marks_lapsed");
       }
-      return why2.length ? { state: "void", why: why2, ...extra } : { state: "held" };
+      return why3.length ? { state: "void", why: why3, ...extra } : { state: "held" };
     } catch (e2) {
       return { state: "undetermined", detail: String(e2 && e2.message || e2).slice(0, 200) };
     }
@@ -193204,9 +193810,9 @@ case_project: ${project}
     return { ok: true, items };
   }
 };
-var instances49 = /* @__PURE__ */ new WeakMap();
+var instances50 = /* @__PURE__ */ new WeakMap();
 function caseCheckOf(host, deps) {
-  let c = instances49.get(host);
+  let c = instances50.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -193216,7 +193822,7 @@ function caseCheckOf(host, deps) {
     const declared2 = record.declarePurge("case-check", CASE_CHECK_TABLES);
     if (declared2 && declared2.ok === false)
       throw new Error(`case-check: record-core refused its table declaration: ${declared2.reason} (${declared2.table})`);
-    instances49.set(host, c);
+    instances50.set(host, c);
   }
   return c;
 }
@@ -194347,7 +194953,7 @@ var Conformance = class _Conformance {
      is `{date: null, why}`, read as undetermined. */
   static datesOf(act2) {
     const w = act2.when;
-    const nowhere = (why2) => [{ date: null, why: why2 }];
+    const nowhere = (why3) => [{ date: null, why: why3 }];
     if (w === null || w === void 0)
       return nowhere(`the act's event is placed nowhere${act2.why ? ` (${act2.why})` : ": no attestation of it is dated"}`);
     if (!isObj42(w)) return nowhere(`the act's event's date is undetermined${act2.why ? ` (${act2.why})` : ""}`);
@@ -194602,11 +195208,11 @@ var Conformance = class _Conformance {
       const all = (state) => answers2.every((x) => x.state === state);
       const binds = all("binds") ? true : all("benchmark") ? false : "undetermined";
       const open = answers2.find((x) => x.state === "undetermined");
-      const why2 = binds === "undetermined" ? open ? open.why : "it binds the body at one end of the act's band and not at the other" : answers2.map((x) => x.why).filter(Boolean).join("; ") || null;
+      const why3 = binds === "undetermined" ? open ? open.why : "it binds the body at one end of the act's band and not at the other" : answers2.map((x) => x.why).filter(Boolean).join("; ") || null;
       out.set(id, {
         body,
         binds,
-        why: why2,
+        why: why3,
         rests_on: answers2.flatMap((x) => x.rests_on).slice(0, 20),
         label: bindingLabel(binds, bodyLabel ?? "the body")
       });
@@ -194779,12 +195385,12 @@ var Conformance = class _Conformance {
     const prevEvent = this.#eventOfRow(prev);
     if (act2.event !== prevEvent)
       return refusal28("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act2.event}. Nothing was written.`, { supersedes: id, act: act2.event, predecessor_act: prevEvent ?? prev.act_id });
-    const why2 = _Conformance.#reason(reason2);
-    const bad2 = this.#reasonRefusal(why2, "superseding a determination", { supersedes: id });
+    const why3 = _Conformance.#reason(reason2);
+    const bad2 = this.#reasonRefusal(why3, "superseding a determination", { supersedes: id });
     if (bad2) return bad2;
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
     if (by) return determinationSuperseded(id, by.superseded_by, { supersedes: id });
-    return { ok: true, prev, reason: why2 };
+    return { ok: true, prev, reason: why3 };
   }
   /* R7, R11, R26: the event a determination's act is, an `ACT-` id resolved through its alias; null for one not aliased. */
   #eventOfRow(r, acts19 = null) {
@@ -194899,8 +195505,8 @@ var Conformance = class _Conformance {
     if (!qs.ok) return qs;
     const sig = this.#refuseSignificance(input);
     if (sig) return sig;
-    const why2 = this.#causeRefusal(cause, author);
-    if (!why2.ok) return why2;
+    const why3 = this.#causeRefusal(cause, author);
+    if (!why3.ok) return why3;
     const rec = this.#refuseRecommendation(input);
     if (rec) return rec;
     const drew = str42(proposal);
@@ -194917,7 +195523,7 @@ var Conformance = class _Conformance {
       questions: qs.questions,
       sup,
       proposal: drew,
-      cause: why2.cause,
+      cause: why3.cause,
       author: str42(author),
       viewer
     });
@@ -196053,19 +196659,19 @@ var Conformance = class _Conformance {
     const sid = str42(standard2);
     const unfit3 = this.#cureRefusal(t2, c, sid);
     if (unfit3) return unfit3;
-    let why2 = null;
+    let why3 = null;
     if (reason2 !== void 0 && reason2 !== null) {
-      why2 = _Conformance.#reason(reason2);
-      const bad2 = why2 === "" ? null : this.#reasonRefusal(why2, "linking a cure", { determination: t2.determination_id });
+      why3 = _Conformance.#reason(reason2);
+      const bad2 = why3 === "" ? null : this.#reasonRefusal(why3, "linking a cure", { determination: t2.determination_id });
       if (bad2) return bad2;
-      why2 = why2 || null;
+      why3 = why3 || null;
     }
     const at50 = this.#when();
     let id = null;
     this.record.transact(() => {
       id = this.record.allocId("CURE", at50.slice(0, 4)).id;
       this.sql.exec(`INSERT INTO determination_cures (link_id, determination_id, standard_id, cure_id, reason, by, at)
-                     VALUES (?,?,?,?,?,?,?)`, id, t2.determination_id, sid, c.determination_id, why2, str42(author), at50);
+                     VALUES (?,?,?,?,?,?,?)`, id, t2.determination_id, sid, c.determination_id, why3, str42(author), at50);
       return { ok: true };
     });
     return { ...this.curesOf({ determination: t2.determination_id, standard: sid, viewer: v }), link: id, wrote: true };
@@ -196077,14 +196683,14 @@ var Conformance = class _Conformance {
   /* R7, R23, R36: the one site of this module's reason codes: an absent reason is `CONFORMANCE_NO_REASON`, one over
      REASON_MAX characters or not text `CONFORMANCE_BAD_REASON` (N233, K264; never progressions' NO_REASON/BAD_REASON).
      `why` is `#reason`'s answer; `act` names the act in the detail. */
-  #reasonRefusal(why2, act2, extra) {
-    if (why2 === "")
+  #reasonRefusal(why3, act2, extra) {
+    if (why3 === "")
       return refusal28(
         "CONFORMANCE_NO_REASON",
         `${act2} says why; this names no reason. Nothing was written.`,
         { ...extra, max: REASON_MAX12 }
       );
-    if (why2 === null || why2.length > REASON_MAX12)
+    if (why3 === null || why3.length > REASON_MAX12)
       return refusal28("CONFORMANCE_BAD_REASON", `${act2} says why, as text of at most ${REASON_MAX12} characters. Nothing was written.`, { ...extra, max: REASON_MAX12 });
     return null;
   }
@@ -196100,15 +196706,15 @@ var Conformance = class _Conformance {
     if (!t2) return noSuchDetermination(null, { link: str42(link) });
     const notJoined = this.#participantRefusal(t2.project_id, author);
     if (notJoined) return notJoined;
-    const why2 = _Conformance.#reason(reason2);
-    const bad2 = this.#reasonRefusal(why2, "ending a cure link", { link: l2.link_id });
+    const why3 = _Conformance.#reason(reason2);
+    const bad2 = this.#reasonRefusal(why3, "ending a cure link", { link: l2.link_id });
     if (bad2) return bad2;
     const ended = this.#one(`SELECT * FROM determination_cure_ends WHERE link_id=?`, l2.link_id);
     if (ended) return { ok: true, wrote: false, link: l2.link_id, ended: endedView(ended) };
     const at50 = this.#when();
     this.record.transact(() => {
       this.sql.exec(`INSERT INTO determination_cure_ends (link_id, determination_id, cure_id, reason, by, at)
-                     VALUES (?,?,?,?,?,?)`, l2.link_id, l2.determination_id, l2.cure_id, why2, str42(author), at50);
+                     VALUES (?,?,?,?,?,?)`, l2.link_id, l2.determination_id, l2.cure_id, why3, str42(author), at50);
       return { ok: true };
     });
     return {
@@ -196123,7 +196729,7 @@ var Conformance = class _Conformance {
     const c = this.#one(`SELECT * FROM determinations WHERE determination_id=?`, l2.cure_id);
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, l2.cure_id);
     const causes = c ? this.#voidCauses(c, memo) : [];
-    const why2 = !c ? "the curing determination is not held" : by ? "the curing determination has been superseded" : causes.length ? "the curing determination is void: a finding it rests on no longer stands" : null;
+    const why3 = !c ? "the curing determination is not held" : by ? "the curing determination has been superseded" : causes.length ? "the curing determination is void: a finding it rests on no longer stands" : null;
     return {
       link: l2.link_id,
       cure: l2.cure_id,
@@ -196131,8 +196737,8 @@ var Conformance = class _Conformance {
       by: l2.by,
       at: l2.at,
       reason: l2.reason ?? null,
-      cure_standing: !why2,
-      ...why2 ? { cure_why: why2 } : {}
+      cure_standing: !why3,
+      ...why3 ? { cure_why: why3 } : {}
     };
   }
   /* R9, R37: `cured_by` (per standard, the standing link and the ended ones) and `cures` (the standing links naming this
@@ -196323,9 +196929,9 @@ var endedView = (e2) => ({ reason: e2.reason, by: e2.by, at: e2.at });
 function refuseNoSuchComparison(id) {
   return refusal28("NO_SUCH_COMPARISON", "no comparison answers to that id in this project. One you may not see answers exactly as one that does not exist. Nothing was written.", { proposal: str42(id) });
 }
-function whenWords2(w, why2) {
-  if (w === null || w === void 0) return `placed nowhere${why2 ? ` (${oneLine4(why2)})` : ""}`;
-  if (!isObj42(w)) return `its date undetermined${why2 ? ` (${oneLine4(why2)})` : ""}`;
+function whenWords2(w, why3) {
+  if (w === null || w === void 0) return `placed nowhere${why3 ? ` (${oneLine4(why3)})` : ""}`;
+  if (!isObj42(w)) return `its date undetermined${why3 ? ` (${oneLine4(why3)})` : ""}`;
   if (w.precision === "upper_bound") return `on or before ${w.value}${w.zone ? ` (${w.zone})` : ""}`;
   return `${w.precision === "day" || w.precision === "edtf" ? "in" : "at"} ${w.value}${w.zone ? ` (${w.zone})` : ""}`;
 }
@@ -196411,9 +197017,9 @@ function determinationDoc({
   ];
   return lines2.join("\n");
 }
-var instances50 = /* @__PURE__ */ new WeakMap();
+var instances51 = /* @__PURE__ */ new WeakMap();
 function conformanceOf(host, deps) {
-  let c = instances50.get(host);
+  let c = instances51.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -196421,7 +197027,7 @@ function conformanceOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Conformance({ ...d, host, storage, record, membership, promotion });
-    instances50.set(host, c);
+    instances51.set(host, c);
     c.migrate();
     record.declarePurge("conformance", CONFORMANCE_TABLES);
     promotion.registerStep("conformance", { check: (x) => c.check(x) });
@@ -196875,11 +197481,11 @@ function reasonRefusal2(reason2) {
     return refuse18("BAD_REASON", `a reason is at most ${REASON_MAX13} characters.${NOTHING}`);
   return null;
 }
-function basisUnreadable(why2, extra = {}) {
-  return refuse18("BASIS_UNREADABLE", `${why2}.${NOTHING}`, extra);
+function basisUnreadable(why3, extra = {}) {
+  return refuse18("BASIS_UNREADABLE", `${why3}.${NOTHING}`, extra);
 }
-function foreignRefusal(code, why2, extra = {}) {
-  return { ok: false, reason: code, code, detail: `${String(why2 ?? "").replace(/\.?\s*$/, "")}.${NOTHING}`, ...extra };
+function foreignRefusal(code, why3, extra = {}) {
+  return { ok: false, reason: code, code, detail: `${String(why3 ?? "").replace(/\.?\s*$/, "")}.${NOTHING}`, ...extra };
 }
 function redressFigureKey(v, depth = 0) {
   if (depth > 8 || v === null || typeof v !== "object") return null;
@@ -196893,7 +197499,7 @@ function redressFigureKey(v, depth = 0) {
 function checkAffected(a) {
   const o = isObj43(a) ? a : {};
   const kind2 = str43(o.kind) ? o.kind.trim().toLowerCase() : null;
-  const unknown = (why2) => refuse18("AFFECTED_UNKNOWN_KIND", `${why2}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description; an office is {role, body}, and a person {entity, named_in}. Nothing was written.`, { kind: kind2 ?? null });
+  const unknown = (why3) => refuse18("AFFECTED_UNKNOWN_KIND", `${why3}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description; an office is {role, body}, and a person {entity, named_in}. Nothing was written.`, { kind: kind2 ?? null });
   if (!isObj43(a)) return unknown("an affected is {kind, description, role?, person?}");
   if (!kind2 || !AFFECTED_KINDS.includes(kind2)) return unknown(`"${String(o.kind ?? "")}" is not a kind of affected`);
   if (!str43(o.description)) return unknown("an affected is described");
@@ -196917,7 +197523,7 @@ function checkMeasure(m) {
       { unit: isObj43(m) ? m.unit ?? null : null }
     );
   const unit = m.unit.trim();
-  const bad2 = (why2) => refuse18("MEASURE_INVALID", `${why2}. Nothing was written.`, { unit });
+  const bad2 = (why3) => refuse18("MEASURE_INVALID", `${why3}. Nothing was written.`, { unit });
   if (m.currency != null && m.currency !== "") {
     if (unit !== "money") return bad2(`a currency belongs to a measure of money, and this one is of ${unit}`);
     if (!str43(m.currency)) return bad2("a currency is named by its code, such as USD");
@@ -196950,7 +197556,7 @@ function measureAsHeld(m) {
   return out;
 }
 function checkPeriod(p3) {
-  const bad2 = (why2) => refuse18("PERIOD_INVALID", `${why2}. Nothing was written.`);
+  const bad2 = (why3) => refuse18("PERIOD_INVALID", `${why3}. Nothing was written.`);
   if (!isObj43(p3)) return bad2("a period is {from, to}: the dates the consequence ran between");
   const from = str43(p3.from);
   const to = str43(p3.to);
@@ -197202,7 +197808,7 @@ var Consequences = class {
         `${person2.entity ? `${person2.entity} is not a person this record holds` : "an affected person names the person entity"}: a harmed person is a registered person entity.${NOTHING}`,
         { entity: person2.entity ?? null }
       );
-    const notNamed = (why2) => refuse18("AFFECTED_PERSON_NOT_NAMED", `${why2}: a person is recorded as affected only as a document in the record names them.${NOTHING}`, { entity: person2.entity, named_in: person2.named_in ?? null });
+    const notNamed = (why3) => refuse18("AFFECTED_PERSON_NOT_NAMED", `${why3}: a person is recorded as affected only as a document in the record names them.${NOTHING}`, { entity: person2.entity, named_in: person2.named_in ?? null });
     if (!person2.named_in) return notNamed("no passage naming the person is given (named_in)");
     const row13 = HEX6420.test(person2.named_in) ? this.content.contentRow(person2.named_in) : null;
     if (!row13 || !this.membership.inSight(row13.bundle_id, who4)) return notNamed("named_in is not content of a held capture you may see");
@@ -197489,13 +198095,13 @@ var Consequences = class {
       ...o.key ? { key: o.key } : {},
       ...o.kind === "content" ? { figure: o.figure } : {}
     };
-    const lacking = (code, why2) => ({
+    const lacking = (code, why3) => ({
       ...base2,
       grade: null,
       route: null,
       determined: false,
       basis: null,
-      lacking: { code, why: `operand ${i} ${why2}` }
+      lacking: { code, why: `operand ${i} ${why3}` }
     });
     if (o.kind === "content") {
       const row13 = this.content.contentRow(o.ref);
@@ -197919,8 +198525,8 @@ var Consequences = class {
     let plain20 = null;
     if (words24 !== void 0 && words24 !== null) {
       const list6 = Array.isArray(words24) ? words24 : null;
-      const why2 = state !== "addressed" ? "plain words are carried only by a part recorded addressed" : !list6 ? "words are a list" : list6.some((x) => !ADDRESSED_WORDS.includes(x)) ? `each word is one of ${ADDRESSED_WORDS.join(", ")}` : new Set(list6).size !== list6.length ? "each word is given once" : list6.length > ADDRESSED_WORDS_MAX ? `at most ${ADDRESSED_WORDS_MAX} words` : null;
-      if (why2) return refuse18("ADDRESSED_WORD_REFUSED", `${why2}.${NOTHING}`);
+      const why3 = state !== "addressed" ? "plain words are carried only by a part recorded addressed" : !list6 ? "words are a list" : list6.some((x) => !ADDRESSED_WORDS.includes(x)) ? `each word is one of ${ADDRESSED_WORDS.join(", ")}` : new Set(list6).size !== list6.length ? "each word is given once" : list6.length > ADDRESSED_WORDS_MAX ? `at most ${ADDRESSED_WORDS_MAX} words` : null;
+      if (why3) return refuse18("ADDRESSED_WORD_REFUSED", `${why3}.${NOTHING}`);
       plain20 = [...list6];
     }
     const ev = evidence == null ? [] : Array.isArray(evidence) ? evidence : [evidence];
@@ -198590,8 +199196,8 @@ function successDoc(r) {
     ""
   ].join("\n");
 }
-function noSuchSuccessRecord(id, wrote = false, why2 = null) {
-  return refuse18("NO_SUCH_SUCCESS_RECORD", `${why2 ? `${why2}; ` : ""}no success record answers to that id here; one you may not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { id: str43(id) });
+function noSuchSuccessRecord(id, wrote = false, why3 = null) {
+  return refuse18("NO_SUCH_SUCCESS_RECORD", `${why3 ? `${why3}; ` : ""}no success record answers to that id here; one you may not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { id: str43(id) });
 }
 function successSuperseded(id, next) {
   return refuse18(
@@ -198691,14 +199297,14 @@ function gradeWhyFor(r, place9) {
 }
 function undeterminedWhyFor(r, place9, withheld) {
   const head = UNDETERMINED_WHY[r.undetermined_code];
-  const why2 = r.undetermined_why;
-  if (!withheld || !head || typeof why2 !== "string" || !why2.startsWith(`${head}: `)) return why2;
-  const detail = why2.slice(head.length + 2);
+  const why3 = r.undetermined_why;
+  if (!withheld || !head || typeof why3 !== "string" || !why3.startsWith(`${head}: `)) return why3;
+  const detail = why3.slice(head.length + 2);
   if (/^operand \d+/.test(detail)) {
     const t2 = renumbered(detail, place9);
     return t2 === null ? head : `${head}: ${t2}`;
   }
-  return detail === NO_UNIT ? why2 : head;
+  return detail === NO_UNIT ? why3 : head;
 }
 var PERSON_IN_TABLE = "a person a document names: answered by this module's reads only to a viewer who may see the passage naming them (R16)";
 function titleOf2(p3) {
@@ -198758,9 +199364,9 @@ function partDoc(id, p3) {
     ""
   ].join("\n");
 }
-var instances51 = /* @__PURE__ */ new WeakMap();
+var instances52 = /* @__PURE__ */ new WeakMap();
 function consequencesModule(host, deps) {
-  let c = instances51.get(host);
+  let c = instances52.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -198768,7 +199374,7 @@ function consequencesModule(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances51.set(host, c);
+    instances52.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
     c.promoteHeldSuccessRecords();
@@ -200451,8 +201057,8 @@ var CaptureRequests = class _CaptureRequests {
       )) {
         const renderRow2 = q10.render === 1;
         const reason2 = renderHoldReason(q10.code);
-        const why2 = String(q10.detail || "").slice(0, 400);
-        const said12 = `held under ${reason2.check || "no catalogued check"} ${q10.code || "(no code: never attempted)"} until this request expired at ${q10.expires}. ` + (renderRow2 ? "The render was never performed and nothing was filed for it, so what the page showed is UNDETERMINED" : "Nothing was fetched or filed for it after that, so what the address holds is UNDETERMINED") + (why2 ? ` \u2014 the reason last given: ${why2}` : " \u2014 no further detail was carried");
+        const why3 = String(q10.detail || "").slice(0, 400);
+        const said12 = `held under ${reason2.check || "no catalogued check"} ${q10.code || "(no code: never attempted)"} until this request expired at ${q10.expires}. ` + (renderRow2 ? "The render was never performed and nothing was filed for it, so what the page showed is UNDETERMINED" : "Nothing was fetched or filed for it after that, so what the address holds is UNDETERMINED") + (why3 ? ` \u2014 the reason last given: ${why3}` : " \u2014 no further detail was carried");
         this.#sql.exec(
           `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
           said12.slice(0, 600),
@@ -200467,7 +201073,7 @@ var CaptureRequests = class _CaptureRequests {
           state: "LOOKED_INDETERMINATE",
           governed: renderRow2,
           condition: renderRow2 ? "render-deferred" : null,
-          detail: `${reason2.check || "no catalogued check"} ${q10.code || "(no code)"}: the request expired UNDETERMINED at ${q10.expires} and is released \u2014 ${why2 || "no detail was carried"}`
+          detail: `${reason2.check || "no catalogued check"} ${q10.code || "(no code)"}: the request expired UNDETERMINED at ${q10.expires} and is released \u2014 ${why3 || "no detail was carried"}`
         }, at50);
         expired.push({
           request: q10.request,
@@ -200539,7 +201145,7 @@ var CaptureRequests = class _CaptureRequests {
         });
       };
       const sourceRefused = (q10, r) => {
-        const why2 = sourceReasonOf(r.status);
+        const why3 = sourceReasonOf(r.status);
         const row13 = CAPTURE_SOURCE_CHECKS.CAPTURE_SOURCE_REFUSED;
         return {
           ok: false,
@@ -200547,8 +201153,8 @@ var CaptureRequests = class _CaptureRequests {
           code: "CAPTURE_SOURCE_REFUSED",
           check: row13.check,
           translation: row13.translation,
-          sourceReason: why2.reason,
-          detail: `the source answered HTTP ${r.status} for ${q10.address} (${why2.reason}); nothing was captured`
+          sourceReason: why3.reason,
+          detail: `the source answered HTTP ${r.status} for ${q10.address} (${why3.reason}); nothing was captured`
         };
       };
       const fetchFailed = (q10, r) => {
@@ -200627,14 +201233,14 @@ var CaptureRequests = class _CaptureRequests {
           });
         } else if (r.renderCode) {
           const renderRow2 = RENDER_CAPTURE_CHECKS[r.renderCode];
-          const why2 = String(r.detail || r.reason || "").slice(0, 400);
+          const why3 = String(r.detail || r.reason || "").slice(0, 400);
           if (renderRow2.check === RENDER_NOT_A_PAGE_CHECK) {
             settle2(q10, {
               terminal: true,
               code: r.renderCode,
               check: renderRow2.check,
               translation: renderRow2.translation,
-              detail: why2 || "the address served something that is not a single HTML page",
+              detail: why3 || "the address served something that is not a single HTML page",
               governed: false,
               condition: null,
               countAttempt: false
@@ -200645,7 +201251,7 @@ var CaptureRequests = class _CaptureRequests {
               code: r.renderCode,
               check: renderRow2.check,
               translation: renderRow2.translation,
-              detail: why2,
+              detail: why3,
               governed: true,
               condition: "render-deferred",
               countAttempt: false,
@@ -200658,7 +201264,7 @@ var CaptureRequests = class _CaptureRequests {
               code: r.renderCode,
               check: renderRow2.check,
               translation: renderRow2.translation,
-              detail: why2,
+              detail: why3,
               governed: true,
               condition: "render-deferred",
               countAttempt: false,
@@ -200832,9 +201438,9 @@ var CaptureRequests = class _CaptureRequests {
     }
     const scope = a && a.ok === true && Array.isArray(a.scope) ? a.scope.filter((p3) => typeof p3 === "string" && p3 !== "") : [];
     if (a && a.ok === true && scope.length && scope.length === a.scope.length) return { ok: true, scope };
-    const why2 = a && SWEEP_REFUSALS[a.reason] ? SWEEP_REFUSALS[a.reason] : "does not admit this request";
+    const why3 = a && SWEEP_REFUSALS[a.reason] ? SWEEP_REFUSALS[a.reason] : "does not admit this request";
     const said12 = a && typeof a.detail === "string" && a.detail.trim() ? ` (${a.detail.trim().slice(0, 200)})` : "";
-    return sweepOutOfScope(`${name3} ${why2}${said12}; ${q10.address} was not fetched under it`);
+    return sweepOutOfScope(`${name3} ${why3}${said12}; ${q10.address} was not fetched under it`);
   }
   #hostHeld(host, nowMs) {
     try {
@@ -201885,10 +202491,10 @@ var CAPTURE_REQUESTS_TABLES = Object.freeze([
     version_chain: false
   })
 ]);
-var instances52 = /* @__PURE__ */ new WeakMap();
+var instances53 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances52.get(storage);
+  let c = instances53.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -201913,7 +202519,7 @@ function captureRequestsOf(host, deps = {}) {
     };
     d.steps = deps.steps === void 0 ? stepsOf(host, { record, observationLog: d.observations, promotion: d.promotion }) : deps.steps;
     c = new CaptureRequests(storage, d);
-    instances52.set(storage, c);
+    instances53.set(storage, c);
     if (typeof record.declareTable === "function") {
       const declared2 = record.declareTable(CAPTURE_REQUESTS_MODULE, CAPTURE_REQUESTS_TABLES.map((t2) => ({ ...t2 })));
       if (declared2 && declared2.ok === false)
@@ -202834,8 +203440,8 @@ var Intent = class {
     if (p3.refused) return p3.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "setCondition");
     if (denied) return denied;
-    const why2 = reasonOf(reason2);
-    if (!why2) return refuseNoReason("setting, changing or removing an objective's measure records why, in your own words. Nothing was written.");
+    const why3 = reasonOf(reason2);
+    if (!why3) return refuseNoReason("setting, changing or removing an objective's measure records why, in your own words. Nothing was written.");
     const c = condition == null ? null : {
       ...condition,
       required: isObj44(condition.required) ? {
@@ -202860,7 +203466,7 @@ var Intent = class {
       c ? "Objective condition set" : "Objective condition removed",
       str44(author),
       `${c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."}
-Reason: ${bodyText2(why2)}`
+Reason: ${bodyText2(why3)}`
     );
     const r = this.#revise(p3.doc, text8, str44(author), viewer, { personWarningSeen: personWarningSeen === true });
     if (!r.ok) return r;
@@ -202868,7 +203474,7 @@ Reason: ${bodyText2(why2)}`
       ok: true,
       project,
       condition: c,
-      reason: why2,
+      reason: why3,
       set_by: str44(author),
       at: at50,
       bundleSha: r.bundleSha,
@@ -202930,14 +203536,14 @@ Reason: ${bodyText2(why2)}`
         continue;
       }
       const placed3 = new Set((inst.stages || []).filter((s) => s.present).map((s) => s.stage_key));
-      const answered = [];
+      const answered2 = [];
       for (const s of stages2)
         if (!placed3.has(s)) {
           const a = this.#noneExistsFor(key2, eid, s, viewer);
-          if (a) answered.push(a);
+          if (a) answered2.push(a);
         }
-      if (answered.length) row13.none_exists = answered;
-      const missing2 = stages2.filter((s) => !placed3.has(s) && !answered.some((a) => a.stage === s));
+      if (answered2.length) row13.none_exists = answered2;
+      const missing2 = stages2.filter((s) => !placed3.has(s) && !answered2.some((a) => a.stage === s));
       if (missing2.length) {
         short.push({ ...row13, why: { stages_missing: missing2 }, documents: this.#documents(inst) });
         continue;
@@ -203006,7 +203612,7 @@ Reason: ${bodyText2(why2)}`
   #amount(entityId, amount, viewer) {
     const a = amountShape(amount).amount;
     const base2 = { currency: a.currency, min: a.min ?? null, max: a.max ?? null, total: null, facts: [] };
-    const open = (why2, extra = {}) => ({ ...base2, ...extra, passes: null, why: why2 });
+    const open = (why3, extra = {}) => ({ ...base2, ...extra, passes: null, why: why3 });
     const ask3 = {
       entity: entityId,
       kinds: a.kinds,
@@ -203121,7 +203727,7 @@ Reason: ${bodyText2(why2)}`
     const m = this.#measure(held3.condition, viewer);
     const n2 = m.matched.length, k = m.meeting.length, u = m.undetermined.length, share = held3.condition.satisfied.share;
     const satisfied = n2 === 0 || m.truncated ? null : k * 100 >= share * n2 ? true : (k + u) * 100 < share * n2 ? false : null;
-    const why2 = n2 === 0 ? "no instance matches the condition, so no share of them can be taken" : m.truncated ? `more than ${MEASURE_MAX} instances match the condition and one read measures that many, so no share of them is taken` : null;
+    const why3 = n2 === 0 ? "no instance matches the condition, so no share of them can be taken" : m.truncated ? `more than ${MEASURE_MAX} instances match the condition and one read measures that many, so no share of them is taken` : null;
     return {
       ok: true,
       project,
@@ -203135,7 +203741,7 @@ Reason: ${bodyText2(why2)}`
       short: m.short,
       undetermined: m.undetermined,
       satisfied,
-      ...why2 ? { satisfied_why: why2 } : {},
+      ...why3 ? { satisfied_why: why3 } : {},
       limit: MEASURE_MAX,
       truncated: m.truncated,
       instances: { meeting: m.meeting },
@@ -203941,8 +204547,8 @@ ${bodyText2(note)}`
     const found3 = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).list.find((p3) => p3.key === proposal);
     if (!found3)
       return refusal30("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
-    const why2 = str44(reason2);
-    if ((act2 === "defer" || act2 === "dismiss") && !why2)
+    const why3 = str44(reason2);
+    if ((act2 === "defer" || act2 === "dismiss") && !why3)
       return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
     if (act2 === "adopt" && !proj)
       return noSuchProject(null);
@@ -203979,7 +204585,7 @@ ${bodyText2(note)}`
       const d = this.progressions.disposeProposal({
         key: found3.source_key,
         to: act2 === "defer" ? "deferred" : "dismissed",
-        reason: why2,
+        reason: why3,
         definitionVersion: found3.basis.definition_version,
         decidedBy: str44(author)
       });
@@ -203996,7 +204602,7 @@ ${bodyText2(note)}`
         act2,
         proj ? proj.id : this.#projectOfAct({ key: found3.key }),
         inquiry,
-        why2 || null,
+        why3 || null,
         found3.grade ?? null,
         JSON.stringify(found3.basis ?? null),
         str44(author) || PLANE_ACTOR,
@@ -204009,7 +204615,7 @@ ${bodyText2(note)}`
       proposal: found3.key,
       act: act2,
       project: proj ? proj.id : null,
-      reason: why2 || null,
+      reason: why3 || null,
       author: str44(author) || null,
       at: at50,
       ...extra,
@@ -204192,8 +204798,8 @@ ${bodyText2(note)}`
   async workObjective({ project, reason: reason2, author, viewer = null, run: run2 = {} } = {}) {
     if (machine2(author))
       return refusal30("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
-    const why2 = reasonOf(reason2);
-    if (!why2) return refuseNoReason("setting an assistant to work an objective records why, in your own words. No run was opened.");
+    const why3 = reasonOf(reason2);
+    if (!why3) return refuseNoReason("setting an assistant to work an objective records why, in your own words. No run was opened.");
     const p3 = this.#project(project, viewer ?? author);
     if (p3.refused) return p3.refused;
     const g = this.gaps({ project, viewer: viewer ?? author });
@@ -204202,18 +204808,18 @@ ${bodyText2(note)}`
       condition: g.condition ?? null,
       gaps: g.gaps || [],
       authority: { kind: "objective", ref: project },
-      reason: why2
+      reason: why3
     };
     const opened2 = await this.#lazy(this.aiRunsRef).open({
       ...isObj44(run2) ? run2 : {},
       contextType: "project",
       contextId: project,
-      label: why2,
+      label: why3,
       state: { instructions },
       actor: this.#memberOf(author),
       viewer: viewer ?? author
     });
-    return { ...isObj44(opened2) ? opened2 : {}, project, reason: why2, instructions };
+    return { ...isObj44(opened2) ? opened2 : {}, project, reason: why3, instructions };
   }
 };
 function refuseNoSuchGoal(detail, extra) {
@@ -204356,7 +204962,7 @@ var BOUND = /^-?\d{1,40}(?:\.\d{1,20})?$/;
 var boundOf = (v) => typeof v === "string" && BOUND.test(v.trim()) ? v.trim() : Number.isSafeInteger(v) ? String(v) : null;
 var AMOUNT_KEYS3 = Object.freeze(["min", "max", "currency", "kinds", "phases", "period"]);
 function amountShape(v) {
-  const no9 = (why2) => ({ ok: false, why: why2 });
+  const no9 = (why3) => ({ ok: false, why: why3 });
   if (!isObj44(v)) return no9("the amount filter is a map");
   const extra = Object.keys(v).find((k) => !AMOUNT_KEYS3.includes(k));
   if (extra !== void 0) return no9(`the amount filter has no field '${String(extra).slice(0, 40)}'`);
@@ -204437,9 +205043,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances53 = /* @__PURE__ */ new WeakMap();
+var instances54 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances53.get(host);
+  let i = instances54.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -204460,7 +205066,7 @@ function intentOf(host, deps) {
       captureRequests: d.captureRequests || (() => captureRequestsOf(host)),
       money: d.money || (() => moneyOf2(host))
     });
-    instances53.set(host, i);
+    instances54.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c), project: (c) => i.project(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
@@ -205233,10 +205839,10 @@ var ActionRecords = class {
     const who4 = String(proposer ?? "").trim();
     if (!who4) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const asked6 = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
-    if (asked6 !== 1 && asked6 !== 2 && asked6 !== 3) return this.badRiskTier(target, tier, "a proposal");
-    const why2 = typeof basis === "string" ? basis.trim() : "";
-    if (!why2 || why2.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why2))
+    const asked7 = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
+    if (asked7 !== 1 && asked7 !== 2 && asked7 !== 3) return this.badRiskTier(target, tier, "a proposal");
+    const why3 = typeof basis === "string" ? basis.trim() : "";
+    if (!why3 || why3.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why3))
       return refuse19("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
     if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const at50 = stampInstant("second", this.#nowMs(null));
@@ -205245,8 +205851,8 @@ var ActionRecords = class {
       ON CONFLICT(bundle_id, proposed_by) DO UPDATE SET tier=excluded.tier, basis=excluded.basis, proposed_at=excluded.proposed_at`,
       target,
       who4,
-      asked6,
-      why2,
+      asked7,
+      why3,
       at50
     );
     const held3 = riskTierState((this.#heldFm(target) || {}).risk_tier);
@@ -205255,10 +205861,10 @@ var ActionRecords = class {
       target,
       weight: "single",
       evidence: false,
-      proposal: { ...proposalLabelFor(who4, "risk_tier"), tier: asked6, tier_words: RISK_TIERS[asked6], basis: why2, at: at50 },
+      proposal: { ...proposalLabelFor(who4, "risk_tier"), tier: asked7, tier_words: RISK_TIERS[asked7], basis: why3, at: at50 },
       risk_tier: held3,
       risk_tier_words: RISK_TIERS[held3] ?? null,
-      says: `a tier of ${asked6} is proposed for this action. This is not the action's risk tier and did not change it: the tier is ${held3 === "undetermined" ? "undetermined" : held3}, and only a member's own act sets it.`
+      says: `a tier of ${asked7} is proposed for this action. This is not the action's risk tier and did not change it: the tier is ${held3 === "undetermined" ? "undetermined" : held3}, and only a member's own act sets it.`
     };
   }
   /** R3 (was `actions` R73; K2561; R10): a proposal of what a records request seeks, as R1 is to `actions.actionLaws`:
@@ -205278,10 +205884,10 @@ var ActionRecords = class {
       } catch {
       }
     }
-    const asked6 = { action_kind: held3.action_kind, seeks: list6 === void 0 || list6 === null ? [] : list6 };
-    const r = this.seeksRefusal(asked6);
+    const asked7 = { action_kind: held3.action_kind, seeks: list6 === void 0 || list6 === null ? [] : list6 };
+    const r = this.seeksRefusal(asked7);
     if (r) return { ...r, target };
-    const items = seeksOf(asked6);
+    const items = seeksOf(asked7);
     const at50 = stampInstant("second", this.#nowMs(null));
     this.record.transact(() => {
       this.sql.exec(`DELETE FROM action_seeks_proposals WHERE bundle_id=? AND proposed_by=?`, target, who4);
@@ -205384,12 +205990,12 @@ var ActionRecords = class {
     author = null
   } = {}) {
     const who4 = String(author ?? "").trim();
-    const asked6 = { target: target ?? null, detail: RECEIPT_DETAIL };
-    const fenced = correspondFence(who4, asked6);
+    const asked7 = { target: target ?? null, detail: RECEIPT_DETAIL };
+    const fenced = correspondFence(who4, asked7);
     if (fenced) return fenced;
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     const when = String(at50 ?? "").trim();
-    const entryRefused = correspondEntryRefusal({ at: when, artifactSha, account: account2, dateTime: true }, asked6);
+    const entryRefused = correspondEntryRefusal({ at: when, artifactSha, account: account2, dateTime: true }, asked7);
     if (entryRefused) return entryRefused;
     const sha2 = shaOf8(artifactSha);
     const acct = String(account2 ?? "").trim();
@@ -205470,7 +206076,7 @@ var ActionRecords = class {
    *  signed edition (`publication` R63), the answer saying so (R14). */
   actionScope({ target, confidential = null, reason: reason2 = "", viewer = null, author = null } = {}) {
     const who4 = String(author ?? "").trim();
-    const why2 = String(reason2 ?? "").trim();
+    const why3 = String(reason2 ?? "").trim();
     if (!who4 || isMachineIdentity(who4))
       return refuse19("MACHINE_CANNOT_SET_SCOPE", "whether an action is confidential is a member's act; a machine credential may not set or remove it. Nothing was written.", { target: target ?? null });
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
@@ -205482,8 +206088,8 @@ var ActionRecords = class {
       legal: [true, false],
       detail: "confidential is true (set the scope) or false (remove it)"
     };
-    if (!why2) return refuse19("SCOPE_NO_REASON", "setting or removing an action's confidential scope carries the member's reason. Nothing was written.", { target });
-    if (why2.length > NOTE_MAX4 || /["\\\r\n]/.test(why2))
+    if (!why3) return refuse19("SCOPE_NO_REASON", "setting or removing an action's confidential scope carries the member's reason. Nothing was written.", { target });
+    if (why3.length > NOTE_MAX4 || /["\\\r\n]/.test(why3))
       return { ok: false, reason: "BAD_REASON", target, detail: `reason is at most ${NOTE_MAX4} characters with no quote, backslash or line break` };
     if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     if (this.confidential(target) === !!want)
@@ -205496,7 +206102,7 @@ var ActionRecords = class {
         target,
         seq,
         want,
-        why2,
+        why3,
         who4,
         at50
       );
@@ -205505,7 +206111,7 @@ var ActionRecords = class {
       ok: true,
       target,
       confidential: !!want,
-      reason: why2,
+      reason: why3,
       by: who4,
       at: at50,
       scope: this.scopeOf(target),
@@ -205532,9 +206138,9 @@ var ActionRecords = class {
     const k = String(kind2 ?? "").trim(), t2 = String(text8 ?? "").trim();
     const endsAt = ends === null || ends === void 0 || ends === "" ? null : Number.isInteger(ends) ? ends : /^\d+$/.test(String(ends).trim()) ? Number(String(ends).trim()) : NaN;
     const kinds3 = PROMISE_KINDS;
-    const promiseRefused = (why2) => refuse19(
+    const promiseRefused = (why3) => refuse19(
       "PROMISE_REFUSED",
-      `${why2} Nothing was written.`,
+      `${why3} Nothing was written.`,
       { target: target ?? null, legal: [...kinds3], max: PROMISE_TEXT_MAX }
     );
     if (!who4 || isMachineIdentity(who4))
@@ -205650,11 +206256,11 @@ var ActionRecords = class {
    *  position check (`projectAuthority`). */
   actionInquiry({ action: action2, question = "", viewer = null, author = null } = {}) {
     const who4 = String(author ?? "").trim();
-    const asked6 = typeof question === "string" ? question.trim() : "";
+    const asked7 = typeof question === "string" ? question.trim() : "";
     if (!who4 || isMachineIdentity(who4))
       return worded("MACHINE_CANNOT_OPEN_FROM_ACTION", "a question is opened from an action by a member; a machine credential may not open one. Nothing was written.", { action: action2 ?? null });
     if (!action2) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass action=<action id>" };
-    if (!asked6 || asked6.length > ACTION_QUESTION_MAX || /[\r\n\u2028\u2029]/.test(asked6))
+    if (!asked7 || asked7.length > ACTION_QUESTION_MAX || /[\r\n\u2028\u2029]/.test(asked7))
       return worded("ACTION_INQUIRY_NO_QUESTION", `the question is 1 to ${ACTION_QUESTION_MAX} characters on one line. Nothing was written.`, { action: action2, max: ACTION_QUESTION_MAX });
     const b = this.#seenAction(action2, viewer);
     if (!b) return noSuchAction(action2);
@@ -205667,7 +206273,7 @@ var ActionRecords = class {
     let id = null;
     const out = this.record.transact(() => {
       id = `${this.record.allocId("INQ", at50.slice(0, 4)).id}-question`;
-      const title = deriveInquiryTitle(asked6) ?? asked6.slice(0, 120);
+      const title = deriveInquiryTitle(asked7) ?? asked7.slice(0, 120);
       const md = [
         "---",
         `id: ${id}`,
@@ -205700,7 +206306,7 @@ var ActionRecords = class {
         "",
         "## Question",
         "",
-        asked6,
+        asked7,
         "",
         "## What It Rests On",
         "",
@@ -205753,9 +206359,9 @@ function proposalLabelFor(who4, subject) {
   const base2 = lawProposalLabel(who4);
   return { by: base2.by, state: base2.state, machine_work: base2.machine_work, says: PROPOSAL_SAYS3[subject][base2.state] };
 }
-var instances54 = /* @__PURE__ */ new WeakMap();
+var instances55 = /* @__PURE__ */ new WeakMap();
 function actionRecordsOf(host, deps) {
-  let r = instances54.get(host);
+  let r = instances55.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -205765,7 +206371,7 @@ function actionRecordsOf(host, deps) {
     const declared2 = record.declarePurge("action-records", [...ACTION_RECORDS_TABLES]);
     if (declared2 && declared2.ok === false)
       throw new Error(`action-records: its tables could not be declared (${declared2.reason}: ${declared2.detail ?? ""})`);
-    instances54.set(host, made3);
+    instances55.set(host, made3);
     r = made3;
   }
   return r;
@@ -207237,14 +207843,14 @@ var Actions = class _Actions {
         reason: "MACHINE_CANNOT_MOVE_ACTION",
         detail: "moving an action is a named member's decision to reach outside this system, or to declare that reaching out is finished. A machine credential may prepare an action and may never advance one. Sign in as a member."
       };
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2)
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3)
       return {
         ok: false,
         reason: "ACTION_MOVE_NO_REASON",
         detail: "an action moves for a stated reason, authored by the member moving it and never prefilled. A state change with no account of why cannot be checked by anyone."
       };
-    if (why2.length > NOTE_MAX5 || /["\\\r\n]/.test(why2))
+    if (why3.length > NOTE_MAX5 || /["\\\r\n]/.test(why3))
       return {
         ok: false,
         reason: "BAD_REASON",
@@ -207323,7 +207929,7 @@ var Actions = class _Actions {
       timestamp: when,
       from_state: b.current_state,
       to_state: to,
-      blurb: why2,
+      blurb: why3,
       author: who4
     });
     if (!withHistory)
@@ -207341,7 +207947,7 @@ var Actions = class _Actions {
     const entry4 = `### Session ${when} | Action ${b.current_state} to ${to} | ${who4}
 Trigger: op=actionmove on ${target}
 Changes: state ${b.current_state} to ${to}.${to === "resolved" ? ` Resolution: ${res}.` : ""}
-Reason: ${why2}
+Reason: ${why3}
 `;
     text8 = _Actions.#appendSessionLog(text8, entry4);
     const carried = this.#carried(target);
@@ -207374,7 +207980,7 @@ Reason: ${why2}
       target,
       from: b.current_state,
       to,
-      reason: why2,
+      reason: why3,
       ...to === "resolved" ? { resolution: res } : {},
       author: who4,
       at: when,
@@ -208150,12 +208756,12 @@ Replaced: ${before3.state === "stated" ? before3.laws.map((e2) => `${e2.level} $
     const fm = parseFrontmatter(liveMd.content).data || {};
     const held3 = riskTierState(fm.risk_tier);
     const before3 = riskTierHistoryOf(fm);
-    const asked6 = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
-    const next = riskTierState(asked6);
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
+    const asked7 = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
+    const next = riskTierState(asked7);
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
     const text0 = _Actions.#appendRiskTierHistory(liveMd.content, null);
     if (next !== 1 && next !== 2 && next !== 3) return this.records.badRiskTier(target, tier, "the act");
-    if (!why2 || why2.length > RISK_TIER_REASON_MAX || /["\\\r\n]/.test(why2))
+    if (!why3 || why3.length > RISK_TIER_REASON_MAX || /["\\\r\n]/.test(why3))
       return {
         ok: false,
         reason: "RISK_TIER_REASON_REFUSED",
@@ -208181,7 +208787,7 @@ Replaced: ${before3.state === "stated" ? before3.laws.map((e2) => `${e2.level} $
         detail: `this action's risk_tier_history is not a block the act can append to in place (or it holds ${RISK_TIER_HISTORY_MAX} revisions already); the act only appends, so nothing was written.`
       };
     const when = stampInstant("second", this.#nowMs(null));
-    const entry4 = { tier: next, prior: held3, by: _Actions.#fmSafe(who4), at: when, reason: why2 };
+    const entry4 = { tier: next, prior: held3, by: _Actions.#fmSafe(who4), at: when, reason: why3 };
     let text8 = _Actions.#appendRiskTierHistory(liveMd.content, entry4);
     text8 = _Actions.#setOrAddScalar(text8, "risk_tier", String(next));
     text8 = _Actions.#setScalar(text8, "last_updated", `"${when}"`);
@@ -208190,7 +208796,7 @@ Replaced: ${before3.state === "stated" ? before3.laws.map((e2) => `${e2.level} $
       `### Session ${when} | Risk tier revised | ${who4}
 Trigger: op=actionrisktier on ${target}
 Changes: risk_tier ${held3} (${RISK_TIERS[held3]}) -> ${next} (${RISK_TIERS[next]}).
-Reason: ${why2}
+Reason: ${why3}
 `
     );
     const carried = this.#carried(target);
@@ -208229,7 +208835,7 @@ Reason: ${why2}
       prior_words: RISK_TIERS[held3] ?? null,
       by: who4,
       at: when,
-      reason: why2,
+      reason: why3,
       risk_tier_history: riskTierHistoryOf(after2),
       weight: "single"
     };
@@ -209304,8 +209910,8 @@ Changes: responds_to edge added to ${actionId}.
   /** R97 (T45; consequences R19): of `ids`, those that are an action bundle of this instance or the capture of one of its
    *  `sent` entries, whatever the viewer; it names nothing back but what it was given, and throws only when it cannot read. */
   ownActIds({ ids = [] } = {}) {
-    const asked6 = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()))];
-    return asked6.filter((x) => this.#one(`SELECT 1 AS y FROM bundles WHERE bundle_id=? AND object_type='action'`, x) || this.#one(
+    const asked7 = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()))];
+    return asked7.filter((x) => this.#one(`SELECT 1 AS y FROM bundles WHERE bundle_id=? AND object_type='action'`, x) || this.#one(
       `SELECT 1 AS y FROM correspondence WHERE direction='sent' AND artifact_sha=?`,
       x.replace(/^sha256:/, "").toLowerCase()
     ));
@@ -209324,9 +209930,9 @@ for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionRiskTier
     return withRow6(fn.apply(this, a));
   };
 }
-var instances55 = /* @__PURE__ */ new WeakMap();
+var instances56 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances55.get(host);
+  let a = instances56.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -209334,7 +209940,7 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances55.set(host, a);
+    instances56.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
@@ -209668,8 +210274,8 @@ function closureListsRead(d) {
 }
 function factAnswer(path, r) {
   if (!r || typeof r !== "object" || r.ok === false) {
-    const why2 = r && typeof r === "object" ? textOf5(r.reason || r.code) : null;
-    return { path, status: "absent", why: why2 ? `local facts refused the read: ${why2}` : "local facts did not answer" };
+    const why3 = r && typeof r === "object" ? textOf5(r.reason || r.code) : null;
+    return { path, status: "absent", why: why3 ? `local facts refused the read: ${why3}` : "local facts did not answer" };
   }
   if (typeof r.status !== "string" || !LOCAL_FACT_STATUSES.includes(r.status))
     return { path, status: "absent", why: `local facts answered no status it gives (${textOf5(r.status)?.slice(0, 40) ?? "none"})` };
@@ -210050,7 +210656,7 @@ function dueAtOf(entry4, zone) {
   }
 }
 function venueOf2(fm, view) {
-  const none = (why2) => ({ venue: null, venue_why: why2 });
+  const none = (why3) => ({ venue: null, venue_why: why3 });
   try {
     const o = actionOffices(fm, view)[0];
     if (o && typeof o.role === "string") return { venue: { kind: "office", role: o.role, body: o.body ?? null } };
@@ -210650,9 +211256,9 @@ var ActionClocks = class {
    *  entry standing for the step, where every viewer of the step's place sees the action: an action in no project
    *  (every member sees it), or a step placed in the action's own project; else `{entry: "clock"}`, held and unnamed.
    *  Null for none or several. Never throws. */
-  stepDueHolder(asked6) {
+  stepDueHolder(asked7) {
     try {
-      const { step, byWhen, waits } = asked6 && typeof asked6 === "object" ? asked6 : {};
+      const { step, byWhen, waits } = asked7 && typeof asked7 === "object" ? asked7 : {};
       const day2 = byWhen && typeof byWhen === "object" ? byWhen.date : null;
       const found3 = this.#entriesFor(step, day2, waits, IN_PROCESS);
       if (found3.length !== 1) return null;
@@ -211217,7 +211823,7 @@ var ActionClocks = class {
   clockAdopt({
     target,
     proposal,
-    why: why2 = null,
+    why: why3 = null,
     date = null,
     text: text8 = null,
     description = null,
@@ -211300,7 +211906,7 @@ var ActionClocks = class {
       adopted_by: who4,
       adopted_at: when,
       ...Object.keys(amend).filter((k) => k !== "owed_by").length ? { amended: Object.keys(amend).filter((k) => k !== "owed_by").sort().join(",") } : {},
-      ...why2 !== null && why2 !== void 0 && String(why2).trim() ? { adopted_why: String(why2) } : {}
+      ...why3 !== null && why3 !== void 0 && String(why3).trim() ? { adopted_why: String(why3) } : {}
     };
     return this.#reviseClock(a.id, written2, who4, viewer, when, (ord) => {
       this.sql.exec(`UPDATE action_clock_proposals SET adopted_by=?, adopted_at=?, adopted_ord=? WHERE bundle_id=? AND
@@ -211339,7 +211945,7 @@ var ActionClocks = class {
     committed_by: committedBy = null,
     precedes = null,
     lead = null,
-    why: why2 = null,
+    why: why3 = null,
     stated_by: statedBy = null,
     held_in: heldIn2 = null,
     due_at: dueAt = null,
@@ -211377,14 +211983,14 @@ var ActionClocks = class {
     };
     const kindFields = {
       commitment: [["committed_by", committedBy, false]],
-      dependency: [["precedes", precedes, true], ["lead", lead, false], ["why", why2, false]],
+      dependency: [["precedes", precedes, true], ["lead", lead, false], ["why", why3, false]],
       stated: [["stated_by", statedBy, true], ["held_in", heldIn2, true]]
     }[k] || [];
     for (const [name3, v, need] of kindFields) {
       const r = field3(name3, v, need);
       if (r) return r;
     }
-    for (const [name3, v] of [["committed_by", committedBy], ["precedes", precedes], ["lead", lead], ["why", why2], ["stated_by", statedBy], ["held_in", heldIn2], ["standard", standard2]])
+    for (const [name3, v] of [["committed_by", committedBy], ["precedes", precedes], ["lead", lead], ["why", why3], ["stated_by", statedBy], ["held_in", heldIn2], ["standard", standard2]])
       if (v !== null && v !== void 0 && String(v).trim() && !(name3 in own10) && !(name3 === "standard" && k === "rule"))
         return clockEntryRefused(name3, `${name3} belongs to another basis kind than '${k}'. Nothing was written.`, ext);
     if (dueAt !== null && dueAt !== void 0 && dueAt !== "") {
@@ -211804,16 +212410,16 @@ for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer
     return withRow7(fn.apply(this, a));
   };
 }
-var instances56 = /* @__PURE__ */ new WeakMap();
+var instances57 = /* @__PURE__ */ new WeakMap();
 function actionClocksOf(host, deps) {
-  let a = instances56.get(host);
+  let a = instances57.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new ActionClocks({ ...d, host, storage, record, membership });
-    instances56.set(host, a);
+    instances57.set(host, a);
     a.migrate();
     void a.actions;
     for (const t2 of ["action_reminders", "action_clock_proposals"])
@@ -212403,12 +213009,12 @@ function noTemplateGrant() {
     detail: "nothing answers to this review link: a link is read only while its grant is open and its version is in draft or in review; any other answers exactly as one that never existed."
   };
 }
-function blankUnknownRefusal(text8, extra = null, why2 = "") {
+function blankUnknownRefusal(text8, extra = null, why3 = "") {
   const { unknown } = blanksOf(text8);
   if (!unknown) return null;
   return refuse22(
     "TEMPLATE_BLANK_UNKNOWN",
-    `{{${unknown}}} is not a blank filings fill${typeof why2 === "string" ? why2 : ""}`,
+    `{{${unknown}}} is not a blank filings fill${typeof why3 === "string" ? why3 : ""}`,
     { ...extra && typeof extra === "object" ? extra : {}, blank: unknown }
   );
 }
@@ -212494,11 +213100,11 @@ var FilingTemplates = class _FilingTemplates {
   }
   /* ================================================================ the one-condition answers */
   /* R3, R24, R25: absent and invisible are one answer. */
-  #noTemplate(asked6) {
+  #noTemplate(asked7) {
     return refuse22(
       "NO_SUCH_TEMPLATE",
       "no template by that id is readable here; one you may not see answers the same",
-      { template: str45(typeof asked6 === "string" ? asked6 : null) }
+      { template: str45(typeof asked7 === "string" ? asked7 : null) }
     );
   }
   #scope(t2, detail) {
@@ -212680,18 +213286,18 @@ var FilingTemplates = class _FilingTemplates {
     return this.#one(`SELECT * FROM tpl_revisions WHERE template_id=? AND version=? ORDER BY rid DESC LIMIT 1`, tid, n2);
   }
   /* The version of `t` named by a version id or a number (a profile template's own number), or null. */
-  #versionOf(t2, asked6) {
-    const p3 = parseVersionId(asked6);
-    const n2 = p3 ? p3.template === t2.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked6 ?? "").trim()) ? Number(String(asked6).trim()) : null;
+  #versionOf(t2, asked7) {
+    const p3 = parseVersionId(asked7);
+    const n2 = p3 ? p3.template === t2.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked7 ?? "").trim()) ? Number(String(asked7).trim()) : null;
     if (n2 === null) return null;
     if (t2.origin === "profile") return n2 === Number(t2.profileTemplate.version) ? n2 : null;
     return this.#one(`SELECT 1 AS x FROM tpl_versions WHERE template_id=? AND version=?`, t2.id, n2) ? n2 : null;
   }
   /* A version id the viewer may see: its template and number, or null. */
-  #resolve(asked6, viewer) {
-    const p3 = parseVersionId(asked6);
+  #resolve(asked7, viewer) {
+    const p3 = parseVersionId(asked7);
     const t2 = p3 ? this.#template(p3.template, viewer) : null;
-    const n2 = t2 ? this.#versionOf(t2, asked6) : null;
+    const n2 = t2 ? this.#versionOf(t2, asked7) : null;
     return t2 && n2 !== null ? { t: t2, n: n2 } : null;
   }
   /* The latest approved version (R14's default), or null. */
@@ -213134,7 +213740,7 @@ var FilingTemplates = class _FilingTemplates {
     template = null,
     kind: kind2 = null,
     text: text8 = void 0,
-    why: why2 = null,
+    why: why3 = null,
     proposer = null,
     viewer = null,
     run: run2 = null,
@@ -213153,7 +213759,7 @@ var FilingTemplates = class _FilingTemplates {
     }
     const bad2 = this.#textRefusal(text8);
     if (bad2) return bad2;
-    if (!textUpTo(why2, PROPOSAL_WHY_MAX))
+    if (!textUpTo(why3, PROPOSAL_WHY_MAX))
       return refuse22("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
     const at50 = this.#when();
     const cut10 = (v) => str45(v) ? String(v).trim().slice(0, 200) : null;
@@ -213171,7 +213777,7 @@ var FilingTemplates = class _FilingTemplates {
         k,
         text8,
         sha2,
-        why2.trim(),
+        why3.trim(),
         who4,
         cut10(run2),
         cut10(model),
@@ -213185,7 +213791,7 @@ var FilingTemplates = class _FilingTemplates {
           template: t2 ? t2.id : null,
           kind: k,
           sha: sha2,
-          why: why2.trim(),
+          why: why3.trim(),
           at: at50,
           label: proposalLabel(who4, "template")
         },
@@ -213214,9 +213820,9 @@ var FilingTemplates = class _FilingTemplates {
     const events = this.#events(t2.id);
     const state = this.#stateOf(events, n2);
     if (state !== "draft") return this.#notADraft(t2, n2, state);
-    const asked6 = [...new Set(listOf6(reviewers).map((x) => x.includes(":") ? x : `member:${x}`))];
+    const asked7 = [...new Set(listOf6(reviewers).map((x) => x.includes(":") ? x : `member:${x}`))];
     const ids = [];
-    for (const a of asked6) {
+    for (const a of asked7) {
       const id = this.#member(a);
       const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
       const standing = id && (facts && facts.status === "active" || this.#call(() => this.membership.isAdministrator(id)) === true);
@@ -213335,10 +213941,10 @@ var FilingTemplates = class _FilingTemplates {
     return { grant: g, t: t2, n: g.version };
   }
   /* Through a door, a version asked must be the grant's own; absent, it is. */
-  static #doorAdmits(d, asked6) {
-    if (asked6 === null || asked6 === void 0 || asked6 === "") return true;
-    const p3 = parseVersionId(asked6);
-    return p3 ? p3.template === d.t.id && p3.version === d.n : String(asked6).trim() === String(d.n);
+  static #doorAdmits(d, asked7) {
+    if (asked7 === null || asked7 === void 0 || asked7 === "") return true;
+    const p3 = parseVersionId(asked7);
+    return p3 ? p3.template === d.t.id && p3.version === d.n : String(asked7).trim() === String(d.n);
   }
   static #hasSecret(s) {
     return s !== null && s !== void 0 && s !== "";
@@ -213459,10 +214065,10 @@ var FilingTemplates = class _FilingTemplates {
     const sha2 = this.#latestRevision(t2.id, n2).sha;
     const standing = this.#reviews(t2.id, n2).filter((x) => x.stands && x.sha === sha2);
     const tier = this.#tierOf(t2.kind, t2.profiles);
-    const why2 = textUpTo(reason2, APPROVAL_REASON_MAX) ? reason2.trim() : null;
+    const why3 = textUpTo(reason2, APPROVAL_REASON_MAX) ? reason2.trim() : null;
     const needs = tier === 1 ? "member" : "professional";
     const blocking = standing.filter((x) => x.outcome === "changes_requested");
-    const met = standing.some((x) => x.kind === needs && x.outcome === "no_concerns") || needs === "professional" && !!why2;
+    const met = standing.some((x) => x.kind === needs && x.outcome === "no_concerns") || needs === "professional" && !!why3;
     if (blocking.length || !met)
       return refuse22(
         "REVIEWS_INSUFFICIENT",
@@ -213474,7 +214080,7 @@ var FilingTemplates = class _FilingTemplates {
     const at50 = this.#when();
     const prev = this.#latestApproved(t2, events);
     return this.record.transact(() => {
-      const detail = { tier, tier_words: RISK_TIERS[tier] ?? null, profiles: t2.profiles, reason: why2, sha: sha2 };
+      const detail = { tier, tier_words: RISK_TIERS[tier] ?? null, profiles: t2.profiles, reason: why3, sha: sha2 };
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
                      VALUES (?,?,?,?,?,?,?,?)`, t2.id, n2, t2.bundle_id, "approved", member2, name_, json11(detail), at50);
       if (prev !== null && prev !== n2)
@@ -213500,11 +214106,11 @@ var FilingTemplates = class _FilingTemplates {
     const t2 = this.#template(named3, viewer);
     if (!t2) return this.#noTemplate(named3);
     const member2 = this.#member(by);
-    const why2 = textUpTo(reason2, ENDING_REASON_MAX);
+    const why3 = textUpTo(reason2, ENDING_REASON_MAX);
     if (version === null || version === void 0 || version === "") {
       const approver = t2.origin !== "profile" && !!member2 && (t2.widened ? this.#call(() => this.membership.isAdministrator(member2)) === true : this.#call(() => this.membership.isProjectOwner(t2.project, member2)) === true);
       if (!approver) return this.#notAnApprover(t2, t2.origin === "profile" ? "a profile's template is read-only here" : t2.widened ? "an administrator retires a team-wide template" : "an owner of the template's project retires it");
-      if (!why2) return refuse22("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+      if (!why3) return refuse22("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
       if (t2.retired) return refuse22("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t2.id, ended: { ending: "retired", ...t2.retired } });
       const at51 = this.#when();
       const name_2 = this.#nameOf(member2);
@@ -213524,7 +214130,7 @@ var FilingTemplates = class _FilingTemplates {
     if (!v || !member2 || v.author !== member2) return this.#scope(t2, "a version is withdrawn by its author");
     const state = this.#stateOf(events, n2);
     if (OFFERED.includes(state)) return this.#notADraft(t2, n2, state);
-    if (!why2) return refuse22("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+    if (!why3) return refuse22("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
     if (state === "withdrawn") {
       const e2 = events.find((x) => x.version === n2 && x.event === "withdrawn");
       return refuse22("TEMPLATE_ALREADY_ENDED", "the version was already withdrawn", {
@@ -213656,13 +214262,13 @@ var FilingTemplates = class _FilingTemplates {
       if (p3 && t2.profiles !== "general" && !t2.profiles.includes(p3)) continue;
       const events = t2.origin === "profile" ? [] : this.#events(t2.id);
       const numbers = t2.origin === "profile" ? [Number(t2.profileTemplate.version)] : this.#numbers(t2.id);
-      const stateOf2 = (n2) => t2.origin === "profile" ? "approved" : this.#stateOf(events, n2);
+      const stateOf3 = (n2) => t2.origin === "profile" ? "approved" : this.#stateOf(events, n2);
       let pick4;
       if (!st || st === "offered") {
         if (t2.retired || this.#profileRefusal(t2)) continue;
-        pick4 = numbers.filter((n2) => OFFERED.includes(stateOf2(n2)));
+        pick4 = numbers.filter((n2) => OFFERED.includes(stateOf3(n2)));
       } else if (st === "retired") pick4 = t2.retired ? numbers : [];
-      else pick4 = t2.retired ? [] : numbers.filter((n2) => stateOf2(n2) === st);
+      else pick4 = t2.retired ? [] : numbers.filter((n2) => stateOf3(n2) === st);
       if (!pick4.length) continue;
       const dflt = !st || st === "offered" ? this.#latestApproved(t2, events) : null;
       out.push(_FilingTemplates.#head(t2, {
@@ -213901,16 +214507,16 @@ for (const m of [
     return withRow8(fn.apply(this, a));
   };
 }
-var instances57 = /* @__PURE__ */ new WeakMap();
+var instances58 = /* @__PURE__ */ new WeakMap();
 function filingTemplatesOf(host, deps) {
-  let f17 = instances57.get(host);
+  let f17 = instances58.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances57.set(host, f17);
+    instances58.set(host, f17);
     f17.migrate();
     record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
     record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
@@ -214547,9 +215153,9 @@ var ActionHolds = class _ActionHolds {
     const who4 = String(author ?? "").trim();
     const preview = mode === "preview", release2 = mode === "release";
     const h = release2 ? "released" : typeof hold === "string" ? hold.trim() : "";
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
     const machine3 = !preview && (!who4 || isMachineIdentity(who4)) ? refuse23("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.") : null;
-    const shape = !preview && (!HOLD_STATES.includes(h) || !why2 || why2.length > NOTE_MAX6 || /["\\\r\n]/.test(why2)) ? refuse23("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX6} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX6 }) : null;
+    const shape = !preview && (!HOLD_STATES.includes(h) || !why3 || why3.length > NOTE_MAX6 || /["\\\r\n]/.test(why3)) ? refuse23("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX6} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX6 }) : null;
     if (machine3) return machine3;
     const names2 = { target, ord, project, caseId, viewer };
     const shaped = this.#placeOf({ ...names2, shapeOnly: true });
@@ -214605,7 +215211,7 @@ var ActionHolds = class _ActionHolds {
         place9.ord,
         seq,
         h,
-        why2,
+        why3,
         who4,
         at50,
         prompted.from ? prompted.from.kind : null,
@@ -214626,7 +215232,7 @@ var ActionHolds = class _ActionHolds {
         ok: true,
         ...where,
         hold: "released",
-        reason: why2,
+        reason: why3,
         by: who4,
         at: at50,
         restarted: written2.list.filter((p3) => this.#mayName(p3, viewer))
@@ -214635,7 +215241,7 @@ var ActionHolds = class _ActionHolds {
       ok: true,
       ...where,
       hold: h,
-      reason: why2,
+      reason: why3,
       by: who4,
       at: at50,
       ...prompted.from ? { from: _ActionHolds.#fromAnswer(prompted.from.kind, prompted.from.ref) } : {},
@@ -214768,8 +215374,8 @@ var ActionHolds = class _ActionHolds {
    *  of the earliest such statement, `false`, or `null` for a project absent or one the viewer may not name (R2). A read
    *  it cannot complete is a refusal, never `false`. Names no action, entry or reason. Writes nothing. */
   projectHolds({ projects: projects2 = null, viewer = null } = {}) {
-    const asked6 = this.#holdProjects(projects2, true);
-    if (!asked6.ok) return asked6;
+    const asked7 = this.#holdProjects(projects2, true);
+    if (!asked7.ok) return asked7;
     let rows4;
     try {
       rows4 = this.#standing();
@@ -214778,7 +215384,7 @@ var ActionHolds = class _ActionHolds {
     }
     const earliest2 = /* @__PURE__ */ new Map();
     for (const r of rows4) if (r.project && !earliest2.has(r.project)) earliest2.set(r.project, r);
-    return { ok: true, projects: asked6.projects.map((p3) => {
+    return { ok: true, projects: asked7.projects.map((p3) => {
       if (!this.#mayName(p3, viewer)) return { project: p3, held: null };
       const e2 = earliest2.get(p3);
       return e2 ? { project: p3, held: true, since: e2.at, recorded_by: e2.stated_by } : { project: p3, held: false };
@@ -215258,16 +215864,16 @@ for (const m of [
     return withRow9(fn.apply(this, a));
   };
 }
-var instances58 = /* @__PURE__ */ new WeakMap();
+var instances59 = /* @__PURE__ */ new WeakMap();
 function actionHoldsOf(host, deps) {
-  let h = instances58.get(host);
+  let h = instances59.get(host);
   if (!h) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     h = new ActionHolds({ ...d, host, storage, record, membership });
-    instances58.set(host, h);
+    instances59.set(host, h);
     h.migrate();
     const declared2 = record.declarePurge("action-holds", [...ACTION_HOLDS_TABLES]);
     if (declared2 && declared2.ok === false && !(declared2.reason === "TABLE_DECLARED" && declared2.declaredBy === "action-holds"))
@@ -216460,7 +217066,7 @@ var Filings = class _Filings {
      viewer may not see exists. */
   #values(action2, det, hidden, entry4, viewer, when) {
     const out = {};
-    const none = (why2) => ({ why: why2 });
+    const none = (why3) => ({ why: why3 });
     const cp = action2.counterparty;
     const arm = !cp ? null : cp.state === "named" ? str47(cp.kind) || "office" : str47(cp.state);
     const cpWhy = !cp ? word2("filings.action_states_counterparty") : cp.state === "undetermined" ? word2("filings.action_counterparty_undetermined") : word2("filings.action_counterparty_names");
@@ -216603,10 +217209,10 @@ var Filings = class _Filings {
   }
   /* R28, R31: the version of a named template a filing or briefing may use (`filing-templates.offeredVersion`, its R25),
      its refusals passed through as that module's; `asked` is `{id, version?}` or a bare id. */
-  #offered(asked6, viewer) {
+  #offered(asked7, viewer) {
     const t2 = this.filingTemplates;
-    const id = isObj46(asked6) ? str47(asked6.id) : str47(asked6);
-    const version = isObj46(asked6) && asked6.version != null && asked6.version !== "" ? asked6.version : null;
+    const id = isObj46(asked7) ? str47(asked7.id) : str47(asked7);
+    const version = isObj46(asked7) && asked7.version != null && asked7.version !== "" ? asked7.version : null;
     if (!t2 || typeof t2.offeredVersion !== "function")
       return withRow8({
         ok: false,
@@ -216912,8 +217518,8 @@ ${body}`;
         max_bytes: FILING_TEXT_MAX,
         detail: `the communication's words must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`
       };
-    const why2 = named3;
-    if (!why2 || why2.length > COMMUNICATION_PURPOSE_MAX || WELL_FORMED3.test(why2))
+    const why3 = named3;
+    if (!why3 || why3.length > COMMUNICATION_PURPOSE_MAX || WELL_FORMED3.test(why3))
       return {
         ok: false,
         reason: "COMMUNICATION_PURPOSE_REFUSED",
@@ -216922,7 +217528,7 @@ ${body}`;
       };
     const mk = _Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
     if (!mk.ok) return mk;
-    if (why2 === "document_infraction" && !mk.marks.audience)
+    if (why3 === "document_infraction" && !mk.marks.audience)
       return {
         ok: false,
         reason: "FILING_MARK_REFUSED",
@@ -216954,8 +217560,8 @@ ${body}`;
     const disclosure2 = _Filings.#disclosure(a);
     const matters = this.#matterFacts(a, det, viewer).facts;
     const facts = [...matters, ...fromFacts.filter((f17) => !matters.some((x) => x.finding === f17.finding))];
-    const rfc = _Filings.#isRfc(a, mk.marks, why2);
-    const parts = assembled ? this.#assembled(why2, a, det, hidden, v, facts, mk.marks, viewer, when) : null;
+    const rfc = _Filings.#isRfc(a, mk.marks, why3);
+    const parts = assembled ? this.#assembled(why3, a, det, hidden, v, facts, mk.marks, viewer, when) : null;
     let content = parts ? parts.map((x) => x.text).join("\n") : words24;
     if (rfc && !content.includes(RFC_QUOTING_SENTENCE)) content = `${content}
 
@@ -216983,7 +217589,7 @@ ${body}`;
       view: v.view,
       marks: mk.marks,
       textcheck: mk.textcheck,
-      purpose: why2,
+      purpose: why3,
       form: "communication",
       viewer
     });
@@ -217007,7 +217613,7 @@ ${body}`;
         id,
         a.id,
         body,
-        why2,
+        why3,
         disclosure2,
         who4,
         when,
@@ -217021,7 +217627,7 @@ ${body}`;
         action: a.id,
         form: "communication",
         text: body,
-        purpose: why2,
+        purpose: why3,
         disclosure: disclosure2,
         addressee: a.counterparty ?? null,
         label: proposalLabel(who4, "communication"),
@@ -218369,7 +218975,7 @@ ${body}` : body;
   }
   /* R25: the venue's standard of evidence for a kind (`jurisdictions` R39), or undetermined with why. */
   #venueStandard(v, kind2) {
-    const none = (why2) => ({ state: "undetermined", why: word2("filings.why.venue_standard_undetermined", { why: why2 }) });
+    const none = (why3) => ({ state: "undetermined", why: word2("filings.why.venue_standard_undetermined", { why: why3 }) });
     if (!v.view) return none(v.why);
     if (v.conflicts.some((c) => c.at === `action_kinds[${kind2}].evidence`)) return none(word2("filings.active_profiles_give"));
     const entry4 = Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === kind2) : null;
@@ -218825,14 +219431,14 @@ ${body}` : body;
         reason: "MACHINE_CANNOT_NAME_COUNSEL",
         detail: who4 ? `'${who4.slice(0, 60)}' is a machine identity: the team names its counsel` : "no member is named as the one naming counsel"
       };
-    const why2 = typeof reason2 === "string" ? reason2 : null;
-    const chars3 = why2 == null ? 0 : [...why2].length;
-    if (why2 == null || !why2.trim() || chars3 > PACKET_REASON_MAX)
+    const why3 = typeof reason2 === "string" ? reason2 : null;
+    const chars3 = why3 == null ? 0 : [...why3].length;
+    if (why3 == null || !why3.trim() || chars3 > PACKET_REASON_MAX)
       return {
         ok: false,
         reason: "PACKET_NO_REASON",
         max: PACKET_REASON_MAX,
-        detail: why2 == null ? reason2 === void 0 || reason2 === null ? "say in your own words why this packet is assembled (reason)" : `the reason must be your words, as text; a ${typeof reason2} was sent` : !why2.trim() ? "the reason is blank: say in your own words why this packet is assembled" : `the reason is ${chars3} characters, over the ${PACKET_REASON_MAX} a packet's reason is kept to; refused rather than cut`
+        detail: why3 == null ? reason2 === void 0 || reason2 === null ? "say in your own words why this packet is assembled (reason)" : `the reason must be your words, as text; a ${typeof reason2} was sent` : !why3.trim() ? "the reason is blank: say in your own words why this packet is assembled" : `the reason is ${chars3} characters, over the ${PACKET_REASON_MAX} a packet's reason is kept to; refused rather than cut`
       };
     const a = this.#action(action2, viewer);
     if (!a) return this.#noAction(action2);
@@ -218907,7 +219513,7 @@ ${body}` : body;
         json12(basis),
         disclosure2,
         json12(tpl),
-        why2,
+        why3,
         goal
       );
       return {
@@ -218923,7 +219529,7 @@ ${body}` : body;
         disclosure: disclosure2,
         fileable: false,
         template: tpl,
-        reason: why2,
+        reason: why3,
         basis_changed: null
       };
     });
@@ -219333,7 +219939,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     theory = null,
     remedy = null,
     standards = null,
-    why: why2 = null,
+    why: why3 = null,
     proposer = null,
     viewer = null
   } = {}) {
@@ -219368,7 +219974,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       };
     const refused5 = reads18.find((r) => r.ok === false);
     if (refused5) return refused5;
-    const w = typeof why2 === "string" ? why2.trim() : "";
+    const w = typeof why3 === "string" ? why3.trim() : "";
     if (!w || w.length > THEORY_WHY_MAX)
       return { ok: false, reason: "THEORY_WHY_REFUSED", max: THEORY_WHY_MAX, detail: `say why in at most ${THEORY_WHY_MAX} characters` };
     const at50 = this.#when();
@@ -219541,15 +220147,15 @@ ${inbandBlock(quartet)}`, inband: quartet };
     return { case: caseId, edition, ...b, determinations_read: true };
   }
 };
-var instances59 = /* @__PURE__ */ new WeakMap();
+var instances60 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f17 = instances59.get(host);
+  let f17 = instances60.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     f17 = new Filings({ ...d, host, storage, record });
-    instances59.set(host, f17);
+    instances60.set(host, f17);
     f17.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f17.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f17.evidenceBlock(arg));
@@ -220282,9 +220888,9 @@ function overdueSince(text8, date, nowMs, place9) {
   }
   return hi * 1e3;
 }
-function eventWhenWords(w, why2) {
+function eventWhenWords(w, why3) {
   if (w === null || w === void 0) return "at no date the record holds (placed nowhere; undetermined)";
-  if (!isObj47(w)) return `at a date that is undetermined${why2 ? ` (${why2})` : ""}`;
+  if (!isObj47(w)) return `at a date that is undetermined${why3 ? ` (${why3})` : ""}`;
   const start = str48(w.start), end2 = str48(w.end);
   if (!start && !end2) return "at a date the record does not state (undetermined)";
   const oneDay = str48(w.precision) === "day" && start && end2 && Date.parse(end2) - Date.parse(start) === DAY_MS4;
@@ -220685,8 +221291,8 @@ var Escalation = class _Escalation {
     const parts = Array.isArray(r.parts) ? r.parts : [];
     const ids = parts.map((p3) => isObj47(p3) ? p3.id ?? p3.part ?? null : p3).filter((x) => typeof x === "string");
     const state = r.state === "addressed" ? "met" : r.state === "not_addressed" ? "not_met" : "undetermined";
-    const why2 = state === "met" ? "every live consequence part is addressed" : state === "not_met" ? "a consequence part is not addressed, or was never assessed" : parts.length ? "a consequence part is undetermined or its causation unproven" : "no consequence recorded";
-    return { state, ids, parts, why: why2 };
+    const why3 = state === "met" ? "every live consequence part is addressed" : state === "not_met" ? "a consequence part is not addressed, or was never assessed" : parts.length ? "a consequence part is undetermined or its causation unproven" : "no consequence recorded";
+    return { state, ids, parts, why: why3 };
   }
   /* The escalation's attached actions as the reader sees them, with stage 7's statements and R12's undetermined
      election or oversight. */
@@ -221599,16 +222205,16 @@ var Escalation = class _Escalation {
   /** R22: every escalation of a determination the viewer may see, oldest first, each with its id, state and stage.
    *  Writes nothing. */
   escalationsFor({ determination, viewer } = {}) {
-    const asked6 = this.#seenDetermination(determination, viewer);
-    if (!asked6.ok) return asked6;
-    return { ok: true, determination: asked6.id, items: this.#escalationsOf(asked6.id, viewer) };
+    const asked7 = this.#seenDetermination(determination, viewer);
+    if (!asked7.ok) return asked7;
+    return { ok: true, determination: asked7.id, items: this.#escalationsOf(asked7.id, viewer) };
   }
   /* R22, R28: the determination named, when this viewer may read it, `{ok: true, id}`; else conformance R19's one
      answer for absent and unseen, the id as asked. */
   #seenDetermination(determination, viewer) {
-    const asked6 = typeof determination === "string" && determination ? determination : null;
-    const d = asked6 ? this.conformance.determinationRead({ id: asked6, viewer }) : null;
-    return !d || d.ok === false ? noSuchDetermination(asked6) : { ok: true, id: asked6 };
+    const asked7 = typeof determination === "string" && determination ? determination : null;
+    const d = asked7 ? this.conformance.determinationRead({ id: asked7, viewer }) : null;
+    return !d || d.ok === false ? noSuchDetermination(asked7) : { ok: true, id: asked7 };
   }
   /* R22, R28: the determination's escalations this viewer may see, oldest first, each with its opening reason. */
   #escalationsOf(determination, viewer) {
@@ -221674,10 +222280,10 @@ var Escalation = class _Escalation {
    *  declines to escalate, with every escalation (as R22) and every decline, each naming what superseded it, oldest
    *  first. Writes nothing. */
   escalationStatus({ determination, viewer } = {}) {
-    const asked6 = this.#seenDetermination(determination, viewer);
-    if (!asked6.ok) return asked6;
-    const escalations = this.#escalationsOf(asked6.id, viewer);
-    const declines = this.#declinesToOpen(asked6.id);
+    const asked7 = this.#seenDetermination(determination, viewer);
+    if (!asked7.ok) return asked7;
+    const escalations = this.#escalationsOf(asked7.id, viewer);
+    const declines = this.#declinesToOpen(asked7.id);
     const timeline = [];
     let i = 0;
     for (const x of declines) {
@@ -221688,7 +222294,7 @@ var Escalation = class _Escalation {
     const next = new Map(timeline.map((t2, k) => [t2.id, timeline[k + 1]?.id ?? null]));
     return {
       ok: true,
-      determination: asked6.id,
+      determination: asked7.id,
       status: timeline.at(-1)?.kind ?? "neither",
       escalations,
       declines: declines.map(({ seq: _, before: __, ...x }) => ({ ...x, superseded_by: next.get(x.id) }))
@@ -221711,9 +222317,9 @@ var Escalation = class _Escalation {
     const { d, pursued } = g;
     const at50 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
     const parts = [];
-    const say7 = (id, text9) => parts.push({ id, text: text9 });
+    const say8 = (id, text9) => parts.push({ id, text: text9 });
     const D = determination;
-    say7(D, `Determination ${D} finds the act noncompliant with ${pursued.length === 1 ? "one standard" : `${pursued.length} standards`}: ${pursued.join(", ")}.`);
+    say8(D, `Determination ${D} finds the act noncompliant with ${pursued.length === 1 ? "one standard" : `${pursued.length} standards`}: ${pursued.join(", ")}.`);
     const act2 = actOf(d);
     const actor = isObj47(act2.actor) && str48(act2.actor.role) && str48(act2.actor.body) ? `${str48(act2.actor.role)}, ${str48(act2.actor.body)}` : "an office the record does not name (undetermined)";
     const ev = isObj47(d.event) ? d.event : null;
@@ -221721,21 +222327,21 @@ var Escalation = class _Escalation {
     const when = str48(act2.at) ? `on ${str48(act2.at)}` : isObj47(act2.period) && str48(act2.period.from) && str48(act2.period.to) ? `from ${str48(act2.period.from)} to ${str48(act2.period.to)}` : str48(act2.event) || ev ? eventWhenWords(eventWhen, ev && str48(ev.why) ? str48(ev.why) : null) : "at a date the record does not state (undetermined)";
     const kind2 = str48(act2.kind) || (ev ? str48(ev.kind) : "");
     const what = str48(act2.description) ? quoted5(act2.description) : str48(act2.event) ? `the event ${str48(act2.event)}${kind2 ? ` (${kind2})` : ""}` : "its description could not be read (undetermined)";
-    say7(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: ${what}, by ${actor}, ${when}.`);
+    say8(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: ${what}, by ${actor}, ${when}.`);
     const held3 = Array.isArray(d.standards) ? d.standards.filter(isObj47) : [];
     for (const standard2 of pursued) {
       const st = held3.find((x) => x.standard === standard2);
       const rows4 = st && Array.isArray(st.rows) ? st.rows.filter(isObj47) : [];
       if (!rows4.length) {
-        say7(standard2, `Standard ${standard2} is breached: its basis in the determination could not be read (undetermined).`);
+        say8(standard2, `Standard ${standard2} is breached: its basis in the determination could not be read (undetermined).`);
         continue;
       }
       const basis = rows4.map((r) => `it requires ${str48(r.requires) ? quoted5(r.requires) : "what the record does not state (undetermined)"}; the act did ${str48(r.did) ? quoted5(r.did) : "what the record does not state (undetermined)"} (reading: ${str48(r.reading) || "undetermined"}${Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : ""})`).join("; and ");
       const force = st.in_force === "in_force" ? "It was in force at the act's date." : `Whether it was in force at the act's date is undetermined${str48(st.in_force_why) ? ` (${str48(st.in_force_why)})` : ""}.`;
-      say7(standard2, `Standard ${standard2} is breached: ${basis}. ${force}${str48(st.disagreement) ? ` The determination states: ${str48(st.disagreement)}.` : ""}`);
+      say8(standard2, `Standard ${standard2} is breached: ${basis}. ${force}${str48(st.disagreement) ? ` The determination states: ${str48(st.disagreement)}.` : ""}`);
     }
     const listed = this.#actionsResting(D, viewer);
-    if (!listed) say7(D, "The actions resting on the determination could not be read (undetermined).");
+    if (!listed) say8(D, "The actions resting on the determination could not be read (undetermined).");
     else {
       const place9 = this.#place();
       const today2 = localToday(at50, zoneOf(place9));
@@ -221745,13 +222351,13 @@ var Escalation = class _Escalation {
         if (!a || a.ok === false) continue;
         shown3++;
         const cp = isObj47(a.counterparty) && str48(a.counterparty.role) && str48(a.counterparty.body) ? `${str48(a.counterparty.role)}, ${str48(a.counterparty.body)}` : "an office the record does not name (undetermined)";
-        say7(id, `Action ${id}${str48(a.kind) ? ` (${str48(a.kind)})` : ""} rests on the determination, addressed to ${cp}${str48(a.current_state) ? `; its state is ${str48(a.current_state)}` : ""}.`);
+        say8(id, `Action ${id}${str48(a.kind) ? ` (${str48(a.kind)})` : ""} rests on the determination, addressed to ${cp}${str48(a.current_state) ? `; its state is ${str48(a.current_state)}` : ""}.`);
         const clock2 = Array.isArray(a.clock) ? a.clock.filter(isObj47) : [];
-        if (!clock2.length) say7(id, `Action ${id} states no clock entry.`);
+        if (!clock2.length) say8(id, `Action ${id} states no clock entry.`);
         for (const c of clock2) {
           const what2 = str48(c.text) || str48(c.description);
           const date = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : null;
-          say7(id, `Action ${id}'s clock entry ${what2 ? quoted5(what2) : "(its text undetermined)"} is due ${date ?? "on a date the record does not state (undetermined)"}, on the basis ${str48(c.basis) ? quoted5(c.basis) : "the record does not state (undetermined)"}, ${str48(c.status) || "its status undetermined"}.`);
+          say8(id, `Action ${id}'s clock entry ${what2 ? quoted5(what2) : "(its text undetermined)"} is due ${date ?? "on a date the record does not state (undetermined)"}, on the basis ${str48(c.basis) ? quoted5(c.basis) : "the record does not state (undetermined)"}, ${str48(c.status) || "its status undetermined"}.`);
           if (c.status === "pending" && date) {
             let past = null;
             try {
@@ -221760,20 +222366,20 @@ var Escalation = class _Escalation {
               past = null;
             }
             if (past === true)
-              say7(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today2 ?? "the day of reading"}.`);
+              say8(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today2 ?? "the day of reading"}.`);
             else if (past === null)
-              say7(id, `Whether the date ${date} on action ${id} has passed is undetermined: no time zone is held for the office's local day.`);
+              say8(id, `Whether the date ${date} on action ${id} has passed is undetermined: no time zone is held for the office's local day.`);
           }
         }
       }
-      if (!shown3) say7(D, "No action resting on the determination is recorded.");
+      if (!shown3) say8(D, "No action resting on the determination is recorded.");
     }
     const q10 = this.consequences.consequencesOf({ determination: D, viewer });
-    if (!q10 || q10.ok === false) say7(D, "The consequences of the breach could not be read (undetermined).");
+    if (!q10 || q10.ok === false) say8(D, "The consequences of the breach could not be read (undetermined).");
     else {
       const recorded = Array.isArray(q10.parts) ? q10.parts.filter(isObj47) : [];
-      if (!recorded.length) say7(D, "No consequence of the breach is recorded on the determination.");
-      for (const p3 of recorded) say7(p3.id, consequenceSentence(p3));
+      if (!recorded.length) say8(D, "No consequence of the breach is recorded on the determination.");
+      for (const p3 of recorded) say8(p3.id, consequenceSentence(p3));
     }
     const text8 = parts.map((p3) => p3.text).join("\n");
     return {
@@ -221902,14 +222508,14 @@ function timelineLabel(id, x) {
 function refuseNoSuchEscalation() {
   return refusal31("NO_SUCH_ESCALATION", "no escalation answers to that id here; one in a project you may not see is answered exactly as one that does not exist.");
 }
-function refuseNotOpen(state, why2) {
-  return refusal31("NOT_OPEN", `this escalation is ${state}: ${why2}. Nothing was written.`, { state });
+function refuseNotOpen(state, why3) {
+  return refusal31("NOT_OPEN", `this escalation is ${state}: ${why3}. Nothing was written.`, { state });
 }
 function refuseEnded() {
   return refusal31("ESCALATION_ENDED", "this escalation has ended; nothing is added to it and it is never reopened. Nothing was written.");
 }
-function refuseNoSuchResponse(why2) {
-  return refusal31("NO_SUCH_RESPONSE", `${why2} An evaluation names a received entry of an action attached to this escalation, or no response for a none reading. Nothing was written.`);
+function refuseNoSuchResponse(why3) {
+  return refusal31("NO_SUCH_RESPONSE", `${why3} An evaluation names a received entry of an action attached to this escalation, or no response for a none reading. Nothing was written.`);
 }
 function refuseReason2(reason2) {
   const r = str48(reason2);
@@ -221962,9 +222568,9 @@ for (const name3 of [
     }
   } });
 }
-var instances60 = /* @__PURE__ */ new WeakMap();
+var instances61 = /* @__PURE__ */ new WeakMap();
 function escalationOf(host, deps) {
-  let i = instances60.get(host);
+  let i = instances61.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -221990,7 +222596,7 @@ function escalationOf(host, deps) {
       entities: entities2,
       lines: lines2
     });
-    instances60.set(host, i);
+    instances61.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -223723,7 +224329,7 @@ var ActionPlans = class {
    *  stamps, neither from the body: `proposer` names the caller for the label and says whether it is machine work;
    *  `principal` is the caller as a run's principal (`<principal>/<tokenId>`), compared with the run's own (N432). */
   async optionPropose(args = {}) {
-    const { plan: plan2, why: why2, run: run2, sources, proposer, principal, viewer } = args;
+    const { plan: plan2, why: why3, run: run2, sources, proposer, principal, viewer } = args;
     const who4 = str49(proposer);
     if (!who4)
       return refusal32("PROPOSAL_NO_PROPOSER", "a proposal names who made it, and this one came with no stamped caller. Nothing was written.");
@@ -223738,7 +224344,7 @@ var ActionPlans = class {
     }
     const f17 = this.#optionFields(args, p3, viewer);
     if (!f17.fields) return f17;
-    if (typeof why2 !== "string" || !why2.trim() || why2.length > WHY_MAX4)
+    if (typeof why3 !== "string" || !why3.trim() || why3.length > WHY_MAX4)
       return refusal32(
         "PROPOSAL_WHY_REFUSED",
         `a proposal says why it is offered, in 1 to ${WHY_MAX4} characters. Nothing was written.`,
@@ -223775,7 +224381,7 @@ var ActionPlans = class {
         p3.id,
         n2,
         JSON.stringify(f17.fields),
-        why2.trim(),
+        why3.trim(),
         who4,
         machine3 ? 1 : 0,
         machine3 ? gate.run.run : null,
@@ -224647,8 +225253,8 @@ var ActionPlans = class {
     const skipped = [];
     const good = [];
     list6.forEach((m, index2) => {
-      const why2 = c ? markFault(m) : "a mark names the response that caused it: {action, ord}";
-      if (why2) skipped.push({ index: index2, why: why2 });
+      const why3 = c ? markFault(m) : "a mark names the response that caused it: {action, ord}";
+      if (why3) skipped.push({ index: index2, why: why3 });
       else good.push(normMark(m));
     });
     if (Array.isArray(marks2) && marks2.length > MARKS_MAX) skipped.push({ index: MARKS_MAX, why: `at most ${MARKS_MAX} marks in one act` });
@@ -225077,8 +225683,8 @@ var ActionPlans = class {
     const cap = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Math.min(Number(limit), PLANS_PAGE_MAX) : PLANS_PAGE_MAX;
     const s = subject === null || subject === void 0 || subject === "" ? null : typeof subject === "string" ? subject : normSubject(subject) ? subjectKey(normSubject(subject)) : "\0";
     const see = this.#sight(viewer);
-    const asked6 = s === null ? null : subjectOfKey(s);
-    if (asked6 && !see.subject(asked6)) return { ok: true, items: [], truncated: false, cursor: null, limit: cap };
+    const asked7 = s === null ? null : subjectOfKey(s);
+    if (asked7 && !see.subject(asked7)) return { ok: true, items: [], truncated: false, cursor: null, limit: cap };
     const where = [], args = [];
     if (project) {
       where.push("p.project_id=?");
@@ -225539,9 +226145,9 @@ for (const name3 of ["optionPropose", "planAsk"]) {
     }
   } });
 }
-var instances61 = /* @__PURE__ */ new WeakMap();
+var instances62 = /* @__PURE__ */ new WeakMap();
 function actionPlansOf(host, deps) {
-  let i = instances61.get(host);
+  let i = instances62.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -225567,7 +226173,7 @@ function actionPlansOf(host, deps) {
       duties: lazy3("duties", () => dutiesOf(host, base2)),
       aiRuns: lazy3("aiRuns", () => aiRunsOf(host))
     });
-    instances61.set(host, i);
+    instances62.set(host, i);
     i.migrate();
     record.declarePurge("action-plans", ACTION_PLANS_TABLES);
     promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -226206,8 +226812,8 @@ var ActionReplies = class _ActionReplies {
   #openRow(a) {
     const ledger = (Array.isArray(a.correspondence) ? a.correspondence : []).filter((e2) => e2 && typeof e2 === "object");
     const sent = ledger.filter((e2) => e2.direction === "sent").sort((p3, q10) => p3.ord - q10.ord)[0];
-    const asked6 = sent ? dayOf6(sent.at) : null;
-    if (!asked6) return null;
+    const asked7 = sent ? dayOf6(sent.at) : null;
+    if (!asked7) return null;
     const cp = a.counterparty && typeof a.counterparty === "object" ? a.counterparty : {};
     const whom = counterpartyName(cp) || (cp.state === "audience" && typeof cp.description === "string" && cp.description.trim() ? cp.description.trim() : null) || word("action-replies.addressee_named");
     const win = (Array.isArray(a.clock) ? a.clock : []).find((c) => c && typeof c === "object" && c.status !== "waived" && dayOf6(c.date));
@@ -226225,7 +226831,7 @@ var ActionReplies = class _ActionReplies {
       const q10 = this.#quoting(a.id, o);
       return q10 && q10.quotable === false;
     });
-    return { whom, asked_at: asked6, window_closes: win ? dayOf6(win.date) : null, answers: answers2, replied: received.length > 0, quotable: quotable2 };
+    return { whom, asked_at: asked7, window_closes: win ? dayOf6(win.date) : null, answers: answers2, replied: received.length > 0, quotable: quotable2 };
   }
 };
 for (const m of ["actionReplyBearing", "actionBearingPropose", "actionReplyQuoting", "bearingsOf", "aroseFromLink", "aroseFrom", "arisenFrom"]) {
@@ -226234,16 +226840,16 @@ for (const m of ["actionReplyBearing", "actionBearingPropose", "actionReplyQuoti
     return withRow11(fn.apply(this, a));
   };
 }
-var instances62 = /* @__PURE__ */ new WeakMap();
+var instances63 = /* @__PURE__ */ new WeakMap();
 function actionRepliesOf(host, deps) {
-  let r = instances62.get(host);
+  let r = instances63.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new ActionReplies({ ...d, host, storage, record, membership });
-    instances62.set(host, r);
+    instances63.set(host, r);
     r.migrate();
     const declared2 = record.declarePurge("action-replies", [...ACTION_REPLIES_TABLES]);
     if (declared2 && declared2.ok === false)
@@ -227950,8 +228556,8 @@ function readSections(raw, form, ctx, locate) {
   const forms2 = codeForms(ctx);
   const heads = form === "code" ? codeHeadings(lines2, forms2) : form === "instrument" ? instrumentHeadings(lines2) : [];
   if (!heads.length) {
-    const why2 = form === "code" ? forms2.length ? "no line of this text opens with a section number of a code the active jurisdiction profiles name, followed by a title, so it is not divided into sections" : "no active jurisdiction profile gives a section-number form for any code, so no code section is read" : form === "instrument" ? "no `SECTION 1.` heading opens a line of this instrument, so its text is not divided into sections" : "this text was read as neither an instrument nor a code section, so it is not divided into sections" + (forms2.length ? "" : "; and no active jurisdiction profile gives a section-number form for any code");
-    return { sections: [], sections_why: why2 };
+    const why3 = form === "code" ? forms2.length ? "no line of this text opens with a section number of a code the active jurisdiction profiles name, followed by a title, so it is not divided into sections" : "no active jurisdiction profile gives a section-number form for any code, so no code section is read" : form === "instrument" ? "no `SECTION 1.` heading opens a line of this instrument, so its text is not divided into sections" : "this text was read as neither an instrument nor a code section, so it is not divided into sections" + (forms2.length ? "" : "; and no active jurisdiction profile gives a section-number form for any code");
+    return { sections: [], sections_why: why3 };
   }
   const sections = [];
   heads.forEach((h, i) => {
@@ -228031,7 +228637,7 @@ function readDefinitions(raw, sections, locate) {
 }
 var EXCEPTS = /\b(?:except[ \t]+as[ \t]+(?:otherwise[ \t]+)?(?:provided|set[ \t]+forth|specified|permitted|required|authorized|stated)\b|notwithstanding\b|(?:does|do|shall)[ \t]+not[ \t]+apply\b)/gi;
 var ABBREV = /(?:\b(?:Sec|Secs|No|Nos|Gov|Govt|Ord|Res|Stat|Stats|Cal|Civ|Pen|Proc|Ch|Art|Subd|seq|al|etc|Inc|St|Code|U\.S|i\.e|e\.g|v|vs|Mr|Ms|Dr)|\b[A-Z])$/;
-function sentenceOf2(raw, at50, endAt) {
+function sentenceOf3(raw, at50, endAt) {
   const lineStart = raw.lastIndexOf("\n", at50 - 1) + 1;
   const lineEndRaw = raw.indexOf("\n", endAt);
   const lineEnd = lineEndRaw < 0 ? raw.length : lineEndRaw;
@@ -228056,7 +228662,7 @@ function readExceptions(raw, sections, form, ctx, locate) {
   const out = [];
   EXCEPTS.lastIndex = 0;
   for (const m of raw.matchAll(EXCEPTS)) {
-    const { start, end: end2 } = sentenceOf2(raw, m.index, m.index + m[0].length);
+    const { start, end: end2 } = sentenceOf3(raw, m.index, m.index + m[0].length);
     if (out.some((x) => x.start === start)) continue;
     const text8 = raw.slice(start, end2);
     const cites = [];
@@ -228729,7 +229335,7 @@ function readAt2(raw, labels2, a, locate) {
     return end2;
   };
   const header2 = {};
-  const why2 = {};
+  const why3 = {};
   const usedDates = /* @__PURE__ */ new Set();
   const spans = taken.map((t2) => ({ ...t2, vEnd: Math.min(nextBound(t2.end), end2) }));
   for (const s of spans) {
@@ -228761,7 +229367,7 @@ function readAt2(raw, labels2, a, locate) {
         header2[s.field] = { text: d.text, date: d.date, start, end: start + d.text.length, source: locate(start) || null };
         continue;
       }
-      why2[s.field] = beside ? "its label is printed with no calendar date beside it or below it in the header" : "its label is printed with nothing beside it";
+      why3[s.field] = beside ? "its label is printed with no calendar date beside it or below it in the header" : "its label is printed with nothing beside it";
       continue;
     }
     if (s.field !== "title") {
@@ -228774,7 +229380,7 @@ function readAt2(raw, labels2, a, locate) {
     }
     const f17 = field(raw, s.end, vEnd, locate);
     if (f17) header2[s.field] = f17;
-    else why2[s.field] = "its label is printed with nothing beside it";
+    else why3[s.field] = "its label is printed with nothing beside it";
   }
   if (a) {
     header2.type = {
@@ -228790,7 +229396,7 @@ function readAt2(raw, labels2, a, locate) {
   if (header2.number && a) {
     const m = a.series.numberOnly ? a.series.numberOnly.exec(header2.number.text.trim()) : null;
     if (!m) {
-      why2.number = `"${header2.number.text}" is printed as the number, and ${a.series.labelText} does not read a number in that form`;
+      why3.number = `"${header2.number.text}" is printed as the number, and ${a.series.labelText} does not read a number in that form`;
       delete header2.number;
     } else header2.number.normal = normalOf2(a.series.normal, m);
   }
@@ -228839,8 +229445,8 @@ function readAt2(raw, labels2, a, locate) {
   if (header2.title) delete header2.title.inline;
   for (const f17 of BELOW_TARGET) if (header2[f17]) header2[f17].measured = "below_target";
   const missing2 = HEADER_FIELDS.filter((f17) => !header2[f17]);
-  for (const f17 of missing2) if (!why2[f17]) why2[f17] = f17 === "type" ? "no line of this text opens with a policy series the active jurisdiction profiles name" : "no label the active jurisdiction profiles give for this field is printed in the header block";
-  return { header: { ...header2, missing: missing2, missing_why: why2, start: from, end: end2 }, why: null };
+  for (const f17 of missing2) if (!why3[f17]) why3[f17] = f17 === "type" ? "no line of this text opens with a policy series the active jurisdiction profiles name" : "no label the active jurisdiction profiles give for this field is printed in the header block";
+  return { header: { ...header2, missing: missing2, missing_why: why3, start: from, end: end2 }, why: null };
 }
 
 // ../doctypes/policy.mjs
@@ -229042,7 +229648,7 @@ function readResponsibilities(raw, sections, from, locate) {
     }
     const body = lines2.filter((l2) => l2.start > head.start && l2.start < stop2 && l2.text.trim() && !FURNITURE3.test(l2.text) && !((recurs.get(l2.text.trim()) || 0) >= 3 && !/[.;:]\s*$/.test(l2.text)));
     const table5 = [];
-    let party = null, pending = [], cur = null, ok3 = true, why2 = null, expect = 1;
+    let party = null, pending = [], cur = null, ok3 = true, why3 = null, expect = 1;
     const finish = () => {
       if (cur) {
         cur.end = cur.lastEnd;
@@ -229074,12 +229680,12 @@ function readResponsibilities(raw, sections, from, locate) {
           pending = inline ? [] : pending.slice(k);
           if (!inline && !pending.length) {
             ok3 = false;
-            why2 = "a numbering that starts again at 1 has no party beside it or above it that can be told from the action before";
+            why3 = "a numbering that starts again at 1 has no party beside it or above it that can be told from the action before";
             break;
           }
           if (cur && !inline && !/[.;:]\s*$/.test(raw.slice(cur.start, cur.lastEnd))) {
             ok3 = false;
-            why2 = "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told";
+            why3 = "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told";
             break;
           }
           finish();
@@ -229120,7 +229726,7 @@ function readResponsibilities(raw, sections, from, locate) {
         start,
         end: stop2,
         source: locate(start) || null,
-        why: why2 || "the table's header is printed but no numbered action under a party is read below it"
+        why: why3 || "the table's header is printed but no numbered action under a party is read below it"
       }));
       continue;
     }
@@ -229914,9 +230520,9 @@ var ReadingGuides = class {
       return refusal33("GUIDE_REVIEW_BY_AUTHOR", `${row13.guide_id} was written or adopted by the member reviewing it. Nothing was written.`, { guide: row13.guide_id });
     if (!GUIDE_VERDICTS.includes(verdict))
       return refusal33("GUIDE_VERDICT_UNKNOWN", "a review's verdict is approve or refuse. Nothing was written.", { guide: row13.guide_id });
-    const why2 = str50(reason2);
-    if (verdict === "refuse" || why2) {
-      const bad2 = reasonRefusal3(why2, verdict === "refuse");
+    const why3 = str50(reason2);
+    if (verdict === "refuse" || why3) {
+      const bad2 = reasonRefusal3(why3, verdict === "refuse");
       if (bad2) return bad2;
     }
     const checked = checkGuide(safeJson29(row13.items_json), row13.purpose);
@@ -229926,7 +230532,7 @@ var ReadingGuides = class {
     return this.#record.transact(() => {
       if (verdict === "approve")
         this.#sql.exec(`UPDATE reading_guides SET state='group', reviewed_by=?, updated_at=? WHERE guide_id=?`, member2, at50, row13.guide_id);
-      this.#history(row13.guide_id, verdict, state, member2, why2 || null, at50);
+      this.#history(row13.guide_id, verdict, state, member2, why3 || null, at50);
       return { ok: true, guide: row13.guide_id, verdict, state, at: at50 };
     });
   }
@@ -230252,8 +230858,8 @@ function readOnly(id) {
 function retiredRefusal(id) {
   return refusal33("GUIDE_RETIRED", `${id} has been retired. Nothing was written.`, { guide: id });
 }
-function reasonRefusal3(why2, required2) {
-  if (required2 && !why2 || why2.length > REASON_MAX16)
+function reasonRefusal3(why3, required2) {
+  if (required2 && !why3 || why3.length > REASON_MAX16)
     return refusal33("GUIDE_REASON_MISSING", `a reason is given in at most ${REASON_MAX16} characters. Nothing was written.`);
   return null;
 }
@@ -230284,16 +230890,16 @@ function readingGuidesOps(s, url, body) {
     // R13 (K2820)
   };
 }
-var instances63 = /* @__PURE__ */ new WeakMap();
+var instances64 = /* @__PURE__ */ new WeakMap();
 function readingGuidesOf(host, deps) {
-  let s = instances63.get(host);
+  let s = instances64.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ReadingGuides({ ...d, storage, record, membership });
-    instances63.set(host, s);
+    instances64.set(host, s);
     record.declareTable("reading-guides", READING_GUIDES_TABLE_CLASSES.map((e2) => ({ ...e2, keys: [...e2.keys] })));
   }
   return s;
@@ -231603,7 +232209,7 @@ var PlanWork = class {
      latest of those. Null, with why, when an occurrence's recorded readings do not end met (the derivation has moved on
      and no reading is recorded yet) or cannot be read: never an instant guessed from the derivation. */
   #metAt(duties2, sight) {
-    const no9 = (why2) => ({ met_at: null, met_at_why: why2 });
+    const no9 = (why3) => ({ met_at: null, met_at_why: why3 });
     const d = this.duties;
     if (typeof d.transitionsOf !== "function") return no9("the duties' recorded readings cannot be read on this instance");
     let last = null;
@@ -231747,9 +232353,9 @@ for (const name3 of [
     }
   } });
 }
-var instances64 = /* @__PURE__ */ new WeakMap();
+var instances65 = /* @__PURE__ */ new WeakMap();
 function planWorkOf(host, deps) {
-  let i = instances64.get(host);
+  let i = instances65.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -231773,7 +232379,7 @@ function planWorkOf(host, deps) {
       actionHolds: lazy3("actionHolds", () => actionHoldsOf(host, base2)),
       actionReplies: lazy3("actionReplies", () => actionRepliesOf(host, base2))
     });
-    instances64.set(host, i);
+    instances65.set(host, i);
     i.migrate();
     record.declarePurge("plan-work", PLAN_WORK_TABLES);
     i.registered = register2(i);
@@ -232100,7 +232706,7 @@ var BUNDLE_MD_HISTORY = (key2) => `_history/bundle_${key2}.md`;
 var isObj52 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var said9 = (v) => typeof v === "string" && v.trim() !== "";
 var known2 = (e2) => isObj52(e2) && typeof e2.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, e2.kind);
-var refused4 = (code, why2) => ({ ok: false, refused: code, code, reason: code, why: why2 });
+var refused4 = (code, why3) => ({ ok: false, refused: code, code, reason: code, why: why3 });
 var clamp9 = (limit) => {
   const n2 = Number(limit);
   return limit === null || limit === void 0 || limit === "" || !Number.isFinite(n2) ? RECORDED_LIMIT_DEFAULT2 : Math.max(1, Math.min(Math.trunc(n2), RECORDED_LIMIT_MAX2));
@@ -232200,11 +232806,11 @@ function recordedBy2(c, memo, args) {
     if (a.viewer === void 0 || a.viewer === null || typeof a.viewer === "string" && a.viewer.trim() === "")
       return refused4("VIEWER_MISSING", "a read names the member reading; with none, nothing is answered");
     if (!said9(a.captureSha)) return refused4("NO_SHA", "who cited a passage is read for one captured document, named by its capture sha256");
-    let asked6 = null;
+    let asked7 = null;
     if (a.extent !== void 0 && a.extent !== null) {
       if (!known2(a.extent))
         return refused4("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS2).join(", ")}`);
-      asked6 = JSON.parse(canonicalExtent2(a.extent));
+      asked7 = JSON.parse(canonicalExtent2(a.extent));
     }
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp9(a.limit);
@@ -232238,8 +232844,8 @@ function recordedBy2(c, memo, args) {
       if (!hits.length || !c.membership.inSight(id, a.viewer)) continue;
       if (!v.writers) v.writers = firstWriters(c, id, type, new Set(v.cites.map((x) => x.ident)));
       for (const x of hits) {
-        const relation2 = asked6 ? extentRelation2(asked6, x.extent) : null;
-        if (asked6 && !RELATIONS2.includes(relation2)) continue;
+        const relation2 = asked7 ? extentRelation2(asked7, x.extent) : null;
+        if (asked7 && !RELATIONS2.includes(relation2)) continue;
         const w = v.writers.get(x.ident) || { by: null, at: null };
         const item3 = {
           module: "citation",
@@ -232422,14 +233028,14 @@ var Citation = class {
       const denied = this.membership.projectAuthority(project, identity2, "joined", resultKey2 === "severed" ? "sever" : "reinstate");
       if (denied) return denied;
     }
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2)
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3)
       return {
         ok: false,
         reason: "NO_REASON",
         detail: `${verb} an edge records WHY. The catalog's own remediation for a bad reference is "sever with reason", and an edge moved with no reason is an unexplained change wearing a status field.`
       };
-    if (why2.length > EDGE_REASON_MAX4 || /["\\\r\n]/.test(why2))
+    if (why3.length > EDGE_REASON_MAX4 || /["\\\r\n]/.test(why3))
       return {
         ok: false,
         reason: "BAD_REASON",
@@ -232500,7 +233106,7 @@ var Citation = class {
     const changes = /* @__PURE__ */ new Map();
     for (const id of sel.members) {
       const prev = String(current2.get(id).note ?? "");
-      let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why2}`;
+      let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why3}`;
       if (note.length > EDGE_NOTE_MAX) note = note.slice(note.length - EDGE_NOTE_MAX);
       changes.set(id, { status: to, note });
     }
@@ -232520,8 +233126,8 @@ var Citation = class {
       text8,
       `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}
-` + (onInquiry ? `Changes: basis legs on ${listed} moved to '${to}', each leg kept as it was. Reason: ${why2}.
-` : `Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why2}.
+` + (onInquiry ? `Changes: basis legs on ${listed} moved to '${to}', each leg kept as it was. Reason: ${why3}.
+` : `Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why3}.
 `)
     );
     const bytes2 = new TextEncoder().encode(text8);
@@ -232547,7 +233153,7 @@ Trigger: selection ${handle}
          prose under the same key would make a success indistinguishable from a refusal to a caller checking
          `reason`. */
       [resultKey2]: ids,
-      why: why2,
+      why: why3,
       from,
       to,
       bundleSha: promoted.bundleSha,
@@ -233202,7 +233808,7 @@ Changes: cites edges added to ${qid}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances65 = /* @__PURE__ */ new WeakMap();
+var instances66 = /* @__PURE__ */ new WeakMap();
 function inquiryServices2(k) {
   return {
     earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds),
@@ -233212,7 +233818,7 @@ function inquiryServices2(k) {
   };
 }
 function citationOf(host, deps) {
-  let c = instances65.get(host);
+  let c = instances66.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -233223,7 +233829,7 @@ function citationOf(host, deps) {
     const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
     c = new Citation({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, retrieval, provenance, inquiry });
-    instances65.set(host, c);
+    instances66.set(host, c);
     if (retrieval && typeof retrieval.registerRecordedBy === "function")
       retrieval.registerRecordedBy("citation", (a) => c.recordedBy(a));
   }
@@ -234294,8 +234900,8 @@ function checkScript(steps, {
       if (!ok3) refusals.push(finding4("WIZARD_DRAFT_REFUSED", n2, !d ? "a draft is one of {text}, {template} or {machine}" : d.template !== void 0 ? `no filing template '${d.template.slice(0, 80)}' is offered here` : d.machine !== void 0 ? `'${d.machine.slice(0, 80)}' is not a registered machine draft` : `a draft's text is 1 to ${DRAFT_TEXT_MAX} characters`));
     }
     if (s.via !== void 0 && s.via !== null && s.via !== "") {
-      const why2 = viaRefusal(s.via, typeof self === "string" ? self : null, steps, offeredById);
-      if (why2) refusals.push(finding4("WIZARD_VIA_REFUSED", n2, why2));
+      const why3 = viaRefusal(s.via, typeof self === "string" ? self : null, steps, offeredById);
+      if (why3) refusals.push(finding4("WIZARD_VIA_REFUSED", n2, why3));
     }
     if (s.draft !== void 0 && s.draft !== null) {
       const d = canonicalDraft(s.draft);
@@ -234444,11 +235050,11 @@ var WizardScripts = class _WizardScripts {
   }
   /* ================================================================ the one-condition answers */
   /* R20: absent and invisible are one answer. */
-  #noWizard(asked6) {
+  #noWizard(asked7) {
     return refuse25(
       "NO_SUCH_WIZARD",
       "no wizard script by that id is readable here; one you may not see answers the same",
-      { script: typeof asked6 === "string" ? parseVersionId2(asked6)?.script ?? str51(asked6) : null }
+      { script: typeof asked7 === "string" ? parseVersionId2(asked7)?.script ?? str51(asked7) : null }
     );
   }
   #scope(s, detail) {
@@ -234583,17 +235189,17 @@ var WizardScripts = class _WizardScripts {
     const r = this.#latestRevision(s.id, n2);
     return r ? parse13(r.steps) || [] : [];
   }
-  #versionOf(s, asked6) {
-    const p3 = parseVersionId2(asked6);
-    const n2 = p3 ? p3.script === s.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked6 ?? "").trim()) ? Number(String(asked6).trim()) : null;
+  #versionOf(s, asked7) {
+    const p3 = parseVersionId2(asked7);
+    const n2 = p3 ? p3.script === s.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked7 ?? "").trim()) ? Number(String(asked7).trim()) : null;
     if (n2 === null) return null;
     if (s.origin === "civicsmith") return _WizardScripts.#libVersion(s, n2) ? n2 : null;
     return this.#one(`SELECT 1 AS x FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n2) ? n2 : null;
   }
-  #resolve(asked6, viewer) {
-    const p3 = parseVersionId2(asked6);
+  #resolve(asked7, viewer) {
+    const p3 = parseVersionId2(asked7);
     const s = p3 ? this.#script(p3.script, viewer) : null;
-    const n2 = s ? this.#versionOf(s, asked6) : null;
+    const n2 = s ? this.#versionOf(s, asked7) : null;
     return s && n2 !== null ? { s, n: n2 } : null;
   }
   #latestApproved(s, events) {
@@ -234810,8 +235416,8 @@ var WizardScripts = class _WizardScripts {
   /* R2, R12: whether filing-templates offers `viewer` the template a `{template}` draft names (its R25; by handle, R26). */
   #templateOffered(ref, viewer, project = null) {
     if (!this.templates || typeof ref !== "string") return false;
-    const asked6 = ref.startsWith("@") ? { name: ref, ...project ? { project } : {} } : ref.includes("@") ? { template: ref.split("@")[0], version: ref.split("@")[1] } : { template: ref, version: null };
-    const r = this.#call(() => this.templates.offeredVersion({ ...asked6, viewer }));
+    const asked7 = ref.startsWith("@") ? { name: ref, ...project ? { project } : {} } : ref.includes("@") ? { template: ref.split("@")[0], version: ref.split("@")[1] } : { template: ref, version: null };
+    const r = this.#call(() => this.templates.offeredVersion({ ...asked7, viewer }));
     return !!r && r.ok === true;
   }
   /* The offered scripts `viewer` may see, each `{s, n, steps}`. */
@@ -235079,9 +235685,9 @@ var WizardScripts = class _WizardScripts {
   }
   /* R4 (DEC-158 (4)): a newer approved version of the base of the copy `s` (one approved after the version its `based_on`
      names, `updated` since or not) that the viewer may see, `{version, steps}`; or null. */
-  #newerBase(s, asked6, viewer) {
+  #newerBase(s, asked7, viewer) {
     const on = s.based_on ? parseVersionId2(s.based_on) : null;
-    const r = on && typeof asked6 === "string" ? this.#resolve(asked6, viewer) : null;
+    const r = on && typeof asked7 === "string" ? this.#resolve(asked7, viewer) : null;
     if (!r || r.s.id !== on.script || r.n <= on.version) return null;
     const st = this.#stateAt(r.s, r.n);
     return ["approved", "updated"].includes(st) ? { version: versionId2(r.s.id, r.n), steps: this.#steps(r.s, r.n) } : null;
@@ -235093,7 +235699,7 @@ var WizardScripts = class _WizardScripts {
     project = null,
     script = null,
     steps = void 0,
-    why: why2 = null,
+    why: why3 = null,
     proposer = null,
     viewer = null,
     run: run2 = null,
@@ -235113,7 +235719,7 @@ var WizardScripts = class _WizardScripts {
     }
     const bad2 = Array.isArray(steps) && !steps.length ? { step: null, why: "a proposal proposes at least one step" } : stepShape(steps);
     if (bad2) return this.#stepRefusal(bad2);
-    if (!textUpTo2(why2, PROPOSAL_WHY_MAX2))
+    if (!textUpTo2(why3, PROPOSAL_WHY_MAX2))
       return refuse25("WIZARD_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX2} characters`, { max: PROPOSAL_WHY_MAX2 });
     const at50 = this.#when();
     const cut10 = (v) => str51(v) ? String(v).trim().slice(0, 200) : null;
@@ -235123,10 +235729,10 @@ var WizardScripts = class _WizardScripts {
       if (!id) return mintExhausted("WZP");
       const sha2 = stepsSha(canon6);
       this.sql.exec(`INSERT INTO wiz_proposals (proposal_id, bundle_id, project, script_id, steps, sha, why, proposer, run, model, at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?)`, id, proj, proj, s ? s.id : null, json14(canon6), sha2, why2.trim(), who4, cut10(run2), cut10(model), at50);
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?)`, id, proj, proj, s ? s.id : null, json14(canon6), sha2, why3.trim(), who4, cut10(run2), cut10(model), at50);
       return {
         ok: true,
-        proposal: { id, project: proj, script: s ? s.id : null, sha: sha2, why: why2.trim(), at: at50, label: _WizardScripts.#label(who4) },
+        proposal: { id, project: proj, script: s ? s.id : null, sha: sha2, why: why3.trim(), at: at50, label: _WizardScripts.#label(who4) },
         evidence: false,
         says: "proposed steps, stored apart: they are no script's until a member drafts from or adopts them"
       };
@@ -235311,14 +235917,14 @@ var WizardScripts = class _WizardScripts {
     if (!s) return this.#noWizard(named3);
     if (s.origin === "civicsmith") return this.#notTheGroups(s);
     const member2 = this.#member(by);
-    const why2 = textUpTo2(reason2, ENDING_REASON_MAX2);
+    const why3 = textUpTo2(reason2, ENDING_REASON_MAX2);
     const reasonRefused = () => {
       return refuse25("WIZARD_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX2} characters`, { max: ENDING_REASON_MAX2 });
     };
     if (version === null || version === void 0 || version === "") {
       if (!this.#mayApprove(s, member2))
         return this.#notAnApprover(s, s.widened ? "an administrator retires a team-wide script" : "an owner of the script's project retires it");
-      if (!why2) return reasonRefused();
+      if (!why3) return reasonRefused();
       if (s.retired) return this.#ended(s, { ending: "retired", ...s.retired });
       const at51 = this.#when();
       const who5 = this.#nameOf(member2);
@@ -235346,7 +235952,7 @@ var WizardScripts = class _WizardScripts {
     if (!member2 || v.author !== member2) return this.#scope(s, "a version is withdrawn by its author");
     const state = this.#stateOf(events, n2);
     if (state === "approved" || state === "updated") return this.#notADraft(s, n2, state);
-    if (!why2) return reasonRefused();
+    if (!why3) return reasonRefused();
     if (state === "withdrawn") {
       const e2 = events.find((x) => x.version === n2 && x.event === "withdrawn");
       return this.#ended(
@@ -235447,14 +236053,14 @@ var WizardScripts = class _WizardScripts {
     for (const s of scripts) {
       const events = s.origin === "civicsmith" ? [] : this.#events(s.id);
       const numbers = s.origin === "civicsmith" ? s.entry.versions.map((v) => v.version) : this.#numbers(s.id);
-      const stateOf2 = (n2) => s.origin === "civicsmith" ? _WizardScripts.#libState(s, n2) : this.#stateOf(events, n2);
+      const stateOf3 = (n2) => s.origin === "civicsmith" ? _WizardScripts.#libState(s, n2) : this.#stateOf(events, n2);
       let pick4;
       if (offered) {
         const n2 = this.#offeredNumber(s, events, viewer);
         pick4 = n2 === null ? [] : [n2];
       } else if (st === "retired") pick4 = s.retired ? numbers : [];
       else if (st === "broken") pick4 = s.origin === "group" ? numbers.filter((n2) => this.#isBroken(s.id, n2)) : [];
-      else pick4 = s.retired ? [] : numbers.filter((n2) => stateOf2(n2) === st && (st !== "draft" || this.#listsTo(s, me) || this.#draftBy(s, n2, me)));
+      else pick4 = s.retired ? [] : numbers.filter((n2) => stateOf3(n2) === st && (st !== "draft" || this.#listsTo(s, me) || this.#draftBy(s, n2, me)));
       if (!pick4.length) continue;
       out.push(this.#head(s, viewer, { versions: pick4.slice().reverse().map((n2) => this.#listed(this.#versionView(s, n2, events), s)) }));
     }
@@ -235582,8 +236188,8 @@ var WizardScripts = class _WizardScripts {
     const door = this.door || {};
     const pointer = door.pointer ? pointerOf(this.#call(() => door.pointer(viewer))) : null;
     const routes = START_ROUTES.map((r) => r.route === "elsewhere" ? { ...r, pointer } : r);
-    const asked6 = typeof message2 === "string" && message2.trim() ? message2.trim().slice(0, 4e3) : null;
-    const matches2 = asked6 && door.findExisting && viewerPredicate(viewer).scope !== "DENY" ? matchesOf(this.#call(() => door.findExisting(asked6, viewer), [])) : [];
+    const asked7 = typeof message2 === "string" && message2.trim() ? message2.trim().slice(0, 4e3) : null;
+    const matches2 = asked7 && door.findExisting && viewerPredicate(viewer).scope !== "DENY" ? matchesOf(this.#call(() => door.findExisting(asked7, viewer), [])) : [];
     return {
       ok: true,
       scripts,
@@ -235708,14 +236314,14 @@ var WizardScripts = class _WizardScripts {
     const noAccount = doorCode === "AI_NO_ACCOUNT" || doorCode === "NO_ACCOUNT";
     const seen = door && !noAccount ? { ...assistant, account: assistant.account || { refused: doorCode } } : assistant;
     const at50 = this.#helpAt({ op, field: field3, draftHeld, assistant: seen }, away);
-    const asked6 = { op: typeof op === "string" ? op.slice(0, 80) : null };
-    if (!at50.offered && at50.code === KEPT_AWAY && isObj55(away) && away.ok === false) return { ...away, ...asked6 };
-    if (!at50.offered && at50.code === "AI_NO_ACCOUNT" && door && noAccount) return { ...door, ...asked6 };
-    if (!at50.offered) return refuse25(at50.code, "the assistant does not help word this field", asked6);
+    const asked7 = { op: typeof op === "string" ? op.slice(0, 80) : null };
+    if (!at50.offered && at50.code === KEPT_AWAY && isObj55(away) && away.ok === false) return { ...away, ...asked7 };
+    if (!at50.offered && at50.code === "AI_NO_ACCOUNT" && door && noAccount) return { ...door, ...asked7 };
+    if (!at50.offered) return refuse25(at50.code, "the assistant does not help word this field", asked7);
     const text8 = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     if (!text8.trim() || text8.length > TOLD_MAX)
       return refuse25("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
-    if (door) return { ...door, ...asked6 };
+    if (door) return { ...door, ...asked7 };
     const untested = this.#untested();
     return refuse25(
       "ASSISTANT_DRAFT_UNAVAILABLE",
@@ -235874,9 +236480,9 @@ for (const m of [
     return withRow12(fn.apply(this, a));
   };
 }
-var instances66 = /* @__PURE__ */ new WeakMap();
+var instances67 = /* @__PURE__ */ new WeakMap();
 function wizardScriptsOf(host, deps) {
-  let w = instances66.get(host);
+  let w = instances67.get(host);
   if (!w) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -235887,7 +236493,7 @@ function wizardScriptsOf(host, deps) {
     const env = d.env ?? host.env ?? null;
     const aiRuns = d.aiRuns || (() => aiRunsOf(host, env));
     w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, accounts, aiRuns, env });
-    instances66.set(host, w);
+    instances67.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t2) => ({ ...t2 })));
     record.registerMintSeed("wizard-scripts", WIZARD_SCRIPTS_MINT_SEED.map((x) => [...x]));
@@ -236392,12 +236998,12 @@ var AffordanceFacts = class {
     return { ok: true, screens, wizard_scripts, writing_help_refused: w.writingHelpRefused() };
   }
 };
-var instances67 = /* @__PURE__ */ new WeakMap();
+var instances68 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances67.get(host);
+  let a = instances68.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances67.set(host, a);
+    instances68.set(host, a);
   }
   return a;
 }
@@ -236671,13 +237277,13 @@ function checkAnswer(answer2, { readLog = null, viewer = null } = {}) {
     const log = readLog instanceof ReadLog && (readLog.viewer === null || readLog.viewer === viewer) ? readLog : new ReadLog({ viewer });
     const withheld = [];
     const out = JSON.parse(JSON.stringify(answer2));
-    const say7 = (code) => ANSWERS_CHECKS[code].translation;
+    const say8 = (code) => ANSWERS_CHECKS[code].translation;
     const { holdOk, ruleOk, lookOk, codes } = judge3(answer2.sentences, answer2, log);
     const kept = /* @__PURE__ */ new Set();
     out.sentences = answer2.sentences.map((s, i) => {
       const code = codes[i];
       if (code) {
-        withheld.push({ sentence: `s${i + 1}`, code, translation: say7(code) });
+        withheld.push({ sentence: `s${i + 1}`, code, translation: say8(code) });
         return null;
       }
       kept.add(`s${i + 1}`);
@@ -236686,24 +237292,24 @@ function checkAnswer(answer2, { readLog = null, viewer = null } = {}) {
     answer2.holdings.forEach((_, i) => {
       if (!holdOk[i]) {
         out.holdings[i] = null;
-        withheld.push({ holding: `h${i + 1}`, code: "ANSWER_CITES_UNREAD", translation: say7("ANSWER_CITES_UNREAD") });
+        withheld.push({ holding: `h${i + 1}`, code: "ANSWER_CITES_UNREAD", translation: say8("ANSWER_CITES_UNREAD") });
       }
     });
     answer2.rules.forEach((_, i) => {
       if (!ruleOk[i]) {
         out.rules[i] = null;
-        withheld.push({ rule: `r${i + 1}`, code: "ANSWER_RULE_NOT_PLANE", translation: say7("ANSWER_RULE_NOT_PLANE") });
+        withheld.push({ rule: `r${i + 1}`, code: "ANSWER_RULE_NOT_PLANE", translation: say8("ANSWER_RULE_NOT_PLANE") });
       }
     });
     answer2.looks.forEach((_, i) => {
       if (!lookOk[i]) {
         out.looks[i] = null;
-        withheld.push({ look: `l${i + 1}`, code: "ANSWER_ABSENCE_WITHOUT_LEVEL", translation: say7("ANSWER_ABSENCE_WITHOUT_LEVEL") });
+        withheld.push({ look: `l${i + 1}`, code: "ANSWER_ABSENCE_WITHOUT_LEVEL", translation: say8("ANSWER_ABSENCE_WITHOUT_LEVEL") });
       }
     });
     if (answer2.summary && verdictIn(answer2.summary.text, [...answer2.holdings.map((h) => h.quote), ...answer2.rules.map((r) => r.quote)])) {
       out.summary = null;
-      withheld.push({ summary: true, code: "ANSWER_VERDICT_WORD", translation: say7("ANSWER_VERDICT_WORD") });
+      withheld.push({ summary: true, code: "ANSWER_VERDICT_WORD", translation: say8("ANSWER_VERDICT_WORD") });
     } else if (answer2.summary && answer2.summary.rests_on.some((id) => !kept.has(id))) {
       const first = withheld.find((w) => answer2.summary.rests_on.includes(w.sentence));
       out.summary = null;
@@ -237021,8 +237627,8 @@ function standingQuestionSet(self, {
     return refusal21("STANDING_NEEDS_SEARCH", given4(query) ? "a standing question keeps a saved query or a find, not both" : "a standing question keeps a saved query or a find, and neither was given");
   if (given4(find2)) return setFind(self, { author, owner, question, find: find2, cadence, ends });
   const ql = self.dep("query");
-  const asked6 = typeof query === "string" ? { q: query } : query && typeof query === "object" ? query : {};
-  const saved = ql && typeof ql.savedForm === "function" ? ql.savedForm({ ...asked6, zone: self.zone() }, self.relations()) : { ok: false, reason: "SAVED_QUERY_EMPTY", detail: "no query compiler is reachable" };
+  const asked7 = typeof query === "string" ? { q: query } : query && typeof query === "object" ? query : {};
+  const saved = ql && typeof ql.savedForm === "function" ? ql.savedForm({ ...asked7, zone: self.zone() }, self.relations()) : { ok: false, reason: "SAVED_QUERY_EMPTY", detail: "no query compiler is reachable" };
   if (!saved || saved.ok !== true) return saved;
   if (!CADENCES.includes(cadence)) return refusal21("BAD_CADENCE", `the cadence is one of ${CADENCES.join(", ")}`);
   const now = self.now();
@@ -237936,10 +238542,10 @@ var Answers = class {
     return standingAnswersFor(this, a);
   }
 };
-var instances68 = /* @__PURE__ */ new WeakMap();
+var instances69 = /* @__PURE__ */ new WeakMap();
 function answersOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let a = instances68.get(storage);
+  let a = instances69.get(storage);
   if (!a) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -237947,7 +238553,7 @@ function answersOf(host, deps) {
     const useCheck = d.useCheck || ((x) => aiUseOf(host, { record, membership }).useCheck(x));
     const accounts = d.accounts || (() => aiAccountsOf(host, { record, membership }));
     a = new Answers({ ...d, storage: d.storage || storage, record, membership, useCheck, accounts });
-    instances68.set(storage, a);
+    instances69.set(storage, a);
     const declared2 = record.declareTable("answers", ANSWERS_TABLES);
     if (!declared2 || declared2.ok === false) throw new Error(`answers' tables could not be declared: ${JSON.stringify(declared2)}`);
   }
@@ -247953,14 +248559,14 @@ var operatorFenceRow = (code) => rowOf18(OPERATOR_FENCE_CHECKS, "OPERATOR_FENCE_
 var identityFenceRow = (code) => rowOf18(GROUP_IDENTITY_FENCE_CHECKS, "GROUP_IDENTITY_FENCE_CHECKS", code);
 function namespaceGate(url) {
   if (!url.searchParams.has("store")) return null;
-  const asked6 = url.searchParams.get("store");
-  if (NAMESPACES2.includes(asked6)) return null;
+  const asked7 = url.searchParams.get("store");
+  if (NAMESPACES2.includes(asked7)) return null;
   return { status: 400, body: {
     ok: false,
     reason: "NAMESPACE_UNKNOWN",
     ...namespaceRow("NAMESPACE_UNKNOWN"),
-    error: `no namespace ${JSON.stringify(asked6.slice(0, 80))} exists on this instance`,
-    asked: asked6.slice(0, 80),
+    error: `no namespace ${JSON.stringify(asked7.slice(0, 80))} exists on this instance`,
+    asked: asked7.slice(0, 80),
     namespaces: [...NAMESPACES2]
   } };
 }
@@ -248019,11 +248625,11 @@ function confinedNamespaceGate(url, cred) {
 }
 function scopeFor(cls3, url) {
   const named3 = url.searchParams.has("store");
-  const asked6 = url.searchParams.get("store");
-  if (named3 && !NAMESPACES2.includes(asked6))
-    return { error: `no namespace ${JSON.stringify(asked6)} exists on this instance; the namespaces are ${NAMESPACES2.join(" and ")}` };
-  if (cls3 === "probe") return named3 && asked6 !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked6)}` } : { name: SCRATCH };
-  return { name: asked6 === SCRATCH ? SCRATCH : "bio" };
+  const asked7 = url.searchParams.get("store");
+  if (named3 && !NAMESPACES2.includes(asked7))
+    return { error: `no namespace ${JSON.stringify(asked7)} exists on this instance; the namespaces are ${NAMESPACES2.join(" and ")}` };
+  if (cls3 === "probe") return named3 && asked7 !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked7)}` } : { name: SCRATCH };
+  return { name: asked7 === SCRATCH ? SCRATCH : "bio" };
 }
 var BEARER = /^bearer ([\x21-\x7e]+)$/i;
 var ADDRESS_CREDENTIALS = Object.freeze(["token", "secret"]);
@@ -248217,8 +248823,8 @@ function runsNamed({ url = null, body = null } = {}) {
   return out;
 }
 function aiScopeDeclaration(writes) {
-  const asked6 = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
-  for (const op of asked6) {
+  const asked7 = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
+  for (const op of asked7) {
     if (!Object.prototype.hasOwnProperty.call(OPS4, op))
       return { refusal: { status: 403, body: {
         ok: false,
@@ -248237,25 +248843,25 @@ function aiScopeDeclaration(writes) {
         classes: Array.isArray(OPS4[op].classes) ? OPS4[op].classes : null
       } } };
   }
-  return { writes: [...new Set(asked6)].sort() };
+  return { writes: [...new Set(asked7)].sort() };
 }
 function aiConfinementDeclaration(confinedTo) {
   if (confinedTo === null || confinedTo === void 0) return { confinedTo: null };
-  const asked6 = String(confinedTo);
-  if (asked6 !== SCRATCH)
+  const asked7 = String(confinedTo);
+  if (asked7 !== SCRATCH)
     return { refusal: { status: 403, body: {
       ok: false,
       reason: "AI_CONFINEMENT_NOT_SCRATCH",
       ...aiScopeRow("AI_CONFINEMENT_NOT_SCRATCH"),
-      detail: `'${asked6.slice(0, 80)}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${JSON.stringify(SCRATCH)}; ${JSON.stringify("bio")} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.`,
-      asked: asked6.slice(0, 80),
+      detail: `'${asked7.slice(0, 80)}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${JSON.stringify(SCRATCH)}; ${JSON.stringify("bio")} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.`,
+      asked: asked7.slice(0, 80),
       confinements: [SCRATCH]
     } } };
   return { confinedTo: SCRATCH };
 }
 var hexOf6 = (raw) => [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
-async function aiCredentialMint(asked6, cls3) {
-  const a = asked6 && typeof asked6 === "object" && !Array.isArray(asked6) ? asked6 : {};
+async function aiCredentialMint(asked7, cls3) {
+  const a = asked7 && typeof asked7 === "object" && !Array.isArray(asked7) ? asked7 : {};
   const declared2 = aiScopeDeclaration(a.writes);
   if (declared2.refusal) return { refusal: { status: declared2.refusal.status, body: { ...declared2.refusal.body, op: "aicredentialmint", cls: cls3 } } };
   const confinement = aiConfinementDeclaration(a.confinedTo);
@@ -248682,12 +249288,12 @@ async function doorWindowGate({
       const digest2 = await liveSessionDigest({ req, env, doAnswer: doAnswer2, credential, background });
       if (digest2 !== null) body.session = digest2;
     }
-    const asked6 = bioStore(env).fetch(new Request("http://do/doorwindow", {
+    const asked7 = bioStore(env).fetch(new Request("http://do/doorwindow", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body)
     }));
-    out = typeof doAnswer2 === "function" ? await doAnswer2(asked6) : null;
+    out = typeof doAnswer2 === "function" ? await doAnswer2(asked7) : null;
   } catch {
     out = null;
   }
@@ -248746,12 +249352,12 @@ async function securityTally({ op = null, answer: answer2 = null, presented = nu
   }
   try {
     if (env && env.STORE && typeof env.STORE.get === "function") {
-      const asked6 = bioStore(env).fetch(new Request("http://do/securitycount", {
+      const asked7 = bioStore(env).fetch(new Request("http://do/securitycount", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(counted)
       }));
-      const out = typeof doAnswer2 === "function" ? await doAnswer2(asked6) : { answered: !!await asked6 };
+      const out = typeof doAnswer2 === "function" ? await doAnswer2(asked7) : { answered: !!await asked7 };
       if (!out || !out.answered)
         console.warn(`admission: a security count was not written and is dropped (correlation ${out && typeof out.correlation === "string" ? out.correlation : "none"})`);
     }
@@ -250831,7 +251437,7 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
           textAt(c.source)
         );
         const verified = q10.verified_quote === true;
-        const why2 = verified ? `earned ${link.letter}: the link rests on ${{
+        const why3 = verified ? `earned ${link.letter}: the link rests on ${{
           A: "the source's own link",
           B: "an identifier the two share",
           C: `a ${c.how === "date" ? "date" : "name"} alone`
@@ -250848,7 +251454,7 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
           verified,
           figures: verified ? q10.check : [],
           earned: verified ? link.letter : null,
-          why: why2
+          why: why3
         });
       }
     }
@@ -251702,9 +252308,9 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
     return out;
   }
 };
-var instances69 = /* @__PURE__ */ new WeakMap();
+var instances70 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p3 = instances69.get(host);
+  let p3 = instances70.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -251730,7 +252336,7 @@ function runProductionsOf(host, deps) {
       legEarning: d.legEarning || legEarningOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances69.set(host, p3);
+    instances70.set(host, p3);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p3.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p3.candidates(a));
     const inquiry = d.inquiry || inquiryOf(host, { record, membership, content });
@@ -253279,7 +253885,7 @@ __export(checks_exports73, {
 });
 
 // src/question-explorer/words.mjs
-var WORD_KEYS7 = Object.freeze([
+var WORD_KEYS8 = Object.freeze([
   "question-explorer.capture_page_act",
   "question-explorer.explorer_false_alarm",
   "question-explorer.exploring_question",
@@ -253305,14 +253911,14 @@ var WORD_KEYS7 = Object.freeze([
   "refusal.EXPLORE_READ_KEPT_AWAY",
   "refusal.EXPLORE_RUN_ENDED"
 ]);
-var KEYS5 = new Set(WORD_KEYS7);
-var asked5 = /* @__PURE__ */ new Set();
-function say5(key2, vars = {}) {
-  if (!KEYS5.has(key2)) throw new Error(`question-explorer: ${key2} is not one of this module's word keys`);
-  asked5.add(key2);
+var KEYS6 = new Set(WORD_KEYS8);
+var asked6 = /* @__PURE__ */ new Set();
+function say6(key2, vars = {}) {
+  if (!KEYS6.has(key2)) throw new Error(`question-explorer: ${key2} is not one of this module's word keys`);
+  asked6.add(key2);
   return word(key2, vars);
 }
-var rowWord7 = (code) => say5(`refusal.${code}`);
+var rowWord7 = (code) => say6(`refusal.${code}`);
 
 // src/question-explorer/checks.mjs
 var n = 0;
@@ -253783,8 +254389,8 @@ function checkGatheringGrammar(ctx, findings, sweepArm = null) {
       errs = e2 instanceof Error ? e2 : new Error(String(e2));
     }
     if (!Array.isArray(errs)) {
-      const why2 = errs instanceof Error ? `failed (${String(errs.message).slice(0, 120)})` : "answered no list of findings";
-      findings.push(f15("C-18.5", "error", `gathering.json sweeps[${i}] could not be checked: the sweep grammar ${String(sweepArm.module)} registered ${why2}, so the entry is refused, never admitted`));
+      const why3 = errs instanceof Error ? `failed (${String(errs.message).slice(0, 120)})` : "answered no list of findings";
+      findings.push(f15("C-18.5", "error", `gathering.json sweeps[${i}] could not be checked: the sweep grammar ${String(sweepArm.module)} registered ${why3}, so the entry is refused, never admitted`));
       continue;
     }
     for (const err of errs) {
@@ -254887,17 +255493,17 @@ function refuse26(code, detail, extra = {}) {
   const row13 = INVESTIGATION_CHECKS[code];
   return { ...extra, ok: false, reason: code, code, check: row13.check, translation: row13.translation, detail };
 }
-var instances70 = /* @__PURE__ */ new WeakMap();
+var instances71 = /* @__PURE__ */ new WeakMap();
 var storageOf3 = (host) => host && host.storage ? host.storage : host;
 function investigationOf(host, deps = {}) {
   const storage = storageOf3(host);
-  let s = instances70.get(storage);
+  let s = instances71.get(storage);
   if (!s) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
     const promotion = deps.promotion ?? promotionOf(host, { record, membership });
     s = new Investigation(storage, { ...deps, record, membership, promotion, host });
-    instances70.set(storage, s);
+    instances71.set(storage, s);
     s.migrate();
     const r = promotion.registerStep(OWNER3, { check: (c) => s.check(c) });
     if (r && r.ok === false) throw new Error(`investigation: registerStep refused: ${r.reason || r.code}`);
@@ -257307,7 +257913,7 @@ var Monitoring = class {
       };
       if (!res.ok) await outcome("source_refused");
       else if (!(driveTick && driveTick.harvestable)) await outcome("success");
-      const answered = driveTick && driveTick.harvestable ? `the OpenDocument export address ${driveTick.exportAddress} answered ${res.status}` : `the source answered ${res.status}`;
+      const answered2 = driveTick && driveTick.harvestable ? `the OpenDocument export address ${driveTick.exportAddress} answered ${res.status}` : `the source answered ${res.status}`;
       if (driveTick && driveTick.harvestable && res.ok) {
         const declaredType = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
         const servedAsPage = declaredType === "text/html" || declaredType === "application/xhtml+xml";
@@ -257347,9 +257953,9 @@ var Monitoring = class {
       }
       if (res.status === 404 || res.status === 410) {
         status = "removed";
-        note = answered;
+        note = answered2;
       } else if (!res.ok) {
-        note = answered;
+        note = answered2;
         unreachable = note;
       } else {
         const bytes2 = new Uint8Array(await res.arrayBuffer());
@@ -257804,7 +258410,7 @@ var Monitoring = class {
     const at50 = stampInstant("second", this.now());
     const c = content && typeof content === "object" ? content : null;
     const known3 = c && typeof c.contract === "string" && Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, c.contract);
-    const why2 = known3 ? null : c && c.contract != null ? `the tick read the contract '${String(c.contract).slice(0, 40)}', which this plane gives no frequency` : String(basis || "the tick could not determine the document's content type").slice(0, 240);
+    const why3 = known3 ? null : c && c.contract != null ? `the tick read the contract '${String(c.contract).slice(0, 40)}', which this plane gives no frequency` : String(basis || "the tick could not determine the document's content type").slice(0, 240);
     this.sql.exec(
       `INSERT INTO monitor_address_type (address_norm, address, content_type, confidence, contract, basis, read_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -257817,7 +258423,7 @@ var Monitoring = class {
       known3 && typeof c.type === "string" ? c.type : null,
       known3 && c.confidence != null ? String(c.confidence) : null,
       known3 ? c.contract : null,
-      why2,
+      why3,
       at50
     );
   }
@@ -258404,14 +259010,14 @@ var Monitoring = class {
     const who4 = typeof author === "string" ? author.trim() : "";
     if (!who4 || isMachineIdentity(who4))
       return frequencyRefusal("MACHINE_CANNOT_SET_FREQUENCY", "an address's own frequency is set by a named member, with the member's reason; a machine may suggest it and never sets it. Nothing was written.");
-    const asked6 = typeof address === "string" && address.trim() ? address.trim() : null;
-    const norm3 = asked6 ? normalizeAddress(asked6) : null;
+    const asked7 = typeof address === "string" && address.trim() ? address.trim() : null;
+    const norm3 = asked7 ? normalizeAddress(asked7) : null;
     const rows4 = norm3 ? this.#subjectsAt(norm3, viewer) : null;
     if (!rows4)
       return frequencyRefusal(
         "NO_SUCH_ADDRESS",
         "no monitored document this viewer may see is checked at that address; one hidden from the viewer is answered exactly as one that does not exist. Nothing was written.",
-        { address: asked6 }
+        { address: asked7 }
       );
     if (!(frequency === null || typeof frequency === "string" && MONITOR_FREQ.includes(frequency)))
       return frequencyRefusal("BAD_FREQUENCY", `the frequency must be one of ${MONITOR_FREQ.join(", ")}, or null to return the address to the frequency its documents set. Nothing was written.`);
@@ -258425,7 +259031,7 @@ var Monitoring = class {
     const at50 = stampInstant("second", this.now());
     const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_address_frequency WHERE address_norm = ?`, norm3).n;
     this.sql.exec(`INSERT INTO monitor_address_frequency (address_norm, seq, address, frequency, reason, reason_text, author, at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm3, seq, asked6, frequency, reason2, custom ? words24 : null, member2, at50);
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm3, seq, asked7, frequency, reason2, custom ? words24 : null, member2, at50);
     const history = this.#rows(`SELECT * FROM monitor_address_frequency WHERE address_norm = ? ORDER BY seq`, norm3).map(settingView);
     return {
       ok: true,
@@ -258449,20 +259055,20 @@ var Monitoring = class {
     const who4 = typeof by === "string" ? by.trim() : "";
     if (!who4 || isMachineIdentity(who4))
       return frequencyRefusal("MACHINE_CANNOT_SET_FREQUENCY", "an address's end date is set by a named member's act; a machine may suggest it and never sets it. Nothing was written.");
-    const asked6 = typeof address === "string" && address.trim() ? address.trim() : null;
-    const norm3 = asked6 ? normalizeAddress(asked6) : null;
+    const asked7 = typeof address === "string" && address.trim() ? address.trim() : null;
+    const norm3 = asked7 ? normalizeAddress(asked7) : null;
     const rows4 = norm3 ? this.#subjectsAt(norm3, viewer) : null;
     if (!rows4)
       return frequencyRefusal(
         "NO_SUCH_ADDRESS",
         "no monitored document this viewer may see is checked at that address; one hidden from the viewer is answered exactly as one that does not exist. Nothing was written.",
-        { address: asked6 }
+        { address: asked7 }
       );
     const zone = this.#zone();
     const today2 = zone ? localDayOf2(this.now(), zone) : null;
     if (until !== null) {
-      const why2 = typeof until !== "string" || !isCalendarDate(until) ? "the end date must be a calendar day written YYYY-MM-DD, or null to clear it" : today2 === null ? "no time zone is held for the instance, so today's local day cannot be read and no end day can be checked against it (the UTC day is never used in its place); null still clears an end date" : until < today2 ? `the end date ${until} is before today (${today2} in ${zone})` : null;
-      if (why2) return frequencyRefusal("WATCH_END_REFUSED", `${why2}. Nothing was written.`, { until: until ?? null });
+      const why3 = typeof until !== "string" || !isCalendarDate(until) ? "the end date must be a calendar day written YYYY-MM-DD, or null to clear it" : today2 === null ? "no time zone is held for the instance, so today's local day cannot be read and no end day can be checked against it (the UTC day is never used in its place); null still clears an end date" : until < today2 ? `the end date ${until} is before today (${today2} in ${zone})` : null;
+      if (why3) return frequencyRefusal("WATCH_END_REFUSED", `${why3}. Nothing was written.`, { until: until ?? null });
     }
     const member2 = who4.startsWith("member:") ? who4.slice("member:".length) : who4;
     const at50 = stampInstant("second", this.now());
@@ -258471,7 +259077,7 @@ var Monitoring = class {
       `INSERT INTO monitor_address_end (address_norm, seq, address, until, set_by, at) VALUES (?, ?, ?, ?, ?, ?)`,
       norm3,
       seq,
-      asked6,
+      asked7,
       until,
       member2,
       at50
@@ -259176,7 +259782,7 @@ var Monitoring = class {
    *  the request's id and its bundle named as the authorisation, in the request's bundle's project. `say`, when given
    *  (R65's `land`, for the link sweep), supplies the bundle's `title`, `summary`, `notes` and `trigger`. Answers `{ok:
    *  true, bundle_id, state}`, or `{ok: false, reason, detail}` with the promotion's refusal relayed; never throws. */
-  #land(q10, filed, at50, say7 = null) {
+  #land(q10, filed, at50, say8 = null) {
     try {
       const doc = filed.doc, cap = doc.capture;
       if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes))
@@ -259189,7 +259795,7 @@ var Monitoring = class {
       const project = home2 && typeof home2.project === "string" && home2.project ? home2.project : null;
       return this.record.transact(() => {
         const id = `${this.record.allocId("INFO", at50.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
-        const title = (say7 ? say7.title : `Gathered for ${q10.id}: ${q10.target || filed.locator}`).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const title = (say8 ? say8.title : `Gathered for ${q10.id}: ${q10.target || filed.locator}`).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
         const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at50;
         const md = [
           "---",
@@ -259225,16 +259831,16 @@ var Monitoring = class {
           "",
           "## Summary",
           "",
-          (say7 ? say7.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q10.id} of ${q10.bundle}.`) + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
+          (say8 ? say8.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q10.id} of ${q10.bundle}.`) + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
           "",
           "## Provenance Notes",
           "",
-          say7 ? say7.notes : `Gathered for the named request ${q10.id}, carried by ${q10.bundle}'s data/gathering.json, which authorised the fetch; locator ${q10.locators.indexOf(filed.locator) + 1} of ${q10.locators.length} in the request's order. Collected ${at50}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
+          say8 ? say8.notes : `Gathered for the named request ${q10.id}, carried by ${q10.bundle}'s data/gathering.json, which authorised the fetch; locator ${q10.locators.indexOf(filed.locator) + 1} of ${q10.locators.length} in the request's order. Collected ${at50}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
           "",
           "## Session Log",
           "",
           `### Session ${at50} | Collected | ${GATHERING_AUTHOR}`,
-          `Trigger: ${say7 ? say7.trigger : `named request ${q10.id} (${q10.bundle})`}`,
+          `Trigger: ${say8 ? say8.trigger : `named request ${q10.id} (${q10.bundle})`}`,
           "Changes: created from the daemon's capture for the named request.",
           "",
           "## Review Notes",
@@ -259335,8 +259941,8 @@ var Monitoring = class {
    *  they carry no shell baseline this remedy could fix. */
   driveShells({ viewer = null, limit = null, after: after2 = null } = {}) {
     const gate = viewerPredicate(viewer);
-    const asked6 = Number(limit);
-    const cap = Number.isFinite(asked6) && asked6 > 0 ? Math.min(DRIVE_SHELLS_LIMIT_MAX, Math.floor(asked6)) : DRIVE_SHELLS_LIMIT_DEFAULT;
+    const asked7 = Number(limit);
+    const cap = Number.isFinite(asked7) && asked7 > 0 ? Math.min(DRIVE_SHELLS_LIMIT_MAX, Math.floor(asked7)) : DRIVE_SHELLS_LIMIT_DEFAULT;
     const where = [`bp.source_locator LIKE '%google.com/%'`, `(${gate.sql})`, ...after2 ? [`b.bundle_id > ?`] : []];
     const raw = this.#rows(
       `SELECT b.bundle_id AS id, bp.source_locator AS locator, bp.monitor_enabled AS monitored
@@ -259477,18 +260083,18 @@ var Monitoring = class {
       };
     const share = this.#sweepShare;
     if (!share) return null;
-    let fenced, why2 = null;
+    let fenced, why3 = null;
     try {
       fenced = share.fence(c, gj.text);
     } catch (e2) {
-      why2 = `failed (${String(e2 && e2.message || e2).slice(0, 120)})`;
+      why3 = `failed (${String(e2 && e2.message || e2).slice(0, 120)})`;
     }
-    if (why2 === null) {
+    if (why3 === null) {
       if (fenced === null || fenced === void 0) return null;
       if (typeof fenced === "object" && fenced.ok === false) return fenced;
-      why2 = "answered neither null nor a refusal";
+      why3 = "answered neither null nor a refusal";
     }
-    const finding6 = { check: "C-18.5", detail: `gathering.json could not be fenced: the sweep fence ${share.module} registered ${why2}, so the file is refused, never admitted` };
+    const finding6 = { check: "C-18.5", detail: `gathering.json could not be fenced: the sweep fence ${share.module} registered ${why3}, so the file is refused, never admitted` };
     return {
       ok: false,
       reason: "GATHERING_REFUSED",
@@ -259534,7 +260140,7 @@ var Monitoring = class {
       },
       running: this.#tickRunning,
       ranked: (list6, item3, rank7, now) => this.#ranked(list6, item3, rank7, now),
-      land: (request2, filed, at50, say7 = null) => this.#land(request2, filed, at50, say7),
+      land: (request2, filed, at50, say8 = null) => this.#land(request2, filed, at50, say8),
       gate: (viewer) => viewerPredicate(viewer),
       recheckMs: () => this.#archiveTickMs()
     });
@@ -259801,10 +260407,10 @@ var Monitoring = class {
    *  the versions the viewer sees (`subjects`' own test), and dropped when those do not disagree, since a
    *  disagreement only a hidden version makes would say that version exists. */
   #withheld(row13, sees) {
-    const { versions, newer_unmonitored: newer, disagreement, asked_after_end: asked6, ...rest } = row13;
+    const { versions, newer_unmonitored: newer, disagreement, asked_after_end: asked7, ...rest } = row13;
     const out = { ...rest };
     if (Array.isArray(versions)) out.versions = versions.filter(sees);
-    if (Array.isArray(asked6)) out.asked_after_end = asked6.filter(sees);
+    if (Array.isArray(asked7)) out.asked_after_end = asked7.filter(sees);
     const newerSeen = Array.isArray(newer) ? newer.filter(sees) : [];
     if (newerSeen.length) out.newer_unmonitored = newerSeen;
     if (disagreement && typeof disagreement === "object") {
@@ -260106,17 +260712,17 @@ var Monitoring = class {
     }
   }
 };
-var instances71 = /* @__PURE__ */ new WeakMap();
+var instances72 = /* @__PURE__ */ new WeakMap();
 function monitoringOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let m = instances71.get(storage);
+  let m = instances72.get(storage);
   if (!m) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     m = new Monitoring({ ...d, host, storage: d.storage || storage, record, membership, promotion });
-    instances71.set(storage, m);
+    instances72.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     if (typeof record.registerCounts === "function")
@@ -260560,7 +261166,7 @@ var LinkSweep = class {
     const iv = INTERVAL[s.cadence] ?? null;
     const dueAt = Number.isFinite(lastMs) && iv ? lastMs + iv : 0;
     const h = this.#held(x);
-    const no9 = (why2) => ({ due: false, why: why2, due_at: dueAt, next: null, ...h });
+    const no9 = (why3) => ({ due: false, why: why3, due_at: dueAt, next: null, ...h });
     if (s.ratified !== true) return no9("not ratified");
     if (!runnable(s)) return no9("its definition is not one a run can read");
     if (paused) return no9("the daemon is paused");
@@ -261001,10 +261607,10 @@ var LinkSweep = class {
 };
 
 // src/link-sweep/index.mjs
-var instances72 = /* @__PURE__ */ new WeakMap();
+var instances73 = /* @__PURE__ */ new WeakMap();
 function linkSweepOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let s = instances72.get(storage);
+  let s = instances73.get(storage);
   if (!s) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -261026,7 +261632,7 @@ function linkSweepOf(host, deps) {
       captureRequests: lazy3(d.captureRequests, () => captureRequestsOf(host, { record })),
       monitoring: lazy3(d.monitoring, () => monitoringOf(host, { record, membership, promotion }))
     });
-    instances72.set(storage, s);
+    instances73.set(storage, s);
     s.migrate();
     record.declarePurge(LINK_SWEEP_MODULE, LINK_SWEEP_TABLES.map((t2) => ({ name: t2.name, keys: [...t2.keys] })));
     s.registration = s.registerWithMonitoring();
@@ -261405,7 +262011,7 @@ var MoneyChecks = class _MoneyChecks {
   }
   /* One check's answer (R1's shape): `holds` true, false or "undetermined", why, and the derivation with what it read.
      A sum money refuses is answered as that refusal, never as a check (R2). */
-  static #answer(check2, { holds: holds2, why: why2, sums = {}, read: read3, parameters = [], refused: refused5 = null }) {
+  static #answer(check2, { holds: holds2, why: why3, sums = {}, read: read3, parameters = [], refused: refused5 = null }) {
     const base2 = {
       check: check2,
       label: NOTICED2,
@@ -261415,7 +262021,7 @@ var MoneyChecks = class _MoneyChecks {
       read: read3
     };
     if (refused5) return { ...base2, refused: refused5, holds: "undetermined", why: "a sum the summation rule refuses is answered as that refusal" };
-    return { ...base2, holds: holds2, why: why2 };
+    return { ...base2, holds: holds2, why: why3 };
   }
   static #fromRelation(rel, ifHigher, ifNot, isQuestion2 = (r) => r === "higher") {
     if (rel && rel.refused) return { holds: "undetermined", why: rel.why };
@@ -262076,9 +262682,9 @@ function moneyChecksOps(c, url, body) {
     moneynoticed: () => c.noticed({ project: q10("project"), viewer: q10("viewer"), limit: q10("limit") })
   };
 }
-var instances73 = /* @__PURE__ */ new WeakMap();
+var instances74 = /* @__PURE__ */ new WeakMap();
 function moneyChecksOf(host, deps) {
-  let c = instances73.get(host);
+  let c = instances74.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -262093,7 +262699,7 @@ function moneyChecksOf(host, deps) {
       progressions: d.progressions || progressionsOf(host, { record }),
       money: d.money || moneyOf2(host, { record, membership })
     });
-    instances73.set(host, c);
+    instances74.set(host, c);
     c.migrate();
     const declared2 = record.declareTable("money-checks", moneyChecksTables((scope) => c.rebuild(scope)));
     if (declared2 && declared2.ok === false) throw new Error(`money-checks: record-core refused its tables: ${declared2.reason}`);
@@ -262406,20 +263012,20 @@ function scrub(v) {
   for (const [k, x] of Object.entries(v)) if (!isContactField(k)) out[k] = scrub(x);
   return out;
 }
-function pageOf3(addr, count2) {
+function pageOf4(addr, count2) {
   if (addr.record !== null) return null;
   const skipRaw = queryParam(addr.query, "$skip");
   const topRaw = queryParam(addr.query, "$top");
   const skip = skipRaw !== null && /^\d+$/.test(skipRaw) ? Number(skipRaw) : 0;
-  const asked6 = topRaw !== null && /^\d+$/.test(topRaw) ? Number(topRaw) : null;
-  const top2 = asked6 !== null && asked6 > 0 && asked6 < PAGE_SIZE ? asked6 : PAGE_SIZE;
+  const asked7 = topRaw !== null && /^\d+$/.test(topRaw) ? Number(topRaw) : null;
+  const top2 = asked7 !== null && asked7 > 0 && asked7 < PAGE_SIZE ? asked7 : PAGE_SIZE;
   return { skip, top: top2, may_continue: count2 >= top2 };
 }
 function nextPage(locator, page2) {
   const addr = readAddress(locator);
   if (addr.why || addr.record !== null) return null;
   if (page2 && typeof page2 === "object" && page2.may_continue === false) return null;
-  const p3 = page2 && typeof page2 === "object" && Number.isInteger(page2.skip) && Number.isInteger(page2.top) ? page2 : pageOf3(addr, Infinity);
+  const p3 = page2 && typeof page2 === "object" && Number.isInteger(page2.skip) && Number.isInteger(page2.top) ? page2 : pageOf4(addr, Infinity);
   const next = p3.skip + p3.top;
   const [head, rest = null] = splitQuery(locator.trim());
   const parts = rest === null || rest === "" ? [] : rest.split("&");
@@ -262521,7 +263127,7 @@ function parse19(ctx) {
     };
   });
   if (c.endpoint === "persons") sameNames(rows4);
-  const page2 = pageOf3(c, rows4.length);
+  const page2 = pageOf4(c, rows4.length);
   if (page2) page2.next = page2.may_continue ? nextPage(ctx.locator, page2) : null;
   return {
     endpoint: c.endpoint,
@@ -263152,10 +263758,10 @@ function wholeSecondFrom(v) {
     return null;
   }
 }
-var instances74 = /* @__PURE__ */ new WeakMap();
+var instances75 = /* @__PURE__ */ new WeakMap();
 function followingOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let f17 = instances74.get(storage);
+  let f17 = instances75.get(storage);
   if (!f17) {
     const record = deps.record || recordOf(host);
     const membership = deps.membership || membershipOf(host, { record });
@@ -263183,7 +263789,7 @@ function followingOf(host, deps = {}) {
       actionClocks: lazy3(deps.actionClocks, () => actionClocksOf(host, { record, membership })),
       retrieval: lazy3(deps.retrieval, () => retrievalOf(host))
     });
-    instances74.set(storage, f17);
+    instances75.set(storage, f17);
     f17.migrate();
     f17.registered = f17.registerWatches();
     f17.marksRegistered = f17.registerMarks();
@@ -263522,7 +264128,7 @@ var Following = class {
   /* R29, R30, R31: `{id}` for a registered entity of kind `proceeding` that `viewer` may see; else `{refusal}`: absent or
      unseen alike `NO_SUCH_ENTITY` (`entities.noSuchEntity`), another kind `NOT_A_PROCEEDING` (`entities.notAProceeding`,
      the one site minting it). `asked` finishes the sentence naming what was asked of it. */
-  #proceedingNamed(value, viewer, asked6) {
+  #proceedingNamed(value, viewer, asked7) {
     const id = typeof value === "string" ? value.trim() : "";
     let r = null;
     if (id && said10(viewer) && viewerPredicate(viewer).scope !== "DENY") {
@@ -263535,7 +264141,7 @@ var Following = class {
     const e2 = r && r.ok && r.found && r.entity ? r.entity : null;
     if (!e2) return { refusal: noSuchEntity(id || null) };
     if (e2.kind !== "proceeding")
-      return { refusal: notAProceeding(`${asked6}, an entity of kind proceeding; the entity named is of kind ${e2.kind}.`, { entity_id: id, kind: e2.kind }) };
+      return { refusal: notAProceeding(`${asked7}, an entity of kind proceeding; the entity named is of kind ${e2.kind}.`, { entity_id: id, kind: e2.kind }) };
     return { id };
   }
   /* R29: the newest capture of a register followed for a proceeding handed to `events.followedRegister` (its R38), as
@@ -263693,12 +264299,12 @@ var Following = class {
         out.push({ ...base2, body: link.body, unscheduled: m.why });
         continue;
       }
-      let next = null, why2 = null;
+      let next = null, why3 = null;
       for (const meeting2 of m.meetings) {
         if (this.#one(`SELECT 1 AS x FROM per_meeting_captures WHERE address=? AND meeting=?`, sub.address, meeting2.instant)) continue;
         const d = dueBefore(meeting2, n2.rule, view);
         if (d.why) {
-          why2 = d.why;
+          why3 = d.why;
           continue;
         }
         if (ms5(meeting2.instant) < since) continue;
@@ -263714,7 +264320,7 @@ var Following = class {
         break;
       }
       if (next) out.push(next);
-      else if (why2) out.push({ ...base2, body: link.body, unscheduled: why2 });
+      else if (why3) out.push({ ...base2, body: link.body, unscheduled: why3 });
     }
     return out;
   }
@@ -264915,11 +265521,11 @@ ${s.address}`, Number(w.follow_id));
    *  Only what the viewer may see is answered. Writes nothing; never throws; a viewer membership does not recognise,
    *  and a machine's, get nothing. */
   browseMarks(a = {}) {
-    const asked6 = a && typeof a === "object" ? a : {};
-    const byIds = Array.isArray(asked6.ids);
+    const asked7 = a && typeof a === "object" ? a : {};
+    const byIds = Array.isArray(asked7.ids);
     const none = byIds ? { watched: [], flagged: [] } : { items: [], truncated: false };
     try {
-      const viewer = asked6.viewer;
+      const viewer = asked7.viewer;
       if (!said10(viewer) || viewerPredicate(viewer).scope === "DENY") return none;
       const member2 = this.#memberKey(viewer);
       if (!member2) return none;
@@ -264930,16 +265536,16 @@ ${s.address}`, Number(w.follow_id));
       };
       const flag2 = (f17) => ({ id: f17.item, by: this.#handleOf(f17.raised_by), at: f17.at, note: f17.note });
       if (byIds) {
-        const ids = [...new Set(asked6.ids.filter((x) => typeof x === "string" && x))].slice(0, BROWSE_IDS_MAX);
+        const ids = [...new Set(asked7.ids.filter((x) => typeof x === "string" && x))].slice(0, BROWSE_IDS_MAX);
         if (!ids.length) return none;
         const mine = new Set(this.#watchedOf(member2).map((x) => x.item));
         const flagged = new Map(this.#rows(`SELECT * FROM second_looks WHERE cleared_at IS NULL`).map((f17) => [f17.item, f17]));
         return { watched: ids.filter((id) => mine.has(id) && visible(id)), flagged: ids.filter((id) => flagged.has(id) && visible(id)).map((id) => flag2(flagged.get(id))) };
       }
-      const cap = Math.max(1, Math.min(BROWSE_MARKS_MAX2, Number.isFinite(Number(asked6.limit)) && asked6.limit != null ? Math.floor(Number(asked6.limit)) : BROWSE_MARKS_MAX2));
+      const cap = Math.max(1, Math.min(BROWSE_MARKS_MAX2, Number.isFinite(Number(asked7.limit)) && asked7.limit != null ? Math.floor(Number(asked7.limit)) : BROWSE_MARKS_MAX2));
       const out = [];
       let truncated6 = false;
-      if (asked6.only === "watched") {
+      if (asked7.only === "watched") {
         for (const x of this.#watchedOf(member2)) {
           if (!visible(x.item)) continue;
           if (out.length === cap) {
@@ -264948,7 +265554,7 @@ ${s.address}`, Number(w.follow_id));
           }
           out.push(x.item);
         }
-      } else if (asked6.only === "flagged") {
+      } else if (asked7.only === "flagged") {
         for (const f17 of this.#rows(`SELECT * FROM second_looks WHERE cleared_at IS NULL ORDER BY at DESC, flag_id DESC`)) {
           if (!visible(f17.item)) continue;
           if (out.length === cap) {
@@ -266139,9 +266745,9 @@ var Scheduler = class {
   }
 };
 var DAILY_OWNER = Object.freeze([["duty-transitions", "duties"], ["interest-checks", "people"], ["money-detectors", "moneyChecks"]]);
-var instances75 = /* @__PURE__ */ new WeakMap();
+var instances76 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances75.get(ctx);
+  let s = instances76.get(ctx);
   if (!s) {
     const e2 = env || {};
     const owners2 = deps.owners || {
@@ -266168,7 +266774,7 @@ function schedulerOf(ctx, env = null, deps = {}) {
     };
     const zone = deps.zone || (() => viewZone3(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e2, owners: owners2, zone });
-    instances75.set(ctx, s);
+    instances76.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -266894,22 +267500,22 @@ var Translations = class _Translations {
     if (keys !== void 0 && keys !== null && (!Array.isArray(keys) || keys.length < 1 || keys.length > TRANSLATION_DRAFT_MAX || keys.some((k) => typeof k !== "string" || !k.trim()) || new Set(keys.map((k) => k.trim())).size !== keys.length))
       return { refused: refusal36("TRANSLATION_KEYS_MALFORMED", `the words to draft are a list of 1 to ${TRANSLATION_DRAFT_MAX} different keys, or none for the first words still missing. Nothing was sent.`) };
     const shown3 = this.#shownAdoptions(tag2);
-    let asked6;
+    let asked7;
     if (Array.isArray(keys)) {
-      asked6 = [];
+      asked7 = [];
       for (const k of keys) {
         const w = this.#translationWord(k);
         if (w.refused) return w;
         if (shown3.has(w.word.key))
           return { refused: refusal36("TRANSLATION_NOT_MISSING", `${w.word.key} already has a kept translation in ${tag2}, so the assistant does not draft it. Nothing was sent.`, { key: w.word.key, language: tag2 }) };
-        asked6.push(w.word);
+        asked7.push(w.word);
       }
     } else {
-      asked6 = INTERFACE_WORDS.filter((w) => !shown3.has(w.key));
+      asked7 = INTERFACE_WORDS.filter((w) => !shown3.has(w.key));
     }
     const names2 = this.#localNames(tag2);
     const offered_official = [], words24 = [];
-    for (const w of asked6) {
+    for (const w of asked7) {
       if (!Array.isArray(keys) && words24.length >= TRANSLATION_DRAFT_MAX) break;
       const n2 = _Translations.#officialFor(w, names2);
       if (n2) {
@@ -266921,7 +267527,7 @@ var Translations = class _Translations {
     if (!words24.length)
       return { refused: refusal36(
         "TRANSLATION_NOTHING_TO_DRAFT",
-        `every word asked for is ${asked6.length ? "an official name, shown as it is" : "translated already"} in ${tag2}, so there is nothing to draft. Nothing was sent.`,
+        `every word asked for is ${asked7.length ? "an official name, shown as it is" : "translated already"} in ${tag2}, so there is nothing to draft. Nothing was sent.`,
         { language: tag2, offered_official }
       ) };
     return { direction, tag: tag2, words: words24, offered_official };
@@ -266999,15 +267605,15 @@ var Translations = class _Translations {
     not_drafted = null,
     by = null
   } = {}) {
-    const asked6 = direction === "to_language" && (keys === void 0 || keys === null) && Array.isArray(words24) ? words24.map((w) => w && typeof w.key === "string" ? w.key : null).filter(Boolean) : keys;
-    const req = this.#draftRequest({ language, direction, keys: asked6, key: key2, by });
+    const asked7 = direction === "to_language" && (keys === void 0 || keys === null) && Array.isArray(words24) ? words24.map((w) => w && typeof w.key === "string" ? w.key : null).filter(Boolean) : keys;
+    const req = this.#draftRequest({ language, direction, keys: asked7, key: key2, by });
     if (req.refused) return req.refused;
-    const unavailable2 = (why2) => draftUnavailable(`${why2} Nothing was saved.`);
+    const unavailable3 = (why3) => draftUnavailable(`${why3} Nothing was saved.`);
     const at50 = this.#iso();
     const askedBy = this.#nameOf(by);
     if (req.direction === "to_english") {
       if (!draft || typeof draft !== "object" || draft.key !== req.key || typeof draft.english !== "string" || !draft.english.trim())
-        return unavailable2("the assistant did not answer a reading of this word back into English.");
+        return unavailable3("the assistant did not answer a reading of this word back into English.");
       const sent = Array.isArray(words24) && words24[0] && words24[0].key === req.key && typeof words24[0].text === "string" ? words24[0].text : req.words[0].text;
       this.#sql.exec(
         `INSERT INTO translation_readings (language, key, text_sha256, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -267028,17 +267634,17 @@ var Translations = class _Translations {
       };
     }
     const got = draft && typeof draft === "object" && Array.isArray(draft.words) ? draft.words : null;
-    if (!got) return unavailable2("the assistant did not answer a draft of these words.");
+    if (!got) return unavailable3("the assistant did not answer a draft of these words.");
     const label = proposalLabel(TRANSLATION_DRAFTER, "translation");
     const drafted = [], refusedHere = [];
-    const answered = /* @__PURE__ */ new Map();
-    for (const d of got) if (d && typeof d.key === "string" && !answered.has(d.key)) answered.set(d.key, d.text);
+    const answered2 = /* @__PURE__ */ new Map();
+    for (const d of got) if (d && typeof d.key === "string" && !answered2.has(d.key)) answered2.set(d.key, d.text);
     for (const w of req.words) {
-      if (!answered.has(w.key)) {
+      if (!answered2.has(w.key)) {
         refusedHere.push({ key: w.key, why: "the assistant did not draft it" });
         continue;
       }
-      const text8 = answered.get(w.key);
+      const text8 = answered2.get(w.key);
       if (typeof text8 !== "string" || !text8.trim() || [...text8].length > TRANSLATION_TEXT_MAX || !oneLine7(text8)) {
         refusedHere.push({ key: w.key, why: `the draft is not one line of 1 to ${TRANSLATION_TEXT_MAX} characters, so it is not stored` });
         continue;
@@ -267463,10 +268069,10 @@ function runnerReport(host) {
 }
 async function memberVersions(env) {
   const out = {};
-  const asked6 = /* @__PURE__ */ new Map();
+  const asked7 = /* @__PURE__ */ new Map();
   const ask3 = (member2, binding) => {
-    if (!asked6.has(member2)) asked6.set(member2, askMemberVersion(env, member2, binding));
-    return asked6.get(member2);
+    if (!asked7.has(member2)) asked7.set(member2, askMemberVersion(env, member2, binding));
+    return asked7.get(member2);
   };
   const hostBinding = (FLEET_BINDINGS.find(([m]) => m === RUNNER_HOST) || [])[1];
   await Promise.all(FLEET_BINDINGS.map(async ([member2, binding]) => {
@@ -268858,13 +269464,13 @@ var InstanceSetup = class _InstanceSetup {
     if (typeof raw !== "string" || !raw.trim()) return { recorded: false, bound: false };
     const { ids, unknown, tests } = this.#checkProfileList(raw.split(",").map((s) => s.trim()).filter(Boolean));
     const unique = [...new Set(ids)];
-    let why2 = null;
-    if (unknown.length) why2 = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which your team's Civicsmith does not hold`;
-    else if (tests.length) why2 = `the installer bound ${tests.join(", ")}, a profile made up for testing`;
+    let why3 = null;
+    if (unknown.length) why3 = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which your team's Civicsmith does not hold`;
+    else if (tests.length) why3 = `the installer bound ${tests.join(", ")}, a profile made up for testing`;
     const core = this.#record();
-    if (why2) {
-      core.setSetting(_InstanceSetup.PROFILES_BOOT_NOTE, { bound: raw, recorded: false, why: why2, at: this.#iso() }, "bootstrap");
-      return { recorded: false, bound: true, why: why2 };
+    if (why3) {
+      core.setSetting(_InstanceSetup.PROFILES_BOOT_NOTE, { bound: raw, recorded: false, why: why3, at: this.#iso() }, "bootstrap");
+      return { recorded: false, bound: true, why: why3 };
     }
     const set = core.setSetting("jurisdiction_profiles", unique, "bootstrap");
     return set && set.ok ? { recorded: true, profiles: unique } : { recorded: false, bound: true, why: set && set.reason };
@@ -269003,8 +269609,8 @@ var InstanceSetup = class _InstanceSetup {
      an earlier run) is `already`; else it is created, machine-declared, and the identifier held on it with the
      system's row as its basis. Answers `{state: seeded | already | unseeded, entity_id?, why?}`. */
   #seedEntity({ p: p3, ident, kind: kind2, label, note, row: row13, source: source2, sector, forumKind }) {
-    const why2 = _InstanceSetup.#identWhy(p3, ident, kind2);
-    if (why2) return { state: "unseeded", why: why2 };
+    const why3 = _InstanceSetup.#identWhy(p3, ident, kind2);
+    if (why3) return { state: "unseeded", why: why3 };
     const E2 = this.#entities();
     const mine = this.#one(`SELECT entity_id FROM seed_entities WHERE scheme = ? AND id = ?`, ident.scheme, ident.id);
     let held3 = null;
@@ -269274,9 +269880,9 @@ var InstanceSetup = class _InstanceSetup {
       for (const more of idents.slice(1)) {
         if (!r.entity_id || r.state === "unseeded") break;
         const o = owner(more);
-        const why2 = _InstanceSetup.#identWhy(o.p, more, "body");
-        if (why2) {
-          r = { state: "unseeded", entity_id: r.entity_id, why: why2 };
+        const why3 = _InstanceSetup.#identWhy(o.p, more, "body");
+        if (why3) {
+          r = { state: "unseeded", entity_id: r.entity_id, why: why3 };
           break;
         }
         const sch = _InstanceSetup.#scheme(o.p, more.scheme);
@@ -269480,9 +270086,9 @@ var InstanceSetup = class _InstanceSetup {
       }
       for (const b of m.bodies) {
         const ident = { scheme: LEGISTAR_SCHEMES.body, id: String(b.BodyId) };
-        const why2 = _InstanceSetup.#identWhy(p3, ident, "body");
+        const why3 = _InstanceSetup.#identWhy(p3, ident, "body");
         let r;
-        if (why2) r = { state: "unseeded", why: why2 };
+        if (why3) r = { state: "unseeded", why: why3 };
         else {
           const got = this.#entities().addIdentifier({
             entityId: office.body_entity,
@@ -269518,14 +270124,14 @@ var InstanceSetup = class _InstanceSetup {
       refused: records.refused,
       ...records.why ? { why: records.why } : {}
     };
-    const pageOf5 = (row13) => parsed.officerecords.find((pg) => pg.rows.includes(row13)) || parsed.officerecords[0];
+    const pageOf6 = (row13) => parsed.officerecords.find((pg) => pg.rows.includes(row13)) || parsed.officerecords[0];
     const seen = /* @__PURE__ */ new Set();
     for (const row13 of recRows) {
       const f17 = row13.facts || {};
       const sb = seatBodies.get(f17.BodyId);
       if (!sb) continue;
       seen.add(f17.BodyId);
-      const page2 = pageOf5(row13) || parsed.officerecords[0];
+      const page2 = pageOf6(row13) || parsed.officerecords[0];
       const recordedAt = instant5(page2.at);
       const seatIdent = { scheme: LEGISTAR_SCHEMES.seat, id: String(f17.OfficeRecordId) };
       const memberType = typeof f17.role === "string" ? f17.role.trim() : "";
@@ -269739,10 +270345,10 @@ var InstanceSetup = class _InstanceSetup {
       at50
     );
   }
-  #leaveArrivals(why2, at50, profiles2 = null) {
+  #leaveArrivals(why3, at50, profiles2 = null) {
     for (const r of this.#rows(`SELECT seq, profile FROM place_arrivals WHERE left_at IS NULL`))
       if (!profiles2 || profiles2.includes(r.profile))
-        this.#sql.exec(`UPDATE place_arrivals SET left_at = ?, left_why = ? WHERE seq = ?`, at50, why2, r.seq);
+        this.#sql.exec(`UPDATE place_arrivals SET left_at = ?, left_why = ? WHERE seq = ?`, at50, why3, r.seq);
   }
   /* R62: a profile matches the named place when its name or one of its covers, folded as extraction's term fold, is
      exactly the name folded the same way. */
@@ -269888,17 +270494,17 @@ var InstanceSetup = class _InstanceSetup {
    *  each writing nothing: a missing or machine `by` `MACHINE_CANNOT_SET_INFO_LEVEL`; a `level` other than `prompt` or
    *  `pause`, or an `asked` other than absent, `true` or `false`, `INFO_LEVEL_UNKNOWN` (K2996). Each set is appended with
    *  when. */
-  infoLevelSet({ level = void 0, asked: asked6 = void 0, by = null } = {}) {
+  infoLevelSet({ level = void 0, asked: asked7 = void 0, by = null } = {}) {
     const who4 = typeof by === "string" ? by.trim() : "";
     if (!who4 || isMachineIdentity(who4))
       return refusal37("MACHINE_CANNOT_SET_INFO_LEVEL", "how quickly explanations open is set by the member, from their own signed-in session. Nothing was changed.", { by: by ?? null });
     if (!INFO_LEVELS.includes(level))
       return refusal37("INFO_LEVEL_UNKNOWN", `${typeof level === "string" && level ? `'${level.slice(0, 40)}' is not` : "the request names no level, and one is chosen as"} one of ${INFO_LEVELS.join(" or ")}. Nothing was changed.`);
-    if (asked6 !== void 0 && asked6 !== null && asked6 !== true && asked6 !== false)
+    if (asked7 !== void 0 && asked7 !== null && asked7 !== true && asked7 !== false)
       return refusal37("INFO_LEVEL_UNKNOWN", "whether this set answers the first-month question is said as true or false, or not at all. Nothing was changed.");
     const before3 = this.#infoLevelRow(who4);
     const at50 = this.#iso();
-    const askedAt = before3 && before3.asked_at ? before3.asked_at : asked6 === true ? at50 : null;
+    const askedAt = before3 && before3.asked_at ? before3.asked_at : asked7 === true ? at50 : null;
     this.#sql.exec(`INSERT INTO member_info_levels (member, level, asked_at, set_at) VALUES (?, ?, ?, ?)`, who4, level, askedAt, at50);
     return {
       ok: true,
@@ -269997,9 +270603,9 @@ var InstanceSetup = class _InstanceSetup {
       return refusal37("GROUP_DRAFT_ANSWERS_MALFORMED", `the answers are a list of at most ${GROUP_DRAFT_ANSWERS_MAX} {question, text}, each text at most ${GROUP_DRAFT_ANSWER_MAX} characters. Nothing was saved.`);
     if (given6.every((a) => !a.text.trim()))
       return refusal37("GROUP_DRAFT_NO_ANSWERS", "every answer is empty, so there is nothing to draft from. Nothing was saved.");
-    const unavailable2 = () => draftUnavailable2("the assistant could not serve a draft of the team's description, so nothing was drafted and the fields are as they were.");
+    const unavailable3 = () => draftUnavailable2("the assistant could not serve a draft of the team's description, so nothing was drafted and the fields are as they were.");
     const draftTurn = typeof turn === "function" ? turn : this.#deps.groupDraftTurn;
-    if (typeof draftTurn !== "function") return unavailable2();
+    if (typeof draftTurn !== "function") return unavailable3();
     const account2 = served.account;
     const suggestions = !!(account2 && account2.suggestions === true);
     let got = null;
@@ -270008,7 +270614,7 @@ var InstanceSetup = class _InstanceSetup {
     } catch {
       got = null;
     }
-    if (!got || typeof got !== "object") return unavailable2();
+    if (!got || typeof got !== "object") return unavailable3();
     const told = given6.map((a) => a.text);
     const askedBy = this.#nameOf(by);
     const readLog = Array.isArray(got.readLog) ? got.readLog : [];
@@ -270017,7 +270623,7 @@ var InstanceSetup = class _InstanceSetup {
       const text8 = typeof got[field3] === "string" ? got[field3] : "";
       const checked = checkDraft(text8, { told, readLog, firsthand: false, suggestions, askedBy: by });
       if (!checked || checked.ok !== true) return draftRefused(checked);
-      if ([...checked.text].length > max) return unavailable2();
+      if ([...checked.text].length > max) return unavailable3();
       out[field3] = { text: checked.text, label: { kind: "machine", asked_by: askedBy } };
       out.withheld.push(...(checked.withheld || []).map((w) => ({ field: field3, ...w })));
     }
@@ -270476,11 +271082,11 @@ var InstanceSetup = class _InstanceSetup {
     if (a.refused) return a.refused;
     const r = this.#updateReady(version);
     if (r.refused) return r.refused;
-    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
-    if (!why2 || [...why2].length > UPDATE_SKIP_REASON_MAX || !oneLine8(why2))
-      return refusal37("UPDATE_SKIP_NO_REASON", `${typeof reason2 !== "string" || !why2 ? "no reason was given" : `a reason of ${[...why2].length} characters${oneLine8(why2) ? "" : " over more than one line"} is not`} one line of 1 to ${UPDATE_SKIP_REASON_MAX} characters, and a release is skipped with one. Nothing was recorded.`, { version: r.ready.version });
-    const at50 = this.#decide(r.ready.version, "skip", a.who, { reason: why2 });
-    return { ok: true, version: r.ready.version, kind: "skip", by: a.who, at: at50, reason: why2 };
+    const why3 = typeof reason2 === "string" ? reason2.trim() : "";
+    if (!why3 || [...why3].length > UPDATE_SKIP_REASON_MAX || !oneLine8(why3))
+      return refusal37("UPDATE_SKIP_NO_REASON", `${typeof reason2 !== "string" || !why3 ? "no reason was given" : `a reason of ${[...why3].length} characters${oneLine8(why3) ? "" : " over more than one line"} is not`} one line of 1 to ${UPDATE_SKIP_REASON_MAX} characters, and a release is skipped with one. Nothing was recorded.`, { version: r.ready.version });
+    const at50 = this.#decide(r.ready.version, "skip", a.who, { reason: why3 });
+    return { ok: true, version: r.ready.version, kind: "skip", by: a.who, at: at50, reason: why3 };
   }
   /* =====================================================================
    * THE INSTANCE'S OWN LIMITS (K98; R33–R40). What runs here COST, measured, and where the CPU ceiling lies, found
@@ -271397,8 +272003,8 @@ function draftDue(op, body) {
     return !!r && r.ok === true && Array.isArray(r.items) && r.items.length > 0;
   return DRAFT_OPS.includes(op) && !!r && r.ok === false && (r.reason === "ASSISTANT_DRAFT_UNAVAILABLE" || r.code === "ASSISTANT_DRAFT_UNAVAILABLE");
 }
-function draftAsk(op, asked6, { member: member2, session, firsthand, pack, owner = null }) {
-  const b = asked6 && typeof asked6 === "object" && !Array.isArray(asked6) ? asked6 : {};
+function draftAsk(op, asked7, { member: member2, session, firsthand, pack, owner = null }) {
+  const b = asked7 && typeof asked7 === "object" && !Array.isArray(asked7) ? asked7 : {};
   if (op === STATUS_REPORT_ASSIST) {
     const o = owner && typeof owner === "object" ? owner : {};
     return {
@@ -272957,8 +273563,8 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" }));
     local.del(STATE_KEY);
   }
-  function clearRecord(why2) {
-    if (why2) local.set(STATE_KEY, why2);
+  function clearRecord(why3) {
+    if (why3) local.set(STATE_KEY, why3);
     else local.del(STATE_KEY);
     local.del(D.storeKey);
   }
@@ -272971,7 +273577,7 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     tab.del(RETURN_KEY);
     return r && /^\/app(\/|$)/.test(r) ? r : "/app";
   }
-  function over(why2) {
+  function over(why3) {
     if (!S3) return;
     keepReturn();
     const handle = S3.w || ME && ME.handle || null;
@@ -272990,8 +273596,8 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     ME = null;
     LOCKED = false;
     stopIdle();
-    clearRecord(why2);
-    ENTRY4 = { state: why2, handle };
+    clearRecord(why3);
+    ENTRY4 = { state: why3, handle };
     route();
   }
   async function call(op, req = {}) {
@@ -273109,7 +273715,7 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
   };
   const ACTSTATE = /* @__PURE__ */ new Map();
   let SOUNDS = local.get("cs-sounds") === "on", AUDIO = null;
-  function say7(text9) {
+  function say8(text9) {
     const el = doc.getElementById("cs-live");
     if (el) el.textContent = text9 || "";
   }
@@ -273149,13 +273755,13 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     if (THEME === "device") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", THEME);
   }
-  async function setLevel(v, asked6) {
+  async function setLevel(v, asked7) {
     LEVEL = v === "pause" ? "pause" : "prompt";
     local.set("cs-level", LEVEL);
-    const body = asked6 ? { level: LEVEL, asked: true } : { level: LEVEL };
+    const body = asked7 ? { level: LEVEL, asked: true } : { level: LEVEL };
     if (can("infolevelset")) {
       const a = await call("infolevelset", { body });
-      if (a.kind === "ok" && asked6) LEVEL_INFO = Object.assign({}, LEVEL_INFO || {}, { asked_at: "now" });
+      if (a.kind === "ok" && asked7) LEVEL_INFO = Object.assign({}, LEVEL_INFO || {}, { asked_at: "now" });
     }
     draw2();
   }
@@ -274683,7 +275289,7 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
   function actState(inst, d, st) {
     if (st === null) ACTSTATE.delete(d.key);
     else ACTSTATE.set(d.key, st);
-    say7(st && st.busy ? textOf10(w("shell.working")) : "");
+    say8(st && st.busy ? textOf10(w("shell.working")) : "");
     paint(inst, d.key);
   }
   function paint(inst, key2) {
@@ -275017,8 +275623,8 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     win.addEventListener("storage", (e2) => {
       if (!e2 || e2.key !== D.storeKey && e2.key !== STATE_KEY && e2.key !== null) return;
       const rec = readRecord();
-      const why2 = local.get(STATE_KEY);
-      if (S3 && !rec) return over(why2 === "ended" ? "ended" : "signedout");
+      const why3 = local.get(STATE_KEY);
+      if (S3 && !rec) return over(why3 === "ended" ? "ended" : "signedout");
       if (rec && (!S3 || rec.t !== S3.t)) {
         S3 = rec;
         ME = null;
@@ -275029,8 +275635,8 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
         else draw2();
         return;
       }
-      if (S3 && rec && why2 === "locked" && !LOCKED) return lock(true);
-      if (S3 && LOCKED && why2 !== "locked") {
+      if (S3 && rec && why3 === "locked" && !LOCKED) return lock(true);
+      if (S3 && LOCKED && why3 !== "locked") {
         LOCKED = false;
         OVERLAY_REFUSAL = "";
         activity();
@@ -275186,8 +275792,8 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     const firstKey = "cs-first:" + (ME.member || "");
     if (!local.get(firstKey)) local.set(firstKey, String(Date.now()));
     const first = Math.min(Number(local.get(firstKey)) || Date.now(), LEVEL_INFO && LEVEL_INFO.set_at ? Date.parse(LEVEL_INFO.set_at) || Date.now() : Date.now());
-    const asked6 = LEVEL_INFO && LEVEL_INFO.asked_at || local.get("cs-level-asked");
-    ASK_LEVEL = !asked6 && LEVEL === "prompt" && Date.now() - first >= 30 * 24 * 3600 * 1e3;
+    const asked7 = LEVEL_INFO && LEVEL_INFO.asked_at || local.get("cs-level-asked");
+    ASK_LEVEL = !asked7 && LEVEL === "prompt" && Date.now() - first >= 30 * 24 * 3600 * 1e3;
     draw2();
   }
   async function loadReach() {
@@ -276006,8 +276612,8 @@ var setup = {
     const host = ok3(data.hosting) || {};
     const tools = ok3(data.tools) && Array.isArray(data.tools.value.tools) ? data.tools.value.tools : [];
     const members3 = ok3(data.members) && Array.isArray(data.members.value.members) ? data.members.value.members : null;
-    const answered = (r) => !!r && (r.state === "ok" || r.state === "empty");
-    const done = (r, test2) => answered(r) && test2() ? "done" : "optional";
+    const answered2 = (r) => !!r && (r.state === "ok" || r.state === "empty");
+    const done = (r, test2) => answered2(r) && test2() ? "done" : "optional";
     const states = {
       group: done(data.identity, () => !!named3),
       places: done(data.profiles, () => active.length > 0),
@@ -277261,10 +277867,10 @@ var teamai = {
     });
     out.push(`<div class="mk-msg" data-situation="teamkey">${card}</div>`);
     let n2 = 0;
-    const part = (title, why2, inner, open) => {
+    const part = (title, why3, inner, open) => {
       if (!inner) return;
       n2 += 1;
-      out.push(`<details class="cs-part" data-part="${n2}"${open ? " open" : ""}><summary><span class="n">${n2}</span><span class="t">${W2(title)}</span>${why2 ? `<span class="why">${why2}</span>` : ""}<span class="chev" aria-hidden="true"></span></summary><div class="body">${inner}</div></details>`);
+      out.push(`<details class="cs-part" data-part="${n2}"${open ? " open" : ""}><summary><span class="n">${n2}</span><span class="t">${W2(title)}</span>${why3 ? `<span class="why">${why3}</span>` : ""}<span class="chev" aria-hidden="true"></span></summary><div class="body">${inner}</div></details>`);
     };
     const panel = (only) => view.parts && view.parts.aiPanel ? view.parts.aiPanel(cs, view, { owner: "group", explore: true, perMember: true, names: names2, only, bare: true }) : "";
     const uses = okv(data.uses);
@@ -277564,10 +278170,10 @@ var connect = {
     };
     const out = [cs.title(), `<p>${W2(S3 + "optional")}</p>`];
     let n2 = 0;
-    const part = (title, why2, inner, o = {}) => {
+    const part = (title, why3, inner, o = {}) => {
       if (!inner) return;
       n2 += 1;
-      out.push(`<details class="cs-part" data-part="${n2}"${o.needed ? ' data-state="needed"' : ""}${o.open ? " open" : ""}><summary><span class="n">${n2}</span><span class="t">${W2(title)}</span>${why2 ? `<span class="why">${W2(why2)}</span>` : ""}${o.needed ? `<span class="cs-due">${W2("screen.setup.state.needed")}</span>` : ""}<span class="chev" aria-hidden="true"></span></summary><div class="body">${inner}</div></details>`);
+      out.push(`<details class="cs-part" data-part="${n2}"${o.needed ? ' data-state="needed"' : ""}${o.open ? " open" : ""}><summary><span class="n">${n2}</span><span class="t">${W2(title)}</span>${why3 ? `<span class="why">${W2(why3)}</span>` : ""}${o.needed ? `<span class="cs-due">${W2("screen.setup.state.needed")}</span>` : ""}<span class="chev" aria-hidden="true"></span></summary><div class="body">${inner}</div></details>`);
     };
     const whoPays = () => out.push(`<details class="mk-details" data-fold="whopays"><summary>${W2(S3 + "whopays.summary")}</summary><p class="mk-note">${W2("ai.whopays")}</p></details>`);
     const ka = okv(data.keepaway), as = okv(data.assistant);
@@ -277599,7 +278205,7 @@ var connect = {
     const lim = payer && (payer.limits || []).find((l2) => l2.scope === "per_member" && l2.period === "day");
     const amountOf = (a, u) => u === "usd" ? "$" + Number(a).toFixed(2) : Number(a).toLocaleString("en");
     const limitText = (l2) => T("screen.panel.amount", { amount: amountOf(l2.amount, l2.unit), unit: T("screen.panel.unit." + l2.unit), period: T("screen.panel.period." + l2.period) });
-    const answered = (x) => x !== null && x !== void 0 && Number.isFinite(Number(x));
+    const answered2 = (x) => x !== null && x !== void 0 && Number.isFinite(Number(x));
     if (situation === "own") {
       const since = subscribed ? st.since : ref && ref.set_at;
       const lead = subscribed ? st.since ? W2(S3 + "own.subscription", { date: D(st.since) }) : "" : W2(S3 + "own.apikey");
@@ -277613,10 +278219,10 @@ var connect = {
       if (lim && lim.reached) allowance = " " + W2(S3 + "group.allowance.reached", { period: T("screen.panel.period." + lim.period) });
       else if (lim) {
         allowance = " " + W2(S3 + "group.allowance", { limit: limitText(lim) });
-        if (admin && lim.period === "day" && answered(lim.used)) allowance += " " + W2(S3 + "group.allowance.used", { used: amountOf(lim.used, lim.unit), when: T("ai.usage.today") });
+        if (admin && lim.period === "day" && answered2(lim.used)) allowance += " " + W2(S3 + "group.allowance.used", { used: amountOf(lim.used, lim.unit), when: T("ai.usage.today") });
       }
       let share = "";
-      if (lim && answered(lim.used) && answered(lim.amount) && Number(lim.amount) > 0) {
+      if (lim && answered2(lim.used) && answered2(lim.amount) && Number(lim.amount) > 0) {
         const pct = Math.min(100, Math.round(100 * Number(lim.used) / Number(lim.amount))), near = pct >= 80;
         const says = W2("ai.usage.meter", { label: T(S3 + "meter.groupshare"), used: amountOf(lim.used, lim.unit), limit: amountOf(lim.amount, lim.unit) });
         share = `<div class="mk-meter"${near ? ' data-near="1"' : ""} data-level="2" data-tip="${W2("ai.usage.meter.means")}"><div class="l"><span>${says}</span><span class="pct">${pct}%${near ? " \xB7 " + W2("ai.usage.meter.near") : ""}</span></div><div class="track" role="img" aria-label="${says}"><i style="width:${pct}%"></i><b style="left:80%"></b></div></div>`;
@@ -277642,7 +278248,7 @@ var connect = {
         if (notice && notice.due === true) part(S3 + "notice.heading", S3 + "part.notice.why", outward(`<p>${W2(S3 + "notice.group")}</p>${cs.act("groupkeynoticeseen")}`), { needed: true, open: true });
         if (lim) {
           let h = `<p>${W2(S3 + "grouplimits", { limit: limitText(lim) })}</p>`;
-          if (admin && answered(lim.used)) h += `<p>${W2(S3 + "grouplimits.used", { used: amountOf(lim.used, lim.unit) })}</p>`;
+          if (admin && answered2(lim.used)) h += `<p>${W2(S3 + "grouplimits.used", { used: amountOf(lim.used, lim.unit) })}</p>`;
           if (admin && gk && typeof gk.suggestions === "boolean") h += `<p>${W2(S3 + "grouplimits.suggestions", { suggestions: T(gk.suggestions ? "screen.panel.on" : "screen.panel.off") })}</p>`;
           part(S3 + "part.allowance", S3 + "part.allowance.why", h, {});
         }
@@ -279120,7 +279726,7 @@ __export(panel_exports, {
 });
 
 // src/screens-settings/keys.mjs
-var KEYS6 = Object.freeze([
+var KEYS7 = Object.freeze([
   "act.accountdrafts.does",
   "act.accountpropose.does",
   "act.accountreferenceremove.does",
@@ -280308,7 +280914,7 @@ var KEYS6 = Object.freeze([
 // src/screens-settings/panel.mjs
 var USE_KINDS4 = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore", "suggestions"];
 var PANEL_KEYS = Object.freeze([
-  ...KEYS6.filter((k) => k.startsWith("screen.panel.")),
+  ...KEYS7.filter((k) => k.startsWith("screen.panel.")),
   ...USE_KINDS4.map((u) => `ai.use.${u}.name`),
   "ai.explore.no",
   "ai.explore.ask",
@@ -280350,8 +280956,8 @@ function aiPanel(cs, view, o) {
   }));
   section(S3 + "limits.heading", cs.state(data.limits, (v) => {
     const L3 = v.limits || [];
-    const scopeOf = (l2) => l2.scope === "overall" || l2.scope === "per_member" ? l2.scope : l2.use || l2.scope;
-    let h = L3.length === 0 ? "" : `<table class="mk-table"><thead><tr><th>${W2(S3 + "col.limit")}</th><th>${W2(S3 + "col.amount")}</th><th>${W2(S3 + "col.counts")}</th><th>${W2(S3 + "col.used")}</th><th>${W2(S3 + "col.acts")}</th></tr></thead><tbody>${L3.map((l2) => `<tr><td>${E2(scopeName(scopeOf(l2)))}</td><td>${W2(S3 + "amount", { amount: amountOf(l2.amount, l2.unit), unit: unitName(l2.unit), period: T(S3 + "period." + l2.period) })}</td><td>${l2.on_top === true ? W2(S3 + "ontop") : l2.on_top === false ? W2(S3 + "within") : ""}</td><td>${l2.used === null || l2.used === void 0 ? "" : E2(amountOf(l2.used, l2.unit))}${l2.reached ? " \xB7 " + W2(S3 + "reached") : ""}</td><td>${cs.act("ailimitset", { label: S3 + "limit.remove", data: { remove: "1", scope: scopeOf(l2), unit: l2.unit, period: l2.period } })}</td></tr>`).join("")}</tbody></table>`;
+    const scopeOf2 = (l2) => l2.scope === "overall" || l2.scope === "per_member" ? l2.scope : l2.use || l2.scope;
+    let h = L3.length === 0 ? "" : `<table class="mk-table"><thead><tr><th>${W2(S3 + "col.limit")}</th><th>${W2(S3 + "col.amount")}</th><th>${W2(S3 + "col.counts")}</th><th>${W2(S3 + "col.used")}</th><th>${W2(S3 + "col.acts")}</th></tr></thead><tbody>${L3.map((l2) => `<tr><td>${E2(scopeName(scopeOf2(l2)))}</td><td>${W2(S3 + "amount", { amount: amountOf(l2.amount, l2.unit), unit: unitName(l2.unit), period: T(S3 + "period." + l2.period) })}</td><td>${l2.on_top === true ? W2(S3 + "ontop") : l2.on_top === false ? W2(S3 + "within") : ""}</td><td>${l2.used === null || l2.used === void 0 ? "" : E2(amountOf(l2.used, l2.unit))}${l2.reached ? " \xB7 " + W2(S3 + "reached") : ""}</td><td>${cs.act("ailimitset", { label: S3 + "limit.remove", data: { remove: "1", scope: scopeOf2(l2), unit: l2.unit, period: l2.period } })}</td></tr>`).join("")}</tbody></table>`;
     const set = cs.act("ailimitset", { data: { remove: "" } });
     if (set) {
       const scopes = ["overall", ...USES2.filter((k) => k !== "suggestions"), ...o.explore ? ["explore"] : [], ...o.perMember ? ["per_member"] : []];
@@ -280442,7 +281048,7 @@ function aiLimitRefused(refusal40, cs) {
 var SCREEN_WORDS2 = Object.freeze([]);
 
 // src/screens-settings/index.mjs
-var own9 = (...prefixes) => KEYS6.filter((k) => prefixes.some((p3) => k.startsWith(p3)));
+var own9 = (...prefixes) => KEYS7.filter((k) => prefixes.some((p3) => k.startsWith(p3)));
 var PANEL = PANEL_KEYS;
 var STATES5 = ["state.loading", "state.empty", "state.failed"];
 var LABELS = (screen2, ops) => ops.flatMap((op) => [`act.${op}.label.${screen2}`, `act.${op}.does`]);
@@ -280706,11 +281312,11 @@ function titleOf5(cs, o) {
 }
 async function promoteDocument(cs, o) {
   const doc = o.doc || {}, title = String(o.title || "").slice(0, 200), locator = String(o.locator || ""), project = o.project || "";
-  const why2 = (r) => r && (r.translation || r.detail || r.reason || r.code) || "";
+  const why3 = (r) => r && (r.translation || r.detail || r.reason || r.code) || "";
   const now = new Date(cs.now ? cs.now() : Date.now()).toISOString().split(".")[0] + "Z";
   const minted = await cs.call("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
   const mid = minted && (minted.result || minted);
-  if (!mid || mid.ok === false || typeof mid.id !== "string") return { refused: why2(mid) };
+  if (!mid || mid.ok === false || typeof mid.id !== "string") return { refused: why3(mid) };
   const slug3 = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "");
   const id = slug3 ? `${mid.id}-${slug3}` : mid.id;
   const sha2 = doc.capture && doc.capture.sha256;
@@ -280796,7 +281402,7 @@ async function promoteDocument(cs, o) {
     register: register3
   } });
   const p3 = done && (done.result || done);
-  if (!p3 || p3.ok === false) return { refused: why2(p3) };
+  if (!p3 || p3.ok === false) return { refused: why3(p3) };
   return { bundleId: p3.bundleId || id };
 }
 function renderCapture(cs, view) {
@@ -281093,11 +281699,11 @@ function renderHeld(cs, view) {
   const eligibility = (r) => {
     if (r.eligible === true) return "";
     if (r.eligible !== false) return `${cs.mark("gap", "undetermined")} ${cs.w("screen.held.eligibility.undetermined")}`;
-    const why2 = String(r.class || "").toUpperCase();
-    const reason2 = why2.startsWith("CRUCIAL") ? "screen.held.ineligible.crucial" : why2.startsWith("CONTESTED") ? "screen.held.ineligible.contested" : null;
+    const why3 = String(r.class || "").toUpperCase();
+    const reason2 = why3.startsWith("CRUCIAL") ? "screen.held.ineligible.crucial" : why3.startsWith("CONTESTED") ? "screen.held.ineligible.contested" : null;
     return `${cs.mark("gap", "refused")} ${reason2 ? cs.w("screen.held.ineligible", { reason: { html: cs.w(reason2) } }) + " " : ""}${cs.w("screen.held.ineligible.alone")}`;
   };
-  const asked6 = (r) => {
+  const asked7 = (r) => {
     const f17 = r.captured_for;
     if (!f17) return r.captured_for_basis ? `${cs.mark("gap", "undetermined")} ${cs.w("screen.held.forundetermined", { reason: r.captured_for_basis })}` : "";
     return (Array.isArray(f17.questions) ? f17.questions : []).map((q10) => `<span class="meta">${cs.w("screen.held.for", { asker: q10.asker || "", title: q10.title || "" })}</span>`).join("") + (f17.withheld ? `${cs.mark("gap", "withheld")} ${cs.w("screen.held.withheld")}` : "");
@@ -281139,7 +281745,7 @@ function renderHeld(cs, view) {
       items: v.held,
       key: (r) => r.bundle_id,
       pick: true,
-      cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}<span class="meta">${grade2(r)} ${age(r.age_days)} \xB7 ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}` + source2(r) + "</span>" + eligibility(r) + asked6(r) + files(r)]
+      cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}<span class="meta">${grade2(r)} ${age(r.age_days)} \xB7 ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}` + source2(r) + "</span>" + eligibility(r) + asked7(r) + files(r)]
     }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : ""),
     { empty: "screen.held.empty" }
   );
@@ -281477,9 +282083,9 @@ async function donePull(view, answer2, cs) {
   cs.set("pulled", a.existed === true ? "existed" : "pulled");
 }
 function sendDiscard(view, el, cs) {
-  const why2 = String(cs.value("cx-why") || "").trim();
-  if (!why2) return { refuse: "refusal.RESOLVE_NO_REASON" };
-  return { body: { knockId: view.subject, status: "discarded", reason: why2 } };
+  const why3 = String(cs.value("cx-why") || "").trim();
+  if (!why3) return { refuse: "refusal.RESOLVE_NO_REASON" };
+  return { body: { knockId: view.subject, status: "discarded", reason: why3 } };
 }
 function doneDiscard(view, answer2, cs) {
   cs.set("discarded", true);
@@ -281546,8 +282152,8 @@ function renderArchive(cs, view) {
       size(a.bytes)
     ].filter(Boolean).join(" \xB7 ")}</span></div>` + (U.showNote && note ? `<p class="mk-small">${cs.esc(note)}</p>` : U.showNote ? said12("screen.archive.nonote") : "");
     if (a.refused) {
-      const why2 = a.refused.translation || a.refused.code || "";
-      return out + `<p>${cs.mark("gap", "refused", { reason: why2 })}</p>` + said12("screen.archive.refused.none") + (U.listed ? cs.sec("screen.archive.lists", list6(entries)) : `<div class="mk-acts">${cs.act("archivelist", { label: "screen.archive.see" })}</div>`);
+      const why3 = a.refused.translation || a.refused.code || "";
+      return out + `<p>${cs.mark("gap", "refused", { reason: why3 })}</p>` + said12("screen.archive.refused.none") + (U.listed ? cs.sec("screen.archive.lists", list6(entries)) : `<div class="mk-acts">${cs.act("archivelist", { label: "screen.archive.see" })}</div>`);
     }
     const sumParts = (m) => [["filed", m.filed], ["held", m.already_held], ["notfiled", m.not_filed], ["folders", m.folders]].filter(([, n2]) => n2 > 0).map(([k, n2]) => cs.w(`screen.archive.sum.${k}`, { count: n2 })).join(", ");
     out += (a.opened === false ? said12("screen.archive.notopened", { waiting: sum.waiting ?? 0 }) : sumParts(sum) ? `<p class="mk-note" role="status">${sumParts(sum)}.</p>` : "") + (g && g.grade ? `<p class="mk-small">${cs.w("screen.archive.gradeabout", { grade: g.grade })}</p>` : "");
@@ -282640,8 +283246,8 @@ var home = Object.freeze({
       reasonField: "why",
       rereads: ["queue"],
       send: function(view, el, cs) {
-        const why2 = String(cs.value(el.dataset.f + "-why") || "").trim();
-        return why2 ? { body: { notice: el.dataset.notice, why: why2 } } : { refuse: "screen.home.fieldfirst" };
+        const why3 = String(cs.value(el.dataset.f + "-why") || "").trim();
+        return why3 ? { body: { notice: el.dataset.notice, why: why3 } } : { refuse: "screen.home.fieldfirst" };
       }
     },
     {
@@ -283223,8 +283829,8 @@ var queue = Object.freeze({
       label: "act.adoptversion.label.queue",
       reasonField: "why",
       send: function(view, el, cs) {
-        const why2 = String(cs.value(el.dataset.f + "-why") || "").trim();
-        return why2 ? { body: { notice: el.dataset.notice, why: why2 } } : { refuse: "screen.queue.fieldfirst" };
+        const why3 = String(cs.value(el.dataset.f + "-why") || "").trim();
+        return why3 ? { body: { notice: el.dataset.notice, why: why3 } } : { refuse: "screen.queue.fieldfirst" };
       },
       done: function(view, answer2, cs) {
         cs.set("done", "adoptversion");
@@ -283349,12 +283955,12 @@ var finder = Object.freeze({
       const plain20 = w.every(function(x) {
         return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
       });
-      const asked6 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+      const asked7 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
         return "passage:" + x;
       }).join(" ") + ")" : q10;
       out.search = {
         op: "search",
-        query: { q: asked6, limit: "50", snippet: "160" },
+        query: { q: asked7, limit: "50", snippet: "160" },
         empty: function(v) {
           return !v || !Array.isArray(v.hits) || v.hits.length === 0;
         }
@@ -283603,10 +284209,10 @@ var finder = Object.freeze({
         const plain20 = w.every(function(x) {
           return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
         });
-        const asked6 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+        const asked7 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
           return "passage:" + x;
         }).join(" ") + ")" : q10;
-        return { query: { q: asked6, limit: "50", snippet: "160" } };
+        return { query: { q: asked7, limit: "50", snippet: "160" } };
       }
     },
     // Holds the picked results together: an enumerated selection over their ids (retrieval R18).
@@ -283961,7 +284567,7 @@ function forms() {
 }
 
 // src/screens-daily/find-in.mjs
-var findIn = Object.freeze({
+var findIn2 = Object.freeze({
   id: "find-in",
   parts: { frontTitle, forms },
   reads: function(view) {
@@ -284342,12 +284948,12 @@ var answers = Object.freeze({
       const plain20 = w.every(function(x) {
         return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
       });
-      const asked6 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+      const asked7 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
         return "passage:" + x;
       }).join(" ") + ")" : ui.q;
       out.search = {
         op: "search",
-        query: { q: asked6, limit: "50", snippet: "160" },
+        query: { q: asked7, limit: "50", snippet: "160" },
         empty: function(v) {
           return !v || !Array.isArray(v.hits) || v.hits.length === 0;
         }
@@ -284542,10 +285148,10 @@ var answers = Object.freeze({
         const plain20 = w.every(function(x) {
           return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
         });
-        const asked6 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+        const asked7 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
           return "passage:" + x;
         }).join(" ") + ")" : q10;
-        return { query: { q: asked6, limit: "50", snippet: "160" } };
+        return { query: { q: asked7, limit: "50", snippet: "160" } };
       }
     },
     // "Show how this was counted": the rule service's answer with its basis and label (answers R7).
@@ -285088,7 +285694,7 @@ var WORDS_OF = {
     "screen.connect.name"
   ]
 };
-var SCREENS4 = Object.freeze([home, elsewhere, projects, queue, finder, findIn, answers].map((s) => Object.freeze({ ...s, words: Object.freeze([...new Set(WORDS_OF[s.id])]) })));
+var SCREENS4 = Object.freeze([home, elsewhere, projects, queue, finder, findIn2, answers].map((s) => Object.freeze({ ...s, words: Object.freeze([...new Set(WORDS_OF[s.id])]) })));
 
 // src/screens-inquiry/common.mjs
 function front2(text8) {
@@ -285170,7 +285776,7 @@ function who3(cs, x, founder) {
   if (s === "admin" && founder) return String(founder);
   return s === "admin" ? String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e2) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[e2]) : s;
 }
-function unavailable(cs) {
+function unavailable2(cs) {
   return `<p class="cs-state" data-state="empty" data-unavailable="notyours"><b>${cs.w("shell.unavailable.notyours.title")}</b> ${cs.w("shell.unavailable.notyours.says")}</p>`;
 }
 function ending(cs, bound, left2) {
@@ -285223,11 +285829,11 @@ function progress(cs, entries, o) {
   if (composing || checks.length || checked) rows4.push(`<li data-step="checking">${cs.w("ai.progress.checking")}</li>`);
   for (const c of checks) rows4.push(`<li data-step="check" data-found="${c.found === true ? "yes" : "no"}">${cs.w(c.found === true ? "ai.progress.check.ok" : "ai.progress.check.fail", { passage: String(c.passage || "") })}</li>`);
   if (checked) rows4.push(`<li data-step="checked">${cs.w("ai.progress.checked", { ok: String(checked.ok), total: String(checked.total) })}</li>`);
-  const answered = !!checked || checks.length > 0;
+  const answered2 = !!checked || checks.length > 0;
   const none = !!checked && Number(checked.ok) === 0;
-  return { html: rows4.length ? `<div class="cs-machinework" data-origin="machine" data-progress="1"><ol class="mk-next" aria-live="polite" data-tip="${cs.esc(cs.w("ai.progress.means"))}">${rows4.join("")}</ol>` + (answered ? "" : `<p class="mk-small" data-hold="1">${cs.w("ai.progress.hold")}</p>`) + "</div>" : "", answered, none };
+  return { html: rows4.length ? `<div class="cs-machinework" data-origin="machine" data-progress="1"><ol class="mk-next" aria-live="polite" data-tip="${cs.esc(cs.w("ai.progress.means"))}">${rows4.join("")}</ol>` + (answered2 ? "" : `<p class="mk-small" data-hold="1">${cs.w("ai.progress.hold")}</p>`) + "</div>" : "", answered: answered2, none };
 }
-var COMMON = Object.freeze({ front: front2, later: later2, plain: plain19, who: who3, unavailable, ending, costLine, progress });
+var COMMON = Object.freeze({ front: front2, later: later2, plain: plain19, who: who3, unavailable: unavailable2, ending, costLine, progress });
 
 // src/screens-inquiry/project.mjs
 function reads(view) {
@@ -285459,8 +286065,8 @@ function render2(cs, view) {
     return `<p data-visibility="${v.setting === "discoverable" ? "discoverable" : "hidden"}">${W2(v.setting === "discoverable" ? "project.visibility.discoverable" : "project.visibility.hidden")}</p>` + lines2.join("") + (owner ? cs.field("project-visibility-why", "shell.reason", { area: true, rec: true, help: "shell.reason.help" }) + cs.act("projectvisibilityset", { label: "act.projectvisibilityset.label.project", data: { to: v.setting === "discoverable" ? "hidden" : "discoverable" } }) : "");
   }));
   out.push(cs.sec("screen.project.account.head", cs.state(!d.participants || d.participants.state === "loading" ? { state: "loading" } : later3("account", "projectaccountstate", { project: id }), (a) => {
-    const say7 = a.on === false && a.held ? "screen.project.account.off" : a.serving === "project" || a.on && a.held ? "screen.project.account.project" : "screen.project.account.member";
-    return `<p>${W2(say7)}</p>`;
+    const say8 = a.on === false && a.held ? "screen.project.account.off" : a.serving === "project" || a.on && a.held ? "screen.project.account.project" : "screen.project.account.member";
+    return `<p>${W2(say8)}</p>`;
   }) + `<p class="mk-small">${W2("screen.project.account.where")} <a class="cs-btn" data-tone="quiet" href="/app/projectai/${cs.esc(id)}" data-nav>${W2("screen.projectai.name")}</a></p>`));
   {
     const idv = d.identity && d.identity.state === "ok" && d.identity.value ? d.identity.value : null;
@@ -286095,8 +286701,8 @@ function render3(cs, view) {
   const runList = runs && runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : runs && runs.state === "loading" && Array.isArray(ui.lastRuns) ? ui.lastRuns : [];
   const isMine = (s) => !!(s && member2 && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/")));
   const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && ui.withheld !== s.id) || null;
-  const asked6 = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
-  const asking = !!ui.asking && !(asked6 && asked6.status !== "running");
+  const asked7 = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
+  const asking = !!ui.asking && !(asked7 && asked7.status !== "running");
   const lastMine = runList.find(isMine) || null;
   const ending2 = (c) => c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || "");
   const watched2 = myRun || lastMine;
@@ -286240,7 +286846,7 @@ function render3(cs, view) {
     const ref = refOf2(target);
     const status = statusOf(l2);
     const severed = status === "severed";
-    const why2 = severed ? (() => {
+    const why3 = severed ? (() => {
       const m = /(?:^|\|\s*)Severed (\S+): ([^|]*)$/.exec(String(ref && (ref.note || ref.reason) || "").trim());
       return m ? m[2].trim() : String(ref && ref.reason || "");
     })() : "";
@@ -286255,7 +286861,7 @@ function render3(cs, view) {
         const r = shown3 && Array.isArray(shown3.legs) ? shown3.legs.find((x) => String(x.target_id || x.target) === target) : null;
         const words24 = l2.words || r && r.words;
         return words24 ? `<span class="rec">\u201C${cs.esc(words24)}\u201D</span>` : "";
-      })() + `<span class="mk-small">${cs.ref("document", target, legTitle(l2), [legTitle(l2)])}` + (severed ? ` \xB7 <span data-leg="severed">${why2 ? W2("screen.question.leg.severed.why", { why: why2 }) : W2("screen.question.leg.severed")}</span>` : "") + "</span>" + line2,
+      })() + `<span class="mk-small">${cs.ref("document", target, legTitle(l2), [legTitle(l2)])}` + (severed ? ` \xB7 <span data-leg="severed">${why3 ? W2("screen.question.leg.severed.why", { why: why3 }) : W2("screen.question.leg.severed")}</span>` : "") + "</span>" + line2,
       isLive ? cs.act("sever", { label: "act.sever.label.question", data: { target } }) : severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { target } }) : ""
     );
   };
@@ -287306,8 +287912,8 @@ var acts4 = [
     rereads: ["backlinks"],
     send(view, el, cs) {
       const notice = String(el.dataset.notice || "");
-      const why2 = String(cs.value("document-version-why-" + notice) || "").trim();
-      return { body: { notice, why: why2 } };
+      const why3 = String(cs.value("document-version-why-" + notice) || "").trim();
+      return { body: { notice, why: why3 } };
     }
   },
   {
@@ -287316,8 +287922,8 @@ var acts4 = [
     rereads: ["backlinks"],
     send(view, el, cs) {
       const notice = String(el.dataset.notice || "");
-      const why2 = String(cs.value("document-version-why-" + notice) || "").trim();
-      return { body: { notice, ...why2 ? { why: why2 } : {} } };
+      const why3 = String(cs.value("document-version-why-" + notice) || "").trim();
+      return { body: { notice, ...why3 ? { why: why3 } : {} } };
     }
   },
   /* R32: the mention that counts for a name, chosen by her (connections R14–R16) */
@@ -287739,14 +288345,14 @@ function render5(cs, view) {
   let runPart = "";
   let status = null;
   if (!run2) {
-    const why2 = (c) => c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || "");
+    const why3 = (c) => c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || "");
     const es = endedMine && endedMine.id ? later3("ended", "airun", { run: String(endedMine.id) }) : null;
     const esess = es && es.state === "ok" && es.value && es.value.session ? es.value.session : null;
     const endWords = (b) => {
       const k = ["cancelled", "mode-not-deployed", "fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces", "proposals", "pages", "lease", "nothing-written"];
       return b === "completed" ? cs.w("ai.run.ending.completed") : cs.w(k.includes(b) ? "ai.run.ending." + b : "ai.run.ending.unknown");
     };
-    runPart = endedMine ? `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: { html: endWords(why2(endedMine.condition) || String(endedMine.status || "")) } })}</p>` + (why2(endedMine.condition) === "cancelled" ? `<p class="mk-small" data-run="stopped">${cs.w("screen.question.stopped.kept")}</p>` : "") + (view.parts && view.parts.costLine ? view.parts.costLine(cs, esess, true) : "") : `<p>${cs.w("screen.assistant.run.none")}</p>`;
+    runPart = endedMine ? `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: { html: endWords(why3(endedMine.condition) || String(endedMine.status || "")) } })}</p>` + (why3(endedMine.condition) === "cancelled" ? `<p class="mk-small" data-run="stopped">${cs.w("screen.question.stopped.kept")}</p>` : "") + (view.parts && view.parts.costLine ? view.parts.costLine(cs, esess, true) : "") : `<p>${cs.w("screen.assistant.run.none")}</p>`;
   } else if (run2.found && !ui.run) {
     status = "running";
   } else {
@@ -288097,8 +288703,8 @@ function render6(cs, view) {
   }
   out.push(`<p class="mk-sub">${W2(S3 + "purpose")}</p>`);
   out.push(cs.sec(S3 + "account.head", cs.state("state", view, (a) => {
-    const say7 = !a.held ? S3 + "account.none" : a.on === false ? S3 + "account.off" : a.serving === false ? S3 + "account.suspended" : a.kind === "signin" ? S3 + "account.signin" : S3 + "account.key";
-    let h = `<p data-account="${E2(!a.held ? "none" : a.on === false ? "off" : a.serving === false ? "suspended" : String(a.kind || ""))}">${W2(say7)}</p>`;
+    const say8 = !a.held ? S3 + "account.none" : a.on === false ? S3 + "account.off" : a.serving === false ? S3 + "account.suspended" : a.kind === "signin" ? S3 + "account.signin" : S3 + "account.key";
+    let h = `<p data-account="${E2(!a.held ? "none" : a.on === false ? "off" : a.serving === false ? "suspended" : String(a.kind || ""))}">${W2(say8)}</p>`;
     if (a.held && (a.by || a.set_at))
       h += `<p class="mk-small">${W2(S3 + "account.since", { who: String(a.by || "").replace(/^member:/, ""), date: { html: a.set_at ? cs.date(String(a.set_at), { year: true }) : "" } })}</p>`;
     if (!isOwner) return h + `<p class="mk-small">${W2(S3 + "owners")}</p>`;
@@ -288319,7 +288925,7 @@ var PROJECTAI_SCREEN = Object.freeze({
   render: render6,
   acts: acts6,
   words: words11,
-  parts: Object.freeze({ aiPanel: aiPanel2, aiPanelSend: aiPanelSend2, later: later2, unavailable })
+  parts: Object.freeze({ aiPanel: aiPanel2, aiPanelSend: aiPanelSend2, later: later2, unavailable: unavailable2 })
 });
 
 // src/screens-inquiry/index.mjs
@@ -288395,9 +289001,9 @@ var library = {
       const lines2 = steps.map((st, i) => {
         const n2 = i + 1;
         const what = s.origin === "civicsmith" && said12("wizard." + s.id + ".step" + n2 + ".what") || E2(st.what || "");
-        const why2 = s.origin === "civicsmith" && said12("wizard." + s.id + ".step" + n2 + ".why") || E2(st.why || "");
+        const why3 = s.origin === "civicsmith" && said12("wizard." + s.id + ".step" + n2 + ".why") || E2(st.why || "");
         const kind2 = st.draft && typeof st.draft === "object" ? Object.keys(st.draft)[0] : null;
-        return `<li><span class="what">${what || W2(S3 + "steps.recorded", { screen: { html: screenName(st.screen) }, act: { html: actName2(st.screen, st.act) } })}</span>` + (why2 ? `<span class="why">${W2(S3 + "steps.why", { why: { html: why2 } })}</span>` : "") + `<span class="meta">${W2(S3 + "steps.where", { screen: { html: screenName(st.screen) } })} \xB7 ${actName2(st.screen, st.act)}` + (st.via ? " \xB7 " + W2(S3 + "steps.via", { name: { html: said12("wizard." + st.via + ".name") || E2(st.via) } }) : "") + (kind2 && ["text", "template", "machine"].includes(kind2) ? " \xB7 " + W2(S3 + "steps.draft." + kind2) : "") + "</span></li>";
+        return `<li><span class="what">${what || W2(S3 + "steps.recorded", { screen: { html: screenName(st.screen) }, act: { html: actName2(st.screen, st.act) } })}</span>` + (why3 ? `<span class="why">${W2(S3 + "steps.why", { why: { html: why3 } })}</span>` : "") + `<span class="meta">${W2(S3 + "steps.where", { screen: { html: screenName(st.screen) } })} \xB7 ${actName2(st.screen, st.act)}` + (st.via ? " \xB7 " + W2(S3 + "steps.via", { name: { html: said12("wizard." + st.via + ".name") || E2(st.via) } }) : "") + (kind2 && ["text", "template", "machine"].includes(kind2) ? " \xB7 " + W2(S3 + "steps.draft." + kind2) : "") + "</span></li>";
       });
       return cs.sec(S3 + "steps.head", `<ol class="mk-list">${lines2.join("")}</ol>`);
     });
@@ -288939,8 +289545,8 @@ var PARTS3 = {
       cs.set("run", run2);
       return;
     }
-    const asked6 = r.label && r.label.asked_by ? String(r.label.asked_by).replace(/^member:/, "") : me.member;
-    const handle = asked6 === me.member && me.handle ? me.handle : asked6 || me.handle || "";
+    const asked7 = r.label && r.label.asked_by ? String(r.label.asked_by).replace(/^member:/, "") : me.member;
+    const handle = asked7 === me.member && me.handle ? me.handle : asked7 || me.handle || "";
     P.place(cs, view, text8, "screen.guide.draft.machine", { handle }, !!(r.untested || r.label && r.label.untested));
     cs.set("run", run2);
   }
@@ -289426,8 +290032,8 @@ var PARTS4 = Object.freeze({
   },
   /** An event's date, as precise as its source states it: a day, a month marked "month known", "on or before"; else undetermined
    *  with `why` (the record's own reason) or the keyed "the source states no date". */
-  when(cs, w, why2) {
-    if (!w) return cs.mark("gap", "undetermined", { reason: why2 || cs.w("screen.timeline.undated") });
+  when(cs, w, why3) {
+    if (!w) return cs.mark("gap", "undetermined", { reason: why3 || cs.w("screen.timeline.undated") });
     if (w.precision === "edtf") {
       const m = /^(\d{4})-(\d{2})$/.exec(String(w.value || ""));
       const names2 = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
@@ -291171,7 +291777,7 @@ function render11(cs, view) {
   const entries = t2 && t2.state === "ok" ? (t2.value.inclusions || []).map((x) => ({ key: x.fact_id, state: "included", reason: x.reason, trail: x.trail })).concat((t2.value.exclusions || []).map((x) => ({ key: x.fact_id, state: "excluded", reason: x.reason, trail: null }))).concat((t2.value.proposals || []).map((x) => ({ key: x.fact_id, state: "proposed", reason: x.label, trail: x.trail }))).concat((Array.isArray(ui.recent) ? ui.recent : []).filter((k) => !(t2.value.inclusions || []).concat(t2.value.exclusions || []).some((x) => x.fact_id === k)).map((k) => ({ key: k, state: "none", reason: "", trail: null }))) : [];
   const fact = (e2) => P.later(cs, view, "fact:" + e2.key, "money", { query: { id: e2.key } });
   const party = (p3) => !p3 ? null : p3.as_written || p3.entity || p3.fund || p3.account || null;
-  const gap = (e2, what, why2) => `<button type="button" class="cs-btn" data-tone="quiet" data-shell="row" data-table="money" data-id="${cs.esc(e2.key)}" aria-label="${cs.esc(cs.w(S3 + "gap.open", { what: cs.w(S3 + "col." + what) }))}">${cs.mark("gap", "undetermined", { reason: why2 })}</button>`;
+  const gap = (e2, what, why3) => `<button type="button" class="cs-btn" data-tone="quiet" data-shell="row" data-table="money" data-id="${cs.esc(e2.key)}" aria-label="${cs.esc(cs.w(S3 + "gap.open", { what: cs.w(S3 + "col." + what) }))}">${cs.mark("gap", "undetermined", { reason: why3 })}</button>`;
   const gapsOf = (e2, f17) => {
     const g = [];
     const tr = e2.trail || {};
@@ -293637,14 +294243,14 @@ var CASE_EDITOR = Object.freeze({
       const obs = Array.isArray(v.observations) ? v.observations : [];
       if (!obs.length) return "";
       return cs.sheet(obs.map(function(o, i) {
-        const why2 = o.stated ? '<span class="rec">' + cs.esc(typeof o.stated === "string" ? o.stated : o.stated.reason || "") + "</span>" : '<span class="muted">' + cs.w("screen.case-editor.people.noreason") + "</span>";
+        const why3 = o.stated ? '<span class="rec">' + cs.esc(typeof o.stated === "string" ? o.stated : o.stated.reason || "") + "</span>" : '<span class="muted">' + cs.w("screen.case-editor.people.noreason") + "</span>";
         const level = o.chosen ? cs.w("screen.case-editor.level." + String(o.chosen.level || o.chosen)) : "";
         const fields = cs.choice("ce-level-" + i, "screen.case-editor.level.label", ["name", "cover", "project", "group"].map(function(l2) {
           return [l2, "screen.case-editor.level." + l2];
         })) + cs.field("ce-why-" + i, "screen.case-editor.people.reason", { area: true });
         return cs.row(
           "",
-          '<span class="rec">' + cs.esc(o.observation) + "</span>" + (level ? " \xB7 " + level : "") + " \xB7 " + why2,
+          '<span class="rec">' + cs.esc(o.observation) + "</span>" + (level ? " \xB7 " + level : "") + " \xB7 " + why3,
           "",
           fields + cs.act("attribute", { data: { observation: o.observation, index: String(i) } })
         );
@@ -294668,8 +295274,8 @@ var PUBLISHED = Object.freeze({
         if (!sha2 && !download) return { query };
         const got = sha2 ? await cs.download("publishedbytes", { query: { sha256: sha2 }, name: sha2.slice(0, 12) }) : await cs.download("publishedbytes", { query: { sha256: el.dataset.manifest, format: "zip" }, name: s[0] + (s[1] ? "-edition-" + s[1] : "") + ".zip" });
         const a = got && got.answer && typeof got.answer === "object" ? got.answer.result && typeof got.answer.result === "object" ? got.answer.result : got.answer : {};
-        const why2 = a.translation || a.reason || a.code || "";
-        P.say(cs, view, "download", got && got.ok ? cs.w("screen.published.download.done") : why2 ? cs.esc(why2) : cs.w("screen.published.download.failed"), !!(got && got.ok));
+        const why3 = a.translation || a.reason || a.code || "";
+        P.say(cs, view, "download", got && got.ok ? cs.w("screen.published.download.done") : why3 ? cs.esc(why3) : cs.w("screen.published.download.failed"), !!(got && got.ok));
         return null;
       }
     }
@@ -295758,15 +296364,15 @@ var plan = Object.freeze({
         });
       });
       const pr = view.data.proposals;
-      const asked6 = view.ui.ask || null;
+      const asked7 = view.ui.ask || null;
       let askNote = "", fresh = null;
-      if (asked6 && asked6.refused) {
-        askNote = '<p class="mk-note" role="alert" data-run="refused">' + asked6.refused + "</p>";
-      } else if (asked6 && asked6.run) {
-        const st = P.later(cs, view, "run", "airun", { run: asked6.run }, String(view.ui.seq || 0));
+      if (asked7 && asked7.refused) {
+        askNote = '<p class="mk-note" role="alert" data-run="refused">' + asked7.refused + "</p>";
+      } else if (asked7 && asked7.run) {
+        const st = P.later(cs, view, "run", "airun", { run: asked7.run }, String(view.ui.seq || 0));
         const session = st.state === "ok" && st.value && st.value.session ? st.value.session : null;
-        if (session) view.ui.askStatus = { run: asked6.run, status: session.status };
-        const status = session ? session.status : view.ui.askStatus && view.ui.askStatus.run === asked6.run ? view.ui.askStatus.status : null;
+        if (session) view.ui.askStatus = { run: asked7.run, status: session.status };
+        const status = session ? session.status : view.ui.askStatus && view.ui.askStatus.run === asked7.run ? view.ui.askStatus.status : null;
         const poll = function() {
           if (st.state !== "loading" && !view.ui.askPolling && (view.ui.askPolls || 0) < 60) {
             view.ui.askPolling = true;
@@ -295778,11 +296384,11 @@ var plan = Object.freeze({
           }
         };
         if (status === "running") {
-          askNote = '<p class="mk-note" role="status" data-run="running">' + cs.w(asked6.existed ? "screen.plan.ask.already" : "screen.plan.ask.running") + "</p>";
+          askNote = '<p class="mk-note" role="status" data-run="running">' + cs.w(asked7.existed ? "screen.plan.ask.already" : "screen.plan.ask.running") + "</p>";
           poll();
         } else if (status) {
           askNote = '<p class="mk-note" role="status" data-run="ended">' + cs.w("screen.plan.ask.ended") + "</p>";
-          fresh = P.later(cs, view, "tray", "planproposals", { plan: view.subject }, asked6.run);
+          fresh = P.later(cs, view, "tray", "planproposals", { plan: view.subject }, asked7.run);
         } else if (st.state === "failed") poll();
       }
       const trayRows = function(v) {
@@ -297363,10 +297969,10 @@ var unbound = () => ({ status: 503, body: {
   reason: "AGENT_WORKER_UNBOUND",
   detail: "your team's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in."
 } });
-var silent = (why2) => ({ status: 502, body: {
+var silent = (why3) => ({ status: 502, body: {
   ok: false,
   reason: "AGENT_WORKER_SILENT",
-  detail: `the assistant member ${why2}. Nothing was kept.`
+  detail: `the assistant member ${why3}. Nothing was kept.`
 } });
 async function send(env, payload, headers) {
   const w = env && env.AGENT_WORKER;
@@ -297405,10 +298011,10 @@ async function writeLine({ env, store, log, line: line2 }) {
       body: JSON.stringify({ line: kept })
     });
 }
-async function subscriptionSignin({ env, member: member2, asked: asked6, store, log = defaultLog }) {
+async function subscriptionSignin({ env, member: member2, asked: asked7, store, log = defaultLog }) {
   const t0 = Date.now();
   const trace = mintTrace();
-  const a = isObject(asked6) ? asked6 : {};
+  const a = isObject(asked7) ? asked7 : {};
   const step = typeof a.step === "string" && SIGNIN_STEPS.includes(a.step) ? a.step : null;
   const memberRef = await memberRefOf(env, member2);
   let msAgent;
@@ -297485,9 +298091,9 @@ async function subscriptionSignin({ env, member: member2, asked: asked6, store, 
   }
   return done(out, out.body.reason === "AGENT_WORKER_UNBOUND" || out.body.reason === "AGENT_WORKER_SILENT" ? "refused_local" : "relayed");
 }
-function leaverOf(op, asked6, result2, by) {
+function leaverOf(op, asked7, result2, by) {
   if (!isObject(result2) || result2.ok !== true) return null;
-  const a = isObject(asked6) ? asked6 : {};
+  const a = isObject(asked7) ? asked7 : {};
   const memberOf9 = (id) => typeof id === "string" && id.trim() !== "" ? id.startsWith("member:") ? id : `member:${id}` : null;
   if (op === "subscriptiondisconnect") return typeof by === "string" && by ? by : null;
   if (op === "memberset" && a.status === "revoked") return memberOf9(result2.memberId ?? a.memberId);
@@ -298340,13 +298946,13 @@ async function knockerConsent(req, store) {
 async function watchedAsk(res, { member: member2, store }) {
   const type = res.headers.get("content-type") || "";
   if (!res.body || /application\/json/i.test(type)) {
-    let asked6 = null;
+    let asked7 = null;
     try {
-      asked6 = await res.clone().json();
+      asked7 = await res.clone().json();
     } catch {
-      asked6 = null;
+      asked7 = null;
     }
-    await tokenRefusedSeen({ member: member2, answer: asked6, store });
+    await tokenRefusedSeen({ member: member2, answer: asked7, store });
     return res;
   }
   const decoder2 = new TextDecoder();
@@ -299210,13 +299816,13 @@ function makeFetch(hooks = {}) {
     seen.trace = trace ?? null;
     if (op === TEXT_CHECK || op === READ_TRANSLATE) {
       if (!viaSession || typeof stub.draft !== "function") return unboundRun();
-      const asked6 = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody : {};
-      const ask3 = op === TEXT_CHECK ? { op, member: sessMember, session: credential.token, text: asked6.text ?? null, trace, memberRef } : {
+      const asked7 = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody : {};
+      const ask3 = op === TEXT_CHECK ? { op, member: sessMember, session: credential.token, text: asked7.text ?? null, trace, memberRef } : {
         op,
         member: sessMember,
         session: credential.token,
-        subject: asked6.subject ?? null,
-        language: asked6.language ?? null,
+        subject: asked7.subject ?? null,
+        language: asked7.language ?? null,
         trace,
         memberRef
       };
@@ -299698,20 +300304,20 @@ function makeFetch(hooks = {}) {
       inner.searchParams.delete("secretSha");
     }
     if (op === "aicredentialmint") {
-      let asked6 = {};
+      let asked7 = {};
       try {
-        asked6 = passBody ? JSON.parse(passBody) : {};
+        asked7 = passBody ? JSON.parse(passBody) : {};
       } catch {
-        asked6 = {};
+        asked7 = {};
       }
-      const mint = await aiCredentialMint(asked6, cls3);
+      const mint = await aiCredentialMint(asked7, cls3);
       if (mint.refusal) return refused5(mint.refusal);
       const secret = mint.secret;
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls3}`);
       const minted = await doAnswer(stub.fetch(new Request(
         inner,
         { method: "POST", body: JSON.stringify({
-          ...asked6,
+          ...asked7,
           writes: mint.writes,
           confinedTo: mint.confinedTo,
           secretSha: mint.secretSha
@@ -299788,11 +300394,11 @@ function makeFetch(hooks = {}) {
       }
     }
     if (draftDue(op, body) && viaSession && typeof stub.draft === "function") {
-      let asked6 = {};
+      let asked7 = {};
       try {
-        asked6 = passBody ? JSON.parse(passBody) : {};
+        asked7 = passBody ? JSON.parse(passBody) : {};
       } catch {
-        asked6 = {};
+        asked7 = {};
       }
       const pack = op === STATUS_REPORT_ASSIST ? null : await heldPack({
         req,
@@ -299809,7 +300415,7 @@ function makeFetch(hooks = {}) {
         storeName,
         stub
       });
-      const ask3 = { ...draftAsk(op, asked6, {
+      const ask3 = { ...draftAsk(op, asked7, {
         member: sessMember,
         session: credential.token,
         firsthand: body.result.firsthand === true,
@@ -299841,8 +300447,8 @@ function makeFetch(hooks = {}) {
         const handed = {
           direction: ask3.direction,
           language: ask3.language,
-          ...Array.isArray(asked6.keys) ? { keys: asked6.keys } : {},
-          ...asked6.key !== void 0 ? { key: asked6.key } : {},
+          ...Array.isArray(asked7.keys) ? { keys: asked7.keys } : {},
+          ...asked7.key !== void 0 ? { key: asked7.key } : {},
           words: ask3.words,
           draft: drafted.draft ?? null,
           ...Array.isArray(drafted.not_drafted) ? { not_drafted: drafted.not_drafted } : {}
@@ -300969,10 +301575,10 @@ var Tasks = class _Tasks {
         "the verdict is `check` or `concern`; nothing was written",
         { verdicts: [...CHECK_VERDICTS] }
       );
-    const why2 = trimmed(reason2);
-    if (verdict === "concern" && !why2)
+    const why3 = trimmed(reason2);
+    if (verdict === "concern" && !why3)
       return _Tasks.#checkRefusal("CHECK_NO_REASON", "a concern is recorded with its reason; nothing was written");
-    if (why2 && why2.length > CHECK_REASON_MAX)
+    if (why3 && why3.length > CHECK_REASON_MAX)
       return _Tasks.#checkRefusal(
         "CHECK_REASON_TOO_LONG",
         `the reason is over ${CHECK_REASON_MAX} characters once trimmed; nothing was written`,
@@ -301001,7 +301607,7 @@ var Tasks = class _Tasks {
       label: req.label ?? null,
       expertise,
       verdict,
-      reason: why2,
+      reason: why3,
       at: at50
     };
     this.#atomically(() => {
@@ -302706,9 +303312,9 @@ function dayWords(day2, today2 = null) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(typeof day2 === "string" ? day2 : "");
   if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return null;
   const fills = { day: Number(m[3]), month: ACTION_WORDS[`date.month.${MONTHS8[Number(m[2]) - 1]}`], year: m[1] };
-  return say6(typeof today2 === "string" && today2.slice(0, 4) === m[1] ? "date.daymonth" : "date.daymonthyear", fills);
+  return say7(typeof today2 === "string" && today2.slice(0, 4) === m[1] ? "date.daymonth" : "date.daymonthyear", fills);
 }
-function say6(key2, fills = {}) {
+function say7(key2, fills = {}) {
   const t2 = ACTION_WORDS[key2] ?? OWN_WORDS[key2];
   if (typeof t2 !== "string") return null;
   return t2.replace(/\{([a-z_]+)\}/g, (_, k) => fills[k] === null || fills[k] === void 0 ? "" : String(fills[k]));
@@ -302971,31 +303577,31 @@ var ActionProducers = class _ActionProducers {
   static MEMBER_LEFT_REMINDER_ACTIONS = 200;
   /** R11: the doors, each the act whose taking makes the item leave, or routes it (take-up, plan-work R11). Plain acts:
    *  `queue` decorates every option (its R17). */
-  static CORRESPOND = Object.freeze({ id: "actioncorrespond", label: say6("door.actioncorrespond"), weight: "single" });
+  static CORRESPOND = Object.freeze({ id: "actioncorrespond", label: say7("door.actioncorrespond"), weight: "single" });
   /** R21: the door stating an entry met or waived. No action-clocks op states it: it is a member's revision of the
    *  action's document (`op=promote`, actions' revision within its R1 and R33), changing only that entry's `status` to
    *  `met` or `waived`. Its label is `door.clockentrystate` (R23); `#entryStateDoor` keys it to the action and entry. */
-  static ENTRY_STATE = Object.freeze({ id: "promote", label: say6("door.clockentrystate"), weight: "single" });
-  static TAKE_UP = Object.freeze({ id: "itemtakeup", label: say6("door.itemtakeup"), weight: "single" });
-  static CHECKPOINT_JUDGE = Object.freeze({ id: "checkpointrecord", label: say6("door.checkpointrecord"), weight: "single" });
-  static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: say6("door.escalationadvance"), weight: "single" });
-  static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: say6("door.escalationdecline"), weight: "single" });
-  static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: say6("door.reminderanswer"), weight: "single" });
+  static ENTRY_STATE = Object.freeze({ id: "promote", label: say7("door.clockentrystate"), weight: "single" });
+  static TAKE_UP = Object.freeze({ id: "itemtakeup", label: say7("door.itemtakeup"), weight: "single" });
+  static CHECKPOINT_JUDGE = Object.freeze({ id: "checkpointrecord", label: say7("door.checkpointrecord"), weight: "single" });
+  static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: say7("door.escalationadvance"), weight: "single" });
+  static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: say7("door.escalationdecline"), weight: "single" });
+  static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: say7("door.reminderanswer"), weight: "single" });
   /** R5: a member's statement that a hold is in place (action-holds R2, `op=actionhold`), or its release, its own act
    *  (action-holds R5, `op=actionholdrelease`, which words.json does not hold: its label stays), DEC-113. */
-  static HOLD_STATE = Object.freeze({ id: "actionhold", label: say6("door.actionhold"), weight: "single" });
+  static HOLD_STATE = Object.freeze({ id: "actionhold", label: say7("door.actionhold"), weight: "single" });
   static HOLD_RELEASE = Object.freeze({ id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" });
   static TEMPLATE_REVIEW = Object.freeze({ id: "templatereview", label: "Review this template version", weight: "single" });
   static FACT_CONFIRM = Object.freeze({ id: "factconfirm", label: "Confirm, correct or dispute this local fact", weight: "single" });
-  static WATCH_ANSWER = Object.freeze({ id: "watchanswer", label: say6("door.watchanswer"), weight: "single" });
-  static REVIEW_RECORD = Object.freeze({ id: "planreviewrecord", label: say6("door.planreviewrecord"), weight: "single" });
-  static PLAN_RESUME = Object.freeze({ id: "planresume", label: say6("door.planresume"), weight: "single" });
+  static WATCH_ANSWER = Object.freeze({ id: "watchanswer", label: say7("door.watchanswer"), weight: "single" });
+  static REVIEW_RECORD = Object.freeze({ id: "planreviewrecord", label: say7("door.planreviewrecord"), weight: "single" });
+  static PLAN_RESUME = Object.freeze({ id: "planresume", label: say7("door.planresume"), weight: "single" });
   /** R25 (DEC-212): the unsent request's doors: the action's screen at its step (`op=action`, actions R47's read, the
    *  screen opening at the send step; its label is this module's own, words.json holding none), keeping it for later
    *  (`queuesnooze`, queue's act) and dropping the request with a reason (`actionmove` to `abandoned`, actions' move). */
-  static OPEN_ACTION = Object.freeze({ id: "action", label: say6("request-unsent.open"), weight: "single" });
-  static SNOOZE = Object.freeze({ id: "queuesnooze", label: say6("act.queuesnooze.label.queue"), weight: "single" });
-  static DROP_REQUEST = Object.freeze({ id: "actionmove", label: say6("act.actionmove.label.queue"), weight: "single" });
+  static OPEN_ACTION = Object.freeze({ id: "action", label: say7("request-unsent.open"), weight: "single" });
+  static SNOOZE = Object.freeze({ id: "queuesnooze", label: say7("act.queuesnooze.label.queue"), weight: "single" });
+  static DROP_REQUEST = Object.freeze({ id: "actionmove", label: say7("act.actionmove.label.queue"), weight: "single" });
   /** R11: each kind's doors, in order (the producers lead their options with exactly these). */
   static DOORS = Object.freeze({
     "action-clock-overdue": ["actioncorrespond", "promote", "itemtakeup"],
@@ -303300,10 +303906,10 @@ ${e2.ord}`, author: e2.created_by, seen: e2.action, project: e2.project });
       const today2 = _ActionProducers.#today(now, zone) || (typeof e2.local_day === "string" ? e2.local_day : null);
       const steps = Array.isArray(e2.steps) ? e2.steps.filter((s) => typeof s === "string" && s) : [];
       const what = e2.text || "an entry on its clock";
-      const summary2 = say6(key2, { date: dated ? dayWords(e2.date, today2) : "its date", what });
+      const summary2 = say7(key2, { date: dated ? dayWords(e2.date, today2) : "its date", what });
       const venue = e2.owed_by === "group" ? _ActionProducers.#venueWords(e2.venue) : null;
       const ours = venue && dated ? {
-        detail: say6("queue.action-clock-overdue.ours.detail", { what, venue, date: dayWords(e2.date, today2) }),
+        detail: say7("queue.action-clock-overdue.ours.detail", { what, venue, date: dayWords(e2.date, today2) }),
         detail_key: "queue.action-clock-overdue.ours.detail"
       } : { detail: _ActionProducers.#detailOf(e2, dated, steps) };
       out.push({
@@ -303630,7 +304236,7 @@ ${p3.id}`, author: p3.opened_by, seen: p3.id, project: p3.project });
           case: this.#projectHomes(project, viewer),
           subject: { kind: "case", id: kase, entry: arrived.docket_entry, note: m.note ?? null, project },
           /* R23: the summary by key (a protected word); the detail keeps its present text, returned to BOB */
-          summary: say6("queue.litigation-hold.docket.summary", { entry: arrived.docket_entry }),
+          summary: say7("queue.litigation-hold.docket.summary", { entry: arrived.docket_entry }),
           summary_key: "queue.litigation-hold.docket.summary",
           detail: `an entry on this case's docket was marked as a legal threat${said12}. Record that the team is preserving what the matter may reach: a hold placed from this mark. This is told once; it leaves when a hold is stated on the mark.`,
           basis: basisOf2(
@@ -304096,9 +304702,9 @@ ${project || "none"}`;
           more: Math.max(0, listed.length - named3.length)
         },
         /* R23: by key; {n} and {items} count and name only the items this recipient may see (R14) */
-        summary: say6("queue.member-left-items.summary", { member: g.member, n: listed.length }),
+        summary: say7("queue.member-left-items.summary", { member: g.member, n: listed.length }),
         summary_key: "queue.member-left-items.summary",
-        detail: say6("queue.member-left-items.detail", {
+        detail: say7("queue.member-left-items.detail", {
           member: g.member,
           place: g.project || "the team",
           items: _ActionProducers.#itemsWords(named3, listed.length - named3.length)
@@ -304175,7 +304781,7 @@ ${project || "none"}`;
       const w = q10.watch && typeof q10.watch === "object" ? q10.watch : {};
       const offered = Array.isArray(q10.offered) ? q10.offered : [];
       const relied = q10.relied_on === true || offered.length === 0;
-      const why2 = q10.cause === "promises_met" ? "every promise this plan's matters adopted as a duty now reads met" : "the plan has closed";
+      const why3 = q10.cause === "promises_met" ? "every promise this plan's matters adopted as a duty now reads met" : "the plan has closed";
       out.push({
         id: `OBLIGATION::watch-keep-or-stop::${q10.link}`,
         class: "OBLIGATION",
@@ -304188,9 +304794,9 @@ ${project || "none"}`;
         }, cause: q10.cause ?? null, relied_on: relied },
         /* R23: the summary by key on every entry; the detail by key where `watchanswer` is offered; a relied-on
            entry keeps its present detail (the key would offer what following R25 refuses, WATCH_RELIED_ON) */
-        summary: say6("queue.watch-keep-or-stop.summary", { what: _ActionProducers.#watchWords(w) }),
+        summary: say7("queue.watch-keep-or-stop.summary", { what: _ActionProducers.#watchWords(w) }),
         summary_key: "queue.watch-keep-or-stop.summary",
-        ...relied ? { detail: `${why2}. This watch is relied on elsewhere, so it is shown here and not offered for keeping or stopping.` } : { detail: say6("queue.watch-keep-or-stop.detail", { plan: q10.plan }), detail_key: "queue.watch-keep-or-stop.detail" },
+        ...relied ? { detail: `${why3}. This watch is relied on elsewhere, so it is shown here and not offered for keeping or stopping.` } : { detail: say7("queue.watch-keep-or-stop.detail", { plan: q10.plan }), detail_key: "queue.watch-keep-or-stop.detail" },
         basis: {
           source: "following.watchQuestions",
           link: q10.link,
@@ -304250,7 +304856,7 @@ ${project || "none"}`;
       const today2 = _ActionProducers.#today(now, zone) || _ActionProducers.#today(now, _ActionProducers.#knownZone(x.zone));
       const title = this.#planTitle(x.plan, viewer, now);
       const keyed8 = rhythm && since ? {
-        detail: say6("queue.plan-review-due.detail", { plan: title ? `"${title}"` : x.plan, rhythm, date: dayWords(since, today2) }),
+        detail: say7("queue.plan-review-due.detail", { plan: title ? `"${title}"` : x.plan, rhythm, date: dayWords(since, today2) }),
         detail_key: "queue.plan-review-due.detail"
       } : { detail: "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. Open the review to see what changed, and record what the members decided. You are reminded only because the team asked for it." };
       out.push({
@@ -304261,7 +304867,7 @@ ${project || "none"}`;
         due: dueDay2,
         subject: { kind: "plan", id: x.plan, project: x.project, day: day2, set_by: x.member ?? null },
         /* R23: the summary by key; R24: the detail by key where the item holds the rhythm in words and the day since */
-        summary: say6("queue.plan-review-due.summary", { plan: x.plan }),
+        summary: say7("queue.plan-review-due.summary", { plan: x.plan }),
         summary_key: "queue.plan-review-due.summary",
         ...keyed8,
         basis: {
@@ -304374,8 +304980,8 @@ ${plan2}`;
           project
         },
         /* R25: this module's own words (words.json holds no key for them), returned to BOB */
-        summary: say6(approver === me && to.rule === "approver" ? "request-unsent.summary.mine" : "request-unsent.summary", { what }),
-        detail: approved ? say6("request-unsent.detail", { date: dayWords(approved, today2) }) : say6("request-unsent.detail.undated"),
+        summary: say7(approver === me && to.rule === "approver" ? "request-unsent.summary.mine" : "request-unsent.summary", { what }),
+        detail: approved ? say7("request-unsent.detail", { date: dayWords(approved, today2) }) : say7("request-unsent.detail.undated"),
         screen: { op: "action", id: x.action, step: "send" },
         basis: {
           source: "filings.approvedUnsent",
@@ -304444,7 +305050,7 @@ ${plan2}`;
           paused_by: x.paused_by ?? null
         },
         /* R23: the summary by key; the detail keeps its present text, returned to BOB */
-        summary: say6("queue.plan-look-again.summary", { plan: x.title ? `"${x.title}"` : x.plan }),
+        summary: say7("queue.plan-look-again.summary", { plan: x.title ? `"${x.title}"` : x.plan }),
         summary_key: "queue.plan-look-again.summary",
         detail: `a member paused this plan${x.reason ? `, because "${x.reason}"` : ""}, and named this day to look at it again. What it set running has gone on. Review it, and resume it if the members decide to.`,
         basis: {
@@ -304542,37 +305148,37 @@ function cardinalityGroups(feed) {
   }
   return out.sort((a, b) => b.n - a.n || cmpKey(a, b));
 }
-function gradeOver(instances80) {
-  const undetermined3 = instances80.some((i) => !i.grade_determined || !i.grade);
+function gradeOver(instances81) {
+  const undetermined3 = instances81.some((i) => !i.grade_determined || !i.grade);
   return {
     grade_determined: !undetermined3,
-    grade: undetermined3 ? null : instances80.map((i) => i.grade).reduce((a, b) => weakerGrade(a, b))
+    grade: undetermined3 ? null : instances81.map((i) => i.grade).reduce((a, b) => weakerGrade(a, b))
   };
 }
 function proposalSeen(p3, seen) {
-  const instances80 = (p3.instances || []).filter(seen);
-  if (!instances80.length) return null;
-  const overdue_count = instances80.filter((i) => i.overdue === true).length;
+  const instances81 = (p3.instances || []).filter(seen);
+  if (!instances81.length) return null;
+  const overdue_count = instances81.filter((i) => i.overdue === true).length;
   const overdue = overdue_count > 0;
   return {
     ...p3,
-    instances: instances80,
-    n: instances80.length,
+    instances: instances81,
+    n: instances81.length,
     overdue_count,
     overdue,
-    ...gradeOver(instances80),
+    ...gradeOver(instances81),
     kinds: overdue ? ["missing_predecessor", "overdue_successor"] : ["missing_predecessor"]
   };
 }
 function groupSeen(g, seen) {
-  const instances80 = g.instances.filter(seen);
-  if (!instances80.length) return null;
+  const instances81 = g.instances.filter(seen);
+  if (!instances81.length) return null;
   return {
     ...g,
-    instances: instances80,
-    n: instances80.length,
-    document_count: instances80.reduce((s, i) => s + (Number(i.document_count) || 0), 0),
-    ...gradeOver(instances80)
+    instances: instances81,
+    n: instances81.length,
+    document_count: instances81.reduce((s, i) => s + (Number(i.document_count) || 0), 0),
+    ...gradeOver(instances81)
   };
 }
 function cardinalityDetail(g) {
@@ -304580,8 +305186,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held3}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances80, into = []) => {
-    for (const inst of instances80)
+  const subjectsFor = (instances81, into = []) => {
+    for (const inst of instances81)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -308854,7 +309460,7 @@ function findingKind(name3) {
 
 // src/file-safety/index.mjs
 var FILE_SAFETY_MODULE = "file-safety";
-var WORD_KEYS8 = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey2), ...SENTENCE_KEYS2]);
+var WORD_KEYS9 = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey2), ...SENTENCE_KEYS2]);
 var RESCAN_INTERVAL_MS = 6048e5;
 var DEEPER_CHECK_FRESH_MS = 864e5;
 var DEEPER_CHECKS_PER_MONTH = 900;
@@ -309645,8 +310251,8 @@ var FileSafety = class _FileSafety {
       const v = r.verdict;
       if (v.result === "found") return { refuse: "SCAN_HOLD" };
       if (v.result === "clean") return { open: path };
-      const why2 = v.reason || v.detail || v.result;
-      return high && this.#lastClean(sha2) ? { refuse: "SCAN_STALE", reason: why2 } : { refuse: "NOT_SCANNED", reason: why2 };
+      const why3 = v.reason || v.detail || v.result;
+      return high && this.#lastClean(sha2) ? { refuse: "SCAN_STALE", reason: why3 } : { refuse: "NOT_SCANNED", reason: why3 };
     };
     if (g.threat === "low") return scan("plain", false);
     if (override === true && this.#freshDeeper(sha2)) return { open: "deeper" };
@@ -311058,8 +311664,8 @@ var EXPLORE_BOUNDS = Object.freeze([
   /* R13: what an exploring run proposes while reading is minted within this bound (`run-productions` R21, R10). */
   Object.freeze({ bound: "mints", allowed: 50 })
 ]);
-var EXPLORE_WORK = say5("question-explorer.system_explored_question");
-var EXPLORE_FIND_SAYS = say5("question-explorer.system_found_exploring");
+var EXPLORE_WORK = say6("question-explorer.system_explored_question");
+var EXPLORE_FIND_SAYS = say6("question-explorer.system_found_exploring");
 var EXPLORE_ASK_RECHECK_MS = 36e5;
 var EXPLORE_SKILL = "explore@1";
 var EXPLORE_PRINCIPAL = "class:ai";
@@ -311312,21 +311918,21 @@ var QuestionExplorer = class {
    *  verification chain stands (it is `partAdmitted`'s), and nothing here counts toward any bar. A group's own test
    *  investigations are never read here (R11). Never throws; anything unreadable shuts it. */
   gate() {
-    const shut = (why2) => ({ open: false, why: why2, false_alarm_rate: null, gold_set: null, untested: null });
+    const shut = (why3) => ({ open: false, why: why3, false_alarm_rate: null, gold_set: null, untested: null });
     try {
-      if (!this.steps || !this.aiUse) return shut(say5("question-explorer.provider_explorer_needs"));
+      if (!this.steps || !this.aiUse) return shut(say6("question-explorer.provider_explorer_needs"));
       const held3 = this.held() || {};
       const inv2 = this.#admitted(EXPLORE_MODE, held3), use = this.#admitted(EXPLORE_TEST_PART, held3);
       if (!inv2.admitted || !use.admitted)
-        return shut(say5("question-explorer.investigate_mode_explorer"));
+        return shut(say6("question-explorer.investigate_mode_explorer"));
       if (use.untested) return { open: true, why: null, false_alarm_rate: null, gold_set: null, untested: use.untested };
       const tb = (Array.isArray(held3.testBars) ? held3.testBars : []).find((r) => checkTestBarRecord(r) === null && r.part === EXPLORE_TEST_PART && r.passed === true && r.set === this.testSet.id && r.set_version === this.testSet.version);
       const far = tb ? tb.false_alarm_rate : NaN;
       if (!(far >= 0 && far <= EXPLORE_FALSE_ALARM_MAX))
-        return shut(say5("question-explorer.explorer_false_alarm"));
+        return shut(say6("question-explorer.explorer_false_alarm"));
       return { open: true, why: null, false_alarm_rate: far, gold_set: `${tb.set}@${tb.set_version}`, untested: null };
     } catch {
-      return shut(say5("question-explorer.gate_read"));
+      return shut(say6("question-explorer.gate_read"));
     }
   }
   /* ---------------------------------------------------------------- R1, R2: choosing */
@@ -311509,13 +312115,13 @@ var QuestionExplorer = class {
     } catch {
       as = null;
     }
-    if (!as) return say5("question-explorer.known");
+    if (!as) return say6("question-explorer.known");
     const viewer = as.startsWith("member:") || as === "admin" ? as : `member:${as}`;
     try {
       const e2 = this.aiUse.estimate({ owner, use: EXPLORE_USE, mode: EXPLORE_MODE, count: count2, viewer, at: at50 });
-      return e2 && e2.ok !== false && e2.estimate !== void 0 ? e2.estimate : say5("question-explorer.known");
+      return e2 && e2.ok !== false && e2.estimate !== void 0 ? e2.estimate : say6("question-explorer.known");
     } catch {
-      return say5("question-explorer.known");
+      return say6("question-explorer.known");
     }
   }
   /** R3, R12: open one exploring run on a question for an owner: its estimate, then the run, passing the step's place
@@ -311529,7 +312135,7 @@ var QuestionExplorer = class {
         run: run2,
         contextType: "inquiry",
         contextId: w.question,
-        label: say5("question-explorer.label.exploring_question"),
+        label: say6("question-explorer.label.exploring_question"),
         mode: EXPLORE_MODE,
         origin: EXPLORE_ORIGIN,
         use: EXPLORE_USE,
@@ -311743,11 +312349,11 @@ var QuestionExplorer = class {
     const r = live7.run;
     if (!this.captureRequests || typeof this.captureRequests.captureRequest !== "function")
       return this.#refuse("EXPLORE_NO_RUN", "the capture door is not in place", { run: r.run });
-    const asked6 = this.captureRequests.captureRequest(
-      { run: r.run, address, target: r.question, purpose: purpose ?? say5("question-explorer.exploring_question"), render: render18, step: r.step },
+    const asked7 = this.captureRequests.captureRequest(
+      { run: r.run, address, target: r.question, purpose: purpose ?? say6("question-explorer.exploring_question"), render: render18, step: r.step },
       { viewer: this.principal, caller: caller ?? this.principal, ...at50 ? { at: at50 } : {} }
     );
-    if (asked6 && asked6.ok === false && asked6.code === "CAPTURE_REQUEST_ADDRESS_NOT_HELD" && typeof address === "string") {
+    if (asked7 && asked7.ok === false && asked7.code === "CAPTURE_REQUEST_ADDRESS_NOT_HELD" && typeof address === "string") {
       const iso8 = this.#iso(at50);
       const ref = address.trim().slice(0, 2048);
       const find2 = `XFD-${sha256HexSync(`${r.run}|page|${ref}`).slice(0, 16)}`;
@@ -311764,9 +312370,9 @@ var QuestionExplorer = class {
         r.owner,
         iso8
       );
-      return { ...asked6, named_to_members: true, find: find2 };
+      return { ...asked7, named_to_members: true, find: find2 };
     }
-    return asked6;
+    return asked7;
   }
   /* ---------------------------------------------------------------- R13: reading inside documents */
   /** R13: the run reads inside a held document through `run-productions` (its R24 `readPages`): a few pages at a time
@@ -311829,7 +312435,7 @@ var QuestionExplorer = class {
     const { r, id } = d;
     for (const c of Array.isArray(connections) ? connections : []) {
       if (!c || c.to_kind !== "person") continue;
-      const looked = await this.look({ run: r.run, entity: c.to, aim: say5("question-explorer.proposed_connection"), caller, at: at50 });
+      const looked = await this.look({ run: r.run, entity: c.to, aim: say6("question-explorer.proposed_connection"), caller, at: at50 });
       if (looked.ok === false) return { ...looked, nothing_proposed: true };
     }
     if (!this.runProductions || typeof this.runProductions.extractPropose !== "function")
@@ -311906,8 +312512,8 @@ var QuestionExplorer = class {
       return this.#refuse("EXPLORE_RUN_ENDED", "a run ends `ended` or `set_aside`", { run: live7.run.run });
     const bad2 = checkCondition(condition);
     if (bad2) return { ...bad2, run: live7.run.run };
-    const why2 = end2 === "set_aside" ? str54(reason2) ? str54(reason2).slice(0, 500) : "LIMIT_REACHED" : null;
-    const done = await this.#end(live7.run, end2, why2, bound, condition, this.#iso(at50), caller);
+    const why3 = end2 === "set_aside" ? str54(reason2) ? str54(reason2).slice(0, 500) : "LIMIT_REACHED" : null;
+    const done = await this.#end(live7.run, end2, why3, bound, condition, this.#iso(at50), caller);
     return done.closed ? { ok: true, ...done, already: false } : { ok: false, ...done, already: false };
   }
   /** R8: the runs set aside by a limit, each told once (a stable key) to the owners of the account that enabled it
@@ -311922,7 +312528,7 @@ var QuestionExplorer = class {
         question: x.question,
         reason: x.reason,
         at: x.closed_at,
-        says: say5("question-explorer.says.exploring_run_enabled")
+        says: say6("question-explorer.says.exploring_run_enabled")
       })) };
     } catch {
       return { ok: true, stops: [] };
@@ -312059,7 +312665,7 @@ var QuestionExplorer = class {
       question: o.f.question,
       accepted: rec,
       leg: leg2,
-      route: o.f.kind === "page" ? say5("question-explorer.capture_page_act") : say5("question-explorer.promotion_question_writes"),
+      route: o.f.kind === "page" ? say6("question-explorer.capture_page_act") : say6("question-explorer.promotion_question_writes"),
       wrote_leg: false
     };
   }
@@ -312085,9 +312691,9 @@ var QuestionExplorer = class {
     return this.aiRuns.groupTestResults({ part: EXPLORE_TEST_PART, viewer });
   }
 };
-var instances76 = /* @__PURE__ */ new WeakMap();
+var instances77 = /* @__PURE__ */ new WeakMap();
 function questionExplorerOf(host, deps) {
-  let p3 = instances76.get(host);
+  let p3 = instances77.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -312112,7 +312718,7 @@ function questionExplorerOf(host, deps) {
       principal: d.principal || EXPLORE_PRINCIPAL,
       now: d.now || null
     });
-    instances76.set(host, p3);
+    instances77.set(host, p3);
     p3.migrate();
     record.declarePurge(QUESTION_EXPLORER_MODULE, QUESTION_EXPLORER_TABLES);
   }
@@ -312304,8 +312910,8 @@ function caseIdentitySentence(caseId, edition, newCase) {
 }
 var printed = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 function listCap(limit) {
-  const asked6 = Number.parseInt(String(limit ?? ""), 10);
-  return Number.isInteger(asked6) && asked6 >= 1 ? Math.min(asked6, REVIEW_LIST_MAX) : REVIEW_LIST_MAX;
+  const asked7 = Number.parseInt(String(limit ?? ""), 10);
+  return Number.isInteger(asked7) && asked7 >= 1 ? Math.min(asked7, REVIEW_LIST_MAX) : REVIEW_LIST_MAX;
 }
 function lastChange({ draft, comments, grants, acknowledgements }) {
   const cand = [];
@@ -313149,8 +313755,8 @@ var Review = class {
         `no document of ${cid} edition ${Number.isInteger(ed) ? ed : "(none)"} has that approval digest (its sha without the approvals block); an approval names the document it approves. Nothing was recorded.`,
         { caseId: cid }
       );
-    const why2 = reason2 == null ? null : String(reason2).trim() || null;
-    if (why2 && why2.length > APPROVAL_REASON_MAX2)
+    const why3 = reason2 == null ? null : String(reason2).trim() || null;
+    if (why3 && why3.length > APPROVAL_REASON_MAX2)
       return refusal39(
         "APPROVAL_REASON_TOO_LONG",
         `an approval's reason is at most ${APPROVAL_REASON_MAX2} characters. Nothing was recorded.`
@@ -313174,10 +313780,10 @@ var Review = class {
       ed,
       sha2,
       who4,
-      why2,
+      why3,
       when
     );
-    return { ok: true, existed: false, case: cid, edition: ed, docSha: sha2, by: who4, reason: why2, at: when };
+    return { ok: true, existed: false, case: cid, edition: ed, docSha: sha2, by: who4, reason: why3, at: when };
   }
   /** R31, R32: the approvals of exactly one document, in the order given. */
   approvalsOf({ case: caseId = null, edition = null, docSha = null } = {}) {
@@ -313319,16 +313925,16 @@ var Review = class {
     return out;
   }
 };
-var instances77 = /* @__PURE__ */ new WeakMap();
+var instances78 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances77.get(host);
+  let r = instances78.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances77.set(host, r);
+    instances78.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
@@ -313488,7 +314094,7 @@ var dayOf9 = (v) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
 };
 var ageFrom = (since, now, reason2, zone = null) => {
-  const undetermined3 = (why2, detail) => ({ state: "undetermined", reason: why2, detail });
+  const undetermined3 = (why3, detail) => ({ state: "undetermined", reason: why3, detail });
   if (!filled18(since)) return undetermined3(reason2, "the provider states no instant this producer can read");
   let ms6 = NaN;
   if (/^\d{4}-\d{2}-\d{2}$/.test(since)) {
@@ -313886,8 +314492,8 @@ var NoticeProducers = class _NoticeProducers {
       const q10 = e2 && e2.question && filled18(e2.question.id) ? e2.question : null;
       if (!q10 || e2.run === void 0 || e2.run === null) continue;
       const finds = e2.finds ?? null;
-      const answered = e2.answer !== null && e2.answer !== void 0;
-      const sentences = answered && Array.isArray(e2.answer.sentences) ? e2.answer.sentences.filter((s) => s && filled18(s.text)).map((s) => s.text) : [];
+      const answered2 = e2.answer !== null && e2.answer !== void 0;
+      const sentences = answered2 && Array.isArray(e2.answer.sentences) ? e2.answer.sentences.filter((s) => s && filled18(s.text)).map((s) => s.text) : [];
       const n2 = finds && Array.isArray(finds.ids) ? finds.ids.length : null;
       items.push({
         id: `FINDING::standing-answer::${q10.id}::${e2.run}`,
@@ -313898,7 +314504,7 @@ var NoticeProducers = class _NoticeProducers {
         case: this.#homesOf([]),
         subject: { kind: "standing_question", id: q10.id, question: q10.question ?? null, run: e2.run },
         summary: `Your standing question found something new: ${q10.question ?? q10.id}`,
-        detail: `Machine work, from your standing question. ${n2 === null ? "New finds are held" : `${n2} new ${n2 === 1 ? "find" : "finds"}`}` + (answered ? sentences.length ? `; the assistant's answer: ${sentences.join(" ")}` : "; the assistant's answer is held with it" : `; the assistant did not answer, because ${_NoticeProducers.heldBackWords(e2.held_back)}`) + ". This is told once.",
+        detail: `Machine work, from your standing question. ${n2 === null ? "New finds are held" : `${n2} new ${n2 === 1 ? "find" : "finds"}`}` + (answered2 ? sentences.length ? `; the assistant's answer: ${sentences.join(" ")}` : "; the assistant's answer is held with it" : `; the assistant did not answer, because ${_NoticeProducers.heldBackWords(e2.held_back)}`) + ". This is told once.",
         basis: {
           source: "answers.standingAnswersFor",
           question: q10.id,
@@ -317544,14 +318150,14 @@ var Queue = class _Queue {
     const st = typeof to === "string" ? to.trim() : typeof state === "string" ? state.trim() : "";
     const undisposed = notADisposition(st);
     if (undisposed) return undisposed;
-    const why2 = String(reason2 ?? "").trim();
-    if (!why2)
+    const why3 = String(reason2 ?? "").trim();
+    if (!why3)
       return {
         ok: false,
         reason: "NO_REASON",
         detail: "deferring or dismissing the record's own question is recorded with a reason, in the member's own words \u2014 a disposition with no reason ages a finding with no account of why"
       };
-    if (why2.length > _Queue.EDGE_REASON_MAX || /["\\\r\n]/.test(why2))
+    if (why3.length > _Queue.EDGE_REASON_MAX || /["\\\r\n]/.test(why3))
       return {
         ok: false,
         reason: "BAD_REASON",
@@ -317590,7 +318196,7 @@ var Queue = class _Queue {
         find2.slice(0, 400),
         kd,
         st,
-        why2.slice(0, _Queue.EDGE_REASON_MAX),
+        why3.slice(0, _Queue.EDGE_REASON_MAX),
         by.slice(0, 200),
         atS
       );
@@ -317603,7 +318209,7 @@ var Queue = class _Queue {
         kind: kd,
         to: st,
         state: st,
-        reason: why2,
+        reason: why3,
         decided_by: by,
         at: atS,
         bundle: null,
@@ -317839,7 +318445,7 @@ async function connectionsOp(op, url, getStore, stamps) {
 }
 
 // src/explore/answer.mjs
-var refuse28 = (refused5, why2) => ({ refused: refused5, why: why2 });
+var refuse28 = (refused5, why3) => ({ refused: refused5, why: why3 });
 var isObj57 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var filled19 = (v) => typeof v === "string" && v.trim() !== "";
 var isRefusal3 = (a) => isObj57(a) && filled19(a.refused);
@@ -317984,6 +318590,31 @@ function makeReader(ctx, q10) {
   return { read: read3, s, elapsed, complete: () => !s.stop && !s.hubs.length && !s.fanout.length && !s.refusals.length };
 }
 
+// src/explore/labels.mjs
+var LABELS_PER_READ = 500;
+var idKindOf = (id) => isRecordId(id) ? id.split("-")[0] : null;
+function readEntities2(ctx, ids, viewer) {
+  const ents = [...new Set([...ids].filter((id) => idKindOf(id) === "ENT"))];
+  const known3 = /* @__PURE__ */ new Map();
+  const reader = typeof ctx.entities === "function" ? ctx.entities() : ctx.entities;
+  if (!reader || typeof reader.labelsOf !== "function") return known3;
+  for (let i = 0; i < ents.length; i += LABELS_PER_READ) {
+    const slice = ents.slice(i, i + LABELS_PER_READ);
+    const got = reader.labelsOf({ ids: slice, viewer });
+    const byId = got && typeof got === "object" ? got.labels ?? got : {};
+    for (const id of slice) if (isObj57(byId[id])) known3.set(id, byId[id]);
+  }
+  return known3;
+}
+function labelIn(known3, id) {
+  const label = known3.get(id)?.label;
+  return typeof label === "string" && label !== "" && label !== id ? label : null;
+}
+function nameEnds(ctx, hops, viewer) {
+  const known3 = readEntities2(ctx, hops.flatMap((h) => [h.from, h.to]), viewer);
+  return (h) => ({ ...h, from_label: labelIn(known3, h.from), to_label: labelIn(known3, h.to) });
+}
+
 // src/explore/walk.mjs
 var QUANTITY_OF_PATH = "the quantity its last step states";
 var PATH_ORDER = "fewest steps first, then the earliest start of validity, then the steps' ids";
@@ -318016,8 +318647,8 @@ function sourcedSteps(registry, r, node, items, kinds3) {
   if (!sk) return items;
   const declared2 = new Set(items.filter((h) => registry.kindOf(h.kind)?.class === "declared").map((h) => h.id));
   if (!declared2.size) return items;
-  const asked6 = kinds3.includes(STEP_SOURCE);
-  const sources = asked6 ? items.filter((h) => h.kind === STEP_SOURCE) : r.read(sk.owner, node, [STEP_SOURCE]) ?? [];
+  const asked7 = kinds3.includes(STEP_SOURCE);
+  const sources = asked7 ? items.filter((h) => h.kind === STEP_SOURCE) : r.read(sk.owner, node, [STEP_SOURCE]) ?? [];
   const relationOf3 = (h) => Array.isArray(h.evidence) && isObj57(h.evidence[0]) ? h.evidence[0].relation : void 0;
   const backing = sources.filter((h) => declared2.has(relationOf3(h)));
   if (!backing.length) return items;
@@ -318028,7 +318659,7 @@ function sourcedSteps(registry, r, node, items, kinds3) {
     if (backed.has(h.id) && registry.kindOf(h.kind)?.class === "declared") continue;
     out.push(marked.get(h) ?? h);
   }
-  if (!asked6) out.push(...marked.values());
+  if (!asked7) out.push(...marked.values());
   return out;
 }
 function traverse(ctx, w) {
@@ -318115,6 +318746,8 @@ function walk2(ctx, w) {
   }
   paths = /** @type {any[]} */
   orderPaths(paths, w.sortBy ? { by: w.sortBy } : {});
+  const named3 = nameEnds(ctx, paths.flatMap((p3) => p3.hops), w.viewer);
+  paths = paths.map((p3) => ({ ...p3, hops: p3.hops.map(named3) }));
   const complete = r.complete();
   const answer2 = {
     ok: true,
@@ -318352,6 +318985,8 @@ function overlaps2(ctx, arg) {
       });
     }
   }
+  const named3 = nameEnds(ctx, found3.flatMap((o) => o.hops), a.viewer);
+  for (const o of found3) o.hops = o.hops.map(named3);
   const s = reader.s;
   return {
     ok: true,
@@ -318400,7 +319035,7 @@ function sharedSet(ctx, reader, { kind: kind2, node, span: span3, a, b }) {
 // src/explore/rederive.mjs
 var DAY6 = /^\d{4}-\d{2}-\d{2}$/;
 var DERIVED_ID = /^[0-9a-f]{64}$/;
-var no6 = (why2, extra = {}) => ({ ok: true, matches: false, why: why2, ...extra });
+var no6 = (why3, extra = {}) => ({ ok: true, matches: false, why: why3, ...extra });
 var INPUT_NOT_READ = "no connection by this id is read at either end of the derivation for this viewer within this scope, so what it rests on is not settled";
 function rederive(ctx, arg) {
   const a = isObj57(arg) ? arg : {};
@@ -318423,8 +319058,8 @@ function rederiveOne(ctx, a) {
   const reader = makeReader(ctx, { at: at50, viewer: a.viewer, scope });
   const items = reader.read(entry4.owner, a.from, [a.kind]);
   if (!items) {
-    const why3 = reader.s.refusals[0] ? `${entry4.owner} refused: ${reader.s.refusals[0].why}` : reader.s.hubs[0] ? `${a.from} is ${reader.s.hubs[0].words}` : "the read used its time budget";
-    return no6(why3, { recomputed_id: recomputed });
+    const why4 = reader.s.refusals[0] ? `${entry4.owner} refused: ${reader.s.refusals[0].why}` : reader.s.hubs[0] ? `${a.from} is ${reader.s.hubs[0].words}` : "the read used its time budget";
+    return no6(why4, { recomputed_id: recomputed });
   }
   const held3 = items.find((h) => h.kind === a.kind && isObj57(h.derived) && h.derived.method === a.method && h.derived.as_of === a.as_of && (h.from === a.from && h.to === a.to || h.from === a.to && h.to === a.from));
   if (!held3) return no6(`${entry4.owner} holds no ${a.kind} between ${a.from} and ${a.to} by ${a.method} as of ${a.as_of}`, { recomputed_id: recomputed });
@@ -318432,7 +319067,7 @@ function rederiveOne(ctx, a) {
   const undetermined3 = rests.filter((r) => r.undetermined);
   const idsMatch = recomputed === a.id && held3.id === recomputed;
   const matches2 = idsMatch && !undetermined3.length;
-  const why2 = !idsMatch ? recomputed !== a.id ? "the id asked is not the id its parameters derive" : "the owner's held id is not the id its parameters derive" : undetermined3.length ? `${undetermined3.length} of the hops it rests on ${undetermined3.length === 1 ? "is" : "are"} not read, so it cannot be re-derived` : null;
+  const why3 = !idsMatch ? recomputed !== a.id ? "the id asked is not the id its parameters derive" : "the owner's held id is not the id its parameters derive" : undetermined3.length ? `${undetermined3.length} of the hops it rests on ${undetermined3.length === 1 ? "is" : "are"} not read, so it cannot be re-derived` : null;
   return {
     ok: true,
     matches: matches2,
@@ -318444,7 +319079,7 @@ function rederiveOne(ctx, a) {
     rests_on: rests,
     declared_or_hunch: rests.some((r) => r.class === "declared" || r.class === "hunch"),
     ...undetermined3.length ? { undetermined: true } : {},
-    ...why2 ? { why: why2 } : {}
+    ...why3 ? { why: why3 } : {}
   };
 }
 function inputOf(input, ends) {
@@ -318577,27 +319212,10 @@ function timelineOver(ctx, arg) {
 // src/explore/graph.mjs
 var STOPPED_SENTENCE = "Where the walk stopped short, what lies beyond is undetermined, not absent.";
 var RINGS = Object.freeze([1, 2]);
-var idKindOf = (id) => isRecordId(id) ? id.split("-")[0] : null;
-var LABELS_PER_READ = 500;
-function named2(ctx, nodes, viewer) {
-  const ents = nodes.filter((n2) => n2.id_kind === "ENT").map((n2) => n2.id);
-  const known3 = /* @__PURE__ */ new Map();
-  const reader = typeof ctx.entities === "function" ? ctx.entities() : ctx.entities;
-  if (reader && typeof reader.labelsOf === "function") {
-    for (let i = 0; i < ents.length; i += LABELS_PER_READ) {
-      const ids = ents.slice(i, i + LABELS_PER_READ);
-      const got = reader.labelsOf({ ids, viewer });
-      const byId = got && typeof got === "object" ? got.labels ?? got : {};
-      for (const id of ids) if (isObj57(byId[id])) known3.set(id, byId[id]);
-    }
-  }
-  return nodes.map((n2) => {
-    const e2 = known3.get(n2.id);
-    const label = typeof e2?.label === "string" && e2.label !== "" && e2.label !== n2.id ? e2.label : null;
-    return { ...n2, label, entity_kind: n2.id_kind === "ENT" ? e2?.kind ?? null : null };
-  });
+function named2(known3, nodes) {
+  return nodes.map((n2) => ({ ...n2, label: labelIn(known3, n2.id), entity_kind: n2.id_kind === "ENT" ? known3.get(n2.id)?.kind ?? null : null }));
 }
-function stepOf2(registry, h) {
+function stepOf2(registry, h, known3) {
   const k = registry.kindOf(h.kind);
   const cls3 = k?.class ?? null;
   const grade2 = cls3 === "declared" ? { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] } : cls3 === "hunch" ? null : h.grade;
@@ -318605,6 +319223,8 @@ function stepOf2(registry, h) {
     id: h.id,
     from: h.from,
     to: h.to,
+    from_label: labelIn(known3, h.from),
+    to_label: labelIn(known3, h.to),
     kind: h.kind,
     word: k?.word ?? null,
     class: cls3,
@@ -318637,12 +319257,12 @@ function neighbourhood(ctx, arg) {
     orderPaths(t2.found)
   );
   const nodes = [{ id: centre, ring: 0, id_kind: idKindOf(centre) }];
-  const seenNode = /* @__PURE__ */ new Set([centre]), seenStep = /* @__PURE__ */ new Set(), steps = [];
-  for (const hops of paths) {
-    for (const h of hops) {
+  const seenNode = /* @__PURE__ */ new Set([centre]), seenStep = /* @__PURE__ */ new Set(), hops = [];
+  for (const path of paths) {
+    for (const h of path) {
       if (!seenStep.has(h.id)) {
         seenStep.add(h.id);
-        steps.push(stepOf2(ctx.registry, h));
+        hops.push(h);
       }
       for (const n2 of [h.from, h.to]) {
         if (seenNode.has(n2) || !t2.level.has(n2)) continue;
@@ -318654,6 +319274,8 @@ function neighbourhood(ctx, arg) {
       }
     }
   }
+  const known3 = readEntities2(ctx, [...nodes.map((n2) => n2.id), ...hops.flatMap((h) => [h.from, h.to])], a.viewer);
+  const steps = hops.map((h) => stepOf2(ctx.registry, h, known3));
   const stopped = [
     ...t2.atDepth.map((node) => ({ node, why: "ring" })),
     ...s.hubs.map((h) => ({ node: h.node, why: "hub", kind: h.kind, bound: h.bound, set_size: h.set_size })),
@@ -318667,7 +319289,7 @@ function neighbourhood(ctx, arg) {
     rings,
     kinds: k.kinds,
     scope: a.scope ?? null,
-    nodes: named2(ctx, nodes, a.viewer),
+    nodes: named2(known3, nodes),
     steps,
     stopped,
     ...stopped.length ? { stopped_sentence: STOPPED_SENTENCE } : {},
@@ -318890,14 +319512,14 @@ function refuse29(code, detail, extra = {}) {
   const row13 = HYPOTHESES_CHECKS[code];
   return { ok: false, reason: code, code, check: row13.check, translation: row13.translation, detail, ...extra };
 }
-var instances78 = /* @__PURE__ */ new WeakMap();
+var instances79 = /* @__PURE__ */ new WeakMap();
 var live6 = /* @__PURE__ */ new Set();
 var storageOf4 = (host) => host && host.storage ? host.storage : host;
 function ownerNeighbours4(args) {
   const a = isObj59(args) ? args : {};
   const { host, ...rest } = a;
   let h = null;
-  if (host !== void 0 && host !== null) h = instances78.get(storageOf4(host)) ?? null;
+  if (host !== void 0 && host !== null) h = instances79.get(storageOf4(host)) ?? null;
   else if (live6.size === 1) h = [...live6][0];
   if (!h) return {
     refused: "OWNER_HOST_AMBIGUOUS",
@@ -318908,7 +319530,7 @@ function ownerNeighbours4(args) {
 defaultRegistry.registerOwner({ owner: OWNER4, kinds: [...HUNCH_KINDS], neighbours: ownerNeighbours4 });
 function hypothesesOf(host, deps = {}) {
   const storage = storageOf4(host);
-  let h = instances78.get(storage);
+  let h = instances79.get(storage);
   if (!h) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
@@ -318920,7 +319542,7 @@ function hypothesesOf(host, deps = {}) {
       host,
       explore: deps.explore ?? null
     });
-    instances78.set(storage, h);
+    instances79.set(storage, h);
     live6.add(h);
     h.migrate();
     const r = promotion.registerStep(OWNER4, { check: (c) => h.check(c) });
@@ -319359,10 +319981,10 @@ var Hypotheses = class _Hypotheses {
     if (!filled20(reason2)) return refuse29("PROPOSAL_NO_REASON", "setting the system's proposal aside says why, in the member's words");
     if (p3.state !== "open") return _Hypotheses.#notOpen(p3);
     const at50 = this.#now();
-    const why2 = reason2.trim().slice(0, REASON_MAX18);
+    const why3 = reason2.trim().slice(0, REASON_MAX18);
     return this.#record.transact(() => {
-      this.#sql.exec(`UPDATE ${PROPOSALS_TABLE} SET state = 'set_aside', acted_by = ?, acted_at = ?, reason = ? WHERE proposal_id = ?`, by, at50, why2, p3.proposal_id);
-      return { ok: true, proposal: p3.proposal_id, label: SYSTEM_LABEL, set_aside: { by, at: at50, reason: why2 } };
+      this.#sql.exec(`UPDATE ${PROPOSALS_TABLE} SET state = 'set_aside', acted_by = ?, acted_at = ?, reason = ? WHERE proposal_id = ?`, by, at50, why3, p3.proposal_id);
+      return { ok: true, proposal: p3.proposal_id, label: SYSTEM_LABEL, set_aside: { by, at: at50, reason: why3 } };
     });
   }
   /* ---- the hunch hops (R4) ---- */
@@ -319680,7 +320302,7 @@ var Hypotheses = class _Hypotheses {
      connection is judged as a leg on it; a calculation not found, or a read that throws or answers no such shape, is
      refused `LEG_NOT_REDERIVED`, never passed (fail closed). */
   #judgeCalculation(calcId, viewer, scope) {
-    const cannot = (why2) => finding5("LEG_NOT_REDERIVED", `the leg rests on the calculation ${calcId}, whose inputs could not be read: ${why2}`, { calculation: calcId });
+    const cannot = (why3) => finding5("LEG_NOT_REDERIVED", `the leg rests on the calculation ${calcId}, whose inputs could not be read: ${why3}`, { calculation: calcId });
     const calc = this.#calculationsOf();
     if (!calc || typeof calc.gradeFactsOf !== "function") return cannot("no calculation read is reachable");
     let facts = null;
@@ -321154,9 +321776,9 @@ function handOn(req, url) {
     if (v !== null) for (const k of keys) url.searchParams.set(k, v);
   }
 }
-function underGrant(store, grant, asked6, op, body, answer2) {
+function underGrant(store, grant, asked7, op, body, answer2) {
   if (!grant || op === "rule" || !askAdmits(op)) return answer2;
-  const { grant: _g, viewer, ...args } = asked6;
+  const { grant: _g, viewer, ...args } = asked7;
   return store.logRead({ grant, op, args: { ...args, ...body && typeof body === "object" ? body : {} }, answer: answer2, viewer });
 }
 var ACCOUNT_UNREAD = Object.freeze({
@@ -321212,7 +321834,7 @@ async function dispatch(req, store) {
   try {
     const grant = grantOf(req);
     url.searchParams.delete(SECRET_SHA_PARAM);
-    const asked6 = Object.fromEntries(url.searchParams);
+    const asked7 = Object.fromEntries(url.searchParams);
     handOn(req, url);
     const map = store.routes(url, body, grant);
     if (!Object.hasOwn(map, op)) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
@@ -321224,7 +321846,7 @@ async function dispatch(req, store) {
     if (existence) return Response.json({ ok: true, result: existence });
     const answer2 = await map[op]();
     if (answer2 instanceof Response) return answer2;
-    return Response.json({ ok: true, result: underGrant(store, grant, asked6, op, body, answer2) });
+    return Response.json({ ok: true, result: underGrant(store, grant, asked7, op, body, answer2) });
   } catch (e2) {
     return Response.json(storeInternalError(e2, op), { status: 500 });
   }
@@ -321651,7 +322273,7 @@ var ADMISSION_TABLES = Object.freeze([DOOR_WINDOW_TABLE, SESSION_WINDOW_TABLE].m
   derive: "stored",
   version_chain: false
 })));
-var instances79 = /* @__PURE__ */ new WeakMap();
+var instances80 = /* @__PURE__ */ new WeakMap();
 var DoorWindow = class {
   constructor({ storage, fingerprint: fingerprint2 }) {
     this.storage = storage;
@@ -321713,7 +322335,7 @@ var DoorWindow = class {
 };
 function admissionOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let a = instances79.get(storage);
+  let a = instances80.get(storage);
   if (!a) {
     const record = deps.record || recordOf(ctx);
     const fingerprint2 = typeof deps.fingerprint === "function" ? deps.fingerprint : (address) => doorbellOf(ctx).sourceFingerprint(address);
@@ -321722,7 +322344,7 @@ function admissionOf(ctx, deps = {}) {
     const d = record.declareTable("admission", ADMISSION_TABLES.map((t2) => ({ ...t2 })));
     if (d && d.ok === false && d.reason !== "TABLE_DECLARED")
       throw new Error(`admission: record-core refused its table: ${d.reason}`);
-    instances79.set(storage, a);
+    instances80.set(storage, a);
   }
   return a;
 }
@@ -322086,10 +322708,10 @@ async function decodePng(bytes2) {
       });
       throw e2;
     }
-    const why2 = String(e2 && e2.message || e2 && e2.code || e2);
+    const why3 = String(e2 && e2.message || e2 && e2.code || e2);
     throw corrupt5(
       y < H ? `the image data does not inflate (row ${y} of ${H})` : "the image data's zlib trailer is damaged or missing",
-      { rows: y, height: H, inflater: why2 }
+      { rows: y, height: H, inflater: why3 }
     );
   }
   if (extra) {
@@ -322779,7 +323401,7 @@ function directoryShape(raw) {
   }
   return Math.max(0, ...byDomain.values());
 }
-var no7 = (why2) => ({ match: false, confidence: CONFIDENCE.NONE, why: why2 });
+var no7 = (why3) => ({ match: false, confidence: CONFIDENCE.NONE, why: why3 });
 function organisationOf(lines2, selfLines, ctx) {
   const titles = titlePatterns(ctx);
   const selfAt = new Set(selfLines.map((x) => x.offset));
@@ -322956,7 +323578,7 @@ function median2(ns) {
   const s = [...ns].sort((a, b) => a - b);
   return s[Math.floor((s.length - 1) / 2)];
 }
-var no8 = (why2) => ({ match: false, confidence: CONFIDENCE.NONE, why: why2 });
+var no8 = (why3) => ({ match: false, confidence: CONFIDENCE.NONE, why: why3 });
 var org_chart_default = {
   key: "org_chart",
   label: "an organisation chart",
@@ -323086,7 +323708,7 @@ function rosterColumns(header2, view) {
 var LEVEL_READ = "held as a table, read by roster-reader";
 var LEVEL_NOT_READ = "held as a table, not read";
 var ROW_ROLES = ["name", "title", "unit", "start", "end", "employee_id"];
-var notRead = (base2, why2) => ({ level: LEVEL_NOT_READ, rosters: [], ...base2, why: why2 });
+var notRead = (base2, why3) => ({ level: LEVEL_NOT_READ, rosters: [], ...base2, why: why3 });
 var msg = (e2) => String(e2 && e2.message || e2).slice(0, 200);
 function rosterSource(reads18) {
   return function source2(q10) {
@@ -323365,7 +323987,7 @@ function rowEntity(r) {
     sealing: r.sealing
   }, r.source);
 }
-function pageOf4(n2, of) {
+function pageOf5(n2, of) {
   if (n2 == null || of == null) return {
     page: { n: null, of: null, may_continue: false },
     complete: false,
@@ -323402,12 +324024,12 @@ function reading2({ type, proceeding, parties, rows: rows4, key_basis, paginatio
 var ROW_FIELDS = [["date", "date"], ["text", "text"], ["filer", "filer"], ["kind", "kind_as_written"], ["links", "links"], ["documents", "documents"], ["sealing", "sealing"]];
 var JSON_FACTS = /* @__PURE__ */ new Set(["links", "documents"]);
 var PROCEEDING_FIELDS = ["number_as_written", "forum_as_written", "kind_as_written", "filed"];
-var failedRead = (why2) => ({
+var failedRead = (why3) => ({
   meaningful: null,
   significance: null,
   events: [],
   confirmed: null,
-  why: `${why2}, so nothing is claimed about the register either way (a failed read is never a register emptied)`
+  why: `${why3}, so nothing is claimed about the register either way (a failed read is never a register emptied)`
 });
 function counterparts(gone, appeared) {
   const pairs = /* @__PURE__ */ new Map();
@@ -323664,11 +324286,11 @@ function parse23(ctx) {
     docket_number_core: null,
     fields_as_written: Object.fromEntries([...fields].map(([k, v]) => [k, v.value]))
   };
-  const why2 = {};
-  if (n2.why) why2.number = n2.why;
-  if (!terminated) why2.status_as_written = "the docket page states no status; a terminated case shows a Date Terminated field, and this page has none";
-  why2.docket_number_core = "the docket page does not state CourtListener's docket_number_core (its API does), so it is not given";
-  proceeding.why = why2;
+  const why3 = {};
+  if (n2.why) why3.number = n2.why;
+  if (!terminated) why3.status_as_written = "the docket page states no status; a terminated case shows a Date Terminated field, and this page has none";
+  why3.docket_number_core = "the docket page does not state CourtListener's docket_number_core (its API does), so it is not given";
+  proceeding.why = why3;
   const parties = [];
   for (const role of ["Assigned To", "Referred To"]) {
     if (!fields.has(role)) continue;
@@ -323684,7 +324306,7 @@ function parse23(ctx) {
     else unkeyed.push(r.unkeyed);
   }
   const pm = /Page\s*<\/span>\s*([0-9]+)\s+of\s+([0-9]+)/i.exec(html) || /\(Page\s+([0-9]+)\s+of\s+([0-9]+)\)/i.exec(html.replace(/\s+/g, " "));
-  const pagination = pm ? pageOf4(Number(pm[1]), Number(pm[2])) : pageOf4(null, null);
+  const pagination = pm ? pageOf5(Number(pm[1]), Number(pm[2])) : pageOf5(null, null);
   return reading2({
     type: KEY2,
     proceeding,
@@ -323775,12 +324397,12 @@ function parse24(ctx) {
     source: h1 ? sourceAt(ctx, h1.index) : null,
     fields_as_written: Object.fromEntries([...fields].map(([k, v]) => [k, v.value]))
   };
-  const why2 = { forum_as_written: "the page names no forum in its text (only its banner image does), so none is given" };
-  if (n2.why) why2.number = n2.why;
+  const why3 = { forum_as_written: "the page names no forum in its text (only its banner image does), so none is given" };
+  if (n2.why) why3.number = n2.why;
   if (!card) {
-    why2.caption = why2.status_as_written = why2.kind_as_written = why2.filed = "the documents report states only the proceeding's number; its caption, status, category and filing date are the card's";
+    why3.caption = why3.status_as_written = why3.kind_as_written = why3.filed = "the documents report states only the proceeding's number; its caption, status, category and filing date are the card's";
   }
-  proceeding.why = why2;
+  proceeding.why = why3;
   const parties = [];
   if (fields.has("Filed By")) {
     const f17 = fields.get("Filed By");
@@ -324006,7 +324628,7 @@ function parse25(ctx) {
     rows: rows4,
     provisional: true,
     at: ctx && ctx.at || null,
-    pagination: pm ? pageOf4(Number(pm[1]), Number(pm[2])) : pageOf4(null, null),
+    pagination: pm ? pageOf5(Number(pm[1]), Number(pm[2])) : pageOf5(null, null),
     failed: !member2 ? `${MEMBER_ONLY}, and this capture is not one` : !t2 ? "the page holds no Register of Actions table with a date and a description" : null,
     key_basis: "ecourt_roa (PROVISIONAL): a row is keyed by its date as written and its order among the rows of that date; the row shape and this key are assumed from the portal's own description of a case page and are not yet verified on a member's capture"
   });
@@ -324025,7 +324647,7 @@ var ecourt_default = {
 
 // ../court-doctypes/index.mjs
 var COURT_TYPES2 = Object.freeze([courtlistener_default, cpuc_default, ecourt_default]);
-var KEYS7 = Object.freeze(COURT_TYPES2.map((t2) => t2.key));
+var KEYS8 = Object.freeze(COURT_TYPES2.map((t2) => t2.key));
 function registerCourtTypes(register3) {
   if (typeof register3 !== "function") return COURT_TYPES2.map((t2) => ({ key: t2.key, registered: false, why: "no register function was given" }));
   return COURT_TYPES2.map((t2) => {
@@ -324038,7 +324660,7 @@ function registerCourtTypes(register3) {
 }
 
 // ../budget-doctypes/view.mjs
-var KEYS8 = Object.freeze({
+var KEYS9 = Object.freeze({
   REPORT_TITLES: "financial_report_titles",
   BOOK_TITLES: "budget_book_titles",
   HEADINGS: "financial_headings",
@@ -324093,7 +324715,7 @@ var UNDECODED_ALL = /[\u0000\uFFFD]/g;
 var LIGATURES = ["fi", "fl", "ff", "ffi", "ffl"];
 function headerWords(ctx) {
   const out = [];
-  for (const e2 of vocabulary(ctx, KEYS8.HEADERS)) {
+  for (const e2 of vocabulary(ctx, KEYS9.HEADERS)) {
     if (!COLUMNS.includes(e2.column)) continue;
     const re = vocabRegex(e2.pattern, null, "i");
     if (re) out.push({ column: e2.column, re });
@@ -324272,7 +324894,7 @@ function readPage(ctx, page2, lines2, { chartSkip = false, method = "text-layer"
   for (const l2 of live7) {
     const t2 = l2.text.trim();
     if (l2.c.cells.length > 1 || l2.c.kind === "years") continue;
-    if (l2.c.dated || matchIn(ctx, KEYS8.HEADINGS, t2) || CAPTION.test(t2) || scaleIn(t2) || t2.split(/\s+/).length <= 6 && matchIn(ctx, KEYS8.FISCAL_YEARS, t2)) {
+    if (l2.c.dated || matchIn(ctx, KEYS9.HEADINGS, t2) || CAPTION.test(t2) || scaleIn(t2) || t2.split(/\s+/).length <= 6 && matchIn(ctx, KEYS9.FISCAL_YEARS, t2)) {
       l2.c = { kind: "text", label: t2, cells: [] };
       l2.meta = true;
     }
@@ -324329,7 +324951,7 @@ function buildTable(ctx, page2, live7, reg, prevEnd, nextStart, method, engine) 
         continue;
       }
       if (l2.c.kind !== "text") break;
-      if (scaleIn(t3) || matchIn(ctx, KEYS8.HEADINGS, t3) || CAPTION.test(t3) || isProse(t3)) break;
+      if (scaleIn(t3) || matchIn(ctx, KEYS9.HEADINGS, t3) || CAPTION.test(t3) || isProse(t3)) break;
       if (years) break;
       header2.unshift(l2);
     }
@@ -324407,16 +325029,16 @@ function buildTable(ctx, page2, live7, reg, prevEnd, nextStart, method, engine) 
     if (r.cells.length !== modal && r.label && TOTAL.test(r.label)) r.span = true;
   const modal_share = counted.length ? Math.round(top2 / counted.length * 1e3) / 1e3 : 0;
   const columns = header2.map((l2) => l2.text.trim());
-  let usable = true, why2 = null;
+  let usable = true, why3 = null;
   if (!counted.length) {
     usable = false;
-    why2 = "no row holds two or more figures";
+    why3 = "no row holds two or more figures";
   } else if (modal_share < USABLE_SHARE) {
     usable = false;
-    why2 = `only ${counted.length ? Math.round(modal_share * 100) : 0}% of the ${counted.length} rows holding two or more figures have the table's modal ${modal} cells (at least ${USABLE_SHARE * 100}% needed)`;
+    why3 = `only ${counted.length ? Math.round(modal_share * 100) : 0}% of the ${counted.length} rows holding two or more figures have the table's modal ${modal} cells (at least ${USABLE_SHARE * 100}% needed)`;
   } else if (!columns.length) {
     usable = false;
-    why2 = "the table's headers are not in the text read";
+    why3 = "the table's headers are not in the text read";
   }
   const above = live7.slice(prevEnd + 1, reg.start);
   const below = live7.slice(reg.end + 1, nextStart);
@@ -324432,7 +325054,7 @@ function buildTable(ctx, page2, live7, reg, prevEnd, nextStart, method, engine) 
     rows: rows4,
     usable,
     modal_share,
-    why: why2,
+    why: why3,
     method
   };
   if (engine) t2.engine = engine;
@@ -324449,7 +325071,7 @@ function row12(label, cells, line2, span3) {
 function describe4(ctx, lines2) {
   for (const l2 of lines2) {
     const t2 = l2.text.trim();
-    if (matchIn(ctx, KEYS8.HEADINGS, t2)) return { title: t2 };
+    if (matchIn(ctx, KEYS9.HEADINGS, t2)) return { title: t2 };
   }
   for (const l2 of lines2) {
     const t2 = l2.text.trim();
@@ -324460,12 +325082,12 @@ function describe4(ctx, lines2) {
 function periodCount(ctx, line2) {
   const s = String(line2).trim();
   let n2 = 0;
-  for (const tok3 of s.split(/\s+/)) if (isYear2(tok3) || matchIn(ctx, KEYS8.FISCAL_YEARS, tok3)) n2++;
+  for (const tok3 of s.split(/\s+/)) if (isYear2(tok3) || matchIn(ctx, KEYS9.FISCAL_YEARS, tok3)) n2++;
   return n2;
 }
 function periodIn(ctx, lines2) {
   for (const l2 of lines2) {
-    const m = matchIn(ctx, KEYS8.FISCAL_YEARS, l2.text);
+    const m = matchIn(ctx, KEYS9.FISCAL_YEARS, l2.text);
     if (m) return m.text;
   }
   return null;
@@ -324524,7 +325146,7 @@ function readTables(ctx, { budget }) {
     tables.push(...r.tables);
     skipped.push(...r.skipped);
     if (pg.page !== null && images.has(pg.page)) {
-      const captioned = r.lines.some((l2) => l2.c.kind === "text" && (CAPTION.test(l2.text.trim()) || matchIn(ctx, KEYS8.HEADINGS, l2.text.trim())));
+      const captioned = r.lines.some((l2) => l2.c.kind === "text" && (CAPTION.test(l2.text.trim()) || matchIn(ctx, KEYS9.HEADINGS, l2.text.trim())));
       const usable = r.tables.some((t2) => t2.usable);
       if (captioned && !usable) {
         const ocr = budget ? ocrOf(supplied2, pg.page) : null;
@@ -324721,11 +325343,11 @@ function keyed7(items, keyOf7) {
   }
   return out;
 }
-function result(events, confirmed, why2) {
-  return { meaningful: isMeaningful(events), significance: worstSignificance(events), events, confirmed, why: why2 };
+function result(events, confirmed, why3) {
+  return { meaningful: isMeaningful(events), significance: worstSignificance(events), events, confirmed, why: why3 };
 }
-function failed2(why2) {
-  return { meaningful: null, significance: null, events: [], confirmed: null, why: why2 };
+function failed2(why3) {
+  return { meaningful: null, significance: null, events: [], confirmed: null, why: why3 };
 }
 var tableKey = (t2) => `${t2.title || "(untitled table)"} @ page ${t2.page === null ? "?" : t2.page + 1}`;
 var rowLabel = (r) => r.label === null ? "(row with no label read)" : r.label;
@@ -324859,7 +325481,7 @@ function ownTitle(ctx, key2) {
   return null;
 }
 function detectPdf(ctx, key2, what) {
-  const no9 = (why2) => ({ match: false, confidence: CONFIDENCE.NONE, signals: [], why: why2 });
+  const no9 = (why3) => ({ match: false, confidence: CONFIDENCE.NONE, signals: [], why: why3 });
   if (!isPdf(ctx)) return no9(`not a PDF: a ${what} is read from a PDF's text`);
   if (!patterns2(ctx, key2).length) return no9(`the view holds no words a ${what} names itself by (vocabulary.${key2})`);
   const title = ownTitle(ctx, key2);
@@ -324885,7 +325507,7 @@ var financialReport = {
   version: 1,
   contract: CONTRACT.SUBSTANCE,
   detect(ctx) {
-    return detectPdf(ctx, KEYS8.REPORT_TITLES, "financial report");
+    return detectPdf(ctx, KEYS9.REPORT_TITLES, "financial report");
   },
   parse(ctx) {
     return readPdf(ctx, false);
@@ -324900,7 +325522,7 @@ var budgetBook = {
   version: 1,
   contract: CONTRACT.SUBSTANCE,
   detect(ctx) {
-    return detectPdf(ctx, KEYS8.BOOK_TITLES, "budget book");
+    return detectPdf(ctx, KEYS9.BOOK_TITLES, "budget book");
   },
   parse(ctx) {
     return readPdf(ctx, true);
@@ -324915,7 +325537,7 @@ var budgetTable = {
   version: 1,
   contract: CONTRACT.SUBSTANCE,
   detect(ctx) {
-    const no9 = (why2) => ({ match: false, confidence: CONFIDENCE.NONE, signals: [], why: why2 });
+    const no9 = (why3) => ({ match: false, confidence: CONFIDENCE.NONE, signals: [], why: why3 });
     if (!isSheet(ctx)) return no9("not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells");
     const sheets = ctx.supplied && Array.isArray(ctx.supplied.sheets) ? ctx.supplied.sheets : [];
     for (const s of sheets) {
@@ -325550,10 +326172,10 @@ var Store = class extends DurableObject {
      `args` is neither read nor handed on; the segment's credential is minted here, in the plane, by ai-runs. */
   async dispatchMemberRun(args) {
     const a = args && typeof args === "object" ? args : {};
-    const asked6 = {};
-    for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== void 0) asked6[k] = a[k];
-    for (const k of ["trace", "memberRef"]) if (typeof a[k] === "string" && a[k] !== "") asked6[k] = a[k];
-    return aiRunsOf(this.ctx, this.env).dispatchMemberRun(asked6);
+    const asked7 = {};
+    for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== void 0) asked7[k] = a[k];
+    for (const k of ["trace", "memberRef"]) if (typeof a[k] === "string" && a[k] !== "") asked7[k] = a[k];
+    return aiRunsOf(this.ctx, this.env).dispatchMemberRun(asked7);
   }
   /* R40 (T46; K2999; control-plane R20), R62 (T50; N933; control-plane R102, public-read R36): public-read's group fields
      of this object (the door asks the `bio` object's); `project`, when named, is passed on so the answer carries that
