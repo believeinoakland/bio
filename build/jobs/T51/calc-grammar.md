@@ -36,3 +36,7 @@ T51-165 calc-grammar is complete on job/T51/calc-grammar (commit 4a489dc084). Th
 - Re-run: `node --test test/m/calc-grammar/` 35 of 35 pass; words check 0 failures; format, architecture and coverage 0 failures.
 
 **Size (session_01B2mwmPfGCqYRdkGsmH36wC), updated: test runs 4, module lines 1348.**
+
+## J2 · COMPLETE
+
+CHANGE B2 is done on job/T51/calc-grammar (commit 3d763245de). I merged tranche/T51. I reworded the field-shape sentence without braces around anything but its placeholder ('each field states its name and its type, the type one of {types}'); the id is kept. build.mjs --check names no calc-grammar item. The words-pass file has no plain findings for calc-grammar beyond the two already fixed. Results: calc-grammar suite 35 of 35 pass; words check 0 failures; format, architecture, coverage 0 failures; ownership 0 failures. Record: build/jobs/T51/calc-grammar.md (CHANGE B2 section).
