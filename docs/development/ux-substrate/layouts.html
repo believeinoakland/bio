@@ -843,7 +843,7 @@ fieldset.mk-checks label > span { flex: 1 1 0; min-width: 0; }  /* DEC-316: a ch
 .mk-table th, .mk-table td { text-align: left; padding: 7px 9px; border-bottom: var(--hair); vertical-align: top; }
 .mk-table th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
 .mk-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
-.mk-sort { all: unset; cursor: pointer; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; white-space: nowrap; }
+.mk-sort { all: unset; cursor: pointer; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; white-space: nowrap; display: inline-block; padding: 7px 0; min-height: 32px; box-sizing: border-box; }
 .mk-sort:focus-visible { outline: 2px solid var(--c-focus, currentColor); outline-offset: 2px; }
 .mk-sort::after { content: " \2195"; opacity: .45; }
 .mk-table th[aria-sort="ascending"] .mk-sort::after { content: " \2191"; opacity: 1; }
