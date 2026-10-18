@@ -191,7 +191,7 @@ function checkFrontmatterContract(ctx, findings) {
     const schema = fm.schema;
     /* N-A1 (T18): a type name may hold `_` (`action_plan`, the first that does), so the stamp's type part does too. */
     const sm = typeof schema === 'string' && /^([a-z][a-z_]*)@(\d+)$/.exec(schema);
-    if (!sm) findings.push(f('C-2.5', 'error', `schema stamp '${schema}' is not of the form <type>@<n>`));
+    if (!sm) findings.push(f('C-2.5', 'error', localize('record-grammar.bundle.schema_stamp_form', 'schema stamp \'{schema}\' is not of the form <type>@<n>', { schema: String(schema) })));
     else {
       if (normalizeType(sm[1]) !== normalizeType(ot)) findings.push(f('C-2.5', 'error', localize('record-grammar.bundle.schema_stamp_schema_does_not', 'schema stamp \'{schema}\' does not match object_type \'{ot}\'', { schema: String(schema), ot: String(ot) })));
       if (!ctx.knownSchemas.includes(schema)) findings.push(f('C-2.5', 'error', localize('record-grammar.bundle.schema_version_schema_is_not', 'schema version \'{schema}\' is not known to this check catalog', { schema: String(schema) })));
