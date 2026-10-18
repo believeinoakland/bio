@@ -17,3 +17,13 @@ Layer 9. 8 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 
 - plain `bio-plane/src/actions/index.mjs:1960` "place, so it was written without one"
 - plain `bio-plane/src/actions/index.mjs:2378` "is reachable only by its request"
+
+## Test copies of code sentences (K3962)
+
+5 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/actions/t33.test.mjs:135` "\"carried forward unchanged\""
+- testcopy `bio-plane/test/m/actions/t34.test.mjs:96` "\"contact names a member of your team by member id, and this one name...\""
+- testcopy `bio-plane/test/m/actions/t34.test.mjs:101` "\"an action recorded for a breach rests on a conformance determinatio...\""
+- testcopy `bio-plane/test/m/actions/t34.test.mjs:102` "\"read on your team's Civicsmith yet, so none could be found. Nothing...\""
+- testcopy `bio-plane/test/m/actions/t50.test.mjs:103` "\"no action answers to that id here. An action you may not see is ans...\""

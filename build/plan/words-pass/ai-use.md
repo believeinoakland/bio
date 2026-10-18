@@ -33,3 +33,9 @@ Layer 6. 31 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/ai-use/t44.test.mjs:32` "on {month} 1" — part test copy
 - testcopy `bio-plane/test/m/ai-use/t44.test.mjs:33` [part] "The assistant can't explore this question on {whose} account: it" — part test copy
 - testcopy `bio-plane/test/m/ai-use/t44.test.mjs:34` [part] "lies outside what the account's owners chose to explore."
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/ai-use/explore.test.mjs:132` "\"a participant who is not an owner\""

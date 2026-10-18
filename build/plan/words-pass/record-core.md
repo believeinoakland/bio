@@ -97,3 +97,20 @@ Layer 2. 89 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('record-core.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
 
 - plain `bio-plane/src/record-core/index.mjs:121` "a draft of a new edition's statement of what changed"
+
+## Test copies of code sentences (K3962)
+
+12 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/record-core/record-core.test.mjs:1354` "\"your team's Civicsmith could not find a free\""
+- testcopy `bio-plane/test/m/record-core/t33.test.mjs:171` "\"your team's Civicsmith could not find a free\""
+- testcopy `bio-plane/test/m/record-core/t33.test.mjs:193` "\"your team's Civicsmith could not find a free\""
+- testcopy `bio-plane/test/m/record-core/t35.test.mjs:85` "\"a setting is recorded under a name, and none was given; nothing was...\""
+- testcopy `bio-plane/test/m/record-core/t35.test.mjs:87` "\"a setting is recorded with who set it, and no one was named; nothin...\""
+- testcopy `bio-plane/test/m/record-core/t35.test.mjs:89` "\"a setting is recorded with a value, and none was given; nothing was...\""
+- testcopy `bio-plane/test/m/record-core/t35.test.mjs:90` "\"The setting was not changed, because the value given is not one it ...\""
+- testcopy `bio-plane/test/m/record-core/t35.test.mjs:91` "\"follows are set as a list of profiles, each named once, in the orde...\""
+- testcopy `bio-plane/test/m/record-core/t35.test.mjs:92` "\"jurisdiction_profiles is an ordered list of distinct profile ids; n...\""
+- testcopy `bio-plane/test/m/record-core/t35.test.mjs:264` "\"your team's Civicsmith could not find a free\""
+- testcopy `bio-plane/test/m/record-core/t47.test.mjs:20` "\"A part of your team's Civicsmith tried to record a setting with a v...\""
+- testcopy `bio-plane/test/m/record-core/t48.test.mjs:18` "\"your team's Civicsmith could not find a free\""

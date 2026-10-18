@@ -33,3 +33,9 @@ Layer 7. 7 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/reevaluation/index.mjs:2231` "were not invited to is not in them"
 - plain `bio-plane/src/reevaluation/index.mjs:2393` "that is not the same as none"
 - plain `bio-plane/src/reevaluation/index.mjs:2396` "it does is undetermined; nothing was moved, and only a member's act moves a reference"
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/reevaluation/obligation.test.mjs:403` "\"with its own signature and its own frozen strength; nothing here fo...\""

@@ -131,8 +131,8 @@ export function detectFormat(bytes, contentType) {
     format: "undetermined",
     confidence: "none",
     signals: [
-      b ? "no registered magic-byte signature matched" : "no bytes were available to sniff",
-      ct ? localize("format-registry.formats.content_type_ct_matched_no", "content type \"{ct}\" matched no registered format", { ct: String(ct) }) : "no content type was declared",
+      b ? localize("format-registry.formats.no_magic_byte_match", "no registered magic-byte signature matched") : localize("format-registry.formats.no_bytes_to_sniff", "no bytes were available to sniff"),
+      ct ? localize("format-registry.formats.content_type_ct_matched_no", "content type \"{ct}\" matched no registered format", { ct: String(ct) }) : localize("format-registry.formats.no_content_type_declared", "no content type was declared"),
     ],
   };
 }
@@ -158,7 +158,7 @@ registerFormat({
       const head = LATIN1.decode(bytes.subarray(0, 1024)).toLowerCase();
       if (head.includes("<!doctype html") || head.includes("<html"))
         return { format: "html", confidence: "certain",
-                 signals: ["magic: doctype/root tag in the first 1024 bytes"] };
+                 signals: [localize("format-registry.formats.magic_doctype_root_tag", "magic: doctype/root tag in the first 1024 bytes")] };
       return null;
     }
     if (contentType && HTML_CONTENT_TYPES.includes(contentType))

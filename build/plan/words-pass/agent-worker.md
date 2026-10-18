@@ -86,3 +86,13 @@ Layer 6. 44 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `agent-worker/src/transcribe.mjs:54` "pages is absent or not a list"
 - plain `agent-worker/src/transcribe.mjs:94` "the page's words as they stand on it, once: labelled the AI's reading, and nothing is s..."
 - plain `agent-worker/src/transcribe.mjs:98` "order, with [illegible] where a word cannot be read; empty when the page holds none"
+
+## Test copies of code sentences (K3962)
+
+5 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `agent-worker/test/t35.test.mjs:559` "\"no skill pack this ask can be instructed by was published, so no mo...\""
+- testcopy `agent-worker/test/t35.test.mjs:570` "\"Its refusal is passed through exactly as it was worded.\""
+- testcopy `agent-worker/test/t35.test.mjs:584` "\"Which account serves a member's act is your team's Civicsmith's to ...\""
+- testcopy `agent-worker/test/t45.test.mjs:227` "\"disputed_without_evidence\""
+- testcopy `agent-worker/test/t48.test.mjs:193` "\"is not a tool of this translation\""

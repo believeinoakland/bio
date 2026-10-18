@@ -44,3 +44,10 @@ Layer 6. 7 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `agent-harness/src/subsession.mjs:549` "the record holds no captured version at this address"
 - plain `agent-harness/src/subsession.mjs:581` "never a title, a text or a byte comparison"
 - plain `agent-harness/src/subsession.mjs:593` "a read, so they are counted as neither a document nor an item"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `agent-harness/test/agent-harness.test.mjs:163` "\"' is not deployed yet — it is a row in this table\""
+- testcopy `agent-harness/test/agent-harness.test.mjs:500` "\"return a REPORT with a citation, never documents. The parent re-rea...\""

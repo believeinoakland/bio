@@ -27,7 +27,7 @@ function failed(why) {
 }
 
 const tableKey = (t) => `${t.title || "(untitled table)"} @ page ${t.page === null ? "?" : t.page + 1}`;
-const rowLabel = (r) => (r.label === null ? "(row with no label read)" : r.label);
+const rowLabel = (r) => (r.label === null ? localize("budget-doctypes.assess.row_with_no_label_read", "(row with no label read)") : r.label);
 const cellsOf = (r) => r.cells.map((c) => c.as_read);
 
 /** Two PDF readings: tables matched by title and page, rows by label. */
@@ -35,7 +35,7 @@ export function assessTables(before, after) {
   const bt = before && Array.isArray(before.tables) ? before.tables : [];
   const at = after && Array.isArray(after.tables) ? after.tables : [];
   if (!bt.length || !at.length)
-    return failed(!bt.length && !at.length ? "no table was read in either reading, so nothing can be compared"
+    return failed(!bt.length && !at.length ? localize("budget-doctypes.assess.no_table_was_read_in_either", "no table was read in either reading, so nothing can be compared")
       : localize("budget-doctypes.assess.no_table_was_read_in", "no table was read in the {v1} reading: a failed read, not a document emptied", { v1: String(!bt.length ? "earlier" : "later") }));
   const b = keyed(bt, tableKey), a = keyed(at, tableKey);
   const events = [];
@@ -64,7 +64,7 @@ export function assessTables(before, after) {
     if (!b.has(k)) events.push(event("item_added", { table: k, why: localize("budget-doctypes.assess.the_table_k_is_new", "the table \"{k}\" is new", { k: String(k) }) }));
   return result(events,
     held ? { kind: "rows_unchanged", count: held, why: localize("budget-doctypes.assess.held_row_s_read_in", "{held} row(s) read in both readings print the same figures", { held: String(held) }) } : null,
-    events.length ? localize("budget-doctypes.assess.length_change_s_between_the", "{length} change(s) between the two readings' tables", { length: String(events.length) }) : "every table and figure read is as it was");
+    events.length ? localize("budget-doctypes.assess.length_change_s_between_the", "{length} change(s) between the two readings' tables", { length: String(events.length) }) : localize("budget-doctypes.assess.every_table_and_figure_read", "every table and figure read is as it was"));
 }
 
 /** Two budget-table readings: rows by R7's key, groupings within a period. */
@@ -72,7 +72,7 @@ export function assessLines(before, after) {
   const bl = before && Array.isArray(before.rows) ? before.rows : [];
   const al = after && Array.isArray(after.rows) ? after.rows : [];
   if (!bl.length || !al.length)
-    return failed(!bl.length && !al.length ? "no budget line was read in either reading, so nothing can be compared"
+    return failed(!bl.length && !al.length ? localize("budget-doctypes.assess.no_budget_line_was_read_in", "no budget line was read in either reading, so nothing can be compared")
       : localize("budget-doctypes.assess.no_budget_line_was_read", "no budget line was read in the {v1} reading: a failed read, not a table emptied", { v1: String(!bl.length ? "earlier" : "later") }));
   const b = keyed(bl, (r) => r.key), a = keyed(al, (r) => r.key);
   const events = [];
@@ -103,5 +103,5 @@ export function assessLines(before, after) {
   }
   return result(events,
     held ? { kind: "lines_unchanged", count: held, why: localize("budget-doctypes.assess.held_line_s_read_in", "{held} line(s) read in both readings hold the same amount", { held: String(held) }) } : null,
-    events.length ? localize("budget-doctypes.assess.length_change_s_between_the_2", "{length} change(s) between the two readings' lines", { length: String(events.length) }) : "every line read is as it was");
+    events.length ? localize("budget-doctypes.assess.length_change_s_between_the_2", "{length} change(s) between the two readings' lines", { length: String(events.length) }) : localize("budget-doctypes.assess.every_line_read_is", "every line read is as it was"));
 }

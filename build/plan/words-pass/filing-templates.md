@@ -60,3 +60,10 @@ Layer 9. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/filing-templates/index.mjs:1251` "no template is named: give its id, or @ and its name"
 - plain `bio-plane/src/filing-templates/index.mjs:1272` "no such version of this template"
 - plain `bio-plane/src/filing-templates/index.mjs:1272` "the template has no approved version"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/filing-templates/t46-words.test.mjs:32` "\"This kind is filed with a court, so no template the team files in i...\""
+- testcopy `bio-plane/test/m/filing-templates/t46-words.test.mjs:33` "\"a licensed professional can certify one. A template that is the bas...\""

@@ -19,3 +19,9 @@ Layer 6. 9 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/leg-earning/index.mjs:156` "writeBasis requires a bundle id"
 - plain `bio-plane/src/leg-earning/index.mjs:715` "capture route — the bytes of this document were served by a route no ruling grades"
 - plain `bio-plane/src/leg-earning/index.mjs:821` "until its accuracy is measured or a member checks it against the page"
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/leg-earning/words.test.mjs:15` "\"web archive, which your team's Civicsmith cannot produce and does n...\""

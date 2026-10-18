@@ -26,3 +26,24 @@ Layer 11. 15 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - plain `civicos-ui/check-mock-envelope.mjs:313` "test/envelope-probe.mjs is missing — arm B cannot run"
 - plain `civicos-ui/check-mock-envelope.mjs:358` "arm B observed no op answers in any suite — the probe is not reaching the mocks"
 - plain `civicos-ui/check-mock-envelope.mjs:476` "arm C could not read bio-plane/src/store.mjs — the census has no authority to compare a..."
+
+## Test copies of code sentences (K3962)
+
+16 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `civicos-ui/test/act-dispose.test.mjs:96` "\"C-2.8 requires a non-empty disposition_reason for deferred and dism...\""
+- testcopy `civicos-ui/test/act-dispose.test.mjs:99` "\"newline: the restricted frontmatter grammar has no escapes\""
+- testcopy `civicos-ui/test/act-dispose.test.mjs:101` "\"these are not legal moves in the catalog's state table. A move to t...\""
+- testcopy `civicos-ui/test/act-dispose.test.mjs:102` "\"something is already in usually means the view was taken before som...\""
+- testcopy `civicos-ui/test/act-dispose.test.mjs:103` "\"disposition, so it is refused rather than treated as a no-op.\""
+- testcopy `civicos-ui/test/analyst-vocabulary.test.mjs:318` "\"LOOKED FOR AND NOT THERE, which is the point of this item rather th...\""
+- testcopy `civicos-ui/test/cite-act.test.mjs:527` "\"every member of the selection was already cited; nothing was written\""
+- testcopy `civicos-ui/test/elicitation.test.mjs:470` "\"this question already carries an authored structure, so changing it...\""
+- testcopy `civicos-ui/test/notifications.test.mjs:165` "\"the natural acts here are at STANCE grain — move to the reading the...\""
+- testcopy `civicos-ui/test/notifications.test.mjs:166` "\"we are staying — and the first of those is op=versioncurrent on THI...\""
+- testcopy `civicos-ui/test/notifications.test.mjs:167` "\"LOOKED FOR AND NOT THERE, which is the point of this item rather th...\""
+- testcopy `civicos-ui/test/notifications.test.mjs:291` "\"bias debt is DISCLOSED and travels with the work; only an uncleared...\""
+- testcopy `civicos-ui/test/notifications.test.mjs:292` "\"publication (DEC-20). Whether the lens moved is op=airun's own comp...\""
+- testcopy `civicos-ui/test/notifications.test.mjs:293` "\"sweep and never recomputed.\""
+- testcopy `civicos-ui/test/notifications.test.mjs:392` "\"new-version-arrived-from-another-team\""
+- testcopy `civicos-ui/test/release-flow.test.mjs:198` "\"verified state has entry requirements\""

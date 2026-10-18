@@ -46,7 +46,7 @@ export async function cleanPdf(d, maxInflated) {
   const table = new Map(read.objects.map((o) => [o.num, o.value]));
   const root = read.trailer.Root;
   if (!root || root.t !== "ref" || !table.has(root.n) || table.get(root.n)?.t !== "dict")
-    throw refusal("DOCUMENT_UNREADABLE", "the trailer's /Root is not a catalog dictionary");
+    throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.the_trailer_s_root_is_not", "the trailer's /Root is not a catalog dictionary"));
 
   const ctx = context(table);
   const out = new Map(); // old number -> {value} or {dict, bytes}

@@ -21,3 +21,14 @@ Layer 3. 2 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/provenance-routes/index.mjs:745` "record adds when something changed rather than repeating itself"
 - plain `bio-plane/src/provenance-routes/index.mjs:749` "recorded: every document in this register can show its route"
 - plain `bio-plane/src/provenance-routes/index.mjs:970` "is complete over the corpus"
+
+## Test copies of code sentences (K3962)
+
+6 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/provenance-routes/audit.test.mjs:78` "\"these are STATED DOUBTS, not conformance errors, and they are delib...\""
+- testcopy `bio-plane/test/m/provenance-routes/audit.test.mjs:79` "\"`tally` or `withErrors`: each names a document whose route cannot b...\""
+- testcopy `bio-plane/test/m/provenance-routes/audit.test.mjs:80` "\"the team put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact...\""
+- testcopy `bio-plane/test/m/provenance-routes/audit.test.mjs:81` "\"assessment has run, not that anything is wrong.\""
+- testcopy `bio-plane/test/m/provenance-routes/chain.test.mjs:162` "\"these bytes were received for upload:\""
+- testcopy `bio-plane/test/m/provenance-routes/rebuild.test.mjs:223` "\"these bytes were received for upload:\""

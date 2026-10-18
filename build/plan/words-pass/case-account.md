@@ -21,3 +21,9 @@ Layer 8. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/case-account/index.mjs:521` "the review comments' reader is a function of {case, edition, viewer, draft}"
 - plain `bio-plane/src/case-account/index.mjs:524` "a reader of the case's review comments is already registered, once, at start"
 - plain `bio-plane/src/case-account/index.mjs:733` "from nothing; until then it is a draft and never the case's account"
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/case-account/t50-words.test.mjs:13` "\"docs/development/ux-substrate/screens/words.json\""

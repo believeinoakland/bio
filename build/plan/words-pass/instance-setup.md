@@ -38,7 +38,7 @@ Layer 11. 33 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 
 ## Plain findings (K3957)
 
-67 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('instance-setup.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+55 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('instance-setup.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
 
 - plain `bio-plane/src/livefire.mjs:68` "creation with base null succeeds"
 - plain `bio-plane/src/livefire.mjs:74` "update with correct base succeeds"
@@ -62,23 +62,18 @@ Layer 11. 33 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - plain `bio-plane/src/setup.mjs:1130` "the request names no display name, and it is set as"
 - plain `bio-plane/src/setup.mjs:1149` "the request names no domain, and one is claimed as"
 - plain `bio-plane/src/setup.mjs:1171` "this store records no producing team, so there is no slug for the file to name"
-- plain `bio-plane/src/setup.mjs:1172` "the claim carries no instance address for the file to name"
 - plain `bio-plane/src/setup.mjs:1306` "declaring what your team has at stake"
 - plain `bio-plane/src/setup.mjs:1313` "the request names no stake, and one is declared as"
 - plain `bio-plane/src/setup.mjs:1314` "an empty stake is not one, and one is declared as"
 - plain `bio-plane/src/setup.mjs:1395` "setting the languages your team's members use"
 - plain `bio-plane/src/setup.mjs:1399` "the languages are sent as a list of"
 - plain `bio-plane/src/setup.mjs:1400` "an empty list names no language, and the languages are"
-- plain `bio-plane/src/setup.mjs:1490` "is answered as undetermined until an administrator chooses"
 - plain `bio-plane/src/setup.mjs:1656` "seeding the offices the jurisdiction profiles name"
-- plain `bio-plane/src/setup.mjs:1662` "no profile is active, so no office is named and nothing is seeded"
-- plain `bio-plane/src/setup.mjs:1697` "a jurisdiction profile's office entry, seeded at setup"
 - plain `bio-plane/src/setup.mjs:1724` "the organisation is not held under its identifier, so the line has no identified ends"
 - plain `bio-plane/src/setup.mjs:1756` "seeded only under the profile's own identifier, never by its name"
 - plain `bio-plane/src/setup.mjs:1856` "its normalised forms equal more than one Legistar body's; it is never resolved by choos..."
 - plain `bio-plane/src/setup.mjs:1857` "no Legistar body's normalised form equals it; it is never matched by a near name, and a..."
 - plain `bio-plane/src/setup.mjs:1868` "seeding the seats Legistar records"
-- plain `bio-plane/src/setup.mjs:1902` "no profile is active, so no body is named and nothing is seeded"
 - plain `bio-plane/src/setup.mjs:2031` "as kept away and the assistant is off"
 - plain `bio-plane/src/setup.mjs:2056` "the request names no member"
 - plain `bio-plane/src/setup.mjs:2084` "no disclosure at this version is recorded as shown to this member"
@@ -86,14 +81,8 @@ Layer 11. 33 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - plain `bio-plane/src/setup.mjs:2126` "naming the place your team works in"
 - plain `bio-plane/src/setup.mjs:2156` "reading the place your team named"
 - plain `bio-plane/src/setup.mjs:2261` "the request names no level, and one is chosen as"
-- plain `bio-plane/src/setup.mjs:2304` "the membership read of who is an administrator"
 - plain `bio-plane/src/setup.mjs:2305` "reading the step of two administrators holding recovery codes"
-- plain `bio-plane/src/setup.mjs:2308` "the membership read of the administrators"
-- plain `bio-plane/src/setup.mjs:2310` "the read of your recovery codes"
-- plain `bio-plane/src/setup.mjs:2311` "the membership read of the administrators"
-- plain `bio-plane/src/setup.mjs:2312` "the read of your recovery codes"
 - plain `bio-plane/src/setup.mjs:2339` "asking the assistant to draft your team's description"
-- plain `bio-plane/src/setup.mjs:2347` "the fields are as they were"
 - plain `bio-plane/src/setup.mjs:2506` "the release notice could not be fetched"
 - plain `bio-plane/src/setup.mjs:2517` "the notice carries no signature"
 - plain `bio-plane/src/setup.mjs:2523` "the newest release published is the one running"
@@ -106,4 +95,11 @@ Layer 11. 33 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - plain `bio-plane/src/setup.mjs:2678` "choosing to update your team's Civicsmith"
 - plain `bio-plane/src/setup.mjs:2691` "setting aside an update of your team's Civicsmith"
 - plain `bio-plane/src/setup.mjs:2719` "skipping an update of your team's Civicsmith"
-- plain `bio-plane/src/setup.mjs:2832` "the probe has never run, so nothing is known about the ceiling by measurement"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/instance-setup/fixture.mjs:106` "\"the team keeps its material away from every assistant, so no accoun...\""
+- testcopy `bio-plane/test/m/instance-setup/fixture.mjs:107` "\"whether the team keeps its material away from every assistant could...\""
+- testcopy `bio-plane/test/m/instance-setup/words.test.mjs:95` "\"is an administrator's act\""

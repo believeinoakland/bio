@@ -716,7 +716,7 @@ export function reuseDecision(ref, known, { now, freshWindowMs = 24 * 3600 * 100
  *  instant is absent or unreadable is counted `undetermined`, never placed. The
  *  primary is not a part here: its retrieval is the document's own. */
 export const SPREAD_CLOCKS = {
-  capture: { instant: "fetched_at", clock: "the capturing Worker's clock, stamped as this capture issued the request" },
+  capture: { instant: "fetched_at", clock: localize("subresources.subresources.the_capturing_worker_s_clock", "the capturing Worker's clock, stamped as this capture issued the request") },
   record: { instant: "reused_from_fetched_at", clock: "the Store's clock (site_assets.last_fetched), stamped when an earlier capture's fetch was filed" },
 };
 export function partFetchSpread(records) {
@@ -758,7 +758,7 @@ export function fetchPolicy(ref, origin) {
     return { fetch: true, why: "layout" };
   if (origin === "third_party" && (ref.kind === "script" || ref.kind === "image" || ref.kind === "media"))
     return { fetch: false, reason: "THIRD_PARTY",
-             detail: "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document" };
+             detail: localize("subresources.subresources.cross_origin_script_image_or_media", "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document") };
   if (ref.kind === "script") return { fetch: true, why: "served_with_the_page" };
   if (ref.region === "furniture")
     return { fetch: false, reason: "OUTSIDE_THE_DOCUMENT",
@@ -993,7 +993,7 @@ export async function captureSubresources({
         ...(cls.scheme ? { scheme: cls.scheme } : {}),
         detail: cls.reason === "REFUSED_SCHEME"
           ? localize("subresources.subresources.a_scheme_reference_is_not", "a {scheme} reference is not something this surface fetches", { scheme: String(cls.scheme) })
-          : "the address is not public https, and the fence that guards the primary locator guards this one" });
+          : localize("subresources.subresources.the_address_is_not_public_https", "the address is not public https, and the fence that guards the primary locator guards this one") });
       continue;
     }
 
@@ -1029,14 +1029,14 @@ export async function captureSubresources({
         retryUrl: cls.url });
       settle(item, { ...stem, ok: false, status: null, reason: "DEFERRED",
         detail: platformHit
-          ? "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it"
-          : "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch" });
+          ? localize("subresources.subresources.this_invocation_reached_the_runtime", "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it")
+          : localize("subresources.subresources.held_back_from_a_previously_observed", "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch") });
       continue;
     }
     if (attempted >= cap) {
       truncated = true;
       settle(item, { ...stem, ok: false, status: null, reason: "CAP_REACHED", cap,
-        detail: "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible" });
+        detail: localize("subresources.subresources.the_fanout_cap_was_reached", "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible") });
       continue;
     }
     if (spent >= budget) {
@@ -1069,12 +1069,13 @@ export async function captureSubresources({
           reused_from_fetched_at: known.last_fetched,
           reused_stable_since: known.stable_since,
           reused_seen_in_documents: known.documents,
-          detail: localize("subresources.subresources.not_fetched_during_this_capture", "not fetched during this capture: the source was seen serving these exact bytes at {last_fetched}{v1}, across {documents} documents on this host{v2}, and they are reused from the record rather than requested again", { last_fetched: String(known.last_fetched), v1: String(known.last_fetched_by
-                    ? ` by capture ${known.last_fetched_by}`
-                    : ` by a capture the record does not name (undetermined)`), documents: String(known.documents), v2: String(known.documents_undetermined
-                    ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} `
-                      + `whose page the record does not name, counted as undetermined)`
-                    : "") }) };
+          detail: localize("subresources.subresources.not_fetched_during_this_capture", "not fetched during this capture: the source was seen serving these exact bytes at {last_fetched}{v1}, across {documents} documents on this host{v2}, and they are reused from the record rather than requested again", { last_fetched: String(known.last_fetched), v1: known.last_fetched_by
+                    ? localize("subresources.subresources.by_capture", " by capture {capture}", { capture: String(known.last_fetched_by) })
+                    : localize("subresources.subresources.by_a_capture_undetermined", " by a capture the record does not name (undetermined)"), documents: String(known.documents), v2: known.documents_undetermined
+                    ? (known.documents_undetermined === 1
+                      ? localize("subresources.subresources.and_earlier_capture_undetermined", " (and {count} earlier capture whose page the record does not name, counted as undetermined)", { count: String(known.documents_undetermined) })
+                      : localize("subresources.subresources.and_earlier_captures_undetermined", " (and {count} earlier captures whose page the record does not name, counted as undetermined)", { count: String(known.documents_undetermined) }))
+                    : "" }) };
         byUrl.set(cls.url, rec);
         if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec);
         siteObservations.push({ address: cls.url, address_norm: normalizeAddress(cls.url),
@@ -1116,8 +1117,7 @@ export async function captureSubresources({
       const platform = /too many subrequests|subrequest limit|exceeded.*limit/i.test(msg);
       r = { ok: false, status: 0, reason: platform ? "PLATFORM_LIMIT" : "FETCH_FAILED",
             detail: platform
-              ? "the runtime refused another outbound request in this invocation; the source was never asked, "
-                + "and this says nothing about whether it would have answered"
+              ? localize("subresources.subresources.the_runtime_refused_another", "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered")
               : msg };
       limited = platform;
       if (platform && !platformHit) {
@@ -1321,8 +1321,8 @@ export async function captureSubresources({
       ceiling_used: platformCeiling,
       spent_this_invocation: attempted + subrequestsAlreadySpent,
       note: observedCeiling
-        ? "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling"
-        : "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown",
+        ? localize("subresources.subresources.the_runtime_refused_an_outbound", "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling")
+        : localize("subresources.subresources.no_limit_was_reached", "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown"),
     },
     counts: {
       fetched: fetched.length,
@@ -1390,11 +1390,11 @@ export async function captureSubresources({
       { file: `${primaryFile}.render.html`, kind: "render_companion", from_file: primaryFile,
         sha256: companionSha, bytes: companionBytes.length, content_type: "text/html",
         transform: "scripts and frames removed; subresource references replaced with about:capture#<sha256> placeholders; a content security policy added",
-        reason: "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one" },
+        reason: localize("subresources.subresources.the_raw_capture_is_the", "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one") },
       { file: "data/snapshot-manifest.json", kind: "snapshot_manifest", from_file: primaryFile,
         sha256: manifestSha, bytes: manifestBytes.length, content_type: "application/json",
-        transform: "index of the render companion's placeholders to the content-addressed captures they resolve to",
-        reason: "a viewer must be able to verify every byte it substitutes against the record before showing it" },
+        transform: localize("subresources.subresources.index_of_the_render_companion", "index of the render companion's placeholders to the content-addressed captures they resolve to"),
+        reason: localize("subresources.subresources.a_viewer_must_be_able", "a viewer must be able to verify every byte it substitutes against the record before showing it") },
     ],
   };
 }

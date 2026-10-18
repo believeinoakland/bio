@@ -11,3 +11,14 @@ Layer 11. 9 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - handlist `bio-plane/test/m/plane/t50.test.mjs:323` [?] ops: translationdraft, translationgrant, translationadopt, ... (8 of 9 not the module's own) — handlist
 - testcopy `bio-plane/test/m/plane/disclosures.test.mjs:157` [part] "the original is unchanged" — part test copy
 - testcopy `bio-plane/test/m/plane/t39.test.mjs:98` [part] "the original is unchanged" — part test copy
+
+## Test copies of code sentences (K3962)
+
+6 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/plane/hosts.test.mjs:42` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/plane/hosts.test.mjs:44` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/plane/hosts.test.mjs:60` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/plane/release.test.mjs:51` "\"The whole record as rows: every bundle your team's Civicsmith holds...\""
+- testcopy `bio-plane/test/m/plane/release.test.mjs:53` "\"The cases your team's Civicsmith has published, readable by somebod...\""
+- testcopy `bio-plane/test/m/plane/t36.test.mjs:265` "\"CAPTURE_CREDENTIAL_OWN_HOST\""

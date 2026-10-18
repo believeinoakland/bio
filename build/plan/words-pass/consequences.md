@@ -24,3 +24,12 @@ Layer 9. 14 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/consequences/index.mjs:456` "an affected person names the person entity"
 - plain `bio-plane/src/consequences/index.mjs:965` "into one figure, and nothing ranks it"
 - plain `bio-plane/src/consequences/index.mjs:1175` "a success record's figures are a list, each {label, basis: {op, operands}}"
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/consequences/t46.test.mjs:60` "\"Say in your own words what changed: at most 2,000 characters. Nothi...\""
+- testcopy `bio-plane/test/m/consequences/t46.test.mjs:61` "\"Saying the team's action caused the change is a statement in your o...\""
+- testcopy `bio-plane/test/m/consequences/t46.test.mjs:63` "\"Whether the cause rests only on the team's own acts could not be ch...\""
+- testcopy `bio-plane/test/m/consequences/t46.test.mjs:64` "\"not recorded. You may state the sequence of events instead. Nothing...\""

@@ -246,6 +246,25 @@ test("R3 (6): TIME_LIMIT when loading took longer than TIME_BUDGET_MS, so evalua
   assert.deepEqual(order, ["now", "turn", "now"]);
 });
 
+/* ---- words (K874): the sentences a member answers are read by their word ids ------------------------------ */
+
+test("words: the refusal sentences are read by sheet-worker.contract.store_must_be_named_this, sheet-worker.contract.no_capture_with_that_sha_in, sheet-worker.contract.the_engine_did_not_load, sheet-worker.contract.the_workbook_is_larger_than, sheet-worker.contract.the_workbook_refers_to_other, sheet-worker.contract.the_engine_refused_or_failed, sheet-worker.contract.loading_the_workbook_took_longer, sheet-worker.member.the_engine_refused_the_workbook and sheet-worker.member.the_engine_failed_while_evaluating, and each answer carries its sentence", async () => {
+  /* contract.mjs: the caller's refusal (BAD_STORE) and the missing capture (NOT_FOUND) are answered with the sentence read by id */
+  const bad = await call(member(), post({ capture_sha: SHA, store: 3 }), ON);
+  assert.equal(bad.body.reason, "BAD_STORE");
+  assert.equal(bad.body.detail, REFUSALS.BAD_STORE); assert.ok(bad.body.detail.length);
+  const missing = await call(member(), post({ capture_sha: SHA, store: "bio" }), { ...ON, CAPTURES: bucket().binding });
+  assert.equal(missing.body.reason, "NOT_FOUND");
+  assert.equal(missing.body.detail, REFUSALS.NOT_FOUND); assert.ok(missing.body.detail.length);
+  /* member.mjs: the engine's refusal while loading and its failure while evaluating each carry their sentence as `why` */
+  const load = await recomputeVia(member(), small([{ r: "A1", v: 1 }], { extra: { "xl/workbook.xml": "<workbook><sheets>" } }));
+  assert.equal(load.body.reason, "ENGINE_FAILED"); assert.equal(load.body.stage, "load");
+  assert.equal(load.body.detail, REFUSALS.ENGINE_FAILED); assert.ok(load.body.why.length);
+  const throwing = { ...realEngine(), evaluate: () => { throw new Error("unreachable executed"); } };
+  const evaluate = await recomputeVia(makeMember(throwing), small([{ r: "A1", f: "1", v: 1 }]));
+  assert.equal(evaluate.body.stage, "evaluate"); assert.ok(evaluate.body.why.length);
+});
+
 /* ---- R4-R6: the answer -------------------------------------------------------------------------------------- */
 
 const VALUES = small([

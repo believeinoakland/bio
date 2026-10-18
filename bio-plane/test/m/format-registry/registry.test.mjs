@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerFormat, unregisterFormat, getFormat, listFormats, detectFormat } from "../../../src/formats.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const BUILT_IN = ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "jpeg", "png", "zip"];
 const enc = (s) => new TextEncoder().encode(s);
@@ -175,7 +176,8 @@ test("R9: bytes count only as a non-empty Uint8Array; a content type only as a n
         log.length = 0;
         const r = detectFormat(bytes, ct);
         assert.deepEqual(log, [], "neither pass runs when nothing counts as provided");
-        assert.deepEqual(r.signals, ["no bytes were available to sniff", "no content type was declared"]);
+        assert.deepEqual(r.signals, [localize("format-registry.formats.no_bytes_to_sniff", "no bytes were available to sniff"),
+          localize("format-registry.formats.no_content_type_declared", "no content type was declared")]);
       }
     }
     for (const bytes of [u8, buf, new Uint8Array(new ArrayBuffer(8), 2, 1)]) {
@@ -252,8 +254,10 @@ test("R11: pass 2 runs only when pass 1 had no hit and a content type is provide
 
 test("R12: no hit in either pass returns the stated undetermined with both reasons", () => {
   const und = (a, b) => ({ format: "undetermined", confidence: "none", signals: [a, b] });
-  const NO_SIG = "no registered magic-byte signature matched", NO_BYTES = "no bytes were available to sniff";
-  const NO_CT = "no content type was declared", ct = (c) => `content type "${c}" matched no registered format`;
+  const NO_SIG = localize("format-registry.formats.no_magic_byte_match", "no registered magic-byte signature matched");
+  const NO_BYTES = localize("format-registry.formats.no_bytes_to_sniff", "no bytes were available to sniff");
+  const NO_CT = localize("format-registry.formats.no_content_type_declared", "no content type was declared");
+  const ct = (c) => localize("format-registry.formats.content_type_ct_matched_no", 'content type "{ct}" matched no registered format', { ct: c });
   for (const run of [() => null, withEmptyRegistry]) {
     const check = () => {
       assert.deepEqual(detectFormat(NOTHING, "x/none"), und(NO_SIG, ct("x/none")));
@@ -271,6 +275,14 @@ test("R12: no hit in either pass returns the stated undetermined with both reaso
   }
   const a = detectFormat(null, null), b = detectFormat(null, null);
   assert.notEqual(a, b, "each undetermined is a fresh object a caller may keep");
+});
+
+test("R12, R17: the reasons the registry states are read by their word keys", () => {
+  const [bytesReason, typeReason] = detectFormat(NOTHING, null).signals;
+  assert.equal(bytesReason, localize("format-registry.formats.no_magic_byte_match", "no registered magic-byte signature matched"));
+  assert.equal(typeReason, localize("format-registry.formats.no_content_type_declared", "no content type was declared"));
+  assert.equal(detectFormat(HTML, null).signals[0], localize("format-registry.formats.magic_doctype_root_tag", "magic: doctype/root tag in the first 1024 bytes"));
+  assert.equal(detectFormat(null, null).signals[0], localize("format-registry.formats.no_bytes_to_sniff", "no bytes were available to sniff"));
 });
 
 test("R13: the only answers are an entry's verbatim result or the stated undetermined; an entry's detect error propagates", () => {
