@@ -21,3 +21,10 @@
 
 Size (session_016KXEuu4bL97DYXetKZYwhK): test runs 12, module lines 1363
 
+## J1 · COMPLETE
+
+T51-29 retrieval-browse is complete on `job/T51/retrieval-browse` (record: "Completion (T51-29)"). R1-R18 met: R1-R11 by copy from retrieval R73-R76 and R80-R86 (no edit of retrieval), R8 with N1238's `row`, R12 and R13 (`state`, `total`, `awaiting_review`, the `awaiting_review` filter, `BROWSE_SCOPES`, `scopeMembers`), R14 the seam (`retrievalBrowseOf(deps)`, five host reads, `HOST_READ_MISSING`), R15-R18 invariants. "Awaiting review" = `information` in `collected`, confirmed against `STATES`; no different mapping.
+Tests: `node --test bio-plane/test/m/retrieval-browse/` 51 pass, 0 fail; the words test is green (`WORD_KEYS` = `modules["retrieval-browse"].reads`). Checks: format, architecture, coverage (18 of 18 ids) and ownership (16 files) all 0 failures, run with the row below in my working tree only.
+For the `modules.json` row (yours to fill, K1043): paths `["bio-plane/src/retrieval-browse/"]`; tests `["bio-plane/test/m/retrieval-browse/"]`; uses `["setup-words","civil-time","calc-grammar","record-grammar","record-core","membership","promotion","provenance","capture","extraction","content","entities","events","standards","money","people","query-language"]` — the map's fourteen plus promotion, capture and query-language, which the tests' fixture needs (all earlier than 70, all already in retrieval's uses).
+For T51-42: the tests that stay in retrieval are `op=findin`/`op=browse` through `retrievalRoutes`, `selectionRead` and `findIn` over a real selection, the real-`recordedBy` test and `BROWSE_ID_CHUNK === SELECTION_ID_CHUNK`; R14's control is T51-42's. The sentences no key holds are listed in the record for the design lane (K3366). Nothing deferred; no generated artifact made stale.
+Size (session_016KXEuu4bL97DYXetKZYwhK): test runs 12, module lines 1363
