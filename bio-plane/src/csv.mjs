@@ -269,19 +269,19 @@ export function encodingSignature(bytes) {
   const bom = readBom(bytes);
   if (bom) {
     return { encoding: bom.encoding, confidence: "certain", bomBytes: bom.bomBytes,
-      signals: [bom.signal, "declared by the producer in the bytes"], undetermined: null };
+      signals: [bom.signal, localize("office-readers.csv.declared_by_the_producer_in_the_bytes", "declared by the producer in the bytes")], undetermined: null };
   }
   const window = bytes.subarray(0, SIGNATURE_WINDOW_BYTES);
   if (!hasHighBytes(window)) {
     return { encoding: "us-ascii", confidence: "certain", bomBytes: 0,
       signals: [`no byte >= 0x80 in the first ${window.length} bytes`,
-        "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"],
+        localize("office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset", "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically")],
       undetermined: null };
   }
   if (isValidUtf8(window)) {
     return { encoding: "utf-8", confidence: "likely", bomBytes: 0,
-      signals: ["no BOM", "every multi-byte sequence in the signature window is valid utf-8",
-        "likely, not certain: validity is evidence, not the producer's declaration"],
+      signals: ["no BOM", localize("office-readers.csv.every_multi_byte_sequence_in_the_signature_window", "every multi-byte sequence in the signature window is valid utf-8"),
+        localize("office-readers.csv.likely_not_certain_validity_is_evidence", "likely, not certain: validity is evidence, not the producer's declaration")],
       undetermined: null };
   }
   return { encoding: null, confidence: "none", bomBytes: 0,
@@ -685,7 +685,7 @@ export const csvEntry = {
     if (ct === CSV_CONTENT_TYPE) {
       return { format: "csv", confidence: "likely", signals: [
         `content type "${contentType}"`,
-        "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
+        localize("office-readers.csv.likely_not_certain_a_declared_type_is_a_claim", "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against"),
         "measured: 166 of 166 .csv keys in s3://cao-94612 were served this type exactly (M-144)",
       ] };
     }

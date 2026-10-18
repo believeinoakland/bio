@@ -724,8 +724,8 @@ async function docxStructure(parts) {
   const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
   if (!walk) {
     notes.push(parts.guard
-      ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())"
-      : "word/document.xml unreadable: element references unavailable (stated)");
+      ? localize("office-readers.docx.word_document_xml_not_read_over_the_size_bound", "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())")
+      : localize("office-readers.docx.word_document_xml_unreadable_element_references", "word/document.xml unreadable: element references unavailable (stated)"));
   }
 
   /* Outbound rels -> deferred/refused, through the ONE linkWrapper. The

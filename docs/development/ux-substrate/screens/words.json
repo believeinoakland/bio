@@ -126,6 +126,8 @@
   "people": 42,
   "reading-pipeline": 80,
   "public-read": 27,
+  "odf-reader": 1,
+  "roster-reader": 1,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
@@ -225,7 +227,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15344,
+  "total": 15346,
   "protected": 933
  },
  "words": [
@@ -56884,6 +56886,20 @@
    "note": "DEC-342: time zone not recognized"
   },
   {
+   "key": "odf-reader.odf.content_xml_with_text_list",
+   "en": "content.xml with text:list xml:id relabeled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-344: reviewed from code (K3930, B343, SETUP-WORDS #7 J3): American spelling (DEC-221); translator: a builder's provenance note, kept verbatim but for the spelling"
+  },
+  {
+   "key": "roster-reader.org-chart.labelled_line_s_name_a",
+   "en": "{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labeled, {floor} boxes): this document does not lay out an organization's boxes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-344: reviewed from code (K3930, B343, SETUP-WORDS #7 J3): American spelling (DEC-221); {labelled}, {named}, {min_labels}, {floor} are counts; translator: keep the placeholder names"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -63612,59 +63628,59 @@
   },
   {
    "key": "refusal.NOT_A_COVERABLE_FORMAT",
-   "en": "The photo is neither a JPEG nor an 8-bit PNG this module covers.",
+   "en": "Areas can be covered only on a JPEG or an ordinary 8-bit PNG photo, and this file is neither. Save it as one of those and try again.",
    "protected": false,
    "source": "DEC-260",
-   "note": "image-cover, refusal by its code"
+   "note": "image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.UNSUPPORTED_JPEG_PROCESS",
-   "en": "The JPEG is progressive, arithmetic-coded, lossless, 12-bit, or otherwise not a baseline or extended-sequential Huffman 8-bit JPEG in one scan.",
+   "en": "This JPEG is saved in a form Civicsmith cannot cover, such as progressive or 12-bit. Save it again as an ordinary JPEG, or as a PNG, and try again.",
    "protected": false,
    "source": "DEC-260",
-   "note": "image-cover, refusal by its code"
+   "note": "image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.PNG_INTERLACED",
-   "en": "The PNG is interlaced (Adam7).",
+   "en": "This PNG is interlaced, a form Civicsmith cannot cover. Save it again without interlacing and try again.",
    "protected": false,
    "source": "DEC-260",
-   "note": "image-cover, refusal by its code"
+   "note": "image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.AREA_MALFORMED",
-   "en": "An area is not four integers [x0, y0, x1, y1] with x0 < x1 and y0 < y1.",
+   "en": "An area to cover could not be read as a rectangle: its left edge must lie left of its right, and its top above its bottom. Mark the area again.",
    "protected": false,
    "source": "DEC-260",
-   "note": "image-cover, refusal by its code"
+   "note": "image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.AREA_OUTSIDE",
-   "en": "An area lies wholly outside the picture.",
+   "en": "An area to cover lies wholly outside the photo. Mark the area again on the photo itself.",
    "protected": false,
    "source": "DEC-260",
-   "note": "image-cover, refusal by its code"
+   "note": "image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.PHOTO_TOO_LARGE",
-   "en": "The photo is larger, in bytes or in pixels, than the most this module covers.",
+   "en": "This photo is larger, in file size or in pixels, than Civicsmith can cover. Save a smaller copy and try again.",
    "protected": false,
    "source": "DEC-260",
-   "note": "image-cover, refusal by its code"
+   "note": "image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.TRUNCATED_IMAGE_DATA",
-   "en": "The image data ends before the image does.",
+   "en": "This photo file ends before the picture does, so it may be incomplete. Copy it again from its source and try again.",
    "protected": false,
    "source": "DEC-260",
-   "note": "image-cover, refusal by its code"
+   "note": "image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.IMAGE_DATA_CORRUPT",
-   "en": "The image data cannot be read: a bad Huffman code or table, a wrong restart marker, a PNG CRC or zlib error.",
+   "en": "This photo file is damaged, so its picture cannot be read. Copy it again from its source and try again.",
    "protected": false,
    "source": "DEC-260",
-   "note": "image-cover, refusal by its code"
+   "note": "image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
   },
   {
    "key": "refusal.NOT_A_STRIPPABLE_FORMAT",

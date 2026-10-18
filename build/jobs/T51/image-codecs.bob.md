@@ -1,6 +1,6 @@
 # BOB to image-codecs (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -16,3 +16,15 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio image-codecs tranche/T51 job/T51/image-codecs`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3962, K3965): merge tranche/T51 and pull civicos-process (ea6cd83) first. The words check's testcopy arm now also counts a test string that copies the en of a product localize call (tag code). Your module's tests hold some: section 'Test copies of code sentences (K3962)' of build/plan/words-pass/image-codecs.md (read it whole). Make each test compare with localize(id, en) / word(id) or assert the key, never the sentence's text (K3810); convert also any such copy written as a regular expression, which the check cannot read. Run your tests, the checks and 'node bio-plane/src/setup-words/build.mjs --check' (read-only); record COMPLETE again.
+
+## B3 · ANSWER · re J2
+
+No test per word id. K874 binds requirement ids (R<n>), not word ids: a `localize` id needs no test of its own (K3965, the same answer given to IMAGE-COVER #3). The words check and `setup-words/build.mjs --check` cover the rows. Write nothing more; your J2 stands as COMPLETE and is merged (K3967). Run `mail done` through B3 and end.
+
+## B4 · CHANGE
+
+CHANGE (K3971; P9, one code one site K231). A flaw from your J1, found at R1's close: `JPX_REFUSES` and `PNG_REFUSES` are keyed by `[localize(...an_image_past_the_memory...)]`, and pdf-pixels maps that key by the English literal (`pagepixels.mjs`:119, `picturepixels.mjs`:60 → `IMAGE_TOO_LARGE`), so in any other locale the mapping is lost. A refusal table's key, and the `feature` your `unsupported()` throws, is an identifier read by code, never a sentence. Fix: key the memory feature by one exported constant that is not localized (e.g. `export const MEMORY_FEATURE = "image past the memory bound"` or an id-shaped string; your choice), used in both tables and both throw sites; the reason sentence (the table's value) stays read by `localize`. R7 holds (feature is a key of the declared set). Merge `tranche/T51` first (never rebase); your tests compare with the constant. pdf-pixels' job then imports it (CHANGE to PDF-PIXELS #6, after your merge). Then tests, checks, COMPLETE.

@@ -81,8 +81,7 @@ export function readPage(ctx, page, lines, { chartSkip = false, method = "text-l
     }
     lines.push(cls[i].text.trim());
     cls[i].chart = true;
-    skipped.push({ page, lines, why: "chart labels: a label paired with an amount and a parenthesised share, "
-                                    + "printed above a table; not a row of it, and the share is not a negative figure" });
+    skipped.push({ page, lines, why: localize("budget-doctypes.tables.chart_labels_a_label", "chart labels: a label paired with an amount and a parenthesised share, printed above a table; not a row of it, and the share is not a negative figure") });
   }
   const live = cls.filter((l) => !l.chart && l.c.kind !== "blank");
   /* A year alone on its line, directly above a line of figures, is that row's
@@ -216,7 +215,7 @@ function buildTable(ctx, page, live, reg, prevEnd, nextStart, method, engine) {
       else if (open && open.perLine && cells.length === 1) open.cells.push({ as_read: cells[0] });
       else {
         open = row(null, cells, l, false);
-        open.label_why = "no label was read beside these figures in the text read";
+        open.label_why = localize("budget-doctypes.tables.no_label_was_read_beside", "no label was read beside these figures in the text read");
         rows.push(open); open = null;
       }
     }
@@ -235,11 +234,11 @@ function buildTable(ctx, page, live, reg, prevEnd, nextStart, method, engine) {
   const modal_share = counted.length ? Math.round((top / counted.length) * 1000) / 1000 : 0;
   const columns = header.map((l) => l.text.trim());
   let usable = true, why = null;
-  if (!counted.length) { usable = false; why = "no row holds two or more figures"; }
+  if (!counted.length) { usable = false; why = localize("budget-doctypes.tables.no_row_holds_two", "no row holds two or more figures"); }
   else if (modal_share < USABLE_SHARE) {
     usable = false;
     why = localize("budget-doctypes.tables.only_v1_of_the_length", "only {v1}% of the {length} rows holding two or more figures have the table's modal {modal} cells (at least {v2}% needed)", { v1: String(counted.length ? Math.round(modal_share * 100) : 0), length: String(counted.length), modal: String(modal), v2: String(USABLE_SHARE * 100) });
-  } else if (!columns.length) { usable = false; why = "the table's headers are not in the text read"; }
+  } else if (!columns.length) { usable = false; why = localize("budget-doctypes.tables.the_table_s_headers", "the table's headers are not in the text read"); }
 
   /* Title, period and scale from the lines above the table (to the previous
      table), else below it (a layout that prints its heading after its body). */
@@ -253,9 +252,9 @@ function buildTable(ctx, page, live, reg, prevEnd, nextStart, method, engine) {
     why, method,
   };
   if (engine) t.engine = engine;
-  if (!t.title) t.title_why = "no heading the view names, and no table caption, was read above or below the table";
+  if (!t.title) t.title_why = localize("budget-doctypes.tables.no_heading_the_view", "no heading the view names, and no table caption, was read above or below the table");
   if (!t.period_as_written)
-    t.period_why = "no fiscal-year form the view holds was read above, below or in the header of the table";
+    t.period_why = localize("budget-doctypes.tables.no_fiscal_year_form", "no fiscal-year form the view holds was read above, below or in the header of the table");
   return t;
 }
 
@@ -371,9 +370,8 @@ export function readTables(ctx, { budget }) {
     const ocr = budget ? ocrOf(supplied, p) : null;
     if (ocr) { tables.push(...readOcr(ctx, ocr)); continue; }
     pages_unread.push({ page: p, why: budget
-      ? "no text layer, and no OCR transcription of the page was supplied: any table printed on it is not read"
-      : "no text layer (a cover, a divider, a certificate or a chart): a financial report is read from its text "
-        + "layer only, and no table is read from this page" });
+      ? localize("budget-doctypes.tables.no_text_layer_and_no_ocr", "no text layer, and no OCR transcription of the page was supplied: any table printed on it is not read")
+      : localize("budget-doctypes.tables.no_text_layer_a_cover", "no text layer (a cover, a divider, a certificate or a chart): a financial report is read from its text layer only, and no table is read from this page") });
     if (budget && images.has(p))
       for (const rect of images.get(p)) unread.push({ page: p, rect, why: "image-only table, not read" });
   }

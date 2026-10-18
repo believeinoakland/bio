@@ -16020,6 +16020,8 @@ var WORD_ROWS = Object.freeze([
   ["bias.index.a_bar_how_strong_support", "a BAR \u2014 how strong support must be before you assert. It gates at pre-flight (DEC-17); declared as bias it would refuse nothing.", null, null, false, "code"],
   ["bias.index.the_not_mechanised_list_is", "the not-mechanised list is the more important half: the extractable rules are the countable ones, and in four of five documented verification failures the countable rules were satisfied while the uncountable properties failed (DEC-54).", null, null, false, "code"],
   ["bias.index.this_is_a_claim_about", "this is a claim about how an organisation behaves, which is a PATTERN statement and must cite evidence in THIS record \u2014 evidence a reader of somebody else's policy does not have. It is left for a member to make, or not.", null, null, false, "code"],
+  ["budget-doctypes.assess.every_line_read_is", "every line read is as it was", null, null, false, "code"],
+  ["budget-doctypes.assess.every_table_and_figure_read", "every table and figure read is as it was", null, null, false, "code"],
   ["budget-doctypes.assess.for_period_org_org_was", 'for {period}, org {org} was under "{department}" and is now under "{department_2}"', null, null, false, "code"],
   ["budget-doctypes.assess.held_line_s_read_in", "{held} line(s) read in both readings hold the same amount", null, null, false, "code"],
   ["budget-doctypes.assess.held_row_s_read_in", "{held} row(s) read in both readings print the same figures", null, null, false, "code"],
@@ -16027,7 +16029,10 @@ var WORD_ROWS = Object.freeze([
   ["budget-doctypes.assess.length_change_s_between_the", "{length} change(s) between the two readings' tables", null, null, false, "code"],
   ["budget-doctypes.assess.length_change_s_between_the_2", "{length} change(s) between the two readings' lines", null, null, false, "code"],
   ["budget-doctypes.assess.no_budget_line_was_read", "no budget line was read in the {v1} reading: a failed read, not a table emptied", null, null, false, "code"],
+  ["budget-doctypes.assess.no_budget_line_was_read_in", "no budget line was read in either reading, so nothing can be compared", null, null, false, "code"],
   ["budget-doctypes.assess.no_table_was_read_in", "no table was read in the {v1} reading: a failed read, not a document emptied", null, null, false, "code"],
+  ["budget-doctypes.assess.no_table_was_read_in_either", "no table was read in either reading, so nothing can be compared", null, null, false, "code"],
+  ["budget-doctypes.assess.row_with_no_label_read", "(row with no label read)", null, null, false, "code"],
   ["budget-doctypes.assess.the_line_k_is_gone", "the line {k} is gone", null, null, false, "code"],
   ["budget-doctypes.assess.the_line_k_is_new", "the line {k} is new", null, null, false, "code"],
   ["budget-doctypes.assess.the_line_k_was_v0", "the line {k} was {v0} and is now {v1}, as written", null, null, false, "code"],
@@ -16037,14 +16042,33 @@ var WORD_ROWS = Object.freeze([
   ["budget-doctypes.assess.the_table_k_is_no", 'the table "{k}" is no longer read', null, null, false, "code"],
   ["budget-doctypes.index.it_names_itself_a_what", 'it names itself a {what} ("{title}") but holds only {lines} line(s) bearing a figure, under the floor of {FIGURE_LINE_FLOOR}', null, null, false, "code"],
   ["budget-doctypes.index.it_names_itself_title", 'it names itself "{title}"', null, null, false, "code"],
+  ["budget-doctypes.index.its_header_row_names", "its header row names a fund or org column and an amount column", null, null, false, "code"],
   ["budget-doctypes.index.its_opening_does_not_name", "its opening does not name it a {what} in any words the view holds", null, null, false, "code"],
   ["budget-doctypes.index.lines_lines_bear_a_figure", "{lines} lines bear a figure", null, null, false, "code"],
+  ["budget-doctypes.index.no_header_row_names_a", "no header row names a fund or org column and an amount column by the view's header words", null, null, false, "code"],
+  ["budget-doctypes.index.no_table_was_read_no", "no table was read: no run of rows with two or more figures was found in the text read", null, null, false, "code"],
+  ["budget-doctypes.index.not_a_csv_or_workbook_sheet", "not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells", null, null, false, "code"],
   ["budget-doctypes.index.not_a_pdf_a_what", "not a PDF: a {what} is read from a PDF's text", null, null, false, "code"],
   ["budget-doctypes.index.sheet_stringify_names_keys_columns", "sheet {stringify} names {keys} columns in its header row", null, null, false, "code"],
   ["budget-doctypes.index.the_view_holds_no_words", "the view holds no words a {what} names itself by (vocabulary.{key})", null, null, false, "code"],
   ["budget-doctypes.lines.no_form_of_the_views", `no form of the view's {column} classification matches "{s}"`, null, null, false, "code"],
+  ["budget-doctypes.lines.no_header_row_names_a", "no header row names a fund or org column and an amount column by the view's header words", null, null, false, "code"],
+  ["budget-doctypes.lines.no_sheet_was_supplied", "no sheet was supplied with this text, so no budget line could be read", null, null, false, "code"],
+  ["budget-doctypes.lines.the_row_holds_no_fund_and_no", "the row holds no fund and no org code", null, null, false, "code"],
+  ["budget-doctypes.lines.the_row_holds_no_fund_code", "the row holds no fund code", null, null, false, "code"],
+  ["budget-doctypes.lines.the_row_holds_no_org_code", "the row holds no org code", null, null, false, "code"],
+  ["budget-doctypes.lines.the_sheet_s_typed_cells", "the sheet's typed cells (office-readers R30) were not supplied: its tab-joined text drops an empty cell, so no value could be placed in its column", null, null, false, "code"],
   ["budget-doctypes.lines.the_view_holds_no_form", "the view holds no form for a {column} code", null, null, false, "code"],
+  ["budget-doctypes.tables.chart_labels_a_label", "chart labels: a label paired with an amount and a parenthesised share, printed above a table; not a row of it, and the share is not a negative figure", null, null, false, "code"],
+  ["budget-doctypes.tables.no_fiscal_year_form", "no fiscal-year form the view holds was read above, below or in the header of the table", null, null, false, "code"],
+  ["budget-doctypes.tables.no_heading_the_view", "no heading the view names, and no table caption, was read above or below the table", null, null, false, "code"],
+  ["budget-doctypes.tables.no_label_was_read_beside", "no label was read beside these figures in the text read", null, null, false, "code"],
+  ["budget-doctypes.tables.no_row_holds_two", "no row holds two or more figures", null, null, false, "code"],
+  ["budget-doctypes.tables.no_text_layer_a_cover", "no text layer (a cover, a divider, a certificate or a chart): a financial report is read from its text layer only, and no table is read from this page", null, null, false, "code"],
+  ["budget-doctypes.tables.no_text_layer_and_no_ocr", "no text layer, and no OCR transcription of the page was supplied: any table printed on it is not read", null, null, false, "code"],
   ["budget-doctypes.tables.only_v1_of_the_length", "only {v1}% of the {length} rows holding two or more figures have the table's modal {modal} cells (at least {v2}% needed)", null, null, false, "code"],
+  ["budget-doctypes.tables.the_table_s_headers", "the table's headers are not in the text read", null, null, false, "code"],
+  ["calc-grammar.recipe.field_shape", "each field states its name and its type, the type one of {types}", null, null, false, "code"],
   ["calc-grammar.recipe.the_input_name_why", 'the input "{name}": {why}', null, null, false, "code"],
   ["calc-grammar.recipe.why_its_groups_sum_is", "{why}; its group's sum is undetermined", null, null, false, "code"],
   ["calc-grammar.tables.the_input_name_why", 'the input "{name}": {why}', null, null, false, "code"],
@@ -16370,8 +16394,68 @@ var WORD_ROWS = Object.freeze([
   ["citation.recorded.the_legs_that_cite_a", "the legs that cite a passage are found through the inquiry module's leg projection, and your team's Civicsmith was created without it, so this read could not be made.", null, null, false, "code"],
   ["citation.splice.rel_rel_target_target_status", '  - rel: {rel}\n    target: {target}\n    status: {status}\n    note: "{v1}"{v2}', null, null, false, "code"],
   ["citation.splice.text_session_log_entry", "{text}\n## Session Log\n\n{entry}", null, null, false, "code"],
+  ["civil-time.calendar.list_cannot_read", "the closure list '{list}' for {year}{offices} cannot be read in your team's Civicsmith", null, null, false, "code"],
+  ["civil-time.calendar.list_cannot_read_why", "the closure list '{list}' for {year}{offices} cannot be read in your team's Civicsmith: {why}", null, null, false, "code"],
+  ["civil-time.calendar.list_disputed", "the closure list '{list}' for {year}{offices} is disputed in your team's Civicsmith", null, null, false, "code"],
+  ["civil-time.calendar.list_year_withheld", "the closure list '{list}' for {year} is withheld: the active profiles disagree on it", null, null, false, "code"],
+  ["civil-time.calendar.no_source_stated", "no source stated", null, null, false, "code"],
+  ["civil-time.calendar.office_cannot_read", "the office calendar for {year}{offices} cannot be read in your team's Civicsmith", null, null, false, "code"],
+  ["civil-time.calendar.office_cannot_read_why", "the office calendar for {year}{offices} cannot be read in your team's Civicsmith: {why}", null, null, false, "code"],
+  ["civil-time.calendar.office_disputed", "the office calendar for {year}{offices} is disputed in your team's Civicsmith", null, null, false, "code"],
+  ["civil-time.calendar.office_year_withheld", "the office calendar for {year} is withheld: the active profiles disagree on it", null, null, false, "code"],
+  ["civil-time.calendar.uncovered_list", "the count reaches {year}, a year the closure list '{list}' does not cover for every office", null, null, false, "code"],
+  ["civil-time.calendar.uncovered_list_office", "the count reaches {year}, a year the closure list '{list}' does not cover for {office}", null, null, false, "code"],
+  ["civil-time.calendar.uncovered_office", "the count reaches {year}, a year the office calendar does not cover for every office", null, null, false, "code"],
+  ["civil-time.calendar.uncovered_office_office", "the count reaches {year}, a year the office calendar does not cover for {office}", null, null, false, "code"],
+  ["civil-time.missing.closure_list_absent", "the closure list '{list}', which the rule names, is not held by the jurisdiction view", null, null, false, "code"],
+  ["civil-time.missing.closure_list_withheld", "the closure list '{list}', which the rule names, is withheld: the active profiles disagree on it ({at})", null, null, false, "code"],
+  ["civil-time.missing.computation_absent", "the computation '{computation}' the rule names is not held by the jurisdiction view", null, null, false, "code"],
+  ["civil-time.missing.computation_withheld", "the computation '{computation}' the rule names is withheld: the active profiles disagree on it ({at})", null, null, false, "code"],
+  ["civil-time.missing.fiscal_year_absent", "a fiscal year for {body} is not held by the jurisdiction view", null, null, false, "code"],
+  ["civil-time.missing.fiscal_year_withheld", "a fiscal year for {body} is withheld: the active profiles disagree on it ({at})", null, null, false, "code"],
+  ["civil-time.missing.weekend_absent", "the weekend is not held by the jurisdiction view", null, null, false, "code"],
+  ["civil-time.missing.weekend_counting_absent", "the weekend is not held by the jurisdiction view; a business count or a roll needs it (the weekend is never assumed)", null, null, false, "code"],
+  ["civil-time.missing.weekend_counting_withheld", "the weekend is withheld: the active profiles disagree on it ({at}); a business count or a roll needs it (the weekend is never assumed)", null, null, false, "code"],
+  ["civil-time.missing.weekend_withheld", "the weekend is withheld: the active profiles disagree on it ({at})", null, null, false, "code"],
+  ["civil-time.recurrence.fiscal_year_form", "the fiscal year held for {body} does not give a start day (MM-DD) and a named_by (start or end)", null, null, false, "code"],
+  ["civil-time.rules.anchor_hours_precision", "an hours rule counts from the anchor's time, and {value} is held at {precision} precision", null, null, false, "code"],
+  ["civil-time.rules.anchor_open_end", "the anchor {value} has an open or unknown end", null, null, false, "code"],
+  ["civil-time.rules.anchor_undetermined", "the anchor is undetermined: {why}", null, null, false, "code"],
+  ["civil-time.rules.anchor_undetermined_unsaid", "the anchor is undetermined: no why given", null, null, false, "code"],
   ["civil-time.rules.daytext_has_no_such_day", "{dayText} has no such day {v1}: both readings are kept (K1504 (4))", null, null, false, "code"],
-  ["civil-time.rules.possibly_overdue_undetermined_because_the", "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {words} lies after the first and not after the second (K1444 (i))", null, null, false, "code"],
+  ["civil-time.rules.due_open_end", "the due {value} has an open end", null, null, false, "code"],
+  ["civil-time.rules.due_undetermined", "the due date is undetermined: {why}", null, null, false, "code"],
+  ["civil-time.rules.due_undetermined_unsaid", "the due date is undetermined: no why given", null, null, false, "code"],
+  ["civil-time.rules.invalid_amount", "the rule's amount is not a positive whole number", null, null, false, "code"],
+  ["civil-time.rules.invalid_applies_on", "the rule's applies_on is not a list of day names", null, null, false, "code"],
+  ["civil-time.rules.invalid_closures", "the rule's closures is not a list's name", null, null, false, "code"],
+  ["civil-time.rules.invalid_computation", "the rule's computation names '{rule}', a computation this module does not count", null, null, false, "code"],
+  ["civil-time.rules.invalid_count", "the rule's count '{count}' is neither calendar nor business", null, null, false, "code"],
+  ["civil-time.rules.invalid_count_unstated", "the rule's count is not stated (calendar or business)", null, null, false, "code"],
+  ["civil-time.rules.invalid_count_with_units", "the rule's count is given with units '{units}'", null, null, false, "code"],
+  ["civil-time.rules.invalid_direction", "the rule's direction '{direction}' is neither forward nor backward", null, null, false, "code"],
+  ["civil-time.rules.invalid_due_at", "the rule's due_at is neither close_of_business nor HH:MM", null, null, false, "code"],
+  ["civil-time.rules.invalid_extension_count", "the rule's extension count '{count}' is neither calendar nor business", null, null, false, "code"],
+  ["civil-time.rules.invalid_extension_days", "the rule's extension has no positive whole number of days", null, null, false, "code"],
+  ["civil-time.rules.invalid_receipt", "the rule's venue receipt '{rule}' is not a receipt rule this module counts", null, null, false, "code"],
+  ["civil-time.rules.invalid_roll", "the rule's roll is not true or false", null, null, false, "code"],
+  ["civil-time.rules.invalid_units", "the rule's units '{units}' is not one of {allowed}", null, null, false, "code"],
+  ["civil-time.rules.not_applicable_day", "the rule applies only to an event on {days}, and the anchor is a {weekday}", null, null, false, "code"],
+  ["civil-time.rules.not_applicable_span", "the rule applies only to an event on {days}, and the anchor is not a single day", null, null, false, "code"],
+  ["civil-time.rules.possibly_overdue_day", "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {day} in {zone} lies after the first and not after the second (K1444 (i))", null, null, false, "code"],
+  ["civil-time.rules.possibly_overdue_instant", "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {instant} lies after the first and not after the second (K1444 (i))", null, null, false, "code"],
+  ["civil-time.rules.span_needs_view", "a span in business days needs the jurisdiction view", null, null, false, "code"],
+  ["civil-time.rules.span_open_end", "{value} has an open or unknown end", null, null, false, "code"],
+  ["civil-time.rules.unmeasured", "the rule's basis is UNMEASURED: no measurement or ruling sources it (K1445)", null, null, false, "code"],
+  ["civil-time.values.end_open", "{value} has an open end, so which comes first is not settled", null, null, false, "code"],
+  ["civil-time.values.end_unknown", "{value} has an unknown end, so which comes first is not settled", null, null, false, "code"],
+  ["civil-time.values.event_unresolved", "the bounding event {event} ({edge}) is not resolved", null, null, false, "code"],
+  ["civil-time.values.event_unresolved_edgeless", "the bounding event {event} is not resolved", null, null, false, "code"],
+  ["civil-time.values.overlap", "{value} ({precision} precision, {zone}) and {value_2} ({precision_2} precision, {zone_2}) overlap, so the precision held does not say which came first", null, null, false, "code"],
+  ["civil-time.values.overlaps_end", "{value} overlaps the end {bound} at the precision held", null, null, false, "code"],
+  ["civil-time.values.overlaps_start", "{value} overlaps the start {bound} at the precision held", null, null, false, "code"],
+  ["civil-time.values.start_open", "{value} has an open start, so which comes first is not settled", null, null, false, "code"],
+  ["civil-time.values.start_unknown", "{value} has an unknown start, so which comes first is not settled", null, null, false, "code"],
   ["conformance.checks.a_cure_is_already_recorded", "A cure is already recorded for that breach against that standard. End that link first, saying why. Nothing was written.", null, null, false, "code"],
   ["conformance.checks.a_determination_rests_on_findings", "A determination rests on findings of three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by this project; or another team's finding this team has accepted at the edition named. The finding named is none of these. Nothing was written.", null, null, false, "code"],
   ["conformance.checks.an_act_is_compared_as", "An act is compared as the act of an office or an organisation. The people who took part are recorded on the act, never as the one who acted. Nothing was written.", null, null, false, "code"],
@@ -16400,6 +16484,7 @@ var WORD_ROWS = Object.freeze([
   ["connection-grammar.conformance.undetermined_undetermined_at_the_date", "{undetermined} (undetermined at the date) is not returned marked undetermined", null, null, false, "code"],
   ["connection-grammar.reads.a_hubs_set_of_one", "a hub's set of one kind exceeds that kind's bound, here at least {bound}; {set_size} does not", null, null, false, "code"],
   ["connection-grammar.reads.a_page_holds_at_most", "a page holds at most {fanout} items; this one holds {length}", null, null, false, "code"],
+  ["connection-grammar.reads.hub_with_items", "a hub is answered with no items, never a partial set shown as whole", null, null, false, "code"],
   ["connection-grammar.reads.name_does_not_have_the", "{name} does not have the node at either end", null, null, false, "code"],
   ["connection-grammar.reads.name_is_a_hunch_returned", "{name} is a hunch returned outside the working inquiry that holds it", null, null, false, "code"],
   ["connection-grammar.reads.name_is_answered_twice_on", "{name} is answered twice on one page", null, null, false, "code"],
@@ -16407,7 +16492,13 @@ var WORD_ROWS = Object.freeze([
   ["connection-grammar.reads.name_is_not_of_owner", "{name} is not of {owner}'s own kinds", null, null, false, "code"],
   ["connection-grammar.reads.name_is_of_kind_kind", "{name} is of kind {kind}, which was not asked", null, null, false, "code"],
   ["connection-grammar.reads.name_is_out_at_the", "{name} is out at the date asked, so it is not returned", null, null, false, "code"],
+  ["connection-grammar.reads.name_is_undetermined_at_the", "{name} is undetermined at the date asked and is not marked undetermined: {why}", null, null, false, "code"],
+  ["connection-grammar.reads.reason_not_filled", "{name} is marked undetermined, but its reason is not a key with the vars the word list fills, nor a localize id", null, null, false, "code"],
+  ["connection-grammar.reads.unread_shape", "unread is a list of entries, each with a non-empty what and a non-empty why", null, null, false, "code"],
   ["connection-grammar.registry.owner_s_answer_breaks_the", "{owner}'s answer breaks the neighbours contract: {check}: {why}", null, null, false, "code"],
+  ["connection-grammar.registry.viewer_missing", "a read names the member reading; an absent viewer is neither an administrator nor the public", null, null, false, "code"],
+  ["connection-grammar.shape.grade_shape", "grade is not {shape} in the letters {letters}", null, null, false, "code"],
+  ["connection-grammar.shape.label_declared", "declared, not evidenced", null, null, false, "code"],
   ["connections.checks.a_membership_is_taken_back", "A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it.", null, null, false, "code"],
   ["connections.checks.placing_a_document_in_a", "Placing a document in a theme is a member's judgement that it passes the theme's test, recorded in their name. An automated credential may only PROPOSE a placement, which stays a hunch until a member confirms it. Sign in to place it, or propose it instead.", null, null, false, "code"],
   ["connections.checks.taking_a_document_or_a", "Taking a document or a passage out of a theme, or turning down a proposal, is a member's own judgement, done in their name. A machine may propose a placement; it cannot take one back.", null, null, false, "code"],
@@ -16534,19 +16625,31 @@ var WORD_ROWS = Object.freeze([
   ["court-citations.translate.does_not_compile_in_javascript", "does not compile in JavaScript: {message}", null, null, false, "code"],
   ["court-doctypes.common.a_reading_failed_v1", "a reading failed ({v1})", null, null, false, "code"],
   ["court-doctypes.common.a_row_is_not_in", "a row is not in the later reading, and {v1} reading holds the whole register, so whether it was removed or is on a page not read is not established", null, null, false, "code"],
+  ["court-doctypes.common.a_row_is_not_in_counterpart", "a row is not in the later reading, and {v1} reading holds the whole register, so whether it was removed or is on a page not read is not established; the row added under key {key} is likely this row with a key field edited, and the two are reported together, never paired silently", null, null, false, "code"],
   ["court-doctypes.common.all_length_rows_of_this", "all {length} rows of this register are unchanged", null, null, false, "code"],
   ["court-doctypes.common.an_address_of_name", "an address of {name}", null, null, false, "code"],
   ["court-doctypes.common.aswritten_has_the_shape_of", `"{asWritten}" has the shape of no form of the active profiles' proceeding space, so it is held as written and not recognised`, null, null, false, "code"],
+  ["court-doctypes.common.its_address_could_not_be_read", "its address could not be read", null, null, false, "code"],
   ["court-doctypes.common.its_address_is_one_of", "its address is one of {v1}, not an address the active profiles name for {label}", null, null, false, "code"],
   ["court-doctypes.common.length_row_s_no_longer", "{length} row(s) no longer listed", null, null, false, "code"],
   ["court-doctypes.common.no_active_profile_names_its", "no active profile names its address as {label}'s ({v1})", null, null, false, "code"],
+  ["court-doctypes.common.no_register_row_could_be_read", "no register row could be read on this page", null, null, false, "code"],
   ["court-doctypes.common.no_register_row_was_read", "no register row was read in the {v1} reading", null, null, false, "code"],
+  ["court-doctypes.common.no_register_row_was_read_either", "no register row was read in either reading", null, null, false, "code"],
   ["court-doctypes.common.other_change_s_to_the", "{other} change(s) to the proceeding", null, null, false, "code"],
+  ["court-doctypes.common.row_added", "a row was added to the register", null, null, false, "code"],
+  ["court-doctypes.common.row_added_counterpart", "a row was added to the register; it is likely the row no longer listed under key {key} with a key field edited", null, null, false, "code"],
+  ["court-doctypes.common.row_gone_both_complete", "a row the register listed is no longer listed, and both readings hold the whole register", null, null, false, "code"],
+  ["court-doctypes.common.row_gone_both_complete_counterpart", "a row the register listed is no longer listed, and both readings hold the whole register; the row added under key {key} is likely this row with a key field edited, and the two are reported together, never paired silently", null, null, false, "code"],
   ["court-doctypes.common.the_capture_names_no_address", "the capture names no address, so whether it is {label} is not established by its address", null, null, false, "code"],
+  ["court-doctypes.common.the_page_states_no_pagination", "the page states no pagination, so whether it holds every row of the register is not established", null, null, false, "code"],
+  ["court-doctypes.common.the_page_states_no_proceeding", "the page states no proceeding number", null, null, false, "code"],
+  ["court-doctypes.common.the_proceedings_caption_as_written", "the proceeding's caption as written changed", null, null, false, "code"],
   ["court-doctypes.common.the_proceedings_replace_as_written", "the proceeding's {replace} as written changed from {show} to {show_2}", null, null, false, "code"],
   ["court-doctypes.common.the_proceedings_status_as_written", "the proceeding's status as written changed from {show} to {show_2}", null, null, false, "code"],
   ["court-doctypes.common.the_row_key_changed_its", "the row {key} changed its {replace}", null, null, false, "code"],
   ["court-doctypes.common.the_two_readings_are_of", "the two readings are of different proceedings ({na} and {nb})", null, null, false, "code"],
+  ["court-doctypes.common.the_two_readings_are_of_kinds", "the two readings are of different kinds of register", null, null, false, "code"],
   ["court-doctypes.common.this_is_page_n_of", "this is page {n} of the register's {of}, so it holds only some of its rows", null, null, false, "code"],
   ["court-doctypes.common.this_page_is_a_search", "this page is a search page, not {what}", null, null, false, "code"],
   ["court-doctypes.common.this_page_is_a_sign", "this page is a sign-in page, not {what}", null, null, false, "code"],
@@ -16556,9 +16659,29 @@ var WORD_ROWS = Object.freeze([
   ["court-doctypes.common.v1_show_is_no_longer", "{v1}{show} is no longer named on the page", null, null, false, "code"],
   ["court-doctypes.common.what_s_structure_is_present", "{what}'s structure is present, but {why}", null, null, false, "code"],
   ["court-doctypes.common.why_so_nothing_is_claimed", "{why}, so nothing is claimed about the register either way (a failed read is never a register emptied)", null, null, false, "code"],
+  ["court-doctypes.courtlistener.an_unnumbered_entry_with", "an unnumbered entry with neither a date nor a text, so it has no key", null, null, false, "code"],
+  ["court-doctypes.courtlistener.key_basis", "courtlistener_docket: a numbered entry is keyed by the entry number CourtListener gives it (entry_id); an unnumbered (minute) entry by its date and its text as written (or, with no text, its documents' descriptions), and twins on one reading by their order among themselves", null, null, false, "code"],
+  ["court-doctypes.courtlistener.label", "a CourtListener docket", null, null, false, "code"],
+  ["court-doctypes.courtlistener.the_docket_page_states_no", "the docket page states no status; a terminated case shows a Date Terminated field, and this page has none", null, null, false, "code"],
+  ["court-doctypes.courtlistener.the_page_holds_no_courtlistener", "the page holds no CourtListener docket header", null, null, false, "code"],
+  ["court-doctypes.cpuc.key_basis", "cpuc_proceeding: the commission assigns its documents report no row id, so a row is keyed by the composite of its filing date, document type, filer and description as written, plus its document link where it has one; identical twins on one reading are told apart by their order; an edit to any of these reads as one row gone and one added, reported together", null, null, false, "code"],
+  ["court-doctypes.cpuc.label", "a CPUC proceeding card or documents report", null, null, false, "code"],
+  ["court-doctypes.cpuc.the_documents_report_filing", "the documents report (Filing Date, Document Type, Filed By, Description)", null, null, false, "code"],
+  ["court-doctypes.cpuc.the_documents_report_states_only", "the documents report states only the proceeding's number; its caption, status, category and filing date are the card's", null, null, false, "code"],
+  ["court-doctypes.cpuc.the_page_holds_neither_the", "the page holds neither the proceeding card nor its documents report", null, null, false, "code"],
+  ["court-doctypes.cpuc.the_page_holds_no_documents", "the page holds no documents report, so it lists no register rows", null, null, false, "code"],
+  ["court-doctypes.cpuc.the_page_names_no_forum", "the page names no forum in its text (only its banner image does), so none is given", null, null, false, "code"],
   ["court-doctypes.cpuc.the_report_says_it_holds", "the report says it holds {total} rows and this reading holds rows {first} to {last} ({length} read)", null, null, false, "code"],
+  ["court-doctypes.cpuc.the_report_states_no_pagination", "the report states no pagination, so whether it holds every row of the register is not established", null, null, false, "code"],
+  ["court-doctypes.ecourt.a_member_s_own_capture", "a member's own capture", null, null, false, "code"],
+  ["court-doctypes.ecourt.a_register_of_actions", "a register of actions", null, null, false, "code"],
+  ["court-doctypes.ecourt.a_register_of_actions_table", "a Register of Actions table (date, description)", null, null, false, "code"],
+  ["court-doctypes.ecourt.key_basis", "ecourt_roa (PROVISIONAL): a row is keyed by its date as written and its order among the rows of that date; the row shape and this key are assumed from the portal's own description of a case page and are not yet verified on a member's capture", null, null, false, "code"],
+  ["court-doctypes.ecourt.label", "an eCourt register of actions", null, null, false, "code"],
+  ["court-doctypes.ecourt.member_only", "an account-gated register is read only from a member's own capture", null, null, false, "code"],
   ["court-doctypes.ecourt.member_only_and_this_capture", "{MEMBER_ONLY}, and this capture is not one", null, null, false, "code"],
   ["court-doctypes.ecourt.member_only_this_capture_is", "{MEMBER_ONLY}; this capture is not one (its origin is {stringify})", null, null, false, "code"],
+  ["court-doctypes.ecourt.the_page_holds_no_register", "the page holds no Register of Actions table with a date and a description", null, null, false, "code"],
   ["credentials.checks.a_credential_that_acts_for", "A credential that acts for one member acts for the member who creates it, and nobody else. You named another member, and nobody can authorise an agent in someone else's name: it would see what they see and its work would be recorded as theirs. Nothing was created. The member it should act for can create it themselves.", null, null, false, "code"],
   ["credentials.checks.an_agent_credential_has_to", "An agent credential has to say who stands behind it: the organisation as a whole, or one named member. The two carry different accountability and they see different things, so the record will not hold one that says neither.", null, null, false, "code"],
   ["credentials.checks.only_a_named_person_signed", "Only a named person signed in to your team's Civicsmith can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it \u2014 not even about itself.", null, null, false, "code"],
@@ -16569,27 +16692,64 @@ var WORD_ROWS = Object.freeze([
   ["credentials.index.no_credential_in_your_teams", "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.", null, null, false, "code"],
   ["credentials.index.string_is_a_machine_identity", "'{String}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.", null, null, false, "code"],
   ["credentials.index.string_is_a_machine_identity_2", "'{String}' is a machine identity. The row carries revoked_by, and a machine name there would record the team withdrawing an authority nobody in the team decided to withdraw.", null, null, false, "code"],
+  ["doc-clean.images.a_malformed_referred_to_count", "a malformed referred-to count", null, null, false, "code"],
+  ["doc-clean.images.a_segment_longer_than_the_stream", "a segment longer than the stream", null, null, false, "code"],
+  ["doc-clean.images.a_segment_of_unstated_length", "a segment of unstated length", null, null, false, "code"],
+  ["doc-clean.images.a_truncated_segment_header", "a truncated segment header", null, null, false, "code"],
+  ["doc-clean.images.name_emf", "an EMF", null, null, false, "code"],
+  ["doc-clean.images.name_heif", "a HEIC or AVIF", null, null, false, "code"],
+  ["doc-clean.images.name_jxl", "a JPEG XL", null, null, false, "code"],
+  ["doc-clean.images.name_svm", "an SVM", null, null, false, "code"],
+  ["doc-clean.images.name_tiff", "a TIFF", null, null, false, "code"],
+  ["doc-clean.images.name_wmf", "a WMF", null, null, false, "code"],
+  ["doc-clean.images.the_image_could_not_be_stripped", "the image could not be stripped", null, null, false, "code"],
   ["doc-clean.images.where_a_bmp_image_carrying", "{where}: a BMP image carrying a colour profile", null, null, false, "code"],
   ["doc-clean.images.where_a_bmp_image_holding", "{where}: a BMP image holding {v1} image", null, null, false, "code"],
   ["doc-clean.images.where_a_compressed_image_that", "{where}: a compressed image that cannot be read whole", null, null, false, "code"],
   ["doc-clean.images.where_a_compressed_image_whose", "{where}: a compressed image whose header cannot be read", null, null, false, "code"],
   ["doc-clean.images.where_a_jbig2_stream_whose", "{where}: a JBIG2 stream whose segments cannot be walked ({why})", null, null, false, "code"],
   ["doc-clean.images.where_an_image_of_no", "{where}: an image of no format this module knows", null, null, false, "code"],
+  ["doc-clean.images.where_an_svg_image_with_an", "{where}: an SVG image with an <{tag}> element", null, null, false, "code"],
+  ["doc-clean.images.where_media_compressed", "{where}: {media}, compressed", null, null, false, "code"],
   ["doc-clean.images.where_v1_image_holding_held", "{where}: {v1} image holding {held} image", null, null, false, "code"],
   ["doc-clean.images.where_v1_image_whose_metadata", "{where}: {v1} image, whose metadata this module cannot strip", null, null, false, "code"],
+  ["doc-clean.index.a_compound_file_a_legacy", "a compound file (a legacy office document), not a format this module cleans", null, null, false, "code"],
   ["doc-clean.index.a_data_image_uri_at", "a data:image URI at character {index}", null, null, false, "code"],
+  ["doc-clean.index.a_mime_message_not_a", "a MIME message, not a format this module cleans", null, null, false, "code"],
+  ["doc-clean.index.a_postscript_document_not", "a PostScript document, not a format this module cleans", null, null, false, "code"],
+  ["doc-clean.index.a_zip_archive_that_is_neither", "a ZIP archive that is neither an OOXML nor an ODF package", null, null, false, "code"],
   ["doc-clean.index.a_zip_package_of_no", "a ZIP package of no office format this module cleans ({why})", null, null, false, "code"],
+  ["doc-clean.index.an_embedded_image_is_of_a_kind", "an embedded image is of a kind whose metadata cannot be stripped", null, null, false, "code"],
+  ["doc-clean.index.an_encrypted_office_document_an", "an encrypted office document (an EncryptedPackage compound file)", null, null, false, "code"],
+  ["doc-clean.index.an_rtf_document_not_a_format", "an RTF document, not a format this module cleans", null, null, false, "code"],
+  ["doc-clean.index.an_xml_or_svg_document", "an XML or SVG document, not a format this module cleans", null, null, false, "code"],
+  ["doc-clean.index.the_document_carries_a_video_audio", "the document carries a video, audio, RichMedia or 3D part, whose own metadata can hold a time and place", null, null, false, "code"],
+  ["doc-clean.index.the_document_carries_an_embedded", "the document carries an embedded file: a PDF attachment, an office file's embedding or macro project, or an ODF embedded object", null, null, false, "code"],
   ["doc-clean.index.the_document_could_not_be", "the document could not be read whole ({String})", null, null, false, "code"],
+  ["doc-clean.index.the_document_is_encrypted", "the document is encrypted", null, null, false, "code"],
   ["doc-clean.index.the_document_is_length_bytes", "the document is {length} bytes, over the {CLEAN_MAX_BYTES} this module reads", null, null, false, "code"],
+  ["doc-clean.index.the_document_or_one_of", "the document, or one of its parts, is larger than this module reads", null, null, false, "code"],
+  ["doc-clean.index.the_document_s_bytes_are_not", "the document's bytes are not a byte array", null, null, false, "code"],
+  ["doc-clean.index.the_document_s_structure_cannot", "the document's structure cannot be read whole", null, null, false, "code"],
+  ["doc-clean.index.the_file_is_a_zip_archive", "the file is a ZIP archive, not an office package; a member-supplied archive is never carried", null, null, false, "code"],
+  ["doc-clean.index.the_file_is_neither_a_pdf", "the file is neither a PDF, an office package nor text", null, null, false, "code"],
+  ["doc-clean.index.the_file_is_of_no_format", "the file is of no format this module cleans", null, null, false, "code"],
+  ["doc-clean.index.the_html_document_embeds_an", "the HTML document embeds an image as a data: URI", null, null, false, "code"],
   ["doc-clean.index.the_package_cannot_be_read", "the package cannot be read ({why})", null, null, false, "code"],
   ["doc-clean.index.the_zip_directory_cannot_be", "the ZIP directory cannot be read ({why})", null, null, false, "code"],
+  ["doc-clean.package.part_cannot_be_read_why", "part {name} cannot be read ({why})", null, null, false, "code"],
   ["doc-clean.package.part_n_appears_twice", "part {n} appears twice", null, null, false, "code"],
   ["doc-clean.package.part_n_declares_uncompressedsize_bytes", "part {n} declares {uncompressedSize} bytes, over the {CLEAN_MAX_PART_BYTES} this module reads", null, null, false, "code"],
   ["doc-clean.package.part_n_is_an_embedded", "part {n} is an embedded file", null, null, false, "code"],
   ["doc-clean.package.part_n_is_or_belongs", "part {n} is or belongs to an embedded object", null, null, false, "code"],
+  ["doc-clean.package.part_n_media", "part {n}: {media}", null, null, false, "code"],
   ["doc-clean.package.part_path_is_an_embedded", "part {path} is an embedded object", null, null, false, "code"],
+  ["doc-clean.package.the_package_s_manifest_lists_encrypted", "the package's manifest lists encrypted parts", null, null, false, "code"],
   ["doc-clean.package.the_packages_zip_directory_cannot", "the package's ZIP directory cannot be read ({why})", null, null, false, "code"],
+  ["doc-clean.pdf.a_number_the_pdf_writer", "a number the PDF writer cannot write", null, null, false, "code"],
+  ["doc-clean.pdf.a_string_the_pdf_reader", "a string the PDF reader answered without its bytes", null, null, false, "code"],
   ["doc-clean.pdf.a_value_the_pdf_reader", "a value the PDF reader could not read ({String})", null, null, false, "code"],
+  ["doc-clean.pdf.a_value_the_pdf_writer_cannot", "a value the PDF writer cannot write", null, null, false, "code"],
   ["doc-clean.pdf.get_0_obj_ser_endobj", "{get} 0 obj\n{ser}\nendobj\n", null, null, false, "code"],
   ["doc-clean.pdf.object_num_a_file_specification", "object {num}: a file specification carrying an embedded file", null, null, false, "code"],
   ["doc-clean.pdf.object_num_a_jbig2_image", "object {num}: a JBIG2 image under another filter", null, null, false, "code"],
@@ -16604,24 +16764,175 @@ var WORD_ROWS = Object.freeze([
   ["doc-clean.pdf.object_num_s_content_stream", "object {num}'s content stream cannot be decoded", null, null, false, "code"],
   ["doc-clean.pdf.object_num_s_stream_cannot", "object {num}'s stream cannot be read", null, null, false, "code"],
   ["doc-clean.pdf.object_num_v1_object", "object {num}: {v1} object", null, null, false, "code"],
+  ["doc-clean.pdf.the_pdf_cannot_be_opened", "the PDF cannot be opened", null, null, false, "code"],
+  ["doc-clean.pdf.the_pdf_has_no_readable", "the PDF has no readable trailer", null, null, false, "code"],
+  ["doc-clean.pdf.the_pdf_is_encrypted_a", "the PDF is encrypted (a Standard security handler)", null, null, false, "code"],
+  ["doc-clean.pdf.the_pdf_s_trailer_names_an", "the PDF's trailer names an /Encrypt dictionary", null, null, false, "code"],
+  ["doc-clean.pdf.the_trailer_s_root_is_not", "the trailer's /Root is not a catalog dictionary", null, null, false, "code"],
   ["docket.index.docket_kind_edition_edition", "docket: {kind}, edition {edition}", null, null, false, "code"],
   ["docket.index.docket_kind_received_edition_edition", "docket: {kind} received, edition {edition}", null, null, false, "code"],
+  ["docprofile.pipeline.cannot_say_the_stack_is_not", "cannot say: the stack is not recognised confidently enough", null, null, false, "code"],
   ["docprofile.pipeline.its_contents_could_not_be", "its contents could not be read this time ({String})", null, null, false, "code"],
+  ["docprofile.pipeline.no_content_type_could_be_decided", "no content type could be decided", null, null, false, "code"],
   ["docprofile.pipeline.none_stated_the_content_type", "none stated: the {content_type} reader failed to derive them", null, null, false, "code"],
   ["docprofile.pipeline.nothing_is_claimed_about_the", "nothing is claimed about the content: {why}", null, null, false, "code"],
   ["docprofile.pipeline.the_content_type_content_type", "the {content_type} content type declares no reader", null, null, false, "code"],
   ["docprofile.pipeline.the_content_type_reader_could", "the {content_type} reader could not compare the two readings ({String})", null, null, false, "code"],
   ["docprofile.pipeline.the_content_type_reader_could_2", "the {content_type} reader could not say", null, null, false, "code"],
+  ["docprofile.pipeline.the_document_differs_and_this", "the document differs and this kind of document is not recognised well enough to say whether the difference matters", null, null, false, "code"],
+  ["docprofile.pipeline.the_document_is_unchanged_only", "the document is unchanged; only machinery this site rebuilds differs", null, null, false, "code"],
+  ["docprofile.pipeline.the_document_itself_is_unchanged_navigation", "the document itself is unchanged; something around it moved, such as navigation", null, null, false, "code"],
+  ["docprofile.pipeline.the_document_itself_is_unchanged_surroundings", "the document itself is unchanged; the site around it changed", null, null, false, "code"],
+  ["docprofile.pipeline.the_source_is_still_serving", "the source is still serving exactly what the record holds", null, null, false, "code"],
+  ["docprofile.pipeline.the_source_served_exactly_the", "the source served exactly the bytes the record holds", null, null, false, "code"],
   ["docprofile.pipeline.the_substance_differs_and_which", "the substance differs, and which kind of document this is could not be decided ({String}), so what changed is not described", null, null, false, "code"],
   ["docprofile.pipeline.the_substance_differs_and_why", "the substance differs and {why}, so what changed is not described", null, null, false, "code"],
+  ["docprofile.pipeline.the_substance_is_the_same", "the substance is the same; only machinery this site rebuilds on every visit differs", null, null, false, "code"],
   ["docprofile.pipeline.the_two_captures_could_not", "the two captures could not be compared ({String}), so nothing is claimed", null, null, false, "code"],
+  ["docprofile.pipeline.the_two_captures_could_not_be_compared", "the two captures could not be compared", null, null, false, "code"],
+  ["docprofile.readtext.no_text_was_supplied_so_no", "no text was supplied, so no reading was attempted", null, null, false, "code"],
   ["docprofile.readtext.read_over_a_full_decode", "read over a full decode ({chars} characters)", null, null, false, "code"],
   ["docprofile.readtext.read_over_a_partial_decode", "read over a PARTIAL decode, stated: {undetermined} undetermined region(s)/code point(s){named} beside {chars} decoded characters", null, null, false, "code"],
   ["docprofile.readtext.the_key_content_type_declares", "the {key} content type declares no reader", null, null, false, "code"],
+  ["docprofile.readtext.the_text_arrived_as_a", "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said", null, null, false, "code"],
   ["docprofile.readtext.the_text_of_this_document", "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one", null, null, false, "code"],
   ["docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", null, null, false, "code"],
+  ["docprofile.readtext.this_producer_emitted_document_text", "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said", null, null, false, "code"],
+  ["docprofile.readtext.this_producers_document_text_is_not_its_pages", "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed", null, null, false, "code"],
+  ["docprofile.readtext.this_producers_document_text_is_not_its_paragraphs", "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed", null, null, false, "code"],
   ["docprofile.readtext.this_producers_source_carry_no", "this producer's {source} carry no part index, so where in the document a reference was read cannot be said", null, null, false, "code"],
+  ["docprofile.registry.no_content_type_is_registered", "no content type is registered", null, null, false, "code"],
+  ["docprofile.registry.no_content_type_is_registered_to_recognise", "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described", null, null, false, "code"],
+  ["docprofile.registry.no_registered_content_type_recognised", "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described", null, null, false, "code"],
   ["docprofile.registry.the_key_content_type_has", "the {key} content type has no detect function, so it could never recognise a document", null, null, false, "code"],
+  ["doctypes.generic.changed", "the substance of this document changed; what kind of document it is has not been worked out", null, null, false, "code"],
+  ["doctypes.generic.changed_undescribed", "the substance of this document changed; what kind of document it is has not been worked out, so what changed is not described", null, null, false, "code"],
+  ["doctypes.generic.label", "a document of no recognised type", null, null, false, "code"],
+  ["doctypes.meeting-agenda.added", "an item of legislation was added to this agenda", null, null, false, "code"],
+  ["doctypes.meeting-agenda.altered", "what this agenda says about an item changed", null, null, false, "code"],
+  ["doctypes.meeting-agenda.changes", "{intact} of {total} items unchanged; {pulled} pulled, {added} added, {altered} altered", null, null, false, "code"],
+  ["doctypes.meeting-agenda.file_lines", "{count} legislation file number line(s)", null, null, false, "code"],
+  ["doctypes.meeting-agenda.no_body_line", "no line at the head of this agenda names a body in the words the active jurisdiction profiles give", null, null, false, "code"],
+  ["doctypes.meeting-agenda.no_body_profile", "no active jurisdiction profile says how a body is named, so which body meets is not read", null, null, false, "code"],
+  ["doctypes.meeting-agenda.no_file_shape", "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no item was read", null, null, false, "code"],
+  ["doctypes.meeting-agenda.pulled", "an item of legislation this agenda listed is no longer on it", null, null, false, "code"],
+  ["doctypes.meeting-agenda.self_naming_furniture", "names itself as an agenda on {count} lines, which is page furniture", null, null, false, "code"],
+  ["doctypes.meeting-agenda.self_naming_once", "names itself as an agenda once ({count}), which a reference also does", null, null, false, "code"],
+  ["doctypes.meeting-agenda.unchanged", "all {count} items on this agenda are unchanged", null, null, false, "code"],
+  ["doctypes.meeting-agenda.unread", "the items on this agenda could not be read this time, so nothing is claimed about them either way", null, null, false, "code"],
+  ["doctypes.meeting-calendar.added", "a meeting was added to the calendar", null, null, false, "code"],
+  ["doctypes.meeting-calendar.all_unchanged", "all {count} meetings on this calendar are unchanged", null, null, false, "code"],
+  ["doctypes.meeting-calendar.due_unknown", "this meeting has taken place and no minutes are offered yet; when they are due is not known, because {why}", null, null, false, "code"],
+  ["doctypes.meeting-calendar.gone_in_range", "a meeting dated inside the range this calendar shows is no longer listed", null, null, false, "code"],
+  ["doctypes.meeting-calendar.gone_unknown_range", "a meeting is no longer listed, and this calendar's date range could not be read, so whether it simply moved out of view is not established", null, null, false, "code"],
+  ["doctypes.meeting-calendar.held_by", "this meeting was held by that body", null, null, false, "code"],
+  ["doctypes.meeting-calendar.is_agenda", "this document is the agenda for that meeting", null, null, false, "code"],
+  ["doctypes.meeting-calendar.is_minutes", "this document records what happened at that meeting", null, null, false, "code"],
+  ["doctypes.meeting-calendar.minutes_exist", "minutes for this meeting exist, so the meeting was recorded", null, null, false, "code"],
+  ["doctypes.meeting-calendar.no_practice", "no active jurisdiction profile states how long minutes usually take", null, null, false, "code"],
+  ["doctypes.meeting-calendar.overdue", "this meeting was held more than {amount} {unit} ago, longer than minutes usually take here (the jurisdiction's measured practice), and this calendar still offers no minutes", null, null, false, "code"],
+  ["doctypes.meeting-calendar.period_not_counted_here", "the jurisdiction's {amount} {unit} could not be counted from this meeting: {reason}", null, null, false, "code"],
+  ["doctypes.meeting-calendar.period_uncounted", "the period could not be counted: {reason}", null, null, false, "code"],
+  ["doctypes.meeting-calendar.published", "{kind} were published for a meeting that had none", null, null, false, "code"],
+  ["doctypes.meeting-calendar.renamed", "the body holding a meeting is named differently", null, null, false, "code"],
+  ["doctypes.meeting-calendar.replaced", "the {kind} document for this meeting is a different document than before", null, null, false, "code"],
+  ["doctypes.meeting-calendar.scrolled", "{count} no longer in the range shown, which is this calendar moving its window", null, null, false, "code"],
+  ["doctypes.meeting-calendar.status_changed", "a meeting's status changed from {was} to {now}", null, null, false, "code"],
+  ["doctypes.meeting-calendar.taken_place", "this meeting has taken place and no minutes are offered yet", null, null, false, "code"],
+  ["doctypes.meeting-calendar.unchanged_of", "{intact} of {total} meetings unchanged{parts}", null, null, false, "code"],
+  ["doctypes.meeting-calendar.unread", "the meetings on this calendar could not be read this time, so nothing is claimed about them either way", null, null, false, "code"],
+  ["doctypes.meeting-calendar.upcoming", "this meeting is upcoming and no agenda is offered yet", null, null, false, "code"],
+  ["doctypes.meeting-calendar.withdrawn", "{kind} that this calendar previously offered are no longer offered", null, null, false, "code"],
+  ["doctypes.meeting-minutes.added", "a matter was added to these minutes", null, null, false, "code"],
+  ["doctypes.meeting-minutes.changes", "{intact} of {total} matters unchanged; {gone} gone, {added} added, {altered} altered", null, null, false, "code"],
+  ["doctypes.meeting-minutes.frame", "a meeting that convened and adjourned at stated times", null, null, false, "code"],
+  ["doctypes.meeting-minutes.item_changed", "what these minutes say about this matter changed", null, null, false, "code"],
+  ["doctypes.meeting-minutes.label", "a set of meeting minutes", null, null, false, "code"],
+  ["doctypes.meeting-minutes.motions", "motions made, seconded and carried or failed", null, null, false, "code"],
+  ["doctypes.meeting-minutes.no_body_line", "no single line of this document names the body at the rate a running header does, so which body met is not stated here rather than guessed from one line", null, null, false, "code"],
+  ["doctypes.meeting-minutes.no_body_profile", "no active jurisdiction profile says how a body is named, so which body met is not read", null, null, false, "code"],
+  ["doctypes.meeting-minutes.no_file_shape", "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no matter was read", null, null, false, "code"],
+  ["doctypes.meeting-minutes.outcome_changed", "what these minutes record the body as having done with this matter changed", null, null, false, "code"],
+  ["doctypes.meeting-minutes.pulled", "a matter these minutes recorded is no longer in them", null, null, false, "code"],
+  ["doctypes.meeting-minutes.self_naming_furniture", "names itself as minutes on {count} lines, which is page furniture", null, null, false, "code"],
+  ["doctypes.meeting-minutes.self_naming_once", "names itself as minutes once ({count}), which a reference also does", null, null, false, "code"],
+  ["doctypes.meeting-minutes.tally_labels", "{count} roll-call vote tally label(s)", null, null, false, "code"],
+  ["doctypes.meeting-minutes.unchanged", "all {count} matters in these minutes are unchanged", null, null, false, "code"],
+  ["doctypes.meeting-minutes.unread", "the matters in these minutes could not be read this time, so nothing is claimed about them either way", null, null, false, "code"],
+  ["doctypes.policy-header.no_block", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it", null, null, false, "code"],
+  ["doctypes.policy-header.no_date_beside", "its label is printed with no calendar date beside it or below it in the header", null, null, false, "code"],
+  ["doctypes.policy-header.no_label", "no label the active jurisdiction profiles give for this field is printed in the header block", null, null, false, "code"],
+  ["doctypes.policy-header.no_series_or_labels", "the active jurisdiction profiles give no policy series and no policy header labels, so no header is read", null, null, false, "code"],
+  ["doctypes.policy-header.no_series_type", "no line of this text opens with a policy series the active jurisdiction profiles name", null, null, false, "code"],
+  ["doctypes.policy-header.nothing_beside", "its label is printed with nothing beside it", null, null, false, "code"],
+  ["doctypes.policy-header.number_form", '"{number}" is printed as the number, and {series} does not read a number in that form', null, null, false, "code"],
+  ["doctypes.policy-header.placeholder_date", "this date is not a whole calendar date as printed (a placeholder), so it is kept as written and not completed", null, null, false, "code"],
+  ["doctypes.policy.action_unbounded", "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told", null, null, false, "code"],
+  ["doctypes.policy.changes", "{count} change(s) between two readings of a policy at the same address", null, null, false, "code"],
+  ["doctypes.policy.header_changed", "this policy's {field} as its header states it is not what it was at this address", null, null, false, "code"],
+  ["doctypes.policy.header_names", "a header naming {type} {number}", null, null, false, "code"],
+  ["doctypes.policy.header_neither", "neither reading gave a header, so nothing is said about the header", null, null, false, "code"],
+  ["doctypes.policy.header_one_side", "only one of the readings gave a header, so nothing is said about the header", null, null, false, "code"],
+  ["doctypes.policy.label", "a policy of a numbered series", null, null, false, "code"],
+  ["doctypes.policy.no_outline", "no outline heading (I., A., 1.) opens a line of this policy after its header, so its text is not divided into sections", null, null, false, "code"],
+  ["doctypes.policy.no_party_numbering", "a numbering that starts again at 1 has no party beside it or above it that can be told from the action before", null, null, false, "code"],
+  ["doctypes.policy.no_series_line", "no line of this text opens with a policy series the active profiles name, beside the header labels they give", null, null, false, "code"],
+  ["doctypes.policy.no_series_number", "the header names {type} but carries no number that series reads, so it is not read as one of its items", null, null, false, "code"],
+  ["doctypes.policy.no_series_supplied", "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy", null, null, false, "code"],
+  ["doctypes.policy.not_divided", "this policy's text was not divided into sections, so no section can be named for this passage", null, null, false, "code"],
+  ["doctypes.policy.section_added", "section {number} is read now and was not read before", null, null, false, "code"],
+  ["doctypes.policy.section_changed", "section {number}'s {moved} is not what it was at this address", null, null, false, "code"],
+  ["doctypes.policy.section_gone", "section {number} was read before and is not read now", null, null, false, "code"],
+  ["doctypes.policy.sections_neither", "neither reading gave sections, so nothing is said about sections: {why}", null, null, false, "code"],
+  ["doctypes.policy.sections_one_side", "only one of the readings gave sections, so nothing is said about sections: {why}", null, null, false, "code"],
+  ["doctypes.policy.table_no_action", "the table's header is printed but no numbered action under a party is read below it", null, null, false, "code"],
+  ["doctypes.policy.unchanged", "this policy reads as it read: the same header and the same sections", null, null, false, "code"],
+  ["doctypes.policy.unplaced", "no section read from this policy holds this passage (it stands before the first outline heading)", null, null, false, "code"],
+  ["doctypes.policy.unread", "nothing could be read from this policy on one side or the other, so nothing is claimed about it either way", null, null, false, "code"],
+  ["doctypes.regulation.added", "this instrument now names something it did not name before", null, null, false, "code"],
+  ["doctypes.regulation.changes", "{count} change(s) to an instrument at the same address", null, null, false, "code"],
+  ["doctypes.regulation.code_headings", "{count} section heading(s) of {label}", null, null, false, "code"],
+  ["doctypes.regulation.enacting", "an enacting formula in the operative voice", null, null, false, "code"],
+  ["doctypes.regulation.form_changed", "what was read at this address is not the same form of law it was", null, null, false, "code"],
+  ["doctypes.regulation.instrument_changed", "this instrument's {field} is not what it was at this address", null, null, false, "code"],
+  ["doctypes.regulation.no_caption", "no caption introduced by an enacting body was read, in the words the active jurisdiction profiles give for instruments and bodies, so the number is not stated", null, null, false, "code"],
+  ["doctypes.regulation.no_form", "this text carries no enacting formula, no instrument caption under a body, and no section heading of a code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section", null, null, false, "code"],
+  ["doctypes.regulation.one_side_unread", "nothing was read from one of the readings, so nothing is said about its sections", null, null, false, "code"],
+  ["doctypes.regulation.proposed_no_number", "this instrument's caption carries no number, which is what a proposed ordinance or resolution looks like before a body adopts it", null, null, false, "code"],
+  ["doctypes.regulation.pulled", "an instrument or code section this one acted on is no longer named in it", null, null, false, "code"],
+  ["doctypes.regulation.recital_chain", "a recital chain of {count} WHEREAS clause(s)", null, null, false, "code"],
+  ["doctypes.regulation.recitals", "the recitals establishing this instrument's grounds changed in number", null, null, false, "code"],
+  ["doctypes.regulation.section_added", "section {number} is read now and was not read before", null, null, false, "code"],
+  ["doctypes.regulation.section_changed", "section {number}'s {moved} is not what it was at this address", null, null, false, "code"],
+  ["doctypes.regulation.section_gone", "section {number} was read before and is not read now", null, null, false, "code"],
+  ["doctypes.regulation.sections_none_read", "no section was read from either reading, so nothing is said about sections: {why}", null, null, false, "code"],
+  ["doctypes.regulation.unchanged", "this instrument says what it said, and acts on the same things", null, null, false, "code"],
+  ["doctypes.sections.neither_form", "this text was read as neither an instrument nor a code section, so it is not divided into sections", null, null, false, "code"],
+  ["doctypes.sections.neither_form_no_codes", "this text was read as neither an instrument nor a code section, so it is not divided into sections; and no active jurisdiction profile gives a section-number form for any code", null, null, false, "code"],
+  ["doctypes.sections.no_code_forms", "no active jurisdiction profile gives a section-number form for any code, so no code section is read", null, null, false, "code"],
+  ["doctypes.sections.no_code_heading", "no line of this text opens with a section number of a code the active jurisdiction profiles name, followed by a title, so it is not divided into sections", null, null, false, "code"],
+  ["doctypes.sections.not_divided", "this text was not divided into sections, so no section can be named for this passage", null, null, false, "code"],
+  ["doctypes.sections.unplaced", "no section read from this text holds this passage (it stands before the first heading)", null, null, false, "code"],
+  ["doctypes.staff-directory.added", "the directory now lists an address it did not", null, null, false, "code"],
+  ["doctypes.staff-directory.addresses", "{count} distinct contact address(es) at one organisation's domain ({domain}), {percent}% of the {total} in the document", null, null, false, "code"],
+  ["doctypes.staff-directory.altered", "this entry's line in the directory now says something else", null, null, false, "code"],
+  ["doctypes.staff-directory.changes", "{count} change(s) to the directory's entries", null, null, false, "code"],
+  ["doctypes.staff-directory.no_title", "no line among the first five names this document as a directory, staff list, roster or contacts", null, null, false, "code"],
+  ["doctypes.staff-directory.pulled", "this address is no longer listed in the directory", null, null, false, "code"],
+  ["doctypes.staff-directory.title_line", 'it names itself in its title line ("{title}")', null, null, false, "code"],
+  ["doctypes.staff-directory.unchanged", "the directory lists the same addresses, each saying what it said", null, null, false, "code"],
+  ["doctypes.staff-directory.unread", "no entry could be read from this directory this time, so nothing is claimed about it either way", null, null, false, "code"],
+  ["doctypes.staff-report.added", "this report now points at an instrument or code section it did not cite before", null, null, false, "code"],
+  ["doctypes.staff-report.changes", "{count} change(s): {gone} citation(s) gone, {added} added", null, null, false, "code"],
+  ["doctypes.staff-report.changes_and_recommendation", "{count} change(s): {gone} citation(s) gone, {added} added, and the recommendation moved", null, null, false, "code"],
+  ["doctypes.staff-report.field_changed", "this report's {field} changed", null, null, false, "code"],
+  ["doctypes.staff-report.label", "a staff report to a public body", null, null, false, "code"],
+  ["doctypes.staff-report.memo_header", "a memorandum header of {labels} labels in {span} characters at the top", null, null, false, "code"],
+  ["doctypes.staff-report.pulled", "an instrument or code section this report pointed at is no longer cited in it", null, null, false, "code"],
+  ["doctypes.staff-report.recommendation_changed", "what this report recommends the body do is not what it recommended before", null, null, false, "code"],
+  ["doctypes.staff-report.template_sections", "{count} report template section heading(s)", null, null, false, "code"],
+  ["doctypes.staff-report.titled", "names itself as a report on a line of its own", null, null, false, "code"],
+  ["doctypes.staff-report.unchanged", "this report says what it said, and points at the same instruments", null, null, false, "code"],
   ["doorbell.checks.changing_a_knocks_status_records", "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written.", null, null, false, "code"],
   ["doorbell.checks.this_teams_inbox_read_your", "This team's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this team has set its Civicsmith up rather than a judgement about what you sent \u2014 a team that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the team's members how to get the whole of it to them. The team can see how often its doorbell turns people away.", null, null, false, "code"],
   ["doorbell.checks.your_material_was_not_received", "Your material was not received. This team's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The team can see how often its doorbell turns people away.", null, null, false, "code"],
@@ -16816,23 +17127,56 @@ var WORD_ROWS = Object.freeze([
   ["file-scanner.catalogue.cloud_not_stored_in_private", "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours", null, null, false, "code"],
   ["file-scanner.catalogue.cloud_scan_results_remain_limited", "Cloud: scan results remain, limited to the submitter", null, null, false, "code"],
   ["file-scanner.catalogue.cloudflare_inc_the_teams_own", "Cloudflare, Inc. (the team's own account)", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_intel_the_teams_own", "the team's own Cloudflare account, a token with Intel Read", null, null, false, "code"],
   ["file-scanner.catalogue.connect_over_tls_yes_or", "Connect over TLS: yes or no (default no)", null, null, false, "code"],
   ["file-scanner.catalogue.data_collection_endpoint_host", "Data collection endpoint host", null, null, false, "code"],
   ["file-scanner.catalogue.data_collection_rule_immutable_id", "Data collection rule immutable ID", null, null, false, "code"],
   ["file-scanner.catalogue.deep_cdr_metadefender_cloud_or", "Deep CDR (MetaDefender Cloud or Core)", null, null, false, "code"],
+  ["file-scanner.catalogue.deep_cdr_not_stated_cloud", "not stated (Cloud); the organization's own servers (Core)", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_blobs_index", "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud keeps them", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_organizations_own", "the organization's own Azure subscription, billed per GB scanned", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_service_does", "the service does not retain the scanned content; this adapter deletes the blob after the result", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_storage_accounts", "the storage account's region; content read within it", null, null, false, "code"],
+  ["file-scanner.catalogue.elastic_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.elastic_the_organizations_own", "the organization's own Elastic deployment", null, null, false, "code"],
   ["file-scanner.catalogue.elasticsearch_address_host_or_host", "Elasticsearch address (host, or host:port)", null, null, false, "code"],
   ["file-scanner.catalogue.endpoint_address_host_or_host", "Endpoint address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_community_access_off", "community access off: every upload confidential", null, null, false, "code"],
   ["file-scanner.catalogue.falcon_sandbox_falcon_intelligence", "Falcon Sandbox (Falcon Intelligence)", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_kept_in_the", "kept in the Falcon platform", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_stored_in_the", "stored in the Falcon platform; period not stated", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_with_the_organizations", "with the organization's Falcon subscription", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_an_entitlement_to", "an entitlement to a number of files or a volume a day", null, null, false, "code"],
   ["file-scanner.catalogue.glasswall_halo_api_address_host", "Glasswall Halo API address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_removed_according_to", "removed according to the deployment's file retention policy", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_the_analysis_report", "the analysis report, as the deployment keeps it", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_the_halo_deployment", "the Glasswall Halo deployment the organization runs or subscribes to", null, null, false, "code"],
   ["file-scanner.catalogue.google_cloud_project_id", "Google Cloud project ID", null, null, false, "code"],
   ["file-scanner.catalogue.google_llc_the_organizations_own", "Google LLC (the organization's own instance)", null, null, false, "code"],
+  ["file-scanner.catalogue.google_secops_as_the_instance", "as the instance keeps its logs", null, null, false, "code"],
   ["file-scanner.catalogue.google_security_operations_importlogs", "Google Security Operations (ImportLogs)", null, null, false, "code"],
+  ["file-scanner.catalogue.google_web_risk_no_file", "no file is sent; the server sees only a hash prefix on a local match", null, null, false, "code"],
+  ["file-scanner.catalogue.google_web_risk_the_organizations_own", "the organization's own Google Cloud project; results must not be redistributed", null, null, false, "code"],
+  ["file-scanner.catalogue.icap_the_organizations_own_server", "the organization's own server and licence", null, null, false, "code"],
   ["file-scanner.catalogue.index_the_counts_are_written", "Index the counts are written to (default civicsmith-security-counts)", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_clean_files_up_to", "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_metadata_up_to_6", "metadata up to 6 months for research", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_the_organizations_own", "the organization's own Intelix account (free monthly allowance, then pay as you go)", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_the_region_chosen", "the region chosen; dynamic analysis traffic may be routed to another region; malicious files to the SophosLabs Hub (UK)", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_an_edition_of", "an edition of Light or above, whose analyses and results are private", null, null, false, "code"],
   ["file-scanner.catalogue.joe_sandbox_cloud_light_and", "Joe Sandbox Cloud (Light and above)", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_kept_until_the", "kept until the customer deletes it; then securely deleted in near real time", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_kept_until_the_2", "kept until the customer deletes it", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_the_organizations_own", "the organization's own Light, Pro or Enterprise subscription", null, null, false, "code"],
   ["file-scanner.catalogue.log_type_the_counts_are", "Log type the counts are imported as", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_file_not", "private mode: not stored or shared; permanently removed from storage", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_cloud_private_mode", "MetaDefender Cloud (private mode)", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_scan_results", "scan results remain in the MetaDefender Cloud database, limited to the submitter", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_as_the_organization", "as the organization configures its server", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_as_the_organization_2", "as the organization configures its server", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_core_server_address_host", "MetaDefender Core server address (host, or host:port)", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_core_server_address_host_2", "MetaDefender Core server address (host, or host:port; Core only)", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_the_organizations_own", "the organization's own MetaDefender Core server", null, null, false, "code"],
   ["file-scanner.catalogue.microsoft_defender_for_storage", "Microsoft Defender for Storage", null, null, false, "code"],
   ["file-scanner.catalogue.microsoft_entra_tenant_id", "Microsoft Entra tenant ID", null, null, false, "code"],
   ["file-scanner.catalogue.microsoft_sentinel_logs_ingestion_api", "Microsoft Sentinel (Logs Ingestion API)", null, null, false, "code"],
@@ -16841,19 +17185,34 @@ var WORD_ROWS = Object.freeze([
   ["file-scanner.catalogue.palo_alto_networks_inc", "Palo Alto Networks, Inc.", null, null, false, "code"],
   ["file-scanner.catalogue.palo_alto_networks_inc_2", "Palo Alto Networks, Inc.", null, null, false, "code"],
   ["file-scanner.catalogue.path_on_the_endpoint_default", "Path on the endpoint (default /)", null, null, false, "code"],
+  ["file-scanner.catalogue.private_mode_samplesharing_0", "private mode: samplesharing 0 and private processing on every call (paid licence only)", null, null, false, "code"],
   ["file-scanner.catalogue.region_one_of_keys", "Region: one of {keys}", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_deleted_on_completion", "deleted on completion of analysis", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_the_teams_own_key", "the team's own key; terms allow use within its own products made available to its clients", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_up_to_400_days", "up to 400 days in the processing region", null, null, false, "code"],
+  ["file-scanner.catalogue.sentinel_as_the_workspace", "as the workspace keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.sentinel_the_organizations_own", "the organization's own Azure workspace", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_hec_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
   ["file-scanner.catalogue.splunk_http_event_collector", "Splunk HTTP Event Collector", null, null, false, "code"],
   ["file-scanner.catalogue.splunk_http_event_collector_address", "Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)", null, null, false, "code"],
   ["file-scanner.catalogue.stream_name_in_the_rule", "Stream name in the rule", null, null, false, "code"],
   ["file-scanner.catalogue.syslog_collector_address_host_or", "Syslog collector address (host, or host:port; port 6514 unless named)", null, null, false, "code"],
   ["file-scanner.catalogue.the_engines_the_tool_runs", "The engines the tool runs, as its maker names them", null, null, false, "code"],
   ["file-scanner.catalogue.the_tools_statement_of_what", "The tool's statement of what it receives, keeps and shares", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_not_stated_beyond", "not stated beyond the account", null, null, false, "code"],
   ["file-scanner.catalogue.web_risk_update_api", "Web Risk (Update API)", null, null, false, "code"],
   ["file-scanner.catalogue.where_that_statement_is_published", "Where that statement is published", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_signatures_and_reports", "signatures and reports kept indefinitely", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_the_regional_cloud", "the regional cloud chosen; some metadata shared across regional clouds", null, null, false, "code"],
   ["file-scanner.clamav.file_scanner_v1_signature_mirror", "file-scanner/{v1} (signature mirror; as cvdupdate)", null, null, false, "code"],
   ["file-scanner.handler.libreoffice_versionof_poppler_utils_versionof", "libreoffice {versionOf}; poppler-utils {versionOf_2}", null, null, false, "code"],
   ["file-scanner.render.the_renderer_answered_status", "the renderer answered {status}", null, null, false, "code"],
+  ["file-scanner.render.the_renderer_could_not", "the renderer could not be reached", null, null, false, "code"],
+  ["file-scanner.routes.a_test_record_of", "a test record of zero counts was accepted", null, null, false, "code"],
+  ["file-scanner.routes.the_safe_view_reported_nothing", "the safe view reported nothing removed", null, null, false, "code"],
   ["file-scanner.routes.the_sandbox_was_still_running", "the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms", null, null, false, "code"],
+  ["file-scanner.routes.the_test_address_answered", "the test address answered listed", null, null, false, "code"],
+  ["file-scanner.routes.the_test_address_did", "the test address did not answer listed", null, null, false, "code"],
   ["file-scanner.scanners.malware_scanning_scan_result", "Malware Scanning scan result", null, null, false, "code"],
   ["filing-templates.checks.a_templates_kind_is_written", "A template's kind is written as a kind is: lower-case letters, digits and underscores.", null, null, false, "code"],
   ["filing-templates.checks.name_the_reviewer_and_their", "Name the reviewer and their organisation, each in one line of at most 200 characters.", null, null, false, "code"],
@@ -16892,7 +17251,11 @@ var WORD_ROWS = Object.freeze([
   ["following.index.a_second_look_carries_a", "a second look carries a note: one line of at most {SECOND_LOOK_NOTE_MAX} characters, saying what to check", null, null, false, "code"],
   ["following.index.this_register_charges_price_the", "this register charges {price}; the refresh runs only once that price is accepted as shown", null, null, false, "code"],
   ["format-registry.formats.content_type_ct_matched_no", 'content type "{ct}" matched no registered format', null, null, false, "code"],
+  ["format-registry.formats.magic_doctype_root_tag", "magic: doctype/root tag in the first 1024 bytes", null, null, false, "code"],
   ["format-registry.formats.magic_hex_at_offset_0", "magic: {hex} at offset 0", null, null, false, "code"],
+  ["format-registry.formats.no_bytes_to_sniff", "no bytes were available to sniff", null, null, false, "code"],
+  ["format-registry.formats.no_content_type_declared", "no content type was declared", null, null, false, "code"],
+  ["format-registry.formats.no_magic_byte_match", "no registered magic-byte signature matched", null, null, false, "code"],
   ["hypotheses.checks.a_hypothesis_is_held_in", "A hypothesis is held in an inquiry, and this record is not one. Hold it in the inquiry it belongs to. Nothing was written.", null, null, false, "code"],
   ["hypotheses.checks.there_is_no_inquiry_here", "There is no inquiry here by that id that you can see. Nothing was written.", null, null, false, "code"],
   ["hypotheses.checks.there_is_no_note_of", "There is no note of yours by that number. Nothing was written.", null, null, false, "code"],
@@ -16901,12 +17264,19 @@ var WORD_ROWS = Object.freeze([
   ["hypotheses.index.the_leg_rests_on_target_2", "the leg rests on {target}, a member's shared note: narrative, never a leg (D18)", null, null, false, "code"],
   ["hypotheses.index.what_cites_the_derived_connection", "{what} cites the derived connection {id}, whose chain carries a {v1} hop{v2}: a lead, never a basis for a finding (K1487)", null, null, false, "code"],
   ["id-spaces.idspaces.a_fund_code_counts_only", "a fund code counts only when the fund name agrees too, and the {v1} end names no fund \u2014 a bare code is not counted", null, null, false, "code"],
+  ["id-spaces.idspaces.active_profiles_supply_no", "the active profiles supply no policy series or standard designation, so no citation of one can be recognised: finding none says nothing about whether the text cites a policy or a standard", null, null, false, "code"],
   ["id-spaces.idspaces.both_ends_are_publications_of", "both ends are publications of one system ({origin}); two publications of one source are one system, however many documents carry the value", null, null, false, "code"],
   ["id-spaces.idspaces.different_values_normal_normal_2", "different values ({normal}, {normal_2})", null, null, false, "code"],
+  ["id-spaces.idspaces.in_none_of_the_published", "in none of the {count} published vintage(s) searched", null, null, false, "code"],
+  ["id-spaces.idspaces.inside_reach_some_kinds", "{n} is inside the reach for some kinds and outside it for others (floors: {named})", null, null, false, "code"],
   ["id-spaces.idspaces.length_series_cannot_be_read", "{length} series cannot be read from the view, so a citation of one is not recognised", null, null, false, "code"],
+  ["id-spaces.idspaces.no_published_vintage_of", "no published vintage of the assessor's roll or lineage is held, so none was searched", null, null, false, "code"],
+  ["id-spaces.idspaces.no_reporter_data_held", "no reporter data is held (court-citations' data is not readable here, and none was passed)", null, null, false, "code"],
+  ["id-spaces.idspaces.no_reporter_data_held_for", "no reporter data is held for this reading: the data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS)", null, null, false, "code"],
   ["id-spaces.idspaces.one_value_via_in_two", "one value{via} in two independent systems, but the referent has not been read: a match counts only when what the value names agrees in both, and that is read, never inferred from the string", null, null, false, "code"],
   ["id-spaces.idspaces.one_value_via_two_independent", "one value{via}, two independent systems ({origin}, {origin_2}), and the fund names agree", null, null, false, "code"],
   ["id-spaces.idspaces.one_value_via_two_independent_2", "one value{via}, two independent systems ({origin}, {origin_2}), and the referent agrees on the caller's reading \u2014 a reading this module did not make and cannot check", null, null, false, "code"],
+  ["id-spaces.idspaces.same_value_names_different", "the same value names different things, on the caller's reading: not a match", null, null, false, "code"],
   ["id-spaces.idspaces.the_forms_joined_through_the", " (the forms joined through the crosswalk {sources})", null, null, false, "code"],
   ["id-spaces.idspaces.the_fund_names_differ_as", "the fund names differ as written ({name} / {name_2}); whether they name one fund is a reading nobody has supplied, so the match is not counted", null, null, false, "code"],
   ["id-spaces.idspaces.the_values_are_in_different", "the values are in different forms of the {label} ({form}, {form_2}); two forms join only through a captured crosswalk, and none is captured between them in the active profiles, so the two stay unjoined: an unmade join, not a mismatch", null, null, false, "code"],
@@ -16925,10 +17295,29 @@ var WORD_ROWS = Object.freeze([
   ["image-codecs.dctdecode.huffman_table_missing_for_component", "Huffman table missing for component {id}", null, null, false, "code"],
   ["image-codecs.dctdecode.huffman_table_of_total_symbols", "Huffman table of {total} symbols {v1}", null, null, false, "code"],
   ["image-codecs.dctdecode.length_of_nc_components_in", "{length} of {nc} components in the first scan", null, null, false, "code"],
+  ["image-codecs.dctdecode.libjpeg_s_default_for_three", "libjpeg's default for three components", null, null, false, "code"],
   ["image-codecs.dctdecode.marker_0x_m_runs_past", "marker 0x{m} runs past end", null, null, false, "code"],
   ["image-codecs.dctdecode.quantisation_table_tq_missing", "quantisation table {tq} missing", null, null, false, "code"],
   ["image-codecs.dctdecode.v1_codes_of_l_bits", "{v1} codes of {l} bits overflow the code space, or use the all-ones code", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_custom_huffman_table_the", "a custom Huffman table the segment does not refer to", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_custom_huffman_table_with", "a custom Huffman table with no end", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_generic_region_of_unknown", "a generic region of unknown length never ends", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_halftone_region_with_no", "a halftone region with no pattern dictionary", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_huffman_code_no_table", "a Huffman code no table line holds", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_huffman_coded_symbol_dictionary", "a Huffman-coded symbol dictionary or text region refines its symbols", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_page_of_unknown_height", "a page of unknown height that is not striped", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_pattern_of_no_size", "a pattern of no size", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_refined_symbol_of_negative", "a refined symbol of negative size", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_refinement_aggregate_symbol_of", "a refinement/aggregate symbol of no instances", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_region_s_colour_extension", "a region's colour-extension flag (T.88 Amendment 3) is set", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_repeated_symbol_id_length", "a repeated symbol-id length with nothing before it", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_segment_type_t_88", "a segment type T.88 does not define", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_symbol_dictionary_reuses_a", "a symbol dictionary reuses a previous dictionary's arithmetic contexts", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_symbol_id_length_code", "a symbol-id length code outside the run table", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_text_region_with_no", "a text region with no end", null, null, false, "code"],
   ["image-codecs.jbig2decode.adaptive_template_pixel_ax_ay", "adaptive template pixel ({ax},{ay}) is not yet decoded", null, null, false, "code"],
+  ["image-codecs.jbig2decode.an_export_run_past_the", "an export run past the symbols", null, null, false, "code"],
+  ["image-codecs.jbig2decode.an_extension_segment_the_decoder", "an extension segment the decoder must understand and does not", null, null, false, "code"],
   ["image-codecs.jbig2decode.bitmap_of_w_x_h", "bitmap of {w}x{h} pixels is beyond any page", null, null, false, "code"],
   ["image-codecs.jbig2decode.generic_refinement_region_template_template", "generic refinement region, template {template}{v1}", null, null, false, "code"],
   ["image-codecs.jbig2decode.generic_region_arithmetic_template_template", "generic region, arithmetic, template {template}{v1}", null, null, false, "code"],
@@ -16940,43 +17329,69 @@ var WORD_ROWS = Object.freeze([
   ["image-codecs.jbig2decode.mmr_data_ends_or_breaks", "MMR data ends or breaks in row {y} of {h}", null, null, false, "code"],
   ["image-codecs.jbig2decode.mmr_data_ends_or_breaks_2", "MMR data ends or breaks in row {y} of {h}", null, null, false, "code"],
   ["image-codecs.jbig2decode.mmr_row_y_runs_backwards", "MMR row {y} runs backwards", null, null, false, "code"],
+  ["image-codecs.jbig2decode.more_symbol_id_lengths_than", "more symbol-id lengths than symbols", null, null, false, "code"],
   ["image-codecs.jbig2decode.oob_where_what_is_required", "OOB where {what} is required", null, null, false, "code"],
+  ["image-codecs.jbig2decode.refinement_adaptive_pixel_is_not", "refinement adaptive pixel is not yet decoded", null, null, false, "code"],
   ["image-codecs.jbig2decode.refinement_of_symbol_id_of", "refinement of symbol {id} of {length}", null, null, false, "code"],
   ["image-codecs.jbig2decode.segment_number_of_type_type", "segment {number} of type {type} has an unknown length", null, null, false, "code"],
   ["image-codecs.jbig2decode.symbol_id_id_of_length", "symbol id {id} of {length}", null, null, false, "code"],
   ["image-codecs.jbig2decode.the_generic_regions_arithmetic_data", "the generic region's arithmetic data ran out ({overrun} bytes short)", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_halftone_region_s_arithmetic", "the halftone region's arithmetic data ran out", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_pattern_dictionary_s_arithmetic", "the pattern dictionary's arithmetic data ran out", null, null, false, "code"],
   ["image-codecs.jbig2decode.the_refinement_regions_arithmetic_data", "the refinement region's arithmetic data ran out ({overrun} bytes short)", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_stream_holds_more_than", "the stream holds more than one page", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_stream_holds_no_page", "the stream holds no page information segment", null, null, false, "code"],
   ["image-codecs.jbig2decode.the_symbol_dictionarys_arithmetic_data", "the symbol dictionary's arithmetic data ran out ({overrun} bytes short)", null, null, false, "code"],
   ["image-codecs.jbig2decode.the_text_regions_arithmetic_data", "the text region's arithmetic data ran out ({overrun} bytes short)", null, null, false, "code"],
   ["image-codecs.jbig2decode.what_n_bytes_needed_v1", "{what}: {n} bytes needed, {v1} left", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_code_block_larger_than", "a code-block larger than 4096 samples", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_code_block_of_31", "a code-block of 31 or more bit-planes", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_colour_transform_over_mixed", "a colour transform over mixed wavelets", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_marker_segment_length_under", "a marker segment length under 2", null, null, false, "code"],
   ["image-codecs.jpxdecode.a_packets_code_block_data", "a packet's code-block data runs past the tile ({v1} bytes)", null, null, false, "code"],
+  ["image-codecs.jpxdecode.an_image_and_tile_geometry", "an image and tile geometry the standard does not allow", null, null, false, "code"],
+  ["image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound", null, null, false, "code"],
   ["image-codecs.jpxdecode.marker_0x_m_where_sot", "marker 0x{m} where SOT was expected", null, null, false, "code"],
   ["image-codecs.jpxdecode.nc_components_only_1_grey", "{nc} components; only 1 (grey) or 3 (colour) are decoded here", null, null, false, "code"],
   ["image-codecs.jpxdecode.no_quantisation_step_for_band", "no quantisation step for band {bi}", null, null, false, "code"],
   ["image-codecs.jpxdecode.prec_bit_samples_only_8", "{prec}-bit samples; only 8-bit are decoded here", null, null, false, "code"],
   ["image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_codestream_ends_before_any", "the codestream ends before any tile", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_codestream_uses_part_15", "the codestream uses Part 15 (HTJ2K) block coding", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_image_s_samples_index", "the image's samples index a palette (pclr box)", null, null, false, "code"],
   ["image-codecs.jpxdecode.the_jp2_box_type_runs", "the JP2 box '{type}' runs past the data", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_jp2_file_holds_no", "the JP2 file holds no codestream (jp2c box)", null, null, false, "code"],
   ["image-codecs.jpxdecode.the_tiles_packets_run_out", "the tile's packets run out at packet {v1} of {length}", null, null, false, "code"],
   ["image-codecs.jpxdecode.tile_part_of_tile_isot", "tile-part of tile {isot} runs past the codestream", null, null, false, "code"],
   ["image-codecs.jpxdecode.what_runs_past_the_codestream", "{what} runs past the codestream", null, null, false, "code"],
+  ["image-codecs.pngdecode.a_chunk_the_decoder_must", "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines", null, null, false, "code"],
   ["image-codecs.pngdecode.a_chunk_type_that_is", "a chunk type that is not four letters at byte {p}", null, null, false, "code"],
   ["image-codecs.pngdecode.a_plte_of_length_bytes", "a PLTE of {length} bytes", null, null, false, "code"],
   ["image-codecs.pngdecode.an_ihdr_of_len_bytes", "an IHDR of {len} bytes, not 13", null, null, false, "code"],
+  ["image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound", null, null, false, "code"],
   ["image-codecs.pngdecode.bit_depth_depth_with_colour", "bit depth {depth} with colour type {colourType}", null, null, false, "code"],
   ["image-codecs.pngdecode.filter_type_f_in_row", "filter type {f} in row {y}", null, null, false, "code"],
   ["image-codecs.pngdecode.palette_index_v_past_the", "palette index {v} past the palette's {entries} entries", null, null, false, "code"],
   ["image-codecs.pngdecode.the_data_ends_at_byte", "the data ends at byte {p}, before an IEND chunk", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image", null, null, false, "code"],
   ["image-codecs.pngdecode.the_first_chunk_is_type", "the first chunk is {type}, not IHDR", null, null, false, "code"],
   ["image-codecs.pngdecode.the_image_data_does_not", "the image data does not inflate (row {y} of {H})", null, null, false, "code"],
   ["image-codecs.pngdecode.the_image_data_ends_after", "the image data ends after {y} of {H} rows", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_image_data_inflates_past", "the image data inflates past the frame", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_image_data_s_zlib", "the image data's zlib trailer is damaged or missing", null, null, false, "code"],
   ["image-codecs.pngdecode.the_type_chunk_at_byte", "the {type} chunk at byte {p} runs past the data", null, null, false, "code"],
   ["image-codecs.pngdecode.the_type_chunk_declares_a", "the {type} chunk declares a length past 2^31 - 1", null, null, false, "code"],
   ["image-codecs.pngdecode.the_type_chunks_crc_does", "the {type} chunk's CRC does not match its data", null, null, false, "code"],
   ["image-cover.geometry.area_i_lies_wholly_outside", "area {i} lies wholly outside the {DW} x {DH} picture", null, null, false, "code"],
   ["image-cover.geometry.the_photo_declares_w_x", "the photo declares {w} x {h} pixels, over the {max} this module covers", null, null, false, "code"],
   ["image-cover.index.the_image_is_length_bytes", "the image is {length} bytes, over the {COVER_MAX_BYTES} this module reads", null, null, false, "code"],
+  ["image-cover.index.the_images_bytes_are_not_a_byte_array", "the image's bytes are not a byte array", null, null, false, "code"],
   ["image-cover.index.the_images_structure_cannot_be", "the image's structure cannot be walked ({v1})", null, null, false, "code"],
   ["image-cover.index.the_photo_is_length_bytes", "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module covers", null, null, false, "code"],
+  ["image-cover.index.the_photo_is_neither_a_jpeg_nor_a_png", "the photo is neither a JPEG nor a PNG", null, null, false, "code"],
+  ["image-cover.index.the_photos_bytes_are_not_a_byte_array", "the photo's bytes are not a byte array", null, null, false, "code"],
   ["image-cover.jpeg.multi_scan_sequential_length_of", "multi-scan sequential: {length} of {nc} components in the first scan", null, null, false, "code"],
   ["image-cover.jpeg.the_jpeg_data_cannot_be", "the JPEG data cannot be read{v1}", null, null, false, "code"],
   ["image-cover.jpeg.the_jpeg_data_ends_before", "the JPEG data ends before the image does{v1}", null, null, false, "code"],
@@ -16985,10 +17400,18 @@ var WORD_ROWS = Object.freeze([
   ["image-cover.png.png_colour_type_ct_is", "PNG colour type {ct} is not defined", null, null, false, "code"],
   ["image-cover.png.the_png_data_cannot_be", "the PNG data cannot be read: {why}", null, null, false, "code"],
   ["image-cover.png.the_png_data_ends_before", "the PNG data ends before the image does: {why}", null, null, false, "code"],
+  ["image-cover.strip.a_box_header_runs_past_its_container", "a box header runs past its container", null, null, false, "code"],
+  ["image-cover.strip.a_chunk_runs_past_the_end_of_the_file", "a chunk runs past the end of the file", null, null, false, "code"],
   ["image-cover.strip.a_chunk_type_that_is", "a chunk type that is not four letters at byte {p}", null, null, false, "code"],
+  ["image-cover.strip.a_marker_runs_past_the_end_of_the_codestream", "a marker runs past the end of the codestream", null, null, false, "code"],
+  ["image-cover.strip.a_scan_before_the_frame_header", "a scan before the frame header", null, null, false, "code"],
   ["image-cover.strip.a_second_frame_header_hex", "a second frame header {hex} outside a hierarchical image", null, null, false, "code"],
   ["image-cover.strip.a_second_soi_at_byte", "a second SOI at byte {p}", null, null, false, "code"],
+  ["image-cover.strip.a_tile_part_header_marker_runs_past_its_tile_part", "a tile-part header marker runs past its tile-part", null, null, false, "code"],
+  ["image-cover.strip.a_tile_part_header_runs_past_its_tile_part", "a tile-part header runs past its tile-part", null, null, false, "code"],
   ["image-cover.strip.a_tile_part_length_of", "a tile-part length of {psot}", null, null, false, "code"],
+  ["image-cover.strip.a_tile_part_runs_past_the_end_of_the_codestream", "a tile-part runs past the end of the codestream", null, null, false, "code"],
+  ["image-cover.strip.a_vp8x_chunk_out_of_place_or_short", "a VP8X chunk out of place or short", null, null, false, "code"],
   ["image-cover.strip.an_lzw_minimum_code_size", "an LZW minimum code size of {v1}", null, null, false, "code"],
   ["image-cover.strip.block_hex_at_byte_p", "block {hex} at byte {p} is neither an extension, an image nor the trailer", null, null, false, "code"],
   ["image-cover.strip.box_type_declares_length_len", "box {type} declares length {len}", null, null, false, "code"],
@@ -16996,6 +17419,7 @@ var WORD_ROWS = Object.freeze([
   ["image-cover.strip.box_type_s_length_runs", "box {type}'s length runs past its container", null, null, false, "code"],
   ["image-cover.strip.chunk_fourcc_runs_past_the", "chunk {fourcc} runs past the RIFF's end", null, null, false, "code"],
   ["image-cover.strip.chunk_type_declares_length_len", "chunk {type} declares length {len}", null, null, false, "code"],
+  ["image-cover.strip.chunk_type_runs_past_the_end_of_the_file", "chunk {type} runs past the end of the file", null, null, false, "code"],
   ["image-cover.strip.expected_sot_at_byte_p", "expected SOT at byte {p}", null, null, false, "code"],
   ["image-cover.strip.marker_hex_declares_length_len", "marker {hex} declares length {len}", null, null, false, "code"],
   ["image-cover.strip.marker_hex_declares_length_len_2", "marker {hex} declares length {len}", null, null, false, "code"],
@@ -17005,11 +17429,20 @@ var WORD_ROWS = Object.freeze([
   ["image-cover.strip.no_marker_at_byte_at", "no marker at byte {at}", null, null, false, "code"],
   ["image-cover.strip.no_marker_at_byte_p", "no marker at byte {p}", null, null, false, "code"],
   ["image-cover.strip.reserved_marker_hex_at_byte", "reserved marker {hex} at byte {p}", null, null, false, "code"],
+  ["image-cover.strip.the_box_after_the_signature_is_not_ftyp", "the box after the signature is not ftyp", null, null, false, "code"],
+  ["image-cover.strip.the_file_ends_before_the_image_data", "the file ends before the image data", null, null, false, "code"],
+  ["image-cover.strip.the_file_ends_before_the_trailer", "the file ends before the trailer", null, null, false, "code"],
+  ["image-cover.strip.the_file_ends_inside_a_marker", "the file ends inside a marker", null, null, false, "code"],
+  ["image-cover.strip.the_file_ends_inside_an_extension", "the file ends inside an extension", null, null, false, "code"],
   ["image-cover.strip.the_file_ends_inside_scan", "the file ends inside scan {scans}'s data", null, null, false, "code"],
   ["image-cover.strip.the_file_ends_inside_scan_2", "the file ends inside scan {scans}'s data", null, null, false, "code"],
+  ["image-cover.strip.the_file_ends_inside_the_global_colour_table", "the file ends inside the global colour table", null, null, false, "code"],
+  ["image-cover.strip.the_file_ends_inside_the_image_descriptor", "the file ends inside the image descriptor", null, null, false, "code"],
+  ["image-cover.strip.the_file_ends_inside_the_screen_descriptor", "the file ends inside the screen descriptor", null, null, false, "code"],
   ["image-cover.strip.the_file_ends_inside_what", "the file ends inside {what}", null, null, false, "code"],
   ["image-cover.strip.the_fmt_data_ends_before", "the {fmt} data ends before the image does: {why}", null, null, false, "code"],
   ["image-cover.strip.the_fmt_s_structure_cannot", "the {fmt}'s structure cannot be walked: {why}", null, null, false, "code"],
+  ["image-cover.strip.the_trailer_before_any_image", "the trailer before any image", null, null, false, "code"],
   ["inquiry-grammar.checks.dividing_a_question_says_the", "Dividing a question says the team asked one thing when it was really asking two, and that is a judgement about the team's own work. The credential that asked here is an automated one: it may raise questions and gather what they rest on, and may not restructure them. Sign in to divide it.", null, null, false, "code"],
   ["inquiry-grammar.grammar.add_a_grounds_row_for", "add a grounds[] row for '{label}' with asserted_by and at", null, null, false, "code"],
   ["inquiry-grammar.grammar.add_a_references_entry_for", "add a references[] entry for '{t}'", null, null, false, "code"],
@@ -17338,7 +17771,10 @@ var WORD_ROWS = Object.freeze([
   ["journey-check.walker.step_label_failed_v1", 'step "{label}" failed: {v1}', null, null, false, "code"],
   ["journey-check.walker.the_designs_rule_for_group", `the design's rule for "group" could not be read: {v1}`, null, null, false, "code"],
   ["jurisdictions.index.a_different_profile_with_id", "a different profile with id '{id}' was given earlier", null, null, false, "code"],
+  ["jurisdictions.index.a_source_has_a_citation", "a source has one field, citation, which is non-empty", null, null, false, "code"],
+  ["jurisdictions.index.a_template_is_fields_never_bare", "a template is {{fields}}, never bare text", null, null, false, "code"],
   ["jurisdictions.index.a_v1_entry_carries_a", "a {v1} entry carries a level, one of {LAW_LEVELS}", null, null, false, "code"],
+  ["jurisdictions.index.amount_is_amount_and_units", "an amount is {amount, units}, a positive integer of one of {units_list}", null, null, false, "code"],
   ["jurisdictions.index.an_entry_with_no_level", "an entry with no level names its issuer's sector, one of {SECTORS}", null, null, false, "code"],
   ["jurisdictions.index.applies_on_is_a_non", "applies_on is a non-empty list of {WEEKDAYS}, each once", null, null, false, "code"],
   ["jurisdictions.index.body_keeps_one_fiscal_year", "{body} keeps one fiscal year", null, null, false, "code"],
@@ -17352,6 +17788,7 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.does_says_what_the_body", "does says what the body does and for whom, 1 to {POINTER_DOES_MAX} characters", null, null, false, "code"],
   ["jurisdictions.index.fact_is_given_twice_for", "{fact} is given twice for this venue", null, null, false, "code"],
   ["jurisdictions.index.fact_is_one_of_venue", "fact is one of {VENUE_FACTS}", null, null, false, "code"],
+  ["jurisdictions.index.family_dropped_from_view", "the family is dropped from the view: a citation of it is recognised by no profile until they agree", null, null, false, "code"],
   ["jurisdictions.index.field_is_one_of_policy", "field is one of {POLICY_HEADER_FIELDS}", null, null, false, "code"],
   ["jurisdictions.index.form_is_named_twice_in", "'{form}' is named twice in {name}", null, null, false, "code"],
   ["jurisdictions.index.forum_kind_is_one_of", "forum_kind is one of {FORUM_KINDS}", null, null, false, "code"],
@@ -17363,6 +17800,7 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.how_is_one_of_pointer", "how is one of {POINTER_HOW}", null, null, false, "code"],
   ["jurisdictions.index.how_is_one_of_venue", "how is one of {VENUE_HOW}", null, null, false, "code"],
   ["jurisdictions.index.id_is_given_twice_in", "'{id}' is given twice in the profile", null, null, false, "code"],
+  ["jurisdictions.index.instrument_key_conflict", "the active profiles give different instrument-key segments, so no key is composed", null, null, false, "code"],
   ["jurisdictions.index.k_is_not_a_field", "'{k}' is not a field here", null, null, false, "code"],
   ["jurisdictions.index.k_is_not_a_section", "'{k}' is not a section of a profile", null, null, false, "code"],
   ["jurisdictions.index.key_is_given_twice", "'{key}' is given twice", null, null, false, "code"],
@@ -17386,11 +17824,17 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.level_is_one_of_law", "level is one of {LAW_LEVELS}", null, null, false, "code"],
   ["jurisdictions.index.level_is_one_of_law_2", "level is one of {LAW_LEVELS}", null, null, false, "code"],
   ["jurisdictions.index.level_is_one_of_law_3", "level is one of {LAW_LEVELS}", null, null, false, "code"],
+  ["jurisdictions.index.local_day_undetermined", "its local day is undetermined", null, null, false, "code"],
+  ["jurisdictions.index.locale_conflict", "the active profiles name different locales, so none is given: a render asks for its fallback", null, null, false, "code"],
   ["jurisdictions.index.marker_is_one_of_meeting", "marker is one of {MEETING_MARKERS}", null, null, false, "code"],
   ["jurisdictions.index.markers_is_the_order_of", "markers is the order of subsection markers, from {SECTION_MARKERS}", null, null, false, "code"],
+  ["jurisdictions.index.minutes_due_conflict", "the active profiles give different periods after which absent minutes raise a question, so none is given", null, null, false, "code"],
   ["jurisdictions.index.name_is_a_title_of", "name is a title of at most {TEMPLATE_NAME_MAX} characters on one line", null, null, false, "code"],
   ["jurisdictions.index.name_is_not_one_of", "'{name}' is not one of {SPACES}", null, null, false, "code"],
   ["jurisdictions.index.name_is_the_bodys_own", "name is the body's own name, 1 to {POINTER_NAME_MAX} characters on one line", null, null, false, "code"],
+  ["jurisdictions.index.named_body_variants", "body-variant keys", null, null, false, "code"],
+  ["jurisdictions.index.named_identifiers", "identifiers", null, null, false, "code"],
+  ["jurisdictions.index.named_within", "organisations it is part of", null, null, false, "code"],
   ["jurisdictions.index.no_computation_entry_of_this", "no computation entry of this profile has key '{String}'", null, null, false, "code"],
   ["jurisdictions.index.no_counterparty_of_this_profile", "no counterparty of this profile has role '{o}'", null, null, false, "code"],
   ["jurisdictions.index.no_holidays_entry_of_this", "no holidays entry of this profile is in a list named '{String}'", null, null, false, "code"],
@@ -17408,6 +17852,8 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.organisation_is_a_key_the", "organisation is a key the body-variant map names, not '{String}'", null, null, false, "code"],
   ["jurisdictions.index.outcome_is_one_of_review", "outcome is one of {REVIEW_OUTCOMES}", null, null, false, "code"],
   ["jurisdictions.index.phrase_is_phrase_min_phrase", "phrase is {PHRASE_MIN}\u2013{PHRASE_MAX} characters on one line", null, null, false, "code"],
+  ["jurisdictions.index.receipt_on_closed_day", "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined", null, null, false, "code"],
+  ["jurisdictions.index.records_help_conflict", "the active profiles give different records-request help, so none is given: the page has no figure to show", null, null, false, "code"],
   ["jurisdictions.index.relation_is_one_of_amending", "relation is one of {AMENDING_RELATIONS}", null, null, false, "code"],
   ["jurisdictions.index.role_is_one_of_roster", "role is one of {ROSTER_ROLES}", null, null, false, "code"],
   ["jurisdictions.index.rule_is_one_of_computation", "rule is one of {COMPUTATION_RULES}", null, null, false, "code"],
@@ -17416,6 +17862,7 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.scheme_is_given_twice_2", "{scheme} is given twice", null, null, false, "code"],
   ["jurisdictions.index.sector_is_one_of_sectors", "sector is one of {SECTORS}", null, null, false, "code"],
   ["jurisdictions.index.shape_is_one_of_kind", "shape is one of {KIND_SHAPES}", null, null, false, "code"],
+  ["jurisdictions.index.sources_lists_one_public_source", "sources lists at least one public source, each with a citation", null, null, false, "code"],
   ["jurisdictions.index.starts_is_one_of_starts", "starts is one of {STARTS}", null, null, false, "code"],
   ["jurisdictions.index.status_is_fact_statuses_naming", "status is {FACT_STATUSES}, naming what the fact rests on", null, null, false, "code"],
   ["jurisdictions.index.string_is_neither_claim_nor", "'{String}' is neither claim nor a kind of this profile", null, null, false, "code"],
@@ -17460,6 +17907,7 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.the_standard_is_text_of", "the standard is text of at most {EVIDENCE_STANDARD_MAX} characters", null, null, false, "code"],
   ["jurisdictions.index.the_templates_f_is_missing", "the template's {f} is missing", null, null, false, "code"],
   ["jurisdictions.index.this_profile_has_no_space", "this profile has no space '{String}'", null, null, false, "code"],
+  ["jurisdictions.index.time_zone_conflict", "the active profiles name different time zones, so none is given: a time of day there is undetermined", null, null, false, "code"],
   ["jurisdictions.index.trigger_is_one_of_legal", "trigger is one of {LEGAL_FACT_TRIGGERS}", null, null, false, "code"],
   ["jurisdictions.index.units_is_one_of_units", "units is one of {UNITS}", null, null, false, "code"],
   ["jurisdictions.index.v1_in_locale_is_given", "{v1} in {locale} is given twice", null, null, false, "code"],
@@ -17469,8 +17917,14 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.v_is_given_twice_v1", "'{v}' is given twice {v1}", null, null, false, "code"],
   ["jurisdictions.index.v_is_not_a_value", "'{v}' is not a value in form '{v1}'", null, null, false, "code"],
   ["jurisdictions.index.value_is_text_of_at", "value is text of at most {VENUE_FACT_MAX} characters", null, null, false, "code"],
+  ["jurisdictions.index.weekend_conflict", "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined", null, null, false, "code"],
   ["jurisdictions.index.what_is_a_non_empty", "{what} is a non-empty string", null, null, false, "code"],
-  ["jurisdictions.index.year_is_listed_twice_for", "{year} is listed twice for {v1}{v2}", null, null, false, "code"],
+  ["jurisdictions.index.who_issues_undetermined", "who issues it is undetermined", null, null, false, "code"],
+  ["jurisdictions.index.within_is_amount_and_units", "within is {amount, units}, units one of {units_list}", null, null, false, "code"],
+  ["jurisdictions.index.year_listed_twice_for_all_offices", "{year} is listed twice for all offices", null, null, false, "code"],
+  ["jurisdictions.index.year_listed_twice_for_list_and_all_offices", "{year} is listed twice for the list {list} and all offices", null, null, false, "code"],
+  ["jurisdictions.index.year_listed_twice_for_list_and_the_same_offices", "{year} is listed twice for the list {list} and the same offices", null, null, false, "code"],
+  ["jurisdictions.index.year_listed_twice_for_the_same_offices", "{year} is listed twice for the same offices", null, null, false, "code"],
   ["leg-earning.index.basis_ord_rests_on_target", "basis[{ord}] rests on {target_id}, another team's finding, graded as the edition this leg names publishes it. This record holds no part of it, so it has no content row here", null, null, false, "code"],
   ["leg-earning.index.basis_ord_rests_on_target_2", "basis[{ord}] rests on {target_id}, which is an inquiry rather than a document. An inquiry has no capture and therefore no part to point at \u2014 the content axis ranges over documents (DEC-21), and this is undetermined and stated rather than a document-extent row invented for it", null, null, false, "code"],
   ["leg-earning.index.bundleid_is_a_members_authored", "{bundleId} is a member's authored observation: its bytes are the member's own words, recorded through op=testify, and nothing was read in from anywhere. The capture axis measures that act, so it earns no letter here \u2014 a {EARNED_CAPTURE_CEILING} would be true of the bytes and would read as strength the observation does not have. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter. Its grade is testimony, {TESTIMONY_GRADE}, on the testimony axis.", null, null, false, "code"],
@@ -17526,18 +17980,29 @@ var WORD_ROWS = Object.freeze([
   ["legistar-reader.index.a_kind_row_legistar_listed", "a {kind} row Legistar listed is no longer listed", null, null, false, "code"],
   ["legistar-reader.index.a_kind_row_was_added", "a {kind} row was added to Legistar's list", null, null, false, "code"],
   ["legistar-reader.index.a_legistar_web_api_address", "a Legistar Web API address of {client}/{endpoint}", null, null, false, "code"],
+  ["legistar-reader.index.a_meeting_is_now_marked", "a meeting is now marked cancelled", null, null, false, "code"],
+  ["legistar-reader.index.a_meeting_was_added_to", "a meeting was added to Legistar's list", null, null, false, "code"],
+  ["legistar-reader.index.a_meetings_date_or_time", "a meeting's date or time moved", null, null, false, "code"],
   ["legistar-reader.index.a_page_of_client_endpoint", "a page of {client}/{endpoint} is not a page of {client_2}/{endpoint_2}", null, null, false, "code"],
   ["legistar-reader.index.a_recorded_v1_changed", "a recorded {v1} changed", null, null, false, "code"],
   ["legistar-reader.index.all_length_rows_unchanged", "all {length} rows unchanged", null, null, false, "code"],
   ["legistar-reader.index.entry_i_carries_no_id", "entry {i} carries no {id}, the id field of every {endpoint} row", null, null, false, "code"],
   ["legistar-reader.index.entry_i_of_the_array", "entry {i} of the array is not an object", null, null, false, "code"],
+  ["legistar-reader.index.every_page_given_was_full", "every page given was full, so a further page may exist", null, null, false, "code"],
   ["legistar-reader.index.intact_of_length_rows_unchanged", "{intact} of {length} rows unchanged; {length_2} change{v1}", null, null, false, "code"],
+  ["legistar-reader.index.last_publication_an_upper_bound", "last publication, an upper bound", null, null, false, "code"],
   ["legistar-reader.index.legistar_web_api_capture", "Legistar Web API capture", null, null, false, "code"],
   ["legistar-reader.index.legistars_kind_for_this_meeting", "Legistar's {kind} for this meeting carries a new last-publication time", null, null, false, "code"],
+  ["legistar-reader.index.no_text_was_supplied_with", "no text was supplied with the address, so there is nothing to read", null, null, false, "code"],
+  ["legistar-reader.index.one_of_the_two_readings", "one of the two readings holds no rows, so an emptied list cannot be told from a failed read and nothing is claimed either way", null, null, false, "code"],
+  ["legistar-reader.index.the_address_names_a_client", "the address names a Legistar client but no endpoint", null, null, false, "code"],
+  ["legistar-reader.index.the_address_names_a_record", "the address names a record id but no endpoint", null, null, false, "code"],
   ["legistar-reader.index.the_address_names_the_legistar", 'the address names the Legistar endpoint "{name}", which this reader does not read', null, null, false, "code"],
   ["legistar-reader.index.the_bytes_are_json_but", "the bytes are JSON but not an array, as a list of {endpoint} is", null, null, false, "code"],
   ["legistar-reader.index.the_bytes_are_not_json", "the bytes are not JSON ({String})", null, null, false, "code"],
+  ["legistar-reader.index.the_captures_own_date_was", "the capture's own date was not given, so whether this end is still to come cannot be said", null, null, false, "code"],
   ["legistar-reader.index.the_record_carries_id_v1", "the record carries {id} {v1}, not the {record} its address names", null, null, false, "code"],
+  ["legistar-reader.index.the_same_row_was_read", "the same row was read twice with different facts; the first reading is kept", null, null, false, "code"],
   ["legistar-reader.index.the_two_readings_are_of", "the two readings are of different lists ({client}/{endpoint}, {client_2}/{endpoint_2})", null, null, false, "code"],
   ["lines.index.a_capacity_is_one_of", "a capacity is one of {CAPACITIES}", null, null, false, "code"],
   ["lines.index.a_line_holds_no_amount", "a line holds no amount ({money}): money given or received is a money fact", null, null, false, "code"],
@@ -17797,29 +18262,56 @@ var WORD_ROWS = Object.freeze([
   ["observation-log.vocabulary.v1_names_no_authority_a", "'{v1}' names no authority. A look is recorded when it carries an authority the record can name: {keys}. A look with none is not a weaker observation, it is an unrecordable one (RFC 2308's rule as STORE-AS-CACHE.md carries it)", null, null, false, "code"],
   ["observation-log.vocabulary.who_ran_over_this_document", "{who} ran over this document and found no entity references{v1}. This is a MEANING-level absence and says nothing about whether the document's TEXT was extracted, which is the content level", null, null, false, "code"],
   ["observation-log.vocabulary.who_ran_over_this_document_2", "{who} ran over this document and found {n} entity reference(s)", null, null, false, "code"],
+  ["ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist", null, null, false, "code"],
   ["ocr-worker.contract.measurements_md_2026_09_10", "MEASUREMENTS.md 2026-09-10 (CPDF-15) \u2014 tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy \u2014 and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.", null, null, false, "code"],
+  ["ocr-worker.contract.no_capture_with_that", "no capture with that sha in that store", null, null, false, "code"],
+  ["ocr-worker.contract.no_namespace_by_that_name", "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture", null, null, false, "code"],
+  ["ocr-worker.contract.pages_must_be_a_non", "pages must be a non-empty array of 0-based page numbers", null, null, false, "code"],
+  ["ocr-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none", null, null, false, "code"],
+  ["ocr-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this frame", null, null, false, "code"],
+  ["ocr-worker.contract.the_engine_returned_no_anchorable", "the engine returned no anchorable word for this page", null, null, false, "code"],
+  ["ocr-worker.contract.the_page_could_not", "the page could not be turned into pixels, and the renderer says why", null, null, false, "code"],
+  ["ocr-worker.contract.the_rendered_container_could_not", "the rendered container could not be read back to samples", null, null, false, "code"],
+  ["ocr-worker.contract.this_page_s_frame_is", "this page's frame is larger than the largest frame measured to complete", null, null, false, "code"],
   ["ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", null, null, false, "code"],
   ["ocr-worker.member.the_engine_boxed_boxes_region", "the engine boxed {boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.", null, null, false, "code"],
   ["ocr-worker.member.the_route_route_hands_back", "the {route} route hands back {mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.", null, null, false, "code"],
   ["ocr-worker.member.this_member_transcribes_one_page", "this member transcribes ONE PAGE PER INVOCATION and {length} further page(s) ({deferred}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.", null, null, false, "code"],
   ["ocr-worker.member.unanchored_region_s_the_engine", "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.", null, null, false, "code"],
   ["ocr-worker.member.unrated_region_s_came_back", "{unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.", null, null, false, "code"],
+  ["ocr-worker.pngsamples.a_scanline_uses_a_filter", "a scanline uses a filter type this reader does not implement", null, null, false, "code"],
+  ["ocr-worker.pngsamples.the_inflated_raster_is_shorter", "the inflated raster is shorter than the header's dimensions require", null, null, false, "code"],
   ["ocr-worker.tessengine.the_language_model_is_v1", "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) \u2014 a different model is a different measurement and this member's stated fidelity would not be about it", null, null, false, "code"],
+  ["odf-reader.odf.content_xml_byte_identical_across", "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)", null, null, false, "code"],
   ["odf-reader.odf.content_xml_could_not_be", "content.xml could not be read whole ({why})", null, null, false, "code"],
+  ["odf-reader.odf.content_xml_is_not_valid", "content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken", null, null, false, "code"],
+  ["odf-reader.odf.content_xml_is_not_valid_2", "content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken", null, null, false, "code"],
   ["odf-reader.odf.content_xml_is_over_the", "content.xml is over the declared-uncompressed text bound ({v1}), so it was not inflated and no digest was taken", null, null, false, "code"],
   ["odf-reader.odf.content_xml_not_read_its", "content.xml not read: its repeats expand past {boundName} (stated in evidentiary.undetermined and by text())", null, null, false, "code"],
+  ["odf-reader.odf.content_xml_not_read_over", "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())", null, null, false, "code"],
   ["odf-reader.odf.content_xml_references_length_package", "content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed", null, null, false, "code"],
+  ["odf-reader.odf.content_xml_with_text_list", "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents", null, null, false, "code"],
   ["odf-reader.odf.no_flavour_export_has_been", "no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed", null, null, false, "code"],
   ["odf-reader.odf.no_intra_link_odf_manifest", "no intra link: {ODF_MANIFEST_PART} could not be read ({manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)", null, null, false, "code"],
   ["odf-reader.odf.no_intra_link_odf_manifest_2", "no intra link: {ODF_MANIFEST_PART} lists no embedded member", null, null, false, "code"],
+  ["odf-reader.odf.no_odp_export_has_been", "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp", null, null, false, "code"],
   ["odf-reader.odf.part_odf_mimetype_part_is", "part: {ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified", null, null, false, "code"],
+  ["odf-reader.odf.the_bytes_are_not_an", "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken", null, null, false, "code"],
   ["odf-reader.odf.the_packages_central_directory_could", "the package's central directory could not be read ({why})", null, null, false, "code"],
   ["odf-reader.odf.the_sha256_of_the_flavour", "the sha256 of the .{flavour} package's content.xml member (inflated, length and CRC-32 verified){v1}, odf-evidentiary v{ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: {v2}", null, null, false, "code"],
+  ["odf-reader.odf.this_package_carries_no_meta", "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author", null, null, false, "code"],
+  ["office-readers.csv.declared_by_the_producer_in_the_bytes", "declared by the producer in the bytes", null, null, false, "code"],
+  ["office-readers.csv.every_multi_byte_sequence_in_the_signature_window", "every multi-byte sequence in the signature window is valid utf-8", null, null, false, "code"],
   ["office-readers.csv.length_candidates_are_equally_consistent", "{length} candidates are equally consistent over {length_2} lines: {map}", null, null, false, "code"],
   ["office-readers.csv.length_complete_line_s_in", "{length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything", null, null, false, "code"],
+  ["office-readers.csv.likely_not_certain_a_declared_type_is_a_claim", "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against", null, null, false, "code"],
+  ["office-readers.csv.likely_not_certain_validity_is_evidence", "likely, not certain: validity is evidence, not the producer's declaration", null, null, false, "code"],
   ["office-readers.csv.name_occurs_v1_time_s", "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines", null, null, false, "code"],
   ["office-readers.csv.no_candidate_map_occurs_a", "no candidate ({map}) occurs a consistent, non-zero number of times over {length} lines", null, null, false, "code"],
+  ["office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset", "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically", null, null, false, "code"],
   ["office-readers.docx.the_macro_enabled_flavour_variant", "the macro-enabled flavour {variant}, read as {format} (R33)", null, null, false, "code"],
+  ["office-readers.docx.word_document_xml_not_read_over_the_size_bound", "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())", null, null, false, "code"],
+  ["office-readers.docx.word_document_xml_unreadable_element_references", "word/document.xml unreadable: element references unavailable (stated)", null, null, false, "code"],
   ["office-readers.formats-xlsx.parts_content_types_part_and", "parts: {CONTENT_TYPES_PART} and {WORKBOOK_PART} present", null, null, false, "code"],
   ["op-declarations.index.an_act_or_a_draft", "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3)).", null, null, false, "code"],
   ["op-declarations.index.an_alias_of_a_declared", "An alias of a declared op (R21): its op's explanation serves it.", null, null, false, "code"],
@@ -17827,8 +18319,33 @@ var WORD_ROWS = Object.freeze([
   ["op-declarations.index.src_control_plane_ops_mjs_2", "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT \u2014 THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY \u2014 AND NO SESSION OF ANY ROLE REACHES IT.'", null, null, false, "code"],
   ["op-grades.marks.dec_300_5_over_the", "DEC-300 (5), over the kit at {MARKS_KIT_COMMIT}: the act weighs Reversible, so no mark is drawn for it", null, null, false, "code"],
   ["op-grades.t48.what_the_record_joins_a", "what the record joins a centre to, two rings out: the nodes and steps the connection graph draws on Explore connections, a person's Connections and the money trail (explore R21)", null, null, false, "code"],
+  ["pdf-pixels.imagecrop.the_document_is_encrypted_streams", "the document is encrypted; streams are ciphertext to this reader", null, null, false, "code"],
+  ["pdf-pixels.imagecrop.the_extent_names_a_page", "the extent names a page and no rectangle, so it names no one image to crop", null, null, false, "code"],
+  ["pdf-pixels.imagecrop.the_image_at_that_rectangle", "the image at that rectangle is inline in the content stream; extracting inline images is not built", null, null, false, "code"],
+  ["pdf-pixels.imagecrop.the_image_was_found_and", "the image was found and its samples could not be decoded here", null, null, false, "code"],
+  ["pdf-pixels.imagecrop.the_page_index_is_outside", "the page index is outside the document", null, null, false, "code"],
+  ["pdf-pixels.imagecrop.the_page_paints_more_than", "the page paints more than one image at exactly that rectangle", null, null, false, "code"],
+  ["pdf-pixels.imagecrop.the_page_paints_no_image", "the page paints no image at exactly that rectangle", null, null, false, "code"],
+  ["pdf-pixels.imagecrop.the_page_s_content_could", "the page's content could not be interpreted, so what it paints is undetermined", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.a_colour_space_other_than", "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.a_jbig2_image_is_1", "a JBIG2 image is 1 bit per sample", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.an_inline_image_reading_inline", "an inline image; reading inline images is not built", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.decoding_the_image_would_need", "decoding the image would need more memory than a decode may use here", null, null, false, "code"],
   ["pdf-pixels.pagepixels.the_colour_space_has_pdfcomps", "the colour space has {pdfComps} components; the image has {comps}", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_decoded_image_is_short", "the decoded image is short of its declared height", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_decoder_could_not_read", "the decoder could not read the image data", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_document_is_encrypted_streams", "the document is encrypted; streams are ciphertext to this reader", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_image_s_filter_chain", "the image's filter chain has no decoder here", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_image_s_sample_layout", "the image's sample layout has no decoder here", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_image_xobject_s_stream", "the image XObject's stream could not be read", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_jbig2globals_stream_could_not", "the /JBIG2Globals stream could not be read", null, null, false, "code"],
   ["pdf-pixels.pagepixels.the_jpeg_2000_image_is", "the JPEG 2000 image is {width}x{height}; the PDF declares {width_2}x{height_2}", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_carries_a_text", "the page carries a text layer; it does not need pixels", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_carries_marks_that", "the page carries marks that are not an embedded image", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_composes_several_images", "the page composes several images; compositing is not built", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_index_is_outside", "the page index is outside the document", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_object_could_not", "the page object could not be read", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_paints_no_image", "the page paints no image", null, null, false, "code"],
   ["pdf-worker.index.a_capture_is_read_from", "a capture is read from the namespace the caller names, and no namespace by that name exists on any instance this member can be bound to, so nothing was read. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message. This is NOT the same answer as NOT_FOUND, which says the namespace exists and holds no such capture.", null, null, false, "code"],
   ["pdf-worker.index.a_capture_lives_inside_one", "a capture lives inside one namespace and this member guesses none: the caller must say which. A default namespace here would read the real record for a caller who believed it was reading a scratch one.", null, null, false, "code"],
   ["people.index.said_grade_grade_because_because", "{said}, grade {grade}, because {because}", null, null, false, "code"],
@@ -18234,13 +18751,23 @@ var WORD_ROWS = Object.freeze([
   ["record-core.index.the_grammar_claims_part_of", "the grammar claims part of {name}, whose ids are {ids}; a slot is claimed whole. Nothing was registered.", null, null, false, "code"],
   ["record-core.index.the_instances_figures_are_already", "the instance's figures are already supplied by {module}; nothing was registered.", null, null, false, "code"],
   ["record-core.index.your_teams_civicsmith_could_not", "your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.", null, null, false, "code"],
+  ["record-grammar.bundle.adjust_the_later_record_timestamp_suffix", "adjust the later record timestamp suffix by one second, logged", null, null, false, "code"],
   ["record-grammar.bundle.annotation_file_name_does_not", "annotation file '{name}' does not match its id (expected '{expectedFile}')", null, null, false, "code"],
   ["record-grammar.bundle.annotation_file_name_is_not", "annotation file '{name}' is not a .json record", null, null, false, "code"],
   ["record-grammar.bundle.annotation_id_rid_does_not", "annotation id '{rid}' does not match the v1.1 timestamp-author grammar", null, null, false, "code"],
   ["record-grammar.bundle.annotation_record_name_does_not", "annotation record '{name}' does not parse", null, null, false, "code"],
   ["record-grammar.bundle.annotation_rid_does_not_belong", "annotation '{rid}' does not belong to parent '{folderName}'", null, null, false, "code"],
   ["record-grammar.bundle.annotations_open_is_annotations_open", "annotations_open is {annotations_open} but {pending} annotation record(s) are pending", null, null, false, "code"],
+  ["record-grammar.bundle.append_the_missing_session_log_entry", "append the missing Session Log entry naming the gap", null, null, false, "code"],
+  ["record-grammar.bundle.apply_disjoint_if_file_sets_prove", "apply-disjoint if file sets prove disjoint (requires history manifests)", null, null, false, "code"],
+  ["record-grammar.bundle.complete_consumption_archive_manifest_delete_consumed", "complete consumption: archive manifest, delete consumed files (idempotent)", null, null, false, "code"],
+  ["record-grammar.bundle.complete_consumption_or_discard_with_reason", "complete consumption or discard with reason", null, null, false, "code"],
   ["record-grammar.bundle.current_state_cur_is_not", "current_state '{cur}' is not legal for {ot} (legal: {legal})", null, null, false, "code"],
+  ["record-grammar.bundle.data_changes_json_records_were_mutated", "data/changes.json records were mutated or removed (append-only surface)", null, null, false, "code"],
+  ["record-grammar.bundle.delete_the_stale_claim_or_presence", "delete the stale claim or presence marker", null, null, false, "code"],
+  ["record-grammar.bundle.discard_the_package_never_promote", "discard the package (never promote)", null, null, false, "code"],
+  ["record-grammar.bundle.discard_the_package_with_a_finding", "discard the package with a finding to the producing author", null, null, false, "code"],
+  ["record-grammar.bundle.discard_with_reason_if_superseded_preserving", "discard with reason if superseded, preserving the manifest as a record", null, null, false, "code"],
   ["record-grammar.bundle.duplicate_annotation_id_rid", "duplicate annotation id '{rid}'", null, null, false, "code"],
   ["record-grammar.bundle.duplicate_manifest_key_key", "duplicate manifest key '{key}'", null, null, false, "code"],
   ["record-grammar.bundle.escaped_markdown_character_v1_in", "escaped markdown character '{v1}' in {path}", null, null, false, "code"],
@@ -18263,15 +18790,23 @@ var WORD_ROWS = Object.freeze([
   ["record-grammar.bundle.manifest_files_entry_stringify_lacks", "manifest files entry {stringify} lacks name+sha256", null, null, false, "code"],
   ["record-grammar.bundle.manifest_keys_out_of_order", "manifest keys out of order at '{key}'", null, null, false, "code"],
   ["record-grammar.bundle.manifest_target_target_does_not", "manifest target '{target}' does not match record '{folderName}'", null, null, false, "code"],
+  ["record-grammar.bundle.map_to_the_nearest_vocabulary_value", "map to the nearest vocabulary value", null, null, false, "code"],
   ["record-grammar.bundle.object_type_ot_is_not", "object_type '{ot}' is not a known type", null, null, false, "code"],
   ["record-grammar.bundle.orphaned_pending_file_p_with", "orphaned pending file '{p}' with no manifest", null, null, false, "code"],
   ["record-grammar.bundle.package_file_name_pending_listed", "package file '{name}.pending' listed in manifest is missing", null, null, false, "code"],
   ["record-grammar.bundle.path_does_not_parse_as", "{path} does not parse as JSON", null, null, false, "code"],
   ["record-grammar.bundle.pending_file_p_is_not", "pending file '{p}' is not listed in the manifest", null, null, false, "code"],
+  ["record-grammar.bundle.pending_package_base_matches_live_bundle", "pending package base matches live bundle.md: fast-forward eligible", null, null, false, "code"],
   ["record-grammar.bundle.pending_package_base_string_does", "pending package base {String}\u2026 does not match live bundle.md {liveHash}\u2026: divergence", null, null, false, "code"],
   ["record-grammar.bundle.pending_package_is_floor_days", "pending package is {floor} days old (policy {maxPackageAgeDays})", null, null, false, "code"],
   ["record-grammar.bundle.preserved_refusal_payload_p_has", "preserved refusal payload '{p}' has no refusal record at '{sibling}'", null, null, false, "code"],
   ["record-grammar.bundle.promotion_record_for_key_is", "promotion record for '{key}' is missing", null, null, false, "code"],
+  ["record-grammar.bundle.re_produce_the_package_from_the", "re-produce the package from the originating session outputs", null, null, false, "code"],
+  ["record-grammar.bundle.rebase_via_a_reconciliation_session", "rebase via a reconciliation session", null, null, false, "code"],
+  ["record-grammar.bundle.rebuild_manifest_entry_from_surviving_files", "rebuild manifest entry from surviving files", null, null, false, "code"],
+  ["record-grammar.bundle.record_a_history_loss_finding_and", "record a history-loss finding and re-snapshot current state", null, null, false, "code"],
+  ["record-grammar.bundle.record_a_tamper_finding_if_history", "record a tamper finding if history lacks the original", null, null, false, "code"],
+  ["record-grammar.bundle.record_has_been_updated_but_carries", "record has been updated but carries no Session Log entry", null, null, false, "code"],
   ["record-grammar.bundle.references_i_is_not_an", "references[{i}] is not an object", null, null, false, "code"],
   ["record-grammar.bundle.references_i_rel_rel_is", "references[{i}].rel '{rel}' is not in the closed vocabulary", null, null, false, "code"],
   ["record-grammar.bundle.references_i_rel_rel_is_2", "references[{i}].rel '{rel}' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim", null, null, false, "code"],
@@ -18283,14 +18818,24 @@ var WORD_ROWS = Object.freeze([
   ["record-grammar.bundle.references_i_target_t_does", "references[{i}].target '{t}' does not match the canonical ID grammar", null, null, false, "code"],
   ["record-grammar.bundle.references_i_target_t_does_2", "references[{i}].target '{t}' does not resolve in the store", null, null, false, "code"],
   ["record-grammar.bundle.refusal_record_p_does_not", "refusal record '{p}' does not parse or names no outcome", null, null, false, "code"],
+  ["record-grammar.bundle.remove_the_orphaned_preserved_payload", "remove the orphaned preserved payload", null, null, false, "code"],
+  ["record-grammar.bundle.remove_the_unexplained_refusal_artifacts", "remove the unexplained refusal artifacts", null, null, false, "code"],
   ["record-grammar.bundle.rename_alias_to_canonical", "rename '{alias}' to '{canonical}'", null, null, false, "code"],
+  ["record-grammar.bundle.rename_file_and_update_references", "rename file and update references", null, null, false, "code"],
+  ["record-grammar.bundle.rename_to_the_canonical_heading_preserving", "rename to the canonical heading, preserving body", null, null, false, "code"],
   ["record-grammar.bundle.required_core_field_key_is", "required core field '{key}' is missing", null, null, false, "code"],
   ["record-grammar.bundle.required_heading_h_is_missing", "required heading '{h}' is missing", null, null, false, "code"],
   ["record-grammar.bundle.required_heading_heading_is_missing", "required heading '{heading}' is missing: a member of a published case carries it", null, null, false, "code"],
+  ["record-grammar.bundle.restore_folder_name_from_frontmatter_id", "restore folder name from frontmatter id", null, null, false, "code"],
+  ["record-grammar.bundle.restore_frontmatter_id_from_folder_name", "restore frontmatter id from folder name if history confirms it", null, null, false, "code"],
+  ["record-grammar.bundle.restore_the_newer_bundle_md_from", "restore the newer bundle.md from history", null, null, false, "code"],
+  ["record-grammar.bundle.restore_the_refusal_record_from_history", "restore the refusal record from history", null, null, false, "code"],
   ["record-grammar.bundle.review_notes_content_from_the", "Review Notes content from the prior version is missing or altered (verbatim-immutable)", null, null, false, "code"],
+  ["record-grammar.bundle.schema_stamp_form", "schema stamp '{schema}' is not of the form <type>@<n>", null, null, false, "code"],
   ["record-grammar.bundle.schema_stamp_schema_does_not", "schema stamp '{schema}' does not match object_type '{ot}'", null, null, false, "code"],
   ["record-grammar.bundle.schema_version_schema_is_not", "schema version '{schema}' is not known to this check catalog", null, null, false, "code"],
   ["record-grammar.bundle.session_log_entry_header_from", "Session Log entry '{header}' from the prior version is missing (append-only surface)", null, null, false, "code"],
+  ["record-grammar.bundle.sever_the_edge_with_a_reason", "sever the edge with a reason note", null, null, false, "code"],
   ["record-grammar.bundle.snapshot_snappath_recorded_in_manifest", "snapshot '{snapPath}' recorded in manifest entry '{key}' is missing", null, null, false, "code"],
   ["record-grammar.bundle.stale_advisory_artifact_p_crashed", "stale advisory artifact '{p}' (crashed or ended actor)", null, null, false, "code"],
   ["record-grammar.bundle.state_history_i_is_not", "state_history[{i}] is not an object", null, null, false, "code"],
@@ -18301,7 +18846,9 @@ var WORD_ROWS = Object.freeze([
   ["record-grammar.frontmatter.array_item_indented_indent_expected", "array item indented {indent} (expected 2) at line {v1}", null, null, false, "code"],
   ["record-grammar.frontmatter.array_item_inside_a_map", "array item inside a map block '{topKey}' at line {v1}", null, null, false, "code"],
   ["record-grammar.frontmatter.array_item_outside_any_block", "array item outside any block at line {v1}", null, null, false, "code"],
+  ["record-grammar.frontmatter.bundle_md_does_not_begin_with", "bundle.md does not begin with a --- frontmatter fence", null, null, false, "code"],
   ["record-grammar.frontmatter.duplicate_top_level_key_key", "duplicate top-level key '{key}' at line {v1}", null, null, false, "code"],
+  ["record-grammar.frontmatter.frontmatter_fence_is_never_closed", "frontmatter fence is never closed", null, null, false, "code"],
   ["record-grammar.frontmatter.key_key_indented_indent_does", "key '{key}' indented {indent} does not fit the restricted grammar at line {v1}", null, null, false, "code"],
   ["record-grammar.frontmatter.line_v1_does_not_fit", "line {v1} does not fit the restricted grammar: {line}", null, null, false, "code"],
   ["record-grammar.frontmatter.re_indent_key_to_column", "re-indent '{key}' to column 0", null, null, false, "code"],
@@ -18359,29 +18906,68 @@ var WORD_ROWS = Object.freeze([
   ["review.index.withdrawing_a_grant_is_the", "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing one is (BIO_Publication \xA76A.2). An administrator sees every project and directs none of them.", null, null, false, "code"],
   ["roster-reader.columns.its_header_matches_the_views", "its header matches the view's words for more than one role ({hit}), so no role is named by guess", null, null, false, "code"],
   ["roster-reader.columns.no_column_is_named_name", "no column is named `name` or `employee_id`, so this table is not read as a roster{v1}", null, null, false, "code"],
+  ["roster-reader.columns.no_header_was_given", "no header was given: a table's roles are named from its header cells, a list", null, null, false, "code"],
+  ["roster-reader.columns.no_header_word_in_the_view", "no header word in the view names a role for it", null, null, false, "code"],
   ["roster-reader.columns.skipped_roster_header_entr_v1", "{skipped} roster header entr{v1} in the view name no known role or do not compile, and were not used", null, null, false, "code"],
+  ["roster-reader.columns.the_column_has_no_header", "the column has no header text, so no role is named", null, null, false, "code"],
+  ["roster-reader.columns.the_view_supplies_no_roster", "the view supplies no roster header words, so no column's role can be named", null, null, false, "code"],
   ["roster-reader.directory-refs.length_name_shaped_spans_remain", "{length} name-shaped spans remain on the entry's line, which may hold more than one person's text, so no name is read", null, null, false, "code"],
+  ["roster-reader.directory-refs.no_name_shaped_span_remains", "no name-shaped span remains on the entry's line once its address, phone numbers and staff titles are removed", null, null, false, "code"],
+  ["roster-reader.directory-refs.one_name_shaped_span_remains", "one name-shaped span remains on the entry's line once its address, phone numbers and staff titles are removed; a name alone is grade C", null, null, false, "code"],
+  ["roster-reader.directory-refs.the_entry_carries_no_line", "the entry carries no line to read a name from", null, null, false, "code"],
+  ["roster-reader.lines.the_line_states_a_two_digit", "the line states a two-digit year, which is not expanded", null, null, false, "code"],
   ["roster-reader.org-chart.boxes_of_length_lines_are", "{boxes} of {length} lines are box labels ({round}%), below {round_2}%: units and posts are mentioned here, not charted", null, null, false, "code"],
   ["roster-reader.org-chart.it_names_itself_a_chart", 'it names itself a chart ("{text}")', null, null, false, "code"],
+  ["roster-reader.org-chart.it_names_itself_with_the_views", "it names itself, with the view's words, as a roster and not as a chart", null, null, false, "code"],
   ["roster-reader.org-chart.its_median_line_is_mid", "its median line is {mid} words, longer than a box label ({CHART_SHORT}): this is running text", null, null, false, "code"],
+  ["roster-reader.org-chart.labelled_line_s_name_a", "{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labelled, {floor} boxes): this document does not lay out an organisation's boxes", null, null, false, "code"],
+  ["roster-reader.org-chart.neither_its_first_line_nor", "neither its first line nor the line before its self-naming line is a heading that names an organisation", null, null, false, "code"],
+  ["roster-reader.org-chart.no_line_among_the_documents_first", "no line among the document's first eight, or beside its self-naming line, states a date", null, null, false, "code"],
+  ["roster-reader.org-chart.no_reporting_relation_is_stated", "no reporting relation is stated in words; the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read", null, null, false, "code"],
+  ["roster-reader.org-chart.no_short_line_names_it_a", "no short line names it a chart with the view's words, so it is read as a chart on its boxes alone", null, null, false, "code"],
+  ["roster-reader.org-chart.no_text_was_read_so", "no text was read, so there are no boxes to recognise", null, null, false, "code"],
+  ["roster-reader.org-chart.reporting_relation_s_stated_in_words", "{count} reporting relation(s) stated in words; the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read", null, null, false, "code"],
   ["roster-reader.org-chart.round_of_its_lines_are", "{round}% of its lines are box labels; its median line is {mid} word(s)", null, null, false, "code"],
-  ["roster-reader.org-chart.v1_the_charts_boxes_and", "{v1}the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read", null, null, false, "code"],
+  ["roster-reader.source.an_organisation_chart_a_row", "an organisation chart: a row is a post whose holder is named on its own line; a box with no name, and any reporting line the drawing shows, are not rows", null, null, false, "code"],
   ["roster-reader.source.contact_contact_column_s_not", "{contact} contact column(s) not read", null, null, false, "code"],
+  ["roster-reader.source.held_as_a_table_read", "held as a table, read by roster-reader", null, null, false, "code"],
   ["roster-reader.source.length_held_roster_s_of", "{length} held roster(s) of this organisation the viewer may see, none of which could be read as a roster", null, null, false, "code"],
+  ["roster-reader.source.no_line_of_the_document", "no line of the document reads as a roster row", null, null, false, "code"],
+  ["roster-reader.source.no_post_in_the_chart", "no post in the chart names its holder on its own line", null, null, false, "code"],
+  ["roster-reader.source.no_read_of_the_store", "no read of the store was handed to roster-reader, so no held roster is read", null, null, false, "code"],
+  ["roster-reader.source.no_roster_document_or_roster", "no roster document or roster table of this organisation is held that the viewer may see", null, null, false, "code"],
+  ["roster-reader.source.no_row_of_the_table", "no row of the table carries a value in a roster column", null, null, false, "code"],
+  ["roster-reader.source.no_text_was_read_from", "no text was read from the held document, so it has no rows to read", null, null, false, "code"],
   ["roster-reader.source.reading_it_failed_msg", "reading it failed ({msg})", null, null, false, "code"],
+  ["roster-reader.source.the_held_document_carries_no", "the held document carries no text to read its rows from", null, null, false, "code"],
+  ["roster-reader.source.the_held_table_carries_no", "the held table carries no header, so its columns' roles cannot be named", null, null, false, "code"],
+  ["roster-reader.source.the_held_table_carries_no_2", "the held table carries no rows", null, null, false, "code"],
+  ["roster-reader.source.the_held_table_states_no", "the held table states no date of its own; a row's own `as_of` column, where it has one, is kept on the row", null, null, false, "code"],
+  ["roster-reader.source.the_item_is_not_a", "the item is not a held roster: it is not an object", null, null, false, "code"],
+  ["roster-reader.source.the_stores_read_answered_later", "the store's read answered later (a promise), and a roster source answers at once, so no held roster is read", null, null, false, "code"],
+  ["roster-reader.source.the_stores_read_answered_no", "the store's read answered no list of held rosters, so no held roster is read", null, null, false, "code"],
   ["roster-reader.source.the_stores_read_of_held", "the store's read of held rosters failed ({msg}), so no held roster is read", null, null, false, "code"],
   ["roster-reader.source.the_stores_read_refused_v1", "the store's read refused{v1}, so no held roster is read", null, null, false, "code"],
   ["roster-reader.source.unnamed_column_s_with_no", "{unnamed} column(s) with no role not read", null, null, false, "code"],
+  ["roster-reader.staff-roster.a_staff_or_membership", "a staff or membership roster", null, null, false, "code"],
   ["roster-reader.staff-roster.atdomain_distinct_addresses_at_one", "{atDomain} distinct addresses at one domain: this is a staff directory's shape, which staff_directory reads", null, null, false, "code"],
   ["roster-reader.staff-roster.boxes_line_s_print_a", "{boxes} line(s) print a post or unit with no name beside it, against {paired} row(s): posts laid out apart from their holders are a chart's boxes, not a roster's rows", null, null, false, "code"],
   ["roster-reader.staff-roster.contactlines_line_s_carry_a", "{contactLines} line(s) carry a contact point beside {paired} row(s): a directory or contact list, not a roster", null, null, false, "code"],
   ["roster-reader.staff-roster.dates_date_s_beside_paired", "{dates} date(s) beside {paired} row(s): the rows are dated events that name people, not a roster", null, null, false, "code"],
   ["roster-reader.staff-roster.it_names_itself_a_roster", 'it names itself a roster ("{text}")', null, null, false, "code"],
+  ["roster-reader.staff-roster.it_names_itself_with_the_views", "it names itself, with the view's words, as a chart and not as a roster", null, null, false, "code"],
   ["roster-reader.staff-roster.named_of_length_lines_carry", "{named} of {length} lines carry a name ({round}%), below {round_2}%: names are mentioned in this document, not listed", null, null, false, "code"],
   ["roster-reader.staff-roster.named_of_length_lines_carry_2", "{named} of {length} lines carry a name ({round}%)", null, null, false, "code"],
+  ["roster-reader.staff-roster.neither_its_first_line_nor", "neither its first line nor the line before its self-naming line is a heading that names an organisation", null, null, false, "code"],
+  ["roster-reader.staff-roster.no_line_among_the_documents_first", "no line among the document's first eight, or beside its self-naming line, states a date", null, null, false, "code"],
   ["roster-reader.staff-roster.no_row_could_be_read", "no row could be read from this {what} {v1}, so nothing is claimed about who left or joined", null, null, false, "code"],
+  ["roster-reader.staff-roster.no_short_line_names_it_a", "no short line names it a roster with the view's words, so it is read as a roster on its rows alone", null, null, false, "code"],
+  ["roster-reader.staff-roster.no_text_was_read_so", "no text was read, so there are no rows to recognise", null, null, false, "code"],
   ["roster-reader.staff-roster.paired_line_s_carry_a", "{paired} line(s) carry a name with more beside it, below the floor of {ROSTER_FLOOR}: the rows are not the body of this document", null, null, false, "code"],
   ["roster-reader.staff-roster.paired_line_s_carry_a_2", "{paired} line(s) carry a name with a title, unit or organisation beside it", null, null, false, "code"],
+  ["roster-reader.staff-roster.the_line_does_not_divide", "the line does not divide into a post and the names after it: what follows its colon is not names alone", null, null, false, "code"],
+  ["roster-reader.staff-roster.the_line_opens_with_a", "the line opens with a name but what follows it is not one of the view's staff titles, so where the name ends is not divided by guess", null, null, false, "code"],
+  ["roster-reader.staff-roster.the_line_prints_staff", "the line prints staff titles and names that do not divide into one name beside its title, so it is not paired by guess", null, null, false, "code"],
   ["roster-reader.staff-roster.the_what_lists_the_same", "the {what} lists the same rows, each saying what it said", null, null, false, "code"],
   ["roster-reader.staff-roster.the_what_now_lists_a", "the {what} now lists a row it did not", null, null, false, "code"],
   ["roster-reader.staff-roster.this_row_is_no_longer", "this row is no longer listed in the {what}", null, null, false, "code"],
@@ -18403,6 +18989,13 @@ var WORD_ROWS = Object.freeze([
   ["run-rules.rules.v1_names_no_bound_of", "'{v1}' names no bound of a run. The bounds a caller spends are {filter} (\xA714b.6); a figure for a bound that does not exist counts nothing. Nothing was written", null, null, false, "code"],
   ["run-rules.test-bar.stringify_has_not_passed_its", "{stringify} has not passed its bar on Civicsmith's test investigations, or what must come before it is not yet verified, and this is not a test instance (R29). Nothing was sent to the assistant", null, null, false, "code"],
   ["scheduler.index.the_key_key_is_one", "the key '{key}' is one of the answer's own fields or another consumer's", null, null, false, "code"],
+  ["sheet-worker.contract.loading_the_workbook_took_longer", "loading the workbook took longer than the time budget, so evaluation was not started", null, null, false, "code"],
+  ["sheet-worker.contract.no_capture_with_that_sha_in", "no capture with that sha in that store", null, null, false, "code"],
+  ["sheet-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none", null, null, false, "code"],
+  ["sheet-worker.contract.the_engine_did_not_load", "the engine did not load as the pinned build, so no workbook is recomputed", null, null, false, "code"],
+  ["sheet-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this workbook", null, null, false, "code"],
+  ["sheet-worker.contract.the_workbook_is_larger_than", "the workbook is larger than this member recomputes; nothing of it was recomputed", null, null, false, "code"],
+  ["sheet-worker.contract.the_workbook_refers_to_other", "the workbook refers to other workbooks, whose values are not here", null, null, false, "code"],
   ["sheet-worker.enginecore.the_engine_module_did_not", "the engine module did not instantiate: {String}", null, null, false, "code"],
   ["sheet-worker.enginecore.the_engine_reports_commit_commit", "the engine reports commit {commit}; the pinned build is {ENGINE_VERSION}", null, null, false, "code"],
   ["sheet-worker.enginecore.the_wasm_module_carries_length", "the wasm module carries {length} `{ENGINE_SECTION}` sections, not one", null, null, false, "code"],
@@ -18413,6 +19006,8 @@ var WORD_ROWS = Object.freeze([
   ["sheet-worker.member.errors_formula_cell_s_gave", '{errors} formula cell(s) gave an error value and are marked "{NOT_RECOMPUTED}" with a cause; an error here is not a disagreement with the file', null, null, false, "code"],
   ["sheet-worker.member.loading_took_elapsed_ms_the", "loading took {elapsed} ms; the budget is {timeBudgetMs} ms", null, null, false, "code"],
   ["sheet-worker.member.spill_cells_cell_s_hold", "{spill_cells} cell(s) hold an array formula's spilled values and are not listed; the formula is listed at its anchor", null, null, false, "code"],
+  ["sheet-worker.member.the_engine_failed_while_evaluating", "the engine failed while evaluating the workbook", null, null, false, "code"],
+  ["sheet-worker.member.the_engine_refused_the_workbook", "the engine refused the workbook while loading it", null, null, false, "code"],
   ["sheet-worker.member.the_workbook_holds_cells_cells", "the workbook holds {cells} cells; this member's bound is {maxCells}", null, null, false, "code"],
   ["sheet-worker.member.the_workbook_refers_to_other", "the workbook refers to other workbooks: {parts} external-link part(s), {formulas} formula(s) and {defined_names} defined name(s)", null, null, false, "code"],
   ["sheet-worker.member.the_workbook_unzips_to_more", "the workbook unzips to more than {maxUnzippedBytes} B, this member's bound; reading stopped at {unzipped_bytes} B", null, null, false, "code"],
@@ -18420,7 +19015,23 @@ var WORD_ROWS = Object.freeze([
   ["signin-door.index.signing_in_with_claude_is", "Signing in with Claude is not installed in your team's Civicsmith yet. Whoever installed your team's Civicsmith can add it.", null, null, false, "code"],
   ["signin-door.index.the_sign_in_trace_is", "the sign-in trace is kept only on a test instance of Civicsmith, and your team's Civicsmith is not one. Nothing was read.", null, null, false, "code"],
   ["signin-door.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in.", null, null, false, "code"],
+  ["site-profiles.aspnet-webforms.an_advertising_or_analytics", "an advertising or analytics slot", null, null, false, "code"],
+  ["site-profiles.aspnet-webforms.page_state_this_site_rebuilds", "page state this site rebuilds on every visit", null, null, false, "code"],
+  ["site-profiles.client-rendered.an_application_that_builds_its", "an application that builds its pages in the browser", null, null, false, "code"],
+  ["site-profiles.client-rendered.no_links_and_no_prose_in_the", "no links and no prose in the body", null, null, false, "code"],
   ["site-profiles.client-rendered.this_address_builds_its_page", "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first.", null, null, false, "code"],
+  ["site-profiles.index.a_file_the_page_needs", "a file the page needs in order to look the way the source published it has not been collected", null, null, false, "code"],
+  ["site-profiles.index.everything_around_the_document_itself", "everything around the document itself, such as navigation and footers", null, null, false, "code"],
+  ["site-profiles.index.everything_the_page_needs_to", "everything the page needs to read correctly is held; some decoration is not", null, null, false, "code"],
+  ["site-profiles.index.no_handler_recognised_this_document", "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported", null, null, false, "code"],
+  ["site-profiles.index.the_document_differs_and_this_kind", "the document differs and this kind of document is not recognised well enough to say whether the difference matters", null, null, false, "code"],
+  ["site-profiles.index.the_source_served_exactly_the_same", "the source served exactly the same document", null, null, false, "code"],
+  ["site-profiles.index.the_substance_and_the_appearance", "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs", null, null, false, "code"],
+  ["site-profiles.index.the_substance_is_the_same", "the substance is the same; something around it changed, such as navigation or related links", null, null, false, "code"],
+  ["site-profiles.index.the_substance_of_the_document", "the substance of the document differs", null, null, false, "code"],
+  ["site-profiles.wordpress.a_page_published_with_wordpress", "a page published with WordPress", null, null, false, "code"],
+  ["site-profiles.wordpress.a_version_stamp_on_a_design", "a version stamp on a design file", null, null, false, "code"],
+  ["site-profiles.wordpress.an_advertising_or_analytics", "an advertising or analytics slot", null, null, false, "code"],
   ["skills.skilldoctrine.11_and_14a_and_sk", "\xA711 and \xA714a, and SK-1 landed the recording half: a run that cannot say which pack it ran under is refused at the door, so this clause is a reading instruction rather than a requirement it could fail to meet.", null, null, false, "code"],
   ["skills.skilldoctrine.11_and_14b_6_d", "\xA711 and \xA714b.6. D-104 is the measured case: a log that writes 'source unreachable' when the truth is 'our governor held us' manufactures a false absence, and our governor refusing is not the source failing.", null, null, false, "code"],
   ["skills.skilldoctrine.14_and_the_ordering_is", "\xA714, and the ordering is the whole point: the lens rule is STRUCTURAL, and v2 demoting it to a skill requirement was the defect \xA714b.4 itself names. Bob's requirement that the skill MINIMISE these effects stands \u2014 on top of the fence, never instead of it.", null, null, false, "code"],
@@ -18636,17 +19247,42 @@ var WORD_ROWS = Object.freeze([
   ["store-door.pull.the_knock_was_already_brought", "the knock was already brought in, and its record was not filed; nothing was written. {String}", null, null, false, "code"],
   ["store-door.pull.the_promotion_did_not_complete", "the promotion did not complete.", null, null, false, "code"],
   ["subresources.subresources.a_scheme_reference_is_not", "a {scheme} reference is not something this surface fetches", null, null, false, "code"],
+  ["subresources.subresources.a_viewer_must_be_able", "a viewer must be able to verify every byte it substitutes against the record before showing it", null, null, false, "code"],
+  ["subresources.subresources.and_earlier_capture_undetermined", " (and {count} earlier capture whose page the record does not name, counted as undetermined)", null, null, false, "code"],
+  ["subresources.subresources.and_earlier_captures_undetermined", " (and {count} earlier captures whose page the record does not name, counted as undetermined)", null, null, false, "code"],
+  ["subresources.subresources.by_a_capture_undetermined", " by a capture the record does not name (undetermined)", null, null, false, "code"],
+  ["subresources.subresources.by_capture", " by capture {capture}", null, null, false, "code"],
+  ["subresources.subresources.cross_origin_script_image_or_media", "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document", null, null, false, "code"],
+  ["subresources.subresources.derived_banner", "<!-- DERIVED ARTIFACT, not evidence. Generated by bio-plane from the capture\n     {primarySha}\n     at {when}. The raw bytes as served are the evidence and are stored\n     separately, unmodified. This file has had scripts and frames removed and\n     every subresource reference replaced with an about:capture#<sha256>\n     placeholder resolved from data/snapshot-manifest.json. Opened without a\n     resolving viewer it renders blank, on purpose. -->\n", null, null, false, "code"],
   ["subresources.subresources.entries_with_fetched_this_capture", "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them.", null, null, false, "code"],
+  ["subresources.subresources.every_a_the_page_carried", "Every <a> the page carried, characterised. `intra` resolves inside this record and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another record is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.", null, null, false, "code"],
   ["subresources.subresources.every_entry_the_viewer_renders", "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion.", null, null, false, "code"],
   ["subresources.subresources.found_in_region_basis_which", "found in {region_basis}, which belongs to the site rather than to this document", null, null, false, "code"],
+  ["subresources.subresources.held_back_from_a_previously_observed", "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch", null, null, false, "code"],
+  ["subresources.subresources.index_of_the_render_companion", "index of the render companion's placeholders to the content-addressed captures they resolve to", null, null, false, "code"],
+  ["subresources.subresources.no_limit_was_reached", "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown", null, null, false, "code"],
   ["subresources.subresources.not_fetched_during_this_capture", "not fetched during this capture: the source was seen serving these exact bytes at {last_fetched}{v1}, across {documents} documents on this host{v2}, and they are reused from the record rather than requested again", null, null, false, "code"],
   ["subresources.subresources.one_of_family_size_responsive", "one of {family_size} responsive candidates for one picture; the largest is captured", null, null, false, "code"],
+  ["subresources.subresources.the_address_is_not_public_https", "the address is not public https, and the fence that guards the primary locator guards this one", null, null, false, "code"],
+  ["subresources.subresources.the_capturing_worker_s_clock", "the capturing Worker's clock, stamped as this capture issued the request", null, null, false, "code"],
   ["subresources.subresources.the_earliest_and_latest_instants", "the earliest and latest instants at which this composite's parts were fetched, per clock. `capture` instants were stamped by this capture; `record` instants are when an earlier capture's fetch of a reused part was filed, on the Store's clock. The two are never ordered against each other, so a composite holding both states each and leaves the composite-wide earliest and latest null. undetermined counts held parts whose instant the record does not give.", null, null, false, "code"],
+  ["subresources.subresources.the_fanout_cap_was_reached", "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible", null, null, false, "code"],
+  ["subresources.subresources.the_raw_capture_is_the", "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one", null, null, false, "code"],
+  ["subresources.subresources.the_runtime_refused_an_outbound", "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling", null, null, false, "code"],
+  ["subresources.subresources.the_runtime_refused_another", "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered", null, null, false, "code"],
+  ["subresources.subresources.this_invocation_reached_the_runtime", "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it", null, null, false, "code"],
   ["tasks.checks.forwarding_hands_an_obligation_to", "Forwarding hands an obligation to a named person, and deciding who is better placed to answer it is a judgement about people rather than about records. The credential that asked here is an automated one: it can surface the work and route it as it arrives, and cannot re-address it. Sign in to forward it.", null, null, false, "code"],
+  ["text-chain.textchain.a_machine_reading_carries_its_anchor", "text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from", null, null, false, "code"],
+  ["text-chain.textchain.a_page_extent_names_which_page", "a page extent names which page (0-based)", null, null, false, "code"],
+  ["text-chain.textchain.a_region_confidence_is_either", "a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one", null, null, false, "code"],
   ["text-chain.textchain.a_region_extent_names_the", "a region extent names the region that was checked: {detail}", null, null, false, "code"],
   ["text-chain.textchain.a_transcription_must_name_at", "a transcription must name at least one step that produced it; {v1} was given, and text with no stated provenance is indistinguishable from text a publisher typed", null, null, false, "code"],
+  ["text-chain.textchain.an_attestation_carries_the_date", "an attestation carries the date it was made", null, null, false, "code"],
   ["text-chain.textchain.an_attestation_is_scoped_to", "an attestation is scoped to what was actually checked \u2014 one of {keys}. An unscoped attestation would be read as covering the whole document, which is the generous reading of a claim nobody made", null, null, false, "code"],
+  ["text-chain.textchain.an_attestation_names_no_member", "an attestation names no member. Nobody said this, and unattributed is not the same as attested", null, null, false, "code"],
   ["text-chain.textchain.confidence_basis_v1_is_not", "confidence basis '{v1}' is not {keys}. A number a model reported about itself is not a calibrated confidence and may not be thresholded as one \u2014 it costs nothing to produce, which is exactly what makes it worthless as evidence", null, null, false, "code"],
+  ["text-chain.textchain.decoded_glyphs_held", "{count} decoded glyph(s)", null, null, false, "code"],
+  ["text-chain.textchain.reported_characters_no_text_read", "{reported} character(s) its producer counted and no text this merge can read", null, null, false, "code"],
   ["text-chain.textchain.step_i_is_not_an", "step {i} is not an object", null, null, false, "code"],
   ["text-chain.textchain.step_i_is_v1_which", "step {i} is '{v1}', which is not one of {keys}. A step nobody classified is neither a derivation nor a verification, and this record will not guess which", null, null, false, "code"],
   ["text-chain.textchain.step_i_names_a_calibration", "step {i} names a calibration that is not a readable identifier ({stringify}). A transcription names the MEASUREMENT its grade rests on so a superseded measurement can name exactly the transcriptions resting on it; a pointer nothing can resolve breaks that join while looking like it works", null, null, false, "code"],
@@ -18654,6 +19290,8 @@ var WORD_ROWS = Object.freeze([
   ["text-chain.textchain.text_a_machine_read_off", "Text a machine read off an image has to say WHERE on the page it came from, so anyone can look at that part of the scan and see for themselves. Without it the reading cannot be checked against the document at all.", null, null, false, "code"],
   ["text-chain.textchain.text_source_is_chain_a", "text_source is '{chain}', a single label. A transcription's provenance is a CHAIN \u2014 each step naming what performed it \u2014 because 'ocr' does not say which engine, and an engine is what a re-run and a calibration are OF", null, null, false, "code"],
   ["text-chain.textchain.the_anchor_names_kind_string", "the anchor names kind '{String}'; a transcription's anchor is a pdf-page reference (I2 IC-1), because that is the arm carrying page and rect", null, null, false, "code"],
+  ["text-chain.textchain.the_anchor_names_no_page", "the anchor names no page (0-based integer required)", null, null, false, "code"],
+  ["text-chain.textchain.the_anchor_names_no_rect", "the anchor names no rect; a page alone is not a region a reader can be pointed at", null, null, false, "code"],
   ["text-chain.textchain.the_step_step_claims_fidelity", "the {step} step claims fidelity {stringify} and names no calibration. A {step_2} step's cap is UNDETERMINED until a measurement of it exists, and a letter written here without one would be the record claiming a fidelity nobody measured", null, null, false, "code"],
   ["text-chain.textchain.the_step_step_claims_fidelity_2", "the {step} step claims fidelity {stringify}. What a member typed is UNDETERMINED until a SECOND member attests it against the page; a letter on the step itself would be the typist grading their own work", null, null, false, "code"],
   ["text-chain.textchain.the_step_step_does_not", "the {step} step does not name its {unnamed}. Who performed a derivation, and what it produced, are the facts the chain exists to carry \u2014 a calibration is OF a named producer and format, and neither can be recovered from the word '{step_2}'", null, null, false, "code"],
@@ -20592,8 +21230,8 @@ function nothingWrittenReason(state) {
 }
 function nothingWrittenGuard(s, decision) {
   if (decision.step !== "close" || decision.bound !== "completed") return decision;
-  const reason = nothingWrittenReason(s);
-  return reason ? { ...decision, bound: NOTHING_WRITTEN, reason, why: `${decision.why}; ${reason}` } : decision;
+  const reason2 = nothingWrittenReason(s);
+  return reason2 ? { ...decision, bound: NOTHING_WRITTEN, reason: reason2, why: `${decision.why}; ${reason2}` } : decision;
 }
 function tableStep(state) {
   const s = state || {};
@@ -22539,7 +23177,7 @@ function parseFrontmatter(text2) {
   const findings = [];
   const lines = text2.split(/\r?\n/);
   if (lines[0] !== "---") {
-    findings.push(f("C-2.1", "error", "bundle.md does not begin with a --- frontmatter fence"));
+    findings.push(f("C-2.1", "error", localize("record-grammar.frontmatter.bundle_md_does_not_begin_with", "bundle.md does not begin with a --- frontmatter fence")));
     return { data: null, findings, body: text2 };
   }
   let end2 = -1;
@@ -22548,7 +23186,7 @@ function parseFrontmatter(text2) {
     break;
   }
   if (end2 === -1) {
-    findings.push(f("C-2.1", "error", "frontmatter fence is never closed"));
+    findings.push(f("C-2.1", "error", localize("record-grammar.frontmatter.frontmatter_fence_is_never_closed", "frontmatter fence is never closed")));
     return { data: null, findings, body: text2 };
   }
   const data = {};
@@ -22695,131 +23333,131 @@ function text(v) {
   }
 }
 var LAW_PROPOSAL_STATES = {
-  machine_proposed: "a machine credential proposed these citations. That is machine work, labelled as machine work: it can set a list of laws beside the request and it can never state which laws govern it. Nothing here is this action's list of governing laws, and nothing becomes one until a member states it themselves",
-  member_proposed: "a member proposed these citations to whoever states this action's governing laws. It is a proposal and not the list: only the governing-laws act sets that, and the record holds who made it",
+  machine_proposed: word("record-grammar.proposal.governing_laws.machine_proposed"),
+  member_proposed: word("record-grammar.proposal.governing_laws.member_proposed"),
   unstated: word("record-grammar.proposal.governing_laws.unstated")
 };
 var PROPOSAL_STATES = Object.freeze({
   governing_laws: LAW_PROPOSAL_STATES,
   standard: Object.freeze({
-    machine_proposed: "a machine credential proposed this standard. That is machine work, labelled as machine work: it can set a standard beside the record for members to consider and it can never enter one. Nothing here is a standard this record holds, and nothing becomes one until a member records it themselves",
-    member_proposed: "a member proposed this standard to whoever records the team's standards. It is a proposal and not a standard: only recording a standard enters one, and the record holds who made the proposal",
+    machine_proposed: word("record-grammar.proposal.standard.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.standard.member_proposed"),
     unstated: word("record-grammar.proposal.standard.unstated")
   }),
   comparison: Object.freeze({
-    machine_proposed: "a machine credential prepared this comparison of a government act against standards. That is machine work, labelled as machine work: it can set out rows and questions for members and it can never determine whether the act complied. Nothing here is a determination, and nothing becomes one until a member records it themselves",
-    member_proposed: "a member suggested this comparison of a government act against standards. It is a comparison and not a determination: only a determination records whether the act complied, and the record holds who made the comparison",
+    machine_proposed: word("record-grammar.proposal.comparison.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.comparison.member_proposed"),
     unstated: word("record-grammar.proposal.comparison.unstated")
   }),
   filing_draft: Object.freeze({
-    machine_proposed: "a machine credential prepared this draft. That is machine work, labelled as machine work: it can prepare the words of a filing and it can never approve or send one. Nobody has approved or sent this draft, and nothing is filed until members decide to file it and send it themselves",
-    member_proposed: "a member prepared this draft. It is a draft and not a filing: nobody has approved or sent it, and the record holds who prepared it",
+    machine_proposed: word("record-grammar.proposal.filing_draft.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.filing_draft.member_proposed"),
     unstated: word("record-grammar.proposal.filing_draft.unstated")
   }),
   theory: Object.freeze({
-    machine_proposed: "a machine credential proposed this candidate theory and remedy. That is machine work, labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it can never state the team's position. Nothing here is the team's position",
-    member_proposed: "a member proposed this candidate theory and remedy. It is a candidate for members and counsel to weigh and not the team's position, and the record holds who proposed it",
+    machine_proposed: word("record-grammar.proposal.theory.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.theory.member_proposed"),
     unstated: word("record-grammar.proposal.theory.unstated")
   }),
   /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
      adopts it, and a prepared communication (filings R23) is a draft nobody has approved or sent, worded as
      `filing_draft`'s sentences are. */
   plan_option: Object.freeze({
-    machine_proposed: "a machine credential proposed this option. That is machine work, labelled as machine work: it can set an option beside the plan for members to weigh and it can never choose one. It is not an option until a member adopts it",
-    member_proposed: "a member proposed this option. It is a proposal and not an option: it is not an option until a member adopts it, and the record holds who proposed it",
+    machine_proposed: word("record-grammar.proposal.plan_option.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.plan_option.member_proposed"),
     unstated: word("record-grammar.proposal.plan_option.unstated")
   }),
   communication: Object.freeze({
-    machine_proposed: "a machine credential prepared this communication. That is machine work, labelled as machine work: it can prepare the words of a message and it can never approve or send one. Nobody has approved or sent it, and nothing is sent until members decide to send it themselves",
-    member_proposed: "a member prepared this communication. It is a draft and not a message sent: nobody has approved or sent it, and the record holds who prepared it",
+    machine_proposed: word("record-grammar.proposal.communication.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.communication.member_proposed"),
     unstated: word("record-grammar.proposal.communication.unstated")
   }),
   /* K921 (T21, R42): wording proposed for a filing template (filing-templates R6, R13) is not a template's text until a
      member adopts it into a draft, and a machine can propose it and never draft, review or approve a template. */
   template: Object.freeze({
-    machine_proposed: "a machine credential proposed this wording for a filing template. That is machine work, labelled as machine work: it can propose wording and it can never draft, review or approve a template. It is not a template's text until a member adopts it into a draft",
-    member_proposed: "a member proposed this wording for a filing template. It is a proposal and not a template's text: it is not that until a member adopts it into a draft, and the record holds who proposed it",
-    unstated: "the record does not say who proposed this wording for a filing template, and it is not a template's text until a member adopts it into a draft"
+    machine_proposed: word("record-grammar.proposal.template.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.template.member_proposed"),
+    unstated: word("record-grammar.proposal.template.unstated")
   }),
   /* DEC-101 (1) (K1019; T23, R43): a draft of a new edition's statement of what changed in it, and why
      (`BIO_Publication_v0_1.md` §5A; case-authoring R39), is not the group's statement until a member adopts or rewrites
      it, and the record keeps that it began as a machine draft. */
   edition_statement: Object.freeze({
-    machine_proposed: "a machine credential drafted this statement of what changed in this edition, and why. That is machine work, labelled as machine work: it is a draft, which can help members say what changed and can never sign a statement. It is not the team's statement until a member adopts or rewrites it",
-    member_proposed: "a member proposed this statement of what changed in this edition, and why. It is a proposal and not the team's statement until a member adopts or rewrites it, and the record holds who proposed it",
-    unstated: "the record does not say who proposed this statement of what changed in this edition, and why, and it is not the team's statement until a member adopts or rewrites it"
+    machine_proposed: word("record-grammar.proposal.edition_statement.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.edition_statement.member_proposed"),
+    unstated: word("record-grammar.proposal.edition_statement.unstated")
   }),
   /* DEC-89 with Bob's addition (K1019; T23, R44): an escalation's opening reason assembled from the determination's
      record (escalation R29) is not a member's reason until a member sends it, as offered or edited; the reason then
      recorded is the member's own. */
   escalation_reason: Object.freeze({
-    machine_proposed: "a machine credential assembled this reason for opening an escalation from the determination's record. That is machine work, labelled as machine work: it is a draft, which can set out what the record holds and can never open an escalation. It is not a member's reason until a member sends it, as offered or edited",
-    member_proposed: "a member assembled this reason for opening an escalation from the determination's record. It is a proposal and not a member's reason until a member sends it, as offered or edited, and the record holds who proposed it",
-    unstated: "the record does not say who assembled this reason for opening an escalation from the determination's record, and it is not a member's reason until a member sends it, as offered or edited"
+    machine_proposed: word("record-grammar.proposal.escalation_reason.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.escalation_reason.member_proposed"),
+    unstated: word("record-grammar.proposal.escalation_reason.unstated")
   }),
   /* N543 (K1396; T32, R45): steps proposed for a wizard script (wizard-scripts R5) are not a script's steps until its
      author adopts them into a version, and a machine can propose steps and never draft, submit or approve a script
      (wizard-scripts R19), worded as `template`'s sentences are. */
   wizard: Object.freeze({
-    machine_proposed: "a machine credential proposed these steps for a wizard script. That is machine work, labelled as machine work: it is a draft, which can propose steps and can never draft, submit or approve a script. They are not a script's steps until its author adopts them into a version",
-    member_proposed: "a member proposed these steps for a wizard script. It is a proposal and not a script's steps until its author adopts them into a version, and the record holds who proposed it",
-    unstated: "the record does not say who proposed these steps for a wizard script, and they are not a script's steps until its author adopts them into a version"
+    machine_proposed: word("record-grammar.proposal.wizard.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.wizard.member_proposed"),
+    unstated: word("record-grammar.proposal.wizard.unstated")
   }),
   /* N568 (K1571; T34, R49): a law relation, a court link or a treatment proposed beside the record (standards R23, R26,
      R27, R30) is not one the record holds until a member records it themselves, and a machine can propose one and never
      record one (K1443). Before this subject, standards' `lawPropose` labelled through `standard`, whose sentences speak
      of a standard and misnamed what was proposed. */
   law_relation: Object.freeze({
-    machine_proposed: "a machine credential proposed this law relation, court link or treatment. That is machine work, labelled as machine work: it can propose one and it can never record one. It is not one the record holds until a member records it themselves",
-    member_proposed: "a member proposed this law relation, court link or treatment. It is a proposal and not one the record holds until a member records it themselves, and the record holds who proposed it",
-    unstated: "the record does not say who proposed this law relation, court link or treatment, and it is not one the record holds until a member records it themselves"
+    machine_proposed: word("record-grammar.proposal.law_relation.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.law_relation.member_proposed"),
+    unstated: word("record-grammar.proposal.law_relation.unstated")
   }),
   /* N669 (K1793, K1804; T37, R50; DEC-127 (2), (5), DEC-157 (2)–(4)): a translation of an interface word drafted for a
      group's language (skills' draft run; instance-setup's workspace) is a draft, shown to members as "Draft", and not the
      group's wording until a member granted that language adopts it; a machine can draft one and never adopt or confirm
      one (DEC-157 (4)'s second check is a member's or an administrator's). */
   translation: Object.freeze({
-    machine_proposed: `a machine credential drafted this translation of an interface word. That is machine work, labelled as machine work: it can draft a translation and it can never adopt or confirm one. It is a draft, shown to members as "Draft", and not the team's wording until a member granted that language adopts it`,
-    member_proposed: `a member proposed this translation of an interface word. It is a draft, shown to members as "Draft", and not the team's wording until a member granted that language adopts it, and the record holds who proposed it`,
-    unstated: `the record does not say who drafted this translation of an interface word. It is a draft, shown to members as "Draft", and not the team's wording until a member granted that language adopts it`
+    machine_proposed: word("record-grammar.proposal.translation.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.translation.member_proposed"),
+    unstated: word("record-grammar.proposal.translation.unstated")
   }),
   /* N838 (K2540; T42, R54): a draft of a case's account drawn from its cited evidence (case-authoring R64, kind
      `case_account`) is never the case's account, which a member writes in her own words; and a check of a member's
      account (kind `account_check`) flags the sentences the evidence they cite does not support, a draft and never a
      finding of the group. Before these subjects case-authoring worded the same three states itself (`#accountLabel`). */
   case_account: Object.freeze({
-    machine_proposed: "a machine credential drafted this account of a case from its cited evidence. That is machine work, labelled as machine work: it is a draft, which can set out what the cited evidence holds and can never be the case's account. The case's account is the one a member writes in her own words",
-    member_proposed: "a member drafted this account of a case from its cited evidence. It is a draft and never the case's account, which a member writes in her own words, and the record holds who proposed it",
-    unstated: "the record does not say who drafted this account of a case from its cited evidence. It is a draft and never the case's account, which a member writes in her own words"
+    machine_proposed: word("record-grammar.proposal.case_account.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.case_account.member_proposed"),
+    unstated: word("record-grammar.proposal.case_account.unstated")
   }),
   account_check: Object.freeze({
-    machine_proposed: "a machine credential flagged these sentences of a member's account as not supported by the evidence they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can never find against one. It is never a finding of the team",
+    machine_proposed: word("record-grammar.proposal.account_check.machine_proposed"),
     member_proposed: word("record-grammar.proposal.account_check.member_proposed"),
-    unstated: "the record does not say who flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the team"
+    unstated: word("record-grammar.proposal.account_check.unstated")
   }),
   /* N912 (K2845; T46, R60): a layout of how a reply to a request for comment bears on each claim of the action
      (`action-replies` R1, `actionBearingPropose`) is a proposed reading, stored apart, and never the group's reading until a
      member records a layout themselves; a machine can propose one and never record one (action-replies R4). Before this
      subject action-replies labelled its proposals through `lawProposalState` with its own sentences. */
   bearing: Object.freeze({
-    machine_proposed: "a machine credential proposed this layout of how a reply bears on each claim of an action. That is machine work, labelled as machine work: it can propose a layout and it can never record one. It is a proposed reading and never the team's reading until a member records it",
-    member_proposed: "a member proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the team's reading until a member records it, and the record holds who proposed it",
-    unstated: "the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the team's reading until a member records it"
+    machine_proposed: word("record-grammar.proposal.bearing.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.bearing.member_proposed"),
+    unstated: word("record-grammar.proposal.bearing.unstated")
   }),
   /* N956 (K3028; T47, R61): a draft of a status report on a plan (`plan-work` R14, the assistant's draft) is kept with the
      plan and never published, and the report kept is the member's; a machine can draft one and never keep or publish one.
      `plan-work` labels the assistant's draft through this subject. */
   status_report: Object.freeze({
-    machine_proposed: "a machine credential drafted this status report on a plan. It is the assistant's draft: machine work, labelled as machine work, which can draft a report and can never keep or publish one. It is kept with the plan and never published, and the report kept is the member's",
-    member_proposed: "a member drafted this status report on a plan. It is a draft, kept with the plan and never published; the report kept is the member's, and the record holds who proposed it",
-    unstated: "the record does not say who drafted this status report on a plan. It is a draft, kept with the plan and never published, and the report kept is the member's"
+    machine_proposed: word("record-grammar.proposal.status_report.machine_proposed"),
+    member_proposed: word("record-grammar.proposal.status_report.member_proposed"),
+    unstated: word("record-grammar.proposal.status_report.unstated")
   })
 });
 var CONTENT_MINTED_BY_PLANE = "plane";
 var CONTENT_MINT_STATES = {
   member_marked: word("record-grammar.mint.member_marked"),
-  plane_minted: "this record minted this reference when a member first cited the passage in their own words \u2014 it is the address of what that member pointed at, and not a separate claim about the document",
-  machine_marked: "a machine credential marked this passage as citable. That is machine work, labelled as machine work: it can lay the passage beside the question and it can never attest that the text matches the page, and nothing here is part of a finding until a member cites it themselves",
+  plane_minted: word("record-grammar.mint.plane_minted"),
+  machine_marked: word("record-grammar.mint.machine_marked"),
   unstated: word("record-grammar.mint.unstated")
 };
 function contentMintState(mintedBy) {
@@ -23629,7 +24267,7 @@ function checkIdentity(ctx, findings) {
       "C-1.1",
       "error",
       localize("record-grammar.bundle.folder_name_foldername_does_not", "folder name '{folderName}' does not equal frontmatter id '{id}'", { folderName: String(ctx.folderName), id: String(id) }),
-      ["restore folder name from frontmatter id", "restore frontmatter id from folder name if history confirms it"]
+      [localize("record-grammar.bundle.restore_folder_name_from_frontmatter_id", "restore folder name from frontmatter id"), localize("record-grammar.bundle.restore_frontmatter_id_from_folder_name", "restore frontmatter id from folder name if history confirms it")]
     ));
   }
   const seen = /* @__PURE__ */ new Set();
@@ -23660,7 +24298,7 @@ function checkIdentity(ctx, findings) {
       findings.push(f2("C-1.3", "error", localize("record-grammar.bundle.annotation_file_name_does_not", "annotation file '{name}' does not match its id (expected '{expectedFile}')", { name: String(name), expectedFile: String(expectedFile) })));
     }
     if (seen.has(rid)) {
-      findings.push(f2("C-1.3", "error", localize("record-grammar.bundle.duplicate_annotation_id_rid", "duplicate annotation id '{rid}'", { rid: String(rid) }), ["adjust the later record timestamp suffix by one second, logged"]));
+      findings.push(f2("C-1.3", "error", localize("record-grammar.bundle.duplicate_annotation_id_rid", "duplicate annotation id '{rid}'", { rid: String(rid) }), [localize("record-grammar.bundle.adjust_the_later_record_timestamp_suffix", "adjust the later record timestamp suffix by one second, logged")]));
     }
     seen.add(rid);
   }
@@ -23697,7 +24335,7 @@ function checkFrontmatterContract(ctx, findings) {
     if (wantType && wantType !== normalizeType(ot)) findings.push(f2("C-2.5", "error", localize("record-grammar.bundle.id_prefix_prefix_implies_wanttype", "id prefix '{prefix}' implies '{wantType}' but object_type is '{ot}'", { prefix: String(prefix), wantType: String(wantType), ot: String(ot) })));
     const schema = fm.schema;
     const sm = typeof schema === "string" && /^([a-z][a-z_]*)@(\d+)$/.exec(schema);
-    if (!sm) findings.push(f2("C-2.5", "error", `schema stamp '${schema}' is not of the form <type>@<n>`));
+    if (!sm) findings.push(f2("C-2.5", "error", localize("record-grammar.bundle.schema_stamp_form", "schema stamp '{schema}' is not of the form <type>@<n>", { schema: String(schema) })));
     else {
       if (normalizeType(sm[1]) !== normalizeType(ot)) findings.push(f2("C-2.5", "error", localize("record-grammar.bundle.schema_stamp_schema_does_not", "schema stamp '{schema}' does not match object_type '{ot}'", { schema: String(schema), ot: String(ot) })));
       if (!ctx.knownSchemas.includes(schema)) findings.push(f2("C-2.5", "error", localize("record-grammar.bundle.schema_version_schema_is_not", "schema version '{schema}' is not known to this check catalog", { schema: String(schema) })));
@@ -23729,7 +24367,7 @@ function checkHeadings(ctx, findings) {
       findings.push(f2("C-3.1", "error", localize("record-grammar.bundle.required_heading_heading_is_missing", "required heading '{heading}' is missing: a member of a published case carries it", { heading: String(c.heading) }), [localize("record-grammar.bundle.insert_canonical_heading_heading_with", "insert canonical heading '{heading}' with the assertion in it", { heading: String(c.heading) })]));
   }
   for (const h of present) {
-    if (!canonical2.includes(h)) findings.push(f2("C-3.1", "error", localize("record-grammar.bundle.heading_h_is_not_in", "heading '{h}' is not in the canonical set for {ot}", { h: String(h), ot: String(ot) }), ["rename to the canonical heading, preserving body"]));
+    if (!canonical2.includes(h)) findings.push(f2("C-3.1", "error", localize("record-grammar.bundle.heading_h_is_not_in", "heading '{h}' is not in the canonical set for {ot}", { h: String(h), ot: String(ot) }), [localize("record-grammar.bundle.rename_to_the_canonical_heading_preserving", "rename to the canonical heading, preserving body")]));
   }
 }
 function checkStateLegality(ctx, findings) {
@@ -23770,7 +24408,7 @@ function checkWriteCompleteness(ctx, findings) {
     const idx = ctx.body.indexOf("## Session Log");
     const section = idx >= 0 ? ctx.body.slice(idx, ctx.body.indexOf("\n## ", idx + 1) === -1 ? void 0 : ctx.body.indexOf("\n## ", idx + 1)) : "";
     if (!/^### Session /m.test(section)) {
-      findings.push(f2("C-13.2", "error", "record has been updated but carries no Session Log entry", ["append the missing Session Log entry naming the gap"]));
+      findings.push(f2("C-13.2", "error", localize("record-grammar.bundle.record_has_been_updated_but_carries", "record has been updated but carries no Session Log entry"), [localize("record-grammar.bundle.append_the_missing_session_log_entry", "append the missing Session Log entry naming the gap")]));
     }
   }
 }
@@ -23779,7 +24417,7 @@ function checkFormatHygiene(ctx, findings) {
   for (const [path, content] of ctx.files) {
     const name = path.split("/").pop() || path;
     if (!FILENAME_RE.test(name) || name.includes(" ") || !name.includes(".") || !/\.[a-z0-9]+$/.test(name)) {
-      findings.push(f2("C-14.2", "error", localize("record-grammar.bundle.filename_path_violates_the_naming", "filename '{path}' violates the naming rule", { path: String(path) }), ["rename file and update references"]));
+      findings.push(f2("C-14.2", "error", localize("record-grammar.bundle.filename_path_violates_the_naming", "filename '{path}' violates the naming rule", { path: String(path) }), [localize("record-grammar.bundle.rename_file_and_update_references", "rename file and update references")]));
     }
     if (name.endsWith(".md")) {
       const text2 = asText(content);
@@ -23836,14 +24474,14 @@ async function checkQueueAndBase(ctx, findings) {
       stale = ts === null || Number.isNaN(ts) || (ctx.nowMs ?? Date.now()) - ts > windowMs;
     }
     if (stale) {
-      findings.push(f2("C-16.5", "info", localize("record-grammar.bundle.stale_advisory_artifact_p_crashed", "stale advisory artifact '{p}' (crashed or ended actor)", { p: String(p) }), ["delete the stale claim or presence marker"]));
+      findings.push(f2("C-16.5", "info", localize("record-grammar.bundle.stale_advisory_artifact_p_crashed", "stale advisory artifact '{p}' (crashed or ended actor)", { p: String(p) }), [localize("record-grammar.bundle.delete_the_stale_claim_or_presence", "delete the stale claim or presence marker")]));
     }
   }
   const manifestRaw = ctx.files.get("PENDING_PROMOTION.json");
   const pendingFiles = [...ctx.files.keys()].filter((p) => p.endsWith(".pending"));
   if (!manifestRaw) {
     for (const p of pendingFiles) {
-      findings.push(f2("C-16.4", "error", localize("record-grammar.bundle.orphaned_pending_file_p_with", "orphaned pending file '{p}' with no manifest", { p: String(p) }), ["complete consumption: archive manifest, delete consumed files (idempotent)"]));
+      findings.push(f2("C-16.4", "error", localize("record-grammar.bundle.orphaned_pending_file_p_with", "orphaned pending file '{p}' with no manifest", { p: String(p) }), [localize("record-grammar.bundle.complete_consumption_archive_manifest_delete_consumed", "complete consumption: archive manifest, delete consumed files (idempotent)")]));
     }
     return;
   }
@@ -23870,22 +24508,22 @@ async function checkQueueAndBase(ctx, findings) {
       listed.add(entry.name + ".pending");
       const pending = ctx.files.get(entry.name + ".pending");
       if (!pending) {
-        findings.push(f2("C-16.2", "error", localize("record-grammar.bundle.package_file_name_pending_listed", "package file '{name}.pending' listed in manifest is missing", { name: String(entry.name) }), ["discard the package with a finding to the producing author", "re-produce the package from the originating session outputs"]));
+        findings.push(f2("C-16.2", "error", localize("record-grammar.bundle.package_file_name_pending_listed", "package file '{name}.pending' listed in manifest is missing", { name: String(entry.name) }), [localize("record-grammar.bundle.discard_the_package_with_a_finding", "discard the package with a finding to the producing author"), localize("record-grammar.bundle.re_produce_the_package_from_the", "re-produce the package from the originating session outputs")]));
         continue;
       }
       const hash = await ctx.sha256(pending);
       if (hash !== entry.sha256) {
-        findings.push(f2("C-16.2", "error", `hash mismatch on '${entry.name}.pending' (manifest ${String(entry.sha256).slice(0, 12)}\u2026, actual ${hash.slice(0, 12)}\u2026)`, ["discard the package (never promote)", "re-produce the package"]));
+        findings.push(f2("C-16.2", "error", `hash mismatch on '${entry.name}.pending' (manifest ${String(entry.sha256).slice(0, 12)}\u2026, actual ${hash.slice(0, 12)}\u2026)`, [localize("record-grammar.bundle.discard_the_package_never_promote", "discard the package (never promote)"), "re-produce the package"]));
       }
     }
   }
   for (const p of pendingFiles) {
-    if (!listed.has(p)) findings.push(f2("C-16.4", "error", localize("record-grammar.bundle.pending_file_p_is_not", "pending file '{p}' is not listed in the manifest", { p: String(p) }), ["complete consumption or discard with reason"]));
+    if (!listed.has(p)) findings.push(f2("C-16.4", "error", localize("record-grammar.bundle.pending_file_p_is_not", "pending file '{p}' is not listed in the manifest", { p: String(p) }), [localize("record-grammar.bundle.complete_consumption_or_discard_with_reason", "complete consumption or discard with reason")]));
   }
   if (typeof man.created === "string" && ISO_TS_RE.test(man.created)) {
     const ageDays = ((ctx.nowMs ?? Date.now()) - Date.parse(man.created)) / 864e5;
     if (ageDays > ctx.maxPackageAgeDays) {
-      findings.push(f2("C-16.3", "warn", localize("record-grammar.bundle.pending_package_is_floor_days", "pending package is {floor} days old (policy {maxPackageAgeDays})", { floor: String(Math.floor(ageDays)), maxPackageAgeDays: String(ctx.maxPackageAgeDays) }), ["promote now", "discard with reason if superseded, preserving the manifest as a record"]));
+      findings.push(f2("C-16.3", "warn", localize("record-grammar.bundle.pending_package_is_floor_days", "pending package is {floor} days old (policy {maxPackageAgeDays})", { floor: String(Math.floor(ageDays)), maxPackageAgeDays: String(ctx.maxPackageAgeDays) }), ["promote now", localize("record-grammar.bundle.discard_with_reason_if_superseded_preserving", "discard with reason if superseded, preserving the manifest as a record")]));
     }
   } else {
     findings.push(f2("C-16.1", "error", localize("record-grammar.bundle.manifest_created_created_is_not", "manifest created '{created}' is not ISO 8601 UTC", { created: String(man.created) })));
@@ -23894,9 +24532,9 @@ async function checkQueueAndBase(ctx, findings) {
   if (live && typeof man.base === "string") {
     const liveHash = await ctx.sha256(live);
     if (liveHash === man.base) {
-      findings.push(f2("C-17.1", "info", "pending package base matches live bundle.md: fast-forward eligible"));
+      findings.push(f2("C-17.1", "info", localize("record-grammar.bundle.pending_package_base_matches_live_bundle", "pending package base matches live bundle.md: fast-forward eligible")));
     } else {
-      findings.push(f2("C-17.1", "warn", localize("record-grammar.bundle.pending_package_base_string_does", "pending package base {String}\u2026 does not match live bundle.md {liveHash}\u2026: divergence", { String: String(String(man.base).slice(0, 12)), liveHash: String(liveHash.slice(0, 12)) }), ["rebase via a reconciliation session", "supersede: human selects one, the other preserved as a diverged branch in _history", "apply-disjoint if file sets prove disjoint (requires history manifests)"]));
+      findings.push(f2("C-17.1", "warn", localize("record-grammar.bundle.pending_package_base_string_does", "pending package base {String}\u2026 does not match live bundle.md {liveHash}\u2026: divergence", { String: String(String(man.base).slice(0, 12)), liveHash: String(liveHash.slice(0, 12)) }), [localize("record-grammar.bundle.rebase_via_a_reconciliation_session", "rebase via a reconciliation session"), "supersede: human selects one, the other preserved as a diverged branch in _history", localize("record-grammar.bundle.apply_disjoint_if_file_sets_prove", "apply-disjoint if file sets prove disjoint (requires history manifests)")]));
     }
   }
 }
@@ -23928,7 +24566,7 @@ function checkAppendOnly(ctx, findings) {
   }
   const rn = sectionText(snap.body, "## Review Notes");
   if (rn && rn.trim() !== "## Review Notes" && !ctx.body.includes(rn.trimEnd())) {
-    findings.push(f2("C-5.1", "error", localize("record-grammar.bundle.review_notes_content_from_the", "Review Notes content from the prior version is missing or altered (verbatim-immutable)"), ["restore from _history and re-append new material", "record a tamper finding if history lacks the original"]));
+    findings.push(f2("C-5.1", "error", localize("record-grammar.bundle.review_notes_content_from_the", "Review Notes content from the prior version is missing or altered (verbatim-immutable)"), ["restore from _history and re-append new material", localize("record-grammar.bundle.record_a_tamper_finding_if_history", "record a tamper finding if history lacks the original")]));
   }
   const priorLog = sectionText(snap.body, "## Session Log") || "";
   for (const header of priorLog.match(/^### Session .*$/gm) || []) {
@@ -23943,7 +24581,7 @@ function checkAppendOnly(ctx, findings) {
       const priorRecs = JSON.parse(asText(ctx.files.get(chSnaps[chSnaps.length - 1]))).records || [];
       const liveRecs = JSON.parse(asText(liveCh)).records || [];
       if (liveRecs.length < priorRecs.length || JSON.stringify(liveRecs.slice(0, priorRecs.length)) !== JSON.stringify(priorRecs)) {
-        findings.push(f2("C-5.1", "error", "data/changes.json records were mutated or removed (append-only surface)", ["restore from _history and re-append new material"]));
+        findings.push(f2("C-5.1", "error", localize("record-grammar.bundle.data_changes_json_records_were_mutated", "data/changes.json records were mutated or removed (append-only surface)"), ["restore from _history and re-append new material"]));
       }
     } catch {
     }
@@ -23957,7 +24595,7 @@ function checkReferences(ctx, findings) {
       findings.push(f2("C-6.1", "error", localize("record-grammar.bundle.references_i_is_not_an", "references[{i}] is not an object", { i: String(i) })));
       continue;
     }
-    if (!REL_VOCAB.includes(r.rel)) findings.push(f2("C-6.1", "error", localize("record-grammar.bundle.references_i_rel_rel_is", "references[{i}].rel '{rel}' is not in the closed vocabulary", { i: String(i), rel: String(r.rel) }), ["map to the nearest vocabulary value", "sever with reason"]));
+    if (!REL_VOCAB.includes(r.rel)) findings.push(f2("C-6.1", "error", localize("record-grammar.bundle.references_i_rel_rel_is", "references[{i}].rel '{rel}' is not in the closed vocabulary", { i: String(i), rel: String(r.rel) }), [localize("record-grammar.bundle.map_to_the_nearest_vocabulary_value", "map to the nearest vocabulary value"), "sever with reason"]));
     if (SOURCE_ASSERTED_RELS.includes(r.rel)) {
       if (r.asserted_by !== "source")
         findings.push(f2("C-6.1", "error", localize("record-grammar.bundle.references_i_rel_rel_is_2", "references[{i}].rel '{rel}' is source-asserted and must carry asserted_by: 'source', so it is never read as a member's claim", { i: String(i), rel: String(r.rel) })));
@@ -23976,7 +24614,7 @@ function checkReferences(ctx, findings) {
       findings.push(f2("C-6.1", "error", localize("record-grammar.bundle.references_i_target_t_does", "references[{i}].target '{t}' does not match the canonical ID grammar", { i: String(i), t: String(t) })));
     } else if (ctx.resolveTarget) {
       if (!ctx.resolveTarget(t)) {
-        findings.push(f2("C-6.2", "error", localize("record-grammar.bundle.references_i_target_t_does_2", "references[{i}].target '{t}' does not resolve in the store", { i: String(i), t: String(t) }), ["restore target from history", "re-point to the successor object (derived_from chain)", "sever the edge with a reason note"]));
+        findings.push(f2("C-6.2", "error", localize("record-grammar.bundle.references_i_target_t_does_2", "references[{i}].target '{t}' does not resolve in the store", { i: String(i), t: String(t) }), ["restore target from history", "re-point to the successor object (derived_from chain)", localize("record-grammar.bundle.sever_the_edge_with_a_reason", "sever the edge with a reason note")]));
       }
     }
   }
@@ -23985,14 +24623,14 @@ function checkHistoryCoherence(ctx, findings) {
   const histFiles = [...ctx.files.keys()].filter((p) => p.startsWith("_history/"));
   const manRaw = ctx.files.get("_history/manifest.json");
   if (!manRaw) {
-    if (histFiles.length) findings.push(f2("C-12.1", "error", "_history contains files but no manifest.json", ["rebuild manifest entry from surviving files"]));
+    if (histFiles.length) findings.push(f2("C-12.1", "error", "_history contains files but no manifest.json", [localize("record-grammar.bundle.rebuild_manifest_entry_from_surviving_files", "rebuild manifest entry from surviving files")]));
     return;
   }
   let man;
   try {
     man = JSON.parse(asText(manRaw));
   } catch {
-    findings.push(f2("C-12.1", "error", "_history/manifest.json does not parse", ["rebuild manifest entry from surviving files"]));
+    findings.push(f2("C-12.1", "error", "_history/manifest.json does not parse", [localize("record-grammar.bundle.rebuild_manifest_entry_from_surviving_files", "rebuild manifest entry from surviving files")]));
     return;
   }
   const entries = Array.isArray(man.entries) ? man.entries : [];
@@ -24012,14 +24650,14 @@ function checkHistoryCoherence(ctx, findings) {
       bundleMdCreated.push(e.created);
     }
     if (e?.kind === "promotion" && e.key && !ctx.files.has(`_history/promotion_${e.key}.json`)) {
-      findings.push(f2("C-12.2", "error", localize("record-grammar.bundle.promotion_record_for_key_is", "promotion record for '{key}' is missing", { key: String(e.key) }), ["rebuild manifest entry from surviving files", "record a history-loss finding and re-snapshot current state"]));
+      findings.push(f2("C-12.2", "error", localize("record-grammar.bundle.promotion_record_for_key_is", "promotion record for '{key}' is missing", { key: String(e.key) }), [localize("record-grammar.bundle.rebuild_manifest_entry_from_surviving_files", "rebuild manifest entry from surviving files"), localize("record-grammar.bundle.record_a_history_loss_finding_and", "record a history-loss finding and re-snapshot current state")]));
     }
     if (Array.isArray(e?.snapshotted)) {
       for (const name of e.snapshotted) {
         const dot = name.lastIndexOf(".");
         const snapPath = `_history/${name.slice(0, dot)}_${e.key}${name.slice(dot)}`;
         if (!hasFile_(ctx, snapPath)) {
-          findings.push(f2("C-12.2", "error", localize("record-grammar.bundle.snapshot_snappath_recorded_in_manifest", "snapshot '{snapPath}' recorded in manifest entry '{key}' is missing", { snapPath: String(snapPath), key: String(e.key) }), ["record a history-loss finding and re-snapshot current state"]));
+          findings.push(f2("C-12.2", "error", localize("record-grammar.bundle.snapshot_snappath_recorded_in_manifest", "snapshot '{snapPath}' recorded in manifest entry '{key}' is missing", { snapPath: String(snapPath), key: String(e.key) }), [localize("record-grammar.bundle.record_a_history_loss_finding_and", "record a history-loss finding and re-snapshot current state")]));
         }
       }
     }
@@ -24040,7 +24678,7 @@ function checkHistoryCoherence(ctx, findings) {
           "C-12.2",
           "error",
           localize("record-grammar.bundle.refusal_record_p_does_not", "refusal record '{p}' does not parse or names no outcome", { p: String(p) }),
-          ["restore the refusal record from history", "remove the unexplained refusal artifacts"]
+          [localize("record-grammar.bundle.restore_the_refusal_record_from_history", "restore the refusal record from history"), localize("record-grammar.bundle.remove_the_unexplained_refusal_artifacts", "remove the unexplained refusal artifacts")]
         ));
       }
       continue;
@@ -24053,7 +24691,7 @@ function checkHistoryCoherence(ctx, findings) {
           "C-12.2",
           "error",
           localize("record-grammar.bundle.preserved_refusal_payload_p_has", "preserved refusal payload '{p}' has no refusal record at '{sibling}'", { p: String(p), sibling: String(sibling) }),
-          ["restore the refusal record", "remove the orphaned preserved payload"]
+          ["restore the refusal record", localize("record-grammar.bundle.remove_the_orphaned_preserved_payload", "remove the orphaned preserved payload")]
         ));
       }
       continue;
@@ -24061,7 +24699,7 @@ function checkHistoryCoherence(ctx, findings) {
     const m = /_((?:\d{8}T\d{6}Z)_[0-9a-f]{8})\./.exec(p) || /^_history\/promotion_(.+)\.json$/.exec(p);
     const key = m ? m[1] : null;
     if (!key || !keys.has(key)) {
-      findings.push(f2("C-12.2", "error", localize("record-grammar.bundle.history_file_p_maps_to", "history file '{p}' maps to no manifest entry", { p: String(p) }), ["rebuild manifest entry from surviving files"]));
+      findings.push(f2("C-12.2", "error", localize("record-grammar.bundle.history_file_p_maps_to", "history file '{p}' maps to no manifest entry", { p: String(p) }), [localize("record-grammar.bundle.rebuild_manifest_entry_from_surviving_files", "rebuild manifest entry from surviving files")]));
     }
   }
   const sorted = bundleMdCreated.slice().sort();
@@ -24072,7 +24710,7 @@ function checkHistoryCoherence(ctx, findings) {
       "C-12.1",
       "error",
       localize("record-grammar.bundle.live_last_updated_last_updated", "live last_updated '{last_updated}' precedes an earlier history entry '{newestPrior}': the live bundle.md is older than a version already superseded", { last_updated: String(ctx.fm.last_updated), newestPrior: String(newestPrior) }),
-      ["restore the newer bundle.md from history", "correct last_updated to reflect the live content"]
+      [localize("record-grammar.bundle.restore_the_newer_bundle_md_from", "restore the newer bundle.md from history"), "correct last_updated to reflect the live content"]
     ));
   }
 }
@@ -24730,7 +25368,7 @@ function checkConfidence(confidence) {
   if (!confidence || typeof confidence !== "object")
     return refusal3(
       "TEXT_CONFIDENCE_SHAPE",
-      `a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one`
+      localize("text-chain.textchain.a_region_confidence_is_either", "a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one")
     );
   if (!Object.prototype.hasOwnProperty.call(CONFIDENCE_BASES, confidence.basis))
     return refusal3(
@@ -24778,7 +25416,7 @@ function checkAnchor(source) {
   if (!source || typeof source !== "object")
     return refusal3(
       "TEXT_ANCHOR_MISSING",
-      `text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from`
+      localize("text-chain.textchain.a_machine_reading_carries_its_anchor", "text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from")
     );
   if (source.kind !== "pdf-page")
     return refusal3(
@@ -24786,11 +25424,11 @@ function checkAnchor(source) {
       localize("text-chain.textchain.the_anchor_names_kind_string", "the anchor names kind '{String}'; a transcription's anchor is a pdf-page reference (I2 IC-1), because that is the arm carrying page and rect", { String: String(String(source.kind)) })
     );
   if (!Number.isInteger(source.page) || source.page < 0)
-    return refusal3("TEXT_ANCHOR_MISSING", `the anchor names no page (0-based integer required)`);
+    return refusal3("TEXT_ANCHOR_MISSING", localize("text-chain.textchain.the_anchor_names_no_page", "the anchor names no page (0-based integer required)"));
   if (!Array.isArray(source.rect) || source.rect.length !== 4 || !source.rect.every((n) => typeof n === "number" && Number.isFinite(n)))
     return refusal3(
       "TEXT_ANCHOR_MISSING",
-      `the anchor names no rect; a page alone is not a region a reader can be pointed at`
+      localize("text-chain.textchain.the_anchor_names_no_rect", "the anchor names no rect; a page alone is not a region a reader can be pointed at")
     );
   return null;
 }
@@ -24851,12 +25489,12 @@ function readingSourceFromColumns(posKind, pos, posRef) {
 var CONTENT_EXTENT_KINDS = {
   document: { landed: true, human: word("content.why.whole_document") },
   "pdf-page": { landed: true, human: "a page of a PDF" },
-  "sheet-cell": { landed: true, human: "a cell of a spreadsheet" },
-  "slide-shape": { landed: true, human: "a shape on a slide" },
-  "doc-para": { landed: true, human: "a paragraph of a document" },
-  "sheet-range": { landed: true, human: "a range of cells in a spreadsheet" },
-  "doc-table": { landed: true, human: "a table in a document" },
-  image: { landed: true, human: "an image in a document" }
+  "sheet-cell": { landed: true, human: word("textchain.text.cell_spreadsheet") },
+  "slide-shape": { landed: true, human: word("textchain.text.shape_deck") },
+  "doc-para": { landed: true, human: word("textchain.text.paragraph_document") },
+  "sheet-range": { landed: true, human: word("textchain.text.range_cells_spreadsheet") },
+  "doc-table": { landed: true, human: word("textchain.text.table_document") },
+  image: { landed: true, human: word("textchain.text.image_document") }
 };
 var CONTENT_EXTENT_A1_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}$/;
 var CONTENT_EXTENT_RANGE_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}(:\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6})?$/;
@@ -24973,6 +25611,7 @@ function describeExtent(extent) {
   const row3 = typeof e.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, e.kind) ? CONTENT_EXTENT_KINDS[e.kind] : null;
   return row3 ? row3.human : word("textchain.text.part_document_record");
 }
+var TIER_RULE = word("textchain.tier_rule");
 var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
 var WHITESPACE = /\s/u;
 function glyphCount(s) {
@@ -25003,7 +25642,7 @@ function mergeTier2Text(base, t2) {
         replaced: [],
         kept: [],
         perPageTier: null,
-        why: `this document's tier-1 reading has no per-page grain and already holds ${baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`}, so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
+        why: word("textchain.why.document_tier_reading", { held: baseGlyphs === null ? localize("text-chain.textchain.reported_characters_no_text_read", "{reported} character(s) its producer counted and no text this merge can read", { reported: String(reported) }) : localize("text-chain.textchain.decoded_glyphs_held", "{count} decoded glyph(s)", { count: String(baseGlyphs) }) })
       };
     return {
       ok: true,
@@ -25073,6 +25712,10 @@ function tier2Note(m) {
 // ../bio-plane/src/subresources.mjs
 var SUBRESOURCE_MAX = 8 * 1024 * 1024;
 var SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
+var SPREAD_CLOCKS = {
+  capture: { instant: "fetched_at", clock: localize("subresources.subresources.the_capturing_worker_s_clock", "the capturing Worker's clock, stamped as this capture issued the request") },
+  record: { instant: "reused_from_fetched_at", clock: "the Store's clock (site_assets.last_fetched), stamped when an earlier capture's fetch was filed" }
+};
 var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
 var linkWrapper = {
   anchor: (frag) => frag,
@@ -26306,7 +26949,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const boxes = [];
   const undecodedCenters = [];
   let unpositioned = 0;
-  const undetermined2 = content.unread.map((reason) => ({ page: pageIdx, reason, font: null, codes: "", count: 0 }));
+  const undetermined2 = content.unread.map((reason2) => ({ page: pageIdx, reason: reason2, font: null, codes: "", count: 0 }));
   let curFont = null;
   let curFontName = null;
   const stack = [];
@@ -30365,7 +31008,7 @@ async function docxStructure(parts) {
   const links = [];
   const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
   if (!walk) {
-    notes.push(parts.guard ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "word/document.xml unreadable: element references unavailable (stated)");
+    notes.push(parts.guard ? localize("office-readers.docx.word_document_xml_not_read_over_the_size_bound", "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())") : localize("office-readers.docx.word_document_xml_unreadable_element_references", "word/document.xml unreadable: element references unavailable (stated)"));
   }
   const docRelsPart = relsPartFor(parts.mainPart);
   for (const rel of parts.rels.outbound) {
@@ -31643,7 +32286,7 @@ async function odfPartsUnguarded(row3, bytes) {
     undetermined2.push({
       part: META_PART,
       why: "part_absent",
-      detail: "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author"
+      detail: localize("odf-reader.odf.this_package_carries_no_meta", "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author")
     });
   }
   const manifest = await manifestIntraLinks(b, container, contentXml, undetermined2);
@@ -31876,7 +32519,7 @@ function officeBody(contentXml, kind) {
   return inner ? inner.inner : null;
 }
 function bodyNotRead(parts, element) {
-  if (parts.guard) return "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())";
+  if (parts.guard) return localize("odf-reader.odf.content_xml_not_read_over", "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())");
   if (parts.repeat) return localize("odf-reader.odf.content_xml_not_read_its", "content.xml not read: its repeats expand past {boundName} (stated in evidentiary.undetermined and by text())", { boundName: String(parts.repeat.boundName) });
   return `content.xml unreadable or carries no <office:${element}>: element references unavailable (stated)`;
 }
@@ -32880,11 +33523,11 @@ var odsEntry = entryFor(ODS_ROW, odsStructure, odsText);
 var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
 var ODF_FORMATS = Object.freeze([ODT_ROW.flavour, ODS_ROW.flavour, ODP_ROW.flavour]);
 var ODF_EVIDENTIARY_MEASURED = Object.freeze({
-  ods: "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)",
-  odt: "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents"
+  ods: localize("odf-reader.odf.content_xml_byte_identical_across", "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 \xA74) and 18/18 over 3 census targets (M-123)"),
+  odt: localize("odf-reader.odf.content_xml_with_text_list", "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents")
 });
 var ODF_EVIDENTIARY_UNMEASURED = Object.freeze({
-  odp: "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp"
+  odp: localize("odf-reader.odf.no_odp_export_has_been", "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp")
 });
 var LIST_ID_RE = /(<text:list\b[^>]*?\sxml:id\s*=\s*)("([^"]*)"|'([^']*)')/g;
 var CONTINUE_RE = /(\stext:continue-list\s*=\s*)("([^"]*)"|'([^']*)')/g;
@@ -32968,7 +33611,7 @@ function encodingSignature(bytes) {
       encoding: bom.encoding,
       confidence: "certain",
       bomBytes: bom.bomBytes,
-      signals: [bom.signal, "declared by the producer in the bytes"],
+      signals: [bom.signal, localize("office-readers.csv.declared_by_the_producer_in_the_bytes", "declared by the producer in the bytes")],
       undetermined: null
     };
   }
@@ -32980,7 +33623,7 @@ function encodingSignature(bytes) {
       bomBytes: 0,
       signals: [
         `no byte >= 0x80 in the first ${window.length} bytes`,
-        "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+        localize("office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset", "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically")
       ],
       undetermined: null
     };
@@ -32992,8 +33635,8 @@ function encodingSignature(bytes) {
       bomBytes: 0,
       signals: [
         "no BOM",
-        "every multi-byte sequence in the signature window is valid utf-8",
-        "likely, not certain: validity is evidence, not the producer's declaration"
+        localize("office-readers.csv.every_multi_byte_sequence_in_the_signature_window", "every multi-byte sequence in the signature window is valid utf-8"),
+        localize("office-readers.csv.likely_not_certain_validity_is_evidence", "likely, not certain: validity is evidence, not the producer's declaration")
       ],
       undetermined: null
     };
@@ -33352,7 +33995,7 @@ var csvEntry = {
     if (ct === CSV_CONTENT_TYPE) {
       return { format: "csv", confidence: "likely", signals: [
         `content type "${contentType}"`,
-        "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
+        localize("office-readers.csv.likely_not_certain_a_declared_type_is_a_claim", "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against"),
         "measured: 166 of 166 .csv keys in s3://cao-94612 were served this type exactly (M-144)"
       ] };
     }
@@ -33426,8 +34069,8 @@ function detectFormat(bytes, contentType) {
     format: "undetermined",
     confidence: "none",
     signals: [
-      b ? "no registered magic-byte signature matched" : "no bytes were available to sniff",
-      ct ? localize("format-registry.formats.content_type_ct_matched_no", 'content type "{ct}" matched no registered format', { ct: String(ct) }) : "no content type was declared"
+      b ? localize("format-registry.formats.no_magic_byte_match", "no registered magic-byte signature matched") : localize("format-registry.formats.no_bytes_to_sniff", "no bytes were available to sniff"),
+      ct ? localize("format-registry.formats.content_type_ct_matched_no", 'content type "{ct}" matched no registered format', { ct: String(ct) }) : localize("format-registry.formats.no_content_type_declared", "no content type was declared")
     ]
   };
 }
@@ -33442,7 +34085,7 @@ registerFormat({
         return {
           format: "html",
           confidence: "certain",
-          signals: ["magic: doctype/root tag in the first 1024 bytes"]
+          signals: [localize("format-registry.formats.magic_doctype_root_tag", "magic: doctype/root tag in the first 1024 bytes")]
         };
       return null;
     }
@@ -33755,14 +34398,14 @@ var Q_SWITCH = Uint8Array.from(QE, (r) => r[3]);
 
 // ../pdf-worker/src/jbig2decode.mjs
 var JBIG2_REFUSES = Object.freeze({
-  "colour extension": "a region's colour-extension flag (T.88 Amendment 3) is set",
+  "colour extension": localize("image-codecs.jbig2decode.a_region_s_colour_extension", "a region's colour-extension flag (T.88 Amendment 3) is set"),
   "12 adaptive-template pixels": "a generic region's extended template (EXTTEMPLATE) is used",
-  "reused bitmap coding contexts": "a symbol dictionary reuses a previous dictionary's arithmetic contexts",
-  "Huffman-coded refinement": "a Huffman-coded symbol dictionary or text region refines its symbols",
-  "a necessary extension segment": "an extension segment the decoder must understand and does not",
-  "segment type": "a segment type T.88 does not define",
-  "several pages": "the stream holds more than one page",
-  "no page": "the stream holds no page information segment"
+  "reused bitmap coding contexts": localize("image-codecs.jbig2decode.a_symbol_dictionary_reuses_a", "a symbol dictionary reuses a previous dictionary's arithmetic contexts"),
+  "Huffman-coded refinement": localize("image-codecs.jbig2decode.a_huffman_coded_symbol_dictionary", "a Huffman-coded symbol dictionary or text region refines its symbols"),
+  "a necessary extension segment": localize("image-codecs.jbig2decode.an_extension_segment_the_decoder", "an extension segment the decoder must understand and does not"),
+  "segment type": localize("image-codecs.jbig2decode.a_segment_type_t_88", "a segment type T.88 does not define"),
+  "several pages": localize("image-codecs.jbig2decode.the_stream_holds_more_than", "the stream holds more than one page"),
+  "no page": localize("image-codecs.jbig2decode.the_stream_holds_no_page", "the stream holds no page information segment")
 });
 var L = (p, r, low, kind = "") => [p, r, low, kind];
 var STANDARD_TABLES = {
@@ -34169,12 +34812,12 @@ var BLACK_LUT = runLookup(BLACK);
 
 // ../pdf-worker/src/jpxdecode.mjs
 var JPX_REFUSES = Object.freeze({
-  "high-throughput coding": "the codestream uses Part 15 (HTJ2K) block coding",
-  "a JP2 palette": "the image's samples index a palette (pclr box)",
-  "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
+  "high-throughput coding": localize("image-codecs.jpxdecode.the_codestream_uses_part_15", "the codestream uses Part 15 (HTJ2K) block coding"),
+  "a JP2 palette": localize("image-codecs.jpxdecode.the_image_s_samples_index", "the image's samples index a palette (pclr box)"),
+  "sYCC colour": localize("image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined"),
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"
+  [localize("image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound")]: localize("image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile")
 });
 var f32 = Math.fround;
 var N = 1;
@@ -34430,6 +35073,24 @@ var BLACK_ALL = { ...BLACK_CODES, ...EXT_CODES };
 
 // ../pdf-worker/src/pagepixels.mjs
 var LATIN13 = new TextDecoder("latin1");
+var REFUSALS = {
+  NOT_A_PDF: "the bytes do not carry a %PDF- header",
+  NOT_A_PICTURE: "the bytes are neither a JPEG nor a PNG file",
+  ENCRYPTED: localize("pdf-pixels.pagepixels.the_document_is_encrypted_streams", "the document is encrypted; streams are ciphertext to this reader"),
+  NO_SUCH_PAGE: localize("pdf-pixels.pagepixels.the_page_index_is_outside", "the page index is outside the document"),
+  PAGE_UNREADABLE: localize("pdf-pixels.pagepixels.the_page_object_could_not", "the page object could not be read"),
+  PAGE_HAS_TEXT_LAYER: localize("pdf-pixels.pagepixels.the_page_carries_a_text", "the page carries a text layer; it does not need pixels"),
+  NOT_IMAGE_ONLY: localize("pdf-pixels.pagepixels.the_page_carries_marks_that", "the page carries marks that are not an embedded image"),
+  NO_IMAGE_ON_PAGE: localize("pdf-pixels.pagepixels.the_page_paints_no_image", "the page paints no image"),
+  MULTIPLE_IMAGES_ON_PAGE: localize("pdf-pixels.pagepixels.the_page_composes_several_images", "the page composes several images; compositing is not built"),
+  IMAGE_UNREADABLE: localize("pdf-pixels.pagepixels.the_image_xobject_s_stream", "the image XObject's stream could not be read"),
+  UNSUPPORTED_FILTER: localize("pdf-pixels.pagepixels.the_image_s_filter_chain", "the image's filter chain has no decoder here"),
+  UNSUPPORTED_SAMPLES: localize("pdf-pixels.pagepixels.the_image_s_sample_layout", "the image's sample layout has no decoder here"),
+  TRUNCATED_IMAGE_DATA: localize("pdf-pixels.pagepixels.the_decoded_image_is_short", "the decoded image is short of its declared height"),
+  DECODE_FAILED: localize("pdf-pixels.pagepixels.the_decoder_could_not_read", "the decoder could not read the image data"),
+  UNSUPPORTED_JPEG_PROCESS: "the JPEG is not baseline (progressive, arithmetic-coded, lossless, hierarchical or not 8-bit); only baseline is decoded here",
+  IMAGE_TOO_LARGE: localize("pdf-pixels.pagepixels.decoding_the_image_would_need", "decoding the image would need more memory than a decode may use here")
+};
 var featureReasons = (declared, named) => Object.freeze(Object.fromEntries(Object.keys(declared).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
 var JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
 var JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
@@ -34446,15 +35107,15 @@ var CRC_TABLE = (() => {
 // ../pdf-worker/src/imagecrop.mjs
 var CROP_REFUSALS = Object.freeze({
   NOT_AN_IMAGE_EXTENT: "the extent is not an `image` extent in its PDF form ({kind:'image', page, rect})",
-  RECT_REQUIRED: "the extent names a page and no rectangle, so it names no one image to crop",
+  RECT_REQUIRED: localize("pdf-pixels.imagecrop.the_extent_names_a_page", "the extent names a page and no rectangle, so it names no one image to crop"),
   NOT_A_PDF: "the bytes do not carry a %PDF- header",
-  ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
-  NO_SUCH_PAGE: "the page index is outside the document",
-  PAGE_UNWALKABLE: "the page's content could not be interpreted, so what it paints is undetermined",
-  NO_IMAGE_AT_RECT: "the page paints no image at exactly that rectangle",
-  AMBIGUOUS_RECT: "the page paints more than one image at exactly that rectangle",
-  INLINE_IMAGE: "the image at that rectangle is inline in the content stream; extracting inline images is not built",
-  DECODE_REFUSED: "the image was found and its samples could not be decoded here"
+  ENCRYPTED: localize("pdf-pixels.imagecrop.the_document_is_encrypted_streams", "the document is encrypted; streams are ciphertext to this reader"),
+  NO_SUCH_PAGE: localize("pdf-pixels.imagecrop.the_page_index_is_outside", "the page index is outside the document"),
+  PAGE_UNWALKABLE: localize("pdf-pixels.imagecrop.the_page_s_content_could", "the page's content could not be interpreted, so what it paints is undetermined"),
+  NO_IMAGE_AT_RECT: localize("pdf-pixels.imagecrop.the_page_paints_no_image", "the page paints no image at exactly that rectangle"),
+  AMBIGUOUS_RECT: localize("pdf-pixels.imagecrop.the_page_paints_more_than", "the page paints more than one image at exactly that rectangle"),
+  INLINE_IMAGE: localize("pdf-pixels.imagecrop.the_image_at_that_rectangle", "the image at that rectangle is inline in the content stream; extracting inline images is not built"),
+  DECODE_REFUSED: localize("pdf-pixels.imagecrop.the_image_was_found_and", "the image was found and its samples could not be decoded here")
 });
 
 // ../bio-plane/src/record-core/schema.mjs
@@ -38882,7 +39543,7 @@ var Membership = class _Membership {
    *  C-70.1, and only then is ownership asked — through `isProjectOwner`, §7's one owner predicate, so an
    *  administrator, the founder and every machine credential are refused (administrators direct nothing, §4.9,
    *  and §7.13's rescue does not set it). A viewer never SENT is not asked, `rosterInSight`'s precedent. */
-  projectVisibilitySet({ projectId, setting, reason = null, by, viewer = null } = {}) {
+  projectVisibilitySet({ projectId, setting, reason: reason2 = null, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     const existence = b ? this.existenceAct(projectId, viewer) : null;
     if (existence) return existence;
@@ -38914,7 +39575,7 @@ var Membership = class _Membership {
       const guarded = this.#projectActGuarded("visibility", projectId, by, want);
       if (guarded) return guarded;
     }
-    const why = reason === null || reason === void 0 || String(reason).trim() === "" ? null : String(reason).slice(0, 280);
+    const why = reason2 === null || reason2 === void 0 || String(reason2).trim() === "" ? null : String(reason2).slice(0, 280);
     const at7 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
@@ -39623,7 +40284,7 @@ var Membership = class _Membership {
     return { ok: true, memberId, invite, expires, endorsedBy: have.sort() };
   }
   /** Vote to remove an administrator. Section 4.7. */
-  adminRemove({ memberId, by, reason } = {}) {
+  adminRemove({ memberId, by, reason: reason2 } = {}) {
     const admins = this.activeAdmins();
     if (!by || !admins.includes(by)) return notAnAdmin(by, "voting to remove an administrator");
     if (memberId === _Membership.ROOT_ADMIN)
@@ -39646,7 +40307,7 @@ var Membership = class _Membership {
       reason: "TARGET_CANNOT_VOTE",
       detail: "the target is counted in the denominator but does not vote"
     };
-    const why = String(reason ?? "").trim();
+    const why = String(reason2 ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "removals are recorded with a reason" };
     const math = _Membership.adminMath(admins.length);
     if (!math.possible)
@@ -44488,7 +45149,7 @@ function validateInto(p, errors) {
   if (own4(p, "time_zone")) zone("time_zone", p.time_zone);
   const amountOf = (path, a) => {
     if (!isObj2(a) || Object.keys(a).some((k) => k !== "amount" && k !== "units") || !isPosInt(a.amount) || !UNITS.includes(a.units))
-      err(path, "VALUE_INVALID", `an amount is {amount, units}, a positive integer of one of ${UNITS.join(", ")}`);
+      err(path, "VALUE_INVALID", localize("jurisdictions.index.amount_is_amount_and_units", "an amount is {amount, units}, a positive integer of one of {units_list}", { units_list: UNITS.join(", ") }));
   };
   const computationKeys = /* @__PURE__ */ new Set();
   if (own4(p, "computation")) list3("computation", p.computation).forEach((c, i) => {
@@ -44620,7 +45281,7 @@ function validateInto(p, errors) {
   const venueKinds = /* @__PURE__ */ new Set();
   const templateIds = /* @__PURE__ */ new Set();
   const templateOf = (ta, t, k, inList) => {
-    if (!isObj2(t)) err(ta, "TEMPLATE_UNATTRIBUTED", `a template is {${TEMPLATE_FIELDS.join(", ")}}, never bare text`);
+    if (!isObj2(t)) err(ta, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.a_template_is_fields_never_bare", "a template is {{fields}}, never bare text", { fields: TEMPLATE_FIELDS.join(", ") }));
     else {
       fields(ta, t, [...TEMPLATE_FIELDS, "name", "sources", ...inList ? ["purpose"] : []]);
       for (const f4 of TEMPLATE_FIELDS)
@@ -44673,10 +45334,10 @@ function validateInto(p, errors) {
         err(`${ta}.name`, "VALUE_INVALID", localize("jurisdictions.index.name_is_a_title_of", "name is a title of at most {TEMPLATE_NAME_MAX} characters on one line", { TEMPLATE_NAME_MAX: String(TEMPLATE_NAME_MAX) }));
     }
     if (isObj2(t) && (inList || own4(t, "sources"))) {
-      if (!Array.isArray(t.sources) || !t.sources.length) err(`${ta}.sources`, "VALUE_INVALID", "sources lists at least one public source {citation}");
+      if (!Array.isArray(t.sources) || !t.sources.length) err(`${ta}.sources`, "VALUE_INVALID", localize("jurisdictions.index.sources_lists_one_public_source", "sources lists at least one public source, each with a citation"));
       else t.sources.forEach((x, j) => {
         if (!isObj2(x) || Object.keys(x).some((f4) => f4 !== "citation") || !isStr(x.citation))
-          err(`${ta}.sources[${j}]`, "VALUE_INVALID", "a source is {citation}, non-empty");
+          err(`${ta}.sources[${j}]`, "VALUE_INVALID", localize("jurisdictions.index.a_source_has_a_citation", "a source has one field, citation, which is non-empty"));
       });
     }
   };
@@ -44941,7 +45602,7 @@ function validateInto(p, errors) {
       else if (years.has(`${h.year}\0${key}`)) err(
         `${at7}.year`,
         "HOLIDAY_INVALID",
-        localize("jurisdictions.index.year_is_listed_twice_for", "{year} is listed twice for {v1}{v2}", { year: String(h.year), v1: String(own4(h, "list") ? `the list ${String(h.list)} and ` : ""), v2: String(own4(h, "offices") ? "the same offices" : "all offices") })
+        own4(h, "list") ? own4(h, "offices") ? localize("jurisdictions.index.year_listed_twice_for_list_and_the_same_offices", "{year} is listed twice for the list {list} and the same offices", { year: String(h.year), list: String(h.list) }) : localize("jurisdictions.index.year_listed_twice_for_list_and_all_offices", "{year} is listed twice for the list {list} and all offices", { year: String(h.year), list: String(h.list) }) : own4(h, "offices") ? localize("jurisdictions.index.year_listed_twice_for_the_same_offices", "{year} is listed twice for the same offices", { year: String(h.year) }) : localize("jurisdictions.index.year_listed_twice_for_all_offices", "{year} is listed twice for all offices", { year: String(h.year) })
       );
       else years.add(`${h.year}\0${key}`);
       const dates = /* @__PURE__ */ new Set();
@@ -45114,7 +45775,7 @@ function validateInto(p, errors) {
         err(`${at7}.covers`, "DEMAND_INVALID", localize("jurisdictions.index.covers_is_a_non_empty", "covers is a non-empty list from {DEMAND_COVERS}", { DEMAND_COVERS: String(DEMAND_COVERS.join(", ")) }));
       const w = d.within;
       if (!isObj2(w) || Object.keys(w).some((k) => k !== "amount" && k !== "units") || !isPosInt(w.amount) || !UNITS.includes(w.units))
-        err(`${at7}.within`, "DEMAND_INVALID", `within is {amount, units}, units one of ${UNITS.join(", ")}`);
+        err(`${at7}.within`, "DEMAND_INVALID", localize("jurisdictions.index.within_is_amount_and_units", "within is {amount, units}, units one of {units_list}", { units_list: UNITS.join(", ") }));
       str(`${at7}.citation`, d.citation, "citation");
       statusBasis(at7, d);
     });
@@ -45593,7 +46254,7 @@ function merge(profiles) {
       conflict(
         "practice.minutes_due_days",
         given.map(({ written, ...g }) => g),
-        "the active profiles give different periods after which absent minutes raise a question, so none is given"
+        localize("jurisdictions.index.minutes_due_conflict", "the active profiles give different periods after which absent minutes raise a question, so none is given")
       );
   }
   if (has("locale")) {
@@ -45605,12 +46266,12 @@ function merge(profiles) {
         profile: given[0].profile,
         bases: given.map((g) => ({ profile: g.profile, basis: g.basis }))
       };
-    else conflict("locale", given, "the active profiles name different locales, so none is given: a render asks for its fallback");
+    else conflict("locale", given, localize("jurisdictions.index.locale_conflict", "the active profiles name different locales, so none is given: a render asks for its fallback"));
   }
   if (has("time_zone")) {
     const given = profiles.filter((p) => p.time_zone).map((p) => ({ profile: p.id, value: p.time_zone, basis: p.time_zone.basis }));
     if (agree(given)) view.time_zone = keep(given);
-    else conflict("time_zone", given, "the active profiles name different time zones, so none is given: a time of day there is undetermined");
+    else conflict("time_zone", given, localize("jurisdictions.index.time_zone_conflict", "the active profiles name different time zones, so none is given: a time of day there is undetermined"));
   }
   for (const sec of ["search_terms", "legal_organisations", "phrasings"])
     if (has(sec)) {
@@ -45621,7 +46282,7 @@ function merge(profiles) {
   if (has("records_help")) {
     const given = profiles.filter((p) => p.records_help).map((p) => ({ profile: p.id, value: p.records_help, basis: p.records_help.basis }));
     if (agree(given)) view.records_help = keep(given);
-    else conflict("records_help", given, "the active profiles give different records-request help, so none is given: the page has no figure to show");
+    else conflict("records_help", given, localize("jurisdictions.index.records_help_conflict", "the active profiles give different records-request help, so none is given: the page has no figure to show"));
   }
   if (has("forums")) {
     const v = [];
@@ -45679,7 +46340,7 @@ function merge(profiles) {
           }]
         ],
         FAMILY,
-        "the family is dropped from the view: a citation of it is recognised by no profile until they agree"
+        localize("jurisdictions.index.family_dropped_from_view", "the family is dropped from the view: a citation of it is recognised by no profile until they agree")
       ],
       [
         (e) => `${e.source}\0${e.issuer}`,
@@ -45693,7 +46354,7 @@ function merge(profiles) {
           }]
         ],
         "a standard source",
-        "who issues it is undetermined"
+        localize("jurisdictions.index.who_issues_undetermined", "who issues it is undetermined")
       ]
     ];
     for (const [keyOf, facts, what, says] of ONE) {
@@ -45788,7 +46449,7 @@ function merge(profiles) {
         localize("jurisdictions.index.the_active_profiles_give_different_3", "the active profiles give different time zones for {role} ({body}), so its local day is undetermined", { role: String(role), body: String(body) })
       );
     }
-    const NAMED = { ids: "identifiers", within: "organisations it is part of", organisation: "body-variant keys" };
+    const NAMED = { ids: localize("jurisdictions.index.named_identifiers", "identifiers"), within: localize("jurisdictions.index.named_within", "organisations it is part of"), organisation: localize("jurisdictions.index.named_body_variants", "body-variant keys") };
     for (const [f4, m] of Object.entries(named)) for (const [k, given] of m) {
       if (agree(given)) {
         each(k, (c) => {
@@ -45842,8 +46503,8 @@ function merge(profiles) {
         const SAYS = {
           hours: "its hours are undetermined",
           cutoff: "its cutoff is undetermined",
-          receipt: "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined",
-          time_zone: "its local day is undetermined"
+          receipt: localize("jurisdictions.index.receipt_on_closed_day", "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined"),
+          time_zone: localize("jurisdictions.index.local_day_undetermined", "its local day is undetermined")
         };
         for (const f4 of ["hours", "cutoff", "receipt", "time_zone"]) {
           const vs = given.filter((g) => isObj2(g.k.venue) && own4(g.k.venue, f4)).map((g) => ({ profile: g.profile, value: g.k.venue[f4], basis: g.k.venue[f4].basis }));
@@ -45957,7 +46618,7 @@ function merge(profiles) {
     if (!has(sec)) continue;
     const given = profiles.filter((p) => p[sec]).map((p) => ({ profile: p.id, value: p[sec], basis: p[sec].basis }));
     if (agree(given)) view[sec] = keep(given);
-    else conflict(sec, given, sec === "weekend" ? "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined" : "the active profiles give different instrument-key segments, so no key is composed");
+    else conflict(sec, given, sec === "weekend" ? localize("jurisdictions.index.weekend_conflict", "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined") : localize("jurisdictions.index.instrument_key_conflict", "the active profiles give different instrument-key segments, so no key is composed"));
   }
   for (const [sec, keyOf, what] of ONE_PER_KEY) {
     if (!has(sec)) continue;
@@ -46601,7 +47262,7 @@ var ProjectRoster = class _ProjectRoster {
      the inactive owners keep their rows, so a reactivated one is an owner again alongside the added one, and nothing
      about this exception strips anyone. Its caller-and-project refusals are membership's `rescueRefusal` (its R75),
      asked here so the offer (affordances) and the act cannot disagree. */
-  projectOwnerRescue({ projectId, handle, by, reason, viewer = null } = {}) {
+  projectOwnerRescue({ projectId, handle, by, reason: reason2, viewer = null } = {}) {
     if (!this.#rescueAtExistence(projectId, viewer)) {
       const refused2 = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" });
       if (refused2) return refused2;
@@ -46616,7 +47277,7 @@ var ProjectRoster = class _ProjectRoster {
     };
     if (this.projectScope(projectId).scope === "own") return this.#scopeOwn(projectId, "rescue");
     if (blocked) return named(blocked);
-    const why = String(reason ?? "").trim();
+    const why = String(reason2 ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
     const target = this.m.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
@@ -46647,7 +47308,7 @@ var ProjectRoster = class _ProjectRoster {
   }
   /* R4 (§7.10 removal). A majority of all owners, the target in the denominator and not voting, EXCEPT at exactly two
      owners where both must agree and the target is one of them. The floor is one owner. */
-  projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
+  projectOwnerRemove({ projectId, handle, by, reason: reason2, viewer = null } = {}) {
     {
       const refused2 = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" });
       if (refused2) return refused2;
@@ -46662,7 +47323,7 @@ var ProjectRoster = class _ProjectRoster {
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (!this.m.isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
-    const why = String(reason ?? "").trim();
+    const why = String(reason2 ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
     const owners = this.m.projectOwners(projectId);
     const math = Membership.ownerMath(owners.length);
@@ -46841,9 +47502,9 @@ var ProjectRoster = class _ProjectRoster {
     };
   }
   /* R21, R24: a reason is required, and bounded. Answers the trimmed reason, or null for absent, blank or too long. */
-  static #reason(reason) {
-    if (typeof reason !== "string") return null;
-    const why = reason.trim();
+  static #reason(reason2) {
+    if (typeof reason2 !== "string") return null;
+    const why = reason2.trim();
     return why && why.length <= _ProjectRoster.REASON_MAX ? why : null;
   }
   static #noReason(detail) {
@@ -46886,7 +47547,7 @@ var ProjectRoster = class _ProjectRoster {
   /** R21: SET A PROJECT'S SCOPE. Sight first (the Terms'), then position, then the scope's own refusals, each writing
    *  nothing. The participant is asked of membership's fence (its R55, `joined`) as the member `by` names, so a caller
    *  that is no member of the project, a machine credential or the founder included, is refused there. */
-  projectScopeSet({ projectId, scope, reason, by, viewer = null } = {}) {
+  projectScopeSet({ projectId, scope, reason: reason2, by, viewer = null } = {}) {
     {
       const refused2 = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused2) return refused2;
@@ -46903,7 +47564,7 @@ var ProjectRoster = class _ProjectRoster {
         "PROJECT_SCOPE_UNKNOWN",
         localize("project-roster.index.stringify_is_not_a_scope", "{stringify} is not a scope: a project is a counsel matter (counsel_matter), a member's own project (own), or neither (none). Nothing was written.", { stringify: String(JSON.stringify(String(scope ?? "").slice(0, 40))) })
       );
-    const why = _ProjectRoster.#reason(reason);
+    const why = _ProjectRoster.#reason(reason2);
     if (!why) return _ProjectRoster.#noReason(
       `a project's scope is set with a reason of at most ${_ProjectRoster.REASON_MAX} characters. Nothing was written.`
     );
@@ -46967,7 +47628,7 @@ var ProjectRoster = class _ProjectRoster {
   }
   /** R24: SET WHICH ACTS NEED A SECOND MEMBER'S APPROVAL. An owner's act (administrators and the founder included, as
    *  R3), after sight; each entry checked, then each kind against the active profiles' view, then the reason. */
-  projectApprovalSet({ projectId, needs, reason, by, viewer = null } = {}) {
+  projectApprovalSet({ projectId, needs, reason: reason2, by, viewer = null } = {}) {
     {
       const refused2 = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused2) return refused2;
@@ -46992,7 +47653,7 @@ var ProjectRoster = class _ProjectRoster {
     for (const [i, n] of clean.entries())
       if (n.kind && !held2.has(n.kind))
         return refusal8("APPROVAL_KIND_UNKNOWN", localize("project-roster.index.stringify_is_not_a_kind", "{stringify} is not a kind of action in your team's active jurisdiction profiles. Nothing was written.", { stringify: String(JSON.stringify(n.kind)) }), { entry: n, index: i });
-    const why = _ProjectRoster.#reason(reason);
+    const why = _ProjectRoster.#reason(reason2);
     if (!why) return _ProjectRoster.#noReason(
       `a project's approval setting is set with a reason of at most ${_ProjectRoster.REASON_MAX} characters. Nothing was written.`
     );
@@ -48417,7 +49078,7 @@ var aspnet_webforms_default = {
       {
         key: "webforms_page_state",
         region: REGION.MECHANICAL,
-        label: "page state this site rebuilds on every visit",
+        label: localize("site-profiles.aspnet-webforms.page_state_this_site_rebuilds", "page state this site rebuilds on every visit"),
         patterns: [
           new RegExp(`(<input[^>]*\\bname="(?:${VIEWSTATE_FIELDS})"[^>]*\\bvalue=")([^"]*)(")`, "gi"),
           /* Some skins emit the field with value= before name=. Measured absent on
@@ -48447,7 +49108,7 @@ var aspnet_webforms_default = {
       {
         key: "ad_slots",
         region: REGION.MECHANICAL,
-        label: "an advertising or analytics slot",
+        label: localize("site-profiles.aspnet-webforms.an_advertising_or_analytics", "an advertising or analytics slot"),
         patterns: [
           /(\bdata-google-query-id=")([^"]*)(")/gi,
           /(["'&](?:correlator|cachebuster|ord|gclid|_ga|_gid)=)([^"'&\s]+)()/gi
@@ -48488,7 +49149,7 @@ var aspnet_webforms_default = {
 // ../site-profiles/handlers/wordpress.mjs
 var wordpress_default = {
   key: "wordpress",
-  label: "a page published with WordPress",
+  label: localize("site-profiles.wordpress.a_page_published_with_wordpress", "a page published with WordPress"),
   version: 1,
   textual: true,
   detect(ctx) {
@@ -48548,13 +49209,13 @@ var wordpress_default = {
       {
         key: "wp_asset_version",
         region: REGION.MECHANICAL,
-        label: "a version stamp on a design file",
+        label: localize("site-profiles.wordpress.a_version_stamp_on_a_design", "a version stamp on a design file"),
         patterns: [/((?:\/wp-content\/|\/wp-includes\/)[^"'\s>]*[?&]ver=)([^"'&\s>]+)()/gi]
       },
       {
         key: "wp_ads",
         region: REGION.MECHANICAL,
-        label: "an advertising or analytics slot",
+        label: localize("site-profiles.wordpress.an_advertising_or_analytics", "an advertising or analytics slot"),
         patterns: [
           /(\bdata-google-query-id=")([^"]*)(")/gi,
           /(\bid="div-gpt-ad-)([0-9]{6,}[^"]*)(")/gi,
@@ -48609,9 +49270,10 @@ var wordpress_default = {
 };
 
 // ../site-profiles/handlers/client-rendered.mjs
+var NO_PROSE = localize("site-profiles.client-rendered.no_links_and_no_prose_in_the", "no links and no prose in the body");
 var client_rendered_default = {
   key: "client_rendered",
-  label: "an application that builds its pages in the browser",
+  label: localize("site-profiles.client-rendered.an_application_that_builds_its", "an application that builds its pages in the browser"),
   version: 1,
   textual: true,
   /* The flag a capture path reads to decide whether the served bytes are worth
@@ -48631,8 +49293,8 @@ var client_rendered_default = {
     const paras = (text2.match(/<p\b/gi) || []).length;
     const body = /<body\b[\s\S]*<\/body>/i.exec(text2);
     const bodyLen = body ? body[0].length : text2.length;
-    if (bodyLen > 2e3 && anchors === 0 && paras <= 1) signals.push("no links and no prose in the body");
-    if (signals.includes("no links and no prose in the body") && signals.length >= 2)
+    if (bodyLen > 2e3 && anchors === 0 && paras <= 1) signals.push(NO_PROSE);
+    if (signals.includes(NO_PROSE) && signals.length >= 2)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     if (signals.length >= 2) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
     if (signals.length) return { match: true, confidence: CONFIDENCE.POSSIBLE, signals };
@@ -48781,7 +49443,7 @@ function identify(ctx) {
       confidence: CONFIDENCE.NONE,
       signals: [],
       considered: r.considered,
-      why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+      why: localize("site-profiles.index.no_handler_recognised_this_document", "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported")
     };
   const out = { handler, confidence: r.confidence, signals: r.signals, considered: r.considered };
   if (typeof handler.kind === "function") out.kind = handler.kind(ctx);
@@ -48795,7 +49457,7 @@ var CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE
 var types = makeRegistry();
 var NO_TYPE = Object.freeze({
   key: "unregistered",
-  label: "no content type is registered",
+  label: localize("docprofile.registry.no_content_type_is_registered", "no content type is registered"),
   version: 0,
   fallback: true,
   contract: CONTRACT.SUBSTANCE
@@ -48811,9 +49473,9 @@ function doctypeFor(ctx) {
     also: alsoFor(ctx, r.member.key)
   };
   if (r.member === NO_TYPE)
-    out.why = "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described";
+    out.why = localize("docprofile.registry.no_content_type_is_registered_to_recognise", "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described");
   else if (!r.matched)
-    out.why = "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described";
+    out.why = localize("docprofile.registry.no_registered_content_type_recognised", "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described");
   return out;
 }
 function alsoFor(ctx, selfKey) {
@@ -48867,7 +49529,7 @@ function flattenText(supplied) {
       undetermined: 0,
       reasons: [],
       segments: [],
-      position_why: "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said"
+      position_why: localize("docprofile.readtext.the_text_arrived_as_a", "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said")
     };
   if (!supplied || typeof supplied !== "object")
     return {
@@ -48892,7 +49554,7 @@ function flattenText(supplied) {
         (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
       );
       if (j.text === text2) segments = j.segments;
-      else position_why = "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed";
+      else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_pages", "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed");
     } else if (paras && paras.length) {
       const j = joinItemised(
         paras,
@@ -48903,9 +49565,9 @@ function flattenText(supplied) {
         )
       );
       if (j.text === text2) segments = j.segments;
-      else position_why = "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed";
+      else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_paragraphs", "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed");
     } else {
-      position_why = "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said";
+      position_why = localize("docprofile.readtext.this_producer_emitted_document_text", "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said");
     }
   } else if (Array.isArray(supplied.pages) && supplied.pages.length) {
     const j = joinItemised(
@@ -48966,7 +49628,7 @@ function readText(supplied, ctx = {}) {
       chars: 0,
       undetermined: flat.undetermined,
       reasons: flat.reasons,
-      why: flat.undetermined > 0 ? localize("docprofile.readtext.the_text_of_this_document", "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one", { undetermined: String(flat.undetermined), named: String(named) }) : "no text was supplied, so no reading was attempted"
+      why: flat.undetermined > 0 ? localize("docprofile.readtext.the_text_of_this_document", "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one", { undetermined: String(flat.undetermined), named: String(named) }) : localize("docprofile.readtext.no_text_was_supplied_so_no", "no text was supplied, so no reading was attempted")
     };
   }
   if (flat.undetermined > flat.chars) {
@@ -54179,6 +54841,80 @@ var MACHINE_METHODS = Object.freeze(["reader", "ocr", "table_binding"]);
 var SET_PURPOSES = Object.freeze(["trail", "attribution"]);
 var CONCERNS_KINDS = Object.freeze(["contract", "fund", "program", "proceeding"]);
 var CHANGES = Object.freeze(["added", "withdrawn", "adjusted", "set_changed"]);
+
+// ../bio-plane/src/civil-time/reasons.mjs
+var TEXT = {
+  "civil-time.start_stated": (v) => word("civil-time.start_stated", v),
+  "civil-time.end_stated": (v) => word("civil-time.end_stated", v),
+  "civil-time.validity_states_zone": (v) => word("civil-time.validity_states_zone", v),
+  "civil-time.precision_precision_held": (v) => word("civil-time.precision_precision_held", v),
+  "civil-time.occur_clocks_move": (v) => word("civil-time.occur_clocks_move", v),
+  "civil-time.occurs_twice_clocks": (v) => word("civil-time.occurs_twice_clocks", v),
+  "civil-time.window_open_end": (v) => word("civil-time.window_open_end", v),
+  "civil-time.date_open_unknown": (v) => word("civil-time.date_open_unknown", v),
+  "civil-time.spans_two_fiscal": (v) => word("civil-time.spans_two_fiscal", v),
+  "civil-time.recurrence.fiscal_year_form": (v) => localize("civil-time.recurrence.fiscal_year_form", "the fiscal year held for {body} does not give a start day (MM-DD) and a named_by (start or end)", v),
+  "civil-time.missing.weekend_withheld": (v) => localize("civil-time.missing.weekend_withheld", "the weekend is withheld: the active profiles disagree on it ({at})", v),
+  "civil-time.missing.weekend_absent": (v) => localize("civil-time.missing.weekend_absent", "the weekend is not held by the jurisdiction view", v),
+  "civil-time.missing.weekend_counting_withheld": (v) => localize("civil-time.missing.weekend_counting_withheld", "the weekend is withheld: the active profiles disagree on it ({at}); a business count or a roll needs it (the weekend is never assumed)", v),
+  "civil-time.missing.weekend_counting_absent": (v) => localize("civil-time.missing.weekend_counting_absent", "the weekend is not held by the jurisdiction view; a business count or a roll needs it (the weekend is never assumed)", v),
+  "civil-time.missing.computation_withheld": (v) => localize("civil-time.missing.computation_withheld", "the computation '{computation}' the rule names is withheld: the active profiles disagree on it ({at})", v),
+  "civil-time.missing.computation_absent": (v) => localize("civil-time.missing.computation_absent", "the computation '{computation}' the rule names is not held by the jurisdiction view", v),
+  "civil-time.missing.fiscal_year_withheld": (v) => localize("civil-time.missing.fiscal_year_withheld", "a fiscal year for {body} is withheld: the active profiles disagree on it ({at})", v),
+  "civil-time.missing.fiscal_year_absent": (v) => localize("civil-time.missing.fiscal_year_absent", "a fiscal year for {body} is not held by the jurisdiction view", v),
+  "civil-time.missing.closure_list_withheld": (v) => localize("civil-time.missing.closure_list_withheld", "the closure list '{list}', which the rule names, is withheld: the active profiles disagree on it ({at})", v),
+  "civil-time.missing.closure_list_absent": (v) => localize("civil-time.missing.closure_list_absent", "the closure list '{list}', which the rule names, is not held by the jurisdiction view", v),
+  "civil-time.calendar.list_year_withheld": (v) => localize("civil-time.calendar.list_year_withheld", "the closure list '{list}' for {year} is withheld: the active profiles disagree on it", v),
+  "civil-time.calendar.office_year_withheld": (v) => localize("civil-time.calendar.office_year_withheld", "the office calendar for {year} is withheld: the active profiles disagree on it", v),
+  "civil-time.calendar.uncovered_list": (v) => localize("civil-time.calendar.uncovered_list", "the count reaches {year}, a year the closure list '{list}' does not cover for every office", v),
+  "civil-time.calendar.uncovered_list_office": (v) => localize("civil-time.calendar.uncovered_list_office", "the count reaches {year}, a year the closure list '{list}' does not cover for {office}", v),
+  "civil-time.calendar.uncovered_office": (v) => localize("civil-time.calendar.uncovered_office", "the count reaches {year}, a year the office calendar does not cover for every office", v),
+  "civil-time.calendar.uncovered_office_office": (v) => localize("civil-time.calendar.uncovered_office_office", "the count reaches {year}, a year the office calendar does not cover for {office}", v),
+  "civil-time.calendar.list_disputed": (v) => localize("civil-time.calendar.list_disputed", "the closure list '{list}' for {year}{offices} is disputed in your team's Civicsmith", v),
+  "civil-time.calendar.office_disputed": (v) => localize("civil-time.calendar.office_disputed", "the office calendar for {year}{offices} is disputed in your team's Civicsmith", v),
+  "civil-time.calendar.list_cannot_read": (v) => localize("civil-time.calendar.list_cannot_read", "the closure list '{list}' for {year}{offices} cannot be read in your team's Civicsmith", v),
+  "civil-time.calendar.office_cannot_read": (v) => localize("civil-time.calendar.office_cannot_read", "the office calendar for {year}{offices} cannot be read in your team's Civicsmith", v),
+  "civil-time.calendar.list_cannot_read_why": (v) => localize("civil-time.calendar.list_cannot_read_why", "the closure list '{list}' for {year}{offices} cannot be read in your team's Civicsmith: {why}", v),
+  "civil-time.calendar.office_cannot_read_why": (v) => localize("civil-time.calendar.office_cannot_read_why", "the office calendar for {year}{offices} cannot be read in your team's Civicsmith: {why}", v),
+  "civil-time.rules.invalid_units": (v) => localize("civil-time.rules.invalid_units", "the rule's units '{units}' is not one of {allowed}", v),
+  "civil-time.rules.invalid_amount": (v) => localize("civil-time.rules.invalid_amount", "the rule's amount is not a positive whole number", v),
+  "civil-time.rules.invalid_direction": (v) => localize("civil-time.rules.invalid_direction", "the rule's direction '{direction}' is neither forward nor backward", v),
+  "civil-time.rules.invalid_count_unstated": (v) => localize("civil-time.rules.invalid_count_unstated", "the rule's count is not stated (calendar or business)", v),
+  "civil-time.rules.invalid_count": (v) => localize("civil-time.rules.invalid_count", "the rule's count '{count}' is neither calendar nor business", v),
+  "civil-time.rules.invalid_count_with_units": (v) => localize("civil-time.rules.invalid_count_with_units", "the rule's count is given with units '{units}'", v),
+  "civil-time.rules.invalid_roll": (v) => localize("civil-time.rules.invalid_roll", "the rule's roll is not true or false", v),
+  "civil-time.rules.invalid_closures": (v) => localize("civil-time.rules.invalid_closures", "the rule's closures is not a list's name", v),
+  "civil-time.rules.invalid_due_at": (v) => localize("civil-time.rules.invalid_due_at", "the rule's due_at is neither close_of_business nor HH:MM", v),
+  "civil-time.rules.invalid_applies_on": (v) => localize("civil-time.rules.invalid_applies_on", "the rule's applies_on is not a list of day names", v),
+  "civil-time.rules.invalid_extension_days": (v) => localize("civil-time.rules.invalid_extension_days", "the rule's extension has no positive whole number of days", v),
+  "civil-time.rules.invalid_extension_count": (v) => localize("civil-time.rules.invalid_extension_count", "the rule's extension count '{count}' is neither calendar nor business", v),
+  "civil-time.rules.invalid_receipt": (v) => localize("civil-time.rules.invalid_receipt", "the rule's venue receipt '{rule}' is not a receipt rule this module counts", v),
+  "civil-time.rules.invalid_computation": (v) => localize("civil-time.rules.invalid_computation", "the rule's computation names '{rule}', a computation this module does not count", v),
+  "civil-time.rules.unmeasured": (v) => localize("civil-time.rules.unmeasured", "the rule's basis is UNMEASURED: no measurement or ruling sources it (K1445)", v),
+  "civil-time.rules.anchor_open_end": (v) => localize("civil-time.rules.anchor_open_end", "the anchor {value} has an open or unknown end", v),
+  "civil-time.rules.anchor_hours_precision": (v) => localize("civil-time.rules.anchor_hours_precision", "an hours rule counts from the anchor's time, and {value} is held at {precision} precision", v),
+  "civil-time.rules.anchor_undetermined": (v) => localize("civil-time.rules.anchor_undetermined", "the anchor is undetermined: {why}", v),
+  "civil-time.rules.anchor_undetermined_unsaid": (v) => localize("civil-time.rules.anchor_undetermined_unsaid", "the anchor is undetermined: no why given", v),
+  "civil-time.rules.not_applicable_day": (v) => localize("civil-time.rules.not_applicable_day", "the rule applies only to an event on {days}, and the anchor is a {weekday}", v),
+  "civil-time.rules.not_applicable_span": (v) => localize("civil-time.rules.not_applicable_span", "the rule applies only to an event on {days}, and the anchor is not a single day", v),
+  "civil-time.rules.due_undetermined": (v) => localize("civil-time.rules.due_undetermined", "the due date is undetermined: {why}", v),
+  "civil-time.rules.due_undetermined_unsaid": (v) => localize("civil-time.rules.due_undetermined_unsaid", "the due date is undetermined: no why given", v),
+  "civil-time.rules.due_open_end": (v) => localize("civil-time.rules.due_open_end", "the due {value} has an open end", v),
+  "civil-time.rules.possibly_overdue_day": (v) => localize("civil-time.rules.possibly_overdue_day", "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {day} in {zone} lies after the first and not after the second (K1444 (i))", v),
+  "civil-time.rules.possibly_overdue_instant": (v) => localize("civil-time.rules.possibly_overdue_instant", "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {instant} lies after the first and not after the second (K1444 (i))", v),
+  "civil-time.rules.span_open_end": (v) => localize("civil-time.rules.span_open_end", "{value} has an open or unknown end", v),
+  "civil-time.rules.span_needs_view": (v) => localize("civil-time.rules.span_needs_view", "a span in business days needs the jurisdiction view", v),
+  "civil-time.values.start_open": (v) => localize("civil-time.values.start_open", "{value} has an open start, so which comes first is not settled", v),
+  "civil-time.values.start_unknown": (v) => localize("civil-time.values.start_unknown", "{value} has an unknown start, so which comes first is not settled", v),
+  "civil-time.values.end_open": (v) => localize("civil-time.values.end_open", "{value} has an open end, so which comes first is not settled", v),
+  "civil-time.values.end_unknown": (v) => localize("civil-time.values.end_unknown", "{value} has an unknown end, so which comes first is not settled", v),
+  "civil-time.values.overlap": (v) => localize("civil-time.values.overlap", "{value} ({precision} precision, {zone}) and {value_2} ({precision_2} precision, {zone_2}) overlap, so the precision held does not say which came first", v),
+  "civil-time.values.overlaps_start": (v) => localize("civil-time.values.overlaps_start", "{value} overlaps the start {bound} at the precision held", v),
+  "civil-time.values.overlaps_end": (v) => localize("civil-time.values.overlaps_end", "{value} overlaps the end {bound} at the precision held", v),
+  "civil-time.values.event_unresolved": (v) => localize("civil-time.values.event_unresolved", "the bounding event {event} ({edge}) is not resolved", v),
+  "civil-time.values.event_unresolved_edgeless": (v) => localize("civil-time.values.event_unresolved_edgeless", "the bounding event {event} is not resolved", v)
+};
+var REASON_KEYS = Object.keys(TEXT);
 
 // ../bio-plane/src/query.mjs
 var FIELDS = {

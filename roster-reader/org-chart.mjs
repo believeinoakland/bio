@@ -87,7 +87,7 @@ export default {
   detect(ctx) {
     const raw = String((ctx && ctx.text) || "");
     const { lines, units, posts, named } = readBoxes(raw, ctx);
-    if (!lines.length) return no("no text was read, so there are no boxes to recognise");
+    if (!lines.length) return no(localize("roster-reader.org-chart.no_text_was_read_so", "no text was read, so there are no boxes to recognise"));
     const lineOf = (o) => { let i = 0; while (i + 1 < lines.length && lines[i + 1].offset <= o) i++; return i; };
     const unitLines = new Set(units.map((u) => lineOf(u.offset))).size;
     const postLines = new Set(posts.map((p) => lineOf(p.offset)));
@@ -104,7 +104,7 @@ export default {
       return no(localize("roster-reader.org-chart.its_median_line_is_mid", "its median line is {mid} words, longer than a box label ({CHART_SHORT}): this is running text", { mid: String(mid), CHART_SHORT: String(CHART_SHORT) }));
     const self = namedAs(selfNamingLines(lines, rosterWordPatterns(ctx)), "chart");
     if (self.only_other)
-      return no("it names itself, with the view's words, as a roster and not as a chart");
+      return no(localize("roster-reader.org-chart.it_names_itself_with_the_views", "it names itself, with the view's words, as a roster and not as a chart"));
     const signals = [`${unitLines} unit line(s), ${postLines.size} post line(s), ${named} holder line(s)`,
                      localize("roster-reader.org-chart.round_of_its_lines_are", "{round}% of its lines are box labels; its median line is {mid} word(s)", { round: String(Math.round(share * 100)), mid: String(mid) })];
     if (self.as.length) {
@@ -112,7 +112,7 @@ export default {
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     }
     return { match: true, confidence: CONFIDENCE.LIKELY, signals,
-             why: "no short line names it a chart with the view's words, so it is read as a chart on its boxes alone" };
+             why: localize("roster-reader.org-chart.no_short_line_names_it_a", "no short line names it a chart with the view's words, so it is read as a chart on its boxes alone") };
   },
 
   parse(ctx) {
@@ -132,9 +132,9 @@ export default {
         : localize("roster-reader.org-chart.no_reporting_relation_is_stated", "no reporting relation is stated in words; the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read"),
       counts: { units: units.length, posts: posts.length, named_posts: posts.filter((p) => p.name).length, reports_to: pairs.length },
       as_of: asOf ? { text: asOf.text, date: asOf.date, precision: asOf.precision, source: locate(asOf.offset) || null } : null,
-      as_of_why: asOf ? (asOf.why || null) : "no line among the document's first eight, or beside its self-naming line, states a date",
+      as_of_why: asOf ? (asOf.why || null) : localize("roster-reader.org-chart.no_line_among_the_documents_first", "no line among the document's first eight, or beside its self-naming line, states a date"),
       organisation: org ? { text: org.text, source: locate(org.offset) || null } : null,
-      organisation_why: org ? null : "neither its first line nor the line before its self-naming line is a heading that names an organisation",
+      organisation_why: org ? null : localize("roster-reader.org-chart.neither_its_first_line_nor", "neither its first line nor the line before its self-naming line is a heading that names an organisation"),
       also_satisfies: alsoSatisfies(ctx, "org_chart"),
       at: (ctx && ctx.at) || null,
     };

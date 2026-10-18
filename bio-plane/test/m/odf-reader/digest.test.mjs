@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { odfEvidentiaryDigest, odtNormalisedContentXml, ODF_EVIDENTIARY_VERSION, ODF_EVIDENTIARY_MEASURED } from "../../../src/odf.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { buildZip, members, pkg, withCd, contentXml, sha256, sha256Hex, enc, TYPES, OVER_BOUND } from "./pkg.mjs";
 
 const D = (bytes) => odfEvidentiaryDigest(bytes, sha256Hex);
@@ -28,7 +29,7 @@ test("R32 only a package detected with certainty is digested; anything else is r
   ]) {
     const d = await D(bytes);
     refused(d, null);
-    assert.match(d.basis, /not an OpenDocument package detected with certainty/);
+    assert.equal(d.basis, localize("odf-reader.odf.the_bytes_are_not_an", "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken"));
   }
   assert.equal((await D(pkg("ods"))).determined, true);
 });
@@ -40,7 +41,7 @@ test("R33 a flavour with no measured-stable entry (.odp) is refused, naming that
   for (const bytes of [pkg("odp"), buildZip(withCd(members("odp"), "content.xml", { crc: 1 }))]) {
     const d = await D(bytes);
     refused(d, "odp");
-    assert.match(d.basis, /no \.odp export has been measured/);
+    assert.equal(d.basis, localize("odf-reader.odf.no_odp_export_has_been", "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp"));
   }
 });
 

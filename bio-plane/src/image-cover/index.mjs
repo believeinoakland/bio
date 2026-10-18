@@ -15,7 +15,7 @@ import { CoverRefusal, checkAreas } from "./geometry.mjs";
 import { coverJpeg } from "./jpeg.mjs";
 import { coverPng } from "./png.mjs";
 import { stripImage } from "./strip.mjs";
-import { localize } from "../setup-words/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 /** The largest photo covered, in bytes; a larger one is refused before a byte of it is read (R3, R4). */
 export const COVER_MAX_BYTES = 32 * 1024 * 1024;
@@ -27,14 +27,14 @@ export const COVER_MAX_PIXELS = 120_000_000;
 
 /** Every refusal code, with what it means (R3). */
 export const COVER_REFUSALS = Object.freeze({
-  NOT_A_COVERABLE_FORMAT: "the photo is neither a JPEG nor an 8-bit PNG this module covers",
-  UNSUPPORTED_JPEG_PROCESS: "the JPEG is progressive, arithmetic-coded, lossless, 12-bit, or otherwise not a baseline or extended-sequential Huffman 8-bit JPEG in one scan",
-  PNG_INTERLACED: "the PNG is interlaced (Adam7)",
-  AREA_MALFORMED: "an area is not four integers [x0, y0, x1, y1] with x0 < x1 and y0 < y1",
-  AREA_OUTSIDE: "an area lies wholly outside the picture",
-  PHOTO_TOO_LARGE: "the photo is larger, in bytes or in pixels, than the most this module covers",
-  TRUNCATED_IMAGE_DATA: "the image data ends before the image does",
-  IMAGE_DATA_CORRUPT: "the image data cannot be read: a bad Huffman code or table, a wrong restart marker, a PNG CRC or zlib error",
+  NOT_A_COVERABLE_FORMAT: word("refusal.NOT_A_COVERABLE_FORMAT"),
+  UNSUPPORTED_JPEG_PROCESS: word("refusal.UNSUPPORTED_JPEG_PROCESS"),
+  PNG_INTERLACED: word("refusal.PNG_INTERLACED"),
+  AREA_MALFORMED: word("refusal.AREA_MALFORMED"),
+  AREA_OUTSIDE: word("refusal.AREA_OUTSIDE"),
+  PHOTO_TOO_LARGE: word("refusal.PHOTO_TOO_LARGE"),
+  TRUNCATED_IMAGE_DATA: word("refusal.TRUNCATED_IMAGE_DATA"),
+  IMAGE_DATA_CORRUPT: word("refusal.IMAGE_DATA_CORRUPT"),
 });
 
 const isJpeg = (d) => d.length >= 3 && d[0] === 0xff && d[1] === 0xd8 && d[2] === 0xff;
@@ -45,14 +45,14 @@ const isPng = (d) => d.length >= 8 && d[0] === 0x89 && d[1] === 0x50 && d[2] ===
 export async function coverAreas(bytes, { areas } = {}) {
   try {
     const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
-    if (!d) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", "the photo's bytes are not a byte array");
+    if (!d) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", localize("image-cover.index.the_photos_bytes_are_not_a_byte_array", "the photo's bytes are not a byte array"));
     if (d.length > COVER_MAX_BYTES)
       throw new CoverRefusal("PHOTO_TOO_LARGE", localize("image-cover.index.the_photo_is_length_bytes", "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module covers", { length: String(d.length), COVER_MAX_BYTES: String(COVER_MAX_BYTES) }));
     checkAreas(areas);
     let answer;
     if (isJpeg(d)) answer = coverJpeg(d, areas, COVER_MAX_PIXELS);
     else if (isPng(d)) answer = await coverPng(d, areas, COVER_MAX_PIXELS);
-    else throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", "the photo is neither a JPEG nor a PNG");
+    else throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", localize("image-cover.index.the_photo_is_neither_a_jpeg_nor_a_png", "the photo is neither a JPEG nor a PNG"));
     return { ok: true, ...answer };
   } catch (e) {
     if (e instanceof CoverRefusal) return { ok: false, code: e.code, detail: e.detail };
@@ -62,11 +62,11 @@ export async function coverAreas(bytes, { areas } = {}) {
 
 /** Every refusal of `stripMetadata`, with what it means (R8). */
 export const STRIP_REFUSALS = Object.freeze({
-  NOT_A_STRIPPABLE_FORMAT: "the image is none of JPEG, PNG, GIF, WebP, JP2 or a J2K codestream, or holds a structure this module cannot judge",
-  PHOTO_TOO_LARGE: "the image is larger, in bytes, than the most this module reads",
-  TRUNCATED_IMAGE_DATA: "the image data ends before the image does",
-  IMAGE_DATA_CORRUPT: "the image's segments, chunks or boxes cannot be walked",
-  ANIMATED_IMAGE: "the image is animated (a GIF of more than one frame, an animated PNG or WebP): one image is allowed",
+  NOT_A_STRIPPABLE_FORMAT: word("refusal.NOT_A_STRIPPABLE_FORMAT"),
+  PHOTO_TOO_LARGE: word("refusal.PHOTO_TOO_LARGE"),
+  TRUNCATED_IMAGE_DATA: word("refusal.TRUNCATED_IMAGE_DATA"),
+  IMAGE_DATA_CORRUPT: word("refusal.IMAGE_DATA_CORRUPT"),
+  ANIMATED_IMAGE: word("refusal.ANIMATED_IMAGE"),
 });
 
 /** Strip an image's metadata without re-encoding it (R8): what R2 forbids is left behind, the coded data is kept
@@ -74,7 +74,7 @@ export const STRIP_REFUSALS = Object.freeze({
 export function stripMetadata(bytes) {
   try {
     const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
-    if (!d) throw new CoverRefusal("NOT_A_STRIPPABLE_FORMAT", "the image's bytes are not a byte array");
+    if (!d) throw new CoverRefusal("NOT_A_STRIPPABLE_FORMAT", localize("image-cover.index.the_images_bytes_are_not_a_byte_array", "the image's bytes are not a byte array"));
     if (d.length > COVER_MAX_BYTES)
       throw new CoverRefusal("PHOTO_TOO_LARGE", localize("image-cover.index.the_image_is_length_bytes", "the image is {length} bytes, over the {COVER_MAX_BYTES} this module reads", { length: String(d.length), COVER_MAX_BYTES: String(COVER_MAX_BYTES) }));
     return { ok: true, ...stripImage(d) };

@@ -37,3 +37,10 @@ Layer 5. 15 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/duties/index.mjs:1399` "the uses could not be read"
 - plain `bio-plane/src/duties/index.mjs:1520` "linking a use to a power"
 - plain `bio-plane/src/duties/index.mjs:1520` "unlinking a use from a power"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/duties/t46-words.test.mjs:38` "\"A promise's date is read from the body's own words, and those words...\""
+- testcopy `bio-plane/test/m/duties/t46-words.test.mjs:39` "\"calendar date. These do not (such as \\\"by spring\\\", a month without i...\""

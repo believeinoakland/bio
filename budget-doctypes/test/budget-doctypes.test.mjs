@@ -6,6 +6,7 @@ import {
   BUDGET_TYPES, registerBudgetTypes, financialReport, budgetBook, budgetTable,
 } from "../index.mjs";
 import { firstView, testView, pdfFixture, ctxFor, csvSupplied, fixture } from "./helpers.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const FIRST = firstView();
 const TESTV = testView();
@@ -79,21 +80,22 @@ test("R1: a budget line-item sheet is matched by header words naming a fund or o
   /* No fund or org column, or no amount column: no match, with why. */
   for (const csv of ["fund,description\n1010,General\n", "description,amount\nGeneral,5\n"]) {
     const d = budgetTable.detect(ctxFor(await csvSupplied(csv), FIRST, { content_type: "text/csv" }));
-    assert.equal(d.match, false); assert.match(d.why, /header row/);
+    assert.equal(d.match, false); assert.equal(d.why, localize("budget-doctypes.index.no_header_row_names_a", "no header row names a fund or org column and an amount column by the view's header words"));
   }
 });
 
 test("R1: anything else does not match, and says why", () => {
+  const floorText = "Statement of Accounts\nCash 1 2\nLand 3 4";
   const cases = [
-    [financialReport, ctxFor("Cash 1 2\n".repeat(20), FIRST), /not a PDF/],
-    [financialReport, ctxFor(testPdf(["A letter to the council", "Cash 1 2\n".repeat(20)]), FIRST), /does not name it/],
-    [financialReport, ctxFor(testPdf(["Statement of Accounts", "Cash 1 2\nLand 3 4"]), TESTV), /floor/],
-    [budgetBook, ctxFor(testPdf(["Adopted Policy Budget", "Cash 1 2\n".repeat(20)]), { vocabulary: {} }), /view holds no words/],
-    [budgetTable, ctxFor(testPdf([COVER]), FIRST), /not a CSV/],
+    [financialReport, ctxFor("Cash 1 2\n".repeat(20), FIRST), localize("budget-doctypes.index.not_a_pdf_a_what", "not a PDF: a {what} is read from a PDF's text", { what: "financial report" })],
+    [financialReport, ctxFor(testPdf(["A letter to the council", "Cash 1 2\n".repeat(20)]), FIRST), localize("budget-doctypes.index.its_opening_does_not_name", "its opening does not name it a {what} in any words the view holds", { what: "financial report" })],
+    [financialReport, ctxFor(testPdf(["Statement of Accounts", "Cash 1 2\nLand 3 4"]), TESTV), localize("budget-doctypes.index.it_names_itself_a_what", "it names itself a {what} (\"{title}\") but holds only {lines} line(s) bearing a figure, under the floor of {FIGURE_LINE_FLOOR}", { what: "financial report", title: "Statement of Accounts", lines: String(floorText.split("\n").length - 1), FIGURE_LINE_FLOOR: "10" })],
+    [budgetBook, ctxFor(testPdf(["Adopted Policy Budget", "Cash 1 2\n".repeat(20)]), { vocabulary: {} }), localize("budget-doctypes.index.the_view_holds_no_words", "the view holds no words a {what} names itself by (vocabulary.{key})", { what: "budget book", key: "budget_book_titles" })],
+    [budgetTable, ctxFor(testPdf([COVER]), FIRST), localize("budget-doctypes.index.not_a_csv_or_workbook_sheet", "not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells")],
   ];
   for (const [type, ctx, why] of cases) {
     const d = type.detect(ctx);
-    assert.equal(d.match, false); assert.equal(d.confidence, "none"); assert.match(d.why, why);
+    assert.equal(d.match, false); assert.equal(d.confidence, "none"); assert.equal(d.why, why);
   }
 });
 
@@ -137,7 +139,7 @@ test("R2: each table has its fields, every figure as printed and unscaled, each 
   assert.equal(net.title, "Statement of Net Position");
   assert.equal(net.scale, "In thousands");
   /* The first profile holds no form for a dated heading ("June 30, 2024"): no period. */
-  assert.equal(net.period_as_written, null); assert.match(net.period_why, /fiscal-year form/);
+  assert.equal(net.period_as_written, null); assert.equal(net.period_why, localize("budget-doctypes.tables.no_fiscal_year_form", "no fiscal-year form the view holds was read above, below or in the header of the table"));
   assert.ok(net.columns.join(" ").includes("Port of"));
   const cash = net.rows.find((x) => x.label === "Cash and investments");
   assert.deepEqual(cash.cells.map((c) => c.as_read), ["$ 1,405,595", "$ 99,327", "$ 1,504,922", "$ 678,654"]);
@@ -179,10 +181,10 @@ test("R3: wrapped labels merge, a dash is a cell, a spanning total row is kept u
   assert.deepEqual(spaced.tables[0].rows.map((x) => x.label), t.rows.map((x) => x.label));
   /* Under 85%: not usable, with the share and why. */
   const rough = financialReport.parse(ctxFor(testPdf([COVER, ROUGH]), TESTV)).tables[0];
-  assert.equal(rough.usable, false); assert.equal(rough.modal_share, 0.4); assert.match(rough.why, /modal/);
+  assert.equal(rough.usable, false); assert.equal(rough.modal_share, 0.4); assert.equal(rough.why, localize("budget-doctypes.tables.only_v1_of_the_length", "only {v1}% of the {length} rows holding two or more figures have the table's modal {modal} cells (at least {v2}% needed)", { v1: "40", length: "5", modal: "2", v2: "85" }));
   /* Headers not in the text read: not usable, with why. */
   const bare = financialReport.parse(ctxFor(testPdf([COVER, "Exhibit C\nCash 1 2 3\nLand 4 5 6"]), TESTV)).tables[0];
-  assert.equal(bare.usable, false); assert.match(bare.why, /headers/);
+  assert.equal(bare.usable, false); assert.equal(bare.why, localize("budget-doctypes.tables.the_table_s_headers", "the table's headers are not in the text read"));
 });
 
 test("R3: measured wrapped labels merge, and a measured total row in its columns is not a span", () => {
@@ -202,7 +204,7 @@ test("R4: a financial report reads only its text layer and lists each page with 
   const r = readPdf("a24", financialReport);
   assert.ok(r.tables.every((t) => t.method === "text-layer"));
   assert.deepEqual(r.pages_unread.map((p) => p.page), [3]);
-  assert.match(r.pages_unread[0].why, /no text layer/);
+  assert.equal(r.pages_unread[0].why, localize("budget-doctypes.tables.no_text_layer_a_cover", "no text layer (a cover, a divider, a certificate or a chart): a financial report is read from its text layer only, and no table is read from this page"));
   assert.ok(r.tables.every((t) => t.page !== 3));
   assert.ok(r.pages_read.includes(48));
   const r14 = readPdf("a14", financialReport);
@@ -221,7 +223,7 @@ test("R5: a budget book sets aside the chart-label block, listed with its page a
   const r = readPdf("bb23", budgetBook, { pages: [1, 148] });
   const skipped = r.skipped.filter((s) => s.page === 147);
   assert.equal(skipped.length, 9);
-  for (const s of skipped) assert.match(s.why, /chart labels/);
+  for (const s of skipped) assert.equal(s.why, localize("budget-doctypes.tables.chart_labels_a_label", "chart labels: a label paired with an amount and a parenthesised share, printed above a table; not a row of it, and the share is not a negative figure"));
   assert.deepEqual(skipped[0].lines, ["Property Tax", "$308,925,155 (36.5%)"]);
   const [t] = onPage(r, 148);
   assert.equal(t.usable, true);
@@ -242,7 +244,7 @@ test("R6: an image-only table is listed unread with its page and rectangle, neve
   assert.deepEqual(u[0], { page: 16, rect: [122.85, 612.48, 488.67, 714.27], why: "image-only table, not read" });
   assert.equal(onPage(r, 17).length, 0);
   /* A budget book page with no text layer and no transcription: unread, with why. */
-  assert.ok(r.pages_unread.some((p) => p.page === 10 && /no OCR transcription/.test(p.why)));
+  assert.ok(r.pages_unread.some((p) => p.page === 10 && p.why === localize("budget-doctypes.tables.no_text_layer_and_no_ocr", "no text layer, and no OCR transcription of the page was supplied: any table printed on it is not read")));
 });
 
 test("R6: a table printed as an image is read from an OCR transcription the supplied text carries, marked ocr with its engine", () => {
@@ -283,7 +285,12 @@ test("R7: each budget line keyed on fund and org, with its codes read by the vie
   assert.ok(r.rows.every((x) => x.fund && x.org));
   const odd = r.codes.filter((c) => c.form === null);
   assert.ok(odd.length >= 1);
-  for (const c of odd) { assert.equal(typeof c.as_written, "string"); assert.match(c.why, /no form/); }
+  const COLUMNS_OF_CODE = ["fund", "org", "program", "project", "account", "department_code"];
+  for (const c of odd) {
+    assert.equal(typeof c.as_written, "string");
+    const column = COLUMNS_OF_CODE.find((col) => r.rows.some((x) => x[col] && x[col].as_written === c.as_written && x[col].form === null));
+    assert.equal(c.why, localize("budget-doctypes.lines.no_form_of_the_views", "no form of the view's {column} classification matches \"{s}\"", { column, s: c.as_written.trim() }));
+  }
   /* A wide table: each amount column's header is that amount's period and phase. */
   const w = budgetTable.parse(ctxFor(await csvSupplied(fixture("fy2019-21-adopted.csv")), FIRST, { content_type: "text/csv" }));
   const first = w.rows.filter((x) => x.source.ref === "csv!G2");
@@ -306,15 +313,15 @@ test("R7: test profile: codes by its forms, a row with no fund or org unread, a 
   assert.deepEqual(r.rows[0].fund, { as_written: "100-01", form: "code 100-01", scheme: "ellery_funds" });
   assert.deepEqual(r.rows[0].project, { as_written: "WO-1234", form: String.raw`^WO-?\d{4}$`, scheme: "ellery_works" });
   /* A code no form matches, and a code of a kind the view holds no form for. */
-  assert.equal(r.rows[1].fund.form, null); assert.match(r.rows[1].fund.why, /no form of the view's fund/);
-  assert.equal(r.rows[1].project.form, null); assert.match(r.rows[1].project.why, /no form of the view's project/);
-  assert.equal(r.rows[0].department_code.form, null); assert.match(r.rows[0].department_code.why, /holds no form/);
+  assert.equal(r.rows[1].fund.form, null); assert.equal(r.rows[1].fund.why, localize("budget-doctypes.lines.no_form_of_the_views", "no form of the view's {column} classification matches \"{s}\"", { column: "fund", s: r.rows[1].fund.as_written.trim() }));
+  assert.equal(r.rows[1].project.form, null); assert.equal(r.rows[1].project.why, localize("budget-doctypes.lines.no_form_of_the_views", "no form of the view's {column} classification matches \"{s}\"", { column: "project", s: r.rows[1].project.as_written.trim() }));
+  assert.equal(r.rows[0].department_code.form, null); assert.equal(r.rows[0].department_code.why, localize("budget-doctypes.lines.the_view_holds_no_form", "the view holds no form for a {column} code", { column: "department_code" }));
   assert.equal(r.unread.length, 1);
-  assert.equal(r.unread[0].why, "the row holds no org code");
+  assert.equal(r.unread[0].why, localize("budget-doctypes.lines.the_row_holds_no_org_code", "the row holds no org code"));
   assert.deepEqual(r.unread[0].source, { kind: "sheet-cell", ref: "csv!A3", sheet: "csv", cell: "A3" });
   const bare = budgetTable.parse(ctxFor(await csvSupplied(csv, { cells: false }), TESTV, { content_type: "text/csv" }));
   assert.equal(bare.rows.length, 0);
-  assert.match(bare.unread[0].why, /typed cells/);
+  assert.equal(bare.unread[0].why, localize("budget-doctypes.lines.the_sheet_s_typed_cells", "the sheet's typed cells (office-readers R30) were not supplied: its tab-joined text drops an empty cell, so no value could be placed in its column"));
 });
 
 // ---------------------------------------------------------------- R8
@@ -363,10 +370,13 @@ test("R9: two PDF readings compared by table and row: a figure changed, a row an
 test("R9: a reading in which no table was read is a failed read, never a document emptied", () => {
   const before = financialReport.parse(ctxFor(testPdf([COVER, STATEMENT]), TESTV));
   const empty = financialReport.parse(ctxFor(testPdf([COVER, ""]), TESTV));
-  assert.equal(empty.tables.length, 0); assert.match(empty.why, /no table was read/);
-  for (const [a, b] of [[before, empty], [empty, before], [empty, empty]]) {
+  assert.equal(empty.tables.length, 0); assert.equal(empty.why, localize("budget-doctypes.index.no_table_was_read_no", "no table was read: no run of rows with two or more figures was found in the text read"));
+  const LATER = localize("budget-doctypes.assess.no_table_was_read_in", "no table was read in the {v1} reading: a failed read, not a document emptied", { v1: "later" });
+  const EARLIER = localize("budget-doctypes.assess.no_table_was_read_in", "no table was read in the {v1} reading: a failed read, not a document emptied", { v1: "earlier" });
+  const EITHER = localize("budget-doctypes.assess.no_table_was_read_in_either", "no table was read in either reading, so nothing can be compared");
+  for (const [[a, b], want] of [[[before, empty], LATER], [[empty, before], EARLIER], [[empty, empty], EITHER]]) {
     const m = financialReport.assess(a, b);
-    assert.equal(m.meaningful, null); assert.deepEqual(m.events, []); assert.match(m.why, /failed read|either reading/);
+    assert.equal(m.meaningful, null); assert.deepEqual(m.events, []); assert.equal(m.why, want);
   }
 });
 
@@ -388,7 +398,7 @@ test("R9: two budget-table readings compared by R7's key: an amount changed, a l
   assert.ok(!budgetTable.assess(await read(a), await read(a + c.slice(head.length))).events.some((e) => e.type === "item_changed"));
   const none = await read(head);
   const f = budgetTable.assess(await read(a), none);
-  assert.equal(f.meaningful, null); assert.match(f.why, /failed read/);
+  assert.equal(f.meaningful, null); assert.equal(f.why, localize("budget-doctypes.assess.no_budget_line_was_read", "no budget line was read in the {v1} reading: a failed read, not a table emptied", { v1: "later" }));
 });
 
 // ---------------------------------------------------------------- R10, R11, R12
@@ -441,7 +451,7 @@ test("R12: pure, and every title, heading, header word and code form is the view
   assert.equal(financialReport.parse(u).tables[0].title, "Harbour Revenue Account");
   const noHeadings = { ...TESTV, vocabulary: { ...TESTV.vocabulary, financial_headings: [] } };
   const [untitled] = financialReport.parse({ ...u, view: noHeadings }).tables;
-  assert.equal(untitled.title, null); assert.match(untitled.title_why, /no heading/);
+  assert.equal(untitled.title, null); assert.equal(untitled.title_why, localize("budget-doctypes.tables.no_heading_the_view", "no heading the view names, and no table caption, was read above or below the table"));
   /* Header words and code forms: with none in the view, no line is read. */
   const csv = "Ledger,Cost Centre,Nominal,Year,Sum\n100-01,CC1001,5100,Year 2025/26,1\n";
   const sheet = await csvSupplied(csv);
@@ -450,7 +460,7 @@ test("R12: pure, and every title, heading, header word and code form is the view
   assert.equal(budgetTable.detect(ctxFor(sheet, bare, { content_type: "text/csv" })).match, false);
   const noForms = { ...TESTV, classification_schemes: [] };
   const r = budgetTable.parse(ctxFor(sheet, noForms, { content_type: "text/csv" }));
-  assert.equal(r.rows[0].fund.form, null); assert.match(r.rows[0].fund.why, /holds no form/);
+  assert.equal(r.rows[0].fund.form, null); assert.equal(r.rows[0].fund.why, localize("budget-doctypes.lines.the_view_holds_no_form", "the view holds no form for a {column} code", { column: "fund" }));
 });
 
 // ---------------------------------------------------------------- R13
@@ -551,7 +561,7 @@ test("R14: every no says which kind of no and why", async () => {
   }
   const lines = budgetTable.parse(ctxFor(await csvSupplied(fixture("fy2013-15-adopted.csv")), FIRST, { content_type: "text/csv" }));
   for (const c of lines.codes) if (c.form === null) assert.ok(c.why);
-  assert.match(budgetTable.parse(ctxFor({ document: "x" }, FIRST)).unread[0].why, /no sheet/);
+  assert.equal(budgetTable.parse(ctxFor({ document: "x" }, FIRST)).unread[0].why, localize("budget-doctypes.lines.no_sheet_was_supplied", "no sheet was supplied with this text, so no budget line could be read"));
   const empty = financialReport.parse(ctxFor(testPdf([COVER]), TESTV));
-  assert.match(empty.why, /no table/);
+  assert.equal(empty.why, localize("budget-doctypes.index.no_table_was_read_no", "no table was read: no run of rows with two or more figures was found in the text read"));
 });

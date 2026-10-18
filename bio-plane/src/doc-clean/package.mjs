@@ -147,7 +147,7 @@ function plainZip(d, entries) {
 // ---- the package ----
 
 const refusal = (code, detail) => new CleanRefusal(code, detail);
-const why = (r) => `part ${r.name ?? "?"} cannot be read (${r.why})`;
+const why = (r) => localize("doc-clean.package.part_cannot_be_read_why", "part {name} cannot be read ({why})", { name: String(r.name ?? "?"), why: String(r.why) });
 
 /** For each `.rels` part that names a removed part, the ids of those relationships, keyed both by the `.rels` part
  *  and by its source part (whose `r:id` attributes naming them are removed too). */
@@ -195,7 +195,7 @@ export async function cleanPackage(d, family) {
     const m = await readPart(d, c, ODF_MANIFEST_PART);
     if (!m.ok) throw refusal("DOCUMENT_UNREADABLE", why(m));
     const s = latin1(m.bytes);
-    if (/<([\w.-]+:)?encryption-data(?=[\s/>])/.test(s)) throw refusal("ENCRYPTED", "the package's manifest lists encrypted parts");
+    if (/<([\w.-]+:)?encryption-data(?=[\s/>])/.test(s)) throw refusal("ENCRYPTED", localize("doc-clean.package.the_package_s_manifest_lists_encrypted", "the package's manifest lists encrypted parts"));
     for (const t of s.matchAll(/<(?:[\w.-]+:)?file-entry(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/g)) {
       const path = /\s(?:[\w.-]+:)?full-path\s*=\s*"([^"]*)"/.exec(t[1])?.[1] ?? "";
       const type = /\s(?:[\w.-]+:)?media-type\s*=\s*"([^"]*)"/.exec(t[1])?.[1] ?? "";
@@ -215,7 +215,7 @@ export async function cleanPackage(d, family) {
     if (!r.ok) throw refusal(r.why === "ARCHIVE_TOTAL_MAX" || r.why === "MEMBER_MAX" ? "DOCUMENT_TOO_LARGE" : "DOCUMENT_UNREADABLE", why(r));
     let bytes = r.bytes;
     const media = n.endsWith("/") ? null : mediaKind(bytes);
-    if (media) throw refusal("EMBEDDED_MEDIA", `part ${n}: ${media}`);
+    if (media) throw refusal("EMBEDDED_MEDIA", localize("doc-clean.package.part_n_media", "part {n}: {media}", { n: String(n), media: String(media) }));
     const kind = n.endsWith("/") ? null : imageKind(bytes);
     if (kind) {
       const out = await cleanImage(bytes, kind, `part ${n}`, CLEAN_MAX_PART_BYTES);

@@ -1,6 +1,6 @@
 # BOB to office-readers (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -29,3 +29,15 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio office-readers tranche/T51 job/T51/office-readers`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+CHANGE (K3960): the design's unkeyed list (DEC-343) is merged into tranche/T51 and your module's 'Plain findings (K3957)' section in build/plan/words-pass/office-readers.md was recomputed (fewer, or none): merge tranche/T51 into your branch and work from the new section. Also run 'node bio-plane/src/setup-words/build.mjs --check' (read-only) before COMPLETE: it must not name your module.
+
+## B4 · RESUME
+
+RESUME (K3968). OFFICE-READERS #10 stalled mid-rebase and was archived; you are #11 (depth 2, sonnet). Do `mail start`, then read B2 (START) and B3 (CHANGE) and act on both: merge `tranche/T51` into your branch (a merge, never a rebase, K1991), work from the recomputed "Plain findings (K3957)" section of `build/plan/words-pass/office-readers.md`, and convert any regex copy of a keyed sentence in your tests to an equality with `localize` (K3965; `localize` answers its `en` while `rows.mjs` is stale). `build.mjs --check` may report stale rows until R1's close: that is expected. Then checks and COMPLETE.
+
+## B5 · RESUME
+
+RESUME (K3969). You are OFFICE-READERS #12 (depth 2, sonnet); #10 and #11 stalled because your job branch was far behind the tranche and `mail start`'s commit conflicted on your record. BOB has fast-forwarded `job/T51/office-readers` to the tranche tip (8b8830f569), so `git fetch origin job/T51/office-readers && git merge --ff-only origin/job/T51/office-readers` first, then `mail start`. Never rebase or reset (K1991). Then act on B2 (START), B3 (CHANGE) and this entry: work from the recomputed "Plain findings (K3957)" section of `build/plan/words-pass/office-readers.md`; convert any regex copy of a keyed sentence in your tests to an equality with `localize` (K3965). A stale-rows note from `build.mjs --check` is expected until R1's close. Then checks and COMPLETE.

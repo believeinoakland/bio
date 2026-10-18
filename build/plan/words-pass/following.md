@@ -51,3 +51,10 @@ Layer 10.
 - plain `bio-plane/src/following/index.mjs:1607` "no portal follow by that id you may see"
 - plain `bio-plane/src/following/index.mjs:1610` "both snapshots are of this follow, by their sequence numbers"
 - plain `bio-plane/src/following/index.mjs:1623` "no portal follow by that id you may see"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/following/fixture.mjs:143` "\"these bytes were served for\""
+- testcopy `bio-plane/test/m/following/fixture.mjs:279` "\"the plan is not about that matter. Nothing was written.\""

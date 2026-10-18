@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { rosterSource, LEVEL_READ, LEVEL_NOT_READ, staffRoster } from "../index.mjs";
 import { ROSTER_DOCS, FIRST, ctxOf, freeze } from "./fixtures.mjs";
-import { word } from "../../bio-plane/src/setup-words/index.mjs";
+import { word, localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const D = ROSTER_DOCS.documents;
 const Q = { organisation: "ENT-7", at: "2025-03-01", viewer: "MBR-1" };
@@ -25,7 +25,7 @@ test("R12 a held roster document is read by R2 and answered as {source, as_of, r
   const a = src(Q);
   assert.deepEqual(seen, [{ organisation: "ENT-7", viewer: "MBR-1" }]);
   assert.equal(a.level, LEVEL_READ);
-  assert.equal(a.level, "held as a table, read by roster-reader");
+  assert.equal(a.level, localize("roster-reader.source.held_as_a_table_read", "held as a table, read by roster-reader"));
   assert.equal(a.organisation, "ENT-7");
   assert.equal(a.at, "2025-03-01");
   assert.equal(a.rosters.length, 1);
@@ -40,7 +40,7 @@ test("R12 a held roster document is read by R2 and answered as {source, as_of, r
   /* A roster whose text states no date: as_of null, with why. */
   const w = rosterSource(() => [docItem("roster_wdb")])(Q).rosters[0];
   assert.equal(w.as_of, null);
-  assert.match(w.as_of_why, /states a date/);
+  assert.equal(w.as_of_why, localize("roster-reader.staff-roster.no_line_among_the_documents_first", "no line among the document's first eight, or beside its self-naming line, states a date"));
   assert.equal(w.rows.length, 18);
 });
 
@@ -57,18 +57,18 @@ test("R12 a held roster table is read through R6's column roles, each row {name?
   assert.doesNotMatch(JSON.stringify(a), CONTACT);
   assert.doesNotMatch(JSON.stringify(a), /private note/);
   assert.deepEqual(r.columns.map((c) => c.role), ["name", "title", "unit", "start", "end", "employee_id", "contact", "contact", null]);
-  assert.match(r.columns_why, /2 contact column\(s\) not read; 1 column\(s\) with no role not read/);
+  assert.equal(r.columns_why, `${localize("roster-reader.source.contact_contact_column_s_not", "{contact} contact column(s) not read", { contact: "2" })}; ${localize("roster-reader.source.unnamed_column_s_with_no", "{unnamed} column(s) with no role not read", { unnamed: "1" })}`);
   /* Rows keyed by header text read the same way; a table stating no date says so. */
   const keyed = { source: "T2", header: ["Name", "Title", "Email"], rows: [{ Name: "Ann Lee", Title: "Chair", Email: "a@x.example" }] };
   const k = rosterSource(() => ({ items: [keyed], view: FIRST }))(Q).rosters[0];
   assert.deepEqual(k.rows, [{ name: "Ann Lee", title: "Chair", source: { roster: "T2", row: 0 } }]);
   assert.equal(k.as_of, null);
-  assert.match(k.as_of_why, /states no date of its own/);
+  assert.equal(k.as_of_why, localize("roster-reader.source.the_held_table_states_no", "the held table states no date of its own; a row's own `as_of` column, where it has one, is kept on the row"));
   /* A table R6 says is not a roster is not read, with R6's why. */
   const not = rosterSource(() => [{ source: "T3", header: ["Title", "Phone"], rows: [["Chair", "510-555-0101"]], view: FIRST }])(Q);
   assert.deepEqual(not.rosters, []);
-  assert.deepEqual(not.unread, [{ source: "T3", why: "no column is named `name` or `employee_id`, so this table is not read as a roster" }]);
-  assert.match(not.why, /none of which could be read/);
+  assert.deepEqual(not.unread, [{ source: "T3", why: localize("roster-reader.columns.no_column_is_named_name", "no column is named `name` or `employee_id`, so this table is not read as a roster{v1}", { v1: "" }) }]);
+  assert.equal(not.why, localize("roster-reader.source.length_held_roster_s_of", "{length} held roster(s) of this organisation the viewer may see, none of which could be read as a roster", { length: "1" }));
 });
 
 test("R12 a held organisation chart gives as rows only the posts that name their holder on their own line", () => {
@@ -76,7 +76,7 @@ test("R12 a held organisation chart gives as rows only the posts that name their
   const a = rosterSource(() => [{ source: "C1", text, type: "org_chart", view: FIRST }])(Q);
   const r = a.rosters[0];
   assert.deepEqual(r.rows.map((x) => [x.name, x.title]), [["Jane Doe", "Director"], ["Ann Lee", "Analyst"]]);
-  assert.match(r.rows_why, /a box with no name.*not rows/);
+  assert.equal(r.rows_why, localize("roster-reader.source.an_organisation_chart_a_row", "an organisation chart: a row is a post whose holder is named on its own line; a box with no name, and any reporting line the drawing shows, are not rows"));
 });
 
 test("R12 it never states that a row's person held the post at `at`: rows carry only what the roster states, and `at` is the date asked", () => {
@@ -98,15 +98,17 @@ test("R12 with no held roster it answers rosters: [] with why; with reads absent
   const none = rosterSource(() => [])(Q);
   assert.equal(none.level, LEVEL_READ);
   assert.deepEqual(none.rosters, []);
-  assert.match(none.why, /no roster document or roster table of this organisation is held that the viewer may see/);
+  assert.equal(none.why, localize("roster-reader.source.no_roster_document_or_roster", "no roster document or roster table of this organisation is held that the viewer may see"));
+  const later = localize("roster-reader.source.the_stores_read_answered_later", "the store's read answered later (a promise), and a roster source answers at once, so no held roster is read");
+  const noList = localize("roster-reader.source.the_stores_read_answered_no", "the store's read answered no list of held rosters, so no held roster is read");
   const cases = [
-    [undefined, /no read of the store was handed/],
-    [() => { throw new Error("db closed"); }, /failed \(db closed\)/],
-    [() => ({ ok: false, why: "not a member" }), /refused \(not a member\)/],
-    [() => Promise.resolve([]), /answered later/],
-    [() => Promise.reject(new Error("x")), /answered later/],
-    [() => 42, /no list of held rosters/],
-    [() => null, /no list of held rosters/],
+    [undefined, localize("roster-reader.source.no_read_of_the_store", "no read of the store was handed to roster-reader, so no held roster is read")],
+    [() => { throw new Error("db closed"); }, localize("roster-reader.source.the_stores_read_of_held", "the store's read of held rosters failed ({msg}), so no held roster is read", { msg: "db closed" })],
+    [() => ({ ok: false, why: "not a member" }), localize("roster-reader.source.the_stores_read_refused_v1", "the store's read refused{v1}, so no held roster is read", { v1: " (not a member)" })],
+    [() => Promise.resolve([]), later],
+    [() => Promise.reject(new Error("x")), later],
+    [() => 42, noList],
+    [() => null, noList],
   ];
   for (const [reads, why] of cases) {
     const a = rosterSource(reads)(Q);
@@ -114,7 +116,7 @@ test("R12 with no held roster it answers rosters: [] with why; with reads absent
     assert.equal(a.level, word("people.held_as_a_table_not"));
     assert.deepEqual(a.rosters, []);
     assert.equal(a.organisation, "ENT-7");
-    assert.match(a.why, why);
+    assert.equal(a.why, why);
   }
   /* Malformed questions and items are answered, never thrown: each item it cannot read is named with why. */
   for (const q of [undefined, null, 7, {}]) assert.equal(rosterSource(() => [])(q).level, LEVEL_READ);

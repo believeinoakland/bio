@@ -1,6 +1,6 @@
 # civil-time (T51)
 
-**Status** · session_01BcmjtWcShwiAerhfkmJdjL · depth 2 · COMPLETE · handled B1
+**Status** · session_01BcmjtWcShwiAerhfkmJdjL · depth 2 · COMPLETE · handled B3
 
 ## Completion record (CR-1)
 
@@ -40,3 +40,25 @@ Size (session_01BcmjtWcShwiAerhfkmJdjL): test runs 4, module lines 1450
 ## J1 · COMPLETE
 
 CR-1 applied: R30 met. localClock(instant, zone) -> {hour, minute} is exported beside localDay; every undetermined answer of values.mjs (compare, joinLocal, validAt) answers why as {key, vars} (reasons.mjs; a second reason rides in 'also'); refusals keep code + detail string (my reading of R30: say if they should be keys). 5 words findings fixed, zero in checks/run.mjs. civil-time tests 68/68; format, architecture, coverage (30/30), ownership 0 failures. REPORT: the new shape breaks 27 baseline-green consumer tests (lines 4, events 3, standards 2, law-relations 2, duties 2, calculations 1, money 1, people 2, connection-grammar 10); names and causes in my record's Completion section. New public export reasonText for BOB to add to Provides. Size line is in the record.
+
+## Completion record 2 (B2 CHANGE, K3961)
+
+Merged `tranche/T51`. `recurrence.mjs` :158, :241, :248 now pass `reason(key, vars)` (`civil-time.window_open_end`, `.date_open_unknown`, `.spans_two_fiscal`), and the fiscal fact of the wrong form (:238, `FACT_INVALID`) is `civil-time.recurrence.fiscal_year_form` `{body}`; all four are in `reasons.mjs`' list, with one R30 test naming each (`recurrence.test.mjs`). `fiscalPeriod`'s "no fiscal_year held" (:235) and the rules' `no(...)` answers still carry `calendar.mjs`'s `missing()` sentence as a string; R30 binds `values.mjs` and BOB named only these sites, so they stay; say if R30 should reach them. The words file has no "Plain findings (K3957)" section for civil-time.
+Checks: civil-time tests 69/69; format, architecture 0 failures; coverage 30/30; words check no civil-time finding. `setup-words/build.mjs --check` fails on `calc-grammar.recipe.field_shape` (a formatted argument; not this module's), and reports nothing for civil-time.
+Size (session_01BcmjtWcShwiAerhfkmJdjL): test runs 8, module lines 1465
+
+## J2 · COMPLETE
+
+B2 applied: recurrence.mjs :158/:241/:248 and the fiscal-form reason (:238) now pass reason(key, vars), each named by an R30 test; tranche merged; tests 69/69, format/architecture/coverage/ownership 0 failures. build.mjs --check fails only on calc-grammar.recipe.field_shape (not mine). Unchanged strings: fiscalPeriod's 'no fiscal_year held' (:235) and rules' no() answers, from calendar.mjs missing(); say if R30 should reach them.
+
+## Completion record 3 (B3 CHANGE, K3966)
+
+Merged `tranche/T51`. Every undetermined `why` the module answers is now `{key, vars}`; a grep of `src/civil-time` finds no undetermined answer built from a string. `calendar.mjs` `missing(view, key, subject, vars)` answers `civil-time.missing.<subject>_withheld|_absent` (subjects `weekend`, `weekend_counting`, `computation`, `fiscal_year`, `closure_list`); `year()`'s answers are `civil-time.calendar.*` (`list|office` × `year_withheld`, `uncovered`, `disputed`, `cannot_read`, `cannot_read_why`); `rules.mjs` RULE_INVALID, UNMEASURED, anchor, not-applicable, due, possibly-overdue and span answers are `civil-time.rules.*`; `fiscalPeriod`'s "no fiscal_year held" is `civil-time.missing.fiscal_year_*`. Every key not in the list is written first by `localize` in `reasons.mjs`; `reasonText` reads them. A caller's own keyed `why` (an undetermined anchor or due) is passed on exactly; a caller's sentence is a fill of `civil-time.rules.anchor_undetermined` / `.due_undetermined`. Vars are values; the one punctuation fragment left is `offices` (" (a, b)") in the calendar's disputed / cannot-read reasons. Tests: `rules.test.mjs` "R30 R16 R9 R19 R24" names each key (about 40), and R9, R16, R19, R21 tests assert keys. Changed text: an office venue now reads as its kind, the uncovered-year sentence no longer says "the venue of".
+Checks: civil-time tests 70/70; format, architecture 0 failures; coverage 30/30; words check no civil-time finding. `setup-words/build.mjs --check` now fails on `jurisdictions.index.amount_is_amount_and_units` (a formatted argument; not this module's).
+Size (session_01BcmjtWcShwiAerhfkmJdjL): test runs 12, module lines 1514
+
+## J3 · COMPLETE
+
+B3 applied: every undetermined why of civil-time is {key, vars} (missing(), calendar year answers, RULE_INVALID, anchors, dues, spans, possibly-overdue, fiscalPeriod's absent fiscal_year); a caller's keyed why is passed on as given; each key named by a test; tranche merged. civil-time tests 70/70; format/architecture/coverage/ownership 0 failures. build.mjs --check fails only on jurisdictions.index.amount_is_amount_and_units (not mine).
+
+Ring failed (J3): BOB session_0179mNWMLZgYg8Zp7SuP3BPK is archived, so no doorbell was set; the pushed COMPLETE entry J3 is the message (mechanics §13).

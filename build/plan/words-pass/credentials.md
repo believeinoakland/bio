@@ -21,3 +21,13 @@ Layer 2. 10 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/credentials/index.mjs:1291` "a run in a project"
 - plain `bio-plane/src/credentials/index.mjs:1966` "setting the team's key for an outside service"
 - plain `bio-plane/src/credentials/index.mjs:1993` "switching the team's key for an outside service"
+
+## Test copies of code sentences (K3962)
+
+5 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/credentials/t35-misc.test.mjs:190` "\"one your team's Civicsmith would refuse. Nothing was written.\""
+- testcopy `bio-plane/test/m/credentials/t35-misc.test.mjs:205` "\"your team's Civicsmith has no seal secret set, so a key cannot be k...\""
+- testcopy `bio-plane/test/m/credentials/t35-misc.test.mjs:223` "\"the reference does not open under the seal secret of your team's Ci...\""
+- testcopy `bio-plane/test/m/credentials/t35-misc.test.mjs:226` "\"the team's key does not open under the seal secret of your team's C...\""
+- testcopy `bio-plane/test/m/credentials/t35-misc.test.mjs:228` "\"the key does not open under the seal secret of your team's Civicsmi...\""

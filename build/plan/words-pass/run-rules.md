@@ -29,3 +29,10 @@ Layer 6. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/run-rules/rules.mjs:264` "no member stopped it and no budget ran out"
 - plain `bio-plane/src/run-rules/rules.mjs:267` "is not deployed yet, so no member stopped this run and no budget ran out"
 - plain `bio-plane/src/run-rules/rules.mjs:413` "no bar was recorded when this run was formed, and none is filled in afterwards"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/run-rules/t46.test.mjs:218` "\"Nothing was started, because this investigation did not say where i...\""
+- testcopy `bio-plane/test/m/run-rules/t46.test.mjs:219` "\"the record knows: an investigation is started by a member or by exp...\""

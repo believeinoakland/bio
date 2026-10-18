@@ -58,7 +58,7 @@ export function makeMember(engine, {
       try {
         meter.sync("load", () => engine.load(bytes), bytes.length);
       } catch (e) {
-        return refusal("ENGINE_FAILED", `the engine refused the workbook while loading it`,
+        return refusal("ENGINE_FAILED", localize("sheet-worker.member.the_engine_refused_the_workbook", "the engine refused the workbook while loading it"),
           { stage: "load", engine_error: engineMessage(e) });
       }
       await turn();
@@ -71,7 +71,7 @@ export function makeMember(engine, {
       try {
         out = meter.sync("evaluate", () => engine.evaluate());
       } catch (e) {
-        return refusal("ENGINE_FAILED", `the engine failed while evaluating the workbook`,
+        return refusal("ENGINE_FAILED", localize("sheet-worker.member.the_engine_failed_while_evaluating", "the engine failed while evaluating the workbook"),
           { stage: "evaluate", engine_error: engineMessage(e) });
       }
       return answer(out, seen, { ...meter.report(), wasm_memory_bytes: engine.memoryBytes() });

@@ -14,6 +14,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as dp from "../registry.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { PORT_ALDER, LAKEMONT, view, EMPTY, HELD, PA_ITEMS, PA_ITEMS_PAGES, calendarHtml, shellHtml } from "./fixtures.mjs";
 import { registerStubs, stubMeetings, stubItems, stubFallback } from "./stubs.mjs";
 
@@ -53,7 +54,7 @@ test("R4 doctypeFor returns the first CERTAIN type in registration order, else t
   // nothing: the registered fallback, NONE, and why
   const g = cert("a letter about nothing in particular", PA);
   assert.deepEqual([g.type, g.confidence, g.signals], [stubFallback, CONFIDENCE.NONE, []]);
-  assert.match(g.why, /no registered content type recognised/);
+  assert.equal(g.why, localize("docprofile.registry.no_registered_content_type_recognised", "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"));
   // every confidence the content-type axis answers is on site-profiles' one ladder (R4's "its R3, R4")
   for (const [t, v] of [[CAL], [PA_ITEMS, PA], [ITEMS_LIKELY, PA], ["plain"], [CAL + PA_ITEMS, PA]]) {
     const dt = cert(t, v);
@@ -263,7 +264,7 @@ test("R17 the result carries the L1 profile always and the content type once L4 
 test("R18 readText refuses when no honest reading may be produced, and says which", () => {
   const none = readText("", { view: PA });
   assert.deepEqual([none.determined, none.partial], [false, false]);
-  assert.match(none.why, /no text was supplied/);
+  assert.equal(none.why, localize("docprofile.readtext.no_text_was_supplied_so_no", "no text was supplied, so no reading was attempted"));
   for (const x of [undefined, null, 7, {}]) assert.equal(readText(x).determined, false);
   const undecoded = readText({ pages: [], undetermined: [{ reason: "no_tounicode", count: 40 }] }, { view: PA });
   assert.equal(undecoded.determined, false);
@@ -489,14 +490,14 @@ test("R34 a position is only what locate returned for the offset read, one entit
 
 test("R35 every no says which no and why", async () => {
   assert.match(identify({ text: "plain" }).why, /./);
-  assert.match(doctypeFor({ text: "plain" }).why, /no registered content type recognised/);
+  assert.equal(doctypeFor({ text: "plain" }).why, localize("docprofile.registry.no_registered_content_type_recognised", "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"));
   assert.match(readText("").why, /./);
   assert.match(readText({ document: "x", counts: { undetermined: 9 } }).why, /./);
   assert.match(flattenText("x").position_why, /./);
   assert.match(flattenText(null).position_why, /no text was supplied/);
   const u = await assess(enc("<p>a</p>"), enc("<p>b</p>"), { sha256, headers: { "x-powered-by": "ASP.NET" } });
   assert.equal(u.verdict, "undetermined");
-  assert.match(u.why, /not recognised well enough/);
+  assert.equal(u.why, localize("docprofile.pipeline.the_document_differs_and_this", "the document differs and this kind of document is not recognised well enough to say whether the difference matters"));
   const nohash = await assess(enc("<p>a</p>"), enc("<p>b</p>"), {});
   assert.match(nohash.why, /could not be compared/);
   // a stub's connection with no practice in the view says why it set no date

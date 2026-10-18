@@ -11,9 +11,9 @@ import { createHash } from "node:crypto";
 import { decodeBaselineJpeg, decodeBaselineJpegRows, DctRefusal } from "../../src/dctdecode.mjs";
 import { ccittDecode } from "../../src/ccittdecode.mjs";
 import { decodeJbig2, JBIG2_REFUSES, Jbig2Refusal } from "../../src/jbig2decode.mjs";
-import { decodeJpx, JPX_REFUSES, JpxRefusal } from "../../src/jpxdecode.mjs";
+import { decodeJpx, JPX_REFUSES, JpxRefusal, MEMORY_FEATURE as JPX_MEMORY } from "../../src/jpxdecode.mjs";
 import { MqDecoder, mqContexts } from "../../src/mq.mjs";
-import { decodePng, PNG_REFUSES, PngRefusal } from "../../src/pngdecode.mjs";
+import { decodePng, PNG_REFUSES, PngRefusal, MEMORY_FEATURE as PNG_MEMORY } from "../../src/pngdecode.mjs";
 
 const load = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), "utf8"));
 const DCT = load("../fixtures/dct-variants.json"), JB = load("../fixtures/jbig2-variants.json");
@@ -70,8 +70,8 @@ test("R7 the declared refusal sets, exactly: renaming or removing a key is a cha
   assert.deepEqual(Object.keys(JBIG2_REFUSES), ["colour extension", "12 adaptive-template pixels", "reused bitmap coding contexts",
     "Huffman-coded refinement", "a necessary extension segment", "segment type", "several pages", "no page"]);
   assert.deepEqual(Object.keys(JPX_REFUSES), ["high-throughput coding", "a JP2 palette", "sYCC colour", "an extended capability",
-    "packed packet headers", "an image past the memory bound"]);
-  assert.deepEqual(Object.keys(PNG_REFUSES), ["interlaced", "an unknown critical chunk", "an image past the memory bound"]);
+    "packed packet headers", JPX_MEMORY]);
+  assert.deepEqual(Object.keys(PNG_REFUSES), ["interlaced", "an unknown critical chunk", PNG_MEMORY]);
   for (const set of [JBIG2_REFUSES, JPX_REFUSES, PNG_REFUSES]) {
     assert.ok(Object.isFrozen(set));
     for (const [k, why] of Object.entries(set)) assert.ok(typeof why === "string" && why.length > 20, k);

@@ -5316,3 +5316,33 @@ decided: 2026-10-18 · the design session (P17)
 the design: (1) The unkeyed lists stand: the 5,433 strings are builder text, and the shell never draws a refusal's `detail` (interface-shell `refusalOf`: the screen's handler, then `refusal.<CODE>`, then the answer's translation, then `refusal.uncatalogued` with the code). (2) Of 2,340 refusal codes `bio-plane/src` emits (origin/main, 2026-10-18), 690 had no `refusal.<CODE>` row: 579 are now worded (`screens/words-drawn.src.py`, the DEC-342 block), each read from its source; 111 are not refusals or cannot be triggered by any request, listed with why and where in `screens/refusals-dec342-skipped.json`. (3) Four evidence-grouping refusals keep "group" in its grouping sense (`build_words.mjs` GROUP_SENSE). (4) For BOB: four screens fall back to the builder's `detail` when an answer has no translation (screens-action/start-send.mjs:69, screens-publish/parts.mjs:21, screens-intake/capture.mjs:83, screens-inquiry/assistant.mjs:268); with every code worded they should take `refusal.<CODE>` and, failing it, the shell's `refusal.uncatalogued` path, never `detail`.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/refusals-dec342-skipped.json`, `screens/build_words.mjs`.
 owed: (BOB, T51) the four screens stop drawing `detail`; any skipped code BOB finds a member can reach comes back to the design to word.
+
+### DEC-343 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B341, K3955: eight `signals` of `ooxml.mjs`'s `discriminate` for the unkeyed list)
+for: design
+question: Listing the eight diagnostic signals of `discriminate` as unkeyed, and why four already listed still counted.
+why it is Bob's: it is not (P17): the design's list beneath K3944.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: a generator step and four list rows.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) `ooxml.mjs` lines 927, 929, 933 and 965 join 773, 834, 854 and 978 on its unkeyed list (`screens/words-reads-mod-2.json`): diagnostic signals every consumer passes on unread; a member reads only the `why` code. (2) The four already listed still counted because the words check names a module by its `build/modules.json` id (`ooxml`), while DEC-260's lists named 34 single-file modules by file (`ooxml.mjs`); `words-reads.src.mjs` now files each such entry under its owning module (read from origin/main's `build/modules.json`; `docx.mjs`, `pptx.mjs`, `formats-xlsx.mjs` and `csv.mjs` under `office-readers`), merged, with the files it came from. 172 entries become 150; 5,437 strings unkeyed; the words check's inline failures fall from 12,187 to 9,504 (2,683 now read as unkeyed), none of `ooxml`'s left.
+reasoning recorded in: this entry; `screens/words-reads.src.mjs` (DEC-343 block), `screens/words-reads-mod-2.json`, `screens/words-reads.json`.
+owed: nothing.
+
+### DEC-344 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B343, K3970: R1's batch)
+for: design
+question: R1's strings no member reads, image-cover's four refusals, and two code rows' spelling.
+why it is Bob's: it is not (P17): the design's list and member words beneath K3930 and K3944.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: data rows.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) A hand-kept list, `screens/words-reads-handoffs.json`, holds the strings BOB's module jobs judge no member reads, by `build/modules.json` id with each job's reason; `words-reads.src.mjs` merges it into each module's unkeyed list (DEC-344 block). R1's 117: connection-grammar 6 (ownerConformance's findings), doctypes 2, court-doctypes 1, docprofile 1 (wiring answers), jurisdictions 102 (a profile validator's detail, read by the profile's author), roster-reader 2 (recognition vocabulary), file-scanner 1 (a route never sent), pdf-pixels 2 (a codec key); taken whole from the words check on tranche/T51 @ 087c98265b, and that check passes on all eight with the new list. subresources' Content-Security-Policy string already passes (counted as a builder string). (2) image-cover's four refusals already had rows (DEC-260, `words-mod-1.src.py`) in builder wording; they and their four siblings are reworded for a member (what to do: save it as a JPEG or an ordinary PNG, save a smaller copy, copy it again from its source, mark the area again). (3) `odf-reader.odf.content_xml_with_text_list` "relabeled" and `roster-reader.org-chart.labelled_line_s_name_a` "labeled", "organization" written into the table (the table wins, K3930), placeholders kept as code names them.
+reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads.src.mjs`, `screens/words-mod-1.src.py`, `screens/words-drawn.src.py`.
+owed: (BOB, T51) image-cover's `COVER_REFUSALS` reads `refusal.<CODE>` for its four English codes.
