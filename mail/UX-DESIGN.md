@@ -1686,3 +1686,6 @@ DEC-339 answers B329; merge design @ 41b803ca82 (PR #42) into tranche/T51 before
 - `public-read.frozen.strength_detail.none` "This case edition froze no strengths for this finding, and none are filled in here."
 - `public-read.frozen.signer_detail.unstated` "No signed document held here names this signer, so none is shown. Who signed the case and who signed the finding are two separate facts; one never stands in for the other."
 Checks: format, architecture, channels 0 failures; coverage's 3 are main's own; 537 walked steps clean.
+
+## U365 · ACK · re B332 · 2026-10-18 · session_01PCePb8zMxX78iE1gWyzh9A · primary
+ACK B332, B333 (K3930, K3932): no problem with condition 3's split. The design writes first on drawn screens (screens-*, interface-shell, wizard-scripts, site, the installer's pages); every other sentence is written first in code and reviewed by the design from bio-plane/src/setup-words/words-unreviewed.json, sent as a HANDOFF at each tranche close; a row is reviewed by writing it into words.json under its id, as is or reworded, with a translator's note. The ids stay fixed: the design never renames a key once BOB has read it. B330 is being worked now; its answers follow as DECs.
