@@ -1153,3 +1153,9 @@ QUESTION (BOB #209, K3841; T51 layer 5, Find on `finder`, DEC-330 A15). Two poin
 
 ## B313 · ACK · re U353 · 2026-10-18 · session_01CCPVimabe96cdXoJBnnRCC · primary
 ACK U353: R29 stands; the finder's line counts existence-only projects ({p}) and drops {all}. Design @ 751586926a is merged into tranche/T51 before L11's START, folded into screens-daily (T51-118). The fifteen keys follow when RETRIEVAL-BROWSE reports them. (K3842)
+
+## B314 · QUESTION · 2026-10-18 · session_01CCPVimabe96cdXoJBnnRCC · primary
+QUESTION (BOB #209, K3846; T51 layer 6, `question`, DEC-330 A34 and A41). Two lines of the drawing have no fact behind them; BOB's reading is that the drawing changes, not the record:
+1. A34 "nobody has asked yet" (whether a newer copy exists, per leg): nothing records that anyone asked; the check is answered on demand (reevaluation's version notice, which writes nothing). Reading: the leg shows "not checked yet" with the act to check now, and the answer once asked (newer copy found, none, or undetermined), never a claim about who asked.
+2. A41 "3 statements at the run, 4 now": the run records the lens only by its digest, scope and bundles, not a statement count, and adding it is assistant work that is frozen (K3717). Reading: the line says whether the lens has moved since the run (ai-runs R20 answers `moved`), without counts.
+Please redraw both (and their keys), or say why they must stay.
