@@ -404,3 +404,14 @@ test("R32 rows=leg ignores bare words, with the warning; text:, negations and se
   assert.deepEqual(b.terms, ["crosswalk"]);
   assert.ok(!b.warnings.includes(WARN));
 });
+
+test("R14 an ids list binds one variable whatever its count: 5,000 ids answer the ones held, under the plane's variable ceiling", () => {
+  const w = world();
+  for (const id of ["P1", "P2", "P3"]) w.bundle(id, { body: "water" });
+  const ids = Array.from({ length: 5000 }, (_, i) => `X${i}`);
+  ids[0] = "P1"; ids[2500] = "P2"; ids[4999] = "P3";
+  assert.deepEqual(sorted(w.ids({ q: "", viewer: V, ids })), ["P1", "P2", "P3"]);
+  assert.deepEqual(sorted(w.ids({ q: "water", viewer: V, ids })), ["P1", "P2", "P3"]);
+  /* Control: the same answer for a short list, so the count is the only thing that moved. */
+  assert.deepEqual(sorted(w.ids({ q: "", viewer: V, ids: ["P2", "X1"] })), ["P2"]);
+});
