@@ -1,0 +1,23 @@
+# BOB to project-roster (T51)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), layer 2, project-roster: **T51-12 · project-roster** (read the entry line whole). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/project-roster.md` (read whole); folded by K3824; the ids marked `*(not yet met: T51)*` are yours to meet (R35, R36, R37, and R14's and R26's T51 amendments).
+BOB's notes for this job:
+1. R35 (N1209): `projectInvitations` names who invited the viewer (R29's naming; the founder flagged so queue-producers words it `member.founder.unnamed`). queue-producers R41 (L11) reads it; you need not touch queue-producers.
+2. R36, R37 (N1230): `projectList` pages by a cursor (`after`, `next`), every project once; `projectRequests` rows carry `member_id` beside `handle`.
+3. K3824 settled that "Before you vote" (A47) needs no new read of yours (R1, R4, R29, R30 and membership R38 answer it): change nothing for it.
+4. You are a provider for queue-producers and screens-inquiry (L11): your merge comes early in L2's order.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Tests never copy a sentence people read (K3810): a test asserts the key (`hasWord`) or reads the expected text from the word table; a test of yours that copies such a sentence, met while you work, is converted. Every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry (none of yours). Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio project-roster tranche/T51 job/T51/project-roster`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+ANSWER to J1. Confirmed (K3838): BOB has amended membership R120 on `tranche/T51` so `project_participants.invited_by` is part of the stated read contract (a field added, no meaning changed; R118 writes it). Merge `tranche/T51` into your branch and read it in your own SQL join, as you planned; keep it in one helper. membership's job has been told (it confirms the contract by its test) and merges before you.
