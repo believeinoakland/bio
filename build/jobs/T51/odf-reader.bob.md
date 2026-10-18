@@ -20,3 +20,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3960): the design's unkeyed list (DEC-343) is merged into tranche/T51 and your module's 'Plain findings (K3957)' section in build/plan/words-pass/odf-reader.md was recomputed (fewer, or none): merge tranche/T51 into your branch and work from the new section. Also run 'node bio-plane/src/setup-words/build.mjs --check' (read-only) before COMPLETE: it must not name your module.
+
+## B3 · CHANGE
+
+CHANGE (K3968; K3965, setup-words R13). Your J2 question: convert now, do not wait for the rows. `localize(id, en)` answers its `en` while `rows.mjs` is stale, so the two regex assertions in `bio-plane/test/m/odf-reader/digest.test.mjs` (the "not an OpenDocument package" refusal and the ".odp export has been measured" refusal) compare with `localize("odf-reader.odf.<id>", en)` by equality. The ooxml strings are settled (DEC-343 lists them unkeyed; nothing to route). Merge `tranche/T51` first; then tests, checks, `build.mjs --check` (a stale-rows note is expected until R1's close), COMPLETE.
