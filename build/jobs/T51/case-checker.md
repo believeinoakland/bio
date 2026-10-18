@@ -15,3 +15,7 @@
 **Ran.** `node --test bio-plane/test/m/case-checker/`: tests 88, pass 86, fail 2 (R13 and R25, the stale program, as above). `checks/format.mjs`: 0 failures. `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 26 of 26 ids named, 0 failures.
 
 Size (session_01CceTzYEaENCZieJw3upijk): test runs 4, module lines 31 (spec.mjs 2 changed lines).
+
+## J1 · COMPLETE
+
+T51-142 done. The checker needed no code change for /8 (it reads each format through case-grammar); spec.mjs now names /8 and a new test proves /8 is accepted as /7 with its own words (R10 R25). R13 and R25 stay red only because program.mjs (generated) is stale since T51-136, and again by my spec.mjs edit: REGENERATE at L8 close with node bio-plane/src/case-checker/build-program.mjs, then both pass. Module tests 88 (86 pass, the 2 are those). format, architecture, coverage, ownership: 0 failures. Details in build/jobs/T51/case-checker.md.
