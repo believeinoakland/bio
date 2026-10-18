@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, PASSWORD } from "./fixture.mjs";
 import { ACCOUNT_CHECKS } from "../../../src/credentials/index.mjs";
-import { noSuchProject } from "../../../src/membership/index.mjs";
+import { noSuchProject, projectViewer } from "../../../src/membership/index.mjs";
 
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
 const refusal = (code) => ({ ok: false, reason: code, code, check: ACCOUNT_CHECKS[code].check, translation: ACCOUNT_CHECKS[code].translation });
@@ -45,7 +45,8 @@ test("R27 aiGrantMint takes `project`, asking R56 for {kind: ask, member, projec
   w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: true, by: "ann" });
   const g = await mint("P");
   assert.equal(g.ok, true);
-  assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).viewer, "member:bob");
+  assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).viewer, projectViewer("member:bob", "P"),
+    "(T50; R79) a grant minted in a project makes that project's viewer");
   assert.notEqual(before, w.snapshot());
   /* the route carries the project */
   assert.equal((await w.ops(`member=bob&by=bob&session=${s}`, { project: "P" }).aigrantmint()).ok, true);

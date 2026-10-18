@@ -26,6 +26,7 @@ function served() {
   const read = (name, query = {}) => {
     const url = new URL(`http://do/${name}`);
     for (const [k, v] of Object.entries(query)) url.searchParams.set(k, String(v));
+    if (name === "publishedcase") return pr.publishedCase({ id: url.searchParams.get("id"), caseId: url.searchParams.get("caseId") || null });
     return publicReadOps(pr, url)[name]();
   };
   const stub = { async fetch(req) {

@@ -98,7 +98,7 @@ export const bucketOver = (m) => ({
   put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
 });
 
-export function world({ steer = {}, worker = null, carriage = null, schedule = null } = {}) {
+export function world({ steer = {}, worker = null, carriage = null, schedule = null, retrieval = null } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
@@ -223,6 +223,7 @@ export function world({ steer = {}, worker = null, carriage = null, schedule = n
                                                                   : { ok: true, found: false, fact_id: factId, fact: null }) };
   const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
+                                   ...(retrieval ? { retrieval } : {}),
                                    basisVersions, publication, caseTensions, capture, strength, reevaluation,
                                    networkNotices, people, money, ...(worker ? { worker } : {}),
                                    /* publish-schedule (N823): a stand-in the test passes, else the real module on

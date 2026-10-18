@@ -5,7 +5,7 @@
    Investigating, Matured, Closed. A project's count (never drawn at zero, R21) is read from `projectquestions` (basis-versions R50), paged to its end
    (a page may hold fewer than its limit while more follow, so only a null cursor ends it); while its pages are read the
    count says it is loading, and a failed read says so, never "no questions". Counts are kept in the screen's page memory
-   (`view.ui.counts`), so a redraw reads none again. With `glance` (the Projects screen, R10; DEC-201 (8), DEC-214 (3)) each
+   (`view.ui["count:<id>"]`, one key each), so a redraw reads none again. With `glance` (the Projects screen, R10; DEC-201 (8), DEC-214 (3)) each
    row also draws its owner (project-roster R27: `{member, handle}`, or `null` when its opener is no longer an active
    member), its members (`cs.initials(handles)`), its activity over eight weeks (`cs.activity(weeks, word)`, the word
    chosen here) and its last change, as `projectlist`
@@ -16,11 +16,11 @@
 export function projectRows(cs, view, w, glance, join, states) {
   const STAGES = ["forming", "investigating", "matured", "closed"];
   const ui = view.ui;
-  if (!ui.counts || typeof ui.counts !== "object") ui.counts = {};
-  const counts = ui.counts;
+  // Each project's count lives under its own key of the page's memory (`count:<id>`), so an answer is a plain write of its own key
+  // and never a read-modify-write of a shared object: answers that land together, or across a redraw, cannot lose one another.
   // One project's count, paged to the end; the outcome lands in page memory and redraws the screen.
   const count = function (id) {
-    counts[id] = { state: "loading" };
+    ui["count:" + id] = { state: "loading" };
     let n = 0;
     const page = function (after) {
       const query = { project: id, limit: "500" };
@@ -32,14 +32,10 @@ export function projectRows(cs, view, w, glance, join, states) {
         return v.cursor ? page(String(v.cursor)) : { state: "ok", n: n };
       }, function () { return { state: "failed" }; });
     };
-    page(null).then(function (r) {
-      const next = Object.assign({}, ui.counts);
-      next[id] = r;
-      cs.set("counts", next);
-    });
+    page(null).then(function (r) { cs.set("count:" + id, r); });
   };
   const countOf = function (id) {
-    const c = counts[id];
+    const c = ui["count:" + id];
     if (!c) { count(id); return cs.state({ state: "loading" }, null); }
     if (c.state === "loading") return cs.state({ state: "loading" }, null);
     if (c.state === "failed") return cs.state({ state: "failed", refusal: null }, null);

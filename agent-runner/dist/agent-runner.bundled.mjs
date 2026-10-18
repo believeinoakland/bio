@@ -1505,7 +1505,7 @@ var fleet_member_default = {
   },
   image: {
     repository: "ghcr.io/believeinoakland/agent-runner",
-    digest: "sha256:d7c81712ef95683068451476597ca22844937d6c9bccc756d713f5943c64ee00",
+    digest: "sha256:b0220ffa2336503cb97edea1355ddb14633264f48c915eb6426a7319cd9243d8",
     platform: "linux/amd64",
     port: 8080,
     schedulingPolicy: "default"
@@ -1557,6 +1557,7 @@ var TRACE_HEADER = "x-civicsmith-trace";
 
 // src/worker.mjs
 var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
+var DISABLED = JSON.stringify({ ok: false, code: "LOCAL_RUNNER_DISABLED" });
 var HOLD_KEY = "signin_hold_until";
 var LIBRARY_DETAIL_MAX = 120;
 var STARTED_WORDS = "Your group's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.";
@@ -1596,6 +1597,35 @@ function egressHandler(host) {
     }
   };
 }
+var REFUSED_WORDS = "Origin is disallowed";
+var hostOf = (url) => {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/\.$/, "");
+  } catch {
+    return null;
+  }
+};
+var RefusalLoggingProxy = class extends ContainerProxy {
+  async fetch(request) {
+    const res = await super.fetch(request);
+    try {
+      const host = hostOf(request.url);
+      if (res.status === 520 && host !== null && !fleet_member_default.egress.includes(host) && await res.clone().text() === REFUSED_WORDS) {
+        const props = this.ctx && this.ctx.props || {};
+        log({
+          event: "runner.egress.refused",
+          instance_ref: instanceRef(props.containerId),
+          host,
+          method: request.method,
+          path_template: pathTemplate(request.url),
+          status: 520
+        });
+      }
+    } catch {
+    }
+    return res;
+  }
+};
 var AgentRunner = class extends Container {
   defaultPort = fleet_member_default.image.port;
   // A conversation's instance sleeps soon after its connection ends (R9); a sign-in holds it awake to its outcome (R25).
@@ -1622,10 +1652,16 @@ var AgentRunner = class extends Container {
     }
     log({ event: "runner.lifecycle", instance_ref: this.instanceRef, what, ...extra, signin_hold: hold });
   }
-  // Every request goes to the image's one port; a caller cannot pick another. R26: an answer that is not the image's
-  // JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a sign-in's answers set and clear the
-  // hold, read from their path, status and the waiting header alone, never a body.
+  // R35: every request, whatever its method, path or upgrade, is answered 410 before the container, its port or the
+  // class's storage is touched; the line names the method and path template only, never a query, header or body.
   async fetch(request) {
+    log({ event: "runner.local.disabled", method: request.method, path_template: pathTemplate(request.url), status: 410 });
+    return new Response(DISABLED, { status: 410, headers: { "content-type": "application/json" } });
+  }
+  // Suspended while R35 holds (nothing calls it): every request to the image's one port; a caller cannot pick another.
+  // R26: an answer that is not the image's JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a
+  // sign-in's answers set and clear the hold, read from their path, status and the waiting header alone, never a body.
+  async passThrough(request) {
     let res;
     try {
       res = await this.containerFetch(request, this.defaultPort);
@@ -1695,6 +1731,6 @@ var worker_default = {
 };
 export {
   AgentRunner,
-  ContainerProxy,
+  RefusalLoggingProxy as ContainerProxy,
   worker_default as default
 };

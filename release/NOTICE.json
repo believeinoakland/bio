@@ -1,0 +1,13 @@
+{
+  "version": "0.85.0",
+  "date": "2026-10-15",
+  "manifest": "f94e6b6247d9c8d81e934480314c64a43991ad53360ce01167a989b06601cbce",
+  "security": false,
+  "notes": {
+    "members": "This release joins up the whole path a member takes: sign in, open a project, connect your own Claude subscription, capture a document, ask a question, work with the assistant, and conclude it. Inviting someone and joining a project now follow the same steps and words as the rest of Civicsmith.",
+    "administrators": "Installing, signing in and inviting members now follow one path from start to finish. The screens use the wording of the latest interface design. This is the first release that carries signed release notes.",
+    "must_do": ""
+  },
+  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAASYmlvLXJlbGVhc2Utbm90aWNlAAAAAAAAAAZzaGE1MTIAAABT\nAAAAC3NzaC1lZDI1NTE5AAAAQFRnr4cUh8Bd8VZEoHhILWF4m/0hY1IbwkICjanw3yXzDL\nlDnq1L7lieoY52yqdOvzI1k+DAm2D0PzZmm+UaqAE=\n-----END SSH SIGNATURE-----\n",
+  "signer": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiA6JRm52rE3agZAKqb/4ATA34c8jEp3Yef0KZyCe18 bio-release"
+}

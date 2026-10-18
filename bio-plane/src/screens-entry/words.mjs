@@ -3,7 +3,9 @@
    `words.json`), drawn by key through the shell's `w` and read in node through `setup-words` `word(key, vars)`. The
    lists are `words-reads.json`'s `reads` for this module with every key a requirement here names (R16–R20); a sentence
    no key holds is a REPORT to BOB, never English here. DEC-256 retired `screen.forgot.handle.help` and
-   `screen.setup.taken`, and DEC-230 withdrew `signin.founderhint`: none is read. */
+   `screen.setup.taken`, and DEC-230 withdrew `signin.founderhint`: none is read. R24: the lists below are this module's
+   own declared keys, every one held by `hasWord`, and every key a screen draws is one of them; `words-reads.json`,
+   generated from T49's code, lists neither the act labels these screens read nor T50's setup keys (DEC-279). */
 
 export const STATES = Object.freeze(["state.loading", "state.empty", "state.failed"]);
 
@@ -40,35 +42,44 @@ export const READS = Object.freeze({
   reset: Object.freeze([...STATES, "screen.reset.name", "screen.reset.purpose",
     ...["for", "forhandle", "keeps", "done", "dead", "dead.what"].map((k) => "screen.reset." + k),
     ...PASSWORDS, "screen.entry.signin", "screen.entry.backtofront", "refusal.PASSWORD_TOO_SHORT", ...labels("reset", ["passwordreset"])]),
-  setup: Object.freeze([...STATES, "screen.setup.name", "screen.setup.purpose",
-    ...["lede", "steps", "step.claim", "step.name", "step.places", "step.offices", "step.assistant", "step.court", "step.hosting",
-      "step.admins", "step.security", "step.done", "claim", "otp", "otp.help", "handle", "handle.help", "own", "own.help", "again.help",
-      "nootp", "claimed", "claimed.nosignin", "unarmed",
-      "name", "name.field", "name.help", "name.now", "name.empty", "domain", "domain.help", "domain.empty", "domain.verified",
-      "places", "places.now", "places.none", "places.choose", "places.help", "place.wanted", "place.wanted.help", "place.wanted.now", "place.empty",
-      "offices", "offices.what", "office.field", "office.note", "office.empty", "office.added",
-      "assistant", "assistant.what", "assistant.own", "assistant.paid", "keepaway", "keepaway.on", "keepaway.why", "keepaway.help",
-      "keepaway.noreason", "key", "key.help", "key.nokey", "key.held", "key.on", "key.off", "key.switchon", "key.switchoff",
-      "limit", "limit.help", "limit.bad", "limit.set",
-      "court", "court.what", "court.legend", "court.tell", "court.dont", "court.pick", "court.now.tell", "court.now.dont",
-      "hosting", "hosting.field", "hosting.note", "hosting.empty", "hosting.now",
-      "admins", "admins.what", "admins.id", "admins.id.help", "admins.cover", "admins.incomplete", "admins.shown",
-      "security", "security.what", "security.scanner", "security.field", "security.keep", "security.missing", "security.nopick",
-      "security.passed", "security.failed", "security.held", "finished", "finished.what", "finished.go"].map((k) => "screen.setup." + k),
-    ...HOSTING_KEYS, ...PASSWORDS, ...CODES, "screen.entry.signin", "screen.entry.backtofront", "screen.entry.group",
-    /* R17, R18: the founder's handle; R19: a reader who is not the founder; R20: the codes, and state c */
+  setup: Object.freeze([...STATES, "screen.setup.name", "screen.setup.purpose", "shell.mark",
+    /* R22: the parts as the design draws them, each its name, what it is for and its state */
+    ...["lede", "coming", "after", "state.needed", "state.done", "state.optional", "state.off",
+      "claim", "part.claim.why", "claim.intro", "claim.button", "otp", "otp.help", "otp.tip", "handle", "handle.help", "handle.tip", "own",
+      "own.help", "again.help", "nootp", "claimed", "claimed.nosignin", "unarmed", "codes.intro",
+      "part.group", "part.group.why", "name.field", "name.help", "name.tip", "name.now", "name.empty", "site.q", "site.no", "site.yes",
+      "site.tip", "domain", "domain.help", "domain.empty", "domain.verified",
+      "places", "part.places.why", "places.intro", "places.chosen", "places.choose", "place.other", "places.help", "places.none",
+      "place.wanted", "place.wanted.help", "place.wanted.now", "place.empty",
+      "offices", "part.offices.why", "offices.what", "offices.none", "office.field", "office.note", "office.empty", "office.added",
+      "assistant", "part.assistant.why", "assistant.what", "ai.q", "ai.yes", "ai.yes.help", "leaves.what", "keepaway", "ai.no.help",
+      "keepaway.on", "ai.off", "keepaway.why", "keepaway.help", "keepaway.noreason", "pay.q", "pay.own", "pay.group", "assistant.own",
+      "assistant.paid", "key", "key.help", "key.tip", "key.nokey", "key.held", "key.on", "key.off", "key.switchon", "key.switchoff",
+      "key.told", "limit", "limit.help", "limit.bad", "limit.set",
+      "court", "part.court.why", "people.what", "court.what", "court.matters", "court.legend", "court.tell", "court.dont", "court.pick",
+      "court.now.tell", "court.now.dont",
+      "security", "part.security.why", "security.scanner", "security.what", "security.field", "security.keep", "security.missing",
+      "security.nopick", "security.passed", "security.failed", "security.held", "security.add",
+      "admins", "part.admins.why", "admins.what", "admins.id", "admins.id.help", "admins.cover", "admins.incomplete", "admins.shown",
+      "hosting.field", "hosting.help", "hosting.note", "hosting.empty", "hosting.now",
+      "finished", "finished.title", "finished.what", "finished.go"].map((k) => "screen.setup." + k),
+    ...HOSTING_KEYS, "screen.entry.again", "screen.entry.differ", "screen.entry.short", "screen.entry.codes.list", "screen.entry.codes.none",
+    "screen.entry.signin", "screen.entry.group", "refusal.PASSWORD_TOO_SHORT",
+    /* R17, R18: the founder's handle; R19: a reader who is not the founder; R20: the codes, and state c; R23: Skip for now,
+       and the second administrator */
     ...HANDLE_REFUSALS, "founder.handle.title", "founder.handle.says", "founder.handle.choose", "founder.handle.later",
     "founder.handle.later.help", "founder.handle.done",
     "setup.member.heading", "setup.member.sub", "setup.member.home",
     "setup.codes.once", "setup.codes.copy", "setup.codes.save", "setup.claimed.heading", "setup.claimed.sub", "refusal.ALREADY_CLAIMED",
-    ...labels("setup", ["claim", "recoverycodesissue", "groupnameset", "groupdomainset", "profilesset", "placewanted", "officesseed",
-      "entitycreate", "aikeepaway", "groupkeyset", "groupkeyswitch", "ailimitset", "courtnoticeset", "hostingaccessset", "memberadd",
-      "securitytooladd"])]),
+    "setup.skip", "setup.skip_does", "setup.admin.invite", "setup.admin.invite_does",
+    ...labels("setup", ["recoverycodesissue", "groupnameset", "groupdomainset", "profilesset", "placewanted", "officesseed", "entitycreate",
+      "aikeepaway", "groupkeyset", "ailimitset", "courtnoticeset", "hostingaccessset"]),
+    ...["claim", "groupkeyswitch", "memberadd", "securitytooladd"].map((op) => `act.${op}.does`)]),
   join: Object.freeze([...STATES, "screen.join.name", "screen.join.purpose",
     ...["invited", "invited.as", "link", "link.what", "cover", "cover.help", "cover.empty", "dead", "dead.what", "language",
       "language.help", "handle", "handle.help", "handle.taken", "handle.empty", "codes.after", "joined", "joined.nosignin", "home",
       "member", "member.go"].map((k) => "screen.join." + k),
     ...PASSWORDS, ...CODES, "screen.entry.group", "screen.entry.signin",
-    "handle.free", "handle.taken", "handle.characters", "handle.fixed", "handle.refused.paused", "refusal.JOIN_LINK_DAILY_CAP",
+    "handle.free", "handle.taken", "handle.characters", "handle.fixed", "handle.refused.paused", "refusal.JOIN_LINK_DAILY_CAP", "join.cap.says",
     "refusal.PASSWORD_TOO_SHORT", ...labels("join", ["invitelook", "memberlanguageset", "handlecheck", "enroll", "joinlinkinvite"])]),
 });

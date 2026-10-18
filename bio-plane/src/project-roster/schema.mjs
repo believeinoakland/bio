@@ -80,9 +80,20 @@ CREATE TABLE IF NOT EXISTS project_approval_settings (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS project_approval_settings_project ON project_approval_settings(project_id, seq);
+ 
+-- R31 (T50; N933): THE PROJECT'S DECLARED STAKE, one row per act, append-only. The latest row is the stake; a null
+-- stake clears it; a project with no row has none. Every participant reads the history through R32.
+CREATE TABLE IF NOT EXISTS project_stakes (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  stake      TEXT,
+  set_by     TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_stakes_project ON project_stakes(project_id, seq);
 `;
 
-/* R18: the tables keyed by project and cleared with it, the scope records and approval settings among them (T45).
+/* R18: the tables keyed by project and cleared with it, the scope records and approval settings among them (T45) and the stake records (T50).
    None is exempt. */
 export const PROJECT_ROSTER_TABLES = Object.freeze(["project_join_requests", "project_owner_votes",
-  "project_owner_decisions", "project_scopes", "project_approval_settings"]);
+  "project_owner_decisions", "project_scopes", "project_approval_settings", "project_stakes"]);

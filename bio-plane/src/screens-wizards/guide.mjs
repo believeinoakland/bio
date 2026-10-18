@@ -1,4 +1,4 @@
-/* screens-wizards R2–R7, R9: the runner, the wizard guide docked beside any screen (interface-shell R31; DEC-120 (2),
+/* screens-wizards R2–R7, R9, R15–R17: the runner, the wizard guide docked beside any screen (interface-shell R31; DEC-120 (2),
    DEC-139 (4), DEC-140, DEC-148). It says each step's what and why, opens the step's screen, rings the control the step
    names and never presses it, sends no act on the member's behalf and fills a field only with a labelled draft (R4).
    It reports use only through `wizardprogress`'s unattributed tally (start, each step reached, finish; stopping sends
@@ -23,7 +23,7 @@ export const WELCOME_AT = 3;
 /* The ops the guide reads and counts through `cs.call` (J2 (1)): the marks, a script's steps, the tally, and each op a
    `{machine: <op>}` draft names (wizard-scripts R13's `machineDrafts`, as `plane`'s `MACHINE_DRAFTS` registers them). */
 export const GUIDE_OPS = Object.freeze(["wizardsat", "wizardread", "startfrom", "wizardprogress", "wizarddraft",
-  "writinghelp", "whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft"]);
+  "writinghelp", "whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "projectlist", "list"]);
 
 export const PARTS = {
   ids() { return { welcome: "WIZ-7db08189cc0e58c3", first: "WIZ-86b7f4007e3b0e3c", welcomeAt: 3 }; },
@@ -70,6 +70,7 @@ export const PARTS = {
     run.i = i;
     ui.absent = false;
     ui.draft = null;
+    ui.ask = null;
     if (count && !run.reached[i]) { run.reached[i] = true; P.count(cs, view, run, "step", i + 1); }
     const step = run.steps[i];
     if (step.via && !run.tripped[i]) {
@@ -82,21 +83,47 @@ export const PARTS = {
         return P.arrive(cs, view, 0, true);
       }
     }
-    P.open(cs, view);
+    return P.open(cs, view);
   },
 
-  /* open the current step's screen; on it already, ring at once (`entered` rings after a route) */
+  /* open the current step's screen; on it already, ring at once (`entered` rings after a route). R17: a screen that works on
+     a project, a question or a document, with none held for the run, asks for it here first. */
   open(cs, view) {
-    const ui = view.ui, run = ui.run;
+    const ui = view.ui, run = ui.run, P = view.parts;
     const step = run && run.steps[run.i];
     if (!step) return;
     if (step.screen && step.screen !== view.screen) {
       cs.set("run", run);
       const subjects = ui.subjects || {};
-      cs.go(step.screen, Object.hasOwn(subjects, step.screen) ? subjects[step.screen] : null);
+      const kind = P.kinds()[step.screen] || null;
+      const held = Object.hasOwn(subjects, step.screen) ? subjects[step.screen] : null;
+      const chosen = kind && ui.chosen && Object.hasOwn(ui.chosen, kind) ? ui.chosen[kind] : null;
+      const here = kind && P.kinds()[view.screen] === kind && view.subject !== null && view.subject !== undefined ? view.subject : null;
+      if (kind && (held === null || held === undefined) && chosen === null && here === null) return P.ask(cs, view, kind);
+      cs.go(step.screen, held !== null && held !== undefined ? held : chosen !== null ? chosen : here);
       return;
     }
     view.parts.ringStep(cs, view);
+  },
+
+  kinds() { return { project: "project", projectai: "project", timeline: "project", money: "project",
+    question: "question", document: "document" }; },
+
+  /* R17: ask in the dock which project, question or document, as record data the member may see; none to choose for a
+     project says so in its fold and offers Next; for a question or a document with none, the screen opens as it always did */
+  async ask(cs, view, kind) {
+    const ui = view.ui, run = ui.run, i = run.i;
+    const read = kind === "project" ? ["projectlist", {}] : ["list", { query: { type: kind === "question" ? "inquiry" : "information", limit: "500" } }];
+    ui.ask = { kind, i, options: null };
+    cs.set("run", run);
+    const a = await cs.call(read[0], read[1]);
+    if (ui.run !== run || run.i !== i) return;
+    const r = a && a.ok !== false ? (a.result !== undefined ? a.result : a) : null;
+    const rows = kind === "project" ? (r && Array.isArray(r.projects) ? r.projects.map((p) => ({ value: p.id, text: p.name || p.id })) : [])
+      : (r && Array.isArray(r.bundles) ? r.bundles.map((b) => ({ value: b.bundle_id, text: b.title || b.bundle_id })) : []);
+    if (!rows.length && kind !== "project") { ui.ask = null; cs.set("run", run); return cs.go(run.steps[i].screen, null); }
+    ui.ask = { kind, i, options: rows };
+    cs.set("run", run);
   },
 
   /* R2: ring the step's control once (`cs.ring`); a step whose act is not drawn says so and offers Next; R4: a text or
@@ -134,6 +161,8 @@ export const PARTS = {
     if ((run.id === ids.welcome || run.id === ids.first) && typeof cs.keep === "function") cs.keep("bio-wizard-finished:" + (me.member || "") + ":" + run.id, "1");
     if (run.parent) { ui.run = run.parent; ui.notice = null; return P.arrive(cs, view, ui.run.i, false); }
     ui.run = null;
+    ui.ask = null;
+    ui.chosen = {};
     ui.notice = { finished: run.id, name: run.name };
     cs.set("run", null);
   },
@@ -145,6 +174,8 @@ export const PARTS = {
     ui.run = null;
     ui.notice = null;
     ui.draft = null;
+    ui.ask = null;
+    ui.chosen = {};
     cs.set("run", null);
   },
 
@@ -153,6 +184,8 @@ export const PARTS = {
     const ui = view.ui, P = view.parts;
     ui.rec = null;
     ui.notice = null;
+    ui.ask = null;
+    ui.chosen = {};
     ui.run = { loading: true, steps: [] };
     cs.set("run", ui.run);
     const run = await P.load(cs, view, script, version);
@@ -282,6 +315,15 @@ export const guide = {
     if (what === "chip") { ui.marksOpen = !ui.marksOpen; return cs.set("marksOpen", ui.marksOpen); }
     if (what === "where" && run && !run.loading) return P.ringStep(cs, view);
     if (what === "draftit") return P.machine(cs, view);
+    if (what === "subjectgo" && run && !run.loading && ui.ask && ui.ask.i === run.i) {
+      const value = cs.value("wz-subject");
+      if (value === null || value === undefined || value === "") return null;
+      ui.chosen = ui.chosen || {};
+      ui.chosen[ui.ask.kind] = value;
+      ui.ask = null;
+      cs.set("run", run);
+      return cs.go(run.steps[run.i].screen, value);
+    }
     if (what === "start") return P.begin(cs, view, data.script, data.version || null, Number(data.at) || 1,
       data.script === ids.welcome && !!ui.joinedCount && Number(data.at) === ids.welcomeAt);
     if (what === "notnow") { ui.offerHidden = true; return cs.set("offer", false); }
@@ -301,7 +343,7 @@ export const guide = {
       const pairs = ui.rec.pairs.map((p, i) => `<li>${W(G + "recording.pair", { i: String(i + 1), screen: { html: P.said(cs, "screen." + p.screen + ".name") || E(p.screen) }, act: { html: P.said(cs, "act." + p.act + ".label." + p.screen) || E(p.act) } })} `
         + btn("unrecord", W(G + "recording.remove", { i: String(i + 1) }), "quiet", ` data-i="${i}"`) + "</li>").join("");
       return `<div class="cs-wizard" data-guide-state="recording"><span class="step">${W(G + "recording")}</span><p>${W(G + "recording.intro")}</p>`
-        + (pairs ? `<ol class="mk-list">${pairs}</ol>` : `<p class="cs-state" data-state="empty">${W(G + "recording.empty")}</p>`)
+        + (pairs ? `<ul class="mk-list">${pairs}</ul>` : `<p class="cs-state" data-state="empty">${W(G + "recording.empty")}</p>`)
         + cs.field("wz-rec-name", G + "recording.name")
         + `<span class="nav">${cs.act("wizarddraft", { label: G + "recording.save" })}${btn("recstop", W(G + "recording.stop"), "quiet")}</span></div>`;
     }
@@ -318,6 +360,11 @@ export const guide = {
       if (run.parent) out.push(`<p class="mk-note" data-guide-trip>${W("guide.sidetrip", { wizard: { html: P.nameOf(cs, view, run.id, run.name) } })}</p>`);
       if (d) out.push(`<p class="mk-note">${W("guide.draft")}</p>`);
       if (ui.absent && step.act) out.push(`<p class="mk-note" data-guide-absent role="status">${W(G + "absent")}</p>`);
+      const ask = ui.ask && ui.ask.i === i && ui.ask.options ? ui.ask : null;
+      if (ui.ask && ui.ask.i === i && !ui.ask.options) out.push(`<p class="cs-state" data-state="loading" role="status">${W("state.loading")}</p>`);
+      if (ask && ask.options.length) out.push(cs.choice("wz-subject", "wizard.subject." + ask.kind, ask.options)
+        + `<span class="nav">${btn("subjectgo", W(G + "next"))}</span>`);
+      if (ask && !ask.options.length) out.push(`<details class="mk-details" open data-guide-nosubject><summary>${W("wizard.subject.none.summary")}</summary><p class="mk-note">${W("wizard.subject.none." + ask.kind)}</p></details>`);
       if (d && typeof d.machine === "string" && view.reachable && step.act && !(draft && draft.text !== undefined))
         out.push(`<span class="nav">${btn("draftit", W(G + "draftit"), "", "")}</span>`);
       if (draft && draft.asking) out.push(`<p class="cs-state" data-state="loading" role="status">${W(G + "draft.asking")}</p>`);
@@ -328,7 +375,7 @@ export const guide = {
         if (draft.untested) out.push(`<p class="mk-note">${W("ai.label.untested")}</p>`);
         out.push(draft.placed ? `<p class="mk-note">${W(G + "draft.placed")}</p>` : `<p class="mk-note">${W(G + "draft.nofield")}</p><blockquote class="cs-draft">${E(draft.text)}</blockquote>`);
       }
-      out.push(`<span class="nav">${i > 0 ? btn("back", W(G + "back"), "quiet") : ""}${btn("next", W(i + 1 < n ? G + "next" : G + "finish"))}</span>`);
+      out.push(`<span class="nav">${i > 0 ? btn("back", W(G + "back"), "quiet") : ""}${ask && ask.options.length ? "" : btn("next", W(i + 1 < n ? G + "next" : G + "finish"))}</span>`);
       if (step.act) out.push(`<span class="nav">${btn("where", W("guide.showwhere"), "quiet", ` aria-keyshortcuts="Alt+Shift+W"`)}<span class="cs-kbd">${W(G + "key")}</span></span>`);
       out.push(stopLine, `<span class="nav">${btn("stop", W(G + "stop"), "quiet", ` data-level="2" data-tip="${E(W(G + "stop.does"))}"`)}</span></div>`);
       return out.join("");
@@ -338,7 +385,7 @@ export const guide = {
     if (ui.notice && ui.notice.finished)
       return `<div class="cs-wizard"><p role="status">${W(G + "finished", { name: { html: P.nameOf(cs, view, ui.notice.finished, ui.notice.name) } })}</p>${btn("close", W(G + "close"), "quiet")}</div>`;
     if (ui.notice && ui.notice.saved)
-      return `<div class="cs-wizard"><p role="status">${W(G + "recording.saved")}</p>${btn("close", W(G + "close"), "quiet")}</div>`;
+      return `<div class="cs-wizard"><p role="status"><b>${E(ui.notice.name || "")}</b> · ${W(G + "recording.saved")}</p>${btn("close", W(G + "close"), "quiet")}</div>`;
     return "";
   },
 
@@ -360,6 +407,8 @@ export const guide = {
       if (!s || items.some((x) => x.id === s.id) || !walkable(s)) continue;
       items.push({ id: s.id, version: s.version, at: 1, name: P.nameOf(cs, view, s.id, s.name), finished: s.finished, draft: s.draft === true, required: s.required === true });
     }
+    // R16: once the member is connected (her own subscription or key serves her, interface-shell R20), `connect` draws no chip
+    if (screen === "connect" && view.reachable) items.length = 0;
     // Home's welcome offer (R7) keeps its own band, which is not a chip
     const offer = screen === "home" && ui.joined && !ui.offerHidden && !kept(ids.welcome)
       ? `<div class="cs-reason" role="region" data-guide-offer><p>${W(G + "welcome")}</p><span class="mk-acts">`
@@ -387,8 +436,17 @@ export const guide = {
         if (!rec.pairs.length) return { refuse: "screen.guide.recording.none" };
         const name = String(cs.value("wz-rec-name") || "").trim();
         if (!name) return { refuse: "screen.guide.recording.noname" };
+        rec.saving = name;
         return { body: { project: rec.project, name, recorded: rec.pairs.map((p) => ({ screen: p.screen, act: p.act })) } };
       },
-      done(view, answer, cs) { view.ui.rec = null; view.ui.notice = { saved: true }; cs.set("rec", null); return { stay: true }; } },
+      /* R15: the guide says the draft was saved, by name, and opens Drafts on it (the library reads the state its address names) */
+      done(view, answer, cs) {
+        const name = view.ui.rec ? view.ui.rec.saving || "" : "";
+        view.ui.rec = null;
+        view.ui.notice = { saved: true, name };
+        cs.set("rec", null);
+        cs.go("wizards", "draft");
+        return { stay: true };
+      } },
   ],
 };

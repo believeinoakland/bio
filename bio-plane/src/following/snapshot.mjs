@@ -1,6 +1,8 @@
 /* following: a portal's dataset as rows, its query key, and the keyed field-level diff of two snapshots (R10, R11;
  * ladders §8.5). Pure: no store, no clock. A difference is what the two answers say, never a finding (R16). */
 
+import { word } from "../setup-words/index.mjs";
+
 /** R10: a portal follow's key: the address with its query parameters (and any given apart) sorted and the host
  *  folded to lower case, so one query written two ways is one follow. Answers null for an address that is no URL. */
 export function portalKey(address, query = null) {
@@ -41,22 +43,22 @@ function csvRows(text) {
 /** R10: the dataset's answer as a list of row objects: a JSON array of objects, a JSON object holding one such array
  *  (`data`, `rows`, `results`, `features`' `properties`), or CSV with a header line. Anything else answers `{why}`. */
 export function readDataset(text) {
-  if (typeof text !== "string") return { why: "the snapshot's bytes could not be read as text" };
+  if (typeof text !== "string") return { why: word("following.why.snapshot_bytes_read_text") };
   const t = text.replace(/^﻿/, "").trim();
   if (t.startsWith("[") || t.startsWith("{")) {
     let v;
-    try { v = JSON.parse(t); } catch { return { why: "the answer is not well-formed JSON" }; }
+    try { v = JSON.parse(t); } catch { return { why: word("following.why.answer_well_formed") }; }
     if (v && !Array.isArray(v)) {
       if (Array.isArray(v.features)) v = v.features.map((x) => (x && x.properties) || x);
       else v = [v.data, v.rows, v.results].find(Array.isArray) || null;
     }
     if (!Array.isArray(v) || !v.every((r) => r && typeof r === "object" && !Array.isArray(r)))
-      return { why: "the JSON answer is not a list of rows" };
+      return { why: word("following.why.json_answer_list") };
     return { rows: v };
   }
-  if (t.startsWith("<")) return { why: "the answer is markup, not rows: neither JSON rows nor CSV" };
+  if (t.startsWith("<")) return { why: word("following.why.answer_markup_rows") };
   const lines = csvRows(t);
-  if (lines.length < 1 || lines[0].length < 1) return { why: "the answer is neither JSON rows nor CSV with a header" };
+  if (lines.length < 1 || lines[0].length < 1) return { why: word("following.why.answer_neither_json") };
   const head = lines[0];
   return { rows: lines.slice(1).map((l) => Object.fromEntries(head.map((h, i) => [h, l[i] ?? null]))) };
 }
@@ -88,9 +90,9 @@ export function diffRows(before, after, key) {
   const added = [], removed = [], changed = [], undetermined = [];
   const doubtful = new Set([...a.repeated, ...b.repeated]);
   for (const k of doubtful)
-    undetermined.push({ key: k, why: `the key ${key} = ${k} is repeated in the ${a.repeated.has(k) && b.repeated.has(k) ? "both snapshots" : a.repeated.has(k) ? "earlier snapshot" : "later snapshot"}, so which row is which is not settled` });
-  if (a.missing) undetermined.push({ key: null, side: "from", rows: a.missing, why: `${a.missing} row${a.missing === 1 ? "" : "s"} of the earlier snapshot carry no ${key}, so they are matched to nothing` });
-  if (b.missing) undetermined.push({ key: null, side: "to", rows: b.missing, why: `${b.missing} row${b.missing === 1 ? "" : "s"} of the later snapshot carry no ${key}, so they are matched to nothing` });
+    undetermined.push({ key: k, why: word("following.why.key_repeated_row", { key, k, snapshot: a.repeated.has(k) && b.repeated.has(k) ? "both snapshots" : a.repeated.has(k) ? "earlier snapshot" : "later snapshot" }) });
+  if (a.missing) undetermined.push({ key: null, side: "from", rows: a.missing, why: word("following.why.row_earlier_snapshot", { missing: a.missing, s: a.missing === 1 ? "" : "s", key }) });
+  if (b.missing) undetermined.push({ key: null, side: "to", rows: b.missing, why: word("following.why.row_later_snapshot", { missing: b.missing, s: b.missing === 1 ? "" : "s", key }) });
   for (const [k, row] of b.by) {
     if (doubtful.has(k)) continue;
     if (!a.by.has(k)) { added.push({ key: k, row }); continue; }

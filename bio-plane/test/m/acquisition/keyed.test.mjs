@@ -7,6 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, network, text } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL,
          civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 
@@ -143,12 +144,12 @@ const BAD_REPORTER = { citation: "33 Umbrella 422", normalized_citations: [], st
 const TOO_MANY = { citation: "576 U.S. 644", normalized_citations: ["576 U.S. 644"], start_index: 10002, end_index: 10013, status: 429, error_message: "Too many citations requested.", clusters: [] };
 const TEXT = "Obergefell v. Hodges (576 U.S. 644) and 1 H. 150 and 1 U.S. 200 and 33 Umbrella 422.";
 
-test("R37 R36: citationLookup sends the text through the keyed path and answers each citation's offsets and the service's matches, every one labelled the service's answer and never verified", async () => {
+test("R37 R36: citationLookup sends the text through the keyed path and answers each citation's offsets and the service's matches, every one labeled the service's answer and never verified", async () => {
   const w = withCreds(world(), credentials());
   const x = await call(w, { [LOOKUP]: json([OBERGEFELL, AMBIGUOUS, NOT_FOUND, BAD_REPORTER, TOO_MANY]) }, (s) => citationLookup(s, { text: TEXT, viewer: "member:m1" }));
   assert.equal(x.out.ok, true, JSON.stringify(x.out));
   assert.deepEqual([x.out.service, x.out.verified, x.out.label], ["courtlistener", false, CITATION_LOOKUP_LABEL]);
-  assert.match(CITATION_LOOKUP_LABEL, /not verified: a citation is verified only by a held capture stating it/);
+  assert.equal(CITATION_LOOKUP_LABEL, word("acquisition.citation_lookup_label"), "read by key (plan rule 6)");
   const sent = x.net.seen[0];
   assert.deepEqual([sent.url, sent.init.method, new URLSearchParams(sent.init.body).get("text")], [LOOKUP, "POST", TEXT], "the text, as the service's documentation sends it");
   const [ob, amb, nf, br, tm] = x.out.citations;
@@ -170,13 +171,13 @@ test("R37 R36: citationLookup sends the text through the keyed path and answers 
   assert.deepEqual([none.out.ok, none.out.citations], [true, []]);
 });
 
-test("R37: with the service off it answers R36's refusal and sends nothing, the recogniser's reading standing alone; the service's throttle is answered with its wait_until", async () => {
+test("R37: with the service off it answers R36's refusal and sends nothing, the recognizer's reading standing alone; the service's throttle is answered with its wait_until", async () => {
   for (const creds of [credentials({ on: false }), null]) {
     const w = world();
     if (creds) w.store.credentials = creds;
     const x = await call(w, { [LOOKUP]: json([OBERGEFELL]) }, (s) => citationLookup(s, { text: TEXT, viewer: "member:m1" }));
     assert.deepEqual([x.out.ok, x.out.reason, x.net.seen.length], [false, "KEYED_SERVICE_OFF", 0]);
-    assert.match(x.out.note, /recogniser's own reading stands alone/);
+    assert.equal(x.out.note, word("acquisition.note.citation_recognizer_reading"), "read by key (plan rule 6)");
     keyNowhere(w, x, "off");
   }
   const w = withCreds(world(), credentials());

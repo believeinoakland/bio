@@ -1,0 +1,37 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+B
+Working · not public · seen by your group's members
+Settings › Members
+Members
+
+Active members: 2 · Administrators: 1
+
+HANDLE
+ROLE
+MAY DO
+STATUS
+The group's founder
+The person who set up this group's Civicsmith, who hasn't chosen a handle yet. Their work will show it once they do.
+administrator
+active
+bob-test
+member
+contribute
+active
+THE GROUP'S API KEY
+
+The group's key is not on.
+
+For a member's act in a project that has its own AI account, that project's account pays. Otherwise the member's own account, if they connected one; otherwise the group's key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.
+
+KEEPING OUR MATERIAL AWAY FROM AI
+
+Off. Members may use the group's key, a project's account or their own.
+
+Home
+Queue
+Add
+Find
+More

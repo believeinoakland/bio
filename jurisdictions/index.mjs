@@ -26,7 +26,9 @@ export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces",
   /* T45 (R79, R80, R86) */
   "legal_facts", "procedure_guides", "phrasings",
   /* T48 (R89) */
-  "pointers"]);
+  "pointers",
+  /* T50 (R93, R94) */
+  "records_help", "forums"]);
 /* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's; `body` and
    `office` (a legislative system's body and office-record numbers, N569, N613) T34's, and `institution` (one form per
    institution scheme, N574, K1729). */
@@ -118,6 +120,9 @@ export const CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 export const POINTER_KINDS = Object.freeze(["legalaid", "selfhelp", "service", "agency", "representative", "tipline"]);
 const POINTER_HOW = Object.freeze([...CONTACT_HOW, "address"]);
 const POINTER_NAME_MAX = 200, POINTER_DOES_MAX = 500;
+/* R93 (T50): the ten sentences of the records-request help each cite their own section; `citations` holds one for each. */
+export const RECORDS_HELP_CITATIONS = Object.freeze(["answer", "extend", "assist", "segregate", "refuse_in_writing", "electronic",
+  "cost", "cost_electronic", "inspect_photograph", "purpose"]);
 /* R39: a venue's evidence standard is named in at most this many characters; the grades it admits are
    letters of record-grammar's BASIS_GRADES (its R16; K624 (6)). */
 const EVIDENCE_STANDARD_MAX = 200;
@@ -1427,6 +1432,71 @@ function validateInto(p, errors) {
       err(`${at}.basis`, "BASIS_INVALID", "a pointer rests on the day its page was read, a dated entry YYYY-MM-DD");
   });
 
+  /* R93 (T50): what the place's public-records law obliges an office to do, so the help page fills its sentences from data.
+     Every field is required but `portal` and `faster`; it rests on the day the statute's text was read (R44). */
+  if (own(p, "records_help")) {
+    const h = p.records_help, at = "records_help";
+    if (!isObj(h)) err(at, "VALUE_INVALID", "records_help is {law, days, extra_days, extension_reasons, portal?, faster?, citations, status, basis}");
+    else {
+      fields(at, h, ["law", "days", "extra_days", "extension_reasons", "portal", "faster", "citations", "status", "basis"]);
+      str(`${at}.law`, h.law, "law");
+      if (!isPosInt(h.days)) err(`${at}.days`, "VALUE_INVALID", "days is a positive integer");
+      if (!isPosInt(h.extra_days)) err(`${at}.extra_days`, "VALUE_INVALID", "extra_days is a positive integer");
+      if (!Array.isArray(h.extension_reasons) || !h.extension_reasons.length) err(`${at}.extension_reasons`, "VALUE_INVALID", "extension_reasons is a non-empty list of {reason, citation}");
+      else h.extension_reasons.forEach((r, j) => {
+        const ra = `${at}.extension_reasons[${j}]`;
+        if (!entry(ra, r)) return;
+        fields(ra, r, ["reason", "citation"]);
+        str(`${ra}.reason`, r.reason, "reason"); str(`${ra}.citation`, r.citation, "citation");
+      });
+      if (own(h, "portal")) {
+        if (!isObj(h.portal)) err(`${at}.portal`, "VALUE_INVALID", "portal is {name, url}");
+        else {
+          fields(`${at}.portal`, h.portal, ["name", "url"]);
+          str(`${at}.portal.name`, h.portal.name, "name");
+          if (typeof h.portal.url !== "string" || !/^https?:\/\/[^\s/]+\S*$/.test(h.portal.url)) err(`${at}.portal.url`, "VALUE_INVALID", "url is an http(s) address");
+        }
+      }
+      if (own(h, "faster")) {
+        if (!isObj(h.faster)) err(`${at}.faster`, "VALUE_INVALID", "faster is {ordinance, window, request, citation}");
+        else {
+          fields(`${at}.faster`, h.faster, ["ordinance", "window", "request", "citation"]);
+          for (const f of ["ordinance", "window", "request", "citation"]) str(`${at}.faster.${f}`, h.faster[f], f);
+        }
+      }
+      if (!isObj(h.citations)) err(`${at}.citations`, "VALUE_INVALID", `citations is {${RECORDS_HELP_CITATIONS.join(", ")}}`);
+      else {
+        fields(`${at}.citations`, h.citations, RECORDS_HELP_CITATIONS);
+        for (const f of RECORDS_HELP_CITATIONS) str(`${at}.citations.${f}`, h.citations[f], "the citation");
+      }
+      if (h.status !== "researched") err(`${at}.status`, "BASIS_INVALID", "records_help is researched: it is read from the statute's own text");
+      if (basis(at, h) && !(test && h.basis === "TEST") && !basisParts(h.basis).every((b) => { const m = DATED_REF.exec(b); return !!m && isDate(m[1]); }))
+        err(`${at}.basis`, "BASIS_INVALID", "records_help rests on the day the text was read, a dated entry YYYY-MM-DD");
+    }
+  }
+
+  /* R94 (T50): the courts and other forums of the place, each once. `ids` are its identifiers in a scheme of the profile. */
+  if (own(p, "forums")) {
+    const seen = new Set();
+    list("forums", p.forums).forEach((f, i) => {
+      const at = `forums[${i}]`;
+      if (!entry(at, f)) return;
+      fields(at, f, ["label", "forum_kind", "ids", "basis"]);
+      str(`${at}.label`, f.label, "label");
+      if (!FORUM_KINDS.includes(f.forum_kind)) err(`${at}.forum_kind`, "VALUE_INVALID", `forum_kind is one of ${FORUM_KINDS.join(", ")}`);
+      if (isStr(f.label)) {
+        const k = `${f.forum_kind}\u0000${f.label}`;
+        if (seen.has(k)) err(`${at}.label`, "VALUE_INVALID", `the forum '${f.label}' is given twice`);
+        seen.add(k);
+      }
+      if (own(f, "ids")) {
+        if (!Array.isArray(f.ids) || !f.ids.length) err(`${at}.ids`, "VALUE_INVALID", "ids is a non-empty list of {scheme, id}");
+        else f.ids.forEach((x, j) => identifier(`${at}.ids[${j}]`, x, "forum"));
+      }
+      basis(at, f);
+    });
+  }
+
   /* R70, R71: official local names (DEC-157 (6)), never translated as ordinary words. An explanation says what the
      name is, in a language; a translation is one an office publishes, with its source, resting on a measurement of
      that publication. One name of one kind once in the profile, and one explanation and one translation per
@@ -1757,6 +1827,14 @@ function merge(profiles) {
     if (has(sec)) { const v = []; for (const p of profiles) union(v, p[sec], p.id); view[sec] = strip(v); }
   /* R90 (T48): pointers are unioned in the order given, as R14's lists are; a pointer's hours carry their own basis, so
      the hours kept are tagged with every giver's (R13), as an office's are. */
+  /* R93 (T50): the records-help block is one value (R15): kept only when every profile that gives it gives the same. */
+  if (has("records_help")) {
+    const given = profiles.filter((p) => p.records_help).map((p) => ({ profile: p.id, value: p.records_help, basis: p.records_help.basis }));
+    if (agree(given)) view.records_help = keep(given);
+    else conflict("records_help", given, "the active profiles give different records-request help, so none is given: the page has no figure to show");
+  }
+  /* R94 (T50): forums are unioned (R14), a forum given twice once. */
+  if (has("forums")) { const v = []; for (const p of profiles) union(v, p.forums, p.id); view.forums = strip(v); }
   if (has("pointers")) {
     const v = [];
     const hoursOf = new Map();

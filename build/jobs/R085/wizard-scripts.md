@@ -1,0 +1,25 @@
+# wizard-scripts (R085)
+
+**Status** · session_01Hmwn13nBZEaJhdPFdzbyVK · depth 2 · COMPLETE · handled B2
+
+## Completion (R085-33 · R40)
+
+- **Applied.** R40: `wizardRegister` and `normaliseRegistration` take `adminActs` and `adminScreens` (default none); `startFrom` withholds a Civicsmith-library script from a viewer whose `membership.sessionRights(viewer).administer` (R92) is not true when its first step's act is in `adminActs`, or, with no act, its screen is in `adminScreens`. Doors follow, since they name only offered scripts. No act is hand-listed in the module.
+- **Wiring owed (another module, REPORTed).** `plane`'s `wizardRegistration` (`bio-plane/src/plane/wizards.mjs`) must pass `adminActs: [...ADMIN_ACTS]` and `adminScreens: [...ADMIN_SCREENS]` from `interface-shell`'s exports (`ADMIN_ACTS` has `groupdescriptionset`, `memberadd`; `ADMIN_SCREENS` has `updates`); until it does, the live registration withholds nothing. `op-declarations`' `NEEDS` holds null for these acts, so it cannot supply the administer capability; `interface-shell` is the registry that names them.
+- **Deferred.** None.
+- **Found in other modules.** screens-daily/screens-wizards: three tests fail identically before and after my change (not edited): `R1–R13 (interface-shell R21, R38): each screen's acts are exactly its registered acts, every op in OPS`, `R1 every refusal is drawn beside its act, a check's refusal naming its step; the form keeps what was typed`, `R8 the path Settings › Wizards, the four states of each read, and the list read again after an act`. Result: 145 pass, 3 fail.
+- **Tests.** `node --test test/m/wizard-scripts/`: 97 pass (94 before + 3 new in `r40.test.mjs`; B2: the test uses a local op table, not op-declarations), 0 fail.
+- **Checks.** format 0 failures; architecture 0 failures; coverage 40 of 40 ids named; ownership 0 failures.
+
+Size (session_01Hmwn13nBZEaJhdPFdzbyVK): test runs 6, module lines 27
+
+## J1 · COMPLETE
+
+R40 applied and green: wizard-scripts 100 pass, checks clean (format, architecture, coverage 40/40, ownership). startFrom withholds the three setup scripts from a non-administrator. WIRING OWED to plane (not mine): plane/wizards.mjs wizardRegistration must pass adminActs and adminScreens from interface-shell's ADMIN_ACTS and ADMIN_SCREENS, or the live registration withholds nothing. Three screens-daily/screens-wizards tests fail identically before and after my change (listed in my record). Record on job/R085/wizard-scripts.
+
+## B2 handled
+r40.test.mjs no longer imports op-declarations: its op table is the acts and owed ops the carried registry names. Tests 97 pass, 0 fail; `checks/run.mjs`: format and architecture 0 failures; coverage fails only for other modules (agent-runner R33; agent-worker R103–R105); wizard-scripts 40 of 40.
+
+## J2 · COMPLETE · re B2
+
+B2 done: r40.test.mjs uses a local op table (no op-declarations import). wizard-scripts 97 pass; run.mjs: format and architecture 0 failures; coverage failures only in agent-runner R33 and agent-worker R103-R105 (not mine). Pushed.

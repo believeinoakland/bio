@@ -13,6 +13,7 @@ import { isPublicHttpsLocator, isMachineIdentity } from "../record-grammar/index
 import { governedFetch as hostGovernedFetch } from "../host-governor/index.mjs";
 import { civicsmithUserAgent, ARCHIVE_CHECKS } from "./checks.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /* R36: each keyed service this copy can speak to: its one host, and how its key rides a request. The names are
    credentials' `KEYED_SERVICES` (its R29); a service that this table and credentials do not both know is not
@@ -133,8 +134,7 @@ export const CITATION_TEXT_MAX = 64000;
 const SITE = "https://www.courtlistener.com";
 /* Each citation's `status`, as the service defines it, in words. */
 const LOOKUP = Object.freeze({ 200: "found", 300: "several_matches", 404: "not_found", 400: "unknown_reporter", 429: "not_looked_up" });
-export const CITATION_LOOKUP_LABEL = "CourtListener's answer, not verified: a citation is verified only by a held capture "
-  + "stating it (standards' citation resolver)";
+export const CITATION_LOOKUP_LABEL = word("acquisition.citation_lookup_label");
 
 const str = (v) => (typeof v === "string" && v.trim() ? v : null);
 const int = (v) => (Number.isInteger(v) && v >= 0 ? v : null);
@@ -150,7 +150,7 @@ function serviceAddress(u) {
 /** R37: `citationLookup(store, {text, viewer})` sends `text` to CourtListener's Citation Lookup through R36 and answers,
  *  for each citation the service found, its offsets (`start`, `end`), what the service read (`citation`,
  *  `normalized`), how its lookup ended (`lookup`, with the service's own `status` and message) and the matches it
- *  named (`case_name`, `court`, `date`, `address`), each labelled as the service's answer, never as verified. With
+ *  named (`case_name`, `court`, `date`, `address`), each labeled as the service's answer, never as verified. With
  *  the service off it answers R36's refusal and the recogniser's own reading stands alone. It writes nothing. */
 export async function citationLookup(store, { text = null, viewer = null, ownHosts = null } = {}) {
   if (typeof viewer !== "string" || !viewer.trim())
@@ -171,7 +171,7 @@ export async function citationLookup(store, { text = null, viewer = null, ownHos
                detail: "CourtListener is holding citation lookups from this key for now; nothing was looked up" };
     }
     const { text: _omit, ...rest } = k;
-    return { ...rest, note: "the citation recogniser's own reading stands alone" };
+    return { ...rest, note: word("acquisition.note.citation_recognizer_reading") };
   }
   let rows;
   try { rows = JSON.parse(k.text); } catch { rows = null; }

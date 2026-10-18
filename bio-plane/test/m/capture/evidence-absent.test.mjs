@@ -6,8 +6,9 @@ import { bucket, fresh, sha } from "./fixture.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { evidenceAbsent, captureObjectOp, captureOp } from "../../../src/capture/ops.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
-const TRANSLATION = "The record holds no stored copy of a document under this fingerprint.";
+const TRANSLATION = word("refusal.EVIDENCE_NOT_HELD");
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 
 test("R63 (N347): evidenceAbsent answers 404 with ok false, reason and code EVIDENCE_NOT_HELD, its own row's check and translation, the digest and the store", () => {

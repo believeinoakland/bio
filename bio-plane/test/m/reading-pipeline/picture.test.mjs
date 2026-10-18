@@ -54,5 +54,7 @@ test("R4 R5 R9 (N853b): with an OCR member bound, the picture's one page is aske
     const reads = await readPicture(format, { OCR_WORKER: member((b) => ocrAnswer(b.pages)) });
     assert.deepEqual([reads.r.text_tier, reads.r.tier3_candidate, reads.out.text_units.map((u) => u.text)],
                      [3, undefined, ["ocr text of page 0"]], format);
+    assert.deepEqual(reads.r.text_source.map((x) => x.step), ["pixels", "ocr"], `${format}: chain pixels -> ocr`);
+    assert.deepEqual([reads.r.title, reads.out.text_units.length], [null, 1], `${format}: one unit`);
   }
 });

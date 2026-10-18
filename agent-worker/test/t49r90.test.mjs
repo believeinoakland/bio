@@ -86,7 +86,7 @@ function plane({ refuseChain = false } = {}) {
         mode: "check", skill: "pack@t49r90", standard_pair: null } });
       case "agentpack": return Response.json({ ok: true, fences: [], pack: { id: "investigative-session", version: "pack@t49r90",
         resident: { objective: { text: "find what the record holds" }, disclosable: [] }, disclosed: {} }, store: "scratch", tokenClass: "ai" });
-      case "meaningrows": return ok({ ok: true, arm: "leg", rows: [], count: 0 });
+      case "meaningrows": return ok({ ok: true, arm: "leg", rows: [], scope: { documents: 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
       case "basisversions": return ok({ id: "INQ-90", versions: [], limit: 50, truncated: false });
       case "search": return ok({ hits: [{ bundle_id: DOC.bundle, source_locator: DOC.address }] });
       case "versionchain":

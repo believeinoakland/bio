@@ -103,7 +103,7 @@ test("R57 proposalsFor lists the proposals made for a project, newest first, eac
   const label = proposalLabel(MACHINE, "standard");
   assert.deepEqual(open.items[0], { id: two.id, cite: "PEBL § 14", kind: null, issuer: null, why: "Fees.",
                                     label: proposalLabel(MACHINE, "standard"), proposed_by: MACHINE,
-                                    proposed_at: "2026-10-02T10:00:00Z", has_text: false, adoption: null, standard: false,
+                                    project: P, proposed_at: "2026-10-02T10:00:00Z", has_text: false, adoption: null, standard: false,
                                     says: open.items[0].says });
   assert.equal(label.machine_work, true);
   assert.match(open.items[0].says, /a proposal and not a standard/, "R9's sentence on each item");

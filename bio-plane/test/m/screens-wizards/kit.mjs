@@ -158,14 +158,15 @@ function keyOf(text) {
 // ---- what the page drew ----
 
 /** A row the shell's `cs.rows` drew (its R19), by its key: the row, and its panel (the next row, `cs-panel`). */
-export function rowOf(tree, key, name = key) {
-  const b = all(tree, (e) => e.attrs["data-shell"] === "row" && e.attrs["data-id"] === String(key))[0];
+export function rowOf(tree, key, name = key, table = null) {
+  const b = all(tree, (e) => e.attrs["data-shell"] === "row" && e.attrs["data-id"] === String(key) && (table === null || e.attrs["data-table"] === table))[0];
   if (b) return ancestor(b, (e) => e.tag === "tr");
   // a row with no acts has no button: found by its first cell, its name
   return all(tree, (e) => e.tag === "tr" && /cs-r\b/.test(e.attrs.class || "") && squash(decode(textOf(e.children.filter((c) => c.tag)[0] || { children: [] }))) === String(name))[0] || null;
 }
-export function panelOf(tree, key) {
-  const r = rowOf(tree, key);
+/** `table` names the table: "library" (the wizards in use) or "own" (the fold's authoring table, R16). */
+export function panelOf(tree, key, table = null) {
+  const r = rowOf(tree, key, key, table);
   if (!r) return { tag: "tr", attrs: {}, children: [] };
   const sib = r.parent.children.filter((c) => c.tag);
   const next = sib[sib.indexOf(r) + 1];

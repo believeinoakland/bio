@@ -37,7 +37,7 @@ export const T37_RUNG_ABSENT = {
   /* instance-setup R67 (K2201): drafts are labelled machine work, append-only, never the group's wording until a member
      adopts one; `to_english` (an administrator's only) adopts and confirms nothing. (R39, T48; N1042) It left
      `undetermined` for `caller-owned`: a granted speaker's own request, asking no reason. */
-  translationdraft:   { ground: "caller-owned", is: "a granted speaker's own request for labelled machine drafts of missing words of a language, never the group's wording until a member adopts one, or an administrator's own back-translation of one protected word, adopting nothing; asks no reason (instance-setup R67)" },
+  translationdraft:   { ground: "caller-owned", is: "a granted speaker's own request for labeled machine drafts of missing words of a language, never the group's wording until a member adopts one, or an administrator's own back-translation of one protected word, adopting nothing; asks no reason (instance-setup R67)" },
   /* instance-setup R73 (DEC-157 (5)), on R3's rule */
   translationmark:    { ground: "undetermined", is: "a member marks a shown word's translation \"this translation looks wrong\", with an optional note; asks no reason, and no act takes it back, a mark staying open until the word's next adoption or undo (instance-setup R73)" },
 };
@@ -51,7 +51,7 @@ export const T37_NON_ACTS = {
   subscriptionsignin: "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login "
     + "held here; moves no bundle",
   translationgrant: "setting: a named member's grant for one language, an administrator's act; moves no bundle",
-  translationdraft: "translation-directed: keyed by a language and interface words; drafts labelled machine work for a "
+  translationdraft: "translation-directed: keyed by a language and interface words; drafts labeled machine work for a "
     + "granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that "
     + "writes nothing (`to_english`); moves no bundle",
   translationadopt: TRANSLATION_WORD,

@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, plane, STD, P, STD_PROPOSALS, word, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, plane, STD, P, SHA, STD_PROPOSALS, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/standard/" + STD;
 const reachable = (o = {}) => ({ boot: { plane: { ...plane(o), assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } } });
@@ -62,9 +62,9 @@ test("R8 standarddeclare \"Hold this as a standard\" from a passage; standardado
   await press(q, "standardadopt", { reason: "the budget's own target" });
   assert.deepEqual(q.byOp("standardadopt")[0].body, { proposal: "STDP-2026-0001", reason: "the budget's own target" });
   assert.equal(q.location.pathname, "/app/standard/STD-2026-0010-policy");
-  fill(p, { "st-cite": "Budget 2026, performance target 4", "st-kind": "commitment", "st-issuer": "City Council", "st-text": "CNT-2026-0030, CNT-2026-0031", "st-from": "2026-07-01" });
+  fill(p, { "st-cite": "Budget 2026, performance target 4", "st-kind": "commitment", "st-issuer": "City Council", "st-doc": SHA, "st-from": "2026-07-01" });
   await press(p, "standarddeclare", { reason: "the council adopted it" });
-  assert.deepEqual(p.byOp("standarddeclare")[0].body, { cite: "Budget 2026, performance target 4", kind: "commitment", issuer: "City Council", text: ["CNT-2026-0030", "CNT-2026-0031"], period: { from: "2026-07-01", to: null }, reason: "the council adopted it" });
+  assert.deepEqual(p.byOp("standarddeclare")[0].body, { cite: "Budget 2026, performance target 4", kind: "commitment", issuer: "City Council", text: [{ capture_sha: SHA, extent: { kind: "document" } }], period: { from: "2026-07-01", to: null }, reason: "the council adopted it" });
 });
 
 test("R8 an amendment needs the day it takes effect (control: nothing sent)", async () => {
@@ -73,4 +73,14 @@ test("R8 an amendment needs the day it takes effect (control: nothing sent)", as
   await press(p, "lawrelate", { reason: "x" });
   assert.equal(p.byOp("lawrelate").length, 0);
   drew(main(p), "screen.standard.relate.effective");
+});
+
+test("R34 the standard's text is a document chosen on screen, never typed content ids; with no document nothing is sent", async () => {
+  const p = await open("/app/standard/" + STD);
+  assert.equal(p.doc.getElementById("st-text"), null);
+  assert.deepEqual(p.doc.getElementById("st-doc").querySelectorAll("option").map((o) => o.textContent), ["Lease amendment 1", "Rent schedule"]);
+  const none = await open("/app/standard/" + STD, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  fill(none, { "st-cite": "c", "st-issuer": "i" });
+  await press(none, "standarddeclare", { reason: "r" });
+  assert.equal(none.byOp("standarddeclare").length, 0);
 });

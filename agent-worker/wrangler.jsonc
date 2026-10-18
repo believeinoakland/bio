@@ -54,7 +54,7 @@
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
 
-  "vars": { "VERSION": "0.84.0" },
+  "vars": { "VERSION": "0.85.0" },
 
   // R47: REACHABLE ONLY THROUGH THE PLANE'S SERVICE BINDING. No `*.workers.dev` route and no preview URL: a
   // public address would be a second way in for a member whose only caller is the plane.
@@ -87,18 +87,30 @@
     { "binding": "PLANE", "service": "bio-plane" }
   ],
 
-  // R35 (Q0-4; K1502, K1601 (6)) — THE ONE OTHER BINDING: the Container Durable Object through which `agent-model`
-  // reaches `agent-runner`, Claude Code in a container, for a member's SUBSCRIPTION path. Bound cross-script, so this
-  // member defines no Durable Object class and depends on nothing from npm; the class (`AgentRunner`), its container
-  // image and its egress (`api.anthropic.com` only, agent-runner R10) are declared by the script that serves it. The
-  // container is passed no plane binding, credential or address: every tool call it relays is performed HERE, through
-  // `PLANE`, under the call's own credential or grant (agent-model R7). Like `PLANE`, its `script_name` is templated
-  // from the instance by the installer.
+  // R35, R109 (Q0-4; K1502, K1601 (6); N1196, K3610) — THE REMOTE SESSION'S DURABLE OBJECT: the namespace through which
+  // `agent-model` reaches Claude Code running in a cloud session that `agent-runner`'s second class (`RemoteSession`,
+  // no container) creates on the member's own sign-in. Bound cross-script, so this member defines no class for it and
+  // depends on nothing from npm; the class and its door are declared by the script that serves it. Every path of this
+  // member that reaches a runner reaches this binding and no other: the local container's binding (`RUNNER`) is not
+  // declared here (R109). It is passed no plane binding, credential or address: every tool call it relays is performed
+  // HERE, through `PLANE`, under the call's own credential or grant (agent-model R7). Like `PLANE`, its `script_name` is
+  // templated from the instance by the installer.
   "durable_objects": {
     "bindings": [
-      { "name": "RUNNER", "class_name": "AgentRunner", "script_name": "agent-runner" }
+      { "name": "REMOTE", "class_name": "RemoteSession", "script_name": "agent-runner" },
+      // R91 (R085-8; K3477): this member's OWN Durable Object, one per run, so a segment outlives the request that
+      // started it. It holds the segment's inputs in memory only (R36) and runs it from an alarm; it is not a store
+      // and writes nothing of the record.
+      { "name": "SEGMENTS", "class_name": "SegmentDriver" },
+      // R110, R111 (K3693): this member's OWN Durable Object holding each member's last passed `check` and the version it
+      // passed at, one object per member. It holds a version and a time, nothing of the record and no secret (R36).
+      { "name": "CHECKS", "class_name": "CheckRecord" }
     ]
   },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["SegmentDriver"] },
+    { "tag": "v2", "new_sqlite_classes": ["CheckRecord"] }
+  ],
 
   "observability": { "enabled": true }
 }

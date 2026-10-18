@@ -88,7 +88,7 @@ export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, 
 export const CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", "published"]);
 /** R32: the disclosure every machine proposal, and every option adopted from one, answers. */
 export const DISCLOSURE = (run, skill) => `Suggested by the assistant (machine work) in run ${run}, under skill version `
-  + `${skill ?? "undetermined"}. It is not the group's decision; it becomes an option only when a member adopts it.`;
+  + `${skill ?? "undetermined"}. It is not the team's decision; it becomes an option only when a member adopts it.`;
 const PROPOSAL_SAYS = "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only "
   + "when a member adopts it, in their own words for any reason the plan asks.";
 const CHECK_SAYS = "a check informs; it never refuses or changes anything.";
@@ -1246,7 +1246,7 @@ export class ActionPlans {
     /* END DEC-49 REGION is-phase-shaped */
     /* DEC-49 REGION is-phase-option-chosen */
     if (r.fault === "not_chosen")
-      return refusal("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the group has not chosen: ${r.detail}. `
+      return refusal("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the team has not chosen: ${r.detail}. `
         + "Nothing was written.", at);
     /* END DEC-49 REGION is-phase-option-chosen */
     /* DEC-49 REGION is-branch-known */
@@ -1460,7 +1460,7 @@ export class ActionPlans {
     const givenWhy = whyFirst !== undefined && whyFirst !== null && whyFirst !== "";
     /* DEC-49 REGION is-document-first */
     if ((first.length && !givenWhy) || (givenWhy && !isLine(whyFirst, REASON_MAX)))
-      return done(refusal("DOCUMENT_FIRST_NO_REASON", `${opt.id} goes outside the group before the infraction it serves is `
+      return done(refusal("DOCUMENT_FIRST_NO_REASON", `${opt.id} goes outside the team before the infraction it serves is `
         + `documented; say why it goes first, in 1 to ${REASON_MAX} characters with no quotation mark, backslash or line break. `
         + "Nothing was written.", { max: REASON_MAX, matters: first.length }));
     /* END DEC-49 REGION is-document-first */
@@ -1906,7 +1906,7 @@ export class ActionPlans {
         out.push({ check: "subjects_not_live", option: o.id, says: `every matter ${o.id} serves is no longer live` });
       const hypothetical = ((held.get(o.id) || o).subjects || []).every((s) => s.kind === "inquiry");
       if (outward(o) && hypothetical)
-        out.push({ check: "outward_on_hypothesis", option: o.id, says: `${o.id} addresses someone outside the group and rests `
+        out.push({ check: "outward_on_hypothesis", option: o.id, says: `${o.id} addresses someone outside the team and rests `
           + "only on suspected matters: nothing it serves is determined yet" });
       if (o.lobbying && o.enforces) {
         let superseded = false;
@@ -1940,7 +1940,7 @@ export class ActionPlans {
         const hostile = ph.options.some((x) => byId.get(x) && outward(byId.get(x)));
         if (hostile && !(ph.checkpoint && !unbranched(ph, sc.phases).includes("not_met")))
           out.push({ check: "no_hostile_branch", scenario: sc.scenario, phase: ph.id,
-            says: `phase ${ph.id} addresses someone outside the group and has no branch for a hostile response (a refusal, `
+            says: `phase ${ph.id} addresses someone outside the team and has no branch for a hostile response (a refusal, `
               + "obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere" });
       }
     }
@@ -2152,7 +2152,7 @@ function decisionsOf(history) {
 
 /* R43: a mark's label: machine work, written by the plan's re-examination; it decides nothing. */
 const MARK_LABEL = Object.freeze({ machine_work: true, by: "plan-work", says: "marked by the plan's re-examination (machine "
-  + "work) after a response was recorded; it decides nothing, and what the group chose changes only by a member's act" });
+  + "work) after a response was recorded; it decides nothing, and what the team chose changes only by a member's act" });
 /* R43: the response that caused a mark, `{action, ord}`; null when it is not one. */
 function causeOf(c) {
   if (typeof c === "string") { const m = /^([^#\s]{1,120})#(\d{1,6})$/.exec(c); return m ? { action: m[1], ord: Number(m[2]) } : null; }

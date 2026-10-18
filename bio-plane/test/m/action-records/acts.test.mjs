@@ -11,7 +11,7 @@ const reasons = (list) => list.map((r) => r.reason);
 const laws = (...cites) => ["governing_laws:", ...cites.flatMap((c) => ["  - level: state", `    citation: "${c}"`]),
   "governing_laws_by: member:alice", 'governing_laws_at: "2026-09-02T00:00:00Z"'];
 
-test("R1 actionLawsPropose: refusals in order (NO_AUTHOR, NO_TARGET, R7's list refusals, NO_SUCH_BUNDLE, NOT_AN_ACTION, a standard not seen); stored apart and labelled; never the list", () => {
+test("R1 actionLawsPropose: refusals in order (NO_AUTHOR, NO_TARGET, R7's list refusals, NO_SUCH_ACTION (R18), a standard not seen); stored apart and labelled; never the list", () => {
   const w = world({ deps: { standards: standardsStandIn() } });
   w.action(A, laws("Act s.1", "Act s.2"));
   w.doc(INFO);
@@ -23,8 +23,8 @@ test("R1 actionLawsPropose: refusals in order (NO_AUTHOR, NO_TARGET, R7's list r
     P({ laws: [{ level: "local", citation: "x" }] }), P({ laws: [{ level: "city", citation: "" }] }),
     P({ target: "ACTN-2026-0404-x" }), P({ target: HIDDEN, viewer: M, proposer: M }), P({ target: INFO }),
     P({ laws: [{ level: "state", citation: "S", standard: STD_HIDDEN }], viewer: M, proposer: M })]),
-    ["NO_AUTHOR", "NO_TARGET", "NO_LAWS", "TOO_MANY_LAWS", "BAD_LAW_LEVEL", "BAD_CITATION", "NO_SUCH_BUNDLE",
-     "NO_SUCH_BUNDLE", "NOT_AN_ACTION", "NO_SUCH_STANDARD"]);
+    ["NO_AUTHOR", "NO_TARGET", "NO_LAWS", "TOO_MANY_LAWS", "BAD_LAW_LEVEL", "BAD_CITATION", "NO_SUCH_ACTION",
+     "NO_SUCH_ACTION", "NO_SUCH_ACTION", "NO_SUCH_STANDARD"]);
   /* R7's refusals carry their rows (C-73.2–.5) through the act */
   assert.deepEqual([P({ laws: [] }).check, P({ laws: [{ level: "local", citation: "x" }] }).check], ["C-73.2", "C-73.3"]);
   assert.equal(P({ laws: [{ level: "state", citation: "S", standard: STD_HIDDEN }], viewer: M, proposer: M }).target, A);
@@ -88,8 +88,8 @@ test("R2 actionRiskPropose: refusals in order; stored apart and labelled; never 
     P({ basis: 'a"b' }), P({ basis: "a\\b" }), P({ basis: "a\nb" }), P({ basis: "x".repeat(501) }),
     P({ target: "ACTN-2026-0404-x" }), P({ target: HIDDEN, viewer: M, proposer: M }), P({ target: INFO })]),
     ["NO_AUTHOR", "NO_TARGET", "BAD_RISK_TIER", "BAD_RISK_TIER", "RISK_PROPOSAL_BASIS_REFUSED", "RISK_PROPOSAL_BASIS_REFUSED",
-     "RISK_PROPOSAL_BASIS_REFUSED", "RISK_PROPOSAL_BASIS_REFUSED", "RISK_PROPOSAL_BASIS_REFUSED", "NO_SUCH_BUNDLE",
-     "NO_SUCH_BUNDLE", "NOT_AN_ACTION"]);
+     "RISK_PROPOSAL_BASIS_REFUSED", "RISK_PROPOSAL_BASIS_REFUSED", "RISK_PROPOSAL_BASIS_REFUSED", "NO_SUCH_ACTION",
+     "NO_SUCH_ACTION", "NO_SUCH_ACTION"]);
   const basis = P({ basis: "" });
   assert.deepEqual([basis.check, basis.max], ["C-90.6", records.RISK_PROPOSAL_BASIS_MAX]);
   assert.equal(records.RISK_PROPOSAL_BASIS_MAX, 500);
@@ -137,7 +137,7 @@ test("R3 actionSeeksPropose: refusals in order; a target not a records_request, 
   assert.deepEqual(reasons([S({ proposer: "", target: "", seeks: "nonsense" }), S({ target: "", seeks: "nonsense" }),
     S({ target: "ACTN-2026-0404-x", seeks: "nonsense" }), S({ viewer: "nobody", seeks: "nonsense" }),
     S({ target: INFO, seeks: "nonsense" }), S({ target: B }), S({ seeks: "nonsense" })]),
-    ["NO_AUTHOR", "NO_TARGET", "NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE", "NOT_AN_ACTION", "SEEKS_REFUSED", "SEEKS_REFUSED"]);
+    ["NO_AUTHOR", "NO_TARGET", "NO_SUCH_ACTION", "NO_SUCH_ACTION", "NO_SUCH_ACTION", "SEEKS_REFUSED", "SEEKS_REFUSED"]);
   const kind = S({ target: B });
   assert.deepEqual([kind.code, kind.check, kind.target], ["SEEKS_REFUSED", "C-117.29", B]);
   assert.match(kind.findings[0].detail, /only a records_request names the stages/);
@@ -189,7 +189,7 @@ test("R3 any credential may propose; stored apart and labelled, replaces only it
   assert.match(w.r.actionSeeksPropose({ target: B, seeks: one, proposer: MACHINE, viewer: MACHINE }).says, /no member has stated what it seeks/);
 });
 
-test("R12 a machine credential may propose laws, a tier and what a request seeks, each stored apart and labelled machine work; it never records a receipt, sets a scope or records a promise", () => {
+test("R12 a machine credential may propose laws, a tier and what a request seeks, each stored apart and labelled machine work; it never records a receipt, sets a scope, records a promise or states a stake", () => {
   const w = world({ deps: { progressions: progressionsStandIn() } });
   w.action(A, ["correspondence:", "  - direction: sent", '    at: "2026-09-02"', '    account: "asked"', "    author: alice"]);
   const props = [
@@ -200,13 +200,15 @@ test("R12 a machine credential may propose laws, a tier and what a request seeks
   const acts = [
     w.r.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "h", account: "a", viewer: MACHINE, author: MACHINE }),
     w.r.actionScope({ target: A, confidential: true, reason: "r", viewer: MACHINE, author: MACHINE }),
-    w.r.actionPromise({ target: A, kind: "other", text: "t", viewer: MACHINE, author: MACHINE })];
-  assert.deepEqual(reasons(acts), ["MACHINE_CANNOT_CORRESPOND", "MACHINE_CANNOT_SET_SCOPE", "MACHINE_CANNOT_RECORD_PROMISE"]);
+    w.r.actionPromise({ target: A, kind: "other", text: "t", viewer: MACHINE, author: MACHINE }),
+    w.r.actionStake({ target: A, stake: "s", viewer: MACHINE, author: MACHINE })];
+  assert.deepEqual(reasons(acts), ["MACHINE_CANNOT_CORRESPOND", "MACHINE_CANNOT_SET_SCOPE", "MACHINE_CANNOT_RECORD_PROMISE",
+    "MACHINE_CANNOT_SET_STAKE"]);
   for (const a of acts) assert.ok(a.check && a.translation, `${a.reason} carries its row`);
   /* every machine identity record-grammar names (its R15) is refused alike; an unstamped author too */
   for (const who of ["token:abc", "class:ai/x", "", null])
     assert.equal(w.r.actionScope({ target: A, confidential: true, reason: "r", viewer: M, author: who }).reason, "MACHINE_CANNOT_SET_SCOPE", String(who));
-  for (const t of ["action_receipts", "action_scopes", "action_promises"]) assert.equal(w.row(`SELECT COUNT(*) AS n FROM ${t}`).n, 0, t);
+  for (const t of ["action_receipts", "action_scopes", "action_promises", "action_stakes"]) assert.equal(w.row(`SELECT COUNT(*) AS n FROM ${t}`).n, 0, t);
   /* control: a member records each */
   assert.equal(w.r.actionScope({ target: A, confidential: true, reason: "r", viewer: M, author: M }).ok, true);
 });

@@ -187,92 +187,25 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      input class this manifest exists to hash (pdf-worker's three plane inputs,
      one section down). The old assertion going red on the first post-FL-6
      build is this guard working, not an obstacle. */
-  /* RE-PINNED 2026-09-28 (T7, legacy-tests; BOB, the legacy-tests job's CHANGE; AGENT-WORKER #1 REPORT 4 said ten, BOB's
-     figure supersedes it): the member's roster is now 132 inputs, pinned to exactly what the committed manifest
-     (`agent-worker/dist/agent-worker.bundle.json`, regenerated at layer 7's close) records. The five that were pinned are
-     all still here; AGENT-WORKER #1 added `src/model.mjs` and, for R48's pack check, `skillpack.mjs`, `skilldoctrine.mjs`,
-     `airun.mjs` and the catalogue, whose own imports carry the plane's extracted modules, docprofile, jurisdictions and
-     pdf-worker's decoders into the member's build. N157 narrows it later; the pin moves with it then, as it did at FL-6. */
-  /* RE-PINNED 2026-09-28 (legacy-tests T9; K286): 132 -> 133 inputs, from the committed manifest this suite reads (its
-     staleness arm green): the one arrival is `bio-plane/src/membership/checks.mjs`, membership's own row family (C-70.5,
-     R78), which `membership/index.mjs` now imports and so every member reaching membership builds in. None left. */
-  /* RE-PINNED 2026-09-28 (legacy-tests T10, B1 (1)): 133 -> 143 inputs, from the committed manifest this suite reads (its
-     staleness arm green on the merged tree). Eleven arrive and one leaves, each by name: `airun.mjs` now imports ai-runs'
-     own module (`ai-runs/index.mjs`, `schema.mjs`, `deployment.mjs`), which reads bias (`bias/index.mjs`, `checks.mjs`,
-     `schema.mjs`) and contradiction (`contradiction.mjs`, `contradiction/index.mjs`, `checks.mjs`, `schema.mjs`);
-     provenance's `index.mjs` imports its own `provenance/checks.mjs`; and `run-productions/interim.mjs` is no longer
-     reached from the member's build. */
-  /* RE-PINNED 2026-09-29 (LEGACY-TESTS #10, T12; K384, K386, K390, N285): 143 -> 148 inputs, from the committed manifest
-     this suite reads (its staleness arm green on the T12 tree; no bundle rebuilt here). Five arrive and none leave, each
-     by name and by the layer-close that regenerated the manifest: `capture/checks.mjs`, capture's own row family, which
-     `capture/index.mjs` now imports (CAPTURE #6, layer 3, K384); `capture/ops.mjs`, which `extraction/index.mjs` imports
-     for R31's absent object through capture's `evidenceAbsent` (EXTRACTION, layer 4, K386, N285); and progressions'
-     `index.mjs`, `checks.mjs` and `schema.mjs`, which `inquiry/index.mjs` imports for R20's NOT_A_DISPOSITION through
-     progressions' `notADisposition` (INQUIRY, layer 6, K390, N285). */
-  /* RE-PINNED 2026-09-29 (LEGACY-TESTS #11, T13; K432, RECORD-CORE #7 N322): 148 -> 149 inputs, from the manifest BOB
-     regenerated at layer 11's close: record-core's `src/record-core/checks.mjs` (C-59.6, R62's row) joined, imported by
-     `record-core/index.mjs` for `mintExhausted` (K384's pattern: an input reached through a module the pack check
-     imports). */
-  /* RE-ANCHORED 2026-09-30 (LEGACY-TESTS #13, T15; K489): 149 -> 153 inputs, from the committed manifest this suite reads
-     (`agent-worker/dist/agent-worker.bundle.json`, last regenerated at K490/K492 and unchanged through layer 11's close,
-     K521; its staleness arm green). Four arrive and none leave, each by name: inquiry's `inquiry/checks.mjs` (its
-     contradiction row family) and `inquiry/contradiction.mjs`, which `inquiry/index.mjs` now imports (INQUIRY, merged
-     early at layer 6, 6aa71a8c37); and contradiction's `contradiction/derive.mjs` and `contradiction/text.mjs`, which
-     `contradiction/index.mjs` now imports (CONTRADICTION, merged early, K490). Kept, not retired: a cross-module census
-     of one fleet member's build inputs, which no module test covers. */
-  /* RE-PINNED 2026-10-01 (LEGACY-TESTS #18, T20; K641, K890): 153 -> 13 inputs, from the committed manifest this suite
-     reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). T18 layer 6 (K683) took the catalogue,
-     skills and ai-runs out of the member's build (R48 read the rendered pack from `op=affordances`; since T36-24 it
-     reads it from `op=agentpack`, K2135), so what is left is
-     its five own modules, the plane's `tokens.mjs` (runtime-limits) and run-rules with observation-log's `checks.mjs` and
-     `vocabulary.mjs` through it (`build/manifest.md`'s artifact table). The 153-input pin, accepted red since T18 (K641),
-     retired with the inputs it named; docprofile's moved files (N441) left this list with them. */
-  /* RE-PINNED 2026-10-06 (BUNDLER #8, T34-6; N575, K1598, K1708): 13 -> 20 inputs, from the committed manifest this
-     suite reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). The agent-worker split (T33,
-     K1615) moved the harness to `agent-harness` and the model calls to `agent-model`, both reached across trees, and
-     added the member's own `ask.mjs` and `ops.mjs`; observation-log's `checks.mjs` brings record-grammar's `ids.mjs`
-     and `actors.mjs` (T33-30). `src/harness.mjs`, `src/model.mjs` and `src/subsession.mjs` left: the first and last
-     are re-export files the build no longer reaches (N586), the second moved to agent-model. */
-  /* RE-PINNED 2026-10-07 (BUNDLER #10, T36-2; N733, T35's red 32): 20 -> 22 inputs, from the committed manifest this
-     suite reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). Two arrive and none leave, the
-     member's own `src/draft.mjs` and `src/reads.mjs`, which its `index.mjs` now imports (agent-worker's T35 job). */
-  /* RE-PINNED 2026-10-08 (BUNDLER #12, T38-1; N787, K2218, T37's red 20): 22 -> 23 inputs, from the committed manifest
-     this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T37-17; its staleness arm green). One
-     arrives and none leaves, the member's own `src/signin.mjs` (R66/R67's sign-in relay), which its `index.mjs` now
-     imports (AGENT-WORKER #13, T37-17). */
-  /* RE-PINNED 2026-10-08 (BUNDLER #13, T39-1; N802, K2302, T38's red 16): 23 inputs still, from the committed manifest
-     this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T38-10; its staleness arm green). One
-     renamed and nothing else moves: agent-model's `src/subscription.mjs` is now `src/signin.mjs` (T38-9), which
-     agent-worker reaches across trees for the member's sign-in account (AGENT-WORKER #14, T38-10, N785). */
-  /* RE-PINNED 2026-10-10 (BUNDLER #14, T42-2; N836, K2520 (a), T42 rule 4 (8)): 23 -> 25 inputs, from the committed
-     manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt at T41 L6's close; its staleness
-     arm green). Two arrive and none leaves: run-rules' `test-bar.mjs` and `test-set.mjs`, which `run-rules/index.mjs`
-     imports since T41-21, so every member reaching run-rules builds them in. */
-  /* RE-PINNED 2026-10-11 (BUNDLER #15, T43-2; N860, K2650, T43 rule 4 (7)): 25 -> 26 inputs, from the committed
-     manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt at T42's L6 close; its staleness
-     arm green). One arrives and none leaves: the member's own `src/transcribe.mjs`, which its `index.mjs` imports since
-     T42-20. */
-  /* RE-PINNED 2026-10-12 (BUNDLER #16, T46-2; N900, K2828, T46 rule 5 (5)): 26 -> 27 inputs, from the committed
-     manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T45; its staleness arm green).
-     One arrives and none leaves: the member's own `src/action-drafts.mjs`, which its `index.mjs` imports since T45. */
-  /* RE-PINNED 2026-10-12 (BUNDLER #17, T47-4; N950, T47 rule 5 (5)): 27 -> 28 inputs, by name as the committed manifest
-     this suite reads records them (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T46-19; its staleness arm
-     green). One arrives and none leaves: the member's own `src/untested.mjs` (R79's test-instance label), which its
-     `index.mjs` imports since T46-19. */
-  t("agent-worker's 28 inputs are all recorded — its ten own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
-    (agent?.inputs || []).map((i) => i.path).sort(),
-    [
-     "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
-     "../agent-model/src/apikey.mjs", "../agent-model/src/model.mjs", "../agent-model/src/outcome.mjs",
-     "../agent-model/src/signin.mjs",
-     "../bio-plane/src/observation-log/checks.mjs", "../bio-plane/src/observation-log/vocabulary.mjs",
-     "../bio-plane/src/record-grammar/actors.mjs", "../bio-plane/src/record-grammar/ids.mjs",
-     "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
-     "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
-     "../bio-plane/src/run-rules/test-bar.mjs", "../bio-plane/src/run-rules/test-set.mjs",
-     "../bio-plane/src/tokens.mjs", "src/action-drafts.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
-     "src/reads.mjs", "src/signin.mjs", "src/transcribe.mjs", "src/untested.mjs",
-    ]);
+  /* T50-1 (BUNDLER #19; N1107, N1156, N1171; K3268, K3353, K3568): this was a hand-listed roster of the member's inputs,
+     re-pinned at every merge that moved one (27 -> 28 at T47-4, then 36 in the bundle and 28 here), and so red whenever
+     another module's job changed what agent-worker imports. A roster written here is a second copy of what the build
+     reaches, which is how the list fell behind. The record is now asserted against the two things that decide it, never
+     against a list: the committed manifest records exactly the first-party files a fresh build of the member reaches
+     (esbuild's own metafile, nothing written), each with its size, and the manifest's recipe names the member's entry
+     as one of them. */
+  const agentMember = members.find((m) => m.name === "agent-worker");
+  const reached = (await buildMember(agentMember, { write: false })).inputs
+    .filter((i) => !i.path.split("/").includes("node_modules"));
+  const recorded = agent?.inputs || [];
+  const byPath = (a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  t("agent-worker's recorded inputs are exactly the first-party files a fresh build of it reaches — none missing, none extra",
+    recorded.map((i) => i.path).sort(), reached.map((i) => i.path).sort());
+  t("and each is recorded with the size the build read, and the member's own entry is among them",
+    [recorded.slice().sort(byPath).map((i) => i.bytes), recorded.some((i) => i.path === agentMember.bundle.entry)],
+    [reached.slice().sort(byPath).map((i) => i.bytes), true]);
+  t("a build that reaches nothing would be the emptiest green: the record is not empty",
+    recorded.length > 0, true);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);
   t("every recorded input carries a hash — a null sha256 would be an input nothing checks",
@@ -291,11 +224,16 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      renderer's CCITT fax decoder, `pdf-worker/src/ccittdecode.mjs`, is a
      ninth. */
   const ocr = manifests.get("ocr-worker");
-  t("ocr-worker's build reaches into the RENDERER's tree and the PLANE's, and the manifest hashes all of them",
-    (ocr?.inputs || []).map((i) => i.path).filter((p) => p.startsWith("../")).sort(),
-    ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/subresources.mjs",
-     "../pdf-worker/src/ccittdecode.mjs", "../pdf-worker/src/dctdecode.mjs", "../pdf-worker/src/jbig2decode.mjs", "../pdf-worker/src/jpxdecode.mjs",
-     "../pdf-worker/src/mq.mjs", "../pdf-worker/src/pagepixels.mjs"]);
+  /* T50-1 (BUNDLER #19; B2/B3, OCR-WORKER #6's R23; K3268): asserted against what a fresh build reaches, never a hand
+     list: the cross-tree inputs the manifest records are exactly those the build reaches, and they still span both the
+     renderer's tree and the plane's. */
+  const ocrMember = members.find((m) => m.name === "ocr-worker");
+  const ocrCross = (list) => list.map((i) => i.path).filter((p) => p.startsWith("../")).sort();
+  const ocrReached = (await buildMember(ocrMember, { write: false })).inputs.filter((i) => !i.path.split("/").includes("node_modules"));
+  t("ocr-worker's recorded cross-tree inputs are exactly those a fresh build of it reaches — none missing, none extra",
+    ocrCross(ocr?.inputs || []), ocrCross(ocrReached));
+  t("and they reach into the RENDERER's tree and the PLANE's",
+    ["../bio-plane/", "../pdf-worker/"].map((d) => ocrCross(ocr?.inputs || []).some((p) => p.startsWith(d))), [true, true]);
   t("and it vendors NOTHING — its engine is a committed upload part, not an npm install, so its byte arm can never skip",
     (ocr?.vendoredInputs || []).length, 0);
 }

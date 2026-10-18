@@ -80,7 +80,8 @@ test("R6 R13 R33 Work on this opens the run under her session with the bounds it
   assert.deepEqual(dockActs(p), ["airunopen"]);
   await workOn(p);
   const [opened, dispatch] = ["airunopen", "airundispatch"].map((op) => p.byOp(op)[0]);
-  assert.deepEqual(Object.keys(opened.body).sort(), ["bounds", "contextId", "contextType", "mode", "principalClaude", "run", "skillVersion"]);
+  assert.deepEqual(Object.keys(opened.body).sort(), ["bounds", "contextId", "contextType", "mode", "principalClaude", "project", "run", "skillVersion"]);
+  assert.equal(opened.body.project, P, "R58: a run opened in a project sends that project (the question's)");
   assert.deepEqual([opened.body.contextType, opened.body.contextId, opened.body.mode, opened.body.principalClaude, opened.body.skillVersion],
                    ["inquiry", Q, "check", "member:mai", "civicsmith@3+ab12cd"]);
   /* R33: no zero allowance, so the plane's rule does not refuse it AI_RUN_BOUND_NO_ALLOWANCE */
@@ -135,7 +136,9 @@ test("R13 a reloaded dock continues her running run by the same act: airundispat
   /* controls: another member's running run, or one of hers that ended, is not continued: a new run is opened */
   for (const run of [{ ...mine, principal: { plane: "member:dev" } }, { ...mine, status: "completed" }]) {
     const q = await dock(Q, stub({ runs: [run] }));
-    assert.ok(says(panel(q), "screen.assistant.run.none"));
+    /* R48: another member's run leaves "No run yet"; one of hers that ended is drawn ended, never "No run yet" */
+    assert.ok(run.status === "completed" ? says(panel(q), "screen.assistant.run.ended", { why: word("ai.run.ending.completed") }) && !says(panel(q), "screen.assistant.run.none")
+      : says(panel(q), "screen.assistant.run.none"));
     await workOn(q);
     assert.equal(q.byOp("airunopen").length, 1);
     assert.notEqual(q.byOp("airundispatch")[0].body.run, OLD);
@@ -154,7 +157,7 @@ test("R8 a run the dock dispatched is read again on the page clock, at most ever
   assert.equal(reads(), before + 1, "once at 10 seconds");
   s.held.status = "completed"; s.held.condition = { kind: "", detail: "completed: the run finished", bound: "completed", at: "2026-10-15T00:00:00Z" };
   await p.clock.tick(10000);
-  assert.ok(says(panel(p), "screen.assistant.run.ended", { why: "completed" }), "without her next act, its ending by its bound, never the object");
+  assert.ok(says(panel(p), "screen.assistant.run.ended", { why: word("ai.run.ending.completed") }), "without her next act, its ending by its bound, never the object");
   assert.ok(!panel(p).textContent.includes("[object Object]"));
   assert.ok(!says(panel(p), "dock.run.yours"), "R33: no longer said working");
   const ended = reads();
@@ -241,8 +244,10 @@ test("R4 R7 the run's productions drawn as machine work, never evidence, each ca
   await p.click(button(p, "suggest", panel(p)));
   await p.settle();
   assert.deepEqual(p.byOp("suggest")[0].body, { target: Q, kind: "sharpen-question", run: p.byOp("airunopen")[0].body.run, name: "Cite the column", description: "Cite the category column" });
-  const items = panel(p).querySelectorAll(".cs-machinework");
-  assert.equal(items.length, 2, "the log's production and the suggestion");
+  /* R58: the log's English is no longer drawn (its seam); the steps are drawn from its fields, the suggestion as machine work */
+  assert.ok(!panel(p).textContent.includes("The work orders cite"), "no English of the log is drawn");
+  const items = panel(p).querySelectorAll(".cs-machinework:not([data-progress])");
+  assert.equal(items.length, 1, "the suggestion");
   for (const it of items) {
     assert.ok(it.querySelector('.cs-origin[data-origin="machine"]'));
     assert.ok(says(it.querySelector('[data-label="untested"]'), "ai.label.untested"));
@@ -256,7 +261,7 @@ test("R7 control: an output of a run the plane did not mark untested carries no 
   s.held.entries = [{ says: "A production." }];
   const p = await dock(Q, s);
   await workOn(p);
-  assert.ok(panel(p).textContent.includes("A production."));
+  assert.ok(!panel(p).textContent.includes("A production."), "R58: the log's English is not drawn");
   assert.equal(panel(p).querySelector('[data-label="untested"]'), null);
   assert.ok(!says(panel(p), "ai.label.untested"));
 });

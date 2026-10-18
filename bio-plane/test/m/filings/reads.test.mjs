@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, CASE, PROFILE, WHY } from "./fixture.mjs";
 import { COUNSEL_SENTENCE, TIER_WORDS, filingsOf } from "../../../src/filings/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 
@@ -81,7 +82,7 @@ test("R15 the available-actions block of a published case a live determination r
   const y = world({ profiles: [bare] });
   const t = block(y).kinds.find((k) => k.kind === "commitment_claim");
   assert.deepEqual(t.legal_organisations, []);
-  assert.match(t.legal_organisations_says, /names no legal organisation/);
+  assert.equal(t.legal_organisations_says, word("filings.profile_names_legal"));
   /* the determination superseded: the live one that supersedes it is listed in its place */
   const D2 = supersede(y, y.D);
   assert.deepEqual(block(y).determinations.map((d) => d.determination), [D2]);

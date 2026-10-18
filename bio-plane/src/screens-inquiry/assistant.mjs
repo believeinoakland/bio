@@ -1,4 +1,4 @@
-/* screens-inquiry R4, R6, R7, R8, R13, R33, R42: the assistant dock (registry screen `assistant`, frame `dock`; its 3
+/* screens-inquiry R4, R6, R7, R8, R13, R33, R42, R48: the assistant dock (registry screen `assistant`, frame `dock`; its 3
  * acts), drawn beside the screen it serves while the assistant is reachable (interface-shell R20). `view.subject` is the
  * served screen's subject: a question (`INQ-`) or a project (`PROJ-`) is the run's context; a document's is the project
  * it states.
@@ -24,6 +24,7 @@
  * (R44). Self-contained functions (interface-shell R21 (1)). */
 
 import * as settingsPanel from "../screens-settings/panel.mjs";
+import { COMMON } from "./common.mjs";
 
 /** R33: the bounds each mode the dock may open is opened with (`run-rules` `checkConsume`: a declared bound states a
  *  positive allowance; C-109.6: a planning run declares no search allowance). `check` reads and fetches, so it is given
@@ -93,7 +94,11 @@ function render(cs, view) {
   /* whose account serves her here (ai.account.*): a project's own account in a project that holds one switched on,
      else her own (a key or her Claude sign-in), else the group's key */
   let context = null;
-  if (/^INQ-/.test(subject)) context = { type: "inquiry", id: subject };
+  if (/^INQ-/.test(subject)) {
+    const qi = later("qproject", "image", { id: subject });
+    const qm = qi.state === "ok" && qi.value && typeof qi.value["bundle.md"] === "string" ? /^project:\s*(\S+)\s*$/m.exec(qi.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : null;
+    context = { type: "inquiry", id: subject, project: qm ? qm[1] : "" };
+  }
   else if (/^PROJ-/.test(subject)) context = { type: "project", id: subject };
   else if (subject) {
     const im = later("context", "image", { id: subject });
@@ -126,7 +131,7 @@ function render(cs, view) {
       else if (over.state === "failed" && !refusedAsNonOwner) out.push(cs.state({ state: "failed", refusal: null }, () => ""));
       else if (over.state === "ok") {
         if (over.value && over.value.unreadable === true) out.push(cs.state({ state: "failed", refusal: null }, () => ""));
-        else if (over.value && Array.isArray(over.value.days)) out.push(bars(cs, view, { owner, value: over.value }));
+        else if (over.value && Array.isArray(over.value.days)) out.push(`<p class="mk-small" data-use="head">${cs.w("dock.use.head")}</p>` + bars(cs, view, { owner, value: over.value }));
       }
     }
   }
@@ -135,6 +140,7 @@ function render(cs, view) {
      `member:<id>/<tokenId>` for one opened before T47); continued by "Work on this" */
   const member = view.me && view.me.member;
   let found = null;
+  let endedMine = null;
   if (!ui.run && context && member) {
     const runs = later("runs", "airuns", { contextType: context.type, contextId: context.id, limit: "50" }, String(ui.seq || 0));
     const list = runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : [];
@@ -142,6 +148,10 @@ function render(cs, view) {
       && (s.principal.plane === "member:" + member || s.principal.plane.startsWith("member:" + member + "/"));
     const r = list.find((s) => s && s.status === "running" && mine(s));
     if (r && r.id) found = { id: String(r.id), status: "running", untested: r.untested || null, dispatched: false, found: true };
+    /* R48: none running, her latest run there (newest first) that has ended; "no run yet" only when she has none */
+    else if (runs.state === "ok") {
+      endedMine = list.find(mine) || null;
+    }
   }
 
   /* the run */
@@ -150,7 +160,16 @@ function render(cs, view) {
   let runPart = "";
   let status = null;
   if (!run) {
-    runPart = `<p>${cs.w("screen.assistant.run.none")}</p>`;
+    const why = (c) => (c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || ""));
+    const es = endedMine && endedMine.id ? later("ended", "airun", { run: String(endedMine.id) }) : null;
+    const esess = es && es.state === "ok" && es.value && es.value.session ? es.value.session : null;
+    const endWords = (b) => { const k = ["cancelled", "mode-not-deployed", "fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces", "proposals", "pages", "lease", "nothing-written"];
+      return b === "completed" ? cs.w("ai.run.ending.completed") : cs.w(k.includes(b) ? "ai.run.ending." + b : "ai.run.ending.unknown"); };
+    runPart = endedMine
+      ? `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: { html: endWords(why(endedMine.condition) || String(endedMine.status || "")) } })}</p>`
+        + (why(endedMine.condition) === "cancelled" ? `<p class="mk-small" data-run="stopped">${cs.w("screen.question.stopped.kept")}</p>` : "")
+        + (view.parts && view.parts.costLine ? view.parts.costLine(cs, esess, true) : "")
+      : `<p>${cs.w("screen.assistant.run.none")}</p>`;
   } else if (run.found && !ui.run) {
     status = "running";
   } else {
@@ -168,7 +187,9 @@ function render(cs, view) {
     /* R33: working is said only while a run this dock dispatched is running, as the last read answers it */
     if (status === "running" && run.dispatched)
       runPart += `<p data-run="running">${cs.w("dock.run.yours")} ${cs.w("screen.assistant.run.running", { ticks: String((last && last.ticks) || 1) })}</p>`;
-    else if (status && status !== "running") runPart += `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: String((last && last.condition) || status) })}</p>`;
+    else if (status && status !== "running") runPart += `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: { html: view.parts.ending(cs, String((last && last.condition) || status), true) } })}</p>`
+      + ((last && last.condition) === "cancelled" ? `<p class="mk-small" data-run="stopped">${cs.w("screen.question.stopped.kept")}</p>` : "");
+    if (session) runPart += view.parts.costLine(cs, session, status !== "running");
     /* R8: while the run this dock dispatched is running, read it again on the page clock, at most once every 10 seconds;
        the shell cancels the timer when she leaves the screen */
     if (session && status === "running" && run.dispatched && !ui.polling) {
@@ -176,12 +197,12 @@ function render(cs, view) {
       cs.later(10000, (k, v) => { v.ui.polling = false; k.set("seq", (v.ui.seq || 0) + 1); });
     }
     const label = untested ? `<span class="cs-draftlabel" data-label="untested">${cs.w("ai.label.untested")}</span>` : "";
+    /* R58: the run's steps as its log makes them, from its fields (no English parsed); a wake's withheld reason by its key */
+    const entries = log.state === "ok" && log.value && Array.isArray(log.value.entries) ? log.value.entries : [];
+    const prog = view.parts.progress(cs, entries, {});
+    runPart += prog.html;
+    for (const e of entries) if (e && typeof e.withheld === "string") { try { runPart += `<p class="mk-small" data-log="withheld">${cs.w("ai.log.withheld." + e.withheld)}</p>`; } catch { /* a code with no key is not drawn */ } }
     const productions = [];
-    if (log.state === "ok" && Array.isArray(log.value.entries))
-      for (const e of log.value.entries) {
-        const what = e && (e.says || e.text || e.summary || e.kind);
-        if (what) productions.push(String(what));
-      }
     for (const s of Array.isArray(ui.suggestions) ? ui.suggestions : []) productions.push(String(s));
     /* a section that holds nothing is not drawn (R20) */
     if (productions.length) runPart += cs.sec("screen.assistant.productions.head",
@@ -201,7 +222,8 @@ function render(cs, view) {
   else if (noPack) out.push(`<p class="mk-small">${cs.w("screen.assistant.run.notready")}</p>`);
   if (context && pack && member && !started)
     out.push(cs.act("airunopen", { label: "act.airunopen.label.assistant",
-      data: { ctxType: context.type, ctxId: context.id, pack: String(pack), run: running ? run.id : "" }, tone: "primary" }));
+      data: { ctxType: context.type, ctxId: context.id, pack: String(pack), run: running ? run.id : "",
+        project: context.type === "project" ? context.id : context.project || "" }, tone: "primary" }));
   if (started && context && context.type === "inquiry")
     out.push(cs.field("assistant-suggest-name", "screen.assistant.suggest.name", {})
       + cs.field("assistant-suggest-description", "screen.assistant.suggest.description", { area: true })
@@ -271,7 +293,8 @@ const acts = [
       /* R33: the bounds the mode needs, as the plane's rules state them; the dock opens `check` only (R6) */
       const mode = "check";
       cs.call("airunopen", { body: { run, contextType: ctx.type, contextId: ctx.id, mode,
-        principalClaude: "member:" + member, skillVersion: el.dataset.pack, bounds: (P.bounds || {})[mode] || [] } })
+        principalClaude: "member:" + member, skillVersion: el.dataset.pack, bounds: (P.bounds || {})[mode] || [],
+        ...(el.dataset.project ? { project: el.dataset.project } : {}) } })
         .then((o) => {
           /* R33: `started: false` is a refusal, drawn by its words; nothing is dispatched after it */
           if (refused(o)) return sayRefusal("airunopen", o);
@@ -328,9 +351,17 @@ const words = Object.freeze([
   "screen.assistant.run.notready", "screen.assistant.run.nocontext", "screen.assistant.productions.head",
   "screen.assistant.production", "screen.assistant.notevidence", "screen.assistant.suggest.name",
   "screen.assistant.suggest.description", "screen.assistant.dispatch.unknown",
+  /* T50 (R57–R59) */
+  "dock.use.head", "dock.ifnot", "screen.question.stopped.kept", "refusal.ACCOUNT_MEMBER_NOT_ACTIVE", "refusal.AI_RUN_NOT_PRINCIPAL",
+  "refusal.AI_RUN_NOT_RUNNING", "refusal.AI_RUN_BOUND_NO_ALLOWANCE", "screen.assistant.run.cost.sofar", "screen.assistant.run.cost.final",
+  ...["completed", "completed.none", "cancelled", "mode-not-deployed", "fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces",
+    "proposals", "pages", "lease", "nothing-written", "unknown"].map((k) => "ai.run.ending." + k),
+  ...["money", "money.one", "tokens", "tokens.one", "on.subscription", "on.apikey", "on.team", "on.project", "means", "tokens.means"].map((k) => "ai.run.cost." + k),
+  ...["reading", "read", "read.one", "found", "found.one", "found.none", "composing", "checking", "hold", "means", "check.ok", "check.fail",
+    "checked", "check.failed"].map((k) => "ai.progress." + k), "ai.reading.levels.disagree", "state.undetermined",
 ]);
 
 /** The assistant dock (interface-shell R20, R21), with the screens-settings bars and R33's tables as its parts. */
 export const ASSISTANT_SCREEN = Object.freeze({ id: "assistant", reads, render, acts, words,
   parts: Object.freeze({ ...(settingsPanel.aiUsageBars ? { aiUsageBars: settingsPanel.aiUsageBars } : {}),
-    bounds: MODE_BOUNDS, refusals: REFUSALS, withheld: WITHHELD }) });
+    bounds: MODE_BOUNDS, refusals: REFUSALS, withheld: WITHHELD, ending: COMMON.ending, costLine: COMMON.costLine, progress: COMMON.progress }) });

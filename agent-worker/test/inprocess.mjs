@@ -83,7 +83,7 @@ function planeStub(rec, cfg) {
         return Response.json({ ok: true, fences: [], ...(cfg.noPack ? { pack: null, pack_absent: "renderPack: no fences published" }
                                                                      : { pack: cfg.pack ?? PACK }), store: "scratch", tokenClass: "ai" });
       case "meaningrows": return ok({ ok: true, arm: String(u.searchParams.get("rows") || "").trim().toLowerCase(),
-                                      rows: [], count: 0 });
+                                      rows: [], scope: { documents: 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
       case "basisversions": return ok({ id: u.searchParams.get("id"), versions: [], limit: 50, truncated: false });
       case "search": return ok({ hits: [{ bundle_id: "bundle:cited", source_locator: "https://example.org/cal" }] });
       case "versionchain": return ok({ address_norm: "example.org/cal", total: 1, truncated: false,

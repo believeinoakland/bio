@@ -41,9 +41,9 @@ test("R1: the five kinds notice-producers raises are classed (the dated wait a t
   for (const k of ["interest-check-noticed", "money-detector-noticed", "standing-answer", "temporal-expectation-due"])
     assert.equal(classOfKind(k), "FINDING", k);
   assert.match(QUEUE_OBLIGATION_KINDS["inquiry-recheck-due"], /a date you set to look again at a question has come/);
-  assert.match(QUEUE_FINDING_KINDS["interest-check-noticed"], /the machine noticed a pattern among people's facts that a check you may see describes; labelled as the machine's, not a judgment of anyone/);
-  assert.match(QUEUE_FINDING_KINDS["money-detector-noticed"], /the machine noticed a pattern in the money facts that a detector describes; labelled as the machine's/);
-  assert.match(QUEUE_FINDING_KINDS["standing-answer"], /your standing question found something new; labelled as the assistant's/);
+  assert.match(QUEUE_FINDING_KINDS["interest-check-noticed"], /the machine noticed a pattern among people's facts that a check you may see describes; labeled as the machine's, not a judgment of anyone/);
+  assert.match(QUEUE_FINDING_KINDS["money-detector-noticed"], /the machine noticed a pattern in the money facts that a detector describes; labeled as the machine's/);
+  assert.match(QUEUE_FINDING_KINDS["standing-answer"], /your standing question found something new; labeled as the assistant's/);
   assert.match(QUEUE_FINDING_KINDS["temporal-expectation-due"], /an occurrence of a body's duty you adopted has come due and nothing the record holds shows it met; a question, never a violation/);
   // a near miss of each is no kind at all
   for (const k of ["inquiry-recheck", "interest-check", "money-detector", "standing-answers", "temporal-expectation"])

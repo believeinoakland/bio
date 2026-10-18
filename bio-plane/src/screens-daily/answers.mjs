@@ -5,15 +5,22 @@
    counted". In both, the question can be kept asking (`standingquestionset`) and stopped (`standingquestionend`). The
    registry names `ask` itself since T47 (interface-shell R28, R38; its own label `act.ask.label.answers`). Every function is self-contained (interface-shell R21 (1)). */
 
+import { frontTitle } from "./front-title.mjs";
+
 export const answers = Object.freeze({
   id: "answers",
+  parts: { frontTitle },
 
   reads: function (view) {
     const ui = view.ui || {};
     const out = {};
     if (!view.reachable && typeof ui.q === "string" && ui.q.trim()) {
+      // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
+      const w = ui.q.trim().split(/\s+/);
+      const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
+      const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : ui.q;
       out.search = {
-        op: "search", query: { q: ui.q, limit: "50", snippet: "160" },
+        op: "search", query: { q: asked, limit: "50", snippet: "160" },
         empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
       };
     }
@@ -29,7 +36,22 @@ export const answers = Object.freeze({
       + '<p class="mk-note">' + cs.w("screen.answers.keeping") + "</p>";
 
     if (view.reachable) {
-      const a = ui.answer && typeof ui.answer === "object" ? ui.answer : null;
+      // R52, R53: the ask's progress as it is written, and its answer only once the plane's check has passed it. The stream's rows
+      // (what is read, that it is being written, that it is being checked) are drawn in a polite live region in the answer's place.
+      const st = ui.stream && typeof ui.stream === "object" ? ui.stream : null;
+      const titles = ui.titles && typeof ui.titles === "object" ? ui.titles : {};
+      let progress = "";
+      if (st && st.working) {
+        const reads = (Array.isArray(st.reads) ? st.reads : []).filter(function (r) { return r && titles[r]; });
+        progress = '<section class="mk-note" role="status" aria-live="polite" data-ask="working" tabindex="0" data-level="2" data-tip="' + cs.w("ai.progress.means") + '"><ul class="mk-list">'
+          + reads.map(function (r) { return "<li>" + cs.w("ai.progress.reading.ask", { document: titles[r] }) + "</li>"; }).join("")
+          + (st.composing ? "<li>" + cs.w("ai.progress.composing.answer") + "</li>" : "")
+          + (st.checking ? "<li>" + cs.w("ai.progress.checking") + "</li>" : "")
+          + '</ul><p class="muted">' + cs.w("ai.progress.hold.answer") + "</p></section>";
+      } else if (st && st.failed) {
+        progress = '<section class="mk-note" role="status" aria-live="polite" data-ask="failed"><p>' + cs.w("ai.progress.check.failed") + "</p><p>" + cs.w("screen.answers.failed.next") + "</p></section>";
+      }
+      const a = ui.answer && typeof ui.answer === "object" && !(st && (st.working || st.failed)) ? ui.answer : null;
       let drawn = "";
       if (a) {
         const holdings = Array.isArray(a.holdings) ? a.holdings : [];
@@ -76,6 +98,7 @@ export const answers = Object.freeze({
         const asRead = a.question_as_read ? '<p class="mk-small">' + cs.w("screen.answers.asread", { question: String(a.question_as_read) }) + "</p>" : "";
         const untested = ui.untested ? '<p class="mk-tag" data-untested="true">' + cs.w("ai.label.untested") + "</p>" : "";
         drawn = '<div class="cs-machinework">' + asRead + summary + sentences + notEstablished + where + looked + withheld
+          + '<p class="mk-note" tabindex="0" data-level="2" data-tip="' + cs.w("ai.progress.checked.all.means") + '">' + cs.w("ai.progress.checked.all") + "</p>"
           + '<p class="mk-note">' + cs.w("screen.answers.legal") + "</p>" + untested
           + '<span class="by">' + cs.w("screen.answers.machine") + "</span></div>";
       }
@@ -83,7 +106,7 @@ export const answers = Object.freeze({
         + cs.field("answers-q", "screen.answers.question", { area: true, rec: true, value: ui.q || "" })
         + '<div class="mk-acts">' + cs.act("ask", { label: "act.ask.label.answers", tone: "primary" })
         + cs.act("search", { label: "act.search.label.answers" }) + "</div>"
-        + drawn + keep;
+        + progress + drawn + keep;
     }
 
     // Not reachable: "Find and count".
@@ -118,12 +141,56 @@ export const answers = Object.freeze({
         AI_KEPT_AWAY: "ai.refused.projectkeptaway", NO_ACCOUNT: "ai.refused.signinnotconnected",
         ASSISTANT_OFF: "screen.answers.refused.off", AI_PART_NOT_DEPLOYED: "screen.answers.refused.notdeployed",
         ANSWER_MALFORMED: "refusal.ANSWER_MALFORMED",
+        // R53: not ready: the words, and a door to `connect`.
+        ASSISTANT_REMOTE_NOT_READY: function (refusal, cs) {
+          return cs.w("refusal.ASSISTANT_REMOTE_NOT_READY") + ' <a class="cs-btn" data-tone="quiet" data-nav href="/app/connect">' + cs.w("screen.connect.name") + "</a>";
+        },
       },
       send: function (view, el, cs) {
         const q = String(cs.value("answers-q") || "").trim();
         if (!q) return { refuse: "screen.answers.questionfirst" };
         cs.set("q", q);
-        return { body: { question: q } };
+        // R52: a new ask clears the last answer and its progress.
+        view.ui.stream = null;
+        view.ui.answer = null;
+
+      // R52, R53: each stream event as it arrives (interface-shell R78). The reads, that the answer is being written and that it
+      // is being checked are drawn as they come; nothing of the answer is drawn before the `answer` event, which follows the
+      // plane's check; a stream that ends `refused` (`ASK_CHECK_FAILED`) draws the failed-check sentence and no answer.
+        const onEvent = function (event) {
+          const ui = view.ui || {};
+          const ev = event && typeof event === "object" ? event : {};
+          const cur = ui.stream && typeof ui.stream === "object" ? ui.stream : { working: false, reads: [], composing: false, checking: false, failed: false };
+          const next = { working: true, reads: cur.reads.slice(), composing: cur.composing, checking: cur.checking, failed: false };
+          if (ev.event === "read" && ev.record) {
+            const id = String(ev.record);
+            if (next.reads.indexOf(id) < 0) next.reads.push(id);
+            if (!(ui.titles && ui.titles[id])) {
+              // The document is named by its title, read once (R26): the row shows when the title is known.
+              cs.call("image", { query: { id: id } }).then(function (a) {
+                const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+                const t = view.parts.frontTitle(v);
+                if (t) { const titles = Object.assign({}, (view.ui || {}).titles || {}); titles[id] = t; cs.set("titles", titles); }
+              }, function () {});
+            }
+          } else if (ev.event === "composing") next.composing = true;
+          else if (ev.event === "checking") next.checking = true;
+          else if (ev.event === "answer") {
+            next.working = false;
+            const a = ev.answer && typeof ev.answer === "object" ? ev.answer : null;
+            cs.set("stream", next);
+            cs.set("answer", a);
+            cs.set("withheld", Array.isArray(ev.withheld) ? ev.withheld : []);
+            cs.set("untested", !!ev.untested || !!(a && a.untested));
+            return;
+          } else if (ev.event === "refused") {
+            cs.set("stream", { working: false, reads: next.reads, composing: false, checking: false, failed: ev.code === "ASK_CHECK_FAILED" });
+            cs.set("answer", null);
+            return;
+          }
+          cs.set("stream", next);
+        };
+        return { body: { question: q }, onEvent: onEvent };
       },
       done: function (view, answer, cs) {
         let ev = answer;
@@ -133,7 +200,14 @@ export const answers = Object.freeze({
         }
         if (Array.isArray(ev)) ev = ev[ev.length - 1];
         if (ev && ev.result && !ev.answer) ev = ev.result;
+        // R53: a stream that ended in `refused` has no answer; nothing of it is drawn.
+        if (ev && ev.event === "refused") {
+          cs.set("stream", { working: false, reads: [], composing: false, checking: false, failed: ev.code === "ASK_CHECK_FAILED" });
+          cs.set("answer", null);
+          return;
+        }
         const a = ev && ev.answer && typeof ev.answer === "object" ? ev.answer : null;
+        cs.set("stream", null);
         cs.set("answer", a);
         cs.set("withheld", ev && Array.isArray(ev.withheld) ? ev.withheld : []);
         cs.set("untested", !!(ev && ev.untested) || !!(a && a.untested));
@@ -145,7 +219,11 @@ export const answers = Object.freeze({
         if (!q) return { refuse: "screen.finder.wordsfirst" };
         cs.set("q", q);
         if (view.reachable) { cs.go("finder", q); return null; }
-        return { query: { q: q, limit: "50", snippet: "160" } };
+        // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
+        const w = q.split(/\s+/);
+        const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
+        const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : q;
+        return { query: { q: asked, limit: "50", snippet: "160" } };
       } },
     // "Show how this was counted": the rule service's answer with its basis and label (answers R7).
     { op: "ruleanswer", label: "act.ruleanswer.label.answers", rereads: [],

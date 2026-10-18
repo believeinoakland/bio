@@ -16,6 +16,7 @@ import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { attestationOf } from "../../../src/attestation/index.mjs";
 import { LocalFacts } from "../../../src/local-facts/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { FilingTemplates, filingTemplatesOf } from "../../../src/filing-templates/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
 
@@ -52,6 +53,8 @@ export function actionMd(id, o) {
     ...(o.partners ? ["partners:", ...o.partners.flatMap((x) => Object.entries(x).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${q(v)}`))] : []),
     ...(o.press_terms ? ["press_terms:", ...Object.entries(o.press_terms).map(([k, v]) => `  ${k}: ${q(v)}`)] : []),
     ...(o.breach ? ["breach: true"] : []),
+    /* T50 (filings R60): an action that names its own project */
+    ...(o.project ? [`project: ${o.project}`] : []),
     /* actions R74 (T45): an override states its ground, held flat (K2849): a legal deadline unless `ground` says otherwise */
     ...(o.override ? ["premise_override:", ...Object.entries(o.ground || { kind: "legal_deadline", citation: "Test Stat. § 9.20", date: "2026-04-01" })
                        .map(([k, v]) => `  ground_${k}: ${q(v)}`), `  reason: ${q(o.override)}`] : []),
@@ -93,6 +96,10 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const w = publicationWorld({ group });
   workerdShaped(w.st);
   for (const m of ["olive", "bo", "cy", "quinn"]) w.member(m);
+  /* T50 (R60, R61): public-read reads a project's stake through project-roster's instance on the host (its R36), as the
+     plane boots it: made with the record and migrated, so a project with no stake reads none, never undetermined */
+  const roster = projectRosterOf(w.host, { record: w.record, membership: w.membership });
+  roster.migrate();
   const proj = w.project("Parks", "olive");
   for (const m of ["bo", "cy"]) {
     const inv = w.membership.projectInvite({ projectId: proj, handle: `h_${m}`, by: "olive", viewer: V("olive") });
@@ -190,7 +197,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const D = determine();
   let n = 0;
   const x = {
-    ...w, w, f, attestation, events, ents, OFFICE, SUBJECT, ELSEWHERE, ACT_EVENT,
+    ...w, w, f, attestation, events, ents, roster, OFFICE, SUBJECT, ELSEWHERE, ACT_EVENT,
     event: makeEvent, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */

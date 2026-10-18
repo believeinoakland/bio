@@ -1,6 +1,6 @@
 # machinery-producers — requirements
 
-**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863). Last changed T48 (T48-58: Purpose widened; R11 new, the administrators' update to-do, and R12 new, the read it is derived from, passed in by the plane's composition; N1047; DEC-226 (1); K3158, K3189, K3195); marked not yet met (T48).
+**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863). Last changed T48 (T48-58: Purpose widened; R11 new, the administrators' update to-do, and R12 new, the read it is derived from, passed in by the plane's composition; N1047; DEC-226 (1); K3158, K3189, K3195); marked not yet met (T48). Last changed T50 (L11 fold, BOB #201: R15 a completed capture request told by key; N1143; DEC-274); marked not yet met (T50).
 
 **Size (P6).** About 1,050 lines. It takes about 840 lines from `queue-producers/index.mjs` (353–802, 1842–1939, 1943–2027, 3031–3237) and copies about 200 lines of helpers. That leaves `queue-producers` at about 3,155.
 
@@ -61,8 +61,11 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
   - Tests: a ready release gives each of two administrators one item; a second, newer release replaces it; control: after one administrator's `updatelater` neither has the item until its date; a member gets none.
 - **R12** (T48; K3189; K31's pattern) The read R11 derives from is handed to this module in process by the plane's composition (`plane` R52), never imported: `deps.updateNotice()`, answering `instance-setup`'s notice read (its R89). With none handed, or one that throws or answers malformed, R11 answers no item and the answer's facts name `update-ready` in `failed`, never a guess. Control: with no read handed, the other producers answer as before.
 - **R13** (T49; N1138; K3407; DEC-272; K3366) `capture-completed-unattended`'s `summary` and `detail` are read by key through `setup-words`' `word`: `queue.capture-completed-unattended.summary` and `.detail`, `{member}` the starter's handle (the founder's through `membership.founderHandle()`, R144), or `.who` when a credential that is no member started it, `{title}` the document's title; never a record or credential id, and none held draws no name.
+- **R14** (R085-19; K3501 (b); amends R2's `capture-completed-unattended`) The item is raised only for a bundle that holds a capture (a `register` row, `provenance` R48) or a completed capture request; a machine's entry on a record holding no capture (an AI run's proposal on a question) raises none. Test: a question carrying a run's proposal raises no such item; control: a machine-written capture still does.
 
 
+**A capture request, told in keys** (T50; N1143; DEC-274)
+- **R15** (T50; N1143; DEC-274; K3366; `capture-requests` R10, R56; `run-rules` `runPrincipalOf`; amends R2) **A completed capture request is told by key.** Its item's `summary` and `detail` (`#conditionsCaptureRequested`) are read through `setup-words`' `word`, composing no English: `queue.capture-completed-unattended.request.summary` and `.request.summary.unnamed`, `.request.detail`, `.request.detail.assistant` and `.request.detail.unnamed`, with `{member}` the requesting member's handle (the founder's through `membership.founderHandle()`) and `{title}` the document's title, `screen.held.untitled` when it has none; never a record, run or credential id. The member is `at_the_request_of.member` (`capture-requests` R56), or, for a run's request (`at_the_request_of.run`), the member read from the attribution's `principals.plane` through `run-rules`' `runPrincipalOf`; a run's request draws `.request.detail.assistant`, a member's `.request.detail`, and one naming no member (a credential that is no member, or a run whose member cannot be read) draws the `.unnamed` forms. The grade note is appended to the detail as `queue.capture-completed-unattended.gradenote` (`{note}`, once per distinct note), by this producer and R13's bundle producer alike (R3). Test: a request by a member and one by a run draw their details, the run's naming the member; an untitled document draws `screen.held.untitled`. Control: a request naming no member, and a run whose principal cannot be read, draw the unnamed forms and name no id.
 **The words members see** (DEC-107, DEC-131; H15, H19)
 - **R9** (copy of `queue-producers` R24, which stays) Every member-facing sentence this module answers calls a CONDITION item a "status", never a "condition" or a "signal". (T48) R11's to-do is a to-do ("To do", `queue` R48), never an "obligation".
   - This covers an item's `summary` and `detail`, every sentence under it, and the words of its options.
@@ -88,6 +91,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 - `link-sweep`: `sweepConditions`, `SWEEP_CONDITION_KINDS` (its R11; R4).
 - `network-notices`: `noticesOf` (its R22; R5).
 - `civil-time`: `localDay`, `dayRange`, `span`, `isCalendarDate` (R10).
+- (T50; R15) `run-rules`: `runPrincipalOf`; `setup-words`: `word`. New `modules.json` edges, each to an earlier module.
 
 ### Invariants
 

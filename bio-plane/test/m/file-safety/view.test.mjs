@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, pdf, sha, enc, T0 } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { FILE_SAFETY_CHECKS, FILE_SAFETY_POLL_MS, derivedKey, fileSafetyOps } from "../../../src/file-safety/index.mjs";
 
 const row = (code) => ({ check: FILE_SAFETY_CHECKS[code].check, translation: FILE_SAFETY_CHECKS[code].translation });
@@ -198,7 +199,7 @@ test("R43 (T47; N941, K231): with a renderer bound, a render queue that cannot b
   const COUNTS = ["rendered", "failed", "none", "data", "copies", "remaining"];
   assert.deepEqual({ ...FILE_SAFETY_CHECKS.RENDER_QUEUE_UNREADABLE }, { check: "C-140.43",
     where: "src/file-safety/index.mjs renderBatch > is-render-queue-readable",
-    translation: "The files waiting for a safe view could not be read just now, so nothing was rendered. They are read again on the next round." });
+    translation: word("refusal.RENDER_QUEUE_UNREADABLE") });
   const w = world({ scan: { copyScan: () => ({ result: "clean" }) } });
   const ct = await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   w.exec("UPDATE fs_tools SET use = 'routine' WHERE tool_id = ?", ct);

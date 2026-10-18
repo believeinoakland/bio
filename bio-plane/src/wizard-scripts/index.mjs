@@ -19,7 +19,7 @@
  *   record           layer 2: `transact`, `mintOpaqueId`, `declarePurge`, `registerMintSeed`.
  *   membership       `positionalMember` (R76), `memberFacts` (R68), `isJoinedParticipant`, `isProjectOwner` (R54),
  *                    `isAdministrator` (R64), `projectOwners` (R65), `activeAdmins` (R86), `inSight` (R80); and
- *                    `viewerPredicate` (R43), `notAnAdmin` (R84).
+ *                    `viewerPredicate` (R43), `notAnAdmin` (R84), `sessionRights` (R92; R40).
  *   filingTemplates  `offeredVersion` (its R25), for a `{template}` draft (R2, R12).
  *   accounts         `ai-accounts`' `aiKeptAway` (its R7; T37, N765, K231; T48, N996): whether the group keeps its material
  *                    away from AI, read at each writing-help call (R24, R27), the one reading of keep-away; reached on
@@ -52,6 +52,7 @@ export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLAS
 export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE, CIVICSMITH_LIBRARY_ADOPTED_SOURCES } from "./civicsmith-library.mjs";
 export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
 export { FRONT_DOORS, FRONT_DOORS_SOURCE, ELSEWHERE_DOOR } from "./front-doors.mjs";
+export { INSTALLER_ROUTES, registryActGaps } from "./data.mjs";
 export { START_ROUTES, MATCH_KINDS, MATCHES_MAX, PARTS_MAX, matchesOf, proposeStart, checkStartProposal } from "./start.mjs";
 export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, factsOf, sentencesOf, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
          WRITING_HELP_NAMED, TOLD_MAX, KEPT_AWAY } from "./writing-help.mjs";
@@ -220,7 +221,7 @@ function screenActs(s, ops) {
 /** R13: a registration's parts, normalised: the screens by id, the ops (null when none was given), the acts a machine is
  *  refused, the labelled machine drafts and the library. */
 export function normaliseRegistration({ screens = [], ops = null, machineRefused = [], machineDrafts = [], irreversible = [],
-                                        library = [] } = {}) {
+                                        library = [], adminActs = [], adminScreens = [] } = {}) {
   const opSet = ops === null || ops === undefined ? null : nameSet(ops);
   const sc = new Map();
   for (const s of Array.isArray(screens) ? screens : [])
@@ -233,7 +234,7 @@ export function normaliseRegistration({ screens = [], ops = null, machineRefused
   const drafts = nameSet(machineDrafts);
   const reg = { screens: sc, ops: opSet, machineRefused: nameSet(machineRefused),
                 machineDrafts: opSet ? new Set([...drafts].filter((o) => opSet.has(o))) : drafts,
-                irreversible: nameSet(irreversible), library: lib };
+                irreversible: nameSet(irreversible), library: lib, adminActs: nameSet(adminActs), adminScreens: nameSet(adminScreens) };
   reg.helpRefused = helpRefusedActs(reg);
   reg.withheld = withheldLibrary(reg);
   return reg;
@@ -785,11 +786,11 @@ export class WizardScripts {
    *  script is checked again: one that fails is recorded `broken` with its first refusal, one that passes again is
    *  recorded as returned. */
   wizardRegister({ screens = SCREEN_REGISTRY, ops = null, machineRefused = [], machineDrafts = [], irreversible = [],
-                   library = CIVICSMITH_LIBRARY, door = null } = {}) {
+                   library = CIVICSMITH_LIBRARY, door = null, adminActs = [], adminScreens = [] } = {}) {
     /* DEC-49 REGION is-wizard-register */
     if (this.reg) return refuse("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
     /* END DEC-49 REGION is-wizard-register */
-    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library });
+    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library, adminActs, adminScreens });
     /* R23: `door.findExisting(message, viewer)` (the existing work matching a message: `steps`' `stepsLike` and the
        record's search, as the plane composes them) and `door.pointer(viewer)` (the "not Civicsmith's" pointer, profile
        data), each optional, K31's pattern */
@@ -1378,7 +1379,16 @@ export class WizardScripts {
    *  finder); and, when the assistant's reading `parts` of the message is given, `proposal`, R28's. Needs no AI
    *  credential and no key; starts nothing, records no use, writes nothing. */
   startFrom({ viewer = null, message = null, parts = undefined } = {}) {
-    const offered = this.#offeredScripts(viewer);
+    /* R40: a library script whose first step is an administrator's (its act among the registration's `adminActs`, or with
+       no act on an `adminScreens` screen) is offered only to a viewer who administers (membership R92) */
+    const reg = this.#registration();
+    const administers = this.#call(() => this.membership.sessionRights(viewer))?.administer === true;
+    const adminFirst = (x) => {
+      if (x.s.origin !== "civicsmith") return false;
+      const t = isObj(x.steps[0]) ? x.steps[0] : {};
+      return typeof t.act === "string" && t.act ? reg.adminActs.has(t.act) : reg.adminScreens.has(t.screen);
+    };
+    const offered = this.#offeredScripts(viewer).filter((x) => administers || !adminFirst(x));
     const scripts = offered.filter((x) => !(x.s.origin === "civicsmith" && x.s.required))
       .map((x) => ({ id: x.s.id, version: versionId(x.s.id, x.n), name: x.s.name, start: startOf(x.steps) }));
     /* R33: a door names any script offered to this viewer, a required one included (the guided starts leave those out) */

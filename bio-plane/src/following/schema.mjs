@@ -117,6 +117,30 @@ CREATE TABLE IF NOT EXISTS policy_versions (
   bundle_id   TEXT,
   at          TEXT NOT NULL,
   UNIQUE (follow_id, seq)
+);
+
+-- R32: a member's watch marks, one row per setting or taking off, never edited; the latest row of an (item, member)
+-- governs. member is the setter's identity (member:<id>, or admin); bundle_id the item's bundle, null for an entity.
+CREATE TABLE IF NOT EXISTS watch_marks (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  item        TEXT NOT NULL,
+  bundle_id   TEXT,
+  member      TEXT NOT NULL,
+  on_mark     INTEGER NOT NULL,
+  at          TEXT NOT NULL
+);
+
+-- R33: the team's second-look flags, one row per flag; a flag is cleared once, by a field of the same row, and stays.
+-- raised_by and cleared_by are identities (member:<id>, or admin), answered as handles (membership), never as these.
+CREATE TABLE IF NOT EXISTS second_looks (
+  flag_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  item        TEXT NOT NULL,
+  bundle_id   TEXT,
+  raised_by   TEXT NOT NULL,
+  note        TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  cleared_by  TEXT,
+  cleared_at  TEXT
 );`;
 
 const t = (name, cls) => ({ name, purge: "clear", expunge: "none", export: "admin-only", derive: "stored", version_chain: false, ...cls });
@@ -133,6 +157,10 @@ export const FOLLOWING_TABLES = Object.freeze([
   t("follow_ends", { keys: [], sight: "group" }),
   t("watch_links", { keys: ["home"], sight: "bundle" }),
   t("watch_answers", { keys: ["home"], sight: "bundle" }),
+  /* R32: read back only to the member who set it (the standing question's classes, `answers`): no export carries it */
+  t("watch_marks", { keys: ["bundle_id"], sight: "owner", export: "never" }),
+  /* R33: seen by every member who may see the item */
+  t("second_looks", { keys: ["bundle_id"], sight: "bundle" }),
 ]);
 
 export function migrateFollowing(sql) {

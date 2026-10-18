@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { open, all, texts, WORDS, SCREENS, SCREEN_WORDS, JOINED, FOUNDER, OLD_FOUNDER, AN_ADMIN, word, hasWord, sentence, unescape, squash } from "./kit.mjs";
+import { open, all, texts, WORDS, SCREENS, SCREEN_WORDS, JOINED, FOUNDER, OLD_FOUNDER, AN_ADMIN, word, hasWord, sentence, unescape, squash, used } from "./kit.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const REGISTRY = JSON.parse(fs.readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
@@ -144,7 +144,7 @@ test("R9 the contract: six screens, each a registry screen in its frame; every a
   }
 });
 
-/* R21: the keys this module reads are words-reads.json's `reads` for it, with every key a requirement here names */
+/* R21: the keys this module reads, by key; R24 below: which list they are checked against */
 const READS = JSON.parse(fs.readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["screens-entry"];
 const NAMED = ["signin.handle.help", "forgot.handle.help", "screen.setup.handle", "screen.setup.handle.help", "refusal.NO_HANDLE", "refusal.BAD_HANDLE",
   "refusal.HANDLE_TAKEN", "refusal.HANDLE_FIXED", "refusal.ALREADY_CLAIMED", "founder.handle.title", "founder.handle.says", "founder.handle.choose",
@@ -169,12 +169,35 @@ test("R21 words by key: no row of its own (SCREEN_WORDS is empty); every key eac
   assert.equal(hasWord("screen.setup.nonesuch"), false);
 });
 
-test("R21 the keys read are words-reads.json's for this module with every key a requirement here names, and no other", () => {
-  const read = new Set(SCREENS.flatMap((s) => s.words).filter((k) => !/^act\./.test(k)));
-  const want = new Set([...READS.reads, ...NAMED]);
-  assert.deepEqual([...read].filter((k) => !want.has(k)).sort(), [], "read beyond the list");
-  assert.deepEqual([...want].filter((k) => !read.has(k)).sort(), [], "listed but not read");
-  for (const k of READS.retired) assert.ok(!read.has(k), k);
+/* R24 (DEC-278; K3421, K3436): the key list is the module's own. words-reads.json's generator, run over T49's code,
+   lists neither the act labels these screens read nor T50's setup keys (DEC-279), so the second route R24 names is
+   taken: the module's declared keys (each screen's `words`) are each held by hasWord, and every key a screen draws, in
+   every state the tests below reach, is one of them. */
+const declared = new Set(SCREENS.flatMap((s) => s.words));
+const undeclared = (keys) => [...keys].filter((k) => !declared.has(k)).sort();
+test("R24 every key the module draws is one it declares and hasWord holds; the two retired keys are in neither; control: a key drawn but not declared fails", async () => {
+  for (const k of declared) assert.ok(hasWord(k), `${k} is declared but no word holds it`);
+  // R21: every key a requirement here names is read
+  for (const k of NAMED) assert.ok(declared.has(k), `${k}, named by a requirement, is not read`);
+  // every screen in its states, and the acts that reach the others
+  for (const [id, o] of STATES) await open(id, { ...o, table: o.table || PLANE });
+  const s = await open("setup", { fragment: { boot: SECRET.otp }, table: PLANE });
+  await s.press("claim", { values: { "su-handle": "rivera", "su-pw": SECRET.pw, "su-pw2": SECRET.pw } });
+  const f = await open("setup", { me: FOUNDER, table: { ...PLANE, aikeepawaystate: { ok: true, result: { on: false } }, groupkeystate: { ok: true, result: { on: true, held: true } } } });
+  f.fields["su-ai-1"] = true; await f.tick(300);
+  f.fields["su-ai-1"] = false; f.fields["su-ai-0"] = true; f.fields["su-pay-1"] = true; await f.tick(300);
+  f.fields["su-site-1"] = true; await f.tick(300);
+  // the dates are the shell's (`cs.date`), and the numbered sentences of HOSTING_CONTROL and FORGOT_HELP are read until
+  // the first number the list does not hold, which is asked and not drawn
+  const probe = /^screen\.(hosting|forgot\.help)\.s\d+$/;
+  const drawn = new Set([...used()].filter((k) => !/^date\./.test(k) && !(probe.test(k) && !hasWord(k))));
+  for (const k of drawn) assert.ok(hasWord(k), `${k} is drawn and no word holds it`);
+  for (const id of ["front", "tour", "forgot", "reset", "setup", "join"]) assert.ok(SCREENS.find((x) => x.id === id).words.length);
+  assert.deepEqual(undeclared(drawn), [], "drawn but not declared");
+  for (const k of RETIRED) { assert.ok(!declared.has(k), k); assert.ok(!drawn.has(k), k); }
+  for (const k of READS.retired) { assert.ok(!declared.has(k), k); assert.ok(!drawn.has(k), k); }
+  // control: a key drawn that is not declared is found
+  assert.deepEqual(undeclared(new Set(["screen.setup.nonesuch.drawn"])), ["screen.setup.nonesuch.drawn"]);
 });
 
 test("R21 over fixtures, what the screens draw for a sample of their keys equals setup-words' word(key, vars)", async () => {

@@ -20,7 +20,7 @@ const en = (key) => {
 };
 const A = V("alice");
 const rows = ft.FILING_TEMPLATE_CHECKS;
-/* the RFC row's word: the module's own (DEC-234, K3357); pinned as r33.test.mjs pins it */
+/* the RFC row's word, read by key from words.json (DEC-260); pinned as r33.test.mjs pins it */
 const RFC_TRANSLATION = "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.";
 const AT = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
 /* C-125.33 as T45 worded it: answered no longer. */
@@ -41,8 +41,9 @@ test("R29 C-125.33 TEMPLATE_NOT_REVIEWED reads words.json's refusal.TEMPLATE_NOT
   assert.deepEqual(Object.keys(ft.FILING_TEMPLATES_WORDS), ["refusal.TEMPLATE_NOT_REVIEWED", "refusal.RFC_QUOTING_MISSING"],
                    "the table holds exactly the rows' keys");
   assert.equal(ft.FILING_TEMPLATES_WORDS["refusal.TEMPLATE_NOT_REVIEWED"], en("refusal.TEMPLATE_NOT_REVIEWED"), "verbatim from words.json, by key");
-  /* the RFC row's word is the module's own (DEC-234, K3357), pinned in r33.test.mjs, absent from words.json */
+  /* the RFC row's word is read by key (DEC-260), pinned in r33.test.mjs */
   assert.equal(ft.FILING_TEMPLATES_WORDS["refusal.RFC_QUOTING_MISSING"], RFC_TRANSLATION, "the module's own word");
+  assert.equal(ft.FILING_TEMPLATES_WORDS["refusal.RFC_QUOTING_MISSING"], en("refusal.RFC_QUOTING_MISSING"), "by key from words.json");
   const row = rows.TEMPLATE_NOT_REVIEWED;
   assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"]);
   assert.deepEqual([row.check, row.where], ["C-125.33", AT("#profileRefusal", "is-profile-offered")]);

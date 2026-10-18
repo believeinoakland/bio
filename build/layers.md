@@ -1,10 +1,10 @@
 # The layers
 
-**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T4), as drafted by BOB #37 the same day with his rulings (below), including the Understanding layer. AMENDED by Bob 2026-09-26: the Action layer (layer 9, below), splitting the old layer 8 into Publication (8) and Operations (10); 11 layers, 58 modules. A view of it is `layers-view.html`, beside this file. The modules, in their total order, are in `modules.json`. Sources: the construct map (`BIO_System_Design.md` §3–§4) and the code as it stands (imports measured 2026-09-25). Each layer's modules may use modules earlier in the order only (P4). AMENDED at T17's close, 2026-09-30 (K608, K617): layer 9's contract and row, action-clocks (split from actions), action-plans. AMENDED at T18's opening, 2026-09-30, by a worker for BOB #75 (K585 (4), K589, K617, K624): `record-grammar` heads layer 1, before `legacy-checks` (Helper modules, below); `control-plane` split three ways for size, `op-declarations` and `admission` directly before it in layer 11 (below). AMENDED on `tranche/T18`, 2026-09-30, by a worker for BOB #75 (K617, K649 (1)): `capture` and `ai-runs` split for size, `acquisition` directly before `capture` in layer 3 and `run-rules` directly before `ai-runs` in layer 6 (below). AMENDED on `tranche/T18`, 2026-09-30, by a worker for BOB #75 (K617, K651): `publication` split four ways for size, `case-grammar` directly before it and `public-read` and `project-stage` directly after it in layer 8 (below). AMENDED on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2): `docprofile` split for size, `site-profiles` directly before it in layer 1 (below). AMENDED on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K636 BOB-1, K637, K653 BOB-2): `membership` split for size, `credentials` directly after it in layer 2 (below). AMENDED on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2): the catalogue's inquiry grammar taken from `legacy-checks` as `inquiry-grammar`, directly before `inquiry` in layer 6 (below). AMENDED on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2): the catalogue's action share and `actions`' grammar taken as `action-grammar`, directly before `actions` in layer 9 (below). AMENDED on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2, K749): the composition root and the plane's deployment config taken from `legacy-store` and `legacy-index` as `plane`, directly after `control-plane` in layer 11 (below). AMENDED on `tranche/T22`, 2026-10-02, by BOB #91 (K617, K1024): `publication` split a second time, `corpus-export` directly before it in layer 8 (below). AMENDED on `tranche/T25`, 2026-10-02, by BOB #101 (K617, K1193, K1219; N512, N513): `provenance` split for size, `attestation` and `provenance-routes` directly after it in layer 3; `extraction` split for size, `reading-pipeline` directly before it in layer 4. AMENDED by a worker for BOB #103, 2026-10-02 (N520; K1256, K1257; DEC-116, DEC-100): `docket`, a new product module, directly after `publication` in layer 8 (below). AMENDED at T28's opening by a worker for BOB #104, 2026-10-03 (N519, N520; K1256, K1257, K1268, K1277; DEC-112): `case-checker` and `case-import`, new product modules, directly after `ratification` in layer 8 (below). AMENDED at T28's opening by a worker for BOB #104, 2026-10-03 (N522; K1273; DEC-96 items 1, 4): `accepted-work`, a new product module, directly after `inquiry-grammar` in layer 6 (below). AMENDED at T41's opening by a worker for BOB, 2026-10-09 (K657, K1043, K2405, K2418; N820, N823): four new product modules Bob approved (D51 A, D1), placed by BOB: `steps`, `reading-guides` and `question-explorer` in layer 6, `investigation` in layer 7; and `publication` split a third time for size, `publish-schedule` directly after it in layer 8 (below).
+**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T4), AMENDED by Bob 2026-09-26 (the Action layer, layer 9, splitting the old layer 8 into Publication (8) and Operations (10)). 11 layers. A view of it is `layers-view.html`, beside this file. The modules, in their total order, are in `modules.json`. Each layer's modules may use modules earlier in the order only (P4). The record of each split and amendment, with its rulings and line counts, is in `plan/archive/layers-history.md` (moved out 2026-10-17, K3679); this file holds only what binds a job working in a layer today.
 
 | layer | name | constructs (System Design §3) | contract | modules |
 | --- | --- | --- | --- | --- |
-| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | record-grammar, jurisdictions, civil-time, calc-grammar, connection-grammar, test-support, runtime-limits, signatures, bundler, court-citations, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, site-profiles, docprofile, doctypes, legistar-reader, roster-reader, court-doctypes, budget-doctypes, image-codecs, pdf-pixels, image-cover, doc-clean, pdf-worker, ocr-worker, sheet-worker, file-scanner |
+| 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | setup-words, record-grammar, jurisdictions, civil-time, calc-grammar, connection-grammar, test-support, runtime-limits, signatures, bundler, court-citations, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, site-profiles, docprofile, doctypes, legistar-reader, roster-reader, court-doctypes, budget-doctypes, image-codecs, pdf-pixels, image-cover, doc-clean, pdf-worker, ocr-worker, sheet-worker, file-scanner |
 | 2 | Record and authority | 3, 1 | Owns storage, id allocation, leases, audit and purge; the member, the capability and the fence; the one write path that promotes and checks a bundle. | record-core, membership, project-roster, ai-accounts, credentials, promotion |
 | 3 | Intake and provenance | 2 | Material enters only with provenance; a hop attests bytes, URL and time, no more. | host-governor, provenance, attestation, provenance-routes, capture-sources, acquisition, capture, doorbell, file-safety, sources |
 | 4 | Content | 4, 5 | Readings are made from captured bytes; content is the reference to a part of a document, minted over them. | calibration, reading-pipeline, extraction, content |
@@ -14,7 +14,7 @@
 | 8 | Publication | 16 | What the group stands behind leaves one way. | case-grammar, corpus-export, case-carriage, case-tensions, publication, publish-schedule, docket, public-read, project-stage, network-notices, case-catalogue, ratification, case-checker, case-import, case-disclosures, case-account, case-inputs, case-authoring, review, case-check |
 | 9 | Action | 16 (`BIO_Action_v0_2.md`); Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on the record, and one asserting a breach rests on a member's determination, against a standard held in the record, on findings published, checked for publication and held, or accepted from another group (v0.2 §2, K2780); the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis. | conformance, consequences, action-grammar, action-records, actions, action-holds, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work |
 | 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, following, link-sweep, scheduler |
-| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | setup-words, wizard-scripts, op-grades, affordances, tasks, machinery-producers, action-producers, queue-producers, notice-producers, queue, instance-setup, op-capabilities, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, legacy-ui, installer, site, stewards, journey-check |
+| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | wizard-scripts, op-grades, affordances, tasks, machinery-producers, action-producers, queue-producers, notice-producers, queue, translations, instance-setup, op-capabilities, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, legacy-ui, installer, site, stewards, journey-check |
 
 ## No jurisdiction in the product (Bob's concern, 2026-09-25; ruled by BOB #37)
 
@@ -31,15 +31,13 @@ The work this makes is in `plan/next.md`. The UI is worked on elsewhere and carr
 
 ## The legacy modules (PROCESS-MECHANICS §12)
 
-| legacy module | file | lines | why it sits where it does |
-| --- | --- | --- | --- |
-| legacy-checks | *(retired at T19's close, 2026-10-01, K858: emptied and deleted by control-plane R43)* `bio-plane/checks/bio-checks.mjs` | 16,591 | It is the whole check catalogue, one set per construct, and it imports nothing. It was first in the order because modules in every layer use it; since T18 it is second, after `record-grammar`, the shared grammar it re-exports while importers re-point (K585 (4)). Each extracted module takes its own checks, which are its invariants. |
-| legacy-store | *(retired at T19's close, 2026-10-01, K858: emptied and deleted by plane R8; its residue held in `src/plane/held.mjs` until T20, then registered by each owner and the file deleted (plane R10, K842, K923))* `store.mjs`, `schema.mjs` | 54,618 and 4,287 | It is last among the store-backed modules, so extraction runs bottom-up: an extracted module never calls back into it, and it calls the extracted modules. |
-| legacy-index | *(retired at T19's close, 2026-10-01, K858: emptied by its extractions; `tools/` deleted by LEGACY-INDEX #12; `src/index.mjs` left as plane's one-line re-export until bundler's T20 job (K846))* `index.mjs` | 13,438 | It is after legacy-store, because it imports it. |
-| legacy-ui | `civicos-ui/` | 26,489 in `app.html` | It talks to the plane over HTTP only. |
-| legacy-tests | *(retired at T22's opening, 2026-10-01, K1006, N478: its 11 paths deleted, its 75 files re-owned by their modules, `plan/draft-legacy-tests-recut.md` §2)* `bio-plane/test/`, `civicos-ui/test/` and the UI's two check scripts | the old battery | Added 2026-09-26 by BOB #38 (P17). The old battery tests every layer, so it is last in the order and may use anything earlier. The extracted modules' own tests live in `bio-plane/test/m/<module>/`, which the most specific path assigns to each module. It shrinks as extraction replaces it (C5) and is retired when empty. |
+`legacy-checks`, `legacy-store`, `legacy-index` and `legacy-tests` are retired (K858 at T19's close, 2026-10-01; K1006, N478 at T22's opening). Their rows, with their line counts, are in `plan/archive/layers-history.md`. What remains binding:
 
-A module marked `from` in `modules.json` is extracted from that legacy module by its own job. Which functions go to which module is an informed guess from their names (for example `promote`, `reopen`, `captureProgressions`). The extraction job reads the legacy code and confirms it.
+| legacy module | file | why it sits where it does |
+| --- | --- | --- |
+| legacy-ui | `civicos-ui/` (26,489 lines in `app.html`) | It talks to the plane over HTTP only. |
+
+`src/index.mjs` stays as plane's one-line re-export until bundler's T20 job (K846). The old battery (legacy-tests) tested every layer, so it was last in the order and might use anything earlier (BOB #38, P17); the extracted modules' own tests live in `bio-plane/test/m/<module>/`, which the most specific path assigns to each module. A module marked `from` in `modules.json` is extracted from a legacy module by its own job; the extraction job reads the legacy code and confirms which functions go to the module.
 
 ## Bob's rulings on the draft, 2026-09-25
 
@@ -67,7 +65,6 @@ What the layer above gets from it: monitoring watches what objectives and findin
 
 ## Layer 9, Action (Bob, 2026-09-26; drafted by BOB #38, APPROVED by Bob the same day)
 
-Bob: once a group publishes a finding, the finding may claim that the government has acted out of conformance with a regulation, a court decision, stated public policy or another requirement. **The Action layer holds the modules that support the group in acting to bring the government back into conformance.** The canon already specifies this work: Functional Architecture v3 "Layer 3: Action" (escalate, communicate, track toward resolution) and "Function 1: Compare actions to standards"; Design Requirements v2 §7 (the six-stage escalation protocol) and §8 (evidence separated from legal strategy, three risk tiers); Roadmap v5 §8 (evidence packages); State Rules v1.5 §4.4 (the Action object and its clocks). Since 2026-09-30 the layer's level-1 home is `BIO_Action_v0_1.md` (System Design §3 row 16, canon whole, K608), which gathers these and Case Making's action plan (K590). T4 compressed all of it into one module, `actions`, inside layer 6. Nothing uses `actions` today, so it can move up freely.
 
 **Where it sits.** After publication, because a finding is published before a group acts on it, and a filing leaves the instance the way publication delivers. Before monitoring, because monitoring watches the actions' clocks and the government's response. So the old layer 8 split, and the order is: 7 Understanding · **8 Publication** (publication) · **9 Action** · **10 Operations** (monitoring, scheduler, legacy-store) · 11 Interface and distribution.
 
@@ -84,41 +81,10 @@ Bob: once a group publishes a finding, the finding may claim that the government
 | escalation | The stages (discovery and documentation, notification, clock starts, response evaluation, legal tools, sustained attention, and political accountability, ruled below), each with entry and trigger conditions; the next stage is proposed when its trigger is met, and a member advances it. It ends only when compliance is restored and the consequences are addressed. | Design Requirements §7, Functional Architecture Functions 3 and 5 |
 | action-plans | A project's working material for deciding what to do about one or more matters, suspected (an inquiry still open) or determined (a determination's outcomes): options the assistant suggests or a member adds, each bound to the matters it serves; the member's choice; up to three scenarios over time with checkpoints a member judges; and the link from each started option to the action it created. No catalogue of options, no budgets, never published; a member closes it with a reason. | `BIO_Action_v0_1.md` §3–§4; Bob, 2026-09-29 and 2026-09-30 (K590) |
 
-Uses, all earlier in the order: `standards` uses jurisdictions, record-core, content; `conformance` uses standards, inquiry, strength, reevaluation, publication, case-check, case-import, accepted-work; `consequences` uses conformance, inquiry, strength, content; `actions` uses conformance, consequences and its current uses; `filings` uses actions, standards, publication, jurisdictions; `escalation` uses conformance, consequences, actions, filings. `action-clocks` uses actions, jurisdictions, retrieval, promotion; `filings` gains action-clocks. `action-plans` uses conformance, actions, action-clocks, escalation, filings, standards, inquiry, strength, jurisdictions. `monitoring` gains actions and escalation, and action-clocks at the split.
-
 **Bob's rulings on the draft (2026-09-26).**
 1. *Significance.* Consequences are computed from the record where it holds the figures; where they cannot be, they are marked undetermined, and members determine them from the record and their own assessment (the `consequences` row above). Significance, whether a breach warrants action and how urgently, stays the member's judgment.
 2. *Tier 3.* `filings` prepares a counsel packet for named counsel (the `filings` row). This amends Design Requirement 8.
 3. *Political stage.* Escalation gains stage 7, **political accountability**, entered from response evaluation or legal tools and aimed at compliance restored and consequences addressed: asking elected officials to act on the breach, oversight and audit requests, testimony, and legislation that restores or enforces an existing requirement. Policy advocacy and candidate support stay out; Operational Principle 1 stands. This amends Design Requirement 7.
-
-**What it changed.** `modules.json` gained five modules and moved `actions`; the layers renumbered to eleven (58 modules). Layer 1 is unaffected except `jurisdictions`, whose profile gains the sources of standards, the offices addressed, the action kinds with their tiers and venues, and the legal deadlines these modules read: R23–R30 of its requirements, approved by Bob 2026-09-26, built with the module itself (entries N1 and N11).
-
-**The Action layer's fold (T17's close, 2026-09-30; K590, K597, K600, K608, K611, K613–K615, K617).** Bob approved the Action design (`BIO_Action_v0_1.md`) as canon and ruled the layer a priority (K608 (2)). The contract above was re-worded; `actions` was split for size into `actions` and `action-clocks` (K617), and `action-plans` joined the layer, last; `actions`, `filings`, `escalation`, `monitoring`, `scheduler`, `queue`, `queue-producers`, `skills` and `jurisdictions` gained requirements (`build/plan/action-fold/deltas/`, with the reminder rulings K613–K615).
-
-## Layer 11: the control-plane split (K617, K624 (1), (2); T18's opening)
-
-`control-plane` passed the 4,000-line mark (6,578 lines at T17's close), and a two-way split left ~4,470, so it is split three ways with no requirement changing meaning; each new module is a product module with no `from` (`from` names a legacy module only), built by copy in its own job and merged early, and `control-plane`'s job, after them, deletes its copy and re-points (K624 (1)).
-
-| module | what it does | source |
-| --- | --- | --- |
-| op-declarations | What each op is: its spec (the classes that reach it, whether it mutates), the act lists that drive the stamps and the fences, the two session sets, the capability each op needs, the recorded decisions that a verb is not a person's, and the act gate read from those tables. Pure data. | `control-plane/ops.mjs`; `control-plane` R31, R34 |
-| admission | Who may call an op: the namespace gates, the binding classes, the agent credential's resolution, confinement and task scope, the session gate, the class and capability gates and the bearer fences, with their refusal rows. | `control-plane/index.mjs` (`classify`, `scopeFor`, the gates, `sessionOpGate`, the admission region); `control-plane` R3–R14, R19 |
-| control-plane | The door: routing, the stamps, the answer's decoration and envelope, the store's dispatch, the pull. | what remains |
-
-Uses: `op-declarations` uses affordances (`decorate`, for the act gate); `admission` uses runtime-limits, membership and op-declarations; `control-plane` gains both.
-
-## Layers 3 and 6: the capture and ai-runs splits (K617, K649 (1); T18)
-
-`capture` (3,704 lines) would pass the 4,000-line mark with the catalogue shares its acquisition act needs, and `ai-runs` (4,204) is past it, so each is split in two with no requirement changing meaning. Each new module is a product module built by copy in its own job and merged early; the source module's job, after it in the same layer, deletes its copy and leaves a re-export for importers not yet re-pointed (K624 (1)).
-
-| module | what it does | source |
-| --- | --- | --- |
-| acquisition | The acquisition act: fetches a document (directly, through a Drive export, from a web archive, or rendered), hashes and stores it as it arrives, records the receipt, profiles it, captures a page's supporting files, requests co-attestation and answers the provenance document; the one CivicOS user agent. It reaches what `capture` keeps about sources and sites through the capture store its caller hands in. `from` `legacy-checks`: C-83, C-48.1–C-48.7, C-28.13 and the user agent. | `capture/acquire.mjs`; `capture` R1–R7, R9–R14, R16–R20, R33–R36, R41, R42, R60–R62 |
-| capture | What capture keeps: the evidence store, reachability, site assets, links and chrome, sessions, the platform's ceiling, the render allowance, the event queue, the doorbell; its `acquire` hands its store to `acquisition`. | what remains |
-| run-rules | The AI run's rules without a store: bounds, endings, statuses, the checks on bounds, consumption, principals, contexts and skill versions, the state's size, the one deployment order, and the run's refusal rows. No `from`. | `airun.mjs`, `ai-runs/checks.mjs`, `deployment.mjs`, `skill-version.mjs`; `ai-runs` R1–R8, R44 |
-| ai-runs | The run itself: open, tick, close, the one exit, reaping, waking, reads, the surfacing step and the bounds' spending. | what remains |
-
-Uses: `acquisition` uses jurisdictions, subresources, odf-reader, format-registry, docprofile, record-core, host-governor, provenance and capture-sources; `capture`, `extraction`, `capture-requests`, `ratification`, `monitoring` and `instance-setup` gain it. `run-rules` uses observation-log; `ai-runs`, `run-productions`, `capture-requests`, `skills`, `agent-worker` and `control-plane` gain it.
 
 ## Helper modules (BOB #38, 2026-09-26, under P17)
 
@@ -134,194 +100,16 @@ Declared uses the code already had were added (affordances, query-language and s
 
 `docs/`, `requirements/`, `build/`, `tools/`, `release/` and the old process's `.claude/` hooks are not modules. `release/` is produced by the distribution process (mechanics §11). `tools/` is the old process's tooling, retired at T7 (TRANSITION §5, C3).
 
-## Layer 8: the publication split (K617, K651; T18)
-
-`publication` (6,185 lines) is past the 4,000-line mark, and neither a two-way cut (~4,345 left) nor a three-way one (~4,080) gets it under, so it is split four ways with no requirement changing meaning (seam read `build/extraction/publication-split.md`). Each new module is a product module with no `from`, built by copy in its own job and merged early; `publication`'s job, after them in the layer, deletes its copies and re-exports `case-grammar` (K624 (1)). Neither later module owns a table: each reads `publication`'s under its R40 and calls only its public services (R53–R55).
-
-| module | what it does | source |
-| --- | --- | --- |
-| case-grammar | The case document's grammar, pure: the formats and their predicates, the `/5` blocks and tension section, the section locators and the attribution run's text, the signed citations, and the edge set a finding rests on. | `publication/checks.mjs` 14–48, `index.mjs` 188–320, `blocks.mjs`, `tensions.mjs`; `publication` R20 |
-| publication | Every table and every write: the case document and relation, the case-level reads, attribution, export, the commits, and the services `public-read` calls. | what remains |
-| public-read | The published record served without a credential, and its packaging: verify, the lists, the published case, the manifest, published bytes, the Worker's routes and relays, the container, the in-band quartet, the evidence-package block. | `publication/index.mjs`' public reads, `worker.mjs`, `container.mjs`, `inband.mjs`; `publication` R8–R11, R13, R15 (part), R16, R36, R48 |
-| project-stage | A project's stage, what each stage has earned and needs, and its work products' readiness, derived at the read. | `publication/index.mjs` 94–169, 1330–1544; `publication` R44–R47, R49 |
-
-Uses: `case-grammar` uses legacy-checks; `publication` gains it (and drops signatures and ooxml once the Worker files leave its paths); `public-read` uses legacy-checks, signatures, ooxml, case-grammar and publication; `project-stage` uses legacy-checks, record-core, membership, inquiry, basis-versions and publication; `ratification`, `filings` and `control-plane` gain `public-read`.
-
-## Layer 8: publication's second split (K617, K1024; T22)
-
-`publication` (3,690 lines) would pass the 4,000-line mark with R32's verifying import (A42) and its T22 shares, so the working-corpus export moves out with no requirement changing meaning (seam map `build/extraction/corpus-export.md`). `corpus-export` is a product module with no `from`, built by copy in its own job and merged first in the layer; `publication`'s job, after it, deletes its copy, creates it, and keeps its ops `export` and `exportlog` as delegates (K624 (1)). It owns the table `export_log`.
-
-| module | what it does | source |
-| --- | --- | --- |
-| corpus-export | The verified working-corpus export, its append-only log, and the verifying import (R3, not yet met). | `publication/index.mjs` 89–94, 1919–2007, `schema.mjs` 566–578, 592; `publication` R18, R19, R32, R31 (part) |
-
-Uses: `corpus-export` uses record-grammar, record-core, provenance and connections; `publication` gains it.
-
-## Layer 8: network-notices (DEC-111, K1019, K1031, K1100; T23's opening, K1113)
-
-A new product module, not a split: a project's owner tells the network that the group is working on something, and the copy keeps the notice honest (`build/requirements/network-notices.md`, from `plan/draft-network-notices.md`). It has no `from` and is created by its own T23 job at `bio-plane/src/network-notices/`; its paths and tests are added to its `modules.json` entry by that job (K1043's form). It sits directly after `project-stage` (closing needs `projectStage`) and before `ratification` and `case-authoring` (they call `openSeals` and `noticeReferenceOf`).
-
-| module | what it does | source |
-| --- | --- | --- |
-| network-notices | "Working on" notices: owner-signed revisions, instance-signed attestations (activity level, cases, seals, closing or lapse), weekly timestamped seals opened at publication, and the group's public signing keys, served on the public path. | new (DEC-111; `BIO_Publication_v0_1.md` §5B) |
-
-Uses: `network-notices` uses record-grammar, signatures, record-core, membership, credentials, promotion, host-governor, provenance, capture, publication, public-read and project-stage; `ratification`, `case-authoring`, `scheduler`, `queue-producers`, `control-plane` and `plane` gain it. (Fold 1a, K1094, N486: `monitoring` gains `project-stage`.)
-
-## Layer 8: docket (DEC-116, DEC-100; N520, K1256, K1257)
-
-A new product module, not a split: each published case's docket, the dated entries beside it that grow while its signed editions never change (`build/requirements/docket.md`, from `plan/draft-T24-dec116.md`). It holds the three shelves, the manager's signed public entries, the required core, standing, take-back and the withdrawal of an edition, and answers the public shelves and a feed per case. It has no `from` and is created by its own T27 job at `bio-plane/src/docket/` (tests `bio-plane/test/m/docket/`); its paths and tests are added to its `modules.json` entry by that job (K1043's form). It sits directly after `publication` (it reads the editions, under `publication` R40) and before `public-read` (which serves the docket, its feed and a withdrawn edition's stamp directly) and `network-notices` (which lists the keys that signed docket entries). No existing module holds it under 4,000 lines (P6): `publication` measures 3,633.
-
-| module | what it does | source |
-| --- | --- | --- |
-| docket | A case's docket: record entries any member files, public entries the manager signs (listed, reactions elsewhere), the required core as To-dos, standing, take-back by a later entry, withdrawal of an edition (never lifted), the public read and an Atom feed per case. It sends nothing, and no entry is evidence. | new (DEC-116, DEC-100; `BIO_Publication_v0_1.md` §5D) |
-
-Uses: `docket` uses record-grammar, signatures, record-core, membership, credentials, promotion, provenance, attestation, entities, inquiry, reevaluation, case-grammar, publication, case-tensions, events and project-roster (K3115); `public-read`, `network-notices` and `plane` gain it (and, proposed in `plan/t27-dec116-shared.md`, `queue-producers`, `affordances`, `op-declarations` and `control-plane`). `reevaluation` (layer 7) reads it only through the registration it offers (its R30). Membership's `MODULE_ORDER` (its R83) is re-pinned to the new order in T27's layer 2.
-
-## Layer 8: case-checker and case-import (DEC-112, DEC-96; N520, K1256, K1257)
-
-Two new product modules, not splits (`build/requirements/case-checker.md`, `case-import.md`, from `plan/draft-T28-dec112.md`). Each has no `from` and is created by its own T28 job at `bio-plane/src/<module>/` (tests at `bio-plane/test/m/<module>/`). That job adds its paths and tests to its `modules.json` entry (K1043's form). `case-checker` sits directly after `ratification`, because it runs `ratification`'s pure case-document checks, the same check code CivicOS runs. `case-import` sits directly after `case-checker`, because it recreates through it, and before `case-authoring`, so a case can state that a finding rests on another group's accepted work (DEC-96 item 4; `case-authoring` R50–R53, N522). No existing module holds either under 4,000 lines (P6): `ratification` measures 3,973 and `case-authoring` 3,421.
-
-| module | what it does | source |
-| --- | --- | --- |
-| case-checker | The one checker of a case file: integrity, signatures, passages, grades recomputed at the stated method version, the bar, the publication checks, presentability and the complete edition, giving each finding Recreated, Recreated in part or Did not recreate. It is a pure function, and also a standalone offline program with the readable format specification, both served on the public path. | new (DEC-112 (3)(6); `BIO_Publication_v0_1.md` §5C) |
-| case-import | Import of another group's case file into a read-only project per source case and lens, with editions side by side; recreation per finding; the importing group's own bar; completion by a fetched document; acceptance of an edition (only for recreated findings, gaps stated), its withdrawal, and flags, all reasoned. | new (DEC-112 (6), DEC-96, DEC-92; §5C) |
-
-Uses: `case-checker` uses record-grammar, signatures, bundler, content, strength, case-grammar, public-read and ratification. `case-import` uses record-grammar, record-core, membership, strength, case-grammar and case-checker, and (N522) inquiry-grammar, accepted-work and reevaluation. `case-authoring` gains `case-import` (N522). `control-plane`, `op-declarations`, `affordances` and `plane` gain `case-import` in their L11 jobs. Membership's `MODULE_ORDER` (its R83) is re-pinned to the new order in T28's layer 2.
-
-## Layer 6: accepted-work (DEC-96 items 1, 4; N522)
-
-A new product module, not a split (`build/requirements/accepted-work.md`, from `plan/draft-T28-n522.md`). It has no `from` and is created by its own T28 job at `bio-plane/src/accepted-work/`. A group's finding may rest on another group's finding it has accepted (DEC-112 (6)). That work is held by `case-import` in layer 8, which `inquiry`, `basis-versions`, `strength`, `reevaluation` and `publication` may not use (P4). This module declares the one registration `case-import` fills, the read facade those modules use, and the check that a leg on an imported finding names an edition whose acceptance is in force. It sits directly after `inquiry-grammar`, whose reference spelling it reads, and before `inquiry`, which measures 3,882 lines and cannot hold the seam (P6).
-
-| module | what it does | source |
-| --- | --- | --- |
-| accepted-work | The registration `case-import` fills; reads of an imported finding's published pair and acceptance, its open flags and the withdrawals; the promotion check refusing a leg on work not accepted at the named edition. No table. | new (DEC-96 items 1, 4; DEC-112 (6)) |
-
-Uses: `accepted-work` uses record-grammar, membership, promotion and inquiry-grammar; `basis-versions`, `strength`, `reevaluation`, `publication` and `plane` gain it.
-
-## Layer 1: the docprofile split (K617, K653 BOB-2; T19's opening)
-
-`docprofile` (4,060 lines) is split along the seam between what a capture's host and bytes are and what kind of document it is, with no requirement changing meaning. `site-profiles` is a product module with no `from`, built by copy in its own job and merged early; `docprofile`'s job, after it, deletes its copy and imports site-profiles (K624 (1)).
-
-| module | what it does | source |
-| --- | --- | --- |
-| site-profiles | The host-stack axis: the four stack recognisers and `identify`, the one recogniser registry and confidence ladder, the three digests, `fidelity`, the profile record, and the event catalogue. | `docprofile/index.mjs`, `recogniser.mjs`, `events.mjs`, `handlers/`; `docprofile` R1–R3, R7–R10, R26–R28 |
-| docprofile | The content-type axis (`doctypeFor`, the content types), the layered `assess`, `readText`; `registry.mjs` stays its facade and re-exports site-profiles' names, so its importers need no re-point. | what remains |
-
-Uses: `site-profiles` uses nothing; `docprofile` gains it.
-
-## Layer 2: the membership split (K617, K636 BOB-1, K637, K653 BOB-2; T19's opening)
-
-`membership` (3,890 lines) is split along the seam between who the members are and what each may do, and the credentials a member or the instance holds, with no requirement changing meaning. `credentials` is a product module after membership, the case K624 (1) did not meet (rule 3, K653 BOB-6): membership's job builds the seam and merges early, credentials copies its code and merges early, then membership's same job deletes its copy, keeping `attestingKeys` and `aiCredentialLook` as named copies for the callers that re-point later in T19 (K636 BOB-1). Its `from` is `legacy-checks` and `legacy-store` (K636 BOB-2): it takes the catalogue's `SIGNER_ENROLMENT_CHECKS` (C-63) and `AI_CREDENTIAL_CHECKS` (C-29), and the store's delegates are rewired to it (§12.2).
-
-| module | what it does | source |
-| --- | --- | --- |
-| membership | Members, administrators, invitations and enrolment, capabilities, expertise, projects as working groups, sight and the fence. It reaches sessions and keys only through R79's `onRevoked`, and reads the founder's claim through a registration. | what remains |
-| credentials | Sessions and passwords (the founder's claim, `login`, `session`, `setPassword`, `bootstrapState`), signer keys (`signerAdd` … `signerSet`, `signerList`, the self-registered key, `attestingKeys`), AI credentials (`aiCredentialMint` … `aiCredentials`), with their tables. It reads `members` only through membership's services. | `membership/index.mjs`, `schema.mjs`; `membership` R1–R3, R25–R30, R62, R70, R72, R73, R89–R91 |
-
-Uses: `credentials` uses record-grammar, legacy-checks, record-core and membership; capture, ai-runs, publication, ratification, admission and control-plane gain it when each re-points in its T19 job.
-
-## Layer 6: inquiry-grammar (K617, K653 BOB-2; T19's layer-6 fold)
-
-Inquiry's catalogue share (about 1,400 lines) would take `inquiry` (3,649) past the 4,000 mark, so it lands in a module of its own, taken straight from `legacy-checks` (rule 3: `from: legacy-checks`, moved, not copied), with no requirement changing meaning. It registers through record-core's grammar seam (record-core R67) into record-grammar R28's slots, so the catalogue's `LEGACY_GRAMMARS` stops filling C-6.1 and C-15.1 and the catalogue's C-2.8 arm leaves (rule 2). `inquiry`'s grammar face (`inquiry/grammar.mjs`) re-exports its names, so inquiry's callers need no re-point.
-
-| module | what it does | source |
-| --- | --- | --- |
-| inquiry-grammar | The inquiry document's grammar: the C-2.8 entry requirements and division block, the leg grammar (grounds, testimony, earned and inherited legs, the leg's part), C-6.1's supersession and division-disclosure arms, C-15.1's recheck coverage, C-54.1's lead checker, and the rows C-33.13, C-33.22, C-33.23, C-32.7 and C-32.8 inquiry's acts mint. Pure. | `checks/bio-checks.mjs` (map §4.2); `inquiry` R2, R3, R38's share |
-| inquiry | The inquiry's lifecycle, legs and acts, unchanged; its grammar face re-exports inquiry-grammar's names. | what remains |
-
-Uses: `inquiry-grammar` uses record-grammar, legacy-checks, text-chain, record-core (`registerGrammar`), content, connections (`themeLegFindings`) and observation-log (`LEAD_ID_RE`); `inquiry` and `reevaluation` (`GROUND_LABEL_RE`) gain it.
-
-## Layer 9: action-grammar (K617, K653 BOB-2; T19's layer-9 fold)
-
-`actions` is 3,846 lines after T18, and its catalogue share (about 450 lines) would take it past the 4,000 mark, so the action document's grammar lands in a module of its own, directly before `actions`, with no requirement changing meaning: the catalogue's action share is taken straight from `legacy-checks` (rule 3: `from: legacy-checks`, moved), and `actions/checks.mjs`, which imports only the catalogue and `jurisdictions`, is copied, then deleted by `actions`' job. Whether an action's write lands stays `actions`': its promotion step and acts call the grammar's functions and mint its rows.
-
-| module | what it does | source |
-| --- | --- | --- |
-| action-grammar | The action vocabularies (kinds, risk tiers, basis-leg kinds, directions, resolutions, the records-request lifecycle's stages and outcomes), C-2.10's arms over an action's document, C-6.1's `responds_to` arm, C-11.1, the quote and lifecycle grammars (C-72, C-94), the request-for-comment rule (DEC-13), the readers `actions`' read answers with, and the rows `actions`' acts mint. Pure. | `checks/bio-checks.mjs` (C-2.10, C-94 and the vocabularies); `actions/checks.mjs` (copied); `actions` R4, R20, R21's grammar, R37, R38, R40, R44 |
-| actions | The action record: its write, acts, reads and tables, unchanged; it reads its grammar from `action-grammar`. | what remains |
-
-Uses: `action-grammar` uses record-grammar, legacy-checks, jurisdictions (`LAW_LEVELS`), connections (`themeLegFindings`) and inquiry-grammar (`leadLegFindings`); `actions` and `action-clocks` (`lawProposalLabel`) gain it; `affordances` and `instance-setup` read its vocabularies when their layer-11 jobs re-point.
-
-## Layer 11: plane (K617, K653 BOB-2; T19's layer-11 fold)
-
-When the catalogue, `store.mjs`, `schema.mjs` and `src/index.mjs` are emptied (T19's finish report), what is left of them is no module's construct: the Durable Object class that builds every module on one storage in the modules' order and runs their migrations, the alarm handed to `scheduler`, the one route map, and the Worker's entry that binds the door to the instance. That composition root, and the deployment config that names its entry, land in a module of their own, directly after `control-plane` (the last module whose routes and hooks it composes), with no requirement changing meaning: `control-plane` R35 (the class) moves to it, and the rest is today's behaviour of `store.mjs`' constructor, `#migrate`, `alarm`/`onAlarm` and `src/index.mjs`' exports, stated. It is rule 3's later-new case: `control-plane` and `legacy-store` build their seams and merge early, `plane` copies, then `control-plane`'s wrapper (`dispatch.mjs`' `Store extends LegacyStore`) goes, then `plane` deletes `store.mjs`, `schema.mjs` and `src/index.mjs`.
-
-| module | what it does | source |
-| --- | --- | --- |
-| control-plane | The instance's two doors (routing, stamps, envelope, the store's dispatch frame), unchanged, less the class; the testimony slot's place among the promotion steps once `legacy-store`'s step goes (provenance R52, K764). | what remains |
-| plane | The composition root: the Durable Object class, construction order, the migration pass, the alarm, the route map spreading every module's ops map through `control-plane`'s `dispatch`, and the Worker's entry; the deployment config (`wrangler.jsonc`, `package.json`, `package-lock.json`, `.gitignore`, `.dev.vars.example`). | `store.mjs` (constructor, `#migrate`'s frame and order, `alarm`, `onAlarm`, `#ownNamespace`, `#nowMs`, the route frame); `src/index.mjs` (`export default`, `export { Store }`, `bindPublishedPlane`'s hand-over); `control-plane/dispatch.mjs`' `Store` (R35); `legacy-index`'s config paths |
-
-Uses: `plane` uses every module today's composition root reaches (`store.mjs`' constructor, `src/index.mjs`, `dispatch.mjs`), less the legacy ones; no module uses it. `legacy-index` keeps `src/index.mjs`, `tools/` (70 files) and `bio-plane/scripts/walkfloor.mjs`, `walkfigure.mjs` (K749) until its layer-11 job empties them.
-
-## Layer 10: link-sweep (N506, K617, K1153, K1159; T24's opening)
-
-`monitoring`'s link sweep (its R53–R64, folded at T23's opening) is split into a module of its own, directly after `monitoring` and before `scheduler`, with no requirement changing meaning: `link-sweep` R1–R12 are `monitoring` R53–R64 in order, which `monitoring` retires as moved. `monitoring` provides the seam as stated services (its R65, R66): the host services the sweep runs under, and a registration by which `link-sweep` hands it, at composition, C-18.5's sweep arms, the R3 fence and its due sweeps for the slate, so `monitoring` never imports a later module. Its code moves from `bio-plane/src/monitoring/` (`sweep.mjs`, `sweep-match.mjs` and the sweep's share of `checks.mjs`, `schema.mjs` and `index.mjs`) to `bio-plane/src/link-sweep/` in its T24 job.
-
-| module | what it does | source |
-| --- | --- | --- |
-| link-sweep | The ratified link sweep, split from monitoring (N506, K1159). | `monitoring/sweep.mjs`, `sweep-match.mjs`, the sweep's share of `checks.mjs`, `schema.mjs`, `index.mjs`; `monitoring` R53–R64 |
-
-Uses: `link-sweep` uses record-grammar, subresources, format-registry, record-core, membership, promotion, capture, observation-log, capture-requests, project-stage and monitoring; `scheduler`, `queue-producers` and `plane` gain it.
-
-## Layer 8: case-authoring's and publication's splits (K617, K1332, K1333; T29)
-
-Two splits for size (P6; BOB's, K617), no requirement changing meaning. Each new module has no `from` and is built by copy in its own T29 job at `bio-plane/src/<module>/`, merged before the module it leaves; that module's job then deletes its copy and keeps delegates.
-
-| module | what it does | source |
-| --- | --- | --- |
-| case-carriage | What a case carries at its commit: its held materials and their texts, and the re-reads at the commit (sources lapsed, accepted work withdrawn, flags opened). Directly before `publication`, which calls it inside `commitCaseEdition`. | `publication` R51 (part), R57, R59; `build/extraction/publication-split-2.md` |
-| case-disclosures | The case's disclosures: materials and their attestations, accepted work relied on, flags, the C-120 refusals and the blocks `publishCase` signs. Directly before `case-authoring`, after `case-import`, which it uses. | `case-authoring` R12, R31, R35–R37, R43–R52, R54; `materials.mjs`, `accepted.mjs`; `build/extraction/case-authoring-split.md` |
-
-Uses: `case-carriage` uses record-grammar, record-core, membership, promotion, provenance, sources, extraction, accepted-work and case-grammar; `publication` gains it (and drops sources, extraction and accepted-work). `case-disclosures` uses record-grammar, record-core, membership, promotion, provenance, attestation, capture, sources, extraction, content, inquiry-grammar, inquiry, strength, contradiction, case-grammar, publication and case-import; `case-authoring` gains it. Each job's final `uses` is recorded in `modules.json` before its merge.
-
-## Layers 6 and 7: the investigation engine (N820; D51 A, D1; K2405, K2417, K2418; T41's opening)
-
-Four new product modules, not splits, each approved by Bob (D51 A; D1, "the reading-guide library"); their names and placement are BOB's (`plan/draft-T41-investigation.md` §2.1, requirements §3.1–§3.4). Each has no `from` and is created by its own T41 job at `bio-plane/src/<module>/` (tests at `bio-plane/test/m/<module>/`); that job adds its paths and tests to its `modules.json` entry (K1043's form). The step is on the question, not the project (D32, D35), and `inquiry` (3,294 lines) cannot hold it (P6). The explorer stands apart so steps, milestones and reports work fully without AI, and so `ai-runs` and `steps` stay under 4,000. No other new module: planning, the account check and drafting, reading inside documents, notes, waits, approvals and import each extend an existing module.
-
-| module | what it does | source |
-| --- | --- | --- |
-| steps | Layer 6, directly after `hypotheses` (before `citation`). Steps: their place and sight, states and per-question outcomes, products, waits and dates, money cost and the cost notice, the duplicate search, following a question, later-found data on dead ends, accepting a proposed step. A step is never evidence and writes no leg. | new (D27–D50, H38, H39, D64; `requirements/steps.md`) |
-| reading-guides | Layer 6, directly after `capture-requests` (before `skills`, which loads a guide as the skill for its document kind, D65). Civicsmith's and each group's reading guides, review, cross-group offer and adoption, the guide check. A guide says what to look for, never how the AI may behave. | new (D8, D24, D65; `requirements/reading-guides.md`) |
-| question-explorer | Layer 6, directly after `skills` (before `answers`). The system exploring a question unasked where an account owner turned exploring on: choosing, running as a system step, gauging, offering finds once to the members following it. | new (N815; D33, D36, D39, D11–D14, D66; `requirements/question-explorer.md`) |
-| investigation | Layer 7, directly after `intent` (before `reevaluation`). A project's working material over its steps and objective: milestones, status reports drafted from the record, the intake interview and narrative claims, planning proposals, the project's standing read and the quiet-project prompt. | new (D1, D15, D16, D19, D20, D27, D30, D48, H27, H28; `requirements/investigation.md`) |
-
-Uses: `steps` uses record-grammar, civil-time, record-core, membership, promotion, connections, observation-log, leg-earning and inquiry. `reading-guides` uses record-grammar, civil-time, record-core and membership. `question-explorer` uses record-grammar, civil-time, record-core, membership, credentials, connections, retrieval, inquiry, leg-earning, basis-versions, contradiction, steps, run-rules, ai-use, ai-runs and capture-requests. `investigation` uses record-grammar, civil-time, record-core, membership, connections, leg-earning, inquiry, basis-versions, steps, intent and hypotheses. The users' edges (§3.6's list: `capture-requests`, `ai-runs`, `run-productions` and `skills` among them) are added with each user's T41 job, its final `uses` recorded before its merge. Membership's `MODULE_ORDER` (its R83) names the new modules in T41's layer 2 (T41-3).
-
-## Layer 8: publication's third split (K617, K624, K2418; N823; T41)
-
-`publication` measures 3,835 lines over its own paths (K1821), and T40-13's work would take it to about 3,900, so its publishing at a set time moves out, with no requirement changing meaning. `publish-schedule` is a product module with no `from`, built by copy (K624) in its own T41 job (T41-37) at `bio-plane/src/publish-schedule/`, merged before `publication`'s job, which then deletes its copy and reaches the seam through a registration `publish-schedule` fills (K31's pattern). Its requirements R1–R7 are `publication` R66–R71 and R74, which `publication` retires as moved; the extraction map is `build/extraction/publication-split-3.md`, written before L8's START (P18).
-
-| module | what it does | source |
-| --- | --- | --- |
-| publish-schedule | Publishing a signed case edition at a set time: the waiting edition and its table (`scheduled_editions`), the publisher registered at start, moving and cancelling, the schedule's read, the wake for `scheduler`, the waiting-edition read for `case-authoring`. It reads `case_documents` to see a commit; ratification's publisher commits (K2438). | `publication/schedule.mjs` (312 lines), `scheduled_editions` and its schema share; `publication` R66–R71, R74 |
-
-Uses: `publish-schedule` uses civil-time, jurisdictions, record-core, membership and publication (K2438). `ratification` (`op=publishat`, R42's publisher), `case-authoring` (R58, R59), `scheduler` (R71's wake), `queue-producers` (R37), `actions` (a test) and `plane` re-point to it in their T41 jobs; publication reaches its waiting editions through the registration `registerWaitingEditions` (K31's pattern).
-
-## Layer 3: capture's second split (K617, K624, K625; N826; T42)
-
-`capture` measures 4,059 lines over its own paths (K1821), past K617's ~4,000 after T41's upload (R86), so its doorbell moves out, with no requirement changing meaning. `doorbell` is a product module with no `from`, built by copy (K624) in its own T42 job; capture's T42 job retires the moved ids and keeps its copy, unused by new code, until its next job deletes it once every user has re-pointed (K625: the plane's door imports capture's file until plane's layer-11 job). Map: `build/extraction/capture-split.md` (its doubts settled at T42's opening, K2607).
-
-| module | what it does | source |
-| --- | --- | --- |
-| doorbell | The public intake by which anyone, with no account, hands the group material (Intake Doctrine §2a): the knock, its rate and refusals (C-85), the member's inbox over it with its read, resolve and pull into the record, the knocker secret and pseudonym, and the two tallies. | capture R30–R32, R47–R54, R56, R65–R67, R70–R72, R80, R85 (moved as doorbell R1–R20) |
-
-Uses: `doorbell` uses record-core, membership, credentials, provenance, acquisition, capture and test-support. `sources` (layer 3), `actions` (layer 9), `answer-envelope`, `store-door` and `plane` (layer 11) re-point to it in their T42 jobs.
-
-## Layer 8: case-authoring's second split (K617, K624; N839; T42)
-
-`case-authoring` measures 4,131 lines over its own paths (K1821) after T41's account work, so the account (R63–R68: the system's drafts of a case's account and its checks, the reader, their helpers) moves out, with no requirement changing meaning. `case-account` is a product module with no `from`, built by copy (K624) in its own T42 job, directly before `case-authoring` (after `case-disclosures`, whose R30 it uses), since `publishCase` calls it (P4; N529's precedent). R65, R67 and R68 run inside the publishing act and stay in case-authoring, re-pointed; case-authoring keeps three one-line pass-throughs (`accountPropose`, `accountDrafts`, `registerReviewComments`; K1333's form) until `review`, `control-plane` and `plane` re-point in T42, deleted in T43 (N850). Map: `build/extraction/case-account-split.md`.
-
-| module | what it does | source |
-| --- | --- | --- |
-| case-account | A case's account: the system's drafts of it and its checks (labelled machine work), the member writing her own from a draft or from nothing, the account's shape and judgment, and the review-comments reader. | case-authoring R64, R66 and R63's account share |
-
-## T47's opening: two splits by copy and four screen modules (K657, K1043, K624, K3027)
-
-| module | layer, place | holds | from |
-|---|---|---|---|
-| case-inputs | 8, after `case-account`, before `case-authoring` | a case's inputs before publishing: the statement acknowledgements, carried outcomes and open requests the signing reads (split map `build/extraction/case-authoring-split-2.md` §1–§4) | case-authoring (N908), by copy then delete |
-| action-records | 9, after `action-grammar`, before `actions` | the action's own receipts, scope, promises and risk basis records (split map `build/extraction/actions-split.md` §1–§4) | actions (N961), by copy then delete |
-| screens-entry | 11, after `interface-shell` | the way in: `front`, `forgot`, `join`, `setup` (DEC-201, DEC-202; K3064) | new |
-| screens-wizards | 11, after `interface-shell` | the wizard runner and the dock's guide (N821's screen side) | new |
-| screens-investigate, screens-publish, screens-action | 11, after `screens-inquiry`, before `control-plane` | the remaining registry screens of N897 (1), by functional area | new |
-
+## Module rules lifted from the split history
+
+Each of these is stated in a history section of the old `build/layers.md` and binds today (verbatim, with the ruling ids of its section).
+
+- **Product modules from splits.** Each module a split or a new-module section created is a product module with no `from` (`from` names a legacy module only) (K624 (1), K617). A module taken from the catalogue is `from: legacy-checks`, moved, not copied (rule 3, K653 BOB-2).
+- **publication family (K617, K651).** "Neither later module owns a table: each reads `publication`'s under its R40 and calls only its public services (R53–R55)." `corpus-export` "owns the table `export_log`" (K1024). `publish-schedule` owns `scheduled_editions` and "reaches the seam through a registration `publish-schedule` fills (K31's pattern)"; publication reaches its waiting editions through the registration `registerWaitingEditions` (K31's pattern; K2418).
+- **Pure modules.** `case-grammar`, `inquiry-grammar` and `action-grammar` are pure; `op-declarations` is pure data (K651, K653 BOB-2, K624). `run-rules` is the AI run's rules "without a store" (K649 (1)). `site-profiles` "uses nothing"; `setup-words` "uses nothing, so every module may read words by key" (N1115, K3366 (4)). `record-grammar` "holds no store, no network and no clock" (K585 (4)). `case-checker` is "a pure function" (DEC-112).
+- **Action grammar's write.** "Whether an action's write lands stays `actions`': its promotion step and acts call the grammar's functions and mint its rows." (K653 BOB-2.)
+- **membership and credentials (K636 BOB-1, K653 BOB-2).** Membership "reaches sessions and keys only through R79's `onRevoked`, and reads the founder's claim through a registration"; credentials "reads `members` only through membership's services".
+- **monitoring and link-sweep (N506, K1153, K1159).** `monitoring` provides the seam as stated services (its R65, R66), "so `monitoring` never imports a later module".
+- **accepted-work (DEC-96 items 1, 4; N522).** "`inquiry`, `basis-versions`, `strength`, `reevaluation` and `publication` may not use" `case-import` (P4); `accepted-work` "declares the one registration `case-import` fills, the read facade those modules use, and the check that a leg on an imported finding names an edition whose acceptance is in force"; it has no table.
+- **docket (DEC-116, DEC-100; N520, K1256, K1257).** "It sends nothing, and no entry is evidence." `reevaluation` (layer 7) "reads it only through the registration it offers (its R30)". Membership's `MODULE_ORDER` (its R83) is re-pinned to the new order whenever a module is added (T27, T28, T41).
+- **steps and reading-guides (D27–D50, D8, D24, D65).** "A step is never evidence and writes no leg." "A guide says what to look for, never how the AI may behave." The step is on the question, not the project (D32, D35); the explorer stands apart "so steps, milestones and reports work fully without AI" (K2405, K2418).

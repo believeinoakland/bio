@@ -247,10 +247,11 @@ test("R55 a refused upload is the stop with Cloudflare's own words, \"Try again\
   const slug = "r55-refused", before = planeBase(slug);
   const w = await run({ slug, mode: "update", pre: { [slug]: before }, rel, version: NEXT, refuseUpdate: true });
   restoreSigners();
-  assert.equal(w.page.failed.h, "Stopped: Cloudflare refused the upload.");
-  assert.equal(w.page.failed.p, UPDATE_WORDS.stoppedKept("0.70.0"));
-  assert.ok(w.page.failed.d.startsWith(UPDATE_WORDS.stoppedDo + " (Cloudflare said: "));
-  assert.equal([w.page.failed.h, w.page.failed.p, UPDATE_WORDS.stoppedDo].join(" "), fill(WORDS["installer.update.stopped"], { version: "0.70.0" }));
+  /* (R72) The stop is the design's key, whole, `installer.update.stopped`; Cloudflare's own words follow it. */
+  assert.equal(w.page.failed.h, fill(WORDS["installer.update.stopped"], { version: "0.70.0" }));
+  assert.match(w.page.failed.h, /^Stopped: Cloudflare refused the upload\. .* runs release 0\.70\.0 as before; nothing changed\. Try again; /);
+  assert.equal(w.page.failed.p, "");
+  assert.ok(w.page.failed.d.startsWith(" (Cloudflare said: "));
   assert.ok(w.raw.includes('id="try-again"'));
   assert.deepEqual(w.acct.get(slug), before);
 });

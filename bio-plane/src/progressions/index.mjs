@@ -39,6 +39,7 @@
  *                over the active profiles); default `governingZone(localFactsOf(host, {record}))`: the one governing
  *                `time_zone` that `factStatus` answers, else `{zone: null, why}` when none or several govern. Read
  *                lazily, each read.
+ *   (R45: an `overdue_successor` finding's words are read by key through `setup-words`' `word(key, vars)`, layer 1.)
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
  *   nowMs        the instance's configured clock for the overdue reads, a function answering milliseconds (R16),
  *                else `env.BIO_NOW_MS`, else the wall clock. `op=proposals` and `op=captureprogressions` read it and
@@ -55,6 +56,7 @@ import { localFactsOf } from "../local-facts/index.mjs";
 import * as EVENTS from "../events/index.mjs";
 import * as STANDARDS from "../standards/index.mjs";
 import { registerOwner, BOUNDS } from "../connection-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
 import { refusal, generic, notADisposition } from "./checks.mjs";
 
@@ -81,6 +83,9 @@ const DISPOSE_ITEM_KEYS = [["key"], ["progressionKey", "stageKey"]];
 const DISPOSE_SHARED_KEYS = ["to", "reason", "definitionVersion"];
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
+
+/* R44: the bounds of one `instancesFor` read: the entity set a caller may name, and a page's size. */
+const INSTANCES_SET_MAX = 200, INSTANCES_LIMIT_DEFAULT = 50, INSTANCES_LIMIT_MAX = 200;
 
 /* R5: a definition's basis as it reads back. `stated: false` is a version written before versions were kept, or a first
    version declared before a first declaration had to state its basis (DEC-88, T22): the record says it holds none
@@ -150,7 +155,7 @@ const dateText = (dt) => (dt ? `${dt.value} (${dt.precision}${dt.zone ? `, ${dt.
 
 /* The members' word for the one connection kind this module owns (R40; K1486), and its id. */
 export const PLACED_KIND = "placed_on_flow";
-export const PLACED_KINDS = Object.freeze([Object.freeze({ kind: PLACED_KIND, word: "placed on a declared flow", class: "evidentiary" })]);
+export const PLACED_KINDS = Object.freeze([Object.freeze({ kind: PLACED_KIND, word: word("progressions.placed_declared_flow"), class: "evidentiary" })]);
 /* R37, R40: own dates are read with the group's whole sight, so a finding is the same for every reader (R13); only
    bundle ids are withheld, by the reader's own sight. */
 const GROUP_SIGHT = "class:member";
@@ -527,11 +532,11 @@ export class Progressions {
     const day = zone.zone ? localDay(instantOf(Date.parse(this.now())), zone.zone) : null;
     if (typeof day !== "string")
       return { ...b, standard: { ...b.standard, in_force: { date: null, state: "undetermined",
-               why: `the read's day is undetermined: ${zone.why || "the governing zone is not a zone the runtime knows"}` } } };
+               why: word("progressions.why.read_day_undetermined", { why: zone.why || word("progressions.why.governing_zone_zone") }) } } };
     const date = day;
     let a = null;
     try { a = this.standards.inForceAt({ standard: b.standard.standard, portion: b.standard.portion, date, viewer }); }
-    catch (e) { a = { state: "undetermined", why: `standards could not answer: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { a = { state: "undetermined", why: word("progressions.why.standards_answer", { entry: String(e && e.message || e).slice(0, 200) }) }; }
     const state = a && a.ok !== false && typeof a.state === "string" ? a.state : "undetermined";
     const why = a && a.ok !== false && typeof a.why === "string" ? a.why
       : `standards gave no answer${a && a.reason ? ` (${a.reason})` : ""}`;
@@ -729,8 +734,9 @@ export class Progressions {
       const pair = [show(p, s.after_stage), show(d, s.stage_key)];
       if (!d.own_date || !p.own_date) {
         undetermined.push({ kind: "order_undetermined", ...base, placements: pair,
-                            why: `${!p.own_date ? `the '${s.after_stage}' document ${p.capture_sha}` : `the '${s.stage_key}' document ${d.capture_sha}`}`
-                               + ` has no own date (${(!p.own_date ? p : d).own_date_why}), so which came first is undetermined` });
+                            why: word("progressions.why.date_came_first", {
+                          own_date: !p.own_date ? `the '${s.after_stage}' document ${p.capture_sha}` : `the '${s.stage_key}' document ${d.capture_sha}`,
+                          own_date_2: (!p.own_date ? p : d).own_date_why }) });
         continue;
       }
       const c = compare(d.own_date, p.own_date);
@@ -741,14 +747,14 @@ export class Progressions {
                               + ` -- out of order (framework 8.2); a finding, which decides nothing` });
       else if (c !== "after")
         undetermined.push({ kind: "order_undetermined", ...base, placements: pair,
-                            why: c && c.why ? c.why : "the dates' precision does not settle which came first" });
+                            why: c && c.why ? c.why : word("progressions.why.dates_precision_settle") });
     }
     const iv = readInterval(s.within_interval);
     if (!iv) return;
     const term = this.#deadline(predDocs, s.within_interval, iv);
     for (const d of docs) {
       const pair = [...predDocs.map((p) => show(p, s.after_stage)), show(d, s.stage_key)];
-      const why = !d.own_date ? `the '${s.stage_key}' document ${d.capture_sha} has no own date (${d.own_date_why})`
+      const why = !d.own_date ? word("progressions.document_date", { stage_key: s.stage_key, capture_sha: d.capture_sha, own_date_why: d.own_date_why })
         : term.undetermined ? term.why : null;
       if (why) { undetermined.push({ kind: "term_undetermined", ...base, within_interval: s.within_interval, placements: pair, why }); continue; }
       /* after the term: the document's whole span lies at or past the first instant after the term's last day; within
@@ -764,10 +770,10 @@ export class Progressions {
                               + ` -- placed after the term (framework 8.2, junction checks); a finding, which decides nothing` });
       else if (!(Number.isFinite(hi) && hi <= endE))
         undetermined.push({ kind: "term_undetermined", ...base, within_interval: s.within_interval, placements: pair,
-                            why: !Number.isFinite(lo) || !Number.isFinite(hi) ? `${dateText(d.own_date)} has an open end`
+                            why: !Number.isFinite(lo) || !Number.isFinite(hi) ? word("progressions.why.open_end", { own_date: dateText(d.own_date) })
                               : term.earliest.value !== term.latest.value
-                                ? `the term ends between ${term.earliest.value} and ${term.latest.value}, and ${dateText(d.own_date)} is not settled against both`
-                                : `${dateText(d.own_date)} overlaps the term's last day, ${term.latest.value}, at the precision held` });
+                                ? word("progressions.why.term_ends_between", { value: term.earliest.value, value_2: term.latest.value, own_date: dateText(d.own_date) })
+                                : word("progressions.why.overlaps_term_last", { own_date: dateText(d.own_date), value: term.latest.value }) });
     }
   }
 
@@ -971,6 +977,62 @@ export class Progressions {
     return this.#answer(str(progressionKey), str(entityId), viewer);
   }
 
+  /** R44 (`op=instances`): the matters followed through a progression, for an entity set the caller resolves. One
+   *  summary of R10's read, taken now (R24, at R43's clock), for each (progression, entity) threaded for an entity of
+   *  the set, in entity id then progression key order. `next_deadline` is the earliest deadline day of a stage not yet
+   *  placed whose predecessor is placed (R16's clocks), null when none or when none is determined. A set of nothing
+   *  threaded contributes nothing. No bundle id is answered (R13). Writes nothing and never throws. */
+  instancesFor({ set, limit = null, after = null, viewer = null } = {}) {
+    void viewer;
+    try {
+      const ids = [...new Set((Array.isArray(set) ? set : typeof set === "string" ? set.split(",") : [])
+        .filter((x) => typeof x === "string").map((x) => x.trim()).filter(Boolean))];
+      /* DEC-49 REGION is-set-named */
+      if (!ids.length)
+        return refusal("NO_SET", "the matters a project follows are read for an explicit set of entity ids, which the caller resolves "
+                                 + "from the project; none was named");
+      /* END DEC-49 REGION is-set-named */
+      /* DEC-49 REGION is-set-bounded */
+      if (ids.length > INSTANCES_SET_MAX)
+        return refusal("SET_TOO_LARGE", `a set of at most ${INSTANCES_SET_MAX} entity ids is read at once; ${ids.length} were named`,
+                       { max: INSTANCES_SET_MAX, given: ids.length });
+      /* END DEC-49 REGION is-set-bounded */
+      const n = limit === null || limit === undefined || limit === "" ? INSTANCES_LIMIT_DEFAULT : Number(limit);
+      const size = Number.isFinite(n) ? Math.min(INSTANCES_LIMIT_MAX, Math.max(1, Math.floor(n))) : INSTANCES_LIMIT_DEFAULT;
+      /* a cursor is the last item's entity id and progression key, each URL-encoded, joined by a comma */
+      const cut = typeof after === "string" && after.includes(",")
+        ? [decodeURIComponent(after.slice(0, after.indexOf(","))), decodeURIComponent(after.slice(after.indexOf(",") + 1))] : null;
+      const marks = ids.map(() => "?").join(",");
+      const pairs = this.#rows(
+        `SELECT DISTINCT entity_id, progression_key FROM progression_instances WHERE entity_id IN (${marks})
+           ORDER BY entity_id, progression_key`, ...ids)
+        .filter((r) => !cut || r.entity_id > cut[0] || (r.entity_id === cut[0] && r.progression_key > cut[1]));
+      const page = pairs.slice(0, size + 1);
+      const truncated = page.length > size;
+      const items = page.slice(0, size).flatMap((r) => {
+        const inst = this.#withDecisions(this.#assemble(r.progression_key, r.entity_id));
+        if (!inst || !inst.found) return [];
+        const threads = this.#threads(r.progression_key, r.entity_id);
+        let next = null;
+        for (const c of this.#clocks(inst)) {
+          const d = c.deadline;
+          if (!d.undetermined && (next === null || d.latest.value < next)) next = d.latest.value;
+        }
+        return [{ progression_key: inst.progression_key, label: inst.label, definition_version: inst.definition_version,
+                 entity_id: inst.entity_id, thread_version: threads.length ? threads[threads.length - 1].version : null,
+                 stage_count: inst.stage_count, placed_count: inst.placed_count, grade: inst.grade,
+                 grade_determined: inst.grade_determined, established: inst.established,
+                 finding_count: inst.findings.length, open_finding_count: inst.open_finding_count, next_deadline: next }];
+      });
+      const last = items[items.length - 1];
+      return { ok: true, count: items.length, items, limit: size, truncated,
+               ...(truncated ? { next: `${encodeURIComponent(last.entity_id)},${encodeURIComponent(last.progression_key)}` } : {}) };
+    } catch (e) {
+      return { ok: false, reason: "INSTANCES_UNREADABLE", code: "INSTANCES_UNREADABLE",
+               detail: `the matters could not be read: ${String(e && e.message || e).slice(0, 200)}` };
+    }
+  }
+
   /* ===================================================================== *
    * EXCEPTION DOCUMENTS (R14, R15; FW-10, K102).
    * ===================================================================== */
@@ -1085,7 +1147,7 @@ export class Progressions {
     if (typeof z === "string" && z) return { zone: z, why: null };
     if (z && typeof z === "object" && typeof z.zone === "string" && z.zone) return { zone: z.zone, why: null };
     return { zone: null, why: z && typeof z === "object" && typeof z.why === "string" ? z.why
-      : "no time zone governs here (local-facts holds no governing time_zone of the active profiles)" };
+      : word("progressions.why.time_zone_governs") };
   }
 
   /* R37: a placement's own date: the event the member named (its `when`), else the dated fact named (its value), else
@@ -1098,30 +1160,29 @@ export class Progressions {
       if (p.event_id) {
         const e = this.events.readEvent({ eventId: p.event_id, viewer: GROUP_SIGHT });
         const ev = e && (e.event || e);
-        if (!e || e.found === false || e.ok === false) return none(`the event ${p.event_id} is not held`, "event", p.event_id);
+        if (!e || e.found === false || e.ok === false) return none(word("progressions.event_held", { event_id: p.event_id }), "event", p.event_id);
         const w = ev.when;
-        if (w == null) return none(`the event ${p.event_id} is placed nowhere: it has no dated attestation`, "event", p.event_id);
+        if (w == null) return none(word("progressions.event_placed_nowhere", { event_id: p.event_id }), "event", p.event_id);
         if (typeof w !== "object" || w.undetermined)
-          return none(`the event ${p.event_id}'s date is undetermined: ${(typeof w === "object" && w.why) || ev.why || "no why given"}`, "event", p.event_id);
+          return none(word("progressions.event_date_undetermined", { event_id: p.event_id, words: (typeof w === "object" && w.why) || ev.why || word("progressions.given") }), "event", p.event_id);
         if (!["day", "minute", "second", "edtf"].includes(w.precision))
-          return none(`the event ${p.event_id}'s date is held as ${w.precision === "upper_bound" ? "an upper bound only (on or before)" : `'${w.precision}'`}, never its date`, "event", p.event_id);
+          return none(word("progressions.event_date_held", { event_id: p.event_id, precision: w.precision === "upper_bound" ? word("progressions.upper_bound") : `'${w.precision}'` }), "event", p.event_id);
         const value = typeof w.value === "string" ? w.value : w.start;
         const dz = w.zone || zone.zone;
-        if (typeof value !== "string" || typeof w.precision !== "string") return none(`the event ${p.event_id} states no date`, "event", p.event_id);
-        if (!dz) return none(`the event ${p.event_id}'s date states no zone and ${zone.why}`, "event", p.event_id);
+        if (typeof value !== "string" || typeof w.precision !== "string") return none(word("progressions.event_states_date", { event_id: p.event_id }), "event", p.event_id);
+        if (!dz) return none(word("progressions.event_date_states", { event_id: p.event_id, why: zone.why }), "event", p.event_id);
         return { own_date: { value, precision: w.precision, zone: dz }, own_date_source: "event", own_date_ref: p.event_id, own_date_why: null };
       }
       const facts = listOf(this.events.datedFactsFor({ captureSha: p.capture_sha, viewer: GROUP_SIGHT }), "facts", "dated_facts", "items");
       let f = null;
       if (p.dated_fact_id) {
         f = facts.find((x) => x && x.dated_fact_id === p.dated_fact_id) || null;
-        if (!f) return none(`the dated fact ${p.dated_fact_id} is no longer held for this document`, "dated_fact", p.dated_fact_id);
+        if (!f) return none(word("progressions.dated_fact_longer", { dated_fact_id: p.dated_fact_id }), "dated_fact", p.dated_fact_id);
       } else if (facts.length === 1) f = facts[0];
-      else return none(facts.length ? `events holds ${facts.length} dated facts for this document; a member names the one that dates this step`
-                                     : "events holds no dated fact for this document");
-      if (f.upper_bound) return none(`the dated fact ${f.dated_fact_id} is an upper bound only (on or before), never the date`, "dated_fact", f.dated_fact_id);
+      else return none(facts.length ? word("progressions.events_holds_dated", { facts: facts.length }) : word("progressions.events_holds_dated_fact"));
+      if (f.upper_bound) return none(word("progressions.dated_fact_upper", { dated_fact_id: f.dated_fact_id }), "dated_fact", f.dated_fact_id);
       const dz = f.zone || zone.zone;
-      if (!dz) return none(`the dated fact ${f.dated_fact_id} states a day and ${zone.why}`, "dated_fact", f.dated_fact_id);
+      if (!dz) return none(word("progressions.dated_fact_states", { dated_fact_id: f.dated_fact_id, why: zone.why }), "dated_fact", f.dated_fact_id);
       return { own_date: { value: f.value, precision: f.precision || "day", zone: dz }, own_date_source: "dated_fact",
                own_date_ref: f.dated_fact_id ?? null, own_date_why: null };
     } catch (e) {
@@ -1150,15 +1211,15 @@ export class Progressions {
     if (undated.length) {
       const bounds_ = undated.map((d) => ({ capture_sha: d.capture_sha, own_date_why: d.own_date_why, bound: this.#captureBound(d.capture_sha) }));
       return { undetermined: true, bounds: bounds_,
-               why: bounds_.map((b) => `the document ${b.capture_sha} has no own date (${b.own_date_why})`
-                 + (b.bound ? `; it was captured (${b.bound.from}) ${b.bound.at}, a bound only and never its date` : "")).join("; ") };
+               why: bounds_.map((b) => word("progressions.why.document_date", { capture_sha: b.capture_sha, own_date_why: b.own_date_why,
+                 from: b.bound ? word("progressions.why.captured_bound_date", { from: b.bound.from, at: b.bound.at }) : "" })).join("; ") };
     }
     const rule = intervalRule(iv, within);
     let earliest = null, latest = null;
     for (const d of predDocs) {
       const r = evaluateRule({ rule, anchor: d.own_date, view: { time_zone: { value: d.own_date.zone } } });
       if (!r || r.refused || r.undetermined || !r.due)
-        return { undetermined: true, bounds: [], why: `the deadline after ${d.capture_sha} (${dateText(d.own_date)}) is undetermined: ${r && r.why || "no answer"}` };
+        return { undetermined: true, bounds: [], why: word("progressions.why.deadline_undetermined", { capture_sha: d.capture_sha, own_date: dateText(d.own_date), row: r && r.why || word("progressions.why.the_deadline_is_undetermined") }) };
       const [e, l] = r.due.candidates ? r.due.candidates : [r.due, r.due];
       earliest = later(earliest, e);
       latest = later(latest, l);
@@ -1175,6 +1236,8 @@ export class Progressions {
     if (!missing.length) return out;
     const within = new Map(this.#rows(`SELECT stage_key, within_interval FROM progression_stages WHERE progression_key=?`,
                                       inst.progression_key).map((r) => [r.stage_key, r.within_interval]));
+    const numbers = new Map(this.#rows(`SELECT stage_key, stage_no FROM progression_stages WHERE progression_key=?`,
+                                       inst.progression_key).map((r) => [r.stage_key, r.stage_no]));
     const stageByKey = new Map((inst.stages || []).map((s) => [s.stage_key, s]));
     for (const f of missing) {
       const wi = within.get(f.stage_key);
@@ -1182,7 +1245,8 @@ export class Progressions {
       if (!iv || !f.after_stage) continue;
       const anchor = stageByKey.get(f.after_stage);
       if (!anchor || !anchor.present) continue;
-      out.push({ finding: f, within_interval: wi, interval: iv, predecessor_stage: f.after_stage, documents: anchor.documents,
+      out.push({ finding: f, within_interval: wi, interval: iv, predecessor_stage: f.after_stage,
+                 predecessor_no: numbers.get(f.after_stage) ?? null, documents: anchor.documents,
                  deadline: this.#deadline(anchor.documents, wi, iv) });
     }
     return out;
@@ -1197,7 +1261,18 @@ export class Progressions {
     const o = overdueOn({ due, at: instantOf(nowMs), side: "body" });
     const wakes = [endMs(d.earliest), endMs(d.latest)].filter((t) => Number.isFinite(t));
     if (o === "overdue" || o === "not_overdue") return { state: o, why: null, wakes };
-    return { state: "undetermined", why: o && o.why ? o.why : "the deadline is undetermined", wakes };
+    return { state: "undetermined", why: o && o.why ? o.why : word("progressions.why.the_deadline_is_undetermined"), wakes };
+  }
+
+  /* R45 (DEC-243, DEC-239): the members' words for an `overdue_successor` finding, by key: `progression.nodoc` leads,
+     then `progression.expects` with its deadline day, or `progression.expects.undetermined` where the predecessor has no
+     own date to count from. The words are read through `setup-words`, and none says "overdue", "late" or "missing". */
+  #says(c, deadline) {
+    const lead = { key: "progression.nodoc", vars: {} };
+    const vars = deadline === null ? { interval: c.within_interval, n: c.predecessor_no }
+                                   : { interval: c.within_interval, n: c.predecessor_no, date: deadline };
+    const key = deadline === null ? "progression.expects.undetermined" : "progression.expects";
+    return { key, vars, lead, words: `${word(lead.key)} ${word(key, vars)}` };
   }
 
   /* R16: the overdue findings of one instance at `nowMs`, each also a missing predecessor, carrying its grade: `overdue:
@@ -1218,7 +1293,7 @@ export class Progressions {
       if (j.state === "undetermined") {
         out.push({ ...head, overdue: "undetermined", deadline: d.undetermined ? null : d.latest.value,
                    deadline_earliest: d.undetermined ? null : d.earliest.value, bounds: d.undetermined ? d.bounds : [],
-                   why: j.why,
+                   why: j.why, says: this.#says(c, d.undetermined ? null : d.latest.value),
                    detail: `whether the '${f.stage_key}' stage is past its '${c.within_interval}' deadline after '${c.predecessor_stage}'`
                          + ` is undetermined: ${j.why}` });
         continue;
@@ -1233,7 +1308,7 @@ export class Progressions {
       out.push({ ...head, overdue: true, deadline: L.value, deadline_earliest: d.earliest.value, deadline_zone: L.zone,
                  predecessor_at: c.documents.map((x) => x.own_date).reduce(later, null).value,
                  overdue_by: { amount, unit: c.interval.unit },
-                 overdue_by_ms: nowMs - endMs(L),
+                 overdue_by_ms: nowMs - endMs(L), says: this.#says(c, L.value),
                  detail: "the '" + f.stage_key + "' stage is " + f.required + " required and still absent past its '"
                        + c.within_interval + "' deadline after '" + c.predecessor_stage + "' (" + L.value + ", the local day in "
                        + L.zone + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade" });
@@ -1395,7 +1470,7 @@ export class Progressions {
    *  neither returned nor counted (R13). Synchronous; writes nothing and records no reading. */
   neighbours({ node, kinds = null, at, page = null, viewer, scope = null } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: word("duties.why.read_names_member") };
     void scope;   /* no hunch kind is this module's (connection-grammar R8) */
     if (Array.isArray(kinds) && !kinds.includes(PLACED_KIND)) return { items: [] };
     if (typeof node !== "string" || !node) return { items: [] };
@@ -1405,7 +1480,7 @@ export class Progressions {
       `SELECT progression_key, entity_id, stage_key, capture_sha, bundle_id, grade, event_id, dated_fact_id FROM progression_instances
          WHERE ${col}=? ORDER BY progression_key, entity_id, stage_key, capture_sha`, node).filter((r) => keep(r.bundle_id) !== null);
     if (rows.length > BOUNDS.hub)
-      return { items: [], hub: { set_size: rows.length, why: `${node} is placed on more than ${BOUNDS.hub} declared flows` } };
+      return { items: [], hub: { set_size: rows.length, why: word("progressions.why.placed_declared_flows", { node, hub: BOUNDS.hub }) } };
     const zone = this.#zone();
     const versions = new Map();
     const items = [];
@@ -1428,7 +1503,7 @@ export class Progressions {
                    grade: { assertion: r.grade, ends: [r.grade, r.grade] }, derived: null,
                    progression_key: r.progression_key, stage_key: r.stage_key, definition_version: versions.get(r.progression_key),
                    own_date_source: own.own_date_source,
-                   ...(v === "in" ? {} : { undetermined: { why: v && v.why ? v.why : `${own.own_date_why || "no own date"}` } }) });
+                   ...(v === "in" ? {} : { undetermined: { why: v && v.why ? v.why : `${own.own_date_why || word("progressions.why.date")}` } }) });
     }
     const start = Number.isInteger(page) && page > 0 ? page : 0;
     const slice = items.slice(start, start + BOUNDS.fanout);
@@ -1529,6 +1604,9 @@ export function progressionOps(p, url, body) {
     exceptions: () => p.readExceptions({ progressionKey: q("key"), entityId: q("id"), viewer: q("viewer") }),
     /* R43 (N983): both are evaluated at the server's instant, R16's configured clock, since their answers (which stage
        is overdue, `overdue_count`) may gate an act; a `now` or `nowMs` in the query or the body is never read. */
+    /* R44: the entity set is the caller's, as a list in the body or comma-separated in the query */
+    instances: () => p.instancesFor({ set: (body && body.set) ?? q("set"), limit: q("limit") ?? (body && body.limit),
+                                      after: q("after") ?? (body && body.after), viewer: q("viewer") }),
     proposals: () => p.proposalsFeed(),
     captureprogressions: () => p.captureProgressions({ captureSha: q("sha256") }),
   };
@@ -1572,8 +1650,8 @@ function governingZone(lf) {
     .map((f) => (typeof f.governs.value === "string" ? f.governs.value : f.governs.value && f.governs.value.value))
     .filter((z) => typeof z === "string" && z));
   if (zones.size === 1) return [...zones][0];
-  return { zone: null, why: zones.size ? `the active profiles' governing time zones differ (${[...zones].join(", ")})`
-                                       : "no time zone governs here (local-facts holds no governing time_zone of the active profiles)" };
+  return { zone: null, why: zones.size ? word("progressions.why.active_profiles_governing", { zones: [...zones].join(", ") })
+                                       : word("progressions.why.time_zone_governs") };
 }
 
 /* R40: every instance `progressionsOf` has made in this isolate. */
@@ -1587,10 +1665,10 @@ export const OWNER_REGISTRATION = registerOwner({
   neighbours: (a) => {
     const { host = null, ...args } = a && typeof a === "object" ? a : {};
     if (args.viewer === undefined || args.viewer === null || args.viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: word("duties.why.read_names_member") };
     const p = host ? instances.get(host) : made.size === 1 ? [...made][0] : null;
-    if (!p) return { refused: "OWNER_HOST_AMBIGUOUS", why: host ? "progressions holds no instance for that host"
-                       : `progressions holds ${made.size} instances in this isolate and the read names no host` };
+    if (!p) return { refused: "OWNER_HOST_AMBIGUOUS", why: host ? word("progressions.why.progressions_holds_instance")
+                       : word("progressions.why.progressions_holds_instances", { size: made.size }) };
     return p.neighbours(args);
   },
 });

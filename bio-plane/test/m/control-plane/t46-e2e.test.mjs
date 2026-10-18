@@ -42,7 +42,13 @@ async function answerOf(res) {
   return { status: res.status, bytes: new Uint8Array(await res.arrayBuffer()), type };
 }
 /* Every op the door declares, answered by the plane: the booted page's whole world is the real one. */
-const real = Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => answerOf(await toPlane(req.url, req.init))]));
+/* what the plane has finished answering, per op: a request the page has SENT is not yet one the plane has ANSWERED */
+const finished = {};
+const real = Object.fromEntries(Object.keys(OPS).map((op) => [op, async (req) => {
+  const a = await answerOf(await toPlane(req.url, req.init));
+  finished[op] = (finished[op] ?? 0) + 1;
+  return a;
+}]));
 const SCRIPT = /<script\b[^>]*>/gi;
 
 let session = null;
@@ -163,6 +169,8 @@ test("R75 end to end: `capture` uploads a file's raw bytes with its statement th
   await quiet(p);
   const [up] = await answered(p, "captureupload");
   assert.equal(up.query.name, "pothole.jpg");
+  /* the repeat below is sent only once the plane has answered the page's upload (before this, the page's request was only sent) */
+  await waitFor(p, () => (finished.captureupload ?? 0) > 0);
   const bytes = Buffer.from(await file.arrayBuffer());
   const sha = (await import("node:crypto")).createHash("sha256").update(bytes).digest("hex");
   const auth = { authorization: `Bearer ${session.t}` };

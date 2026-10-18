@@ -66,7 +66,7 @@ test("R17 controls: an unreadable answer, and a read that fails, are drawn faile
 /* the kit stand-in: every kit call answers an empty string but the reference, which records what it was asked and answers
    a link (the shell links a kind it lists and whose screen it registers, interface-shell R16) */
 function kit(refs, answer) {
-  return new Proxy({}, { get: (_, k) => (k === "ref" ? (...a) => { refs.push(a); return answer(...a); }
+  return new Proxy({}, { get: (_, k) => (k === "call" ? async () => ({ ok: true }) : k === "ref" ? (...a) => { refs.push(a); return answer(...a); }
     : k === "esc" || k === "w" ? (x) => String(x) : k === "sec" ? (t, inner) => inner : k === "sheet" ? (x) => x
     : k === "row" ? (...a) => a.join("") : k === "date" ? () => "" : () => "") });
 }
@@ -77,14 +77,14 @@ test("R18 a plan opened in the project is a reference link to the plan screen, w
   const refs = [];
   const html = PROJECT.render(kit(refs, (kind, id, label) => `<a class="cs-ref" href="/app/${kind}/${id}" data-nav>${label}</a>`),
     projectView([{ id: "PLAN-2026-0003", title: "Pothole options" }]));
-  assert.deepEqual(refs.map((r) => r.slice(0, 3)), [["plan", "PLAN-2026-0003", "Pothole options"]]);
+  assert.ok(refs.some((r) => r[0] === "plan" && r[1] === "PLAN-2026-0003" && r[2] === "Pothole options"), "the plan by name, with the plan as subject");
   assert.match(html, /<a class="cs-ref" href="\/app\/plan\/PLAN-2026-0003" data-nav>Pothole options<\/a>/);
 });
 
-test("R18 controls: a project with no plan draws no plan link; a kind the shell does not link is drawn plain, never as a bare card", async () => {
+test("R18 R52 controls: a project with no plan still lists the plan kind (with the project as subject); a kind the shell does not link is drawn plain, never as a bare card", async () => {
   const none = [];
   PROJECT.render(kit(none, () => ""), projectView([]));
-  assert.deepEqual(none, [], "no plan, no link asked for");
+  assert.ok(none.some((r) => r[0] === "plan" && r[1] === P), "R52 (1): the first plan can be made");
   const unlinked = PROJECT.render(kit([], (kind, id, label) => `<span class="cs-card">${label}</span>`), projectView([{ id: "PLAN-1", title: "Options" }]));
   assert.doesNotMatch(unlinked, /cs-card/);
   assert.match(unlinked, /Options/);

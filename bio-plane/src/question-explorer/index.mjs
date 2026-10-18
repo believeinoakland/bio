@@ -1,5 +1,5 @@
 /* question-explorer — the system exploring a question on its own where an account owner turned exploring on
- * (requirements: `build/requirements/question-explorer.md`, R1–R16; D33, D36, D39, D11–D14, D66; N815).
+ * (requirements: `build/requirements/question-explorer.md`, R1–R17; D33, D36, D39, D11–D14, D66; N815).
  *
  * `questionExplorerOf(host, deps)` answers the one instance per Durable Object storage (K61). What it does:
  *   - chooses (R1, R2, R9): each tick reads at most 200 open or surfaced questions, keeps those worth exploring, and
@@ -43,6 +43,7 @@ import { parseFrontmatter, isMachineIdentity, ACCEPTANCE_FORMS, acceptanceRecord
   from "../record-grammar/index.mjs";
 import { EXPLORE_CHECKS } from "./checks.mjs";
 import { QUESTION_EXPLORER_TABLES, migrateQuestionExplorer } from "./schema.mjs";
+import { say } from "./words.mjs";
 
 export { EXPLORE_CHECKS, EXPLORE_CHECK_KEYS } from "./checks.mjs";
 export { QUESTION_EXPLORER_SCHEMA, QUESTION_EXPLORER_TABLES, migrateQuestionExplorer } from "./schema.mjs";
@@ -74,10 +75,9 @@ export const EXPLORE_BOUNDS = Object.freeze([
   Object.freeze({ bound: "mints", allowed: 50 }),
 ]);
 /** The step's words (`steps` R1's `work`, the doer's words on what the work is). */
-export const EXPLORE_WORK = "The system explored this question for material the record does not yet bring to it.";
+export const EXPLORE_WORK = say("question-explorer.system_explored_question");
 /** What every offered find says, whatever its bearing (R5, R14). */
-export const EXPLORE_FIND_SAYS = "The system found this while exploring the question. It is the system's work, offered "
-  + "once; it is not evidence until a member takes it in by her own act.";
+export const EXPLORE_FIND_SAYS = say("question-explorer.system_found_exploring");
 /** How long a pending Ask waits before a tick looks for its approval again (R1). */
 export const EXPLORE_ASK_RECHECK_MS = 3600000;
 /** The skill an exploring run is formed under (`run-rules` R8's `<pack>@<edition>`). */
@@ -120,6 +120,8 @@ export class QuestionExplorer {
       testBars: aiRuns && typeof aiRuns.testBarRecords === "function" ? aiRuns.testBarRecords() : [] });
     this.testSet = testSet;
   }
+
+  #tail = Promise.resolve();
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -295,11 +297,11 @@ export class QuestionExplorer {
   gate() {
     const shut = (why) => ({ open: false, why, false_alarm_rate: null, gold_set: null, untested: null });
     try {
-      if (!this.steps || !this.aiUse) return shut("a provider the explorer needs is not in place");
+      if (!this.steps || !this.aiUse) return shut(say("question-explorer.provider_explorer_needs"));
       const held = this.held() || {};
       const inv = this.#admitted(EXPLORE_MODE, held), use = this.#admitted(EXPLORE_TEST_PART, held);
       if (!inv.admitted || !use.admitted)
-        return shut("the investigate mode and the explorer's use are not both deployable on the test investigations");
+        return shut(say("question-explorer.investigate_mode_explorer"));
       if (use.untested) return { open: true, why: null, false_alarm_rate: null, gold_set: null, untested: use.untested };
       /* The record that holds the explorer's bar on the set's current version (`run-rules`' `checkTestBarRecord`). */
       const tb = (Array.isArray(held.testBars) ? held.testBars : []).find((r) => runRules.checkTestBarRecord(r) === null
@@ -307,9 +309,9 @@ export class QuestionExplorer {
         && r.set_version === this.testSet.version);
       const far = tb ? tb.false_alarm_rate : NaN;
       if (!(far >= 0 && far <= EXPLORE_FALSE_ALARM_MAX))
-        return shut("the explorer's false-alarm rate on the test investigations is not recorded at or under 20%");
+        return shut(say("question-explorer.explorer_false_alarm"));
       return { open: true, why: null, false_alarm_rate: far, gold_set: `${tb.set}@${tb.set_version}`, untested: null };
-    } catch { return shut("the gate could not be read"); }
+    } catch { return shut(say("question-explorer.gate_read")); }
   }
 
   /* ---------------------------------------------------------------- R1, R2: choosing */
@@ -382,13 +384,13 @@ export class QuestionExplorer {
   }
 
   /** R1: for `scheduler`: how many questions a tick would consider now; none while the gate is shut. */
-  exploreDue(now) {
+  async exploreDue(now) {
     try { return this.gate().open ? this.#due(this.#iso(now)).length : 0; } catch { return 0; }
   }
 
   /** R1: when a tick is next worth running: now while any is due; else, while an Ask waits for its approval today,
    *  the hour after it was made; else null. Answered in `now`'s own form (a number of ms, or an instant). */
-  exploreWake(now) {
+  async exploreWake(now) {
     try {
       if (!this.gate().open) return null;
       const iso = this.#iso(now);
@@ -411,6 +413,14 @@ export class QuestionExplorer {
    *  owner's Ask (`ai-use.exploreAsk`, with the questions and their estimate, R12), and nothing runs without approval;
    *  a refusal passes. Answers what it did. */
   exploreTick(now) {
+    /* R17: `ai-runs` answers `open` asynchronously, so two ticks must not interleave between a question's check and its
+       run's row: one tick at a time. */
+    const tick = this.#tail.then(() => this.#tick(now));
+    this.#tail = tick.catch(() => {});
+    return tick;
+  }
+
+  async #tick(now) {
     const at = this.#iso(now);
     const out = { at, gate: "open", opened: [], asked: [], refused: 0, considered: 0 };
     const g = this.gate();
@@ -438,7 +448,7 @@ export class QuestionExplorer {
           continue;
         }
         const label = (a && a.label) || { kind: "machine", enabled_by: owner };
-        const opened = this.#open(w, owner, label, at, day);
+        const opened = await this.#open(w, owner, label, at, day);
         if (opened.ok) { this.#consider(w.question, owner, day, "opened", at); out.opened.push(opened); break; }
         this.#consider(w.question, owner, day, "refused", at);
         out.refused += 1;
@@ -465,25 +475,30 @@ export class QuestionExplorer {
         : owner.startsWith("project:") ? this.membership.projectOwners(owner.slice(8))[0] ?? null
           : this.membership.activeAdmins()[0] ?? null;
     } catch { as = null; }
-    if (!as) return "not known yet";
+    if (!as) return say("question-explorer.known");
     const viewer = as.startsWith("member:") || as === "admin" ? as : `member:${as}`;
     try {
       const e = this.aiUse.estimate({ owner, use: EXPLORE_USE, mode: EXPLORE_MODE, count, viewer, at });
-      return e && e.ok !== false && e.estimate !== undefined ? e.estimate : "not known yet";
-    } catch { return "not known yet"; }
+      return e && e.ok !== false && e.estimate !== undefined ? e.estimate : say("question-explorer.known");
+    } catch { return say("question-explorer.known"); }
   }
 
   /** R3, R12: open one exploring run on a question for an owner: its estimate, then the run, passing the step's place
    *  and work; `ai-runs` opens the run and then creates its system step (its R73, K2490), answering it. */
-  #open(w, owner, label, at, day) {
+  async #open(w, owner, label, at, day) {
     const estimate = this.#estimate(owner, 1, at);
     const run = `XPL-${day}-${sha256HexSync(`${w.question}|${owner}|${at}`).slice(0, 12)}`;
-    const opened = this.aiRuns.open({ run, contextType: "inquiry", contextId: w.question, label: "exploring this question",
-                                      mode: EXPLORE_MODE, origin: EXPLORE_ORIGIN, use: EXPLORE_USE,
-                                      place: { questions: [w.question] }, work: EXPLORE_WORK,
-                                      principalPlane: this.principal, principalClaude: owner, principalClaudeRef: null,
-                                      enabledBy: label, skillVersion: EXPLORE_SKILL, bounds: EXPLORE_BOUNDS.map((b) => ({ ...b })),
-                                      at, actor: null, viewer: this.principal });
+    /* R17: `ai-runs.open` answers asynchronously and is awaited; a run it refuses, or that it fails to open, is no run. */
+    let opened;
+    try {
+      opened = await this.aiRuns.open({ run, contextType: "inquiry", contextId: w.question,
+                                        label: say("question-explorer.label.exploring_question"),
+                                        mode: EXPLORE_MODE, origin: EXPLORE_ORIGIN, use: EXPLORE_USE,
+                                        place: { questions: [w.question] }, work: EXPLORE_WORK,
+                                        principalPlane: this.principal, principalClaude: owner, principalClaudeRef: null,
+                                        enabledBy: label, skillVersion: EXPLORE_SKILL, bounds: EXPLORE_BOUNDS.map((b) => ({ ...b })),
+                                        at, actor: null, viewer: this.principal });
+    } catch { opened = null; }
     if (!opened || opened.ok === false || typeof opened.step !== "string" || !opened.step)
       return { ok: false, question: w.question, owner, refused: opened };
     const step = opened.step;
@@ -498,7 +513,7 @@ export class QuestionExplorer {
    *  cannot place, read as a person, fail closed) is made only when a member tied that person to the question; any
    *  other is refused `EXPLORE_PERSON_NOT_TIED`, recorded on the run, and the run goes on. A tied person past the
    *  run's 20th is refused `EXPLORE_PERSON_CAP_REACHED` and the run ends its step set aside (R8). */
-  look({ run, entity = null, aim = null, caller = null, at = null } = {}) {
+  async look({ run, entity = null, aim = null, caller = null, at = null } = {}) {
     const live = this.#liveRun(run, caller);
     if (live.refusal) return live.refusal;
     const r = live.run;
@@ -520,7 +535,7 @@ export class QuestionExplorer {
     if (this.#personCount(r.run) >= EXPLORE_PERSON_CAP) {
       this.sql.exec(`INSERT INTO explore_refusals (run, question, code, entity, aim, at) VALUES (?,?,?,?,?,?)`,
                     r.run, r.question, "EXPLORE_PERSON_CAP_REACHED", e, aimText, iso);
-      const ended = this.#end(r, "set_aside", "EXPLORE_PERSON_CAP_REACHED", null, iso, caller);
+      const ended = await this.#end(r, "set_aside", "EXPLORE_PERSON_CAP_REACHED", null, null, iso, caller);
       return { ...this.#refuse("EXPLORE_PERSON_CAP_REACHED", `the run gathered about ${EXPLORE_PERSON_CAP} persons`,
                                { run: r.run, entity: e, cap: EXPLORE_PERSON_CAP }), ended };
     }
@@ -631,7 +646,7 @@ export class QuestionExplorer {
     if (!this.captureRequests || typeof this.captureRequests.captureRequest !== "function")
       return this.#refuse("EXPLORE_NO_RUN", "the capture door is not in place", { run: r.run });
     const asked = this.captureRequests.captureRequest(
-      { run: r.run, address, target: r.question, purpose: purpose ?? "exploring the question", render, step: r.step },
+      { run: r.run, address, target: r.question, purpose: purpose ?? say("question-explorer.exploring_question"), render, step: r.step },
       { viewer: this.principal, caller: caller ?? this.principal, ...(at ? { at } : {}) });
     if (asked && asked.ok === false && asked.code === "CAPTURE_REQUEST_ADDRESS_NOT_HELD" && typeof address === "string") {
       const iso = this.#iso(at);
@@ -690,13 +705,13 @@ export class QuestionExplorer {
    *  passages and connections, each tied to its quote, labelled the system's, under the run's step, minted within its
    *  `mints` bound. Asked here first, as `read` asks; and a proposed connection to a person passes R9 and R10's gate (a
    *  person a member tied, within the run's 20), so the run gathers about no one else by proposing either. */
-  propose({ run, bundleId, fn, version, cap = null, refs = [], connections = [], caller = null, at = null } = {}) {
+  async propose({ run, bundleId, fn, version, cap = null, refs = [], connections = [], caller = null, at = null } = {}) {
     const d = this.#readable(run, bundleId, caller);
     if (d.refusal) return d.refusal;
     const { r, id } = d;
     for (const c of Array.isArray(connections) ? connections : []) {
       if (!c || c.to_kind !== "person") continue;
-      const looked = this.look({ run: r.run, entity: c.to, aim: "a proposed connection", caller, at });
+      const looked = await this.look({ run: r.run, entity: c.to, aim: say("question-explorer.proposed_connection"), caller, at });
       if (looked.ok === false) return { ...looked, nothing_proposed: true };
     }
     if (!this.runProductions || typeof this.runProductions.extractPropose !== "function")
@@ -708,34 +723,52 @@ export class QuestionExplorer {
 
   /* ---------------------------------------------------------------- R8, R12: the end */
 
-  #end(r, end, reason, bound, iso, caller) {
-    /* `ai-runs` ends the run's step at its close (its R73, `steps` R5's machine arm): `ended`, or `set_aside` with the
-       reason. */
+  /** R17: the run's close through `ai-runs`, awaited, in the record's own words: a `bound` of `run-rules`' `RUN_BOUNDS`
+   *  or `RUN_ENDINGS` (the one named when it is one, else `completed`: a run this module ends by its own rule, the cap or
+   *  a limit, finished its work as far as it went) and a `condition` that is null or a key of `CONDITION_KINDS`. This
+   *  module's own reasons (`EXPLORE_PERSON_CAP_REACHED`, a limit's text) are the step's `reason` only, never the run's
+   *  condition. `ai-runs` ends the run's step at its close (its R73, `steps` R5's machine arm): `ended`, or `set_aside`
+   *  with the reason. A close `ai-runs` refuses, or that fails, is carried in the answer (`closed: false`, the plane's
+   *  code) and the row records that the end was not accepted (`close_refused`), the run staying open to end again; it
+   *  never throws. */
+  async #end(r, end, reason, bound, condition, iso, caller) {
     let closed = null;
     try {
-      closed = this.aiRuns.close({ run: r.run, bound: bound || (end === "ended" ? "completed" : "cancelled"),
-                                   condition: reason ?? null, stepEnd: end, reason: reason ?? null,
-                                   at: iso, actor: null, viewer: this.principal,
-                                   caller: caller ?? this.principal });
+      closed = await this.aiRuns.close({ run: r.run, bound: typeof bound === "string" && runRules.checkBound(bound) === null
+                                           ? bound : "completed",
+                                         condition: condition ?? null, stepEnd: end, reason: reason ?? null,
+                                         at: iso, actor: null, viewer: this.principal,
+                                         caller: caller ?? this.principal });
     } catch { closed = null; }
-    const actual = closed && (closed.actual ?? closed.cost) != null ? (closed.actual ?? closed.cost) : null;
-    this.sql.exec(`UPDATE explore_runs SET ended=?, reason=?, closed_at=?, actual=? WHERE run=?`,
+    const accepted = !!closed && closed.ok !== false && closed.terminated !== false && closed.found !== false;
+    if (!accepted) {
+      const code = closed && typeof closed.code === "string" ? closed.code : null;
+      this.sql.exec(`UPDATE explore_runs SET close_refused=? WHERE run=? AND ended IS NULL`, code ?? "NOT_ACCEPTED", r.run);
+      return { run: r.run, end, reason: reason ?? null, closed: false, code, actual: null };
+    }
+    const actual = (closed.actual ?? closed.cost) != null ? (closed.actual ?? closed.cost) : null;
+    this.sql.exec(`UPDATE explore_runs SET ended=?, reason=?, closed_at=?, actual=?, close_refused=NULL WHERE run=? AND ended IS NULL`,
                   end, reason ?? null, iso, json(actual === null ? null : { actual }), r.run);
-    return { run: r.run, end, reason: reason ?? null, closed: !!(closed && closed.ok !== false), actual };
+    return { run: r.run, end, reason: reason ?? null, closed: true, actual };
   }
 
-  /** R8, R12: the run's end. `ended` ends its step with every outcome undetermined; `set_aside` (a limit reached, a
-   *  refusal) names its reason, and only the enabling owner is told (`stopsFor`). The run's actual cost (`ai-runs`
-   *  R76) is kept, answered only to the paying account's owners. An ended run answers as it ended. */
-  end({ run, end = "ended", reason = null, bound = null, caller = null, at = null } = {}) {
+  /** R8, R12, R17: the run's end. `ended` ends its step with every outcome undetermined; `set_aside` (a limit reached, a
+   *  refusal) names its reason, and only the enabling owner is told (`stopsFor`). The close is awaited and answers
+   *  `closed` only when `ai-runs` accepted it; the run's actual cost (`ai-runs` R76) is kept, answered only to the paying
+   *  account's owners. An ended run answers as it ended. A `condition` outside `CONDITION_KINDS` is refused before
+   *  anything is closed. */
+  async end({ run, end = "ended", reason = null, bound = null, condition = null, caller = null, at = null } = {}) {
     const held = typeof run === "string" ? this.#one(`SELECT * FROM explore_runs WHERE run=?`, run.trim()) : null;
     if (held && held.ended) return { ok: true, run: held.run, end: held.ended, reason: held.reason, already: true };
     const live = this.#liveRun(run, caller);
     if (live.refusal) return live.refusal;
     if (end !== "ended" && end !== "set_aside")
       return this.#refuse("EXPLORE_RUN_ENDED", "a run ends `ended` or `set_aside`", { run: live.run.run });
+    const bad = runRules.checkCondition(condition);
+    if (bad) return { ...bad, run: live.run.run };
     const why = end === "set_aside" ? (str(reason) ? str(reason).slice(0, 500) : "LIMIT_REACHED") : null;
-    return { ok: true, ...this.#end(live.run, end, why, bound, this.#iso(at), caller), already: false };
+    const done = await this.#end(live.run, end, why, bound, condition, this.#iso(at), caller);
+    return done.closed ? { ok: true, ...done, already: false } : { ok: false, ...done, already: false };
   }
 
   /** R8: the runs set aside by a limit, each told once (a stable key) to the owners of the account that enabled it
@@ -746,7 +779,7 @@ export class QuestionExplorer {
                                 ORDER BY closed_at DESC, run LIMIT 1000`);
       return { ok: true, stops: rows.filter((x) => this.#ownsAccount(viewer, x.owner))
         .map((x) => ({ key: `explore-stopped:${x.run}`, run: x.run, question: x.question, reason: x.reason, at: x.closed_at,
-                       says: "An exploring run you enabled stopped before it finished, and its step was set aside." })) };
+                       says: say("question-explorer.says.exploring_run_enabled") })) };
     } catch { return { ok: true, stops: [] }; }
   }
 
@@ -853,8 +886,8 @@ export class QuestionExplorer {
       : { question: o.f.question, target, ...(o.f.kind === "content" ? { content_id: o.f.ref } : {}),
           note: form === "edited" ? str(edit) : o.f.how };
     return { ok: true, find: o.f.find, question: o.f.question, accepted: rec, leg,
-             route: o.f.kind === "page" ? "capture the page by her own act, then cite it"
-               : "her own promotion of the question, which writes the leg as hers", wrote_leg: false };
+             route: o.f.kind === "page" ? say("question-explorer.capture_page_act")
+               : say("question-explorer.promotion_question_writes"), wrote_leg: false };
   }
 
   /** R6: a follower outside every project drawing on the question mutes a find; within a drawing project the find is

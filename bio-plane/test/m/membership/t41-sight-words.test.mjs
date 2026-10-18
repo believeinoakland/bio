@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V } from "./fixture.mjs";
-import { Membership, viewerPredicate, hiddenBundles, MEMBERSHIP_CHECKS, PROJECT_VISIBILITY_CHECKS, HANDLE_WORDS }
+import { Membership, viewerPredicate, hiddenBundles, MEMBERSHIP_CHECKS, PROJECT_VISIBILITY_CHECKS, WORD_KEYS }
   from "../../../src/membership/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
@@ -224,15 +224,15 @@ test("R120 T41 the sight the contract tables give is R43's: an administrator is 
 
 /* ---------------------------------------------------------------- R123, R126 ---------------------------------------- */
 
-test("R126 R123 T41 T46 HANDLE_CHECK_PAUSED's translation is words.json's handle.refused.paused, read by key (DEC-188 (7)), its row C-96.48; the two refusals R124 read by key are retired with it", async () => {
+test("R126 R123 T41 T46 R151 HANDLE_CHECK_PAUSED's translation is the words of handle.refused.paused, read by key (DEC-188 (7)), its row C-96.48; the two refusals R124 read by key are retired with it", async () => {
   const words = await wordsJson();
   const en = (k) => words.find((x) => x.key === k).en;
-  assert.equal(HANDLE_WORDS["handle.refused.paused"], en("handle.refused.paused"), "held verbatim");
-  assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.translation, HANDLE_WORDS["handle.refused.paused"]);
+  assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.translation, en("handle.refused.paused"), "the key's words, placeholder left");
   assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.check, "C-96.48");
-  /* negative control (T46, DEC-197): no row reads handle.refused.notmember or handle.refused.unchecked, nor holds them */
+  assert.ok(WORD_KEYS.includes("handle.refused.paused"));
+  /* negative control (T46, DEC-197): no row reads handle.refused.notmember or handle.refused.unchecked, nor reads handle.fixed */
   for (const key of ["handle.refused.notmember", "handle.refused.unchecked", "handle.fixed"])
-    assert.equal(key in HANDLE_WORDS, false, key);
+    assert.equal(WORD_KEYS.includes(key), false, key);
   for (const code of ["HANDLE_CHANGE_NOT_A_MEMBER", "HANDLE_CHANGE_UNCHECKED"]) assert.equal(code in MEMBERSHIP_CHECKS, false, code);
 });
 
@@ -241,7 +241,7 @@ test("R123 T41 HANDLE_CHECK_PAUSED answers handle.refused.paused with `minutes`,
   const inv = (await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" })).invite;
   for (let i = 0; i < 60; i++) await w.m.handleCheck({ invite: inv, handle: `h-${i}` });
   const p = await w.m.handleCheck({ invite: inv, handle: "x-y" });
-  assert.deepEqual([p.reason, p.translation], ["HANDLE_CHECK_PAUSED", HANDLE_WORDS["handle.refused.paused"]]);
+  assert.deepEqual([p.reason, p.translation], ["HANDLE_CHECK_PAUSED", MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.translation]);
   assert.match(p.translation, /\{minutes\}/, "the placeholder is left for the screen");
   assert.equal(p.minutes, Math.ceil(p.retryAfter / 60));
   assert.ok(Number.isInteger(p.minutes) && p.minutes >= 1 && p.minutes <= 21, String(p.minutes));

@@ -4,18 +4,18 @@
 const RAIL = [['home', 'Home', 'home'], ['queue', 'Queue', 'queue', 13], ['find', 'Find', 'search'], ['add', 'Add', 'add'], ['projects', 'Projects', 'project'], ['people', 'People', 'subject'], ['settings', 'Settings', 'settings']];
 const TABS = [['home', 'Home', 'home'], ['queue', 'Queue', 'queue'], ['add', 'Add', 'add'], ['find', 'Find', 'search'], ['more', 'More', 'settings']];
 const BANDS = {
-  working: `<b>Working</b> · not public · seen by your group's members`,
-  review: `${I('outward')}<b>Shared for review</b> · 2 people outside the group can read this until 20 October`,
-  imported: `${I('elsewhere')}<b>Another group's case:</b> West Oakland Neighbors · Edition 2 · read-only · 1 of 3 findings recreated`,
+  working: `<b>Working</b> · not public · seen by your team's members`,
+  review: `${I('outward')}<b>Shared for review</b> · 2 people outside the team can read this until 20 October`,
+  imported: `${I('elsewhere')}<b>Another team's case:</b> West Oakland Neighbors · Edition 2 · read-only · 1 of 3 findings recreated`,
 };
 /* what the assistant says beside each screen, when the member has connected their own account */
 const ASSIST = {
   question: ['Is there anything that links the work orders to the policy directly?', 'The work orders cite "AI 4.12" in their category field, row by row. Citing that column would make the link one the source itself makes, which would raise connection from C to A. I looked in the 14 documents this project holds.'],
   document: ['What does this instruction say "closed" means?', 'Passage 5: a report is closed "when the crew reports the work complete". It does not mention an inspection. This is legal information, not legal advice.'],
-  plan: ['What options does a group usually have here?', 'For a fixing project with a hypothetical subject, groups often start with a records request, then ask the responsible committee to agendize the issue. I put two suggestions in the tray; they are not in the plan until you adopt one.'],
+  plan: ['What options does a team usually have here?', 'For a fixing project with a hypothetical subject, teams often start with a records request, then ask the responsible committee to agendize the issue. I put two suggestions in the tray; they are not in the plan until you adopt one.'],
   'start-send': ['Draft the request for me.', 'I drafted it in the field, labeled as my draft. Edit it until it is yours; nothing is sent until you approve it and send it yourself.'],
-  request: ['Draft the request for me.', 'I drafted it in the field, labeled as my draft. The law and the office come from your group\'s profile.'],
-  person: ['Has L. Chen held any other post?', 'Deputy Director, Transportation, 2018–2022, from the council minutes the group holds. I found nothing earlier; I looked in 31 documents.'],
+  request: ['Draft the request for me.', 'I drafted it in the field, labeled as my draft. The law and the office come from your team\'s profile.'],
+  person: ['Has L. Chen held any other post?', 'Deputy Director, Transportation, 2018–2022, from the council minutes the team holds. I found nothing earlier; I looked in 31 documents.'],
   timeline: ['Can you propose events from the rent schedules?', 'This is switched on after its measurement at the release. For now, record events from cited passages yourself.'],
   _: ['What is waiting on me here?', 'Two things on this screen need you. I can explain any mark: tap it, or ask me.'],
 };
@@ -23,19 +23,21 @@ function assistantPanel(screen, c) {
   const [q, a] = ASSIST[screen] || ASSIST._;
   return `<aside class="cs-dock" aria-label="The assistant">
    <header>${I('machine')}The assistant<span class="spacer"></span><span class="muted mk-small">$0.42 of your $2.00 today</span><button type="button" class="cs-btn" data-tone="quiet" aria-label="Widen">${I('expand')}</button></header>
-   <div class="body"><p class="mk-small muted"><b data-tip="<b>On your own account</b>: your own Claude subscription serves you here, so its use is yours. Where the group's key or a project's account serves you instead, this says so.">On your own account</b> · It works for you alone. It finds, reads and checks; it never concludes, signs or sends.</p>
-    <div class="mk-msg me mk-data">${esc(q)}</div>${machine('Mai', `<p class="mk-data">${esc(a)}</p>`)}${screen === 'assistant' ? dockMore() : ''}</div>
-   <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('airunopen', 'Work on this', { tone: 'primary' })}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
+   <div class="body"><p class="mk-small muted"><b data-tip="<b>On your own account</b>: your own Claude subscription serves you here, so its use is yours. Where the team's key or a project's account serves you instead, this says so.">On your own account</b> · It works for you alone. It finds, reads and checks; it never concludes, signs or sends.</p>
+    <div class="mk-msg me mk-data">${esc(q)}</div>${machine('Mai', `<p class="mk-data">${esc(a)}</p><p class="mk-small">${I('accepted')} ${card('Checked by Civicsmith before it was shown', 'Every passage this answer cites was found, word for word, in the document it names, by Civicsmith itself and not by the assistant.')}</p>`)}${screen === 'assistant' ? dockMore() : ''}</div>
+   <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('ask', 'Ask', { tone: 'primary' })}${btn('airunopen', 'Work on this')}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
 }
-/* DEC-248 (BOB's B209 (1); screens-inquiry R13, R17, R33): on the assistant panel, a run working, what a run that can't
+/* DEC-296 (BOB's B251, N1167; ai-runs R76): a run's cost, "so far" while it works and in full when it ends, shown only to the
+   paying account's owners; money where the account reports it, else tokens and calls.
+   DEC-248 (BOB's B209 (1); screens-inquiry R13, R17, R33): on the assistant panel, a run working, what a run that can't
    start says in the panel (each withheld or refused dispatch by its words, never blank), and the serving account's thirty
    days of bars, drawn only for that account's owner. */
 function dockMore() {
-  return `<p class="mk-small">${I('machine')} A run of yours is working on this.</p>
-   <details class="mk-details"><summary>If a run can't start, the panel says why, here</summary><div style="display:grid;gap:6px">${gapm('refused', '“Work on this” runs only on your own Claude subscription, and here another account serves you. Nothing was sent. To use your own, connect it under Settings, The assistant.')}${gapm('refused', 'The assistant isn\'t installed in your group\'s Civicsmith yet, so this run can\'t start. Nothing was sent. Whoever installed your group\'s Civicsmith can add it; everything else works without it.')}${gapm('refused', 'The run can\'t start: your group\'s Civicsmith didn\'t answer in time while preparing it. Nothing was sent. Try again in a moment.')}${gapm('refused', 'This run has already ended, so it can\'t be set working again. Nothing was sent. Start a new one with Work on this.')}${gapm('refused', 'The run can\'t start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.')}<p class="mk-small muted">Reference: 7Q2K-91XD</p></div></details>
+  return `<p class="mk-small">${I('machine')} A run of yours is working on this. ${card('So far: $0.62 in 31 calls, on your Claude subscription.', "What this run has cost the account that pays for it. Only that account's owners see it, never another member.")}</p>
+   <details class="mk-details"><summary>If a run can't start, the panel says why, here</summary><div style="display:grid;gap:6px">${gapm('refused', '“Work on this” runs only on your own Claude subscription, and here another account serves you. Nothing was sent. To use your own, connect it under Settings, The assistant.')}${gapm('refused', 'The assistant isn\'t installed in your team\'s Civicsmith yet, so this run can\'t start. Nothing was sent. Whoever installed your team\'s Civicsmith can add it; everything else works without it.')}${gapm('refused', 'The run can\'t start: your team\'s Civicsmith didn\'t answer in time while preparing it. Nothing was sent. Try again in a moment.')}${gapm('refused', 'This run has already ended, so it can\'t be set working again. Nothing was sent. Start a new one with Work on this.')}${gapm('refused', 'The run can\'t start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.')}<p class="mk-small muted">Reference: 7Q2K-91XD</p></div></details>
    <details class="mk-details"><summary>Your account's use, last 30 days</summary>${usageBars(4.10, 61, 4)}</details>`;
 }
-const DOOR_WIZ = new Set(['Your first question', 'Get a record', 'Check a claim', 'Follow the money', 'Build a timeline', 'Follow a proceeding', 'Use another group\'s case']);  // the scripts a front door offers (library DOORS): their guide names the way out (DEC-227)
+const DOOR_WIZ = new Set(['Your first question', 'Get a record', 'Check a claim', 'Follow the money', 'Build a timeline', 'Follow a proceeding', 'Use another team\'s case']);  // the scripts a front door offers (library DOORS): their guide names the way out (DEC-227)
 function wizardGuide(w) {
   return `<aside class="cs-dock" aria-label="Wizard">
    <header>${I('wizard')}Wizard<span class="spacer"></span><button type="button" class="cs-btn" data-tone="quiet">Stop</button></header>
@@ -43,31 +45,32 @@ function wizardGuide(w) {
     <span class="step">${I('wizard')}${esc(w.name)} · step ${w.i} of ${w.n}</span>
     <span class="what">${esc(w.what)}</span><span class="why">${esc(w.why)}</span>
     ${w.via ? `<p class="mk-small">${I('wizard')} Side trip: <b>${esc(w.via)}</b>. When it finishes or you stop it, you come back to this step.</p>` : ''}
+    ${w.ask === 'project' ? `<div class="cs-field"><label for="mk-wsubj">This step works in a project. Which one?</label><select id="mk-wsubj" class="cs-input"><option class="mk-data" selected>Pothole repairs</option><option class="mk-data">The Coliseum lease</option></select></div><details class="mk-details"><summary>With no project to choose</summary><p class="mk-small">This step works in a project, and you aren't in one yet. Start one, or ask to join one, then come back to this step.</p></details>` : ''}
     ${w.draft ? `<p class="mk-small">${I('machine')} This step places a labeled draft in the field. It becomes yours only when you keep or edit it.</p>` : ''}
     <span class="nav"><button type="button" class="cs-btn" data-tone="quiet">${I('back')}Back</button><button type="button" class="cs-btn">Next${I('next')}</button></span>
     ${w.act ? `<span class="nav"><button type="button" class="cs-btn" data-replay>${I('wizard')}Show me where</button><span class="cs-kbd">Alt+Shift+W</span></span>` : ''}
-    ${DOOR_WIZ.has(w.name) ? `<p class="mk-small muted">For your own situation rather than the government's word: <a href="#" class="cs-ref" data-goto="elsewhere" data-tip="<b>Where else to go</b> · the places your group's place lists for needs Civicsmith doesn't serve, each with where that came from. Opening it records nothing.">where else to go</a>.</p>` : ''}
+    ${DOOR_WIZ.has(w.name) ? `<p class="mk-small muted">For your own situation rather than the government's word: <a href="#" class="cs-ref" data-goto="elsewhere" data-tip="<b>Where else to go</b> · the places your team's place lists for needs Civicsmith doesn't serve, each with where that came from. Opening it records nothing.">where else to go</a>.</p>` : ''}
     <p class="mk-small muted">Stopping is fine: nothing is lost, and nobody is told.</p></div></div></aside>`;
 }
 function mast(c, s) {
   return `<header class="cs-mast"><span class="cs-mark" role="img" aria-label="Civicsmith"><svg viewBox="0 0 60 90"><use href="#i-mark"/></svg></span><span class="grp">${G.name}</span><span class="spacer"></span>
     <span class="mk-mastsearch">${I('search')}<span>Search</span></span>
-    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: How quickly explanations open. Promptly, everything opens when you rest on it for half a second; on a longer pause, what screens, sections and acts are waits a second and a half. Keyboard focus and a tap always show everything at once; nothing is ever hidden. Click, or press Alt+Shift+I, to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'On a longer pause' : 'Explain promptly'}</span></button>
+    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: How quickly explanations open. Promptly, everything opens when you rest on it for half a second; on a longer pause, what screens, sections and acts are waits a second and a half. Keyboard focus and a tap always show everything at once; nothing is ever hidden. Click, or press Alt+Shift+I, to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'Explanations: on a pause' : 'Explanations: prompt'}</span></button>
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
     <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}13</span><details class="mk-usermenu"><summary class="mk-avatar" aria-label="Mai: your menu" data-tip="<b>Your menu</b>: your account, and signing out of this device.">M</summary><div class="mk-menu" role="menu"><span class="mk-small muted">Mai · signed in as mai-k</span><a href="#" role="menuitem" onclick="return false">Your account</a><a href="#" role="menuitem" onclick="return false" data-tip="<b>Sign out</b>: ends your session on this device and goes to the sign-in page. Nothing you wrote is lost; drafts stay where they were.">Sign out</a></div></details></header>`;
 }
 // DEC-154 (Bob, 6 October): every screen shows where it is, in the same place: its path, from the section of the rail
-// (or, outside the workspace, the group or Civicsmith) to the screen's own name, which is always last. The heading below
+// (or, outside the workspace, the team or Civicsmith) to the screen's own name, which is always last. The heading below
 // names the thing shown (a question's words, a person's name); the path names the screen.
 const PATH = {
-  site: ['civicsmith.org'], install: ['Civicsmith', 'Create your group'], update: ['Civicsmith', 'Update'], front: ['Lakeshore Tenants'], forgot: ['Lakeshore Tenants', 'Forgot your password'], tour: ['Lakeshore Tenants', 'How we work'], 'help-records': ['Help', 'How a records request works'], reset: ['Lakeshore Tenants', 'Choose a new password'], 'review-outside': ['Lakeshore Tenants', 'Review copy'],
-  group: ['Settings', 'Your group'], settings: ['Settings'], more: ['More'], theme: ['Projects', 'Themes'], projects: ['Projects'], people: ['People'], 'dash-action': ['Action'], 'dash-project': ['The Coliseum lease'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
+  site: ['civicsmith.org'], install: ['Civicsmith', 'Create your team'], update: ['Civicsmith', 'Update'], front: ['Lakeshore Tenants'], forgot: ['Lakeshore Tenants', 'Forgot your password'], tour: ['Lakeshore Tenants', 'How we work'], 'help-records': ['Help', 'How a records request works'], reset: ['Lakeshore Tenants', 'Choose a new password'], 'review-outside': ['Lakeshore Tenants', 'Review copy'],
+  group: ['Settings', 'Your team'], settings: ['Settings'], more: ['More'], theme: ['Projects', 'Themes'], projects: ['Projects'], people: ['People'], 'dash-action': ['Action'], 'dash-project': ['The Coliseum lease'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
   home: ['Home'], elsewhere: ['Home', 'Where else to go'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
   finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'], 'open-file': ['Projects', 'The Coliseum lease', 'Opening a file'],
   'find-in': ['Projects', 'Pothole repairs', 'Find in this'],
-  'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], security: ['Settings', 'Security'], places: ['Settings', 'Places and offices'], recovery: ['Settings', 'Recovery codes'], account: ['Settings', 'Your account'],
-  connect: ['Settings', 'The assistant'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
+  'group-identity': ['Settings', 'Who your team is'], members: ['Settings', 'Members'], security: ['Settings', 'Security'], places: ['Settings', 'Places and offices'], recovery: ['Settings', 'Recovery codes'], account: ['Settings', 'Your account'],
+  connect: ['Settings', 'The assistant'], teamai: ['Settings', 'The team\'s assistant'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
   translations: ['Settings', 'Translations'], wizards: ['Settings', 'Wizards'], updates: ['Settings', 'Updates'],
   person: ['People', 'Person'], explore: ['People', 'Person', 'Explore connections'],
   project: ['Projects', 'Pothole repairs'], document: ['Projects', 'Pothole repairs', 'Document'],
@@ -79,7 +82,7 @@ const PATH = {
   proceeding: ['Projects', 'The Coliseum lease', 'Proceeding'], matter: ['Projects', 'The Coliseum lease', 'Matter'],
   'case-editor': ['Projects', 'The Coliseum lease', 'Case'], 'review-copy': ['Projects', 'The Coliseum lease', 'Review copy'],
   ceremony: ['Projects', 'The Coliseum lease', 'Publish'], docket: ['Projects', 'The Coliseum lease', 'Docket'],
-  imported: ['Projects', 'Imported cases', "Another group's case"],
+  imported: ['Projects', 'Imported cases', "Another team's case"],
 };
 const pathOf = (id, s) => PATH[id] && !(id === 'answers') ? PATH[id] : id === 'answers' ? ['Find', s.title] : [(RAIL.find(r => r[0] === s.rail) || ['', 'Settings'])[1], s.title];
 const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map((x, i) => i === list.length - 1 ? `<b aria-current="page">${esc(x)}</b>` : `<a href="#" onclick="return false">${esc(x)}</a>`).join(' <i>›</i> ')}</nav>`;
@@ -92,8 +95,8 @@ const REFS = {
   home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published 18 September', '2 items in it wait on you this week.'],
          ['Pothole repairs', 'project', '<b>Pothole repairs</b> · project · 2 questions · its main question is short on connection', 'A better link between reports and work orders would bring it to the bar.'],
          ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · project · a money trail across FY2022 to FY2024', 'Ana\'s question there waits for the FY2024–25 budget.']],
-  members: [['Rosa', null, '<b>Rosa</b> · administrator · cover name R. Medina', 'The group\'s only administrator: the group depends on her and the hosting account.'],
-            ['Dev', null, '<b>Dev</b> · member · owner of The Coliseum lease', 'Signs the group\'s cases for that project.'],
+  members: [['Rosa', null, '<b>Rosa</b> · administrator · cover name R. Medina', 'The team\'s only administrator: the team depends on her and the hosting account.'],
+            ['Dev', null, '<b>Dev</b> · member · owner of The Coliseum lease', 'Signs the team\'s cases for that project.'],
             ['Ana', null, '<b>Ana</b> · member · works on Sewer fund transfers', 'Has a question waiting on a held document.'],
             ['Teo', null, '<b>Teo</b> · member · <span class=mk-data>reporter at the Bay Courier</span> · declared expertise: journalism', 'Runs the story that cites Edition 2.']],
   queue: [['812 of 903 reports closed within 7 days', 'calculation', '<b>Reports closed within seven days, FY2025</b> · a calculation · 812 of 903 · computed from the city\'s work orders', 'One of its inputs changed: check whether the count still holds.'],
@@ -108,14 +111,14 @@ const REFS = {
             ['Does "closed" in the city\'s records mean "repaired"?', 'question', '<b>Does “closed” mean “repaired”?</b> · question · unrated · opened by Mai', 'If the answer is no, the main question\'s count overstates repairs.']],
   question: [['812 of 903 reports closed within 7 days', 'calculation', '<b>Reports closed within seven days, FY2025</b> · a calculation from the city\'s work orders', 'Supports the question, using the city\'s own count of “closed”.']],
   answers: [['Public Works work orders, FY2025', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture B', 'The answer counts its rows.']],
-  timeline: [['City Clerk releases schedules', 'action', '<b>The City Clerk released the rent schedules</b> · 18 September · answering the group\'s request', 'The group\'s own act and the office\'s reply, in the second lane.']],
+  timeline: [['City Clerk releases schedules', 'action', '<b>The City Clerk released the rent schedules</b> · 18 September · answering the team\'s request', 'The team\'s own act and the office\'s reply, in the second lane.']],
   explore: [['J. Ortega', 'person', '<b>J. Ortega</b> · Council District 3 since 2023, from Legistar', 'Where this chain starts.'],
             ['Bayline Properties', 'money', '<b>Bayline Properties</b> · paid $1.2M in FY2024 under the Coliseum lease', 'Where the money in this chain ends up.']],
   plan: [['Records request: inspection logs', 'action', '<b>Records request: inspection logs</b> · sent to the City Clerk 2 October · reply due 14 October', 'The plan\'s first step; the next one waits on its reply.'],
          ['Complaint to the city auditor', 'action', '<b>Complaint to the city auditor</b> · an option, not started', 'Becomes ready if the inspection logs show reports closed without repair.']],
   'start-send': [['Asha Rao', 'person', '<b>Asha Rao</b> · City Clerk since March 2021, from the city\'s roster', 'Holds the office this request goes to, today.']],
   'review-copy': [['Prof. N. Iyer', null, '<b>Prof. N. Iyer</b> · housing-law professor · an outside reader named by Dev · can read until 20 October', 'Reviewing Edition 2 before it is published.']],
-  imported: [['Port lease revenue fell short of the adopted budget in three years', 'question', '<b>Port lease revenue fell short of the adopted budget in three years</b> · West Oakland Neighbors\' finding · recreated here', 'Recreated from their case; it counts for your group only once a member accepts it.']],
+  imported: [['Port lease revenue fell short of the adopted budget in three years', 'question', '<b>Port lease revenue fell short of the adopted budget in three years</b> · West Oakland Neighbors\' finding · recreated here', 'Recreated from their case; it counts for your team only once a member accepts it.']],
 };
 
 // Things named on many screens: one card wherever they appear (DEC-160, widened 6 October). [text, opens, what it is, why here
@@ -124,12 +127,12 @@ const GLOBAL_REFS = [
   ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · <span class=mk-data>whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote</span> · owner: Dev · Edition 2 published 18 September', null, ['project']],
   ['Pothole repairs', 'project', '<b>Pothole repairs</b> · a project · <span class=mk-data>whether the city repairs reported potholes within the seven days its own policy sets</span> · 2 questions', null, ['project']],
   ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · a project · <span class=mk-data>where sewer-fee money moved between funds, FY2022 to FY2024, and whether each transfer was authorized</span> · owner: Ana', null, []],
-  ['Lakeshore Tenants', null, '<b>Lakeshore Tenants</b> · your group · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · 6 members, 1 administrator', null, ['install', 'setup', 'join', 'doorbell', 'published']],
-  ['Rosa', 'members', '<b>Rosa</b> · member of your group · administrator', null, ['members']],
-  ['Dev', 'members', '<b>Dev</b> · member of your group · owns The Coliseum lease and signs its cases', null, ['members']],
-  ['Mai', 'members', '<b>Mai</b> · member of your group · works on Pothole repairs · translates Español', null, ['members']],
-  ['Ana', 'members', '<b>Ana</b> · member of your group · works on Sewer fund transfers', null, ['members']],
-  ['Teo', 'members', '<b>Teo</b> · member of your group · <span class=mk-data>a reporter at the Bay Courier</span> · declared expertise: journalism', null, ['members']],
+  ['Lakeshore Tenants', null, '<b>Lakeshore Tenants</b> · your team · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · 6 members, 1 administrator', null, ['install', 'setup', 'join', 'doorbell', 'published']],
+  ['Rosa', 'members', '<b>Rosa</b> · member of your team · administrator', null, ['members']],
+  ['Dev', 'members', '<b>Dev</b> · member of your team · owns The Coliseum lease and signs its cases', null, ['members']],
+  ['Mai', 'members', '<b>Mai</b> · member of your team · works on Pothole repairs · translates Español', null, ['members']],
+  ['Ana', 'members', '<b>Ana</b> · member of your team · works on Sewer fund transfers', null, ['members']],
+  ['Teo', 'members', '<b>Teo</b> · member of your team · <span class=mk-data>a reporter at the Bay Courier</span> · declared expertise: journalism', null, ['members']],
   ['Asha Rao', 'person', '<b>Asha Rao</b> · a person the record follows · City Clerk since March 2021, from the city\'s roster', null, []],
   ['L. Chen', 'person', '<b>L. Chen</b> · a person the record follows · Director of Public Works since 2022, from the city\'s roster', null, ['person']],
   ['J. Ortega', 'person', '<b>J. Ortega</b> · a person the record follows · Council District 3 since 2023, from Legistar', null, []],
@@ -142,7 +145,7 @@ const GLOBAL_REFS = [
   ['Bayline Properties', 'money', '<b>Bayline Properties</b> · a firm · paid $1.2M in FY2024 under the Coliseum lease', null, []],
   ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · published 18 September 2026 at the time Dev set when signing', null, ['published']],
   ['Edition 1', 'published', '<b>Edition 1</b> of The Coliseum lease · a published case, since corrected by Edition 2', null, []],
-  ['West Oakland Neighbors', 'imported', '<b>West Oakland Neighbors</b> · another group · its published cases can be imported and recreated here', null, ['imported']],
+  ['West Oakland Neighbors', 'imported', '<b>West Oakland Neighbors</b> · another team · its published cases can be imported and recreated here', null, ['imported']],
   ['Bay Courier', null, '<b>Bay Courier</b> · a newsroom · <span class=mk-data>Teo reports for it; its story cites Edition 2</span>', null, []],
 ];
 // Attach references by text: every occurrence on the screen, inside running text too, never inside a link, button, field,
@@ -180,18 +183,18 @@ const railW = () => window.CS_RAILW || 184;
 // DEC-163: every element type, decided once (the table on the layouts page): explanations and links added to the whole frame
 // (masthead, path, rail and tabs, wizard marks, step lists, row icons, the published page's head and foot), not only the
 // screen's main area. Level 1 (marks and names) always; level 2 (guidance) when the member has guidance on (DEC-162).
-const GROUP_CARD = '<b>Lakeshore Tenants</b> · your group · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · 6 members<span class=more>Click to see who your group is.</span>';
-const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · <span class=mk-data>a tenants\' group near the Oakland Coliseum</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · its published cases are signed by its project owners';
-const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organization your group\'s record follows', group: 'An office, a member or a group', question: 'A question', finding: 'A finding', case: 'A case', plan: 'A plan or an action', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
+const GROUP_CARD = '<b>Lakeshore Tenants</b> · your team · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · 6 members<span class=more>Click to see who your team is.</span>';
+const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · <span class=mk-data>a tenants\' team near the Oakland Coliseum</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · its published cases are signed by its project owners';
+const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organization your team\'s record follows', group: 'An office, a member or a team', question: 'A question', finding: 'A finding', case: 'A case', plan: 'A plan or an action', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
 const CRUMB_GO = { Home: 'home', Queue: 'queue', Find: 'finder', Add: 'capture', Projects: 'project', People: 'people', Settings: 'account' };
 function decorate(html, id, c) {
   if (typeof document === 'undefined') return html;
   const t = document.createElement('template'); t.innerHTML = html; const R = t.content;
   const set = (el, tip, lvl, go) => { if (!el || el.dataset.tip) return; el.dataset.tip = tip; if (lvl) el.dataset.level = lvl; if (go) el.dataset.goto = go; };
-  set(R.querySelector('.cs-mast .cs-mark'), '<b>Civicsmith</b>: the plumb bob is Civicsmith\'s mark. Wherever you see it, you are in your group\'s own Civicsmith, and the name beside it says whose.', 2);
+  set(R.querySelector('.cs-mast .cs-mark'), '<b>Civicsmith</b>: the plumb bob is Civicsmith\'s mark. Wherever you see it, you are in your team\'s own Civicsmith, and the name beside it says whose.', 2);
   set(R.querySelector('.cs-mast .grp'), GROUP_CARD, 1, 'group-identity');
-  set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your group holds, documents, questions, people and more.', 2);
-  set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your group holds, on the account that serves you, and never concludes, signs or sends.', 2);
+  set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your team holds, documents, questions, people and more.', 2);
+  set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your team holds, on the account that serves you, and never concludes, signs or sends.', 2);
   set(R.querySelector('.cs-mast .cs-kind'), '<b>13 items wait on you</b> in your queue: 5 to do, 5 noticed, 3 status.<span class=more>Click to open your queue.</span>', 1, 'queue');
   set(R.querySelector('.mk-avatar'), '<b>You: Mai</b> · member of Lakeshore Tenants · works on Pothole repairs<span class=more>Click for your account and settings.</span>', 1, 'account');
   R.querySelectorAll('.mk-crumbs a').forEach(a => { const x = a.textContent.trim(); const g = (typeof GLOBAL_REFS !== 'undefined' ? GLOBAL_REFS : []).find(r => r[0] === x);
@@ -208,9 +211,9 @@ function decorate(html, id, c) {
   R.querySelectorAll('table.mk-rows').forEach(tb => { const hs = [...tb.tHead.rows[0].cells].map(h => h.textContent.trim());
     tb.querySelectorAll('tbody tr.mk-r').forEach(r => [...r.cells].forEach((td, i) => { if (i > 1 && hs[i]) { td.dataset.label = hs[i]; td.innerHTML = `<span class="mk-cv">${td.innerHTML}</span>`; } })); });
   set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
-  set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
-  set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
-  set(R.querySelector('.mk-setuphead .mk-wordmark'), '<b>Civicsmith</b>: free software for groups that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises.', 2);
+  set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the team\'s help.', 1);
+  set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for teams that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
+  set(R.querySelector('.mk-setuphead .mk-wordmark'), '<b>Civicsmith</b>: free software for teams that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises.', 2);
   return t.innerHTML;
 }
 function render(screenId, c) { return decorate(renderFrame(screenId, c), screenId, c); }
@@ -251,6 +254,9 @@ function ring(root, act, label) {
   const sel = `[data-act="${CSS.escape(act)}"]`;
   const el = root.querySelector(`button${sel}`) || root.querySelector(sel);
   if (!el) return false;
+  for (let a = el.parentElement; a && a !== root; a = a.parentElement) { // DEC-279: a wizard opens the part, and the choice's block, it points into
+    if (a.tagName === 'DETAILS') a.open = true;
+    if (a.dataset && a.dataset.opens) { const [cls, r] = a.dataset.opens.split('|'); const m = a.closest('main'); if (m) m.classList.add(cls); const ri = r && root.querySelector('#' + r); if (ri) ri.checked = true; } }
   const det = el.closest('tr.mk-detail[hidden]'); if (det) { det.hidden = false; const ob = det.previousElementSibling.querySelector('.mk-open'); if (ob) ob.setAttribute('aria-expanded', 'true'); } // DEC-176: a wizard opens the row it points into
   el.classList.add('cs-target');
   const tag = document.createElement('span');

@@ -7,6 +7,7 @@
    from. */
 import { planeWorld, world as bareWorld, caseDoc, V, NOW } from "../publication/fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { caseDocumentRequiresMaterials } from "../../../src/case-grammar/index.mjs";
 
@@ -155,9 +156,23 @@ function withRead(w, opts = {}) {
   withReceipts(w);
   signAsOfItsFormat(w);
   w.docket = opts.docket || docketOn();
+  /* R36: project-roster's tables, as the host's boot makes them, so a project's matter stake reads. */
+  w.roster = projectRosterOf(w.host);
+  w.roster.migrate();
   w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket });
   w.stamps = stampsOn(w);
   w.read = (name, query = {}) => {
+    const url = new URL(`http://do/${name}`);
+    for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));
+    /* R37 (K3725): the `publishedcase` op is asynchronous (it awaits the docket's public answer); `read` answers its
+       synchronous part, `publishedCase`, as every earlier arm reads it, and `readOp` is the op itself. */
+    if (name === "publishedcase")
+      return w.pr.publishedCase({ id: url.searchParams.get("id"), edition: url.searchParams.get("edition"),
+                                  caseId: url.searchParams.get("caseId") || null,
+                                  sha256: (url.searchParams.get("sha256") || "").toLowerCase() || null });
+    return publicReadOps(w.pr, url)[name]();
+  };
+  w.readOp = async (name, query = {}) => {
     const url = new URL(`http://do/${name}`);
     for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));
     return publicReadOps(w.pr, url)[name]();

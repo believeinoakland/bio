@@ -4,14 +4,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
-import { store, storage, Store, STEP_ORDER } from "./fixture.mjs";
+import { store, storage, Store, STEP_ORDER, stepOrderFrom } from "./fixture.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
-import { MODULE_ORDER } from "../../../src/membership/index.mjs";
+import { moduleOrderFrom } from "../../../src/membership/index.mjs";
 const STEP = "store-door";   /* store-door's promotion step (its R5, was control-plane R42), registered under its name (K2037) */
 const { MODULE_MAPS, ownMaps } = await import("./maps.mjs");   /* after the fixture: control-plane reaches `cloudflare:workers` */
 
@@ -82,28 +82,38 @@ test("R2: before the first request every module's start registrations are held, 
   for (const t of ["tasks", "queue_state"]) assert.ok(names.includes(t), `table ${t}`);
 });
 
-test("R2, R10 (K1416, K1832; control-plane R42): store-door's step (was control-plane's) ranks after every module of layers 1-10 and before every later module of `build/modules.json`, directly before the first layer-11 module, so checks and refusals keep their order; a pure module the order does not rank holds no step", async () => {
+/* R60 (T50; N1171; K3268, K3368 (2); membership R146): the order laws, read from `build/modules.json`'s modules (their
+   ids, their layers), never from a list typed here: the step is ranked once, every module of layers 1-10 before it and
+   every later one after it, directly before the first layer-11 module, and the rest in the file's order. */
+function orderLaws(mods, stepOrder) {
+  const at = stepOrder.indexOf(STEP);
+  assert.equal(stepOrder.filter((m) => m === STEP).length, 1, "the step is ranked once");
+  for (const m of mods) {
+    if (m.layer <= 10) assert.ok(stepOrder.indexOf(m.id) < at, `${m.id} (layer ${m.layer}) ranks before the step`);
+    else assert.ok(stepOrder.indexOf(m.id) > at, `${m.id} (layer ${m.layer}) ranks after the step`);
+  }
+  assert.equal(stepOrder[at + 1], mods.find((m) => m.layer > 10).id, "directly before the first layer-11 module");
+  assert.deepEqual(stepOrder.filter((m) => m !== STEP), mods.map((m) => m.id), "otherwise the file's order");
+}
+const modulesFile = () => {
   const file = JSON.parse(readFileSync(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
-  const mods = (file.modules || file).filter((m) => m.id !== STEP);
-  const at = STEP_ORDER.indexOf(STEP);
-  assert.equal(STEP_ORDER.filter((m) => m === STEP).length, 1, "the step is ranked once");
+  return (file.modules || file).filter((m) => m.id !== STEP);
+};
+
+test("R2, R10 (K1416, K1832; control-plane R42): store-door's step (was control-plane's) ranks after every module of layers 1-10 and before every later module of `build/modules.json`, directly before the first layer-11 module, so checks and refusals keep their order; a pure module the order does not rank holds no step", async () => {
+  const mods = modulesFile();
+  orderLaws(mods, STEP_ORDER);
   const x = await store();
   /* K1832: a module the plane builds nothing for (a pure library, such as case-catalogue) is not asked for a rank; it
      holds no step on the constructed store, so nothing of it is ranked last (promotion R39). Every module that is
      ranked is ranked by its layer. */
   const unranked = [];
   for (const m of mods) {
-    if (!STEP_ORDER.includes(m.id)) {
-      unranked.push(m.id);
-      assert.equal(promotionOf(x.ctx).registerStep(m.id, {}).ok, true, `${m.id} is not ranked, so it holds no step`);
-      continue;
-    }
-    if (m.layer <= 10) assert.ok(STEP_ORDER.indexOf(m.id) < at, `${m.id} (layer ${m.layer}) ranks before the step`);
-    else assert.ok(STEP_ORDER.indexOf(m.id) > at, `${m.id} (layer ${m.layer}) ranks after the step`);
+    if (STEP_ORDER.includes(m.id)) continue;
+    unranked.push(m.id);
+    assert.equal(promotionOf(x.ctx).registerStep(m.id, {}).ok, true, `${m.id} is not ranked, so it holds no step`);
   }
   assert.ok(unranked.length < mods.length / 10, `few modules unranked: ${unranked.join()}`);
-  assert.equal(STEP_ORDER[at + 1], mods.find((m) => m.layer > 10).id, "directly before the first layer-11 module");
-  assert.deepEqual(STEP_ORDER.filter((m) => m !== STEP), MODULE_ORDER.filter((m) => m !== STEP), "otherwise the modules' order");
   /* negative control: a ranked module that registers a step holds it (refused a second) */
   assert.equal(promotionOf(x.ctx).registerStep("ratification", {}).ok, false);
   /* Observed on a promotion: probes registered either side of it see its testimony check run between them. */
@@ -114,6 +124,23 @@ test("R2, R10 (K1416, K1832; control-plane R42): store-door's step (was control-
   const r = await x.call("/testify?author=member:m-riley", { words: "The gate was chained.", observedAt: "2026-09-01" });
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.deepEqual(seen, ["scheduler", STEP, "wizard-scripts", "affordances"]);
+});
+
+test("R60 (T50; N1171; K3268; membership R146): the order laws read the file, so they hold after a module is added to it and another moved, with no edit to a list in the tests; control: a step order that holds the step after the first layer-11 module, or lacks the file's last module, fails them", () => {
+  const mods = modulesFile();
+  /* a module added in layer 3 and one in layer 11 (the last), and one existing module moved within its layer */
+  const added = [...mods.slice(0, 40), { id: "zz-added-3", layer: 3 }, ...mods.slice(40), { id: "zz-added-11", layer: 11 }];
+  const l = added.findIndex((m) => m.id === "zz-added-3");
+  const moved = [...added]; [moved[l - 1], moved[l - 2]] = [moved[l - 2], moved[l - 1]];
+  for (const list of [mods, added, moved]) orderLaws(list, stepOrderFrom(moduleOrderFrom(list)));
+  /* the real order is the same rule over the file itself */
+  assert.deepEqual([...STEP_ORDER], [...stepOrderFrom(moduleOrderFrom(mods))]);
+  /* controls */
+  const good = [...stepOrderFrom(moduleOrderFrom(mods))];
+  const first11 = good.indexOf(mods.find((m) => m.layer > 10).id);
+  const late = good.filter((m) => m !== STEP); late.splice(first11 + 1, 0, STEP);
+  assert.throws(() => orderLaws(mods, late), "the step after the first layer-11 module is refused");
+  assert.throws(() => orderLaws(mods, good.slice(0, -1)), "an order lacking the file's last module is refused");
 });
 
 test("R3: the migration pass is idempotent: a second construction on one storage changes no table, and the PROJ ledger is seeded from the live bundles", async () => {

@@ -29,6 +29,8 @@
  *                  `docketOf(host)`).
  *   record         `record-core`, for its strict `getSetting` (its R25, R83) of the one setting `declared_stake`, for R34 (default:
  *                  `recordOf(host)`, reached at the read, so a world without it reads the stake undetermined).
+ *   roster         `project-roster`, for its `projectStake` (its R32), read at the call, for R36's `matter_stake` (default:
+ *                  `projectRosterOf(host)`, so a world without it reads the matter stake undetermined).
  *   storage        the Durable Object's storage (default: the host's).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
@@ -37,11 +39,13 @@
 import { publicationOf } from "../publication/index.mjs";
 import { recordOf, SETTING_UNREADABLE } from "../record-core/index.mjs";
 import { docketOf } from "../docket/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -92,12 +96,9 @@ const lensSection = (body) => {
   return lines.slice(at, end).join("\n").replace(/\s+$/, "");
 };
 /* R3 (DEC-103): what a document without the lens blocks says instead (R13: stated, never filled). */
-export const LENS_FINGERPRINT_SENTENCE = "this edition carries only the lens's fingerprint, not its statements: the "
-  + "statements_sha of the bias manifest it froze, which anyone holding that manifest can check it against";
-export const LENS_NONE_IN_FORCE_SENTENCE = "this edition carries only the lens's fingerprint, and its bias manifest "
-  + "states that no manifest was in force, so there is no fingerprint to give";
-export const LENS_FINGERPRINT_UNDETERMINED_SENTENCE = "this edition carries only the lens's fingerprint, and its bias "
-  + "manifest states none that can be read, so the fingerprint is undetermined, not absent";
+export const LENS_FINGERPRINT_SENTENCE = word("public-read.edition_carries_lens");
+export const LENS_NONE_IN_FORCE_SENTENCE = word("public-read.edition_carries_lens_fingerprint");
+export const LENS_FINGERPRINT_UNDETERMINED_SENTENCE = word("public-read.edition_carries_lens_fingerprint_bias");
 /* R22: a grade as the signed front matter writes it: the YAML word `null` (or nothing) is no grade. */
 const gradeOf = (g) => (typeof g === "string" && g.trim() && g.trim() !== "null" ? g.trim() : null);
 /* R22 (DEC-112 (4)(1)): each member's standing, from the signed document only: its role (`case_roles`), the bar the
@@ -142,7 +143,7 @@ function withholdChains(withheld, manifest) {
 }
 /* R21: the fixed address a case's docket is served at (its feed's is `op=docketfeed&case=`). */
 export const docketAddress = (caseId) => `op=docketpublic&case=${encodeURIComponent(caseId)}`;
-export const LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for this edition, so it states no lens here";
+export const LENS_NO_DOCUMENT_SENTENCE = word("public-read.signed_case_document");
 
 /* R28: a finding row whose bytes an order in force withholds: its id and hash stay (both public), its title, frozen
    from those bytes, is not served, and the withholding is stated with its orders. Unchanged when nothing withholds it. */
@@ -160,9 +161,8 @@ function withheldCase(row, index, content) {
 }
 
 /* R31 (`publication` R72): what an edition answers of its criteria, as R53 froze them; never recomputed. */
-export const CRITERIA_NOT_RECORDED_SENTENCE = "the criteria were not recorded: this edition was committed before published "
-  + "cases recorded them";
-export const CRITERIA_NOT_A_CASE_SENTENCE = "this is not a case, so it states no criteria";
+export const CRITERIA_NOT_RECORDED_SENTENCE = word("public-read.criteria_recorded_edition");
+export const CRITERIA_NOT_A_CASE_SENTENCE = word("public-read.case_states_criteria");
 function criteriaOf(state, theCase, whole) {
   if (!theCase) return { criteria: null, criteria_detail: CRITERIA_NOT_A_CASE_SENTENCE };
   if (whole) return { criteria: null, criteria_detail: WITHHELD_SENTENCE };
@@ -174,14 +174,10 @@ function criteriaOf(state, theCase, whole) {
 
 /* R26 (D275; `calc-grammar` R10): every calculation output is a computed fact, never a finding. */
 export const COMPUTED_FACT = "computed fact";
-export const CALC_DISCLOSED_SENTENCE = "this calculation did not agree when recomputed, or an input was not bound, and the "
-  + "publisher disclosed that in the words beside it";
-export const CALC_UNDISCLOSED_SENTENCE = "this calculation did not agree when recomputed, or an input was not bound, and "
-  + "the signed document states no disclosure of it";
-export const SHARE_NO_DENOMINATOR_SENTENCE = "the signed document states no denominator for this share, so what it is a "
-  + "share of is undetermined";
-export const TIMELINE_SENTENCE = "the timeline as the case document froze it at signing: what they did and what we did, "
-  + "apart and never interleaved, each item with its source; an item that could be placed at no time is listed apart";
+export const CALC_DISCLOSED_SENTENCE = word("public-read.calculation_agree_recomputed");
+export const CALC_UNDISCLOSED_SENTENCE = word("public-read.calculation_agree_recomputed_input");
+export const SHARE_NO_DENOMINATOR_SENTENCE = word("public-read.signed_document_states");
+export const TIMELINE_SENTENCE = word("public-read.timeline_case_document");
 /* R23: the SHA-256 of each input a `calculations:` row names (`case-grammar` R18: each input's name and hash), whether
    the row lists them as `[{name, sha256}]` or as `{name: sha256}`, in the row's order, each once. */
 function inputHashes(inputs) {
@@ -210,16 +206,11 @@ function outputOf(key, result) {
 /* R34 (T45; N883, N892 (d); Actions D16, D28d; v0.2 rule 21): the group's per-group fields, stated in words where they
    are undetermined or absent (R13): never a guess, never an unread stake read as none. */
 export const DECLARED_STAKE_SETTING = "declared_stake";
-export const GROUP_FIELDS_SENTENCE = "the group's public identity and the stake it declares, as its own administrators "
-  + "set them";
-export const GROUP_IDENTITY_UNDETERMINED_SENTENCE = "the group's public identity is undetermined: no source of it "
-  + "answered at this read, so nothing here names the group, and that is not a statement that it has no name";
-export const STAKE_NONE_SENTENCE = "the group has declared no stake: its administrators have set none";
-export const STAKE_UNDETERMINED_SENTENCE = "the group's declared stake could not be read, so it is undetermined, which "
-  + "is not a statement that the group declared none";
-export const GROUP_FIELDS_CURRENT_SENTENCE = "the group's public identity and declared stake as they stand at this "
-  + "read, labeled current: they are not read from this edition's signed document or its case file, and a later "
-  + "declaration changes nothing published";
+export const GROUP_FIELDS_SENTENCE = word("public-read.group_public_identity");
+export const GROUP_IDENTITY_UNDETERMINED_SENTENCE = word("public-read.group_public_identity_undetermined");
+export const STAKE_NONE_SENTENCE = word("public-read.group_declared_stake");
+export const STAKE_UNDETERMINED_SENTENCE = word("public-read.group_declared_stake_read");
+export const GROUP_FIELDS_CURRENT_SENTENCE = word("public-read.group_public_identity_declared");
 
 export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
@@ -227,12 +218,14 @@ export class PublicRead {
   #originalsByEdition = new Map(); // R23 (T38): `case NUL edition` -> the originals of the material its signed document states as carried by copy
   #groupIdentity = null; // R34: {identity}, filled once
   #record; // R34: () => record-core, reached at the read
+  #roster; // R36: () => project-roster, reached at the read
 
-  constructor({ storage, publication, docket, record = null } = {}) {
+  constructor({ storage, publication, docket, record = null, roster = null } = {}) {
     this.sql = storage.sql;
     this.publication = publication;
     this.docket = docket;
     this.#record = typeof record === "function" ? record : () => record;
+    this.#roster = typeof roster === "function" ? roster : () => roster;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -293,8 +286,12 @@ export class PublicRead {
    *  display name); with none registered, or one that throws or answers no object, all four are null and `detail` says
    *  the identity is undetermined. `stake` is `record-core`'s setting `declared_stake` as held: null when never set,
    *  `"undetermined"` when it cannot be read, never null then. It reads nothing else (R10), writes nothing and never
-   *  throws. */
-  groupFields() {
+   *  throws.
+   *  R36 (T50; N933): with a `project` given it also answers `matter_stake`, the team's own stake for that matter beside
+   *  its team-wide `stake`, which it never replaces: `project-roster.projectStake(project)` (its R32) as `{stake, set_by,
+   *  set_at, source: "project"}`; null with no project or a project whose latest entry is none; a stake that cannot be
+   *  read is `{stake: "undetermined", ...}`, never null. */
+  groupFields({ project = null } = {}) {
     const said = [];
     /* The identity, copied out of the source's answer inside the guard, so an answer that throws when read is an
        undetermined identity too, never a throw. */
@@ -326,7 +323,22 @@ export class PublicRead {
     }
     return { group: id ? id.group : null, name: id ? id.name : null, domain: id ? id.domain : null,
              domain_verified_at: id ? id.domain_verified_at : null, stake,
-             detail: said.length ? said.join("; ") : GROUP_FIELDS_SENTENCE };
+             detail: said.length ? said.join("; ") : GROUP_FIELDS_SENTENCE, matter_stake: this.#matterStake(project) };
+  }
+
+  /* R36: the matter stake of one project, read through `project-roster`'s `projectStake` (its R32); never throws. */
+  #matterStake(project) {
+    if (typeof project !== "string" || !project) return null;
+    const unread = { stake: "undetermined", set_by: null, set_at: null, source: "project" };
+    try {
+      const roster = this.#roster();
+      if (!roster || typeof roster.projectStake !== "function") return unread;
+      const s = roster.projectStake(project);
+      if (!s || typeof s !== "object") return unread;
+      if (s.stake === null || s.stake === undefined) return null;
+      if (s.stake === "undetermined") return unread;
+      return { stake: s.stake, set_by: s.set_by ?? null, set_at: s.set_at ?? null, source: "project" };
+    } catch { return unread; }
   }
 
   /* ---------------------------------------------------------------- R18: the registered public reads */
@@ -1129,10 +1141,7 @@ export class PublicRead {
                + "moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches "
                + "to any finding, and nothing composed it across projects. Each member's own derived pair is "
                + "printed beside it inside findings[], and a member may exceed it."
-               : "NO BAR IS RECORDED for this case edition, and that is not a bar of zero. Either the case "
-               + "was published before a case carried its own standard, or no bar was ever declared — in "
-               + "which case the case claims no cleared standard and says so, because undetermined is "
-               + "first-class here and is never rounded to a number nobody chose.",
+               : word("public-read.bar_recorded_case"),
              bias_acknowledgement: whole ? null : (state.bias_acknowledgement ?? null),
              /* R3 (DEC-103): the lens this edition was produced under, read from its signed document, never live. */
              lens: said.lens, lens_fingerprint: said.lens_fingerprint, lens_detail: said.lens_detail,
@@ -1220,14 +1229,9 @@ export class PublicRead {
              calculations, timeline,
              method: six ? methodOf(signed.fm) : null, materials: six ? keyedMaterialsOf(signed.fm) : null,
              blocks_detail: blocks.detail
-               ?? "each capture a member rests on, with its grade and co-attestation, and what may be told of the source "
-                + "behind it, read from the signed document: a source's detail is stated only as it could be published "
-                + "when the case was signed.",
+               ?? word("public-read.capture_member_rests"),
              tensions_detail: disclosed.detail
-               ?? "each contradiction this edition's owner disclosed, read from the signed document: both sides as "
-                + "the publisher saw them, its state and who acknowledged it. One marked highlighted rests on a side in "
-                + "conflict with a record the publisher could not see, which is not named. A disclosure reaches one "
-                + "level. It composes no strength.",
+               ?? word("public-read.contradiction_edition_owner"),
              /* R8: the evidence package's block, computed at this read by the module that provides it. */
              evidence_package: this.#evidencePackage(theCase, ed, findings),
              manifest_sha: state.manifest_sha, manifest,
@@ -1240,7 +1244,7 @@ export class PublicRead {
              latest_edition: editions.length ? editions[editions.length - 1].edition : ed,
              /* R34: the group's identity and declared stake as they stand now, labeled current; never read from or
                 written into the signed document or the case file (R23). */
-             group_fields: { ...this.groupFields(), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
+             group_fields: { ...this.groupFields({ project: state.project ?? null }), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
              case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
                         + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
                         + "the case carries the scope that brought them together, the completeness "
@@ -1252,6 +1256,40 @@ export class PublicRead {
                          + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
                          + "classified servable at publication with no published edition behind it now, stated "
                          + "rather than dropped; it should be empty." };
+  }
+
+  /** R37 (T50; DEC-310 (6); K3683, K3725): the `publishedcase` op's answer, `publishedCase`'s with `corrections` beside it,
+   *  read from `docket`'s public answer (captures omitted) at the read. The synchronous `publishedCase` method does not
+   *  carry it, so its other callers are unchanged. A refusal, and an answer that is no case, are `publishedCase`'s own.
+   *  `{count, last}`: the public entries of the case dated after the answered edition's `published_at` (by day) whose
+   *  kind is `edition`, `withdrawal` or `court-order`, and the newest of them by (date, seq) as `{seq, kind, date}`;
+   *  `{count: null, last: null, undetermined: true}` when the docket cannot be read, never `count: 0`. Never throws, writes
+   *  nothing, and is the same bytes for every caller. */
+  async publishedCaseWithCorrections(query = {}) {
+    const a = this.publishedCase(query);
+    if (!a || a.ok !== true) return a;
+    /* a ratified bundle in no case has no docket: it states null, so both branches answer one key set */
+    if (!a.caseId) return { ...a, corrections: null };
+    return { ...a, corrections: await this.#corrections(a.caseId, a.published_at) };
+  }
+
+  async #corrections(caseId, publishedAt) {
+    const unread = { count: null, last: null, undetermined: true };
+    try {
+      const day = /^\d{4}-\d{2}-\d{2}/.exec(typeof publishedAt === "string" ? publishedAt : "");
+      if (!day) return unread;
+      const d = await this.docket.docketPublic({ case: caseId, captures: "omit" });
+      if (!d || d.ok !== true || !Array.isArray(d.entries)) return unread;
+      const later = [];
+      for (const e of d.entries) {
+        const f = (e && e.fields && typeof e.fields === "object" ? e.fields : safeJson(e && e.json)) || {};
+        if (!["edition", "withdrawal", "court-order"].includes(f.kind)) continue;
+        if (typeof f.date !== "string" || !(f.date.slice(0, 10) > day[0])) continue;
+        later.push({ seq: Number(e.seq), kind: f.kind, date: f.date });
+      }
+      later.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : x.seq - y.seq));
+      return { count: later.length, last: later.length ? later[later.length - 1] : null };
+    } catch { return unread; }
   }
 
   /** R23 (DEC-112 (3); K1315, K1316): WHAT A CASE EDITION'S CASE FILE CARRIES, read from the published projection only,
@@ -1821,7 +1859,9 @@ export function publicReadOf(host, deps) {
     const docket = d.docket || docketOf(host);
     /* R34: record-core, reached at the read (a throw there reads the stake undetermined). */
     const record = d.record || (() => recordOf(host));
-    r = new PublicRead({ storage, publication, docket, record });
+    /* R36: project-roster, reached at the read (a throw there reads the matter stake undetermined). */
+    const roster = d.roster || (() => projectRosterOf(host));
+    r = new PublicRead({ storage, publication, docket, record, roster });
     instances.set(host, r);
   }
   return r;
@@ -1835,7 +1875,7 @@ export function publicReadOps(r, url) {
   return {
     publishededitions: () => r.publishedEditions(q("id")),
     /* REC-22: the public read path's store side. */
-    publishedcase: () => r.publishedCase({ id: q("id"), edition: q("edition"), caseId: q("caseId") || null,
+    publishedcase: () => r.publishedCaseWithCorrections({ id: q("id"), edition: q("edition"), caseId: q("caseId") || null,
                                            sha256: (q("sha256") || "").toLowerCase() || null }),
     publishedmanifest: () => r.publishedManifest(),
     verify: () => r.verifySha((q("sha256") || "").toLowerCase()),

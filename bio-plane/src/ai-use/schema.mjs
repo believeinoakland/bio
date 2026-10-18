@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS ai_usage (
 CREATE INDEX IF NOT EXISTS ai_usage_owner_day ON ai_usage(owner, day);
 
 -- R10, R11 (D12): ONE ROW PER MEASURED ACT (a run, or an ask's or a draft's own act id), its sums as the counter's,
--- so a range can be estimated from an account's measured acts and an act's actual cost answered after. Numbers only.
+-- so a range can be estimated from an account's measured acts and an act's actual cost answered after. Numbers only;
+-- its models and efforts are in ai_use_act_models (R15).
 CREATE TABLE IF NOT EXISTS ai_use_acts (
   owner                        TEXT NOT NULL,
   act                          TEXT NOT NULL,
@@ -44,6 +45,18 @@ CREATE TABLE IF NOT EXISTS ai_use_acts (
   PRIMARY KEY (owner, act)
 );
 CREATE INDEX IF NOT EXISTS ai_use_acts_measure ON ai_use_acts(owner, use, mode, last_at);
+
+-- R15 (T50; N1168): THE MODELS AND EFFORTS OF EACH MEASURED ACT, one row per model and effort its conversations ran at
+-- ('' where none was stated, read back as null), with their calls. 'seq' gives first-seen order. Names only, no content.
+CREATE TABLE IF NOT EXISTS ai_use_act_models (
+  seq      INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner    TEXT NOT NULL,
+  act      TEXT NOT NULL,
+  model    TEXT NOT NULL,
+  effort   TEXT NOT NULL,
+  calls    INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (owner, act, model, effort)
+);
 
 -- R2 (D39; B4): THE LIMITS, at most one per owner, scope, unit and period. 'amount' is whole cents for 'usd', whole
 -- tokens or calls otherwise. 'inclusive' is 1 or 0 for a use scope, NULL for 'overall' and 'per_member'. 'project_id'
@@ -117,6 +130,7 @@ const CLASSES = Object.freeze({ purge: "clear", expunge: "none", export: "admin-
 export const AI_USE_TABLES = Object.freeze([
   { name: "ai_usage", keys: [] },
   { name: "ai_use_acts", keys: [] },
+  { name: "ai_use_act_models", keys: [] },
   { name: "ai_use_migrations", keys: [] },
   { name: "ai_limits", keys: ["project_id"] },
   { name: "ai_limit_history", keys: ["project_id"] },

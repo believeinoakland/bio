@@ -70,7 +70,9 @@ test("R45 (T47; N908, N961; case-inputs R16, action-records R15): case-inputs' m
   const ci = Object.keys(caseInputsOps(caseInputsOf(x.ctx), u, null));
   const ar = Object.keys(actionRecordsOps(actionRecordsOf(x.ctx), u, null));
   assert.deepEqual(ci, ["whatchangedpropose", "whatchangeddrafts", "statementack"]);
-  assert.equal(ar.length, 6);
+  /* R58 (T50; K3746): the arms are read from action-records' own map, never counted here; T50's two are among them */
+  for (const op of ["actionstake", "actioninquiry"]) assert.ok(ar.includes(op), `${op} is action-records'`);
+  assert.ok(ar.length > 0 && new Set(ar).size === ar.length, "its arms, each once");
   /* at their places: case-inputs' ops directly before case-authoring's first own op */
   const firstCa = Object.keys(caseAuthoringOps(caseAuthoringOf(x.ctx), u, null))[0];
   assert.deepEqual(keys.slice(keys.indexOf(firstCa) - ci.length, keys.indexOf(firstCa)), ci);

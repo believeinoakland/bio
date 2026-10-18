@@ -1,0 +1,26 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+S
+Working · not public · seen by your group's members
+Find › Ask
+Ask
+1 wizard starts here
+
+In plain words. The assistant answers only from what your group holds, and says where it looked.
+
+Your question
+Ask
+Reasoned
+Search instead
+Reversible
+Keep asking this
+Reversible
+
+New matches will arrive in your queue as a list for you to read.
+
+Home
+Queue
+Add
+Find
+More

@@ -7,10 +7,10 @@
    live arm through the real sign-in, whose code the person types (R12). */
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { settle } from "./walker.mjs";
+import { settle, StepFailed } from "./walker.mjs";
 import { act, control, type, open, requireDrawn } from "./journeys.mjs";
-import { requireWord, requireAnyWord, byWord, wordPattern } from "./words.mjs";
-import { NOTICE_ADDRESS, NOTICE_PASSAGE } from "./city.mjs";
+import { requireWord, requireAnyWord, byWord, wordPattern, word } from "./words.mjs";
+import { NOTICE_ADDRESS, NOTICE_PASSAGE, HEAT_ADDRESS, HEAT_PASSAGE } from "./city.mjs";
 
 export const PLAN_TITLE = "Get the roof repaired";
 const PROJECT_TITLE = "Roof repairs at 14 Lakeshore Row";
@@ -148,13 +148,13 @@ async function captureAndVouch(walk, page, base, { question, password }) {
 /* Steps 7 and 8: the document opened and its words seen in its Passages (extraction R76, K3399); the passage found with
    Find-in (from the document's own "Find in this"), for the question, and cited from the result as supporting it
    (screens-daily R24: the role chosen, none preselected). The question then holds the passage. */
-async function readAndCite(walk, page, { document, question }) {
-  await walk.step(page, "7 · open the document, see its words, and Find-in a passage", async (p) => {
+async function readAndCite(walk, page, { document, question, phrase = FIND_PHRASE, passage = NOTICE_PASSAGE, prefix = "" }) {
+  await walk.step(page, (prefix ? prefix : "7 · ") + "open the document, see its words, and Find-in a passage", async (p) => {
     await p.goto(document); await settle(p);
     await requireDrawn(walk, p, "document");
     await requireWord(p, "screen.document.passages.head", { within: "#cs-main" });
     /* its words (extraction R76's `text_units`, K3399): the notice's passage drawn on its page */
-    if (!(await p.locator("#cs-main").textContent()).replace(/\s+/g, " ").includes(NOTICE_PASSAGE))
+    if (!(await p.locator("#cs-main").textContent()).replace(/\s+/g, " ").includes(passage))
       throw new Error("the document's words are not drawn on its page");
     await act(p, "findin");
     await p.waitForURL((u) => u.pathname.startsWith("/app/find-in/"), { timeout: 15000 });
@@ -162,26 +162,30 @@ async function readAndCite(walk, page, { document, question }) {
     await requireDrawn(walk, p, "find-in");
     const term = p.locator("#findin-kind-term");
     if (await term.count() && !(await term.isChecked())) await term.check();
-    await type(p, "findin-term", FIND_PHRASE);
+    await type(p, "findin-term", phrase);
     const pick = p.locator("#findin-question");
     if (await pick.count()) await pick.selectOption(decodeURIComponent(new URL(question).pathname.split("/").pop()));
     await act(p, "findin");
-    if (!(await p.locator("#cs-main").textContent()).includes(FIND_PHRASE)) throw new Error("Find-in found no passage holding the phrase");
+    if (!(await p.locator("#cs-main").textContent()).includes(phrase)) throw new Error("Find-in found no passage holding the phrase");
   }, { expect: READING_EXPECTS });
-  await walk.step(page, "8 · cite it with a role (supports)", async (p) => {
+  await walk.step(page, (prefix ? prefix : "8 · ") + "cite it with a role (supports)", async (p) => {
     const cite = p.locator('#cs-main details:has([data-act="cite"])').first();
     try { await cite.waitFor({ state: "attached", timeout: 10000 }); } catch { throw new Error(`no result offers to cite it on ${where(p)}`); }
     if (!(await cite.evaluate((d) => d.open))) await cite.locator("summary").first().click();
     await cite.locator('input[type="radio"][id$="-role-supports"]').check();
     await act(p, "cite", { within: '#cs-main details[open]:has([data-act="cite"])', reason: "The notice orders the repair." });
     await p.goto(question); await settle(p);
-    if (!(await p.locator("#cs-main").textContent()).includes(FIND_PHRASE)) throw new Error("the question does not hold the cited passage");
+    /* the question holds the citation: its Supports list draws it, with the control to remove it (`sever`) */
+    if (!(await p.locator('#cs-main [data-act="sever"]').count())) throw new Error("the question does not hold the cited passage");
   });
 }
 
 /* Steps 9 and 10: the assistant run on the question from the dock; its answer and its suggested reading read. */
-async function runAndRead(walk, page, { question }) {
+async function runAndRead(walk, page, { question, segments = null }) {
   await walk.step(page, "9 · run the assistant on the question from the dock", async (p) => {
+    /* R15: where the world is the walk's own (`segments` is its answer), the agent-worker must hold its `SEGMENTS` Durable
+       Object, or a run's segment would stop with the request that started it: said here, by name, not left to a silent stop */
+    if (segments === false) throw new Error("the agent-worker of this world has no SEGMENTS binding (R15): a run's segment would not outlive the request that started it");
     await p.goto(question); await settle(p);
     await openDock(p);
     await act(p, "airunopen", { within: DOCK });
@@ -239,7 +243,7 @@ async function concludeOn(walk, page, { question, project }) {
 /** R9: the administrator's journey, from her claimed group (journey 28 has claimed it and signed her in by her handle,
  *  step 1) to a first conclusion. `codeOf` (live arm, R12) asks the person for the sign-in's code. Answers the
  *  project's and question's addresses. */
-export async function walkAdministrator(walk, page, { base, founder, codeOf = null, made = {} }) {
+export async function walkAdministrator(walk, page, { base, founder, codeOf = null, made = {}, segments = null }) {
   walk.journey = "R9 as administrator";
   const { project, question } = await projectAndQuestion(walk, page, base, { title: PROJECT_TITLE, question: QUESTION });
   /* the project exists from here on: R10 invites a member to it even when a later step of this journey stops (`made`) */
@@ -247,7 +251,7 @@ export async function walkAdministrator(walk, page, { base, founder, codeOf = nu
   await connectSubscription(walk, page, base, { password: founder.password, codeOf });
   const document = await captureAndVouch(walk, page, base, { question, password: founder.password });
   await readAndCite(walk, page, { document, question });
-  await runAndRead(walk, page, { question });
+  await runAndRead(walk, page, { question, segments });
   await ask(walk, page, { words: "What did the city order the landlord to do, and by when?" });
   await concludeOn(walk, page, { question, project });
   return { project, question };
@@ -256,7 +260,7 @@ export async function walkAdministrator(walk, page, { base, founder, codeOf = nu
 /** R10: the same journey as a member, invited to the group (journey 28 joined her) and to the project: her own Claude
  *  subscription connected, her own run dispatched on it, and the project's assistant page (`projectai`), plan help
  *  (`planask`) and Ask walked as hers. `inviter` is the administrator's page, which invites her to the project. */
-export async function walkMemberJourney(walk, page, { base, member, inviter, project, codeOf = null }) {
+export async function walkMemberJourney(walk, page, { base, member, inviter, project, codeOf = null, segments = null }) {
   walk.journey = "R10 as member";
   await walk.step(inviter, "the administrator invites her to the project", async (p) => {
     await p.goto(project); await settle(p);
@@ -302,38 +306,106 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
       await p.waitForTimeout(3000);
     }
   });
-  await runAndRead(walk, page, { question });
+  await runAndRead(walk, page, { question, segments });
   await ask(walk, page, { words: "Who has the tenants' reports of the leak?" });
   return { question };
 }
 
 
-/* R13: which of the walk's steps walks each step of design journey 29 (with the assistant), by the step's screen and act
-   (`s:act`): the label its LIVE screenshot is paired under. The design's `groupkeyset` step (the group's API key) is
-   walked by the person's own subscription on `connect` since K3347; the question's running and concluded states are
-   what steps 9 and 12 leave drawn. */
+/* R16 (N1109, N1106; DEC-254 (the member's own reading)): journey 29's `search` path, with no assistant (the unassisted
+   metric, K3718). A project of its own, a question in it with nothing cited (the page says it has nothing to conclude on,
+   `question.empty.conclude.own`), a look for a source the team already holds (`search`, to the finder), a capture by
+   address, the copy vouched for, its passage cited, and the conclusion made on her own reading, which the screen offers
+   beside the readings to conclude on (`question.conclude.own.choice`, `.field`, `.help`) and draws as hers
+   (`question.reading.by.member`). Each is asserted by its key (R14). The steps are labelled "no assistant · …". */
+export const OWN_PROJECT = "Heating at 14 Lakeshore Row";
+export const OWN_QUESTION = "Has the landlord been ordered to restore the heating of flat 6 at 14 Lakeshore Row?";
+export const OWN_READING = "The city's notice 2026-131 orders the landlord to restore the heating of flat 6 within 7 days.";
+export const OWN_FIND_PHRASE = "restore heating";
+export const NO_ASSISTANT = "no assistant · ";
+const own = (label) => NO_ASSISTANT + label;
+
+export async function walkUnassisted(walk, page, { base, founder }) {
+  walk.journey = "R16 without the assistant (journey 29's search path)";
+  /* a step that fails has said so; the steps after it do not depend on it, so the path is still walked to its conclusion */
+  const stays = (e) => { if (!(e instanceof StepFailed)) throw e; };
+  const { project, question } = await projectAndQuestion(walk, page, base, { title: OWN_PROJECT, question: OWN_QUESTION });
+  await walk.step(page, own("nothing to conclude on yet: no citation"), async (p) => {
+    await p.goto(question); await settle(p);
+    await requireWord(p, "question.empty.conclude.own", { within: "#cs-main" });
+    if (await p.locator('#cs-main [data-conclude="form"]').count()) throw new Error("the question offers to conclude before a passage is cited");
+  }).catch(stays);
+  await walk.step(page, own("search: look for a source the team already holds"), async (p) => {
+    await p.goto(question); await settle(p);
+    await act(p, "search");
+    await requireDrawn(walk, p, "finder");
+  }).catch(stays);
+  await walk.step(page, own("capture by address, from the question's \"Add a document\""), async (p) => {
+    await p.goto(question); await settle(p);
+    await follow(p, "question.adddoc");
+    await requireDrawn(walk, p, "capture");
+    await act(p, "acquire", { fields: { "ci-address": HEAT_ADDRESS }, password: founder.password });
+    await requireWord(p, "screen.capture.address.done", { within: "#cs-main" });
+  }, { expect: CAPTURE_EXPECTS });
+  let document = null;
+  await walk.step(page, own("see it held, and vouch for it"), async (p) => {
+    await open(walk, p, base, "/app/held", "held");
+    const row = p.locator("#cs-main tr").filter({ has: p.locator('a[href^="/app/document/"]') }).filter({ hasText: HEAT_ADDRESS }).first();
+    document = new URL(await row.locator('a[href^="/app/document/"]').first().getAttribute("href"), base).href;
+    await row.locator('input[type="checkbox"][data-table="held"]').check();
+    await act(p, "release", { fields: { "ch-ack": "The copy is the notice the city published at that address", "ch-mitigation": "None remains" } });
+    await requireWord(p, "screen.held.released", { vars: { count: 1 }, within: "#cs-main" });
+  });
+  await readAndCite(walk, page, { document, question, phrase: OWN_FIND_PHRASE, passage: HEAT_PASSAGE, prefix: NO_ASSISTANT });
+  await walk.step(page, own("conclude on her own reading"), async (p) => {
+    await p.goto(question); await settle(p);
+    const form = p.locator('#cs-main [data-conclude="form"]').first();
+    try { await form.waitFor({ state: "attached", timeout: 10000 }); } catch { throw new Error(`the question offers no way to conclude after a citation, on ${where(p)}`); }
+    if (!(await form.evaluate((d) => d.open))) await form.locator("summary").first().click();
+    /* the reading choice: "Write the reading yourself" is offered beside the readings, with or without an assistant */
+    const choice = form.locator("select").filter({ has: p.locator("option", { hasText: wordPattern("question.conclude.own.choice") }) }).first();
+    try { await choice.waitFor({ state: "visible", timeout: 10000 }); } catch { throw new Error("the reading choice does not offer the member's own reading (question.conclude.own.choice)"); }
+    await choice.selectOption({ label: word("question.conclude.own.choice") });
+    await requireWord(p, "question.conclude.own.field", { within: "#cs-main" });
+    await requireWord(p, "question.conclude.own.help", { within: "#cs-main" });
+    await form.getByLabel(wordPattern("question.conclude.own.field")).first().fill(OWN_READING);
+    await act(p, "conclude", { fields: { "question-conclude-falsifier": "The city withdrawing or amending notice 2026-131",
+      "question-conclude-commentary": "The city's notice orders the heating restored within 7 days." }, reason: "The notice answers the question." });
+    await requireWord(p, "question.concluded.by", { within: "#cs-main" });
+    await requireWord(p, "question.reading.by.member", { within: "#cs-main" });
+  });
+  return { project, question };
+}
+
+/* R13, R18: which of the walk's steps walks each step of design journey 29, by the step's screen, state and act
+   (`s:v:act`): the label its LIVE screenshot is paired under. The steps the design marks for the assistant are walked by
+   R9's (the group's own API key, `groupkeyset`, by the person's own subscription on `connect` since K3347); the steps it
+   marks for none, and those either path shares after the question is made, by the "no assistant" walk (R16), which does
+   not wait on the assistant. The question's running and ended states are what step 9 leaves drawn. */
 export const JOURNEY_29_STEPS = Object.freeze({
-  "install:bootstrap": "install: the installer's first page",
-  "install:null": "install: each step finishes, the checks pass",
-  "setup:claim": "1 · setup: claim",
-  "setup:groupkeyset": "4 · connect an assistant",
-  "home:null": "home: a new group's home",
-  "projects:promote": "2 · start a project",
-  "project:promote": "3 · open a question",
-  "question:airunopen": "9 · run the assistant",
-  "question:null": "9 · run the assistant",
-  "capture:acquire": "5 · capture by address",
-  "held:release": "6 · see both held",
-  "document:cite": "8 · cite it",
-  "question:versionaccept": "10 · read its run's answer",
-  "question:conclude": "12 · accept a reading",
+  "install:start:bootstrap": "install: the installer's first page",
+  "install:done:null": "install: each step finishes, the checks pass",
+  "setup:null:claim": "1 · setup: claim",
+  "setup:null:groupkeyset": "4 · connect an assistant",
+  "home:newgroup:null": "home: a new team's home",
+  "security:ordinary:null": "security: a first look at Security",
+  "projects:empty:promote": "2 · start a project",
+  "project:empty:promote": "3 · open a question",
+  "question:new:airunopen": "9 · run the assistant",
+  "question:running:null": "9 · run the assistant",
+  "question:ended:airunopen": "9 · run the assistant",
+  "question:new:search": own("search"),
+  "capture:question:acquire": own("capture by address"),
+  "document:held:release": own("see it held"),
+  "document:null:cite": own("cite it"),
+  "question:proposal:versionaccept": "10 · read its run's answer",
+  "question:null:conclude": own("conclude on her own reading"),
+  "question:concluded:null": own("conclude on her own reading"),
 });
-/* The LIVE screenshot (its path) for a step of journey 29: the last screenshot of the walk's step whose label begins as
-   the table says; the running state's own shot is step 9's, the concluded state's step 12's. */
+/* The LIVE screenshot (its path) for a step of journey 29: the last screenshot of the walk's step whose label holds what
+   the table says. */
 export function journey29Live(walk, step) {
-  const key = `${step.s}:${step.act}`;
-  const concluded = step.s === "question" && step.v === "concluded";
-  const label = concluded ? JOURNEY_29_STEPS["question:conclude"] : JOURNEY_29_STEPS[key];
+  const label = JOURNEY_29_STEPS[`${step.s}:${step.v ?? null}:${step.act ?? null}`];
   if (!label) return null;
   const core = label.replace(/^\d+ · /, "");
   const hit = walk.steps.filter((x) => x.label.includes(core)).pop();

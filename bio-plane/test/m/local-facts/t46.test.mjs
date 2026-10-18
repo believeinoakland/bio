@@ -3,8 +3,9 @@
    fails the test. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { world, V, sha } from "./fixture.mjs";
-import { LOCAL_FACTS_CHECKS, RULE_WORDS, localFactsOps } from "../../../src/local-facts/index.mjs";
+import { LOCAL_FACTS_CHECKS, LOCAL_FACTS_WORDS, localFactsOps } from "../../../src/local-facts/index.mjs";
 import { WORD, HAS } from "./words.mjs";
 
 const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9" };
@@ -50,27 +51,6 @@ test("R15 the grouprules arm answers exactly R12's groupRules({section, viewer})
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM local_rule_acts`)[0].n, n);
 });
 
-/* R16: the C-126 codes words.json holds as `refusal.<CODE>`; the eight re-worded by it, and RULE_SELF_CONFIRM, which
-   already read as its key. */
-const KEYED = ["MACHINE_CANNOT_DRAFT_RULE", "RULE_SECTION_UNKNOWN", "RULE_ENTRY_INVALID", "RULE_NO_SOURCE", "RULE_IN_PROFILE",
-  "NO_SUCH_GROUP_RULE", "RULE_SELF_CONFIRM", "RULE_NOT_DRAFTED", "RULE_NEEDS_QUALIFICATION"];
-/* The rows words.json does not hold keep their translations, as they read before T46. */
-const KEPT = {
-  MACHINE_CANNOT_CONFIRM: "Confirming, correcting or disputing a local fact (a holiday calendar, an office's hours, the time "
-    + "zone), and confirming a rule your group drafted, is a member's act. An assistant may re-check a source and report what "
-    + "it found; it may not record a confirmation. Sign in as a member. Nothing was written.",
-  NO_SUCH_FACT: "No local fact of the active jurisdiction profiles answers to that path. A path names one profile's holiday "
-    + "year (of its office calendar or of a named closure list), an office's hours or the time zone. Nothing was written.",
-  FACT_ACT_REFUSED: "A member confirms, corrects or disputes a local fact; this act is none of the three. Nothing was written.",
-  FACT_HOW_REFUSED: "Say how you checked, in at most 500 characters: the official page and its address, a call to the office, "
-    + "a visit. None was given, or it is too long. Nothing was written.",
-  FACT_VALUE_REFUSED: "A correction gives the corrected value, in the form the profile holds that fact in, and its source in "
-    + "at most 500 characters. The value is missing or not of that form, or the source is missing or too long. Nothing was "
-    + "written.",
-  RULE_NO_REASON: "Say why, in at most 500 characters. None was given, or it is too long. Nothing was written.",
-  RULE_NOT_CONFIRMED: "Only a rule your group confirmed and still applies can be offered to the shared profile. Nothing was "
-    + "written.",
-};
 /* Codes, numbers and wheres, unmoved by R16 (C-126.7's `where` moved since by R17, T47, to its one builder). */
 const ROWS = {
   MACHINE_CANNOT_CONFIRM: ["C-126.1", "src/local-facts/index.mjs machineRefusal > is-fact-member"],
@@ -91,23 +71,24 @@ const ROWS = {
   RULE_NOT_CONFIRMED: ["C-126.16", "src/local-facts/rules.mjs ruleOffer > is-rule-confirmed"],
 };
 
-test("R16 every C-126 row whose code words.json holds as refusal.<CODE> takes its translation from that key, verbatim; the rest keep theirs; codes, numbers and wheres unmoved", () => {
-  /* which codes the list holds is the list's own answer: exactly the nine keyed */
-  assert.deepEqual(Object.keys(LOCAL_FACTS_CHECKS).filter((c) => HAS(`refusal.${c}`)), KEYED);
-  assert.deepEqual(Object.keys(RULE_WORDS), KEYED.map((c) => `refusal.${c}`));
-  assert.ok(Object.isFrozen(RULE_WORDS));
-  for (const code of KEYED) {
-    assert.equal(RULE_WORDS[`refusal.${code}`], WORD(`refusal.${code}`), code);
+test("R16 every C-126 row takes its translation from words.json's refusal.<CODE> key, verbatim; codes, numbers and wheres unmoved", () => {
+  /* the list holds a key for every row (DEC-260, K3374), so every row is keyed and the words are the list's own */
+  const CODES = Object.keys(LOCAL_FACTS_CHECKS);
+  assert.deepEqual(CODES.filter((c) => HAS(`refusal.${c}`)), CODES);
+  assert.deepEqual(Object.keys(LOCAL_FACTS_WORDS), CODES.map((c) => `refusal.${c}`));
+  assert.ok(Object.isFrozen(LOCAL_FACTS_WORDS));
+  /* and the module's own declaration of the keys it reads (words-reads.json, DEC-260) names the same sixteen */
+  const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["local-facts"].reads;
+  assert.deepEqual(READS.filter((k) => k.startsWith("refusal.")).sort(), CODES.map((c) => `refusal.${c}`).sort());
+  for (const code of CODES) {
+    assert.equal(LOCAL_FACTS_WORDS[`refusal.${code}`], WORD(`refusal.${code}`), code);
     assert.equal(LOCAL_FACTS_CHECKS[code].translation, WORD(`refusal.${code}`), code);
   }
   /* RULE_ENTRY_INVALID's {errors} is left for the screen */
   assert.match(LOCAL_FACTS_CHECKS.RULE_ENTRY_INVALID.translation, /\{errors\}/);
-  /* the negative control: the rows the list does not hold keep their own words */
-  assert.deepEqual(Object.keys(KEPT).sort(), Object.keys(LOCAL_FACTS_CHECKS).filter((c) => !KEYED.includes(c)).sort());
-  for (const [code, words] of Object.entries(KEPT)) {
-    assert.equal(HAS(`refusal.${code}`), false, code);
-    assert.equal(LOCAL_FACTS_CHECKS[code].translation, words, code);
-  }
+  /* the negative control: a key the list does not hold is not held, and reading one throws, so no row can carry a copy */
+  assert.equal(HAS("refusal.NO_SUCH_ROW"), false);
+  assert.throws(() => WORD("refusal.NO_SUCH_ROW"), /words\.json holds no word refusal\.NO_SUCH_ROW/);
   for (const [code, [check, where]] of Object.entries(ROWS))
     assert.deepEqual([LOCAL_FACTS_CHECKS[code].check, LOCAL_FACTS_CHECKS[code].where], [check, where], code);
   assert.deepEqual(Object.keys(LOCAL_FACTS_CHECKS), Object.keys(ROWS));
@@ -136,7 +117,7 @@ test("R16 each keyed refusal reached at the interface answers words.json's words
     assert.equal(r.translation, WORD(`refusal.${code}`), code);
   }
   assert.deepEqual(got.RULE_ENTRY_INVALID.errors.map((e) => [e.path, e.code]), [["deadlines[0].units", "UNIT_UNKNOWN"]]);
-  /* the negative control: a refusal the list does not hold answers its own row's words */
+  /* the control: a refusal reached on another path answers the same key's words, the row having no copy of its own */
   const reason = draft({ entry: { ...DL, rule: "no_reason" }, reason: "" });
-  assert.deepEqual([reason.code, reason.translation], ["RULE_NO_REASON", KEPT.RULE_NO_REASON]);
+  assert.deepEqual([reason.code, reason.translation], ["RULE_NO_REASON", WORD("refusal.RULE_NO_REASON")]);
 });

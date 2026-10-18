@@ -213,6 +213,8 @@ export class Scheduler {
   #faults = [];
   /* true while onAlarm runs: an `onFileWork` call made inside a batch leaves the arming to its reconcile (R1, R24). */
   #firing = false;
+  /* R27: the registered consumers held, by name, at the wake that did not advance (see `#holding`). */
+  #held = new Map();
 
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
@@ -428,8 +430,8 @@ export class Scheduler {
        wake is `exploreWake(now)` (now while any is due; else an Ask's re-check, its own instant; else null), asked afresh
        every time, so nothing is kept here (R7, R18). No arming notice: the wake is weighed at every firing, arm and start. */
     if (this.#owners.questionExplorer) c["question-explore"] = {
-      due: (now) => counted(o("questionExplorer").exploreDue(now), now),
-      wake: (now) => msOf(o("questionExplorer").exploreWake(now)),
+      due: async (now) => counted(await o("questionExplorer").exploreDue(now), now),
+      wake: async (now) => msOf(await o("questionExplorer").exploreWake(now)),
       tick: async (now) => ({ explore: await o("questionExplorer").exploreTick(now) }) };
     return c;
   }
@@ -451,9 +453,43 @@ export class Scheduler {
     if (ANSWER_FIELDS.has(key) || this.registry(null).some((r) => r.key === key))
       return { ok: false, reason: "CONSUMER_MALFORMED", module, name: c.name,
                detail: `the key '${key}' is one of the answer's own fields or another consumer's` };
-    this.#registered.set(c.name, { name: c.name, key, module, due: c.due, wake: c.wake, tick: c.tick });
+    this.#registered.set(c.name, this.#holding({ name: c.name, key, module, due: c.due, wake: c.wake, tick: c.tick }));
     this.#registeredOrder.push(c.name);
     return { ok: true, module, name: c.name, key, placed: SCHEDULER_ORDER.includes(c.name) ? "R5" : "appended" };
+  }
+
+  /* R27: a registered consumer whose `wake`, read after its tick, equals the `wake` read before it and is at or before
+     the firing's `now` is held: its due and wake read as none, so it cannot keep the alarm firing at once, again and
+     again. It is released when its own `wake` changes, at an `arm` made outside a firing and at a start. The due, wake
+     and tick of a consumer may answer a promise; each is awaited before its answer is read. Nothing is written, and no
+     interval of this module's is added (R7). */
+  #holding(c) {
+    const held = this.#held, name = c.name;
+    const wakeOf = async (now) => { try { return await c.wake(now); } catch { return null; } };
+    /* the consumer's wake while it is held at that wake; none then, and released when its wake has changed */
+    const heldWake = (w) => {
+      if (!held.has(name)) return w;
+      if (w === held.get(name)) return null;
+      held.delete(name);
+      return w;
+    };
+    return { ...c,
+      due: async (now) => {
+        if (held.has(name) && heldWake(await c.wake(now)) === null) return null;
+        return await c.due(now);
+      },
+      wake: async (now) => heldWake(await c.wake(now)),
+      tick: async (now, rank) => {
+        const before = await wakeOf(now);
+        const note = async () => {
+          const after = await wakeOf(now);
+          if (Number.isFinite(before) && after === before && after <= now) held.set(name, after); else held.delete(name);
+        };
+        let r;
+        try { r = await c.tick(now, rank); } catch (e) { await note(); throw e; }
+        await note();
+        return r;
+      } };
   }
 
   /** The registry, in R5's order, then the registered consumers R5 does not name in the order they registered (the
@@ -506,7 +542,7 @@ export class Scheduler {
     try {
     for (const c of reg) {
       let d;
-      try { d = c.due(now); } catch (e) { answers[c.key] = { error: message(e) }; continue; }
+      try { d = await c.due(now); } catch (e) { answers[c.key] = { error: message(e) }; continue; }
       if (d === null || d === undefined || d > now + SCHED_GRACE_MS) continue;
       let r;
       /* Awaited, so an asynchronous consumer's work completes inside the alarm. */
@@ -541,7 +577,7 @@ export class Scheduler {
     const wants = [];
     for (const c of reg) {
       let w;
-      try { w = c.wake(now); } catch (e) { if (errors) errors[c.key] = { error: message(e) }; continue; }
+      try { w = await c.wake(now); } catch (e) { if (errors) errors[c.key] = { error: message(e) }; continue; }
       if (w !== null && w !== undefined && Number.isFinite(w)) wants.push(w);
     }
     if (!wants.length) { await this.#storage.deleteAlarm(); return null; }
@@ -557,6 +593,7 @@ export class Scheduler {
   /** The producers' door: reconciles without firing, never pushing a set alarm later. Runs no tick and writes no
    *  work; answers the alarm as it stands. */
   async arm(now = Date.now()) {
+    if (!this.#firing) this.#held.clear();   /* R27 */
     const probe = await this.#probeState(now, true);
     await this.#loadDaily();
     const at = await this.#reconcile(now, this.registry(probe), false);
@@ -571,6 +608,7 @@ export class Scheduler {
     const probe = await this.#probeState(now, false);
     this.#dailyIdle.clear();
     this.#publishHeld = null;
+    this.#held.clear();   /* R27 */
     await this.#loadDaily();
     return await this.#reconcile(now, this.registry(probe), false);
   }

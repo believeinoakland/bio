@@ -7,6 +7,10 @@ import { containerDescriptor, discoverMembers, isGuarded } from '../../bio-plane
 import { installRuntime, loadWorker, fakeCtx } from './stubs/runtime.mjs';
 import { stubSdk, success, startRunner } from './helpers.mjs';
 
+// R35 (N1197, K3611): the class answers every request 410 and passes nothing to its container, so the tests that drive
+// its `fetch` are suspended, not deleted; they run again when R35 is lifted.
+const SUSPENDED = { skip: 'suspended while R35 holds: the class answers 410 and passes nothing to its container' };
+
 const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const wrangler = () => parseJsonc(read('../wrangler.jsonc'), 'wrangler.jsonc');
 const DIGEST = /^sha256:[0-9a-f]{64}$/;
@@ -38,7 +42,7 @@ test('R13 the image\'s base is pinned by digest', () => {
   for (const f of froms) assert.match(f, /^FROM\s+\S+@sha256:[0-9a-f]{64}(\s|$)/, f);
 });
 
-test('R13 R10 the egress, the model API and the sign-in\'s host only, is declared in the member\'s own configuration and applied by its class', async () => {
+test('R13 R10 the egress, the model API and the sign-in\'s host only, is declared in the member\'s own configuration and applied by its class', SUSPENDED, async () => {
   assert.deepEqual(readManifest().egress, ['api.anthropic.com', 'platform.claude.com']);
   // the image trusts the CA through which HTTPS egress is applied, and passes it to the query (runner R2's env)
   assert.match(read('../Dockerfile'), /NODE_EXTRA_CA_CERTS=\/etc\/cloudflare\/certs\/cloudflare-containers-ca\.crt/);
@@ -75,6 +79,32 @@ test('R13 R10 the egress, the model API and the sign-in\'s host only, is declare
   } finally { globalThis.fetch = fetch0; restore(); await image.stop(); }
 });
 
+// While R35 holds the container never starts, so the egress is read from what the class declares for its start, and
+// the library's proxy is given those same props.
+test('R13 R10 the class declares the egress, the model API and the sign-in\'s host only, from the member\'s own configuration', async () => {
+  const egress = ['api.anthropic.com', 'platform.claude.com'];
+  assert.deepEqual(readManifest().egress, egress);
+  assert.match(read('../Dockerfile'), /NODE_EXTRA_CA_CERTS=\/etc\/cloudflare\/certs\/cloudflare-containers-ca\.crt/);
+  const restore = installRuntime();
+  const fetch0 = globalThis.fetch;
+  try {
+    const mod = await loadWorker();
+    const runner = new mod.AgentRunner(fakeCtx('127.0.0.1:9'), {});
+    assert.deepEqual(runner.allowedHosts, egress);
+    assert.equal(runner.enableInternet, false, 'no internet but the allowed hosts');
+    assert.equal(runner.interceptHttps, true, 'all HTTPS goes through the outbound proxy');
+    assert.deepEqual(Object.keys(mod.AgentRunner.outboundByHost).sort(), [...egress].sort(), 'one handler per egress host');
+    const passed = [];
+    globalThis.fetch = async (req) => { passed.push(new URL(req.url).hostname); return new Response('{}', { status: 200 }); };
+    const proxy = new mod.ContainerProxy({ props: { allowedHosts: runner.allowedHosts, enableInternet: runner.enableInternet, interceptAll: true } }, {});
+    for (const url of ['https://api.anthropic.com/v1/messages', 'https://platform.claude.com/v1/oauth/token'])
+      assert.equal((await proxy.fetch(new Request(url, { method: 'POST' }))).status, 200, url);
+    for (const url of ['https://example.com/', 'https://claude.ai/', 'https://api.anthropic.com.evil.test/', 'http://169.254.169.254/latest'])
+      assert.equal((await proxy.fetch(new Request(url))).status, 520, url);
+    assert.deepEqual(passed, ['api.anthropic.com', 'platform.claude.com']);
+  } finally { globalThis.fetch = fetch0; restore(); }
+});
+
 test('R14 the marker states kind, image, bundle, class_name, max_instances, bind and image.digest for bundler', () => {
   const m = readManifest();
   assert.equal(m.kind, 'container');
@@ -96,4 +126,12 @@ test('R14 the marker states kind, image, bundle, class_name, max_instances, bind
     class_name: 'AgentRunner', image: `${m.image.repository}@sha256:${'c'.repeat(64)}`, scheduling_policy: 'default',
     max_instances: m.max_instances, bind: [{ member: 'agent-worker', binding: 'RUNNER' }],
   });
+});
+
+test('R33 the container runs at Cloudflare\'s instance type standard-1, declared in its deploy configuration; its max_instances and image are unchanged', () => {
+  const c = wrangler().containers[0];
+  assert.equal(c.instance_type, 'standard-1');
+  // control: the figures the container had before R33
+  assert.equal(c.max_instances, 10);
+  assert.equal(c.image, 'ghcr.io/believeinoakland/agent-runner@sha256:b0220ffa2336503cb97edea1355ddb14633264f48c915eb6426a7319cd9243d8');
 });

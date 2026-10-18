@@ -1,12 +1,12 @@
 /* action-replies' T46 requirements at its interface (T46-35): a proposal labelled through `record-grammar`'s `bearing`
    subject (R5); `aroseFromLink`'s refusals in order and its project judged by the author's sight, `arisenFrom`'s three
-   refusals (R6); six rows read their words from `words.json` by key, C-150.7 keeping its own (R7). R8 is in
+   refusals (R6); seven rows read their words from `words.json` by key (R7). R8 is in
    `open.test.mjs`, beside R3. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, M, BOB, MACHINE, INQ, INQ3, INFO, RFC, REQ, PROJ, PROJ2, PLAN, PLAN2, leg } from "./fixture.mjs";
-import { ACTION_REPLY_CHECKS, ACTION_REPLY_WORDS, bearingProposalLabel } from "../../../src/action-replies/index.mjs";
+import { ACTION_REPLY_CHECKS, bearingProposalLabel } from "../../../src/action-replies/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
@@ -94,8 +94,8 @@ test("R6 aroseFromLink's refusals in order, each writing nothing: machine, no ta
   const unseen = { project: "PROJ-2026-0099-none" };
   assert.equal(code({ author: MACHINE, target: null, ord: 0, arising: "x" }), "MACHINE_CANNOT_LINK");
   assert.equal(code({ target: null, ord: 0, arising: "x" }), "NO_TARGET");
-  assert.equal(code({ target: "ACTN-2026-0099-none", ord: 0, arising: "x" }), "NO_SUCH_BUNDLE");
-  assert.equal(code({ target: INFO, ord: 0, arising: "x" }), "NOT_AN_ACTION");
+  assert.equal(code({ target: "ACTN-2026-0099-none", ord: 0, arising: "x" }), "NO_SUCH_ACTION");
+  assert.equal(code({ target: INFO, ord: 0, arising: "x" }), "NO_SUCH_ACTION");
   assert.equal(code({ ord: 0, arising: "x" }), "AROSE_FROM_NOT_A_RESPONSE");
   /* the malformed arising is refused before any project is looked for */
   for (const arising of ["x", { project: "x" }, { project: PROJ, plan: PLAN }, { plan: "PROJ-2026-0001-roads", matter: "m" },
@@ -149,20 +149,17 @@ const T45 = [
   "A matter or project is linked to a response the group received.", "This link is already recorded, so nothing was added.",
 ];
 
-test("R7 the six rows take their translations from words.json's refusal.<CODE>, read by key; codes, numbers and wheres unmoved; C-150.7 keeps its own", () => {
-  assert.deepEqual(Object.keys(ACTION_REPLY_WORDS).sort(), Object.keys(TAKEN).map((c) => `refusal.${c}`).sort(), "the six keys, no other");
+test("R7 the seven rows take their translations from words.json's refusal.<CODE>, read by key; codes, numbers and wheres unmoved", () => {
   for (const [code, [check, where]] of Object.entries(TAKEN)) {
     const row = ACTION_REPLY_CHECKS[code];
     assert.deepEqual([row.check, row.where], [check, where], code);
-    assert.equal(ACTION_REPLY_WORDS[`refusal.${code}`], en(`refusal.${code}`), `${code}: the list holds words.json's sentence`);
-    assert.equal(row.translation, en(`refusal.${code}`), `${code}: the row answers it`);
+    assert.equal(row.translation, en(`refusal.${code}`), `${code}: the row answers words.json's sentence`);
     for (const old of T45) assert.ok(!row.translation.includes(old), `${code} no longer answers T45's words`);
   }
-  assert.ok(!WORDS.some((x) => x.key === "refusal.AROSE_FROM_REFUSED"), "words.json holds no AROSE_FROM_REFUSED");
+  assert.ok(WORDS.some((x) => x.key === "refusal.AROSE_FROM_REFUSED"), "words.json holds AROSE_FROM_REFUSED (DEC-260), read by key");
   assert.deepEqual([ACTION_REPLY_CHECKS.AROSE_FROM_REFUSED.check, ACTION_REPLY_CHECKS.AROSE_FROM_REFUSED.where,
                     ACTION_REPLY_CHECKS.AROSE_FROM_REFUSED.translation],
-    ["C-150.7", AT("#arising", "is-arising-shape"), "What arose from the response is named as a project, or as a plan with one "
-      + "of its matters, each by its id. This request named neither in that form, so nothing was linked."]);
+    ["C-150.7", AT("#arising", "is-arising-shape"), en("refusal.AROSE_FROM_REFUSED")]);
   assert.equal(Object.keys(ACTION_REPLY_CHECKS).length, 10, "these seven, and T48's C-150.8 to .10 (R10; quoting.test.mjs)");
 });
 

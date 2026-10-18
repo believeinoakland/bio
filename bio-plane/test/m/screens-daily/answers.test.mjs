@@ -120,7 +120,7 @@ test("R6: while not reachable the screen is \"Find and count\": search here, and
   assert.deepEqual(ops(p), ["search", "standingquestionset"]);
   assert.ok(!ops(p).includes("ask"), "no assistant control drawn (interface-shell R20)");
   await press(p, "search", { values: { "answers-q": "work orders" }, reason: R });
-  assert.equal(last(p, "search").query.q, "work orders");
+  assert.equal(last(p, "search").query.q, "(work orders) OR (passage:work passage:orders)", "R35: \"Search here\" asks the passages too");
   assert.ok(main(p).querySelector('.cs-origin[data-origin="search"]'));
   assert.deepEqual(ops(p), ["search", "ruleanswer", "standingquestionset"]);
   assert.ok(button(p, "ruleanswer").textContent.startsWith(word("act.ruleanswer.label.answers")));
@@ -154,5 +154,5 @@ test("R6: in both, standingquestionset keeps asking and standingquestionend stop
 
 test("R34: every key Ask reads is a word of the list", () => {
   for (const k of screen("answers").words) assert.ok(hasWord(k), k);
-  for (const k of Object.values(screen("answers").acts.find((a) => a.op === "ask").refusals)) assert.ok(hasWord(k), k);
+  for (const k of Object.values(screen("answers").acts.find((a) => a.op === "ask").refusals).filter((k) => typeof k === "string")) assert.ok(hasWord(k), k);
 });

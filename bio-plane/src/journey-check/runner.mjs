@@ -118,5 +118,16 @@ export class AgentRunner {
 }
 const usage = () => ({ input_tokens: 100, output_tokens: 20, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null });
 
+/* The remote side of agent-runner (R19's `REMOTE`), standing only far enough to say what version it is, as agent-runner R40
+   states (`GET /remote/version`): the install's verification asks it. It starts no session. */
+export class RemoteSession {
+  constructor(state, env) { this.env = env; }
+  async fetch(request) {
+    if (request.method === "GET" && new URL(request.url).pathname === "/remote/version")
+      return json({ ok: true, name: "agent-runner", version: this.env.VERSION || "0.0.0" });
+    return refuse("UNKNOWN", 404, "no such route");
+  }
+}
+
 /* agent-runner R15: the Worker's own handler reaches no instance. */
 export default { fetch: () => json({ ok: false, code: "UNKNOWN" }, 404) };

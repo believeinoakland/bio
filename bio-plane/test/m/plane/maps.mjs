@@ -65,6 +65,7 @@ import { contentOf, contentOps } from "../../../src/content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../../../src/retrieval/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../../../src/setup.mjs";
+import { translationsOf, translationsOps } from "../../../src/translations/index.mjs";
 import { controlPlaneRoutes } from "../../../src/store-door/dispatch.mjs";
 import { admissionOf, admissionOps } from "../../../src/admission/window.mjs";
 import { eventsOf, eventsOps } from "../../../src/events/index.mjs";
@@ -184,7 +185,10 @@ export const MODULE_MAPS = [
   ["review", (c, u, b) => reviewOps(reviewOf(c), u, b)],
   ["case-check", (c, u, b) => caseCheckOps(caseCheckOf(c), u, b)],   /* plane R39 (K2839): after review's */
   ["wizard-scripts", (c, u, b) => wizardScriptsOps(wizardScriptsOf(c), u, b)],
-  ["instance-setup", (c, u, b, e) => instanceSetupOps(instanceSetupOf(c, e), u, b)],
+  /* R61 (T50; translations R12): translations' nine routes before instance-setup's, which drops them (its own copy goes in T50-23) */
+  ["translations", (c, u, b) => translationsOps(translationsOf(c), u, b)],
+  ["instance-setup", (c, u, b, e) => Object.fromEntries(Object.entries(instanceSetupOps(instanceSetupOf(c, e), u, b))
+    .filter(([op]) => !Object.hasOwn(translationsOps(translationsOf(c), u, b), op)))],
   ["admission", (c, u, b) => admissionOps(admissionOf(c), u, b)],
   /* plane R35 (K2585): control-plane's own map for owners with no arm (its R71, R72), over each owner's one instance */
   ["control-plane", (c, u, b, e) => controlPlaneOwnerOps({ aiUse: () => aiUseOf(c), aiRuns: () => aiRunsOf(c, e),

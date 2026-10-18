@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, M, BOB, MACHINE, INQ, RFC, REQ, WINDOW, leg } from "./fixture.mjs";
 import { ACTION_REPLY_CHECKS, ACTION_REPLIES_TABLES, actionRepliesOps } from "../../../src/action-replies/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const WORDS = "Please do not quote this reply in any public document.";
 const members = [{ bundle_id: INQ, version_sha: "a".repeat(64) }];
@@ -60,11 +61,11 @@ test("R10 control: every refusal in order, each with its control, writing nothin
     assert.deepEqual([r.reason, r.check], ["MACHINE_CANNOT_RECORD_QUOTING", "C-150.8"], String(author));
     assert.equal(r.translation, ACTION_REPLY_CHECKS.MACHINE_CANNOT_RECORD_QUOTING.translation);
   }
-  /* 2 NO_TARGET; 3 NO_SUCH_BUNDLE (absent and unseen alike); 4 NOT_AN_ACTION */
+  /* 2 NO_TARGET; 3 NO_SUCH_ACTION (absent, unseen and non-action alike) */
   assert.equal(quote(w, { ...ok, target: null, quotable: "x" }).reason, "NO_TARGET");
-  assert.equal(quote(w, { ...ok, target: "ACTN-2026-9999-none", quotable: "x" }).reason, "NO_SUCH_BUNDLE");
-  assert.equal(quote(w, { ...ok, viewer: "nobody", quotable: "x" }).reason, "NO_SUCH_BUNDLE");
-  assert.equal(quote(w, { ...ok, target: INQ, quotable: "x" }).reason, "NOT_AN_ACTION");
+  assert.equal(quote(w, { ...ok, target: "ACTN-2026-9999-none", quotable: "x" }).reason, "NO_SUCH_ACTION");
+  assert.equal(quote(w, { ...ok, viewer: "nobody", quotable: "x" }).reason, "NO_SUCH_ACTION");
+  assert.equal(quote(w, { ...ok, target: INQ, quotable: "x" }).reason, "NO_SUCH_ACTION");
   /* 5 QUOTING_NOT_RFC is ahead of 6 */
   assert.equal(quote(w, { ...ok, ord: 99, quotable: "x" }).reason, "QUOTING_NOT_RFC");
   /* 6 QUOTING_REFUSED: a quotable that is not a boolean, words missing with false, malformed words */
@@ -83,15 +84,12 @@ test("R10 control: every refusal in order, each with its control, writing nothin
   assert.equal(quote(w, { ...ok, quotable: true, words: undefined }).ok, true);
 });
 
-test("R10 the rows C-150.8 to C-150.10 are this module's, in BOB's drafted words; the op reads the control plane's stamps; the act refuses no act of any module", () => {
+test("R10 the rows C-150.8 to C-150.10 are this module's, their words read by key from words.json; the op reads the control plane's stamps; the act refuses no act of any module", () => {
   const { w, got } = answered();
   assert.deepEqual(Object.values(ACTION_REPLY_CHECKS).map((r) => r.check).slice(-3), ["C-150.8", "C-150.9", "C-150.10"]);
-  assert.equal(ACTION_REPLY_CHECKS.MACHINE_CANNOT_RECORD_QUOTING.translation,
-    "Only a member records what a reply says about being quoted. Nothing was written.");
-  assert.equal(ACTION_REPLY_CHECKS.QUOTING_NOT_RFC.translation,
-    "Only a reply received to a request for comment can ask not to be quoted. Nothing was written.");
-  assert.equal(ACTION_REPLY_CHECKS.QUOTING_REFUSED.translation, "Say whether the reply may be quoted, and when it may not, give the "
-    + "reply's own words that say so, on one line of at most 500 characters. Nothing was written.");
+  assert.equal(ACTION_REPLY_CHECKS.MACHINE_CANNOT_RECORD_QUOTING.translation, word("refusal.MACHINE_CANNOT_RECORD_QUOTING"));
+  assert.equal(ACTION_REPLY_CHECKS.QUOTING_NOT_RFC.translation, word("refusal.QUOTING_NOT_RFC"));
+  assert.equal(ACTION_REPLY_CHECKS.QUOTING_REFUSED.translation, word("refusal.QUOTING_REFUSED"));
   const ops = (q, b) => actionRepliesOps(w.r, url(q), b);
   assert.ok("actionreplyquoting" in ops({}, {}));
   /* a body's own author never wins over the stamp */
@@ -138,6 +136,6 @@ test("R4 control: a machine records no quoting; the table is this module's, decl
   assert.ok(ACTION_REPLIES_TABLES.includes("action_reply_quoting"));
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_reply_quoting`)[0].n, 0);
   quote(w, { target: RFC, ord: got, quotable: false, words: WORDS });
-  assert.equal(w.r.bearingsOf({ target: RFC, viewer: "nobody" }).reason, "NO_SUCH_BUNDLE", "an invisible action reads as an absent one");
+  assert.equal(w.r.bearingsOf({ target: RFC, viewer: "nobody" }).reason, "NO_SUCH_ACTION", "an invisible action reads as an absent one");
   void WINDOW;
 });

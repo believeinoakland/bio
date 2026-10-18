@@ -86,7 +86,7 @@ function plane(cfg = {}) {
         context: { type: "inquiry", id: "INQ-T35" }, mode: cfg.mode ?? "check", skill: PACK.version, standard_pair: null } });
       /* control-plane R41: the door answers `agentpack` at the envelope's top level */
       case "agentpack": return Response.json({ ok: true, fences: [], ...(cfg.noPack ? { pack: null, pack_absent: "no fences" } : { pack: cfg.pack ?? PACK }), store: "scratch", tokenClass: "ai" });
-      case "meaningrows": return ok({ ok: true, arm: "leg", rows: [{ id: "row-1", text: doc, ...extra }], count: 1 });
+      case "meaningrows": return ok({ ok: true, arm: "leg", rows: [{ id: "row-1", text: doc, ...extra }], scope: { documents: 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 1 });
       case "basisversions": return ok({ versions: [{ name: `held ${SENT}` }] });
       case "search": return ok({ hits: [{ bundle_id: "bundle:cited", title: doc, source_locator: "https://example.org/cal", ...extra }] });
       case "versionchain": return ok({ address_norm: "example.org/cal", total: 1, versions: [{ bundle_id: "bundle:cited", title: doc }] });

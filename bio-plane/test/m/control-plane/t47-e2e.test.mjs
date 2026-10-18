@@ -146,12 +146,21 @@ test("R81 end to end: Home draws the group's projects from the real `projectlist
   const p = await appAt("/app");
   /* the counts are read one after the list, each paged: wait for both to be drawn (or the time to run out) */
   /* screens-daily R10, R21: a count is drawn in the row's meta, and never at zero, so wait for the busy project's */
-  await until(p, () => /2 questions/.test(text(main(p))));
+  /* the wait is on the busy project's own row, the thing asserted below (not any "2 questions" on the page), bounded generously */
+  /* a project is referenced more than once on Home (a "Last change" line names it too): its ROW is the reference whose
+     container draws the stage ladder, which only a project row does (screens-daily R8) */
+  const containerOf = (a) => a.closest(".cs-row") || a.parentElement.parentElement;
+  const rowOf = (id) => main(p).querySelectorAll("a").find((a) => ((a.getAttribute("href") || "").includes(encodeURIComponent(id)) || (a.getAttribute("href") || "").includes(id))
+    && containerOf(a).querySelector('[data-ladder="stage"]'));
+  const rowTextOf = (id) => { const a = rowOf(id); return a ? text(containerOf(a)) : ""; };
+  assert.ok(await until(p, () => /2 questions/.test(rowTextOf(busy)), 90000), "the busy project's count is drawn in its row: " + rowTextOf(busy)
+    + " | projectquestions asked: " + JSON.stringify(p.byOp("projectquestions").map((r) => [r.query.project, r.status ?? r.answered ?? null, r.after ?? r.query.after ?? null]))
+    + " | requests: " + p.requests.length);
   answered(p, "projectlist");
   const asked = answered(p, "projectquestions");
   assert.deepEqual([...new Set(asked.map((r) => r.query.project))].sort(), [busy, quiet].sort(), "each listed project's count is read");
   const m = main(p);
-  const row = (id) => m.querySelectorAll("a").find((a) => (a.getAttribute("href") || "").includes(encodeURIComponent(id)) || (a.getAttribute("href") || "").includes(id));
+  const row = (id) => rowOf(id) ?? m.querySelectorAll("a").find((a) => (a.getAttribute("href") || "").includes(encodeURIComponent(id)) || (a.getAttribute("href") || "").includes(id));
   for (const [id, title] of [[busy, "The dark streets"], [quiet, "The library hours"]]) {
     const a = row(id);
     assert.ok(a, `${id} is drawn as a reference`);
@@ -185,18 +194,26 @@ test("R81 end to end: a wizard started from one of Home's front doors: the doors
   assert.ok(doors, "Home draws its front doors");
   const at = doors.querySelector(`[data-door="${door.door}"]`);
   assert.ok(at, `the ${door.door} door is drawn`);
-  const button = at.querySelectorAll('button[data-act="startfrom"]').find((b) => b.getAttribute("data-script") === SCRIPT);
-  assert.ok(button, "the door's script is a control");
+  /* screens-daily R9, R40 (T50): a door is a button that starts directly, pressing it sends `startfrom` for it and opens its
+     offer in place; the door's scripts are drawn in that offer, so the door is pressed first */
+  const doorButton = at.querySelectorAll('button[data-act="startfrom"]').find((b) => !b.getAttribute("data-script"));
+  assert.ok(doorButton, "the door is a control");
+  await p.click(doorButton);
+  await until(p, () => main(p).querySelector(`[data-door="${door.door}"][data-open="true"]`));
+  const button = main(p).querySelector(`[data-door="${door.door}"]`).querySelectorAll('button[data-act="startfrom"]')
+    .find((b) => b.getAttribute("data-script") === SCRIPT);
+  assert.ok(button, "the open door's script is a control");
   /* control: before the press, no wizard runs and no script was read */
   assert.equal(p.byOp("wizardread").length, 0);
   assert.equal(p.root().querySelector('[data-guide-state="running"]'), null, "no wizard runs before the press");
   const startfromBefore = p.byOp("startfrom").length;
+  const startfromPosts = p.byOp("startfrom").filter((r) => r.method === "POST").length;
 
   await p.click(button);
   await until(p, () => p.root().querySelector('[data-guide-state="running"]') && p.byOp("wizardprogress").length > 0);
   /* screens-daily R23: a script is started by the shell's `cs.wizard`; the press sends no act of its own. Home may read the
      doors again as it redraws (a GET), but no `startfrom` is ever a POST */
-  assert.ok(p.byOp("startfrom").every((r) => r.method === "GET"), "the script button sends no act of its own");
+  assert.equal(p.byOp("startfrom").filter((r) => r.method === "POST").length, startfromPosts, "the script button sends no act of its own");
   assert.ok(startfromBefore >= 1);
   const [read] = answered(p, "wizardread");
   assert.equal(read.query.script, SCRIPT);

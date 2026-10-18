@@ -39,6 +39,7 @@ import { toolContent } from "./reads.mjs";
 import { ACTION_DRAFT_OPS, actionTaskOf, actionDraft } from "./action-drafts.mjs";
 import { untestedOf, UNTESTED_BAD } from "./untested.mjs";
 import { doorTrace } from "./signin.mjs";
+import { remoteOf } from "./remote.mjs";
 import { askBoundReached, draftMayRead, TRANSLATION_DRAFT_MAX_WORDS } from "../../bio-plane/src/run-rules/index.mjs";
 
 /** The tasks a draft is asked for, and the field shapes of each (R59; R68, the translation draft; R76, the action
@@ -213,6 +214,9 @@ export async function handleDraft(req, env, deps) {
   if (grantSent && !(typeof body.grant === "string" && body.grant))
     return refusal("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
   const grant = grantSent ? body.grant : null;
+  /* R110: past the shape checks and before the pack is read or any model turn. */
+  const blocked = await deps.assistantReady(env, account);
+  if (blocked) return blocked;
 
   const gotPack = await packFor(grant, body, env, deps);
   if (gotPack.refusal) return gotPack.refusal;
@@ -252,7 +256,7 @@ export async function handleDraft(req, env, deps) {
   const reference = (await cascadeToken(account)).reference;
   const meter = segmentMeter({ turnsBound: ASK_DECLARED.turns, bytesBound: DEFAULT_MAX_SEGMENT_BYTES });
   const got = await converse({
-    reference, runner: env.RUNNER ?? null, mode: "draft", meter, system, messages, tools, finalTool: "draft",
+    reference, runner: remoteOf(env), mode: "draft", meter, system, messages, tools, finalTool: "draft",
     maxTurns: ASK_DECLARED.turns, onTool: grantReader({ env, grant, meter, deps }), ...traced,
   });
   const spent = { usage: got.usage ?? null, calls: got.calls === undefined ? null : got.calls };
@@ -379,6 +383,9 @@ async function translationDraft(body, task, env, deps, labelled = {}, traced = {
     return refusal("DRAFT_READ_NOT_ALLOWED",
       "a translation draft reads nothing of what the group holds; a grant to read was sent with it, so nothing was "
       + "done.", 400);
+  /* R110 */
+  const blocked = await deps.assistantReady(env, account);
+  if (blocked) return blocked;
 
   /* R69: the pack the door sends; its `interface_translation` layer, or no model call. */
   const pub = publishedPack({ pack: body.pack ?? null });
@@ -411,7 +418,7 @@ async function translationDraft(body, task, env, deps, labelled = {}, traced = {
   const reference = (await cascadeToken(account)).reference;
   const meter = segmentMeter({ turnsBound: ASK_DECLARED.turns, bytesBound: DEFAULT_MAX_SEGMENT_BYTES });
   const got = await converse({
-    reference, runner: env.RUNNER ?? null, mode: "draft", meter, system, messages, tools, finalTool: "draft",
+    reference, runner: remoteOf(env), mode: "draft", meter, system, messages, tools, finalTool: "draft",
     maxTurns: ASK_DECLARED.turns, ...traced,
     /* R69: no tool reaches anything; any call but the answer is refused here, with no plane call. */
     onTool: async (name) => ({ content: `'${String(name).slice(0, 40)}' is not a tool of this draft`, error: true }),
@@ -466,6 +473,9 @@ async function readingDraft(body, task, env, deps, labelled = {}, traced = {}) {
     return refusal("DRAFT_READ_NOT_ALLOWED",
       "a translation of the group's writing reads nothing of what the group holds, only the passage it is given; a "
       + "grant to read was sent with it, so nothing was done.", 400);
+  /* R110 */
+  const blocked = await deps.assistantReady(env, account);
+  if (blocked) return blocked;
 
   /* R86: the pack the door sends; its `reading_translation` layer, or no model call. */
   const pub = publishedPack({ pack: body.pack ?? null });
@@ -493,7 +503,7 @@ async function readingDraft(body, task, env, deps, labelled = {}, traced = {}) {
   const reference = (await cascadeToken(account)).reference;
   const meter = segmentMeter({ turnsBound: ASK_DECLARED.turns, bytesBound: DEFAULT_MAX_SEGMENT_BYTES });
   const got = await converse({
-    reference, runner: env.RUNNER ?? null, mode: "draft", meter, system, messages, tools: [readingTool()],
+    reference, runner: remoteOf(env), mode: "draft", meter, system, messages, tools: [readingTool()],
     finalTool: "draft", maxTurns: ASK_DECLARED.turns, ...traced,
     /* R86: no tool reaches anything; any call but the answer is refused here, with no plane call. */
     onTool: async (name) => ({ content: `'${String(name).slice(0, 40)}' is not a tool of this translation`, error: true }),

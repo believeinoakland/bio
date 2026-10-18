@@ -1130,7 +1130,25 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    record names. Credentials added no row (K3337).
    ROW_CENSUS (R50) re-pinned to this tree: 1907 rows. Rows a T49 job in layers 3-11 adds or changes are T50's stamp
    (plan T49, rule 5 item 2). */
-export const CATALOG_VERSION = "1.76.0";
+/* 1.77.0 (PROMOTION #48, T50-6, 2026-10-17; T49's rules 5 (2) and 7, T50's rule 5 (2); K3624, K3625, K3633, K3636, K3638):
+   MINOR. The stamp of every row awaiting it at T49's close (R085's and T49's layers 3-11) and of T50's layer 2, read by
+   diffing R50's census lines of `tranche/T50` (after ai-accounts, membership, credentials and project-roster merged, and
+   this module's own N1116 words) against 1.76.0's own (`test/fixtures/row-census-1.76.0.jsonl`: 1907 rows, e2035581...):
+   seventy lines, two new rows, sixty-eight changed, none retired.
+   ARRIVED (2): project-roster C-147.9 MACHINE_CANNOT_SET_STAKE, C-147.10 STAKE_MALFORMED (T50-3, N933).
+   CHANGED (68), code and number unmoved, each its translation (N1116, the words read by key `refusal.<CODE>`, "team" for
+   "group", N1160) unless named: promotion (this job) the 38 rows it holds that the design keys, of which the census
+   moves C-32.5 MACHINE_CANNOT_REOPEN, C-64.1 GROUP_UNDETERMINED, C-86.3 ENVELOPE_TITLE_DISAGREES, C-86.14
+   REVISION_REGROUPS_BUNDLE, C-97.1 PROJECT_VISIBILITY_NO_OWNER and C-102.4 to C-102.8 (the rest read by key the words
+   they had); ai-accounts C-29.6-.10, C-29.15, .17, .20, .22, .27, .29-.32, .45 (the T50-4 moves, K3625; C-29.6-.10 and
+   C-29.30 from R085/T49 as well); credentials and the door C-32.17 OPERATOR_TOKEN_CANNOT_GOVERN, C-38.1-.11, C-64.4
+   GROUP_IDENTITY_NEEDS_SESSION, C-78.1-.3; membership C-55.1, C-56.6, C-70.2 and C-96.1-.3, .6, .11, .18, .22,
+   .25, .27-.33, .35-.38, .47, .54, C-102.11, C-102.12 (listenerRefusal); project-roster C-147.8 APPROVAL_KIND_UNKNOWN.
+   THE FAMILIES THAT ARRIVED: none. CHANGED IN WHAT THE GATES RUN, no row line moving: none a T49 L3-L11 or T50 L2 job
+   record names (membership's `MODULE_ORDER` is now generated from `modules.json`, which moves no gate's order).
+   ROW_CENSUS (R50) re-pinned to this tree: 1909 rows. Rows a T50 job in layers 3-11 adds or changes are T51's stamp
+   (plan T50, rule 5 item 2). */
+export const CATALOG_VERSION = "1.77.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1222,8 +1240,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1907,
-  digest: "e20355819ac78cfe8991def71b3c719c0dd7507f573703422b58d5b049149835" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1909,
+  digest: "962db2b0fc620f04b8edfe7ebf5e489543d0721b4b6638764dd2c7e7e024d766" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -1383,7 +1401,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        then there is nothing to verify or to copy under any hash. */
     if (!probe.present && probe.heldInParts)
       errors.push({ check: "PLANE_HELD_IN_PARTS",
-                    detail: `registered capture is held only in parts: the acquisition receipt of your group's Civicsmith `
+                    detail: `registered capture is held only in parts: the acquisition receipt of your team's Civicsmith `
                           + `names the whole hash, and the working bucket stores the document as its parts, each under `
                           + `its own hash, but the record's data/provenance.json names no parts for it. `
                           + `Publication copies the parts the record names, so name them there, or register `

@@ -1,0 +1,44 @@
+# screens-settings (T50)
+
+**Status** · session_01Xn8gDK93aCQ7QN2Ga2AvXK · depth 2 · COMPLETE · handled B4
+
+## Completion (SCREENS-SETTINGS #6)
+
+**Entries applied (T50-29).** R42 (account's Sounds by `cs.sounds()` when the kit has it; recovery's `onlyyou`), R43 (Security leads; period by first and last day; may end today; a bad period in its fold), R44 (term cards on group's headings; section openers), R45 (the team's time zone named, corrected by `factconfirm` on each profile's own path; two/none folds), R46 (Courts section, Add a court), R47 (Members is the roster; a table for a member), R48 (`teamai`, new), R49 (`connect` in all five states, parts), R50 (a code being exchanged; used/suggestions only to an administrator and only when answered), R51 (the founder's row from the roster), R52 (setup/system lines; name saved/same), R54 (an expired sign-in on Connect). Fixes made on the restart: `group` drew the time-zone correction fields to a member (now an administrator's only); the name help is drawn only when a name is held; the hosting section is drawn only when something is held or the form (R28 against R44); `connect` draws "Which account pays" also in the kept-away state (R4); two `connect.part.limit.why.*` keys added to `keys.mjs`.
+
+**Deferred.** R41 (the connection check) and R53 (its words and steps) wait on the remote proof (agent-runner R38), accepted red by name (K3718 (2)); nothing is drawn for them, and `connect.test.mjs` pins that the check is absent. R54's control "a held subscription draws the check" waits on the same.
+
+**Sounds (R42).** With interface-shell merged (B3), `cs.sounds()` draws a labeled pair of buttons; the account test now checks them (off by default, nothing sent) and passes. All 146 tests of the module pass.
+
+**Found in other modules.** (1) The tranche baseline fails `plane/t47.test.mjs` (R45, R48), `control-plane/t46-app.test.mjs` (R75, R81) and `answer-envelope/catalogue-end.test.mjs` (R13) without this job's files (more tests fail there than with them); not mine. (2) `kit.mjs` here filters the shell's frame reads by a hand list (`SHELL`), deferred N1073: the shell exports no list of them.
+
+**REPORTs for BOB (words the design lacks or contradicts; nothing is drawn inline).** (1) No `screen.teamai` sentence says "administrators only" apart from `screen.teamai.purpose`, which a member's address draws. (2) `screen.security.ordinary.line`'s `{period}` is drawn with `period.days` ("11 October to 17 October"); the design means "7 days"; no key holds a number of days. (3) `screen.security.summary.detail` claims "No new key, credential or administrator was made in the period", which no read answers; it is drawn for a raised or high period only when `times`, `from`/`to` and `highfrom`/`highto` can be filled from `securitymap` (an assumption; check with UX design). (4) The design's "Saved" after the uses has no key: nothing is drawn as done before the answer (the shell's `data-done`). (5) A court's `entitycreate` needs a note (entities R1) the design's one-field form lacks; the court's name is sent as its note, and the empty-name refusal uses `court.add.help` (no key says "name the court"). (6) The hosting-account card on `members` (R44): the roster draws no sentence that carries the term; only `group` does. (7) `member.founder.unnamed.summary` is not drawn: the founder's row is never folded (K3742). (8) The hosting section's opener `screen.group.hosting.says` is drawn only when something is held or the administrator's form is (R28 beats R44's opener for a section that holds nothing).
+
+**Tests.** `node --test bio-plane/test/m/screens-settings/*.test.mjs`: 146 tests, all pass. New: `teamai.test.mjs` (R48), and tests naming R42–R52, R54 in `account`, `settings` (recovery), `security`, `group`, `places`, `connect`, `members`, `panel`, `common`. Used-by tests (`screens-inquiry` projectai, t48) pass; `plane/t47`, `control-plane/t46-app` and `answer-envelope/catalogue-end` fail on the tranche baseline too.
+
+**Checks** (process repository, product /home/user/bio): `format: 171 modules, 170 requirements files; 0 failures`; `architecture: 34 product files, 61 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 53 of 53 live requirement ids named by a test; 0 failures`; `ownership: 26 files changed by screens-settings between tranche/T50 and HEAD; 0 failures`. `checks/run.mjs` shows no failure for this module (the 19 coverage failures listed are other modules').
+
+Size (session_01Xn8gDK93aCQ7QN2Ga2AvXK): test runs 16, module lines 3420
+
+## J1 · BLOCKED
+
+BLOCKED (cause: context). I am past half my window. Done and pushed (job/T50/screens-settings @ 3d3cff8825): the code for R42–R46, R47–R52 and R54 (teamai new; members as the roster; security, group, places, connect redrawn; keys regenerated), and the tests for panel and members. NOT done: the other tests listed in my record ('Progress at J1'), a teamai test file, a test for each new id, the checks (format, architecture, coverage, ownership), and the COMPLETE record. R41 and R53 stay unbuilt, accepted red (K3718 (2)). IMPORTANT for the restart: on this branch the module's tests cannot pass until interface-shell (cs.sounds, R74), wizard-scripts (SCREEN_REGISTRY with teamai and factconfirm on group, T50-17) and interface-assets (.cs-part, T50-26) merge into tranche/T50; I tested in a throwaway worktree with those regenerated (recipe in my record). If BOB has merged them by the restart, merge tranche/T50 into the branch first. Eight REPORTs on words the design lacks are in my record.
+
+## J2 · COMPLETE
+
+COMPLETE. T50-29 applied: R42–R52 and R54 built; R41 and R53 stay unbuilt, accepted red by name (K3718 (2)). Tests: 146, 145 pass; the one red is account's R42 Sounds test, which needs interface-shell R74's cs.sounds() (merge the shell, re-run it). Checks: format 0, architecture 0, coverage 53 of 53, ownership 0. Eight REPORTs on words the design lacks or contradicts, found in other modules (three baseline failures in plane/t47, control-plane/t46-app, answer-envelope/catalogue-end), the Size line and the details are in my record, 'Completion (SCREENS-SETTINGS #6)'. Pushed: job/T50/screens-settings.
+
+## J3 · REPORT · re B2
+
+B2 checked on tranche/T50 merged into my branch (wizard-scripts and interface-assets in): members draws no groupkeyset (it is teamai's, since J1, R47); every screen of mine lists exactly its registry acts (script over SCREENS vs registry.json: no extra, no missing), and contract.test.mjs runs checkScreens(SCREENS) and interfacePage over mine: green. control-plane t46-app and plane t47 R48 still fail, but the refusal they log is 'interface-shell: screen person's act person is not the registry's' — screen `person` is not a screen of mine (my ids: settings, members, teamai, account, connect, notes, group, group-identity, places, recovery, security, translations, updates). Nothing to change in screens-settings; the tests for the composed page (t47, t46-app) are others'. Pushed.
+
+## J4 · B3 note
+B3: merged tranche/T50 (interface-shell in). My screens list exactly the registry's acts; interface-shell's R73 test (t50.test.mjs) still fails only on screens-investigate's `person` act ("screen person's act person is not the registry's"), not on any screen of mine. Fixed here: `screen.account.sounds.on` added to keys; members' pending-act test ignores the shell's aria-busy (R74); account's Sounds test follows the shell's control.
+
+## J5 · COMPLETE · re B3
+
+COMPLETE after B3. Merged tranche/T50 (interface-shell in); all 146 screens-settings tests pass (the Sounds test now passes against the shell's cs.sounds). My screens draw exactly the registry's acts. interface-shell's t50 R73 test still fails, but only on screens-investigate's person act ('screen person's act person is not the registry's'), not on any screen of mine. format/architecture/coverage (53 of 53)/ownership: 0 failures. Pushed.
+
+## J6 · COMPLETE · re B4
+
+B4: merged tranche/T50, re-ran (146 pass). Neither sentence is screens-settings' text: security draws each tool's handling (sends, never sends, recipient, region, file retention) as record data, escaped, from securitytoolcatalogue; both come from the catalogue entries in file-scanner/src/providers/catalogue.mjs (handling.recipient 'Cloudflare, Inc. ...the group's own account', handling.region 'Where chosen by the group: US1, EU1, ...'), a file-safety/file-scanner file I may not change. Not a keyed word, so nothing for me to key; I will not rewrite catalogue data in the screen (it would misstate what the vendor's entry digest covers). Needs: file-safety/file-scanner to say 'team' in those entries (and its handling_digest then moves). Nothing changed in my module.

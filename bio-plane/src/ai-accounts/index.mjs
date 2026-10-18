@@ -29,6 +29,7 @@ import { Membership, membershipOf, notAnAdmin, noSuchProject, notTheOwner, liste
 import { AI_ACCOUNTS_SCHEMA, AI_ACCOUNTS_ADDITIVE_COLUMNS, AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES,
          AI_ACCOUNTS_HISTORY_TABLE } from "./schema.mjs";
 export { AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "./schema.mjs";
+import { word } from "../setup-words/index.mjs";
 import { AI_ACCOUNT_CHECKS, AI_WORDS } from "./checks.mjs";
 export { AI_ACCOUNT_CHECKS, AI_WORDS } from "./checks.mjs";
 
@@ -786,7 +787,9 @@ export class AiAccounts {
 
   /* R19: an in-plane call, when an act on her token was answered SIGNIN_TOKEN_REFUSED: the token is dropped and
      `refused_at` recorded (the fact stays, answering not connected), a change of her account (R16), and (R31 (4)) her
-     projects' sign-in accounts cleared; her own switches stay for her next sign-in. Answers `{ok: true, dropped}`; never throws. */
+     projects' sign-in accounts cleared; her own switches stay for her next sign-in. (T50; R26, N1060, K3218, K3224) It
+     tells R26's listeners once, inside the act, as a disconnection does (`why: "refused"`, `by: null`); a call for a member
+     with none held drops nothing, records nothing and tells no one. Answers `{ok: true, dropped}`; never throws. */
   subscriptionTokenRefused({ member = null } = {}) {
     try {
       const id = AiAccounts.#memberOf(member);
@@ -797,6 +800,8 @@ export class AiAccounts {
           at, id);
         this.#change(`member:${id}`, "removed", { account: "signin", why: "refused" }, null, null, at);
         this.#projectSigninsCleared(id, null);   /* R31 (4) */
+        this.#cleared({ member: id, account: "signin", by: null, why: "refused",
+                        reference_held: !!this.#reference(id, "member_id") });   /* R26 */
       });
       return { ok: true, dropped: true };
     } catch { return { ok: false, dropped: false, unreadable: true }; }
@@ -987,10 +992,9 @@ export class AiAccounts {
     } catch { return { on: false, suggestions: false, standing: false }; }
   }
 
-  /* R8: the notice, its words fixed here (D311's disclosure, K1478 (i), K1755). */
-  static GROUP_KEY_NOTICE_TEXT = "This group has its own Claude account, an Anthropic API key an administrator set. When "
-    + "you ask the assistant and you have not connected an account of your own, your questions, and the material read "
-    + "to answer them, go to Anthropic under the group's API account.";
+  /* R8: the notice's words, `words.json`'s `ai-accounts.group_key_notice_text`, read by key (D311's disclosure, K1478 (i),
+     K1755). */
+  static GROUP_KEY_NOTICE_TEXT = word("ai-accounts.group_key_notice_text");
 
   /* R8: `{due, text}` for a member until their own act records that they have read it; writes nothing. */
   groupKeyNotice({ member = null } = {}) {
@@ -1169,7 +1173,7 @@ export class AiAccounts {
     if (uses === null || uses === undefined) return { json: null };
     if (Array.isArray(uses) && uses.length && uses.every((u) => USE_KINDS.includes(u)) && new Set(uses).size === uses.length)
       return { json: JSON.stringify(USE_KINDS.filter((k) => uses.includes(k))) };
-    return { fault: AiAccounts.#valueInvalid("a material limit's uses, a list of the kinds of use it covers,", USE_KINDS) };
+    return { fault: AiAccounts.#valueInvalid(word("ai-accounts.fault"), USE_KINDS) };
   }
 
   /* R20 (DEC-172), R22: the reason rule a material limit is set under, the group's or a project's: `on: true` needs a

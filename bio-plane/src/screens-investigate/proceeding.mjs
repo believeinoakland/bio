@@ -5,18 +5,27 @@
  * with its due date. Procedural facts are drawn as facts, never as advice on what to file. */
 
 import { PARTS } from "./parts.mjs";
+import { FORM_SHARED } from "./graphwords.mjs";
 
 function reads(view) {
   const id = String(view.subject || "");
-  if (!/^ENT-/.test(id)) return {};
-  return {
+  /* R36: the registered forums (`entitieskind` with `forum_kind`, every kind `entities` R54 lists) and the profile's proceeding kinds */
+  const forums = "court,commission,grand_jury,auditor,other";
+  const base = {
+    courts: { op: "entitieskind", query: { kind: "body", forum_kind: forums, limit: "200" } },
+    institutions: { op: "entitieskind", query: { kind: "institution", forum_kind: forums, limit: "200" } },
+    vocab: { op: "affordances", query: {} },
+  };
+  if (!/^ENT-/.test(id)) return base;
+  return Object.assign(base, {
     entity: { op: "entity", query: { id }, subject: true, empty: (v) => !v || v.found === false },
     parties: { op: "partiesof", query: { proceeding: id } },
     dates: { op: "proceedingdates", query: { proceeding: id } },
     follows: { op: "follows", query: {} },
+    docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
     people: { op: "peopledirectory", query: { limit: "200" } },
     standards: { op: "standards", query: { limit: "200" } },
-  };
+  });
 }
 
 function render(cs, view) {
@@ -24,8 +33,33 @@ function render(cs, view) {
   const P = view.parts;
   const id = String(view.subject || "");
   const out = [];
-  const create = cs.choice("pr-forum", S + "forum", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {}) + cs.field("pr-number", S + "number", {})
-    + cs.field("pr-kind", S + "kind", { help: S + "kind.help" }) + cs.field("pr-label", S + "label", { help: S + "label.help" })
+  /* R36: the court is chosen among the registered forums (record data), never among the people; with none held the fold
+     says so and the "Add a court" form stands; the kind is chosen among the profile's kinds for the forum chosen */
+  const forums = [];
+  for (const name of ["courts", "institutions"]) {
+    const d = view.data[name];
+    if (d && d.state === "ok" && d.value) for (const r of d.value.entities || []) if (r.entity_id) forums.push({ value: r.entity_id, text: r.label || "", forumKind: r.forum_kind || "" });
+  }
+  const settled = ["courts", "institutions"].every((n) => view.data[n] && (view.data[n].state === "ok" || view.data[n].state === "empty"));
+  const failedRead = ["courts", "institutions"].find((n) => view.data[n] && view.data[n].state === "failed");
+  const chosenForum = forums.find((f) => f.value === view.ui["choice:pr-forum"]) || forums[0] || null;
+  const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
+  const profileKinds = vocab && vocab.vocabularies && Array.isArray(vocab.vocabularies.proceeding_kinds) ? vocab.vocabularies.proceeding_kinds.filter((k) => k && typeof k.kind === "string") : null;
+  const fallback = { court: ["civil", "writ", "appeal"], commission: ["complaint"] };
+  const keyed = ["civil", "writ", "appeal", "complaint"];
+  const kindList = (profileKinds
+    ? profileKinds.filter((k) => !chosenForum || !chosenForum.forumKind || !k.forum_kind || k.forum_kind === chosenForum.forumKind).map((k) => ({ value: k.kind, text: keyed.includes(k.kind) ? P.plain(cs, "proceeding.kind." + k.kind) : String(k.label || k.kind) }))
+    : (fallback[chosenForum && chosenForum.forumKind] || keyed).map((k) => ({ value: k, text: P.plain(cs, "proceeding.kind." + k) })));
+  const addCourt = (summary) => `<details class="mk-details" open><summary>${cs.w(summary)}</summary>`
+    + (summary === "screen.proceeding.court.none.summary" ? `<p>${cs.w("court.none")}</p>` : "")
+    + cs.field("pr-court-name", "court.add.name", { help: "court.add.help" })
+    + cs.act("entitycreate", { label: "court.add", data: { court: "1" } }) + "</details>";
+  const courtAdded = view.ui.courtAdded ? `<p class="mk-note">${cs.w("court.add.done", { name: view.ui.courtAdded })}</p>` : "";
+  const create = (failedRead ? cs.state(failedRead, view, () => "") : "") + (forums.length ? cs.choice("pr-forum", "screen.proceeding.forum", forums, { acts: {} }) + `<p class="mk-small">${cs.w("screen.proceeding.court.help")}</p>` : "")
+    + (!forums.length && settled ? addCourt("screen.proceeding.court.none.summary") : forums.length ? addCourt("court.add") : "")
+    + courtAdded
+    + cs.choice("pr-kind", "screen.proceeding.kind", kindList, {}) + `<p class="mk-small">${cs.w("proceeding.kind.help")}</p>`
+    + cs.field("pr-number", S + "number", {}) + cs.field("pr-label", S + "label", { help: S + "label.help" })
     + cs.field("pr-note", S + "note", { area: true, rec: true })
     + cs.act("entitycreate", { label: "act.entitycreate.label.proceeding", tone: "primary" });
   if (!/^ENT-/.test(id)) {
@@ -67,7 +101,7 @@ function render(cs, view) {
     : ""))
     + cs.choice("pr-party", S + "party", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
     + cs.choice("pr-role", S + "rolepick", ["petitioner", "respondent", "plaintiff", "defendant", "appellant", "appellee", "intervenor", "amicus", "other"].map((r) => [r, S + "roles." + r]), {})
-    + cs.field("pr-sha", S + "sha", { help: S + "sha.help" }) + cs.field("pr-page", S + "page", {})
+    + P.docChoice(cs, view, "pr-doc")
     + cs.act("recordline", { label: "act.recordline.label.proceeding" })));
   out.push(cs.sec(S + "register.head", cs.state("follows", view, (v) => {
     const regs = (v.items || []).filter((x) => x.kind === "register" && x.subject && x.subject.proceeding === id);
@@ -102,16 +136,33 @@ const acts = [
   /* "Register the proceeding" from its caption: the court, the number, a neutral label (the note: the member's own words) */
   { op: "entitycreate", label: "act.entitycreate.label.proceeding", reasonField: "note",
     send(view, el, cs) {
+      /* R36: "Add a court": a body carrying `forum_kind: "court"`, its name the member's own words (entities R54) */
+      if (el && el.dataset && el.dataset.court) {
+        const name = String(cs.value("pr-court-name") || "").trim();
+        if (!name) return { refuse: "screen.proceeding.create.empty" };
+        view.ui.addingCourt = name;
+        return { body: { kind: "body", label: name, forum_kind: "court", note: name } };
+      }
       const forum = String(cs.value("pr-forum") || "").trim(), number = String(cs.value("pr-number") || "").trim();
       const kind = String(cs.value("pr-kind") || "").trim(), label = String(cs.value("pr-label") || "").trim(), note = String(cs.value("pr-note") || "").trim();
       if (!forum || !number || !kind || !note) return { refuse: "screen.proceeding.create.empty" };
       return { body: Object.assign({ kind: "proceeding", note, proceeding: { forum, kind, number } }, label ? { label, aliases: [label] } : {}) };
     },
-    done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; if (r && r.entity_id) cs.go("proceeding", r.entity_id); } },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      if (view.ui.addingCourt) {
+        /* the new court is chosen once added */
+        const name = view.ui.addingCourt;
+        view.ui.addingCourt = null;
+        if (r && r.entity_id) { view.ui["choice:pr-forum"] = r.entity_id; cs.set("courtAdded", name); }
+        return;
+      }
+      if (r && r.entity_id) cs.go("proceeding", r.entity_id);
+    } },
   { op: "recordline", label: "act.recordline.label.proceeding",
     send(view, el, cs) {
       const from = String(cs.value("pr-party") || "").trim();
-      const basis = view.parts.passage(cs.value("pr-sha"), cs.value("pr-page"));
+      const basis = view.parts.chosen(cs, "pr-doc");
       if (!from || !basis) return { refuse: "screen.proceeding.party.empty" };
       return { body: { kind: "party_to", from, to: String(view.subject || ""), role: String(cs.value("pr-role") || "other"), basis } };
     } },
@@ -154,6 +205,8 @@ const PROCEEDING_KEYS = [
   "screen.proceeding.register", "screen.proceeding.forum", "screen.proceeding.number", "screen.proceeding.kind", "screen.proceeding.kind.help",
   "screen.proceeding.label", "screen.proceeding.label.help", "screen.proceeding.note", "screen.proceeding.create.empty",
   "screen.proceeding.party.empty", "screen.proceeding.register.empty", "screen.proceeding.order.empty", "screen.proceeding.link.empty",
+  "screen.proceeding.court.help", "screen.proceeding.court.none.summary", "court.none", "court.add", "court.add.name", "court.add.help", "court.add.done",
+  "proceeding.kind.civil", "proceeding.kind.writ", "proceeding.kind.appeal", "proceeding.kind.complaint", "proceeding.kind.help",
 ];
 
 const words = ["screen.proceeding.name", "screen.proceeding.purpose",
@@ -161,6 +214,6 @@ const words = ["screen.proceeding.name", "screen.proceeding.purpose",
   "screen.timeline.month", "screen.timeline.onorbefore", "screen.timeline.undated", "screen.timeline.more",
   ...["entitycreate", "recordline", "followregister", "declare", "courtlink"].flatMap((op) => ["act." + op + ".label.proceeding", "act." + op + ".does"]),
   "mark.kind.todo.name", "mark.kind.todo.means", "mark.due.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
-  "state.empty", "state.loading", "state.failed", ...PROCEEDING_KEYS];
+  "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...PROCEEDING_KEYS];
 
 export const PROCEEDING_SCREEN = Object.freeze({ id: "proceeding", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, render, acts, words, parts: PARTS });

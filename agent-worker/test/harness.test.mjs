@@ -94,6 +94,9 @@ import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
 import { REPORTING_LEVEL } from "../../agent-harness/src/harness.mjs";
+/* agent-harness R18 (T50): an absence is written only for a level the shell shows was read over a document, so these
+   direct calls state it the way the shell does: one read of each level, three documents in scope. */
+const SCOPE = Object.fromEntries(LEVELS.map((l) => [l, { reads: 1, documents: 3 }]));
 import { MEANING_ARM } from "../src/ops.mjs";
 /* FL-8 / IC-67 — THE PLANE'S STATUS KEYING, TAKEN FROM THE PLANE INSTEAD OF
    REPRODUCED HERE, AND THE CORRECTION IS A MEASURED DEFECT RATHER THAN A TIDY-UP.
@@ -176,7 +179,7 @@ async function harnessPurity() {
     stepLog: () => states.map((x) => H.stepLog(x, H.nextStep(x))),
     applyJudgement: () => states.map((x) => H.applyJudgement(x, { candidates: [], pass: x.pass ? 1 : undefined })),
     applyPlanJudgement: () => states.map((x) => H.applyPlanJudgement(x, { candidates: [{ summary: "s", score: 1 }] })),
-    emptyLevelCandidates: () => states.map((x) => H.emptyLevelCandidates(x, "INQ-1")),
+    emptyLevelCandidates: () => states.map((x) => H.emptyLevelCandidates({ ...x, scope: SCOPE }, "INQ-1")),
     runContextTarget: () => [{ context: { type: "inquiry", id: "I" } }, { context: { type: "project", id: "P", questions: ["A"] } },
                              { context: null }].map((x) => H.runContextTarget(x)),
     resumableState: () => states.map((x) => H.resumableState(x)),
@@ -193,6 +196,11 @@ async function harnessPurity() {
     earlierPlans: () => [H.earlierPlans({ plans: [{ id: "A", project: "P" }, { id: "B", project: "Q" }] }, "P", "B")],
     whyWithUndetermined: () => [H.whyWithUndetermined("why", [{ op: "plan", id: "X", code: "C" }]),
                                 H.whyWithUndetermined("w".repeat(900), [])],
+    /* agent-harness R18, R19 (T50) */
+    levelsWithoutScope: () => states.map((x) => H.levelsWithoutScope(x)),
+    disagreementKey: () => [{ record: "R", levels: ["meaning", "content"] }, { record: "R", levels: ["content", "meaning"] }]
+      .map((p) => H.disagreementKey(p)),
+    disagreementsToSettle: () => states.map((x) => H.disagreementsToSettle({ ...x, disagreements: [{ record: "R", levels: ["meaning", "content"] }] })),
   };
   const exported = Object.entries(H).filter(([, v]) => typeof v === "function").map(([k]) => k);
   const uncalled = exported.filter((k) => !corpus[k]);
@@ -488,7 +496,7 @@ console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's 
     { level: "document", state: "LOOKED_INDETERMINATE", observed_at: "log:13" },
     { level: "internet", state: "partial", observed_at: "log:14" },
   ];
-  const out = emptyLevelCandidates({ reports }, "INQ-1");
+  const out = emptyLevelCandidates({ reports, scope: SCOPE }, "INQ-1");
   t("exactly one candidate, for the one level that was LOOKED_ABSENT", out.map((c) => c.level), ["meaning"]);
   t("it is §9's kind", out[0]?.kind ?? null, "level-empty");
   t("it names the inquiry and the observation-log address that establishes it",
@@ -496,7 +504,7 @@ console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's 
   /* D-129's four are DIFFERENT CLAIMS and only one of them is an absence. */
   for (const st of ["NEVER_LOOKED", "LOOKED_INDETERMINATE", "PRESENT", "partial"])
     t(`'${st}' does NOT produce an empty-level claim`,
-      emptyLevelCandidates({ reports: [{ level: "meaning", state: st, observed_at: "x" }] }, "I"), []);
+      emptyLevelCandidates({ reports: [{ level: "meaning", state: st, observed_at: "x" }], scope: SCOPE }, "I"), []);
   /* CORRECTED 2026-09-13 (D-323): the candidate's `level` is the spelling a
      SUGGESTION is written in (`SUGGEST_LEVELS`), not the spelling the run's
      observation log uses (`OBSERVATION_LEVELS`), and the two disagree on one
@@ -506,7 +514,7 @@ console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's 
      one-per-level claim the arm is actually about is unchanged and is now
      asserted over the wire's four. */
   t("all four empty produce four candidates, one per level — absence at one level is not absence at the next",
-    emptyLevelCandidates({ reports: LEVELS.map((l) => ({ level: l, state: "LOOKED_ABSENT", observed_at: "x" })) }, "I")
+    emptyLevelCandidates({ reports: LEVELS.map((l) => ({ level: l, state: "LOOKED_ABSENT", observed_at: "x" })), scope: SCOPE }, "I")
       .map((c) => c.level), LEVELS.map((l) => REPORTING_LEVEL[l]));
   t("no reports at all produce nothing (an unrun search is not an absence)",
     emptyLevelCandidates({ reports: [] }, "I"), []);
@@ -699,6 +707,12 @@ export default {
         principal: { plane: "member:ruth", claude: CFG.payer ?? "member:ruth", ref: CFG.payer ?? "member:ruth" },
         context: runCtx(CFG),
         max_passes: CFG.maxPasses || 1,
+        /* agent-harness R18 (T50): a level is written absent only when the shell shows it was read over a document. This
+           suite drives the table with the judgements it is handed, no sub-session reading, so the scope arrives as the run's
+           published state, a place to resume at \`plan\` with every level read over three documents (\`noScope\` leaves it
+           out, as a run that had read nothing). */
+        state: CFG.noScope ? null : { step: "plan", pass: 0, scope: Object.fromEntries(
+          ["meaning", "content", "document", "internet"].map((l) => [l, { reads: 1, documents: 3 }])) },
         budget: Object.entries(S.budget).map(([bound, b]) => ({ bound, allowed: b.allowed, consumed: b.consumed, unit: null })),
       } }, store });
 
@@ -849,7 +863,9 @@ console.log("\n--- B1 · a CHECK run walks the table and the plane holds the who
      record refuses. Every step still TICKS; no step here judged a look, so the log holds only the plane's own
      terminal entry. */
   t("every step the trace names ticked, and none that looked at nothing sent an entry",
-    [st.log.filter((l) => l.op === "airuntick").length, st.runlog.length], [(out.trace || []).length, 1]);
+    /* R91 (R085): a segment also sends one closing tick, `segment_end`, beside its step ticks; this counts step ticks. */
+    [st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {}))).length, st.runlog.length],
+    [(out.trace || []).length, 1]);
   t("the last entry is terminal", st.runlog[st.runlog.length - 1]?.terminal ?? null, 1);
   t("and names the bound", st.runlog[st.runlog.length - 1]?.bound ?? null, "completed");
 
@@ -921,7 +937,7 @@ console.log("\n--- B2 · §14b.7 — A RESUMED RUN READS ITS OWN LOG AND CONTINU
   /* THE ARM THAT MAKES IT A RESUMPTION AND NOT A COINCIDENCE: a run with an
      EMPTY log says the opposite thing, so the sentence tracks the log rather
      than being printed either way. */
-  const mf2 = newMf({ mode: "check", maxPasses: 1, budget: wide });
+  const mf2 = newMf({ mode: "check", maxPasses: 1, budget: wide, noScope: true });
   const out2 = await (await runOp(mf2, base)).json();
   t("a run with no prior log says its log is EMPTY, not that it resumed", out2.resumed_from, 0);
   t("and says so in words", /log is empty/.test(out2.trace?.find((x) => x.step === "resume")?.why ?? ""), true);
@@ -973,8 +989,13 @@ console.log("\n--- B3 · A BUDGET EXHAUSTION WRITES `runtime-ceiling-reached` --
       .filter((e) => e && e.condition != null).length, 0);
   t("the word nevertheless reached the observation log — written by the PLANE",
     st.runlog.some((e) => e.condition === "runtime-ceiling-reached"), true);
-  t("a run that ended is not ticked again after its exit — one tick per step taken, the last one the tick that ended it",
-    st.log.filter((l) => l.op === "airuntick").length, (out.trace || []).length);
+  /* R91 (R085): the one tick after its exit is the segment's `segment_end`, telling the plane how it ended, and no step. */
+  t("a run that ended is not ticked again after its exit — one tick per step taken, the last one the tick that ended it; "
+    + "then only the segment's own segment_end, naming the plane's exit",
+    [st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {}))).length,
+     st.log.filter((l) => l.op === "airuntick" && "segment_end" in (l.body || {})).map((l) => l.body.segment_end.by),
+     st.log[st.log.length - 1]?.body?.segment_end?.done],
+    [(out.trace || []).length, ["the plane's own exit"], true]);
   await mf.dispose();
 }
 
@@ -1789,23 +1810,28 @@ export default {
   }
 
   /* R2 — (2), THE CLASS AND NOT THE INSTANCE: ANY entry the plane refuses is
-     SURFACED. A judged `condition` outside the record's vocabulary is refused
-     by the REAL plane per entry (C-22.4) — the member does not validate it and
-     should not (the plane does). Before REC-100 this member counted each such
-     tick `logged` and the run's own output said nothing. */
+     SURFACED. A judged state the record has no word for is refused by the REAL
+     plane per entry (C-22.1). Before REC-100 this member counted each such tick
+     `logged` and the run's own output said nothing.
+     MOVED BY R92 (R085), NEVER WEAKENED: this arm's trigger was a judged
+     `condition` outside the record's vocabulary (C-22.4). That was WALK-085's
+     cause B (every live entry refused), so this member now sends such a
+     condition as stated text in `detail` (`loggable` in `index.mjs`, through the plane's
+     own `checkCondition`) and it lands; REC100-3 below holds that. The class
+     this arm tests, a per-entry refusal surfaced, rides on a state instead,
+     which this member does not rewrite: a state is the look itself. */
   {
     const mf = realMf({ mode: "check", maxPasses: 1, budget: wide });
     const out = await (await runOp(mf, { ...base,
-      /* R26 (K148): only a step that states a look sends an entry, so the bad condition rides on a judged look. */
-      judgements: [{ targets: [], level: "document", observed: "LOOKED_INDETERMINATE",
-                     condition: "no-such-condition-rec100" }] })).json();
+      /* R26 (K148): only a step that states a look sends an entry, so the bad state rides on a judged look. */
+      judgements: [{ targets: [], level: "document", observed: "NO_SUCH_STATE_REC100" }] })).json();
     const log = await realLog(mf);
     const entries = Array.isArray(log.entries) ? log.entries : [];
     const lr = Array.isArray(out.log_refused) ? out.log_refused : [];
     t("REC100-2: every step entry the REAL plane refused is SURFACED in the run's own output — named by the "
       + "plane's code and C-number and the step it came from — and none is silently dropped",
       [lr.length > 0, [...new Set(lr.map((r) => `${r.code}/${r.check}`))], lr.every((r) => typeof r.step === "string")],
-      [true, ["AI_RUN_CONDITION_UNKNOWN/C-22.4"], true]);
+      [true, ["AI_LOG_STATE_UNKNOWN/C-22.1"], true]);
     /* THE EXPECTATION IS COUNTED OFF THE RECORD AND THE TRACE, NOT OFF `log_refused`.
        The first draft compared `refusals` against `log_refused` — two fields the
        same code fills — and the `aw-refused` control arm (refused[] unread) left
@@ -1820,6 +1846,27 @@ export default {
       [true, sent - entries.length, entries.length]);
     t("REC100-2c: …and the one step that looked is the only one that sent — no NEVER_LOOKED entry reached the plane",
       [entries.length + lr.length, entries.filter((e) => e.state === "NEVER_LOOKED").length], [sent, 0]);
+    await mf.dispose();
+  }
+
+  /* R3 — R92 (R085-8; WALK-085 F2, cause B), AT THE REAL PLANE'S APPEND PATH. A model writes prose where the judging
+     tool offers `condition`, and says `governed` beside a definitive state. Both were refused per entry (C-22.4,
+     C-22.2), so a live check run's log stayed empty. Now each lands, in the record's own words. */
+  {
+    const mf = realMf({ mode: "check", maxPasses: 1, budget: wide });
+    const out = await (await runOp(mf, { ...base,
+      judgements: [{ targets: [], level: "document", observed: "LOOKED_ABSENT", governed: true,
+                     condition: "the source answered slowly, so we stopped" }] })).json();
+    const log = await realLog(mf);
+    const entries = Array.isArray(log.entries) ? log.entries : [];
+    const e = entries.find((x) => String(x.detail || "").includes("condition stated as")) || {};
+    t("REC100-3 (R92): a judged look with a free condition and a governed definitive state LANDS at the REAL plane — "
+      + "nothing refused, logged > 0 and equal to what the record holds",
+      [out.log_refused, out.logged > 0, out.logged], [[], true, entries.length]);
+    t("REC100-3b (R92): …in the record's words: no condition, LOOKED_INDETERMINATE (D-104), and what the model said is "
+      + "stated in detail, never dropped",
+      [e.condition ?? null, e.state, /the source answered slowly/.test(e.detail || ""), /LOOKED_ABSENT/.test(e.detail || "")],
+      [null, "LOOKED_INDETERMINATE", true, true]);
     await mf.dispose();
   }
   PLANE_WORLD.dispose();

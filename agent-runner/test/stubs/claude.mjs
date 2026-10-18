@@ -4,7 +4,7 @@
 // mode is baked in by the wrapper `stubClaude` writes. It logs each run's arguments and environment names (never values)
 // to the log file the wrapper names, and stores nothing.
 import { appendFileSync } from 'node:fs';
-import { TOKEN, GOOD_CODE, ADDRESS } from './claude-values.mjs';
+import { TOKEN, GOOD_CODE, LONG_CODE, ADDRESS } from './claude-values.mjs';
 
 const [mode, log, ...args] = process.argv.slice(2);
 appendFileSync(log, JSON.stringify({ mode, args, env: Object.keys(process.env).sort(), tty: process.stdin.isTTY === true,
@@ -34,15 +34,17 @@ else {
   if (process.stdin.isTTY) process.stdin.setRawMode(true);
   let typed = '';
   process.stdin.on('data', (d) => {
+    // A long chunk arriving at once is a paste, as Claude Code 2.1.289's terminal UI takes it: its CR is not Enter (K3450).
+    const pasted = d.length > 100;
     for (const ch of d.toString('utf8')) {
-      if (ch !== '\r') { typed += ch; out(mode === 'echo' ? ch : '*'); continue; }
+      if (ch !== '\r' || pasted) { typed += ch; out(mode === 'echo' ? ch : '*'); continue; }
       const code = typed; typed = '';
       // the screen is redrawn from four lines up, as the binary's renderer does
       out('\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[2K\x1b[G\r');
       if (mode === 'hangs') return;
       const [a, b] = code.split('#');
       if (!a || !b) { line('OAuth error: Invalid code. Please make sure the full code was copied'); line('Press Enter to retry.'); return; }
-      if (code !== GOOD_CODE || mode === 'refuses') {
+      if ((code !== GOOD_CODE && code !== LONG_CODE) || mode === 'refuses') {
         line(`OAuth error: Request failed with status code 400 for ${code}`); line('Press Enter to retry.'); return;
       }
       const token = mode === 'long-token' ? `sk-ant-oat01-${'x'.repeat(2000)}` : mode === 'bad-token' ? 'not a token!' : TOKEN;

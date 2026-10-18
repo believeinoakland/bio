@@ -15,7 +15,7 @@
   "key": "prepared.rests.accepted",
   "en": "Rests on findings of {group} (edition of {date}), accepted by us on {date_accepted}.",
   "protected": true,
-  "note": "canon; shown with that group's public identity and declared stake"
+  "note": "canon; shown with that team's public identity and declared stake"
  },
  {
   "key": "queue.action-clock-overdue.noreply",
@@ -129,19 +129,19 @@
   "key": "label.grouprule.drafted",
   "en": "Drafted, waiting for another member to confirm it",
   "protected": false,
-  "note": "a group's own jurisdiction rule (local-facts)"
+  "note": "a team's own jurisdiction rule (local-facts)"
  },
  {
   "key": "label.grouprule.confirmed",
   "en": "Confirmed",
   "protected": false,
-  "note": "a group's own jurisdiction rule (local-facts)"
+  "note": "a team's own jurisdiction rule (local-facts)"
  },
  {
   "key": "label.grouprule.withdrawn",
   "en": "Withdrawn (kept, no longer applied)",
   "protected": false,
-  "note": "a group's own jurisdiction rule (local-facts)"
+  "note": "a team's own jurisdiction rule (local-facts)"
  },
  {
   "key": "grouprule.qualification.prompt",
@@ -163,7 +163,7 @@
  },
  {
   "key": "label.readsas.own_benefit_ask",
-  "en": "Reads as asking for something for your group",
+  "en": "Reads as asking for something for your team",
   "protected": false,
   "note": "textcheck: machine work; it points out, never rewrites"
  },
@@ -235,13 +235,13 @@
  },
  {
   "key": "refusal.APPROVAL_KIND_UNKNOWN",
-  "en": "That kind of action isn't one your group's places list, so a second approval can't be required for it. Nothing was changed.",
+  "en": "That kind of action isn't one your team's places list, so a second approval can't be required for it. Nothing was changed.",
   "protected": false,
   "note": ""
  },
  {
   "key": "refusal.PROJECT_GUARD_UNCHECKED",
-  "en": "Your group's Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
+  "en": "Your team's Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
   "protected": true,
   "note": ""
  },
@@ -253,7 +253,7 @@
  },
  {
   "key": "refusal.COMMITMENT_OWN_LETTER",
-  "en": "A commitment becomes a standard only once the body confirms it in writing or states it publicly. Every passage named here is from your group's own letters or members' accounts. Name the body's own confirmation. Nothing was written.",
+  "en": "A commitment becomes a standard only once the body confirms it in writing or states it publicly. Every passage named here is from your team's own letters or members' accounts. Name the body's own confirmation. Nothing was written.",
   "protected": false,
   "note": ""
  },
@@ -283,13 +283,13 @@
  },
  {
   "key": "refusal.MACHINE_CANNOT_DRAFT_RULE",
-  "en": "Only a member drafts or withdraws your group's own rule. The assistant may draft one for you to read, but it enters only when you draft it yourself. Nothing was written.",
+  "en": "Only a member drafts or withdraws your team's own rule. The assistant may draft one for you to read, but it enters only when you draft it yourself. Nothing was written.",
   "protected": true,
   "note": ""
  },
  {
   "key": "refusal.RULE_SECTION_UNKNOWN",
-  "en": "A group's rule is either a deadline or a legal fact, and this is neither. Nothing was written.",
+  "en": "A team's rule is either a deadline or a legal fact, and this is neither. Nothing was written.",
   "protected": false,
   "note": ""
  },
@@ -307,7 +307,7 @@
  },
  {
   "key": "refusal.RULE_IN_PROFILE",
-  "en": "Your places' rules, or a rule your group already applies, hold this already. Dispute that fact, or offer your correction to whoever keeps those rules, instead. Nothing was written.",
+  "en": "Your places' rules, or a rule your team already applies, hold this already. Dispute that fact, or offer your correction to whoever keeps those rules, instead. Nothing was written.",
   "protected": false,
   "note": ""
  },
@@ -331,13 +331,13 @@
  },
  {
   "key": "refusal.NO_SUCH_GROUP_RULE",
-  "en": "Your group has no rule of its own by that name, or none you can see. Nothing was written.",
+  "en": "Your team has no rule of its own by that name, or none you can see. Nothing was written.",
   "protected": false,
   "note": "renamed from NO_SUCH_RULE (K2811)"
  },
  {
   "key": "refusal.GUIDE_KIND_UNKNOWN",
-  "en": "A guide is for one kind of action or document your group's places recognize, and this names another. Nothing was written.",
+  "en": "A guide is for one kind of action or document your team's places recognize, and this names another. Nothing was written.",
   "protected": false,
   "note": ""
  },
@@ -403,7 +403,7 @@
  },
  {
   "key": "signing.openrequest.unread",
-  "en": "Your group's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
+  "en": "Your team's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
   "protected": true,
   "note": ""
  },
@@ -433,7 +433,7 @@
  },
  {
   "key": "case.check.void.accepted_work_lapsed",
-  "en": "The check no longer holds: another group's work it relied on has lapsed. Check it again.",
+  "en": "The check no longer holds: another team's work it relied on has lapsed. Check it again.",
   "protected": true,
   "note": ""
  },
@@ -445,7 +445,7 @@
  },
  {
   "key": "case.check.undetermined",
-  "en": "Undetermined, because your group's Civicsmith couldn't read everything the check rests on. It is not treated as held.",
+  "en": "Undetermined, because your team's Civicsmith couldn't read everything the check rests on. It is not treated as held.",
   "protected": true,
   "note": ""
  },
@@ -631,7 +631,7 @@
  },
  {
   "key": "refusal.DETERMINATION_NOT_ADOPTABLE",
-  "en": "Another group's determination is never adopted as yours. Read its findings, and make your own determination from them. Nothing was written.",
+  "en": "Another team's determination is never adopted as yours. Read its findings, and make your own determination from them. Nothing was written.",
   "protected": true,
   "note": ""
  },
@@ -673,7 +673,7 @@
  },
  {
   "key": "refusal.FINDING_NOT_PUBLISHED",
-  "en": "A determination rests on findings your group has published, checked and held for publication, or accepted from another group. The finding named is none of these. Nothing was written.",
+  "en": "A determination rests on findings your team has published, checked and held for publication, or accepted from another team. The finding named is none of these. Nothing was written.",
   "protected": true,
   "note": "re-worded for the three kinds"
  },
@@ -757,13 +757,13 @@
  },
  {
   "key": "refusal.SUCCESS_CAUSE_OWN_ACT_ONLY",
-  "en": "Everything cited for the cause is your group's own act, and your own act never shows that it caused the change. Cite what the body did or said, or leave the cause out. Nothing was written.",
+  "en": "Everything cited for the cause is your team's own act, and your own act never shows that it caused the change. Cite what the body did or said, or leave the cause out. Nothing was written.",
   "protected": true,
   "note": ""
  },
  {
   "key": "refusal.SUCCESS_CAUSE_UNCHECKABLE",
-  "en": "Your group's Civicsmith couldn't check whether the cause rests only on your group's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
+  "en": "Your team's Civicsmith couldn't check whether the cause rests only on your team's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
   "protected": true,
   "note": ""
  },
@@ -835,13 +835,13 @@
  },
  {
   "key": "phrasing.position.pointed",
-  "en": "This sentence reads as a policy position. A comment for the group states facts and asks the body to examine or apply them; remove it, or comment as yourself.",
+  "en": "This sentence reads as a policy position. A comment for the team states facts and asks the body to examine or apply them; remove it, or comment as yourself.",
   "protected": true,
   "note": ""
  },
  {
   "key": "phrasing.own_benefit_ask.pointed",
-  "en": "This sentence asks for something for your group or its members. A notice or demand asks the body to correct its own act. Rewrite it.",
+  "en": "This sentence asks for something for your team or its members. A notice or demand asks the body to correct its own act. Rewrite it.",
   "protected": true,
   "note": ""
  },
@@ -933,19 +933,19 @@
   "key": "label.promise.embargo",
   "en": "An embargo",
   "protected": true,
-  "note": "a promise the group made to a person"
+  "note": "a promise the team made to a person"
  },
  {
   "key": "label.promise.anonymity",
   "en": "Anonymity",
   "protected": true,
-  "note": "a promise the group made to a person"
+  "note": "a promise the team made to a person"
  },
  {
   "key": "label.promise.other",
   "en": "Another promise",
   "protected": true,
-  "note": "a promise the group made to a person"
+  "note": "a promise the team made to a person"
  },
  {
   "key": "label.clockowedby.group",
@@ -967,7 +967,7 @@
  },
  {
   "key": "label.actionscope.confidential",
-  "en": "Confidential: seen inside the group, never published",
+  "en": "Confidential: seen inside the team, never published",
   "protected": true,
   "note": ""
  },
@@ -1015,7 +1015,7 @@
  },
  {
   "key": "refusal.MACHINE_CANNOT_SET_PARTNERS",
-  "en": "Only a member names the organizations acting with your group. Nothing was written.",
+  "en": "Only a member names the organizations acting with your team. Nothing was written.",
   "protected": true,
   "note": ""
  },
@@ -1165,7 +1165,7 @@
  },
  {
   "key": "refusal.MACHINE_CANNOT_RECORD_PROMISE",
-  "en": "Only a member records a promise your group made to a person. Nothing was written.",
+  "en": "Only a member records a promise your team made to a person. Nothing was written.",
   "protected": true,
   "note": ""
  },
@@ -1219,7 +1219,7 @@
  },
  {
   "key": "packet.privileged.warning",
-  "en": "This packet belongs to a counsel matter. Sharing it outside the group may end its privilege. Share it only with your lawyer.",
+  "en": "This packet belongs to a counsel matter. Sharing it outside the team may end its privilege. Share it only with your lawyer.",
   "protected": true,
   "note": ""
  },
@@ -1255,7 +1255,7 @@
  },
  {
   "key": "pointer.selfbenefit",
-  "en": "Asks for something for your group: rewrite it before approving.",
+  "en": "Asks for something for your team: rewrite it before approving.",
   "protected": true,
   "note": ""
  },
@@ -1273,13 +1273,13 @@
  },
  {
   "key": "voice.group",
-  "en": "For the group",
+  "en": "For the team",
   "protected": true,
   "note": ""
  },
  {
   "key": "voice.group.means",
-  "en": "Approved and sent as your group's act.",
+  "en": "Approved and sent as your team's act.",
   "protected": true,
   "note": ""
  },
@@ -1291,7 +1291,7 @@
  },
  {
   "key": "voice.self.means",
-  "en": "Your own notes for speaking as yourself. It is not the group's act, and it is never recorded as sent or published.",
+  "en": "Your own notes for speaking as yourself. It is not the team's act, and it is never recorded as sent or published.",
   "protected": true,
   "note": ""
  },
@@ -1303,7 +1303,7 @@
  },
  {
   "key": "plan.close.lessons",
-  "en": "What would your group do differently next time? (optional, at most 4,000 characters)",
+  "en": "What would your team do differently next time? (optional, at most 4,000 characters)",
   "protected": false,
   "note": ""
  },
@@ -1435,7 +1435,7 @@
  },
  {
   "key": "refusal.SELF_BENEFIT_ASK",
-  "en": "A sentence still asks for something for your group or its members. A notice or demand asks the body to correct its own act; rewrite that sentence before approving. Nothing was written.",
+  "en": "A sentence still asks for something for your team or its members. A notice or demand asks the body to correct its own act; rewrite that sentence before approving. Nothing was written.",
   "protected": true,
   "note": ""
  },
@@ -1459,7 +1459,7 @@
  },
  {
   "key": "refusal.JOINT_FINGERPRINT_MISMATCH",
-  "en": "The partner's copy isn't the same text your group approved. They sign the same words, or none. Nothing was written.",
+  "en": "The partner's copy isn't the same text your team approved. They sign the same words, or none. Nothing was written.",
   "protected": true,
   "note": ""
  },
@@ -1489,7 +1489,7 @@
  },
  {
   "key": "refusal.NOT_STOPPED",
-  "en": "Only an escalation your group stopped pursuing can be reopened. Nothing was written.",
+  "en": "Only an escalation your team stopped pursuing can be reopened. Nothing was written.",
   "protected": false,
   "note": ""
  },
@@ -1581,11 +1581,11 @@
   "key": "queue.action-clock-overdue.ours.summary",
   "en": "Our deadline passed: {what}",
   "protected": false,
-  "note": "owed by the group, told once"
+  "note": "owed by the team, told once"
  },
  {
   "key": "queue.action-clock-overdue.ours.detail",
-  "en": "Your group's deadline to {what} with {venue} was {date}, and nothing is recorded as done. See what can still be done.",
+  "en": "Your team's deadline to {what} with {venue} was {date}, and nothing is recorded as done. See what can still be done.",
   "protected": false,
   "note": ""
  },
@@ -1633,7 +1633,7 @@
  },
  {
   "key": "queue.plan-review-due.detail",
-  "en": "Your group set {plan} to be reviewed every {rhythm}, and nothing has been reviewed since {date}. See what changed, then record the review.",
+  "en": "Your team set {plan} to be reviewed every {rhythm}, and nothing has been reviewed since {date}. See what changed, then record the review.",
   "protected": false,
   "note": ""
  },

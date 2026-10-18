@@ -86,15 +86,15 @@ test("R10: success writes the run, its bounds, the handed manifest and bar verba
   const r = await w.runs.open(OPEN({ label: "fees", bounds: [{ bound: "fetches", allowed: 5, unit: "fetch" },
     { bound: "surfaces", allowed: 2, consumed: 0 }], biasManifest: handed, standardPair: bar, state: { todo: [1] },
     actor: "bob", viewer: "member:bob", principalPlane: "member:bob/t1" }));
-  assert.deepEqual(Object.keys(r), ["run", "started", "status", "ticks", "created", "expires", "untested", "projectGate"]);
+  assert.deepEqual(Object.keys(r), ["run", "started", "status", "ticks", "created", "expires", "untested", "project", "projectGate"]);
   assert.equal(r.untested, null, "R78: a run the bar admitted carries no label");
-  assert.deepEqual([r.started, r.status, r.ticks, r.created, r.expires], [true, "running", 1, T0, "2026-07-01T01:00:00Z"]);
+  assert.deepEqual([r.started, r.status, r.ticks, r.created, r.expires], [true, "running", 1, T0, "2026-07-01T00:10:00Z"]);
   /* INQ is cited by PROJ (bob sees it) and HIDDEN (he does not): the stated count is the sighted one */
   assert.deepEqual(r.projectGate, { applied: false, ground: "INQUIRY", why: r.projectGate.why, projects: 1 });
   const row = w.row(`SELECT * FROM ai_runs WHERE run='R1'`);
   assert.deepEqual([row.status, row.ticks, row.label, row.bias_manifest, row.standard_pair, row.state, row.context_type, row.context_id,
                     row.principal_plane, row.principal_claude, row.skill_version, row.expires],
-                   ["running", 1, "fees", handed, bar, '{"todo":[1]}', "inquiry", INQ, "member:bob/t1", "member:bob", "bio@1", "2026-07-01T01:00:00Z"]);
+                   ["running", 1, "fees", handed, bar, '{"todo":[1]}', "inquiry", INQ, "member:bob/t1", "member:bob", "bio@1", "2026-07-01T00:10:00Z"]);
   assert.deepEqual(w.rows(`SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run='R1' ORDER BY bound`),
     [{ bound: "fetches", allowed: 5, consumed: 0, unit: "fetch" }, { bound: "surfaces", allowed: 2, consumed: 0, unit: null }]);
   const atOpen = JSON.parse(row.lens_at_open);

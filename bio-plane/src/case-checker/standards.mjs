@@ -17,6 +17,10 @@
  * and its `completeness:` `statement`. The body is not read: it prints quoted passages, whose own words may say
  * "violation". A row with `stated: "not held"` is not judged and is named in `unjudged`.
  *
+ * (T50; R26) Each departure also carries `says: {key, vars}`: the members' words are read by the caller through
+ * `setup-words` `word(key, vars)`, the key `refusal.<code>` and `vars` the departure's own fields. No English is answered
+ * here, and an `{ok: true}` answer carries no `says`.
+ *
  * Pure: it reads only its arguments, the same arguments give the same answer, and it never throws. Its caller with the
  * record refuses at the ceremony (`case-authoring`'s pre-flight, N717); `checkCaseFile` runs it offline over a carried
  * `criteria` file (R22), so it is part of the standalone program (R13). No place is named here (R17). */
@@ -34,6 +38,12 @@ export const STANDARDS_USE_CODES = Object.freeze(["MALFORMED", "COPYRIGHTED_TEXT
 export const NONCONFORMING_WORDS = Object.freeze(["violated", "violates", "violation", "nonconforming", "non-conforming",
   "nonconformity", "nonconformance"]);
 
+/** R26: the key of the members' words for each code (`refusal.<code>`, `setup-words`), in the codes' order. */
+export const STANDARDS_USE_KEYS = Object.freeze(STANDARDS_USE_CODES.map((c) => `refusal.${c}`));
+
+/** R26: a departure with the words it is read by: `says.key` is `refusal.<code>`, `says.vars` the departure's own fields. */
+const withSays = (r) => { const { code, ...vars } = r; return { ...r, says: { key: `refusal.${code}`, vars } }; };
+
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" && v !== "" ? v : null);
 const shaKey = (v) => (typeof v === "string" ? v.trim().toLowerCase() : null);
@@ -49,11 +59,11 @@ const wordsIn = (texts) => {
 /** R21. Never throws; any input answers. */
 export function checkStandardsUse(args) {
   try { return judge(args); }
-  catch { return { ok: false, refusals: [{ code: "MALFORMED", field: "arguments" }] }; }
+  catch { return { ok: false, refusals: [withSays({ code: "MALFORMED", field: "arguments" })] }; }
 }
 
 function judge(args) {
-  if (!isObj(args)) return { ok: false, refusals: [{ code: "MALFORMED", field: "arguments" }] };
+  if (!isObj(args)) return { ok: false, refusals: [withSays({ code: "MALFORMED", field: "arguments" })] };
   const { text, criteria, materials, passages } = args;
   const malformed = [];
   if (typeof text !== "string") malformed.push("text");
@@ -73,11 +83,11 @@ function judge(args) {
     fm = isObj(p.data) ? p.data : null;
     if (!fm) malformed.push("text");
   }
-  if (malformed.length) return { ok: false, refusals: [...new Set(malformed)].map((field) => ({ code: "MALFORMED", field })) };
+  if (malformed.length) return { ok: false, refusals: [...new Set(malformed)].map((field) => withSays({ code: "MALFORMED", field })) };
 
   const refusals = [];
   const seen = new Set();
-  const refuse = (r) => { const k = canonicalJson(r); if (!seen.has(k)) { seen.add(k); refusals.push(r); } };
+  const refuse = (r) => { const k = canonicalJson(r); if (!seen.has(k)) { seen.add(k); refusals.push(withSays(r)); } };
 
   const unjudged = [];
   const judged = [];

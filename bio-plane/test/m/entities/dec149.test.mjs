@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { IDSPACE_CHECKS, Entities } from "../../../src/entities/index.mjs";
 
 const PE = ["test-port-ellery"];
@@ -27,16 +28,13 @@ const NAMED = /\b(?:this|the) instance\b|\binstance's\b|\bcopy\b|\bplane\b|\bser
 
 test("R20 R25 (DEC-149) C-91.1 IDSPACE_UNKNOWN's translation names your group's jurisdiction profiles, never this instance's", () => {
   const r = world({ profiles: PE }).e.idMatch({ space: "nope" });
-  assert.equal(r.translation, "That is not an identifier space the record knows how to judge. The answer lists the spaces it "
-    + "knows, each with its forms as your group's jurisdiction profiles give them. Nothing was judged.");
+  assert.equal(r.translation, word("refusal.IDSPACE_UNKNOWN"), "T50: the words of its key");
   assert.equal(r.translation, IDSPACE_CHECKS.IDSPACE_UNKNOWN.translation);
 });
 
 test("R21 R25 (DEC-149) C-91.2 IDSPACE_VALUE_NOT_IN_SPACE's translation names your group's jurisdiction profiles; with no form held, its detail says your group's active jurisdiction profiles give the space none", () => {
   const r = world({ profiles: PE }).e.idMatch({ space: "project", a: "zzz" });
-  assert.equal(r.translation, "The value given does not have the shape of any form your group's jurisdiction profiles give "
-    + "that identifier space, so the record cannot say what it would join. Give the identifier as the document writes it; "
-    + "the answer lists the forms. Nothing was judged.");
+  assert.equal(r.translation, word("refusal.IDSPACE_VALUE_NOT_IN_SPACE"), "T50: the words of its key");
   assert.equal(r.translation, IDSPACE_CHECKS.IDSPACE_VALUE_NOT_IN_SPACE.translation);
   assert.equal(r.detail, "a has the shape of no form of the works order number", "with forms held, the detail names none");
   const none = world().e.idMatch({ space: "enactment", a: "12345" });
@@ -74,8 +72,7 @@ test("R45 (DEC-149) PROCEEDING_KIND_UNKNOWN's detail says a proceeding's kind is
 });
 
 test("R19 (DEC-149) namingPlan with no terms and none held answers why: your group's active jurisdiction profiles hold no search terms", () => {
-  assert.equal(world().e.namingPlan().why, "no terms were given and your group's active jurisdiction profiles hold no search terms, so "
-    + "there is nothing to explain; no term is assumed");
+  assert.equal(world().e.namingPlan().why, word("entities.why.terms_given_group"), "T50: the words of its key");
 });
 
 test("R25 R31 (DEC-149) no member-facing string this module answers calls the group's Civicsmith the instance, a copy, the plane or a server", () => {

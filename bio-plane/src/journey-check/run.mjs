@@ -10,9 +10,9 @@ import { Walk, StepFailed, FAIL, settle } from "./walker.mjs";
 import { requireTestInstance, WalkRefused } from "./guard.mjs";
 import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs,
   signInBy, sweepAsFounder, walkSite } from "./journeys.mjs";
-import { walkAdministrator, walkMemberJourney, journey29Live } from "./investigation.mjs";
+import { walkAdministrator, walkMemberJourney, walkUnassisted, journey29Live } from "./investigation.mjs";
 import { sweepScreens } from "./screens.mjs";
-import { designMock, pageLimits, pair, WIDTHS, viewportOf, journeyPairs } from "./design.mjs";
+import { designMock, pageLimits, pair, WIDTHS, viewportOf, journeyPairs, JOURNEY_29, stepName } from "./design.mjs";
 
 export const OUT = join(dirname(fileURLToPath(import.meta.url)), "out");
 
@@ -64,20 +64,22 @@ async function device(walk, b, route, viewport = { width: 1280, height: 900 }) {
 }
 
 /* The local arm (R1 (a), R9–R11), with no account. `world` starts the world, `launch` the browser; `model: false` binds
-   the runner with no fake model (R11's control); `parts` names which walks follow journey 28 and R9 (all by default:
-   `journey 3`, `R10`, `sweep`, `R13`). Journey 28 (its founder claiming by her own handle, R9 step 1), journey
+   the runner with no fake model (R11's control), `segments: false` agent-worker with no `SEGMENTS` binding (R15's
+   control); `parts` names which walks follow journey 28 and R9 (all by default: `journey 3`, `R10`, `R16`, `sweep`, `R13`). Journey 28 (its founder claiming by her own handle, R9 step 1), journey
    3, then the journey to a first conclusion as administrator (R9) and as the member journey 28 joined (R10), then the
    sweep. Whatever stops the walk (a step, the guard's refusal, a world or a browser that cannot start), the browser and
    the world, with their servers and Miniflare instances, are closed before it answers. */
-export const PARTS = Object.freeze(["journey 3", "R10", "sweep", "R13"]);
-export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true, parts = PARTS } = {}) {
+export const PARTS = Object.freeze(["journey 3", "R10", "R16", "sweep", "R13"]);
+export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true, segments = true, parts = PARTS } = {}) {
   const { localWorld, INSTALLER_ORIGIN, SITE_ORIGIN } = await import("./local.mjs");
   const walk = new Walk({ out, arm: "local", ownHosts: [new URL(INSTALLER_ORIGIN).host, "dash.cloudflare.com", new URL(SITE_ORIGIN).host] });
   const who = credentials();
   for (const p of [who.founder.password, who.member.password, who.newcomer.password]) walk.keepSecret(p);
   let world = null, b = null;
   try {
-    world = await (makeWorld || localWorld)({ model });
+    world = await (makeWorld || localWorld)({ model, segments });
+    /* R15: whether the world gave agent-worker its `SEGMENTS`, as the world says it (null: a world that does not say) */
+    const bound = world.agentBindings ? world.agentBindings().includes("SEGMENTS") : null;
     b = await launch();
     const route = (ctx) => world.route(ctx, (u) => walk.foreign(u));
     walk.journey = "journey 28";
@@ -107,15 +109,17 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     /* each journey that stops has said why; the next is still walked, and the sweep after them */
     const going = (e) => { if (!(e instanceof StepFailed)) throw e; return null; };
     const made = {};
-    await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder, made }).catch(going);
+    await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder, made, segments: bound }).catch(going);
     if (parts.includes("R10")) {
       walk.journey = "R10 as member";
       if (!made.project) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
       else await (async () => {
         await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
-        await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: made.project });
+        await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: made.project, segments: bound });
       })().catch(going);
     }
+    /* R16: journey 29's search path, with no assistant, to a conclusion on her own reading */
+    if (parts.includes("R16")) await walkUnassisted(walk, founder.page, { base: copy, founder: who.founder }).catch(going);
     /* the sweep with her handle held (a founder who could not choose one was swept handleless above) */
     if (parts.includes("sweep") && who.founder.handle) await sweepAsFounder(walk, founder.page, copy, { handle: who.founder.handle });
     /* R13: design journey 29, step by step, each LIVE step beside the mock's drawing of it */
@@ -252,6 +256,11 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
       if (investigate) await investigateLive(walk, b, base, {
         founder: { handle: env.JOURNEY_ADMIN_HANDLE, password: env.JOURNEY_ADMIN_PASSWORD },
         member: { handle: env.JOURNEY_MEMBER_HANDLE, password: env.JOURNEY_MEMBER_PASSWORD }, codeOf });
+      /* R18 (K3747): journey 29's steps the design marks for the assistant, which the walk did not reach while the assistant does
+         not work, are reported as not walked, never failed */
+      walk.journey = "R18 design journey 29";
+      for (const [k, st] of (await mock.allSteps(JOURNEY_29)).entries())
+        if (st.only === "ai" && !journey29Live(walk, st)) walk.notes.push(`${stepName(JOURNEY_29, k, st)}: not walked, the assistant does not work (K3717)`);
       /* R5: the acts only an administrator is drawn */
       walk.journey = "roles";
       if (acts.administrator.size && acts.member.size) {

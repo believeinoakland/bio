@@ -247,6 +247,9 @@ const deploy = (root, { args = [SLUG, VERSION, ASSET], env = CF, stub } = {}) =>
   run(root, "bio-plane", ["scripts/deploy.mjs", ...args], { env, stub });
 const okStub = (extra = {}) => ({ subdomain: "sub", put: "accept", scripts: { "alpha-worker": { settings: {} } }, ...extra });
 const puts = (r) => r.calls.filter((c) => c.method === "PUT");
+/** The bindings R13 derives for the fixture plane, as an account that already holds them reads them back. */
+const derivedOnScript = (root) =>
+  deriveBindings(parseJsonc(readFileSync(join(root, "bio-plane/wrangler.jsonc"), "utf8")), { slug: SLUG, version: VERSION });
 
 test("R17: missing arguments or credentials exit 2 with the usage line; a skewed tree or a disagreeing version argument refuses; a non-plane slug exits 3; all before any request", async () => {
   const root = await deployRepo();
@@ -371,15 +374,16 @@ test("R18: already-deployed bytes serving the version with matching limits uploa
   const root = await deployRepo();
   try {
     const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
-    const done = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settings: { limits: { subrequests: 500 } } } },
+    const bindings = derivedOnScript(root);
+    const done = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } },
       serving: { [SLUG]: VERSION } }) });
     assert.equal(done.status, 0, done.stderr);
     assert.deepEqual(puts(done), []);
-    assert.match(done.stdout, /already byte-identical AND serving 1\.2\.3 AND limits\.subrequests 500 read back; nothing to do/);
+    assert.match(done.stdout, /already byte-identical AND serving 1\.2\.3 AND limits\.subrequests 500 read back AND every derived binding present; nothing to do/);
 
     for (const [label, scripts, serving] of [
-      ["serving an older version", { body, settings: { limits: { subrequests: 500 } } }, "1.2.2"],
-      ["limits not ours", { body, settings: { limits: { subrequests: 9 } } }, VERSION],
+      ["serving an older version", { body, settings: { limits: { subrequests: 500 }, bindings } }, "1.2.2"],
+      ["limits not ours", { body, settings: { limits: { subrequests: 9 }, bindings } }, VERSION],
     ]) {
       const r = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: scripts }, serving: { [SLUG]: serving } }) });
       assert.equal(r.status, 0, `${label}: ${r.stderr}`);
@@ -394,6 +398,90 @@ test("R18: already-deployed bytes serving the version with matching limits uploa
     const nosub = deploy(root, { stub: okStub({ subdomain: null }) });
     assert.equal(nosub.status, 0);
     assert.match(nosub.stdout, /could not learn the workers\.dev subdomain, so which build is SERVING is unconfirmed/);
+  } finally { rm(root); }
+});
+
+test("R34: a derived binding missing or different on the script makes a deploy of identical bytes serving the version with matching limits a metadata deploy, reported as such; an undeclared plain_text on the script is kept unchanged", async () => {
+  const root = await deployRepo();
+  try {
+    const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
+    const full = derivedOnScript(root);
+    const undeclared = { type: "plain_text", name: "JURISDICTION_PROFILES", text: "{\"ca\":1}" };
+    const account = (bindings) => okStub({ scripts: { "alpha-worker": { settings: {} },
+      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } }, serving: { [SLUG]: VERSION } });
+    const lacking = full.filter((b) => !(b.type === "service" && b.name === "AGENT"));
+    assert.equal(lacking.length, full.length - 1);
+    for (const [label, bindings, what] of [
+      ["a service binding missing", [...lacking, undeclared], /service AGENT is missing/],
+      ["a service pointing elsewhere", [...full.map((b) => (b.name === "AGENT" ? { ...b, service: "other-worker" } : b)), undeclared],
+        /service AGENT points at "other-worker", not "alpha-worker"/],
+      ["a plain_text of another value", [...full.map((b) => (b.name === "MODE" ? { ...b, text: "old" } : b)), undeclared],
+        /plain_text MODE points at "old", not "fixture"/],
+      ["an R2 bucket of another name", [...full.map((b) => (b.type === "r2_bucket" && b.name === "CAPTURES" ? { ...b, bucket_name: "old" } : b)), undeclared],
+        /r2_bucket CAPTURES points at "old", not "c"/],
+      ["an R2 bucket missing", [...full.filter((b) => b.name !== "PUBLISHED"), undeclared], /r2_bucket PUBLISHED is missing/],
+    ]) {
+      const r = deploy(root, { stub: account(bindings) });
+      assert.equal(r.status, 0, `${label}: ${r.stdout}${r.stderr}`);
+      assert.equal(puts(r).length, 1, `${label}: one metadata upload`);
+      assert.match(r.stdout, /derived bindings differ on the script — a METADATA deploy proceeds \(the same script, the new bindings\)/, label);
+      assert.match(r.stdout, what, label);
+      assert.doesNotMatch(r.stdout, /nothing to do/, label);
+      const sent = puts(r)[0].metadata.bindings;
+      assert.deepEqual(sent.filter((b) => b.name !== "JURISDICTION_PROFILES"), full, `${label}: R13's bindings, unchanged`);
+      assert.deepEqual(sent.filter((b) => b.name === "JURISDICTION_PROFILES"), [undeclared], `${label}: the undeclared plain_text is sent again, unchanged`);
+      assert.equal(puts(r)[0].moduleBytes, Buffer.byteLength(body), `${label}: the same script`);
+      assert.match(r.stdout, /kept: 1 plain_text binding\(s\) on the script that this deploy does not derive, sent unchanged — JURISDICTION_PROFILES/, label);
+    }
+  } finally { rm(root); }
+});
+
+test("R34: a deploy of different bytes keeps every undeclared plain_text on the script and derives the rest; a binding R13 derives wins over the script's value of that name", async () => {
+  const root = await deployRepo();
+  try {
+    const full = derivedOnScript(root);
+    const onScript = [{ type: "plain_text", name: "JURISDICTION_PROFILES", text: "p" }, { type: "plain_text", name: "OTHER", text: "o" },
+      { type: "plain_text", name: "MODE", text: "old" }, { type: "secret_text", name: "SOME_SECRET" }];
+    const r = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body: "old bytes", settings: { limits: { subrequests: 500 }, bindings: onScript } } } }) });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const sent = puts(r)[0].metadata.bindings;
+    assert.deepEqual(sent, [...full, onScript[0], onScript[1]], "R13's bindings, then the two undeclared plain_text bindings as they were");
+    assert.equal(sent.filter((b) => b.name === "MODE").length, 1);
+    assert.equal(sent.find((b) => b.name === "MODE").text, "fixture");
+    assert.deepEqual(puts(r)[0].metadata.keep_bindings, ["secret_text", "durable_object_namespace", "service"], "secrets and the rest ride keep_bindings as before");
+    const fresh = deploy(root, { stub: okStub() });
+    assert.equal(fresh.status, 0, "an instance not on the account yet has nothing to keep");
+    assert.deepEqual(puts(fresh)[0].metadata.bindings, full);
+    assert.doesNotMatch(fresh.stdout, /kept:/);
+  } finally { rm(root); }
+});
+
+test("R34 (control): with every derived binding present and the bytes matching, serving the version with matching limits, it uploads nothing; an undeclared plain_text on the script is no difference", async () => {
+  const root = await deployRepo();
+  try {
+    const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
+    const bindings = [...derivedOnScript(root), { type: "plain_text", name: "JURISDICTION_PROFILES", text: "p" }, { type: "secret_text", name: "INSTANCE_AI_TOKEN" }];
+    const r = deploy(root, { env: { ...CF, INSTANCE_AI_TOKEN: "x" }, stub: okStub({ scripts: { "alpha-worker": { settings: {} },
+      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } }, serving: { [SLUG]: VERSION } }) });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.deepEqual(puts(r), []);
+    assert.match(r.stdout, /AND every derived binding present; nothing to do/);
+  } finally { rm(root); }
+});
+
+test("R34 (control): settings of a script that exists that cannot be read refuse BINDINGS_UNREADABLE before any upload, as an answer that is not the script's settings does", async () => {
+  const root = await deployRepo();
+  try {
+    const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
+    for (const stub of [
+      okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settingsStatus: 500 } }, serving: { [SLUG]: VERSION } }),
+      okStub({ unreachable: [`/scripts/${SLUG}/settings`] }),
+    ]) {
+      const r = deploy(root, { stub });
+      refused(r, "BINDINGS_UNREADABLE");
+      assert.equal(r.status, 1);
+      assert.deepEqual(puts(r), []);
+    }
   } finally { rm(root); }
 });
 
@@ -606,20 +694,24 @@ function expectedPayload(root, version = VERSION) {
       const b = readFileSync(join(m.abs, p));
       return { path: p, type: p.endsWith(".bin") ? "Data" : "CompiledWasm", sha256: hex(b), bytes: b.length };
     });
+    /* R33: a class's size, as the member's own configuration states it (by hand), after max_instances; none when none. */
+    const sized = (cls) => { const x = (cfg.containers || []).find((k) => k.class_name === cls);
+      return x && x.instance_type !== undefined ? { instance_type: x.instance_type } : {}; };
     /* R25: a container member's descriptor, written here from its marker's fields by hand. */
     const mk = readJson(join(m.abs, "fleet-member.json"));
     if (mk.kind === "container" && Array.isArray(mk.containers)) {
       /* R25, R27 (T36-2): one part per class, each with its own image and its statement's packages (SCANNER_PACKAGES). */
       for (const c of mk.containers) {
         const b = Buffer.from(JSON.stringify({ class_name: c.class_name, image: `${c.image.repository}@${c.image.digest}`,
-          scheduling_policy: "default", max_instances: c.max_instances ?? mk.max_instances, bind: c.bind ?? mk.bind,
-          packages: SCANNER_PACKAGES[c.class_name] }, null, 2) + "\n");
+          scheduling_policy: "default", max_instances: c.max_instances ?? mk.max_instances, ...sized(c.class_name),
+          bind: c.bind ?? mk.bind, packages: SCANNER_PACKAGES[c.class_name] }, null, 2) + "\n");
         parts.push({ path: `container/${c.class_name}.json`, type: "Container", sha256: hex(b), bytes: b.length, buf: b });
       }
     } else if (mk.kind === "container") {
       /* R27: the image's packages, as the fixture's lockfile states them (CONTAINER_PACKAGES, by hand), last. */
       const b = Buffer.from(JSON.stringify({ class_name: mk.class_name, image: `${mk.image.repository}@${mk.image.digest}`,
-        scheduling_policy: "default", max_instances: mk.max_instances, bind: mk.bind, packages: CONTAINER_PACKAGES }, null, 2) + "\n");
+        scheduling_policy: "default", max_instances: mk.max_instances, ...sized(mk.class_name), bind: mk.bind,
+        packages: CONTAINER_PACKAGES }, null, 2) + "\n");
       parts.push({ path: "container.json", type: "Container", sha256: hex(b), bytes: b.length, buf: b });
     }
     /* R25 (N772): the Worker part, written here from the config by hand, each bucket by its role. */
@@ -1113,6 +1205,77 @@ test("R26: a two-class member whose class states no digest, or whose config's co
     assert.match(dis.stderr, /the config names Renderer, which the marker states no image for; the marker's SafeViewRenderer has no container in the config/);
     assert.deepEqual([dis.calls, dis.docker, dis.wrangler], [[], [], []]);
   } finally { rm(root); }
+});
+
+/* ------------------------------------------------------- R33: a container's size (T50; N1170, K3535) */
+
+test("R33: a container member whose configuration names an instance_type is emitted with it inside the signed part, each class its own; a class naming none is emitted without the field", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner", { instanceType: "standard-1" });
+    addScannerMember(root, "scanner", { instanceTypes: { FileScanner: "standard-2", SafeViewRenderer: { vcpu: 1, memory_mib: 2048, disk_mb: 4000 } } });
+    addScannerMember(root, "mixed", { instanceTypes: { SafeViewRenderer: "basic" } });
+    await buildAll(root);
+    const { payload, members, bufs } = expectedPayload(root);
+    const part = (buf) => JSON.parse(buf);
+    assert.equal(part(bufs["runner/container.json"]).instance_type, "standard-1");
+    assert.equal(part(bufs["scanner/container/FileScanner.json"]).instance_type, "standard-2");
+    assert.deepEqual(part(bufs["scanner/container/SafeViewRenderer.json"]).instance_type, { vcpu: 1, memory_mib: 2048, disk_mb: 4000 });
+    assert.equal(Object.hasOwn(part(bufs["mixed/container/FileScanner.json"]), "instance_type"), false, "a class naming none gets no field");
+    assert.equal(part(bufs["mixed/container/SafeViewRenderer.json"]).instance_type, "basic");
+    for (const m of members) for (const p of m.parts) assert.ok(payload.includes(`${p.path}:${p.type}:${p.sha256}:${p.bytes}`), `${m.member}/${p.path} is in the statement`);
+
+    const dry = assemble(root, ["--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.ok(dry.stdout.includes(payload), "the payload the fleet signature covers carries the sized parts' hashes");
+
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const rel = readJson(join(root, "release/RELEASE.json"));
+    assert.deepEqual(rel.fleet, members);
+    for (const k of ["runner/container.json", "scanner/container/FileScanner.json", "scanner/container/SafeViewRenderer.json",
+      "mixed/container/FileScanner.json", "mixed/container/SafeViewRenderer.json"])
+      assert.ok(readFileSync(join(root, "release", k)).equals(bufs[k]), `${k}: the exact bytes hashed`);
+    assert.ok(sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
+  } finally { rm(root); }
+});
+
+test("R33 (control): a container member whose configuration names no instance_type is emitted without the field, never a guessed size", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    const { payload, bufs } = expectedPayload(root);
+    for (const k of ["runner/container.json", "scanner/container/FileScanner.json", "scanner/container/SafeViewRenderer.json"])
+      assert.doesNotMatch(bufs[k].toString(), /instance_type/, k);
+    const dry = assemble(root, ["--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.ok(dry.stdout.includes(payload), "and the parts are the same bytes the release always wrote");
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.doesNotMatch(readFileSync(join(root, "release/runner/container.json"), "utf8"), /instance_type/);
+  } finally { rm(root); }
+});
+
+test("R33 (control): an instance_type the configuration states that is not a size name or a size block is refused CONTAINER_UNDESCRIBED naming it, before anything is written", async () => {
+  for (const bad of ["", "   ", 7, [], {}, null]) {
+    const root = await makeRepo({ build: false });
+    try {
+      addContainerMember(root, "runner");
+      editConfig(root, "runner", (c) => { c.containers[0].instance_type = bad; });
+      await buildAll(root);
+      const before = snapshot(root);
+      const r = assemble(root, ["--dry-run"]);
+      refused(r, "CONTAINER_UNDESCRIBED");
+      assert.match(r.stderr, /runner is a container member and its fleet-member\.json does not state.* instance_type/, JSON.stringify(bad));
+      assert.deepEqual(snapshot(root), before);
+    } finally { rm(root); }
+  }
 });
 
 /* ------------------------------------------------------- R25: a member's Worker part (N772, K2155) */

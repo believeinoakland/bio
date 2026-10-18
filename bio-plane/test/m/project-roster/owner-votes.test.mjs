@@ -119,3 +119,17 @@ test("R30 writes nothing and never throws: any viewer, any project argument", as
   assert.equal(snapshot(w), before);
   assert.deepEqual(w.ops(`projectId=PROJ-P&viewer=${encodeURIComponent(V("ann"))}`).projectownervotes(), votes(w, V("ann")));
 });
+
+test("R30 (T50; N1135) changes proposed at one instant are listed in the order proposed, not by kind or target, on every run", async () => {
+  const order = async (first, second) => {
+    const w = await threeOwners();
+    w.time.now = Date.parse("2026-03-01T00:00:00.000Z");
+    first(w); second(w);
+    return votes(w, V("ann")).changes.map((x) => [x.change, x.target, x.proposed_at]);
+  };
+  const at = "2026-03-01T00:00:00.000Z";
+  const addThenRemove = await order((w) => add(w, "dee", "ann"), (w) => rem(w, "cal", "ann"));
+  assert.deepEqual(addThenRemove, [["add", "dee", at], ["remove", "cal", at]], "an add, then a remove");
+  const removeThenAdd = await order((w) => rem(w, "cal", "ann"), (w) => add(w, "dee", "ann"));
+  assert.deepEqual(removeThenAdd, [["remove", "cal", at], ["add", "dee", at]], "a remove, then an add: not by kind");
+});

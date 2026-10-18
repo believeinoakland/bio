@@ -39,6 +39,8 @@ import { eventsOf } from "../events/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf } from "../people/index.mjs";
+import { Browser } from "./browse.mjs";
+import { say } from "./words.mjs";
 import { Finder, FIND_KINDS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
          FIND_TERM_MAX, RECORDED_BY_MODULES } from "./findin.mjs";
 
@@ -52,6 +54,8 @@ export { FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_I
          matchRequirements, cutWords, RECORDED_BY_MODULES, RECORDED_BY_LIMIT, RECORDED_NONE_REGISTERED } from "./findin.mjs";
 /* R33, R71: the names of the tables this module declares. */
 export const RETRIEVAL_TABLES = Object.freeze([...RETRIEVAL_PURGE.map((t) => t.name), TERMS_TABLE]);
+export { FIND_ROW_CELLS_MAX } from "./findin.mjs";
+export { BROWSE_KINDS, BROWSE_ONLY, BROWSE_LIMIT_DEFAULT, BROWSE_LIMIT_MAX, BROWSE_MARKS_MAX } from "./browse.mjs";
 export { FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE };
 
 /* ---- S-10 step 5: selections ----
@@ -81,7 +85,7 @@ export const SEARCH_ORPHAN_MAX = 100;
    and a longer list is cut and SAID to be cut. */
 export const CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
 /* D-724: the words a skipped unit is served in. */
-export const CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
+export const CAPTURE_TEXT_SKIPPED_SAYS = say("retrieval.capture_text_skipped_says");
 
 /* R17, R61: the text-index keys a bundle claims, through its projection row. */
 const CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
@@ -133,6 +137,7 @@ export class Retrieval {
   #selectionListeners = [];     // R52: {module, fn, seq}
   #fields = [];                 // R62: {module, field, table, key, col, seq}
   #recordedBy = [];             // R76: {module, fn, seq}
+  #browseMarks = null;          // R86: {module, fn}
   /* R61, R62: the second argument of every `compile` this module runs: the projection through this module's own
      relation (query-language R25), and each registered field through its owner's (its R26). */
   #via = Object.freeze({ projection: PROJECTION_RELATION });
@@ -177,6 +182,7 @@ export class Retrieval {
       [m, recorders && typeof recorders === "object" && recorders[m] !== undefined ? recorders[m] : undefined]));
     this.frontierReader = new Frontier(this);
     this.finder = new Finder(this);
+    this.browser = new Browser(this);
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -404,6 +410,20 @@ export class Retrieval {
     return { ok: true, module };
   }
 
+  /** R86 (N1092; DEC-238 S23 "A"; K31's pattern, as R52, R76): the one later module (`following`) that holds a member's
+   *  watches and the team's second-look flags registers its read once at start: `fn({viewer, only, limit})` answers
+   *  `{items, truncated}` (the ids marked) and `fn({viewer, ids})` answers `{watched, flagged}` for those ids. A malformed
+   *  registration, or a second whoever makes it (the slot takes one), is refused by membership's `listenerRefusal`. */
+  registerBrowseMarks(module, fn) {
+    const refused = listenerRefusal(this.#browseMarks, module, fn);
+    if (refused) return refused;
+    this.#browseMarks = { module, fn };
+    return { ok: true, module };
+  }
+
+  /** R85, R86: the registered read of marks, or null. */
+  browseMarks() { return this.#browseMarks; }
+
   /** R73, R76: the reads a find calls, in order: `events`, `standards`, `money` and `people`'s `recordedBy`, then each
    *  registered one. `read` is null, with why, for a module whose instance offers none; `registered` says which. */
   recordedReads() {
@@ -422,7 +442,7 @@ export class Retrieval {
       return inst && typeof inst.recordedBy === "function"
         ? { module: m, read: (a) => inst.recordedBy(a), registered: false }
         : { module: m, read: null, registered: false,
-            why: inst ? `${m} offers no recordedBy read` : `${m} is not reachable here` };
+            why: inst ? say("retrieval.why.offers_recordedby_read", { m }) : say("retrieval.why.reachable", { m }) };
     });
     return [...own, ...this.#recordedBy.map((r) => ({ module: r.module, read: r.fn, registered: true }))];
   }
@@ -858,6 +878,8 @@ export class Retrieval {
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked, rowLimit: input.limit, rowOffset: input.offset,
+      /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
+      snippetChars: Number(input.snippetChars) || undefined,
     });
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
@@ -975,20 +997,18 @@ export class Retrieval {
       ftsColumns: FTS_COLUMNS, defaultFacets: DEFAULT_FACETS, idsMax: IDS_MAX,
       meaning: meaningVocabulary(),
       syntax: [
-        "bare words are AND, ranked by relevance",
-        "\"quoted phrase\" is one unit",
-        "term* is a prefix match",
-        "-term and NOT term exclude",
-        "OR and parentheses nest",
+        say("retrieval.syntax.bare_words_ranked"),
+        say("retrieval.syntax.quoted_phrase_unit"),
+        say("retrieval.syntax.term_prefix_match"),
+        say("retrieval.syntax.term_term_exclude"),
+        say("retrieval.syntax.parentheses_nest"),
         /* R54 (K105): the proximity operator, stated in the published grammar. */
-        "NEAR(a b) finds the words within 10 words of each other, NEAR(a b, 5) within 5 (0 to 100); in "
-        + "passage: it matches only inside one passage, never across two",
-        "field:value filters; free-text fields (title, locator, authority) match text, enumerations match exactly",
+        say("retrieval.syntax.near_finds_words"),
+        say("retrieval.syntax.field_value_filters"),
         "field:>value, field:<value, field:a..b compare and range",
-        "has:field asks whether the field carries any value",
-        "fm:path and fm:path=value reach frontmatter no column projects",
-        "leg:, resolves: and concerns: reach the MEANING layer -- leg:hunch is outstanding hunch debt, "
-        + "resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at RECORD grain",
+        say("retrieval.syntax.field_asks_field"),
+        say("retrieval.syntax.fm_path_fm"),
+        say("retrieval.syntax.leg_resolves_concerns"),
         /* REC-90: `content:` searches WHAT HAS BEEN CITED OR MARKED CITABLE, never the text of the documents
            themselves — `passage:` is that question. */
         "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
@@ -997,20 +1017,14 @@ export class Retrieval {
         + "content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
         "content: does NOT search the text of the documents -- it searches what has been cited or marked "
         + "citable in them, so an empty answer is a fact about citation and never about what a document says",
-        "passage: searches what the documents SAY -- the indexed text of every captured document, one "
-        + "passage per page, paragraph, slide or sheet; rows=passage lists the passages it matched",
-        "content:cap=undetermined and content:chain=undetermined are their own values, never folded into a "
-        + "letter or a step; a comparison like content:cap<=B does not match them, because NULL compares to nothing",
-        "content:chain=does-not-apply names the images cited as their own bytes -- no transcription stands "
-        + "between such a citation and what it points at, so its chain is not undetermined and "
-        + "content:chain=undetermined does not match it",
-        "content:cap=does-not-apply names the same images -- with nothing transcribed there is no derivation "
-        + "step for a cap to be the weakest of, so their cap is not undetermined and content:cap=undetermined "
-        + "does not match them",
+        say("retrieval.syntax.passage_searches_documents"),
+        say("retrieval.syntax.content_cap_undetermined"),
+        say("retrieval.syntax.content_chain_apply"),
+        say("retrieval.syntax.content_cap_apply"),
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
         + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
-        "has:leg asks whether the record carries any row in the meaning table at all",
-        "sort:field and sort:-field order the result",
+        say("retrieval.syntax.leg_asks_record"),
+        say("retrieval.syntax.sort_field_sort"),
       ],
     };
   }
@@ -1469,16 +1483,14 @@ export class Retrieval {
     if (!sha)
       return { found: false, vocabulary: V.CONTENT_AXIS_STATES,
                undetermined_value: V.CONTENT_AXIS_UNDETERMINED,
-               note: "a content-axis read names one capture by its sha256" };
+               note: say("retrieval.note.content_axis_read") };
     const owner = this.#one(`SELECT bundle_id, registered FROM register WHERE capture_sha = ? LIMIT 1`, sha);
     const held = owner && this.sight(viewer)(owner.bundle_id) ? owner : null;
     if (!held)
       return { found: false, capture_sha: sha, capture_held: false,
                vocabulary: V.CONTENT_AXIS_STATES,
                undetermined_value: V.CONTENT_AXIS_UNDETERMINED,
-               note: "this record holds no capture with that fingerprint, so there is nothing to "
-                   + `say about its content axis. That is NOT '${Object.keys(V.CONTENT_AXIS_STATES)[3]}', `
-                   + `which is a statement about a document the record DOES hold and has never read` };
+               note: say("retrieval.note.record_holds_capture", { content_axis_states: Object.keys(V.CONTENT_AXIS_STATES)[3] }) };
     const latest = this.#one(
       `SELECT state, condition, detail, authority_kind, authority, actor_class, actor, at, seq
          FROM observation_log
@@ -1584,9 +1596,11 @@ export class Retrieval {
     const next = remaining.length > page.length ? page[page.length - 1].capture_sha : null;
     const found = this.finder.find({ captures: page, kinds: wanted, term: words, limit: cap, viewer,
                                      whole: after === null && next === null });
+    /* R80, R81: each match names its document and, held, its content row. */
+    this.finder.annotate(found, page, viewer);
     /* R73, R76 (N715): who recorded each match, through the recording modules' reads by capture. */
     const recorded = this.finder.recorded(found, page, viewer);
-    return { ok: true, scope: { form, [form]: value, captures: resolved.captures.length },
+    return { ok: true, scope: { form, [form]: value, captures: resolved.captures.length, title: resolved.title ?? null },
              kinds: found, captures_read: page.length, limit: cap, captures_limit: FIND_CAPTURES_PER_CALL, next,
              recorded_read: recorded.read, recorded_not_read: recorded.not_read };
   }
@@ -1636,7 +1650,14 @@ export class Retrieval {
     }
     const captures = [...byCapture].map(([capture_sha, bundle_id]) => ({ capture_sha, bundle_id }))
       .sort((a, b) => (a.capture_sha < b.capture_sha ? -1 : a.capture_sha > b.capture_sha ? 1 : 0));
-    return { ok: true, captures };
+    /* R80: a capture's title is the title of the bundle R73 attributes it to, a project's its own; a set has none. */
+    const titleOf = (id) => {
+      const row = id ? this.#one(`SELECT title FROM bundles WHERE bundle_id = ?`, id) : null;
+      return row && typeof row.title === "string" && row.title.trim() ? row.title : null;
+    };
+    const title = form === "capture" ? titleOf(captures[0] ? captures[0].bundle_id : null)
+      : form === "project" ? titleOf(String(value).trim()) : null;
+    return { ok: true, captures, title };
   }
 
   /** R74's `term`, through the compiler (R28): a compile with this module's relations and zone. */
@@ -1663,6 +1684,9 @@ export class Retrieval {
       return typeof v === "string" && v ? v.split("-")[0].toLowerCase() : null;
     } catch { return null; }
   }
+
+  /** R85, R86: `op=browse` (`browse.mjs`). */
+  browse(args = {}) { return this.browser.read(args); }
 
   /** R35–R50: `op=frontier` (`frontier.mjs`). */
   frontier(args = {}) { return this.frontierReader.read(args); }
@@ -1786,6 +1810,7 @@ export function retrievalRoutes(r, url, body) {
     }),
     meaningrows: () => r.meaningRows({ q: q.get("q") ?? "", rows: q.get("rows"), viewer: q.get("viewer"),
                                        limit: q.get("limit"), offset: q.get("offset"),
+                                       snippetChars: Number(q.get("snippet")) || undefined,
                                        ids: Array.isArray(body?.ids) ? body.ids : null }),
     searchfields: () => r.searchFields(),
     select: () => r.selectionCreate({ q: q.get("q") ?? "", viewer: q.get("viewer"), owner: q.get("owner"),
@@ -1807,6 +1832,12 @@ export function retrievalRoutes(r, url, body) {
     file: () => r.readFile({ id: q.get("id"), path: q.get("path"), viewer: q.get("viewer") }),
     /* R73: "Find in this" (`owed:findin`): the scope, kinds, term, limit and cursor from the body (or the query, the
        scope as JSON and the kinds comma-separated); the viewer and owner the control plane's stamps. */
+    /* R85: "Browse" (`owed:browse`): what the viewer may see, newest first, with no words; the viewer the control plane's stamp. */
+    browse: () => {
+      const b = body && typeof body === "object" ? body : {};
+      return r.browse({ kinds: b.kinds ?? q.get("kinds"), only: b.only ?? q.get("only"), since: b.since ?? q.get("since"),
+                        after: b.after ?? q.get("after"), limit: b.limit ?? q.get("limit"), viewer: q.get("viewer") });
+    },
     findin: () => {
       const b = body && typeof body === "object" ? body : {};
       const scopeQ = (() => { try { return q.has("scope") ? JSON.parse(q.get("scope")) : null; } catch { return undefined; } })();

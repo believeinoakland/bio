@@ -1,6 +1,6 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R10 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R19 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
@@ -11,7 +11,8 @@ import { readdirSync } from "node:fs";
 
 import * as HARNESS from "../src/harness.mjs";
 import * as SUBSESSION from "../src/subsession.mjs";
-import { DEPLOYED_MODES, RUN_MODES } from "../../bio-plane/src/run-rules/index.mjs";
+import { DEPLOYED_MODES, RUN_MODES, checkCondition } from "../../bio-plane/src/run-rules/index.mjs";
+import { CONDITION_KINDS } from "../../bio-plane/src/observation-log/vocabulary.mjs";
 
 const {
   CONTROL_FLOW, PLAN_FLOW, FIRST_STEP, MODES, LEVELS, BUDGET_BOUNDS, PLAN_BUDGET_BOUNDS, PLAN_MAX_PASSES,
@@ -26,7 +27,7 @@ const {
 
 /* A run driven as the shell drives it: from the gate, each step's decision applied by `advance`; at a judged row the
    next judgement (if any is left) is applied first. Returns the trace, the close and the judgements consumed. */
-function walk(start, judgements = [], { flow = CONTROL_FLOW, limit = 200 } = {}) {
+function walk(start, judgements = [], { flow = CONTROL_FLOW, limit = 200, newEachPass = false } = {}) {
   const next = flow === PLAN_FLOW ? nextPlanStep : nextStep;
   const move = flow === PLAN_FLOW ? planAdvance : advance;
   const queue = [...judgements];
@@ -45,6 +46,8 @@ function walk(start, judgements = [], { flow = CONTROL_FLOW, limit = 200 } = {})
     trace.push(`${state.step}>${d.step}`);
     if (d.step === "close") return { trace, bound: d.bound, why: d.why, used, state: move(state, d) };
     state = move(state, d);
+    /* newEachPass: stands for a pass that submitted a candidate (R15), so only the pass limit ends the run */
+    if (newEachPass && state.step === "plan") state = { ...state, passAdded: true };
   }
   throw new Error("walk did not close");
 }
@@ -214,7 +217,7 @@ test("R3: then pass count >= the pass limit closes `completed`; the limit is max
 
 test("R3: a pass counts when it is done (next-pass): a driven run makes exactly the limit's passes", () => {
   for (const [maxPasses, passes] of [[1, 1], [2, 2], [undefined, 3], [0, 3]]) {
-    const r = walk({ mode: "check", maxPasses });
+    const r = walk({ mode: "check", maxPasses, passAdded: true }, [], { newEachPass: true });
     assert.equal(r.bound, "completed");
     assert.equal(r.state.pass, passes);
     assert.equal(r.trace.filter((x) => x.startsWith("next-pass>")).length, passes);
@@ -247,7 +250,7 @@ test("R4: a judged row with no judgement carries the state on", () => {
     assert.equal(a.ok, true);
     assert.deepEqual(a.state, before);
   }
-  const r = walk({ mode: "check", maxPasses: 2 });
+  const r = walk({ mode: "check", maxPasses: 2, passAdded: true }, [], { newEachPass: true });
   assert.deepEqual([r.used, r.bound, r.state.pass], [0, "completed", 2]);
 });
 
@@ -267,10 +270,10 @@ test("R4: a judgement naming pass, maxPasses, step, budget, mode, bound, run, st
   assert.equal(r.state.target, undefined);
 });
 
-test("R4: only targets, reports, candidates, queue, adjusted, submission, level, observed, governed, condition are applied", () => {
+test("R4: only targets, reports, candidates, queue, adjusted, submission, level, observed, governed, condition (and, at compose, disagreements, R19) are applied", () => {
   assert.deepEqual(JUDGEABLE, ["targets", "reports", "candidates", "queue", "adjusted", "submission", "level", "observed",
-    "governed", "condition"]);
-  const all = Object.fromEntries(JUDGEABLE.map((k, i) => [k, `v${i}`]));
+    "governed", "condition", "disagreements"]);
+  const all = Object.fromEntries(JUDGEABLE.filter((k) => k !== "disagreements").map((k, i) => [k, `v${i}`]));
   const a = applyJudgement({ step: "plan", pass: 1 }, { ...all, whimsy: 2, bytes: "doc" });
   assert.equal(a.ok, true);
   assert.deepEqual(a.state, { step: "plan", pass: 1, ...all });
@@ -473,6 +476,9 @@ test("R7: sub-sessions run one per level, all four in LEVELS order, each under i
     assert.deepEqual(Object.keys(c), SPAWN_KEYS);
     assert.deepEqual(c.scope, SUBSESSION_OPS);
     assert.deepEqual(c.scope, ["meaningrows"]);
+    /* R12: no subjects and no arms unless the payload or the caller gives them */
+    assert.deepEqual(c.subjects, []);
+    assert.deepEqual(c.arms, []);
     assert.deepEqual(c.standard, { in_force: true, basis: "b", stated: "st", pair: "p" });
     assert.ok(Object.isFrozen(c) && Object.isFrozen(c.context) && Object.isFrozen(c.returns));
   }
@@ -489,7 +495,8 @@ test("R7: each returns only reports: the contract it is briefed with is R5's, an
   for (const c of contracts)
     assert.deepEqual(c.returns, {
       keys: Object.keys(REPORT_KEYS), required: ["level", "state"], citation_keys: ["address"],
-      states: Object.keys(REPORT_STATES), summary_max: SUMMARY_MAX, citations_max: CITATIONS_MAX, address_max: ADDRESS_MAX,
+      states: Object.keys(REPORT_STATES), summary_max: SUMMARY_MAX, conditions: Object.keys(CONDITION_KINDS),
+      citations_max: CITATIONS_MAX, address_max: ADDRESS_MAX,
       rule: "return a REPORT with a citation, never documents. The parent re-reads by address." });
   const returns = [good, { level: "content", state: "LOOKED_ABSENT", observed_at: "log:2", text: "the document" }, "bytes",
                    { level: "internet", state: "NEVER_LOOKED" }];
@@ -507,7 +514,11 @@ const ARGS = {
   adjustedFrom: [{ a: 1 }, { a: 2 }], advance: [{ step: "dedup", pass: 1, submission: { a: 1 } }, { step: "next-pass" }],
   applyJudgement: [{ step: "plan" }, { targets: ["t"] }], applyPlanJudgement: [{ step: "compose" }, { candidates: [{ summary: "s" }] }],
   canonical: [{ b: [1, { c: 2 }], a: null }], earlierPlans: [{ plans: [{ id: "P1", project: "J" }, { id: "P2", project: "K" }] }, "J", "P0"],
-  emptyLevelCandidates: [{ reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:1", summary: "none" }] }, "INQ-1"],
+  emptyLevelCandidates: [{ reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:1", summary: "none" }],
+                          scope: { document: { reads: 1, documents: 3 } } }, "INQ-1"],
+  levelsWithoutScope: [{ reports: [{ level: "content", state: "LOOKED_ABSENT" }], scope: { content: { reads: 1, documents: 0 } } }],
+  disagreementsToSettle: [{ disagreements: [{ record: "REC-1", levels: ["meaning", "content"] }], disagreed: [] }],
+  disagreementKey: [{ record: "REC-1", levels: ["content", "meaning"] }],
   flowFor: ["plan"], gateStep: [{ mode: "investigate" }], nextPlanStep: [{ step: "dedup", pass: 0, queue: [{ summary: "a" }] }],
   nextStep: [{ step: "submit", pass: 0, maxPasses: 3, refusal: { code: "X" } }], passLimit: [0],
   planAdvance: [{ step: "dedup", pass: 0 }, { step: "close", pass_done: true }], planDedup: [[{ summary: "a" }, { summary: "a" }], { options: [] }],
@@ -521,7 +532,8 @@ const ARGS = {
   documentHoldings: [[{ citation: "c", bundle: "b1", chain: { address_norm: "a", total: 2, versions: [{ bundle_id: "b1" }] } },
                       { citation: "d", refused: { code: "X" } }]],
   holdingsNote: [{ documents: 1, citations: 2, versions_cited: 1, versions_held: 2, unchained: 0, undetermined: 1 }],
-  spawnContract: [{ level: "meaning", payload }], spawnContracts: [payload], takeReports: [[good, { bytes: 1 }]],
+  spawnContract: [{ level: "meaning", payload: { ...payload, subjects: { items: [{ id: "R-1", extent: "¶2", kind: "leg" }] } },
+                    arms: ["leg"], targets: [{ id: "R-2", extent: null }] }], spawnContracts: [payload], takeReports: [[good, { bytes: 1 }]],
 };
 
 test("R8: every export is pure: equal arguments give equal answers, with no network, clock or randomness reached", () => {
@@ -573,4 +585,308 @@ test("R9: no file of this module exports PLANE_OPS, NAMESPACES or MEANING_ARM (t
     for (const name of ["PLANE_OPS", "NAMESPACES", "MEANING_ARM"]) if (name in mod) found.push(`${f}: ${name}`);
   }
   assert.deepEqual(found, []);
+});
+
+/* ============================================================ R11: the contract's condition kinds */
+test("R11: a contract's returns.conditions is non-empty, in the vocabulary's fixed order, and each kind passes checkCondition", () => {
+  const { contracts } = spawnContracts(payload);
+  for (const c of contracts) {
+    assert.ok(Array.isArray(c.returns.conditions) && c.returns.conditions.length > 0, "conditions is a non-empty list");
+    assert.deepEqual(c.returns.conditions, Object.keys(CONDITION_KINDS));
+    for (const kind of c.returns.conditions) assert.equal(checkCondition(kind), null, kind);
+  }
+  /* the same list the plane's own checker admits: every kind, and only those, passes it */
+  assert.deepEqual(spawnContract({ level: "meaning", payload }).contract.returns.conditions, Object.keys(CONDITION_KINDS));
+});
+
+test("R11: control: a kind outside the vocabulary is not offered in returns.conditions, and checkCondition refuses it", () => {
+  const { contracts } = spawnContracts(payload);
+  for (const word of ["not-a-condition", "host-held", "CAPTURE_COMPLETED", " monitoring-recheck-due"]) {
+    assert.equal(contracts[0].returns.conditions.includes(word), false, word);
+    const refused = checkCondition(word);
+    assert.deepEqual([refused.ok, refused.code], [false, "AI_RUN_CONDITION_UNKNOWN"], word);
+  }
+});
+
+/* ============================================================ R12: the contract's subjects and arms */
+const twoSubjects = { ...payload, subjects: { items: [{ id: "REC-1", extent: "¶3", kind: "leg" }, { id: "REC-2", extent: null, kind: "cited" }] } };
+
+test("R12: spawnContract carries subjects (the payload's items, then the level's targets) and arms, after scope: two subjects and one target give three, in that order, frozen", () => {
+  const made = spawnContract({ level: "content", payload: twoSubjects, arms: ["leg", "passage"],
+                               targets: [{ id: "INFO-3", extent: "¶1" }] });
+  assert.equal(made.ok, true);
+  const c = made.contract;
+  assert.deepEqual(Object.keys(c).slice(Object.keys(c).indexOf("scope"), Object.keys(c).indexOf("scope") + 3),
+    ["scope", "subjects", "arms"]);
+  assert.deepEqual(c.subjects, [
+    { id: "REC-1", extent: "¶3", kind: "leg" },
+    { id: "REC-2", extent: null, kind: "cited" },
+    { id: "INFO-3", extent: "¶1", kind: "target" },
+  ]);
+  assert.deepEqual(c.arms, ["leg", "passage"]);
+  assert.ok(Object.isFrozen(c.subjects) && Object.isFrozen(c.subjects[0]) && Object.isFrozen(c.arms));
+});
+
+test("R12: control: a duplicate of a subject among the targets appears once, and absent subjects, targets or arms give an empty list", () => {
+  const dup = spawnContract({ level: "meaning", payload: twoSubjects, arms: ["leg"],
+                              targets: [{ id: "REC-1", extent: "¶3" }, { id: "REC-1", extent: "¶4" }] });
+  assert.deepEqual(dup.contract.subjects.map((s) => [s.id, s.extent, s.kind]),
+    [["REC-1", "¶3", "leg"], ["REC-2", null, "cited"], ["REC-1", "¶4", "target"]]);
+  const bare = spawnContract({ level: "meaning", payload });
+  assert.deepEqual([bare.contract.subjects, bare.contract.arms], [[], []]);
+  const absent = spawnContract({ level: "meaning", payload, arms: null, targets: "not a list" });
+  assert.deepEqual([absent.contract.subjects, absent.contract.arms], [[], []]);
+  /* the payload is read key by key: a stray key on an item does not ride into the brief */
+  const stray = spawnContract({ level: "meaning", payload: { ...payload, subjects: { items: [{ id: "X", extent: null, kind: "leg", secret: "s" }] } } });
+  assert.deepEqual(stray.contract.subjects, [{ id: "X", extent: null, kind: "leg" }]);
+});
+
+test("R12: at most 50 subjects, the first 50 in order, and the list is held by value per contract", () => {
+  const items = Array.from({ length: 60 }, (_, i) => ({ id: `S-${i}`, extent: null, kind: "leg" }));
+  const made = spawnContracts({ ...payload, subjects: { items } });
+  assert.equal(made.contracts[0].subjects.length, 50);
+  assert.equal(made.contracts[0].subjects[49].id, "S-49");
+  assert.notEqual(made.contracts[0].subjects, made.contracts[1].subjects);
+});
+
+/* R18: a scope in which each named level was read once and held documents (the plane's four-level statement, set by the shell) */
+const scopeOf = (levels, documents = 3) => Object.fromEntries(levels.map((l) => [l, { reads: 1, documents }]));
+
+/* ============================================================ R13: the empty-level description */
+test("R13: an empty-level candidate's description names the target as \"this question\", never its record id", () => {
+  const state = { reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:4", summary: "none" }], scope: scopeOf(LEVELS) };
+  const [made] = HARNESS.emptyLevelCandidates(state, "INQ-2026-0042");
+  assert.equal(made.target, "INQ-2026-0042");
+  assert.match(made.description, /this question/);
+  assert.equal(made.description.includes("INQ-2026-0042"), false);
+});
+
+test("R13: control: the name stays level-empty-<level> for every empty level, and each description still says where its search is written", () => {
+  const levels = ["meaning", "content", "document", "internet"];
+  const reports = levels.map((level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary: "" }));
+  const made = HARNESS.emptyLevelCandidates({ reports, scope: scopeOf(LEVELS) }, "INQ-2026-0042");
+  assert.deepEqual(made.map((c) => c.name), ["level-empty-meaning", "level-empty-content", "level-empty-documents", "level-empty-internet"]);
+  made.forEach((c, i) => assert.ok(c.description.includes(reports[i].observed_at), c.name));
+});
+
+test("R14: an empty-level candidate's description holds neither a record id nor the sub-session's summary", () => {
+  const summary = "nothing in INQ-2026-0002 or INFO-2026-0006-council-minutes";
+  const state = { reports: LEVELS.map((level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary })),
+                  scope: scopeOf(LEVELS) };
+  const made = HARNESS.emptyLevelCandidates(state, "INQ-2026-0002");
+  assert.equal(made.length, LEVELS.length);
+  for (const c of made) {
+    assert.equal(/INQ-\d|INFO-\d/.test(c.description), false, c.name);
+    assert.equal(c.description.includes("The sub-session reported"), false, c.name);
+    assert.equal(c.description.includes("council-minutes"), false, c.name);
+  }
+});
+
+test("R14: control: the name stays level-empty-<level> and the report's summary is left untouched in the state", () => {
+  const reports = [{ level: "internet", state: "LOOKED_ABSENT", observed_at: "log:9", summary: "see INQ-2026-0002" }];
+  const [made] = HARNESS.emptyLevelCandidates({ reports, scope: scopeOf(LEVELS) }, "INQ-2026-0002");
+  assert.equal(made.name, "level-empty-internet");
+  assert.equal(reports[0].summary, "see INQ-2026-0002");
+});
+
+/* ============================================================ R15: a pass that adds nothing closes the run */
+test("R15: a pass whose candidates are all dropped as held closes before the next pass, and the close says why", () => {
+  /* composed candidates, every one dropped by dedup: the queue is empty, so dedup goes to next-pass and no submit ran */
+  const r = walk({ mode: "check", maxPasses: 3 }, [{ targets: ["t"] }, { reports: [] }, { candidates: [{ name: "held" }] }, { queue: [] }]);
+  assert.equal(r.bound, "completed");
+  assert.equal(r.state.pass, 1);
+  assert.deepEqual(r.trace.filter((x) => x.startsWith("next-pass>")), ["next-pass>close"]);
+  assert.match(r.why, /added no new candidate/);
+  /* a pass that composed none closes the same way */
+  const none = walk({ mode: "check", maxPasses: 3 });
+  assert.deepEqual([none.bound, none.state.pass], ["completed", 1]);
+  assert.match(none.why, /added no new candidate/);
+});
+
+test("R15: control: a pass that submits a new candidate goes on to the next pass, below maxPasses", () => {
+  /* the walk never writes, so drive dedup > submit > next-pass by hand */
+  let s = { step: "dedup", pass: 0, maxPasses: 3, mode: "check", queue: [{ name: "new" }] };
+  let d = nextStep(s);
+  assert.equal(d.step, "submit");
+  s = advance(s, d);
+  assert.equal(s.passAdded, true);
+  s = { ...s, queue: [] };
+  d = nextStep(s);
+  assert.equal(d.step, "next-pass");
+  s = advance(s, d);
+  d = nextStep(s);
+  assert.deepEqual([d.step, s.pass], ["plan", 1]);
+  s = advance(s, d);
+  assert.equal(s.passAdded, false, "the next pass starts with none added");
+});
+
+test("R15: control: passAdded survives a segment break and a restart under the state ceiling", () => {
+  const s = { step: "next-pass", pass: 1, passAdded: true };
+  assert.equal(HARNESS.resumableState(s).passAdded, true);
+  assert.equal(HARNESS.resumeFrom(HARNESS.resumableState(s)).state.passAdded, true);
+  const big = { ...s, queue: ["x".repeat(500)] };
+  const pub = HARNESS.publishableState(big, 100);
+  assert.deepEqual([pub.restarted.at, pub.state.passAdded], ["next-pass", true]);
+});
+
+/* ============================================================ R16: a run that wrote nothing never closes completed */
+test("R16: composed 1, written 0, at the last pass: the close is not completed and names the reason", () => {
+  /* the pass limit closes (pass 1 of 1) with one candidate composed and sent to be written, none written */
+  const s = { step: "next-pass", pass: 1, maxPasses: 1, mode: "check", composed: 1, kept: 1, wrote: 0, passAdded: true };
+  const d = nextStep(s);
+  assert.equal(d.step, "close");
+  assert.notEqual(d.bound, "completed");
+  assert.equal(d.bound, "nothing-written");
+  assert.match(d.reason, /^nothing written: 1 candidate\(s\) composed/);
+  assert.ok(d.why.includes(d.reason), "the close's why carries the reason");
+  /* the same, driven as the shell drives it: compose one, keep it, the plane refuses it, the adjust drops it */
+  let w = { step: "compose", pass: 0, maxPasses: 1, mode: "check", candidates: [{ name: "c" }] };
+  w = advance(w, nextStep(w));
+  w = advance({ ...w, queue: [{ name: "c" }] }, nextStep({ ...w, queue: [{ name: "c" }] }));
+  w = advance({ ...w, queue: [], refusal: { code: "X" }, submission: { name: "c" } }, { step: "adjust" });
+  w = advance({ ...w, adjusted: false }, nextStep({ ...w, adjusted: false, queue: [] }));
+  const last = nextStep(w);
+  assert.deepEqual([w.step, last.step, last.bound, w.composed, w.kept, w.wrote ?? 0], ["next-pass", "close", "nothing-written", 1, 1, 0]);
+  /* the shell's own list of what it wrote, empty, says the same */
+  assert.equal(nextStep({ ...s, wrote: undefined, written: [] }).bound, "nothing-written");
+});
+
+test("R16: control: a run that wrote something, or whose candidates were all held already, still closes completed", () => {
+  const base = { step: "next-pass", pass: 1, maxPasses: 1, mode: "check", passAdded: true };
+  /* one written */
+  assert.equal(nextStep({ ...base, composed: 1, kept: 1, wrote: 1 }).bound, "completed");
+  assert.equal(nextStep({ ...base, composed: 1, kept: 1, written: [{ name: "c" }] }).bound, "completed");
+  /* composed and every one dropped by dedup as already held: nothing was lost */
+  assert.equal(nextStep({ ...base, composed: 2, kept: 0, wrote: 0 }).bound, "completed");
+  /* composed none */
+  assert.equal(nextStep({ ...base, composed: 0 }).bound, "completed");
+  /* a budget bound is not rewritten */
+  assert.equal(nextStep({ ...base, composed: 1, kept: 1, budget: spent("fetches") }).bound, "fetches");
+});
+
+test("R16: control: advance counts composed, kept and written, and the counts survive a segment break", () => {
+  let s = { step: "compose", pass: 0, candidates: [{ name: "a" }, { name: "b" }] };
+  s = advance(s, nextStep(s));
+  s = { ...s, queue: [{ name: "a" }] };
+  s = advance(s, { step: "submit" });
+  assert.deepEqual([s.composed, s.kept, s.wrote ?? 0], [2, 1, 0]);
+  s = { ...s, step: "submit", queue: [], submission: { name: "a" }, refusal: null };
+  s = advance(s, { step: "next-pass" });
+  assert.equal(s.wrote, 1);
+  const back = HARNESS.resumeFrom(HARNESS.resumableState({ ...s, step: "next-pass" })).state;
+  assert.deepEqual([back.composed, back.kept, back.wrote], [2, 1, 1]);
+});
+
+/* ============================================================ R18: no absence for a level with nothing in scope */
+const absent = (level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary: "" });
+
+test("R18: content reported empty with documents 0 and document reported empty with documents 3 give the one level-empty-documents candidate", () => {
+  const state = { reports: [absent("content"), absent("document")],
+                  scope: { content: { reads: 1, documents: 0 }, document: { reads: 2, documents: 3 } } };
+  assert.deepEqual(HARNESS.emptyLevelCandidates(state, "INQ-1").map((c) => c.name), ["level-empty-documents"]);
+  const without = HARNESS.levelsWithoutScope(state);
+  assert.deepEqual(without.map((x) => x.level), ["content"]);
+  /* run-rules R35's answer, carried whole */
+  assert.deepEqual([without[0].holds, without[0].code, without[0].check],
+    [false, "LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE", "C-22.31"]);
+  assert.equal(typeof without[0].translation, "string");
+});
+
+test("R18: a level reported empty with no read at all gives none, whatever the scope says of its documents", () => {
+  for (const scope of [undefined, null, {}, { document: undefined }, { document: { reads: 0, documents: 5 } }, { document: {} },
+                       { document: { reads: 1 } }, { document: { reads: 1, documents: "3" } }, "scope"]) {
+    const state = { reports: [absent("document")], scope };
+    assert.deepEqual(HARNESS.emptyLevelCandidates(state, "INQ-1"), [], JSON.stringify(scope));
+    assert.deepEqual(HARNESS.levelsWithoutScope(state).map((x) => x.level), ["document"], JSON.stringify(scope));
+  }
+});
+
+test("R18: control: a level whose scope holds a document (the statement over its reads) keeps its candidate, and only LOOKED_ABSENT levels are asked", () => {
+  const state = { reports: [absent("meaning"), { level: "content", state: "LOOKED_INDETERMINATE", observed_at: "log:c" },
+                            { level: "internet", state: "PRESENT", observed_at: "log:i", citations: [{ address: "a" }] }],
+                  scope: { meaning: { reads: 2, documents: 2 }, content: { reads: 1, documents: 0 }, internet: { reads: 1, documents: 0 } } };
+  assert.deepEqual(HARNESS.levelsWithoutScope(state), []);
+  assert.deepEqual(HARNESS.emptyLevelCandidates(state, "INQ-1").map((c) => c.name), ["level-empty-meaning"]);
+  /* each of the four levels is decided by its own scope */
+  const all = { reports: LEVELS.map(absent), scope: { meaning: { reads: 1, documents: 0 }, content: { reads: 1, documents: 1 } } };
+  assert.deepEqual(HARNESS.emptyLevelCandidates(all, "INQ-1").map((c) => c.name), ["level-empty-content"]);
+});
+
+test("R18: scope is in RESUMABLE and survives a segment break and a restart under the state ceiling, and no judgement sets it", () => {
+  assert.ok(HARNESS.RESUMABLE.includes("scope"));
+  const scope = { document: { reads: 1, documents: 3 } };
+  const s = { step: "compose", pass: 1, scope };
+  assert.deepEqual(HARNESS.resumableState(s).scope, scope);
+  assert.deepEqual(HARNESS.resumeFrom(HARNESS.resumableState(s)).state.scope, scope);
+  assert.deepEqual(HARNESS.publishableState({ ...s, queue: ["x".repeat(500)] }, 300).state.scope, scope);
+  assert.equal(JUDGEABLE.includes("scope"), false);
+  const a = applyJudgement({ step: "compose", scope }, { scope: { document: { reads: 9, documents: 9 } }, candidates: [] });
+  assert.deepEqual(a.state.scope, scope, "a judgement naming scope leaves it as the shell set it");
+});
+
+/* ============================================================ R19: a level disagreement named once */
+const pair = (record, a = "meaning", b = "content") => ({ record, levels: [a, b] });
+
+test("R19: a judgement naming two pairs lists both; after the step, the same two named in the next pass list none and no pass is entered because of them", () => {
+  const two = [pair("REC-1"), pair("REC-2", "content", "document")];
+  let s = { step: "compose", pass: 0, maxPasses: 3, mode: "check", candidates: [] };
+  const a = applyJudgement(s, { disagreements: two });
+  assert.equal(a.ok, true);
+  s = a.state;
+  assert.deepEqual(HARNESS.disagreementsToSettle(s), two);
+  const d = nextStep(s);
+  assert.equal(d.step, "dedup");
+  s = advance(s, d);
+  assert.deepEqual(HARNESS.disagreementsToSettle(s), []);
+  assert.equal(s.disagreed.length, 2);
+  assert.deepEqual([s.passAdded, s.pass, s.maxPasses], [undefined, 0, 3], "a pair changes neither passAdded nor the pass limit");
+  /* the next pass names the same two (one with its levels the other way round): none to settle, and the pass was not opened by them */
+  const run = walk({ mode: "check", maxPasses: 3, disagreed: s.disagreed },
+    [{ targets: [] }, { reports: [] }, { disagreements: [pair("REC-1", "content", "meaning"), two[1]] }, { queue: [] }]);
+  assert.equal(run.state.disagreed.length, 2);
+  assert.deepEqual(HARNESS.disagreementsToSettle({ disagreements: [two[0], two[1]], disagreed: run.state.disagreed }), []);
+  assert.deepEqual(run.trace.filter((x) => x.startsWith("next-pass>")), ["next-pass>close"], "added nothing, so no further pass");
+  assert.deepEqual([run.bound, run.state.pass], ["completed", 1]);
+});
+
+test("R19: it is applied at compose only, resumable as disagreed, and at most 10 pairs are settled in all", () => {
+  assert.ok(JUDGEABLE.includes("disagreements") && HARNESS.RESUMABLE.includes("disagreed"));
+  for (const step of ["plan", "collect", "dedup", "adjust"])
+    assert.equal("disagreements" in applyJudgement({ step }, { disagreements: [pair("REC-1")] }).state, false, step);
+  const kept = applyJudgement({ step: "compose" }, { disagreements: [pair("REC-1")] }).state;
+  assert.deepEqual(kept.disagreements, [pair("REC-1")]);
+  const back = HARNESS.resumeFrom(HARNESS.resumableState({ step: "dedup", pass: 1, disagreed: ["k1", "k2"] })).state;
+  assert.deepEqual(back.disagreed, ["k1", "k2"]);
+  assert.deepEqual(HARNESS.publishableState({ step: "dedup", pass: 1, disagreed: ["k1"], queue: ["x".repeat(500)] }, 300).state.disagreed, ["k1"]);
+  /* ten settled in all: the eleventh, named later, is not listed, whatever the pass */
+  let s = { step: "compose", pass: 0, disagreements: Array.from({ length: 10 }, (_, i) => pair(`REC-${i}`)) };
+  assert.equal(HARNESS.disagreementsToSettle(s).length, 10);
+  s = advance(s, { step: "dedup" });
+  assert.deepEqual(HARNESS.disagreementsToSettle({ ...s, disagreements: [pair("REC-10")] }), []);
+  /* a duplicate within one list is listed once; a close from compose settles them too */
+  const dup = { step: "compose", disagreements: [pair("R"), pair("R", "content", "meaning")] };
+  assert.equal(HARNESS.disagreementsToSettle(dup).length, 1);
+  assert.equal(advance(dup, { step: "close" }).disagreed.length, 1);
+});
+
+test("R19: control: an eleventh pair, a pair naming one level twice and a pair with an empty record are refused, naming the key", () => {
+  const eleven = Array.from({ length: 11 }, (_, i) => pair(`REC-${i}`));
+  const refused = (d) => applyJudgement({ step: "compose" }, { disagreements: d });
+  const a = refused(eleven);
+  assert.deepEqual([a.ok, a.overreach, a.state], [false, ["disagreements[10]"], undefined]);
+  assert.deepEqual(refused([pair("R", "meaning", "meaning")]).overreach, ["disagreements[0].levels"]);
+  assert.deepEqual(refused([pair("  ")]).overreach, ["disagreements[0].record"]);
+  assert.deepEqual(refused([pair("")]).overreach, ["disagreements[0].record"]);
+  assert.deepEqual(refused([{ record: "R", levels: ["meaning", "gossip"] }]).overreach, ["disagreements[0].levels"]);
+  assert.deepEqual(refused([{ record: "R", levels: ["meaning"] }]).overreach, ["disagreements[0].levels"]);
+  assert.deepEqual(refused([{ record: "R", levels: ["meaning", "content"], note: "free text" }]).overreach, ["disagreements[0].note"]);
+  assert.deepEqual(refused("REC-1").overreach, ["disagreements"]);
+  assert.deepEqual(refused([null]).overreach, ["disagreements[0]"]);
+  /* refused at any step, and through a driven run at the step that took it, nothing applied */
+  assert.equal(applyJudgement({ step: "plan" }, { disagreements: eleven }).ok, false);
+  const r = walk({ mode: "check", maxPasses: 3 }, [{ targets: [] }, { reports: [] }, { disagreements: eleven }]);
+  assert.deepEqual(r.refused, { step: "compose", fields: ["disagreements[10]"] });
+  assert.equal(r.state.disagreements, undefined);
+  /* ten is the most that is accepted */
+  assert.equal(refused(eleven.slice(0, 10)).ok, true);
 });

@@ -24,7 +24,7 @@
  * process's tooling in T19 (K648, K749): who cuts a release is the process's
  * question, not this script's.
  *
- * usage (bundler R17, R18), from bio-plane/:
+ * usage (bundler R17, R18, R34), from bio-plane/:
  *   CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset>
  */
 import { readFileSync } from "node:fs";
@@ -245,6 +245,37 @@ async function settingsNow() {
   } catch { return null; }
 }
 
+/* R34: the same read, told apart: a script that does not exist yet (404) has no bindings to keep or compare, and one
+   whose settings cannot be read has bindings this deploy cannot see, which a PUT could delete. */
+async function bindingsNow() {
+  let r;
+  try { r = await fetch(`${api}/settings`, { headers: { authorization: `Bearer ${TOKEN}` } }); }
+  catch (e) { return { unreadable: (e && e.message) || String(e) }; }
+  if (r.status === 404) return { settings: null, bindings: [] };
+  if (!r.ok) return { unreadable: `HTTP ${r.status}` };
+  let j = null;
+  try { j = await r.json(); } catch { /* said below */ }
+  if (!j || !j.success || !j.result || typeof j.result !== "object") return { unreadable: "an answer that is not the script's settings" };
+  return { settings: j.result, bindings: Array.isArray(j.result.bindings) ? j.result.bindings : [] };
+}
+
+/* R34: where a derived binding is not on the deployed script as derived. A secret's value is never readable back, so
+   a `secret_text` is not compared (the wake entry confirms it, as the header says). Each class is compared by what it
+   points at: a `plain_text` by its text, a `service` by its target, an `r2_bucket` by its bucket, a `browser` by name. */
+const POINTS_AT = { plain_text: (b) => b.text, service: (b) => b.service, r2_bucket: (b) => b.bucket_name, browser: () => "" };
+function bindingDifferences(derived, deployedBindings) {
+  const out = [];
+  for (const b of derived) {
+    const at = POINTS_AT[b.type];
+    if (!at) continue;
+    const has = deployedBindings.find((d) => d && d.name === b.name && d.type === b.type);
+    if (!has) out.push(`${b.type} ${b.name} is missing`);
+    else if (String(at(has) ?? "") !== String(at(b) ?? ""))
+      out.push(`${b.type} ${b.name} points at ${JSON.stringify(at(has) ?? null)}, not ${JSON.stringify(at(b))}`);
+  }
+  return out;
+}
+
 /* Pre-flight every derived service target (except the self-reference, which
    this very PUT creates) so the refusal names the missing worker. */
 for (const target of serviceTargets(meta.bindings, slug)) {
@@ -289,6 +320,23 @@ async function deployed() {
   return createHash("sha256").update(script).digest("hex");
 }
 
+/* R34: every `plain_text` already on the script that R13 does not derive (JURISDICTION_PROFILES and the like) is sent
+   again unchanged: the PUT replaces the script's bindings, and keep_bindings does not carry this class. Read here,
+   before the PUT, and unreadable settings of a script that exists refuse, because a binding this deploy cannot see
+   is one it could delete. */
+const onScript = await bindingsNow();
+if (onScript.unreadable !== undefined) {
+  console.error(`REFUSED [BINDINGS_UNREADABLE]: could not read the bindings now on "${slug}" (${onScript.unreadable}); `
+    + "a deploy that cannot see them could delete the plain_text bindings this one does not derive.");
+  process.exit(1);
+}
+const derivedNames = new Set(meta.bindings.map((b) => b.name));
+const kept = onScript.bindings.filter((b) => b && b.type === "plain_text" && !derivedNames.has(b.name))
+  .map((b) => ({ type: "plain_text", name: b.name, text: b.text }));
+meta.bindings.push(...kept);
+if (kept.length) console.log(`kept: ${kept.length} plain_text binding(s) on the script that this deploy does not derive, sent unchanged — ${kept.map((b) => b.name).join(", ")}`);
+const differences = bindingDifferences(meta.bindings, onScript.bindings);
+
 const before = await deployed();
 console.log(`before: ${before ? before.slice(0, 16) + "\u2026" : "(unreadable)"}`);
 console.log(`signed: ${want.slice(0, 16)}\u2026  ${version}  ${source.length} bytes`);
@@ -308,12 +356,16 @@ if (before === want) {
   }
   /* D-54: and the limits must already read back, or the metadata is not ours. */
   const lim = limitsReadBack(await settingsNow(), meta.limits);
-  if (serving === version && lim.verdict === "MATCH") {
-    console.log(`already byte-identical AND serving ${version} AND ${lim.why}; nothing to do`);
+  /* R34: and so must the bindings this deploy derives, each with the same target or value. */
+  if (serving === version && lim.verdict === "MATCH" && differences.length === 0) {
+    console.log(`already byte-identical AND serving ${version} AND ${lim.why} AND every derived binding present; nothing to do`);
     process.exit(0);
   }
-  if (serving === version) console.log(`bytes identical and serving ${version}, but limits: ${lim.verdict} (${lim.why}) — a METADATA deploy proceeds.`);
-  console.log(`bytes are identical but the instance serves ${serving ?? "(unreadable)"} — a METADATA deploy proceeds (VERSION var, derived bindings).`);
+  if (serving === version && lim.verdict === "MATCH")
+    console.log(`bytes identical, serving ${version} and limits match, but the derived bindings differ on the script — a METADATA deploy proceeds (the same script, the new bindings): ${differences.join("; ")}.`);
+  if (serving === version && lim.verdict !== "MATCH") console.log(`bytes identical and serving ${version}, but limits: ${lim.verdict} (${lim.why}) — a METADATA deploy proceeds.`);
+  if (serving !== version)
+    console.log(`bytes are identical but the instance serves ${serving ?? "(unreadable)"} — a METADATA deploy proceeds (VERSION var, derived bindings).`);
 }
 
 for (let attempt = 1; attempt <= 4; attempt++) {

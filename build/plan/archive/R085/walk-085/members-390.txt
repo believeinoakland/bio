@@ -1,0 +1,153 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+S
+Working · not public · seen by your group's members
+Settings › Members
+Members
+1 wizard starts here
+
+Active members: 2 · Administrators: 1
+
+With one administrator, the group depends on that one person and the hosting account. You hold recovery codes (10 left).
+
+Add a second administrator
+
+HANDLE
+COVER
+ROLE
+MAY DO
+STATUS
+sparky
+administrator
+active
+bob-test
+Acts
+Test account for BOB
+member
+contribute
+active · invitation used
+MORE FOR ADMINISTRATORS
+Your group
+Places and offices
+Recovery codes
+INVITE A MEMBER
+A short id for this invitation
+Lower-case letters, digits and hyphens. They choose the handle the record shows when they join.
+The cover the group knows them by, not a legal name
+What they may do
+contributepublishstart projectsadminister
+Invite a member
+Reasoned
+
+Your group's Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.
+
+JOINING THROUGH YOUR WEBSITE
+
+Let your website invite people: an open form, or an application someone approves. Anyone let through can see the group's shared work.
+
+How many may join each day
+Days until it expires (1 to 30; seven if left empty)
+Create a website key
+Reasoned
+Turn on the reusable join link
+Reasoned
+THE GROUP'S API KEY
+
+No key is held. Members bring their own account, or use your group's Civicsmith without the assistant.
+
+The group's Anthropic API key
+Hold the group's API key
+Reasoned
+
+For a member's act in a project that has its own AI account, that project's account pays. Otherwise the member's own account, if they connected one; otherwise the group's key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.
+
+WHAT THIS ACCOUNT PAYS FOR
+Asking · on 
+Switch off
+Reasoned
+Drafting · on 
+Switch off
+Reasoned
+Runs · on 
+Switch off
+Reasoned
+Standing questions · off 
+Switch on
+Reasoned
+Interviews and planning · on 
+Switch off
+Reasoned
+Reading inside documents · on 
+Switch off
+Reasoned
+Reading page pictures · on 
+Switch off
+Reasoned
+A case's account · on 
+Switch off
+Reasoned
+Suggestions · off 
+Switch on
+Reasoned
+Exploring
+No
+Ask every day
+Yes
+Save
+Reasoned
+
+A use switched off here stops the assistant for that use whenever this account would pay. It does not move on to another account.
+
+LIMITS ON THIS ACCOUNT
+Limit on
+Everything (the overall limit)
+Asking
+Drafting
+Runs
+Standing questions
+Interviews and planning
+Reading inside documents
+Reading page pictures
+A case's account
+Exploring
+Each member's use
+Amount
+In
+(dollars, estimated)
+tokens
+calls
+Each
+day
+month
+For a limit on one use
+Part of the overall limitOn top of the overall limit
+Set a limit on the group's key
+Reasoned
+
+The first time a limit is reached in a period, this account's owners are told once in their queue; a member stopped by it is told whose limit it is, never a cost.
+
+THIS MONTH'S USE
+ESTIMATED DOLLARS A DAY, THE LAST 30 DAYS
+16 September 2026
+15 October 2026, today, so far
+Last 30 days: $0.00, 0 calls · busiest 16 September 2026, $0.00
+Everything (the overall limit) · (dollars, estimated) · month: $0.00 · No limit is set, so there is nothing to measure against: only Anthropic's own spending limit on the key caps this account.
+KEEPING OUR MATERIAL AWAY FROM AI
+
+Off. Members may use the group's key, a project's account or their own.
+
+Keeps the group's material away from AI, for every use or the ones you choose. It binds every account, the group's, any project's and members' own. Members see your reason on Settings › The assistant.
+
+Keep our material away from AI
+For every useOnly for these uses
+The uses
+AskingDraftingRunsStanding questionsInterviews and planningReading inside documentsReading page picturesA case's accountExploring
+Why (every member will see this)
+Keep the group's material away from AI, with a reason
+Reasoned
+Home
+Queue
+Add
+Find
+More

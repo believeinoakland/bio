@@ -45,6 +45,25 @@ export const PARTS = Object.freeze({
     const n = Number(String(page || "").trim());
     return { captureSha: s, extent: Number.isInteger(n) && n > 0 ? { kind: "pdf-page", page: n - 1 } : { kind: "document" } };
   },
+  /** R34: "Which document": a choice among the documents `heldcaptures` answers (`view.data.docs`), by title, each value the
+   *  capture's digest (`capture.sha256`, capture R77), never typed. With none, the choice's empty state is drawn and nothing is
+   *  sent. The passage on the document is the whole document until the page lets a member select its words. */
+  docChoice(cs, view, id, o) {
+    const d = view.data && view.data.docs;
+    o = o || {};
+    if (d && d.state === "failed") return cs.state("docs", view, () => "");
+    const rows = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
+    const options = rows.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256)
+      .map((r) => ({ value: r.capture.sha256, text: r.title || cs.w("screen.held.untitled").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e])) }));
+    if (d && d.state !== "loading" && !options.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+    return cs.choice(id, o.label || "form.choose.document", options, {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
+      + (o.passage === false ? "" : `<p class="mk-small">${cs.w("form.choose.passage")}</p>`);
+  },
+  /** R34: the passage the member chose: the chosen document's digest and its whole-document extent, else null. */
+  chosen(cs, id) {
+    const s = String(cs.value(id) || "").trim().toLowerCase();
+    return /^[0-9a-f]{64}$/.test(s) ? { captureSha: s, extent: { kind: "document" } } : null;
+  },
   /** A record id drawn as a reference to its screen (interface-shell R16): a person or organisation the record follows
    *  opens `person`, a document, capture, question or project its own; anything else carries its card only. */
   refOf(cs, id, label, facts, kind) {
@@ -118,16 +137,24 @@ export const PARTS = Object.freeze({
       kids.forEach((id, j) => { const a = t + (j - (kids.length - 1) / 2) * 0.55; pos[id] = [CX + R2 * Math.cos(a) * 1.25, CY + R2 * Math.sin(a) * 0.93]; });
     });
     nodes.forEach((n, i) => { if (!pos[n.id]) pos[n.id] = [60 + (i % 10) * 80, H - 30]; });
+    /* R35: an ENT- node's kind word is its `entity_kind` (explore R25); a document and a payment keep their own */
+    const KIND_OF = { person: "person", office: "office", body: "org", institution: "org", movement: "org", program: "org", fund: "fund" };
     const thingOf = (id) => {
       if (/^(INFO|INF)-/.test(id)) return "doc";
       if (/^MNY-/.test(id)) return "pay";
       if (!/^ENT-/.test(id)) return null;
-      const ps = steps.filter((s) => (o && o.groupOf && o.groupOf(s.kind)) === "pos");
-      if (ps.some((s) => s.to === id)) return "org";
-      if (ps.some((s) => s.from === id)) return "person";
-      return null;
+      const n = nodes.find((x) => x.id === id);
+      return KIND_OF[n && n.entity_kind] || "entity";
     };
-    const label = (id) => names[id] || id;
+    /* R35: a node is drawn by its `label`; `null` means the record holds no name for it: never its id */
+    const unnamed = cs.w("connection.node.unnamed");
+    const label = (id) => {
+      const n = nodes.find((x) => x.id === id);
+      const l = n && typeof n.label === "string" && n.label.trim() ? n.label : names[id];
+      return l || unnamed.replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
+    };
+    const isUnnamed = (id) => { const n = nodes.find((x) => x.id === id); return !(n && typeof n.label === "string" && n.label.trim()) && !names[id]; };
+    const tipOf = (id) => cs.w("connection.node.unnamed.tip", { kind: cs.w("connection.thing." + (thingOf(id) || "entity")) });
     const shape = (t, r) => (t === "person" ? `<circle r="${r}"/>` : t === "doc" ? `<path d="M${-r} ${-r * 0.85} h${r * 1.45} l${r * 0.55} ${r * 0.55} v${r * 1.15} h${-2 * r} z"/>`
       : t === "pay" ? `<path d="M0 ${-r} L${r} 0 L0 ${r} L${-r} 0 z"/>` : `<rect x="${-r}" y="${-r * 0.78}" width="${2 * r}" height="${1.56 * r}" rx="3"/>`);
     const pairCount = {}, pairSeen = {};
@@ -157,7 +184,7 @@ export const PARTS = Object.freeze({
     const nodeSvg = nodes.map((n) => {
       const [x, y] = pos[n.id]; const c = n.id === centre, r = c ? 30 : 22, t = thingOf(n.id), lim = limit.has(n.id) && !c;
       const nm = label(n.id); const short = nm.length > 26 ? nm.slice(0, 25) + "…" : nm;
-      return `<g class="node${c ? " center" : ""}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" data-node="${cs.esc(n.id)}">${shape(t, r)}${lim ? `<circle class="lim" r="${r + 7}"/>` : ""}`
+      return `<g class="node${c ? " center" : ""}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" data-node="${cs.esc(n.id)}"${isUnnamed(n.id) ? ` data-tip="${cs.esc(tipOf(n.id))}"` : ""}>${shape(t, r)}${lim ? `<circle class="lim" r="${r + 7}"/>` : ""}`
         + `<text class="n" y="${r + 16}" text-anchor="middle">${cs.esc(short)}</text>${lim ? `<text class="lim" y="${r + 30}" text-anchor="middle">${cs.w("connection.graph.limit")}</text>` : ""}</g>`;
     }).join("");
     /* the same things as a list: references, the controls, the limits and each step's citation */
@@ -165,7 +192,7 @@ export const PARTS = Object.freeze({
       : `<a class="cs-btn" data-tone="quiet" data-nav href="/app/explore/${encodeURIComponent(id)}">${cs.w("connection.graph.click")}</a>`);
     const list = nodes.map((n) => {
       const t = thingOf(n.id);
-      return cs.row("", `<b>${cs.ref(/^ENT-/.test(n.id) ? "person" : /^(INFO|INF)-/.test(n.id) ? "document" : "record", n.id, label(n.id), [])}</b>${t ? ` <span class="mk-small">${cs.w("connection.thing." + t)}</span>` : ""}`
+      return cs.row("", `<b>${cs.ref(/^ENT-/.test(n.id) ? "person" : /^(INFO|INF)-/.test(n.id) ? "document" : "record", n.id, label(n.id), isUnnamed(n.id) ? [tipOf(n.id).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]))] : [])}</b>${t ? ` <span class="mk-small"${isUnnamed(n.id) ? ` data-tip="${cs.esc(tipOf(n.id))}"` : ""}>${cs.w("connection.thing." + t)}</span>` : ""}`
         + (limit.has(n.id) && n.id !== centre ? ` <span class="mk-small" data-limit="${cs.esc(n.id)}"><b>${cs.w("connection.graph.limit")}</b> · ${cs.w("connection.graph.limit.means")}</span>` : ""),
         n.id === centre ? `<span class="mk-small">${cs.w("connection.graph.center.means")}</span>` : press(n.id));
     }).join("");
@@ -173,9 +200,13 @@ export const PARTS = Object.freeze({
       const c = classOf(s);
       const ev = (Array.isArray(s.evidence) ? s.evidence : []).map((e) => (e.capture_sha ? cs.ref("capture", e.capture_sha, cs.w(o.words.cited), []) : e.source ? cs.esc(String(e.source)) : "")).filter(Boolean).join(" ");
       const letter = s.grade && /^[A-D]$/.test(s.grade.assertion || "") ? cs.grade("connection", s.grade.assertion) : "";
+      /* R35, R17: a step a member backed with a passage shows who attached it and when beside its citation, and offers its withdrawal */
+      const by = s.kind === "step_source" && s.attached_by
+        ? ` <span class="mk-small" data-attached="${cs.esc(s.id)}">${cs.w(o.words.attached, { by: String(s.attached_by).replace(/^member:/, ""), date: cs.date(s.at || "") })}</span>` : "";
+      const wd = s.kind === "step_source" && o && o.withdraw ? cs.act("stepsourcewithdraw", { label: o.words.withdraw, data: { id: s.id } }) : "";
       return cs.row(letter, `<b>${cs.esc(label(s.from))}</b> → <i>${cs.esc(s.word || s.kind)}</i> → <b>${cs.esc(label(s.to))}</b>`
         + (c === "lead" ? ` <b>${cs.w(s.label === "hunch" || s.class === "hunch" ? o.words.hunch : o.words.declared)}</b>` : ""),
-        (ev ? ev : c === "lead" ? "" : cs.mark("gap", "undetermined", { reason: cs.w(o.words.nosource) })));
+        (ev ? ev : c === "lead" ? "" : cs.mark("gap", "undetermined", { reason: cs.w(o.words.nosource) })) + by + wd);
     }).join("");
     const trail = (o && Array.isArray(o.trail) ? o.trail : [centre]);
     const trailHtml = `<div class="mk-trail"><span class="k" data-tip="${cs.esc(cs.w("connection.graph.trail.means"))}">${cs.w("connection.graph.trail.label")}</span>`

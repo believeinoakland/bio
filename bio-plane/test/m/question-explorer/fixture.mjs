@@ -123,7 +123,7 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true, aiA
     runs: new Map(), bounds: new Map(),
     /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
     testBars: [bar("investigate"), bar("explore")], verifications: [VERIFIED_CHECK],
-    groupResults: [], openRefuse: null,
+    groupResults: [], openRefuse: null, closeRefuse: null, closeThrows: false, openDelay: 0,
     /* ai-runs R78's `testInstance()`: the deployment's fact, false unless a test sets it. */
     testInstance: false,
     row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
@@ -143,8 +143,9 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true, aiA
     /* R73 (K2490): the run opens first, then its system step is created through the real steps' stepCreate with `run`
        the open run (steps R1's machine arm, held through the run holder the fixture registers as ai-runs would); the
        answer names the step. */
-    open(a) {
+    async open(a) {
       note("open", a);
+      if (w.openDelay) await new Promise((r) => setTimeout(r, w.openDelay));
       if (w.openRefuse) return w.openRefuse;
       w.runs.set(a.run, { ...a, status: "running" });
       for (const b of a.bounds || []) w.bounds.set(`${a.run}|${b.bound}`, { allowed: b.allowed, consumed: 0 });
@@ -154,9 +155,16 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true, aiA
       w.runs.get(a.run).step = made.step;
       return { ok: true, run: a.run, status: "running", step: made.step };
     },
-    /* R73: at close it ends the run's step as steps R5 allows a machine. */
-    close(a) {
+    /* R73: at close it ends the run's step as steps R5 allows a machine. R17: asynchronous, as ai-runs' is, and it
+       refuses what ai-runs refuses: a bound outside RUN_BOUNDS and RUN_ENDINGS (run-rules' `checkBound`) or a condition
+       outside CONDITION_KINDS (`checkCondition`), answered in its refusal shape (`terminated: false`, the code); `w.closeRefuse`
+       is a refusal a test sets; success answers the real shape (`terminated: true`, no `ok`). */
+    async close(a) {
       note("close", a);
+      if (w.closeThrows) throw new Error("ai-runs could not be reached");
+      if (w.closeRefuse) return w.closeRefuse;
+      const bad = runRules.checkBound(a.bound) || runRules.checkCondition(a.condition);
+      if (bad) return { run: a.run, found: true, terminated: false, ...bad };
       const r = w.runs.get(a.run);
       if (r) {
         r.status = "stopped";
@@ -165,7 +173,7 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true, aiA
         const e = realSteps.stepEnd(end);
         if (!e || e.ok === false) throw new Error(`stepEnd: ${JSON.stringify(e)}`);
       }
-      return { ok: true, run: a.run, actual: { usd: 0.42 } };
+      return { run: a.run, found: true, terminated: true, actual: { usd: 0.42 } };
     },
     /* R28: the run as run-productions reads it (sight through membership, as ai-runs answers it). */
     runFor(run, viewer) {
@@ -368,7 +376,7 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true, aiA
   /* One tick with `owner`'s exploring set to yes, answering the run it opened. */
   w.openRun = async (owner = "group", question = Q) => {
     await w.setExplore(owner, "yes");
-    const t = p.exploreTick(clock.now);
+    const t = await p.exploreTick(clock.now);
     const o = t.opened.find((x) => x.question === question);
     if (!o) throw new Error(`no run opened: ${JSON.stringify(t)}`);
     return o;

@@ -278,7 +278,7 @@
   },
   {
    "key": "contradiction.why.two_things_group",
-   "en": "two things the group HOLDS about one subject — the case that carries a duty",
+   "en": "two things the team HOLDS about one subject — the case that carries a duty",
    "protected": false,
    "note": "DEC-260: contradiction, why"
   },
@@ -368,13 +368,13 @@
   },
   {
    "key": "contradiction.reading",
-   "en": "questions exist and none of them holds an ACCEPTED reading. A suggested, considering or rejected reading is not something the group HOLDS, so there is no held assertion to pair. Nothing is claimed about what the questions would say if they were read",
+   "en": "questions exist and none of them holds an ACCEPTED reading. A suggested, considering or rejected reading is not something the team HOLDS, so there is no held assertion to pair. Nothing is claimed about what the questions would say if they were read",
    "protected": false,
    "note": "DEC-260: contradiction, reading"
   },
   {
    "key": "contradiction.claim",
-   "en": "accepted readings exist and none of them carries a CLAIM. What the group holds is therefore unstated in the one field this key can read, which is absence in OUR record rather than agreement in it",
+   "en": "accepted readings exist and none of them carries a CLAIM. What the team holds is therefore unstated in the one field this key can read, which is absence in OUR record rather than agreement in it",
    "protected": false,
    "note": "DEC-260: contradiction, claim"
   },
@@ -512,7 +512,7 @@
   },
   {
    "key": "contradiction.why.two_questions_registered",
-   "en": "two questions about the same registered subject, each with a reading the group ACCEPTED and a claim it therefore holds. Whether they can both be so is not read here",
+   "en": "two questions about the same registered subject, each with a reading the team ACCEPTED and a claim it therefore holds. Whether they can both be so is not read here",
    "protected": false,
    "note": "DEC-260: contradiction, why"
   },
@@ -1070,7 +1070,7 @@
   },
   {
    "key": "case-grammar.not_recomputed",
-   "en": "not recomputed here: a workbook this group's Civicsmith did not recompute",
+   "en": "not recomputed here: a workbook this team's Civicsmith did not recompute",
    "protected": false,
    "note": "DEC-260: case-grammar, not_recomputed"
   },
@@ -1316,7 +1316,7 @@
   },
   {
    "key": "case-grammar.p.get_checker_file",
-   "en": "1. Get the checker, one file, from the publishing group's public read {program}, and the specification of the case file's format from {specification}.",
+   "en": "1. Get the checker, one file, from the publishing team's public read {program}, and the specification of the case file's format from {specification}.",
    "protected": false,
    "note": "DEC-260: case-grammar, p()"
   },
@@ -1376,7 +1376,7 @@
   },
   {
    "key": "case-grammar.esc.group_finding",
-   "en": "{head}. This is another group's finding.",
+   "en": "{head}. This is another team's finding.",
    "protected": false,
    "note": "DEC-260: case-grammar, esc()"
   },
@@ -1502,7 +1502,7 @@
   },
   {
    "key": "case-grammar.p.account_publisher_sentence",
-   "en": "The account is the publisher's own, sentence by sentence; every sentence rests on what it cites. A sentence framed by the group's declared bias is marked, and its statement named.",
+   "en": "The account is the publisher's own, sentence by sentence; every sentence rests on what it cites. A sentence framed by the team's declared bias is marked, and its statement named.",
    "protected": false,
    "note": "DEC-260: case-grammar, p()"
   },
@@ -1538,7 +1538,7 @@
   },
   {
    "key": "case-grammar.p.group_rule_force",
-   "en": "The group's rule in force at signing required approval by: {set_by}{set_at}.",
+   "en": "The team's rule in force at signing required approval by: {set_by}{set_at}.",
    "protected": false,
    "note": "DEC-260: case-grammar, p()"
   },
@@ -1562,7 +1562,7 @@
   },
   {
    "key": "case-grammar.text.attested_member_group",
-   "en": "Attested by a member of the group, credited to the {level}{at}.",
+   "en": "Attested by a member of the team, credited to the {level}{at}.",
    "protected": false,
    "note": "DEC-260: case-grammar, text"
   },
@@ -1586,7 +1586,7 @@
   },
   {
    "key": "case-grammar.text.vouched_group_under",
-   "en": "Vouched for by the group {by}, under this case's own signature.",
+   "en": "Vouched for by the team {by}, under this case's own signature.",
    "protected": false,
    "note": "DEC-260: case-grammar, text"
   },
@@ -1604,19 +1604,19 @@
   },
   {
    "key": "case-grammar.scrutiny",
-   "en": "a source this group checks more closely before relying on it",
+   "en": "a source this team checks more closely before relying on it",
    "protected": false,
    "note": "DEC-260: case-grammar, scrutiny"
   },
   {
    "key": "case-grammar.inference",
-   "en": "an inference this group allows or refuses to draw",
+   "en": "an inference this team allows or refuses to draw",
    "protected": false,
    "note": "DEC-260: case-grammar, inference"
   },
   {
    "key": "case-grammar.pattern",
-   "en": "a pattern this group has evidence an institution or source follows",
+   "en": "a pattern this team has evidence an institution or source follows",
    "protected": false,
    "note": "DEC-260: case-grammar, pattern"
   },
@@ -1628,7 +1628,7 @@
   },
   {
    "key": "case-grammar.freeze.group_declares_lens",
-   "en": "This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material.",
+   "en": "This team declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material.",
    "protected": false,
    "note": "DEC-260: case-grammar, Object.freeze()#0"
   },
@@ -1664,9 +1664,9 @@
   },
   {
    "key": "case-grammar.group",
-   "en": "the group that publishes this case",
+   "en": "the team that publishes this case",
    "protected": false,
-   "note": "DEC-260: case-grammar, group"
+   "note": "DEC-260: case-grammar, team"
   },
   {
    "key": "case-grammar.project",
@@ -1676,7 +1676,7 @@
   },
   {
    "key": "case-grammar.cover",
-   "en": "the cover the group knows its author by",
+   "en": "the cover the team knows its author by",
    "protected": false,
    "note": "DEC-260: case-grammar, cover"
   },
@@ -1688,7 +1688,7 @@
   },
   {
    "key": "case-grammar.text.case_rests_directly",
-   "en": "This case rests, directly or through another finding, on {count} firsthand observation{plural} recorded by a member of this group. What it shows of who SAID each one is that member's own choice, made for this edition and never filled in for them. An observation names no person in its own bytes; the words below are the whole of the attribution.",
+   "en": "This case rests, directly or through another finding, on {count} firsthand observation{plural} recorded by a member of this team. What it shows of who SAID each one is that member's own choice, made for this edition and never filled in for them. An observation names no person in its own bytes; the words below are the whole of the attribution.",
    "protected": false,
    "note": "DEC-260: case-grammar, text"
   },
@@ -1706,7 +1706,7 @@
   },
   {
    "key": "case-grammar.map.record_names_producing",
-   "en": "(this record names no producing group, so none is printed)",
+   "en": "(this record names no producing team, so none is printed)",
    "protected": false,
    "note": "DEC-260: case-grammar, .map()#0"
   },
@@ -2666,7 +2666,7 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_PUBLISH",
-   "en": "Publishing puts the group's name on a case, together with an assertion that it is complete and a stated position on putting it to the people it concerns. Both of those are declared judgments, and the credential that asked here is an automated one. It can assemble the case; sign in to publish it.",
+   "en": "Publishing puts the team's name on a case, together with an assertion that it is complete and a stated position on putting it to the people it concerns. Both of those are declared judgments, and the credential that asked here is an automated one. It can assemble the case; sign in to publish it.",
    "protected": false,
    "note": "DEC-260: case-authoring, refusal by its code"
   },
@@ -2678,7 +2678,7 @@
   },
   {
    "key": "refusal.CALCULATION_NOT_DISCLOSED",
-   "en": "A calculation a load-bearing finding rests on gives a different result when your group's Civicsmith recomputes it, or rests on a figure typed in without a source, and this publication does not say so. List it with your own words, and publish again; the published case will state it. Nothing was published.",
+   "en": "A calculation a load-bearing finding rests on gives a different result when your team's Civicsmith recomputes it, or rests on a figure typed in without a source, and this publication does not say so. List it with your own words, and publish again; the published case will state it. Nothing was published.",
    "protected": false,
    "note": "DEC-260: case-authoring, refusal by its code"
   },
@@ -2756,7 +2756,7 @@
   },
   {
    "key": "case-authoring.document.row_adoption_scope",
-   "en": "each row is an adoption in this scope whose pinned revision the group had proposed and not accepted when this case was signed; that revision was not in force at signing",
+   "en": "each row is an adoption in this scope whose pinned revision the team had proposed and not accepted when this case was signed; that revision was not in force at signing",
    "protected": false,
    "note": "DEC-260: case-authoring, page/document"
   },
@@ -2780,7 +2780,7 @@
   },
   {
    "key": "case-authoring.body.conclusion_belongs_project",
-   "en": "A conclusion belongs to a PROJECT'S RELATIONSHIP with a question, never to the question alone: an inquiry can be shared, and one team concluding it does not move another team's stance. Each member below is named with the relationship whose conclusion this case rests on, and with the claim that relationship adopted, frozen as it stood at publication.",
+   "en": "A conclusion belongs to a PROJECT'S RELATIONSHIP with a question, never to the question alone: an inquiry can be shared, and one project concluding it does not move another project's stance. Each member below is named with the relationship whose conclusion this case rests on, and with the claim that relationship adopted, frozen as it stood at publication.",
    "protected": false,
    "note": "DEC-260: case-authoring, =body"
   },
@@ -2912,7 +2912,7 @@
   },
   {
    "key": "case-authoring.body.project_override_named",
-   "en": "{lock_violations} project override(s) named a LOCKED group-wide statement and were refused their effect; the group-wide statement stands in the set hashed above.",
+   "en": "{lock_violations} project override(s) named a LOCKED team-wide statement and were refused their effect; the team-wide statement stands in the set hashed above.",
    "protected": false,
    "note": "DEC-260: case-authoring, =body"
   },
@@ -2924,13 +2924,13 @@
   },
   {
    "key": "case-authoring.body.manifest_force_case",
-   "en": "NO MANIFEST WAS IN FORCE for {scope_id} when this case was published: no bias set stood adopted for the group or this project. That is stated, not left blank — it is a different fact from a lens with nothing in it.",
+   "en": "NO MANIFEST WAS IN FORCE for {scope_id} when this case was published: no bias set stood adopted for the team or this project. That is stated, not left blank — it is a different fact from a lens with nothing in it.",
    "protected": false,
    "note": "DEC-260: case-authoring, =body"
   },
   {
    "key": "case-authoring.body.adoption_pinned_proposed",
-   "en": "AN ADOPTION PINNED A PROPOSED REVISION when this case was signed: {adoptions} in this scope pinned a revision the group had proposed and not accepted. It was not in force at signing, and it is not part of any lens this document names.",
+   "en": "AN ADOPTION PINNED A PROPOSED REVISION when this case was signed: {adoptions} in this scope pinned a revision the team had proposed and not accepted. It was not in force at signing, and it is not part of any lens this document names.",
    "protected": false,
    "note": "DEC-260: case-authoring, =body"
   },
@@ -3026,7 +3026,7 @@
   },
   {
    "key": "case-authoring.document.calculation_recomputed_case",
-   "en": "Each calculation below was recomputed when the case was published, never on a later read. A result that differs, or an input typed in with no source, is disclosed here by the group and does not stop publication.",
+   "en": "Each calculation below was recomputed when the case was published, never on a later read. A result that differs, or an input typed in with no source, is disclosed here by the team and does not stop publication.",
    "protected": false,
    "note": "DEC-260: case-authoring, page/document"
   },
@@ -3038,13 +3038,13 @@
   },
   {
    "key": "case-authoring.rows.map",
-   "en": "Disclosed by the group: {disclosed}",
+   "en": "Disclosed by the team: {disclosed}",
    "protected": false,
    "note": "DEC-260: case-authoring, rows.map()"
   },
   {
    "key": "case-authoring.document.timeline_read_case",
-   "en": "The timeline could not be read when this case was published ({unread}). It is stated as not read, not as empty: this case claims nothing about what happened or what the group did.",
+   "en": "The timeline could not be read when this case was published ({unread}). It is stated as not read, not as empty: this case claims nothing about what happened or what the team did.",
    "protected": false,
    "note": "DEC-260: case-authoring, page/document"
   },
@@ -3056,7 +3056,7 @@
   },
   {
    "key": "case-authoring.document.frozen_case_published",
-   "en": "Frozen when this case was published. What happened in the world and what the group did are two lists and are never merged into one.",
+   "en": "Frozen when this case was published. What happened in the world and what the team did are two lists and are never merged into one.",
    "protected": false,
    "note": "DEC-260: case-authoring, page/document"
   },
@@ -3068,7 +3068,7 @@
   },
   {
    "key": "case-authoring.document.group_act_marked",
-   "en": "{kept} of the group's own act(s) were not marked public by the record that holds them and are left out of this published record of what we did.",
+   "en": "{kept} of the team's own act(s) were not marked public by the record that holds them and are left out of this published record of what we did.",
    "protected": false,
    "note": "DEC-260: case-authoring, page/document"
   },
@@ -3086,7 +3086,7 @@
   },
   {
    "key": "case-authoring.notice_seals_sentence",
-   "en": "This project has a public notice that the group is working on it, so publishing this edition also opens the notice's sealed weeks for the work this edition publishes.",
+   "en": "This project has a public notice that the team is working on it, so publishing this edition also opens the notice's sealed weeks for the work this edition publishes.",
    "protected": false,
    "note": "DEC-260: case-authoring, =NOTICE_SEALS_SENTENCE"
   },
@@ -3104,7 +3104,7 @@
   },
   {
    "key": "case-authoring.republish_sentence",
-   "en": "The published case republishes in full every document it includes, and judging whether they may be republished, copyright included, is the group's.",
+   "en": "The published case republishes in full every document it includes, and judging whether they may be republished, copyright included, is the team's.",
    "protected": false,
    "note": "DEC-260: case-authoring, =REPUBLISH_SENTENCE"
   },
@@ -3206,19 +3206,19 @@
   },
   {
    "key": "case-authoring.stated.approvals_group_rule",
-   "en": "the approvals the group's rule requires could not be read",
+   "en": "the approvals the team's rule requires could not be read",
    "protected": false,
    "note": "DEC-260: case-authoring, stated"
   },
   {
    "key": "case-authoring.says.signing_waits_until",
-   "en": "Signing waits until every approver the group names has approved this version. An approval given after this preparation is carried once the case is prepared again; its version does not change.",
+   "en": "Signing waits until every approver the team names has approved this version. An approval given after this preparation is carried once the case is prepared again; its version does not change.",
    "protected": false,
    "note": "DEC-260: case-authoring, says"
   },
   {
    "key": "case-authoring.says.approval_group_requires",
-   "en": "Every approval the group requires is given for this version, and the document carries them.",
+   "en": "Every approval the team requires is given for this version, and the document carries them.",
    "protected": false,
    "note": "DEC-260: case-authoring, says"
   },
@@ -4004,7 +4004,7 @@
   },
   {
    "key": "observation-log.plane",
-   "en": "the scheduler of your group's Civicsmith looked, with no member and no machine behind it",
+   "en": "the scheduler of your team's Civicsmith looked, with no member and no machine behind it",
    "protected": false,
    "note": "DEC-260: observation-log, plane"
   },
@@ -4046,13 +4046,13 @@
   },
   {
    "key": "observation-log.objective",
-   "en": "a standing objective your group's Civicsmith is monitoring for",
+   "en": "a standing objective your team's Civicsmith is monitoring for",
    "protected": false,
    "note": "DEC-260: observation-log, objective"
   },
   {
    "key": "observation-log.step",
-   "en": "a step a member or your group's Civicsmith took in pursuit of a question, and the look it made",
+   "en": "a step a member or your team's Civicsmith took in pursuit of a question, and the look it made",
    "protected": false,
    "note": "DEC-260: observation-log, step"
   },
@@ -4154,7 +4154,7 @@
   },
   {
    "key": "observation-log.parts.push.document_pages_engine",
-   "en": "this document has pages no engine in your group's Civicsmith could read",
+   "en": "this document has pages no engine in your team's Civicsmith could read",
    "protected": false,
    "note": "DEC-260: observation-log, parts.push()"
   },
@@ -4538,13 +4538,13 @@
   },
   {
    "key": "queue-producers.text.group",
-   "en": "of the group {group}",
+   "en": "of the team {group}",
    "protected": false,
    "note": "DEC-260: queue-producers, text"
   },
   {
    "key": "queue-producers.text.group_2",
-   "en": "of another group",
+   "en": "of another team",
    "protected": false,
    "note": "DEC-260: queue-producers, text"
   },
@@ -4616,7 +4616,7 @@
   },
   {
    "key": "queue-producers.summary.entry_publisher_docket",
-   "en": "an entry on the publisher's docket for {e}, which you follow, failed the checks your group's Civicsmith makes",
+   "en": "an entry on the publisher's docket for {e}, which you follow, failed the checks your team's Civicsmith makes",
    "protected": false,
    "note": "DEC-260: queue-producers, summary"
   },
@@ -4718,7 +4718,7 @@
   },
   {
    "key": "queue-producers.detail.edition_signed_waits",
-   "en": "This edition is signed and waits to publish on {date}{time}, the group's own time. Nothing of it is public until then. At that time every check it passed at signing is run again, and it is published only if nothing has changed. An owner of the case's project may move the time or cancel it{moved_clause}.",
+   "en": "This edition is signed and waits to publish on {date}{time}, the team's own time. Nothing of it is public until then. At that time every check it passed at signing is run again, and it is published only if nothing has changed. An owner of the case's project may move the time or cancel it{moved_clause}.",
    "protected": false,
    "note": "DEC-260: queue-producers, =detail"
   },
@@ -4790,7 +4790,7 @@
   },
   {
    "key": "queue-producers.summary.place_group_named",
-   "en": "the place your group named",
+   "en": "the place your team named",
    "protected": false,
    "note": "DEC-260: queue-producers, summary"
   },
@@ -4808,7 +4808,7 @@
   },
   {
    "key": "queue-producers.summary.newer_approved_version",
-   "en": "{base_name} has a newer approved version, {base_version}, than your group's copy {name} was made from",
+   "en": "{base_name} has a newer approved version, {base_version}, than your team's copy {name} was made from",
    "protected": false,
    "note": "DEC-260: queue-producers, summary"
   },
@@ -5012,7 +5012,7 @@
   },
   {
    "key": "following.bad.end_date_day",
-   "en": "an end date is a day after today ({today}), in the group's own zone",
+   "en": "an end date is a day after today ({today}), in the team's own zone",
    "protected": false,
    "note": "DEC-260: following, bad"
   },
@@ -5060,7 +5060,7 @@
   },
   {
    "key": "following.text.group_standing_watch",
-   "en": "the group's standing watch of a policy it holds",
+   "en": "the team's standing watch of a policy it holds",
    "protected": false,
    "note": "DEC-260: following, text"
   },
@@ -5144,7 +5144,7 @@
   },
   {
    "key": "following.note.proceeding_dates_group",
-   "en": "the proceeding's own dates and the group's own deadlines on it, kept apart; neither is a finding",
+   "en": "the proceeding's own dates and the team's own deadlines on it, kept apart; neither is a finding",
    "protected": false,
    "note": "DEC-260: following, note"
   },
@@ -5180,7 +5180,7 @@
   },
   {
    "key": "following.watch",
-   "en": "the group's standing watch of a policy it holds: no member made it, and it ends when the policy is superseded",
+   "en": "the team's standing watch of a policy it holds: no member made it, and it ends when the policy is superseded",
    "protected": false,
    "note": "DEC-260: following, watch"
   },
@@ -5720,13 +5720,13 @@
   },
   {
    "key": "case-checker.rest_on_another_group_statement",
-   "en": "Part of this case rests on another group's published finding. That part is checked against that group's own case file, named here, and not on that group's behalf here.",
+   "en": "Part of this case rests on another team's published finding. That part is checked against that team's own case file, named here, and not on that team's behalf here.",
    "protected": false,
    "note": "DEC-260: case-checker, =REST_ON_ANOTHER_GROUP_STATEMENT"
   },
   {
    "key": "case-checker.keys_not_checked_statement",
-   "en": "The signing keys were not checked against the group's published list of keys, because no list was given to this check.",
+   "en": "The signing keys were not checked against the team's published list of keys, because no list was given to this check.",
    "protected": false,
    "note": "DEC-260: case-checker, =KEYS_NOT_CHECKED_STATEMENT"
   },
@@ -5828,7 +5828,7 @@
   },
   {
    "key": "case-checker.gap.group_attestation_case",
-   "en": "the group's attestation of {ref} is the case document's signature, which is not carried",
+   "en": "the team's attestation of {ref} is the case document's signature, which is not carried",
    "protected": false,
    "note": "DEC-260: case-checker, gap()#0"
   },
@@ -6008,7 +6008,7 @@
   },
   {
    "key": "refusal.NOT_AN_ADMIN",
-   "en": "Only an active administrator of this group can do that, and the account asking is not one of them here. The record reads who is asking from the signed-in session, never from the request. Nothing was changed.",
+   "en": "Only an active administrator of this team can do that, and the account asking is not one of them here. The record reads who is asking from the signed-in session, never from the request. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
@@ -6038,13 +6038,13 @@
   },
   {
    "key": "refusal.LISTENER_MALFORMED",
-   "en": "A part of your group's Civicsmith tried to register a listener without naming itself or without a function to call, so nothing was registered. This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.",
+   "en": "A part of your team's Civicsmith tried to register a listener without naming itself or without a function to call, so nothing was registered. This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.LISTENER_DECLARED",
-   "en": "A part of your group's Civicsmith tried to register a listener it had already registered, or one that another part already holds, so the second registration was refused and the first still stands. This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.",
+   "en": "A part of your team's Civicsmith tried to register a listener it had already registered, or one that another part already holds, so the second registration was refused and the first still stands. This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
@@ -6068,7 +6068,7 @@
   },
   {
    "key": "refusal.LAST_ADMIN",
-   "en": "You are the only administrator of this group, so you cannot step down: the group would be left with nobody to run it. Nothing was changed. Add another administrator first, then resign.",
+   "en": "You are the only administrator of this team, so you cannot step down: the team would be left with nobody to run it. Nothing was changed. Add another administrator first, then resign.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
@@ -6086,7 +6086,7 @@
   },
   {
    "key": "refusal.WEBSITE_KEY_EXISTS",
-   "en": "Your group already has a live website key, and it holds one at a time. Nothing was created. Change the live key's settings, or switch it off and create a new one.",
+   "en": "Your team already has a live website key, and it holds one at a time. Nothing was created. Change the live key's settings, or switch it off and create a new one.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
@@ -6098,31 +6098,31 @@
   },
   {
    "key": "refusal.NO_WEBSITE_KEY",
-   "en": "Your group has no live website key, so there is none to change or switch off. Nothing was changed. An administrator can create one.",
+   "en": "Your team has no live website key, so there is none to change or switch off. Nothing was changed. An administrator can create one.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.WEBSITE_KEY_UNKNOWN",
-   "en": "This website key does not open this group: it was never made, was switched off, or is not a key at all, and the answer does not say which. Nothing was written.",
+   "en": "This website key does not open this team: it was never made, was switched off, or is not a key at all, and the answer does not say which. Nothing was written.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.WEBSITE_DAILY_CAP",
-   "en": "The website has made as many invitations today as the group allows it in a day. Nothing was written. Try again later, or ask an administrator to raise the daily number.",
+   "en": "The website has made as many invitations today as the team allows it in a day. Nothing was written. Try again later, or ask an administrator to raise the daily number.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.JOIN_LINK_ON",
-   "en": "Your group's join link is already on, and it has one at a time. Nothing was changed. Change its settings, replace it with a new link, or switch it off.",
+   "en": "Your team's join link is already on, and it has one at a time. Nothing was changed. Change its settings, replace it with a new link, or switch it off.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.JOIN_LINK_OFF",
-   "en": "Your group's join link is off, so there is none to change, replace or switch off. Nothing was changed. An administrator can switch one on.",
+   "en": "Your team's join link is off, so there is none to change, replace or switch off. Nothing was changed. An administrator can switch one on.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
@@ -6134,43 +6134,43 @@
   },
   {
    "key": "refusal.GROUP_KIND_UNKNOWN",
-   "en": "A group says what kind it is from the list: professional, issue-specific, neighborhood or community, catch-all, or one it describes itself, and may choose none. Something else was given. Nothing was written.",
+   "en": "A team says what kind it is from the list: professional, issue-specific, neighborhood or community, catch-all, or one it describes itself, and may choose none. Something else was given. Nothing was written.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code; American English, DEC-273"
   },
   {
    "key": "refusal.GROUP_KIND_OTHER_EMPTY",
-   "en": "You chose to describe your group's kind yourself and wrote nothing to describe it. Write it, or leave that choice out. Nothing was written.",
+   "en": "You chose to describe your team's kind yourself and wrote nothing to describe it. Write it, or leave that choice out. Nothing was written.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.GROUP_DESCRIPTION_TOO_LONG",
-   "en": "Part of what you wrote is longer than it may be: a kind you describe yourself is at most 120 characters, the focus at most 1,000 and why the group exists at most 4,000. Nothing was written.",
+   "en": "Part of what you wrote is longer than it may be: a kind you describe yourself is at most 120 characters, the focus at most 1,000 and why the team exists at most 4,000. Nothing was written.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.GROUP_VISIBILITY_UNKNOWN",
-   "en": "Who sees what your group says about itself is your members only, or the public as well, and nothing else. Nothing was written.",
+   "en": "Who sees what your team says about itself is your members only, or the public as well, and nothing else. Nothing was written.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.NO_SUCH_MEMBER",
-   "en": "No member of your group answers to the name or id given. Nothing was changed. Check the name, or add the person as a member first.",
+   "en": "No member of your team answers to the name or id given. Nothing was changed. Check the name, or add the person as a member first.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.FOUNDER_HANDLE_NOT_FOUNDER",
-   "en": "Only the founder of this group chooses the founder's handle, and the account asking is not the founder's. Nothing was changed.",
+   "en": "Only the founder of this team chooses the founder's handle, and the account asking is not the founder's. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
   {
    "key": "refusal.MEMBER_ID_RESERVED",
-   "en": "That member id is reserved. `admin` is the name your group's Civicsmith gives its founding administrator, and anything that checks whether someone is an administrator by name would read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id for this person.",
+   "en": "That member id is reserved. `admin` is the name your team's Civicsmith gives its founding administrator, and anything that checks whether someone is an administrator by name would read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id for this person.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
@@ -6200,7 +6200,7 @@
   },
   {
    "key": "refusal.NO_HOLDERS",
-   "en": "This records who holds access to the hosting account your group's Civicsmith runs in, and it named nobody. Write the people who hold that access. Nothing was written.",
+   "en": "This records who holds access to the hosting account your team's Civicsmith runs in, and it named nobody. Write the people who hold that access. Nothing was written.",
    "protected": false,
    "note": "DEC-260: membership, refusal by its code"
   },
@@ -6242,7 +6242,7 @@
   },
   {
    "key": "membership.says.member_enrolled_under",
-   "en": "a member is enrolled under the reserved id '{id}' (role {role}, status {status}). Every check that asks whether someone administers by name reads it as the founding administrator. It was enrolled before the id was reserved and has NOT been renamed: an administrator should decide what it is and re-enrol the person under another id",
+   "en": "a member is enrolled under the reserved id '{id}' (role {role}, status {status}). Every check that asks whether someone administers by name reads it as the founding administrator. It was enrolled before the id was reserved and has not been renamed: an administrator should decide what it is and re-enroll the person under another id",
    "protected": false,
    "note": "DEC-260: membership, says"
   },
@@ -6254,13 +6254,13 @@
   },
   {
    "key": "membership.remedy.active_administrator_group",
-   "en": "An active administrator of this group can add the owner; while any owner of the project is active, its owners add one instead.",
+   "en": "An active administrator of this team can add the owner; while any owner of the project is active, its owners add one instead.",
    "protected": false,
    "note": "DEC-260: membership, remedy"
   },
   {
    "key": "membership.remedy.active_administrator_group_confirm",
-   "en": "An active administrator of this group can confirm it, for any member, another administrator included.",
+   "en": "An active administrator of this team can confirm it, for any member, another administrator included.",
    "protected": false,
    "note": "DEC-260: membership, remedy"
   },
@@ -6296,7 +6296,7 @@
   },
   {
    "key": "membership.door_warning",
-   "en": "Anyone your website lets through can join and see your group's shared work, including people you are looking into. Keep sensitive work in hidden projects.",
+   "en": "Anyone your website lets through can join and see your team's shared work, including people you are looking into. Keep sensitive work in hidden projects.",
    "protected": false,
    "note": "DEC-260: membership, =DOOR_WARNING"
   },
@@ -6368,13 +6368,13 @@
   },
   {
    "key": "refusal.WIZARD_NOT_APPROVED",
-   "en": "Only an approved script is made group-wide, and this version is not the script's approved one.",
+   "en": "Only an approved script is made team-wide, and this version is not the script's approved one.",
    "protected": false,
    "note": "DEC-260: wizard-scripts, refusal by its code"
   },
   {
    "key": "refusal.WIZARD_NOT_THE_GROUPS",
-   "en": "This script is from the Civicsmith library, shipped with the release and read-only to every group. A group cannot edit, retire or withdraw it; it may write its own.",
+   "en": "This script is from the Civicsmith library, shipped with the release and read-only to every team. A team cannot edit, retire or withdraw it; it may write its own.",
    "protected": false,
    "note": "DEC-260: wizard-scripts, refusal by its code"
   },
@@ -6410,7 +6410,7 @@
   },
   {
    "key": "refusal.WIZARD_DRAFT_REFUSED",
-   "en": "A step's draft is the script's own words, a filing template offered here, or a labeled machine draft your group's Civicsmith registers, and this one is none of them.",
+   "en": "A step's draft is the script's own words, a filing template offered here, or a labeled machine draft your team's Civicsmith registers, and this one is none of them.",
    "protected": false,
    "note": "DEC-260: wizard-scripts, refusal by its code"
   },
@@ -6452,7 +6452,7 @@
   },
   {
    "key": "refusal.WIZARD_EDITOR_MEMBER_UNKNOWN",
-   "en": "The advanced editor is granted to a member of the group, and the one named is not one.",
+   "en": "The advanced editor is granted to a member of the team, and the one named is not one.",
    "protected": false,
    "note": "DEC-260: wizard-scripts, refusal by its code"
   },
@@ -6488,19 +6488,19 @@
   },
   {
    "key": "refusal.WRITING_HELP_NOTHING_TOLD",
-   "en": "Tell the assistant what you want to say first: it works only from what you tell it and what your group holds.",
+   "en": "Tell the assistant what you want to say first: it works only from what you tell it and what your team holds.",
    "protected": false,
    "note": "DEC-260: wizard-scripts, refusal by its code"
   },
   {
    "key": "refusal.WRITING_HELP_FACT_ADDED",
-   "en": "A sentence was left out because it said something you did not tell the assistant and your group's record does not hold.",
+   "en": "A sentence was left out because it said something you did not tell the assistant and your team's record does not hold.",
    "protected": false,
    "note": "DEC-260: wizard-scripts, refusal by its code"
   },
   {
    "key": "refusal.WRITING_HELP_SUGGESTIONS_OFF",
-   "en": "Your suggestions are switched off, so the assistant works only from what you typed and reads nothing your group holds.",
+   "en": "Your suggestions are switched off, so the assistant works only from what you typed and reads nothing your team holds.",
    "protected": false,
    "note": "DEC-260: wizard-scripts, refusal by its code"
   },
@@ -6632,7 +6632,7 @@
   },
   {
    "key": "store-door.md.material_handed_group",
-   "en": "Material handed to the group at its doorbell as knock {knock} by an unnamed knocker, and brought into the record by {member}. Its bytes are `{sha256}`, exactly as received; nothing here summarizes them.",
+   "en": "Material handed to the team at its doorbell as knock {knock} by an unnamed knocker, and brought into the record by {member}. Its bytes are `{sha256}`, exactly as received; nothing here summarizes them.",
    "protected": false,
    "note": "DEC-260: store-door, =md"
   },
@@ -6644,19 +6644,19 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_IMPORT",
-   "en": "Only a member, signed in as themselves, imports another group's case or acts on one. A machine, the assistant or an operator token cannot. Nothing was written.",
+   "en": "Only a member, signed in as themselves, imports another team's case or acts on one. A machine, the assistant or an operator token cannot. Nothing was written.",
    "protected": false,
    "note": "DEC-260: case-import, refusal by its code"
   },
   {
    "key": "refusal.IMPORT_NOT_A_MEMBER",
-   "en": "Only an active member of this group imports another group's case or acts on one. Nothing was written.",
+   "en": "Only an active member of this team imports another team's case or acts on one. Nothing was written.",
    "protected": false,
    "note": "DEC-260: case-import, refusal by its code"
   },
   {
    "key": "refusal.IMPORT_NOT_A_CASE_FILE",
-   "en": "What was given is not a case file your group's Civicsmith can read: each way it departs from the case-file format is named. Nothing was imported.",
+   "en": "What was given is not a case file your team's Civicsmith can read: each way it departs from the case-file format is named. Nothing was imported.",
    "protected": false,
    "note": "DEC-260: case-import, refusal by its code"
   },
@@ -6668,7 +6668,7 @@
   },
   {
    "key": "refusal.IMPORT_EDITION_DIFFERS",
-   "en": "Your group's Civicsmith already holds this edition of the case, and the case file given differs from it. An edition never changes, so both fingerprints are named for you to compare. Nothing was imported.",
+   "en": "Your team's Civicsmith already holds this edition of the case, and the case file given differs from it. An edition never changes, so both fingerprints are named for you to compare. Nothing was imported.",
    "protected": false,
    "note": "DEC-260: case-import, refusal by its code"
   },
@@ -6680,13 +6680,13 @@
   },
   {
    "key": "refusal.IMPORT_NO_SUCH_EDITION",
-   "en": "Your group's Civicsmith holds no imported edition by that name. Nothing was written.",
+   "en": "Your team's Civicsmith holds no imported edition by that name. Nothing was written.",
    "protected": false,
    "note": "DEC-260: case-import, refusal by its code"
   },
   {
    "key": "refusal.IMPORT_ACCEPT_NO_REASON",
-   "en": "Say, in your own words and at most 2,000 characters each, what you checked and why the group accepts it, or why it withdraws the acceptance. Nothing was written.",
+   "en": "Say, in your own words and at most 2,000 characters each, what you checked and why the team accepts it, or why it withdraws the acceptance. Nothing was written.",
    "protected": false,
    "note": "DEC-260: case-import, refusal by its code"
   },
@@ -6728,7 +6728,7 @@
   },
   {
    "key": "refusal.IMPORT_WATCH_BAD_ADDRESS",
-   "en": "That is not the public https address of the publishing group's copy. Give the address of their copy, with no query and no fragment. Nothing was written.",
+   "en": "That is not the public https address of the publishing team's copy. Give the address of their copy, with no query and no fragment. Nothing was written.",
    "protected": false,
    "note": "DEC-260: case-import, refusal by its code"
   },
@@ -6740,37 +6740,37 @@
   },
   {
    "key": "case-import.source_bar",
-   "en": "the source group's bar, as its case states it",
+   "en": "the source team's bar, as its case states it",
    "protected": false,
    "note": "DEC-260: case-import, =SOURCE_BAR"
   },
   {
    "key": "case-import.source_lens",
-   "en": "the source group's lens, as its case states it",
+   "en": "the source team's lens, as its case states it",
    "protected": false,
    "note": "DEC-260: case-import, =SOURCE_LENS"
   },
   {
    "key": "case-import.own_lens",
-   "en": "your group's own lens: its statements in force, the case's applications of them, the rest read as removed",
+   "en": "your team's own lens: its statements in force, the case's applications of them, the rest read as removed",
    "protected": false,
    "note": "DEC-260: case-import, =OWN_LENS"
   },
   {
    "key": "case-import.lens_undetermined",
-   "en": "Whether a statement this finding applies is in your group's lens cannot be determined, so it is not re-weighed under that lens; that is not a statement that it would not change.",
+   "en": "Whether a statement this finding applies is in your team's lens cannot be determined, so it is not re-weighed under that lens; that is not a statement that it would not change.",
    "protected": false,
    "note": "DEC-260: case-import, =LENS_UNDETERMINED"
   },
   {
    "key": "case-import.lens_not_reweighed",
-   "en": "This edition could not be re-weighed under your group's lens.",
+   "en": "This edition could not be re-weighed under your team's lens.",
    "protected": false,
    "note": "DEC-260: case-import, =LENS_NOT_REWEIGHED"
   },
   {
    "key": "case-import.no_own_bar",
-   "en": "no bar is set for this group",
+   "en": "no bar is set for this team",
    "protected": false,
    "note": "DEC-260: case-import, =NO_OWN_BAR"
   },
@@ -6794,25 +6794,25 @@
   },
   {
    "key": "case-import.no_move_seen",
-   "en": "No new edition or withdrawal of this case has been seen on its publisher's docket. That is not a statement that none was made: it says only what your group's Civicsmith has seen in its reads, as of the last read.",
+   "en": "No new edition or withdrawal of this case has been seen on its publisher's docket. That is not a statement that none was made: it says only what your team's Civicsmith has seen in its reads, as of the last read.",
    "protected": false,
    "note": "DEC-260: case-import, =NO_MOVE_SEEN"
   },
   {
    "key": "case-import.group_fields_label",
-   "en": "the source group's public identity and declared stake, as it stated them when they were read; unsigned, not part of the edition, and never your group's",
+   "en": "the source team's public identity and declared stake, as it stated them when they were read; unsigned, not part of the edition, and never your team's",
    "protected": false,
    "note": "DEC-260: case-import, =GROUP_FIELDS_LABEL"
   },
   {
    "key": "case-import.group_fields_none",
-   "en": "The source group's public identity and declared stake were not recorded when this edition was imported, so they are not known here. Nothing is guessed: the identity reads as unknown and the stake as undetermined.",
+   "en": "The source team's public identity and declared stake were not recorded when this edition was imported, so they are not known here. Nothing is guessed: the identity reads as unknown and the stake as undetermined.",
    "protected": false,
    "note": "DEC-260: case-import, =GROUP_FIELDS_NONE"
   },
   {
    "key": "case-import.source_calculation",
-   "en": "the source group's value, as its case states it",
+   "en": "the source team's value, as its case states it",
    "protected": false,
    "note": "DEC-260: case-import, =SOURCE_CALCULATION"
   },
@@ -6830,7 +6830,7 @@
   },
   {
    "key": "case-import.why.group_civicsmith_hold",
-   "en": "your group's Civicsmith does not hold the method version {method} (it holds {calc_method}): the value was computed by the publishing group's engine and is not recreated here",
+   "en": "your team's Civicsmith does not hold the method version {method} (it holds {calc_method}): the value was computed by the publishing team's engine and is not recreated here",
    "protected": false,
    "note": "DEC-260: case-import, why"
   },
@@ -6860,7 +6860,7 @@
   },
   {
    "key": "case-import.why.input_over_bytes",
-   "en": "the input is over {calc_input_max} bytes, more than your group's Civicsmith reads",
+   "en": "the input is over {calc_input_max} bytes, more than your team's Civicsmith reads",
    "protected": false,
    "note": "DEC-260: case-import, why"
   },
@@ -6968,7 +6968,7 @@
   },
   {
    "key": "ai-runs.note.mode_deployed_group",
-   "en": "the mode '{mode}' is not deployed in your group's Civicsmith: the modes deploy in one order, each only after the one before it is verified live, and today {deployed} {are} deployed. Nothing was written",
+   "en": "the mode '{mode}' is not deployed in your team's Civicsmith: the modes deploy in one order, each only after the one before it is verified live, and today {deployed} {are} deployed. Nothing was written",
    "protected": false,
    "note": "DEC-260: ai-runs, note"
   },
@@ -7046,19 +7046,19 @@
   },
   {
    "key": "ai-runs.says.resumption_handed_agent",
-   "en": "Resumption: handed to agent-worker under the organization credential '{token_id}' of your group's Civicsmith, which opened this run.",
+   "en": "Resumption: handed to agent-worker under the organization credential '{token_id}' of your team's Civicsmith, which opened this run.",
    "protected": false,
    "note": "DEC-260: ai-runs, says"
   },
   {
    "key": "ai-runs.text.principal_opened_organization",
-   "en": "another principal opened it, and the organization credential of your group's Civicsmith resumes only the runs it opened",
+   "en": "another principal opened it, and the organization credential of your team's Civicsmith resumes only the runs it opened",
    "protected": false,
    "note": "DEC-260: ai-runs, text"
   },
   {
    "key": "ai-runs.text.group_civicsmith_resume",
-   "en": "your group's Civicsmith cannot resume anything here ({withheld})",
+   "en": "your team's Civicsmith cannot resume anything here ({withheld})",
    "protected": false,
    "note": "DEC-260: ai-runs, text"
   },
@@ -7238,7 +7238,7 @@
   },
   {
    "key": "inquiry.text.group_lens_force",
-   "en": "the group's lens in force",
+   "en": "the team's lens in force",
    "protected": false,
    "note": "DEC-260: inquiry, text"
   },
@@ -7256,7 +7256,7 @@
   },
   {
    "key": "inquiry.why.time_zone_held",
-   "en": "no time zone is held for your group's Civicsmith, so the local day the wait falls due on cannot be read (it is never read as the UTC day)",
+   "en": "no time zone is held for your team's Civicsmith, so the local day the wait falls due on cannot be read (it is never read as the UTC day)",
    "protected": false,
    "note": "DEC-260: inquiry, why"
   },
@@ -7790,7 +7790,7 @@
   },
   {
    "key": "refusal.UNKNOWN_ACCOUNT_KIND",
-   "en": "That is not a kind of Claude account this group can hold. Connect your own API key, or connect your Claude subscription by signing in through Claude Code. Nothing was changed.",
+   "en": "That is not a kind of Claude account this team can hold. Connect your own API key, or connect your Claude subscription by signing in through Claude Code. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: ai-accounts, refusal by its code"
   },
@@ -7802,7 +7802,7 @@
   },
   {
    "key": "refusal.NO_ACCOUNT",
-   "en": "No Claude account serves you here: you have not connected your own API key or your Claude subscription, and the group's own key is not switched on. Connect your own API key, sign in with your Claude subscription through Claude Code, or ask an administrator about the group's key. Nothing was changed.",
+   "en": "No Claude account serves you here: you have not connected your own API key or your Claude subscription, and the team's own key is not switched on. Connect your own API key, sign in with your Claude subscription through Claude Code, or ask an administrator about the team's key. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: ai-accounts, refusal by its code"
   },
@@ -7814,25 +7814,25 @@
   },
   {
    "key": "refusal.ACCOUNT_SEAL_UNAVAILABLE",
-   "en": "Your group's Civicsmith cannot keep a key sealed right now, because its sealing secret is not set or has changed. Nothing was stored or read. Ask whoever hosts your group's Civicsmith to set it.",
+   "en": "Your team's Civicsmith cannot keep a key sealed right now, because its sealing secret is not set or has changed. Nothing was stored or read. Ask whoever hosts your team's Civicsmith to set it.",
    "protected": false,
    "note": "DEC-260: ai-accounts, refusal by its code"
   },
   {
    "key": "refusal.SUBSCRIPTION_LOGIN_REFUSED",
-   "en": "Your Claude subscription's sign-in stays where Claude Code itself keeps it, for you alone. Your group's Civicsmith only notes that you are connected, and never takes a login, a code or a token. This request carried more than that, so nothing was recorded.",
+   "en": "Your Claude subscription's sign-in stays where Claude Code itself keeps it, for you alone. Your team's Civicsmith only notes that you are connected, and never takes a login, a code or a token. This request carried more than that, so nothing was recorded.",
    "protected": false,
    "note": "DEC-260: ai-accounts, refusal by its code"
   },
   {
    "key": "refusal.GROUP_KEY_NOTICE_DUE",
-   "en": "Before the assistant answers you under the group's account, read one short notice: your questions, and the material read to answer them, go to Anthropic under the group's API account. Confirm you have read it, then ask again. Nothing was sent.",
+   "en": "Before the assistant answers you under the team's account, read one short notice: your questions, and the material read to answer them, go to Anthropic under the team's API account. Confirm you have read it, then ask again. Nothing was sent.",
    "protected": false,
    "note": "DEC-260: ai-accounts, refusal by its code"
   },
   {
    "key": "refusal.AI_KEPT_AWAY",
-   "en": "Your group keeps its material away from every assistant, so no assistant was used: not the group's account and not your own. An administrator turned this on and gave the reason shown. If you think this should change, ask an administrator. Nothing was sent.",
+   "en": "Your team keeps its material away from every assistant, so no assistant was used: not the team's account and not your own. An administrator turned this on and gave the reason shown. If you think this should change, ask an administrator. Nothing was sent.",
    "protected": false,
    "note": "DEC-260: ai-accounts, refusal by its code"
   },
@@ -7844,19 +7844,19 @@
   },
   {
    "key": "refusal.SUBSCRIPTION_TOKEN_MALFORMED",
-   "en": "The Claude sign-in could not be kept, because what came back from it was not a sign-in. Nothing was kept. Sign in again; if it keeps happening, tell whoever hosts your group's Civicsmith.",
+   "en": "The Claude sign-in could not be kept, because what came back from it was not a sign-in. Nothing was kept. Sign in again; if it keeps happening, tell whoever hosts your team's Civicsmith.",
    "protected": false,
    "note": "DEC-260: ai-accounts, refusal by its code"
   },
   {
    "key": "refusal.AI_KEEP_AWAY_NO_REASON",
-   "en": "Keeping the group's material away from every assistant needs a reason, which every member will read: from 1 to 2,000 characters. Nothing was changed.",
+   "en": "Keeping the team's material away from every assistant needs a reason, which every member will read: from 1 to 2,000 characters. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: ai-accounts, refusal by its code"
   },
   {
    "key": "ai-accounts.group_key_notice_text",
-   "en": "This group has its own Claude account, an Anthropic API key an administrator set. When you ask the assistant and you have not connected an account of your own, your questions, and the material read to answer them, go to Anthropic under the group's API account.",
+   "en": "This team has its own Claude account, an Anthropic API key an administrator set. When you ask the assistant and you have not connected an account of your own, your questions, and the material read to answer them, go to Anthropic under the team's API account.",
    "protected": false,
    "note": "DEC-260: ai-accounts, =GROUP_KEY_NOTICE_TEXT"
   },
@@ -7910,7 +7910,7 @@
   },
   {
    "key": "refusal.PLAN_WORK_PROVIDER_UNAVAILABLE",
-   "en": "This reads part of the record that is not in your group's Civicsmith yet, so it is not answered in part. Nothing was written.",
+   "en": "This reads part of the record that is not in your team's Civicsmith yet, so it is not answered in part. Nothing was written.",
    "protected": false,
    "note": "DEC-260: plan-work, refusal by its code"
   },
@@ -8186,7 +8186,7 @@
   },
   {
    "key": "refusal.NO_SUCH_PHOTO",
-   "en": "Your group's Civicsmith holds no photo you can see under that digest. Nothing was recorded.",
+   "en": "Your team's Civicsmith holds no photo you can see under that digest. Nothing was recorded.",
    "protected": false,
    "note": "DEC-260: case-carriage, refusal by its code"
   },
@@ -8210,7 +8210,7 @@
   },
   {
    "key": "refusal.DOCUMENT_COPY_NO_STORE",
-   "en": "Your group's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made.",
+   "en": "Your team's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made.",
    "protected": false,
    "note": "DEC-260: case-carriage, refusal by its code"
   },
@@ -8276,25 +8276,25 @@
   },
   {
    "key": "case-carriage.miss.group_civicsmith_holds",
-   "en": "your group's Civicsmith holds no text of that observation at its digest",
+   "en": "your team's Civicsmith holds no text of that observation at its digest",
    "protected": false,
    "note": "DEC-260: case-carriage, miss()#1"
   },
   {
    "key": "case-carriage.miss.group_civicsmith_holds_bytes",
-   "en": "your group's Civicsmith holds no bytes of that document at its digest",
+   "en": "your team's Civicsmith holds no bytes of that document at its digest",
    "protected": false,
    "note": "DEC-260: case-carriage, miss()#1"
   },
   {
    "key": "case-carriage.miss.group_civicsmith_holds_whole",
-   "en": "your group's Civicsmith holds no whole extracted text of that document at its stated digest",
+   "en": "your team's Civicsmith holds no whole extracted text of that document at its stated digest",
    "protected": false,
    "note": "DEC-260: case-carriage, miss()#1"
   },
   {
    "key": "case-carriage.why.group_civicsmith_record",
-   "en": "your group's Civicsmith could not record it",
+   "en": "your team's Civicsmith could not record it",
    "protected": false,
    "note": "DEC-260: case-carriage, why"
   },
@@ -8336,7 +8336,7 @@
   },
   {
    "key": "machinery-producers.zone_undetermined",
-   "en": "no time zone is held for it by your group's Civicsmith, so the local day it is counted from is undetermined; it is never counted on the UTC day",
+   "en": "no time zone is held for it by your team's Civicsmith, so the local day it is counted from is undetermined; it is never counted on the UTC day",
    "protected": false,
    "note": "DEC-260: machinery-producers, =ZONE_UNDETERMINED"
   },
@@ -8474,13 +8474,13 @@
   },
   {
    "key": "machinery-producers.summary.new_release_group",
-   "en": "a new release of your group's Civicsmith, {version}, with a security fix, is ready to install",
+   "en": "a new release of your team's Civicsmith, {version}, with a security fix, is ready to install",
    "protected": false,
    "note": "DEC-260: machinery-producers, summary"
   },
   {
    "key": "machinery-producers.summary.new_release_group_civicsmith",
-   "en": "a new release of your group's Civicsmith, {version}, is ready to install",
+   "en": "a new release of your team's Civicsmith, {version}, is ready to install",
    "protected": false,
    "note": "DEC-260: machinery-producers, summary"
   },
@@ -8540,7 +8540,7 @@
   },
   {
    "key": "leg-earning.ceiling.grade_reachable_capture",
-   "en": "Grade {unreachable_capture_grade} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your group's Civicsmith cannot produce and does not claim.",
+   "en": "Grade {unreachable_capture_grade} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim.",
    "protected": false,
    "note": "DEC-260: leg-earning, =ceiling"
   },
@@ -8552,7 +8552,7 @@
   },
   {
    "key": "leg-earning.why.strongest_capture_grade",
-   "en": "{capture_word}, so the strongest capture grade it can earn is {earned_capture_ceiling} — the bytes as your group's Civicsmith fetched them, hashed at receipt.",
+   "en": "{capture_word}, so the strongest capture grade it can earn is {earned_capture_ceiling} — the bytes as your team's Civicsmith fetched them, hashed at receipt.",
    "protected": false,
    "note": "DEC-260: leg-earning, why"
   },
@@ -8564,7 +8564,7 @@
   },
   {
    "key": "leg-earning.why.strongest_route_group",
-   "en": "{capture_word}, and the strongest route by which your group's Civicsmith received them earns {bound} on the capture axis (provenance's capture grade: an archive replay stands one party further from the publisher than a direct fetch), so the strongest capture grade this document can earn is {bound}.",
+   "en": "{capture_word}, and the strongest route by which your team's Civicsmith received them earns {bound} on the capture axis (provenance's capture grade: an archive replay stands one party further from the publisher than a direct fetch), so the strongest capture grade this document can earn is {bound}.",
    "protected": false,
    "note": "DEC-260: leg-earning, why"
   },
@@ -8642,13 +8642,13 @@
   },
   {
    "key": "refusal.ACCEPTANCE_WITHDRAWN_SINCE",
-   "en": "This group's acceptance of another group's work this case rests on was withdrawn after the case was prepared. Prepare the case again. Nothing was published.",
+   "en": "This team's acceptance of another team's work this case rests on was withdrawn after the case was prepared. Prepare the case again. Nothing was published.",
    "protected": false,
    "note": "DEC-260: publication, refusal by its code"
   },
   {
    "key": "refusal.FLAG_OPENED_SINCE",
-   "en": "A flag was raised on another group's work this case rests on after the case was prepared, and the case must disclose it. Prepare the case again. Nothing was published.",
+   "en": "A flag was raised on another team's work this case rests on after the case was prepared, and the case must disclose it. Prepare the case again. Nothing was published.",
    "protected": false,
    "note": "DEC-260: publication, refusal by its code"
   },
@@ -8816,55 +8816,55 @@
   },
   {
    "key": "refusal.UNKNOWN_OP",
-   "en": "This group's Civicsmith has no operation by that name. A version older or newer than this one can have a different set of operations, and a misspelt name reads the same way. Nothing was changed.",
+   "en": "This team's Civicsmith has no operation by that name. A version older or newer than this one can have a different set of operations, and a misspelt name reads the same way. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
   {
    "key": "refusal.STORE_DID_NOT_ANSWER",
-   "en": "This group's Civicsmith could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did.",
+   "en": "This team's Civicsmith could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
   {
    "key": "refusal.PLANE_INTERNAL_ERROR",
-   "en": "This group's Civicsmith failed while handling the request, before it could produce an answer. That is a fault in this group's Civicsmith, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in its logs under the reference given with this answer.",
+   "en": "This team's Civicsmith failed while handling the request, before it could produce an answer. That is a fault in this team's Civicsmith, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in its logs under the reference given with this answer.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
   {
    "key": "refusal.STORE_INTERNAL_ERROR",
-   "en": "This group's Civicsmith failed inside its own record while carrying out the request, so no answer was produced. That is a fault in this group's Civicsmith, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in its logs under the reference given with this answer.",
+   "en": "This team's Civicsmith failed inside its own record while carrying out the request, so no answer was produced. That is a fault in this team's Civicsmith, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in its logs under the reference given with this answer.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
   {
    "key": "refusal.PURGE_HOLD_IN_PLACE",
-   "en": "Your group's Civicsmith is preserving records under a litigation hold, and this removal would reach material the hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold stands waits until the hold is released.",
+   "en": "Your team's Civicsmith is preserving records under a litigation hold, and this removal would reach material the hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold stands waits until the hold is released.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
   {
    "key": "refusal.BOOTSTRAP_CREDENTIAL_UNSET",
-   "en": "Your group's Civicsmith has no administrator token set, so it cannot be claimed yet. Whoever installed it sets one in the hosting account. Nothing was changed.",
+   "en": "Your team's Civicsmith has no administrator token set, so it cannot be claimed yet. Whoever installed it sets one in the hosting account. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
   {
    "key": "refusal.BOOTSTRAP_CREDENTIAL_PUBLISHED",
-   "en": "The administrator token of your group's Civicsmith is a value published in the project's public repository, so it can never be used to claim it: anyone can read it. Whoever installed your group's Civicsmith sets a fresh one in the hosting account. Nothing was changed.",
+   "en": "The administrator token of your team's Civicsmith is a value published in the project's public repository, so it can never be used to claim it: anyone can read it. Whoever installed your team's Civicsmith sets a fresh one in the hosting account. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
   {
    "key": "refusal.BOOTSTRAP_CREDENTIAL_MISMATCH",
-   "en": "The administrator token given does not match the one your group's Civicsmith holds, so it was not claimed. Nothing was changed.",
+   "en": "The administrator token given does not match the one your team's Civicsmith holds, so it was not claimed. Nothing was changed.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
   {
    "key": "refusal.REPLAY_UNVERIFIED",
-   "en": "This save says it is a replay of the record's own history, and your group's Civicsmith could not check that against the history it holds: the replay must name the provenance file for this document, already uploaded, whose records list this document and exactly this version of it. A replay is excused from the rules a new save must meet only when that check succeeds. Nothing was saved.",
+   "en": "This save says it is a replay of the record's own history, and your team's Civicsmith could not check that against the history it holds: the replay must name the provenance file for this document, already uploaded, whose records list this document and exactly this version of it. A replay is excused from the rules a new save must meet only when that check succeeds. Nothing was saved.",
    "protected": false,
    "note": "DEC-260: answer-envelope, refusal by its code"
   },
@@ -8882,7 +8882,7 @@
   },
   {
    "key": "refusal.OWN_HOST",
-   "en": "Its host is one of your group's own (where your group's Civicsmith or its fleet is reached).",
+   "en": "Its host is one of your team's own (where your team's Civicsmith or its fleet is reached).",
    "protected": false,
    "note": "DEC-260: browserrender, refusal by its code"
   },
@@ -9080,7 +9080,7 @@
   },
   {
    "key": "setup-fleet.hosting_recovery_deployer",
-   "en": "To open the way back in: sign in to the hosting account, replace the ADMIN_TOKEN value in this worker's settings, and your group's Civicsmith can be claimed again.",
+   "en": "To open the way back in: sign in to the hosting account, replace the ADMIN_TOKEN value in this worker's settings, and your team's Civicsmith can be claimed again.",
    "protected": false,
    "note": "DEC-260: setup-fleet, =HOSTING_RECOVERY_DEPLOYER"
   },

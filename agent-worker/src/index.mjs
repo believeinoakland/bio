@@ -38,8 +38,9 @@
  * project's (R71), or the group's API key, as `credentials.accountFor` answers
  * it, K1755) and the run's mode has turns to run: an API key goes to the
  * Messages API, the member's own sign-in (or a one-member project's, which is
- * that member's own) to Claude Code in that member's
- * `agent-runner` instance through the Container Durable Object binding (R35). A segment whose caller
+ * that member's own) to Claude Code in a cloud session that `agent-runner`'s remote class creates on it, through
+ * the Durable Object binding `REMOTE` (R35, R109); the local container is reached by no path, and until a member's
+ * check has passed (R110, R111) a call on a sign-in is refused `ASSISTANT_REMOTE_NOT_READY`. A segment whose caller
  * supplied the judgements (`judgements` in the body, the stubbed path) runs no
  * turn. The answer's `turns_run` counts the turns that actually ran and
  * `judgement_source` says whose judgements the table applied (`model` or
@@ -55,7 +56,7 @@
  * picture the plane rendered, as a tool's result, and answers the AI's reading
  * of each page: no plane call. `POST /signin` (R66, R67, R81–R84)
  * relays one step of a member's own Claude sign-in to that member's own
- * `agent-runner` instance on the same `RUNNER` binding and holds nothing of it:
+ * remote instance on the same `REMOTE` binding and holds nothing of it:
  * no plane call, no model turn; the token the sign-in mints passes to the door
  * once, only under its `hold` (R81), and comes back on each act as the `signin`
  * account's `secret` (R82). (T48; R87) `/ask`, `/run`, `/draft` and
@@ -150,15 +151,17 @@ const PLANE_ORIGIN = "http://plane"; /* a binding ignores the host; this names t
  * through `POST /run` inside workerd, and the two must agree. A table exercised
  * only through the op is a table nobody can exhaust. */
 import {
-  FIRST_STEP, LEVELS, BUDGET_BOUNDS, passLimit,
+  FIRST_STEP, LEVELS, REPORTING_LEVEL, BUDGET_BOUNDS, passLimit,
   nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates, runContextTarget,
   advance, publishableState, resumeFrom,
   PLAN_FLOW, PLAN_MAX_PASSES, OPTION_KEYS, flowFor, nextPlanStep, planAdvance, applyPlanJudgement, planDedup,
   PLAN_READS, PROFILE_FACTS, planSubjectReads, earlierPlans, whyWithUndetermined, resumeTargets,
+  /* R116 (agent-harness R19): the (record, levels) pairs a judgement named that the table has not yet settled. */
+  disagreementsToSettle,
 } from "../../agent-harness/src/harness.mjs";
 
 /* R4, R37, R55 — what this member names to the plane: its namespaces, a run's ops, the meaning arm, an ask's reach. */
-import { NAMESPACES, MEANING_ARM, RESPONSE_ID } from "./ops.mjs";
+import { NAMESPACES, MEANING_ARM, RESPONSE_ID, SEGMENT_END_BY } from "./ops.mjs";
 /* R63 — what a read hands the model of a file: the readers' text and its `active` list, never its bytes. */
 import { toolContent, droppedNote } from "./reads.mjs";
 /* R54–R56 — `POST /ask`, in its own file. */
@@ -166,13 +169,17 @@ import { handleAsk } from "./ask.mjs";
 /* R59 — `POST /draft`, in its own file. */
 import { handleDraft } from "./draft.mjs";
 /* R66, R67 — `POST /signin`, the relay of a member's own sign-in to their own runner instance, in its own file. */
-import { handleSignin, doorTrace } from "./signin.mjs";
+import { handleSignin, doorTrace, TRACE_HEADER, MEMBER_REF_HEADER } from "./signin.mjs";
 /* R72–R75 — `POST /transcribe`, the AI's reading of a page's picture the plane rendered, in its own file. */
 import { handleTranscribe } from "./transcribe.mjs";
+/* R109, R110 — the one road to a runner (`env.REMOTE`), and whether it may be taken yet. */
+import { remoteOf, remoteVersion, remoteReady } from "./remote.mjs";
+/* Plan rule 6 — a member-facing sentence is read by key, never written here. */
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS run-rules' (its R10), read from its own module and never
  * copied. run-rules is pure (no storage, no clock), so this is the one plane module in the bundle beside `tokens.mjs`. */
-import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/run-rules/index.mjs";
+import { AI_RUN_STATE_MAX_BYTES, checkCondition, DEFINITIVE_STATES } from "../../bio-plane/src/run-rules/index.mjs";
 
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
  * PURE. What goes OUT to a sub-session and what may come BACK are shapes, not
@@ -181,8 +188,13 @@ import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/run-rules/index.mjs"
  * driver's job is reduced to asking and obeying. Read `agent-harness`' `subsession.mjs` header
  * for why the rule is an exact key set rather than a list of banned fields. */
 import {
-  SUBSESSION_OPS, spawnContract, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
+  SUBSESSION_OPS, spawnContract, checkReport, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
 } from "../../agent-harness/src/subsession.mjs";
+/* R115 — a record id's shape (record-grammar R1): a citation of this form that the plane does not answer to the run's
+   credential is absent as `membership` R44 answers it, and holds no document. */
+import { BUNDLE_ID_RE } from "../../bio-plane/src/record-grammar/ids.mjs";
+/* R97 (R085-18; K3268): the meaning arms a sub-session may be told of, read from query-language's own registry, never listed. */
+import { MEANING } from "../../bio-plane/src/query.mjs";
 /* R90 (T49; N1137): the record id a leg names, added beside each held document's address. */
 import { withRecordIds } from "./holdings.mjs";
 
@@ -353,6 +365,9 @@ async function askPlane(env, op, credential, store, query = null, body = null) {
  * rule and the one this Worker already applies to a silent plane. */
 const MAX_STEPS = 400;
 
+/* R99 — the clock `wallclock` is measured on: `env.CLOCK` when a function (a test injects one), else `Date.now`. */
+const wallNow = (env) => (typeof env?.CLOCK === "function" ? Number(env.CLOCK()) : Date.now());
+
 /** FL-3's DRIVER. It turns each row of `agent-harness`' table into plane calls
  *  and appends an observation entry for EVERY step — including the last one, and
  *  including the steps of a run that ends badly (§14b.6: log-always).
@@ -362,7 +377,8 @@ const MAX_STEPS = 400;
  *  answers F10's precondition. Every one of those is in `agent-harness`, is pure,
  *  and is driven directly by the suite as well as through this function — so a
  *  decision made here instead would be a decision nothing exhaustive covers. */
-async function driveHarness(env, { runId, store, credential, judgements, maxSteps, account = null, model = null }) {
+async function driveHarness(env, { runId, store, credential, judgements, maxSteps, account = null, model = null,
+                                    deadline = null, progress = null, preflight = false }) {
   /* EVERY PLANE CALL IS COUNTED, AND THE COUNT IS WHAT SPENDS `runtime`.
      §14b.6 named `runtime-ceiling-reached` as a word the record had with no
      writer, and IS-9(d) as the item that builds the producer. This counter IS
@@ -373,6 +389,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
      one exit. Nothing here emits the word. */
   let calls = 0;
   const call = (op, query, body) => { calls += 1; return askPlane(env, op, credential, store, query, body); };
+  /* R114: the plane calls a tick has already spent. A step's own tick spends the rest; a tick sent inside a step (a
+     re-read's, R114) spends the calls since the last and moves this on. */
+  const accounted = { at: 0 };
   const trace = [];
   const refusals = [];
   let logged = 0, submitted = 0, adjusted = 0, verbatimResubmits = 0;
@@ -433,20 +452,32 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   if (model) {
     const pub = planeAnswer(await call("agentpack"), "agentpack");
     if (pub.silent) return { refusal: planeSilent(pub.silent) };
-    if (pub.refused)
-      return { refusal: planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null }) };
+    if (pub.refused) {
+      const refused = planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null });
+      await settleAtDispatch({ call, runId, session, code: pub.refused.code ?? "PLANE_REFUSED",
+                               why: "the plane refused the read of the skill pack" });
+      return { refusal: refused };
+    }
     const pack = publishedPack(pub.result);
     const recordedSkill = session.principal?.skill ?? null;
-    if (!pack.ok || recordedSkill !== pack.pack.version)
+    if (!pack.ok || recordedSkill !== pack.pack.version) {
+      /* R107: the run cannot continue under another pack, and the plane's lease would lapse with its composed work unwritten. */
+      const lapse = await settleAtDispatch({ call, runId, session, code: "SKILL_VERSION_MISMATCH",
+        why: pack.ok ? `the run recorded ${recordedSkill} and the plane publishes ${pack.pack.version}`
+          : `the plane published no skill pack this member can use (${pack.why})` });
       return { refusal: refusal("SKILL_VERSION_MISMATCH",
         (pack.ok
           ? "the run's record says it runs under one skill pack and the pack the plane publishes is another, so its "
             + "model would be instructed by words the record does not name."
           : "the plane published no skill pack this member can instruct a model with, so the pack's version is "
             + `UNDETERMINED and cannot be held to the one the run recorded (${pack.why}).`)
-        + " No turn was taken; the run is resumable once the two agree.", 409,
+        + " No turn was taken."
+        + (lapse ? " The run cannot be continued under another pack, so what it composed was written where the plane "
+                   + "accepted it and the run was closed (R107)." : " The run is resumable once the two agree."), 409,
         { run_id: runId, recorded: recordedSkill, rendered: pack.ok ? pack.pack.version : null,
-          ...(pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why }) }) };
+          ...(pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why }),
+          ...(lapse ? { lapse } : {}) }) };
+    }
     const { pack: held } = pack;
     model.pack = held;
     model.messages = [];
@@ -455,7 +486,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* R56 (K1479, K1502, K1755): the `suggestions` layer is loadable only when the switch that governs the act is on. */
     model.layers = loadableLayers(held, model.suggestions);
     model.tools = [LOAD_LAYER(model.layers),
-                   ...(session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS))];
+                   /* R117 (agent-model R23): the record's conditions, so the judging tools offer them and a model names one. */
+                   ...(session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS, CONDITIONS))];
   }
 
   /* §14b.7 — A RESUMED RUN READS ITS OWN LOG AND CONTINUES.
@@ -475,11 +507,45 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       { status: 403, body: logRead.refused.plane ?? null }) };
   const priorLog = logRead.result ?? {};
   const resumedFrom = Array.isArray(priorLog.entries) ? priorLog.entries.length : 0;
+  /* R99 (R085-18; K3501 (e)): the wall time the `wallclock` bound measures. Each tick carries the milliseconds since the
+     segment's previous tick (its start for the first), never negative; `env.CLOCK`, when a function, is the clock (a
+     test's), else `Date.now`. */
+  const wall = { last: wallNow(env), extra: 0,
+                 /* a tick other than a step's spends wall time the table's copy of the budget has not seen: kept for the next
+                    step's update of it */
+                 spend() { const ms = this.take(); this.extra += ms; return ms; },
+                 take() { const now = wallNow(env), ms = Math.max(0, Math.round(now - this.last)); this.last = now; return ms; } };
   /* THE ADDRESS OF A LOOK THIS SEGMENT WRITES: `log:<seq>`, the ordinal `op=airunlog` answers (agent-harness R7's reports
      cite it as `observed_at`). Knowable only from a whole log: a truncated read leaves it UNDETERMINED. */
-  const logSeq = { next: () => (priorLog.truncated === true ? null : resumedFrom + logged + 1),
+  const logSeq = { wall, next: () => (priorLog.truncated === true ? null : resumedFrom + logged + 1),
                    landed: () => { logged += 1; },
-                   refused: (named) => { logRefused.push(named); refusals.push(named); } };
+                   refused: (named) => { logRefused.push(named); refusals.push(named); },
+                   runtimeExtra: 0,
+                   /* R114: one log entry in its own tick, sent the moment it is made, spending the plane calls made since the
+                      last tick (itself included) and the wall time since. `{silent}` when the plane did not answer;
+                      `{landed}` whether the entry was appended; `{ended}` when the plane ended the run by it. */
+                   tickEntry: async (entry, at) => {
+                     const spend = calls - accounted.at + 1;
+                     const sent = await call("airuntick", null,
+                       { run: runId, log: [loggable(entry).entry], consume: { runtime: spend, wallclock: wall.spend() } });
+                     accounted.at = calls;
+                     logSeq.runtimeExtra += spend;
+                     if (!sent.reached) return { silent: sent };
+                     const answer = planeAnswer(sent, "airuntick");
+                     const t = answer.result ?? {};
+                     const bad = Array.isArray(t.refused) ? t.refused : [];
+                     /* R26, R92: a tick answered `found: false`, or refused whole, appended nothing. */
+                     const whole = t.found === false || (t.ticked === false && t.code != null);
+                     if (answer.refused || bad.length || whole) {
+                       for (const r of answer.refused ? [answer.refused] : whole ? [t] : bad)
+                         logSeq.refused({ at: "airuntick.log", step: at.step, to: at.to, code: r?.code ?? r?.reason ?? null,
+                                          check: r?.check ?? null, plane: r?.plane ?? r ?? null });
+                       return { landed: false };
+                     }
+                     logSeq.landed();
+                     return { landed: true, ...(t.ended ? { ended: { bound: t.ended.bound ?? null,
+                       condition: t.ended.condition ?? null, by: SEGMENT_END_BY.plane } } : {}) };
+                   } };
 
   const budget = {};
   for (const b of Array.isArray(session.budget) ? session.budget : [])
@@ -528,11 +594,19 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
      simply carries the state forward — an absent judgement is not an error, it
      is a run whose model had nothing to add. */
   let jx = 0;
-  let ended = null, steps = 0, segmentStopped = null;
+  let ended = null, steps = 0, segmentStopped = null, closeRefused = false;
+  /* R91: the run's facts are read and held to the account and the pack: everything a refusal "before the segment
+     starts" answers. `preflight` stops here, for `/run` to answer those refusals before it hands the segment over. */
+  if (preflight) return { ready: true };
+  if (progress) progress.started = true;
+  wall.last = wallNow(env);
 
   while (steps < maxSteps) {
+    /* R91: the segment's wall bound, met between steps (a durable segment runs inside an alarm, which has a wall limit
+       of its own); the segment stops and the run does not, as at its turn or byte bound. */
+    if (deadline != null && Date.now() >= deadline) { segmentStopped = "wall"; break; }
     steps += 1;
-    const callsAtStepStart = calls;
+    accounted.at = calls;
     const row = FLOW[state.step];
 
     /* THE JUDGEMENT, AND THE ONE DOOR IT COMES THROUGH. Supplied by the caller in order, or (R58; agent-model R1) made by
@@ -549,6 +623,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       const got = await converse({
         reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter, system: model.system,
         messages: model.messages, tools: model.tools, finalTool: `judge_${state.step}`, ...model.traced,
+        /* R117: a `condition` outside the record's vocabulary is handed back once, on the two rows that carry one. */
+        checkFinal: JUDGED_WITH_CONDITION.has(state.step) ? conditionFault : undefined,
         onTool: async (name, input) => {
           if (name === "load_layer") return loadLayer(model, input);
           return { content: `this step is judged by judge_${state.step}`, error: true };
@@ -580,6 +656,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* D-611: the segment's turns or bytes ran out inside the step. The SEGMENT stops; the run does not, and what
        the step already logged stays logged. */
     if (work.stopped) { segmentStopped = work.stopped; break; }
+    /* R114: a tick sent inside the step (a re-read's) was answered by the plane ending the run: the segment is over. */
+    if (work.planeEnded) { ended = work.planeEnded; state = work.state; break; }
     /* THE SPAWN CONTRACT COULD NOT BE COMPOSED, AND THE RUN STOPS RATHER THAN
        FANNING OUT ANYWAY. This is the §14 fence firing: the plane's search-half
        payload arrived carrying the lens, or carrying nothing at all. Continuing
@@ -625,11 +703,16 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        writes `runtime-ceiling-reached`: a tick that spends the last of a budget
        ends the run through the plane's one exit and the plane writes the
        condition. */
-    const spentThisStep = calls - callsAtStepStart + 1; /* +1: the tick is a subrequest too */
-    const consume = { ...(work.consume || {}), runtime: spentThisStep };
+    const spentThisStep = calls - accounted.at + 1; /* +1: the tick is a subrequest too */
+    const consume = { ...(work.consume || {}), runtime: spentThisStep, wallclock: wall.take() };
     /* R26, K148: the entry only when the step's judgement states a look; a step that looked at nothing still
        ticks, for its spend and its lease, and sends no entry. */
-    const entry = stepLog(state, decision);
+    /* R92: in the record's own words — a condition outside its vocabulary, or a governed definitive look, was refused
+       per entry, so the log stayed empty (`loggable`). */
+    const entry = loggable(stepLog(state, decision)).entry;
+    /* R101: entries the step itself states beside its look (`dedup`'s drops), in the record's own words like the rest. */
+    const stated = (Array.isArray(work.logEntries) ? work.logEntries : []).map((e) => loggable(e).entry);
+    const sentEntries = [...(entry ? [entry] : []), ...stated];
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
     /* R11, N153: the tick also publishes where the table goes next, so a later segment continues there. The gate's
        tick publishes nothing: until `resume` has moved on, the resume point is the one the record already holds. */
@@ -650,7 +733,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* ai-runs R48: the usage of every model call since the last tick, counted for the member whose account carried it. */
     const usage = model ? model.drain() : [];
     const tick = await call("airuntick", null,
-      { run: runId, log: entry ? [entry] : [], consume, ...(published ? { state: published.state } : {}),
+      { run: runId, log: sentEntries, consume, ...(published ? { state: published.state } : {}),
         ...(usage.length ? { usage } : {}) });
     if (!tick.reached) return { refusal: planeSilent(tick) };
     /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
@@ -659,7 +742,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* R26: a tick the plane answered `found: false` (no such run, `ai-runs`) appended nothing: it is a refusal of the
        tick in the plane's words, never an entry that landed (T41 B6: a run the plane never opened counted `logged`). */
     const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;
-    if (noRun) {
+    /* R92: a tick refused whole answers `ticked: false` with its code and no `ok` (ai-runs' gates, figures, state and
+       usage), so it appended nothing: a refusal of the tick, never an entry that landed. */
+    const tickRefused = !tickAnswer.refused && !noRun && tickAnswer.result?.ticked === false
+      && tickAnswer.result?.code != null;
+    if (noRun || tickRefused) {
       refusals.push({ at: "airuntick", code: tickAnswer.result.code ?? null, check: tickAnswer.result.check ?? null,
                       plane: tick.body ?? null });
     } else if (tickAnswer.refused) {
@@ -685,7 +772,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];
       const appendedNow = t?.appended != null && Number.isFinite(Number(t.appended))
         ? Number(t.appended)
-        : (t?.ticked === false ? 0 : Math.max(0, (entry ? 1 : 0) - refusedEntries.length));
+        : (t?.ticked === false ? 0 : Math.max(0, sentEntries.length - refusedEntries.length));
       logged += appendedNow;
       for (const r of refusedEntries) {
         const named = { at: "airuntick.log", step: state.step, to: decision.step,
@@ -701,6 +788,12 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       state = { ...state, budget: { ...state.budget } };
       for (const [k, v] of Object.entries(consume))
         if (state.budget[k]) state.budget[k] = { ...state.budget[k], consumed: state.budget[k].consumed + Number(v) };
+      if (wall.extra && state.budget.wallclock)
+        state.budget.wallclock = { ...state.budget.wallclock, consumed: state.budget.wallclock.consumed + wall.extra };
+      wall.extra = 0;
+      if (logSeq.runtimeExtra && state.budget.runtime)
+        state.budget.runtime = { ...state.budget.runtime, consumed: state.budget.runtime.consumed + logSeq.runtimeExtra };
+      logSeq.runtimeExtra = 0;
       /* THE PLANE ENDED IT. This is the `runtime` path above all: the harness
          spends and the plane decides, so an ending that arrives HERE rather than
          from the table is the record telling this member something it could not
@@ -708,7 +801,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
          stopped" and "the plane stopped it" are different facts. */
       if (t && t.ended) {
         ended = { bound: t.ended.bound ?? null, condition: t.ended.condition ?? null,
-                  by: "the plane's own exit" };
+                  by: SEGMENT_END_BY.plane };
         break;
       }
     }
@@ -732,8 +825,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
          claiming more than it can support. The refusal is named and `ended`
          stays null, which is the honest "this segment did not end it". */
       /* The pass a close completes is counted (R50's one pass; `advance` leaves R15's count as it was). */
-      if (closed.refused) { refusals.push(closed.refused); state = { ...state, step: "close", pass: after.pass }; break; }
-      ended = { bound: decision.bound || "completed", by: "the table" };
+      if (closed.refused) { refusals.push(closed.refused); closeRefused = true; state = { ...state, step: "close", pass: after.pass }; break; }
+      ended = { bound: decision.bound || "completed", by: SEGMENT_END_BY.table };
       state = { ...state, step: "close", pass: after.pass };
       break;
     }
@@ -780,7 +873,109 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     holdings: state.holdings ?? null,
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...(state.budget[b] || { allowed: 0, consumed: 0 }) })),
     segmentStopped,
+    /* R91: how this segment ended, for its `segment_end`: the run ended (by the table or the plane's exit), the plane
+       refused its close, or (`by` null) the segment met one of its own bounds (turns, bytes, wall, or `max_steps`). */
+    segmentEnd: ended ? { by: ended.by, done: true }
+      : closeRefused ? { by: SEGMENT_END_BY.refusal, done: false }
+      : { by: null, done: false },
   };
+}
+
+/** R107 (R085; S4 N1, N4; K3557) — A RUN REFUSED AT DISPATCH DOES NOT LAPSE SILENTLY. The pack a run recorded at its open
+ *  never comes back once the plane publishes another, so a segment refused for it (or for the read of it) can never be
+ *  continued, and the plane's lease would end the run with what it composed unwritten and no word of why. After the payer
+ *  check (a run that is not this account's is touched by nothing, R10), for a run that has done work: the candidates its
+ *  published state holds and has not written are written through `op=suggest` where the plane accepts them (a refusal is
+ *  named, not retried or adjusted), one tick logs the refusal by name, and the run is closed on `lease`, which stops it
+ *  (status `stopped`, never `completed`). A run that has done nothing, a plan-mode run's proposals (not `suggest`'s) and a
+ *  plane that does not answer are left as they were. Returns `{written, not_accepted, closed}` or null; it never throws. */
+async function settleAtDispatch({ call, runId, session, code, why }) {
+  try {
+    const flow = flowFor(session.mode);
+    const resumed = resumeFrom(session.state ?? null, flow);
+    const st = resumed.at ? resumed.state : null;
+    if (!st) return null;
+    const seeded = runContextTarget(session);
+    /* what the state holds and has not written: before `dedup` has queued them, the composed list; after, the queue */
+    const unwritten = flow === PLAN_FLOW ? []
+      : (resumed.at === "dedup" ? st.candidates : st.queue).filter((c) => c && typeof c === "object");
+    const written = [], notAccepted = [];
+    for (const c of unwritten) {
+      const res = await call("suggest", null, { ...c, target: c.target ?? seeded.target ?? null, run: runId });
+      if (!res.reached) break;
+      const a = res.body?.result ?? res.body ?? {};
+      if (res.status === 200 && res.body?.ok === true && a.ok !== false && a.wrote !== false) written.push(String(c.name ?? ""));
+      else notAccepted.push({ name: String(c.name ?? ""), code: a.code ?? a.reason ?? null });
+    }
+    const said = `dispatch refused ${code} (${why}); the run cannot be continued, so ${written.length} composed candidate(s) `
+      + `were written${written.length ? ` (${written.map((n) => `'${n}'`).join(", ")})` : ""}`
+      + (notAccepted.length ? `, ${notAccepted.length} not accepted by the plane (${notAccepted.map((n) => n.code ?? "?").join(", ")})` : "")
+      + " and the run was closed";
+    const { entry } = loggable({ level: "meaning", subject: "dispatch -> refused", state: "LOOKED_INDETERMINATE", governed: false,
+                                 condition: null, terminal: false, bound: null, detail: said.slice(0, LOG_DETAIL_MAX) });
+    await call("airuntick", null, { run: runId, log: [entry], consume: { runtime: 1 } });
+    const closed = planeAnswer(await call("airunclose", null, { run: runId, bound: "lease" }), "airunclose");
+    return { written, not_accepted: notAccepted, closed: !closed.silent && !closed.refused };
+  } catch {
+    return null;
+  }
+}
+
+/* R92 (R085-8; K3477; WALK-085 F2, cause B) — AN ENTRY THIS MEMBER SENDS IS IN THE RECORD'S OWN WORDS.
+ *
+ * The cause, measured on biosmoke8 and reproduced over the plane's real append path: `agent-model`'s judging and
+ * `report` tools offer `condition` as a free string, so a model writes prose there ("the source was slow", "none found"),
+ * and this member copied it into the log entry. The observation log takes a `condition` only from its vocabulary
+ * (observation-log's `CONDITION_KINDS`, C-22.4 `AI_RUN_CONDITION_UNKNOWN`), and a look `governed` by our own pacing only
+ * as LOOKED_INDETERMINATE (D-104, C-22.2 `AI_LOG_GOVERNED_ABSENCE`). Every such entry was refused, so a check run's log
+ * stayed empty and every sub-session's report went out with no `observed_at` (REPORT_UNLOCATED).
+ *
+ * The plane is still the judge: the test is the plane's own `checkCondition` and `DEFINITIVE_STATES`, read through
+ * run-rules (its re-export of observation-log's, the one function reached through a second door, never a copy). What
+ * the model said is kept, as stated text in `detail`, never dropped. Pure. */
+
+const LOG_DETAIL_MAX = 500;
+
+/** The entry as the record takes it: `{entry, governedDowngrade}`. A `condition` outside the vocabulary leaves the
+ *  field and is stated in `detail`; a `governed` look stating a definitive state is recorded LOOKED_INDETERMINATE,
+ *  with the stated state in `detail` (`governedDowngrade` is then the state it replaced). Anything else is unchanged. */
+function loggable(entry) {
+  if (!entry || typeof entry !== "object") return { entry, governedDowngrade: null };
+  const out = { ...entry };
+  const said = [];
+  if (out.condition != null && out.condition !== "" && checkCondition(out.condition) !== null) {
+    said.push(`condition stated as ${JSON.stringify(String(out.condition).slice(0, 160))}, `
+              + "which is not a word of the record's condition vocabulary, so none is recorded");
+    out.condition = null;
+  }
+  let governedDowngrade = null;
+  if (out.governed === true && DEFINITIVE_STATES.has(String(out.state))) {
+    governedDowngrade = String(out.state);
+    said.push(`stated ${governedDowngrade} while our own pacing governed the look, which supports only `
+              + "LOOKED_INDETERMINATE (D-104)");
+    out.state = "LOOKED_INDETERMINATE";
+  }
+  if (said.length) out.detail = [...said, String(out.detail ?? "")].filter(Boolean).join("; ").slice(0, LOG_DETAIL_MAX);
+  return { entry: out, governedDowngrade };
+}
+
+/* R117 (T50; N1188; K3557; `agent-model` R18, R23) — A `condition` OUTSIDE THE RECORD'S VOCABULARY IS HANDED BACK ONCE.
+ *
+ * The model writes `condition` on `judge_plan`, `judge_compose` and a sub-session's `report`; the observation log takes
+ * one only from its vocabulary (R92 sends none that is not one, saying in `detail` what was stated). Rather than lose
+ * the model's meaning to a refusal at the append, the final call is checked as it is made (`checkFinal`, agent-model
+ * R18): a `condition` that `run-rules`' `checkCondition` does not admit is handed back once with the vocabulary in the
+ * detail, for the model to rewrite; a second one outside it is taken, with `condition` null, the state exactly as stated
+ * and `detail` saying what was stated (R92's `loggable`), never as a lower state. The vocabulary is read from the
+ * contract `agent-harness` builds (R11: `returns.conditions`), never listed here. */
+const CONDITIONS = spawnContract({ level: LEVELS[0], payload: {} }).contract?.returns?.conditions ?? [];
+const JUDGED_WITH_CONDITION = new Set(["plan", "compose"]);
+function conditionFault(input) {
+  const stated = input?.condition;
+  if (stated == null || stated === "" || checkCondition(stated) === null) return null;
+  return { code: "AI_RUN_CONDITION_UNKNOWN",
+           detail: `'${String(stated).slice(0, 80)}' is not one of the record's conditions (${CONDITIONS.join(", ")}); name one `
+                   + "of them, or leave condition out" };
 }
 
 /* -------------------------------------------------- D-276: THE ANSWER, NOT THE WIRE
@@ -868,8 +1063,11 @@ function publishedPack(answer) {
  *  without having decided what to do about a refusal. The op's NAME is a
  *  constant because `planeAnswer` also wants it, so the code says the name once. */
 const MEANING_OP = "meaningrows";
+/* R103: a passage row's `snippet` is read at the longest length query-language R12 allows (64 tokens); its default is
+   one clause, which is all a sub-session would otherwise see of a cited passage. */
+const SNIPPET_TOKENS = 64;
 const meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) =>
-  planeAnswer(await call(MEANING_OP, { q, rows, limit }, ids ? { ids } : null), MEANING_OP);
+  planeAnswer(await call(MEANING_OP, { q, rows, limit, snippet: SNIPPET_TOKENS }, ids ? { ids } : null), MEANING_OP);
 
 /** WHAT EACH ROW ACTUALLY DOES AGAINST THE PLANE. One `case` per row that has
  *  work, and rows that have none say so by falling through — the table already
@@ -920,7 +1118,9 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
            mechanism believed on the strength of its existence rather than its
            behaviour is the defect this project meets most, so the flag is gone
            and `spawnContract` REFUSES the payload instead. */
-        const made = spawnContract({ level, payload });
+        /* R97: the level's targets the plan judgement named (the model's `target`, an id with an optional extent) and the
+           meaning arms `query-language` declares go into the brief beside the payload's subjects (agent-harness R12). */
+        const made = spawnContract({ level, payload, arms: Object.keys(MEANING), targets: levelTargets(state, level) });
         if (!made.ok) return { contract: made, level };
         contracts.push(made.contract);
       }
@@ -935,7 +1135,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         const ran = await runSubsessions(call, out.state, runId, model, logSeq, contracts);
         if (ran.silent || ran.model || ran.stopped) return ran;
         if (ran.dropped.length) out.dropped = ran.dropped;
-        out.state = { ...out.state, reports: ran.reports,
+        out.state = { ...out.state, reports: ran.reports, scope: ran.scope,
                       reportsRefused: [...(out.state.reportsRefused || []), ...ran.refused] };
         out.note += `; ${ran.reports.length} sub-session(s) reported, ${ran.refused.length} returned no report`;
       }
@@ -992,7 +1192,11 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          the parent resolves it itself, which is the whole trade the memory model
          is making. Bounded by `citedAddresses`, so a report cannot turn the
          parent's context into the reading it was supposed to replace. */
+      /* R100: a cited address is a record id with an optional extent after it (`INFO-… ¶1`, `INFO-…#p1`), else a source
+         address. Its record id is the part before the first space or `#`: the re-read and the document count use it,
+         and an address that names no held record is read as the address it is. */
       const addresses = citedAddresses(taken);
+      const idOf = new Map(addresses.map((a) => [a, splitAddress(a).id]));
       /* D-276: `reread` COUNTS READS THAT ANSWERED, never calls that were made.
          It used to climb once per address regardless of what came back, so a
          refused read was published as `citations_reread` — this member claiming
@@ -1001,11 +1205,27 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          zero below, one field along. */
       let reread = 0;
       const rereadRefused = [];
-      for (const address of addresses) {
-        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [address] });
+      for (const [i, address] of addresses.entries()) {
+        const record = idOf.get(address);
+        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [record] });
         if (got.silent) return { silent: got.silent };
-        if (got.refused) { rereadRefused.push(got.refused); continue; }
-        reread += 1;
+        if (got.refused) rereadRefused.push(got.refused); else reread += 1;
+        /* R114 (T50; N1195; K3602, K3637): THE READ IS TICKED AS IT IS MADE, before the next is begun: one entry in R26's
+           form whose `detail` names the record, its place in the step's list and whether the plane answered or refused,
+           and whose `read` field carries the same as data, so a screen draws "Reading {document} · {n} of {total}" from
+           fields and parses no English. A refused re-read is ticked too, as refused. No score and no word of the model's. */
+        const total = addresses.length;
+        const outcome = got.refused ? "refused" : "answered";
+        const ticked = await logSeq.tickEntry({
+          level: "meaning", subject: "collect -> re-read", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
+          terminal: false, bound: null,
+          detail: `re-read ${record} (${i + 1} of ${total}): the plane ${got.refused
+            ? `refused '${String(got.refused.code ?? "?")}'` : "answered"}`.slice(0, LOG_DETAIL_MAX),
+          read: { record, n: i + 1, total, outcome },
+        }, { step: "collect", to: "compose" });
+        if (ticked.silent) return { silent: ticked.silent };
+        /* The plane ended the run by this tick: the segment is over, and no later read is made. */
+        if (ticked.ended) return { state, consume: {}, note: null, planeEnded: ticked.ended };
       }
 
       /* D-220 — AND THE RUN COUNTS WHAT IT HOLDS IN DOCUMENTS, ITS VERSIONS AS
@@ -1025,15 +1245,33 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          as the address it is. Every read goes through `planeAnswer`, so a refusal
          makes that citation's document UNDETERMINED and is published, never a zero. */
       const resolved = [];
+      /* R115: the cited record ids the plane does not answer to the run's credential. */
+      const fenced = [];
       for (const address of addresses) {
-        const found = planeAnswer(await call("search",
-          { q: `id:"${address.replace(/"/g, "")}"`, limit: 1, facets: "none" }), "search");
+        const rid = idOf.get(address);
+        const lookup = async (id) => {
+          const f = planeAnswer(await call("search",
+            { q: `id:"${id.replace(/"/g, "")}"`, limit: 1, facets: "none" }), "search");
+          const h = f.result ? (Array.isArray(f.result.hits) ? f.result.hits : []).find((x) => x && x.bundle_id === id) || null : null;
+          return { f, h };
+        };
+        let { f: found, h: hit } = await lookup(rid);
+        if (!found.silent && !found.refused && !hit && rid !== address) ({ f: found, h: hit } = await lookup(address));
         if (found.silent) return { silent: found.silent };
         if (found.refused) { rereadRefused.push(found.refused); resolved.push({ citation: address, refused: found.refused }); continue; }
-        const hit = (Array.isArray(found.result?.hits) ? found.result.hits : [])
-          .find((h) => h && h.bundle_id === address) || null;
+        /* R115 (T50; N1186; K3557; `credentials` R79, `membership` R149): A RUN DOES NOT GO AROUND THE FENCE OF ITS
+           CREDENTIAL. A cited record id that `op=search` does not answer under the run's credential is absent as
+           `membership` R44 answers a record outside the fence (or was never there: the two read alike), so it is no
+           held document and gets no record id and no capture: it is UNDETERMINED, named in the step's note. Nothing
+           this member builds widens the credential's reads (R37); it only declines to count what they did not answer.
+           An address that is not a record id is read as the address it is (R100). */
+        if (!hit && BUNDLE_ID_RE.test(rid)) {
+          fenced.push(rid);
+          resolved.push({ citation: address, refused: { at: "search", code: "RECORD_NOT_ANSWERED", check: null } });
+          continue;
+        }
         if (hit && !(typeof hit.source_locator === "string" && hit.source_locator.trim())) {
-          resolved.push({ citation: address, bundle: address, address: null, chain: null,
+          resolved.push({ citation: address, bundle: hit.bundle_id, address: null, chain: null,
                           reason: "the cited record names no source address, so no version chain can hold it" });
           continue;
         }
@@ -1041,7 +1279,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         const chain = planeAnswer(await call("versionchain", { address: target, limit: 1000 }), "versionchain");
         if (chain.silent) return { silent: chain.silent };
         if (chain.refused) { rereadRefused.push(chain.refused); resolved.push({ citation: address, refused: chain.refused }); continue; }
-        resolved.push({ citation: address, bundle: hit ? address : null, address: target, chain: chain.result });
+        resolved.push({ citation: address, bundle: hit ? hit.bundle_id : null, address: target, chain: chain.result });
       }
       /* R90: beside its `address_norm`, each held document carries the record id and capture a leg can be cited
          by, read off the same chains; compose's facts pass `holdings` on whole. A refused read has none (R21). */
@@ -1056,6 +1294,10 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
                     + "rather than empty"
                   : "")
                + `; ${holdingsNote(holdings)}`
+               + (fenced.length
+                  ? `; ${fenced.length} cited record(s) (${fenced.slice(0, 5).map((f) => `'${f}'`).join(", ")}) are not answered `
+                    + "to the run's credential, so each is UNDETERMINED and none is held"
+                  : "")
                + `. No document was returned by a sub-session and none was loaded`;
       out.state = { ...state, reports: taken, rereads: (state.rereads || 0) + reread,
                     reportsRefused: [...(state.reportsRefused || []), ...refused], holdings };
@@ -1077,8 +1319,23 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          absence is written down, and it is deterministic for the reason its own
          header gives — if emitting it were judged, the one run the instrument
          exists to catch is the run that would not emit it. */
-      const empties = emptyLevelCandidates(state, state.target ?? null);
+      const reported = emptyLevelCandidates(state, state.target ?? null);
+      /* R104: the meaning level is the one level this step reads, so a report of it EMPTY stands only when that read
+         holds no row for the run's target. A row for it contradicts the report, and a read that gave no rows cannot
+         confirm it; either way no candidate is composed, and the tick's log says which. */
+      const rowsForTarget = Array.isArray(read.result?.rows)
+        ? read.result.rows.filter((r) => r && r.bundle_id === (state.target ?? null)).length : null;
+      const unconfirmed = rowsForTarget === 0 ? null : (rowsForTarget === null ? "unread" : "contradicted");
+      const empties = unconfirmed ? reported.filter((c) => c.level !== REPORTING_LEVEL.meaning) : reported;
       const candidates = [...(state.candidates || []), ...empties];
+      const wronged = reported.length - empties.length;
+      if (wronged) out.logEntries = [{
+        level: "meaning", subject: "compose -> level-empty candidate dropped", state: "LOOKED_INDETERMINATE",
+        governed: false, condition: null, terminal: false, bound: null,
+        detail: (unconfirmed === "contradicted"
+          ? `the sub-session reported the meaning level empty, but this step's read of it holds ${rowsForTarget} row(s) for the question: the report is contradicted by the read, so 'level-empty-${REPORTING_LEVEL.meaning}' is not composed`
+          : `the sub-session reported the meaning level empty, but this step's read of it gave no rows to confirm that, so 'level-empty-${REPORTING_LEVEL.meaning}' is not composed`).slice(0, LOG_DETAIL_MAX),
+      }];
 
       /* D-276 — THREE OUTCOMES, THREE SENTENCES, AND THE RUN NOTE IS RECORD.
          "the record was not asked", "the record answered and said nothing about
@@ -1106,7 +1363,36 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         said = `${read.result.rows.length} meaning-grain row(s) queried at the '${MEANING_ARM}' grain`;
       }
       out.note = `${said}; no document `
-               + `was loaded. ${empties.length} level(s) observed EMPTY and written down as §9's kind`;
+               + `was loaded. ${empties.length} level(s) observed EMPTY and written down as §9's kind`
+               + (wronged ? `; ${wronged} reported empty and ${unconfirmed === "contradicted" ? "contradicted by the read" : "not confirmed by the read"}, so not written down` : "");
+      /* R116 (T50; N1187; K3557; `agent-harness` R19): A DISAGREEMENT BETWEEN LEVELS IS STATED AND READ ONCE, NEVER LOOPED.
+         For each (record, levels) pair the judgement named that the table has not settled (`disagreementsToSettle`, once
+         per pair per run, whatever the pass or segment), the record is read at passage grain through the one reader
+         (R19) and one entry says which levels disagree about which record and whether the read answered (with the
+         number of passages) or was refused (`unread`); the pair rides in the entry as data (`disagree`), so a screen
+         parses no English. No candidate, pass or bound is touched by it, and the model is asked nothing more. */
+      const pairs = disagreementsToSettle(state);
+      const statements = [];
+      for (const pair of pairs) {
+        const got = await meaningRead(call, { rows: "passage", limit: 50, ids: [pair.record] });
+        if (got.silent) return { silent: got.silent };
+        const n = Array.isArray(got.result?.rows) ? got.result.rows.length : null;
+        const named = pair.levels.join(" and ");
+        statements.push({
+          level: pair.levels[0], subject: "compose -> levels disagree", state: "LOOKED_INDETERMINATE", governed: false,
+          condition: null, terminal: false, bound: null,
+          detail: `${named} disagree about ${pair.record}: ${got.refused
+            ? `the record was unread (the plane refused '${String(got.refused.code ?? "?")}')`
+            : n === null ? "the record was read, and the plane answered without a list of passages this member could count"
+            : `the record was read at passage grain (${n} passage(s))`}`.slice(0, LOG_DETAIL_MAX),
+          disagree: { record: pair.record, levels: [...pair.levels] },
+        });
+        if (got.refused) out.refused = [...(Array.isArray(out.refused) ? out.refused : out.refused ? [out.refused] : []), got.refused];
+      }
+      if (statements.length) {
+        out.logEntries = [...(out.logEntries || []), ...statements];
+        out.note += `; ${statements.length} disagreement(s) between levels stated and each record read once at passage grain`;
+      }
       out.state = { ...state, candidates };
       return out;
     }
@@ -1141,16 +1427,38 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         return out;
       }
       const body = held.result ?? {};
-      const names = new Set((Array.isArray(body.versions) ? body.versions : [])
-        .map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
+      const versions = Array.isArray(body.versions) ? body.versions : [];
+      const names = new Set(versions.map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
       /* FL-11: the read above is of the RUN's target, so it can only rule on candidates aimed THERE. A
          candidate naming another question was compared against nothing and says so — it survives to the
          plane, which bounds it — rather than being filtered against another question's versions. */
       const aimedHere = (c) => (c.target ?? state.target ?? null) === (state.target ?? null);
       const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
+      const droppedHere = (state.candidates || []).filter((c) => c && aimedHere(c) && names.has(String(c.name ?? "")));
       const queue = (state.candidates || []).filter((c) => c && (!aimedHere(c) || !names.has(String(c.name ?? ""))));
+      /* R101: a drop is a look the log must hold, not only the trace: one LOOKED_INDETERMINATE entry per level, at the
+         dropped candidate's level (the observation log's spelling of the candidate's), naming each dropped name. A
+         candidate that states no level has none to be logged at and stays in the note alone. */
+      /* R105: a held version this run wrote itself says so, with the pass that wrote it, rather than reading as someone else's. */
+      const mine = (n) => (state.written || []).find((w) => w.name === n) ?? null;
+      const ofRun = (n) => (mine(n) ? ` (written by this run in pass ${mine(n).pass})` : "");
+      /* R108: a candidate whose level is none of the four is dropped and logged too, at the `meaning` level (the look
+         dedup itself makes is of the question), its detail saying it states no level. */
+      const byLevel = new Map();
+      for (const c of droppedHere) {
+        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level) ?? "meaning";
+        const n = String(c.name ?? "");
+        byLevel.set(level, [...(byLevel.get(level) || []),
+          `'${n}'${LEVELS.some((l) => REPORTING_LEVEL[l] === c.level) ? "" : " (stating no level)"}${ofRun(n)}, matching the held version of that name`]);
+      }
+      if (byLevel.size) out.logEntries = [...byLevel].map(([level, named]) => ({
+        level, subject: "dedup -> candidate dropped", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
+        terminal: false, bound: null,
+        detail: `dropped before any write: ${named.join(", ")} already held on the question`.slice(0, LOG_DETAIL_MAX),
+      }));
       out.note = `${proposed} candidate(s) compared against ${names.size} on the record; `
                + `${queue.length} survived`
+               + (droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'${ofRun(String(c.name ?? ""))}`).join(", ")})` : "")
                + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
       out.state = { ...state, queue };
       return out;
@@ -1175,7 +1483,17 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       if (res.status === 200 && res.body?.ok === true && answer.ok !== false && answer.wrote !== false) {
         out.submitted = true;
         out.note = `wrote '${String(candidate.name ?? "")}'`;
-        out.state = { ...state, queue, refusal: null, submission: candidate };
+        /* R105: the write is a look the log holds: its name, its level and the pass that wrote it; the state keeps it
+           (this run's, not the record's) so a later pass's dedup drop can name it. */
+        const name = String(candidate.name ?? "");
+        const pass = Number(state.pass) + 1;
+        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === candidate.level);
+        if (level) out.logEntries = [{
+          level, subject: "submit -> candidate written", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
+          terminal: false, bound: null, detail: `wrote '${name}' at level ${level} in pass ${pass}`.slice(0, LOG_DETAIL_MAX),
+        }];
+        out.state = { ...state, queue, refusal: null, submission: candidate,
+                      written: [...(state.written || []), { name, level: level ?? null, pass }] };
         return out;
       }
       /* F10's OTHER HALF, OBSERVED RATHER THAN ASSUMED. PL-3 answers a verbatim
@@ -1374,12 +1692,38 @@ async function reexaminationReads(ask, response, undetermined) {
   else undetermined.push({ op: "procedureguides", id: action, code: null, why: "the action answered names no kind" });
 }
 
+/** R97 — the targets the plan judgement named for one level, as `agent-harness` R12 takes them, `{id, extent}`. A
+ *  target names its subject in `target` (an id), optionally followed by an extent (` ¶n`, `#…`, R100's form); one that
+ *  names none, or whose level is another, is not this level's. An internet target's `url` is the fetch's (R18), not a subject. */
+function levelTargets(state, level) {
+  const out = [];
+  for (const t of Array.isArray(state.targets) ? state.targets : []) {
+    if (!t || typeof t !== "object" || t.level !== level || typeof t.target !== "string" || !t.target.trim()) continue;
+    const { id, extent } = splitAddress(t.target.trim());
+    out.push({ id, extent });
+  }
+  return out;
+}
+
+/** R100, R102 — a cited address as a record id and the extent after it: the id is the part before the first space,
+ *  `#` or `¶`, the extent what follows (` ¶1`, `¶1`, `#p1`, the `¶` kept), or null. */
+function splitAddress(address) {
+  const at = address.search(/[\s#¶]/);
+  if (at <= 0) return { id: address, extent: null };
+  return { id: address.slice(0, at), extent: address.slice(at).trim() || null };
+}
+
 /** agent-harness R7 — THE SUB-SESSIONS. Each gets a fresh transcript (nothing shared with the parent or another level), its
  *  frozen contract, the contract's `scope` as its only plane tool, and `report` as its answer. Its look is logged
  *  at its level, and that entry's address is the report's `observed_at`. A sub-session that returns no report is
  *  named, never read as an absence. */
 async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   const reports = [], refused = [], dropped = [];
+  /* agent-harness R18 (T50; N1169): WHAT EACH LEVEL'S SUB-SESSION READ, set here and nowhere else, from the plane's own
+     four-level statement of each read it made (`retrieval` R13: `scope.documents`), never from a report's words and never
+     by a judgement. `reads` counts the reads that answered; `documents` is the greatest the statements gave (R118), and is left out
+     when none stated one, so the table (which fails closed) writes no absence for that level. */
+  const scope = {};
   for (const contract of contracts) {
     const got = await converse({
       reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter, ...model.traced,
@@ -1389,12 +1733,34 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
       messages: subsessionOpening(contract),
       tools: subsessionTools(contract),
       finalTool: "report",
+      /* R95 (agent-model R19): a check's sub-sessions, and no other conversation, run as sub-sessions. */
+      role: "subsession",
+      /* R94 (agent-model R18): the report is checked as `checkReport` will check it, less its location (the log gives
+         that after, so its absence is never handed back), and a refusal goes back once with its detail to be rewritten. */
+      checkFinal: (input) => {
+        const notObject = input == null || typeof input !== "object" || Array.isArray(input);
+        const { observed_at: _located, ...said } = notObject ? {} : input;
+        const bad = checkReport(notObject ? input : { ...said, level: contract.level, observed_at: "log:0" });
+        /* R117: and a `condition` the record has no word for is handed back once, after the report's shape. */
+        return bad ? { code: bad.code, detail: bad.detail } : conditionFault(notObject ? {} : input);
+      },
       onTool: async (name, input) => {
         if (!contract.scope.includes(name))
           return { content: `'${String(name)}' is not in this sub-session's scope (${contract.scope.join(", ")})`, error: true };
         const lim = Math.min(50, Math.max(1, Math.floor(Number(input.limit)) || 20));
-        const r = await meaningRead(call, { q: String(input.q ?? ""), rows: String(input.rows ?? ""), limit: lim });
+        /* R96: `ids` limits a read to named records: at most 20, each a non-empty string, others dropped. */
+        const ids = (Array.isArray(input.ids) ? input.ids : [])
+          .filter((x) => typeof x === "string" && x.length > 0).slice(0, 20);
+        const r = await meaningRead(call, { q: String(input.q ?? ""), rows: String(input.rows ?? ""), limit: lim,
+                                            ids: ids.length ? ids : null });
         if (r.silent) return { halt: { planeSilent: r.silent } };
+        if (!r.refused) {
+          const seen = (scope[contract.level] ??= { reads: 0, documents: null });
+          const documents = r.result?.scope?.documents;
+          seen.reads += 1;
+          /* R118: the greatest `documents` any read stated; a read that stated none adds nothing. */
+          if (Number.isInteger(documents) && documents >= 0) seen.documents = seen.documents === null ? documents : Math.max(seen.documents, documents);
+        }
         /* R61, R63: what the plane answers reaches the sub-session only as this tool's result, text only. */
         const told = toolContent(r.refused ? (r.refused.plane ?? { code: r.refused.code }) : r.result);
         dropped.push(...told.dropped.map((d) => ({ ...d, path: `${contract.level}: ${d.path}` })));
@@ -1412,22 +1778,31 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
     }
     const { observed_at: _ignored, ...said } = got.answer;
     const report = { ...said, level: contract.level };
+    /* R117: a second `condition` outside the vocabulary is taken as none; `loggable` below says what was stated. */
+    const statedCondition = typeof report.condition === "string" ? report.condition : null;
+    if (statedCondition && checkCondition(statedCondition) !== null) report.condition = null;
     if (LOOKED_STATES.has(String(report.state))) {
       const seq = logSeq ? logSeq.next() : null;
-      const entry = {
+      /* R92: in the record's own words (`loggable`); a governed definitive look is LOOKED_INDETERMINATE, and the report
+         located at it says the same, so no absence is written off a look our own pacing held. */
+      const { entry, governedDowngrade } = loggable({
         level: contract.level, subject: `sub-session ${contract.level} -> report`,
         state: report.state === "PRESENT" ? "LOOKED_INDETERMINATE" : report.state,
-        governed: report.governed === true, condition: typeof report.condition === "string" ? report.condition : null,
+        governed: report.governed === true, condition: statedCondition,
         terminal: false, bound: null,
         detail: String(typeof report.summary === "string" ? report.summary : "").slice(0, 500),
-      };
-      const tick = planeAnswer(await call("airuntick", null, { run: runId, log: [entry] }), "airuntick");
+      });
+      if (governedDowngrade && report.state === governedDowngrade) report.state = "LOOKED_INDETERMINATE";
+      const tick = planeAnswer(await call("airuntick", null,
+        { run: runId, log: [entry], ...(logSeq?.wall ? { consume: { wallclock: logSeq.wall.spend() } } : {}) }), "airuntick");
       if (tick.silent) return { silent: tick.silent };
       const t = tick.result ?? {};
       const bad = Array.isArray(t.refused) ? t.refused : [];
-      /* R26: a tick answered `found: false` (no such run) appended nothing, so it is refused, never landed. */
-      if (tick.refused || bad.length || t.found === false) {
-        for (const r of tick.refused ? [tick.refused] : t.found === false ? [t] : bad)
+      /* R26: a tick answered `found: false` (no such run) appended nothing, so it is refused, never landed; (R92) so is
+         a tick refused whole (`ticked: false` with its code). */
+      const whole = t.found === false || (t.ticked === false && t.code != null);
+      if (tick.refused || bad.length || whole) {
+        for (const r of tick.refused ? [tick.refused] : whole ? [t] : bad)
           logSeq?.refused({ at: "airuntick.log", step: "fanout", to: "collect", level: contract.level,
                             code: r?.code ?? r?.reason ?? null, check: r?.check ?? null, plane: r?.plane ?? r ?? null });
       } else {
@@ -1437,7 +1812,9 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
     }
     reports.push(report);
   }
-  return { reports, refused, dropped };
+  return { reports, refused, dropped,
+           scope: Object.fromEntries(Object.entries(scope).map(([level, v]) =>
+             [level, { reads: v.reads, ...(v.documents !== null ? { documents: v.documents } : {}) }])) };
 }
 
 /* R56 (K1479, K1502, K1755) — THE SUGGESTIONS SWITCH THAT GOVERNS THE ACT, as the plane sends it beside the account
@@ -1473,8 +1850,11 @@ function modelHalf({ reference, runner, meter, suggestions, traced = {} }) {
        covers, so the plane counts each model call, never a conversation as one. A `calls` it did not state is passed
        as `null` (which the plane counts as one call), never invented here. */
     spent(got, mode) {
-      if (got && got.usage) pending.push({ mode, model: MODEL_FOR_MODE[mode] ?? null, usage: got.usage,
-                                           calls: got.calls === undefined ? null : got.calls });
+      /* R98: the model `converse` answers for that conversation (agent-model R21), the mode's only when it states none.
+         R112 (N1168): and the `effort` its requests carried (the same answer), as requested; `usage` and `calls` as the
+         end states them, `null` where it states none, never invented here. */
+      if (got && got.usage) pending.push({ mode, model: got.model ?? MODEL_FOR_MODE[mode] ?? null, effort: got.effort ?? null,
+                                           usage: got.usage, calls: got.calls === undefined ? null : got.calls });
     },
     drain() { return pending.splice(0, pending.length); },
   };
@@ -1528,11 +1908,7 @@ async function accountOf(body) {
       + "carries the one account that serves the member's act, as account.", 400, { field: "claude_accounts" }) };
   const a = body.account;
   if (a === undefined || a === null)
-    return { refusal: refusal("NO_ACCOUNT",
-      "this call carries no Claude account for the act of the member who started it: neither the member's own "
-      + "reference nor the group's API key serves that act (K1502, K1755), so the capability is UNAVAILABLE and "
-      + "nothing was done.",
-      409, { capability: "unavailable" }) };
+    return { refusal: refusal("NO_ACCOUNT", word("refusal.NO_ACCOUNT"), 409, { capability: "unavailable" }) };
   if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind)
       || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind)
       || typeof a.member !== "string" || !a.member
@@ -1551,9 +1927,7 @@ async function accountOf(body) {
   /* R82 (T47; K3060 D10): a sign-in serves an act only on the token `credentials` holds for the member; with none held
      (every connection made before T47 among them) the member connects again, and nothing was done. */
   if (a.kind === "signin" && !(typeof a.secret === "string" && a.secret.length > 0))
-    return { refusal: refusal("SIGNIN_NOT_HELD",
-      "Your group's Civicsmith holds no Claude sign-in for you to use, so nothing was done. Connect your Claude account "
-      + "again in your settings, then try again.", 409, { capability: "unavailable" }) };
+    return { refusal: refusal("SIGNIN_NOT_HELD", word("refusal.SIGNIN_NOT_HELD"), 409, { capability: "unavailable" }) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
     return { refusal: refusal(CASCADE_NO_ACCOUNT, cascade.detail, 409,
@@ -1572,63 +1946,9 @@ async function handleRun(req, env) {
   if (body == null)
     return refusal("BAD_BODY", "the request body could not be read as JSON.", 400);
 
-  const runId = typeof body.run_id === "string" ? body.run_id : "";
-  const store = typeof body.store === "string" ? body.store : "";
-  const credential = typeof body.credential === "string" ? body.credential : "";
-
-  /* The run's identity is the PLANE's. This member mints none — a component that
-     invents an identifier the record will later cite is a component inventing a
-     hop (D-112), and the run log is the plane's own object. */
-  if (!runId || runId.length > 200)
-    return refusal("BAD_RUN_ID",
-      "a run is identified by the plane and this member mints no identity of its own; the caller must say "
-      + "which run this segment belongs to.", 400);
-
-  if (typeof body.store !== "string")
-    return refusal("BAD_STORE",
-      "a run happens inside one namespace and this member guesses none: the caller must say which. "
-      + "A default namespace here would let a run touch the real record while its caller believed it "
-      + "was working in a scratch one.", 400);
-  /* D-462: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, an empty string — is
-     refused by the plane's own code, with the plane's `asked`/`namespaces` beside it, and nothing was called. */
-  if (!NAMESPACES.includes(store))
-    return refusal("NAMESPACE_UNKNOWN",
-      "a run names the namespace it works in, and no namespace by that name exists on any instance this member "
-      + "can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept "
-      + "apart for testing, and the name must match one of them exactly; they are listed beside this message.", 400,
-      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] });
-
-  /* A SHAPE test, never an authorisation test — see AI_TOKEN_SHAPE above. */
-  if (!credential)
-    return refusal("NO_CREDENTIAL",
-      "this member holds no credential of its own and cannot act except under one it is handed. There is "
-      + "no fallback identity here by design: a worker that could act unattended would be acting as "
-      + "nobody, and nothing it did could be attributed.", 401);
-  if (!AI_TOKEN_SHAPE.test(credential))
-    return refusal("BAD_CREDENTIAL_SHAPE",
-      "the credential handed to this member is not shaped like one this plane issues. Whether a "
-      + "well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and "
-      + "is never made here.", 400);
-
-  /* R6, R32, R57 (K1502, K1503) — THE MEMBER'S OWN ACCOUNT, JUDGED BEFORE ANY PLANE CALL IS SPENT ON THIS RUN. */
-  const acct = await accountOf(body);
-  if (acct.refusal) return acct.refusal;
-  const { account, cascade } = acct;
-
-  /* R7: a positive number, else 120 — `Number(x) || 120` let a negative setting become the bound. */
-  const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
-  const requested = body.turns == null ? bound : Number(body.turns);
-  if (!Number.isFinite(requested) || requested < 1)
-    return refusal("BAD_TURNS", "turns must be a positive number of model turns for this segment.", 400);
-  /* REFUSED rather than silently clamped. A caller that asked for 400 turns and
-     got 120 without being told believes it saw a whole run; the same reasoning
-     that makes the plane's read bounds refuse rather than truncate. */
-  if (requested > bound)
-    return refusal("SEGMENT_OVER_BOUND",
-      `a segment is bounded at ${bound} model turns and ${requested} were asked for. The bound is not a `
-      + `policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a `
-      + `longer segment would meet. Split the run across segments — resuming is what segments are for.`,
-      400, { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE });
+  const checked = await checkRun(body, env);
+  if (checked.refusal) return checked.refusal;
+  const { runId, store, credential } = checked;
 
   /* THE ROUND TRIP. One op, non-mutating, under the credential we were handed.
      Whatever this member reports about the credential is the PLANE's statement,
@@ -1652,6 +1972,143 @@ async function handleRun(req, env) {
                         + "refusal is passed through exactly as the plane worded it.",
                   plane_status: asked.status, plane: asked.body }, 403);
 
+  /* R110: past R1–R8's checks and before any segment, write or model call (the run stays as it was). A segment whose
+     caller supplies the judgements (the stubbed path) takes no model turn and reaches no runner (R28, R58), so there is
+     nothing for the gate to hold back. */
+  const blocked = Array.isArray(body.judgements) ? null : await assistantReady(env, checked.account);
+  if (blocked) return blocked;
+
+  /* R91 — THE SEGMENT OUTLIVES ITS CALLER. With the segment driver bound, the segment is handed to the run's own
+     Durable Object, which runs it from an alarm whether or not the plane is still connected, and this answers 202 at
+     once (ai-runs R82 waits only for this). With none bound (an instance not yet installed with it), the segment runs
+     on this request and answers R28, as it always did; both paths end with the `segment_end` tick. */
+  if (segmentsBound(env)) {
+    let before;
+    try {
+      before = await segmentAnswer(env, checked, body, asked.body, doorTrace(req), null, true);
+    } catch (e) {
+      /* Before any step: no segment started, so nothing is written for it (R10, R57). */
+      return refusal("SEGMENT_THREW", "the segment could not be started for an error of this member's own; the run "
+        + "stays as it was and is resumable.", 500,
+        { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) });
+    }
+    if (!before.ready) return before.response;
+    let res;
+    try {
+      const stub = env.SEGMENTS.get(env.SEGMENTS.idFromName(runId));
+      const traced = doorTrace(req);
+      res = await stub.fetch("http://segment/start", { method: "POST", headers: {
+        "content-type": "application/json",
+        ...(traced.trace ? { [TRACE_HEADER]: traced.trace } : {}),
+        ...(traced.memberRef ? { [MEMBER_REF_HEADER]: traced.memberRef } : {}) },
+        body: JSON.stringify({ body, whoami: asked.body }) });
+    } catch (e) {
+      return refusal("SEGMENT_NOT_ACCEPTED",
+        "the segment driver could not be reached, so no segment was started and the run stays as it was; it is "
+        + "resumable.", 502, { run_id: runId, detail_from_binding: String((e && e.message) || e).slice(0, 200) });
+    }
+    if (res.status === 202) return json({ accepted: true, run_id: runId }, 202);
+    return res;
+  }
+  return runSegment(env, checked, body, asked.body, doorTrace(req));
+}
+
+/** R2–R7 — the body's own checks, before any plane call: `{refusal}` or the segment's inputs. Pure but for the
+ *  account's judgement (R32). */
+async function checkRun(body, env) {
+  const runId = typeof body.run_id === "string" ? body.run_id : "";
+  const store = typeof body.store === "string" ? body.store : "";
+  const credential = typeof body.credential === "string" ? body.credential : "";
+
+  /* The run's identity is the PLANE's. This member mints none — a component that
+     invents an identifier the record will later cite is a component inventing a
+     hop (D-112), and the run log is the plane's own object. */
+  if (!runId || runId.length > 200)
+    return { refusal: refusal("BAD_RUN_ID",
+      "a run is identified by the plane and this member mints no identity of its own; the caller must say "
+      + "which run this segment belongs to.", 400) };
+
+  if (typeof body.store !== "string")
+    return { refusal: refusal("BAD_STORE",
+      "a run happens inside one namespace and this member guesses none: the caller must say which. "
+      + "A default namespace here would let a run touch the real record while its caller believed it "
+      + "was working in a scratch one.", 400) };
+  /* D-462: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, an empty string — is
+     refused by the plane's own code, with the plane's `asked`/`namespaces` beside it, and nothing was called. */
+  if (!NAMESPACES.includes(store))
+    return { refusal: refusal("NAMESPACE_UNKNOWN", word("refusal.NAMESPACE_UNKNOWN"), 400,
+      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }) };
+
+  /* A SHAPE test, never an authorisation test — see AI_TOKEN_SHAPE above. */
+  if (!credential)
+    return { refusal: refusal("NO_CREDENTIAL",
+      "this member holds no credential of its own and cannot act except under one it is handed. There is "
+      + "no fallback identity here by design: a worker that could act unattended would be acting as "
+      + "nobody, and nothing it did could be attributed.", 401) };
+  if (!AI_TOKEN_SHAPE.test(credential))
+    return { refusal: refusal("BAD_CREDENTIAL_SHAPE",
+      "the credential handed to this member is not shaped like one this plane issues. Whether a "
+      + "well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and "
+      + "is never made here.", 400) };
+
+  /* R6, R32, R57 (K1502, K1503) — THE MEMBER'S OWN ACCOUNT, JUDGED BEFORE ANY PLANE CALL IS SPENT ON THIS RUN. */
+  const acct = await accountOf(body);
+  if (acct.refusal) return { refusal: acct.refusal };
+  const { account, cascade } = acct;
+
+  /* R7: a positive number, else 120 — `Number(x) || 120` let a negative setting become the bound. */
+  const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
+  const requested = body.turns == null ? bound : Number(body.turns);
+  if (!Number.isFinite(requested) || requested < 1)
+    return { refusal: refusal("BAD_TURNS", "turns must be a positive number of model turns for this segment.", 400) };
+  /* REFUSED rather than silently clamped. A caller that asked for 400 turns and
+     got 120 without being told believes it saw a whole run; the same reasoning
+     that makes the plane's read bounds refuse rather than truncate. */
+  if (requested > bound)
+    return { refusal: refusal("SEGMENT_OVER_BOUND",
+      `a segment is bounded at ${bound} model turns and ${requested} were asked for. The bound is not a `
+      + `policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a `
+      + `longer segment would meet. Split the run across segments — resuming is what segments are for.`,
+      400, { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE }) };
+
+  return { runId, store, credential, account, cascade, bound, requested };
+}
+
+/** R91 — ONE SEGMENT, run to its end: on the request when no driver is bound, or from the run's Durable Object's alarm
+ *  (`SegmentDriver`). It answers R28 or the refusal that ended it, and, whatever ended it, first sends the plane one
+ *  `op=airuntick` carrying `segment_end: {by, done, refusals, error?}` (`SEGMENT_END_BY`), so the plane learns every segment's
+ *  end even when nobody is left to read the answer. `deadline` is the segment's wall bound, when it has one. `beforeEnd` (R93)
+ *  is called once the segment's end is known and before that tick is sent: the driver marks the segment not running there,
+ *  so the next segment the plane dispatches from inside the tick (ai-runs R84) is accepted. */
+async function runSegment(env, checked, body, whoami, traced, deadline = null, beforeEnd = null) {
+  const { runId, store, credential } = checked;
+  let answer;
+  try {
+    answer = await segmentAnswer(env, checked, body, whoami, traced, deadline);
+  } catch (e) {
+    /* An error is a segment's end whenever it came, the run having been handed to this segment. */
+    answer = { response: refusal("SEGMENT_THREW",
+      "the segment stopped on an error of this member's own, so it ended where it stood; what it already logged and "
+      + "wrote stays, and the plane is told the segment ended.", 500,
+      { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) }),
+      end: { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" } };
+  }
+  if (beforeEnd) await beforeEnd();
+  /* The plane's answer to this tick changes nothing here: the segment has already ended. */
+  if (answer.end)
+    await askPlane(env, "airuntick", credential, store, null, { run: runId, segment_end: answer.end })
+      .catch(() => null);
+  return answer.response;
+}
+
+/** R91: the codes of R28's `refusals`, each named once, in order. */
+const refusalCodes = (list) => [...new Set((list || []).map((r) => r && (r.code ?? r.reason))
+  .filter((c) => typeof c === "string" && c))];
+
+async function segmentAnswer(env, checked, body, whoami, traced, deadline, preflight = false) {
+  const { runId, store, credential, account, cascade, bound, requested } = checked;
+  const progress = { started: false };
+
   /* ------------------------------------------------------- FL-3: DRIVE THE TABLE
    *
    * Everything below is `agent-harness`' decision and this function's plumbing.
@@ -1667,18 +2124,27 @@ async function handleRun(req, env) {
   const meter = segmentMeter({ turnsBound: requested, bytesBound });
   const modelMode = !Array.isArray(body.judgements);
   const model = modelMode
-    ? modelHalf({ reference: (await cascadeToken(account)).reference, runner: env.RUNNER ?? null, meter,
-                  suggestions: account.suggestions, traced: doorTrace(req) })
+    ? modelHalf({ reference: (await cascadeToken(account)).reference, runner: remoteOf(env), meter,
+                  suggestions: account.suggestions, traced })
     : null;
 
   const drive = await driveHarness(env, {
-    runId, store, credential, account, model,
+    runId, store, credential, account, model, preflight,
     judgements: Array.isArray(body.judgements) ? body.judgements : [],
     maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS,
+    deadline, progress,
   });
-  if (drive.refusal) return drive.refusal;
+  if (drive.ready) return { ready: true };
+  /* R91: a refusal that ended the segment is answered as it always was, and its code ends the segment's `segment_end`.
+     One before the first step (R8–R11, R48: the run, its payer, its pack, its log) is a segment that never started, and
+     nothing is written for it (R10, R57: the run stays as it was). */
+  if (drive.refusal) {
+    const said = await drive.refusal.clone().json().catch(() => ({}));
+    return { response: drive.refusal, end: progress.started
+      ? { by: SEGMENT_END_BY.refusal, done: false, refusals: refusalCodes([said]) } : null };
+  }
 
-  return json({
+  return { end: { ...drive.segmentEnd, refusals: refusalCodes(drive.refusals) }, response: json({
     ok: true,
     run_id: runId,
     store,
@@ -1749,9 +2215,9 @@ async function handleRun(req, env) {
        and the namespace it confined the call to. Both are facts the plane
        decided; this member re-derives neither. */
     plane_says: {
-      token_class: asked.body.result?.tokenClass ?? asked.body.tokenClass ?? null,
-      store: asked.body.store ?? null,
-      session: asked.body.result?.session ?? null,
+      token_class: whoami?.result?.tokenClass ?? whoami?.tokenClass ?? null,
+      store: whoami?.store ?? null,
+      session: whoami?.result?.session ?? null,
     },
 
     /* AND THE PART THAT IS UNDETERMINED, STATED RATHER THAN GUESSED OR OMITTED.
@@ -1767,9 +2233,9 @@ async function handleRun(req, env) {
     principal: null,
     principal_source: "UNPUBLISHED — no read op an ai credential may call states its own principal (D-199 (4))",
 
-    plane: { version: asked.body.version ?? null, op: "whoami" },
+    plane: { version: whoami?.version ?? null, op: "whoami" },
     worker: { name: "agent-worker", version: env.VERSION || "0.0.0" },
-  });
+  }) };
 }
 
 /* Fleet rule 4: each member versions and rolls out on its own, so "a deploy
@@ -1777,20 +2243,102 @@ async function handleRun(req, env) {
    current while the sibling it calls is still serving the previous build, and
    that window is invisible to both. A verification must establish which build
    ANSWERED. This is how this member answers that question about itself. */
-function handleVersion(env) {
+async function handleVersion(env) {
   return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0", model_turns: MODEL_TURNS,
-                runner: runnerBound(env) });
+                runner: (await remoteVersion(env)).answered });
 }
 
-/* R30 (T46; N897 (4)) — WHETHER THE SIGN-IN PART IS INSTALLED: the `RUNNER` Container Durable Object binding is present
-   (it names instances and reaches them, as `/signin` and a sign-in's turns use it), so `instance-setup` (its R17) can tell
-   a copy that runs a member's own sign-in from one that does not. A boolean only: nothing else of the binding is named. */
-const runnerBound = (env) => typeof env.RUNNER?.idFromName === "function" && typeof env.RUNNER?.get === "function";
+/** R110 — THE GATE: until the remote path works on a copy, that copy's assistant does not run (K3610). A member's own
+ *  sign-in is the only account that reaches `REMOTE`; for one, the call proceeds only when the remote class answers its
+ *  version and the member's last `check` (R111) passed at that version: otherwise 503 `ASSISTANT_REMOTE_NOT_READY`,
+ *  its `detail` the record's word (DEC-301; R64), `why` naming `absent`, `silent` or `unchecked`. An API-key account
+ *  is unchanged (it never reaches `REMOTE`; K3347). Null when the call may go on. Made after R1–R8's shape checks and
+ *  before any plane write, model call or segment, so a refused `/run` leaves its run as it was (R57). */
+async function assistantReady(env, account) {
+  if (account?.kind !== "signin") return null;
+  const got = await remoteReady(env, account.member);
+  if (got.ready) return null;
+  return refusal("ASSISTANT_REMOTE_NOT_READY", word("refusal.ASSISTANT_REMOTE_NOT_READY"), 503,
+                 { capability: "unavailable", why: got.why });
+}
+
+/* R91 (R085-8; K3477; WALK-085 F2) — THE SEGMENT DRIVER: one Durable Object per run (`SEGMENTS`, named by the run id), so
+   a segment outlives the request that started it. Live, the plane dropped `/run` after 30 s and the segment, living
+   only on that connection, died with it, its answer never read; `waitUntil` would hold it 30 s more and no longer.
+
+   It holds the segment's inputs IN MEMORY ONLY, from the `/start` that hands them over to the alarm that runs them:
+   the credential and the account are never written to storage (R36), only the alarm's time is. An object evicted in
+   between runs nothing, and the plane's lease ends the run (ai-runs R83). The alarm runs the segment under a wall
+   bound (`MAX_SEGMENT_MS`, else 10 minutes) clear of an alarm's own 15-minute limit, so a long segment ends as a
+   segment bound and the plane dispatches the next (ai-runs R84), never as a killed handler. A second segment of a run
+   whose segment is still held or running is refused `SEGMENT_RUNNING`: two would race the run's published state. */
+const DEFAULT_SEGMENT_WALL_MS = 10 * 60 * 1000;
+const segmentsBound = (env) => typeof env.SEGMENTS?.idFromName === "function" && typeof env.SEGMENTS?.get === "function";
+const segmentWallMs = (env) => (Number(env.MAX_SEGMENT_MS) > 0 ? Number(env.MAX_SEGMENT_MS) : DEFAULT_SEGMENT_WALL_MS);
+
+export class SegmentDriver {
+  constructor(state, env) { this.state = state; this.env = env; this.pending = null; this.running = false; }
+
+  async fetch(req) {
+    if (this.pending || this.running)
+      return refusal("SEGMENT_RUNNING",
+        "a segment of this run is still running, so no second one was started; the plane is told when it ends.", 409);
+    const got = await req.json().catch(() => null);
+    if (!got || typeof got.body !== "object" || got.body === null)
+      return refusal("BAD_BODY", "the request body could not be read as JSON.", 400);
+    const checked = await checkRun(got.body, this.env);
+    if (checked.refusal) return checked.refusal;
+    this.pending = { checked, body: got.body, whoami: got.whoami ?? null, traced: doorTrace(req) };
+    await this.state.storage.setAlarm(Date.now());
+    return json({ accepted: true, run_id: checked.runId }, 202);
+  }
+
+  async alarm() {
+    const p = this.pending;
+    this.pending = null;
+    if (!p) return;
+    this.running = true;
+    let released = false;
+    /* R93: the segment is over before the plane hears it: its `segment_end` tick may dispatch the run's next segment
+       within that very call, and that `/run` must find this object free, not `SEGMENT_RUNNING`. */
+    const release = () => { released = true; this.running = false; };
+    try {
+      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env), release);
+    } finally {
+      if (!released) this.running = false;
+    }
+  }
+}
+
+/* R110, R111 (BOB's K3693) — THE MEMBER'S CHECK RECORD, in this member's own storage: one instance per member (`CHECKS`),
+   holding the version at which that member's last `check` passed and the time, and nothing else (R36). `GET /check`
+   answers `{ok: true, checked, version}`; `POST /check` with `{version}` records a pass (R111's `check` step makes it).
+   Only the gate reads it (`remoteReady`); it is not a store of the record and writes nothing of it. */
+export class CheckRecord {
+  constructor(state) { this.state = state; }
+
+  async fetch(req) {
+    if (new URL(req.url).pathname !== "/check") return refusal("UNKNOWN", "GET or POST /check only.", 404);
+    if (req.method === "GET") {
+      const held = await this.state.storage.get("check");
+      return json({ ok: true, checked: !!held, version: held?.version ?? null });
+    }
+    if (req.method === "POST") {
+      const got = await req.json().catch(() => null);
+      if (!(got && typeof got.version === "string" && got.version && got.version.length <= 200))
+        return refusal("BAD_BODY", "a check is recorded with the version it passed at: a non-empty string.", 400);
+      await this.state.storage.put("check", { version: got.version, at: Date.now() });
+      return json({ ok: true });
+    }
+    return refusal("UNKNOWN", "GET or POST /check only.", 404);
+  }
+}
 
 /* R54, R59 — what `/ask` (ask.mjs) and `/draft` (draft.mjs) use of this shell: one route to the plane, one refusal
    helper, one account judgement. */
 const ASK_DEPS = { refusal, json, askPlane, planeAnswer, publishedPack, accountOf, cascadeToken, modelHalf,
-                   loadableLayers, loadLayer, converse, segmentMeter, NAMESPACES, DEFAULT_MAX_SEGMENT_BYTES };
+                   loadableLayers, loadLayer, converse, segmentMeter, NAMESPACES, DEFAULT_MAX_SEGMENT_BYTES,
+                   assistantReady };
 
 /* R58 — ONE TRUTH FOR MODEL TURNS, the sentence this member states about itself on `GET /version`, and the same one its
    header and its `/run` answer state. */
@@ -1802,7 +2350,7 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/+/, "");
-    if (req.method === "GET" && path === "version") return handleVersion(env);
+    if (req.method === "GET" && path === "version") return await handleVersion(env);
     if (req.method === "POST" && (path === "run" || path === "")) return handleRun(req, env);
     if (req.method === "POST" && path === "ask") return handleAsk(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "draft") return handleDraft(req, env, ASK_DEPS);

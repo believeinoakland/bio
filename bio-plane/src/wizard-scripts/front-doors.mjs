@@ -5,7 +5,7 @@
  * build-data.mjs. */
 import { deepFreeze } from "./data.mjs";
 
-export const FRONT_DOORS_SOURCE = deepFreeze({"commit":"a0fab7abf0","path":"docs/development/ux-substrate/screens/library.json","sha256":"df6da3b1df35a2202279c263652ea41cd24c41dc3a6f15775a5198ff7a3acd26"});
+export const FRONT_DOORS_SOURCE = deepFreeze({"commit":"7be06eb4cb","path":"docs/development/ux-substrate/screens/library.json","sha256":"1ff268c60031b7df88bc1f3ef98312dd2797de3d9eb7f52d2b57fd105da7483e"});
 
 export const FRONT_DOORS = deepFreeze([
   {"door":"problem","scripts":["WIZ-86b7f4007e3b0e3c","WIZ-cb0ad18a17a04233","WIZ-33b5887790b7561b"]},
@@ -15,5 +15,5 @@ export const FRONT_DOORS = deepFreeze([
   {"door":"tip","scripts":["WIZ-33b5887790b7561b","WIZ-9f2b79390d6940a0"]},
 ]);
 
-/** R37: the sixth door, always answered after these (DEC-227 (1)'s frozen data: the library holds none at 4664e8efd4). */
+/** R37, R41: the sixth door, always answered after these (the file's own). */
 export const ELSEWHERE_DOOR = deepFreeze({"door":"elsewhere","scripts":[],"opens":"elsewhere"});

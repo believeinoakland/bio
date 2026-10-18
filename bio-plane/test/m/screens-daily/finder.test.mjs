@@ -24,12 +24,28 @@ test("R4: search with the member's words: read from the route's words or the las
   const blank = await open("/app/finder", PLANE);
   assert.equal(blank.byOp("search").length, 0, "nothing searched before the member writes words");
   const routed = await open("/app/finder/pothole", PLANE);
-  assert.equal(last(routed, "search").query.q, "pothole");
+  assert.equal(last(routed, "search").query.q, "(pothole) OR (passage:pothole)", "R35: the words, and the passages holding them");
   await press(routed, "search", { values: { "finder-q": "  work orders " }, reason: R });
   const reads = routed.byOp("search").map((r) => r.query.q);
-  assert.deepEqual(reads.slice(-2), ["work orders", "work orders"], "the act's search, then the screen's re-read of it");
+  assert.deepEqual(reads.slice(-2), ["(work orders) OR (passage:work passage:orders)", "(work orders) OR (passage:work passage:orders)"], "the act's search, then the screen's re-read of it");
+  // R44: leaving the words empty returns to the browse; nothing is searched and nothing is refused.
   const empty = await press(blank, "search", { values: { "finder-q": " " }, reason: R });
-  assert.equal(beside(blank, empty), word("screen.finder.wordsfirst"));
+  assert.equal(beside(blank, empty), "");
+  assert.equal(blank.byOp("search").length, 0);
+});
+
+test("R35: Find's search also matches the words of held documents' passages: the words as words and as passages, for one word and for several, in a form the query language parses; control: an empty search sends nothing", async () => {
+  const one = await open("/app/finder/pothole", PLANE);
+  const two = await open("/app/finder/work orders", PLANE);
+  // The form the query language parses (query-language R1): a parenthesised AND of the words, OR a parenthesised AND of `passage:` terms.
+  assert.equal(last(one, "search").query.q, "(pothole) OR (passage:pothole)");
+  assert.equal(last(two, "search").query.q, "(work orders) OR (passage:work passage:orders)");
+  // The member's own syntax is sent as written: a field is not split into passage terms.
+  const typed = await open("/app/finder/capture:b", PLANE);
+  assert.equal(last(typed, "search").query.q, "capture:b");
+  const blank = await open("/app/finder", PLANE);
+  await press(blank, "search", { values: { "finder-q": "   " }, reason: R });
+  assert.equal(blank.byOp("search").length, 0, "control: an empty search sends nothing");
 });
 
 test("R4: each result with its grade and where it matched (Found by search), a reference to its document and a box to pick it", async () => {
@@ -37,7 +53,10 @@ test("R4: each result with its grade and where it matched (Found by search), a r
   assert.ok(text(p).includes(word("screen.finder.total.many", { n: "3" })));
   assert.equal(main(p).querySelectorAll('.cs-origin[data-origin="search"]').length, 3);
   assert.deepEqual(main(p).querySelectorAll(".cs-grade").map((g) => g.textContent.slice(-1)), ["B", "C"]);
-  assert.match(text(p), /pothole \[work orders\]/);
+  // R46: the match brackets are drawn as emphasis, never as raw brackets.
+  assert.match(text(p), /pothole work orders/);
+  assert.ok(!text(p).includes("[work orders]"));
+  assert.deepEqual(main(p).querySelectorAll("em").map((e) => e.textContent), ["work orders"]);
   assert.ok(main(p).querySelectorAll(".cs-card, a.cs-ref").some((a) => a.textContent === "Administrative Instruction 4.12"));
   assert.equal(p.doc.getElementById("finder-pick-INF-1").getAttribute("aria-label"), word("screen.finder.pick", { title: "Public Works work orders, FY2025" }));
   const none = await open("/app/finder/zz", { search: ok({ total: 0, hits: [], widen: { total: 4 } }) });
@@ -60,7 +79,7 @@ test("R4: select holds the picked results together; the hold strip shows how man
   const at = new Date("2026-10-12T16:40:00Z");
   const hm = `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}`;
   assert.ok(text(p, main(p).querySelector(".cs-hold")).includes(`${word("screen.finder.held.many", { n: "2" })} · ${word("screen.finder.until", { time: hm })}`));
-  assert.deepEqual(ops(p).filter((o) => !["search", "frontier", "select"].includes(o)), ["findin", "calculationcreate", "selectionrelease"]);
+  assert.deepEqual(ops(p).filter((o) => !["search", "frontier", "select", "watchitem", "secondlook"].includes(o)), ["findin", "calculationcreate", "selectionrelease"]);
   const one = await open("/app/finder/pothole", { ...PLANE, selection: ok({ n: 1, members: ["INF-1"] }) });
   await press(one, "select", { values: { "finder-pick-INF-1": true } });
   assert.ok(text(one).includes(word("screen.finder.held.one")), "R25: one document, the singular key");

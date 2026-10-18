@@ -9,6 +9,7 @@ import { AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS, SIGN_IN_CHECKS, CREDENTIALS_CHECK
          KEYED_SERVICE_CHECKS, AI_CREDENTIAL_EXPIRY_DAYS, CREDENTIALS_TABLES, Credentials, credentialsOf }
   from "../../../src/credentials/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const D = 24 * 3600e3;
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -199,8 +200,8 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   /* :153, :154 (C-29.22) and index :794 */
   const bare = await world({ sealSecret: null }).group("ann");
   const unsealed = await bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
-  has(unsealed.translation, "Your group's Civicsmith cannot keep a key sealed right now, because its sealing secret is not set or has changed.");
-  has(unsealed.translation, "Ask whoever hosts your group's Civicsmith to set it.");
+  /* (T50; plan rule 6) ai-accounts' rows are read by key, never quoted: the row's translation is the word itself */
+  assert.equal(unsealed.translation, word("refusal.ACCOUNT_SEAL_UNAVAILABLE"));
   has(unsealed.detail, "your group's Civicsmith has no seal secret set, so a key cannot be kept sealed or read.");
   /* index :822 */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,

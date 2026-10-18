@@ -57,7 +57,7 @@ test("R29: no other row moves: the rows naming action-records are R28's twelve a
   const rows = allRows();
   const naming = rows.filter((r) => r.row.where.startsWith(`${RECORDS_FILE} `)).map((r) => r.code);
   for (const code of Object.keys(MOVED)) assert.ok(naming.includes(code), code);
-  assert.equal(naming.length, 12 + 5);
+  assert.equal(naming.length, 12 + 5 + 1, "R28's twelve, R29's five and T50's NO_SUCH_ACTION");
   const others = rows.filter((r) => !naming.includes(r.code));
   for (const { code, row } of others) assert.match(row.where, /^src\/(actions\/index|action-grammar\/checks)\.mjs /, code);
   for (const code of ["MACHINE_CANNOT_SET_LAWS", "MACHINE_CANNOT_SET_RISK_TIER"]) assert.match(rowOf(code).row.where, /^src\/actions\/index\.mjs /, code);
@@ -108,7 +108,7 @@ test("R29 (the census arm): every one of the six rows' where names a region that
 });
 
 test("R29 (N1053; DEC-221): ACTION_GRAMMAR_WORDS' two frozen copies, refusal.MACHINE_CANNOT_SET_PARTNERS and refusal.PARTNERS_REFUSED, are in American spelling, and C-117.34 and C-117.35 translate by them; control: no sentence of the table holds a British -isation or -ised form", () => {
-  assert.equal(AG.ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PARTNERS"], "Only a member names the organizations acting with your group. Nothing was written.");
+  assert.equal(AG.ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PARTNERS"], "Only a member names the organizations acting with your team. Nothing was written.");
   assert.equal(AG.ACTION_GRAMMAR_WORDS["refusal.PARTNERS_REFUSED"], "Each partner is a named organization, listed once. Nothing was written.");
   assert.equal(AG.ACTION_CATALOGUE_CHECKS.MACHINE_CANNOT_SET_PARTNERS.translation, AG.ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PARTNERS"]);
   assert.equal(AG.ACTION_CATALOGUE_CHECKS.PARTNERS_REFUSED.translation, AG.ACTION_GRAMMAR_WORDS["refusal.PARTNERS_REFUSED"]);

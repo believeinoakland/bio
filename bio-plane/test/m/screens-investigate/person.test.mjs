@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, ADMIN } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, plane, PERSON, ENT, ORG, SHA, word, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, plane, PERSON, ENT, ORG, SHA, SHA2, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/person/" + ENT;
 const admin = { boot: { plane: { ...plane(), whoami: ok(ADMIN) } } };
@@ -29,34 +29,31 @@ test("R1 reads person (as of the page's day, never \"now\") and samepersoncandid
 test("R1 same person? the cluster's other records linked as claimed (never merged) and the candidates, which are not claims", async () => {
   const p = await open(at);
   const s = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("screen.person.same"));
-  assert.ok(s.textContent.includes("ENT-2026-0019"));
   drew(s, "screen.person.same.claimed");
   drew(s, "screen.person.candidates");
-  const fieldState = (f, st) => word("screen.person.field." + f) + ": " + word("screen.person.state." + st);
-  assert.ok(s.textContent.includes([fieldState("names", "agrees"), fieldState("identifiers", "absent"), fieldState("posts", "differs")].join(" · ")));
 });
 
-test("R1 the acts as drawn for a member: person, explore, recordpersonfact, identityclaim, withdrawidentityclaim, followregister; personexpunge only for an administrator (interface-shell R47)", async () => {
+test("R1 the acts as drawn for a member: explore, recordpersonfact, identityclaim, withdrawidentityclaim, followregister, and the entities acts (R32); no Open the person; personexpunge only for an administrator (interface-shell R47)", async () => {
   const p = await open(at);
-  assert.deepEqual(actsIn(main(p)).sort(), ["explore", "followregister", "identityclaim", "person", "recordpersonfact", "withdrawidentityclaim"]);
+  const acts = actsIn(main(p));
+  assert.ok(!acts.includes("person"), "R32 (3): the person's own page has no Open the person");
+  for (const op of ["explore", "followregister", "identityclaim", "recordpersonfact", "withdrawidentityclaim", "entityalias", "aliaswithdraw", "relationdeclare", "resolve", "resolvetestify", "connect"]) assert.ok(acts.includes(op), op);
   const q = await open(at, admin);
   assert.ok(actsIn(main(q)).includes("personexpunge"));
 });
 
-test("R1 Open the person reads it again; Explore connections opens explore from this person", async () => {
+test("R1 Explore connections opens explore from this person", async () => {
   const p = await open(at);
-  await press(p, "person");
-  assert.ok(p.byOp("person").length >= 2);
   await press(p, "explore");
   assert.equal(p.location.pathname, "/app/explore/" + ENT);
 });
 
 test("R1 recordpersonfact: a fact read from the passage the member names, citing it (control: no passage sends nothing)", async () => {
   const p = await open(at, { plane: { recordpersonfact: ok({ ok: true, fact_id: "PFA-2026-0010" }) } });
-  fill(p, { "person-fact-kind": "locality", "person-fact-value": "Lakeshore", "person-fact-from": "2024-01-01", "person-fact-sha": SHA, "person-fact-page": "4" });
+  fill(p, { "person-fact-kind": "locality", "person-fact-value": "Lakeshore", "person-fact-from": "2024-01-01", "person-fact-doc": SHA });
   await press(p, "recordpersonfact");
   assert.deepEqual(p.byOp("recordpersonfact")[0].body, { person: ENT, kind: "locality", value: "Lakeshore", valid: { from: "2024-01-01", to: null },
-    citation: { captureSha: SHA, extent: { kind: "pdf-page", page: 3 } } });
+    citation: { captureSha: SHA, extent: { kind: "document" } } });
   const q = await open(at);
   fill(q, { "person-fact-value": "Lakeshore" });
   await press(q, "recordpersonfact");
@@ -71,7 +68,7 @@ test("R1 identityclaim \"Say another record is this person\" with its basis and 
   assert.deepEqual(p.byOp("identityclaim")[0].body, { a: ENT, b: "ENT-2026-0019", kind: "same_as", basis: "testimony", note: "I met both at the same meeting" });
   assert.equal(p.byOp("person").length, 2, "after the claim the screen reads the person again");
   const q = await open(at, { plane: { identityclaim: refusedIn("IDENTITY_GRADE_UNEARNED", "That basis does not earn this grade.") } });
-  fill(q, { "person-claim-other": "ENT-2026-0019", "person-claim-basis": "name", "person-claim-sha-a": SHA, "person-claim-sha-b": SHA, "person-claim-note": "same name" });
+  fill(q, { "person-claim-other": "ENT-2026-0019", "person-claim-basis": "name", "person-claim-doc-a": SHA, "person-claim-doc-b": SHA, "person-claim-note": "same name" });
   await press(q, "identityclaim");
   assert.equal(q.byOp("identityclaim")[0].body.evidence.a.captureSha, SHA);
   assert.ok(main(q).textContent.includes("That basis does not earn this grade."), "the refusal by its words");
@@ -117,16 +114,133 @@ test("R21 person draws each identity claim as person answers it (kind, grade, wh
   const m = main(p);
   const buttons = m.querySelectorAll('button[data-act="withdrawidentityclaim"]');
   assert.deepEqual(buttons.map((b) => b.getAttribute("data-claim")), ["IDC-2026-0001", "IDC-2026-0002"]);
-  for (const [kind, why, by, day] of [["same_as", "both hold the Deputy Director post", "dev", "2026-10-03"], ["unsure", "the same surname", "mai", "2026-10-04"]]) {
-    drew(m, "screen.person.claim." + kind);
-    assert.ok(m.textContent.includes(why), "its why, as the member wrote it");
+  for (const [kind, by, day] of [["same_as", "dev", "2026-10-03"], ["unsure", "mai", "2026-10-04"]]) {
+    drew(m, "label.identityclaimkinds." + kind);
     drew(m, "screen.person.claim.by", { by, date: dayOf(day) });
   }
   assert.equal(m.querySelectorAll("*").filter((e) => e.getAttribute("id") === "person-claim-id").length, 0, "no field asks for a claim id");
-  await press(p, "withdrawidentityclaim", { el: buttons[0], reason: "different middle initial" });
+  fill(p, { "person-wd-reason-0": "different middle initial" });
+  await press(p, "withdrawidentityclaim", { el: buttons[0] });
   assert.deepEqual(p.byOp("withdrawidentityclaim")[0].body, { claimId: "IDC-2026-0001", reason: "different middle initial" });
   const after = main(p).querySelectorAll('button[data-act="withdrawidentityclaim"]');
   assert.deepEqual(after.map((b) => b.getAttribute("data-claim")), ["IDC-2026-0002"], "the other claim is still drawn");
   const hidden = await open(at, { plane: { person: ok(PERSON({ claims: [] })) } });
   assert.equal(main(hidden).querySelectorAll('button[data-act="withdrawidentityclaim"]').length, 0, "a claim person does not answer is not drawn");
+});
+
+const opts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
+const secOf = (p, key) => main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word(key));
+const HIDDEN = (o) => ({ boot: { plane: { ...plane(), ...o } } });
+
+test("R32 (1) what the team says about them: other names (a roster name as data, an added name withdrawn with a reason), ties a member declared, documents that may name them; each act sends the owner's arguments", async () => {
+  const p = await open(at, { plane: { entityalias: ok({ ok: true }), aliaswithdraw: ok({ ok: true }), relationdeclare: ok({ ok: true }), resolve: ok({ ok: true }), resolvetestify: ok({ ok: true }), connect: ok({ ok: true }) } });
+  const s = secOf(p, "entity.says.title");
+  assert.ok(s, "the section is headed entity.says.title");
+  drew(s, "entity.alias.roster");
+  drew(s, "entity.alias.by", { who: "mai", date: dayOf("2026-10-01") });
+  drew(s, "entity.relation.declared", { who: "dev", date: dayOf("2026-10-02"), where: "minutes, page 2" });
+  fill(p, { "person-alias": "Lin C." });
+  await press(p, "entityalias");
+  assert.deepEqual(p.byOp("entityalias")[0].body, { entityId: ENT, alias: "Lin C." });
+  await press(p, "aliaswithdraw", { reason: "a typo" });
+  assert.deepEqual(p.byOp("aliaswithdraw")[0].body, { entityId: ENT, alias: "Lin Chen", reason: "a typo" });
+  fill(p, { "person-rel-kind": "proxy_for", "person-rel-with": ORG, "person-rel-why": "acts in their name", "person-rel-cite": "letter, page 1" });
+  await press(p, "relationdeclare");
+  assert.deepEqual(p.byOp("relationdeclare")[0].body, { fromEntity: ENT, toEntity: ORG, relation: "proxy_for", justification: "acts in their name", citation: "letter, page 1" });
+  drew(s, "entity.naming.row", { page: "2", alias: "L. Chen" });
+  await press(p, "resolve", { reason: "the name matches" });
+  assert.deepEqual(p.byOp("resolve")[0].body, { captureSha: SHA, ref: "L. Chen", reason: "the name matches" });
+  fill(p, { "person-naming-basis": "I was at the meeting" });
+  await press(p, "resolvetestify");
+  assert.deepEqual(p.byOp("resolvetestify")[0].body, { captureSha: SHA, ref: "L. Chen", entityId: ENT, basis: "I was at the meeting" });
+  await press(p, "connect");
+  assert.deepEqual(p.byOp("connect")[0].body, { entityId: ENT });
+});
+
+test("R32 (1) control: an organization's page words it for an organization; writinghelp is offered only while the assistant is reachable", async () => {
+  const org = await open(at, { plane: { entity: ok({ ok: true, found: true, entity: { entity_id: ENT, kind: "body", label: "Works", aliases: [], relations: [] } }) } });
+  assert.ok(secOf(org, "entity.says.title.org"));
+  assert.equal(secOf(org, "entity.says.title"), undefined);
+  assert.equal(button(org, "writinghelp"), null, "no assistant, no help");
+});
+
+test("R32 (2) every fact recorded is listed: valid today, then those whose validity is not stated or settled (marked undetermined with the reason and the source), the withdrawn in a fold with who, when and why", async () => {
+  const base = PERSON();
+  const nostate = { fact_id: "PFA-2026-0008", member: ENT, kind: "birth", value: "1971", valid: null, citation: { captureSha: SHA, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: "no validity is stated" } };
+  const unsettled = { fact_id: "PFA-2026-0009", member: ENT, kind: "address", value: "9 Elm St", valid: { from: "2020-01-01", to: "2021-01-01" }, citation: { captureSha: SHA2, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: "the owner cannot settle it" } };
+  const gone = { fact_id: "PFA-2026-0003", member: ENT, kind: "contact", value: "old@example.org", valid: null, citation: null, grade: "D", withdrawn: { by: "member:mai", at: "2026-10-05T09:00:00Z", reason: "a typo" } };
+  const p = await open(at, { plane: { person: ok({ ...base, undetermined: [nostate, unsettled], facts: [...base.facts, gone] }) } });
+  const f = secOf(p, "screen.person.facts");
+  drew(f, "screen.person.facts.undetermined", { reason: word("people.why.validity_stated"), document: "Lease amendment 1" });
+  drew(f, "screen.person.facts.undetermined", { reason: "the owner cannot settle it", document: "Rent schedule" });
+  assert.ok(f.textContent.includes("1971") && f.textContent.includes("9 Elm St"), "none dropped");
+  assert.ok(f.querySelectorAll(".cs-gap").length >= 2, "each marked undetermined");
+  drew(f, "screen.person.facts.withdrawn", { n: "1" });
+  drew(f, "screen.person.facts.withdrawn.by", { name: "mai", date: dayOf("2026-10-05"), reason: "a typo" });
+  assert.ok(!f.textContent.includes(word("screen.person.facts.withdrawn.by", { name: "admin", date: dayOf("2026-10-05"), reason: "a typo" })), "never admin");
+});
+
+test("R32 (3) a person with no connection draws person.graph.none in place of an empty graph; the other sections stand", async () => {
+  const p = await open(at, { plane: { exploregraph: ok({ ok: true, centre: ENT, nodes: [{ id: ENT, ring: 0, label: "L. Chen", entity_kind: "person" }], steps: [], stopped: [] }) } });
+  const c = secOf(p, "screen.person.connections");
+  drew(c, "person.graph.none");
+  assert.equal(c.querySelectorAll("svg").length, 0);
+  assert.ok(secOf(p, "screen.person.facts"));
+});
+
+test("R34 the fact form chooses a document by title and sends its digest; with no document the choice's empty state is drawn and nothing is sent", async () => {
+  const p = await open(at);
+  assert.deepEqual(opts(p, "person-fact-doc"), [[SHA, "Lease amendment 1"], [SHA2.toString(), "Rent schedule"]]);
+  const none = await open(at, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  assert.equal(none.doc.getElementById("person-fact-doc"), null);
+  drew(secOf(none, "screen.person.facts"), "state.empty");
+  fill(none, { "person-fact-value": "x" });
+  await press(none, "recordpersonfact");
+  assert.equal(none.byOp("recordpersonfact").length, 0);
+  assert.equal(main(p).querySelectorAll("*").filter((e) => /sha|fingerprint|content id/i.test(e.getAttribute("id") || "")).length, 0, "no field asks for a fingerprint");
+});
+
+test("R38 Same person?: a standing claim row (grade, the basis in the row's words, who and when), both acts explained, the form's menu listing the candidates and its basis choice worded by label.claimbases.<id>", async () => {
+  const p = await open(at, { plane: { identityclaim: ok({ ok: true, claim_id: "IDC-2026-0003" }) } });
+  const s = secOf(p, "screen.person.same");
+  drew(s, "screen.person.same.because", { grade: "B", basis: word("screen.person.basis.row.name") });
+  drew(s, "screen.person.same.because", { grade: "C", basis: word("screen.person.basis.row.testimony") });
+  for (const k of ["act.identityclaim.does", "act.withdrawidentityclaim.does"]) drew(s, k);
+  const agree = word("screen.person.field.names"), differ = word("screen.person.field.posts");
+  assert.deepEqual(opts(p, "person-claim-other"), [["ENT-2026-0019", word("screen.person.claim.candidate", { record: word("connection.node.unnamed"), agrees: agree, differs: differ })]]);
+  assert.deepEqual(opts(p, "person-claim-basis").map((o) => o[1]), ["identifier", "corroborated_name", "name", "testimony"].map((b) => word("label.claimbases." + b)));
+  assert.deepEqual(opts(p, "person-claim-kind").map((o) => o[1]), ["same_as", "not_same_as", "unsure"].map((k) => word("screen.person.claim.kind." + k)));
+  fill(p, { "person-claim-other": "ENT-2026-0019", "person-claim-note": "" });
+  await press(p, "identityclaim");
+  assert.equal(p.byOp("identityclaim").length, 0, "with the note missing nothing is sent");
+  const fold = secOf(p, "screen.person.same");
+  drew(fold, "screen.person.claim.empty.summary");
+  drew(fold, "screen.person.claim.empty");
+});
+
+test("R38 with no candidate the menu lists the people the record follows, never an empty menu; a failed candidates read is drawn failed and the menu is not drawn empty; a withdrawn claim is not drawn", async () => {
+  const none = await open(at, { plane: { samepersoncandidates: ok({ ok: true, entity_id: ENT, count: 0, candidates: [], truncated: false }) } });
+  assert.deepEqual(opts(none, "person-claim-other").map((o) => o[0]), [ORG]);
+  const bad = await open(at, { plane: { samepersoncandidates: ok({ ok: false, code: "UNREADABLE" }) } });
+  assert.equal(bad.doc.getElementById("person-claim-other"), null);
+  assert.ok(secOf(bad, "screen.person.same").querySelector('[data-state="failed"], .cs-gap'), "drawn failed");
+  const wd = await open(at, { plane: { person: ok(PERSON({ claims: [{ ...PERSON().claims[0], withdrawn: { by: "member:mai" } }] })) } });
+  assert.equal(main(wd).querySelectorAll('button[data-act="withdrawidentityclaim"]').length, 0);
+});
+
+test("R38 the withdraw fold asks its reason before it sends; a basis other than testimony chooses a document for each record", async () => {
+  const p = await open(at, { plane: { withdrawidentityclaim: ok({ ok: true }) } });
+  await press(p, "withdrawidentityclaim", { el: button(p, "withdrawidentityclaim") });
+  assert.equal(p.byOp("withdrawidentityclaim").length, 0, "no reason, nothing sent");
+  fill(p, { "person-claim-basis": "identifier" });
+  await p.click(p.doc.getElementById("person-claim-basis"));
+  assert.equal(p.doc.getElementById("person-claim-doc-a") === null, false, "a basis other than testimony chooses a document for each record");
+});
+
+test("R39 a claim of each basis draws screen.person.basis.row.<basis>; the form's basis words are label.claimbases.<id>, and screen.person.basis.<id> is not drawn", async () => {
+  const bases = ["identifier", "corroborated_name", "name", "testimony"];
+  const claims = bases.map((b, i) => ({ claim_id: "IDC-2026-01" + i, a: ENT, b: "ENT-2026-02" + i, kind: "same_as", basis: b, grade: "A", why: "w", by: "member:mai", at: "2026-10-03T09:00:00Z" }));
+  const p = await open(at, { plane: { person: ok(PERSON({ claims })) } });
+  const s = secOf(p, "screen.person.same");
+  for (const b of bases) { drew(s, "screen.person.same.because", { grade: "A", basis: word("screen.person.basis.row." + b) }); assert.ok(!s.textContent.includes(word("screen.person.basis." + b))); }
 });

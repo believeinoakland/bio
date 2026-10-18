@@ -258,6 +258,9 @@ export const RUN_BOUNDS = {
 export const RUN_ENDINGS = {
   completed:  "the run finished its work",
   cancelled:  "a member stopped it",
+  "nothing-written":
+    "the run composed a candidate and wrote none, so it closed with nothing to show for its work; "
+  + "no member stopped it and no budget ran out",
   "mode-not-deployed":
     "the deployment gate refused this launch before it spent anything: the mode it asked for "
   + "is not deployed yet, so no member stopped this run and no budget ran out",
@@ -784,6 +787,23 @@ export function checkPagesRead(asked) {
   return refusal("AI_RUN_READ_NO_AI",
     "this document is kept away from the assistant by a limit on its material, so the run may not read inside it, "
       + "whatever its reading bound allows (R26). Nothing was read");
+}
+
+/** R35 (T50; N1169; K3501 (C2)) — DOES A `level-empty` FINDING HOLD OVER THIS SCOPE? `scope` is the plane's four-level
+ *  statement of the read the finding rests on (`retrieval` R13). `true` exactly when `scope.documents` is a whole number of
+ *  1 or more: a level with a document in scope was looked at. Otherwise `{holds: false, code, check, translation}`, C-22.31's
+ *  row: a level that had no document in scope was not looked at, so no absence is written for it. A scope that is absent,
+ *  not an object, or states no whole `documents` (a string, a fraction, a negative, an infinity, one inherited rather than
+ *  stated) does not hold: fail closed. `agent-harness` R18 asks it before it composes a candidate. Pure; never throws. */
+export function levelEmptyHolds(asked) {
+  const has = (o, k) => o !== null && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
+  let documents = null;
+  try {
+    if (has(asked, "scope") && has(asked.scope, "documents")) documents = asked.scope.documents;
+  } catch { documents = null; }
+  if (typeof documents === "number" && Number.isSafeInteger(documents) && documents >= 1) return true;
+  const row = AI_RUN_CHECKS.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE;
+  return { holds: false, code: "LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE", check: row.check, translation: row.translation };
 }
 
 /* ------------------------------------------------- DEC-63's gate (PL-18)

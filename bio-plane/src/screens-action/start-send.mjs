@@ -3,7 +3,12 @@
    refusal it would meet, each resolved in place; nothing runs before the member's confirm. Step 2 (subject the action
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, PREPARE, PREPARE_FILING, APPROVE, SECOND, RECORD_SENT } from "./send-steps.mjs";
+import { OPS } from "../op-declarations/index.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT } from "./send-steps.mjs";
+
+// R21: `actionstake` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
+// shell draws it as it draws every act (R12).
+const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : []; };
 
 export const startSend = Object.freeze({
   id: "start-send",
@@ -24,6 +29,9 @@ export const startSend = Object.freeze({
     if (at < 0) return {
       action: { op: "action", query: { id: s }, subject: true },
       filings: { op: "filingsfor", query: { action: s }, empty: function () { return false; } },
+      // R21: the matter's stake and whether the question is asked (`filings` R60 to R62), and the team's name
+      stake: { op: "stakeatpreparation", query: { action: s }, empty: function () { return false; } },
+      identity: { op: "groupidentity", empty: function () { return false; } },
     };
     const plan = s.slice(0, at), option = s.slice(at + 1);
     const body = { plan: plan, option: option, kind: view.ui.kind || "records_request", breach: view.ui.breach === true };
@@ -37,6 +45,7 @@ export const startSend = Object.freeze({
 
   parts: {
     draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling,
+    stakeLines: stakeLines, stakeAsk: stakeAsk,
     isRequest: function () { return false; },
     kinds: function () { return ["records_request", "request_for_comment", "other"]; },
     // R2: the preview's answer drawn: the kind, the office by its role, what it rests on, the clock, the breach, and the
@@ -133,6 +142,7 @@ export const startSend = Object.freeze({
     },
     Object.assign({}, PREPARE, { rereads: ["filings"] }),
     Object.assign({}, PREPARE_FILING, { rereads: ["filings"] }),
+    ...OWED(STAKE),
     Object.assign({}, APPROVE, { rereads: ["filings"] }),
     Object.assign({}, SECOND, { rereads: ["filings"] }),
     Object.assign({}, RECORD_SENT, { rereads: ["filings", "action"] }),

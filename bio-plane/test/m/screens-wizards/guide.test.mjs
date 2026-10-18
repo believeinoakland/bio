@@ -26,7 +26,8 @@ const AT = (q) => ok({ ok: true, screen: q.screen, scripts: q.screen === "finder
      { id: "WIZ-00000000000000d1", version: "WIZ-00000000000000d1@1", name: "My search draft", steps: [{ screen: "finder", act: "search", what: "a", why: "b" }], approver: null, finished: 0, draft: true }]
   : [] });
 const DRAWN = { finder: ["search"], document: ["cite"], ties: ["declaretie"], question: ["testify"], home: [] };
-const plane = (over = {}) => ({ wizardread: read, wizardsat: AT, wizardprogress: ok({ ok: true }), ...over });
+/* R17: a document or a question with none to choose opens as it always did, so these walks hold none */
+const plane = (over = {}) => ({ wizardread: read, wizardsat: AT, wizardprogress: ok({ ok: true }), list: ok({ ok: true, bundles: [] }), ...over });
 const ACT_OPS = new Set(Object.keys(OPS).filter((op) => OPS[op].mutating !== false && op !== "wizardprogress"));
 const sentActs = (g) => g.requests.filter((r) => ACT_OPS.has(r.op) || r.op === "wizarddraft");
 
@@ -69,7 +70,7 @@ test("R2 the guide walks a two-screen script: name, step i of n, what and why, B
   assert.deepEqual(g.nav.at(-1), ["finder", null]);
   // nothing the runner sent is an act: only reads and the tally
   assert.deepEqual(sentActs(g), []);
-  assert.deepEqual([...new Set(g.requests.map((r) => r.op))].sort(), ["startfrom", "wizardprogress", "wizardread", "wizardsat"]);
+  assert.deepEqual([...new Set(g.requests.map((r) => r.op))].sort(), ["list", "startfrom", "wizardprogress", "wizardread", "wizardsat"]);
 });
 
 test("R2 a step whose act the screen does not draw for this member says so and offers Next", async () => {
@@ -87,13 +88,16 @@ test("R2 a step whose act the screen does not draw for this member says so and o
 });
 
 test("R2 a Civicsmith script's name and step words are read by their keys wizard.<id>.*; cs.wizard from Home's doors starts it", async () => {
-  const g = standIn({ plane: plane(), drawn: DRAWN });
+  const g = standIn({ plane: plane({ projectlist: ok({ ok: true, projects: [{ id: "P1", name: "Pothole repairs" }] }) }), drawn: DRAWN, values: { "wz-subject": "P1" } });
   await g.enter("home");
   await g.start({ script: { id: FIRST_QUESTION, version: `${FIRST_QUESTION}@1`, name: "x", start: "project" }, version: null });
   const text = g.text();
   assert.ok(text.includes(said(`wizard.${FIRST_QUESTION}.name`)));
   assert.ok(text.includes(said(`wizard.${FIRST_QUESTION}.step1.what`)) && text.includes(said(`wizard.${FIRST_QUESTION}.step1.why`)));
-  assert.deepEqual(g.nav, [["project", null]]);
+  // R17: its first screen works in a project, so the guide asks which one (the screen opens on the one chosen)
+  assert.deepEqual(g.nav, []);
+  await g.control("subjectgo");
+  assert.deepEqual(g.nav, [["project", "P1"]]);
   // a script it cannot read says so in the dock and runs nothing
   const h = standIn({ plane: plane() });
   await h.start({ script: "WIZ-0000000000000404" });
@@ -316,7 +320,7 @@ test("R9 nothing records which member walked, stopped or finished which wizard: 
   await g.control("next");
   await g.control("next");
   const ops = new Set(g.requests.map((r) => r.op));
-  for (const op of ops) assert.ok(["wizardsat", "wizardread", "wizardprogress", "startfrom"].includes(op), `${op} sent`);
+  for (const op of ops) assert.ok(["wizardsat", "wizardread", "wizardprogress", "startfrom", "list"].includes(op), `${op} sent`);
   assert.deepEqual([...g.store.keys()], [], "a script other than the welcome or the first question leaves no device note");
   assert.ok(!JSON.stringify(g.requests).includes("mai"));
 });

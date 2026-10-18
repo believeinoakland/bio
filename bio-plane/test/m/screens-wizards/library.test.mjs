@@ -5,6 +5,7 @@ import { acts, all, ancestor, has, lacks, open, panelOf, rowOf, said, textOf, sq
 import { decode } from "../interface-shell/dom.mjs";
 import { ADMIN, MEMBER, READER, CIV, COPY, SUBMITTED, GET_RECORD, COPY_STEPS, env, refuse, libraryTable } from "./fixtures.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 
 const opsIn = (n) => [...new Set(acts(n).map((b) => b.attrs["data-act"]))].sort();
 const t = (n) => squash(decode(textOf(n)));
@@ -50,24 +51,29 @@ test("R1 reads wizards, baseupdates and projectlist; each script a row with its 
 
 test("R1 a Civicsmith script's row offers no write act but the copy (WIZARD_NOT_THE_GROUPS)", async () => {
   const a = await open("wizards", { me: ADMIN, table: libraryTable() });
-  assert.deepEqual(opsIn(panelOf(a.tree, V.civ)), ["wizarddraft", "wizards"]);
-  assert.ok(t(panelOf(a.tree, V.civ)).includes(said("screen.wizards.civicsmith.only")));
+  // the wizards in use are read-only (R16); the acts that write sit in the fold's own table
+  assert.deepEqual(opsIn(panelOf(a.tree, V.civ, "library")), ["wizards"]);
+  assert.deepEqual(opsIn(panelOf(a.tree, V.civ, "own")), ["wizarddraft"]);
+  assert.ok(t(panelOf(a.tree, V.civ, "own")).includes(said("screen.wizards.civicsmith.only")));
   // control: a group's approved script offers its approver's acts too
-  assert.deepEqual(opsIn(panelOf(a.tree, V.copy)), ["wizardapprove", "wizarddraft", "wizardretire", "wizards"]);
-  assert.deepEqual(opsIn(panelOf(a.tree, V.draft)), ["wizardretire", "wizardrevise", "wizards", "wizardsubmit"]);
-  assert.deepEqual(opsIn(panelOf(a.tree, V.sub)), ["wizardapprove", "wizardretire", "wizards"]);
+  assert.deepEqual(opsIn(panelOf(a.tree, V.copy, "own")), ["wizardapprove", "wizarddraft", "wizardretire"]);
+  assert.deepEqual(opsIn(panelOf(a.tree, V.draft, "own")), ["wizardretire", "wizardrevise", "wizardsubmit"]);
+  // the author's own draft also opens its steps to change them there
+  const mine = await open("wizards", { me: MEMBER, table: libraryTable() });
+  assert.deepEqual(opsIn(panelOf(mine.tree, V.draft, "own")), ["wizardretire", "wizardrevise", "wizards", "wizardsubmit"]);
+  assert.deepEqual(opsIn(panelOf(a.tree, V.sub, "own")), ["wizardapprove", "wizardretire"]);
 });
 
-test("R1 wizards: \"See the whole library\" lists again with the state chosen", async () => {
+test("R1 wizards: a state pressed lists it; \"See the whole library\" lists the offered ones again", async () => {
   const a = await open("wizards", { me: ADMIN, table: libraryTable() });
-  const { sent } = await a.press("wizards", { data: { see: "1" }, values: { "wz-state": "retired" } });
+  const { sent } = await a.press("wizards", { data: { state: "retired" } });
   assert.deepEqual(sent.map((r) => [r.op, r.query.state]), [["wizards", "retired"], ["wizards", "retired"]], "the act, then R8's read again in that state");
   has(a, "screen.wizards.retired", { reason: "replaced" });
   // open proposals: each with "Draft a wizard from these steps" and, into the member's own draft, adopt
   const b = await open("wizards", { me: MEMBER, table: libraryTable() });
-  await b.press("wizards", { data: { see: "1" }, values: { "wz-state": "proposed" } });
+  await b.press("wizards", { data: { state: "proposed" } });
   has(b, "screen.wizards.proposal.by", { why: "Members keep missing the search" });
-  const p = panelOf(b.tree, "WZP-0000000000000001");
+  const p = panelOf(b.tree, "WZP-0000000000000001", "ownproposals");
   assert.deepEqual(opsIn(p), ["wizarddraft", "wizardrevise"]);
   const k = "WZP-0000000000000001";
   assert.deepEqual((await b.press("wizarddraft", { data: { from: k }, values: { "wz-pn-WZP-0000000000000001": "Search first" } })).sent[0].body, { from: k, name: "Search first" });
@@ -80,8 +86,9 @@ test("R1 wizarddraft: \"Copy a wizard to change it\" sends the version, the proj
   const { sent } = await a.press("wizarddraft", { data: { mode: "copy", version: V.civ }, values: { ["wz-cp-" + k]: "P2", ["wz-cn-" + k]: "Get a record, our way" } });
   assert.deepEqual(sent[0].body, { copy: V.civ, project: "P2", name: "Get a record, our way" });
   assert.equal(a.p.requests.at(-1).op === "wizards" || a.p.requests.some((r, i) => i > 0 && r.op === "wizards"), true, "R8: read again");
-  // the name is the member's own words (interface-shell R11): with none, nothing is sent
-  assert.deepEqual((await a.press("wizarddraft", { data: { mode: "copy", version: V.civ }, values: { ["wz-cn-" + k]: "" } })).sent, []);
+  // with no name typed, the copy keeps its original's name, never an empty one
+  const kept = await a.press("wizarddraft", { data: { mode: "copy", version: V.civ }, values: { ["wz-cp-" + k]: "P2", ["wz-cn-" + k]: "" } });
+  assert.deepEqual(kept.sent[0].body, { copy: V.civ, project: "P2", name: CIV.name });
   // control: with no project to choose, nothing is sent and the screen says why
   const n = await open("wizards", { me: MEMBER, table: libraryTable({ projectlist: env({ ok: true, projects: [], count: 0 }) }) });
   const r = await n.press("wizarddraft", { data: { mode: "copy", version: V.civ } });
@@ -125,7 +132,7 @@ test("R1 \"See its steps\" reads wizardread; the author's draft is reworded, reo
     { screen: "finder", act: "search", what: "Search the record", why: COPY_STEPS[0].why }] });
   // control: an approved version is not editable, and another author's draft offers no revise
   await a.press("wizards", { data: { open: V.copy } });
-  assert.ok(!acts(panelOf(a.tree, V.copy)).some((b) => b.attrs["data-act"] === "wizardrevise"));
+  assert.ok(!acts(panelOf(a.tree, V.copy, "own")).some((b) => b.attrs["data-act"] === "wizardrevise"));
 });
 
 test("R1 wizardrevise adds a step with the advanced editor's fields; removing every step sends nothing", async () => {
@@ -145,7 +152,7 @@ test("R1 wizardrevise adds a step with the advanced editor's fields; removing ev
 
 test("R1 a copy whose base changed shows what changed and brings it across by adopt: {base}", async () => {
   const a = await open("wizards", { me: MEMBER, table: libraryTable() });
-  const p = panelOf(a.tree, V.draft);
+  const p = panelOf(a.tree, V.draft, "own");
   assert.ok(t(p).includes(said("screen.wizards.changes.copy")) && t(p).includes(said("screen.wizards.changes.base")));
   assert.ok(t(p).includes("Look for it"));
   const { sent } = await a.press("wizardrevise", { data: { mode: "base", version: V.draft }, reason: "the base changed" });
@@ -153,7 +160,7 @@ test("R1 a copy whose base changed shows what changed and brings it across by ad
   // control: with the change on an approved copy, a new draft of it is offered instead (wizard-scripts R3's `from`)
   const up = { ok: true, entries: [{ copy: COPY.id, copy_version: V.copy, base: GET_RECORD.id, base_name: "Get a record", base_version: `${GET_RECORD.id}@2`, steps: { copy: [], base: [] } }] };
   const b = await open("wizards", { me: MEMBER, table: libraryTable({ baseupdates: env(up) }) });
-  assert.ok(!acts(panelOf(b.tree, V.copy)).some((x) => x.attrs["data-act"] === "wizardrevise"));
+  assert.ok(!acts(panelOf(b.tree, V.copy, "own")).some((x) => x.attrs["data-act"] === "wizardrevise"));
   assert.deepEqual((await b.press("wizarddraft", { data: { mode: "from", from: V.copy } })).sent[0].body, { from: V.copy, name: COPY.name });
 });
 
@@ -172,18 +179,20 @@ test("R1 wizardsubmit, wizardapprove (and widen), wizardretire (a script, or a v
   assert.deepEqual(none.sent, []);
 });
 
-test("R1 every refusal is drawn beside its act, a check's refusal naming its step; the form keeps what was typed", async () => {
+test("R1 R14 every refusal is drawn beside its act, a check's refusal naming its step; the form keeps what was typed", async () => {
   const table = libraryTable({ wizardsubmit: refuse("WIZARD_ACT_UNKNOWN", { step: 2 }), wizardretire: refuse("WIZARD_NOT_THE_GROUPS") });
   const a = await open("wizards", { me: ADMIN, table });
   await a.press("wizardsubmit", { data: { version: V.draft }, reason: "ready" });
-  assert.equal(a.refused.text, said("screen.wizards.refusal.step", { step: "2", words: "translated WIZARD_ACT_UNKNOWN" }));
+  // R14: the words are the refusal's key, never the stub row's translation
+  assert.ok(hasWord("refusal.WIZARD_ACT_UNKNOWN") && hasWord("refusal.WIZARD_NOT_THE_GROUPS"));
+  assert.equal(a.refused.text, said("screen.wizards.refusal.step", { step: "2", words: said("refusal.WIZARD_ACT_UNKNOWN") }));
   const kc = V.copy.replace(/[^A-Za-z0-9_-]/g, "_");
   await a.press("wizardretire", { data: { field: "wz-rr-" + kc }, values: { ["wz-rr-" + kc]: "replaced" } });
-  assert.equal(a.refused.text, "translated WIZARD_NOT_THE_GROUPS");
+  assert.equal(a.refused.text, said("refusal.WIZARD_NOT_THE_GROUPS"));
   assert.equal(a.b.doc.getElementById("wz-rr-" + kc).value, "replaced");
 });
 
-test("R8 the path Settings › Wizards, the four states of each read, and the list read again after an act", async () => {
+test("R8 R14 the path Settings › Wizards, the four states of each read, and the list read again after an act", async () => {
   const a = await open("wizards", { me: ADMIN, table: libraryTable() });
   const crumbs = all(a.tree, (e) => e.tag === "nav" && /cs-crumbs/.test(e.attrs.class || ""))[0];
   assert.equal(t(crumbs), said("rail.settings.name") + " › " + said("screen.wizards.name"));
@@ -192,7 +201,9 @@ test("R8 the path Settings › Wizards, the four states of each read, and the li
     has(o, word);
   }
   const f = await open("wizards", { me: ADMIN, table: libraryTable({ wizards: refuse("WIZARDS_STATE_REFUSED") }) });
-  assert.ok(f.text.includes("translated WIZARDS_STATE_REFUSED"));
+  assert.ok(hasWord("refusal.WIZARDS_STATE_REFUSED"));
+  assert.ok(f.text.includes(said("refusal.WIZARDS_STATE_REFUSED")), "R14: drawn by its key, never the stub translation");
+  assert.ok(!f.text.includes("translated WIZARDS_STATE_REFUSED"));
   const s = await open("wizards", { me: ADMIN, table: libraryTable({ wizards: "none" }) });
   lacks(s, "screen.wizards.empty");
   assert.ok(all(s.tree, (e) => e.attrs["data-state"] === "failed").length >= 1);

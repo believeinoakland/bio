@@ -73,16 +73,88 @@ export function plain(cs, key, fills) {
   return String(cs.w(key, fills)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
 }
 
-/** A member as drawn (R40): her handle; the founder with no handle by `member.founder.unnamed`, never `admin`. */
-export function who(cs, x) {
+/** A member as drawn (R40): her handle; the founder with no handle by `member.founder.unnamed`, never `admin`. A screen
+    that reads the founder's handle passes it as `founder` (R46): the credential `admin` is then drawn by that handle. */
+export function who(cs, x, founder) {
   if (x && typeof x === "object") {
     if (x.handle) return String(x.handle);
     if (x.founder === true) return String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
     return "";
   }
   const s = String(x == null ? "" : x).replace(/^(member:|token:)/, "");
+  if (s === "admin" && founder) return String(founder);
   return s === "admin" ? String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) : s;
 }
 
+/** R60: a project she cannot see, drawn as the shell's "unavailable" state b ("You can't open this"), with nothing beneath. */
+export function unavailable(cs) {
+  return `<p class="cs-state" data-state="empty" data-unavailable="notyours"><b>${cs.w("shell.unavailable.notyours.title")}</b> ${cs.w("shell.unavailable.notyours.says")}</p>`;
+}
+
+
+/** R57: the ending's own words, never its code: `ai.run.ending.<bound>`, `ai.run.ending.unknown` for any other; a run that
+ *  completed is `completed` when it left a proposal that waits (`left`), `completed.none` when it left none. */
+export function ending(cs, bound, left) {
+  const b = String(bound || "");
+  if (b === "completed") return cs.w(left === false ? "ai.run.ending.completed.none" : "ai.run.ending.completed");
+  const known = ["cancelled", "mode-not-deployed", "fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces", "proposals", "pages", "lease", "nothing-written"];
+  return cs.w(known.includes(b) ? "ai.run.ending." + b : "ai.run.ending.unknown");
+}
+
+/** R57: the cost line, to the account's owners only (`session.cost` is absent for anyone else, and before anything is
+ *  reported): `so far` while it works, `final` once it has ended; money where the account reports it, tokens and calls
+ *  otherwise; never a zero for a figure not reported. */
+export function costLine(cs, session, ended) {
+  const c = session && session.cost;
+  if (!c || typeof c !== "object") return "";
+  const calls = Number(c.calls);
+  const usd = c.cost && Number.isFinite(Number(c.cost.usd)) ? Number(c.cost.usd) : null;
+  const tokens = Number(c.tokens);
+  const owner = String(c.owner || "");
+  let amount;
+  if (usd !== null && c.unit !== "tokens") amount = cs.w(calls === 1 ? "ai.run.cost.money.one" : "ai.run.cost.money", { amount: "$" + usd.toFixed(2), calls: String(calls) });
+  else if (Number.isFinite(tokens) && tokens > 0) amount = cs.w(calls === 1 ? "ai.run.cost.tokens.one" : "ai.run.cost.tokens", { tokens: String(tokens), calls: String(calls) });
+  else return "";
+  const account = owner.startsWith("project:") ? cs.w("ai.run.cost.on.project", { project: String(c.project_title || c.project || "") })
+    : owner === "group" ? cs.w("ai.run.cost.on.team") : usd !== null && c.unit !== "tokens" ? cs.w("ai.run.cost.on.apikey") : cs.w("ai.run.cost.on.subscription");
+  const means = usd === null || c.unit === "tokens" ? " " + cs.w("ai.run.cost.tokens.means") : "";
+  return `<p class="mk-small" data-run="cost" data-tip="${cs.esc(cs.w("ai.run.cost.means") + means)}">${cs.w(ended ? "screen.assistant.run.cost.final" : "screen.assistant.run.cost.sofar", { cost: { html: amount }, account: { html: account } })}</p>`;
+}
+
+/** R58: a run's steps as its log makes them, each row added as it arrives (a polite live region), from the entries' fields
+ *  (`read: {record, n, total, outcome}`, a compose tick's `found`, the check's ticks): no English is parsed. `title(record)`
+ *  names a document the member may see; a refused read, or one she may not see, names none. */
+export function progress(cs, entries, o) {
+  const list = Array.isArray(entries) ? entries : [];
+  const rows = [];
+  const tick = (key, vars, attrs) => rows.push(`<li${attrs || ""}><span aria-hidden="true">\u2713</span> ${cs.w(key, vars)}</li>`);
+  let total = 0, lastRead = false, found = null, checks = [], checked = null, composing = false;
+  for (const e of list) {
+    if (!e || typeof e !== "object") continue;
+    if (e.read && typeof e.read === "object") {
+      const r = e.read, refused = r.outcome === "refused";
+      const named = refused ? "" : (o && o.title ? o.title(String(r.record || "")) : "");
+      rows.push(`<li data-step="reading" data-n="${cs.esc(r.n)}" data-outcome="${refused ? "refused" : "answered"}">${cs.w("ai.progress.reading",
+        { document: named || cs.w("state.undetermined", { reason: "" }), n: String(r.n), total: String(r.total) })}</li>`);
+      total = Number(r.total) || total; lastRead = Number(r.n) === Number(r.total);
+    } else if (e.disagree && typeof e.disagree === "object") {
+      rows.push(`<li data-step="disagree">${cs.w("ai.reading.levels.disagree", { record: String(e.disagree.record || ""), first: String((e.disagree.levels || [])[0] || ""), second: String((e.disagree.levels || [])[1] || "") })}</li>`);
+    } else if (typeof e.found === "number") found = e.found;
+    else if (e.check && typeof e.check === "object") checks.push(e.check);
+    else if (e.checked && typeof e.checked === "object") checked = e.checked;
+    if (e.composing === true) composing = true;
+  }
+  if (lastRead && total) tick(total === 1 ? "ai.progress.read.one" : "ai.progress.read", { total: String(total) }, ' data-step="read"');
+  if (found !== null) tick(found === 0 ? "ai.progress.found.none" : found === 1 ? "ai.progress.found.one" : "ai.progress.found", { count: String(found) }, ' data-step="found"');
+  if (composing && !checks.length && !checked) rows.push(`<li data-step="composing">${cs.w("ai.progress.composing")}</li>`);
+  if (composing || checks.length || checked) rows.push(`<li data-step="checking">${cs.w("ai.progress.checking")}</li>`);
+  for (const c of checks) rows.push(`<li data-step="check" data-found="${c.found === true ? "yes" : "no"}">${cs.w(c.found === true ? "ai.progress.check.ok" : "ai.progress.check.fail", { passage: String(c.passage || "") })}</li>`);
+  if (checked) rows.push(`<li data-step="checked">${cs.w("ai.progress.checked", { ok: String(checked.ok), total: String(checked.total) })}</li>`);
+  const answered = !!checked || checks.length > 0;
+  const none = !!checked && Number(checked.ok) === 0;
+  return { html: rows.length ? `<div class="cs-machinework" data-origin="machine" data-progress="1"><ol class="mk-next" aria-live="polite" data-tip="${cs.esc(cs.w("ai.progress.means"))}">${rows.join("")}</ol>`
+    + (answered ? "" : `<p class="mk-small" data-hold="1">${cs.w("ai.progress.hold")}</p>`) + "</div>" : "", answered, none };
+}
+
 /** The parts every screen of the module carries. */
-export const COMMON = Object.freeze({ front, later, plain, who });
+export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress });

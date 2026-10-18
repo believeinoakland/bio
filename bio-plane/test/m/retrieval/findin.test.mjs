@@ -102,7 +102,7 @@ test("R73: a scope of each form — a capture, a selection (read under its owner
   const { w, a, b, h, proj } = corpus();
   const shas = (ans) => [...new Set(ans.kinds.flatMap((k) => k.items.map((i) => i.capture_sha)))].sort();
   const one = run(w, { scope: { capture: a.sha }, kinds: ["term"], term: "the" });
-  assert.deepEqual([one.ok, one.scope, one.captures_read, one.next], [true, { form: "capture", capture: a.sha, captures: 1 }, 1, null]);
+  assert.deepEqual([one.ok, one.scope, one.captures_read, one.next], [true, { form: "capture", capture: a.sha, captures: 1, title: "Document INFO-A" }, 1, null]);
   const ids = run(w, { scope: { ids: ["INFO-A", b.sha, "INFO-NONE", h.sha] }, kinds: ["term"], term: "page" });
   assert.equal(ids.scope.captures, 2, "INFO-A's capture and b; the hidden capture and the absent id leave");
   assert.deepEqual(shas(ids), [b.sha]);

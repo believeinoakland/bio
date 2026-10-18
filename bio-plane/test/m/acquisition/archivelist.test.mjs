@@ -292,3 +292,42 @@ test("R41: an office file opened before T36 (R38 now refuses one, K2100) is stil
     assert.equal((await w.acq.archiveList({ archiveSha: sha(hidden), viewer })).reason, "NOT_AN_ARCHIVE", viewer);
   assert.equal((await w.acq.archiveList({ archiveSha: sha(hidden), viewer: "member:outsider" })).reason, "ARCHIVE_NOT_HELD");
 });
+
+test("R41 (T50, N1126): an `already_held` entry also carries `held_at` (provenance R12's, the instant the record first held the bytes) and `held_name` (that document's title); both null when the viewer may not see the earlier holding or it has no document yet; an entry in any other state carries neither key", async () => {
+  const w = world();
+  const s = sight(w);
+  const z = makeZip([{ name: "a.txt", data: "same" }, { name: "b.txt", data: "same" }, { name: "c.txt", data: "fenced" }, { name: "d.txt", data: "fenced" },
+                     { name: "e.txt", data: "plain" }, { name: "f.txt", data: "plain" }, { name: "g.txt", data: "fresh" }, { name: "h.txt", data: "fresh" }]);
+  await capture(w, z);
+  /* an earlier holding the viewer sees (a titled document), one in a hidden project, one without a title, one never promoted */
+  s.bundle("PROJ-1"); s.bundle("INFO-SAME"); s.bundle("INFO-FENCED", "PROJ-1"); s.bundle("INFO-UNTITLED");
+  s.set("PROJ-1", "hidden");
+  w.rows("UPDATE bundles SET title = 'Annual report' WHERE bundle_id = 'INFO-SAME'");
+  w.rows("UPDATE bundles SET title = 'Closed-session memo' WHERE bundle_id = 'INFO-FENCED'");
+  w.prov.homes[sha("same")] = "INFO-SAME"; w.prov.heldAt[sha("same")] = "2026-02-03T04:05:06Z";
+  w.prov.homes[sha("fenced")] = "INFO-FENCED"; w.prov.heldAt[sha("fenced")] = "2026-03-04T05:06:07Z";
+  w.prov.homes[sha("plain")] = "INFO-UNTITLED"; w.prov.heldAt[sha("plain")] = "2026-04-05T06:07:08Z";
+  const l = await w.acq.archiveList({ archiveSha: sha(z), viewer: ADMIN });
+  const by = (name) => l.entries.find((e) => e.name === name);
+  /* the earlier holding is a capture the viewer may see: its instant and its title */
+  assert.deepEqual([by("b.txt").state, by("b.txt").bundle, by("b.txt").held_at, by("b.txt").held_name], ["already_held", "INFO-SAME", "2026-02-03T04:05:06Z", "Annual report"]);
+  assert.equal(by("b.txt").held_at, w.prov.capturesOf("INFO-SAME").find((c) => c.capture_sha === sha("same")).held_at, "provenance R12's own figure");
+  /* a document with no title: the instant is given, the name is not (both are needed to draw the sentence whole) */
+  assert.deepEqual([by("f.txt").state, by("f.txt").bundle, by("f.txt").held_at, by("f.txt").held_name], ["already_held", "INFO-UNTITLED", "2026-04-05T06:07:08Z", null]);
+  /* no document yet: all three are null */
+  assert.deepEqual([by("h.txt").state, by("h.txt").bundle, by("h.txt").held_at, by("h.txt").held_name], ["already_held", null, null, null]);
+  /* control: a viewer who may not see the earlier capture gets bundle, held_at and held_name all null, and never its title */
+  assert.deepEqual([by("d.txt").state, by("d.txt").bundle, by("d.txt").held_at, by("d.txt").held_name], ["already_held", "INFO-FENCED", "2026-03-04T05:06:07Z", "Closed-session memo"],
+                   "negative control: a machine credential sees the hidden project's holding whole");
+  w.prov.homes[sha(z)] = "INFO-SAME";
+  const fenced = await w.acq.archiveList({ archiveSha: sha(z), viewer: "member:outsider" });
+  assert.equal(fenced.ok, true, "the archive's own home is one the outsider sees");
+  const d = fenced.entries.find((e) => e.name === "d.txt");
+  assert.deepEqual([d.state, d.bundle, d.held_at, d.held_name], ["already_held", null, null, null], "withheld whole");
+  assert.ok(!JSON.stringify(fenced).includes("Closed-session memo") && !JSON.stringify(fenced).includes("2026-03-04T05:06:07Z"), "no trace of the hidden holding");
+  /* an entry in any other state carries neither key (a filed entry keeps its bundle, as R41 states) */
+  const others = l.entries.filter((e) => e.state !== "already_held");
+  assert.ok(others.length >= 4 && others.every((e) => e.state === "filed"));
+  for (const e of others) assert.deepEqual([e.state, "held_at" in e, "held_name" in e], ["filed", false, false], e.name);
+  assert.equal(by("a.txt").bundle, "INFO-SAME", "a filed entry still answers its bundle");
+});

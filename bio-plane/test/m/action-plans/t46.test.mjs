@@ -89,7 +89,8 @@ test("R46 (b): plansToLookAgain answers a look_again day on the local day of now
 
 test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's refusal.<CODE>, read by key, answered so at the interface; codes, numbers and wheres unmoved; a row words.json does not hold keeps its own (control); C-124.63's words are R49's (T47) and tested there", () => {
   const rows = { SCENARIO_OUT_OF_RANGE: "C-124.30", NO_SUCH_SCENARIO: "C-124.58", SCENARIO_ALREADY_SET_ASIDE: "C-124.59",
-                 SCENARIO_NOT_SET_ASIDE: "C-124.60", PLAN_NOT_OPEN: "C-124.61", PLAN_NOT_PAUSED: "C-124.62" };
+                 SCENARIO_NOT_SET_ASIDE: "C-124.60", PLAN_NOT_OPEN: "C-124.61", PLAN_NOT_PAUSED: "C-124.62",
+                 PLAN_NO_TITLE: "C-124.2" };
   for (const [c, check] of Object.entries(rows)) {
     assert.equal(typeof WORDS[`refusal.${c}`], "string", `words.json holds refusal.${c}`);
     assert.equal(PLAN_WORDS[`refusal.${c}`], WORDS[`refusal.${c}`], `${c}: held by key, verbatim`);
@@ -104,6 +105,7 @@ test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's
   const phases = [{ id: "p", name: "P", options: [], starts: "plan_start" }];
   assert.equal(w.ap.scenarioSet({ plan: w.PL, scenario: 1, name: "S", phases, ...by("bob") }).ok, true);
   const said = {
+    PLAN_NO_TITLE: w.ap.planOpen({ project: w.P, subjects: [w.S1], title: "", ...by("bob") }),
     SCENARIO_OUT_OF_RANGE: w.ap.scenarioSet({ plan: w.PL, scenario: 0, name: "S", phases, ...by("bob") }),
     NO_SUCH_SCENARIO: w.ap.scenarioSetAside({ plan: w.PL, scenario: 9, reason: "r", ...by("bob") }),
     SCENARIO_NOT_SET_ASIDE: w.ap.scenarioRestore({ plan: w.PL, scenario: 1, reason: "r", ...by("bob") }),
@@ -118,12 +120,17 @@ test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's
     assert.deepEqual([r.check, r.translation], [rows[c], WORDS[`refusal.${c}`]], c);
     assert.match(r.where ?? ACTION_PLAN_CHECKS[c].where, /^src\/action-plans\/index\.mjs /);
   }
+  /* T50-47 (K3736): C-124.2 PLAN_NO_TITLE reads refusal.PLAN_NO_TITLE by key too (DEC-260), answered above. */
+  assert.equal(PLAN_WORDS["refusal.PLAN_NO_TITLE"], WORDS["refusal.PLAN_NO_TITLE"], "PLAN_NO_TITLE held by key, verbatim");
+  assert.equal(ACTION_PLAN_CHECKS.PLAN_NO_TITLE.translation, WORDS["refusal.PLAN_NO_TITLE"]);
   /* control: this module's other rows, which words.json does not hold, keep theirs (R47). (T47: R49 amends R47's clause
      on C-124.63, which now reads DEC-199's sentence by key; its test is t47's.) */
   for (const [c, r] of Object.entries(ACTION_PLAN_CHECKS))
     if (!(`refusal.${c}` in WORDS)) assert.equal(`refusal.${c}` in PLAN_WORDS, false, c);
-  assert.equal(WORDS["refusal.PLAN_NO_TITLE"], undefined);
-  assert.match(ACTION_PLAN_CHECKS.PLAN_NO_TITLE.translation, /^A plan needs a title of 1 to 200 characters/);
+  /* T50-47: words.json now holds refusal.PLAN_NO_TITLE (DEC-260), so the unheld control row is SUBJECT_MALFORMED */
+  assert.equal(WORDS["refusal.SUBJECT_MALFORMED"], undefined);
+  assert.match(ACTION_PLAN_CHECKS.SUBJECT_MALFORMED.translation, /\S/);
+  assert.equal("refusal.SUBJECT_MALFORMED" in PLAN_WORDS, false);
 });
 
 test("R47 R20: the closing note is prompted with the key plan.close.lessons and words.json's words for it, read by key; a closed plan asks for none (control)", () => {

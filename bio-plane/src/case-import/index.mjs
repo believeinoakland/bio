@@ -56,7 +56,7 @@
  * here (R15). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
-import { membershipOf } from "../membership/index.mjs";
+import { membershipOf, Membership } from "../membership/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
@@ -71,6 +71,7 @@ import { isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { verifySshsig, NS_DOCKET, docketStatement, normalizeKey } from "../sshsig.mjs";
 import { DOCKET_UNREADABLE, ENTRY_FORMATS } from "../docket/index.mjs";
 import { CASE_IMPORT_CHECKS, rowOf } from "./checks.mjs";
+import { say } from "./words.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
 import * as caseChecker from "../case-checker/index.mjs";
 import { biasOf } from "../bias/index.mjs";
@@ -92,27 +93,26 @@ export const WORDS_MAX = 2000;
 /** R16: the most withdrawals one page answers, and the default. */
 export const WITHDRAWALS_PAGE_MAX = 1000, WITHDRAWALS_PAGE = 200;
 /** R4: the label every statement of the source's own bar carries (DEC-45). */
-export const SOURCE_BAR = "the source group's bar, as its case states it";
+export const SOURCE_BAR = say("case-import.source_bar");
 /** R23: the labels of the two lenses an edition is read under (DEC-45's kind: the source's is never this group's). */
-export const SOURCE_LENS = "the source group's lens, as its case states it";
-export const OWN_LENS = "your group's own lens: its statements in force, the case's applications of them, the rest read as removed";
+export const SOURCE_LENS = say("case-import.source_lens");
+export const OWN_LENS = say("case-import.own_lens");
 /** R23 (`case-checker` R23): the limit every re-weighing states. */
-export const LENS_LIMIT = "A re-check re-weighs the analysis that exists; it cannot write what another lens would have written.";
+export const LENS_LIMIT = say("case-checker.lens_limit_statement");
 /** R23: undetermined, stated and never read as false (`bias` R49's `in_force: null`). */
-export const LENS_UNDETERMINED = "Whether a statement this finding applies is in your group's lens cannot be determined, so it is not "
-  + "re-weighed under that lens; that is not a statement that it would not change.";
+export const LENS_UNDETERMINED = say("case-import.lens_undetermined");
 /** R23: when the re-weighing could not be made. */
-export const LENS_NOT_REWEIGHED = "This edition could not be re-weighed under your group's lens.";
+export const LENS_NOT_REWEIGHED = say("case-import.lens_not_reweighed");
 /** R4: this group's own bar, the group default, when none is set (K1134 reading 3). */
-export const NO_OWN_BAR = "no bar is set for this group";
+export const NO_OWN_BAR = say("case-import.no_own_bar");
 /** R1 (`case-checker` R1): the checker's statement when no answer carries one; its words are the UX stream's. */
-export const STATEMENT = "Recreating a case shows it is intact and consistent, not that it is true.";
+export const STATEMENT = say("case-import.statement");
 /** R22 (D62): the `findings` value that takes every finding of the edition. */
 export const ALL_FINDINGS = "all";
 /** R22: why a finding was not accepted under `findings: "all"`. */
 export const NOT_ACCEPTED_WHY = Object.freeze({
-  did_not_recreate: "It did not recreate, so it cannot be accepted.",
-  gaps_unstated: "It recreated in part, and the gaps named under unstated are not yet stated in your words.",
+  did_not_recreate: say("case-import.did_not_recreate"),
+  gaps_unstated: say("case-import.gaps_unstated"),
 });
 const AXES = Object.freeze(["capture", "connection", "testimony"]);
 const ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF", move: "IMM" };
@@ -130,8 +130,7 @@ export const ENTRY_CHECKS = Object.freeze(["digest", "form", "signature", "chain
 /** R16, R18: the most watches or moves one page answers, and the default. */
 export const WATCH_PAGE_MAX = 200;
 /** R19: what an import's reads say beside a `publisher` of null (DEC-116 item 8: never that nothing changed). */
-export const NO_MOVE_SEEN = "No new edition or withdrawal of this case has been seen on its publisher's docket. That is "
-  + "not a statement that none was made: it says only what your group's Civicsmith has seen in its reads, as of the last read.";
+export const NO_MOVE_SEEN = say("case-import.no_move_seen");
 export { DOCKET_UNREADABLE };
 
 /* ================================================================ R4 (T46; N903): the source group's identity and stake */
@@ -139,22 +138,41 @@ export { DOCKET_UNREADABLE };
 /** R4 (`public-read` R34): the keys of a group's `group_fields`, and the instant the caller read them. */
 export const GROUP_FIELD_KEYS = Object.freeze(["group", "name", "domain", "domain_verified_at", "stake", "detail"]);
 /** R4: the label the recorded fields carry: the source's declaration as current when read, never as of the signing. */
-export const GROUP_FIELDS_LABEL = "the source group's public identity and declared stake, as it stated them when they were read; "
-  + "unsigned, not part of the edition, and never your group's";
+export const GROUP_FIELDS_LABEL = say("case-import.group_fields_label");
 /** R4: why an edition answers `group_fields: null` (never a guess; `conformance` R32 reads identity null, stake undetermined). */
-export const GROUP_FIELDS_NONE = "The source group's public identity and declared stake were not recorded when this edition was "
-  + "imported, so they are not known here. Nothing is guessed: the identity reads as unknown and the stake as undetermined.";
+export const GROUP_FIELDS_NONE = say("case-import.group_fields_none");
 /* R4: the bounds this module keeps on what it records (R34 states none): a text field, and the stake as held. */
 const GROUP_TEXT_MAX = 2000, GROUP_STAKE_MAX = 8192;
 
+/** R25 (`public-read` R36): the keys of a matter stake as the source's `groupFields` carries it. */
+export const MATTER_STAKE_KEYS = Object.freeze(["stake", "set_by", "set_at", "source"]);
+
+/** R25: a `matter_stake` as given, checked against `public-read` R36's shape: `null`, or `{stake, set_by, set_at, source:
+ *  "project"}` (an unread stake is `stake: "undetermined"` with `set_by` and `set_at` null). Answers `{value}` to record, or
+ *  `{malformed: true}`, never a refusal. Pure; never throws. */
+function matterStakeOf(v) {
+  try {
+    if (v === null) return { value: null };
+    if (!isObj(v)) return { malformed: true };
+    const keys = Object.keys(v);
+    if (keys.length !== MATTER_STAKE_KEYS.length || !MATTER_STAKE_KEYS.every((k) => Object.hasOwn(v, k))) return { malformed: true };
+    const text = (x) => typeof x === "string" && x.length > 0 && x.length <= GROUP_TEXT_MAX && !LONE_SURROGATE.test(x);
+    const orNull = (x) => x === null || text(x);
+    if (!text(v.stake) || !orNull(v.set_by) || !orNull(v.set_at) || v.source !== "project") return { malformed: true };
+    return { value: { stake: v.stake, set_by: v.set_by, set_at: v.set_at, source: v.source } };
+  } catch { return { malformed: true }; }
+}
+
 /** R4: the source group's `group_fields` as given with an import, checked against `public-read` R34's shape and the slug
  *  the manifest names. Answers `{fields, read_at}` to record, or `{why}` naming why they are not recorded. Pure; never
- *  throws. Absent fields answer `{why: "none_given"}`. */
+ *  throws. Absent fields answer `{why: "none_given"}`. R25: the fields may also carry `matter_stake` (R36's shape or
+ *  `null`); `fields.matter_stake` is it as recorded, `null` when absent or malformed, and `matter_stake_malformed` marks
+ *  a malformed one, which never makes the other fields unrecorded. */
 export function groupFieldsOf(given, manifestGroup) {
   try {
     if (given === null || given === undefined) return { why: "none_given" };
     if (!isObj(given)) return { why: "not_an_object" };
-    const extra = Object.keys(given).filter((k) => !GROUP_FIELD_KEYS.includes(k) && k !== "read_at");
+    const extra = Object.keys(given).filter((k) => !GROUP_FIELD_KEYS.includes(k) && k !== "read_at" && k !== "matter_stake");
     const absent = [...GROUP_FIELD_KEYS, "read_at"].filter((k) => !Object.hasOwn(given, k));
     if (extra.length || absent.length) return { why: "not_its_shape", ...(extra.length ? { extra } : {}), ...(absent.length ? { absent } : {}) };
     const text = (v) => v === null || (typeof v === "string" && v.length <= GROUP_TEXT_MAX && !LONE_SURROGATE.test(v));
@@ -169,7 +187,9 @@ export function groupFieldsOf(given, manifestGroup) {
     if (!Number.isFinite(ms) || ms < 0) return { why: "no_read_at" };
     const fields = {};
     for (const k of GROUP_FIELD_KEYS) fields[k] = k === "stake" ? JSON.parse(stakeJson) : given[k];
-    return { fields, read_at: stampInstant("second", ms) };
+    const matter = given.matter_stake === undefined ? { value: null } : matterStakeOf(given.matter_stake);
+    fields.matter_stake = matter.malformed ? null : matter.value;
+    return { fields, read_at: stampInstant("second", ms), ...(matter.malformed ? { matter_stake_malformed: true } : {}) };
   } catch { return { why: "not_its_shape" }; }
 }
 
@@ -260,7 +280,7 @@ function fingerprintsOf(entry, out = new Set(), depth = 0) {
 /* ================================================================ R21: a carried calculation, recreated */
 
 /** R4, R21: the label every statement of a source's calculation carries: its values are the source's (DEC-45's kind). */
-export const SOURCE_CALCULATION = "the source group's value, as its case states it";
+export const SOURCE_CALCULATION = say("case-import.source_calculation");
 /** R21: a calculation's results as recreated here. */
 export const CALC_RESULTS = Object.freeze(["recreated", "differs", "not_recreated"]);
 /* `case-checker` R20's answers, read against R21's. */
@@ -323,7 +343,7 @@ export function recreateCalculations({ rows = [], files = [], documents = [] } =
     try { out.push(recreateOne(row, ord, byContent, byStated)); }
     catch (e) {
       out.push({ calc: isObj(row) ? str(row.calc) ?? `#${ord + 1}` : `#${ord + 1}`, result: "not_recreated", differs: [], recomputed: null,
-                 missing: [{ what: "evaluation", why: `it could not be evaluated here: ${String(e && e.message || e).slice(0, 200)}` }],
+                 missing: [{ what: "evaluation", why: say("case-import.why.evaluated", { e: String(e && e.message || e).slice(0, 200) }) }],
                  stated: statedOf(row) });
     }
   });
@@ -339,16 +359,16 @@ function recreateOne(row, ord, byContent, byStated) {
   const stated = statedOf(row);
   const missing = [];
   const done = (result, differs = [], recomputed = null) => ({ calc, result, missing, differs, recomputed, stated });
-  if (!isObj(row)) { missing.push({ what: "row", why: "the case states this calculation in no readable row" }); return done("not_recreated"); }
+  if (!isObj(row)) { missing.push({ what: "row", why: say("case-import.why.case_states_calculation") }); return done("not_recreated"); }
   const method = str(row.method_version);
   if (method !== CALC_METHOD)
     missing.push({ what: "method_version", method_version: method, why: method
-      ? `your group's Civicsmith does not hold the method version ${method} (it holds ${CALC_METHOD}): the value was computed by the publishing group's engine and is not recreated here`
-      : "the case states no method version" });
+      ? say("case-import.why.group_civicsmith_hold", { method, calc_method: CALC_METHOD })
+      : say("case-import.why.case_states_method") });
   const recipe = isObj(row.recipe) ? row.recipe : null;
-  if (!recipe) missing.push({ what: "recipe", why: "the case states no recipe that can be read" });
+  if (!recipe) missing.push({ what: "recipe", why: say("case-import.why.case_states_recipe") });
   const inputs = inputsOfRow(row.inputs);
-  if (!inputs) missing.push({ what: "inputs", why: "the case states no list of named inputs that can be read" });
+  if (!inputs) missing.push({ what: "inputs", why: say("case-import.why.case_states_list") });
   const bound = {}, hashes = {};
   for (const inp of inputs || []) {
     hashes[inp.name] = inp.sha;
@@ -357,21 +377,21 @@ function recreateOne(row, ord, byContent, byStated) {
     if (!b) {
       const listed = byStated.get(inp.sha);
       missing.push(listed
-        ? { input: inp.name, sha: inp.sha, carried: listed.got, path: listed.path, why: "the file carried for this input differs from its hash",
+        ? { input: inp.name, sha: inp.sha, carried: listed.got, path: listed.path, why: say("case-import.why.file_carried_input"),
             ...(listed.detail ? { detail: listed.detail } : {}) }
         : { input: inp.name, sha: inp.sha, why: "the case file does not carry this input; bytes with this SHA-256 complete it" });
       continue;
     }
-    if (b.length > CALC_INPUT_MAX) { missing.push({ input: inp.name, sha: inp.sha, why: `the input is over ${CALC_INPUT_MAX} bytes, more than your group's Civicsmith reads` }); continue; }
+    if (b.length > CALC_INPUT_MAX) { missing.push({ input: inp.name, sha: inp.sha, why: say("case-import.why.input_over_bytes", { calc_input_max: CALC_INPUT_MAX }) }); continue; }
     const v = (() => { try { return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(b)); } catch { return undefined; } })();
-    if (v === undefined) { missing.push({ input: inp.name, sha: inp.sha, why: "the input's bytes are not the canonical JSON of a value calc-grammar evaluates" }); continue; }
+    if (v === undefined) { missing.push({ input: inp.name, sha: inp.sha, why: say("case-import.why.input_bytes_canonical") }); continue; }
     bound[inp.name] = v;
   }
   if (missing.length) return done("not_recreated");
   const e = evaluateRecipe(recipe, bound, {});
   if (!isObj(e) || e.refused) {
     missing.push({ what: "evaluation", refused: isObj(e) ? e.refused : null,
-                   why: `calc-grammar could not evaluate the recipe over the carried inputs${isObj(e) && e.why ? `: ${e.why}` : ""}` });
+                   why: say("case-import.why.calc_grammar_evaluate", { why: isObj(e) && e.why ? `: ${e.why}` : "" }) });
     return done("not_recreated");
   }
   const key = resultKey(recipe, hashes, { methodVersion: method });
@@ -383,7 +403,7 @@ function recreateOne(row, ord, byContent, byStated) {
     differs.push({ result: "result_key", source: row.result_key, recomputed: key });
   const values = statedValues(row.results, row.result_key);
   if (!values && (row.result_key === null || row.result_key === undefined)) {
-    missing.push({ what: "results", why: "the case states no result and no result key to recreate" });
+    missing.push({ what: "results", why: say("case-import.why.case_states_result") });
     return done("not_recreated", [], recomputed);
   }
   for (const [name, v] of values || []) {
@@ -451,7 +471,9 @@ export class CaseImport {
   /* The member an identity names, or null for a machine, an AI credential, an operator token or nobody (R1). */
   #member(identity) {
     if (!str(identity) || isMachineIdentity(identity)) return null;
-    return this.#call(() => this.membership.positionalMember(null, String(identity).trim()));
+    const id = String(identity).trim();
+    /* the founder's viewer is the bare `admin` (membership R43), whose member is `member:admin` (REC-132): both name her */
+    return this.#call(() => this.membership.positionalMember(null, id === Membership.ROOT_ADMIN ? `member:${id}` : id));
   }
   /* An active member of this group: the founder and every administrator, and every member whose status is active. */
   #isActiveMember(identity) {
@@ -530,11 +552,11 @@ export class CaseImport {
   async #recreate(parts, documents) {
     const fn = this.#checkCaseFile;
     try {
-      if (typeof fn !== "function") return { findings: [], unread: "no case checker is composed on this copy" };
+      if (typeof fn !== "function") return { findings: [], unread: say("case-import.unread.case_checker_composed") };
       const a = await fn({ parts, documents });
-      return isObj(a) ? a : { findings: [], unread: "the case checker gave no answer" };
+      return isObj(a) ? a : { findings: [], unread: say("case-import.unread.case_checker_gave") };
     } catch (e) {
-      return { findings: [], unread: `the case checker failed: ${String(e && e.message ? e.message : e).slice(0, 200)}` };
+      return { findings: [], unread: say("case-import.unread.case_checker_failed", { e: String(e && e.message ? e.message : e).slice(0, 200) }) };
     }
   }
 
@@ -622,11 +644,11 @@ export class CaseImport {
                     { departures: [!list.length ? "no part was given" : `part ${list.findIndex((p) => !p)} is not bytes`] });
     /* The manifest, by the one reader of the format (`case-checker` R19), checked by `case-grammar` R13's check. A file
        whose bytes differ from the manifest is the checker's to report (its R2), never a refusal here. */
-    const read = this.#call(() => readCaseFile(list), { manifest: null, files: [], departures: ["the parts could not be read"] });
+    const read = this.#call(() => readCaseFile(list), { manifest: null, files: [], departures: [say("case-import.departures")] });
     const check = this.#manifestCheck;
-    const checked = !isObj(read.manifest) ? (Array.isArray(read.departures) && read.departures.length ? read.departures : ["no manifest was found"])
-      : typeof check === "function" ? this.#call(() => check(read.manifest), ["the manifest could not be checked"])
-      : ["this copy holds no check of a case file's manifest"];
+    const checked = !isObj(read.manifest) ? (Array.isArray(read.departures) && read.departures.length ? read.departures : [say("case-import.text.manifest_found")])
+      : typeof check === "function" ? this.#call(() => check(read.manifest), [say("case-import.call.manifest_checked")])
+      : [say("case-import.text.copy_holds_check")];
     const named = Array.isArray(checked) ? checked : checked ? [checked] : [];
     if (named.length)
       return refuse("IMPORT_NOT_A_CASE_FILE", "the parts do not carry a manifest that meets the case-file format", { departures: named });
@@ -686,7 +708,8 @@ export class CaseImport {
                       importId, who.edition, f.path, str(f.kind), shaOf(f.content), f.content.length, listed.get(f.path)?.part ?? 0);
       if (gf.fields)
         this.sql.exec(`INSERT INTO case_import_group_fields (import_id, edition, fields, read_at) VALUES (?,?,?,?)`,
-                      importId, who.edition, canonicalJson(gf.fields), gf.read_at);
+                      importId, who.edition, canonicalJson(gf.matter_stake_malformed ? { ...gf.fields, matter_stake_malformed: true } : gf.fields),
+                      gf.read_at);
       this.#recordCheck(importId, who.edition, answer, { cause: "import", by: k.member, at, published, calcs });
       return { ok: true };
     });
@@ -771,14 +794,16 @@ export class CaseImport {
 
   /* ================================================================ R4: the reads */
 
-  /** R4: every import, with its source group, case, lens and editions, each with when it was imported. A viewer who is
-   *  not an active member is answered as if no import exists. Writes nothing. */
+  /** R4, R26: every import, with its source group, case, lens, its `latest_edition` and its editions, each with when and by
+   *  whom it was imported (`importer`) and its findings counted by result, so the list draws with no read per case. A
+   *  viewer who is not an active member is answered as if no import exists. Writes nothing. */
   importedCases({ viewer = null } = {}) {
     if (!this.#isActiveMember(viewer)) return { ok: true, imports: [], count: 0, wrote: false };
     const imports = this.#rows(`SELECT * FROM case_imports ORDER BY source_group, case_id, import_id`).map((i) => {
       const wf = this.#watchFacts(i);
+      const editions = this.#editionsOf(i, wf);
       return { import: i.import_id, group: i.source_group, case: i.case_id, lens: i.lens ?? null,
-               editions: this.#editionsOf(i, wf), ...wf.facts };
+               latest_edition: editions.length ? editions[editions.length - 1].edition : null, editions, ...wf.facts };
     });
     return { ok: true, imports, count: imports.length, wrote: false };
   }
@@ -811,10 +836,32 @@ export class CaseImport {
              edition: { ...this.#editionView(i, e, viewer), ...wf.publisher(Number(e.edition)) }, ...wf.facts, wrote: false };
   }
 
-  /* R4, R19: an import's editions, each with when it was imported, the source's group fields and its publisher facts. */
+  /* R26: who imported an edition, as the list draws it: the member and the handle `membership.memberFacts` gives (null
+     where none is held); the founder (`admin`) by `founderHandle()` (its R144), with `founder: true`. */
+  #importerOf(member) {
+    if (member === Membership.ROOT_ADMIN)
+      return { member, handle: this.#call(() => this.membership.founderHandle()) ?? null, founder: true };
+    return { member, handle: this.#call(() => this.membership.memberFacts(member))?.handle ?? null };
+  }
+  /* R26: an edition's findings counted over the latest recreation recorded for it (R3), each `null` where none is. */
+  #countsOf(importId, edition) {
+    const c = this.#latestCheck(importId, edition);
+    if (!c) return { findings: null, recreated: null, recreated_in_part: null, did_not_recreate: null };
+    const by = Object.fromEntries(RESULTS.map((r) => [r, 0]));
+    let findings = 0;
+    for (const r of this.#rows(`SELECT result, COUNT(*) AS n FROM case_import_results WHERE check_rn=? GROUP BY result`, c.rn)) {
+      findings += Number(r.n);
+      if (r.result in by) by[r.result] = Number(r.n);
+    }
+    return { findings, ...by };
+  }
+
+  /* R4, R19, R26: an import's editions, each with when and by whom it was imported, the counts of its findings by result,
+     the source's group fields and its publisher facts. */
   #editionsOf(i, wf) {
     return this.#rows(`SELECT edition, imported_at, imported_by FROM case_import_editions WHERE import_id=? ORDER BY edition`, i.import_id)
       .map((e) => ({ edition: Number(e.edition), imported_at: e.imported_at, imported_by: e.imported_by,
+                     importer: this.#importerOf(e.imported_by), ...this.#countsOf(i.import_id, Number(e.edition)),
                      ...this.#groupFields(i.import_id, Number(e.edition)), ...wf.publisher(Number(e.edition)) }));
   }
 
@@ -825,7 +872,10 @@ export class CaseImport {
     if (!isObj(f)) return { group_fields: null, group_fields_note: GROUP_FIELDS_NONE };
     const out = {};
     for (const k of GROUP_FIELD_KEYS) out[k] = Object.hasOwn(f, k) ? f[k] : null;
-    return { group_fields: { ...out, read_at: r.read_at }, group_fields_label: GROUP_FIELDS_LABEL };
+    /* R25: an edition recorded before T50 carries no matter stake, which reads `null` and is no fault */
+    out.matter_stake = isObj(f.matter_stake) ? f.matter_stake : null;
+    return { group_fields: { ...out, read_at: r.read_at }, group_fields_label: GROUP_FIELDS_LABEL,
+             ...(f.matter_stake_malformed === true ? { group_fields_note: say("caseimport.stake.unreadable") } : {}) };
   }
 
   /* R4: one edition in full. */
@@ -1101,7 +1151,7 @@ export class CaseImport {
              checked: checked.trim(), reason: reason.trim(), gaps: kept,
              findings: named.map((f) => ({ finding: f, ref: importedFindingRef(e.import_id, f), result: results.get(f).result })),
              ...(all ? { scope: ALL_FINDINGS, not_accepted: notAccepted } : {}),
-             grades: "unchanged: the edition's grades stand as published" };
+             grades: say("case-import.grades") };
   }
 
   /** R7: withdraws every acceptance of the edition in force, with a reason; each stays in the history. After the

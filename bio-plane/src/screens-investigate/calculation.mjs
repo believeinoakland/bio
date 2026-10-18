@@ -6,10 +6,12 @@
  * what she saw at a drawn report in two acts: `testify` (her own words) and `spotcheckvisit` (tying it to the item). */
 
 import { PARTS } from "./parts.mjs";
+import { FORM_SHARED } from "./graphwords.mjs";
 
 function reads(view) {
   const id = String(view.subject || "");
-  return { calc: { op: "calculation", query: { id }, subject: true, empty: (v) => !v || v.found === false } };
+  return { calc: { op: "calculation", query: { id }, subject: true, empty: (v) => !v || v.found === false },
+    docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
 }
 
 /** R8's project step: the calculation's project, by its id (the project's title is read where it is drawn). */
@@ -68,7 +70,7 @@ function render(cs, view) {
   const items = spot && spot.state === "ok" ? (spot.value.items || []).map((x) => ({ value: String(x.item), text: cs.w(S + "item", { item: String(x.item) }) })) : [];
   out.push(cs.sec(S + "spot", spotInner
     + `<p class="mk-small">${cs.w("screen.help.notsays.p")} <a href="/app/help" data-nav>${cs.w(S + "help")}</a></p>`
-    + cs.field("calc-set", S + "set", { help: S + "set.help" }) + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
+    + P.docChoice(cs, view, "calc-set", { label: S + "set", help: S + "set.help", passage: false }) + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
     + cs.field("calc-dq", S + "dq", { area: true, rec: true })
     + cs.act("calculationdraw", { label: "act.calculationdraw.label.calculation" })
     + cs.field("calc-words", S + "words", { area: true, rec: true, help: S + "words.help" }) + cs.field("calc-observed", S + "observed", { type: "date", value: P.today(cs) })
@@ -76,16 +78,16 @@ function render(cs, view) {
     + (ui.testimony ? `<p class="mk-note">${cs.w(S + "testified")}</p>` : "")
     + cs.choice("calc-item", S + "itempick", items, {})
     + cs.checks("calc-finding", S + "finding", [["yes", S + "finding.yes", false], ["no", S + "finding.no", false], ["could_not_tell", S + "finding.could_not_tell", false]], { radio: true })
-    + cs.field("calc-photo", S + "photo", { help: S + "photo.help" })
+    + P.docChoice(cs, view, "calc-photo", { label: S + "photo", help: S + "photo.help", passage: false })
     + cs.act("spotcheckvisit", { label: "act.spotcheckvisit.label.calculation" }), { help: S + "spot.help" }));
   /* working it out, and a member's own spreadsheet */
   out.push(cs.sec(S + "work", cs.field("calc-q", S + "q", { rec: true }) + cs.field("calc-from", S + "from", { type: "date" }) + cs.field("calc-to", S + "to", { type: "date" })
     + cs.choice("calc-kind", S + "kind", ["count", "total", "share", "ratio", "difference", "estimate"].map((k) => [k, S + "kind." + k]), {})
     + cs.field("calc-input", S + "input", { help: S + "input.help" })
     + cs.act("calculationcreate", { label: "act.calculationcreate.label.calculation", tone: "primary" })
-    + cs.field("calc-content", S + "content", { help: S + "content.help" }) + cs.field("calc-header", S + "header", { help: S + "header.help" })
+    + P.docChoice(cs, view, "calc-content", { label: S + "content", help: S + "content.help", passage: false }) + cs.field("calc-header", S + "header", { help: S + "header.help" })
     + cs.act("tabledeclare", { label: "act.tabledeclare.label.calculation" })));
-  out.push(cs.sec(S + "workbook", cs.field("calc-wb", S + "wb", { help: S + "wb.help" }) + cs.field("calc-period", S + "period", {})
+  out.push(cs.sec(S + "workbook", P.docChoice(cs, view, "calc-wb", { label: S + "wb", help: S + "wb.help", passage: false }) + cs.field("calc-period", S + "period", {})
     + cs.act("addworkbook", { label: "act.addworkbook.label.calculation" })
     + cs.field("calc-range", S + "range.field", { help: S + "range.help" }) + cs.field("calc-table", S + "table", {}) + cs.field("calc-trange", S + "trange", {})
     + cs.act("bind", { label: "act.bind.label.calculation" })
@@ -214,7 +216,7 @@ const words = ["screen.calculation.name", "screen.calculation.purpose",
     .flatMap((op) => ["act." + op + ".label.calculation", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
-  "screen.help.notsays.p", "state.empty", "state.loading", "state.failed", ...CALCULATION_KEYS];
+  "screen.help.notsays.p", "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...CALCULATION_KEYS];
 
 export const CALCULATION_SCREEN = Object.freeze({ id: "calculation", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, place, render, acts, words, parts: PARTS });
 export const HELP_SCREEN = Object.freeze({ id: "help", reads: () => ({}), render: renderHelp, acts: [], words: ["screen.help.name", ...HELP_KEYS] });

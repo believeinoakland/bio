@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0, sha, inquiryMd } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS, OBSERVATION_COVERAGE_UNDETERMINED } from "../../../src/run-rules/index.mjs";
 
 const CAP = "c".repeat(64);
@@ -91,8 +92,8 @@ test("R16, R18 (convert d260-resume): each withheld resumption's wake entry says
                    ["MEMBER_PRINCIPAL_RUN", "NOT_THE_INSTANCE_CREDENTIALS_RUN", "DISPATCH", "DISPATCHED"]);
   const wakeEntry = (run) => logOf(w, run).find((e) => /the daemon answered/.test(e.detail));
   assert.match(wakeEntry("MEM").detail, /Resumption: NOT dispatched — a member's credential opened it/);
-  assert.match(wakeEntry("OTHER").detail, /Resumption: NOT dispatched — another principal opened it/);
-  assert.match(wakeEntry("INST").detail, /Resumption: handed to agent-worker under the organisation credential 'tok-org' of your group's Civicsmith, which opened this run\./);
+  assert.ok(wakeEntry("OTHER").detail.includes(word("ai-runs.says.resumption_dispatched", { why: word("ai-runs.text.principal_opened_organization") })));
+  assert.ok(wakeEntry("INST").detail.includes(word("ai-runs.says.resumption_handed_agent", { token_id: "tok-org" })));
   /* withheld runs: still running, woken, and nothing after their wake entry */
   for (const run of ["MEM", "OTHER"]) {
     assert.equal((await w.runs.read({ run, viewer: "admin" })).session.status, "running");
@@ -108,7 +109,8 @@ test("R16, R18 (convert d260-resume): each withheld resumption's wake entry says
   await u.runs.open(OPEN({ principalPlane: stamp }));
   u.runs.registerWaitSource("capture-requests", waitSource({ R1: [{ request: "q", state: "captured" }] }));
   await u.runs.wake(at("00:00:10"));
-  assert.match(logOf(u)[0].detail, /Resumption: NOT dispatched — your group's Civicsmith cannot resume anything here \(AGENT_WORKER_UNBOUND\)\./);
+  assert.ok(logOf(u)[0].detail.includes(word("ai-runs.says.resumption_dispatched",
+    { why: word("ai-runs.text.group_civicsmith_resume", { withheld: "AGENT_WORKER_UNBOUND" }) })));
   /* a dispatch agent-worker refuses carries its code, in the answer and in the run's own last entry */
   answer = { status: 409, body: { ok: false, reason: "RUN_NAMES_A_DIFFERENT_PAYER" } };
   await w.runs.open(OPEN({ run: "PAYER", principalPlane: stamp }));
@@ -261,7 +263,7 @@ test("R9, R40 (convert extractrun, skillpack): the mode refusal echoes the mode 
   const r = await w.runs.open(OPEN({ mode: "extract" }));
   assert.deepEqual([r.started, r.code, r.mode, r.deployed], [false, "AI_RUN_MODE_NOT_DEPLOYED", "extract", ["check", "plan"]]);
   /* run-rules R14 (T46; K2892): plan deployed by its own flag, its bar held in this world */
-  assert.match(r.note, /the mode 'extract' is not deployed in your group's Civicsmith.*today check, plan are deployed\. Nothing was written/);
+  assert.equal(r.note, word("ai-runs.note.mode_deployed_group", { mode: "extract", deployed: "check, plan", are: "are" }));
   const long = await w.runs.open(OPEN({ mode: "m".repeat(80) }));
   assert.equal(long.mode, "m".repeat(60));
   const s = await w.runs.open(OPEN({ skillVersion: "3" }));
@@ -296,8 +298,7 @@ test("R54: every member-facing string the sweep names says \"your group's Civics
   const w0 = world();
   await w0.group("ann"); w0.bundle(INQ);
   const m = await w0.runs.open(OPEN({ mode: "extract" }));
-  assert.equal(m.note, "the mode 'extract' is not deployed in your group's Civicsmith: the modes deploy in one order, each only "
-    + "after the one before it is verified live, and today check, plan are deployed. Nothing was written", "index.mjs:895");
+  assert.equal(m.note, word("ai-runs.note.mode_deployed_group", { mode: "extract", deployed: "check, plan", are: "are" }), "index.mjs:895");
   assert.equal(OLD.test(m.note), false, m.note);
   /* :1688, :1694, :1698 */
   const TOKEN = "instance-ai-secret-value-r54";
@@ -317,13 +318,11 @@ test("R54: every member-facing string the sweep names says \"your group's Civics
   const served = (u, run) => u.runs.log({ run, viewer: "admin" }).entries.map((e) => e.detail).find((d) => /Resumption:/.test(d));
   const says = (d) => d.slice(d.indexOf("Resumption:"));
   const rows = {
-    "index.mjs:1688": [served(w, "INST"), "Resumption: handed to agent-worker under the organisation credential 'tok-org' of your group's "
-      + "Civicsmith, which opened this run."],
+    "index.mjs:1688": [served(w, "INST"), word("ai-runs.says.resumption_handed_agent", { token_id: "tok-org" })],
     "index.mjs:1694": [served(w, "MEM"), "Resumption: NOT dispatched — a member's credential opened it, and your group's Civicsmith resumes "
       + "only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the group's key would "
       + "re-attribute its acts). It waits for its own principal."],
-    "index.mjs:1698": [served(w, "OTHER"), "Resumption: NOT dispatched — another principal opened it, and the organisation credential of "
-      + "your group's Civicsmith resumes only the runs it opened."],
+    "index.mjs:1698": [served(w, "OTHER"), word("ai-runs.says.resumption_dispatched", { why: word("ai-runs.text.principal_opened_organization") })],
   };
   /* :1699 */
   const u = world({ env: { ...env, AGENT_WORKER: null } });
@@ -331,8 +330,8 @@ test("R54: every member-facing string the sweep names says \"your group's Civics
   await u.runs.open(OPEN({ principalPlane: runs.INST }));
   u.runs.registerWaitSource("capture-requests", waitSource({ R1: [{ request: "q", state: "captured" }] }));
   await u.runs.wake(at("00:00:10"));
-  rows["index.mjs:1699"] = [served(u, "R1"), "Resumption: NOT dispatched — your group's Civicsmith cannot resume anything here "
-    + "(AGENT_WORKER_UNBOUND)."];
+  rows["index.mjs:1699"] = [served(u, "R1"), word("ai-runs.says.resumption_dispatched",
+    { why: word("ai-runs.text.group_civicsmith_resume", { withheld: "AGENT_WORKER_UNBOUND" }) })];
   for (const [row, [detail, want]] of Object.entries(rows)) {
     assert.equal(typeof detail, "string", `${row}: served in the run's log`);
     assert.equal(says(detail), want, row);

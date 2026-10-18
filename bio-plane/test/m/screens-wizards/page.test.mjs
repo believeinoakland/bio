@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { boot, ok } from "../interface-shell/harness.mjs";
 import { SCREENS, GUIDE } from "../../../src/screens-wizards/index.mjs";
 import { ADMIN, libraryTable } from "./fixtures.mjs";
+import { said } from "./standin.mjs";
 
 const SCRIPT = { id: "WIZ-00000000000000e9", version: "WIZ-00000000000000e9@1", name: "Submit a draft", steps: [
   { screen: "wizards", act: "wizardsubmit", what: "Submit your draft", why: "An owner approves it" },
@@ -67,13 +68,13 @@ test("R3 in the page: \"Record a new wizard\" puts the dock's guide in recording
   const dock = () => p.root().querySelector(".cs-dock");
   assert.equal(dock() && dock().getAttribute("data-panel"), "guide");
   assert.ok(dock().querySelector('[data-guide-state="recording"]'));
-  // an act pressed on the screen (here, "See the whole library") is heard as {screen, act}
-  p.root().querySelector("#wz-state").value = "draft";
-  await p.click(p.root().querySelector('button[data-act="wizards"][data-see="1"]'));
+  // an act pressed on the screen (here, the Drafts state) is heard as {screen, act}
+  await p.click(p.root().querySelector('button[data-act="wizards"][data-state="draft"]'));
   await p.settle(60);
-  const pairs = dock().querySelectorAll("ol li");
+  const pairs = dock().querySelectorAll("ul li");
   assert.equal(pairs.length, 1);
-  assert.ok(/^1\. Wizards: See the library/.test(pairs[0].textContent.trim()), pairs[0].textContent);
+  assert.equal(pairs[0].textContent.trim().replace(/\s+/g, " ").replace(/\s*Remove step.*$/, ""),
+    said("screen.guide.recording.pair", { i: "1", screen: said("screen.wizards.name"), act: said("act.wizards.label.wizards") }));
   assert.equal(p.byOp("wizarddraft").length, 0, "nothing is saved until the member saves");
 });
 
@@ -139,4 +140,29 @@ test("R7 in the page: after join the welcome offer sits on Home; \"Not now\" fol
   await p.click(p.root().querySelector('#cs-main [data-guide="chip"]'));
   await p.settle(40);
   assert.ok(p.root().querySelector('#cs-main [data-guide="start"][data-script="WIZ-7db08189cc0e58c3"]'), "the mark stays");
+});
+
+test("R17 in the page: a step on a screen that works in a project asks in the dock, as a choice of the member's projects, and opens the screen on the one chosen", async () => {
+  const PLAN = { id: "timeline", reads: () => ({}), render: (cs, view) => `<p data-subject="${cs.esc(view.subject)}">${cs.title()}</p>`, acts: [], words: [] };
+  const start = { id: "home", reads: () => ({}), render: (cs) => cs.act("startfrom", { data: { s: "1" } }),
+    acts: [{ op: "startfrom", send(view, el, cs) { cs.wizard("WIZ-00000000000000e9", "WIZ-00000000000000e9@1", {}); return null; } }] };
+  const steps = [{ screen: "timeline", act: null, what: "Open the plan", why: "To see its options" }, { screen: "wizards", act: null, what: "Then here", why: "Done" }];
+  const p = await boot({ screens: [start, PLAN, ...SCREENS], guide: GUIDE, path: "/app",
+    plane: plane({ projectlist: ok({ ok: true, projects: [{ id: "P1", name: "Pothole repairs" }, { id: "P2", name: "The Coliseum lease" }], count: 2 }),
+      wizardread: () => ok({ ok: true, script: { id: "WIZ-00000000000000e9", name: "Plan it", origin: "group" }, version: { id: "WIZ-00000000000000e9@1", state: "approved", steps } }) }) });
+  await p.settle(60);
+  await p.click(p.root().querySelector('button[data-act="startfrom"]'));
+  await reasonIfAsked(p);
+  await p.settle(120);
+  const dock = () => p.root().querySelector(".cs-dock");
+  assert.equal(p.location.pathname, "/app", "the screen is not opened on nothing");
+  const select = dock().querySelector("#wz-subject");
+  assert.ok(select, "the choice is asked in the dock");
+  assert.deepEqual([...select.querySelectorAll("option")].map((o) => o.textContent.trim()), ["Pothole repairs", "The Coliseum lease"]);
+  assert.ok(dock().textContent.includes(said("wizard.subject.project")));
+  select.value = "P2";
+  await p.click(dock().querySelector('[data-guide="subjectgo"]'));
+  await p.settle(120);
+  assert.equal(p.location.pathname, "/app/timeline/P2");
+  assert.equal(p.root().querySelector("#cs-main [data-subject]").getAttribute("data-subject"), "P2");
 });

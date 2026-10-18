@@ -1,0 +1,51 @@
+# agent-worker (T50)
+
+**Status** · session_01ExtfTo6iBGUSsaBuUqEFKD · depth 2 · COMPLETE · handled B4
+
+## J1 · QUESTION
+
+QUESTION (J1) on R110/R111, my best reading, for BOB to confirm or change. I carry on with R109, R112–R117 meanwhile.
+
+1. **Where the "passed check" is recorded.** R111 says a pass "is recorded in the member's REMOTE instance with the version (R110 reads it)", but agent-runner R36–R40 define no route that records or returns it. My reading: the REMOTE class (agent-runner, your CHANGE to that job) answers two routes on the member's instance: `POST /remote/check` body `{version}` (records a pass) and `GET /remote/check` → `{ok: true, checked: true|false, version}`. R110's gate reads the second; R111's `check` step makes the first call. Until agent-runner has them, a gated call is refused 503 `ASSISTANT_REMOTE_NOT_READY`, which is what K3610 wants. If you would rather agent-worker kept the record in its own SEGMENTS storage (inside my module, no change to agent-runner), say so and I build that instead.
+2. **"From another version"** I read as: the recorded version differs from the `version` that `GET /remote/version` answers now (the REMOTE class's own version).
+3. **Who the gate covers.** Only a `signin` account (it is the only kind that reaches REMOTE). An `apikey` account is unchanged (R109's control). If R110 should also stop API-key conversations, that is a requirement change.
+4. **`GET /version` has no member**, so "REMOTE answers `GET /remote/version`" is asked of a fixed instance named `version`.
+5. **Not yet merged here:** agent-harness R19's `disagreementsToSettle`, agent-model R23's `judgeTools(levels, conditions)` and R24. I build R116/R117 against their requirements, reading those names defensively until your CHANGE says they are merged.
+
+## J2 · REPORT
+
+REPORT (J2) · agent-worker, T50-65. Findings that lie outside my module, and four readings of mine BOB may want to change. Nothing here blocks; COMPLETE follows.
+
+**For the installer (T50-78, R56/R59) and `build/requirements/agent-worker.md` R35:**
+1. agent-worker now declares a fourth Durable Object binding, `CHECKS` → class `CheckRecord` (migration tag `v2`, `new_sqlite_classes: ["CheckRecord"]`), beside `REMOTE`, `SEGMENTS` and `PLANE`. It is the member's check record in my own storage (K3693): a version and a time per member, no secret. I did not reuse `SEGMENTS`: that namespace is the run's segment driver (`/run` hands a segment to it whenever it is bound), so a suite or an install that wants a passed check without a driver cannot have one. R35's "PLANE, REMOTE, SEGMENTS" needs `CHECKS` added, and the install and update must bind it (and carry the migration), or the gate fails closed (503 `ASSISTANT_REMOTE_NOT_READY`), which is safe but means no check can ever be recorded.
+2. `wrangler.jsonc` binds `REMOTE` as `{class_name: "RemoteSession", script_name: "agent-runner"}`. The class name is my assumption; agent-runner R36 does not name it. Whichever name agent-runner exports, the installer and this file must say it.
+
+**For ai-runs / observation-log (T50-66/67 area):** R114 and R116 send log entries carrying `read: {record, n, total, outcome}` and `disagree: {record, levels}`. I could not confirm that `op=airuntick` keeps unknown keys on an appended entry and `op=airunlog` serves them; if either strips them, screens-inquiry R58 gets nothing to draw. Please have the owner state it.
+
+**For screens-inquiry R58 / BOB:** it says the "Found {count} passages" count comes "from the compose tick's `found`, agent-worker R114". R114 as folded carries no `found` on any tick (it ticks the re-reads). I added nothing for it. If a run's compose tick must carry `found`, that is a requirement line for agent-worker, with its meaning (what a "passage that bears on the question" is for a run).
+
+**A gap I filled, for BOB to ratify with an R-id:** agent-harness R18 (merged, K3694) writes no `level-empty` candidate unless the table's state carries `scope` for the level, and says the shell sets it "from the plane's four-level statement of each read (`retrieval` R13)". agent-worker has no requirement for that, so after the merge no run wrote any absence. I set it in `runSubsessions`: for each level's sub-session, `scope[level] = {reads, documents}`, `reads` the reads that answered, `documents` the least `scope.documents` any of them stated (left out if one stated none, so the table fails closed). Reports a caller supplies (`judgements`) are no sub-session's reads, so that path now writes no absence unless the run's published state carries a scope. 20-odd tests in harness, fanout, wire-vocabulary, r101 and r103 drove that path; I gave their mock planes a scope (the real plane's answers carry `scope.documents`) or a published state, and added a section to t50 for it. Suggest R118 for the shell's half.
+
+**My readings (J1 and B2 agreed the first four):**
+- R113's `composing.count` is the number of distinct elements of the reads' answers' result lists (`hits`, `rows`, `passages`); `record` on a `read` event is the `id`/`record`/`bundle_id`/`address` argument (or an `id:` in `q`) when it is shaped like an id, else null; `checked.passage` is the cited holding's address when shaped like an id, else `h<i>`; `ASK_CHECK_FAILED`'s detail is the record's `ai.progress.check.failed` word (no `refusal.ASK_CHECK_FAILED` exists). "Bears on the question" is the check's judgement, not known before composing, so `found` means "the reads returned something".
+- The gate (R110) does not hold a `/run` whose caller supplies the judgements: it takes no turn and reaches no runner.
+- Plan rule 6: I read the keyed sentences by key (`refusal.NO_ACCOUNT`, `.SIGNIN_NOT_HELD`, `.NAMESPACE_UNKNOWN`, `.ASSISTANT_REMOTE_NOT_READY`, `ai.progress.check.failed`). Every other refusal sentence this member writes has no key (BAD_BODY, BAD_RUN_ID, BAD_STORE, BAD_TURNS, BAD_TASK, BAD_TOLD, BAD_GRANT, BAD_CONVERSATION, BAD_PAGES, BAD_SHA, BAD_CODE, BAD_MEMBER, BAD_STEP, BAD_ACCOUNT, BAD_CREDENTIAL_SHAPE, NO_CREDENTIAL, NO_GRANT, NO_SUCH_RUN, PLANE_NOT_CONFIGURED, PLANE_SILENT, PLANE_REFUSED, RUNNER_NOT_CONFIGURED, RUNNER_SILENT, RUN_NAMES_A_DIFFERENT_PAYER, SKILL_VERSION_MISMATCH, SEGMENT_*, DRAFT_*, ASK_*, MODEL_SILENT, MODEL_REFUSED, PACK_UNDETERMINED, JUDGEMENT_OVERREACH, the cascade's NO_ACCOUNT detail, and `/signin`'s six own WORDS): REPORT to the design lane, still inline English. Their text says "your group's Civicsmith" (DEC-149, agent-worker R64), which plan rule 6 ("team, never group") contradicts; that is for BOB to settle.
+- M-T50-5 (a plain member's run on biosmoke8) cannot be made while agent-runner's proof is blocked (K3692). R111 is unbuilt, as B2 says.
+
+## J3 · COMPLETE
+
+COMPLETE · agent-worker, T50-65 (R109, R110, R112–R118; R111 unbuilt by B2).
+
+Entries applied
+- R109: every path reaches a runner through `remoteOf(env)` (`src/remote.mjs`), `env.REMOTE` only; no RUNNER binding declared or named (a fresh build holds none). wrangler binds `REMOTE` (`RemoteSession`, agent-runner), `SEGMENTS`, and `CHECKS` (`CheckRecord`, migration v2).
+- R110 (K3693, B2/B6): the member's passed check is kept in this member's own `CheckRecord`; `GET /version` `runner` is true when `REMOTE` answers `GET /remote/version`; a signin call without a passed check at that version is 503 `ASSISTANT_REMOTE_NOT_READY` (word by key). Apikey accounts and a `/run` with caller-supplied judgements are not gated.
+- R112 (effort on usage entries), R113 (ask stream: step/read(record)/composing/checking/checked/answer, `ASK_CHECK_FAILED`), R114 (a tick per re-read with `read` data), R115 (fence: an id-shaped citation the plane does not answer is UNDETERMINED), R116 (disagreement read once, `disagree` data), R117 (condition handed back once), R118 (scope per level: greatest `documents`, left out when none stated).
+- Words by key for NO_ACCOUNT, SIGNIN_NOT_HELD, NAMESPACE_UNKNOWN; the rest in REPORT J2 (N1217).
+
+Deferred: R111 (the `check` step), per B2, until agent-runner's proof stands; `CheckRecord` has its `POST /check` and `recordCheck` ready for it.
+Found in another module: see REPORT J2 (installer binds CHECKS; ai-runs keeping `read`/`disagree` keys; screens-inquiry R58's compose-tick `found`).
+
+Tests and checks
+- `npm test` in agent-worker: every file passes except `requirements.test.mjs`: 302 pass, 2 fail, both R45 (the committed bundle is stale; BOB regenerates at L6's close, accepted red 12). New `t50.test.mjs`: 111 pass, 0 fail. Existing suites updated for REMOTE/CHECKS, R112–R114 shapes, and agent-harness R18/R19 (mock planes carry `scope.documents`; stub-path fixtures publish a scope).
+- format 0 failures; architecture (agent-worker) 0 failures; coverage 108 of 108 ids named, 0 failures; ownership 0 failures.
+Size (session_01ExtfTo6iBGUSsaBuUqEFKD): test runs 16, module lines 4421

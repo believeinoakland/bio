@@ -122,3 +122,20 @@ export function factsOf(messages) {
   }
   return { content: "no facts were given for this work", error: true };
 }
+
+/** R18 — what `checkFinal` says of a final call's input, as the error text handed back to the model, or null to accept it.
+ *  A `checkFinal` that throws, or answers anything but `{code, detail}`, accepts. */
+export async function finalRefusal(checkFinal, input) {
+  if (typeof checkFinal !== "function") return null;
+  try {
+    const r = await checkFinal(input && typeof input === "object" ? input : {});
+    return r && typeof r === "object" && r.code != null ? `${String(r.code)}: ${String(r.detail ?? "")}` : null;
+  } catch { return null; }
+}
+
+/** R22 — A PASSAGE READ ASKS FOR THE LONGEST SNIPPET. A `meaningrows` call with `rows=passage` and no `snippet` of its own
+ *  goes to the caller's `onTool` with `snippet: 64`; any other call goes unchanged. */
+export const PASSAGE_SNIPPET = 64;
+export const toolInput = (name, input) =>
+  name === "meaningrows" && input && input.rows === "passage" && input.snippet === undefined
+    ? { ...input, snippet: PASSAGE_SNIPPET } : input;

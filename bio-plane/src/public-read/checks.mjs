@@ -9,6 +9,8 @@
  * here in T23, stamped by 1.54.0; C-98.11 (`WITHHELD_BY_COURT_ORDER`, R28) in T33, its stamp T34's (K1504). `publication`'s job deletes its copies once this one merges,
  * so no row id is held in two tables after it. */
 
+import { word } from "../setup-words/index.mjs";
+
 /* C-44.2 — D-309's read (R3). Its family, C-44, is the case identity: the act's half (C-44.1) is case-authoring's. */
 export const CASE_RESOLUTION_CHECKS = {
   /* UI-81 (2026-09-23) — D-309's OTHER HALF, the READ, given its row. `op=publishedcase` handed a
@@ -23,10 +25,7 @@ export const CASE_RESOLUTION_CHECKS = {
   FINDING_IN_SEVERAL_CASES: {
     check: 'C-44.2',
     where: 'src/public-read/index.mjs #resolveOneCase > is-finding-in-several-cases',
-    translation: 'This finding is part of more than one published case file. Each case file is its own '
-      + 'publication, with its own scope and its own statement of what it covers, so the record will not '
-      + 'pick one of them for you. Nothing is wrong with the finding. Choose the case file you mean, and '
-      + 'it opens with this finding in it.',
+    translation: word('refusal.FINDING_IN_SEVERAL_CASES'),
   },
 };
 
@@ -41,10 +40,7 @@ export const PUBLISHED_STORE_CHECKS = {
   NO_PUBLISHED_STORE: {
     check: 'C-68.5',
     where: 'src/publication/worker.mjs publishedStoreAbsent > is-published-store-absent',
-    translation: 'This group\'s Civicsmith was set up without the storage it keeps its published documents in, '
-      + 'so it cannot hand over the published document\'s contents. The document is published; this is a fact '
-      + 'about how this group\'s Civicsmith was set up, not about the document or this request, and nothing was changed. '
-      + 'Whoever runs this group\'s Civicsmith can connect that storage.',
+    translation: word('refusal.NO_PUBLISHED_STORE'),
   },
 };
 
@@ -79,57 +75,42 @@ export const PUBLISHED_READ_CHECKS = {
   NO_PUBLISHED_PART: {
     check: 'C-98.1',
     where: 'src/publication/worker.mjs noPublishedPart > is-no-published-part',
-    translation: 'Nothing this group\'s Civicsmith has published matches that fingerprint. Something that was never '
-      + 'published and something that never existed get this same answer, so it says nothing about anything '
-      + 'unpublished. Check that the fingerprint was copied whole. Nothing was changed.',
+    translation: word('refusal.NO_PUBLISHED_PART'),
   },
   OBJECT_MISSING: {
     check: 'C-98.2',
     where: 'src/publication/worker.mjs publishedObjectMissing > is-published-object-missing',
-    translation: 'This document is published, but this group\'s Civicsmith cannot find its contents in its storage, '
-      + 'so it cannot hand them over. The document and its fingerprint are unaffected, and nothing was changed. '
-      + 'Whoever runs this group\'s Civicsmith can restore the missing contents.',
+    translation: word('refusal.OBJECT_MISSING'),
   },
   NOT_A_CONTAINER: {
     check: 'C-98.3',
     where: 'src/publication/worker.mjs publishedRoutes > is-not-a-container',
-    translation: 'You asked for a whole case file as one download, but that fingerprint belongs to a single '
-      + 'document inside a case file. Ask for it without the download-as-one-file option to get that document, or '
-      + 'use the fingerprint of the case file\'s list of contents to get the whole case file. Nothing was changed.',
+    translation: word('refusal.NOT_A_CONTAINER'),
   },
   MANIFEST_UNREADABLE: {
     check: 'C-98.4',
     where: 'src/publication/worker.mjs publishedRoutes > is-manifest-unreadable',
-    translation: 'This case file is published, but this group\'s Civicsmith cannot read the list of its contents, '
-      + 'so it cannot put the case file together as one download. Nothing was changed. Whoever runs this group\'s Civicsmith '
-      + 'can repair it.',
+    translation: word('refusal.MANIFEST_UNREADABLE'),
   },
   PART_MISSING: {
     check: 'C-98.5',
     where: 'src/container.mjs containerEntries > is-part-missing',
-    translation: 'This case file is published, but this group\'s Civicsmith cannot find one of the documents it '
-      + 'lists, and it will not hand over a case file with a piece missing. The reply names the missing document; '
-      + 'the others can still be asked for one at a time. Nothing was changed. Whoever runs this group\'s Civicsmith can restore it.',
+    translation: word('refusal.PART_MISSING'),
   },
   DUPLICATE_PATH: {
     check: 'C-98.6',
     where: 'src/container.mjs serialiseContainer > is-duplicate-path',
-    translation: 'The list of this case file\'s contents puts two documents under the same name, so one download '
-      + 'could be read two ways. This group\'s Civicsmith will not hand over a case file that says two things about one name. '
-      + 'Each document can still be asked for on its own. Nothing was changed.',
+    translation: word('refusal.DUPLICATE_PATH'),
   },
   CONTAINER_TOO_LARGE: {
     check: 'C-98.7',
     where: 'src/container.mjs serialiseContainer > is-container-too-large',
-    translation: 'This case file is too large to hand over as one download. Every document in it can still be asked '
-      + 'for on its own, which gives the same contents. Nothing was changed.',
+    translation: word('refusal.CONTAINER_TOO_LARGE'),
   },
   NOT_PUBLISHED: {
     check: 'C-98.8',
     where: 'src/public-read/index.mjs publishedCase > is-not-published',
-    translation: 'Nothing this group\'s Civicsmith has published answers to what you asked for. A case that was '
-      + 'never published, an edition that does not exist and a name that never existed all get this same answer, '
-      + 'so it says nothing about anything unpublished. Nothing was changed.',
+    translation: word('refusal.NOT_PUBLISHED'),
   },
   /* D-734 (K245): a RATIFIED case document's hash is published, and its bytes are its signed text, re-hashed before
      they are served. When the record cannot produce bytes that hash to it, nothing is served and this says so; it is
@@ -137,9 +118,7 @@ export const PUBLISHED_READ_CHECKS = {
   CASE_DOCUMENT_UNSERVABLE: {
     check: 'C-98.9',
     where: 'src/publication/worker.mjs publishedRoutes > is-case-document-unservable',
-    translation: 'This case document is published and signed, but this group\'s Civicsmith could not produce its exact '
-      + 'contents just now, so it hands over nothing rather than something different. The fingerprint is genuine and '
-      + 'can still be checked. Nothing was changed. Whoever runs this group\'s Civicsmith can repair it.',
+    translation: word('refusal.CASE_DOCUMENT_UNSERVABLE'),
   },
   /* R18 (K1149): a name no module registered a public read under, at `op=publicread` or a read's own op. A STRANGER's
      refusal, so it has its row; the registration's own refusals (`PROVIDER_DECLARED`, `PROVIDER_MALFORMED`) are a
@@ -148,7 +127,7 @@ export const PUBLISHED_READ_CHECKS = {
   PUBLIC_READ_NOT_REGISTERED: {
     check: 'C-98.10',
     where: 'src/public-read/index.mjs publicRead > is-public-read-not-registered',
-    translation: 'This group\'s Civicsmith offers no public read by that name. Nothing was changed.',
+    translation: word('refusal.PUBLIC_READ_NOT_REGISTERED'),
   },
   /* R28 (K1480, K1493, K1522; J1 (6)): bytes a court order this group complied with withholds from serving, at
      `publishedbytes`. A new row minted in T33; its stamp by a release is T34's (K1504). The bytes are held, never
@@ -156,8 +135,7 @@ export const PUBLISHED_READ_CHECKS = {
   WITHHELD_BY_COURT_ORDER: {
     check: 'C-98.11',
     where: 'src/publication/worker.mjs withheldByCourtOrder > is-withheld-by-court-order',
-    translation: 'A court order this group complied with keeps these contents from being handed over. The order and the '
-      + 'record entry that names it are public, and nothing was deleted. Nothing was changed.',
+    translation: word('refusal.WITHHELD_BY_COURT_ORDER'),
   },
 };
 

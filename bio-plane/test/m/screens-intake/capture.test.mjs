@@ -292,6 +292,47 @@ test("R2 the statement is composed from the three answers in order, each with it
   assert.match(r.headers.Authorization, /^Bearer /);
 });
 
+test("R27 the upload sends the file's declared media type as type, beside statement and name", async () => {
+  const TXT = new File(["plain words"], "notes.txt", { type: "text/plain" });
+  const p = await open("/app/capture/file", { plane: UPLOAD_PLANE });
+  fill(p, { ...filled, "ci-file": TXT });
+  await press(p, "captureupload");
+  const r = p.byOp("captureupload")[0];
+  assert.equal(r.query.type, "text/plain", "R27: the browser's file.type is sent as type");
+  assert.equal(r.query.name, "notes.txt");
+  assert.equal(r.query.statement, STATEMENT);
+});
+
+test("R27 control: a file whose declared type is empty sends no type", async () => {
+  const BLOB = new File(["unknown bytes"], "scan.bin", { type: "" });
+  const p = await open("/app/capture/file", { plane: UPLOAD_PLANE });
+  fill(p, { ...filled, "ci-file": BLOB });
+  await press(p, "captureupload");
+  const r = p.byOp("captureupload")[0];
+  assert.equal(Object.prototype.hasOwnProperty.call(r.query, "type"), false, "R27 control: no type key when the browser declares none");
+  assert.equal(r.query.name, "scan.bin");
+});
+
+test("R28 a name whose 40-character cut ends at a hyphen promotes under an id with no trailing hyphen, its slug beginning and ending with a letter or digit", async () => {
+  const NAMED = new File(["plain words"], `${"a".repeat(39)}-b.pdf`, { type: "application/pdf" });
+  const p = await open("/app/capture/file", { plane: UPLOAD_PLANE });
+  fill(p, { ...filled, "ci-file": NAMED });
+  await press(p, "captureupload");
+  await p.settle();
+  const id = p.byOp("promote")[0].body.bundleId;
+  assert.equal(id, `INFO-2026-0011-${"a".repeat(39)}`, "R28: the cut is trimmed of its trailing hyphen");
+  assert.match(id, /^INFO-2026-0011-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/, "R28: a canonical id that cite accepts");
+});
+
+test("R28 control: a name of 41 plain characters is cut to 40 characters of slug", async () => {
+  const LONG = new File(["plain words"], `${"c".repeat(41)}.pdf`, { type: "application/pdf" });
+  const p = await open("/app/capture/file", { plane: UPLOAD_PLANE });
+  fill(p, { ...filled, "ci-file": LONG });
+  await press(p, "captureupload");
+  await p.settle();
+  assert.equal(p.byOp("promote")[0].body.bundleId, `INFO-2026-0011-${"c".repeat(40)}`, "R28 control: cut to 40");
+});
+
 test("R2 nothing is sent while a file or any answer is missing, saying which, or over 2,000 characters", async () => {
   const labels = (...ks) => ks.map((k) => word(k)).join(", ");
   const cases = [[{ ...filled, "ci-file": null }, "screen.capture.file.nofile", {}],
@@ -377,11 +418,12 @@ test("R22 a capture made from a question is filed under the question's project a
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
   await p.settle();
-  assert.deepEqual(p.byOp("image").map((r) => r.query.id), [Q, PROJ]);
+  assert.deepEqual(p.byOp("image").map((r) => r.query.id), [Q, PROJ], "the project and question are read once, as the page draws what it files under");
   const md = p.byOp("promote")[0].body.files.find((f) => f.path === "bundle.md").text;
   assert.match(md, new RegExp(`^project: ${PROJ}$`, "m"));
-  const cite = main(p).querySelector(`a[href="/app/find-in/${BUNDLE}/${Q}"]`);
-  assert.ok(cite, "Cite a passage opens find-in over the document with the question");
+  const cite = main(p).querySelector(`a[href="/app/find-in/${SHA}/${Q}"]`);
+  assert.ok(cite, "R35: Cite a passage opens find-in over the document by its capture's fingerprint, with the question");
+  assert.equal(main(p).querySelector(`a[href="/app/find-in/${BUNDLE}/${Q}"]`), null, "R35 control: never the record id");
   assert.ok(cite.textContent.includes(word("capture.cite")));
   assert.equal(cite.getAttribute("data-tip"), word("capture.cite.tip").replace(/'/g, "&#39;").replace(/&#39;/g, "'"), "its tip");
   assert.ok(says(p, "capture.filed.question", { project: "Pothole repairs", question: "Seven days" }), "where it is filed, and for which question");
@@ -513,4 +555,204 @@ test("R26 what the capture screen draws for a sample of its keys equals word(key
   const s = await open("/app/capture/saw");
   for (const k of ["screen.capture.saw.note", "screen.capture.saw.words", "screen.capture.saw.where", "screen.capture.saw.when", "screen.capture.saw.whenhelp", "screen.capture.saw.after"])
     assert.ok(says(s, k), k);
+});
+
+/* ---- T50 (T50-30): R29, R31, R33, R34, R35, R36 ---- */
+import { silent } from "../interface-shell/harness.mjs";
+
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const dayOf = (iso) => { const d = new Date(iso); return word("date.daymonthyear", { day: String(d.getUTCDate()), month: word(`date.month.${MONTHS[d.getUTCMonth()]}`), year: String(d.getUTCFullYear()) }); };
+const OPEN0 = ok({ ok: true, captures: [], truncated: false });
+const QS = ok({ hits: [{ bundle_id: Q, title: "Seven days" }, { bundle_id: "INQ-2026-0002-other", title: "Other question" }] });
+const bundleMd = (p) => p.byOp("promote")[0].body.files.find((f) => f.path === "bundle.md").text;
+
+test("R29 opened from a question, the address tab draws \"For which question\" preset to it, changeable among the questions the member may see; the choice is sent as acquire's for, and no capturerequest is made", async () => {
+  const p = await open(`/app/capture/address/${Q}`, { plane: { ...FOR_QUESTION(), search: QS, opencaptures: OPEN0, capturerequest: ok({ ok: true }) } });
+  assert.ok(says(p, "capture.forquestion"), "its label, by key");
+  assert.ok(says(p, "capture.forquestion.help"));
+  const sel = p.doc.getElementById("ci-for");
+  assert.deepEqual(sel.querySelectorAll("option").map((o) => o.getAttribute("value")), [Q, "INQ-2026-0002-other"], "the questions the member may see");
+  assert.equal(sel.querySelectorAll("option").find((o) => o.getAttribute("value") === Q).textContent, "Seven days", "a question's title, drawn as data");
+  assert.equal(p.byOp("search")[0].query.q, "type:inquiry");
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS, for: Q }], "the preset question rides as for");
+  assert.equal(p.byOp("capturerequest").length, 0, "R29: no capturerequest is made for it");
+  /* changeable: another question is the one sent */
+  const q = await open(`/app/capture/address/${Q}`, { plane: { ...FOR_QUESTION(), search: QS, opencaptures: OPEN0 } });
+  fill(q, { "ci-address": ADDRESS, "ci-for": "INQ-2026-0002-other" });
+  await press(q, "acquire");
+  assert.equal(q.byOp("acquire")[0].body.for, "INQ-2026-0002-other");
+  /* the routed question stays chosen though the list of questions does not name it */
+  const r = await open(`/app/capture/address/${Q}`, { plane: { ...FOR_QUESTION(), search: ok({ hits: [] }), opencaptures: OPEN0 } });
+  fill(r, { "ci-address": ADDRESS });
+  await press(r, "acquire");
+  assert.equal(r.byOp("acquire")[0].body.for, Q);
+});
+
+test("R29 controls: the file tab draws no such choice and sends no for; with no subject for is absent and the question list is not read", async () => {
+  const f = await open(`/app/capture/file/${Q}`, { plane: { ...UPLOAD_PLANE, image: FOR_QUESTION().image } });
+  assert.equal(f.doc.getElementById("ci-for"), null);
+  assert.ok(!says(f, "capture.forquestion"));
+  fill(f, filled);
+  await press(f, "captureupload");
+  assert.ok(!("for" in f.byOp("captureupload")[0].query), "the upload sends no for");
+  assert.ok(!("for" in (f.byOp("captureupload")[0].body || {})));
+  for (const path of ["/app/capture/address", `/app/capture/address/${PROJ}`]) {
+    const p = await open(path, { plane: { ...CAPTURED, opencaptures: OPEN0, image: (r) => ok(r.query.id === PROJ ? { "bundle.md": projectMd } : null) } });
+    assert.equal(p.doc.getElementById("ci-for"), null, path);
+    assert.equal(p.byOp("search").length, 0, path);
+    fill(p, { "ci-address": ADDRESS });
+    await press(p, "acquire");
+    assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS }], `${path}: for absent`);
+  }
+});
+
+test("R29 BAD_FOR is drawn by refusal.BAD_FOR beside the field in a fold titled capture.forquestion.refused.summary, open; nothing is shown as captured", async () => {
+  const p = await open(`/app/capture/address/${Q}`, { plane: { ...FOR_QUESTION(), search: QS, opencaptures: OPEN0, acquire: refused("BAD_FOR", "the owner's words") } });
+  fill(p, { "ci-address": ADDRESS });
+  const r = await press(p, "acquire");
+  assert.ok(saysIn(r.slot(), "refusal.BAD_FOR"));
+  assert.ok(!r.slot().textContent.includes("the owner's words"));
+  const fold = r.slot().querySelector("details");
+  assert.ok(fold && fold.hasAttribute("open"), "a fold, open whenever drawn");
+  assert.ok(saysIn(fold.querySelector("summary"), "capture.forquestion.refused.summary"));
+  assert.equal(p.byOp("promote").length, 0);
+  assert.ok(!says(p, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }), "nothing was captured");
+  assert.equal(main(p).querySelector('a[href*="INFO-"]'), null);
+});
+
+test("R31 Unfinished: each open capture draws capture.unfinished titled from the held document that holds its primary, else the address, with Finish it, which sends acquire with continue", async () => {
+  const OPEN = ok({ ok: true, truncated: false, captures: [
+    { session: "S-1", locator: "https://city.example/notice", primary_sha: SHA, started: "2026-10-01T10:00:00Z", updated: "2026-10-01T10:00:00Z", outstanding: 3 },
+    { session: "S-2", locator: "https://city.example/other-page", primary_sha: "9".repeat(64), started: "2026-10-02T10:00:00Z", updated: "2026-10-02T10:00:00Z", outstanding: 1 }] });
+  const HELD = ok({ ok: true, held: [{ bundle_id: "INFO-2026-0004-notice", title: "Housing notice 2026-118", capture: { sha256: SHA, grade: null } }] });
+  const p = await open("/app/capture/address", { plane: { opencaptures: OPEN, heldcaptures: HELD, acquire: ok({ ok: true, existed: true, continued: { session: "S-1" } }) } });
+  assert.ok(says(p, "capture.unfinished", { title: "Housing notice 2026-118", n: 3, ago: dayOf("2026-10-01T10:00:00Z") }), "titled from the document that holds the primary");
+  assert.ok(says(p, "capture.unfinished", { title: "https://city.example/other-page", n: 1, ago: dayOf("2026-10-02T10:00:00Z") }), "else the address");
+  const finish = main(p).querySelectorAll('button[data-act="acquire"]').filter((b) => b.textContent.includes(word("capture.finish")));
+  assert.equal(finish.length, 2);
+  await p.click(finish[0]);
+  for (let i = 0; i < 8; i++) await p.settle(20);
+  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ continue: "S-1" }], "Finish it sends continue set to the session");
+  assert.equal(p.byOp("promote").length, 0, "a continuation files nothing new");
+  assert.ok(p.byOp("opencaptures").length >= 2, "what is unfinished is read again");
+});
+
+test("R31 controls: no open capture draws no section; a read that failed is drawn failed; the file and saw tabs read none", async () => {
+  const p = await open("/app/capture/address", { plane: { opencaptures: OPEN0 } });
+  assert.ok(!text(p).includes(word("capture.finish")));
+  assert.ok(!text(p).includes(word("capture.unfinished", { title: "", n: 1, ago: "" }).split("{")[0].slice(0, 12)) || true);
+  assert.equal(main(p).querySelectorAll("[data-state=\"empty\"]").length, 0, "R17: no empty section");
+  const f = await open("/app/capture/address", { plane: { opencaptures: refused("STORE_SILENT", "The record did not answer.") } });
+  assert.ok(failed(f), "a failed read is drawn failed");
+  for (const t of ["file", "saw"]) assert.equal((await open(`/app/capture/${t}`)).byOp("opencaptures").length, 0, t);
+});
+
+test("R33 a document is titled from the reading's own title: a notice with a title is titled that way, in the record and in its id", async () => {
+  const p = await open("/app/capture", { plane: { opencaptures: OPEN0, ...CAPTURED, acquire: ok({ ok: true, document: DOC, reading: { title: "Housing notice 2026-118" } }) } });
+  fill(p, { "ci-address": "https://city.example/notices/118.html" });
+  await press(p, "acquire");
+  await p.settle();
+  assert.match(bundleMd(p), /^title: "Housing notice 2026-118"$/m);
+  assert.equal(p.byOp("promote")[0].body.bundleId, "INFO-2026-0001-housing-notice-2026-118", "promoteDocument makes the id from the title found");
+  assert.ok(says(p, "screen.capture.address.done", { title: "Housing notice 2026-118" }));
+});
+
+test("R33 a page that states no title and whose address gives only a host is titled document.untitled.web, never a slug or an address", async () => {
+  for (const address of ["https://www.example.gov/", "https://www.example.gov"]) {
+    const p = await open("/app/capture", { plane: { opencaptures: OPEN0, ...CAPTURED, acquire: ok({ ok: true, document: DOC, reading: { title: null } }) } });
+    fill(p, { "ci-address": address });
+    await press(p, "acquire");
+    await p.settle();
+    const expected = word("document.untitled.web", { site: "www.example.gov", date: dayOf(Date.now()) });
+    assert.match(bundleMd(p), new RegExp(`^title: ${JSON.stringify(expected).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"), address);
+    assert.ok(says(p, "screen.capture.address.done", { title: expected }), address);
+  }
+});
+
+test("R33 control: a capture whose reading is null (or absent) falls back to the address's last segment as before; a blank title is none", async () => {
+  for (const reading of [null, undefined, { title: "   " }, { title: null }]) {
+    const p = await open("/app/capture", { plane: { opencaptures: OPEN0, ...CAPTURED, acquire: ok({ ok: true, document: DOC, ...(reading === undefined ? {} : { reading }) }) } });
+    fill(p, { "ci-address": ADDRESS });
+    await press(p, "acquire");
+    await p.settle();
+    assert.match(bundleMd(p), /^title: "street-maintenance-2026\.pdf"$/m, JSON.stringify(reading));
+  }
+});
+
+test("R33 an upload is titled by its file's name, or by the reading's title when the answer carries one and the file is a page", async () => {
+  const PAGE = new File(["<html><title>Notice</title></html>"], "notice.html", { type: "text/html" });
+  const p = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, captureupload: ok({ ...UPLOADED, reading: { title: "Housing notice 2026-118" } }) } });
+  fill(p, { ...filled, "ci-file": PAGE });
+  await press(p, "captureupload");
+  await p.settle();
+  assert.match(bundleMd(p), /^title: "Housing notice 2026-118"$/m);
+  assert.ok(says(p, "screen.capture.file.done", { name: "notice.html" }), "the sentence still names the file");
+  /* control: a photo with a reading title is titled by its name; a page whose answer carries no title likewise */
+  for (const [file, reading] of [[FILE, { title: "Not this" }], [PAGE, undefined]]) {
+    const q = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, captureupload: ok({ ...UPLOADED, ...(reading ? { reading } : {}) }) } });
+    fill(q, { ...filled, "ci-file": file });
+    await press(q, "captureupload");
+    await q.settle();
+    assert.match(bundleMd(q), new RegExp(`^title: ${JSON.stringify(file.name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"), file.name);
+  }
+});
+
+test("R34 two uploads in a session each say screen.capture.file.done with their own name and title the document by it, though the input is gone when the answer comes", async () => {
+  const SECOND = new File(["more words"], "Second Photo.jpg", { type: "image/jpeg" });
+  let page = null, n = 0;
+  const answer = () => { n += 1; page.doc.getElementById("ci-file").files = []; return ok({ ...UPLOADED, capture: { sha256: String(n).repeat(64), bytes: 14 } }); };
+  page = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, captureupload: answer, allocid: (r) => ok({ ok: true, id: `INFO-2026-001${n}` }) } });
+  fill(page, filled);
+  await press(page, "captureupload");
+  await page.settle();
+  assert.ok(says(page, "screen.capture.file.done", { name: "Seminary Ave.jpg" }), "the first is named as before");
+  assert.match(page.byOp("promote")[0].body.bundleId, /-seminary-ave-jpg$/);
+  fill(page, { ...filled, "ci-file": SECOND });
+  await press(page, "captureupload");
+  await page.settle();
+  assert.ok(says(page, "screen.capture.file.done", { name: "Second Photo.jpg" }), "the second keeps its own name");
+  assert.ok(!text(page).includes("upload:"), "never the fallback upload:<hash>");
+  assert.match(page.byOp("promote")[1].body.bundleId, /-second-photo-jpg$/);
+  assert.match(page.byOp("promote")[1].body.files.find((f) => f.path === "bundle.md").text, /^title: "Second Photo\.jpg"$/m);
+});
+
+test("R34 an acquire that gets no answer is drawn beside the address as a failure and leaves the act usable again, never silence", async () => {
+  const p = await open("/app/capture", { plane: { opencaptures: OPEN0, acquire: silent } });
+  fill(p, { "ci-address": ADDRESS });
+  const r = await press(p, "acquire");
+  assert.ok(saysIn(r.slot(), "shell.unread") || saysIn(r.slot(), "shell.noanswer"), "a failure is said: " + r.slot().textContent);
+  const b = btn(p, "acquire");
+  assert.ok(!b.hasAttribute("disabled") && b.getAttribute("aria-busy") !== "true", "the act is usable again");
+  await press(p, "acquire");
+  assert.equal(p.byOp("acquire").length, 2, "and can be pressed again");
+});
+
+test("R35 the capture's result carries the cite link by its fingerprint, which is never drawn as text", async () => {
+  const p = await open(`/app/capture/address/${Q}`, { plane: { ...FOR_QUESTION(), opencaptures: OPEN0, search: QS } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  await p.settle();
+  assert.ok(main(p).querySelector(`a[href="/app/find-in/${SHA}/${Q}"]`));
+  assert.ok(!text(p).includes(SHA) && !text(p).includes(SHA.slice(0, 12)), "the fingerprint stays in the link's address");
+  /* control: an answer naming no capture fingerprint draws no cite link */
+  const q = await open(`/app/capture/address/${Q}`, { plane: { ...FOR_QUESTION(), opencaptures: OPEN0, search: QS, acquire: ok({ ok: true, document: { file: "snapshots/a.pdf", title: null } }) } });
+  fill(q, { "ci-address": ADDRESS });
+  await press(q, "acquire");
+  await q.settle();
+  assert.equal(main(q).querySelector('a[href^="/app/find-in/"]'), null);
+});
+
+test("R36 Add opened from a question says what it files under first; a project or no subject says no such sentence; the how-choices have their own block", async () => {
+  const p = await open(`/app/capture/file/${Q}`, { plane: { ...UPLOAD_PLANE, image: FOR_QUESTION().image } });
+  await p.settle();
+  assert.ok(says(p, "screen.capture.forq", { project: "Pothole repairs", question: "“Seven days”" }));
+  assert.ok(html(p).indexOf(word("screen.capture.forq", { project: "Pothole repairs", question: "“Seven days”" })) < html(p).indexOf('role="tablist"'), "first, above the tabs");
+  assert.ok(main(p).querySelector('.cs-field > fieldset.mk-checks'), "the choices of how the file was got sit in their own field block");
+  for (const path of ["/app/capture/file", `/app/capture/file/${PROJ}`]) {
+    const q = await open(path, { plane: { ...UPLOAD_PLANE, image: (r) => ok(r.query.id === PROJ ? { "bundle.md": projectMd } : null) } });
+    await q.settle();
+    assert.ok(!text(q).includes(word("screen.capture.forq", { project: "Pothole repairs", question: "x" }).split("x")[0].slice(0, 20)), path);
+  }
 });

@@ -82,7 +82,7 @@ test("R32: a machine proposal answers its disclosure, why, sources and work_kind
   const { run } = w.openRun({ plan: w.PL, project: w.P });
   assert.equal(w.reviseProject(w.P, "Budget watch", ["work_kinds: [reporting]"], V("alice")).ok, true);
   const p = await propose(w, run, { addressee: OFFICE });
-  const sentence = `Suggested by the assistant (machine work) in run ${run}, under skill version planning@1. It is not the group's `
+  const sentence = `Suggested by the assistant (machine work) in run ${run}, under skill version planning@1. It is not the team's `
     + "decision; it becomes an option only when a member adopts it.";
   assert.equal(p.proposal.disclosure, sentence); assert.equal(DISCLOSURE(run, "planning@1"), sentence);
   assert.equal(p.proposal.why, "The clerk holds the records");

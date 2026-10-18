@@ -126,6 +126,10 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   /* provenance's `register` (its read contract), which a promotion's steps read: empty here, as a record with no
      registered capture holds it. provenance is not among this module's uses, so the table stands alone. */
   sql.exec(`CREATE TABLE IF NOT EXISTS register (bundle_id TEXT, capture_sha TEXT, registered TEXT, authored INTEGER NOT NULL DEFAULT 0)`);
+  /* leg-earning's `inquiry_basis` and content's `content`, which R85 reads for a run's subjects: neither is among this module's
+     uses, so the tables stand alone with the columns read (as `register` above). */
+  sql.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL, content_id TEXT, PRIMARY KEY (bundle_id, ord))`);
+  sql.exec(`CREATE TABLE IF NOT EXISTS content (content_id TEXT PRIMARY KEY, extent_kind TEXT NOT NULL, ref TEXT NOT NULL)`);
   observationLogOf(ctx, { extraction: null, provenance: null }).migrate();
   connectionsOf(ctx, { env }).migrate();
   const bias = biasOf(ctx, { env });
@@ -146,9 +150,9 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
     /** Every row of this module's tables and of the observation log, for "nothing was written". */
     dump: () => [...TABLES, "observation_log"].map((t) => JSON.stringify([...sql.exec(`SELECT * FROM ${t} ORDER BY rowid`)])).join("\n"),
     /** A bundle of a type, committed through record-core (a context for a run). */
-    bundle(id, type = "inquiry", text = null) {
+    bundle(id, type = "inquiry", text = null, project = null) {
       const t = text ?? `---\nid: ${id}\n---\n`;
-      record.transact(() => record.commit({ bundleId: id, type, title: id, project: null, snapKey: `c${k++}`, kind: "promotion",
+      record.transact(() => record.commit({ bundleId: id, type, title: id, project, snapKey: `c${k++}`, kind: "promotion",
         base: sha(""), author: "x", writer: null, operation: null, files: [{ path: "bundle.md", text: t, sha256: sha(t), bytes: t.length }],
         state: type === "project" ? "forming" : "open", priorState: null, group: "test-group", created: T0, lastUpdated: T0,
         criticality: null, at: T0 }));
@@ -254,7 +258,7 @@ export const USAGE = (over = {}) => ({ input_tokens: 1000, output_tokens: 200, c
 export function agentWorker(answer = { status: 200, body: { ok: true } }) {
   const calls = [];
   return { calls, fetch: async (url, init) => {
-    calls.push({ url, body: JSON.parse(init.body) });
+    calls.push({ url, body: JSON.parse(init.body), headers: { ...(init.headers || {}) } });
     if (answer === "hang") return new Promise(() => {});
     if (answer === "throw") throw new Error("network down");
     return new Response(JSON.stringify(answer.body), { status: answer.status });

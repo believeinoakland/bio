@@ -1,0 +1,36 @@
+# Ask 3 (same question as ask 2), 2026-10-16 19:21:49–19:22:58Z: the plane's own lines (Workers Logs on, K3577), the runner's, and the model calls' body sizes. No header value, token or body.
+
+## plane front door (service biosmoke8), requests carrying only the agent-worker's authorization
+19:21:51.506 GET /?op=askceiling 200 wall 46 cpu 8
+19:21:51.537 GET /?op=agentpack 200 wall 127 cpu 26
+19:22:40.475 GET /?op=search&q=library+opening+hours 200 wall 49 cpu 2
+19:22:40.538 GET /?op=entitybyalias&alias=library 200 wall 23 cpu 2
+19:22:43.416 GET /?op=search&q=library 200 wall 50 cpu 2
+19:22:43.554 GET /?op=search&q=hours 200 wall 26 cpu 2
+19:22:46.765 GET /?op=linesof&bundle_id=REDACTED 200 wall 31 cpu 6
+19:22:49.669 GET /?op=searchfields&q=open&bundle_id=REDACTED 200 wall 19 cpu 1
+19:22:53.618 GET /?op=search&q=opens 200 wall 28 cpu 1
+19:22:53.935 GET /?op=timeline&from=REDACTED 200 wall 21 cpu 1
+
+## plane Store object, requests under the ask's grant
+19:21:51.513 GET /askceiling?viewer=member%3Aadmin -> 200 wall 18 cpu 6 ok
+19:22:40.526 GET /search?q=library+opening+hours&viewer=member%3Aadmin -> 200 wall 80 cpu 26 ok
+19:22:43.407 GET /entitybyalias?alias=library&viewer=member%3Aadmin -> 200 wall 2831 cpu 1 ok
+19:22:43.544 GET /search?q=library&viewer=member%3Aadmin -> 200 wall 159 cpu 32 ok
+19:22:43.943 GET /search?q=hours&viewer=member%3Aadmin -> 200 wall 385 cpu 9 ok
+19:22:46.855 GET /linesof?bundle_id=X&viewer=member%3Aadmin -> 200 wall 95 cpu 1 ok
+19:22:47.029 GET /explore?bundle_id=X&viewer=member%3Aadmin -> 200 wall 150 cpu 1 ok
+19:22:49.729 GET /searchfields?q=open&bundle_id=X -> 200 wall 52 cpu 2 ok
+19:22:53.922 GET /search?q=opens&viewer=member%3Aadmin -> 200 wall 291 cpu 6 ok
+19:22:54.059 GET /timeline?from=X&viewer=member%3Aadmin -> 200 wall 120 cpu 1 ok
+19:22:57.871 POST /askusage?viewer=member%3Aadmin -> 200 wall 139 cpu 13 ok
+
+## runner: model calls (container egress; body bytes)
+19:22:36.531 POST /v1/messages body 51428 B
+19:22:39.252 POST /v1/messages body 59653 B
+19:22:42.260 POST /v1/messages body 63266 B
+19:22:45.230 POST /v1/messages body 73578 B
+19:22:48.546 POST /v1/messages body 75904 B
+19:22:51.599 POST /v1/messages body 77287 B
+19:22:55.958 POST /v1/messages body 81296 B
+19:23:00.270 POST /v1/messages body 83608 B

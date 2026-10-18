@@ -2390,6 +2390,29 @@ export const COMPOSITION = {
   where_the_grades_come_from:
     "the resolutions the legs rest on, through the record's earned-basis registry, exactly as "
     + "`op=cite` already fills them",
+  /** R51 (T50; N1143; `agent-worker` R90): what a check run's compose step is handed, named so the model can name the
+   *  leg an accepted reading rests on. This module's own words, not a clause (R21 binds the clauses only), and it reads
+   *  no holdings (R22): each key is named once here as a selector, listed nowhere else (R23). */
+  handed_to_compose: Object.freeze({
+    defined_by: "agent-worker R90",
+    held_document: Object.freeze({
+      in: "the facts' holdings (by_document)",
+      carries: Object.freeze(["record_id", "capture_sha"]),
+      says: "each held document carries the record id a leg's target takes (record_id) and the fingerprint of the "
+        + "capture it was read from (capture_sha)",
+    }),
+    unchained_item: Object.freeze({
+      in: "the facts' unchained_items",
+      carries: Object.freeze(["record_id"]),
+      says: "an item with no chain carries its record id, or null when the record answers none",
+    }),
+    leg: Object.freeze({
+      target: "a leg's target is the record_id of the document it rests on",
+      extent: "a leg's extent_capture is that document's capture_sha",
+    }),
+    when_null: "a document whose record_id is null is not cited as a leg: it is named as held without a record id, "
+      + "and no leg is written against it",
+  }),
 };
 
 export const DESCRIPTION_STANDARD = {

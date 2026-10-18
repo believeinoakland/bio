@@ -93,10 +93,11 @@ test("R29 R36 actionRead answers R25's block and the document's values; absent a
     assert.ok(k in r, k);
   w.a.actionMove({ target: A, to: "active", reason: "go", viewer: M, author: M });
   assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).state_history, [{ state: "active", at: "2026-09-28T12:00:00Z", by: M }]);
-  assert.equal(w.a.actionRead({ id: "ACTN-2026-0404-x", viewer: M }).reason, "NO_SUCH_BUNDLE");
-  assert.equal(w.a.actionRead({ id: A, viewer: "nobody" }).reason, "NO_SUCH_BUNDLE", "invisible answers as absent");
+  /* R106 (T50): absent, invisible and no-action alike answer through R43 (t50.test.mjs holds the full arms) */
+  assert.equal(w.a.actionRead({ id: "ACTN-2026-0404-x", viewer: M }).reason, "NO_SUCH_ACTION");
+  assert.equal(w.a.actionRead({ id: A, viewer: "nobody" }).reason, "NO_SUCH_ACTION", "invisible answers as absent");
   w.doc("INFO-2026-0001-d");
-  assert.equal(w.a.actionRead({ id: "INFO-2026-0001-d", viewer: M }).reason, "NOT_AN_ACTION");
+  assert.equal(w.a.actionRead({ id: "INFO-2026-0001-d", viewer: M }).reason, "NO_SUCH_ACTION");
 });
 
 test("R30 actionsFor filters visible actions in id order, at most 200 a page, truncated by reading one past", () => {

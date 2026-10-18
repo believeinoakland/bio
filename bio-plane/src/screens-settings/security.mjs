@@ -9,13 +9,18 @@
    confirmed where it keeps them, "every file" offered only for a tool on the organization's own servers, and the shown
    handling's digest sent (`securitytooladd`, file-safety R28), then tested (`securitytooltest`), saying whether it is
    on or why it stays off. Every refusal is the owner's own words. Every function is self-contained (interface-shell
-   R21). */
+   R21).
+   T50 (R43; U3; DEC-291, DEC-323): the screen leads with how things stand under its mark; the counts fold; the catalogue of
+   outside-tool kinds is drawn only inside the fold "Add another checker"; a period is named by its first and last day, both
+   included, and may end today (`to` the end of the present hour then). A member who does not administer reads only the
+   administrators (`memberlist`) to be told whose screen it is. */
 
 export const security = {
   id: "security",
 
   reads(view) {
-    if (!(view.me && view.me.administer === true)) return {};
+    // anyone else is told whose screen it is, by the administrators' handles (the roster a member reads)
+    if (!(view.me && view.me.administer === true)) return { roster: { op: "memberlist" } };
     const ui = view.ui || {};
     // the period chosen, else the last seven days
     const to = ui.period ? ui.period.to : new Date(Math.floor(Date.now() / 3600000) * 3600000).toISOString();
@@ -36,27 +41,52 @@ export const security = {
     const D = (iso) => String(cs.date(iso, { year: true })).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
     const me = view.me || {};
     const out = [cs.title()];
-    if (me.administer !== true) { out.push(`<p data-state="admins">${W(S + "admins")}</p>`); return out.join(""); }
-    const ui = view.ui || {};
     const data = view.data || {};
+    if (me.administer !== true) {
+      // whose screen it is: the administrators' handles, the founder's as hers or `member.founder.unnamed` (R37: every fill filled)
+      out.push(cs.state(data.roster, (v) => {
+        const admins = (Array.isArray(v.members) ? v.members : []).filter((m) => m.role === "admin" && m.status === "active")
+          .map((m) => (m.founder === true || m.member_id === "admin" ? m.handle || T("member.founder.unnamed") : m.handle || m.member_id));
+        return admins.length ? `<p data-state="admins">${W(S + "admins", { admins: admins.join(", ") })}</p>` : "";
+      }));
+      return out.join("");
+    }
+    const ui = view.ui || {};
     const KINDS = ["signin", "credential", "rate", "handover", "through"];
     const onOwn = (r) => typeof r === "string" && (/^the organization\b/i.test(r.trim()) || /^[^,(]+\(the organization's own [^)]+\)$/i.test(r.trim()));
 
-    // the level for the period, by kind against its usual; counts only
+    // how things stand, first (R43 (1)): the mark, then one sentence; the counts fold below it. A period is named by its first and last
+    // day, both included (R43 (2)). Counts only: nothing names an address, country, role or member.
+    const boot0 = data.boot && data.boot.state === "ok" ? data.boot.value : null;
     out.push(cs.sec(S + "level.heading", cs.state(data.map, (v) => {
       const t = v.totals || {};
       const sum = (k) => (v.buckets || []).reduce((n, b) => n + (Number(b.counts && b.counts[k]) || 0), 0);
       const usual = (k) => (v.buckets || []).reduce((n, b) => n + (Number(b.usual && b.usual[k]) || 0), 0);
       const lvl = ["Ordinary", "Raised", "High"].indexOf(v.level) >= 0 ? v.level.toLowerCase() : "ordinary";
-      // no count is drawn at zero (R28): a kind with neither a count nor a usual is left out
+      const last = new Date(Date.parse(v.to) - 1).toISOString();
+      const days = W("period.days", { first: D(v.from), last: D(last) });
+      const tip = lvl === "ordinary" ? W(S + "risk.means.ordinary") : W(S + "tip." + lvl);
+      let h = `<p data-state="level"><span class="cs-risk" data-risk="${lvl}" tabindex="0" data-level="1" data-tip="${tip}">${W(S + "level." + lvl)}</span> ${W(S + "period", { from: D(v.from), to: D(last) })}</p>`;
+      if (lvl === "ordinary") h += `<p>${W(S + "ordinary.head")}</p><p>${W(S + "ordinary.line", { period: days })}</p>`;
+      else {
+        // what happened and that it was refused, from the counts alone: said only where every fill is answered
+        const hard = (v.buckets || []).filter((b) => Number(b.counts && b.counts.signin) > Number(b.usual && b.usual.signin));
+        h += `<p>${W(S + "summary.signin", { when: D(v.levelAt || (hard[0] && hard[0].start) || v.from) })}</p>`;
+        if (hard.length && usual("signin") > 0) h += `<p>${W(S + "summary.detail", { times: Math.max(1, Math.round(sum("signin") / usual("signin"))), from: D(hard[0].start), to: D(last), highfrom: D(v.levelAt || hard[0].start), highto: D(last) })}</p>`;
+      }
+      // the files are checked, said once and only while the scanner is built in (R15's rule)
+      if (boot0 && boot0.part_scanner === true) h += `<p data-state="files">${W(S + "files.on")}</p>`;
       const rows = KINDS.filter((k) => sum(k) > 0 || usual(k) > 0);
-      return `<p data-state="level">${W(S + "level." + lvl)} ${W(S + "period", { from: D(v.from), to: D(v.to) })}</p>${Number(t.count || 0) > 0 || Number(t.usual || 0) > 0 ? `<p>${W(S + "total", { count: Number(t.count || 0).toLocaleString("en"), usual: Number(t.usual || 0).toLocaleString("en") })}</p>` : ""}${rows.length ? `<table class="mk-table"><thead><tr><th>${W(S + "col.kind")}</th><th>${W(S + "col.count")}</th><th>${W(S + "col.usual")}</th></tr></thead><tbody>${rows.map((k) => `<tr><td>${W(S + "kind." + k)}</td><td>${E(sum(k).toLocaleString("en"))}</td><td>${E(usual(k).toLocaleString("en"))}</td></tr>`).join("")}</tbody></table>` : ""}`;
-    }) + `${cs.field("se-from", S + "from", { type: "date" })}${cs.field("se-to", S + "to", { type: "date" })}${cs.act("securitymap")}`));
+      const counts = (Number(t.count || 0) > 0 || Number(t.usual || 0) > 0 ? `<p>${W(S + "total", { count: Number(t.count || 0).toLocaleString("en"), usual: Number(t.usual || 0).toLocaleString("en") })}</p>` : "")
+        + (rows.length ? `<table class="mk-table"><thead><tr><th>${W(S + "col.kind")}</th><th>${W(S + "col.count")}</th><th>${W(S + "col.usual")}</th></tr></thead><tbody>${rows.map((k) => `<tr><td>${W(S + "kind." + k)}</td><td>${E(sum(k).toLocaleString("en"))}</td><td>${E(usual(k).toLocaleString("en"))}</td></tr>`).join("")}</tbody></table>` : "");
+      return h + (counts ? `<details class="mk-details" data-fold="counts"><summary>${W(S + "counts.fold")}</summary>${counts}</details>` : "");
+    }) + `${ui.periodBad ? `<details class="mk-details" open data-state="periodbad"><summary>${W(S + "period.bad.summary")}</summary><p>${W(S + "period.bad")}</p></details>` : ""}${cs.field("se-from", S + "from", { type: "date" })}${cs.field("se-to", S + "to", { type: "date" })}${cs.act("securitymap")}`));
 
     // what is built in, as the plane answers it, and the scanner's queue
     out.push(cs.sec(S + "parts.heading", cs.state(data.boot, (b) => {
       const part = (v, key, name) => (v === true ? W("instance.part." + key + ".present") : v === false ? W("instance.part." + key + ".absent") : W("instance.part.unknown", { part: T(S + "part." + name) }));
-      let h = `<p data-state="scanner">${part(b.part_scanner, "scanner", "scanner")}</p><p data-state="safeview">${part(b.part_safe_view, "safeview", "safeview")}</p>`;
+      // a scanner that is built in is said once, in the lead (`screen.security.files.on`)
+      let h = `${b.part_scanner === true ? "" : `<p data-state="scanner">${part(b.part_scanner, "scanner", "scanner")}</p>`}<p data-state="safeview">${part(b.part_safe_view, "safeview", "safeview")}</p>`;
       if (b.part_scanner === false) h += `<p>${W("instance.scanner.absent.step")}</p>`;
       if (b.part_scanner === true) {
         const sc = data.scan && data.scan.state === "ok" ? data.scan.value : null;
@@ -76,7 +106,7 @@ export const security = {
     if (!data.events || data.events.state !== "empty") out.push(cs.sec(S + "events.heading", cs.state(data.events, (v) => `<ul class="mk-list">${(v.events || []).map((e) => `<li>${W(S + "event." + (["added", "test_passed", "test_failed", "removed", "switched_off"].indexOf(e.event) >= 0 ? e.event : "added"), { tool: e.tool_id })} · ${cs.date(e.at, { year: true })}${e.reason ? ` · <span class="rec">${E(e.reason)}</span>` : ""}</li>`).join("")}</ul>`, { empty: S + "events.none" })));
 
     // the catalogue: each entry's panel says what the tool is sent and keeps, then asks what its config lists
-    if (!data.catalogue || data.catalogue.state !== "empty") out.push(cs.sec(S + "catalogue.heading", cs.state(data.catalogue, (v) => cs.rows({
+    if (!data.catalogue || data.catalogue.state !== "empty") out.push(`<details class="mk-details" data-fold="add"><summary>${W(S + "add.fold")}</summary>${cs.sec(S + "catalogue.heading", cs.state(data.catalogue, (v) => cs.rows({
       id: "catalogue", cols: [S + "col.tool", S + "col.does"], items: v.offered || [], key: (t) => t.provider_id, name: (t) => E(t.vendor + " " + t.product),
       cells: (t) => [E(t.vendor + " · " + t.product), (t.kinds || []).map((k) => W(S + "does." + (["scan", "cdr", "sandbox", "url_reputation", "log_sink"].indexOf(k) >= 0 ? k : "scan"))).join(", ")],
       acts: (t) => {
@@ -95,18 +125,20 @@ export const security = {
         if (onOwn(h.recipient)) f += `<input type="checkbox" id="${p}-every"><label for="${p}-every">${W(S + "every")}</label>`;
         return f + add + "</div>";
       },
-    }), { empty: S + "catalogue.none" })));
+    }), { empty: S + "catalogue.none" }))}</details>`);
     return out.join("");
   },
 
   acts: [
-    // a read: the level for the period chosen
+    // a read: the level for the period chosen. The last day named is included: `to` is the end of that day, or, when it is today, the end of
+    // the present hour, the latest instant credentials R45 admits (R43). A start after the end is refused in place, nothing read.
     { op: "securitymap", rereads: ["map"],
       send(view, el, cs) {
         const from = String(cs.value("se-from") || ""), to = String(cs.value("se-to") || "");
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || from > to) return { refuse: "screen.security.period.bad" };
-        const period = { from: from + "T00:00:00.000Z", to: new Date(Date.parse(to + "T00:00:00.000Z") + 86400000).toISOString() };
-        return { query: period };
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || from > to) { cs.set("periodBad", true); return null; }
+        if (view.ui && view.ui.periodBad) cs.set("periodBad", false);
+        const now = Date.now(), endOfDay = Date.parse(to + "T00:00:00.000Z") + 86400000, endOfHour = (Math.floor(now / 3600000) + 1) * 3600000;
+        return { query: { from: from + "T00:00:00.000Z", to: new Date(Math.min(endOfDay, endOfHour)).toISOString() } };
       },
       done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.from && a.to) cs.set("period", { from: a.from, to: a.to }); } },
     // the entry's config by its names, its credentials in the body only, its handling's digest, then tested at once

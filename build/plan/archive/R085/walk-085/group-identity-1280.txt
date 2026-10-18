@@ -1,0 +1,39 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Settings › Who your group is
+Who your group is
+1 wizard starts here
+
+About Believe In Oakland.
+
+CHANGE IT
+What kind of group
+a professional groupan issue groupa community groupa group for many thingssomething else
+Describe your kind of group, in a few words
+What you focus on
+Why the group exists, in your own words
+Who sees all of this
+Members onlyAlso our public page and the network directory
+Save who your group is, and who sees it
+Reasoned
+
+Answer one or more of these, and the assistant drafts the focus and the reasons from your answers alone. Nothing is saved until you save it.
+
+What does your group do?
+Who is in it, and who does it work for?
+Why did it start?
+Ask the assistant to help write it
+Reasoned

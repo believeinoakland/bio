@@ -28,13 +28,13 @@
       {
        "screen": "install",
        "act": "bootstrap",
-       "what": "Choose your group's short name, then install. It is not the group's name: you choose that next, and can change it.",
-       "why": "The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing."
+       "what": "Choose your team's short name, then install. It is not the team's name: you choose that next, and can change it.",
+       "why": "The short name is the fixed label in your addresses and beside every signature, and can never change. A team that wants to stay unnamed picks one that reveals nothing."
       },
       {
        "screen": "install",
        "act": null,
-       "what": "Your group's Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run the assistant's container if you are asked.",
+       "what": "Your team's Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run its file scanner if you are asked.",
        "why": "The test proves it works before anyone relies on it. The installer keeps nothing once it hands over, so the checks are run then, not later."
       },
       {
@@ -46,75 +46,75 @@
       {
        "screen": "setup",
        "act": "claim",
-       "what": "Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.",
+       "what": "Make it yours: with the one-time password (already filled in if you came straight from the installer), choose your handle and your own password, and claim.",
        "why": "Only the person holding the one-time password can become the first administrator. Once you claim, it is spent."
       },
       {
        "screen": "setup",
        "act": "groupnameset",
-       "what": "Name the group as people should read it, and add its logo if it has one.",
-       "why": "The group's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures."
+       "what": "Open “Your team”: type its name as people should read it, and add its logo if it has one.",
+       "why": "The team's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures."
       },
       {
        "screen": "setup",
        "act": "groupdomainset",
-       "what": "If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.",
-       "why": "Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this."
+       "what": "If your team has a website of its own, choose “Yes” and verify its address: put the small file Civicsmith gives you on the site.",
+       "why": "Readers can then confirm that a published case really comes from your team. The public page names the site, so a team that wants to stay unnamed skips this."
       },
       {
        "screen": "setup",
        "act": "profilesset",
-       "what": "Choose the places whose rules apply, and the languages your members use.",
+       "what": "Open “Where your team works”: choose your place, and the languages your members read.",
        "why": "Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself."
       },
       {
        "screen": "setup",
        "act": "officesseed",
-       "what": "Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.",
+       "what": "Open “The officials you deal with”: check the offices and who holds them, then confirm the list. Each is marked with where it came from.",
        "why": "Requests go to offices by role, so correct anything before members rely on it."
       },
       {
        "screen": "setup",
        "act": null,
-       "what": "Read who in the group will see facts about people.",
+       "what": "Open “Privacy and the law” and read who will see facts about people.",
        "why": "Facts from public documents follow those documents; a project's own notes about a person stay inside the project."
       },
       {
        "screen": "setup",
        "act": "aikeepaway",
-       "what": "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.",
+       "what": "Open “The AI assistant”, read what it is, then choose whether your team uses it. Choosing “No” keeps the team's material away from AI and hides the rest.",
        "why": "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."
       },
       {
        "screen": "setup",
        "act": "groupkeyset",
-       "what": "If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.",
-       "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account. Leave it empty and members bring their own."
+       "what": "If your team will pay for the assistant, choose “Your team, with one API key” and paste the key. It is never shown again.",
+       "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the team's account. Leave it empty and members bring their own."
       },
       {
        "screen": "setup",
        "act": "courtnoticeset",
-       "what": "Choose whether members are told what a court can reach.",
-       "why": "A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away."
+       "what": "In “Privacy and the law”, choose whether members are told what a court can reach.",
+       "why": "A court order your team cannot defeat can require anything not public to be shown. Some teams want every member told; the explanation is always one tap away."
       },
       {
        "screen": "setup",
        "act": "hostingaccessset",
-       "what": "Record who holds the hosting account.",
-       "why": "If you are ever unreachable, this is how the group gets back in."
+       "what": "In “A second administrator”, record who holds the hosting account.",
+       "why": "If you are ever unreachable, this is how the team gets back in."
       },
       {
        "screen": "setup",
        "act": "memberadd",
-       "what": "Invite your first members, and a second administrator now or later.",
-       "why": "With one administrator the group depends on one person. A second means it is never stuck."
+       "what": "Invite a second administrator, now or later; your first members come after.",
+       "why": "With one administrator the team depends on one person. A second means it is never stuck."
       },
       {
        "screen": "group-identity",
        "act": null,
-       "what": "Optional: say who your group is. You will come back here when you finish or stop.",
+       "what": "Optional: say who your team is. You will come back here when you finish or stop.",
        "why": "It shapes how each member is welcomed. It locks nothing and is never required.",
-       "via": "Say who your group is"
+       "via": "Say who your team is"
       }
      ]
     }
@@ -151,7 +151,7 @@
       {
        "screen": "home",
        "act": null,
-       "what": "This is your group's home: what it is working on, and what is waiting on you.",
+       "what": "This is your team's home: what it is working on, and what is waiting on you.",
        "why": "Come back here whenever you lose your place."
       },
       {
@@ -170,7 +170,7 @@
       {
        "screen": "ties",
        "act": null,
-       "what": "Optional: tell the group about your own ties.",
+       "what": "Optional: tell the team about your own ties.",
        "why": "Only you and the administrators see them, and they let a case disclose a tie honestly.",
        "via": "Your ties"
       },
@@ -229,7 +229,7 @@
        "screen": "ceremony",
        "act": "obscuremark",
        "what": "Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.",
-       "why": "The public copy shows them obscured and says so; the original stays inside the group."
+       "why": "The public copy shows them obscured and says so; the original stays inside the team."
       },
       {
        "screen": "ceremony",
@@ -240,7 +240,7 @@
       {
        "screen": "ceremony",
        "act": null,
-       "what": "Read the group's declared bias as it will appear.",
+       "what": "Read the team's declared bias as it will appear.",
        "why": "Every published case carries the lens it was made through."
       },
       {
@@ -291,7 +291,7 @@
       {
        "screen": "finder",
        "act": "search",
-       "what": "Look first: is the record already public? Search what your group holds and where the office publishes.",
+       "what": "Look first: is the record already public? Search what your team holds and where the office publishes.",
        "why": "Much is public already. A copy from the office's own site holds up better than one found elsewhere."
       },
       {
@@ -315,7 +315,7 @@
       {
        "screen": "request",
        "act": "actionlaws",
-       "what": "Choose the law the request goes under, from your group's places.",
+       "what": "Choose the law the request goes under, from your team's places.",
        "why": "The law sets the office's deadline. Where a faster kind of request fits, it is offered."
       },
       {
@@ -337,7 +337,7 @@
        "screen": "request",
        "act": "filingrecordsent",
        "what": "Send it the way the office accepts requests, then record that you sent it.",
-       "why": "Sending tells the office what your group is looking at. Recording the send starts the clock."
+       "why": "Sending tells the office what your team is looking at. Recording the send starts the clock."
       },
       {
        "screen": "due-date",
@@ -485,7 +485,7 @@
    "id": "WIZ-4d42b0233d48913f",
    "origin": "civicsmith",
    "scope": "group",
-   "name": "Say who your group is",
+   "name": "Say who your team is",
    "start": "group-identity",
    "required": false,
    "journeys": [
@@ -500,7 +500,7 @@
       {
        "screen": "group-identity",
        "act": "groupdescriptionset",
-       "what": "What kind of group are you? Pick one or more, or describe your own.",
+       "what": "What kind of team are you? Pick one or more, or describe your own.",
        "why": "It shapes how each member is welcomed. It never limits what anyone can do."
       },
       {
@@ -512,14 +512,14 @@
       {
        "screen": "group-identity",
        "act": "groupdescriptionset",
-       "what": "Why does the group exist? Say it in your own words.",
+       "what": "Why does the team exist? Say it in your own words.",
        "why": "Your declared bias can start from what you write here."
       },
       {
        "screen": "group-identity",
        "act": "groupdescriptionset",
        "what": "Who should see this: members only, or also your public page and the network directory?",
-       "why": "Members only is the default. A group that wants to stay unnamed keeps it that way."
+       "why": "Members only is the default. A team that wants to stay unnamed keeps it that way."
       }
      ]
     }
@@ -545,7 +545,7 @@
       {
        "screen": "members",
        "act": "memberadd",
-       "what": "Who: a short id for the invitation, and the cover the group knows them by. Not a legal name.",
+       "what": "Who: a short id for the invitation, and the cover the team knows them by. Not a legal name.",
        "why": "They choose their own handle when they join. The record never needs a legal name; administrators keep the cover so they know who is who."
       },
       {
@@ -564,7 +564,7 @@
        "screen": "members",
        "act": "websitekeycreate",
        "what": "Or let people join through your website: create a website key, or turn on the reusable join link.",
-       "why": "Anyone let through can see the group's shared work, so each comes with limits and a daily cap."
+       "why": "Anyone let through can see the team's shared work, so each comes with limits and a daily cap."
       }
      ]
     }
@@ -574,7 +574,7 @@
    "id": "WIZ-7de505135a9ecd4f",
    "origin": "civicsmith",
    "scope": "group",
-   "name": "Update your group's Civicsmith",
+   "name": "Update your team's Civicsmith",
    "start": "updates",
    "required": false,
    "journeys": [
@@ -595,14 +595,14 @@
       {
        "screen": "updates",
        "act": "owed:updatestart K3158",
-       "what": "Choose Update if you hold your group's Cloudflare account. If not, copy the link and pass it to whoever does. Not now and Skip this version are the other choices.",
-       "why": "Only Cloudflare's consent, given by the account's holder, lets a new release in. Your group's Civicsmith cannot rewrite itself."
+       "what": "Choose Update if you hold your team's Cloudflare account. If not, copy the link and pass it to whoever does. Not now and Skip this version are the other choices.",
+       "why": "Only Cloudflare's consent, given by the account's holder, lets a new release in. Your team's Civicsmith cannot rewrite itself."
       },
       {
        "screen": "update",
        "act": "bootstrap",
        "what": "On the installer's page, check the release running and the release chosen, then continue to Cloudflare and allow the update.",
-       "why": "If a step stops, your group's Civicsmith keeps running as it was; the stop says what to do."
+       "why": "If a step stops, your team's Civicsmith keeps running as it was; the stop says what to do."
       }
      ]
     }
@@ -628,7 +628,7 @@
       {
        "screen": "connect",
        "act": null,
-       "what": "The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.",
+       "what": "The assistant is optional. If your team offers its API key, you can use it already; your own account, if you connect one, always comes first.",
        "why": "Your own account serves only you. Everything works without the assistant."
       },
       {
@@ -659,7 +659,7 @@
        "screen": "connect",
        "act": "ailimitset",
        "what": "Set a limit on your account, if you want one: for everything or for one use, a day or a month.",
-       "why": "It binds only your own account. The group's and a project's limits never bind it."
+       "why": "It binds only your own account. The team's and a project's limits never bind it."
       },
       {
        "screen": "connect",
@@ -671,7 +671,7 @@
        "screen": "connect",
        "act": "subscriptiondisconnect",
        "what": "You can disconnect at any time, here: your subscription, or your API key.",
-       "why": "Disconnecting removes the sign-in or the key from your group's Civicsmith."
+       "why": "Disconnecting removes the sign-in or the key from your team's Civicsmith."
       }
      ]
     }
@@ -708,7 +708,7 @@
       {
        "screen": "ties",
        "act": "declaretie",
-       "what": "For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as “a member of the group”.",
+       "what": "For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as “a member of the team”.",
        "why": "Readers learn of the tie either way; not naming you protects you while keeping the case honest."
       }
      ]
@@ -913,7 +913,7 @@
    "id": "WIZ-4cdbd26939d4cc6d",
    "origin": "civicsmith",
    "scope": "group",
-   "name": "Use another group's case",
+   "name": "Use another team's case",
    "start": "imported",
    "required": false,
    "journeys": [
@@ -929,7 +929,7 @@
        "screen": "imported",
        "act": "caseimport",
        "what": "Import the case into its own read-only project.",
-       "why": "Another group's work stays marked as theirs, and cannot be edited."
+       "why": "Another team's work stays marked as theirs, and cannot be edited."
       },
       {
        "screen": "imported",
@@ -973,7 +973,7 @@
        "screen": "translations",
        "act": null,
        "what": "Choose the language.",
-       "why": "Civicsmith's own translations come with releases. Your group fills gaps and improves wording."
+       "why": "Civicsmith's own translations come with releases. Your team fills gaps and improves wording."
       },
       {
        "screen": "translations",
@@ -991,7 +991,7 @@
        "screen": "translations",
        "act": "translationadopt",
        "what": "Read each draft against the English; keep it or correct it.",
-       "why": "A word becomes the group's only when a granted member who knows the language keeps it."
+       "why": "A word becomes the team's only when a granted member who knows the language keeps it."
       },
       {
        "screen": "translations",
@@ -1007,7 +1007,7 @@
    "id": "WIZ-f06504b9133b8d61",
    "origin": "civicsmith",
    "scope": "group",
-   "name": "Comment for the group",
+   "name": "Comment for the team",
    "start": "plan",
    "required": false,
    "journeys": [
@@ -1034,14 +1034,14 @@
       {
        "screen": "start-send",
        "act": "communicationprepare",
-       "what": "Choose \"For the group\" or \"As myself\", then write what the record shows and what you ask the body to examine or apply. Start from your group's template for a written comment if it has one.",
-       "why": "A comment for the group is the group's act. One as yourself is your own notes, never recorded as sent."
+       "what": "Choose \"For the team\" or \"As myself\", then write what the record shows and what you ask the body to examine or apply. Start from your team's template for a written comment if it has one.",
+       "why": "A comment for the team is the team's act. One as yourself is your own notes, never recorded as sent."
       },
       {
        "screen": "start-send",
        "act": null,
        "what": "Read any sentence pointed out as a policy position: remove it, or comment as yourself.",
-       "why": "A comment for the group states facts and asks. A position is a member's to take as themselves."
+       "why": "A comment for the team states facts and asks. A position is a member's to take as themselves."
       },
       {
        "screen": "start-send",
@@ -1053,7 +1053,7 @@
        "screen": "start-send",
        "act": "filingrecordsent",
        "what": "Submit it, or read it at the meeting, then record that it was sent.",
-       "why": "The record keeps what the group said, and when."
+       "why": "The record keeps what the team said, and when."
       }
      ]
     }
@@ -1096,14 +1096,14 @@
       {
        "screen": "start-send",
        "act": "communicationprepare",
-       "what": "Write what the body did, the rule it seems to break, and what correcting it would look like. Start from your group's demand template if it has one.",
+       "what": "Write what the body did, the rule it seems to break, and what correcting it would look like. Start from your team's demand template if it has one.",
        "why": "A demand asks the body to correct its own act, so it says exactly what correcting it means."
       },
       {
        "screen": "start-send",
        "act": null,
-       "what": "Rewrite any sentence pointed out as asking for something for your group.",
-       "why": "A demand asks nothing for the group. Approval waits until those sentences are gone."
+       "what": "Rewrite any sentence pointed out as asking for something for your team.",
+       "why": "A demand asks nothing for the team. Approval waits until those sentences are gone."
       },
       {
        "screen": "start-send",
@@ -1164,7 +1164,7 @@
       {
        "screen": "matter",
        "act": "escalationstoppursuing",
-       "what": "If your group is stopping, stop pursuing it, with your reason.",
+       "what": "If your team is stopping, stop pursuing it, with your reason.",
        "why": "Stopping is never recorded as ended or as a success, and it can be reopened where it stopped."
       },
       {
@@ -1208,7 +1208,7 @@
       {
        "screen": "start-send",
        "act": "communicationprepare",
-       "what": "Write what happened and ask the body to look into it. Start from your group's referral template if it has one.",
+       "what": "Write what happened and ask the body to look into it. Start from your team's referral template if it has one.",
        "why": "A referral asks for an examination. It doesn't claim a breach the body hasn't found."
       },
       {
@@ -1227,7 +1227,7 @@
        "screen": "action",
        "act": "actionscope",
        "what": "If the referral shouldn't be published, make the action confidential, with your reason.",
-       "why": "A confidential action is seen inside the group and never published."
+       "why": "A confidential action is seen inside the team and never published."
       },
       {
        "screen": "action",
@@ -1320,8 +1320,8 @@
       {
        "screen": "start-send",
        "act": "communicationprepare",
-       "what": "Prepare what is sent: start from your group's template for this kind of action if it has one, or write it yourself. A template or draft is labeled until you make it yours.",
-       "why": "The words that leave the group are always a member's."
+       "what": "Prepare what is sent: start from your team's template for this kind of action if it has one, or write it yourself. A template or draft is labeled until you make it yours.",
+       "why": "The words that leave the team are always a member's."
       },
       {
        "screen": "start-send",
@@ -1333,7 +1333,7 @@
        "screen": "start-send",
        "act": "filingrecordsent",
        "what": "Send it, then record that you sent it.",
-       "why": "This tells the office what your group is looking at, and starts the clock."
+       "why": "This tells the office what your team is looking at, and starts the clock."
       },
       {
        "screen": "due-date",

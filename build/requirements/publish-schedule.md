@@ -39,7 +39,7 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
   `scheduleEdition({case, edition, docSha, signature, signer, deliveredBy, at, checked, by})` is called by the case ceremony (`ratification`, for `op=publishat`) in place of `publication` R22's commit, after every refusal that commit would make has passed, inside the caller's transaction.
 
-  `at` is `{date, time}`: a `YYYY-MM-DD` and a 24-hour `HH:MM`. It is a local time in the group's zone (the active profiles' `time_zone`, `jurisdictions` R41, read through `jurisdictions.combine` over record-core's `jurisdiction_profiles` setting). It is resolved to its instant through `civil-time` (`bounds` of the minute-precision date-time, its `earliest`).
+  `at` is `{date, time}`: a `YYYY-MM-DD` and a 24-hour `HH:MM`. It is a local time in the team's governing zone, read as `retrieval` R69 reads it: the value that governs on this instance for the `time_zone` path as `local-facts` answers it (its R2, a local correction first), else the active profiles' `time_zone` (`jurisdictions` R41, read through `jurisdictions.combine` over record-core's `jurisdiction_profiles` setting). (T50; N1203, K3635 doubt 5) It is resolved to its instant through `civil-time` (`bounds` of the minute-precision date-time, its `earliest`).
 
   `checked` is what the ceremony checked at signing, as the publisher of R2 will compare it.
 
@@ -136,7 +136,8 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 ### Uses
 
 - `civil-time`: `bounds`, `isCalendarDate` (R1, R3).
-- `jurisdictions`: `combine`, for the group's `time_zone` (its R41; R1).
+- `local-facts`: the governing value of the `time_zone` path (its R2; R1, first). A new `modules.json` edge (T50, K3642).
+- `jurisdictions`: `combine`, for the profiles' `time_zone` when no local value governs (its R41; R1).
 - `record-core`: `getSetting("jurisdiction_profiles")` (R1), `transact`, `declareTable` (R10).
 - `membership`: `viewerPredicate` (R3's machine fence), `isProjectOwner` (R3), `listenerRefusal` (R6).
 - `publication`:

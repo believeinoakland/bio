@@ -1,0 +1,21 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+B
+Working · not public · seen by your group's members
+Add › Held captures
+Held captures
+
+Captured but not yet vouched for. Nothing here is sent to you; it waits.
+
+See held captures
+Reversible
+CAPTURE
+Open the file
+walk085m-sample.txt
+Received, not fetched: it earns no capture grade of its own. Captured today · No project yet · From upload:328a13d1a4349c2eeb30d2ca4747d1da884a845a8575b80be274ee3dedb1d294
+Home
+Queue
+Add
+Find
+More

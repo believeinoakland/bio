@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS entities (
   note        TEXT,
   declared_by TEXT,
   at          TEXT,
-  sector      TEXT
+  sector      TEXT,
+  forum_kind  TEXT
 );
 CREATE INDEX IF NOT EXISTS entities_kind ON entities(kind);
 -- ALIASES are FIRST-CLASS and per entity (safeguard 4). The canonical label is also an alias (canonical=1).
@@ -173,6 +174,10 @@ export const BASIS_NORM_INDEX = "CREATE INDEX IF NOT EXISTS resolutions_entity_b
 
 /* R42 (T33-25): the sector column a store written before T33 lacks; its organisations read 'undetermined'. */
 export const SECTOR_COLUMN = Object.freeze(["entities", "sector"]);
+
+/* R54 (T50; N1190): the forum kind a `body` or `institution` may carry, NULL for every entity that carries none; a store
+   written before T50 lacks the column and its entities read none. */
+export const FORUM_KIND_COLUMN = Object.freeze(["entities", "forum_kind"]);
 
 /* R8: the columns a store written before K106 lacks. */
 export const WITHDRAWAL_COLUMNS = Object.freeze([

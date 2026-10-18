@@ -12,6 +12,7 @@ import worker from "../src/index.mjs";
 import { READ_TEXT_MAX } from "../src/draft.mjs";
 import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
 import { MEMBER } from "./account.mjs";
+import { remoteBindings } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -120,7 +121,7 @@ async function drive(path, body, headers = {}, model = null) {
   for (const k of ["log", "info", "warn", "error", "debug"]) { kept[k] = console[k]; console[k] = (...a) => lines.push(a.map(String).join(" ")); }
   try {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`, { method: "POST", headers, body: JSON.stringify(body) }),
-      { VERSION: "t48", PLANE: p.binding, RUNNER: r });
+      { VERSION: "t48", PLANE: p.binding, ...remoteBindings(r) });
     const text = await res.text();
     const parsed = text.trim().split("\n").map((l) => { try { return JSON.parse(l); } catch { return null; } });
     return { status: res.status, text, out: parsed[parsed.length - 1], plane: p.calls, runner: r, api, lines };
@@ -237,6 +238,10 @@ section("R86 (R79) · the test-instance label is answered unchanged beside the t
 
 /* ================================================================================================ R87 */
 
+/* R99: a run's answer carries the wall time it took (its budget's `wallclock` consumption), which differs between two
+   runs; the answers are compared without that one figure. */
+const unmeasured = (text) => String(text).replace(/("bound":"wallclock","allowed":\d+,"consumed":)\d+/g, "$10");
+
 section("R87 · the door's trace and member ref reach the member's runner on every conversation's upgrade");
 {
   for (const [k, body] of Object.entries(BODIES)) {
@@ -250,7 +255,7 @@ section("R87 · the door's trace and member ref reach the member's runner on eve
     t(`R87 (/${k}, control): without the headers, no upgrade carries either`,
       [bare.status, bare.runner.upgrades.length === ups.length,
        bare.runner.upgrades.some((u) => "x-civicsmith-trace" in u.headers || "x-civicsmith-member-ref" in u.headers)], [200, true, false]);
-    t(`R87 (/${k}, control): the answer is unchanged by them`, sent.text, bare.text);
+    t(`R87 (/${k}, control): the answer is unchanged by them`, unmeasured(sent.text), unmeasured(bare.text));
     t(`R87 (/${k}): they reach no plane call and no log line`,
       [sent.plane.some((c) => c.raw.includes(TRACE) || c.raw.includes(REF)), sent.lines.some((l) => l.includes(TRACE) || l.includes(REF))],
       [false, false]);
@@ -291,7 +296,7 @@ section("R87 (control) · on an API key the headers change nothing and reach the
     const sent = await drive(path, body(KEY), DOOR);
     const bare = await drive(path, body(KEY));
     t(`R87 (/${k}, control): an apikey account answers the same with and without the headers, and no runner is named`,
-      [sent.status, sent.text === bare.text, sent.runner.named.length], [200, true, 0]);
+      [sent.status, unmeasured(sent.text) === unmeasured(bare.text), sent.runner.named.length], [200, true, 0]);
     t(`R87 (/${k}, control): neither header reaches a model API request`,
       sent.api.some((a) => JSON.stringify(a).includes(TRACE) || JSON.stringify(a).includes(REF)), false);
   }

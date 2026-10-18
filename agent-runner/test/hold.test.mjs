@@ -8,6 +8,10 @@ import { GOOD_CODE } from './stubs/claude-values.mjs';
 import { readManifest } from '../src/manifest.mjs';
 import { SIGNIN_HOLD_MS, CODE_WAIT_MS, OUTCOME_WAIT_MS } from '../src/waits.mjs';
 
+// R35 (N1197, K3611): the class answers every request 410 and passes nothing to its container, so the tests that drive
+// its `fetch` are suspended, not deleted; they run again when R35 is lifted.
+const SUSPENDED = { skip: 'suspended while R35 holds: the class answers 410 and passes nothing to its container' };
+
 const M = 'member-7d1e';
 const MIN = 60_000;
 const ID = 'f3a9c1d2e4b5' + '0'.repeat(52);
@@ -45,7 +49,7 @@ test('R25 the hold is from start to the code\'s outcome plus 30 s, 10 min 90 s f
   assert.equal(SIGNIN_HOLD_MS, 10 * MIN + 90_000);
 });
 
-test('R25 after a 200 start, expiries at +3 and +9 minutes stop nothing, and one at +12 minutes stops the container', async () => {
+test('R25 after a 200 start, expiries at +3 and +9 minutes stop nothing, and one at +12 minutes stops the container', SUSPENDED, async () => {
   const h = await hosted();
   try {
     const s = await h.post('/signin', { member: M });
@@ -65,7 +69,7 @@ test('R25 after a 200 start, expiries at +3 and +9 minutes stop nothing, and one
   } finally { await h.stop(); }
 });
 
-test('R25 after a code answer the next expiry stops it; a 409 that keeps the attempt keeps the hold', async () => {
+test('R25 after a code answer the next expiry stops it; a 409 that keeps the attempt keeps the hold', SUSPENDED, async () => {
   const h = await hosted();
   try {
     const first = await h.post('/signin', { member: M });
@@ -93,7 +97,7 @@ test('R25 after a code answer the next expiry stops it; a 409 that keeps the att
   }
 });
 
-test('R25 after a start answered 502 the next expiry stops it; control: an instance that never saw start stops at its first expiry', async () => {
+test('R25 after a start answered 502 the next expiry stops it; control: an instance that never saw start stops at its first expiry', SUSPENDED, async () => {
   const h = await hosted('foreign');
   try {
     assert.equal((await h.post('/signin', { member: M })).status, 502);
@@ -108,7 +112,7 @@ test('R25 after a start answered 502 the next expiry stops it; control: an insta
   } finally { await c.stop(); }
 });
 
-test('R26 a start the library cannot make is answered JSON 503 RUNNER_NOT_STARTED with its status, never its plain text', async () => {
+test('R26 a start the library cannot make is answered JSON 503 RUNNER_NOT_STARTED with its status, never its plain text', SUSPENDED, async () => {
   const h = await hosted();
   try {
     const cases = [
@@ -144,7 +148,7 @@ test('R26 a start the library cannot make is answered JSON 503 RUNNER_NOT_STARTE
   } finally { await h.stop(); }
 });
 
-test('R30 each lifecycle hook writes one line: start, started, held_awake, activity_expired, stop, error', async () => {
+test('R30 each lifecycle hook writes one line: start, started, held_awake, activity_expired, stop, error', SUSPENDED, async () => {
   const h = await hosted();
   try {
     const life = () => h.lines.filter((l) => l.event === 'runner.lifecycle');
@@ -171,7 +175,7 @@ test('R30 each lifecycle hook writes one line: start, started, held_awake, activ
   } finally { await h.stop(); }
 });
 
-test('R30 R10 one egress handler per egress host passes the request through unchanged and logs its status, never its query, headers or body', async () => {
+test('R30 R10 one egress handler per egress host passes the request through unchanged and logs its status, never its query, headers or body', SUSPENDED, async () => {
   const h = await hosted();
   const fetch0 = globalThis.fetch;
   const SENT = 'sk-ant-oat01-EGRESS-SENTINEL-3c1d';
@@ -196,7 +200,35 @@ test('R30 R10 one egress handler per egress host passes the request through unch
     assert.equal(h.lines.filter((l) => l.event === 'runner.egress').at(-1).path_template, '/v1/messages');
     const lines = h.lines.length;
     assert.equal((await proxy.fetch(new Request('https://example.com/'))).status, 520);
-    assert.equal(h.lines.length, lines, 'a refused host is not logged here');
+    assert.deepEqual(h.lines.slice(lines).map((l) => l.event), ['runner.egress.refused'], 'a refused host writes R34\'s line and no runner.egress line');
     assert.equal(seen.length, n + 1);
+  } finally { globalThis.fetch = fetch0; await h.stop(); }
+});
+
+test('R34 a request to a host outside egress is answered 520 and writes exactly one runner.egress.refused line, never its query, headers or body', SUSPENDED, async () => {
+  const h = await hosted();
+  const fetch0 = globalThis.fetch;
+  const SENT = 'sk-ant-oat01-REFUSED-SENTINEL-9a2e';
+  try {
+    const seen = [];
+    globalThis.fetch = async (req) => { seen.push(req); return new Response('{}', { status: 200 }); };
+    const proxy = new h.mod.ContainerProxy({ props: { className: 'AgentRunner', containerId: ID, allowedHosts: readManifest().egress, enableInternet: false, interceptAll: true } }, {});
+    const before = h.lines.length;
+    const res = await proxy.fetch(new Request(`https://Telemetry.Example.com/v1/${'b'.repeat(30)}/events?k=${SENT}`, {
+      method: 'POST', headers: { authorization: `Bearer ${SENT}` }, body: JSON.stringify({ k: SENT }) }));
+    assert.equal(res.status, 520, 'refused exactly as before');
+    assert.equal(await res.text(), 'Origin is disallowed');
+    assert.equal(seen.length, 0, 'nothing forwarded');
+    const added = h.lines.slice(before);
+    assert.deepEqual(added, [{ event: 'runner.egress.refused', instance_ref: ID.slice(0, 12), host: 'telemetry.example.com',
+      method: 'POST', path_template: '/v1/:id/events', status: 520 }], 'exactly that line');
+    assert.ok(!JSON.stringify(h.lines).includes(SENT), 'no query, header or body is logged');
+    // control: every allowed host writes runner.egress (R30) and no refused line
+    for (const host of readManifest().egress) {
+      const n = h.lines.length;
+      const ok = await proxy.fetch(new Request(`https://${host}/x`));
+      assert.equal(ok.status, 200, host);
+      assert.deepEqual(h.lines.slice(n).map((l) => l.event), ['runner.egress'], host);
+    }
   } finally { globalThis.fetch = fetch0; await h.stop(); }
 });

@@ -6,7 +6,7 @@
    are named at their sites. It is pure: no record, no table, no catalogue row. It fetches nothing about the source:
    the bytes come from the evidence store the caller hands in (R24), and tiers 2 and 3 are reached only through their
    bindings with the capture's digest (R16). R32 (T49) gives text read as text through no format entry its text units
-   (`textUnitsOfText`). T33-23 adds the opt-in after-read hook (R25–R27, `hooks.mjs`), which
+   (`textUnitsOfText`; R33, T50: a text with no blank line split at its line breaks), R34 (T50) its `title`. T33-23 adds the opt-in after-read hook (R25–R27, `hooks.mjs`), which
    `read` never reaches. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
@@ -897,17 +897,74 @@ export function visibleTextOfHtml(html) {
   return decodeReferences(bare);
 }
 
-/* R32: the units of text read as text. `html` is true for a capture whose detected format is `html`. */
+/* R32: the units of text read as text. `html` is true for a capture whose detected format is `html`.
+   R33 (T50; N1191 (a)): a text that is not HTML and holds no blank line but at least two non-empty lines is split at
+   its line breaks: one unit per non-empty line (the line trimmed), `para` counting the non-empty lines from 0. A text
+   with a blank line anywhere keeps its paragraphs (a wrapped paragraph is never split), a one-line text is one unit,
+   and an HTML page is read by R32's rule. */
+const BLANK_LINE_RUN = /\r?\n[ \t\f\v\u00a0 ]*(?:\r?\n[ \t\f\v\u00a0 ]*)+/;
 export function textUnitsOfText(text, { html = false } = {}) {
   if (typeof text !== "string" || !text) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
   const visible = html ? visibleTextOfHtml(text) : text;
   /* Runs between blank lines; a run of no character (the text's edges, a markup-only block) is no paragraph, so `para`
      counts the paragraphs the text has, from 0, and a page's leading blank does not shift it. */
-  const paragraphs = visible.split(/\r?\n[ \t\f\v ]*(?:\r?\n[ \t\f\v ]*)+/)
-    .map((p) => (html ? p.replace(/[ \t\f\v \r\n]+/g, " ") : p).trim())
-    .filter((p) => p.length)
+  const runs = visible.split(BLANK_LINE_RUN);
+  const lines = !html && runs.length === 1 ? runs[0].split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length) : [];
+  const paragraphs = (lines.length >= 2 ? lines : runs
+    .map((p) => (html ? p.replace(/[ \t\f\v\u00a0 \r\n]+/g, " ") : p).trim())
+    .filter((p) => p.length))
     .map((p, para) => ({ para, text: p }));
   return textUnitsFor({ paragraphs });
+}
+
+/* ===================================================================== *
+ * A reading's title (R34).
+ * ===================================================================== */
+
+export const TITLE_MAX_CHARS = 200;
+
+/* R34: a title is the text with markup removed and character references decoded as R32 decodes them (markup first,
+   so a decoded `&lt;` is text), whitespace runs collapsed to one space, trimmed, at most TITLE_MAX_CHARS characters
+   (code points); one with no glyph is none (null). */
+function cleanTitle(s) {
+  if (typeof s !== "string") return null;
+  const bare = decodeReferences(s.replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, ""))
+    .replace(/\s+/g, " ").trim();
+  const t = [...bare].slice(0, TITLE_MAX_CHARS).join("").trimEnd();
+  return glyphCount(t) > 0 ? t : null;
+}
+
+/* The inner markup of the first element named `names` (a regex alternation) in `markup` that has an end tag; a
+   self-closing tag and a start tag with no end tag are no element. */
+function firstElementInner(markup, names) {
+  const open = new RegExp(`<(${names})(?=[\\s>/])((?:"[^"]*"|'[^']*'|[^'">])*)>`, "gi");
+  for (let m = open.exec(markup); m; m = open.exec(markup)) {
+    if (m[2].endsWith("/")) continue;
+    const end = new RegExp(`</${m[1]}\\s*>`, "i").exec(markup.slice(open.lastIndex));
+    if (end) return markup.slice(open.lastIndex, open.lastIndex + end.index);
+  }
+  return null;
+}
+
+/* R34: the title of a capture read as HTML: its first `<title>` element, else its first heading (`h1` to `h6`) in
+   document order. Nothing inside a comment, `script`, `style` or `template` is a title; `head` is not dropped, since
+   it is where the title is. A `<title>` that holds no glyph is none, and the heading is read in its place. */
+export function titleOfHtml(html) {
+  if (typeof html !== "string" || !html) return null;
+  const live = html
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+    .replace(/<(script|style|template)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ")
+    .replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ");
+  for (const names of ["title", "h[1-6]"]) {
+    const t = cleanTitle(firstElementInner(live, names));
+    if (t !== null) return t;
+  }
+  return null;
+}
+
+/* R34: the title a format entry's metadata states (R28), when it is a non-blank string, else null. */
+export function titleOfMetadata(metadata) {
+  return metadata && typeof metadata === "object" && !Array.isArray(metadata) ? cleanTitle(metadata.title) : null;
 }
 
 /* ===================================================================== *
@@ -1233,6 +1290,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     /* R32: its text units, drawn from the decoded text (the page's visible text for HTML); a capture whose text holds
        no glyph has none. The reader's outcome below does not change them. */
     ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text, { html: fmt === "html" }));
+    /* R34: the title, read from the markup R32's units drop; null for any text that is not HTML. A reader that throws
+       gives a failed reading, which carries none. */
+    const title = fmt === "html" ? titleOfHtml(text) : null;
     if (typeof docType.type.parse === "function") {
       try {
         const parsed = docType.type.parse({ ...profCtx, handler: stackId.handler, at: retrieved, ...vw }) || {};
@@ -1243,6 +1303,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           content_type: docType.type.key, reader_version: docType.type.version ?? null,
           read_from_text: true, found: entities.length > 0,
           entities, facts: facts || {}, at: retrieved,
+          title,
           basis: entities.length
             ? `read by the ${docType.type.key} reader v${docType.type.version}`
               + `${entities.some((e) => e.source) ? "" : " — no reference carries where it was read: this "
@@ -1264,6 +1325,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading = {
         content_type: docType.type.key, reader_version: docType.type.version ?? null,
         read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
+        title,
         basis: `the ${docType.type.key} content type declares no reader, so this document has no reading`,
       };
     }
@@ -1360,6 +1422,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting })
         : { ...failed(doc, docType, [tier2note, ocrNote, `the ${fmt} entry produced no text from these bytes`]
               .filter(Boolean).join(" — ")) };
+      /* R34: a determined reading carries the title its entry's metadata states, else null; a failed one carries none. */
+      if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata);
       /* R29: the pages the AI read, labeled as its reading. */
       if (aiRead) reading.ai_transcription = aiRead;
       /* R12: never zero. */

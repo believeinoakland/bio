@@ -14,7 +14,7 @@ const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux
 const A = V("alice"), B = V("bob"), F = V("frank");
 const SENTENCE = "Your reply may be quoted unless it says otherwise.";
 const ROW = ft.FILING_TEMPLATE_CHECKS.RFC_QUOTING_MISSING;
-/* this module's own words (DEC-234, B200 (5), K3357): declared in the module, pinned here, absent from words.json */
+/* the row's word, pinned here: words.json holds it by key (DEC-260), its text unchanged since DEC-234 (K3357) */
 const RFC_TRANSLATION = "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.";
 const RFC = "request_for_comment";
 const BODY = "To the {{counterparty_role}}: {{group}} asks for your comment on {{act}}.";
@@ -48,16 +48,19 @@ const inReview = (w, { kind = RFC, use = "file", text = BODY, name = `${kind} ${
 };
 const approve = (w, version, x = {}) => w.ft.templateApprove({ version, by: B, viewer: B, ...x });
 
-test("R33 RFC_QUOTING_SENTENCE is the sentence filings held, unchanged (K2953); words.json holds neither rfc.quoting nor refusal.RFC_QUOTING_MISSING (DEC-234, K3357)", () => {
+test("R33 RFC_QUOTING_SENTENCE is the sentence filings held, unchanged (K2953), read by key from words.json's filing-templates.rfc_quoting_sentence (DEC-260)", () => {
   assert.equal(ft.RFC_QUOTING_SENTENCE, SENTENCE);
-  assert.equal(WORDS.some((x) => x.key === "rfc.quoting" || x.key === "refusal.RFC_QUOTING_MISSING"), false,
-               "withdrawn from words.json: the module's own words now");
+  const held = (key) => WORDS.find((x) => x.key === key)?.en;
+  assert.equal(held("filing-templates.rfc_quoting_sentence"), SENTENCE, "the word the module reads");
+  assert.equal(held("refusal.RFC_QUOTING_MISSING"), RFC_TRANSLATION, "the word the row reads");
+  assert.equal(WORDS.some((x) => x.key === "rfc.quoting"), false, "no rfc.quoting: the sentence is not filings' keyed row (DEC-234, K3357)");
 });
 
 test("R33 rfcQuotingRefusal answers C-115.47 RFC_QUOTING_MISSING with its row, extra fields merged, when the text lacks the sentence; control: a text holding it answers null", () => {
   const r = ft.rfcQuotingRefusal(`${BODY} Thanks.`, { filing: "FIL-1", version: "TPL-x@1" });
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "RFC_QUOTING_MISSING", "RFC_QUOTING_MISSING", "C-115.47", ROW.translation]);
-  assert.deepEqual([r.filing, r.version, r.sentence, r.key], ["FIL-1", "TPL-x@1", SENTENCE, "rfc.quoting"], "extra merged; the sentence named");
+  assert.deepEqual([r.filing, r.version, r.sentence, r.key], ["FIL-1", "TPL-x@1", SENTENCE, "filing-templates.rfc_quoting_sentence"],
+                   "extra merged; the sentence named by its current key (R33; rfc.quoting was withdrawn, DEC-234)");
   assert.equal(ft.rfcQuotingRefusal(BODY).reason, "RFC_QUOTING_MISSING", "extra may be absent");
   assert.equal(ft.rfcQuotingRefusal(BODY, { sentence: "other" }).sentence, SENTENCE, "the sentence named is the refusal's own");
   for (const text of ["", null, undefined, 7, "your reply may be quoted unless it says otherwise.", "Your reply may be quoted, unless you say otherwise in it."])
@@ -70,7 +73,7 @@ test("R33 rfcQuotingRefusal answers C-115.47 RFC_QUOTING_MISSING with its row, e
 test("R33 the row moves here unchanged: C-115.47, filings' translation read by key from refusal.RFC_QUOTING_MISSING, its where this one function", () => {
   assert.deepEqual(Object.keys(ROW).sort(), ["check", "translation", "where"]);
   assert.deepEqual([ROW.check, ROW.where], ["C-115.47", "src/filing-templates/index.mjs rfcQuotingRefusal > is-rfc-quoting-missing"]);
-  assert.equal(ft.FILING_TEMPLATES_WORDS["refusal.RFC_QUOTING_MISSING"], RFC_TRANSLATION, "the module's own declaration, text unchanged");
+  assert.equal(ft.FILING_TEMPLATES_WORDS["refusal.RFC_QUOTING_MISSING"], RFC_TRANSLATION, "read by key, text unchanged");
   assert.equal(ROW.translation, RFC_TRANSLATION);
 });
 
@@ -86,7 +89,7 @@ test("R33 templateApprove refuses a file version of the request-for-comment kind
   const d = inReview(w, { name: "lacking" });
   const before = w.snapshot();
   const r = refused(approve(w, d.version), "RFC_QUOTING_MISSING");
-  assert.deepEqual([r.version, r.sentence, r.key], [d.version, SENTENCE, "rfc.quoting"]);
+  assert.deepEqual([r.version, r.sentence, r.key], [d.version, SENTENCE, "filing-templates.rfc_quoting_sentence"]);
   assert.deepEqual(w.snapshot(), before, "nothing written");
   assert.equal(w.ft.templateRead({ template: d.template, version: d.version, viewer: A }).version.state, "in_review");
   refused(w.ft.offeredVersion({ template: d.template, viewer: A }), "TEMPLATE_NOT_OFFERED");
@@ -118,7 +121,7 @@ test("R33 controls: a brief template of the kind, and a template of another kind
 test("R33 a profile template of the kind and use lacking the sentence is not offered and reads RFC_QUOTING_MISSING, in R15's form; controls: with it, a brief one, and a template of another kind are offered", () => {
   const w = world();
   const without = refused(w.ft.offeredVersion({ template: "TPL-test-rfc-without", viewer: A }), "RFC_QUOTING_MISSING");
-  assert.deepEqual([without.template, without.sentence, without.key], ["TPL-test-rfc-without", SENTENCE, "rfc.quoting"]);
+  assert.deepEqual([without.template, without.sentence, without.key], ["TPL-test-rfc-without", SENTENCE, "filing-templates.rfc_quoting_sentence"]);
   const read = w.ft.templateRead({ template: "TPL-test-rfc-without", viewer: A });
   assert.deepEqual([read.ok, read.offered, read.not_offered.reason, read.not_offered.check, read.version.state],
                    [true, false, "RFC_QUOTING_MISSING", "C-115.47", "approved"]);

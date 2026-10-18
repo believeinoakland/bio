@@ -3,9 +3,15 @@
    with their due dates and state, its replies, its scope, its hold and pressure (the marks `pressurefor` answers); "Waiting on <office>'s reply" while one is owed. A passed date is drawn as
    canon's question ("no reply recorded by <date>"), never "overdue" until a member determines it (`action-producers` R1).
    An action holding an approved, unsent text offers to pick up where it was left (R10). It draws "The law it goes under"
-   (R16) and "Its risk" (R17), each apart from its proposals. The subject is the action's id. It holds no member-facing
-   English (R19). Every function here is self-contained (interface-shell R21 (1)). */
+   (R16) and "Its risk" (R17), each apart from its proposals, and offers to open a question from the action (R23): at once
+   where a reply's date has passed with none recorded, behind a fold on any other. The subject is the action's id. It holds
+   no member-facing English (R19). Every function here is self-contained (interface-shell R21 (1)). */
+import { OPS } from "../op-declarations/index.mjs";
 import { draftsOf, stepOf } from "./send-steps.mjs";
+
+// R23: `actioninquiry` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
+// shell draws it as it draws every act (R12).
+const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : []; };
 
 export const action = Object.freeze({
   id: "action",
@@ -122,6 +128,18 @@ export const action = Object.freeze({
         return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + "</span>", "", remind);
       }).join("")));
 
+      // R23: "Open a question from this" (`actioninquiry`): the member writes the question, one line; the action is where it
+      // comes from, not evidence in it. At once where a reply's date has passed with none recorded (state b), else on request.
+      const lapsed = clock.filter(function (c) { return c.date && (["pending", undefined].includes(c.status)) && String(c.date) < today; })
+        .map(function (c) { return String(c.date); }).sort();
+      const ask = cs.act("actioninquiry", { label: "action.noreply.question", tone: lapsed.length ? "primary" : undefined });
+      const askForm = cs.field("action-question", "act.owed_actioninquiry.label.action", { max: 500, help: "action.noreply.question.help" })
+        + '<div class="mk-acts">' + ask + "</div>";
+      const question = !ask ? "" : lapsed.length
+        ? '<div class="cs-reason" role="region"><p class="cs-wait" role="status"><b>' + cs.w("action.noreply.title", { date: { html: cs.date(lapsed[0]) } }) + "</b></p>"
+          + '<p class="mk-small">' + cs.w("action.noreply.says") + "</p>" + askForm + "</div>"
+        : '<details class="mk-details"><summary>' + cs.w("action.noreply.question") + "</summary>" + askForm + "</details>";
+
       // R5: the replies, each received one markable as pressure (once).
       const entries = Array.isArray(a.entries) ? a.entries : [];
       const received = corr.filter(function (c) { return c.direction !== "sent"; });
@@ -221,7 +239,7 @@ export const action = Object.freeze({
       const scope = '<p class="mk-note">' + cs.w(a.confidential ? "screen.action.scope.confidential" : "screen.action.scope.open") + "</p>"
         + cs.act("actionscope", { data: { to: a.confidential ? "false" : "true" } });
       const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + hold + scope);
-      return head + pickup + wait + clocks + replies + pressureSec + lawSec + riskSec + manage;
+      return head + pickup + wait + question + clocks + replies + pressureSec + lawSec + riskSec + manage;
     });
   },
 
@@ -306,6 +324,18 @@ export const action = Object.freeze({
       },
       rereads: ["action"],
     },
+    ...OWED({
+      // R23: "Open a question from this": the question the member wrote, with the action as its reference; the new question
+      // opens in the action's project, and this page is unchanged.
+      op: "actioninquiry", label: "action.noreply.question",
+      send: function (view, el, cs) {
+        const question = String(cs.value("action-question") || "").trim();
+        if (!question) return { refuse: "refusal.ACTION_INQUIRY_NO_QUESTION" };
+        return { body: { action: view.subject, question: question } };
+      },
+      rereads: [],
+      done: function (view, answer, cs) { if (answer && answer.inquiry) cs.go("question", answer.inquiry); return { stay: true }; },
+    }),
     {
       // R5: "Record a litigation hold", with a reason (the shell asks it).
       op: "actionhold",

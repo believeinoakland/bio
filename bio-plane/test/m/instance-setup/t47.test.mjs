@@ -2,6 +2,7 @@
    root registers with ai-accounts (R54's T47 clause, re-pointed in T48, N996), at the module's interface. R82 and R83 are tested in t46.test.mjs
    and page.test.mjs beside the requirements they amend. Every refusal has a control (K874). */
 import test from "node:test";
+import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import assert from "node:assert/strict";
 import { boot, frame, io, envOver, stubOver, instanceSetupOps } from "./fixture.mjs";
 import { InstanceSetup, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, GROUP_LOGO_MAX_BYTES,
@@ -148,7 +149,7 @@ test("R85 refusals, each writing nothing: a member or a machine NOT_AN_ADMIN; no
     assert.equal(w.m.groupLanguagesSet({ languages: ["en"], by }).code, "NOT_AN_ADMIN", String(by));
   const tags20 = ["en", "es", "fr", "de", "it", "pt", "nl", "sv", "da", "fi", "pl", "cs", "ru", "uk", "el", "tr", "ar", "he", "hi", "vi"];
   assert.equal(tags20.length, GROUP_LANGUAGES_MAX);
-  const row = INSTANCE_SETUP_CHECKS.LANGUAGE_MALFORMED;
+  const row = TRANSLATIONS_CHECKS.LANGUAGE_MALFORMED;
   for (const languages of [undefined, "en", [], [...tags20, "ko"], ["en", "not a tag!"], ["en", 7], [""]]) {
     const r = w.m.groupLanguagesSet({ languages, by: "admin" });
     assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, "LANGUAGE_MALFORMED", row.check, row.translation], JSON.stringify(languages));

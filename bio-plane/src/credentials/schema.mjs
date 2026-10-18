@@ -119,7 +119,11 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
   expires_at      TEXT,
   -- R63 (T47; N955): the run a segment's credential is bound to, minted by the plane at the member's act
   -- (aiRunCredentialMint); NULL for every credential R12 mints. Never back-filled.
-  run             TEXT
+  run             TEXT,
+  -- R79 (T50; N1186): the project a run's credential was minted in (aiRunCredentialMint's optional \`project\`), the
+  -- project that fences the viewer the credential makes; NULL for a credential minted with none, and for every
+  -- earlier one. Never changes after minting; never back-filled.
+  project         TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_run ON ai_credentials(run);
@@ -154,7 +158,10 @@ CREATE TABLE IF NOT EXISTS ai_grants (
   member_id TEXT NOT NULL,
   session   TEXT NOT NULL,
   expires   INTEGER NOT NULL,
-  kind      TEXT
+  kind      TEXT,
+  -- R79 (T50; N1186): the project an ask's grant was minted in (R27's optional \`project\`), which fences the viewer it
+  -- makes; NULL for a grant minted with none, a standing question's, and every earlier one. Never changes after minting.
+  project   TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_grants_member ON ai_grants(member_id);
 
@@ -250,6 +257,9 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["keyed_services", "form", "TEXT"],
   /* R63 (T47): the run a segment's credential is bound to; NULL for every earlier credential */
   ["ai_credentials", "run", "TEXT"],
+  /* R79 (T50): the project a grant or a run's credential was minted in; NULL for every earlier one */
+  ["ai_credentials", "project", "TEXT"],
+  ["ai_grants", "project", "TEXT"],
   /* R65, R66 (T47): a session's device, its last activity and its re-ask window */
   ["sessions", "device", "TEXT"],
   ["sessions", "last_active", "INTEGER"],

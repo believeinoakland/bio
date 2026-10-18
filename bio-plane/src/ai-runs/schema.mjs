@@ -10,7 +10,9 @@ export const AI_RUNS_ADDED_COLUMNS = Object.freeze(["lens_at_open", "rerun_of", 
   /* R77 (T45): a re-examination run's response, stored verbatim; NULL for every other run */
   "response",
   /* R78 (T46): the test-instance exception's label a run was admitted under, JSON; NULL for a run the bar admitted */
-  "untested"]);
+  "untested",
+  /* R89 (T50): the project a run was opened in, recorded at the open and never changed; NULL for a run opened with none */
+  "project"]);
 
 export const AI_RUNS_SCHEMA = `
 
@@ -76,7 +78,10 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   response              TEXT,
   -- R78 (T46): the 'untested' label (run-rules R29's untestedLabel) a run admitted on the test-instance exception
   -- carries, recorded at the open and never derived later (R32); NULL for a run the bar admitted.
-  untested              TEXT
+  untested              TEXT,
+  -- R89 (T50; N1186): the project the run was opened in (for a project context, that project), fixed at the open and
+  -- never changed; the segment credential of a member's dispatch carries it (credentials R79). NULL when none.
+  project               TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);

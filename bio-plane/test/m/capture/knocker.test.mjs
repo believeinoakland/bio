@@ -13,6 +13,7 @@ import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import * as signatures from "../../../src/sshsig.mjs";
 import { NS_RATIFY, NS_RELEASE } from "../../../src/sshsig.mjs";
 import { ARCHIVE_SERVICE, ARCHIVE_SAVE_BASE, TSA_ENDPOINTS } from "../../../src/tsa.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 function setup({ evidence = true, env = {} } = {}) {
   const b = evidence ? bucket() : null;
@@ -122,11 +123,12 @@ const REPLAY = "https://web.archive.org/web/20260930110001id_/https://a.example/
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 /* `tsa`: each authority's answer in TSA_ENDPOINTS order (a status, or "granted": a token bound to `d`); `save`: the
    archived locator the archive's save answers, or null for a 523; `replay`: the raw replay's bytes, or null (a 404). */
-const authorities = (d, { tsa = [], save = ARCHIVED, replay = null } = {}) => network((url) => {
+const authorities = (d, { tsa = [], save = ARCHIVED, replay = null, replayError = null } = {}) => network((url) => {
   const i = TSA_ENDPOINTS.indexOf(url);
   if (i >= 0) return tsa[i] === "granted" ? new Response(granted(d)) : new Response("", { status: tsa[i] ?? 500 });
   if (url === ARCHIVE_SAVE_BASE + LOCATOR)
     return save ? new Response("", { headers: { "content-location": save.replace("https://web.archive.org", "") } }) : new Response("", { status: 523 });
+  if (url === REPLAY && replayError) return new Error(replayError);
   if (url === REPLAY && replay) return new Response(replay);
   return null;
 });
@@ -147,7 +149,7 @@ test("R68: reattest asks attestation's attest for a fresh timestamp over the dig
                    [["timestamp", TSA_ENDPOINTS[0], false, true], ["timestamp", TSA_ENDPOINTS[1], true, true], ["co_archive", ARCHIVE_SERVICE, true, true]]);
   for (const o of outs) {
     assert.match(o.at, ISO, "dated by its own attempt");
-    assert.equal(o.proves, `proves the bytes existed by ${o.at}, not at capture`);
+    assert.equal(o.proves, word("capture.text.proves_bytes_existed", { at: o.at }));
   }
   assert.equal(outs[0].note, "http 500", "a failed attempt is kept with its reason");
   /* the token, stored under its own digest, is the attestation over this capture */
@@ -157,21 +159,36 @@ test("R68: reattest asks attestation's attest for a fresh timestamp over the dig
   assert.deepEqual([r.attestation.over, r.attestation.sha256, r.attestation.kind], [w.d, tok.token_sha256, "rfc3161"]);
   const co = outs[2];
   assert.deepEqual([co.matches, co.archived_locator, co.replay, co.replay_sha256], [true, ARCHIVED, REPLAY, w.d]);
+  assert.equal(co.match_basis, word("capture.match_basis.co_archive_replay"));
+  assert.equal(r.note, word("capture.note.attempt_recorded_late"));
   assert.deepEqual(w.c.lateAttestationsOf(w.d).late_attestations.map((o) => [o.seq, o.by, o.kind, o.matches ?? null]),
                    [[1, "m1", "timestamp", null], [2, "m1", "timestamp", null], [3, "m1", "co_archive", true]], "appended in order");
   /* a replay of other bytes: false; no archived locator, or no replay: undetermined, with the reason */
   const w2 = reWorld();
   const r2 = await run(authorities(w2.d, { tsa: ["granted"], replay: "something else" }), () => w2.c.reattest({ captureSha: w2.d, locator: LOCATOR }));
-  assert.deepEqual([r2.late_attestations[1].matches, r2.late_attestations[1].match_basis], [false, "the co-archive's replay holds other bytes than the capture"]);
+  assert.deepEqual([r2.late_attestations[1].matches, r2.late_attestations[1].match_basis], [false, word("capture.match_basis.co_archive_replay_holds")]);
   const w3 = reWorld();
   const n3 = authorities(w3.d, { tsa: ["granted"], save: null });
   const r3 = await run(n3, () => w3.c.reattest({ captureSha: w3.d, locator: LOCATOR }));
   assert.deepEqual([r3.late_attestations[1].kind, r3.late_attestations[1].ok, r3.late_attestations[1].note, r3.late_attestations[1].matches],
                    ["co_archive", false, "http 523", "undetermined"]);
+  assert.equal(r3.late_attestations[1].match_basis, word("capture.match_basis.co_archive_gave"));
   assert.ok(!n3.seen.some((x) => x.url.includes("id_/")), "no replay is fetched without an archived locator");
   const w4 = reWorld();
   const r4 = await run(authorities(w4.d, { tsa: ["granted"] }), () => w4.c.reattest({ captureSha: w4.d, locator: LOCATOR }));
-  assert.deepEqual([r4.late_attestations[1].matches, r4.late_attestations[1].match_basis], ["undetermined", "the replay answered 404"]);
+  assert.deepEqual([r4.late_attestations[1].matches, r4.late_attestations[1].match_basis], ["undetermined", word("capture.match_basis.replay_answered", { status: 404 })]);
+  /* a replay that cannot be fetched at all, and one the governor holds back: undetermined, each with its reason */
+  const w6 = reWorld();
+  const r6 = await run(authorities(w6.d, { tsa: ["granted"], replayError: "connection reset" }), () => w6.c.reattest({ captureSha: w6.d, locator: LOCATOR }));
+  assert.equal(r6.late_attestations[1].matches, "undetermined");
+  assert.equal(r6.late_attestations[1].match_basis, word("capture.match_basis.replay_fetched", { e: "connection reset" }));
+  const w7 = reWorld();
+  let asks = 0;
+  const admit = w7.gov.governorAdmit.bind(w7.gov);
+  w7.gov.governorAdmit = (a) => (a.host === "web.archive.org" && ++asks > 1 ? { admitted: false, reason: "cooling_off", retry_in_ms: 5000 } : admit(a));
+  const r7 = await run(authorities(w7.d, { tsa: ["granted"], replay: w7.bytes }), () => w7.c.reattest({ captureSha: w7.d, locator: LOCATOR }));
+  assert.equal(r7.late_attestations[1].matches, "undetermined");
+  assert.equal(r7.late_attestations[1].match_basis, word("capture.match_basis.governor_holding_requests", { g: "cooling_off" }));
   /* no token from any authority: every failed attempt is still appended late; a second reattest appends after the first */
   const w5 = reWorld();
   const n5 = authorities(w5.d, { tsa: [500, 503, 502] });
@@ -210,30 +227,31 @@ test("R68 (R63): reattest refuses BAD_SHA, and R63's absence when no bytes are h
 
 test("R37 (K2607, K2609; T43, N849, N851): capture's own rows are C-118.1, .5, .6, .8, .9 and .10, each at the site in capture that raises it, with the translations the requirements state; the rows that moved to doorbell (C-85.1–C-85.5, C-118.2, .3, .4, .7) are defined in doorbell's table alone, none of them here", () => {
   const want = {
-    EVIDENCE_NOT_HELD: ["C-118.1", "The record holds no stored copy of a document under this fingerprint.", /^src\/capture\/ops\.mjs evidenceAbsent > is-evidence-held$/],
-    NOT_THE_CAPTURING_ACTOR: ["C-118.5", "An account of how a document was captured is added only by the member who captured it, and that is not you, or no member captured it. Nothing was written.",
+    EVIDENCE_NOT_HELD: ["C-118.1", true, /^src\/capture\/ops\.mjs evidenceAbsent > is-evidence-held$/],
+    NOT_THE_CAPTURING_ACTOR: ["C-118.5", true,
                               /^src\/capture\/index\.mjs recordCaptureAccount > is-capturing-actor$/],
-    ACCOUNT_NO_TEXT: ["C-118.6", "An account of how you captured a document says what happened in your own words, and this one is empty. Write it. Nothing was written.",
+    ACCOUNT_NO_TEXT: ["C-118.6", true,
                       /^src\/capture\/index\.mjs recordCaptureAccount > is-account-worded$/],
-    MACHINE_CANNOT_SET_ASIDE: ["C-118.8", "Setting held material aside, or bringing it back, is a member's own act, and no member made this request. Nothing was written.",
+    MACHINE_CANNOT_SET_ASIDE: ["C-118.8", true,
                                /^src\/capture\/index\.mjs #heldActRefusal > is-held-act-by-member$/],
-    SET_ASIDE_NO_REASON: ["C-118.9", "Setting held material aside, or bringing it back, records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written.",
+    SET_ASIDE_NO_REASON: ["C-118.9", true,
                           /^src\/capture\/index\.mjs #heldActRefusal > is-held-act-reasoned$/],
-    UPLOAD_NO_STATEMENT: ["C-118.10", null, /^src\/capture\/index\.mjs uploadCapture > is-upload-stated$/],
+    UPLOAD_NO_STATEMENT: ["C-118.10", true, /^src\/capture\/index\.mjs uploadCapture > is-upload-stated$/],
   };
   /* control: capture's own six rows are present, each whole */
   assert.deepEqual(Object.keys(CAPTURE_CHECKS).sort(), Object.keys(want).sort(), "capture's own rows, and only those");
   for (const [code, [check, translation, where]] of Object.entries(want)) {
     const row = CAPTURE_CHECKS[code];
     assert.equal(row.check, check, code);
-    if (translation) assert.equal(row.translation, translation, code);
-    else assert.ok(typeof row.translation === "string" && row.translation.length > 0, code);
+    /* T50 (N1116): every row's translation is the words of its key, refusal.<CODE>, read through setup-words */
+    assert.equal(row.translation, word(`refusal.${code}`), code);
+    assert.ok(translation && row.translation.length > 0, code);
     assert.match(row.where, where, code);
     assert.ok(Object.isFrozen(row));
   }
   /* the raisers' answers carry the rows: R63's absence */
   const absent = evidenceAbsent(H("a1"), "bio").body;
-  assert.deepEqual([absent.code, absent.check, absent.translation], ["EVIDENCE_NOT_HELD", "C-118.1", want.EVIDENCE_NOT_HELD[1]]);
+  assert.deepEqual([absent.code, absent.check, absent.translation], ["EVIDENCE_NOT_HELD", "C-118.1", word("refusal.EVIDENCE_NOT_HELD")]);
   /* the moved rows (N1073, K3268): no hand-list of `doorbell`'s rows is kept here. `doorbell` is later in the order and
      `capture` does not use it, so its table cannot be read from this module's tests; what the move means is judged from
      this side: the file exports capture's own table alone (no KNOCK_CHECKS family), every row is raised at a site in

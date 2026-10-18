@@ -16,7 +16,8 @@ test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its we
   assert.equal(RUNGS.cite, "reversible"); assert.equal(RUNGS.retire, "terminal"); assert.equal(RUNGS.attest, "attested"); assert.equal(RUNGS.release, "reasoned");
   assert.equal(RUNGS.promote, undefined);
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE });
-  const cases = [["cite", word("weight.reversible.name"), 1], ["retire", word("weight.terminal.name"), 3], ["attest", word("weight.signed.name"), 4], ["release", word("weight.reasoned.name"), 2]];
+  /* R77: a Reversible act draws no dots and no weight name; the rest draw them */
+  const cases = [["retire", word("weight.terminal.name"), 3], ["attest", word("weight.signed.name"), 4], ["release", word("weight.reasoned.name"), 2]];
   for (const [op, name, on] of cases) {
     const b = btn(p, op);
     assert.equal(b.localName, "button");
@@ -25,6 +26,9 @@ test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its we
     assert.ok(b.getAttribute("data-tip").includes(name + ":"), op);
   }
   assert.ok(btn(p, "cite").textContent.startsWith(word("act.cite.label.document")));
+  assert.equal(btn(p, "cite").querySelector(".w"), null, "R77: a Reversible act draws no weight");
+  assert.equal(btn(p, "cite").querySelectorAll(".cs-pips").length, 0);
+  assert.ok(!(btn(p, "cite").getAttribute("data-tip") || "").includes(word("weight.reversible.name")), "nor in its explanation");
   /* R64 amends: promote, RUNG_ABSENT under substrate, carries no weight of its own, only the design kit's mark */
   const h = await boot({ screens: ALL, plane: PLANE });
   assert.equal(btn(h, "promote").querySelector(".w").getAttribute("data-mark"), "reasoned");
@@ -43,12 +47,11 @@ test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither tabl
   assert.ok(p.root().querySelector('[data-slot="m:0"] textarea'));
   const o = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal" }], render: (cs) => cs.act("openoriginal") };
   const q = await boot({ screens: [o], path: "/app/open-file/ab" });
-  /* R64: its mark only (the design kit's), never a weight: it runs on press */
-  assert.equal(btn(q, "openoriginal").querySelector(".w").getAttribute("data-mark"), "reversible");
+  /* R64, R77: its kit mark is Reversible, so none is drawn; it runs on press */
+  assert.equal(btn(q, "openoriginal").querySelector(".w"), null);
   await q.click(btn(q, "openoriginal"));
   assert.equal(q.byOp("openoriginal").length, 1, "runs on press");
   const a = await boot({ screens: ALL, path: "/app/members", plane: { whoami: ok(ADMIN) } });
-  assert.ok(btn(a, "memberadd").querySelector(".w").hasAttribute("data-mark"));
   await a.click(btn(a, "memberadd"));
   assert.equal(a.byOp("memberadd").length, 1, "memberadd runs on press, its mark Reasoned or not");
 });
@@ -339,14 +342,14 @@ test("R11 (K3011) a read (an op OPS declares not mutating) carries no weight mar
   const s = { id: "finder", reads: () => ({}), acts: [{ op: "search" }, { op: "findin" }, { op: "frontier" }, { op: "select" }], render: (cs) => cs.act("search") + cs.act("findin") + cs.act("frontier") + cs.act("select") };
   const p = await boot({ screens: [s], path: "/app/finder" });
   for (const op of ["search", "findin"]) {
-    assert.equal(btn(p, op).querySelector(".w").getAttribute("data-mark"), "reversible", op + ": R64's mark, no weight");
+    assert.equal(btn(p, op).querySelector(".w"), null, op + ": R77: a Reversible mark draws nothing");
     await p.click(btn(p, op));
     assert.equal(p.byOp(op).length, 1, op + " runs on press");
   }
   const { SESSION_OPS } = await import("../../../src/op-declarations/index.mjs");
   assert.equal(btn(p, "frontier") === null, !SESSION_OPS.member.has("frontier"), "frontier is gated by R12 alone");
   assert.equal(OPS.cite.mutating, true);
-  const c = { id: "document", reads: () => ({}), acts: [{ op: "cite" }], render: (cs) => cs.act("cite") };
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "release" }], render: (cs) => cs.act("release") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
-  assert.equal(btn(q, "cite").querySelector(".w").textContent, word("weight.reversible.name"), "control: a mutating act keeps its weight");
+  assert.equal(btn(q, "release").querySelector(".w").textContent, word("weight.reasoned.name"), "control: a mutating act keeps its weight");
 });

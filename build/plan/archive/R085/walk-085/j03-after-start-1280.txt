@@ -1,0 +1,89 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Projects › WALK-085 project
+WALK-085 project
+1 wizard starts here
+WHERE IT STANDS
+Forming
+Investigating
+Matured
+Closed
+THE PROJECT'S BAR
+
+Unrated This project has set no bar of its own.
+
+Capture
+No bar on this axis
+A
+B
+C
+D
+Connection
+No bar on this axis
+A
+B
+C
+D
+
+Choose neither axis to withdraw the project's bar. It never changes the group's bar, and it holds nothing back.
+
+Set this project's bar
+Reasoned
+YOUR FIRST QUESTION
+Your first question
+One question the record could answer, in words a stranger would understand, such as “How many pothole reports did the city close late in 2025?”.
+Open a question
+Reasoned
+Add a document
+WHO CAN FIND IT
+
+Hidden: only its members know it exists.
+
+started Hidden: only its members know it exists., 15 October 2026
+
+Your reason
+It is kept with the act, under your name.
+Change who can find it
+Reversible
+WHAT PAYS FOR THE ASSISTANT HERE
+
+No project account: each member's own account, or the group's key, pays as usual.
+
+Who pays, for which uses and up to what limits: AI for this project
+
+MEMBERS
+sparky · owner
+Stand down as owner
+Reasoned
+
+With one owner, that owner can add a second. After that, every owner agrees before someone becomes an owner or stops being one, each by making the same change.
+
+Only this project's members see its work.
+
+The member's handle
+Invite a member to the project
+Reasoned
+Ask to leave this project
+Reasoned
+What it is about
+One line the members will recognize, such as "Rent at the Coliseum lots". You become its owner.
+Who can find it
+Hidden: only the members you invite know it exists
+Findable: every member of the group sees it in Projects and can ask to join
+Start a project from this one
+Reversible
+Set this project's bar: Sets this project's own bar, with your reason: the strength each of its questions is measured against. It never changes the group's bar and holds nothing back; it shows how far each answer is from the bar.
+Reasoned: asks for your reason, which becomes part of the record.

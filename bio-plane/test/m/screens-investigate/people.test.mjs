@@ -95,7 +95,9 @@ test("R15 people draws \"Added at setup from your group's place\" for an organis
   const p = await open(at, { plane: { peopledirectory: ok(DIRECTORY({ rows, following: 3, in_your_projects: 0 })) } });
   const m = main(p);
   const [a, b, c] = m.querySelectorAll(".cs-row");
-  assert.ok(a.textContent.includes("City Clerk · " + word("screen.people.today.seeded")));
+  assert.ok(a.textContent.includes("City Clerk"));
+  drew(a, "screen.people.today.seeded");
+  drew(a, "screen.people.today.kind.office");
   assert.doesNotMatch(p.root().textContent + m.innerHTML, /counterparties\[0\]|oakland-alameda|jurisdiction profile/, "no machine note anywhere, card included");
   assert.ok(b.textContent.includes("A city department · repairs streets and sewers"));
   notDrew(b, "screen.people.today.seeded");
@@ -121,4 +123,26 @@ test("R25 with nothing followed people draws only its empty state (follows no on
   assert.ok(q.doc.getElementById("people-q"), "one follow draws the full screen");
   assert.ok(button(q, "search"));
   drew(main(q), "screen.people.show.organizations", undefined, "DEC-221's spelling");
+});
+
+test("R37 a seeded office draws its kind beside its name and the seeded line on a line of its own; a row no document names says so and offers no Explore connections; control: a row named in three documents keeps its counts and the act (R13)", async () => {
+  const rows = [{ entity: "ENT-2026-0400", kind: "office", name: "City Clerk", today: { kind: "office", note: "x", machine: true }, documents: 0, questions: 0, projects: 0, newest_added: "2026-09-01T09:00:00Z", mine: false },
+    { entity: "ENT-2026-0401", kind: "body", name: "Public Works", today: { kind: "body", note: "repairs streets", machine: false }, documents: 3, questions: 0, projects: 0, newest_added: "2026-09-02T09:00:00Z", mine: false }];
+  const p = await open(at, { plane: { peopledirectory: ok(DIRECTORY({ rows, following: 2, in_your_projects: 0 })) } });
+  const [a, b] = main(p).querySelectorAll(".cs-row");
+  drew(a, "screen.people.today.kind.office");
+  assert.ok(a.querySelector("[data-seeded]"), "the seeded line stands on its own");
+  drew(a, "screen.people.counts.none");
+  assert.equal(a.querySelectorAll('button[data-act="explore"]').length, 0, "no explore act for a row no document names");
+  drew(b, "screen.people.counts", { list: word("screen.people.count.documents", { n: "3" }) });
+  assert.equal(b.querySelectorAll('button[data-act="explore"]').length, 1);
+  assert.equal(main(p).querySelectorAll("section").filter((x) => x.querySelector("h2").textContent === word("screen.people.others")).length, 0, "no Everyone else heading while no project names anyone");
+});
+
+test("R37 the add form asks the name, then one two-way choice of a person or an organization, then the note, and its button is Follow them", async () => {
+  const p = await open(at);
+  const sel = p.doc.getElementById("people-add-kind");
+  assert.deepEqual(sel.querySelectorAll("option").map((o) => o.textContent), [word("screen.people.add.kind.person"), word("screen.people.add.kind.organization")]);
+  assert.equal(p.doc.getElementById("people-add-name") !== null, true);
+  assert.ok(button(p, "entitycreate").textContent.includes(word("screen.people.add.submit")));
 });

@@ -15,7 +15,7 @@ import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { fileSafetyOf, fileSafetyOps, FILE_SAFETY_TABLES, FILE_SAFETY_MODULE } from "../../../src/file-safety/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../../../src/capture-sources/credentials.mjs";
-import { ARCHIVE_UNPACK, UNPACK_RETRY_LIMIT, UNPACK_PAGE } from "../../../src/plane/unpack.mjs";
+import { ARCHIVE_UNPACK, UNPACK_RETRY_LIMIT, UNPACK_PAGE, archiveUnpackConsumer } from "../../../src/plane/unpack.mjs";
 import { ownHostsOf, bareHost } from "../../../src/plane/wiring.mjs";
 
 const TABLES = FILE_SAFETY_TABLES.map((t) => t.name);
@@ -89,11 +89,13 @@ test("R25 (K2097; capture R45): the drain reads archive-unpack events in pages p
   cap.taskEvents = (a) => { const r = own(a); reads.push({ after: a.after ?? null, n: r.length, shas: r.map((e) => e.captureSha) }); return r; };
   const c = schedulerOf(x.ctx).registry(null).find((r) => r.name === ARCHIVE_UNPACK);
   const now = Date.parse("2026-10-08T00:00:00Z");
-  assert.equal(c.due(now), now, "the newer events are due: a page of 1,000 at the limit does not hide them");
-  assert.equal(c.wake(now), now);
+  assert.equal(await c.due(now), now, "the newer events are due: a page of 1,000 at the limit does not hide them");
+  assert.equal(await c.wake(now), now);
   /* one drain: two pages, the second after the first's last cursor, no event read twice */
   reads.length = 0;
-  const r = await c.tick(now);
+  /* the drain itself, as the plane registers it: the scheduler's own wrapper (R27) also reads `wake` before and after a
+     tick, each a pass over the queue of its own, so the drain's reads are counted on the consumer it wraps */
+  const r = await archiveUnpackConsumer({ capture: () => cap, env }).tick(now);
   assert.deepEqual(reads.map((p) => p.n), [1000, 200]);
   assert.equal(reads[0].after, null);
   assert.equal(typeof reads[1].after, "string");
@@ -112,7 +114,7 @@ test("R25 negative control: a queue shorter than a page is read once, from the h
   const own = cap.taskEvents.bind(cap);
   cap.taskEvents = (a) => { reads.push(a.after ?? null); return own(a); };
   const c = schedulerOf(x.ctx).registry(null).find((r) => r.name === ARCHIVE_UNPACK);
-  assert.equal(c.due(Date.parse("2026-10-08T00:00:00Z")) !== null, true);
+  assert.equal((await c.due(Date.parse("2026-10-08T00:00:00Z"))) !== null, true);   /* scheduler R27: awaited */
   assert.deepEqual(reads, [null]);
 });
 

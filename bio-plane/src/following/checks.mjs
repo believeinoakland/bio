@@ -9,73 +9,44 @@
  * (`listenerRefusal`), answered through it, never minted here. No translation names a place (R18), and none names the
  * group's own system other than as "your group's Civicsmith" (DEC-149); none needs to. */
 
+import { word } from "../setup-words/index.mjs";
+
 const at = (fn, region) => `src/following/index.mjs ${fn} > ${region}`;
-const row = (n, fn, region, translation) => Object.freeze({ check: `C-137.${n}`, where: at(fn, region), translation });
+const row = (code, n, fn, region) => Object.freeze({ check: `C-137.${n}`, where: at(fn, region), translation: word(`refusal.${code}`) });
 
 export const FOLLOWING_CHECKS = Object.freeze({
-  MACHINE_CANNOT_FOLLOW: row(1, "#actorRefusal", "is-follow-member",
-    "A follow, and the body a watch is captured before, is a member's own act; the machine follows nothing of its own "
-    + "accord. Nothing was written."),
-  NO_SUCH_HOME: row(2, "#actorRefusal", "is-follow-home",
-    "A follow lives in the project of a bundle you may see, named as its home; no such bundle was named. Nothing was "
-    + "written."),
-  NO_SUCH_BODY: row(3, "followBody", "is-follow-body",
-    "No body by that id is registered that you may see. Nothing was written."),
-  NO_LEGISTAR_ID: row(4, "followBody", "is-follow-legistar",
-    "That body holds no identifier in a scheme the active jurisdiction profiles name for Legistar, so its records "
-    + "cannot be read there. Nothing was written."),
-  BAD_PERIOD: row(5, "followBody", "is-follow-period",
-    "A follow names the days it covers: a first day, and a last day not before it, or none. Nothing was written."),
-  BAD_FOLLOW_CADENCE: row(6, "#cadence", "is-follow-cadence",
-    "A follow is read daily, weekly or monthly. Choose one of these. Nothing was written."),
-  NO_SUCH_FOLLOW: row(7, "#follow", "is-follow-held",
-    "No follow of that kind that you may see is held under that id. Nothing was changed."),
-  NOT_THE_AUTHOR: row(8, "unfollow", "is-follow-author",
-    "A follow is ended only by the member who made it. Nothing was changed."),
-  NO_LOCATOR: row(9, "followRegister", "is-follow-locator",
-    "A register or a portal is followed at a public https address. Nothing was written."),
-  BAD_RENDER: row(10, "followRegister", "is-follow-render",
-    "Whether the register is re-rendered is yes or no. Nothing was written."),
-  BAD_GATE: row(11, "#gated", "is-follow-gate",
-    "A register behind an account or a fee is declared as one or the other, and one that charges a fee names its "
-    + "price, so you see it before any refresh. Nothing was written."),
-  PERSON_QUERY_NOT_NAMED: row(12, "followPersonQuery", "is-person-query-named",
-    "A person is followed only through one register's own query for one identifier you name, in a scheme the active "
-    + "profiles list for that register, at the register's own address for it, in your project; a query by name alone "
-    + "or across registers is not followed. Nothing was written."),
-  NO_KEY: row(13, "followPortal", "is-portal-key",
-    "A portal follow declares the field that keys its rows. Nothing was written."),
-  NO_SUCH_MEETING_ADDRESS: row(14, "perMeetingBody", "is-meeting-address",
-    "No address you may see is watched per meeting, so no body's meetings can be named for it. Nothing was written."),
-  NO_SUCH_SNAPSHOT: row(15, "snapshotDiff", "is-snapshot-held",
-    "Each snapshot is named by its number among this portal follow's snapshots; one named is not held. Nothing was "
-    + "changed."),
-  NOT_GATED: row(16, "refreshRegister", "is-refresh-gated",
-    "A public register is read on its schedule; a member's refresh is only for one behind an account or a fee. "
-    + "Nothing was read."),
-  NOT_THE_FOLLOWER: row(17, "refreshRegister", "is-refresh-follower",
-    "Only the member who follows this register refreshes it, with their own credential. Nothing was read."),
-  PRICE_FIRST: row(18, "refreshRegister", "is-refresh-price",
-    "This register charges a fee; the refresh runs only once its price, as shown, is accepted. Nothing was read."),
-  NO_CREDENTIAL: row(19, "refreshRegister", "is-refresh-credential",
-    "A register behind an account is read with your own credential, and none was given. Nothing was read."),
-  NOT_READ: row(20, "refreshRegister", "is-refresh-read",
-    "The register could not be read; the reason is beside this. Nothing was changed."),
-  WATCH_ENDED: row(21, "watchLink", "is-watch-live",
-    "That watch has already ended, so it can no longer be linked or given an end date. Nothing was written."),
-  MACHINE_CANNOT_LINK_WATCH: row(22, "watchLink", "is-link-member",
-    "Linking a watch to a plan, and answering whether to keep it, is a member's own act; the machine does neither. "
-    + "Nothing was written."),
-  NO_SUCH_WATCH: row(23, "watchLink", "is-watch-seen",
-    "No watch of that kind that you may see is held under that id. Nothing was written."),
-  WATCH_NOT_ASKED: row(24, "watchAnswer", "is-answer-asked",
-    "There is no question about keeping this watch that is yours to answer now. Nothing was written."),
-  WATCH_RELIED_ON: row(25, "watchAnswer", "is-answer-relied",
-    "Something else still relies on this watch, so it is shown but not offered for keeping or stopping here. Nothing "
-    + "was written."),
-  BAD_PROCEEDING_DATES: row(26, "proceedingDates", "is-proceeding-dates",
-    "A proceeding's dates are read between two calendar days, written year-month-day, the first not after the second. "
-    + "Nothing was read."),
+  MACHINE_CANNOT_FOLLOW: row("MACHINE_CANNOT_FOLLOW", 1, "#actorRefusal", "is-follow-member"),
+  NO_SUCH_HOME: row("NO_SUCH_HOME", 2, "#actorRefusal", "is-follow-home"),
+  NO_SUCH_BODY: row("NO_SUCH_BODY", 3, "followBody", "is-follow-body"),
+  NO_LEGISTAR_ID: row("NO_LEGISTAR_ID", 4, "followBody", "is-follow-legistar"),
+  BAD_PERIOD: row("BAD_PERIOD", 5, "followBody", "is-follow-period"),
+  BAD_FOLLOW_CADENCE: row("BAD_FOLLOW_CADENCE", 6, "#cadence", "is-follow-cadence"),
+  NO_SUCH_FOLLOW: row("NO_SUCH_FOLLOW", 7, "#follow", "is-follow-held"),
+  NOT_THE_AUTHOR: row("NOT_THE_AUTHOR", 8, "unfollow", "is-follow-author"),
+  NO_LOCATOR: row("NO_LOCATOR", 9, "followRegister", "is-follow-locator"),
+  BAD_RENDER: row("BAD_RENDER", 10, "followRegister", "is-follow-render"),
+  BAD_GATE: row("BAD_GATE", 11, "#gated", "is-follow-gate"),
+  PERSON_QUERY_NOT_NAMED: row("PERSON_QUERY_NOT_NAMED", 12, "followPersonQuery", "is-person-query-named"),
+  NO_KEY: row("NO_KEY", 13, "followPortal", "is-portal-key"),
+  NO_SUCH_MEETING_ADDRESS: row("NO_SUCH_MEETING_ADDRESS", 14, "perMeetingBody", "is-meeting-address"),
+  NO_SUCH_SNAPSHOT: row("NO_SUCH_SNAPSHOT", 15, "snapshotDiff", "is-snapshot-held"),
+  NOT_GATED: row("NOT_GATED", 16, "refreshRegister", "is-refresh-gated"),
+  NOT_THE_FOLLOWER: row("NOT_THE_FOLLOWER", 17, "refreshRegister", "is-refresh-follower"),
+  PRICE_FIRST: row("PRICE_FIRST", 18, "refreshRegister", "is-refresh-price"),
+  NO_CREDENTIAL: row("NO_CREDENTIAL", 19, "refreshRegister", "is-refresh-credential"),
+  NOT_READ: row("NOT_READ", 20, "refreshRegister", "is-refresh-read"),
+  WATCH_ENDED: row("WATCH_ENDED", 21, "watchLink", "is-watch-live"),
+  MACHINE_CANNOT_LINK_WATCH: row("MACHINE_CANNOT_LINK_WATCH", 22, "watchLink", "is-link-member"),
+  NO_SUCH_WATCH: row("NO_SUCH_WATCH", 23, "watchLink", "is-watch-seen"),
+  WATCH_NOT_ASKED: row("WATCH_NOT_ASKED", 24, "watchAnswer", "is-answer-asked"),
+  WATCH_RELIED_ON: row("WATCH_RELIED_ON", 25, "watchAnswer", "is-answer-relied"),
+  BAD_PROCEEDING_DATES: row("BAD_PROCEEDING_DATES", 26, "proceedingDates", "is-proceeding-dates"),
+  /* T50 (R32, R33; N1092): watch marks and second-look flags. `MACHINE_CANNOT_MARK` is sources' C-121.7 and is answered
+     bare (no row minted here), so no code is held in two families. */
+  MARK_NO_ITEM: row("MARK_NO_ITEM", 27, "#markRefusal", "is-mark-item-named"),
+  MARK_NO_SUCH_ITEM: row("MARK_NO_SUCH_ITEM", 28, "#markRefusal", "is-mark-item-seen"),
+  SECOND_LOOK_NO_NOTE: row("SECOND_LOOK_NO_NOTE", 29, "secondLook", "is-second-look-note"),
+  SECOND_LOOK_NOT_OPEN: row("SECOND_LOOK_NOT_OPEN", 30, "secondLookClear", "is-second-look-open"),
 });
 
 /** A refusal answer naming one of this module's rows (DEC-49): `{ok: false, reason, code, check, translation, detail,

@@ -1368,13 +1368,13 @@ function parseTokens(tokens, implicitOp, ctx) {
     if (t.k === ")") return null;
     if (t.k === "and" || t.k === "or") { eat(); return primary(); } // a dangling operator is noise
     if (t.k === "not") { eat(); const k = unary(); return k ? { op: "not", kid: k } : null; }
-    if (t.k === "term") { eat(); return textAtom(null, t.value, t.quoted, ctx); }
+    if (t.k === "term") { eat(); return bareAtom(textAtom(null, t.value, t.quoted, ctx)); }
     if (t.k === "sel") { eat(); return selector(t, ctx); }
     if (t.k === "near") {
       eat();
       if (t.field && t.field.toLowerCase() === "passage") return meaningAtom("passage", t, ctx);
-      return nearAtom(t.near, (term) => textAtom(null, term.value, term.quoted, ctx),
-                      (atom) => { ctx.textAtoms.push(atom); return atom; }, ctx);
+      return nearAtom(t.near, (term) => bareAtom(textAtom(null, term.value, term.quoted, ctx)),
+                      (atom) => { ctx.textAtoms.push(atom); return bareAtom(atom); }, ctx);
     }
     eat();
     return null;
@@ -1412,6 +1412,13 @@ function parseTokens(tokens, implicitOp, ctx) {
   };
   const ast = orExpr();
   return ast;
+}
+
+/* R31: a text atom a member typed as a bare word, phrase, prefix or `NEAR` group (not `text:`) is marked, so
+   `rows=passage` can read it as a `passage:` term. The mark changes nothing else about the atom. */
+function bareAtom(atom) {
+  if (atom) atom.bare = true;
+  return atom;
 }
 
 /* A free-text atom. `column` restricts it to one FTS column; null matches every
@@ -2247,7 +2254,61 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   const frs = fieldRelationsOf(relation, ctx.warnings);
   ctx.frs = frs;
   const fieldRef = (col) => (frs.has(col) ? fieldValue(frs.get(col)) : ref(col));
-  const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
+  let ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
+  const rowArm = typeof rows === "string" && rows.toLowerCase() in MEANING ? rows.toLowerCase() : null;
+  /* R31 (R085-21): under `rows=passage`, a query with no `passage:` term reads its positive bare words as
+     `passage:` terms, so the scope is what `passage:` gives and not the bundles whose own text holds the words.
+     `text:`, a negated word and every selector keep their meaning. */
+  if (rowArm === "passage") {
+    const hasPassage = (n) => !!n && typeof n === "object"
+      && ((n.op === "meaning" && n.arm === "passage" && n.field) || hasPassage(n.kid) || (Array.isArray(n.kids) && n.kids.some(hasPassage)));
+    if (!hasPassage(ast)) {
+      const sub = MEANING.passage.sub.text;
+      const moved = new Set();
+      const toPassage = (n, negated) => {
+        if (!n || typeof n !== "object") return n;
+        if (n.op === "not") { const k = toPassage(n.kid, !negated); return k === n.kid ? n : { ...n, kid: k }; }
+        if (Array.isArray(n.kids)) return { ...n, kids: n.kids.map((k) => toPassage(k, negated)) };
+        if (n.op !== "text" || !n.bare || negated) return n;
+        moved.add(n);
+        ctx.meaningArms.push({ arm: "passage", field: "text", column: sub.col });
+        const expr = ftsAtom(n);
+        ctx.passageTerms.push(expr);
+        return { op: "meaning", arm: "passage", field: "text", col: sub.col, cmp: "match", value: n.value, fts: expr };
+      };
+      ast = toPassage(ast, false);
+      if (moved.size) {
+        ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
+        ctx.warnings.push("words read as passage words (rows=passage); use text: for the record's own text");
+      }
+    }
+  }
+  /* R32 (R085-27): under `rows=leg`, a query with no `text:` term ignores its positive bare words, so the scope
+     is not narrowed to bundles whose own text holds them. `text:`, a negated word and every selector keep their
+     meaning. */
+  if (rowArm === "leg") {
+    const hasText = (n) => !!n && typeof n === "object"
+      && ((n.op === "text" && !n.bare) || hasText(n.kid) || (Array.isArray(n.kids) && n.kids.some(hasText)));
+    if (!hasText(ast)) {
+      const moved = new Set();
+      const drop = (n, negated) => {
+        if (!n || typeof n !== "object") return n;
+        if (n.op === "not") { const k = drop(n.kid, !negated); return k === n.kid ? n : k ? { ...n, kid: k } : null; }
+        if (Array.isArray(n.kids)) {
+          const kids = n.kids.map((k) => drop(k, negated)).filter(Boolean);
+          return !kids.length ? null : kids.length === 1 ? kids[0] : { ...n, kids };
+        }
+        if (n.op !== "text" || !n.bare || negated) return n;
+        moved.add(n);
+        return null;
+      };
+      ast = drop(ast, false);
+      if (moved.size) {
+        ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
+        ctx.warnings.push("bare words ignored (rows=leg); use text: for the record's own text");
+      }
+    }
+  }
   /* An explicit sort parameter outranks a `sort:` token in the query string:
      the parameter is a header the member just clicked, the token is what they
      typed earlier. */
@@ -2359,7 +2420,6 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      clamped against two ceilings is one number a caller cannot reason about. The
      cap PUBLISHED by the op is this one, after clamping and never the number
      asked for (REC-57). */
-  const rowArm = typeof rows === "string" && rows.toLowerCase() in MEANING ? rows.toLowerCase() : null;
   const mLim = Math.max(1, Math.min(MEANING_LIMIT_MAX, Math.floor(Number(rowLimit) || MEANING_LIMIT_DEFAULT)));
   const mOff = Math.max(0, Math.floor(Number(rowOffset) || 0));
 
@@ -2415,22 +2475,51 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
 
   const cols = PROVENANCE_COLS.map(ref).join(", ");
   const joinRanked = rank ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
+  /* R33 (T50; N1166): the page's `snippet` and `snippet_from`, both always columns, never missing keys. A text snippet
+     is cut from the record's `body`, else its `title`, and from no other column (R19): `meta` (the bundle id and the
+     flattened frontmatter) and the locator and authority are not words a member wrote to be read. FTS5's
+     `snippet(table, -1, …)` chose the best column, `meta` included, so the column is named, and a column holds a match
+     only when `highlight()` changed its text (a marker character the text may itself hold changes nothing there). With
+     no text snippet and a `passage:` term, the snippet is the first matching unit of the hit's captures, by capture
+     sha and then reading order (`seq`), cut as the text one is: the same brackets, ellipsis and clamp (R12). Both are
+     cut for the page's rows only, after the order and the limit. */
+  const BODY = FTS_COLUMNS.indexOf("body"), TITLE = FTS_COLUMNS.indexOf("title");
+  const pm = MEANING.passage;
   const page = () => {
     const c = cte(true);
-    if (!rank)
-      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet FROM scope s ${rowJoin}${joinRanked}\n`
+    if (!rank && !passageMatch)
+      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet, NULL AS snippet_from FROM scope s ${rowJoin}${joinRanked}\n`
                   + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
     /* D-447: the snippet and NOT the score — the answer publishes the ORDER relevance produced, never its number.
        The snippet is cut for the PAGE's rows only, after the order and the LIMIT: `snippet()` re-reads a row's text,
        and cutting one for every match measured ~65 ms of a 2,000-match search (MEASUREMENTS M-122). It needs no
        statistics, so where it is cut changes nothing a viewer can compare. */
     const pcols = PROVENANCE_COLS.map((c2) => `p.${c2}`).join(", ");
-    return { sql: `${c.sql}\nSELECT ${pcols}, (SELECT snippet(bundles_fts, -1, '[', ']', '\u2026', ?) FROM bundles_fts `
-                + `WHERE bundles_fts MATCH ? AND rowid = p._fid) AS snippet\n`
+    const qcols = PROVENANCE_COLS.map((c2) => `q.${c2}`).join(", ");
+    const mark = `char(1)`;
+    const ts = rank
+      ? `(SELECT CASE`
+        + ` WHEN highlight(bundles_fts, ${BODY}, ${mark}, ${mark}) <> bundles_fts.body`
+        + ` THEN snippet(bundles_fts, ${BODY}, '[', ']', '\u2026', ?)`
+        + ` WHEN highlight(bundles_fts, ${TITLE}, ${mark}, ${mark}) <> bundles_fts.title`
+        + ` THEN snippet(bundles_fts, ${TITLE}, '[', ']', '\u2026', ?) END`
+        + ` FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid = p._fid)`
+      : `NULL`;
+    const tsArgs = rank ? [snip, snip, rank] : [];
+    const ps = passageMatch
+      ? `(SELECT snippet(${pm.ftsTable}, ${pm.ftsColumn}, '[', ']', '\u2026', ?) FROM ${pm.table} ct`
+        + ` JOIN ${pm.ftsTable} ON ${pm.ftsTable}.rowid = ct.rowid`
+        + ` WHERE ct.${pm.key} = p.bundle_id AND ${pm.ftsTable} MATCH ?`
+        + ` ORDER BY ct.capture_sha ASC, ct.seq ASC, ct.extent_kind ASC, ct.extent ASC LIMIT 1)`
+      : `NULL`;
+    const psArgs = passageMatch ? [snip, passageMatch] : [];
+    return { sql: `${c.sql}\nSELECT ${qcols}, COALESCE(q.ts, q.ps) AS snippet,`
+                + ` CASE WHEN q.ts IS NOT NULL THEN 'text' WHEN q.ps IS NOT NULL THEN 'passage' END AS snippet_from\n`
+                + `FROM (SELECT ${pcols}, p._pos AS _pos, ${ts} AS ts, ${ps} AS ps\n`
                 + `FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos `
                 + `FROM scope s ${rowJoin}${joinRanked}\n`
-                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?) p\nORDER BY p._pos`,
-             args: [...c.args, snip, rank, ...gate.args, lim, off] };
+                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?) p) q\nORDER BY q._pos`,
+             args: [...c.args, ...tsArgs, ...psArgs, ...gate.args, lim, off] };
   };
   const count = () => {
     const c = cte(false);

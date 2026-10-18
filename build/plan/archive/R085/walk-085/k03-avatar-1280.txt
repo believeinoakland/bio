@@ -1,0 +1,84 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Home
+Believe In Oakland
+2 wizards start here
+EACH AREA AT A GLANCE
+Investigation
+1 project
+1 question
+Last change 15 October 2026: WALK-085 project
+Members
+1 member
+Administration
+0.85.0 this release
+Places: City of Oakland and Alameda County
+languages: American English
+PROJECTS
+WALK-085 project
+1 question
+Forming
+Investigating
+Matured
+Closed
+Owner: sparky
+S
+1
+busy
+Last change 15 October 2026
+What happened?
+
+Choose what fits, or describe it in your own words. Nothing here is the one right way in.
+
+A problem I live with
+Potholes, dumping, a bill, a service
+A person
+An official, a name in the news
+A payment or contract
+A budget line, a lease, a change order
+Something I read
+A code, a court case, a story, minutes
+A tip or documents
+Something someone handed you
+Help for my own situation
+
+
+A notice, a bill, a repair, a deadline that's yours alone: not Civicsmith's work, but it knows where to send you
+What happened, in your own words
+Start from…
+Reversible
+
+None of these: start a project from a blank page.
+
+Start a project
+Assistant
+
+It finds, reads and checks; it never concludes, signs or sends.
+
+The assistant serves you here on: your own account
+
+ESTIMATED DOLLARS A DAY, THE LAST 30 DAYS
+16 September 2026
+15 October 2026, today, so far
+Last 30 days: $0.00, 0 calls · busiest 16 September 2026, $0.00
+Everything (the overall limit) · (dollars, estimated) · month: $0.00 · No limit is set, so there is nothing to measure against: only Anthropic's own spending limit on the key caps this account.
+THE ASSISTANT'S RUN
+
+No run yet. Ask it to work on this, and it reads what the group holds about it.
+
+The assistant works on a question or a project; open one to ask it.
+
+How quickly explanations open. Promptly, everything opens when you rest on it for half a second; on a longer pause, what screens, sections and acts are waits a second and a half. Keyboard focus and a tap always show everything at once; nothing is ever hidden. Click, or press Alt+Shift+I, to switch.
