@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01G31x27GuFV84fTJFmbxZNa · depth 2 · COMPLETE · handled B2
+**Status** · session_01G31x27GuFV84fTJFmbxZNa · depth 2 · COMPLETE · handled B3
 
 ## Completion record (T51, B1 START)
 
