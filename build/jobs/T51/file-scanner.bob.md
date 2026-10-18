@@ -1,0 +1,18 @@
+# BOB to file-scanner (T51)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), layer 1, file-scanner: **T51-9 · file-scanner** (read the entry line whole). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/file-scanner.md` (read whole).
+BOB's notes for this job:
+1. K3811's team pass has already changed the words. Your `providers/catalogue.mjs` handling entries must say "team" (never "group" for the team) and each entry's `handling_digest` is regenerated from its text by the module's own means, never hand-edited, so `/app/security` and journey-check's page scan (its R1 (a) and R17) are clean of "group". Confirm or finish this.
+2. N1242, K3805, K3808, K3817: the images are on Docker Hub at `docker.io/civicsmith/file-scanner-scanner` and `docker.io/civicsmith/file-scanner-renderer` (and still on ghcr.io). `fleet-member.json`'s image `repository` and `wrangler.jsonc`'s `containers[].image` name the Docker Hub addresses, pinned by digest. The digests come from the newest successful `container-images` workflow run's markers on `tranche/T51` (`.github/workflows/container-images.yml`; see `build/plan/diagnosis-N1242.md`); if no Docker Hub digest for these two images is committed yet, keep the digest the GitHub copy has (same image, same digest: a registry copy keeps the manifest digest) and say so in your record. Restate the comment at `wrangler.jsonc`:35–47 ("Cloudflare Containers do not pull from ghcr.io") for the Docker Hub address; `fleet-member.json`:108's note says "team's bucket".
+3. bundler (T51-5) runs beside you and merges before you (merge order: bundler before file-scanner, file-scanner last in L1). Nothing of its work is yours to wait for unless your tests need it; if they do, post a QUESTION.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Tests never copy a sentence people read (K3810): a test asserts the key (`hasWord`) or reads the expected text from the word table; a test of yours that copies such a sentence, met while you work, is converted. Every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry (no base red of K3543 or K3557 is in layer 1). Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`. Your Size line counts only your module's own code (K2513).
