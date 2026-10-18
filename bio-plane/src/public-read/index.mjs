@@ -877,17 +877,17 @@ export class PublicRead {
         withdrawn: this.#withdrawnStamp(pin.case_id, ced),
         finding, version_sha: version, pinned: version === null ? null : version === finding.bundle_sha,
         strength, strength_from: strength ? from : null,
-        ...(!withheld && !rows.length ? { strength_detail: "this case edition records no frozen pair for this finding, and none is supplied here" } : {}),
+        ...(!withheld && !rows.length ? { strength_detail: word("public-read.frozen.strength_detail.none") } : {}),
         signed_by: signedBy, delivered_by: withheld || !state.document ? null : state.document.delivered_by ?? null,
         finding_signed_by: findingBy,
         ...(!withheld && (!signedBy || !findingBy)
-          ? { signer_detail: "a signer this answer does not state is one no signed document held here names; the case document's signer and the finding's own are two facts, and neither stands in for the other" } : {}),
+          ? { signer_detail: word("public-read.frozen.signer_detail.unstated") } : {}),
         withheld });
     }
     return { ok: true, id: want, cases,
              detail: cases.length
-               ? "each entry is one published case edition's own frozen reading of this finding, as that case's signed document states it; no case's reading stands for another, and none is combined with any other"
-               : "this finding is published and no published case edition pins it, so no case froze a reading of it" };
+               ? word("public-read.frozen.detail.cases")
+               : word("public-read.frozen.detail.none") };
   }
 
   /* REC-22: ONE PUBLISHED EDITION, everything the public read path can say about

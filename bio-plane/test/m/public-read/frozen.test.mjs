@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, SIG } from "./fixture.mjs";
+import { hasWord, word } from "../../../src/setup-words/index.mjs";
 import { rowOf } from "../../../src/public-read/checks.mjs";
 import { PUBLIC_READ_OWN_OPS } from "../../../src/public-read/reads.mjs";
 
@@ -40,7 +41,7 @@ function twoCases({ second = true, secondStrength = [{ target: F, axis: "capture
 test("R38 a finding two cases pin answers one entry for each, in case order, each with its own frozen pair, its signers and `pinned: true`", () => {
   const { w, pin, proj, proj2 } = twoCases();
   const r = w.read("publishedfrozen", { id: F });
-  assert.deepEqual([r.ok, r.id, typeof r.detail], [true, F, "string"]);
+  assert.deepEqual([r.ok, r.id, r.detail], [true, F, word("public-read.frozen.detail.cases")]);
   assert.deepEqual(r.cases.map((c) => [c.case_id, c.edition, c.project]), [[C1, 1, proj], [C2, 1, proj2]]);
   const [a, b] = r.cases;
   assert.deepEqual([a.finding, b.finding], [{ edition: 1, bundle_sha: pin }, { edition: 1, bundle_sha: pin }],
@@ -101,8 +102,7 @@ test("R38 a finding in no case answers `cases: []` and says so; an edition not y
   assert.equal(w.signFinding("INFO-2026-0002-loose", {}).ok, true);
   const loose = w.read("publishedfrozen", { id: "INFO-2026-0002-loose" });
   assert.deepEqual([loose.ok, loose.id, loose.cases], [true, "INFO-2026-0002-loose", []]);
-  assert.equal(typeof loose.detail, "string");
-  assert.notEqual(loose.detail, w.read("publishedfrozen", { id: F }).detail, "and its statement is not the one a case-holding answer makes");
+  assert.equal(loose.detail, word("public-read.frozen.detail.none"), "and its statement is not the one a case-holding answer makes");
   /* a case edition prepared but never signed has no published row: it pins nothing here */
   w.prepare(C2, 1, { project: proj, roles, strength: [{ target: F, axis: "capture", grade: "A" }] });
   assert.deepEqual(w.read("publishedfrozen", { id: F }).cases.map((c) => c.case_id), [C1], "an unsigned preparation is not listed");
@@ -185,4 +185,19 @@ test("R38 a pre-/2 case document, which states no pair of its own, is read from 
   const [a] = w.read("publishedfrozen", { id: F }).cases;
   assert.deepEqual([a.strength_from, a.strength.capture.grade, a.strength.connection.grade], ["member_bytes", "A", "B"]);
   assert.equal(a.signed_by.member, "olive", "the case document's signer is stated apart from the finding's");
+});
+
+test("R38 the four sentences it says are read from the word table by key, and each key is held", () => {
+  const keys = ["detail.cases", "detail.none", "strength_detail.none", "signer_detail.unstated"].map((k) => `public-read.frozen.${k}`);
+  for (const k of keys) assert.equal(hasWord(k), true, k);
+  const { w, proj, roles } = twoCases({ second: false });
+  /* strength_detail: a case edition recording no pair for the finding */
+  w.prepare(C2, 1, { project: proj, roles, strength: [] });
+  assert.equal(w.signCase(C2, 1, { project: proj, roster: [{ bundle_id: F, version_sha: roles[0].version_sha, role: "load_bearing" }] }).ok, true);
+  const none = w.read("publishedfrozen", { id: F }).cases.find((c) => c.case_id === C2);
+  assert.deepEqual([none.strength, none.strength_detail], [null, word("public-read.frozen.strength_detail.none")]);
+  /* signer_detail: no signed case document is held, so the signer is unstated */
+  w.st.sql.exec(`UPDATE case_documents SET ratified_at=NULL WHERE case_id=? AND edition=1`, C2);
+  const unsigned = w.read("publishedfrozen", { id: F }).cases.find((c) => c.case_id === C2);
+  assert.deepEqual([unsigned.signed_by, unsigned.signer_detail], [null, word("public-read.frozen.signer_detail.unstated")]);
 });
