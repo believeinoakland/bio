@@ -75,3 +75,34 @@ T51-171 · record-grammar, CHANGE B3 (plain findings): done (commit 0c38d307a3 o
 - `node checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; words and coverage failures only in other modules, none naming record-grammar.
 
 Size (session_011VXhNRgAkPtLh1zWD7xHc3): test runs 8, module lines 4537
+
+## J4 · COMPLETE
+
+T51-171 · record-grammar, CHANGE B5 (test copies of code sentences): done (commit adcf338b1d on job/T51/record-grammar; tranche/T51 merged; civicos-process at ea6cd83).
+
+**Entries applied.** The three test copies in `build/plan/words-pass/record-grammar.md`, and the regex copies the same section asked me to convert.
+- `bundle.test.mjs:45`: the C-13.2 message compares with `localize("record-grammar.bundle.record_has_been_updated_but_carries", en)`.
+- `bundle.test.mjs:246`: the C-1.1 folder-name message compares with `localize("record-grammar.bundle.folder_name_foldername_does_not", en, { folderName, id })`.
+- `bundle.test.mjs`: the unknown-schema check (a regex on the C-2.5 message) compares each message with `localize("record-grammar.bundle.schema_version_schema_is_not", en, { schema })`, the stamp passed in.
+- `frontmatter.test.mjs`: the six C-2.1 regex checks compare each message with its `localize(id, en, vars)`, the vars being the fixture's own values (key, indent, line numbers).
+- `acceptance.test.mjs`: the two regex checks on the accept row compare with `word("refusal.ACCEPT_MUST_REAUTHOR")`.
+- `labels.test.mjs`: the table tests compare each sentence with its design row (`row(subject, state)` → `word("record-grammar.proposal.<subject>.<state>")`). The fragment regexes are gone; the property checks (frozen, key order, `proposalLabel`, no "machine" in member or unstated sentences) stay.
+- Found while converting: a backspace byte had replaced a `\b` escape in the R61 `doesNotMatch` regex since before this job. Restored. The check now asserts what it was written to.
+
+**Report for BOB: one finding remains, and it is not in a sentence.** `invariants.test.mjs:78` holds the export name `UNREACHABLE_CAPTURE_GRADE` in the module's key-set check (`Object.keys(RG)` must equal the provided names). The whole-tree words run flags it as a `code` testcopy: the name is a 25-character substring of `leg-earning`'s localize sentence `Grade {UNREACHABLE_CAPTURE_GRADE} is not reachable…`, where it is a placeholder name, filled before anyone reads it. No member reads the name, and I cannot remove it without dropping the key-set check. The fix belongs either in `leg-earning` (rename that placeholder) or in the check (do not count identifier-shaped substrings). I changed nothing in another module. The module's own words check (`node checks/words.mjs /home/user/bio record-grammar`) is at 0 failures; the one finding is visible only on the whole-tree run.
+
+**Deferred.** Nothing.
+
+**Found in other modules.** The `leg-earning` placeholder above. Whole-tree run: coverage 32 failures and the words check's arms in other modules; none names record-grammar except the one report above.
+
+**Tests and checks** (from `civicos-process`, against `/home/user/bio`):
+- `node --test bio-plane/test/m/record-grammar/`: 103 pass, 0 fail.
+- `node checks/words.mjs /home/user/bio record-grammar`: 0 failures (inline 0, plain 0, testcopy 0, marker 0).
+- `node bio-plane/src/setup-words/build.mjs --check` (read-only): exit 0. Its one note is about another module's formatted argument, not this one.
+- `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio record-grammar`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio record-grammar`: 61 of 61 live ids named by a test, 0 failures.
+- `node checks/ownership.mjs /home/user/bio record-grammar tranche/T51 job/T51/record-grammar`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; the one record-grammar line is the report above.
+
+Size (session_011VXhNRgAkPtLh1zWD7xHc3): test runs 12, module lines 4478
