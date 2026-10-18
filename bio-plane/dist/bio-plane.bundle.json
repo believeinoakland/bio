@@ -1318,8 +1318,8 @@
     },
     {
       "path": "src/content/extent-core.mjs",
-      "bytes": 50803,
-      "sha256": "487ef5ea048a0a3462f6e4523d697d6410541e4ec93e34930b5c1b8dbe777406"
+      "bytes": 50799,
+      "sha256": "c299bc3cfb17654cb94baec5309f07892a096aa47860e0f15c01e772346ed685"
     },
     {
       "path": "src/content/extent.mjs",
