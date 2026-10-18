@@ -110,6 +110,7 @@ test("R28 every undetermined answer and every refusal says which kind of no and 
   ];
   for (const n of nos) {
     assert.ok(n && (n.undetermined === true || (typeof n.refused === "string" && /^[A-Z_]+$/.test(n.refused))), JSON.stringify(n));
-    assert.ok(typeof n.why === "string" && n.why.length > 10, JSON.stringify(n));
+    /* R30: a reason is a string, or {key, vars} where values.mjs answers it */
+    assert.ok((typeof n.why === "string" && n.why.length > 10) || (n.why && typeof n.why.key === "string" && typeof n.why.vars === "object"), JSON.stringify(n));
   }
 });
