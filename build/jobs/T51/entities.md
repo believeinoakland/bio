@@ -20,3 +20,7 @@
 **Tests and checks.** Entities: `node --test bio-plane/test/m/entities/*.test.mjs` 131 pass, 0 fail (new `t51.test.mjs` 13; ops, reads and registry tests updated). Consumers of entities (all 40 test dirs in `modules.json` uses): 3584 pass, 31 fail, same reds as base. Checks: format 0 failures; architecture 0 failures; coverage 61 of 61; ownership 0 failures.
 
 Size (session_01BRhBQme4TGHsPej7wEteGu): test runs 9, module lines 2,432
+
+## J1 · COMPLETE
+
+T51-30 applied: R57-R61 met (matched_by/names, onlyByIdentifier, subjectsNamed, similarSubjects, page). entities tests 131/0; format, architecture, coverage 61/61, ownership 0 failures. Consumers: same reds as base (retrieval words keys; date/word tests), none new. Stale generated: bio-plane/dist bundle and release copy. Readings and details in my record.
