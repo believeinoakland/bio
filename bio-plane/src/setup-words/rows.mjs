@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (14518 words, 922 protected; SHA-256
-   e619ab4a941fb6c84f7bddda3b195722c8d19698af86dd486c86d1c519fb4859), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (14522 words, 922 protected; SHA-256
+   90a05d9fbf845ef855c54310c5f35e9f54c3d6b68b23c757ef010b14ac47947c), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "e619ab4a94";
+export const WORDS_COMMIT = "90a05d9fbf";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -7397,6 +7397,10 @@ export const WORD_ROWS = Object.freeze([
   ["installer.invite.button","Set up my team's Civicsmith","DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the button",null,false],
   ["installer.invite.update","Already running your team's Civicsmith and want the latest software? That is a separate page: {address}. Updates never touch your passwords or your record.","DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): small paragraph; {address} the update page's address, shown as code",null,false],
   ["screen.published.rests.on.the.council.minutes.one","Rests on: 1 document, not published with the case.","DEC-338: the consistency read: the one-form",null,false],
+  ["public-read.frozen.detail.cases","Each line is one published edition of a case and the reading of this finding it froze, as that case's signed document states it. One case's reading never stands for another's, and readings are never combined.","DEC-339: B329, public-read R38 publishedfrozen (question, A37)",null,false],
+  ["public-read.frozen.detail.none","This finding is published, but no published case edition rests on it, so no case froze a reading of it.","DEC-339: B329, public-read R38 publishedfrozen (question, A37)",null,false],
+  ["public-read.frozen.strength_detail.none","This case edition froze no strengths for this finding, and none are filled in here.","DEC-339: B329, public-read R38 publishedfrozen (question, A37)",null,false],
+  ["public-read.frozen.signer_detail.unstated","No signed document held here names this signer, so none is shown. Who signed the case and who signed the finding are two separate facts; one never stands in for the other.","DEC-339: B329, public-read R38 publishedfrozen (question, A37)",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],

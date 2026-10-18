@@ -3385,6 +3385,10 @@ W.append(dict(key='installer.invite.before', en="It takes you to {address}. That
 W.append(dict(key='installer.invite.button', en="Set up my team's Civicsmith", protected=False, note='DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the button'))
 W.append(dict(key='installer.invite.update', en="Already running your team's Civicsmith and want the latest software? That is a separate page: {address}. Updates never touch your passwords or your record.", protected=False, note="DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): small paragraph; {address} the update page's address, shown as code"))
 W.append(dict(key='screen.published.rests.on.the.council.minutes.one', en='Rests on: 1 document, not published with the case.', protected=False, note='DEC-338: the consistency read: the one-form'))
+W.append(dict(key='public-read.frozen.detail.cases', en="Each line is one published edition of a case and the reading of this finding it froze, as that case's signed document states it. One case's reading never stands for another's, and readings are never combined.", protected=False, note='DEC-339: B329, public-read R38 publishedfrozen (question, A37)'))
+W.append(dict(key='public-read.frozen.detail.none', en='This finding is published, but no published case edition rests on it, so no case froze a reading of it.', protected=False, note='DEC-339: B329, public-read R38 publishedfrozen (question, A37)'))
+W.append(dict(key='public-read.frozen.strength_detail.none', en='This case edition froze no strengths for this finding, and none are filled in here.', protected=False, note='DEC-339: B329, public-read R38 publishedfrozen (question, A37)'))
+W.append(dict(key='public-read.frozen.signer_detail.unstated', en='No signed document held here names this signer, so none is shown. Who signed the case and who signed the finding are two separate facts; one never stands in for the other.', protected=False, note='DEC-339: B329, public-read R38 publishedfrozen (question, A37)'))
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
