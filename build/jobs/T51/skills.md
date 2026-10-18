@@ -16,3 +16,7 @@ Size (session_01K9Zb4DmgqUt5XwdxVRzjzu): test runs 3, module lines 0
 ## J1 · REPORT
 
 T51-135: no clause re-spanned. Canon sources (Action v0.2 §4, Publication §5A, Constructs §L/P, Roles, PILOT) still say 'group' for the team; DEC-281 rules members read 'team' where canon says 'group'. Per your note 1 the clauses stay; canon wording is the design stream's. Pack version unchanged; skills tests 130/130.
+
+## J2 · COMPLETE
+
+T51-135 complete, no code change; details in my record. Checks: format, architecture, coverage (skills 51/51), ownership 0 failures. Tests 130/130.
