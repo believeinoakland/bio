@@ -95,7 +95,7 @@ export default {
     const labelled = unitLines + postLines.size;
     const boxes = labelled + named;
     if (labelled < CHART_MIN_LABELS || boxes < CHART_FLOOR)
-      return no(`${labelled} line(s) name a unit or a post and ${named} a holder alone, below the floor (${CHART_MIN_LABELS} labelled, ${CHART_FLOOR} boxes): this document does not lay out an organisation's boxes`);
+      return no(localize("roster-reader.org-chart.labelled_line_s_name_a", "{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labelled, {floor} boxes): this document does not lay out an organisation's boxes", { labelled: String(labelled), named: String(named), min_labels: String(CHART_MIN_LABELS), floor: String(CHART_FLOOR) }));
     const share = boxes / lines.length;
     if (share < CHART_SHARE)
       return no(localize("roster-reader.org-chart.boxes_of_length_lines_are", "{boxes} of {length} lines are box labels ({round}%), below {round_2}%: units and posts are mentioned here, not charted", { boxes: String(boxes), length: String(lines.length), round: String(Math.round(share * 100)), round_2: String(Math.round(CHART_SHARE * 100)) }));
@@ -127,7 +127,9 @@ export default {
       units: units.map(place),
       posts: posts.map(place),
       reports_to: pairs.map(({ line, ...p }) => place(p)),
-      pairs_why: localize("roster-reader.org-chart.v1_the_charts_boxes_and", "{v1}the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read", { v1: String(pairs.length ? `${pairs.length} reporting relation(s) stated in words; ` : "no reporting relation is stated in words; ") }),
+      pairs_why: pairs.length
+        ? localize("roster-reader.org-chart.reporting_relation_s_stated_in_words", "{count} reporting relation(s) stated in words; the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read", { count: String(pairs.length) })
+        : localize("roster-reader.org-chart.no_reporting_relation_is_stated", "no reporting relation is stated in words; the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read"),
       counts: { units: units.length, posts: posts.length, named_posts: posts.filter((p) => p.name).length, reports_to: pairs.length },
       as_of: asOf ? { text: asOf.text, date: asOf.date, precision: asOf.precision, source: locate(asOf.offset) || null } : null,
       as_of_why: asOf ? (asOf.why || null) : "no line among the document's first eight, or beside its self-naming line, states a date",
