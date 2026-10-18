@@ -537,6 +537,16 @@ for (const f of fs.readdirSync(HERE).filter((f) => /^words-reads-mod-\d+\.json$/
     out.modules[id] = { ...t, reads, unkeyed: [...(t.unkeyed || []), ...(v.unkeyed || [])], files: [...(t.files || []), name] };
   }
 }
+// DEC-344 (B343): strings BOB's module jobs judged no member reads (K3970), hand-kept in words-reads-handoffs.json by
+// module id, join that module's unkeyed list (a module with no entry yet gets one).
+{
+  const ho = JSON.parse(fs.readFileSync(path.join(HERE, "words-reads-handoffs.json"), "utf8")).modules;
+  for (const [id, list] of Object.entries(ho)) {
+    const t = out.modules[id] ??= { reads: [], counts: { reads: 0 }, unkeyed: [], batch: "DEC-344" };
+    const have = new Set(t.unkeyed.map((u) => u.text));
+    for (const u of list) if (!have.has(u.text)) { t.unkeyed.push(u); have.add(u.text); }
+  }
+}
 fs.writeFileSync(path.join(HERE, "words-reads.json"), JSON.stringify(out, null, 1) + "\n");
 const tot = Object.values(out.modules).reduce((a, v) => ({ reads: a.reads + (Array.isArray(v.reads) && v.reads[0] !== "*" ? v.reads.length : 0), unkeyed: a.unkeyed + v.unkeyed.length }), { reads: 0, unkeyed: 0 });
 for (const [m, v] of Object.entries(out.modules)) console.log(m.padEnd(20), JSON.stringify(v.counts), v.retired ? "retired " + v.retired.length : "", v.renamed ? "renamed " + Object.keys(v.renamed).length : "");
