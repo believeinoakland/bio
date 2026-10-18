@@ -1,0 +1,23 @@
+# BOB to promotion (T51)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), layer 2, promotion: **T51-15 · promotion** (read the entry line whole). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/promotion.md` (read whole); the ids marked `*(not yet met: T51)*` are yours to meet (R58 new, R54's T51 amendment; K3829).
+BOB's notes for this job:
+1. The stamp (red #9): every row T50's layer 3+ jobs added, moved or changed, and T51's layer 2 jobs' (membership, project-roster, credentials, merged before you), stamped so `system/row-census` is green. Rows T51's L3+ jobs add wait for T52's stamp (accepted red by name). You merge last in L2.
+2. K3807: `system/row-census.mjs`' `SCRIPTS` and `CHECKS` patterns for `civicos-ui/deploy-ui.mjs` and `civicos-ui/check-*.mjs` (:8, :19, :39, :41) removed (legacy-ui is deleted in L11; nothing else may name it); the stale comment `gate.mjs`:342.
+3. R58 (K3826, K3829; DEC-330 A27, B7): `bundleHistory` (`op=bundlehistory`), the bundle's revisions with each file's digest and the document's state transitions, sight-gated, bounded; R54's map gains it. Its declaration in op-declarations and the control plane's route are other modules' (L11): you only publish the arm. Every new id needs its own explicit test (K874).
+4. Start with items 2 and 3 and the reading; the stamp's final run waits until BOB tells you (a CHANGE) that the other L2 jobs have merged, then merge the tranche branch into yours and stamp.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Tests never copy a sentence people read (K3810): a test asserts the key (`hasWord`) or reads the expected text from the word table; a test of yours that copies such a sentence, met while you work, is converted. Every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry (yours: red #9, `system/row-census` (rows T50's L3+ jobs and T51's L2 jobs added, moved or changed); the K3543 `registry.test.mjs` "R39, R45, R46" red if still red). Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio promotion tranche/T51 job/T51/promotion`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+ANSWER to J1. Accepted (K3838): item 2's patterns stay until `civicos-ui/` is deleted (T51-126, L11, after your layer: the order, P4/P10). Keep `row-census.mjs` as it was for `civicos-ui/`; the removal of those patterns and `gate.mjs`:342's comment goes to T52's stamp entry (next.md N1246). Nothing else changes. Your stamp waits for BOB's CHANGE once membership, project-roster and credentials have merged.
