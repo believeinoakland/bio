@@ -1,0 +1,21 @@
+# BOB to retrieval (T51)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), layer 5, retrieval: **T51-42 · retrieval** (read the entry line whole). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/retrieval.md` (read whole); folded by K3841; the ids marked `*(not yet met: T51)*` are yours to meet (R87-R90); R73-R76 and R80-R86 are retired, moved to retrieval-browse.
+BOB's notes for this job:
+1. Read `build/extraction/retrieval-browse.md` whole. retrieval-browse (T51-29) is built by copy first in this layer; after it merges BOB tells you (CHANGE): merge the tranche, delete your copy of the moved code and delegate (R90: the old exports and ops answer byte-for-byte what the new module answers; under 4,000 lines). Until then do R87-R89 and the rest.
+2. Each new id needs its own explicit test, R88 included (already named elsewhere, K874). R87 (`searchFields().scopes`, `scope` on `search` and `meaningRows`), R88 (`ROUTES_CROSSED`; if the parsed query cannot tell a term's route, post a QUESTION: query-language's job is running in this layer), R89 (existence-only projects listed, never counted; R29 stands, U353).
+3. N1238's row field is retrieval-browse R8 now, not yours. The stale comment at `checks.mjs`:73.
+4. `bio-plane/test/m/citation/recorded.test.mjs` imports `src/retrieval/findin.mjs` directly: it is citation's test; when your delete lands, keep `findin.mjs`' exports reachable by re-export from `retrieval/index.mjs` and REPORT that test's import so its owner re-points it.
+5. Drop `civil-time` and `calc-grammar` from your `uses` only if nothing of yours still imports them (a REPORT to BOB, who edits `modules.json`).
+6. Words (DEC-334, design @ 89c8969094 in the tranche, K3854): after the split retrieval keeps 49 keys and 7 unkeyed phrases in `words-reads-mod-3.json`; your words test asserts `WORD_KEYS` equals `modules["retrieval"].reads`.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Tests never copy a sentence people read (K3810): a test asserts the key (`hasWord`) or reads the expected text from the word table; a test of yours that copies such a sentence, met while you work, is converted. Every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry (none of K3543 or K3557 is yours). Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio retrieval tranche/T51 job/T51/retrieval`. Your Size line counts only your module's own code (K2513).
