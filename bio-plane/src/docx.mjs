@@ -943,11 +943,14 @@ async function docxText(parts) {
  *  its marker for `text().undetermined`; an ABSENT part yields none, because
  *  absence is normal OPC (ooxml R19). This states, never asserts an act (R24).
  *  Shared by the three OOXML entries — one builder, so they cannot drift. */
-export function coreMetadata(parts) {
+export function coreMetadata(parts, withTitle = false) {
   if (parts?.core) {
     const c = parts.core;
-    return { metadata: { author: c.creator ?? null, lastModifiedBy: c.lastModifiedBy ?? null,
-      created: c.created ?? null, modified: c.modified ?? null, source: CORE_PROPERTIES_PART }, marker: null };
+    const metadata = { author: c.creator ?? null, lastModifiedBy: c.lastModifiedBy ?? null,
+      created: c.created ?? null, modified: c.modified ?? null, source: CORE_PROPERTIES_PART };
+    /* R34: docx and pptx only; the key is absent, never null, for a missing, empty or blank title. */
+    if (withTitle && typeof c.title === "string" && c.title.trim() !== "") metadata.title = c.title;
+    return { metadata, marker: null };
   }
   const stated = Array.isArray(parts?.undetermined) ? parts.undetermined.find((u) => u.part === CORE_PROPERTIES_PART) : null;
   return { metadata: null,
@@ -956,9 +959,9 @@ export function coreMetadata(parts) {
 
 /** Carry `metadata` onto an ok text() result; a marker joins `undetermined`
  *  and its count. */
-export function withMetadata(out, parts) {
+export function withMetadata(out, parts, withTitle = false) {
   if (!out || !out.ok) return out;
-  const { metadata, marker } = coreMetadata(parts);
+  const { metadata, marker } = coreMetadata(parts, withTitle);
   if (!marker) return { ...out, metadata };
   return { ...out, metadata, undetermined: [...out.undetermined, marker],
     counts: { ...out.counts, undetermined: out.counts.undetermined + 1 } };
@@ -1092,6 +1095,6 @@ export const docxEntry = {
       : partsOrBytes;
     /* FW-19 / IC-124: `images` — every image under word/media/, content-
        addressed, exhaustive or NULL (ooxml.mjs's `containerImages`). */
-    return withContainerImages(withActive(withMetadata(await docxText(parts), parts), parts), parts, "word/media/");
+    return withContainerImages(withActive(withMetadata(await docxText(parts), parts, true), parts), parts, "word/media/");
   },
 };
