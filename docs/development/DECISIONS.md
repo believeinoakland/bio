@@ -5115,3 +5115,18 @@ the design: (1) Setup: a skipped part reads `screen.setup.state.skipped` "Skippe
 consistency: a reader's twenty fixes applied the same day (one form for a held check, "in a minute; this is usually temporary" on every try-again, "conflict", "to-do", "the assistant", curly quotes, an overdue stage worded apart from a missing one; `queue.told-once`, `queue.reevaluation-tail` and `installer.tryagain.update` dropped because their details carry the sentence).
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-329's block), `words-reads.src.mjs`, `words-reads-mod-5.src.mjs`, `mock-screens.js` (plan's states, Find's field), `mock-shell.js` (the plan icon's words).
 owed: (BOB, T51) the modules read DEC-329's keys; queue-producers passes facts, not English, in `{statement}`, `{says}`, `{scope}`, `{grade}`, `{affects}`, `{checks}`, `{reason}` and a new reading's `{state}` (their words are the source module's keys); actions confirm the kind id for taking part as a party; the kit draws a field's placeholder and a strip reading's explanation (N1232). (design, next) the installer's remaining inline sentences (about 70, outside B303's items), keyed in the next batch.
+
+### DEC-331 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01JEe1HZq7KGYZq4FVGEBtQe; the development process also runs on his primary account since K1428) (DEC-329's owed: the installer's remaining inline sentences)
+for: design
+question: The installer's member-facing sentences B303 did not name, and the technical request it tells an administrator to send.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) 231 more `installer.*` keys: the first and update pages (the dialog, places, short name, assistant, security tools, the publisher line, the begin and return refusals), the progress labels and checks, the release choice, install stops (one "Stopped: …" sentence each, as the update stops), the helper-program and connection steps, the log check, the assistant and member-key steps, account limits, and the finished panels; "capability workers" are "helper programs", the public repository "Civicsmith's software source", internal codes dropped. `installer.stopped.running` replaces `screen.install.stopped.running`'s "This one waits" for a stop. (2) An older installation that does not yet know its producing team no longer asks the administrator to send a raw request with a token: `installer.team.unrecorded.how` sends them to Settings › Who your team is, which draws, in that state only, "Which team produces this record": a note, the short-name field (the installed name suggested, not filled as a default) and `instancegroupseed` "Record your team's short name" (keys `screen.group-identity.seed.*`).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-331's block), `registry.src.py`, `mock-acts.js`, `mock-screens.js` (group-identity's state b).
+owed: (BOB, T51) the installer reads these keys (its `words.mjs` key list); `instancegroupseed` drawn on group-identity for an administrator (screens-settings), which retires the request the installer described.
