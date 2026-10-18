@@ -288,8 +288,8 @@ export function proposalLabel(proposedBy, subject) {
  * a surface renders the identity verbatim, and the moment the field can hold a
  * machine word the surface prints a machine word at a member. `content.minted_by`
  * is that column again — it holds `plane`, a member handle, or a control-plane
- * machine stamp — and `civicos-ui/app.html` renders `Asserted by ${…}` verbatim
- * one field over TODAY. So the plane answers the QUESTION and publishes the
+ * machine stamp — and a surface that renders `Asserted by ${…}` verbatim is one
+ * field over from it. So the plane answers the QUESTION and publishes the
  * SENTENCE, and the surface renders what it was given (DEC-49's rule reaching a
  * published vocabulary's texts, `SUFFICIENCY_CLAIM_STATES`' own words).
  *
