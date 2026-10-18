@@ -2,6 +2,30 @@
 
 **Status** · session_017VMvhjxUfKRwS5rFeW66NT · depth 2 · WORKING · handled B4
 
+## Record (BUNDLER #22, B4/B6: R38)
+
+**Entries applied (R38, K3953 as amended by K3958; T51-144 stays as BUNDLER #21 left it, J3)**
+- **How it works (`fleet-bundle.mjs`, `buildMember`):** for a fleet member (a descriptor `discoverMembers` marks; the plane, `wholeWordTable`, and any other descriptor, such as the standalone case checker's, carry the table whole) a probe build stubs `setup-words/rows.mjs` out and names the first-party inputs; each is parsed with the vendored acorn (`setup-words/vendor/acorn.mjs`, never a pattern) by `wordKeysOf`, which reads every call of `word`, `localize` and `hasWord` (a name the file declares itself is not the call, setup-words' own rule): a string or no-expression template is a key, a `+` chain or template with a literal head is a prefix, both arms of `?:`, `||`, `??` count. The real build then replaces the `rows.mjs` import (an esbuild `onLoad` plugin) by a module of the rows named or under a prefix, in the table's order. `manifestFrom` records `words: {rows, sha256}` (the SHA-256 of the kept rows); `verifyFresh` compares the manifest's word fields with the fresh build's and names a disagreement as STALE BUNDLE.
+- **K3958 (a variable key keeps the whole table):** a call with no literal prefix, `word` used other than as a callee, `WORD_ROWS` imported or re-exported outside setup-words' own index, a dynamic import of the table: the build does not fail; it keeps the whole table and the manifest says `words: "all"` with `wordSites`, every site as `file:line` (code-point order, member-relative). A member whose inputs do not reach the table records nothing, as before; the plane's manifest and bytes are as before (tested against the plain recipe).
+- **Real fleet (kept rows of 18,680, each member's inputs as the tree stands at the tranche merge):** pdf-worker **10**, ocr-worker **74**, sheet-worker **15**, agent-runner **2**, file-scanner **45**; agent-worker keeps **the whole table** for 6 sites (7 findings; `project-roster/checks.mjs:14` holds two on one line): `../bio-plane/src/capture/words.mjs:78`, `extraction/words.mjs:7` (imports `WORD_ROWS`) and `:67`, `membership/words.mjs:11`, `project-roster/checks.mjs:14`, `run-rules/checks.mjs:26`. The standalone case checker's `program.mjs` build is unchanged (checked: sha256 `de50988e…` before and after).
+- **Tests (bundler.test.mjs, all name R38):** fixture exact keys (word, localize, hasWord, template, conditional; table order; manifest rows and digest; the bundle still runs); `'refusal.' + code` and a template keep every row under the prefix; bare variable / call result / no argument / spread / one bare site among literal ones keep the whole table naming the site, and the build equals the untrimmed one; `word` as a value, the table imported, a dynamic import; a local `word` is not the call; the plane built by the plain recipe, no `words` field; a non-member descriptor is built whole; `verifyFresh` covers the rows (wrong count, wrong digest, missing, "all") and the sites; real fleet: each buildable member's rows are in the table's order and each kept key appears quoted in its inputs or begins with a literal prefix before a `+` or `${` (an independent regex check), counts printed; agent-worker named as keeping the whole table with its sites. The scratch repository (`repo.mjs`) copies the vendored parser the build now imports.
+
+**Deferred / not done**
+- Nothing deferred. Not done, as instructed: no `dist/` bundle or manifest rebuilt or committed.
+
+**For BOB (not mine)**
+1. **Architecture: 1 failure, yours to clear.** `fleet-bundle.mjs` imports `bio-plane/src/setup-words/vendor/acorn.mjs` (the parser B4 names), so `bundler`'s `uses` in `build/modules.json` and the Uses part of `build/requirements/bundler.md` need `setup-words` added (`signatures`, `test-support`, `setup-words`). I cannot edit either; nothing else in the check fails. setup-words is earlier in layer 1.
+2. **Every committed bundle is now stale against a fresh build** (as intended before R1's close): `fleetbundles` fails the byte arm for agent-runner, agent-worker, file-scanner, ocr-worker, pdf-worker (their manifests record no `words`; their bundles carry the whole table), and several members' static arm was already stale from merged source changes (the plane, agent-worker, file-scanner, ocr-worker, pdf-worker: sources changed by other modules since each bundle was built). `bundles.mjs` at R1's close regenerates them (agent-worker, with its whole table and 6 sites, builds).
+3. **Real-fleet expectation (K3958):** the second real-fleet test lists the members keeping the whole table and their sites (agent-worker today) and fails only if pdf-worker, ocr-worker or sheet-worker did. When the five modules' jobs make their reads literal (CR-4, T51-157, T51-180, T51-189, T51-218) agent-worker trims, its count is printed by the first real-fleet test with the others (it skips only a member that keeps the whole table), and the second test then lists no member; BOB tightens it to assert none.
+4. `node_modules` of `agent-runner` and `file-scanner` were absent in this container; I ran `npm ci --ignore-scripts` there (untracked `node_modules`, nothing committed).
+
+**Tests and checks** (from `/home/user/bio/bio-plane` and the process repository)
+- `node --test test/m/bundler/bundler.test.mjs release.test.mjs thirdparty.test.mjs test/system/bundle.test.mjs deploybindings.test.mjs resolveversion.test.mjs`: **129 pass, 0 fail** (8 new R38 tests).
+- `node --test test/system/fleetbundles.test.mjs`: red as item 2 says (stale committed bundles; not skipped).
+- `node checks/format.mjs`: 0 failures. `coverage.mjs bundler`: 38 of 38 live ids named, 0 failures. `ownership.mjs bundler tranche/T51 job/T51/bundler`: 0 failures. `architecture.mjs bundler`: 1 failure (item 1). `checks/run.mjs`: words findings repo-wide, none in bundler's files.
+
+Size (session_017VMvhjxUfKRwS5rFeW66NT): test runs 14, module lines 3986
+
 ## Record (BUNDLER #21, B3: T51-144)
 
 **Entries applied (T51-144, R36 second half: the two digests agree)**

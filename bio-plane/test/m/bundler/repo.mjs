@@ -232,6 +232,8 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
      import closure, so a new import there never strands the fixture. */
   for (const rel of localClosure("src/sshsig.mjs")) put(root, `bio-plane/${rel}`, readFileSync(join(PLANE, rel)));
   put(root, "bio-plane/scripts/sign-sshsig.mjs", readFileSync(join(PLANE, "scripts/sign-sshsig.mjs")));
+  /* fleet-bundle.mjs reads the calls of a member's inputs with the parser setup-words vendors (R38). */
+  put(root, "bio-plane/src/setup-words/vendor/acorn.mjs", readFileSync(join(PLANE, "src/setup-words/vendor/acorn.mjs")));
   mkdirSync(join(root, "bio-plane/node_modules/.bin"), { recursive: true });
   symlinkSync(join(PLANE, "node_modules/esbuild"), join(root, "bio-plane/node_modules/esbuild"), "dir");
   put(root, "bio-plane/node_modules/.bin/wrangler", WRANGLER);
