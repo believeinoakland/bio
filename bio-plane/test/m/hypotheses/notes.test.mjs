@@ -7,7 +7,7 @@ import { ID_TABLE, isHypothesisId } from "../../../src/record-grammar/index.mjs"
 import { isRecordId, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
 
-const COURT = "Your team's Civicsmith keeps this from the public and the people the team looks into. A court order your team can't defeat could still require it to be shown. Write accordingly.";
+const COURT = Membership.COURT_STATEMENT;
 const url = (op, q = {}) => { const u = new URL(`https://plane.example/?op=${op}`); for (const [k, v] of Object.entries(q)) u.searchParams.set(k, v); return u; };
 const count = (w) => w.rows(`SELECT COUNT(*) AS n FROM member_notes`)[0].n;
 const row = (code) => HYPOTHESES_CHECKS[code];

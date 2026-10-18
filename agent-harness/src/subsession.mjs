@@ -86,7 +86,7 @@
  *
  * DEC-49's reach is "every code a SURFACE can receive". No member receives these:
  * this Worker has no member-facing surface and its only caller is the plane (the
- * DEC-49 guard that walked the plane's codes, `civicos-ui/check-refusal-codes.mjs`,
+ * DEC-49 guard that walked the plane's codes,
  * never walked the fleet, and was deleted with the old battery in T20). The
  * convention — a code as a STRING LITERAL at its site through a helper named
  * `refusal` — is followed anyway, because it costs nothing and it is what a check

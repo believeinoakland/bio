@@ -13,13 +13,16 @@ import { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, axisResult } from "./arithme
 import { DERIVED_KINDS, CAPTURE_ONLY_KINDS } from "./legs.mjs";
 
 /** R31: the version of the grading arithmetic of R1–R5, R29, R30 (with R33's and R34's arms, as built in T28, and since
- *  T33 the calculation, standard and occurrence legs of R36–R38). It changes whenever any of them changes; a case states
- *  it (`case-grammar` R11) and a checker recomputes at it. */
-export const GRADING_METHOD_VERSION = "bio-grading/2";
+ *  T33 the calculation, standard and occurrence legs of R36–R38). It changes whenever any of them changes, and whenever
+ *  the words of the method do (T51-54: "team" for the group that holds the case); a case states it (`case-grammar` R11)
+ *  and a checker recomputes at it. */
+export const GRADING_METHOD_VERSION = "bio-grading/3";
 /* The version T28 published: R1–R5, R29–R34, with no calculation, standard or occurrence leg. */
 const V1 = "bio-grading/1";
+/* The version T33 published: V1 with the calculation, standard and occurrence legs; its words say "group". */
+const V2 = "bio-grading/2";
 /** R32: every version this module has published, oldest first; `recomputePair` answers for each. */
-export const GRADING_METHOD_VERSIONS = Object.freeze([V1, GRADING_METHOD_VERSION]);
+export const GRADING_METHOD_VERSIONS = Object.freeze([V1, V2, GRADING_METHOD_VERSION]);
 
 /** R29 (DEC-102): the credit levels a caller may state; the first two credit anonymously. */
 export const CREDIT_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
@@ -275,7 +278,7 @@ export const PRODUCT_NAME = "Civicsmith";
 
 /* Each version's words, as a function of the product's name. With "CivicOS" a version answers, byte for byte, the
    words it answered before T31 (a `bio-case-document/6` edition re-renders identically, `case-grammar` R14). */
-const V1_LINES = (product, version) => [
+const V1_LINES = (product, version, team = "group") => [
     `How ${product} grades a finding (method ${version}).`,
     "",
     "1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were "
@@ -285,11 +288,11 @@ const V1_LINES = (product, version) => [
     "2. Which legs count. A leg counts only for the strength its grade names. A capture grade is never above what the "
       + "record holds for that document; a testimony grade is always D. A leg with no grade, or one marked as a hunch, "
       + "is listed and counts for nothing: it never lowers or raises a strength. A capture or testimony grade written "
-      + "on a leg to another question, or to another group's finding, has nothing to grade and is listed, not counted.",
+      + `on a leg to another question, or to another ${team}'s finding, has nothing to grade and is listed, not counted.`,
     "3. Questions resting on questions. A leg to another question contributes that question's own strengths, worked "
       + "out the same way, up to six steps down. Past six steps, or where that question's strength is not known, the "
       + "strength is stated as undetermined: unknown, not low.",
-    "4. Another group's work. A leg to a finding of another group's case that this group has accepted contributes the "
+    `4. Another ${team}'s work. A leg to a finding of another ${team}'s case that this ${team} has accepted contributes the `
       + "strengths that accepted edition published for that finding, never more, and nothing below it is followed. If "
       + "that finding cannot be read, the strength is undetermined. Withdrawing the acceptance later changes no grade.",
     "5. Sets of reasons. Legs the author did not sort into sets of reasons are all needed together, so they are only "
@@ -299,7 +302,7 @@ const V1_LINES = (product, version) => [
     "6. When a strength is undetermined. A strength is undetermined only when something it needs is unknown: one of "
       + "the legs every set needs, or every set at once. A set that is unknown beside a known one could only be "
       + "stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.",
-    "7. Anonymous testimony and evidence. Testimony from a member credited only to the group or the project, and "
+    `7. Anonymous testimony and evidence. Testimony from a member credited only to the ${team} or the project, and `
       + "material from an unnamed source that such a member attests, counts only when something independent beside it "
       + "bears it out; otherwise it is listed and counts for nothing. What bears it out is a counted leg on a document "
       + "that shares no origin with it (not the same document, not the same capture, not the same web address) and is "
@@ -325,13 +328,16 @@ const V2_LEGS = [
     + "rule in force and the record of the date that started it. Whether it was met, late or overdue is stated beside "
     + "the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
 ];
+/* Version 3 (T51-54): version 2's words with the team named "team" wherever the words name the group that holds a case
+   (the credit level's code is still "group"; the words are the member's). Version 2 and version 1 keep their words. */
+const withLegs = (lines) => {
+  const named = lines.pop().replace(/^8\. /, "11. ");
+  return [...lines, ...V2_LEGS, named].join("\n");
+};
 const METHOD_TEXT = Object.freeze({
   [V1]: (product) => V1_LINES(product, V1).join("\n"),
-  [GRADING_METHOD_VERSION]: (product) => {
-    const lines = V1_LINES(product, GRADING_METHOD_VERSION);
-    const named = lines.pop().replace(/^8\. /, "11. ");
-    return [...lines, ...V2_LEGS, named].join("\n");
-  },
+  [V2]: (product) => withLegs(V1_LINES(product, V2)),
+  [GRADING_METHOD_VERSION]: (product) => withLegs(V1_LINES(product, GRADING_METHOD_VERSION, "team")),
 });
 
 /** R31: the method of `version` in plain words, complete enough to recompute a grade by hand, naming the product by

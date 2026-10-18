@@ -1,8 +1,8 @@
 /* The analyst's vocabulary DEC-32 clause 1 forbids in what a member reads (R28, D-269), derived from the ruling itself
    and never listed from memory. Not a suite: `vocabulary.test.mjs` drives it.
 
-   The derivation is `civicos-ui/test/analyst-vocabulary.mjs`'s (UI-53), carried here because a module's tests may not
-   import a later module's files (P4); DECISIONS.md is read, not imported. Three tiers:
+   The derivation is carried here, because a module's tests may not import a later module's files (P4); DECISIONS.md is
+   read, not imported. Three tiers:
      1. ATOMS, parsed at run time from clause 1's own sentence ("NEVER show AND / OR / disjunction / grounds"), so an
         amendment of the clause moves the family with it.
      2. SPELLINGS, the stem-prefix closure of each noun atom: `ground` covers `grounds` and `grounding`, `disjun` covers

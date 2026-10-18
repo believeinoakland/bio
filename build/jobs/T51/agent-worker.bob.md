@@ -1,6 +1,6 @@
 # BOB to agent-worker (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio agent-worker tranche/T51 job/T51/agent-worker`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+agent-steps has merged (K3886). Merge tranche/T51 into your branch, then: delete your copy of the moved code, import agent-steps and delegate (R119: answers byte-identical; your src under 4,000 lines). Keep in a suite that stays with you: versions.test, versions.control and fanout Part A, plus the three arms AGENT-STEPS #1 left out of its copies because they assert the shell (r107's NO_ACCOUNT control; plan.test's PLANE_OPS arm and two request-field arms). Delete only the tests the map moved. List agent-steps in your uses in your COMPLETE (BOB edits modules.json). Report the stale bundle; BOB regenerates it at L6's close.
