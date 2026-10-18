@@ -1,4 +1,4 @@
-/* `t`, the extraction, the review list, the pseudo-locale rows and the refusal of formatted arguments (R13–R18; K3930).
+/* `localize`, the extraction, the review list, the pseudo-locale rows and the refusal of formatted arguments (R13–R18; K3930).
    The generator runs over fixture trees (a git repository in a temporary directory holding a module list, a
    words.json and some source), never over the real tree except for the invariants of the real list. The fixtures'
    sentences are test data, not the product's words. */
@@ -9,7 +9,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
-import { WORD_ROWS, hasWord, t, word } from "../../../src/setup-words/index.mjs";
+import { WORD_ROWS, hasWord, localize, word } from "../../../src/setup-words/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const BUILD = join(ROOT, "bio-plane/src/setup-words/build.mjs");
@@ -40,25 +40,25 @@ const DESIGN = [
   { key: "fix.held.plain", en: "Plain", protected: false },
 ];
 const SOURCE = [
-  'import { t } from "../setup-words/index.mjs";',
-  't("fix.held.row", "Another draft of {n}", { n: 1 });',
-  't("one.area.newid", "A new {name}", { name: "x" });',
-  "t(`one.area.template`, `Template sentence`);",
-  't("one.area.newid", "A new {name}");',
-  'function local(t) { return t(someId, someText); }',
-  "const f = () => { const t = (a) => a; return t(1); };",
+  'import { localize } from "../setup-words/index.mjs";',
+  'localize("fix.held.row", "Another draft of {n}", { n: 1 });',
+  'localize("one.area.newid", "A new {name}", { name: "x" });',
+  "localize(`one.area.template`, `Template sentence`);",
+  'localize("one.area.newid", "A new {name}");',
+  'function local(localize) { return localize(someId, someText); }',
+  "const f = () => { const localize = (a) => a; return localize(1); };",
 ].join("\n");
 
-test("R15 the extraction reads t(id, en) calls of the product source with a parser: the file's rows come first with origin design (a call on a held id changes nothing: the row wins), then one code row per new id in id order with note and means null and protected false; a template literal without ${} counts as a literal, a t the file declares itself is not the call, and tests, bundles, vendored code and fixtures are not read", async () => {
+test("R15 the extraction reads localize(id, en) calls of the product source with a parser: the file's rows come first with origin design (a call on a held id changes nothing: the row wins), then one code row per new id in id order with note and means null and protected false; a template literal without ${} counts as a literal, a localize the file declares itself is not the call, and tests, bundles, vendored code and fixtures are not read", async () => {
   const root = tree({
     "src/one/a.mjs": SOURCE,
-    "src/two/b.mjs": 't("two.area.second", "Second");\nt("one.area.alpha", "Alpha");',
-    "src/two/dist/bundle.mjs": 't("two.dist.dup", "Never read");',
-    "src/two/vendor/v.mjs": 't("two.vendor.dup", "Never read");',
-    "src/two/fixtures/f.mjs": 't("two.fixture.dup", "Never read");',
-    "src/two/x.test.mjs": 't("two.test.dup", "Never read");',
-    "test/one/c.mjs": 't("one.tests.dup", "Never read");',
-    "elsewhere/z.mjs": 't("none.owned.dup", "Never read");',
+    "src/two/b.mjs": 'localize("two.area.second", "Second");\nlocalize("one.area.alpha", "Alpha");',
+    "src/two/dist/bundle.mjs": 'localize("two.dist.dup", "Never read");',
+    "src/two/vendor/v.mjs": 'localize("two.vendor.dup", "Never read");',
+    "src/two/fixtures/f.mjs": 'localize("two.fixture.dup", "Never read");',
+    "src/two/x.test.mjs": 'localize("two.test.dup", "Never read");',
+    "test/one/c.mjs": 'localize("one.tests.dup", "Never read");',
+    "elsewhere/z.mjs": 'localize("none.owned.dup", "Never read");',
   }, DESIGN);
   try {
     const out = join(root, "out/rows.mjs");
@@ -79,12 +79,12 @@ test("R15 the extraction reads t(id, en) calls of the product source with a pars
 
 test("R15 control: one id extracted with two different en fails naming both places, so does a non-literal en, a non-literal id, and an id that is not dotted; --check covers the extracted rows, failing when a sentence in the source changes", () => {
   const cases = {
-    "two en": [{ "src/one/a.mjs": 't("one.area.same", "First");', "src/two/b.mjs": 't("one.area.same", "Second");' }, /one\.area\.same[^]*src\/one\/a\.mjs:1[^]*src\/two\/b\.mjs:1/],
-    "variable en": [{ "src/one/a.mjs": 'const s = "x";\nt("one.area.v", s);' }, /src\/one\/a\.mjs:2/],
-    "template en": [{ "src/one/a.mjs": "t(\"one.area.v\", `a ${b}`);" }, /src\/one\/a\.mjs:1/],
-    "variable id": [{ "src/one/a.mjs": "t(id, \"x\");" }, /src\/one\/a\.mjs:1/],
-    "one argument": [{ "src/one/a.mjs": 't("one.area.v");' }, /src\/one\/a\.mjs:1/],
-    "bad id": [{ "src/one/a.mjs": 't("single", "x");' }, /single/],
+    "two en": [{ "src/one/a.mjs": 'localize("one.area.same", "First");', "src/two/b.mjs": 'localize("one.area.same", "Second");' }, /one\.area\.same[^]*src\/one\/a\.mjs:1[^]*src\/two\/b\.mjs:1/],
+    "variable en": [{ "src/one/a.mjs": 'const s = "x";\nlocalize("one.area.v", s);' }, /src\/one\/a\.mjs:2/],
+    "template en": [{ "src/one/a.mjs": "localize(\"one.area.v\", `a ${b}`);" }, /src\/one\/a\.mjs:1/],
+    "variable id": [{ "src/one/a.mjs": "localize(id, \"x\");" }, /src\/one\/a\.mjs:1/],
+    "one argument": [{ "src/one/a.mjs": 'localize("one.area.v");' }, /src\/one\/a\.mjs:1/],
+    "bad id": [{ "src/one/a.mjs": 'localize("single", "x");' }, /single/],
   };
   for (const [name, [files, pattern]] of Object.entries(cases)) {
     const root = tree(files, DESIGN);
@@ -94,12 +94,12 @@ test("R15 control: one id extracted with two different en fails naming both plac
       assert.match(r.out, pattern, name);
     } finally { rmSync(root, { recursive: true, force: true }); }
   }
-  const root = tree({ "src/one/a.mjs": 't("one.area.new", "Draft");' }, DESIGN);
+  const root = tree({ "src/one/a.mjs": 'localize("one.area.new", "Draft");' }, DESIGN);
   try {
     const out = join(root, "rows.mjs");
     assert.equal(run(root, "--out", out).code, 0);
     assert.equal(run(root, "--check", "--out", out).code, 0);
-    writeFileSync(join(root, "src/one/a.mjs"), 't("one.area.new", "Changed draft");');
+    writeFileSync(join(root, "src/one/a.mjs"), 'localize("one.area.new", "Changed draft");');
     const stale = run(root, "--check", "--out", out);
     assert.notEqual(stale.code, 0);
     assert.match(stale.out, /one\.area\.new/);
@@ -107,7 +107,7 @@ test("R15 control: one id extracted with two different en fails naming both plac
 });
 
 test("R16 the generator writes words-unreviewed.json beside the list: one entry per code-origin row in id order with its id, en, module, file and line; the id the file holds is not listed; --check covers it", () => {
-  const root = tree({ "src/one/a.mjs": SOURCE, "src/two/b.mjs": '\n\nt("one.area.alpha", "Alpha");' }, DESIGN);
+  const root = tree({ "src/one/a.mjs": SOURCE, "src/two/b.mjs": '\n\nlocalize("one.area.alpha", "Alpha");' }, DESIGN);
   try {
     const out = join(root, "rows.mjs");
     assert.equal(run(root, "--out", out).code, 0);
@@ -142,7 +142,7 @@ test("R16 the real tree's review list is exactly its code-origin rows in id orde
 });
 
 test("R17 --pseudo writes the rows with every en transformed: bracketed, lengthened by about a third, each {name} placeholder unchanged and in place, no ASCII letter left outside the placeholders; the module never imports the pseudo rows, and nothing else of a row changes", async () => {
-  const root = tree({ "src/one/a.mjs": 't("one.area.new", "Pay {amount} to {who}, now");' }, [...DESIGN, { key: "fix.held.two", en: "{a} and {b}: {a}" }, { key: "fix.held.digits", en: "No. 7: 100%" }]);
+  const root = tree({ "src/one/a.mjs": 'localize("one.area.new", "Pay {amount} to {who}, now");' }, [...DESIGN, { key: "fix.held.two", en: "{a} and {b}: {a}" }, { key: "fix.held.digits", en: "No. 7: 100%" }]);
   try {
     const out = join(root, "pseudo.mjs");
     const r = run(root, "--pseudo", "--out", out);
@@ -191,44 +191,44 @@ test("R18 a row whose en holds a plural, select or other formatted argument fail
       assert.match(r.out, /fix\.held\.formatted/, form);
     } finally { rmSync(root, { recursive: true, force: true }); }
   }
-  const root = tree({ "src/one/a.mjs": 't("one.area.formatted", "{n, plural, one {x} other {y}}");' }, DESIGN);
+  const root = tree({ "src/one/a.mjs": 'localize("one.area.formatted", "{n, plural, one {x} other {y}}");' }, DESIGN);
   try {
     const r = run(root, "--out", join(root, "rows.mjs"));
     assert.notEqual(r.code, 0);
     assert.match(r.out, /one\.area\.formatted/);
   } finally { rmSync(root, { recursive: true, force: true }); }
-  const ok = tree({ "src/one/a.mjs": 't("one.area.plain", "{n} and {m}");' }, DESIGN);
+  const ok = tree({ "src/one/a.mjs": 'localize("one.area.plain", "{n} and {m}");' }, DESIGN);
   try { assert.equal(run(ok, "--out", join(ok, "rows.mjs")).code, 0); } finally { rmSync(ok, { recursive: true, force: true }); }
 });
 
-test("R14 R13 t(id, en, vars) answers the list's row for id when it holds one, not en, and en when it does not, each {name} filled as word fills it; word and t read one list", () => {
+test("R14 R13 localize(id, en, vars) answers the list's row for id when it holds one, not en, and en when it does not, each {name} filled as word fills it; word and localize read one list", () => {
   const withVars = WORD_ROWS.find((r) => placeholders(r[1]).length >= 2);
   const none = WORD_ROWS.find((r) => placeholders(r[1]).length === 0);
-  assert.equal(t(none[0], "a different draft"), none[1]);
-  assert.equal(t(none[0], "a different draft", { unused: 1 }), none[1]);
+  assert.equal(localize(none[0], "a different draft"), none[1]);
+  assert.equal(localize(none[0], "a different draft", { unused: 1 }), none[1]);
   const vars = Object.fromEntries(placeholders(withVars[1]).map((p, i) => [p, i === 0 ? "Ada" : 42]));
-  assert.equal(t(withVars[0], "draft {x}", vars), word(withVars[0], vars));
-  assert.equal(t("test.fixture.absent", "Hello {who}, {n}", { who: "Ada", n: 7 }), "Hello Ada, 7");
-  assert.equal(t("test.fixture.absent", "Hello {who}", { who: "{other}", extra: 1 }), "Hello {other}");
-  assert.equal(t("Test.Fixture-A_b.absent", "Plain"), "Plain");
-  assert.equal(hasWord("test.fixture.absent"), false, "t does not add to the list");
+  assert.equal(localize(withVars[0], "draft {x}", vars), word(withVars[0], vars));
+  assert.equal(localize("test.fixture.absent", "Hello {who}, {n}", { who: "Ada", n: 7 }), "Hello Ada, 7");
+  assert.equal(localize("test.fixture.absent", "Hello {who}", { who: "{other}", extra: 1 }), "Hello {other}");
+  assert.equal(localize("Test.Fixture-A_b.absent", "Plain"), "Plain");
+  assert.equal(hasWord("test.fixture.absent"), false, "localize does not add to the list");
   /* a key of the file outside R14's id shape (it holds a `/`) is read by word only */
   for (const r of WORD_ROWS.filter((x) => /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/.test(x[0]))) {
     const v = Object.fromEntries(placeholders(r[1]).map((p) => [p, `<${p}>`]));
-    assert.equal(t(r[0], "draft", v), word(r[0], v), r[0]);
+    assert.equal(localize(r[0], "draft", v), word(r[0], v), r[0]);
   }
 });
 
 test("R14 control: a missing placeholder throws WORD_VAR_MISSING naming the id and the placeholder (for a held id and for en); a malformed id throws BAD_WORD_ID; an id with no row and no sentence throws; neither falls back to the id", () => {
   const withVars = WORD_ROWS.find((r) => placeholders(r[1]).length >= 1);
   const [p] = placeholders(withVars[1]);
-  assert.throws(() => t(withVars[0], "draft"), (e) => e.code === "WORD_VAR_MISSING" && e.message.includes(withVars[0]) && e.message.includes(`{${p}}`));
+  assert.throws(() => localize(withVars[0], "draft"), (e) => e.code === "WORD_VAR_MISSING" && e.message.includes(withVars[0]) && e.message.includes(`{${p}}`));
   for (const vars of [undefined, {}, { [p]: undefined }, { [p]: null }, Object.create({ [p]: "x" })])
-    assert.throws(() => t(withVars[0], "draft", vars), (e) => e.code === "WORD_VAR_MISSING");
-  assert.throws(() => t("test.fixture.absent", "Hello {who}"), (e) => e.code === "WORD_VAR_MISSING" && e.message.includes("test.fixture.absent") && e.message.includes("{who}"));
-  assert.throws(() => t("test.fixture.absent", "Hello {who}", { other: 1 }), (e) => e.code === "WORD_VAR_MISSING");
+    assert.throws(() => localize(withVars[0], "draft", vars), (e) => e.code === "WORD_VAR_MISSING");
+  assert.throws(() => localize("test.fixture.absent", "Hello {who}"), (e) => e.code === "WORD_VAR_MISSING" && e.message.includes("test.fixture.absent") && e.message.includes("{who}"));
+  assert.throws(() => localize("test.fixture.absent", "Hello {who}", { other: 1 }), (e) => e.code === "WORD_VAR_MISSING");
   for (const id of ["single", "", "a..b", ".a.b", "a.b.", "a b.c", "a.b!", "a.b c", undefined, null, 7, {}])
-    assert.throws(() => t(id, "x"), (e) => e.code === "BAD_WORD_ID", String(id));
-  assert.throws(() => t("test.fixture.absent"), (e) => e.code === "BAD_WORD_EN");
-  assert.throws(() => t("test.fixture.absent", 5), (e) => e.code === "BAD_WORD_EN");
+    assert.throws(() => localize(id, "x"), (e) => e.code === "BAD_WORD_ID", String(id));
+  assert.throws(() => localize("test.fixture.absent"), (e) => e.code === "BAD_WORD_EN");
+  assert.throws(() => localize("test.fixture.absent", 5), (e) => e.code === "BAD_WORD_EN");
 });

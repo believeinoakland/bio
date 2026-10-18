@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import * as words from "../../../src/setup-words/index.mjs";
-import { WORD_ROWS, WORDS_COMMIT, word, hasWord, t } from "../../../src/setup-words/index.mjs";
+import { WORD_ROWS, WORDS_COMMIT, word, hasWord, localize } from "../../../src/setup-words/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const SOURCE = join(ROOT, "bio-plane/src/setup-words/index.mjs");
@@ -141,7 +141,7 @@ test("R3 WORD_ROWS and each of its rows are frozen: no write changes the list, a
   assert.equal(JSON.stringify(WORD_ROWS[0]), first);
 });
 
-test("R4 the module does nothing when loaded beyond defining its exports and imports only its own generated list: its exports are exactly WORDS_COMMIT, WORD_ROWS, hasWord, t and word; its code never imports the generator or any other module; every load answers the same", async () => {
+test("R4 the module does nothing when loaded beyond defining its exports and imports only its own generated list: its exports are exactly WORDS_COMMIT, WORD_ROWS, hasWord, localize and word; its code never imports the generator or any other module; every load answers the same", async () => {
   const code = readFileSync(SOURCE, "utf8")
     .replace(/\/\*[^]*?\*\//g, " ")
     .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
@@ -149,7 +149,7 @@ test("R4 the module does nothing when loaded beyond defining its exports and imp
   assert.equal(imports.length, 1);
   assert.match(readFileSync(SOURCE, "utf8"), /import \{ WORD_ROWS, WORDS_COMMIT \} from "\.\/rows\.mjs";/);
   assert.doesNotMatch(code, /\brequire\b|build\.mjs|\bprocess\b|\bDate\b|\bMath\b|\bfetch\b|\bsetTimeout\b/);
-  assert.deepEqual(Object.keys(words).sort(), ["WORDS_COMMIT", "WORD_ROWS", "hasWord", "t", "word"]);
+  assert.deepEqual(Object.keys(words).sort(), ["WORDS_COMMIT", "WORD_ROWS", "hasWord", "localize", "word"]);
   const again = await import(`${pathToFileURL(SOURCE).href}?again`);
   assert.equal(again.WORDS_COMMIT, WORDS_COMMIT);
   assert.deepEqual(again.WORD_ROWS, WORD_ROWS);

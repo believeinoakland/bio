@@ -1,5 +1,5 @@
 /* setup-words' generator (R10, R15–R18): `docs/development/ux-substrate/screens/words.json` as it stands in the product
-   tree, plus every `t(id, en)` call in the product's source, becomes `bio-plane/src/setup-words/rows.mjs` and the
+   tree, plus every `localize(id, en)` call in the product's source, becomes `bio-plane/src/setup-words/rows.mjs` and the
    design's review list `words-unreviewed.json`. Run from the repository root:
      node bio-plane/src/setup-words/build.mjs            write rows.mjs and words-unreviewed.json
      node bio-plane/src/setup-words/build.mjs --check    exit 1, naming the first difference, when either is stale
@@ -117,7 +117,7 @@ function namesIn(p, into) {
 
 /* The names a scope-making node declares for its own body: its parameters and function name, `var`s anywhere inside it
    (not inside a nested function), and the lets, consts, classes and functions of its statement lists. Import bindings
-   are left out: `t` imported is the call the build reads. */
+   are left out: `localize` imported is the call the build reads. */
 function declared(node) {
   const into = new Set();
   const hoist = (n, top) => {
@@ -145,7 +145,7 @@ function declared(node) {
   return into;
 }
 
-/* Every call `t(<id>, <en>, …)` of one source text, in source order: { id, en, line }. A `t` the file declares itself
+/* Every call `localize(<id>, <en>, …)` of one source text, in source order: { id, en, line }. A `localize` the file declares itself
    (a parameter, a local function or constant) is not the call. */
 export function callsOf(source, where) {
   let ast;
@@ -156,13 +156,13 @@ export function callsOf(source, where) {
   const SCOPES = /^(Program|BlockStatement|StaticBlock|SwitchStatement|CatchClause|ForStatement|ForInStatement|ForOfStatement|FunctionDeclaration|FunctionExpression|ArrowFunctionExpression)$/;
   const visit = (node, shadowed) => {
     if (!node || typeof node.type !== "string") return;
-    if (!shadowed && SCOPES.test(node.type) && declared(node).has("t")) shadowed = true;
-    if (!shadowed && node.type === "CallExpression" && node.callee.type === "Identifier" && node.callee.name === "t") {
+    if (!shadowed && SCOPES.test(node.type) && declared(node).has("localize")) shadowed = true;
+    if (!shadowed && node.type === "CallExpression" && node.callee.type === "Identifier" && node.callee.name === "localize") {
       const [a, b] = node.arguments;
       const id = literalOf(a), en = literalOf(b);
       const line = node.loc.start.line;
-      if (id === null) throw fail(`${where}:${line}: t's id is not a string literal`);
-      if (en === null) throw fail(`${where}:${line}: t's sentence for ${id} is not a string literal`);
+      if (id === null) throw fail(`${where}:${line}: localize's id is not a string literal`);
+      if (en === null) throw fail(`${where}:${line}: localize's sentence for ${id} is not a string literal`);
       if (!ID_RE.test(id)) throw fail(`${where}:${line}: ${JSON.stringify(id)} is not a word id`);
       calls.push({ id, en, line });
     }
@@ -176,7 +176,7 @@ export function callsOf(source, where) {
   return calls;
 }
 
-/* The `t` calls of the product's source: [{ id, en, module, file, line }], two different `en` for one id refused. */
+/* The `localize` calls of the product's source: [{ id, en, module, file, line }], two different `en` for one id refused. */
 export function extract(root) {
   const first = new Map();
   for (const [file, module] of ownedFiles(root)) {
@@ -198,7 +198,7 @@ export function combine(designRows, calls) {
   const held = new Set(designRows.map((r) => r[0]));
   const added = calls.filter((c) => !held.has(c.id));
   const rows = [...designRows, ...added.map((c) => [c.id, c.en, null, null, false, "code"])];
-  for (const r of rows) if (FORMATTED.test(r[1])) throw fail(`${r[0]} holds a formatted argument ({name, …}); word and t do not render these yet (R18)`);
+  for (const r of rows) if (FORMATTED.test(r[1])) throw fail(`${r[0]} holds a formatted argument ({name, …}); word and localize do not render these yet (R18)`);
   const unreviewed = added.map(({ id, en, module, file, line }) => ({ id, en, module, file, line }));
   return { rows, unreviewed };
 }
@@ -215,7 +215,7 @@ export function render(rows, sha) {
    ${sha}) followed by ${codeCount} sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
-   "code" (a t(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
+   "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by \`node bio-plane/src/setup-words/build.mjs\` from the repository root
    (\`--check\` finds it stale); bio-plane/test/m/setup-words/ checks it. */
 export const WORDS_COMMIT = ${JSON.stringify(sha.slice(0, 10))};
