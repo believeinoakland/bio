@@ -21,3 +21,7 @@ Size (session_01QXX7F37mcmzDGf3WCEqdPU): test runs 14, module lines 3948
 ## J2 · REPORT
 
 Two things the stamp 1.78.0 makes stale in files that are not mine. (a) build/modules.json: promotion's tests entry names bio-plane/test/fixtures/row-census-1.77.0.jsonl, now row-census-1.78.0.jsonl; checks/run format and architecture each fail on it until you move the entry (as for 1.77.0). (b) case-checker's generated bio-plane/src/case-checker/program.mjs embeds CATALOG_VERSION and is stale: 3 tests in test/m/case-checker/program.test.mjs (R13 build bytes, R13 R16 R20 R22, R25) fail until the case-checker job runs node bio-plane/src/case-checker/build-program.mjs. Details in my record.
+
+## J3 · COMPLETE
+
+T51-15 done: R58 bundleHistory/op=bundlehistory (R54 four arms) with tests; stamp 1.78.0, 1918 rows, digest 31b4a129...; system/row-census green; promotion tests 148 pass; coverage 58/58; ownership 0 failures. K3807 item 2 deferred to T52 (B2). Reports: modules.json fixture name, case-checker program.mjs stale. Record has the detail.
