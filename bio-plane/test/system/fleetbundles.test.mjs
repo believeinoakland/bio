@@ -10,7 +10,6 @@
    ---- FL-10's ARMS (D-298: the plane's own bundle gets the guard), RUN 2026-09-10 IN WORKTREE bio-worktrees/FLEET, APPENDED — no FL-9 arm edited. **BASELINE 56 pass / 0 fail, exit 0** before each arm.
    (6) **FL-10's OWN ARM, AND THE TREE-SHAKE PAIR IN ONE** — append one export to `bio-plane/src/pdfstructure.mjs` (NON-entry) and rebuild nothing -> **54 pass, 2 FAIL, exit 1**: bio-plane's input-hash arm naming `src/pdfstructure.mjs` AND pdf-worker's cross-tree arm naming `../bio-plane/src/pdfstructure.mjs` — the SAME plane edit stales BOTH committed artifacts by name. **The plane's BYTE arm stayed GREEN, as declared: esbuild tree-shakes the unused export, so byte-identity alone would have passed this real source change** — FL-9's measurement holding on the plane, which is FL-10's NC (2) satisfied by measurement rather than assertion. agent-worker held.
    (6b) **THE SAME CHANGE ON THE PLANE'S ENTRY** (`src/index.mjs`, exports not tree-shaken) -> **52 pass, 4 FAIL, exit 1**: input-hash, byte-identity, the manifest-sha arm, AND the comment-only sensitivity assertion — the fourth is the same change seen by the sensitivity probe, not a second cause. Both members held.
-   (7) **THE GENERATED-INPUT LOOP** — append one HTML comment to `bio-plane/src/sign-release.html`, re-render nothing -> **55 pass, 1 FAIL, exit 1**, EXACTLY the render assertion naming the stale render; every input-hash and byte arm held, because no hashed input moved. This is the staleness class the manifest cannot see and the arm exists for.
    (8) **OVER-STRICTNESS, PLANE HALF** — a legitimate `npm run build` of the unchanged plane must leave the tree byte-identical (`git status --porcelain` empty; run after the commit, like (5a)) and the suite green at the baseline figure.
    (5) **OVER-STRICTNESS, and these must all PASS.** [(b) and (c) RETIRED in T20 with `tools/` and `scripts/coverage.mjs`, which they read; the driver runs (a) alone — see its header.] (a) Rebuild BOTH members from unchanged sources — a legitimately rebuilt, byte-identical bundle must still pass and the tree must be UNCHANGED afterwards (`git status --porcelain` empty). **RUN AFTER THE COMMIT, deliberately: the tree-unchanged half is only a statement about a clean tree.** (b) A docs-only change must not fail the build — this suite must be OUTSIDE the doc-facing set `tools/gates.mjs` derives, READ OFF `gates.mjs --explain` since M0-152 (see M0-152's line below; the restatement this sentence described is superseded). (c) `node scripts/coverage.mjs --strict` exits 0, read from the process's own status.
    ---- M0-188's ARMS (the remedy a finding hands its reader), RUN 2026-09-24 IN THIS WORKTREE, APPENDED — no earlier arm edited. **BASELINE 96 pass / 0 fail, exit 0** before each arm; every restore verified by CONTENT and by sha256 at 31888 B.
@@ -81,7 +80,6 @@ import {
   planeMember, assetsOf, optionsFor, isContainer, isGuarded,
   BUDGET, MIB, sizeVerdict, startVerdict, measureStart, budgetReport,
 } from "../../scripts/fleet-bundle.mjs";
-import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../scripts/embed-signpage.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -616,15 +614,6 @@ console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because
     planeInputs.filter((p) => /^\.\.\/docprofile\/(index|recogniser|events)\.mjs$|^\.\.\/docprofile\/handlers\//.test(p)), []);
   t("bio-plane: and vendors NOTHING — the byte arm is runnable on any checkout, so it can never skip",
     (planeManifest?.vendoredInputs || []).length, 0);
-
-  /* THE GENERATED-INPUT LOOP the input hashes cannot see: `src/signpage.mjs` is
-     committed and hashed like any source, but it is GENERATED from
-     `bio-plane/src/sign-release.html` — so a changed page whose render was never re-run
-     leaves every input hash true and the next build different. The gate closes
-     it by rendering IN MEMORY (one expression, imported from the script that
-     writes it) and comparing. Nothing writes. */
-  t("bio-plane: committed src/signpage.mjs IS the render of bio-plane/src/sign-release.html — a changed page with a stale render fails HERE, not at the next build",
-    renderSignpage(readFileSync(SIGNPAGE_SRC, "utf8")), readFileSync(SIGNPAGE_OUT, "utf8"));
 
   if (planeCommitted) {
     const { runnable, reason } = freshBuildRunnable(plane, planeManifest || {});

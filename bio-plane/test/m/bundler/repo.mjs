@@ -228,11 +228,9 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   plane = {}, build = true, realPackageJson = false, notes = NOTES } = {}) {
   const root = mkdtempSync(join(tmpdir(), "bundler-repo-"));
   for (const f of OWN) put(root, `bio-plane/scripts/${f}`, readFileSync(join(PLANE, "scripts", f)));
-  put(root, "bio-plane/scripts/embed-signpage.mjs", readFileSync(join(PLANE, "scripts/embed-signpage.mjs")));
   /* sshsig.mjs is signatures', and it imports other modules (record-grammar since T33-7): copy its whole relative
      import closure, so a new import there never strands the fixture. */
   for (const rel of localClosure("src/sshsig.mjs")) put(root, `bio-plane/${rel}`, readFileSync(join(PLANE, rel)));
-  put(root, "bio-plane/src/sign-release.html", readFileSync(join(PLANE, "src/sign-release.html")));
   put(root, "bio-plane/scripts/sign-sshsig.mjs", readFileSync(join(PLANE, "scripts/sign-sshsig.mjs")));
   mkdirSync(join(root, "bio-plane/node_modules/.bin"), { recursive: true });
   symlinkSync(join(PLANE, "node_modules/esbuild"), join(root, "bio-plane/node_modules/esbuild"), "dir");

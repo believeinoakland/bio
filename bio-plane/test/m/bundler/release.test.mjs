@@ -208,7 +208,7 @@ test("R16: npm run build writes the plane's bundle and manifest by R5 from the c
     writeFileSync(join(root, "bio-plane/src/index.mjs"), 'export { default } from "./plane/index.mjs";\n');
     /* A committed generated source that its generator would now render differently: a build that ran the generator
        would rewrite it (R16: it calls no step that generates a source file). */
-    const stale = "export const SIGN_HTML = 'committed, not the render of sign-release.html';\n";
+    const stale = "export const SIGN_HTML = 'a committed file, whatever it says';\n";
     writeFileSync(join(root, "bio-plane/src/signpage.mjs"), stale);
     const r = spawnSync("npm", ["run", "build"], { cwd: join(root, "bio-plane"), encoding: "utf8" });
     assert.equal(r.status, 0, r.stdout + r.stderr);
