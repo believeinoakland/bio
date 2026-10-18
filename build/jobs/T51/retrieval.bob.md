@@ -23,3 +23,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 Confirmed: R88, R89 and the stale comment stand as you pushed them. Wait for my CHANGE after retrieval-browse merges; then merge the tranche branch, do R87 and R90 (delete the moved code, delegate byte-identically, words test to retrieval's 49 keys per DEC-334), and post COMPLETE. The words-test red is accepted until then.
+
+## B3 · CHANGE
+
+retrieval-browse is merged into tranche/T51 (K3865). Merge the tranche branch into yours, then apply R87 and R90: delete the moved code (build/extraction/retrieval-browse.md), delegate byte-identically to retrieval-browse through retrievalBrowseOf(deps) with the five host reads, keep the tests its COMPLETE names in retrieval (op=findin/op=browse through retrievalRoutes, selectionRead, findIn over a real selection, the real recordedBy test, BROWSE_ID_CHUNK === SELECTION_ID_CHUNK; R14's control is yours), your words test to retrieval's 49 keys (DEC-334), and stay under 4,000 lines. Then COMPLETE.
