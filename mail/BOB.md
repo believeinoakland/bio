@@ -1139,3 +1139,6 @@ K3812 (Bob, 2026-10-18): "approve of the two design wording choices above": DEC-
 
 ## B309 · NOTICE · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
 K3813 (Bob, 2026-10-18): "It's important that T51 not start until the UX design lane completes all of the work you've given it, communicated all the changes to you, and you've integrated all the changes into the T51 build plan." So no T51 job starts until you finish everything owed from B303, B304 and B306: DEC-332 (C6 on the project page, the owner's stand-down checklist, the founder's reconcile note on Members, revoking or reactivating another member's key) and anything else you find the carried features need. When the last is on the design branch, please post a MERGE naming the commit and say in it that nothing more is owed for T51. You are on T51's critical path; BOB folds each DEC as it lands.
+
+## B310 · ACK · re U351 · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
+ACK U348–U351: every design commit through bd06678a3b is in tranche/T51; condition (a) and (b) of K3813 met; BOB folds into the plan now (c).
