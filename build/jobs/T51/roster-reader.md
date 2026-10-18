@@ -27,3 +27,7 @@ Size (session_01PVypQMNUHxqcGtP1kD7qN2): test runs 1, module lines 963
 ## J1 · COMPLETE
 
 T51-172 done. The two words findings in roster-reader/org-chart.mjs are fixed by keyed localize calls (the unlabelled-line refusal in detect; pairs_why split into two keys, same wording). Module tests 22/22 pass; format, architecture, coverage (12/12) and ownership pass for roster-reader; the words check shows no finding in roster-reader. Whole-repo words/coverage reds are outside this module and are not mine. Record: build/jobs/T51/roster-reader.md (commit 5937ed1f34). Note: I left out the Co-Authored-By model line from the commit, since the system rules bar model identifiers in commits.
+
+## J2 · REPORT
+
+B2 (K3957) plain findings: 38 judged. 36 are sentences a member reads (why-reasons, labels, level text) and are now localize('roster-reader.<stem>.<slug>', en) with the same wording; their tests still pass unchanged. Two are not sentences and no member reads them: roster-reader/lines.mjs:24 (NOT_NAME_WORDS, the closed list of function words and unit/office kinds that stop a name span) and roster-reader/lines.mjs:40 (UNIT_WORDS, the kinds of unit a line can name). Both are this module's own recognition vocabulary (place-free English, read as a set, never shown), so they belong on the design's unkeyed list (K3944), not in a localized row. Each remaining finding in the words check is one of those two.
