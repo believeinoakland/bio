@@ -106,3 +106,27 @@ Two strings in doctypes/index.mjs stay plain. They are the `why` of registerDoct
 **M-T51-1:** module raw source lines = 3498 (`wc -l doctypes/*.mjs`; excludes doctypes/test/).
 
 Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 2, module lines 3498
+
+## J7 · COMPLETE
+
+**Entries applied**
+- B4 (CHANGE, K3962, K3965) read and acted on. Merged tranche/T51 and pulled civicos-process (ea6cd83) first.
+- The one test copy in section "Test copies of code sentences (K3962)", doctypes/test/doctypes.test.mjs (the "this meeting has taken place..." assertion), now compares with localize("doctypes.meeting-calendar.taken_place", en).
+- Regex copies of localize ens, converted as B4 asks: each now compares with localize(id, en[, vars]) by equality. These were doctypes.test.mjs (form_why and the references/body whys), policy.test.mjs (the detect why, header_why, sections_why), regulation-sections.test.mjs (form_why, the code-forms and neither-form sections_why, the added-section why, sections_none_read). Each test imports localize from bio-plane/src/setup-words/index.mjs. Fragments under 25 characters, and assertions on rendered values, stay as regex; none copies a localize en.
+- Commit 56bdcc8415 on job/T51/doctypes.
+
+**Deferred:** none.
+
+**Other modules:** `node bio-plane/src/setup-words/build.mjs --check` (read-only) fails on a jurisdictions key, not doctypes: jurisdictions.index.amount_is_amount_and_units holds a formatted argument ({name, …}), which word and localize do not render yet (R18). For jurisdictions to fix; I have not touched it.
+
+**Tests and checks** (from civicos-process)
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0.
+- `checks/words.mjs /home/user/bio doctypes`: 2 findings, both REPORTed (index.mjs:48, :58); testcopy 0, inline 0 other.
+- `checks/format.mjs`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 77 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 3 files changed by doctypes; 0 failures.
+
+**M-T51-1:** module raw source lines = 3498 (`wc -l doctypes/*.mjs`; excludes doctypes/test/). No product code changed in this round.
+
+Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 3, module lines 3498
