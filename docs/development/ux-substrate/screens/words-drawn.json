@@ -11876,7 +11876,7 @@
   },
   {
    "key": "installer.logs.undetermined",
-   "en": "The installer could not look at your account's Logpush jobs (Cloudflare said: {said}), so it can't say whether one keeps a record of each request to your team's Civicsmith, which would be a log of who opened which file. To check it yourself, open Analytics & Logs in the Cloudflare dashboard, then Logpush, and look for a job over Workers Trace Events. None should cover {programs}.",
+   "en": "The installer could not read your account's Logpush jobs (Cloudflare said: {said}), so it can't say whether one keeps a record of each request to your team's Civicsmith, which would be a log of who opened which file. To check it yourself, open Analytics & Logs in the Cloudflare dashboard, then Logpush, and look for a job over Workers Trace Events. None should cover {programs}.",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1509; {said} {programs}; B323 6: K3818: says plainly it could not look; never \"undetermined\""
   },
@@ -12152,7 +12152,7 @@
   },
   {
    "key": "installer.check.log.undetermined",
-   "en": "The installer could not look at whether a log on your Cloudflare account records who opens which file. The step above says how to check it yourself.",
+   "en": "The installer could not check whether a log on your Cloudflare account records who opens which file. The step above says how to check it yourself.",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2064; B323 6: K3818: says plainly it could not look; never \"undetermined\""
   },
@@ -13538,7 +13538,7 @@
   },
   {
    "key": "screen.published.named.only.its.documents.are",
-   "en": "Served with its own published case; its documents are not held here.",
+   "en": "Served with its own published case; its documents are not published here.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -15200,7 +15200,7 @@
   },
   {
    "key": "screen.project.notice.your.team.has.two.other",
-   "en": "Your team has {open} other notices open and has published {published} yet.",
+   "en": "Other notices your team has open: {open}. Cases it has published: {published}.",
    "protected": false,
    "note": "DEC-332: B306 C6: drawn sentence; B325 2: {open} is a count in words (such as two); {published} is the cases published so far, in words (such as no case, one case, three cases)"
   },
@@ -16568,7 +16568,7 @@
   },
   {
    "key": "queue.answered.snoozed",
-   "en": "Snoozed {item} to {date}",
+   "en": "Snoozed {item} until {date}",
    "protected": false,
    "note": "DEC-338: B325 2: an answered row: what was snoozed (as the item names it) and the day it comes back"
   },
@@ -16895,6 +16895,12 @@
    "en": "Already running your team's Civicsmith and want the latest software? That is a separate page: {address}. Updates never touch your passwords or your record.",
    "protected": false,
    "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): small paragraph; {address} the update page's address, shown as code"
+  },
+  {
+   "key": "screen.published.rests.on.the.council.minutes.one",
+   "en": "Rests on: 1 document, not published with the case.",
+   "protected": false,
+   "note": "DEC-338: the consistency read: the one-form"
   }
  ],
  "rewrite": {
