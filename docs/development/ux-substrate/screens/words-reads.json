@@ -5870,6 +5870,7 @@
     "refusal.NOT_A_PARTICIPANT",
     "refusal.NOT_SIGNED_IN",
     "refusal.NOT_YOURS",
+    "refusal.NO_CALC",
     "refusal.NO_ENTITY",
     "refusal.NO_NODE",
     "refusal.REAUTH_DUE",
@@ -6071,14 +6072,14 @@
     "weight.dots.means"
    ],
    "counts": {
-    "reads": 232,
+    "reads": 233,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 174,
     "inline": 3,
     "inlineKeyed": 0,
     "inlineUnkeyed": 3,
-    "computedKeys": 58
+    "computedKeys": 59
    },
    "unkeyed": [
     {
@@ -7773,6 +7774,7 @@
     "queue.wizard-withdrawn.detail",
     "queue.wizard-withdrawn.summary",
     "refusal.AI_KEPT_AWAY",
+    "refusal.AI_LIMIT_REACHED",
     "refusal.AI_PART_NOT_DEPLOYED",
     "refusal.ANSWER_MALFORMED",
     "refusal.ASSISTANT_REMOTE_NOT_READY",
@@ -8062,14 +8064,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 1033,
+    "reads": 1034,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 422,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 611
+    "computedKeys": 612
    },
    "unkeyed": [
     {
@@ -11687,8 +11689,11 @@
     "refusal.AGENT_WORKER_SILENT",
     "refusal.AGENT_WORKER_UNBOUND",
     "refusal.AI_KEPT_AWAY",
+    "refusal.AI_LIMIT_INVALID",
     "refusal.ASSISTANT_REMOTE_NOT_READY",
     "refusal.DISCLOSURE_DUE",
+    "refusal.LIMIT_UNIT_UNAVAILABLE",
+    "refusal.NOT_THIS_MEMBER",
     "refusal.NO_SIGNIN_WAITING",
     "refusal.SIGNIN_ADDRESS_UNEXPECTED",
     "refusal.SIGNIN_EXPIRED",
@@ -12465,14 +12470,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1321,
+    "reads": 1324,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 1182,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 139
+    "computedKeys": 142
    },
    "unkeyed": []
   },
