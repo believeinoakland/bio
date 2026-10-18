@@ -46,3 +46,7 @@ CR-1 applied: R30 met. localClock(instant, zone) -> {hour, minute} is exported b
 Merged `tranche/T51`. `recurrence.mjs` :158, :241, :248 now pass `reason(key, vars)` (`civil-time.window_open_end`, `.date_open_unknown`, `.spans_two_fiscal`), and the fiscal fact of the wrong form (:238, `FACT_INVALID`) is `civil-time.recurrence.fiscal_year_form` `{body}`; all four are in `reasons.mjs`' list, with one R30 test naming each (`recurrence.test.mjs`). `fiscalPeriod`'s "no fiscal_year held" (:235) and the rules' `no(...)` answers still carry `calendar.mjs`'s `missing()` sentence as a string; R30 binds `values.mjs` and BOB named only these sites, so they stay; say if R30 should reach them. The words file has no "Plain findings (K3957)" section for civil-time.
 Checks: civil-time tests 69/69; format, architecture 0 failures; coverage 30/30; words check no civil-time finding. `setup-words/build.mjs --check` fails on `calc-grammar.recipe.field_shape` (a formatted argument; not this module's), and reports nothing for civil-time.
 Size (session_01BcmjtWcShwiAerhfkmJdjL): test runs 8, module lines 1465
+
+## J2 · COMPLETE
+
+B2 applied: recurrence.mjs :158/:241/:248 and the fiscal-form reason (:238) now pass reason(key, vars), each named by an R30 test; tranche merged; tests 69/69, format/architecture/coverage/ownership 0 failures. build.mjs --check fails only on calc-grammar.recipe.field_shape (not mine). Unchanged strings: fiscalPeriod's 'no fiscal_year held' (:235) and rules' no() answers, from calendar.mjs missing(); say if R30 should reach them.
