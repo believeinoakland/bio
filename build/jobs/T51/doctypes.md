@@ -79,3 +79,7 @@ Plain (unformatted) member-facing sentences remain in doctypes and the words che
 **M-T51-1:** module raw source lines = 3507 (`wc -l doctypes/*.mjs`, the module's own code; excludes doctypes/test/).
 
 Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 1, module lines 3507
+
+## J5 · REPORT
+
+Two strings in doctypes/index.mjs stay plain. They are the `why` of registerDoctypes' return value (index.mjs:48, "the types are already registered here", and :58, "every type was already held by this registry"). The composition root reads them at wiring time, and no member sees them. The R2 test matches /already/ on them. Please put them on the design's unkeyed list (K3944), or say if they should be keyed instead.
