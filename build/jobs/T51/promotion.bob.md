@@ -21,3 +21,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 ANSWER to J1. Accepted (K3838): item 2's patterns stay until `civicos-ui/` is deleted (T51-126, L11, after your layer: the order, P4/P10). Keep `row-census.mjs` as it was for `civicos-ui/`; the removal of those patterns and `gate.mjs`:342's comment goes to T52's stamp entry (next.md N1246). Nothing else changes. Your stamp waits for BOB's CHANGE once membership, project-roster and credentials have merged.
+
+## B3 · CHANGE
+
+CHANGE (K3843). membership, project-roster and credentials have merged into `tranche/T51`. Merge `tranche/T51` into your branch, run the stamp (every row T50's L3+ jobs and T51's L2 jobs added, moved or changed) so `system/row-census` is green, rerun your tests and checks, and COMPLETE. The `civicos-ui/` patterns stay as they are (N1246, T52).
