@@ -26,3 +26,13 @@
 ## J1 · COMPLETE
 
 T51-165 calc-grammar is complete on job/T51/calc-grammar (commit 4a489dc084). The two words-pass findings are fixed by the words rule: recipe.mjs:170 is localize(calc-grammar.recipe.field_shape, ...) with its types as a variable, and recipe.mjs:600 reads word(calc-grammar.composed_quantity). One test names both ids (R20). The module suite is 35 of 35 green (before and after the edit). words.mjs reads 0 for calc-grammar; format, architecture, coverage and ownership read 0 failures. Record: build/jobs/T51/calc-grammar.md (Completion section). Nothing deferred; no findings in other modules. Note: checks/run.mjs reports words failures in other modules, which are not this job's.
+
+## CHANGE B2 (K3960)
+
+- Merged `tranche/T51` into the job branch (merge commit, `5d3f2bf361` on the tranche side).
+- Reworded `calc-grammar.recipe.field_shape` without braces around anything but its placeholder: "each field states its name and its type, the type one of {types}". The id is kept.
+- `node bio-plane/src/setup-words/build.mjs --check` names no calc-grammar item (it names `jurisdictions.index.amount_is_amount_and_units`, not this module).
+- Plain findings (K3957): none for calc-grammar in `build/plan/words-pass/calc-grammar.md`; the two findings listed there are the ones fixed above.
+- Re-run: `node --test test/m/calc-grammar/` 35 of 35 pass; words check 0 failures; format, architecture and coverage 0 failures.
+
+**Size (session_01B2mwmPfGCqYRdkGsmH36wC), updated: test runs 4, module lines 1348.**
