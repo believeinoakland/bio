@@ -32,3 +32,7 @@ Tests and checks:
 - `node checks/ownership.mjs /home/user/bio subresources tranche/T51 job/T51/subresources`: 1 file changed by subresources, 0 failures.
 
 Size (session_016S5EWxLud6RnWPVBD4mLr4): test runs 36, module lines 1400
+
+## J4 · REPORT
+
+One plain finding is left unkeyed on purpose: `bio-plane/src/subresources.mjs:402`, the render companion's Content-Security-Policy string (`object-src 'none'; form-action 'none'; base-uri 'none'` and its siblings). It is wire grammar: the browser reads it from the companion's meta tag, and no member reads it, so I did not key it. For the design's unkeyed list (K3944).
