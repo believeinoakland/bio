@@ -138,7 +138,7 @@ function readTable(item, view) {
     rows.push(out);
   });
   const roster = { source, as_of: typeof item.as_of === "string" && item.as_of ? item.as_of : null, rows };
-  if (!roster.as_of) roster.as_of_why = "the held table states no date of its own; a row's own `as_of` column, where it has one, is kept on the row";
+  if (!roster.as_of) roster.as_of_why = localize("roster-reader.source.the_held_table_states_no", "the held table states no date of its own; a row's own `as_of` column, where it has one, is kept on the row");
   const unnamed = cols.roles.filter((c) => c.role === null).length, contact = cols.roles.filter((c) => c.role === "contact").length;
   roster.columns = cols.roles.map((c) => ({ index: c.index, header: c.header, role: c.role }));
   if (contact || unnamed)
