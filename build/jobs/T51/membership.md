@@ -37,3 +37,15 @@
 Commit note: the Co-Authored-By line is omitted. The session prompt says no model identifier goes in commit messages.
 
 Size (session_017qPsKctYDpHHE9UBkwHN19): test runs 3, module lines 4212
+
+## J2 · COMPLETE
+
+**COMPLETE** again, for B2 (CHANGE, K3838). Commit `d302aa72fe` on `job/T51/membership`; `tranche/T51` merged in first.
+
+- **R120 contract**: `project_participants` now names `invited_by` (TEXT), the column R118 writes. `t38-seams.test.mjs` (the R120 test) asserts it by type, and `t41-sight-words.test.mjs` (R120) asserts its presence. No column changed.
+- **Tests**: `node --test test/m/membership/*.test.mjs test/members.test.mjs` from `bio-plane/`: 267 pass, 0 fail. The two R120 files: 17 pass.
+- **Checks** (process repo): format 0 failures; architecture for membership 0 failures; coverage for membership 112 of 112 named; ownership 0 failures (6 files changed by membership, all in its paths or its record); `run.mjs`: architecture 0 failures.
+- **Coverage in `run.mjs`**: 10 failures, none in membership. Since the merge, `entities` (R57–R61), `explore` (R26), `people` (R40, R41) and `progressions` (R46) also show ids named by no test, in addition to the six from COMPLETE J1. These came in with the tranche merge and are outside this job.
+- **Raw lines of source**: 4,212, unchanged from J1 (test edits only in this change).
+
+Size (session_017qPsKctYDpHHE9UBkwHN19): test runs 6, module lines 4212
