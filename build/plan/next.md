@@ -4,6 +4,7 @@
 
 ## Entries
 
+- N1252 · provenance-routes, ai-runs (RUN-RULES #18 J1; K3880) · stale comments naming the deleted `check-refusal-codes.mjs` guard: `provenance-routes/checks.mjs`:36, `ai-runs/index.mjs`:1026, :1269 · K3880 · hard reason: no behaviour (P19), 1 of 3, each with its module's next entry; provenance-routes' L3 closed and ai-runs has no T51 job (P10)
 - N1251 · inquiry-grammar, basis-versions (BASIS-VERSIONS #19 J1; K3873, K3879) · inquiry-grammar exports `standardLegFindings` (behaviour unchanged; R13 or R4 names it exported, as R11, R14, R15, R17 name theirs) and basis-versions judges a version's standard leg by it, meeting R3's standard half · K3879 · hard reason: P10 (arose during T51's L6; inquiry-grammar has no T51 job)
 - N1184 · UX-DESIGN (B-19–B-23, and the wording halves of N1181–N1183) · page titles per screen, the project page's order and tooltips covering content, the person page's empty graph, 390 px truncation and touch targets, unnamed controls: one HANDOFF to the design lane (K3460), folded when its DECs return · K3560
 - N751 · doctypes (measurement) · R35's out-of-sample measure again for the three header fields below target (coordinator, review_due, revision_cycle; R26's `measured: "below_target"`, K2079) once the issuers publish policies not among the 74 already read (the 50 and T36's 24); the mark comes off a field read at 90% or more · K2079 · req: R26 (the mark struck per field) · hard reason: a measurement: no fresh policies exist (DOCTYPES #3 J1)
