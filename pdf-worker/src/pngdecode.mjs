@@ -55,11 +55,14 @@ const unsupported = (feature, extra = {}) => new PngRefusal("UNSUPPORTED", { fea
 const corrupt = (note, extra = {}) => new PngRefusal("CORRUPT", { note, ...extra });
 const truncated = (note, extra = {}) => new PngRefusal("TRUNCATED", { note, ...extra });
 
+/** The `feature` of the memory refusal: an identifier read by code (picture-pixels maps it), never localized. */
+export const MEMORY_FEATURE = "image-past-memory-bound";
+
 /** Every `feature` an UNSUPPORTED refusal can carry. */
 export const PNG_REFUSES = Object.freeze({
   "interlaced": "the image is stored Adam7-interlaced (IHDR interlace method 1), whose seven passes are not reassembled here",
   "an unknown critical chunk": localize("image-codecs.pngdecode.a_chunk_the_decoder_must", "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines"),
-  [localize("image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound")]: localize("image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image"),
+  [MEMORY_FEATURE]: localize("image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image"),
 });
 
 /* THE MEMORY BOUND, a workload size (N34, D-312), the same figure as the JPEG
@@ -193,7 +196,7 @@ export async function decodePng(bytes) {
   const rowBytes = Math.ceil((W * ch * depth) / 8);
   const need = W * H * comps + 2 * (rowBytes + 1);
   if (need > MEMORY_BOUND)
-    throw unsupported(localize("image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound"), { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: comps });
+    throw unsupported(MEMORY_FEATURE, { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: comps });
 
   /* The palette and transparency, as the colour type reads them. */
   let palette = null, alphaOf = null, key = null, transparency = colourType === 4 || colourType === 6 ? "alpha channel" : null;

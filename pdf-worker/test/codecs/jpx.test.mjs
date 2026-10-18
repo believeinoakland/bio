@@ -20,19 +20,18 @@
  * in its COD, and check the refusal is made from the header, before any sample:
  * a refused declaration takes no time and no memory. */
 import "../../../bio-plane/test/sandbox.mjs";
-import { localize } from "../../../bio-plane/src/setup-words/index.mjs";
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { decodeJpx, JPX_REFUSES, JpxRefusal } from "../../src/jpxdecode.mjs";
+import { decodeJpx, JPX_REFUSES, JpxRefusal, MEMORY_FEATURE } from "../../src/jpxdecode.mjs";
 
 const FIX = JSON.parse(readFileSync(new URL("../fixtures/jpx-variants.json", import.meta.url), "utf8"));
 const V = FIX.variants;
 const bytesOf = (v) => new Uint8Array(Buffer.from(v.data_b64, "base64"));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-const MEMORY = localize("image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound");
+const MEMORY = MEMORY_FEATURE;
 
 function refusal(fn) {
   try { fn(); } catch (e) {

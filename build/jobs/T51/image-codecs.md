@@ -1,6 +1,6 @@
 # image-codecs (T51)
 
-**Status** · session_01YPCgAZ8Ga6MXdTiGufjUD7 · depth 2 · COMPLETE · handled B3
+**Status** · session_01YPCgAZ8Ga6MXdTiGufjUD7 · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -48,3 +48,26 @@ Size (session_01YPCgAZ8Ga6MXdTiGufjUD7): test runs 19, module lines 3423.
 **Still open (unchanged from J1).** K874: no test names the 45 new ids. Please rule whether you want a test per id or whether the words check is enough.
 
 Size (session_01YPCgAZ8Ga6MXdTiGufjUD7): test runs 33, module lines 3423.
+
+## J3 · COMPLETE
+
+**T51-256 image-codecs: COMPLETE after CHANGE B4 (K3971)** (commit a825394b67 on job/T51/image-codecs; tranche/T51 merged first).
+
+**Applied.** `jpxdecode.mjs` and `pngdecode.mjs` each export `MEMORY_FEATURE`, the one unlocalized identifier for the memory refusal. Both refusal tables use it as the key, both throw sites pass it as `feature`, and the reason sentence stays read by `localize`. The three tests compare against the constant (or import it). R7 holds: the feature is a key of the declared set.
+
+**Value, and why it differs from the English.** The constant is `"image-past-memory-bound"`, not `"an image past the memory bound"`. The words check reads the English five-word literal as a sentence and fails the module, so the identifier form was the only way to meet your rule and the words zero-count together. This is a deliberate change of value, and it has a cross-module effect (below).
+
+**Cross-module reds (REPORT, not my files).** The old English value is still the key in PDF-PIXELS' maps and tests, so these break until PDF-PIXELS #6 lands with the constant:
+- `pdf-worker/src/pagepixels.mjs:119` and `pdf-worker/src/picturepixels.mjs:60` map `"an image past the memory bound"` → `IMAGE_TOO_LARGE`. With the new key, `featureReasons` falls back to `UNSUPPORTED_FILTER`: the memory refusal still refuses, but its reason changes. No picture is produced in either case.
+- `pdf-worker/test/pagepixels.test.mjs:657` and `pdf-worker/test/jpx.test.mjs:183,188` assert the English literal and now fail (`pagepixels.test.mjs` exit 1, `test/jpx.test.mjs` exit 1).
+If you would rather keep the English value and accept the words-check failure for the constant, say so and I will revert the value; the rest of the change stands.
+
+**Checks.**
+- Codec tests: ccitt 7/7, dct 16/16, invariants 12/12, jbig2 6/6, jpx 8/8, mq 6/6, png 10/10.
+- pdf-worker: structure, imagecrop, jbig2 pass; pagepixels and jpx fail as above.
+- format 0 failures; architecture 0 failures; coverage 11 of 11 live ids.
+- ownership (tranche/T51 to job/T51/image-codecs): 5 files, 0 failures.
+- words: 0 `image-codecs` findings.
+- `node bio-plane/src/setup-words/build.mjs --check` exits 1: `rows.mjs` is stale for `image-codecs.jpxdecode.marker_0x_m_where_sot` (the generated row list). It is generated; I have not regenerated it, as BOB does that at layer close.
+
+Size (session_01YPCgAZ8Ga6MXdTiGufjUD7): test runs 36, module lines 3423.
