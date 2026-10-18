@@ -104,7 +104,7 @@ export const budgetTable = {
   key: "budget_table", label: "a budget line-item table", version: 1, contract: CONTRACT.SUBSTANCE,
   detect(ctx) {
     const no = (why) => ({ match: false, confidence: CONFIDENCE.NONE, signals: [], why });
-    if (!isSheet(ctx)) return no("not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells");
+    if (!isSheet(ctx)) return no(localize("budget-doctypes.index.not_a_csv_or_workbook_sheet", "not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells"));
     const sheets = ctx.supplied && Array.isArray(ctx.supplied.sheets) ? ctx.supplied.sheets : [];
     for (const s of sheets) {
       if (s && Array.isArray(s.cells)) {

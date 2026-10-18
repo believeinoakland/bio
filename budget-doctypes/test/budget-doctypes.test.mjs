@@ -85,16 +85,17 @@ test("R1: a budget line-item sheet is matched by header words naming a fund or o
 });
 
 test("R1: anything else does not match, and says why", () => {
+  const floorText = "Statement of Accounts\nCash 1 2\nLand 3 4";
   const cases = [
-    [financialReport, ctxFor("Cash 1 2\n".repeat(20), FIRST), /not a PDF/],
-    [financialReport, ctxFor(testPdf(["A letter to the council", "Cash 1 2\n".repeat(20)]), FIRST), /does not name it/],
-    [financialReport, ctxFor(testPdf(["Statement of Accounts", "Cash 1 2\nLand 3 4"]), TESTV), /floor/],
-    [budgetBook, ctxFor(testPdf(["Adopted Policy Budget", "Cash 1 2\n".repeat(20)]), { vocabulary: {} }), /view holds no words/],
-    [budgetTable, ctxFor(testPdf([COVER]), FIRST), /not a CSV/],
+    [financialReport, ctxFor("Cash 1 2\n".repeat(20), FIRST), localize("budget-doctypes.index.not_a_pdf_a_what", "not a PDF: a {what} is read from a PDF's text", { what: "financial report" })],
+    [financialReport, ctxFor(testPdf(["A letter to the council", "Cash 1 2\n".repeat(20)]), FIRST), localize("budget-doctypes.index.its_opening_does_not_name", "its opening does not name it a {what} in any words the view holds", { what: "financial report" })],
+    [financialReport, ctxFor(testPdf(["Statement of Accounts", "Cash 1 2\nLand 3 4"]), TESTV), localize("budget-doctypes.index.it_names_itself_a_what", "it names itself a {what} (\"{title}\") but holds only {lines} line(s) bearing a figure, under the floor of {FIGURE_LINE_FLOOR}", { what: "financial report", title: "Statement of Accounts", lines: String(floorText.split("\n").length - 1), FIGURE_LINE_FLOOR: "10" })],
+    [budgetBook, ctxFor(testPdf(["Adopted Policy Budget", "Cash 1 2\n".repeat(20)]), { vocabulary: {} }), localize("budget-doctypes.index.the_view_holds_no_words", "the view holds no words a {what} names itself by (vocabulary.{key})", { what: "budget book", key: "budget_book_titles" })],
+    [budgetTable, ctxFor(testPdf([COVER]), FIRST), localize("budget-doctypes.index.not_a_csv_or_workbook_sheet", "not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells")],
   ];
   for (const [type, ctx, why] of cases) {
     const d = type.detect(ctx);
-    assert.equal(d.match, false); assert.equal(d.confidence, "none"); assert.match(d.why, why);
+    assert.equal(d.match, false); assert.equal(d.confidence, "none"); assert.equal(d.why, why);
   }
 });
 
@@ -284,7 +285,12 @@ test("R7: each budget line keyed on fund and org, with its codes read by the vie
   assert.ok(r.rows.every((x) => x.fund && x.org));
   const odd = r.codes.filter((c) => c.form === null);
   assert.ok(odd.length >= 1);
-  for (const c of odd) { assert.equal(typeof c.as_written, "string"); assert.match(c.why, /no form/); }
+  const COLUMNS_OF_CODE = ["fund", "org", "program", "project", "account", "department_code"];
+  for (const c of odd) {
+    assert.equal(typeof c.as_written, "string");
+    const column = COLUMNS_OF_CODE.find((col) => r.rows.some((x) => x[col] && x[col].as_written === c.as_written && x[col].form === null));
+    assert.equal(c.why, localize("budget-doctypes.lines.no_form_of_the_views", "no form of the view's {column} classification matches \"{s}\"", { column, s: c.as_written.trim() }));
+  }
   /* A wide table: each amount column's header is that amount's period and phase. */
   const w = budgetTable.parse(ctxFor(await csvSupplied(fixture("fy2019-21-adopted.csv")), FIRST, { content_type: "text/csv" }));
   const first = w.rows.filter((x) => x.source.ref === "csv!G2");

@@ -1,6 +1,6 @@
 # budget-doctypes (T51)
 
-**Status** · session_01RezKKmfnBViKhH5MtBRmm8 · depth 2 · COMPLETE · handled B3
+**Status** · session_01RezKKmfnBViKhH5MtBRmm8 · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -74,3 +74,31 @@ CHANGE B3 (K3962, K3965): done. The test copies are converted to localize, and t
 **Commits:** 51550c5447 on job/T51/budget-doctypes (pushed).
 
 Size (session_01RezKKmfnBViKhH5MtBRmm8): test runs 15, module lines 1067
+
+## J4 · COMPLETE
+
+CHANGE B4 (K3967, K3964): done.
+
+**Merged** tranche/T51 into job/T51/budget-doctypes (J3 is merged).
+
+**Item 1, keyed.** `index.mjs`: the refusal "not a CSV or workbook sheet: a budget line-item table is read from a sheet's cells" is read through `localize('budget-doctypes.index.not_a_csv_or_workbook_sheet', en)`, English unchanged.
+
+**Item 2, regex copies converted.**
+- The R1 case table (test near line 97) compares each reason with `localize`, with its variables: not a PDF (the view's "financial report"); its opening does not name it; the floor reason (title "Statement of Accounts", lines = the fixture's figure lines, from the test's own text, floor 10); the view holds no words for a budget book (key `budget_book_titles`); and the refusal above. The regex loop is gone.
+- The code-form assertion (test near line 287) finds each odd code's column from the rows and compares its reason with `localize('budget-doctypes.lines.no_form_of_the_views', en, {column, s})`.
+- No regex copies of a keyed reason remain in the module's tests.
+
+**Not done, for BOB.** `bio-plane/src/setup-words/rows.mjs` is stale for this module's new keys. `build.mjs --check` exits 1 with "rows.mjs is stale: word 16042 (budget-doctypes.index.not_a_csv_or_workbook_sheet)". It is setup-words' generated artifact; per the START it is regenerated at layer close, so I did not edit it. Until then `localize` answers the English, which the tests use.
+
+**Checks (summary lines):**
+- module tests `node --test budget-doctypes/test/`: 27 pass, 0 fail.
+- `checks/format.mjs` (via run.mjs): 174 modules; 0 failures.
+- `checks/architecture.mjs` (via run.mjs): 3,592 product files; 0 failures.
+- `checks/coverage.mjs budget-doctypes`: 14 of 14 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs` (via run.mjs): no finding names budget-doctypes.
+- `bio-plane/src/setup-words/build.mjs --check`: exit 1, the stale-rows note above; not a finding in this module's code.
+- `checks/ownership.mjs budget-doctypes tranche/T51 job/T51/budget-doctypes`: 2 files changed; 0 failures.
+
+**Commit:** aa57ab5cc4 on job/T51/budget-doctypes (pushed).
+
+Size (session_01RezKKmfnBViKhH5MtBRmm8): test runs 20, module lines 1067
