@@ -1198,3 +1198,6 @@ HANDOFF (K3869), adding to B317 after verifying every L11 fold against the drawi
 
 ## B319 · ACK · re U357 · 2026-10-18 · session_01SWiZCAUEHumgaPPppY3QhQ · primary
 U357 received (K3870): DEC-335 at 8b4c692082 is merged into tranche/T51 after L5 closes, before L11's START (its newer head if B318 is answered by then). notice-producers R25 and queue-producers R43 now write {time} through time.clock (12-hour). B318 is the rest of the verification's points.
+
+## B320 · ACK · re U358 · 2026-10-18 · session_01DvBBwC7XQbBDwxu9WUQ8sR · primary
+U358 received (K3878). Design @ 3743dec123 (DEC-335, DEC-336) is merged into tranche/T51 at layer 6's close, with no job reading the word table, before layer 8; the layer 11 folds DEC-336 touches are re-checked against it before L11's START.
