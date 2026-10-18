@@ -264,11 +264,16 @@ test("R1, R2, R3, R6, R8, R35: every C-25 row this module's grammar, promotion c
   collect(w.revise(INQ, inqMd(INQ, block(merge(V1({ description: "The first reading, reworded in place, which is refused." }), V2())))));
   collect(w.bv.basisVersions({ viewer: V("ruth") }));
   collect(w.bv.basisVersions({ id: PROJ, viewer: V("ruth") }));
+  /* R55: the three refusals of a compare, each reached by the read */
+  collect(w.bv.compareVersions({ target: PROJ, a: "x", b: "y", viewer: V("ruth") }));
+  collect(w.bv.compareVersions({ target: INQ, a: "", b: "", viewer: V("ruth") }));
+  collect(w.bv.compareVersions({ target: INQ, a: "as composed", b: "never written", viewer: V("ruth") }));
   const got = Object.fromEntries([...wire].sort());
   assert.deepEqual(got, Object.fromEntries(Object.entries(BASIS_VERSION_CHECKS).map(([k, r]) => [k, r.check]).sort()),
     "every declared code reached, nothing undeclared sent, each with its own number");
   assert.deepEqual(got, {
     BASIS_VERSIONS_NOT_AN_INQUIRY: "C-25.18", BASIS_VERSIONS_NO_INQUIRY: "C-25.17",
+    VERSION_COMPARE_NO_INQUIRY: "C-25.37", VERSION_COMPARE_NO_SUCH_VERSION: "C-25.39", VERSION_COMPARE_NO_VERSION: "C-25.38",
     VERSION_DERIVATION_CYCLE: "C-25.8", VERSION_DERIVED_FROM_UNKNOWN: "C-25.7", VERSION_DISPOSITION_UNATTRIBUTED: "C-25.19",
     VERSION_FROZEN: "C-25.11", VERSION_GROUND_UNASSERTED: "C-25.6", VERSION_HIDDEN_NOT_BOOLEAN: "C-25.13",
     VERSION_LEG_NOT_CITABLE: "C-25.10", VERSION_LEG_SELF: "C-25.14", VERSION_LEG_UNRESOLVED: "C-25.16",

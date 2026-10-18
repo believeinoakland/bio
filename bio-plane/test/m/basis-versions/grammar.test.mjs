@@ -195,9 +195,9 @@ test("R5 (K182): versionAsWritten is the written form of a submission, which ver
     "idempotent: the written form writes as itself");
 });
 
-test("R35: every check this module mints is a catalogue row with its C-number and a translation — C-25.1–C-25.36, C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2", () => {
+test("R35: every check this module mints is a catalogue row with its C-number and a translation — C-25.1–C-25.39 (C-25.37–.39 are R55's), C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2", () => {
   const nums = (m) => Object.values(m).map((r) => r.check);
-  const want25 = Array.from({ length: 36 }, (_, i) => `C-25.${i + 1}`);
+  const want25 = Array.from({ length: 39 }, (_, i) => `C-25.${i + 1}`);
   assert.equal(BASIS_VERSION_CHECKS.VERSION_NAME_MALFORMED.check, "C-25.36", "R54: the name form's own row");
   /* C-25.35 (BAD_BIAS_APPLIED, R48) is a conclusion's refusal, so its row is in CONCLUDE_ACT_CHECKS */
   const c25 = [...nums(BASIS_VERSION_CHECKS), ...nums(VERSION_ACT_CHECKS), ...nums(CONCLUDE_ACT_CHECKS)].filter((c) => c.startsWith("C-25."));

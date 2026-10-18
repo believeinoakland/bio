@@ -380,6 +380,23 @@ export const BASIS_VERSION_CHECKS = {
      default subject and there must not be one — VERSION_CHAIN_NO_ADDRESS'
      reasoning one construct over: an answer for an unnamed subject is a list of
      unrelated compositions wearing the word "versions". */
+  /* R55 (T51; N1215; DEC-330 A40): the three refusals of `compareVersions`, a read. Their words are plain until the design
+     stream's word table holds keys for them (owed). */
+  VERSION_COMPARE_NO_INQUIRY: {
+    check: 'C-25.37',
+    where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
+    translation: 'That request did not name a question you can read, so there are no two readings of it to compare.',
+  },
+  VERSION_COMPARE_NO_VERSION: {
+    check: 'C-25.38',
+    where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
+    translation: 'Comparing needs two readings of the question, and one of them was not named.',
+  },
+  VERSION_COMPARE_NO_SUCH_VERSION: {
+    check: 'C-25.39',
+    where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
+    translation: 'This question holds no reading by one of the names given, so the two cannot be compared.',
+  },
   BASIS_VERSIONS_NO_INQUIRY: {
     check: 'C-25.17',
     where: 'src/basis-versions/index.mjs basisVersions, reached from op=basisversions',
