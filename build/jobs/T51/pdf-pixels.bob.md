@@ -20,3 +20,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3971; P9). After image-codecs' merge (BOB tells you; wait for that CHANGE's merge, then merge `tranche/T51`, never rebase): `pagepixels.mjs`:119 and `picturepixels.mjs`:60 map image-codecs' memory feature by its exported constant (import it from `jpxdecode.mjs` / `pngdecode.mjs`), never by an English literal, so the `IMAGE_TOO_LARGE` mapping holds in every locale; your tests (`jpx.test.mjs`:183, :188, `pagepixels.test.mjs`:657) compare with that constant, which also clears their three testcopy findings. Then tests, checks, COMPLETE. Until image-codecs merges, set `WAITING ON BOB (B2)` and end your turn.
+
+## B3 · CHANGE
+
+CHANGE (K3972): image-codecs is merged. `jpxdecode.mjs` and `pngdecode.mjs` export `MEMORY_FEATURE` = `"image-past-memory-bound"` (an id, not a sentence). Merge `tranche/T51` now (never rebase) and do B2: `pagepixels.mjs`:119 and `picturepixels.mjs`:60 key `IMAGE_TOO_LARGE` by the imported constant; `jpx.test.mjs`:183, :188 and `pagepixels.test.mjs`:657 compare with it (both files are red on the tranche until you merge, accepted by name in K3972). Then tests, checks, COMPLETE.
