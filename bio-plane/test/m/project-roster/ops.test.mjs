@@ -18,7 +18,7 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 R26 R30 each op answers its serv
     ["projectdirectory", "projectowneradd", "projectownerremove", "projectownerrescue", "projectparticipants",
      "projectrequest", "projectrequestanswer", "projectrequests", "projectrequestwithdraw", "projectvisibility",
      "projectapprovalset", "projectscopeset", "projectlist", "projectownervotes", "projectstakeset", "projectstake",
-     "projectownersgone"].sort());
+     "projectownersgone", "projectinvitations"].sort());
   /* reads */
   assert.deepEqual(op("projectparticipants", { projectId: "PROJ-P", by: "bob" }),
     w.r.projectParticipants({ projectId: "PROJ-P", by: "bob" }));
@@ -34,7 +34,10 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 R26 R30 each op answers its serv
   assert.deepEqual(op("projectlist", { viewer: V("bob"), limit: "5" }), w.r.projectList({ viewer: V("bob"), limit: 5 }));
   assert.deepEqual(op("projectlist", { viewer: V("bob") }).projects.map((p) => [p.id, p.stage]), [["PROJ-P", "forming"]]);
   assert.deepEqual(op("projectlist", {}, { viewer: V("bob") }),
-    { ok: true, projects: [], count: 0, limit: 200, truncated: false }, "a body's viewer names nothing");
+    { ok: true, projects: [], count: 0, limit: 200, truncated: false, next: null }, "a body's viewer names nothing");
+  /* R35: the stamped viewer, `limit` and `after` from the query; a body's viewer names nothing */
+  assert.deepEqual(op("projectinvitations", { viewer: V("cal"), limit: "5" }), w.r.projectInvitations({ viewer: V("cal"), limit: 5 }));
+  assert.equal(op("projectinvitations", {}, { viewer: V("cal") }).count, 0, "a body's viewer names nothing");
   /* the request's life through the ops */
   const asked = op("projectrequest", { projectId: "PROJ-P", comment: "hello", by: "cal", viewer: V("cal") });
   assert.deepEqual([asked.ok, asked.comment], [true, "hello"]);
