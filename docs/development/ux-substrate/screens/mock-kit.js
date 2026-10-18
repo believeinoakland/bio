@@ -43,7 +43,7 @@ function btn(op, label, o = {}) {
   return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${say ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(say)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}${w >= 2 ? `<span class="w">${pips(w)}${WNAME[w]}</span>` : ''}</button>`;  // S26 (DEC-295): no mark on a reversible act
 }
 /* a plain control with no act (navigation, a link) */
-const link = (label, icon) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet">${icon ? I(icon) : ''}${esc(label)}</a>`;
+const link = (label, icon, help) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet"${help ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(help)}"` : ''}>${icon ? I(icon) : ''}${esc(label)}</a>`;
 const grade = (scale, l, full) => `<span class="cs-grade" data-scale="${scale}" tabindex="0" aria-label="${scale} ${l}">${I(scale === 'subject' ? 'subject' : scale)}${full ? `<span class="sc">${full}</span> ` : ''}${l}</span>`;
 // DEC-160: anything the record holds that a screen names is a link: click opens it (here, the screen that shows it), hover
 // or focus shows its card. `go` is the screen it opens.

@@ -34,6 +34,10 @@ for (const [m, ps] of Object.entries(PATHS)) {
   /* the keys DEC-329 minted for the module, read once its source carries them (B303 (2), (7), (11)) */
   const own = { installer: /^installer\./, "instance-setup": /^instance-setup\./, translations: /^translations\./ }[m];
   for (const k of KEYS) if (own.test(k)) reads.add(k);
+  /* B323 (7): reads the installer's source on main does not yet show, and reads it no longer has. ui.mjs:71 reads the
+     Irreversible weight's name (R41); screen.install.stopped.running (K3864) and installer.fact.unknown.older (DEC-331) are
+     no longer read. Applied after the own-family rule above, which would list the second whether or not it is read. */
+  if (m === "installer") { reads.add("weight.irreversible.name"); reads.delete("screen.install.stopped.running"); reads.delete("installer.fact.unknown.older"); }
   out[m] = { reads: [...reads].sort(), unkeyed: [], note: `DEC-329 (B303 (8)): read from ${ps.join(", ")}; its own ${own.source.slice(1)} keys listed whether or not its source names them yet` };
   console.log(m.padEnd(16), reads.size, "keys,", files.length, "files");
 }
