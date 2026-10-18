@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { checkBundle, EXTENSION_ARMS, idDisagrees } from "../../../src/record-grammar/index.mjs";
 import { fixtures, STUBS, sha256, NOW } from "./fixtures/bundles.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const EXPECTED = JSON.parse(readFileSync(new URL("./fixtures/expected.json", import.meta.url), "utf8"));
 const run = (b, grammars = STUBS) => checkBundle(b, { grammars, ...(b.knownSchemas ? { knownSchemas: b.knownSchemas } : {}) });
@@ -42,7 +43,7 @@ test("R40 N458: C-13.2's and C-16.1's messages say record, not bundle", async ()
   const F = fixtures();
   const msgs = [...(await run(F["C-13.2 updated without a session entry"])).findings, ...(await run(F["C-16 package checks"])).findings]
     .filter((f) => f.check === "C-13.2" || f.check === "C-16.1").map((f) => f.message);
-  assert.ok(msgs.includes("record has been updated but carries no Session Log entry"));
+  assert.ok(msgs.includes(localize("record-grammar.bundle.record_has_been_updated_but_carries", "record has been updated but carries no Session Log entry")));
   assert.ok(msgs.includes("manifest target 'INFO-2026-0003-c' does not match record 'INFO-2026-0001-a'"));
   for (const m of msgs) assert.doesNotMatch(m, /\bbundle\b(?!\.md)/, m);
 });
@@ -158,13 +159,13 @@ test("R39 R62 the default knownSchemas are the sixteen stamps, success_record@1 
   const prefix = (t) => ({ information: "INFO", inquiry: "INQ", focus: "FOCUS", problem: "PROB", project: "PROJ", action: "ACTN",
     bias: "BIAS", standard: "STD", determination: "CONF", consequence: "CONS", escalation: "ESC", aspiration: "ASP", goal: "GOAL",
     action_plan: "PLN", success_record: "SUC" })[t];
-  const unknown = (r) => r.findings.some((f) => f.check === "C-2.5" && /not known to this check catalog/.test(f.message));
-  for (const s of STAMPS) assert.equal(unknown(await at(s)), false, s);
-  for (const s of ["information@3", "inquiry@2", "action_plan@2", "success_record@2", "success_record@0"]) assert.equal(unknown(await at(s)), true, s);
+  const unknown = (r, stamp) => r.findings.some((f) => f.check === "C-2.5" && f.message === localize("record-grammar.bundle.schema_version_schema_is_not", "schema version '{schema}' is not known to this check catalog", { schema: stamp }));
+  for (const s of STAMPS) assert.equal(unknown(await at(s), s), false, s);
+  for (const s of ["information@3", "inquiry@2", "action_plan@2", "success_record@2", "success_record@0"]) assert.equal(unknown(await at(s), s), true, s);
   /* A passed list without the stamp refuses it, so the default is what admits it. */
-  assert.equal(unknown(await at("success_record@1", { knownSchemas: STAMPS.slice(0, 15) })), true);
-  assert.equal(unknown(await at("information@1", { knownSchemas: ["information@2"] })), true);
-  assert.equal(unknown(await at("information@2", { knownSchemas: ["information@2"] })), false);
+  assert.equal(unknown(await at("success_record@1", { knownSchemas: STAMPS.slice(0, 15) }), "success_record@1"), true);
+  assert.equal(unknown(await at("information@1", { knownSchemas: ["information@2"] }), "information@1"), true);
+  assert.equal(unknown(await at("information@2", { knownSchemas: ["information@2"] }), "information@2"), false);
   const e = fixtures()["C-12.2 elided snapshots count as present"];
   assert.deepEqual(await run({ ...e, elidedPaths: new Set(e.elidedPaths) }), EXPECTED["C-12.2 elided snapshots count as present"]);
   assert.ok((await run({ ...e, elidedPaths: undefined })).findings.some((f) => f.check === "C-12.2"));
@@ -243,7 +244,7 @@ test("R56 idDisagrees(fm, folderName): true exactly when fm.id is a string not e
     const r = await run({ ...base, folderName, files: new Map([...base.files, ["bundle.md", text]]) });
     const c11 = r.findings.filter((f) => f.check === "C-1.1");
     assert.equal(c11.length, idDisagrees({ id }, folderName) ? 1 : 0, JSON.stringify([id, folderName]));
-    if (c11.length) { refused++; assert.equal(c11[0].message, `folder name '${folderName}' does not equal frontmatter id '${id}'`); }
+    if (c11.length) { refused++; assert.equal(c11[0].message, localize("record-grammar.bundle.folder_name_foldername_does_not", "folder name '{folderName}' does not equal frontmatter id '{id}'", { folderName, id })); }
   }
   assert.equal(refused, cases.length - 1);
   /* A non-string id draws C-1.2 and no C-1.1. */
