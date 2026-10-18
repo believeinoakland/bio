@@ -5301,3 +5301,18 @@ the design: (1) `counsel`'s defense state draws "The statements challenged" befo
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
 folded after: the consistency read by UX design #30 (session_0132xHbVxJ5XZzHuwzNvwbRa): the minutes form's heading names the public comment ("Record a reply to your team's public comment"; a request for comment is a different kind of action); its refusal ends "Nothing was written." like every refusal; its helps no longer restate their labels ("The day of the meeting, as the minutes date it.", "Copy the words exactly as the minutes write them.") and a capture is one "your team holds", as on `grouprules`; counsel's "List each statement the other side challenges."; the rule triggers speak of "your team", never "we" ("Your team files a document", "Your team learns of it", "Your team is served", "The office receives your team's request").
 owed: (BOB, T51) local-facts R18 gains the effective date the drawing asks for (discharged: B337, K3938, `effective_from` required on a drafted rule, never applied before that day; `.eff` kept, a future date reads "In effect from <date>"); filings R9's "where it was said" is the design's reading of what the member names.
+
+### DEC-342 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (DEC-260's owed second reading, made pressing by BOB's NOTICE B339: K3944 stops the words check counting a string on `words-reads.json`'s unkeyed list)
+for: design
+question: Whether the unkeyed lists hide text a member reads, and what a member sees for a refusal whose code has no words row.
+why it is Bob's: it is not (P17): member words beneath DEC-260 and K3930.
+provisional: as below.
+alternative: leave the codes to be written first in code and reviewed at the tranche close (K3930). Rejected: refusal rows are the design's, one wording per code (DEC-260), and a member meanwhile sees only "no explanation yet" and the raw code.
+recommendation: as below.
+reversal cost: low: data rows only.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) The unkeyed lists stand: the 5,433 strings are builder text, and the shell never draws a refusal's `detail` (interface-shell `refusalOf`: the screen's handler, then `refusal.<CODE>`, then the answer's translation, then `refusal.uncatalogued` with the code). (2) Of 2,340 refusal codes `bio-plane/src` emits (origin/main, 2026-10-18), 690 had no `refusal.<CODE>` row: 579 are now worded (`screens/words-drawn.src.py`, the DEC-342 block), each read from its source; 111 are not refusals or cannot be triggered by any request, listed with why and where in `screens/refusals-dec342-skipped.json`. (3) Four evidence-grouping refusals keep "group" in its grouping sense (`build_words.mjs` GROUP_SENSE). (4) For BOB: four screens fall back to the builder's `detail` when an answer has no translation (screens-action/start-send.mjs:69, screens-publish/parts.mjs:21, screens-intake/capture.mjs:83, screens-inquiry/assistant.mjs:268); with every code worded they should take `refusal.<CODE>` and, failing it, the shell's `refusal.uncatalogued` path, never `detail`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/refusals-dec342-skipped.json`, `screens/build_words.mjs`.
+owed: (BOB, T51) the four screens stop drawing `detail`; any skipped code BOB finds a member can reach comes back to the design to word.

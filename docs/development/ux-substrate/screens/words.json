@@ -22,7 +22,7 @@
   "label": 207,
   "project": 53,
   "grouprule": 1,
-  "refusal": 1990,
+  "refusal": 2569,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -225,7 +225,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 14765,
+  "total": 15344,
   "protected": 933
  },
  "words": [
@@ -52829,6 +52829,4059 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 4: ceremony: the sign step when the minutes source cannot be read"
+  },
+  {
+   "key": "refusal.ACCOUNT_UNREADABLE",
+   "en": "The account that would pay for this request could not be read. Nothing was used.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: paying account failed to read before an ask"
+  },
+  {
+   "key": "refusal.ACTIONS_UNREADABLE",
+   "en": "The actions' marks could not be read. This is not an empty list; try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: action marks failed to read"
+  },
+  {
+   "key": "refusal.ACT_ALIASED",
+   "en": "That act already names a different event, so it was not reassigned. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: act id already aliased to another event"
+  },
+  {
+   "key": "refusal.ADJUSTS_NOT_HELD",
+   "en": "The figure this adjustment corrects is not in your team's record. Check which figure you meant. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: adjustment names a figure not held"
+  },
+  {
+   "key": "refusal.AI_LIMIT_INVALID",
+   "en": "That assistant limit is not one Civicsmith can set. Check the value and try again. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant limit change with invalid value"
+  },
+  {
+   "key": "refusal.AI_LIMIT_REACHED",
+   "en": "Your team's limit on assistant use has been reached, or no limit has been set for it. Nothing was started.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant use blocked by account limit"
+  },
+  {
+   "key": "refusal.ALREADY_ALIASED",
+   "en": "This entity already has that name on record, even if it was withdrawn, so it was not added again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: alias already on the entity, possibly withdrawn"
+  },
+  {
+   "key": "refusal.ALREADY_AN_OWNER",
+   "en": "That member is already an owner of this project. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: granting ownership to current owner"
+  },
+  {
+   "key": "refusal.ALREADY_A_CASE_MEMBER",
+   "en": "This finding is already part of a published case at its current version, with the same conclusion. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: finding already in a published case edition"
+  },
+  {
+   "key": "refusal.ALREADY_A_PARTICIPANT",
+   "en": "That member is already on this project, so no invitation was sent. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: invite a member already participating"
+  },
+  {
+   "key": "refusal.ALREADY_CONFIRMED",
+   "en": "That expertise is already confirmed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: confirm already confirmed expertise"
+  },
+  {
+   "key": "refusal.ALREADY_DECLARED",
+   "en": "You have already declared that expertise. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: declare expertise already declared or confirmed"
+  },
+  {
+   "key": "refusal.ALREADY_RESOLVED",
+   "en": "This task is already resolved, so it cannot be forwarded. A new determination opens a new task. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: forward of a resolved task"
+  },
+  {
+   "key": "refusal.ALREADY_THEIRS",
+   "en": "This task is already assigned to that member, so there is nothing to forward. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: forward to the current assignee"
+  },
+  {
+   "key": "refusal.ALREADY_VOTED",
+   "en": "You have already voted on this removal. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: second removal vote by same voter"
+  },
+  {
+   "key": "refusal.AMOUNT_NOT_HERE",
+   "en": "An amount does not belong on an event. Record it on the money fact instead. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: event row carrying an amount field"
+  },
+  {
+   "key": "refusal.AMOUNT_NOT_READ",
+   "en": "The amount on this row could not be read as a figure, so no money fact was recorded for it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money ingest row amount unparseable"
+  },
+  {
+   "key": "refusal.ANCHOR_UNDETERMINED",
+   "en": "The date the deadline counts from is not precise enough, so no due date could be worked out. Enter the exact date.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: deadline anchor undetermined or has open end"
+  },
+  {
+   "key": "refusal.APPROVALS_CHANGED",
+   "en": "The approvals for this case edition changed after it was signed, so it was not published at its set time. Review it again before signing. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: scheduled publish stopped because approvals or rule changed"
+  },
+  {
+   "key": "refusal.APPROVALS_UNREAD",
+   "en": "The approvals for this case could not be read, so its signing status is unknown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: approvals lookup failed for a case edition"
+  },
+  {
+   "key": "refusal.APPROVALS_UNREADABLE",
+   "en": "The approvals recorded for this case edition could not be read, so Civicsmith cannot tell whether it has the approvals it needs. Try again shortly.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: approvals lookup failed for a case edition"
+  },
+  {
+   "key": "refusal.ARCHIVE_RECORD_UNAVAILABLE",
+   "en": "Your team's Civicsmith is not set up to record what an archive contains, so the archive was not opened. Nothing was opened.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: unpack store lacks acquisition record"
+  },
+  {
+   "key": "refusal.ARCHIVE_REFUSED",
+   "en": "The web archive turned down the request, or is limiting how fast we can ask. Nothing was captured; try again later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive answered with an error or rate limit"
+  },
+  {
+   "key": "refusal.ARCHIVE_UNREACHABLE",
+   "en": "The web archive could not be read, so nothing was captured from it. Try again later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive fetch failed or its answer broke off"
+  },
+  {
+   "key": "refusal.ATTESTATION_UNDATED",
+   "en": "An attestation with no date of its own cannot decide when the event happened. Choose a dated one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: governing date chosen from an undated attestation"
+  },
+  {
+   "key": "refusal.ATTEST_FAILED",
+   "en": "Civicsmith could not re-check this document's archived copy just now. Try again later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: re-attestation threw an error"
+  },
+  {
+   "key": "refusal.AUDIENCE_UNKNOWN",
+   "en": "A timeline can be read for the public or for your team only, and this audience was neither. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: timeline asked for an audience other than public"
+  },
+  {
+   "key": "refusal.BAD_ADDRESS",
+   "en": "The document address must be a secure web address on a public site that the archive can look up. Nothing was fetched.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive lookup address not public https"
+  },
+  {
+   "key": "refusal.BAD_AMOUNT",
+   "en": "An amount must be an exact decimal in digits, unsigned, with the sign given separately. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money amount not an exact decimal"
+  },
+  {
+   "key": "refusal.BAD_APPETITE",
+   "en": "A visit rate must be a positive number, or left empty to return to your team's default. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: host visit rate not a positive number"
+  },
+  {
+   "key": "refusal.BAD_APPORTIONMENT",
+   "en": "A division named a piece of evidence that is not in the question being divided. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: apportioned leg ordinal does not exist"
+  },
+  {
+   "key": "refusal.BAD_ARGUMENT",
+   "en": "One of the filters on this people search was not usable, such as a name that is too long or an unknown option. Adjust it and try again. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: people directory query bad argument"
+  },
+  {
+   "key": "refusal.BAD_CAPABILITY",
+   "en": "Capabilities must be a list of names Civicsmith knows. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: capability list malformed or has unknown names"
+  },
+  {
+   "key": "refusal.BAD_CAPACITY",
+   "en": "Only a connection showing someone holding a post can carry a capacity. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: capacity given on a non-holds line"
+  },
+  {
+   "key": "refusal.BAD_CAPTURE_SHA",
+   "en": "This task could not be queued because the document it names has no valid fingerprint. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: review task enqueued with invalid capture digest"
+  },
+  {
+   "key": "refusal.BAD_CHAIN",
+   "en": "A chain to check must be a path's steps in order, each a recognized kind of step, and this one was not. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: chain to verify malformed or too long"
+  },
+  {
+   "key": "refusal.BAD_CHILD_ID",
+   "en": "Each new question from a division needs its own question number, different from the others and from the question being divided. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: child id malformed, duplicated, or equals the parent"
+  },
+  {
+   "key": "refusal.BAD_CHILD_QUESTION",
+   "en": "A question is at most 200 characters and cannot contain a quotation mark, a backslash or a line break. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: child question too long or has forbidden characters"
+  },
+  {
+   "key": "refusal.BAD_COMPLETENESS",
+   "en": "A disclosure list is malformed, or a statement is too long or has a quotation mark, backslash or line break. Fix it and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: completeness or disclosure field malformed"
+  },
+  {
+   "key": "refusal.BAD_CONDITION",
+   "en": "This check's condition is not one Civicsmith can read. Fix the condition and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: check condition invalid"
+  },
+  {
+   "key": "refusal.BAD_CONTENT",
+   "en": "The material you sent could not be decoded, so it was not received. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: doorbell knock content failed to decode"
+  },
+  {
+   "key": "refusal.BAD_CURSOR",
+   "en": "That page marker isn't one Civicsmith gave out, so the next page could not be read. Start again from the first page.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: paging cursor invalid"
+  },
+  {
+   "key": "refusal.BAD_EDGE",
+   "en": "When a start or end is an event, say whether it is the event's start or its end. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: event bound lacks a valid start/end edge"
+  },
+  {
+   "key": "refusal.BAD_EVIDENCES",
+   "en": "Evidence must name each duty and its occurrence that the calculation measures. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation evidences malformed"
+  },
+  {
+   "key": "refusal.BAD_EXCLUSION",
+   "en": "Each left-out item needs a document or a description, and a reason. One is missing. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: excluded entry lacks target, description or reason"
+  },
+  {
+   "key": "refusal.BAD_FINDING",
+   "en": "A visit's finding has to be one of the answers offered for the draw's question. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: visit finding not among allowed answers"
+  },
+  {
+   "key": "refusal.BAD_KEYED_REQUEST",
+   "en": "That request is not one Civicsmith will send to the outside service. Nothing was fetched.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: keyed service request not a plain public request to its host"
+  },
+  {
+   "key": "refusal.BAD_KIND",
+   "en": "Civicsmith could not tell what you meant: the request mixed up its options. Ask for one thing at a time and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: selection, or mute request, names a conflicting or unknown kind"
+  },
+  {
+   "key": "refusal.BAD_MEASURE",
+   "en": "A measure needs a table with start, end and value columns, one row per period. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: measure table malformed or states no period"
+  },
+  {
+   "key": "refusal.BAD_MEMBER_ROLE",
+   "en": "A finding can only be marked load-bearing or supporting. Correct the mark. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case member designation not an allowed value"
+  },
+  {
+   "key": "refusal.BAD_N",
+   "en": "A draw needs the number of items to take, as a whole number. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: draw count not a whole number"
+  },
+  {
+   "key": "refusal.BAD_NODE",
+   "en": "That is not a record id Civicsmith recognizes, so the exploration could not start from it. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: explore started from a malformed record id"
+  },
+  {
+   "key": "refusal.BAD_OUTCOME",
+   "en": "This web address outcome could not be recorded because the result given isn't one Civicsmith knows. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: source outcome value not recognised"
+  },
+  {
+   "key": "refusal.BAD_PARTITION",
+   "en": "The groups are not in a usable form: each group needs a name and the evidence it covers, and each piece of evidence can sit in only one group. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: malformed grouping entry or evidence position"
+  },
+  {
+   "key": "refusal.BAD_PLACE",
+   "en": "Duties are listed for an entity as obligor, obligee or enforcer, and the role asked for was none of these. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: duties listed with an unknown role"
+  },
+  {
+   "key": "refusal.BAD_QUESTION",
+   "en": "A draw's question is the words each drawn item is judged by, kept short. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: draw given an empty or overlong question"
+  },
+  {
+   "key": "refusal.BAD_RANGE",
+   "en": "A range needs a low and a high, with the low not above the high, and only a range amount carries them. For workbooks, a binding must be one rectangle on one sheet. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: range amount inconsistent or workbook range unusable"
+  },
+  {
+   "key": "refusal.BAD_RINGS",
+   "en": "A graph can show records one or two steps from its center, and this asked for something else. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: graph rings other than 1 or 2"
+  },
+  {
+   "key": "refusal.BAD_ROLES",
+   "en": "Give each finding in the case its designation, as a map from finding to load-bearing or supporting, not a list. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case roles given as a list instead of a map"
+  },
+  {
+   "key": "refusal.BAD_SCHEMA",
+   "en": "The table's description doesn't fit its columns, roles or version. Check them and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: table schema, roles or vintage inconsistent"
+  },
+  {
+   "key": "refusal.BAD_SEED",
+   "en": "A draw's seed must be text. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: draw seed not text"
+  },
+  {
+   "key": "refusal.BAD_SHA",
+   "en": "Civicsmith needs the exact archive to open, identified by its full fingerprint. Nothing was opened.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: unpack called with malformed archive hash"
+  },
+  {
+   "key": "refusal.BAD_SIGNATURE",
+   "en": "That signature does not match what was being signed, so it was not accepted. Sign again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: signature fails verification against the statement"
+  },
+  {
+   "key": "refusal.BAD_SINCE",
+   "en": "That starting date and time could not be read, so the list could not be read. Give a full date and time, such as October 1, 2026 at midnight UTC.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: since value is not a valid instant"
+  },
+  {
+   "key": "refusal.BAD_STATEMENT",
+   "en": "A group's statement is at most 200 characters and cannot contain a quotation mark, a backslash or a line break. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: group statement too long or has forbidden characters"
+  },
+  {
+   "key": "refusal.BAD_STATUS",
+   "en": "A status here is either active or revoked, and this one was neither. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: status set to something other than active or revoked"
+  },
+  {
+   "key": "refusal.BAD_SWITCH",
+   "en": "Say whether the pattern should be on or off. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: pattern switch lacks a true/false setting"
+  },
+  {
+   "key": "refusal.BAD_TARGET_STATE",
+   "en": "That is not a state an action can be in, or not one it can move to from where it is. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: action moved to illegal state"
+  },
+  {
+   "key": "refusal.BAD_TASK",
+   "en": "The assistant could not set up that draft because the records it concerns could not be gathered. Check the matter and try again. Nothing was drafted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: action draft task cannot be assembled"
+  },
+  {
+   "key": "refusal.BAD_TERMS",
+   "en": "The calculation's terms are incomplete or not usable, such as how to group, the period, or the body measured. Check and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation terms malformed or missing a field"
+  },
+  {
+   "key": "refusal.BAD_TEXT",
+   "en": "There is no text to look citations up in. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: citation lookup given empty text"
+  },
+  {
+   "key": "refusal.BAD_THRESHOLD",
+   "en": "The threshold isn't usable: give a figure, or cite a standard or a figure you can see. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation threshold malformed or cites unseen figure"
+  },
+  {
+   "key": "refusal.BAD_TITLE",
+   "en": "A title belongs only to a post being held, and it must be the post's title as the source words it, not blank. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: title on non-holds line or blank title"
+  },
+  {
+   "key": "refusal.BAD_UNTIL",
+   "en": "That snooze date could not be read. Use a real calendar date or a full date and time. Your team's Civicsmith may also need a time zone set before it can read a bare date. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: snooze until value unreadable or no time zone held"
+  },
+  {
+   "key": "refusal.BAD_WHAT_CHANGED",
+   "en": "The statement of what changed must be words, kept short. Shorten it or fill it in. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: what-changed text blank or too long"
+  },
+  {
+   "key": "refusal.BALANCE_CLASS_NOT_IN_FAMILY",
+   "en": "That balance class does not fit this figure: it needs to be a balance, tied to a fund whose type is recorded, and a class that type allows. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: balance class mismatched with fund type"
+  },
+  {
+   "key": "refusal.BAR_IS_A_PROJECT_PROPERTY",
+   "en": "A standard of evidence belongs to a project, not to a single finding or claim, so none can be read for this finding. Look at the project that published it instead.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: bar requested for a target instead of a project"
+  },
+  {
+   "key": "refusal.BASE_UNLINKED",
+   "en": "A revision in this export does not link to the one before it, so the export could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: promotion base unlinked"
+  },
+  {
+   "key": "refusal.BASIS_IN_PAYLOAD",
+   "en": "Basis legs must come from the document itself, not from the request. Remove them from the request and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: promote request carries basis"
+  },
+  {
+   "key": "refusal.BASIS_REFUSED",
+   "en": "A piece of evidence cannot be used: it rests on something that is not evidence, such as an interview, an unaccepted finding from another team, or a hypothesis. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: evidence leg refused by basis rules"
+  },
+  {
+   "key": "refusal.BASIS_VERSION_REFUSED",
+   "en": "This basis version breaks the rules for how a basis is built, so it was declined. Fix the points listed and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: basis version failed validation findings"
+  },
+  {
+   "key": "refusal.BELOW_PROJECT_STRENGTH",
+   "en": "A load-bearing finding doesn't reach the strength of evidence your project requires. Strengthen it or mark it supporting. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: load-bearing finding below project's evidence bar"
+  },
+  {
+   "key": "refusal.BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD",
+   "en": "The bias acknowledgement is identical to the previous edition's. Write it fresh for this edition. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: bias acknowledgement unchanged from prior edition"
+  },
+  {
+   "key": "refusal.BINDING_ROLES",
+   "en": "Each money role must point to a column of the table that was declared for that role, or to one value. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: binding roles invalid for the table"
+  },
+  {
+   "key": "refusal.BOUNDS_REVERSED",
+   "en": "The start of this connection is after its end. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: line validity from is after to"
+  },
+  {
+   "key": "refusal.BOUND_BOTH",
+   "en": "A start or end can be a date or an event, not both. Choose one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: validity bound gives both a date and an event"
+  },
+  {
+   "key": "refusal.BUDGET_INPUTS",
+   "en": "Budget against actuals needs two money inputs, adopted and actual, each holding only its own kind of figures with a readable fiscal period. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: budget comparison inputs missing, mixed or undated"
+  },
+  {
+   "key": "refusal.BUNDLE_SHA_MISMATCH",
+   "en": "A project's main document in this export does not match its recorded fingerprint, so the export could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: bundle digest mismatch"
+  },
+  {
+   "key": "refusal.BYTES_MISSING",
+   "en": "Part of this export's contents is missing, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: file bytes not supplied"
+  },
+  {
+   "key": "refusal.CALCULATIONS_UNREAD",
+   "en": "The calculations this case rests on haven't been recomputed and read, so it can't be checked this way. Publish the normal way. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case check asked without recomputed calculations"
+  },
+  {
+   "key": "refusal.CALCULATION_NOT_ACCEPTED",
+   "en": "A piece of evidence rests on a calculation that nobody has accepted yet, or whose acceptance could not be read. A member must accept it first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: evidence cites a calculation not accepted"
+  },
+  {
+   "key": "refusal.CALCULATION_UNREAD",
+   "en": "A calculation this case rests on could not be read, so the case can't be checked yet. Try again. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation read threw during publish check"
+  },
+  {
+   "key": "refusal.CALC_RECOMPUTE_DIFFERS",
+   "en": "Recalculating gives a different answer than what is stored, so the calculation was not accepted. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: accepting a calculation whose recompute disagrees"
+  },
+  {
+   "key": "refusal.CALENDAR_UNCOVERED",
+   "en": "The count reaches a year the holiday list does not cover for that office, so the due date could not be worked out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: deadline count passes the end of the holiday list"
+  },
+  {
+   "key": "refusal.CAPTURE_NOT_HELD",
+   "en": "Your team's Civicsmith holds no captured document like that, or you cannot see it, so it cannot be cited. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: citing a capture the record lacks or hides"
+  },
+  {
+   "key": "refusal.CAP_NOT_A_GRADE",
+   "en": "A step's cap must be one of the recognized grades, and this was not. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: step cap given is not a known grade"
+  },
+  {
+   "key": "refusal.CASE_ASSERTION_DIVERGED",
+   "en": "This finding's signed text states a different completeness for the case than the case document your team signed. Make them agree. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: finding completeness differs from case document"
+  },
+  {
+   "key": "refusal.CASE_BELONGS_TO_ANOTHER_PROJECT",
+   "en": "This case belongs to a different project, and a case can't change projects between editions. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: edition names a different project than the case's"
+  },
+  {
+   "key": "refusal.CASE_EDITION_ALREADY_RATIFIED",
+   "en": "This case edition is already signed by someone else's signature, and an edition cannot be signed twice. To change it, publish a new edition. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case edition already ratified under another signature"
+  },
+  {
+   "key": "refusal.CASE_FIELD_NOT_ALLOWED",
+   "en": "A case has no field with that name. Only the set statements, scope, bias acknowledgement and account are allowed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case publish carries unrecognised field"
+  },
+  {
+   "key": "refusal.CASE_FILE_NOT_ASSEMBLED",
+   "en": "The case edition is published, but its case file could not be built because something it must include could not be read. Nothing was recorded for the case file.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case file assembly after publish failed"
+  },
+  {
+   "key": "refusal.CASE_PRODUCTION_DIVERGED",
+   "en": "This case belongs to a different project than the one named in the signed case document, and a case cannot move between projects from one edition to the next. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: signed case names a different project than its owner"
+  },
+  {
+   "key": "refusal.CASE_PUBLISH_FAILED",
+   "en": "Civicsmith could not publish this case edition. Nothing was published. Try again, and if it keeps failing, ask an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case commit refused without a specific reason"
+  },
+  {
+   "key": "refusal.CASE_RATIFY_STALE",
+   "en": "This case document has changed since you reviewed it. Read it again, then sign again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case signed against an outdated document"
+  },
+  {
+   "key": "refusal.CASE_SEARCHED_UNCOMPUTABLE",
+   "en": "The part of the case that says what was searched could not be worked out, and a case can't publish without it. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case publish cannot compute its searched section"
+  },
+  {
+   "key": "refusal.CASE_UNSIGNED",
+   "en": "Publishing a case edition at a set time needs a member's signature, and this request had none. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case commit or schedule arrived without a signature"
+  },
+  {
+   "key": "refusal.CAUSE_NEEDS_SOURCE",
+   "en": "A cause is recorded only as a named source's claim, not as your own hypothesis. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: stated cause given as member testimony, not a source"
+  },
+  {
+   "key": "refusal.CAUSE_NOT_MACHINE",
+   "en": "A stated cause can be recorded only by a member from a named source, never by the assistant. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant tried to record a stated cause"
+  },
+  {
+   "key": "refusal.CHAIN_BROKEN",
+   "en": "The chain's steps do not connect, because two neighboring steps share no record. Nothing could be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: chain to verify has disconnected neighboring steps"
+  },
+  {
+   "key": "refusal.CHAIN_START_UNANCHORED",
+   "en": "A project's history in this export does not start where it should, so the export could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: revision chain start wrong"
+  },
+  {
+   "key": "refusal.CHANGE_DATE_UNDETERMINED",
+   "en": "That version of the standard states no start date, so before and after can't be told apart. Use a date instead. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: standard version has no starting date"
+  },
+  {
+   "key": "refusal.CHILD_EXISTS",
+   "en": "One of the new questions uses a number that already belongs to another record, and a division cannot overwrite it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: child id already names an existing record"
+  },
+  {
+   "key": "refusal.CHILD_REFUSED",
+   "en": "One of the new questions would not pass Civicsmith's checks, so the division was not made and the original is unchanged. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: a child document fails the catalog during division"
+  },
+  {
+   "key": "refusal.CITATION_TOO_LARGE",
+   "en": "Adding this many citations at once would make the document too large. Cite fewer records at a time. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: citation would push document past one megabyte"
+  },
+  {
+   "key": "refusal.CLOCKS_ICS_REFUSED",
+   "en": "A calendar download names between one and the allowed number of actions. Name at least one, and not too many. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: deadline calendar export with no or too many actions"
+  },
+  {
+   "key": "refusal.COMPLETENESS_CARRIED_FORWARD",
+   "en": "A limit statement is identical to the previous edition's. Write it fresh for this edition, even to say nothing changed. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: completeness statement unchanged from prior edition"
+  },
+  {
+   "key": "refusal.CONCERNS_DUTY",
+   "en": "A money figure cannot name a duty. Let the duty cite the figure instead. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure write names a duty"
+  },
+  {
+   "key": "refusal.CONCERNS_KIND",
+   "en": "This figure points at a record of a kind it cannot concern. It can concern a contract, fund, program or proceeding. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure concerns entity of disallowed kind"
+  },
+  {
+   "key": "refusal.CONCERNS_UNKNOWN",
+   "en": "This figure points at something Civicsmith cannot place. A figure can concern events, contracts, funds, programs, proceedings or lines. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure concerns list malformed or unrecognized id"
+  },
+  {
+   "key": "refusal.CONNECTION_ASSERT_BASIS_TOO_LONG",
+   "en": "The basis for this connection is too long. Shorten it and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: connection assert basis over length limit"
+  },
+  {
+   "key": "refusal.CONNECTION_ASSERT_NOT_A_MEMBER",
+   "en": "A connection between documents can be asserted only by a team member in their own name, not by the assistant. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: connection assert by machine or unnamed actor"
+  },
+  {
+   "key": "refusal.CONNECTION_ASSERT_NO_BASIS",
+   "en": "A connection needs its basis: why these two documents are connected. Add it and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: connection assert without basis words"
+  },
+  {
+   "key": "refusal.CONNECTION_ASSERT_SELF",
+   "en": "A connection joins two different documents, and this names the same one twice. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: connection assert with identical documents"
+  },
+  {
+   "key": "refusal.CONNECTION_AUTHOR_NOT_DERIVED",
+   "en": "Connections found by Civicsmith cannot be credited to a member or a source. Assert a connection yourself to put your name on it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: derive connection with member or source as author"
+  },
+  {
+   "key": "refusal.CONTACT_NOT_IMPORTED",
+   "en": "An address or contact detail can be recorded only by a member, from a cited document. The assistant cannot add one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: contact fact written by non-member"
+  },
+  {
+   "key": "refusal.CONTENT_STALE",
+   "en": "This passage was cited from an earlier reading of its document. Cite it again from the current reading. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: table source cites a passage from a superseded reading"
+  },
+  {
+   "key": "refusal.CORRESPONDENCE_REFUSED",
+   "en": "The correspondence on this action does not meet the rules for recording it, so the change was declined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: action edit with invalid correspondence entry"
+  },
+  {
+   "key": "refusal.COUNTS_MISMATCH",
+   "en": "The totals this export states do not match what it holds, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: stated counts differ"
+  },
+  {
+   "key": "refusal.CREDENTIALS_UNAVAILABLE",
+   "en": "The scanner's credentials are not available to your team's Civicsmith, so the file could not be tested or made safe. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: file-safety tool credentials missing during test or copy"
+  },
+  {
+   "key": "refusal.CROP_CAPTURE_MISMATCH",
+   "en": "The crop did not come from the saved document this passage names, so it was not shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: cropped bytes hash differs from capture"
+  },
+  {
+   "key": "refusal.CROP_CAPTURE_NOT_HELD",
+   "en": "The saved document this image comes from is not in evidence storage, so it could not be cropped.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: crop capture bytes absent from store"
+  },
+  {
+   "key": "refusal.CROP_NOT_A_PAGE_IMAGE",
+   "en": "This passage is not an image on a document page, so there is nothing to crop from it. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: crop requested for non-page-image passage"
+  },
+  {
+   "key": "refusal.CROP_NOT_DERIVABLE",
+   "en": "The image could not be cut out of its document, so no crop was made.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: pdf crop extraction failed"
+  },
+  {
+   "key": "refusal.CROP_NO_EVIDENCE_STORE",
+   "en": "Your team's Civicsmith has no evidence storage set up, so the image could not be read. Nothing could be cropped.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: crop with no evidence store configured"
+  },
+  {
+   "key": "refusal.DATE_INVALID",
+   "en": "That is not a date Civicsmith can read, so nothing was calculated. Check the date and try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: date, range or recurrence malformed"
+  },
+  {
+   "key": "refusal.DECODE_FAILED",
+   "en": "One of the pages could not be decoded into an image, so it was left out of the transcription. Nothing was sent for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: transcription page failed to decode"
+  },
+  {
+   "key": "refusal.DEMAND_KIND_UNLISTED",
+   "en": "Your team's jurisdiction profiles do not list that kind of lawful demand, so the removal was declined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: removal citing an unlisted lawful demand"
+  },
+  {
+   "key": "refusal.DOCKET_UNREADABLE",
+   "en": "The docket's marks could not be read, so whether that entry is marked cannot be said. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: docket marks failed to read"
+  },
+  {
+   "key": "refusal.DOCUMENT_COPY_CHANGED_SINCE",
+   "en": "Documents supplied for this case changed after it was prepared, so it cannot be published as prepared. Prepare the case again. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: publish with stale document copies"
+  },
+  {
+   "key": "refusal.DRAWN_ON_BY_A_PROJECT",
+   "en": "A project draws on these questions, so they cannot be set aside for everyone. Each project sets a question aside for itself instead. Nothing was moved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: shared set-aside of a question a project draws on"
+  },
+  {
+   "key": "refusal.DRAW_TOO_LARGE",
+   "en": "A draw cannot take more items than the list it draws from holds, or fewer than none. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: draw size outside the frame's size"
+  },
+  {
+   "key": "refusal.DUE_UNDETERMINED",
+   "en": "The due date has no fixed end, so Civicsmith cannot say whether it is overdue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: overdue check against open-ended due date"
+  },
+  {
+   "key": "refusal.DUPLICATE_MEMBER",
+   "en": "A finding can be in a case only once, and one is listed twice. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: same finding listed twice in a case"
+  },
+  {
+   "key": "refusal.EDITION_EXISTS",
+   "en": "This edition is already published with different contents, and a published edition never changes. Publish your changes as a new edition. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: republish of same edition with other bytes"
+  },
+  {
+   "key": "refusal.EDITION_NOT_INCREMENTED",
+   "en": "A revision must be published as a newer edition than the latest one, and this was not. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: publish edition not above highest published"
+  },
+  {
+   "key": "refusal.EDTF_UNSUPPORTED",
+   "en": "That date uses an advanced format Civicsmith does not read. Enter an ordinary date or a simple range instead.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: date uses unsupported extended date format"
+  },
+  {
+   "key": "refusal.EMPTY_SELECTION",
+   "en": "The selection no longer holds anything to use. Its items may have been removed or hidden since you made it. Choose again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: selection resolves to no members"
+  },
+  {
+   "key": "refusal.END_STATED",
+   "en": "This connection already has an end date, so it cannot also be marked current through a day. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: current-through on a line with a stated end"
+  },
+  {
+   "key": "refusal.ESTIMATE_INPUTS",
+   "en": "An estimate over visits takes just one input: the draw whose items members visited. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: visit estimate given extra inputs"
+  },
+  {
+   "key": "refusal.ESTIMATE_WITHOUT_DRAW",
+   "en": "A population estimate can only be made from a recorded draw. Draw a sample first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: estimate requested with no draw input"
+  },
+  {
+   "key": "refusal.EVENTS_FAILED",
+   "en": "The record of how powers were used could not be read, so nothing could be frozen. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: uses reader declined while freezing uses"
+  },
+  {
+   "key": "refusal.EVENTS_NOT_REACHABLE",
+   "en": "The record of how powers were used can't be read right now, so it can't be frozen into a table. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: uses-of-powers reader unavailable"
+  },
+  {
+   "key": "refusal.EVENTS_THREW",
+   "en": "Reading the record of how powers were used failed partway, so nothing could be frozen. Try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: uses reader errored while freezing uses"
+  },
+  {
+   "key": "refusal.EVIDENCE_ABSENT",
+   "en": "The document to transcribe could not be found in your team's evidence. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: transcription of missing capture"
+  },
+  {
+   "key": "refusal.EVIDENCE_INSUFFICIENT",
+   "en": "The chain of custody for some documents in this record could not be rebuilt from the evidence held. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: provenance derive with unrebuildable documents"
+  },
+  {
+   "key": "refusal.EVIDENCE_WRITE_FAILED",
+   "en": "The file could not be saved to your team's evidence storage. Try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: evidence store write failed"
+  },
+  {
+   "key": "refusal.EXPERTISE_IS_NOT_ASSIGNED",
+   "en": "Expertise cannot be set when an invitation is created. A member declares it and an administrator confirms it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: invitation created with expertise preset"
+  },
+  {
+   "key": "refusal.EXPLORE_ASK_INVALID",
+   "en": "That exploring request is not in a form Civicsmith can accept. Check it and try again. Nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: exploring ask malformed"
+  },
+  {
+   "key": "refusal.EXPLORE_NOT_ENABLED",
+   "en": "Exploring is turned off on this account, so it will not pay for exploring. Nothing was started.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: exploring asked on account where it is off"
+  },
+  {
+   "key": "refusal.EXPLORE_OUT_OF_SCOPE",
+   "en": "That question is not one this account pays to explore. Nothing was started.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: exploring asked outside the account's allowed scope"
+  },
+  {
+   "key": "refusal.EXPORT_FORMAT_UNKNOWN",
+   "en": "Civicsmith cannot export in that format. Choose one of the formats it offers. Nothing was exported.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export rendering in unlisted format"
+  },
+  {
+   "key": "refusal.EXPORT_PAGE_MALFORMED",
+   "en": "An export page is named by a whole-number position, and that one was not. Nothing was exported.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export page index not a whole number"
+  },
+  {
+   "key": "refusal.EXPORT_TABLE_NOT_CARRIED",
+   "en": "That table's rows are never carried in an export, so there is nothing to export for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export page of never-export or rebuildable table"
+  },
+  {
+   "key": "refusal.EXPORT_TABLE_UNKNOWN",
+   "en": "That is not a table of records Civicsmith can export. Nothing was exported.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export page of undeclared table"
+  },
+  {
+   "key": "refusal.EXPUNGE_GROUND_REFUSED",
+   "en": "A value can be removed only if it is unlawful or confidential to hold, or under a court order or a lawful demand. Otherwise withdraw it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: removal with invalid ground"
+  },
+  {
+   "key": "refusal.EXTENT_MALFORMED",
+   "en": "The passage you pointed to is not described in a form Civicsmith can read. Select the passage again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: passage extent invalid in read or attach"
+  },
+  {
+   "key": "refusal.EXTENT_NOT_IN_CAPTURE",
+   "en": "The part you cited does not exist in that captured document, so the citation was declined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: cited part names nothing in the capture"
+  },
+  {
+   "key": "refusal.FACT_ABSENT",
+   "en": "A fact this count needs, such as the weekend or holidays, is not held for the jurisdiction, so the due date could not be worked out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: deadline count needs a jurisdiction fact not held"
+  },
+  {
+   "key": "refusal.FACT_INVALID",
+   "en": "The fiscal year held for this body is not in a usable form, so the date could not be worked out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: held fiscal-year fact malformed"
+  },
+  {
+   "key": "refusal.FACT_WITHDRAWN",
+   "en": "One of the figures chosen has been withdrawn and is never counted. Remove it and try again. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: combining a withdrawn money figure"
+  },
+  {
+   "key": "refusal.FACT_WITHHELD",
+   "en": "A date this count depends on is withheld because the active jurisdiction profiles disagree about it, so the due date could not be worked out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: deadline count needs a fact profiles dispute"
+  },
+  {
+   "key": "refusal.FIELD_NOT_FOR_KIND",
+   "en": "A scope, conditions or an expiry belong to a waiver only, and an act of discretion holds none. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: waiver-only field given to a discretion record"
+  },
+  {
+   "key": "refusal.FIGURE_INVALID",
+   "en": "One of the figures in this calculation is not a valid number with its unit. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation operand is not a valid figure"
+  },
+  {
+   "key": "refusal.FIGURE_NOT_READ",
+   "en": "One of the calculation's inputs doesn't read as a single figure. Check that each input is one number with its unit. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation input is not a parseable figure"
+  },
+  {
+   "key": "refusal.FILE_MEMBERSHIP_BAD_VERDICT",
+   "en": "A judgment on a file membership must be to confirm it or to reject it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: membership verdict neither confirm nor reject"
+  },
+  {
+   "key": "refusal.FILE_MEMBERSHIP_NOT_A_MEMBER",
+   "en": "Confirming or rejecting an inferred file membership is a team member's judgment, not the assistant's. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: file membership judged by machine or unnamed actor"
+  },
+  {
+   "key": "refusal.FILE_MEMBERSHIP_NO_REASON",
+   "en": "Confirming or rejecting a file membership needs a reason. Add one and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: membership judgment without reason"
+  },
+  {
+   "key": "refusal.FILE_MEMBERSHIP_NO_SUCH_CONNECTION",
+   "en": "Civicsmith holds no file membership by that number that you can see. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: membership judgment names unknown or unseen connection"
+  },
+  {
+   "key": "refusal.FIXED_KEY_ONLY",
+   "en": "A passage is looked up by its id alone and takes no filters or paging. Remove the extra settings and try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: content read with extra parameters"
+  },
+  {
+   "key": "refusal.FORK_FAILED",
+   "en": "The copy of this project could not be completed. Try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: fork threw unexpectedly"
+  },
+  {
+   "key": "refusal.FRAME_INVALID",
+   "en": "The list of items to sample from must be unique text keys with no repeats. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: draw frame has non-text or repeated keys"
+  },
+  {
+   "key": "refusal.FUND_NOT_IDENTIFIED",
+   "en": "The fund on this row is not a registered fund, so no money fact was recorded for it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money ingest row fund unresolved"
+  },
+  {
+   "key": "refusal.GATE_REFUSED",
+   "en": "This cannot be signed yet because it did not pass Civicsmith's checks before publication. Fix the problems listed, then sign again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: pre-signing publication checks found problems"
+  },
+  {
+   "key": "refusal.GRADE_OFFERED",
+   "en": "A proposal cannot grade itself. Civicsmith composes grades from what a reference names, so the assistant's proposal was declined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposal supplied its own grade"
+  },
+  {
+   "key": "refusal.HELD_ACTS_UNREADABLE",
+   "en": "The set-asides recorded for this question could not be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: reading set-asides for a question failed"
+  },
+  {
+   "key": "refusal.HOLDER_NOT_A_PERSON",
+   "en": "A post can only be held by a person. Choose a person as the holder. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: holds line whose holder is not a person"
+  },
+  {
+   "key": "refusal.HOLDS_UNREADABLE",
+   "en": "The litigation holds could not be read, so whether these projects are held cannot be said. Try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: litigation holds failed to read"
+  },
+  {
+   "key": "refusal.HOST_COOLING_OFF",
+   "en": "Civicsmith is holding off asking that website for now so it is not overloaded. Nothing was fetched; try again in a little while.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: per-host request governor is pausing that site"
+  },
+  {
+   "key": "refusal.HYPOTHESIS_ID",
+   "en": "A hypothesis cannot be named here, because it is not evidence or a record. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: hypothesis id used in a fact, event or line"
+  },
+  {
+   "key": "refusal.HYPOTHESIS_NOT_A_FACT",
+   "en": "A hypothesis or hunch can't be an input or threshold of a calculation, or the basis of a check. Use held facts instead. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation or check rests on a hypothesis"
+  },
+  {
+   "key": "refusal.IDENTIFIER_NOT_IN_SPACE",
+   "en": "That identifier does not have the shape of any form your team's jurisdiction profiles allow for it. Check it and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: identifier shape matches no form of its scheme"
+  },
+  {
+   "key": "refusal.IDENTIFIER_TAKEN",
+   "en": "Another entity already holds that identifier for an overlapping or unstated period. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: identifier already held by another entity"
+  },
+  {
+   "key": "refusal.IDENTITY_GRADE_UNEARNED",
+   "en": "The evidence given does not yet support that kind of identity claim. Add what it needs, or choose a weaker basis. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: identity claim lacks evidence for its grade"
+  },
+  {
+   "key": "refusal.IMAGE_TOO_LARGE",
+   "en": "One of the pages makes an image too large to transcribe, so it was left out. Nothing was sent for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: transcription page image over size limit"
+  },
+  {
+   "key": "refusal.IMPOSSIBLE_AT_TWO",
+   "en": "With only two administrators, a removal can never carry, so neither can remove the other. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: administrator removal vote with two administrators"
+  },
+  {
+   "key": "refusal.INPUT_INVALID",
+   "en": "One of this calculation's inputs is not valid or could not be read again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recipe input table invalid or unreadable on rescan"
+  },
+  {
+   "key": "refusal.INPUT_UNBOUND",
+   "en": "This calculation needs an input that was not supplied. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recipe input has no bound value"
+  },
+  {
+   "key": "refusal.INQUIRY_UNAVAILABLE",
+   "en": "Your team's Civicsmith is not set up for questions, so this could not be done. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: inquiry services not wired into this instance"
+  },
+  {
+   "key": "refusal.INSTANCES_UNREADABLE",
+   "en": "The matters could not be read just now. Try again in a moment.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: reading progression matters failed"
+  },
+  {
+   "key": "refusal.INTERVAL_INVALID",
+   "en": "The counts for this estimate do not fit together: successes cannot exceed the sample, nor the sample the full list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: interval counts or confidence invalid"
+  },
+  {
+   "key": "refusal.JOIN_NOT_BY_IDENTIFIER",
+   "en": "A join has to match records by an identifier or a declared crosswalk, not by name. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation joins on something other than ids"
+  },
+  {
+   "key": "refusal.JOIN_UNKEYED",
+   "en": "A join must say how rows match, using an identifier space or a crosswalk. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: join step has no matching key"
+  },
+  {
+   "key": "refusal.KIND_NOT_DISCRETION",
+   "en": "This applies only to an act of discretion, a waiver or an assessment, and the record given is not one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: discretion or withdrawal on a record of the wrong kind"
+  },
+  {
+   "key": "refusal.KIND_UNKNOWN",
+   "en": "One of the kinds you asked to look for is not one Civicsmith knows. Choose from the kinds it offers and try again. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: browse or find names an unknown kind"
+  },
+  {
+   "key": "refusal.KNOCK_NOT_STORED",
+   "en": "The material could not be stored just now, so it was not received. Nothing was sent. You can try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: doorbell storage failed on a knock"
+  },
+  {
+   "key": "refusal.LATENESS_REFUSED",
+   "en": "The dates must be calendar days written like 2026-10-08, with the start not after the end. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: lateness report given bad or reversed dates"
+  },
+  {
+   "key": "refusal.LEASE_HELD",
+   "en": "Another member is writing to this action right now. Try again in a moment. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: another member holds the action's courtesy write lock"
+  },
+  {
+   "key": "refusal.LIMITS_UNREADABLE",
+   "en": "The limits on the account that would pay for this request could not be read. Nothing was used.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: account limits failed to read before an ask"
+  },
+  {
+   "key": "refusal.LIMIT_UNIT_UNAVAILABLE",
+   "en": "This account is a sign-in, which reports no cost, so a limit in dollars cannot be set. Use tokens or calls. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: dollar limit set on sign-in account"
+  },
+  {
+   "key": "refusal.LINE_WITHDRAWN",
+   "en": "This connection has been withdrawn, so it cannot be marked current. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: current-through on a withdrawn line"
+  },
+  {
+   "key": "refusal.LISTENER_FAILED",
+   "en": "Another part of Civicsmith that follows this change failed, so the change was undone. Try again, and tell your team's admin if it keeps happening. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: downstream listener threw, write rolled back"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_LOOK",
+   "en": "Recording a look at a dated wait is the person who set it acting while signed in, never the assistant. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: look at a wait attempted by a machine credential"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SCHEDULE_PUBLISH",
+   "en": "Only a member who owns the case's project can move or cancel a publishing time, not the assistant. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant changing scheduled publish time"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_WITHDRAW_MARK",
+   "en": "A mark on a photo can be withdrawn only by a team member, not by the assistant. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdraw photo mark requested by assistant or automation"
+  },
+  {
+   "key": "refusal.MACHINE_CLAIM_REFUSED",
+   "en": "The assistant can record only an identifier match with source data at both ends. Any other identity claim must be made by a member. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant identity claim beyond identifier match"
+  },
+  {
+   "key": "refusal.MACHINE_NEEDS_IDENTIFIERS",
+   "en": "The assistant can record a figure on its own only when each party is a registered entity with its identifier. Otherwise it suggests the figure to a member, who can record it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: machine money write lacks party identifiers"
+  },
+  {
+   "key": "refusal.MANIFEST_EXISTS",
+   "en": "This edition already has a case file recorded, and a different one cannot replace it. Publish changes as a new edition. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: second manifest recorded for same edition"
+  },
+  {
+   "key": "refusal.MANIFEST_MALFORMED",
+   "en": "This export's manifest is missing or unreadable, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: manifest or register malformed"
+  },
+  {
+   "key": "refusal.MANIFEST_NOT_RECORDED",
+   "en": "The case was published, but its case file could not be recorded. Tell your team's admin.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case container not recorded after commit"
+  },
+  {
+   "key": "refusal.MARK_ALREADY_WITHDRAWN",
+   "en": "That mark has already been withdrawn, and the record shows when and by whom. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdraw of an already-withdrawn photo mark"
+  },
+  {
+   "key": "refusal.MEMBER_SESSION_REQUIRED",
+   "en": "This needs a signed-in team member. Sign in and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: upload or doorbell read without member session"
+  },
+  {
+   "key": "refusal.MEMENTO_BAD_ASKED_DATE",
+   "en": "The moment you asked about must be a date and time to the second, like 2026-10-08T14:30:00Z. Nothing was fetched.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive lookup given malformed as-of instant"
+  },
+  {
+   "key": "refusal.MEMENTO_BAD_DATETIME",
+   "en": "The web archive gave a copy date Civicsmith can't read, so the copy was not used. Nothing was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive date not in a valid format"
+  },
+  {
+   "key": "refusal.MEMENTO_LINK_MALFORMED",
+   "en": "The web archive's list of copies was garbled, so none of it was used. Nothing was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive link list malformed"
+  },
+  {
+   "key": "refusal.MEMENTO_NOT_NEGOTIATED",
+   "en": "The web archive redirected without saying where, or to an unusable address, so the archived copy couldn't be found. Nothing was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive time gate gave bad redirect"
+  },
+  {
+   "key": "refusal.MEMENTO_NO_DATETIME",
+   "en": "The web archive's answer doesn't say when the copy was made, so it isn't treated as an archived copy. Nothing was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive reply lacks archive date"
+  },
+  {
+   "key": "refusal.MEMENTO_NO_ORIGINAL",
+   "en": "The web archive's answer doesn't say which page it is a copy of, so Civicsmith can't use it. Nothing was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive reply names no original page"
+  },
+  {
+   "key": "refusal.METHOD_UNKNOWN",
+   "en": "This recipe names a method Civicsmith does not know. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recipe method not the supported one"
+  },
+  {
+   "key": "refusal.MINT_FAILED",
+   "en": "Civicsmith could not issue a number for this calculation, so nothing was written. Try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation id allocation failed during create"
+  },
+  {
+   "key": "refusal.MONEY_NOT_REACHABLE",
+   "en": "The money records are not available here, so no facts were recorded. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money module missing during ingest"
+  },
+  {
+   "key": "refusal.MONEY_THREW",
+   "en": "The money records hit an error on this row, so no fact was recorded for it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money recordFact threw during ingest row"
+  },
+  {
+   "key": "refusal.NAME_UNDEFINED",
+   "en": "A step refers to a name that is not an input or an earlier step. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recipe step uses an undefined name"
+  },
+  {
+   "key": "refusal.NEED_CAPTURE",
+   "en": "Projecting links needs a captured document, and none was given. Choose a capture and try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: link projection without a valid capture digest"
+  },
+  {
+   "key": "refusal.NEED_CAPTURE_OR_ADDRESS",
+   "en": "Say which document to look at, or a web address or site, to see its links. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: links read with no document, address or host"
+  },
+  {
+   "key": "refusal.NEED_HOST",
+   "en": "Setting how fast Civicsmith visits a website needs the site named, so a change to all sites cannot be made by accident. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: host setting without naming a host"
+  },
+  {
+   "key": "refusal.NOTHING_JUDGED",
+   "en": "No drawn item has been judged yet, so there is nothing to estimate from. Judge some items first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: estimate asked before any sampled item is judged"
+  },
+  {
+   "key": "refusal.NOT_ACTIVE",
+   "en": "That member is not active, so nothing was done. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: target member inactive"
+  },
+  {
+   "key": "refusal.NOT_AN_ACTION",
+   "en": "Only an action can be moved through the steps of an action, and this record is not one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: state or correspondence change on a non-action record"
+  },
+  {
+   "key": "refusal.NOT_AN_ORGANISATION",
+   "en": "Only an organization can hold a sector, and this entity is not one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: sector given to a non-organisation entity"
+  },
+  {
+   "key": "refusal.NOT_AN_OWNER",
+   "en": "That member is not an owner of this project, so there is no ownership to remove. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: removing ownership from non-owner"
+  },
+  {
+   "key": "refusal.NOT_AVAILABLE",
+   "en": "Your team's Civicsmith has no events record connected, so no timeline can be read. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: timeline asked where events record is not connected"
+  },
+  {
+   "key": "refusal.NOT_A_CAPABILITY_GRANT",
+   "en": "Administrator status cannot be granted or changed this way. It goes through the team's administrator vote. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: set capabilities including administer or for an admin"
+  },
+  {
+   "key": "refusal.NOT_A_CASE",
+   "en": "Queue settings belong to an inquiry or a project, not to a single document. Choose the case instead. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: queue mute or snooze on a document"
+  },
+  {
+   "key": "refusal.NOT_A_CASE_FILE_DOCUMENT",
+   "en": "This case document is not one that carries a case file, so none could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case file read for document without materials"
+  },
+  {
+   "key": "refusal.NOT_A_CASE_OWNER",
+   "en": "Only an owner of the case's project can move or cancel its publishing time. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: non-owner changing scheduled publish time"
+  },
+  {
+   "key": "refusal.NOT_A_COMMUNICATION",
+   "en": "Who was sent something can be read only for a communication, an issuance or a meeting. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recipients asked of an event of the wrong kind"
+  },
+  {
+   "key": "refusal.NOT_A_CONTRACT",
+   "en": "That is not a contract registered in your team's record, so committed against paid cannot be read for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: committed-against-paid read on non-contract"
+  },
+  {
+   "key": "refusal.NOT_A_FUND",
+   "en": "The record named as a fund is not registered as a fund, so it cannot be used that way here. Register it as a fund first, or name a different one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: fund party or fund type names non-fund entity"
+  },
+  {
+   "key": "refusal.NOT_A_HOLDS_LINE",
+   "en": "Only a connection showing someone holding a post can be marked current through a day. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: current-through on non-holds line"
+  },
+  {
+   "key": "refusal.NOT_A_PDF",
+   "en": "This file is not a PDF, so its structure could not be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: PDF structure read of non-PDF file"
+  },
+  {
+   "key": "refusal.NOT_A_PERSON",
+   "en": "The record named is not a person, so it cannot be used here. Choose a person record. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: person operation on non-person entity"
+  },
+  {
+   "key": "refusal.NOT_A_PROJECT",
+   "en": "This is not a project (or a case or question), so it can't be used here. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: target of citation or publish is wrong object type"
+  },
+  {
+   "key": "refusal.NOT_A_RANKING",
+   "en": "A ranking's answer must be a sort by its one stated quantity. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: ranking recipe does not end in a sort"
+  },
+  {
+   "key": "refusal.NOT_A_REGISTER",
+   "en": "This captured document was not read as a court register, so it cannot be imported as one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: register import from a capture not read as a register"
+  },
+  {
+   "key": "refusal.NOT_A_USES_TABLE",
+   "en": "This input is not the frozen table of recorded uses that the calculation needs; some of its columns are missing. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: application recipe input lacks required uses columns"
+  },
+  {
+   "key": "refusal.NOT_A_WORKBOOK",
+   "en": "Civicsmith could not read any cells from this capture, so it cannot be treated as a workbook. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: capture yields no spreadsheet cells"
+  },
+  {
+   "key": "refusal.NOT_CITABLE",
+   "en": "Some items in your selection cannot be cited here; a question rests only on material or on other questions. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: cite onto question includes non-material, non-question items"
+  },
+  {
+   "key": "refusal.NOT_CONCLUDED",
+   "en": "Only a concluded finding can become part of a case, and this one has not concluded. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case member finding not in concluded state"
+  },
+  {
+   "key": "refusal.NOT_CONFIRMED",
+   "en": "That expertise has not been confirmed, so there is nothing to withdraw. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdraw confirmation never given"
+  },
+  {
+   "key": "refusal.NOT_DECLARED",
+   "en": "That member has not declared this expertise. An administrator can only confirm what a member declared. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: confirm expertise that was not declared"
+  },
+  {
+   "key": "refusal.NOT_DRAWN",
+   "en": "That item is not one of the items the draw picked, so a visit can't be recorded for it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: visit names an item outside the draw's sample"
+  },
+  {
+   "key": "refusal.NOT_ELIGIBLE",
+   "en": "The web archive is only a backup, and this document has not been unreachable long enough to use it yet. Nothing was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive fallback asked before document was unreachable long enough"
+  },
+  {
+   "key": "refusal.NOT_INVITED",
+   "en": "You can only join a project you were invited to. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: join a project without an invitation"
+  },
+  {
+   "key": "refusal.NOT_JOINED",
+   "en": "You have not joined this project yet, so you cannot do that. Join it first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: act needing joined state while only invited"
+  },
+  {
+   "key": "refusal.NOT_LEGISTAR",
+   "en": "This captured document was not read as a Legistar record, so it cannot be imported as one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: Legistar import from a non-Legistar capture"
+  },
+  {
+   "key": "refusal.NOT_NEWER",
+   "en": "That release notice is not newer than the version Civicsmith is already running, so it was not accepted. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: release notice version not higher than running version"
+  },
+  {
+   "key": "refusal.NOT_PERMITTED",
+   "en": "This lookup is for a signed-in member or an operator to run, not an automated account. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: outside service used by machine credential or unnamed caller"
+  },
+  {
+   "key": "refusal.NOT_RECORDED",
+   "en": "The money records did not accept this row, so no fact was recorded for it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money ingest row declined by money module"
+  },
+  {
+   "key": "refusal.NOT_SET_ASIDE",
+   "en": "Some of these documents are not set aside, so they can't be restored. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: restore names documents not set aside"
+  },
+  {
+   "key": "refusal.NOT_SET_DOWN",
+   "en": "Only something your team set down, such as a deferred or dismissed item, or a finding in a prepared or published case, can be reopened. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: reopen of item not set down"
+  },
+  {
+   "key": "refusal.NOT_TESTIMONY",
+   "en": "A visit rests on a firsthand observation recorded as testimony that you can see, and this isn't one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: visit cites a capture that is not visible testimony"
+  },
+  {
+   "key": "refusal.NOT_THE_OWNER",
+   "en": "Only an owner of this project can do that. Ask an owner to do it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: project act by someone who is not an owner"
+  },
+  {
+   "key": "refusal.NOT_THE_PROJECT_OWNER",
+   "en": "Only an owner of the project can publish its case. Ask an owner to do it. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: non-owner tries to publish a case"
+  },
+  {
+   "key": "refusal.NOT_THIS_MEMBER",
+   "en": "This sign-in belongs to a different member, so Civicsmith did not keep it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: sign-in token returned for a different member"
+  },
+  {
+   "key": "refusal.NOT_WAITING",
+   "en": "No edition of that case is waiting to be published, so there is no time to change. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: reschedule or cancel without waiting edition"
+  },
+  {
+   "key": "refusal.NOT_YOUR_QUERY",
+   "en": "You have no saved search of your own that matches that, so it was not run.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: saved query run by someone other than its owner or malformed"
+  },
+  {
+   "key": "refusal.NOT_YOUR_TESTIMONY",
+   "en": "A visit rests on your own observation, and this testimony was recorded by another team member. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: visit cites testimony another member recorded"
+  },
+  {
+   "key": "refusal.NOT_YOUR_WAIT",
+   "en": "Only the member who set a dated wait can record that they looked at it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: look recorded on a wait set by someone else"
+  },
+  {
+   "key": "refusal.NO_ACT",
+   "en": "An act has to be named by its act id, and none valid was given. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: act alias without a valid act id"
+  },
+  {
+   "key": "refusal.NO_ACTOR",
+   "en": "This needs a signed-in member to do it, and none was identified. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: task forward or resolve without an acting member"
+  },
+  {
+   "key": "refusal.NO_ADDRESS",
+   "en": "This web address outcome could not be recorded because no address was given. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: source outcome recorded without an address"
+  },
+  {
+   "key": "refusal.NO_AMOUNT",
+   "en": "A money fact must state its amount. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money fact missing amount"
+  },
+  {
+   "key": "refusal.NO_ANSWER",
+   "en": "The workbook's calculation gave no answer, so its results could not be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: workbook engine returned nothing usable"
+  },
+  {
+   "key": "refusal.NO_APPORTIONMENT",
+   "en": "Every piece of evidence in the question being divided must go to at least one new question, and each new question needs some. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: a leg or child has no apportionment in a division"
+  },
+  {
+   "key": "refusal.NO_AS_READ",
+   "en": "A money fact must keep the figure exactly as its source printed it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money fact without the as-printed figure"
+  },
+  {
+   "key": "refusal.NO_ATTESTATION",
+   "en": "This needs at least one attestation: a dated fact, a passage of a captured document, or a member's testimony. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: event or participant lacks a backing attestation"
+  },
+  {
+   "key": "refusal.NO_ATTESTING_KEY",
+   "en": "You have no active registered signing key, so a signature from you would not be accepted. Register a key of your own, or ask an administrator for help. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: signer holds no active registered key"
+  },
+  {
+   "key": "refusal.NO_AUTHOR",
+   "en": "This request carries no named member, and a proposal must say who made it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: action proposal made with no identified proposer"
+  },
+  {
+   "key": "refusal.NO_BAR",
+   "en": "Setting a standard of evidence needs at least one level, and none was given. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: strength bar set with neither axis declared"
+  },
+  {
+   "key": "refusal.NO_BIAS_ACKNOWLEDGEMENT",
+   "en": "Acknowledge the bias this case was produced under, freshly for this edition. Declaring it won't block publishing. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case lacks a bias acknowledgement"
+  },
+  {
+   "key": "refusal.NO_BODY",
+   "en": "Civicsmith got no content to work with: the page sent back nothing to capture, or no government body was named to follow. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: capture response empty or following names no body"
+  },
+  {
+   "key": "refusal.NO_BUNDLE_MD",
+   "en": "This project has no readable main document, so the request could not be carried out. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: project's main document missing or unreadable"
+  },
+  {
+   "key": "refusal.NO_BUYS",
+   "en": "A unit cost needs a single money input where every figure says what it buys, as a quantity in one unit. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: unit cost money facts lack quantity or unit"
+  },
+  {
+   "key": "refusal.NO_BY",
+   "en": "Civicsmith could not tell which member made this change, so it did not record it. Sign in again and retry. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: write made without a stamped member author"
+  },
+  {
+   "key": "refusal.NO_CALC",
+   "en": "Name the calculation to read by its number. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation read without an id"
+  },
+  {
+   "key": "refusal.NO_CAPACITY",
+   "en": "A post must say in what capacity it is held. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: holds line without a capacity"
+  },
+  {
+   "key": "refusal.NO_CAPTURE_CHAIN",
+   "en": "This captured document's text has no stated provenance, so the assistant's reading cannot build on it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant reading of a capture with no provenance chain"
+  },
+  {
+   "key": "refusal.NO_CASE",
+   "en": "Name the case this is about. Personal queue settings are kept per case. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: queue mute or snooze without a case"
+  },
+  {
+   "key": "refusal.NO_CASE_DOCUMENT",
+   "en": "No case document was found for that case edition, so it could not be read or signed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case edition has no stored document"
+  },
+  {
+   "key": "refusal.NO_CHANGE",
+   "en": "A before-and-after comparison needs the change it turns on: a standard's version or a date. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: before/after calculation lacks a usable change"
+  },
+  {
+   "key": "refusal.NO_CHILD_QUESTION",
+   "en": "Each question from a division must state its own question in words. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: a child question has no text"
+  },
+  {
+   "key": "refusal.NO_CLASSES",
+   "en": "Choosing which readings' dates are held takes a list of capture classes, which may be empty. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: opt-in set not given as a list of classes"
+  },
+  {
+   "key": "refusal.NO_CONTENT",
+   "en": "Civicsmith needs to know which passage you mean before it can show how well its connections hold up. Choose a passage and try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: portion grade asked without a content id"
+  },
+  {
+   "key": "refusal.NO_CURRENCY",
+   "en": "A money fact must name its currency. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money fact without currency"
+  },
+  {
+   "key": "refusal.NO_DATE",
+   "en": "This needs a date. Pick the day you want to see it as of.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: read as of a date given no date"
+  },
+  {
+   "key": "refusal.NO_DOCUMENT",
+   "en": "This item has no readable document, so it can't be changed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: item's main document missing or unreadable"
+  },
+  {
+   "key": "refusal.NO_DOCUMENTS",
+   "en": "This record's list of captured documents is not in the shape Civicsmith expects. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: provenance register lacks documents list"
+  },
+  {
+   "key": "refusal.NO_ENDS",
+   "en": "This needs both ends named, each one already in your team's record. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: relation or line missing one or both ends"
+  },
+  {
+   "key": "refusal.NO_ENGINE",
+   "en": "The spreadsheet could not be recalculated here because the calculation service is not connected. Figures shown were not recomputed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: no sheet recompute service bound"
+  },
+  {
+   "key": "refusal.NO_EVENT",
+   "en": "An event has to be named by its id to be read, and none was given. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: event read without an id"
+  },
+  {
+   "key": "refusal.NO_EVIDENCE_STORE",
+   "en": "Your team's Civicsmith has no evidence storage set up, so this can't be kept. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: evidence store missing when saving table bytes"
+  },
+  {
+   "key": "refusal.NO_EXCLUSION_FIELD",
+   "en": "List what the case left out. An empty list is allowed, but a missing one is not. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case lacks an excluded list"
+  },
+  {
+   "key": "refusal.NO_EXTENT",
+   "en": "A citation needs to name the part of the captured document it rests on, and this one did not. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: citation missing the cited part of a capture"
+  },
+  {
+   "key": "refusal.NO_FACT",
+   "en": "This needs the identifier of one money figure, and none was given. Choose a figure and try again. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure read without an id"
+  },
+  {
+   "key": "refusal.NO_FACTS",
+   "en": "Choose at least one money figure before asking for this. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: combine/sum read without figure ids"
+  },
+  {
+   "key": "refusal.NO_FINDING",
+   "en": "A snooze on a project's queue item has to name the finding it applies to, and none was named. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: project-scoped disposition missing its finding"
+  },
+  {
+   "key": "refusal.NO_FUNCTION",
+   "en": "The assistant's step must name what produced it, and this one named nothing. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposal without a function name"
+  },
+  {
+   "key": "refusal.NO_FUNCTION_VERSION",
+   "en": "The assistant's step must name the version that produced it so it can be re-run and checked. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposal without a function version"
+  },
+  {
+   "key": "refusal.NO_HEADER",
+   "en": "A table needs a header: a list of distinct column names, none blank. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: table declared without valid column names"
+  },
+  {
+   "key": "refusal.NO_IDS",
+   "en": "Name at least one document. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: bulk act given no document ids"
+  },
+  {
+   "key": "refusal.NO_INPUTS",
+   "en": "A calculation needs at least one input, such as a table, money fact or earlier calculation. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation created with no inputs"
+  },
+  {
+   "key": "refusal.NO_JUSTIFICATION",
+   "en": "A declared relation needs a justification, and none was given. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: relation declared without a justification"
+  },
+  {
+   "key": "refusal.NO_KIND",
+   "en": "An entity needs a kind, and none was given. Choose one from the list of kinds. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: entity created or listed without a kind"
+  },
+  {
+   "key": "refusal.NO_KINDS",
+   "en": "A search has to say what kinds of thing to look for, and none were named. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: find or mute request names no kinds"
+  },
+  {
+   "key": "refusal.NO_LEG",
+   "en": "That piece of evidence is not in this question, so there is nothing to read for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: leg earning reads a missing evidence position"
+  },
+  {
+   "key": "refusal.NO_LIKE_CASE_KEYS",
+   "en": "A consistency check needs the columns that make cases alike, other than outcome and event. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: consistency calculation keys missing or invalid"
+  },
+  {
+   "key": "refusal.NO_LIMITATIONS",
+   "en": "A workbook's method note must state the limits of the data and method. Add them and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: method note missing limitations"
+  },
+  {
+   "key": "refusal.NO_LINE",
+   "en": "Name the connection to read it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: read a line without an id"
+  },
+  {
+   "key": "refusal.NO_LOAD_BEARING_MEMBER",
+   "en": "A case must rest on at least one load-bearing finding, and all of these are supporting. Mark the finding it rests on. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case has no load-bearing finding"
+  },
+  {
+   "key": "refusal.NO_MEASURE_INPUT",
+   "en": "Checking against a target needs the measure to compare, and none was given. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: target-met calculation lacks its measure"
+  },
+  {
+   "key": "refusal.NO_MEMBER",
+   "en": "Muting or snoozing is personal to a member, so it needs a signed-in member, not the assistant on its own. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: mute or snooze with no member behind it"
+  },
+  {
+   "key": "refusal.NO_MEMBER_ROLE",
+   "en": "Every finding in a case must be marked load-bearing or supporting, and one has no mark. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case member finding has no designation"
+  },
+  {
+   "key": "refusal.NO_METHOD",
+   "en": "A figure needs to say how it was read, and this one did not name an allowed way. Choose how it was read. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure missing or invalid reading method"
+  },
+  {
+   "key": "refusal.NO_MINTER",
+   "en": "Civicsmith could not tell who marked this passage as citable, so it was not marked. Sign in again and retry. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: content mint arrives without stamped member"
+  },
+  {
+   "key": "refusal.NO_NAME",
+   "en": "A check needs a name. Give it one and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: defining a check without a name"
+  },
+  {
+   "key": "refusal.NO_OFFICE_METADATA",
+   "en": "This captured document's reading holds no office metadata, so no dates could be taken from it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: office-metadata dates asked of a capture without any"
+  },
+  {
+   "key": "refusal.NO_OWNER",
+   "en": "This selection or list needs a signed-in member to own it, and none was identified. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: selection create or list without an owner credential"
+  },
+  {
+   "key": "refusal.NO_OWNERS",
+   "en": "This project has no owner on record, so this change was not made. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: project owner action with zero owners"
+  },
+  {
+   "key": "refusal.NO_PAGE_RENDERED",
+   "en": "None of the pages asked for could be turned into an image, so nothing was transcribed. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: transcription where no requested page renders"
+  },
+  {
+   "key": "refusal.NO_PARTITION",
+   "en": "Grouping needs the list of groups, even an empty one to remove the grouping. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: grouping call without a groups list"
+  },
+  {
+   "key": "refusal.NO_PERIOD",
+   "en": "This needs the period it covers. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money fact, workbook, calculation or follow without period"
+  },
+  {
+   "key": "refusal.NO_PRACTICE_INPUT",
+   "en": "Comparing a policy to practice needs the acts measured, as a table or a calculation that gives one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: policy-against-practice calculation lacks practice input"
+  },
+  {
+   "key": "refusal.NO_PROVISION",
+   "en": "This comparison needs the provision it measures practice against, a standard and optionally a portion. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: policy-against-practice lacks a provision"
+  },
+  {
+   "key": "refusal.NO_PSEUDONYM",
+   "en": "Listing a knocker's earlier knocks needs the pseudonym to look up, and none was given. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: knocks listed without naming a pseudonym"
+  },
+  {
+   "key": "refusal.NO_PUBLISHED_EDITION",
+   "en": "No published edition of that case answers here, or you cannot see one. If it is still being prepared, it opens once it is published. Nothing could be opened.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: opening a case edition not published or not visible"
+  },
+  {
+   "key": "refusal.NO_PUBLISHING_PROJECT",
+   "en": "A case is published by a project. Say which project is publishing it. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case publish without a project id"
+  },
+  {
+   "key": "refusal.NO_PULLER",
+   "en": "A knock can only be brought in by a signed-in member, and none was named. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: pull of a knock without a member named"
+  },
+  {
+   "key": "refusal.NO_PURPOSE",
+   "en": "A workbook's method note must say what the workbook is for. Add that and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: method note missing purpose"
+  },
+  {
+   "key": "refusal.NO_QUERY",
+   "en": "Name the saved search whose answer should be frozen. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: freeze set requested without a saved query"
+  },
+  {
+   "key": "refusal.NO_READING",
+   "en": "Civicsmith has not read that document yet, or you cannot see it, so there is no text to attest to. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: attest text for capture never read or unseen"
+  },
+  {
+   "key": "refusal.NO_REF",
+   "en": "Naming a reference is required here, and none was given. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: resolve or testify without naming the reference"
+  },
+  {
+   "key": "refusal.NO_REGISTER",
+   "en": "This record has no readable list of captured documents, so the chain of custody cannot be worked out. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: provenance derive without register file"
+  },
+  {
+   "key": "refusal.NO_RELATION",
+   "en": "A relation has to be named by its id, and none was given. Nothing was read or written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: relation read or withdrawn without an id"
+  },
+  {
+   "key": "refusal.NO_RESPONSE_HAS_NO_BYTES",
+   "en": "Nothing arrived, so there is no file to attach. Record a non-response with an account of it and its date. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: non-response correspondence given a file hash"
+  },
+  {
+   "key": "refusal.NO_ROWS",
+   "en": "Name the rows to read as money facts by number, or choose every row and give a reason. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money ingest without rows chosen"
+  },
+  {
+   "key": "refusal.NO_SCOPE",
+   "en": "A find needs one place to look: a capture, a selection, a set of items or a project. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: find run without a usable scope"
+  },
+  {
+   "key": "refusal.NO_SIBLING_DISCLOSURE",
+   "en": "A question that came from a division must name its parent and the sibling questions, and the parent must name it back. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: divided child lacks matching sibling disclosure"
+  },
+  {
+   "key": "refusal.NO_SIGN",
+   "en": "A money fact must say whether its amount is plus or minus. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money fact without explicit sign"
+  },
+  {
+   "key": "refusal.NO_SIGNERS",
+   "en": "Nobody on your team has a registered signing key yet, so nothing can be signed. An administrator needs to register a member's key first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: no active signing keys registered on the team"
+  },
+  {
+   "key": "refusal.NO_SINCE",
+   "en": "Showing what is new needs a starting date and time, and none was given, so the list could not be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: new-since browse without a since instant"
+  },
+  {
+   "key": "refusal.NO_SOURCE",
+   "en": "A money figure must rest on exactly one source, either a passage of a document or another figure. This one named none that could be read. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure has no usable source"
+  },
+  {
+   "key": "refusal.NO_SOURCES",
+   "en": "A workbook's method note must name the sources its inputs come from. Add them and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: method note missing sources"
+  },
+  {
+   "key": "refusal.NO_STEPS",
+   "en": "A workbook's method note must describe the steps the workbook takes. Add them and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: method note missing steps"
+  },
+  {
+   "key": "refusal.NO_SUBJECT_JUSTIFICATION",
+   "en": "Say why your team took its position on notifying the subject, including a choice not to notify. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case lacks justification for subject position"
+  },
+  {
+   "key": "refusal.NO_SUBJECT_POSITION",
+   "en": "Say your team's position on giving the case's subject notice. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: case lacks subject-notice position"
+  },
+  {
+   "key": "refusal.NO_SUCH_ALIAS",
+   "en": "This entity holds no such name, so there is nothing to withdraw. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdrawing a name the entity does not hold"
+  },
+  {
+   "key": "refusal.NO_SUCH_ATTESTATION",
+   "en": "This event holds no such attestation. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: attestation id not found on the event"
+  },
+  {
+   "key": "refusal.NO_SUCH_BINDING",
+   "en": "No binding with that identifier is held, or you may not see it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: binding id unknown or outside the member's sight"
+  },
+  {
+   "key": "refusal.NO_SUCH_CALCULATION",
+   "en": "No calculation with that number is available to you here. Check the number. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: calculation id unknown or hidden from viewer"
+  },
+  {
+   "key": "refusal.NO_SUCH_CASE_EDITION",
+   "en": "No edition of that case is prepared and waiting for a signature where you can see it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: sign request for an unseen or unprepared case edition"
+  },
+  {
+   "key": "refusal.NO_SUCH_CHECK",
+   "en": "That check is not in your team's record. Check which one you meant. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: changing or switching a check that does not exist"
+  },
+  {
+   "key": "refusal.NO_SUCH_CONTENT",
+   "en": "No passage by that id is in this record, or you cannot see it. A passage exists only once something has cited it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: content id unknown or unseen"
+  },
+  {
+   "key": "refusal.NO_SUCH_DOCUMENT",
+   "en": "No document you can see matches some of the ones named. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: restore names documents not found or not visible"
+  },
+  {
+   "key": "refusal.NO_SUCH_DRAW",
+   "en": "No draw on record matches that one, or it is not one you can see. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: visit names a draw not found or not visible"
+  },
+  {
+   "key": "refusal.NO_SUCH_EXHIBIT",
+   "en": "An exhibit names a document that isn't held, or that you can't see. Exhibits must be documents you can see. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: visit exhibit not held or not visible"
+  },
+  {
+   "key": "refusal.NO_SUCH_FINDING",
+   "en": "The workbook check raised no such issue for this workbook, so the note was not saved. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: note on a workbook check result that does not exist"
+  },
+  {
+   "key": "refusal.NO_SUCH_HANDLE",
+   "en": "No member has that handle, so nothing was done. Check the handle. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: handle names no member"
+  },
+  {
+   "key": "refusal.NO_SUCH_IDENTIFIER",
+   "en": "This entity holds no such identifier, so there is nothing to withdraw. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdrawing an identifier the entity lacks"
+  },
+  {
+   "key": "refusal.NO_SUCH_INPUT",
+   "en": "One of the inputs named is not held, or you may not see it. Check the name and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: named workbook or calculation input missing or unseen"
+  },
+  {
+   "key": "refusal.NO_SUCH_KEY",
+   "en": "Civicsmith holds no such signing key for you, so its status was not changed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: signing key revoked or set that is not found"
+  },
+  {
+   "key": "refusal.NO_SUCH_LINE",
+   "en": "That line is not one your team's record holds, or you cannot see it. Check the line and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: line id unknown or invisible to writer"
+  },
+  {
+   "key": "refusal.NO_SUCH_MARK",
+   "en": "No mark with that number is on that photo, so none was withdrawn. Check the number and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdraw names a mark absent from the photo"
+  },
+  {
+   "key": "refusal.NO_SUCH_PARTICIPANT",
+   "en": "No participant with that id is on record. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: participant correction names a missing participant"
+  },
+  {
+   "key": "refusal.NO_SUCH_PATTERN",
+   "en": "No built-in pattern has that name. Check the name and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: pattern name not among shipped patterns"
+  },
+  {
+   "key": "refusal.NO_SUCH_REFERENCE",
+   "en": "That captured document's reading holds no such reference, or you cannot see the document, so there is nothing to resolve or read. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: reference or capture digest not found for resolving"
+  },
+  {
+   "key": "refusal.NO_SUCH_RELATION",
+   "en": "No declared step with that number is held, or it has been withdrawn. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: relation id unknown or already withdrawn"
+  },
+  {
+   "key": "refusal.NO_SUCH_ROW",
+   "en": "The table has no row with that number, so no money fact was recorded for it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money ingest row number not in table"
+  },
+  {
+   "key": "refusal.NO_SUCH_RULE",
+   "en": "No active rules profile states that deadline for this kind of action, so none was set. Name a deadline the profile lists. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: deadline rule missing or unknown for the action's kind"
+  },
+  {
+   "key": "refusal.NO_SUCH_SET",
+   "en": "That set of money figures is not in your team's record. Check which set you meant. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money set id unknown"
+  },
+  {
+   "key": "refusal.NO_SUCH_STEP_SOURCE",
+   "en": "No attached source by that number is standing and visible to you, so none was withdrawn. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdraw step source unknown, withdrawn or unseen"
+  },
+  {
+   "key": "refusal.NO_SUCH_TABLE",
+   "en": "No table matches that fingerprint here, or you may not see it, or its contents are not held. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: table for binding or ingest not found or hidden"
+  },
+  {
+   "key": "refusal.NO_SUCH_TASK",
+   "en": "No task like that exists that you can see. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: task id unknown or outside the member's sight"
+  },
+  {
+   "key": "refusal.NO_SUCH_TIE",
+   "en": "None of your ties matches that one. Check which tie you meant. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdrawing a tie that is not the member's"
+  },
+  {
+   "key": "refusal.NO_SUCH_WHAT_CHANGED_DRAFT",
+   "en": "No draft of this case's statement of what changed matches the one named. Pick a listed draft or write your own. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: named what-changed draft not found"
+  },
+  {
+   "key": "refusal.NO_SUCH_WORKBOOK",
+   "en": "No workbook is held for this capture in this project. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: workbook act on a capture with no workbook"
+  },
+  {
+   "key": "refusal.NO_TABLE",
+   "en": "Name the table you want to read. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: table read without a table id"
+  },
+  {
+   "key": "refusal.NO_TARGET",
+   "en": "Name the one action this applies to. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: action request missing its target action"
+  },
+  {
+   "key": "refusal.NO_TERM",
+   "en": "Searching by term needs a name or term to look for, and none was given. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: term search with empty term"
+  },
+  {
+   "key": "refusal.NO_TITLE",
+   "en": "A project needs a name, and it must be unique across your team's Civicsmith. Give it one and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: project or fork saved without usable title"
+  },
+  {
+   "key": "refusal.NO_UNTIL",
+   "en": "Snoozing needs a date or time to snooze until, and none was given. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: snooze requested without an until instant"
+  },
+  {
+   "key": "refusal.NO_USABLE_CAPTURE",
+   "en": "The web archive has no usable saved copy of that address, so nothing could be captured from it. Try another address or a different archive date.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: archive lookup finds no 200 capture or memento"
+  },
+  {
+   "key": "refusal.NO_USES",
+   "en": "Your filter matches no recorded use of a power that you can see, so there is nothing to freeze. Try a wider filter. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: freeze uses filter matched no visible acts"
+  },
+  {
+   "key": "refusal.NO_USES_INPUT",
+   "en": "This calculation needs a frozen table of recorded uses as its input. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: application recipe has no uses table"
+  },
+  {
+   "key": "refusal.NO_VOTE_VALUE",
+   "en": "A vote is recorded with the value the record states, and none was given. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: vote recorded without a value"
+  },
+  {
+   "key": "refusal.NO_WHAT_CHANGED",
+   "en": "A later edition must say what changed since the one before, and why, in your team's own words. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: later case edition lacks a what-changed statement"
+  },
+  {
+   "key": "refusal.ONE_SOURCE",
+   "en": "A money fact must rest on exactly one source. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money fact with zero or several sources"
+  },
+  {
+   "key": "refusal.ONLY_UNKNOWN",
+   "en": "That filter is not one Civicsmith offers, so the list could not be read. Choose one of the available filters and try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: browse names an unknown filter"
+  },
+  {
+   "key": "refusal.OPEN_END",
+   "en": "One of the dates has no known end, so the time between them could not be counted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: span between dates with open or unknown end"
+  },
+  {
+   "key": "refusal.ORDER_ALREADY_DATED",
+   "en": "The two events' dates already settle which came first, so a cited order is not needed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: cited order for events whose dates already settle it"
+  },
+  {
+   "key": "refusal.OUR_DEADLINES_REFUSED",
+   "en": "The dates must be calendar days written like 2026-10-08, with the start not after the end. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: our-deadlines list given bad or reversed dates"
+  },
+  {
+   "key": "refusal.OVERSIZE_INLINE",
+   "en": "A file in this submission is too large to be included as written. Reduce its size and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: inline file over size limit"
+  },
+  {
+   "key": "refusal.PAGE_HASH_MISMATCH",
+   "en": "A page of records in this export has been altered or damaged, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: page hash invalid or differs"
+  },
+  {
+   "key": "refusal.PAGE_MALFORMED",
+   "en": "A page of records in this export is unreadable, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: page not canonical rows"
+  },
+  {
+   "key": "refusal.PAGE_MISPLACED",
+   "en": "A page of records in this export sits where it does not belong, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: page owner/table/index wrong"
+  },
+  {
+   "key": "refusal.PAGE_MISSING",
+   "en": "A page of records is missing from this export, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: page gap"
+  },
+  {
+   "key": "refusal.PAGE_ROWS_MISMATCH",
+   "en": "A page of records in this export holds a different number of rows than stated, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: page row count differs"
+  },
+  {
+   "key": "refusal.PAGE_SIZE_MISMATCH",
+   "en": "A page of records in this export is not the size it states, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: page byte size differs"
+  },
+  {
+   "key": "refusal.PARTICIPANT_SUPERSEDED",
+   "en": "That participant row was already corrected. Correct the row that replaced it instead. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: correcting a participant row already superseded"
+  },
+  {
+   "key": "refusal.PARTITION_UNCHANGED",
+   "en": "This question already has exactly this grouping, so nothing changed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: regroup with an identical grouping"
+  },
+  {
+   "key": "refusal.PAYEE_NOT_IDENTIFIED",
+   "en": "The payee on this row could not be matched to a known party, so no money fact was recorded for it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money ingest row payee unresolved"
+  },
+  {
+   "key": "refusal.PAYER_NOT_IDENTIFIED",
+   "en": "The payer on this row could not be matched to a known party, so no money fact was recorded for it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money ingest row payer unresolved"
+  },
+  {
+   "key": "refusal.PHOTO_MARKS_CHANGED_SINCE",
+   "en": "Photos in this case changed after it was prepared: a mark was made or withdrawn, or a photo is not the copy your team marked. Prepare the case again. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: publish with stale photo marks"
+  },
+  {
+   "key": "refusal.POSSIBLY_OVERDUE",
+   "en": "This may be overdue, but Civicsmith cannot be sure because the due date is uncertain between two days.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: due date uncertain, check falls between them"
+  },
+  {
+   "key": "refusal.PREFLIGHT_UNDETERMINED",
+   "en": "Civicsmith couldn't finish checking whether this can be signed or published, so nothing is claimed either way. Ask again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: pre-flight check gave no answer"
+  },
+  {
+   "key": "refusal.PROCEEDING_ENDS",
+   "en": "This kind of connection must run to a proceeding, and some link two proceedings. Check what each end is. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: proceeding line with wrong end kinds"
+  },
+  {
+   "key": "refusal.PROCEEDING_FACET_MISSING",
+   "en": "A proceeding is registered with its forum, kind and number, and one of them is missing. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: proceeding registered missing forum, kind or number"
+  },
+  {
+   "key": "refusal.PROCEEDING_KIND_UNKNOWN",
+   "en": "That kind of proceeding is not one your team's jurisdiction profiles name. Choose one they name. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: proceeding kind outside the team's profiles"
+  },
+  {
+   "key": "refusal.PROJECTS_UNDETERMINED",
+   "en": "Civicsmith could not tell which projects rely on these questions, so it did not move them. Try again. Nothing was moved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: project usage of questions unreadable when moving questions"
+  },
+  {
+   "key": "refusal.PROMOTE_FAILED",
+   "en": "Civicsmith brought that record in but could not file it, so nothing was written. Try again, and if it keeps failing, ask an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: promoting a pulled record failed"
+  },
+  {
+   "key": "refusal.PROMOTION_FAILED",
+   "en": "Civicsmith could not turn this into its own record, so nothing was written. Try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: promotion into an inquiry or record did not complete"
+  },
+  {
+   "key": "refusal.PROPOSAL_ABOVE_CEILING",
+   "en": "The grade this reading earned is stronger than a machine reading can reach, so it was declined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposal graded above its allowed ceiling"
+  },
+  {
+   "key": "refusal.PROPOSAL_NAMES_NOTHING",
+   "en": "A proposed reference must name an identifier or a name that can be graded, and this named neither. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposal gives nothing to grade"
+  },
+  {
+   "key": "refusal.PROPOSAL_NO_REF",
+   "en": "A proposed reference must carry the reference exactly as it appears in the document, and this one had none. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposal lacks the raw reference text"
+  },
+  {
+   "key": "refusal.PROPOSAL_POSITION",
+   "en": "The place the assistant says it read the reference cannot be located in the document. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposal gives an unreadable source position"
+  },
+  {
+   "key": "refusal.PROPOSAL_SHAPE",
+   "en": "The assistant's proposed reference was not in a form Civicsmith can read. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposed reference is not an object"
+  },
+  {
+   "key": "refusal.PROVISION_MALFORMED",
+   "en": "A provision must name a standard, and may name a portion, each as plain text that is not blank and not too long. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: provision key blank, missing or too long"
+  },
+  {
+   "key": "refusal.PROVISION_NOT_A_MEASURE",
+   "en": "That standard is held without its own words, so acts can't be measured against it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: provision standard lacks text to measure against"
+  },
+  {
+   "key": "refusal.PUBLISHED_CANNOT_BE_SET_DOWN",
+   "en": "A finding in a published case cannot be deferred or dismissed. Only findings nobody has published age out. Nothing was moved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: dispose of a question that belongs to a published case"
+  },
+  {
+   "key": "refusal.PUBLISHED_CANNOT_DIVIDE",
+   "en": "A published case cannot be divided, because people may already rely on it. Reopen it and publish what changed as a new edition. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: divide a question that is in a published case"
+  },
+  {
+   "key": "refusal.PUBLISHED_CANNOT_RESTRUCTURE",
+   "en": "A published case's strength and grouping are part of its signed record, so they cannot be regrouped. Reopen the case and publish a new edition. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: regroup evidence of a published case"
+  },
+  {
+   "key": "refusal.PUBLISH_AT_ALREADY_SET",
+   "en": "This case edition is already signed and waiting to be published at its set time. To publish it now, an owner has to cancel the set time and sign again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: scheduling a publish when one is already waiting"
+  },
+  {
+   "key": "refusal.PUBLISH_AT_FAILED",
+   "en": "Civicsmith could not schedule this case edition to publish at the set time. Nothing was written. Try again, and if it keeps failing, ask an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: scheduling a timed publish failed for no named reason"
+  },
+  {
+   "key": "refusal.PUBLISH_AT_MALFORMED",
+   "en": "A publishing time needs a real date and a 24-hour time, such as October 8, 2026 at 14:30. Nothing was scheduled.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: publish time not a valid date and time"
+  },
+  {
+   "key": "refusal.PUBLISH_AT_PAST",
+   "en": "That time is not in the future. Choose a later time, or publish now. Nothing was scheduled.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: publish time at or before now"
+  },
+  {
+   "key": "refusal.PUBLISH_FAILED",
+   "en": "Civicsmith could not publish this finding. Nothing was published. Try again, and if it keeps failing, ask an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: finding publish refused without a specific reason"
+  },
+  {
+   "key": "refusal.PULL_NOT_STORED",
+   "en": "The knock's material could not be held, so it was not brought in. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: storing a pulled knock's bytes failed"
+  },
+  {
+   "key": "refusal.PULL_WITHIN_FAILED",
+   "en": "Bringing in this knock failed on Civicsmith's side, so nothing was brought in. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: pull of a knock failed internally mid-write"
+  },
+  {
+   "key": "refusal.R2_NOT_CONFIGURED",
+   "en": "Your team's Civicsmith has no file storage set up for safe copies, so the copy could not be kept. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: safe copy made where storage is not configured"
+  },
+  {
+   "key": "refusal.RANGE_HOLDS_FORMULAS",
+   "en": "An input range can hold only plain values, and part of this range holds formulas. Choose a range without formulas. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: workbook input range contains formula cells"
+  },
+  {
+   "key": "refusal.RANGE_INVERTED",
+   "en": "The first date is after the last date. Swap them and try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: day range with start after end"
+  },
+  {
+   "key": "refusal.RANKING_TERMS",
+   "en": "A ranking needs its quantity, its scope and its period stated. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: ranking missing quantity, scope or period"
+  },
+  {
+   "key": "refusal.RATIFY_STALE",
+   "en": "This finding has changed since you reviewed it. Read it again, then sign again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: finding signed against outdated bytes"
+  },
+  {
+   "key": "refusal.READ_FAILED",
+   "en": "Civicsmith could not read who recorded figures from this capture. Try again in a moment.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: read of capture's recorders failed"
+  },
+  {
+   "key": "refusal.RECEIPT_NOT_WRITTEN",
+   "en": "The record of where this file came from could not be written, so nothing was filed. Try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: acquisition receipt write failed"
+  },
+  {
+   "key": "refusal.RECIPE_INVALID",
+   "en": "This calculation recipe is not built the way recipes must be. Check its inputs and steps. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recipe malformed in a field or shape"
+  },
+  {
+   "key": "refusal.RECIPE_NOT_TEMPLATE",
+   "en": "This kind of calculation runs a fixed set of steps, and the steps given differ from it. Remove them to use the standard steps. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: custom recipe differs from the template's"
+  },
+  {
+   "key": "refusal.RECIPIENTS_UNREADABLE",
+   "en": "The projects using this question could not be read in full, so the list was not shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recipient list lookup for a question failed"
+  },
+  {
+   "key": "refusal.RECOMPUTE_FAILED",
+   "en": "A calculation this case rests on could not be recomputed, so the case can't be checked yet. Try again. Nothing was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recomputing a calculation or strength failed"
+  },
+  {
+   "key": "refusal.RECORDED_BY_UNREADABLE",
+   "en": "Civicsmith could not read who has cited this passage, so nothing is shown. Try again later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: unexpected error reading who cited or recorded"
+  },
+  {
+   "key": "refusal.REEVAL_PENDING_REFUSED",
+   "en": "This document's re-evaluation setting is not in a form Civicsmith can read, so the change was declined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: document carries a malformed re-evaluation pending field"
+  },
+  {
+   "key": "refusal.REFS_IN_PAYLOAD",
+   "en": "References must come from the document itself, not from the request. Remove them from the request and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: promote request carries refs"
+  },
+  {
+   "key": "refusal.RELATION_NOT_MACHINE",
+   "en": "The assistant can record only a within relation between events. Any other relation must be recorded by a member. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant tried a relation other than within"
+  },
+  {
+   "key": "refusal.REOPEN_FAILED",
+   "en": "The reopening could not be completed. Try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: reopen threw unexpectedly"
+  },
+  {
+   "key": "refusal.RESPONDS_TO_REFUSED",
+   "en": "A link saying this responds to another record is malformed or points at nothing your team holds. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: responds-to reference invalid or unresolved"
+  },
+  {
+   "key": "refusal.RETRIEVAL_FAILED",
+   "en": "The saved search gave no answer, so there is nothing to freeze. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: saved search returned nothing when freezing a set"
+  },
+  {
+   "key": "refusal.RETRIEVAL_NOT_REACHABLE",
+   "en": "The saved search can't be run right now, so its answer can't be frozen. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: search service unavailable when freezing a set"
+  },
+  {
+   "key": "refusal.RETRIEVAL_THREW",
+   "en": "The saved search failed while running, so its answer can't be frozen. Try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: saved search errored while freezing a set"
+  },
+  {
+   "key": "refusal.ROOT_OF_TRUST",
+   "en": "The founding administrator cannot resign or be removed inside Civicsmith. That is done at the hosting account. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: resign or remove the founding administrator"
+  },
+  {
+   "key": "refusal.ROUNDING_UNSTATED",
+   "en": "This calculation must say how to round: how many decimal places and which rounding mode. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: rounding places or mode missing or invalid"
+  },
+  {
+   "key": "refusal.RRULE_UNSUPPORTED",
+   "en": "That repeating schedule uses a feature Civicsmith does not support, so it could not be expanded. Use a simpler weekly, monthly or yearly pattern.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recurrence rule outside supported subset"
+  },
+  {
+   "key": "refusal.RULE_INVALID",
+   "en": "The deadline rule for this item is not valid, so no due date could be worked out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: deadline rule malformed or uncountable"
+  },
+  {
+   "key": "refusal.RULE_NOT_APPLICABLE",
+   "en": "This deadline rule applies only to events on certain days of the week, and this date is not one, so no due date was worked out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: rule applies_on mismatches anchor weekday"
+  },
+  {
+   "key": "refusal.SAME_EVENT",
+   "en": "An event cannot be merged into itself. Name two different events. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: merge naming the same event twice"
+  },
+  {
+   "key": "refusal.SAVED_QUERY_DROPS",
+   "en": "Part of this search would be ignored when it runs, so what would be saved is not what would run. Fix or remove those terms. Nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: saving a query with terms that drop"
+  },
+  {
+   "key": "refusal.SAVED_QUERY_EMPTY",
+   "en": "This search has no term that can run, so there is nothing to save. Nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: saving a query with no usable terms"
+  },
+  {
+   "key": "refusal.SAVED_QUERY_SELECTION",
+   "en": "A hand-picked selection of records cannot be saved as a search, because a search is run again later. Nothing was saved.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: saving a query that carries chosen ids"
+  },
+  {
+   "key": "refusal.SCHEME_NOT_FOR_KIND",
+   "en": "That identifier scheme is not used for this kind of entity. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: identifier scheme does not fit entity's kind"
+  },
+  {
+   "key": "refusal.SCOPE_TOO_LARGE",
+   "en": "That selection holds more items than a saved find can keep. Narrow it and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: standing find selection over the id limit"
+  },
+  {
+   "key": "refusal.SCOPE_UNKNOWN",
+   "en": "A search can cover only one area at a time: a capture, a selection, a list of items, or a project. Choose one and try again. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: find scope names none or several of the allowed forms"
+  },
+  {
+   "key": "refusal.SCORE_NOT_A_FACT",
+   "en": "A ranking must order by one measured quantity of one kind. Scores for importance, suspicion or severity, or blended measures, can't order it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: ranking by judgment, composite or mixed-kind measure"
+  },
+  {
+   "key": "refusal.SEAT_ON_ENDS",
+   "en": "A seat must run from an office to a body. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: seat_on line with wrong end kinds"
+  },
+  {
+   "key": "refusal.SEED_INVALID",
+   "en": "A random draw needs a seed that is not empty, so it can be repeated. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: draw seed empty"
+  },
+  {
+   "key": "refusal.SELF_CHECK",
+   "en": "A workbook has to be checked by a second member, so its author cannot check it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: author tried to check their own workbook"
+  },
+  {
+   "key": "refusal.SELF_CLAIM",
+   "en": "An identity claim joins two different person records, and these are the same one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: identity claim between a record and itself"
+  },
+  {
+   "key": "refusal.SELF_LINE",
+   "en": "A connection must run between two different entities. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: line from an entity to itself"
+  },
+  {
+   "key": "refusal.SELF_RELATION",
+   "en": "A relation has to join two different records, not one to itself. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: relation with identical ends"
+  },
+  {
+   "key": "refusal.SERVICE_ANSWER_UNREADABLE",
+   "en": "The citation service answered in a form Civicsmith could not read. Nothing was looked up.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: citation service reply not the expected list"
+  },
+  {
+   "key": "refusal.SERVICE_THROTTLED",
+   "en": "The citation service is holding lookups from your team's key for now. Nothing was looked up; try again later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: outside citation service rate-limited the key"
+  },
+  {
+   "key": "refusal.SHAPE_MISMATCH",
+   "en": "The range and the input have different numbers of rows or columns. Choose a range the same size as the input. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: workbook range size differs from the input size"
+  },
+  {
+   "key": "refusal.SNAPSHOT_UNLINKED",
+   "en": "This export holds a saved snapshot that no revision accounts for, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: orphan snapshot"
+  },
+  {
+   "key": "refusal.SORT_NOT_QUANTITY",
+   "en": "A sort can only use a column holding one stated quantity, and this one does not. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: sort on a non-quantity or composed column"
+  },
+  {
+   "key": "refusal.SOURCE_EXTENT_UNREADABLE",
+   "en": "The passage named as this figure's source could not be read as given. Select the passage again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: source passage grammar unreadable"
+  },
+  {
+   "key": "refusal.SOURCE_IS_CALCULATION",
+   "en": "A calculation cannot be the source of a money figure. Cite the figures it used, or the document itself. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure source is a calculation"
+  },
+  {
+   "key": "refusal.SOURCE_NOT_HELD",
+   "en": "The source for this figure is not in your team's record, or you cannot see it. Check the document or figure and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure source missing or invisible"
+  },
+  {
+   "key": "refusal.SOURCE_NOT_READ",
+   "en": "The table's source document could not be read as a table. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: source bytes unreadable or not valid CSV"
+  },
+  {
+   "key": "refusal.SPLIT_EMPTIES",
+   "en": "A split must leave at least one attestation on the event being split. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: split would strip all attestations from the event"
+  },
+  {
+   "key": "refusal.STAGE_NOT_ACTUAL",
+   "en": "Only an actual amount has a stage. This one is not marked actual. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: stage given on a non-actual money fact"
+  },
+  {
+   "key": "refusal.STAMP_NO_ORDER",
+   "en": "That entry is not a posted court order of this case with this effect, so no stamp was applied. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: court-order stamp without matching order"
+  },
+  {
+   "key": "refusal.STATED_REASON_MISSING",
+   "en": "A recorded act needs its stated reason, quoted from a captured document, or the word none if the record states none. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: discretion recorded without a stated reason"
+  },
+  {
+   "key": "refusal.STEP_SOURCE_BASIS_TOO_LONG",
+   "en": "The basis for this source is too long. Shorten it and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: attach step source basis over length limit"
+  },
+  {
+   "key": "refusal.STEP_SOURCE_NOT_A_MEMBER",
+   "en": "Attaching or withdrawing a source for a step is a team member's act, not the assistant's. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: step source act by machine or unnamed actor"
+  },
+  {
+   "key": "refusal.STEP_SOURCE_NOT_THE_ATTACHER",
+   "en": "An attached source can be withdrawn only by the member who attached it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdraw step source by someone else"
+  },
+  {
+   "key": "refusal.STEP_SOURCE_NO_BASIS",
+   "en": "An attached source needs its basis: what the passage says about this step, in your words. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: attach step source without basis"
+  },
+  {
+   "key": "refusal.STORAGE_ABSENT",
+   "en": "Your team's Civicsmith has no file storage connected, so this file could not be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: file read where evidence storage is absent"
+  },
+  {
+   "key": "refusal.SUBJECT_MALFORMED",
+   "en": "A plan's matter must be either an inquiry, or an outcome with its determination and the standard it is measured by. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: plan matter not shaped as inquiry or outcome"
+  },
+  {
+   "key": "refusal.SUBJECT_REFUSED",
+   "en": "This question names a subject that is not in your team's subject registry. Add the subject first or choose one that exists. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: inquiry subject entity unknown"
+  },
+  {
+   "key": "refusal.SUPERSESSION_REFUSED",
+   "en": "A question can only replace a different question that exists in your team's record. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: supersedes link to itself or a missing question"
+  },
+  {
+   "key": "refusal.TABLE_NEVER_CARRIED",
+   "en": "This export carries records that are never supposed to travel, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: forbidden table rows present"
+  },
+  {
+   "key": "refusal.TABLE_NOT_CARRIED",
+   "en": "This export leaves out a table it should carry or account for, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: declared table absent"
+  },
+  {
+   "key": "refusal.TABLE_ROWS_MISMATCH",
+   "en": "A table in this export holds a different number of rows than stated, so it could not be verified.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: export verification: table row total differs"
+  },
+  {
+   "key": "refusal.TABLE_TOO_LARGE",
+   "en": "This table is larger than Civicsmith holds, either too many cells or over 20 MB. Narrow the source or the filter. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: table exceeds cell or byte bound"
+  },
+  {
+   "key": "refusal.TARGET_CANNOT_VOTE",
+   "en": "The member being removed does not vote on their own removal. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: target votes on own removal with three or more"
+  },
+  {
+   "key": "refusal.TERM_TOO_LONG",
+   "en": "That search term is too long. Shorten it and try again. Nothing could be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: term search exceeds the maximum term length"
+  },
+  {
+   "key": "refusal.TEXT_ANCHOR_MISSING",
+   "en": "Text read by a machine has to point to the page region it came from, and this did not, so it was declined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: machine transcription missing a valid page-region anchor"
+  },
+  {
+   "key": "refusal.TEXT_TOO_LONG",
+   "en": "That text is longer than the citation service reads in one request. Shorten it or split it up. Nothing was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: citation lookup text over size limit"
+  },
+  {
+   "key": "refusal.THRESHOLD_NOT_IN_FORCE",
+   "en": "The standard this calculation relies on was not in force for the period it covers. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: cited standard not in force in calculation period"
+  },
+  {
+   "key": "refusal.TOO_FEW_CHILDREN",
+   "en": "A division produces at least two questions. One is only a rename, and none is a deletion. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: divide with fewer than two child questions"
+  },
+  {
+   "key": "refusal.TOO_MANY_CAPTURES",
+   "en": "Too many captured documents were named at once. Ask for fewer, or in parts. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: more captures named than one call reads"
+  },
+  {
+   "key": "refusal.TOO_MANY_IDS",
+   "en": "Too many items were named at once, so the whole request was declined. Split it into smaller sets. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: more ids than one act allows"
+  },
+  {
+   "key": "refusal.TOO_MANY_QUESTIONS",
+   "en": "Too many questions were named at once to read their waits. Ask about fewer at a time. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: waits read for more questions than one call allows"
+  },
+  {
+   "key": "refusal.TOTAL_NOT_STORED",
+   "en": "A total is a calculation and is not stored as a money fact. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money fact row carries a total or sum field"
+  },
+  {
+   "key": "refusal.TRANSCRIBE_NOT_DEPLOYED",
+   "en": "The assistant's page transcription has not passed its tests on your team's Civicsmith, so it is not switched on. Nothing was read or written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: transcription asked where the feature is not deployed"
+  },
+  {
+   "key": "refusal.TWO_SOURCES",
+   "en": "A money figure rests on one source only, and this one named more than one. Choose one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure names several sources"
+  },
+  {
+   "key": "refusal.TYPED_NOT_MEMBER",
+   "en": "Only a team member can record a figure by typing it in. The assistant must say how it read the figure instead. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: typed method used by non-member writer"
+  },
+  {
+   "key": "refusal.UNDECLARED_OPERATION",
+   "en": "That kind of automatic change is not one Civicsmith supports. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: mechanical promotion with unknown operation"
+  },
+  {
+   "key": "refusal.UNIT_MISMATCH",
+   "en": "These values use different units or currencies, so they cannot be compared or combined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: figures or column mix units or currencies"
+  },
+  {
+   "key": "refusal.UNKNOWN_ATTRIBUTION",
+   "en": "That is not a disclosure level a tie can have. Pick one of the listed levels. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: declaring a tie with invalid disclosure level"
+  },
+  {
+   "key": "refusal.UNKNOWN_BASIS",
+   "en": "That is not a basis Civicsmith knows. Choose one from the list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money or identity-claim basis unrecognised"
+  },
+  {
+   "key": "refusal.UNKNOWN_CAPACITY",
+   "en": "That is not a capacity Civicsmith knows for holding a post. Choose one from the list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: holds line with unknown capacity"
+  },
+  {
+   "key": "refusal.UNKNOWN_CLAIM_KIND",
+   "en": "That is not a kind of identity claim Civicsmith recognizes. Pick one of the listed kinds. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: identity claim with invalid kind"
+  },
+  {
+   "key": "refusal.UNKNOWN_CODE_SCHEME",
+   "en": "A classification code on this figure names a scheme your team's active profiles do not hold, or has no code. Use a scheme your team has, with its code. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure write carries unknown classification scheme"
+  },
+  {
+   "key": "refusal.UNKNOWN_DATED_KIND",
+   "en": "That kind of dated fact is not one Civicsmith recognizes. Choose one from its list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: dated fact of an unknown kind"
+  },
+  {
+   "key": "refusal.UNKNOWN_EVENT_KIND",
+   "en": "That kind of event is not one Civicsmith recognizes. Choose one from its list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: event created with an unknown kind"
+  },
+  {
+   "key": "refusal.UNKNOWN_FACT_KIND",
+   "en": "That is not a kind of fact Civicsmith keeps about a person. Pick one of the listed kinds. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: person fact with invalid kind"
+  },
+  {
+   "key": "refusal.UNKNOWN_FIELD",
+   "en": "A money fact holds only the fields Civicsmith knows, and one given is not among them. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money fact input has an unrecognised field"
+  },
+  {
+   "key": "refusal.UNKNOWN_FUNCTION",
+   "en": "The assistant's step named a producer Civicsmith does not have. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assistant proposal names an unknown function"
+  },
+  {
+   "key": "refusal.UNKNOWN_FUND_TYPE",
+   "en": "That is not a fund type Civicsmith knows. Choose one from the list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: set fund type with unknown type"
+  },
+  {
+   "key": "refusal.UNKNOWN_KEY",
+   "en": "That signature was made with a key your team has not registered, so it was not accepted. Sign with a registered key. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: signature verifies against no registered key"
+  },
+  {
+   "key": "refusal.UNKNOWN_KIND",
+   "en": "Civicsmith does not recognize that kind or item, so it was declined. Choose one from the list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: queue mute of unknown item or calculation of unknown kind"
+  },
+  {
+   "key": "refusal.UNKNOWN_LINE_KIND",
+   "en": "That is not a kind of connection Civicsmith records. Money given or received belongs in a money fact, not a connection. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: unknown line kind on write or filter"
+  },
+  {
+   "key": "refusal.UNKNOWN_METHOD_VERSION",
+   "en": "This grade was made with a grading method Civicsmith has not published, so it could not be checked again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: recompute of a grade with an unpublished method version"
+  },
+  {
+   "key": "refusal.UNKNOWN_MONEY_KIND",
+   "en": "That is not a kind of money fact Civicsmith knows. Choose one from the list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money kind unrecognised on write or list"
+  },
+  {
+   "key": "refusal.UNKNOWN_OUTCOME",
+   "en": "That is not an outcome a check can have. Choose one of the outcomes offered and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: workbook check outcome not an allowed value"
+  },
+  {
+   "key": "refusal.UNKNOWN_PHASE",
+   "en": "That is not a phase Civicsmith knows for a money fact. Choose one from the list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money phase unrecognised on write or list"
+  },
+  {
+   "key": "refusal.UNKNOWN_PRECISION",
+   "en": "That is not a precision Civicsmith knows for an amount. Choose one from the list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money precision unrecognised"
+  },
+  {
+   "key": "refusal.UNKNOWN_PRESET",
+   "en": "That preset exploration does not exist. Choose one from the list of presets. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: explore preset name not in the list"
+  },
+  {
+   "key": "refusal.UNKNOWN_PURPOSE",
+   "en": "That is not a purpose a set of money figures can have. Choose one of the listed purposes. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: createSet with invalid purpose"
+  },
+  {
+   "key": "refusal.UNKNOWN_QUANTITY",
+   "en": "No step in this walk states the quantity you asked to sort by. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: walk sorted by a quantity no step states"
+  },
+  {
+   "key": "refusal.UNKNOWN_RELATION",
+   "en": "That kind of relation is not one Civicsmith recognizes. Choose one from its list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: relation of an unknown kind declared"
+  },
+  {
+   "key": "refusal.UNKNOWN_ROLE",
+   "en": "A payer or payee belongs on the money fact, not on an event, and other roles must come from the allowed list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: payer or payee role, or unknown role, on an event"
+  },
+  {
+   "key": "refusal.UNKNOWN_SCHEME",
+   "en": "Your team's jurisdiction profiles name no identifier scheme like that one. Choose one they name. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: identifier scheme not in the team's profiles"
+  },
+  {
+   "key": "refusal.UNKNOWN_SECTOR",
+   "en": "That sector is not one Civicsmith recognizes. Choose one from its list of sectors. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: entity sector outside the allowed list"
+  },
+  {
+   "key": "refusal.UNKNOWN_STAGE",
+   "en": "That stage does not belong with this kind of figure, so the figure was declined. Pick a stage the figure's kind allows. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: money figure write names a stage its kind lacks"
+  },
+  {
+   "key": "refusal.UNKNOWN_STATUS",
+   "en": "That status is not one an event can have. Choose one from the list. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: event given an unknown status"
+  },
+  {
+   "key": "refusal.UNKNOWN_TIE_KIND",
+   "en": "That is not a kind of tie Civicsmith recognizes. Pick one of the listed kinds. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: declaring a tie with invalid kind"
+  },
+  {
+   "key": "refusal.UNKNOWN_VOTE_VALUE",
+   "en": "That vote value is not one your team's profile allows. Choose one it lists. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: vote value outside the profile's allowed values"
+  },
+  {
+   "key": "refusal.UNMET_NOT_CITED",
+   "en": "Each unmet item must cite the passage of a captured document that states it unmet, and one did not. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: assessment unmet item lacks a cited passage"
+  },
+  {
+   "key": "refusal.UNPARSABLE_REGISTER",
+   "en": "This record's list of captured documents could not be read. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: provenance register not valid JSON"
+  },
+  {
+   "key": "refusal.UNPARSEABLE_FRONTMATTER",
+   "en": "This project's main document has a heading block Civicsmith cannot read, so it cannot be edited safely. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: document front matter unparseable when citing"
+  },
+  {
+   "key": "refusal.UNSPLICEABLE_BASIS",
+   "en": "This question's basis section is not in a form Civicsmith can edit in place, so nothing was changed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: basis block cannot be edited in place"
+  },
+  {
+   "key": "refusal.UNSPLICEABLE_CLOCK",
+   "en": "This action's deadline block is in a shape Civicsmith cannot extend in place, so it was left alone. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: clock append to oddly shaped action document"
+  },
+  {
+   "key": "refusal.UNSPLICEABLE_CORRESPONDENCE",
+   "en": "This action's correspondence section could not be extended in place, so nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: correspondence block not in extendable shape"
+  },
+  {
+   "key": "refusal.UNSPLICEABLE_GOVERNING_LAWS",
+   "en": "This action's list of governing laws could not be replaced in place, so nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: governing laws block not in replaceable shape"
+  },
+  {
+   "key": "refusal.UNSPLICEABLE_REFERENCES",
+   "en": "This document's references section is not in a form Civicsmith can edit in place, so nothing was changed. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: references block cannot be edited in place"
+  },
+  {
+   "key": "refusal.UNSPLICEABLE_STATE_HISTORY",
+   "en": "This document's history of states could not be extended in place, so the move was not made. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: document state history block cannot be extended"
+  },
+  {
+   "key": "refusal.UNTIL_IN_PAST",
+   "en": "A snooze has to end in the future, and that date has already passed. Choose a later date or time. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: snooze until is not after now"
+  },
+  {
+   "key": "refusal.UPLOAD_NOT_STORED",
+   "en": "The file could not be read whole or stored, so it was not added. Try uploading again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: upload bytes could not be held"
+  },
+  {
+   "key": "refusal.UPLOAD_WITHIN_FAILED",
+   "en": "Adding the file failed partway, so it was not filed. Try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: upload follow-on step failed"
+  },
+  {
+   "key": "refusal.USES_UNREADABLE",
+   "en": "The recorded uses of powers could not be read just now. Nothing was read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: listing uses of powers failed on an error"
+  },
+  {
+   "key": "refusal.USE_NEEDS_ITS_ACT",
+   "en": "An assessment or act of discretion is recorded only with its provision, reason and outcome, through its own form. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: plain event created for an assessment or discretion kind"
+  },
+  {
+   "key": "refusal.VALUE_INVALID",
+   "en": "This rule entry is not in a valid form, so it was not accepted. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: local-facts rule entry fails validation"
+  },
+  {
+   "key": "refusal.VIEWER_MISSING",
+   "en": "Civicsmith could not tell who is asking, so nothing was answered. Sign in again and retry.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: read arrives without a stamped viewer"
+  },
+  {
+   "key": "refusal.VOTES_SHORT",
+   "en": "There are not enough votes yet to carry this removal. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: removal vote counted below the needed threshold"
+  },
+  {
+   "key": "refusal.WAIVER_NO_SCOPE",
+   "en": "A waiver must cite the passage that states what is waived and for whom. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: waiver recorded without a cited scope"
+  },
+  {
+   "key": "refusal.WITHDRAW_NO_REASON",
+   "en": "Withdrawing a mark needs a reason of 1 to 500 characters. Add one and try again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: withdraw photo mark with missing or overlong reason"
+  },
+  {
+   "key": "refusal.WITHIN_CYCLE",
+   "en": "That would make an event lie within itself, so the within relation was declined. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: within relation that would form a loop"
+  },
+  {
+   "key": "refusal.WIZARD_ALREADY_ENDED",
+   "en": "That guided script or version has already been retired or withdrawn. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: ending a wizard script already ended"
+  },
+  {
+   "key": "refusal.WIZARD_REASON_REFUSED",
+   "en": "Ending a guided script needs a reason of 1 to 300 characters. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: wizard retire or withdraw without a usable reason"
+  },
+  {
+   "key": "refusal.ZONE_INVALID",
+   "en": "Civicsmith does not recognize that time zone, so nothing was calculated. Use a standard zone name such as America/Los_Angeles.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-342: time zone not recognized"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
