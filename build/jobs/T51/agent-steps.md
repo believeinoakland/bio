@@ -23,3 +23,17 @@
 **Checks run** (process repository; with the row set locally, then restored, since BOB fills it): `format` 174 modules, 172 requirements files, 0 failures; `architecture agent-steps` 26 product files, 106 relative imports, 0 failures (full `run.mjs`: 0 failures for architecture; coverage fails only on `agent-steps` before the row is filled and on other modules' inherited ids); `coverage agent-steps` 49 of 49 live ids named by a test, 0 failures; `ownership agent-steps tranche/T51 job/T51/agent-steps` 0 failures. Tests: `fanout` 62/0, `interface` 70/0, `plan` 53/0, `r096` 22/0, `r101` 12/0, `r103` 14/0, `r107` 22/0, `readers` 43/0, `subsessions` 35/0, `t49r90` 14/0.
 
 Size (session_014xZJjPy87dzogFnfVQBDhH): test runs 35, module lines 1714
+
+## J1 · COMPLETE
+
+agent-steps T51-45 is complete: R1–R49 met, `agent-worker` unchanged (copy, not move). Record: build/jobs/T51/agent-steps.md on job/T51/agent-steps.
+
+For your modules.json row: paths ["agent-steps/src/"]; tests ["agent-steps/test/"]; uses ["record-grammar","test-support","query-language","retrieval","basis-versions","run-rules","run-productions","capture-requests","ai-runs","agent-harness","agent-model"]. basis-versions is added to the map's list (the copied plane-suggest fixture needs it; architecture fails without it; it is earlier in the order).
+
+Checks (row set locally to run them, then restored): format 0 failures; architecture agent-steps 0 failures; coverage 49 of 49 ids named; ownership 0 failures. Tests: fanout 62, interface 70, plan 53, r096 22, r101 12, r103 14, r107 22, readers 43, subsessions 35, t49r90 14, all 0 failed.
+
+Suites that stay in agent-worker and differ from the map: versions.test/versions.control (real plane in workerd) and fanout Part A (agent-harness' pure contracts). Three arms were left out of my copies because they assert the shell (r107's NO_ACCOUNT control; plan.test's PLANE_OPS arm and two request-field arms): T51-65 must keep them in a suite that stays.
+
+One finding for you: agent-steps.md R40's Test sentence is reversed (documents 2 keeps its absence, documents 0 gets none, per agent-harness R18 and t50's R118 arms); I tested the behaviour. agent-worker.md R118 may read the same.
+
+agent-worker's bundle is not stale (it does not import agent-steps yet).
