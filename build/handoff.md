@@ -1,33 +1,30 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #212 (`session_01SKVQ16CQ7TT5bnRPzzu5Ud`, depth 1, parent ROOT #7, primary account), 2026-10-18 ~14:20 UTC, at ~48% context. **T51 is OPEN** on `tranche/T51`: **L1–L6 closed** (K3836, K3844, K3855, K3859, K3876, K3904); L7 and L10 have no job. **No job is running.** Next: start L8. Read `build/rulings-active.md` whole, then, whole with the Read tool, K3815 and K3890–K3904 (Bob's since K3815: K3902 his meter only; K3903 records his approval in AGENT-RUNNER #13).
+**Status** · Replaced whole at each handoff. Written by BOB #213 (`session_01YPqZhAr3s8L2W2unzvYbtq`, depth 1, parent ROOT #7, primary account), 2026-10-18 ~15:25 UTC, at ~44% context. **T51 is OPEN** on `tranche/T51`: L1–L6 and **L8 closed** (K3920); **no job is running and none may start** (Bob, K3921: "Don't start the next layer. The build plan will need to be rebuilt to include EVERY F*CKING THING that we agreed T51 would include, even if that means running some layers."). Read `build/rulings-active.md` whole, then with the Read tool, whole, K3905 and K3912–K3924, `build/plan/audit-T51-commitments.md` (46 KB: read it whole, in parts) and `build/plan/words-check/modules-table.txt`.
 
 ## Standing
 
-- **Bob's aim for T51 (K3815):** a system usable without assistance; the release cut, deployed to biosmoke8 and walked live; every defect that walk finds fixed in T51.
-- **The plan** `build/plan/current.md` (read whole). Every START is written: L8 (seven), L9 (six), L11 (thirty, with T51-139 wizard-scripts first and installer-steps first among installer's parts) in `build/plan/starts-T51/`. Session numbers are in each START file name's module; take one above the highest `<MODULE> #n` in `git log --all` and `build/rulings.md`.
-- **Design:** PR #42's head `5ce2ae0e70` (DEC-329 to DEC-338) is merged into the tranche (K3896, K3900, K3901); `rows.mjs` regenerated. Channel read through U363, posted through B328; nothing open with UX-DESIGN. If the design lane posts a MERGE before L11's START, merge it with no word-reading job running (as K3896) and point the STARTs at the new head.
-- **Owed at L11's START (K3835):** move `bio-plane/src/signpage.mjs`, `bio-plane/src/sign-release.html`, `bio-plane/scripts/embed-signpage.mjs` into control-plane's `paths` and `bio-plane/test/m/signatures/signpage.test.mjs`, `signer-keys.test.mjs` (find their paths) into its `tests` in `modules.json` (`order-build --check`).
-- **installer-steps (K3893):** two stages in one job: the byte copy merges first; after installer (T51-128) merges, BOB's CHANGE has installer-steps read its sentences by key (its R36). Fill its `modules.json` row from its COMPLETE (K1043); installer's `uses` gains `installer-steps` at T51-128's merge.
-- **journey-check (T51-131)** runs its final walk only after BOB's CHANGE says every other L11 job has merged.
-- **At the cut (K3877):** after `container-images.yml` builds the cut's images, BOB runs `bundles.mjs --record-image` for the three classes with Docker Hub's public digests and commits the markers on the cut branch (the workflow is not edited).
-- **Accepted reds** (each until the named merge): the plan's rule 5 as it stands; K3820's design-merge reds in their L11 STARTs; op-declarations' owner map and plane's op-grades check until T51-107/T51-137 (K3843); affordances' two ACT_HELP tests until T51-99 (K3863); case-authoring R61 until T51-83; coverage on ids marked not yet met.
-- **Artifacts:** after a container restart, `npm ci --ignore-scripts` in `agent-runner`, `npm ci` in `sheet-worker` and `file-scanner`. `newgroup-bundle-fresh` passes but never exits until T51-128 fixes it (N1254, in its START, K3905): run it in the background, read its log for "4 passed, 0 failed", and stop it by PID (never `pkill -f` with its name, which kills your own shell).
-- **Lanes:** UX design #29 `session_01PCePb8zMxX78iE1gWyzh9A`. AI-DESIGN past A5, JOURNEYS past W4, INVESTIGATION-DESIGN past H43: nothing.
-- **Wording to fix when next touched:** `agent-steps.md`'s Status still says "not yet met: T51 (the module does not exist until T51-45…)"; strike that clause (BOB's wording edit).
+- **Bob is angry, rightly**, that work keeps slipping to later tranches and that the tree is still fragile after four tranches of promises (K3913, K3919, K3921). Nothing goes to T52 except for P19's three reasons (P10, P19 as amended, K3915). Never offer him an option that defers or that leaves him unsure whether more fragility remains.
+- **Process changed today (civicos-process `314d84f`, Bob's approval, K3915, K3923):** P10/P19 (nothing found in a tranche waits; the completion round), P7/P8 (a mechanical change is one pass), mechanics §5.2 (1), §5.7 (0), §5.10, §6 (4), §7, §8.4, §8.6. **Owed:** certify §5.10, §5.7 (0) and §8.6 on a dry run (P3, `dryrun/`, record in `dryrun/RUNS.md`): one pass over two toy modules, one completion-round job, a planted inline sentence and a planted deferral each caught. Then wire `checks/words.mjs` (async; `await`) into `checks/run.mjs`.
+- **The words check** (`checks/words.mjs`, committed `04e53bb`): 14,161 findings, 169 of 174 modules (K3922; report in `build/plan/words-check/`): inline 12,522, testcopy 1,463, missingkey 0, handlist 176.
+- **Open with Bob (K3924):** how words are kept, page https://claude.ai/artifact/ToHDMr3pvqtDh1gJ9pSdS2 (`build/plan/words-best-practice.html`): A keep hand keys (~7,100 design round trips), **B extract from code (BOB's recommendation:** sentence written once at its use, wrapped in one marker with a stable id, extracted into the word table by a build step; the design's English row overrides; check fails unwrapped sentences, copied tests, hand-lists; pseudo-locale test), C mix. His answer decides the words pass. Whatever he chooses, the 1,463 test copies and 176 hand-lists are fixed in T51.
+- **Then rebuild T51's plan** (`build/plan/current.md`) from the audit (138 commitments: 38 done, 66 planned, 21 partial, 7 deferred, 6 missing; its part 2 lists closed-layer modules with work, its part 3 the 16 likeliest underestimates) and the check's findings: every missing, partial and deferred item placed in T51 (re-run closed layers L1–L8 where needed, or the completion round), stale entry text brought up to DEC-334–339 and K3868–K3900, the Count fixed. Show Bob the rebuilt plan rendered before any START (K3921). Then: the words pass(es) with no job running, L9, L10 (scheduler red, C80), L11 (the owed control-plane path move first, K3835), the completion round, close, cut, deploy, walk, fix rounds (K3815).
+- **Design lane:** UX design #29 `session_01PCePb8zMxX78iE1gWyzh9A`; channel read through U364, posted through B331; B330 (N1184, N889, N1046, N858, N880, N933's screen, DEC-265's photo date) awaits its answer.
+- **Lanes:** AI-DESIGN past A5, JOURNEYS past W4, INVESTIGATION-DESIGN past H43: nothing new.
+- **Artifacts:** after a container restart, `npm ci --ignore-scripts` in `agent-runner`, `npm ci` in `sheet-worker` and `file-scanner`; `newgroup-bundle-fresh` passes but never exits (N1254, T51-128): run in background, stop by PID.
 
 ## What comes next, in order
 
-1. **Take over** (§5.1). Archive BOB #212 once idle (BOB-final row under T51). Delete its backstop (newest "BOB #212 backstop" in `list_triggers`) and WATCH #212 `trig_01RPCYdgRNwg1PqSx1U2HBcA`; create your own WATCH first.
-2. **L8** (§5.3): case-carriage, public-read, case-import, case-inputs, case-authoring, review, case-grammar; merge order `modules.json`'s (case-carriage before case-disclosures; review last but one). Close it (§5.6), then **L9** (six), then **L11** (thirty, the owed act above first).
-3. **Close T51 (§5.7)**, release, record images (K3877), deploy (Bob's one-line approval in the refused session each time), the `civicos` Worker removal, BOB's live walk, fix rounds (K3815). Then T52 (`draft-T52-sweeps.md`, N1245–N1253).
+1. Take over (§5.1): archive BOB #213 once idle (BOB-final row under T51); delete WATCH #213 `trig_01VgbLzCZ7EC268b39HxhFP2` and any BOB #213 backstop; create your own WATCH. No backstop while no layer runs.
+2. Certify the process edits on the dry run; wire the words check.
+3. On Bob's answer to K3924: write the words rule into requirements and the check, then the pass(es).
+4. Rebuild the plan (above); show it to Bob; then the layers.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- `main` moves only by a tranche's close PR (§5.7 (3), K2273) and the design PR merged at the close on its MERGE (K1177); no refusal recorded. `release/T50-unassisted` never moved.
+- `main` moves only by the tranche's close PR (§5.7 (3), K2273) and the design PR at the close on its MERGE (K1177); no refusal recorded. civicos-process `main` takes process edits Bob approved (K3915, K3923).
 - Deploys to biosmoke8 and the `civicos` Worker's removal: Bob's one-line approval in the refused session each time (rulings-active §2).
-- Auto-mode refusals recorded this tranche, never worked around: BOB #210's `git stash drop`; BOB #211's `container-images.yml` record job (K3877); AGENT-RUNNER #13's Docker Hub address (K3885, approved by Bob in that session, K3903).
 
 ## Open with Bob
 
-- Nothing open. Told to Bob as done: the installer split (K3893), the installer fold and its security choice (K3892), the design merges (K3896, K3900), the scan by a worker and its re-read (K3897, K3898). His meter: 38% mid-T51 (K3902); ask it again at T51's close.
+- K3924: A, B or C for how words are kept (page above). Recommended B.
