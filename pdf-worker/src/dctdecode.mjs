@@ -387,7 +387,7 @@ export function colourTransformOf(h) {
   if (h.jfif) return { ycc: true, why: "JFIF" };
   if (h.adobe) return { ycc: h.adobe.transform !== 0, why: `Adobe APP14 transform=${h.adobe.transform}` };
   if (ids[0] === 82 && ids[1] === 71 && ids[2] === 66) return { ycc: false, why: "component ids R,G,B" };
-  return { ycc: true, why: "libjpeg's default for three components" };
+  return { ycc: true, why: localize("image-codecs.dctdecode.libjpeg_s_default_for_three", "libjpeg's default for three components") };
 }
 
 /**
