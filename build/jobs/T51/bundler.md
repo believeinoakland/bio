@@ -37,3 +37,7 @@ For BOB (exact changes, not mine):
 
 **B2 CHANGE (K3835) applied:** `fleetbundles.test.mjs` no longer imports `embed-signpage.mjs` (the generated-input assertion and header note (7) removed); `fleetbundles.control.mjs` control (7) removed, the others kept; `repo.mjs` no longer copies `embed-signpage.mjs` or `sign-release.html`; R16's test keeps a stale committed `signpage.mjs` as a plain file, importing nothing. Reran: bundler tests 114 pass, 2 fail (the same two real-fleet tests, awaiting the members' markers); `fleetbundles`: only the same marker-list FAIL; format, architecture (0), coverage (37 of 37) and ownership (0 failures) clean.
 Size (session_01X7jKAKCTDrVKXvoacZ8mWN): test runs 18, module lines 3768
+
+## J2 · COMPLETE
+
+COMPLETE (B2, K3835 applied): the signing page is out of my tests and fixture; details in my record. Remaining reds unchanged: the two real-fleet marker tests and fleetbundles' marker list, until file-scanner and agent-runner merge.
