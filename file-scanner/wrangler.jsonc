@@ -24,27 +24,27 @@
   // R6: the daily mirror run.
   "triggers": { "crons": ["17 4 * * *"] },
 
-  // The group's bucket: captures are read (never written, R11); the mirror and reputation lists are written under
-  // clamav/ and reputation/. The installer names the group's bucket here.
+  // The team's bucket: captures are read (never written, R11); the mirror and reputation lists are written under
+  // clamav/ and reputation/. The installer names the team's bucket here.
   "r2_buckets": [
     { "binding": "CAPTURES", "bucket_name": "bio-captures" }
   ],
 
   // R10: the two containers. Each image is named by the release's registry rule, as agent-runner's is: the
-  // repository fleet-member.json's class states, @sha256:<64 hex>, the digest the release published, the same
-  // reference as the marker's. Cloudflare Containers do not pull from ghcr.io: bundler's deploy copies each image by
-  // that digest into the account's own registry and deploys the copy. Neither container has internet (src/worker.mjs,
-  // enableInternet false; R12).
+  // repository fleet-member.json's class states (Docker Hub, docker.io/civicsmith), @sha256:<64 hex>, the digest the
+  // release published, the same reference as the marker's. Cloudflare Containers pull public Docker Hub images by
+  // digest with no credential, and do not pull from GitHub's registry (the GitHub copy of each image stays published but is
+  // not named here). Neither container has internet (src/worker.mjs, enableInternet false; R12).
   "containers": [
     {
       "class_name": "FileScanner",
-      "image": "ghcr.io/believeinoakland/file-scanner-scanner@sha256:2af812a3bde157731a05a827c035f49e8faf83ad29e6cbbf4ff440844b6e5db8",
+      "image": "docker.io/civicsmith/file-scanner-scanner@sha256:38d314ed955e0af0c3f5379ecb609c718b562911af80e34cd787d0c3bc0a76fd",
       "instance_type": "standard-1",
       "max_instances": 3
     },
     {
       "class_name": "SafeViewRenderer",
-      "image": "ghcr.io/believeinoakland/file-scanner-renderer@sha256:90385aeddbc05b66882506a0ae6ec48dfb635119bae8c20cfba3c31e4afb974b",
+      "image": "docker.io/civicsmith/file-scanner-renderer@sha256:27941d2aab6f9fd11e308ff4d3715674d38f268be7a6dcf3d7be8e398fa5ae9c",
       "instance_type": "standard-1",
       "max_instances": 3
     }
