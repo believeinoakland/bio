@@ -53,6 +53,7 @@ Each entry: id · module · what (N ids, rulings) · requirements · model. "Tex
 ### L2
 - **T51-11 · record-core** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-12 · project-roster** · (N1209, K3667 doubt 14, K3674) `projectInvitations`: the invited member reads who invited her (by handle; the founder as `member.founder.unnamed`); (N1230, K3766) `projectList` pages past 200 projects by a cursor, and `projectRequests` names a requester by member id beside the handle, so none is skipped · Text: fold · provider for queue-producers (L11) · claude-sonnet-5-5
+- **T51-98 · membership** · (N1243) `t19-enrol-boot` R12, R57 assert the key · Text: none · claude-haiku-5-5
 - **T51-13 · promotion** · the stamp: every row T50's L3+ jobs added, moved or changed, and T51's L2 jobs' · Text: none · last in L2 · claude-sonnet-5-5
 
 ### L3
@@ -83,7 +84,7 @@ Each entry: id · module · what (N ids, rulings) · requirements · model. "Tex
 - **T51-34 · progressions** · (N1213) its unkeyed fragments by key · Text: none · claude-haiku-5-5
 - **T51-35 · money** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-36 · money-checks** · sweep (rule 6) · Text: none · claude-haiku-5-5
-- **T51-37 · duties** · sweep (rule 6); N1068 · Text: none · claude-haiku-5-5
+- **T51-37 · duties** · sweep (rule 6); N1068; (N1244) `checks.mjs`:31's "group" read by key · Text: none · claude-haiku-5-5
 - **T51-38 · people** · (N1226, K3742; screens-investigate R32 (2)) an undetermined fact's `why` answers a key with its fills, never English; sweep (rule 6) · Text: fold · provider for screens-investigate · claude-sonnet-5-5
 - **T51-39 · bias** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-40 · retrieval** · (N1212) deletes the moved code, delegating to the new module; (N1213) `refusal.NO_SET`, `refusal.SET_TOO_LARGE.read`, `retrieval.syntax.*`, `retrieval.notread.*` by key; its frontier notes stay unkeyed until the design lane keys them; (N1238, K3775) R83 names the field holding a sheet match's row · Text: the split map, fold · after the new module · claude-sonnet-5-5
@@ -94,7 +95,7 @@ Each entry: id · module · what (N ids, rulings) · requirements · model. "Tex
 - **T51-43 · inquiry-grammar** · sweep (rule 6); (N1216, BASIS-VERSIONS #18) `golden.json` and the corpus regenerated: a malformed version name is `VERSION_NAME_MALFORMED`/C-25.36; basis-versions' `amended()` in its R43 test then goes (BOB: check the order with basis-versions); N1068 · Text: none · claude-haiku-5-5
 - **T51-44 · accepted-work** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-45 · leg-earning** · sweep (rule 6) · Text: none · claude-haiku-5-5
-- **T51-46 · hypotheses** · sweep (rule 6) · Text: none · claude-haiku-5-5
+- **T51-46 · hypotheses** · sweep (rule 6); (N1244) `notes.test.mjs` R11 asserts the key · Text: none · claude-haiku-5-5
 - **T51-47 · steps** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-48 · citation** · (N1071, K3264) the sever-inquiry relay test confirmed against the real answer of a sever of a divided question (`target`, `from: "divided"`, `children`); sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-49 · basis-versions** · (N1215, BASIS-VERSIONS #18 J1 (4), K3697) a question resting on a leg the version grammar does not take (a standard, a calculation): R51 copies only the legs it takes and says which it left, never refusing `BASIS_VERSION_REFUSED` for the whole (BOB: check this option against "the grammar takes those legs"; a requirement's meaning); START re-measures (3,782+): past ~4,000 its `conclude` family into its own file (P6) · Text: fold · claude-sonnet-5-5
@@ -102,6 +103,8 @@ Each entry: id · module · what (N ids, rulings) · requirements · model. "Tex
 - **T51-51 · contradiction** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-52 · run-productions** · (N1070, K3264) relays inquiry R64's `DIVIDED_CANNOT_RESTRUCTURE` on a divided question, the relayed refusal named in its requirements and a test writing one; sweep (rule 6) · Text: fold · claude-sonnet-5-5
 - **T51-53 · answers** · sweep (rule 6); N1068 · Text: none · claude-haiku-5-5
+- **T51-99 · capture-requests** · (N1243) `plane.test.mjs` R48's fixture and ghost arm follow control-plane R105 (`BAD_FOR`) · Text: none · claude-haiku-5-5
+- **T51-100 · agent-runner** · (N1243) `worker.test.mjs` R12 follows agent-worker R109 (no `RUNNER` binding); test only, no assistant work (rule 9) · Text: none · claude-haiku-5-5
 - **T51-54 · agent-steps (new, by copy from agent-worker; N1205, N1218, P6, K617, K624)** · `index.mjs`'s segment driver, `performStep` and sub-sessions as a module of its own, agent-worker delegating; the name is BOB's (BOB: check; the split moves code N1220 will rewrite) · Text: the split map · first in L6 · claude-sonnet-5-5
 - **T51-55 · agent-worker** · (N1205, N1218) deletes the moved code (4,421 lines before the split), delegating; nothing else (no assistant work, K3717) · Text: the split map, fold · after the new module · claude-sonnet-5-5
 
@@ -112,7 +115,7 @@ Each entry: id · module · what (N ids, rulings) · requirements · model. "Tex
 ### L8
 - **T51-58 · case-grammar** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-59 · corpus-export** · sweep (rule 6) · Text: none · claude-haiku-5-5
-- **T51-60 · case-carriage** · sweep (rule 6) · Text: none · claude-haiku-5-5
+- **T51-60 · case-carriage** · sweep (rule 6); (N1244) `checks.mjs`:28–34's "group" read by key, clearing case-disclosures' two R22 tests · Text: none · claude-haiku-5-5
 - **T51-61 · case-tensions** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-62 · publication** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-63 · docket** · sweep (rule 6) · Text: none · claude-haiku-5-5
@@ -121,7 +124,7 @@ Each entry: id · module · what (N ids, rulings) · requirements · model. "Tex
 - **T51-66 · network-notices** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-67 · case-catalogue** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-68 · case-checker** · (N1222, CASE-CHECKER #13 J1 (2), K3725) the ~60 inline sentences of `check.mjs`, `account.mjs`, `lens.mjs`, `zip.mjs`, `index.mjs` carried as data with their keys (`case-checker.*`), answer bytes unchanged (R16); BOB writes R27 before L8's START (BOB: check it is written; if not, this entry waits for it) · Text: R27, BOB's · claude-sonnet-5-5
-- **T51-69 · case-import** · (N1223, DEC-327, U343, K3729) its three `importCaseFile` departures (no part given, a part not bytes, a manifest naming no team, case and edition) by key · Text: none · claude-haiku-5-5
+- **T51-69 · case-import** · (its `words.test.mjs` R14, R4, R19, R21 red until this entry, K3797) (N1223, DEC-327, U343, K3729) its three `importCaseFile` departures (no part given, a part not bytes, a manifest naming no team, case and edition) by key · Text: none · claude-haiku-5-5
 - **T51-70 · case-disclosures** · sweep (rule 6) · Text: none · claude-haiku-5-5
 - **T51-71 · case-account** · (N1223, DEC-327) the keys for field-level `BAD_ACCOUNT`, four `BAD_STATEMENT_CITES`, `ACCOUNT_CHECK_UNDETERMINED`, `ACCEPT_MUST_REAUTHOR`, the counsel-matter per-case sentence, the second sentences of `MACHINE_CANNOT_CHECK_ADVOCACY` and `ADVOCACY_NOT_OWN_PROJECT`, `BAD_REVIEW_COMMENTS`, `REVIEW_COMMENTS_UNREAD`, `REVIEW_COMMENT_NOT_FOUND`, `NO_SUCH_CASE`, `NO_SUCH_RUN`, `document.mjs`' left-out count and placeholders (signed bytes, K1333: BOB: check the placeholders); `MALFORMED`, `REVIEW_COMMENTS_DECLARED` stay inline · Text: none · claude-sonnet-5-5
 - **T51-72 · case-inputs** · (N1224, ACTION-REPLIES #5 J3 (2), K3738) `signing.openrequest.unread` read by key ("team"), clearing `openrequests.test.mjs`:150 (R17), `t46-words.test.mjs`:45 (R10, R12); sweep (rule 6) · Text: none · claude-haiku-5-5
@@ -162,7 +165,7 @@ Each entry: id · module · what (N ids, rulings) · requirements · model. "Tex
 
 ## Count
 
-**97 job ids, 97 jobs** (T51-1 to T51-97): L1 10, L2 3, L3 9, L4 3, L5 17, L6 13, L7 2, L8 18, L9 6, L10 3, L11 13. Models: default 0, Haiku 70, Sonnet 27. Of the 91, 51 are bare sweeps (rule 6) and 15 more carry the clause with other entries. Three are new modules by copy (T51-26, T51-54, T51-96); one retires a legacy module (T51-91).
+**100 job ids, 100 jobs** (T51-1 to T51-100): L1 10, L2 4, L3 9, L4 3, L5 17, L6 15, L7 2, L8 18, L9 6, L10 3, L11 13. Models: default 0, Haiku 73, Sonnet 27. Of the 91, 51 are bare sweeps (rule 6) and 15 more carry the clause with other entries. Three are new modules by copy (T51-26, T51-54, T51-96); one retires a legacy module (T51-91).
 
 ## BOB's acts (no job)
 
