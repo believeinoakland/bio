@@ -787,7 +787,7 @@
  },
  {
   "key": "screen.setup.handle.help",
-  "en": "The record shows your handle on your work and on every case you sign, so choose it with care: it can't be changed, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.",
+  "en": "The record shows your handle on your work and on every case you sign, so choose it with care: it can't be changed, and no one else can ever take it. It needn't be your legal name. Lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.",
   "protected": false,
   "note": "DEC-230"
  },
@@ -817,7 +817,7 @@
  },
  {
   "key": "refusal.BAD_HANDLE",
-  "en": "A handle uses only lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
+  "en": "A handle uses only lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
   "protected": false,
   "note": "DEC-230; membership R12"
  },

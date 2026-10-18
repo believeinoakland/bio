@@ -136,8 +136,8 @@ must(scr, 'mock-screens.js', 'is already taken in Lakeshore Tenants. Try another
 add('handle.changeable', 'You can still change it: none of your work is in a published case yet.', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
 add('handle.fixed', 'Your handle can\'t be changed: it names your work for good, and no one else can ever take it.', false, 'DEC-197 (was DEC-186); kept while membership reads it');
 add('handle.formerly', 'formerly {handle}', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
-add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
-must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
+add('handle.characters', 'A handle uses only lowercase letters, digits and hyphens.', false, 'mock-screens.js join');
+must(scr, 'mock-screens.js', 'A handle uses only lowercase letters, digits and hyphens');
 
 add('handle.refused.paused', 'Too many handles checked in a short time. Try again in {minutes} minutes.', false, 'DEC-188', 'HANDLE_CHECK_PAUSED');
 

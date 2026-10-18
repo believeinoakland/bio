@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 366,
+  "queue": 365,
   "transcribe": 19,
   "capture": 71,
   "document": 62,
@@ -49,11 +49,11 @@
   "session": 11,
   "updates": 34,
   "home": 19,
-  "installer": 362,
+  "installer": 366,
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4404,
+  "screen": 4410,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 878,
+  "act": 880,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -224,8 +224,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 14267,
-  "protected": 921
+  "total": 14278,
+  "protected": 923
  },
  "words": [
   {
@@ -794,7 +794,7 @@
   },
   {
    "key": "handle.characters",
-   "en": "A handle uses only lower-case letters, digits and hyphens.",
+   "en": "A handle uses only lowercase letters, digits and hyphens.",
    "protected": false,
    "source": "mock-screens.js join"
   },
@@ -5613,7 +5613,7 @@
   },
   {
    "key": "refusal.BAD_HANDLE",
-   "en": "A handle uses only lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
+   "en": "A handle uses only lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
    "protected": false,
    "source": "DEC-230",
    "note": "DEC-230; membership R12"
@@ -14818,7 +14818,7 @@
   },
   {
    "key": "screen.join.handle.help",
-   "en": "The record shows your handle on your work. Choose it with care: it can't be changed after you join, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Choosing a handle: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.",
+   "en": "The record shows your handle on your work. Choose it with care: it can't be changed after you join, and no one else can ever take it. It needn't be your legal name. Lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Choosing a handle: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-entry's own rows; DEC-259: reworded"
@@ -37004,7 +37004,7 @@
   },
   {
    "key": "screen.setup.handle.tip",
-   "en": "Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. It needn't be your legal name, and no one else in your team can ever take it.",
+   "en": "Lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. It needn't be your legal name, and no one else in your team can ever take it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-279: explains 'Choose it with care'"
@@ -42121,14 +42121,14 @@
   },
   {
    "key": "progression.finding.state.deferred",
-   "en": "Put off for now",
+   "en": "Deferred",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (3): a finding with disposition deferred (progressions: a decision is deferred or dismissed); timeline-parts.mjs:50-55"
   },
   {
    "key": "progression.finding.state.help",
-   "en": "Where a finding stands. Open means no one has dealt with it yet. Set aside means a member decided it needs no action; put off for now means a member chose to come back to it. The reason stays beside it, and the finding is never hidden or deleted.",
+   "en": "Where a finding stands. Open means no one has dealt with it yet. Set aside means a member decided it needs no action; deferred means a member chose to come back to it. The reason stays beside it, and the finding is never hidden or deleted.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-329: B303 (3): explains the three words above; timeline-parts.mjs:50-55"
@@ -44249,7 +44249,7 @@
   },
   {
    "key": "installer.shortname.hint",
-   "en": "Lower-case letters, digits and hyphens. It becomes the first part of your team's web address and the name of its program in your Cloudflare account. A team that wants to stay unnamed picks one that reveals nothing.",
+   "en": "Lowercase letters, digits and hyphens. It becomes the first part of your team's web address and the name of its program in your Cloudflare account. A team that wants to stay unnamed picks one that reveals nothing.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-331: the installer remaining sentences: newgroup/src/ui.mjs:290"
@@ -44592,7 +44592,7 @@
   },
   {
    "key": "installer.begin.slug",
-   "en": "The short name needs 3 to 40 characters: lower-case letters, digits and hyphens, starting and ending with a letter or digit.",
+   "en": "The short name needs 3 to 40 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2585"
@@ -45473,32 +45473,60 @@
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1688; {what} {said} {name}"
   },
   {
-   "key": "installer.limit.workers",
+   "key": "installer.limit.workers.other",
    "en": "{n} programs",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1709; Workers"
   },
   {
-   "key": "installer.limit.classes",
+   "key": "installer.limit.workers.one",
+   "en": "1 program",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "installer.limit.classes.other",
    "en": "{n} Durable Object classes",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1710; a Cloudflare term, kept so the person can find it in the dashboard"
   },
   {
-   "key": "installer.limit.buckets",
+   "key": "installer.limit.classes.one",
+   "en": "1 Durable Object class",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "installer.limit.buckets.other",
    "en": "{n} storage buckets (R2)",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1711"
   },
   {
-   "key": "installer.limit.containers",
+   "key": "installer.limit.buckets.one",
+   "en": "1 storage bucket (R2)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "installer.limit.containers.other",
    "en": "{n} containers",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1712"
+  },
+  {
+   "key": "installer.limit.containers.one",
+   "en": "1 container",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "installer.success.title.ready",
@@ -45824,7 +45852,7 @@
   },
   {
    "key": "screen.group-identity.seed.note",
-   "en": "This Civicsmith held a record before it was told which team produces it. Until you record it, it refuses what must name its team: testimony, setup's saves, and a new document that names none. Nothing already in your record changes.",
+   "en": "This Civicsmith held a record before it was told which team produces it. Until you record it, it refuses what must name its team: testimony, the setup page's saves, and a new document that names none. Nothing already in your record changes.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-331"
@@ -45928,13 +45956,6 @@
    "note": "DEC-330: B306 A61: sub-line"
   },
   {
-   "key": "queue.answered.left",
-   "en": "They have left your queue.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-330: B306 A61"
-  },
-  {
    "key": "queue.answered.photos",
    "en": "Vouched for 2 photos you captured on Seminary Avenue",
    "protected": false,
@@ -45999,7 +46020,7 @@
   },
   {
    "key": "queue.aside.deferred",
-   "en": "Put off by you until 1 November",
+   "en": "Deferred by you until 1 November",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A63"
@@ -46391,7 +46412,7 @@
   },
   {
    "key": "screen.question.say042",
-   "en": "held back from this display",
+   "en": "held back from this list",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46461,7 +46482,7 @@
   },
   {
    "key": "screen.question.say052",
-   "en": "Pinned at the version you are reading, so its pair belongs to it.",
+   "en": "Pinned at the version you are reading, so the strength shown is the one for this version.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -47119,7 +47140,7 @@
   },
   {
    "key": "screen.document.a26.short_codes_computed_from_the_exact_byte",
-   "en": "Short codes computed from the exact bytes.",
+   "en": "Fingerprints computed from the exact bytes.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A26: document explanation"
@@ -47140,7 +47161,7 @@
   },
   {
    "key": "screen.finder.a17.cites_every_document_you_hold_together_i",
-   "en": "Cites every document you hold together in one question.",
+   "en": "Opens Cite these together, to cite the documents you hold in one question you choose.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A17: finder explanation"
@@ -47210,7 +47231,7 @@
   },
   {
    "key": "screen.published.a.filtered.view.you.constructed",
-   "en": "A filtered view you constructed.",
+   "en": "A filtered view you built.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47574,7 +47595,7 @@
   },
   {
    "key": "screen.review_copy.a.code.that.names.exactly",
-   "en": "a code that names exactly what the file holds, on every page",
+   "en": "a fingerprint that names exactly what the file holds, on every page",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A81: drawn sentence"
@@ -48106,14 +48127,14 @@
   },
   {
    "key": "screen.account.key.lost",
-   "en": "Lose a key later? Withdraw it here and make a new one; cases it already signed can still be checked.",
+   "en": "Lose a key later? Revoke it here and make a new one; cases it already signed can still be checked.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 C1: Your account, state c"
   },
   {
    "key": "screen.finder.table.view.help",
-   "en": "One table: every item your team holds, a row each, with its kind, its state and when it last changed. Choose a column heading to sort by it.",
+   "en": "One table: every item your team holds, a row each, with its kind, its state and when it last changed.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A14: the Show as choice in Find"
@@ -48126,11 +48147,18 @@
    "note": "DEC-330: B306 A14: Find, state g"
   },
   {
-   "key": "screen.finder.table.count",
+   "key": "screen.finder.table.count.other",
    "en": "{n} items · {m} awaiting review",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A14: Find, state g: the count line"
+  },
+  {
+   "key": "screen.finder.table.count.one",
+   "en": "1 item · {m} awaiting review",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "screen.finder.table.sorting",
@@ -48161,11 +48189,18 @@
    "note": "DEC-330: B306 A15: the first route of three"
   },
   {
-   "key": "screen.finder.route.fields.holds",
+   "key": "screen.finder.route.fields.holds.other",
    "en": "Looks at titles, your team's notes and each document's details. {n} documents match.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: the first route: documents matched on their fields"
+  },
+  {
+   "key": "screen.finder.route.fields.holds.one",
+   "en": "Looks at titles, your team's notes and each document's details. 1 document matches.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "screen.finder.route.passages",
@@ -48175,18 +48210,32 @@
    "note": "DEC-330: B306 A15: the second route of three"
   },
   {
-   "key": "screen.finder.route.passages.holds",
+   "key": "screen.finder.route.passages.holds.other",
    "en": "Looks at what the documents say, passage by passage. {n} passages in {m} documents match.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: the second route: passages"
   },
   {
-   "key": "screen.finder.route.subjects.holds",
+   "key": "screen.finder.route.passages.holds.one",
+   "en": "Looks at what the documents say, passage by passage. 1 passage in 1 document matches.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "screen.finder.route.subjects.holds.other",
    "en": "Looks at the names of the people, offices, laws, funds and other things your team's record follows. {n} match.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: the third route: subjects"
+  },
+  {
+   "key": "screen.finder.route.subjects.holds.one",
+   "en": "Looks at the names of the people, offices, laws, funds and other things your team's record follows. 1 matches.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "screen.finder.route.apart",
@@ -48245,18 +48294,32 @@
    "note": "DEC-330: B306 A15: level 2 of 4"
   },
   {
-   "key": "screen.finder.covered.read.says",
+   "key": "screen.finder.covered.read.says.other",
    "en": "Passages were read from {read} of the {n} documents searched. The other {rest} have not been read passage by passage yet, so their words were not searched.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: level 2 of 4: how much was read at passage grain"
   },
   {
-   "key": "screen.finder.covered.docs.says",
+   "key": "screen.finder.covered.read.says.one",
+   "en": "Passages were read from {read} of the {n} documents searched. The other one has not been read passage by passage yet, so its words were not searched.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "screen.finder.covered.docs.says.other",
    "en": "Searched {n} of the {all} documents your team holds. {hidden} are in projects where you can see only that they exist, so they were not searched for you.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see"
+  },
+  {
+   "key": "screen.finder.covered.docs.says.one",
+   "en": "Searched {n} of the {all} documents your team holds. 1 is in a project where you can see only that it exists, so it was not searched for you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "screen.finder.covered.looked",
@@ -53307,7 +53370,7 @@
   },
   {
    "key": "refusal.TEMPLATE_KIND_REFUSED",
-   "en": "A template's kind is written as a kind is: lower-case letters, digits and underscores.",
+   "en": "A template's kind is written as a kind is: lowercase letters, digits and underscores.",
    "protected": false,
    "source": "DEC-260",
    "note": "filing-templates, refusal by its code"
@@ -59537,7 +59600,7 @@
   },
   {
    "key": "refusal.LIFECYCLE_TOKEN_MALFORMED",
-   "en": "A stage, the entry it follows, an outcome and a due date are each written as one short token of lower-case letters, digits, underscores or hyphens, at most forty characters. One of them was not, so nothing was written.",
+   "en": "A stage, the entry it follows, an outcome and a due date are each written as one short token of lowercase letters, digits, underscores or hyphens, at most forty characters. One of them was not, so nothing was written.",
    "protected": false,
    "source": "DEC-260",
    "note": "action-grammar's translation, keyed by its code"
@@ -90477,6 +90540,18 @@
   {
    "key": "act.projectownerrescue.label.project",
    "en": "Become the owner of an ownerless project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.noticeprepare.label.project",
+   "en": "Preview the notice",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.noticepost.label.project",
+   "en": "Sign and publish the notice",
    "protected": true,
    "source": "registry.json"
   },
