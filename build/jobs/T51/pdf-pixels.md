@@ -1,6 +1,6 @@
 # pdf-pixels (T51)
 
-**Status** · session_01CDmjLZR4AnXcUoKjGVUyEk · depth 2 · COMPLETE · handled B1
+**Status** · session_01CDmjLZR4AnXcUoKjGVUyEk · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -34,3 +34,22 @@ Two of the 27 plain findings are not sentences a member reads; they stay unconve
 So the words check is not yet clean for this module: the two REPORTed keys read as `plain` until BOB decides them. Everything else reads zero.
 
 Size (session_01CDmjLZR4AnXcUoKjGVUyEk): test runs 11, module lines 1400
+
+## J3 · COMPLETE
+
+**B2 and B3 applied** (CHANGE K3971, K3972; image-codecs merged, `tranche/T51` merged into the job branch, not rebased).
+
+- `pagepixels.mjs` and `picturepixels.mjs` now key `IMAGE_TOO_LARGE` by the codecs' exported `MEMORY_FEATURE` (`jpxdecode.mjs`, `pngdecode.mjs`), not the English literal. The REPORT on those two keys is resolved by this change.
+- `jpx.test.mjs` (the two lines that named the feature) and `pagepixels.test.mjs` (the PNG mapping check) compare with `MEMORY_FEATURE`. The three testcopy findings are gone.
+- Commit `298f179e25` on `job/T51/pdf-pixels`, pushed.
+
+**Tests** (all 0 failed): `pagepixels.test.mjs` 383; `imagecrop.test.mjs` 55; `jbig2.test.mjs` 179; `jpx.test.mjs` 205. Corpus probes not run (corpus not in the container).
+
+**Checks** (scoped to `pdf-pixels`):
+- `checks/format.mjs /home/user/bio`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio pdf-pixels`: 16 product files, 36 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio pdf-pixels`: 27 of 27 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs /home/user/bio pdf-pixels`: 0 failures (`plain` 0, `inline` 0, `testcopy` 0, `marker` 0). This clears the words findings this job carried.
+- `checks/ownership.mjs /home/user/bio pdf-pixels tranche/T51 job/T51/pdf-pixels`: 5 files changed by pdf-pixels; 0 failures.
+
+Size (session_01CDmjLZR4AnXcUoKjGVUyEk): test runs 15, module lines 1400
