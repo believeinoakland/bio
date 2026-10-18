@@ -31,3 +31,20 @@ Tests and checks:
 - `node checks/run.mjs /home/user/bio`: the words check shows no finding in odf-reader or `odf.mjs`; `plain` 2137 to 2132. The run exits 1 on other modules' inherited failures only (4844 to 4839), as above.
 
 Size (session_013zPuS6aCiGt1Nqw5Gii5vD): test runs 1, module lines 2413
+
+## J3 · COMPLETE
+
+CHANGE B2 (K3960) handled. Merged tranche/T51 into job/T51/odf-reader (merge commit 5795b25470). The recomputed "Plain findings (K3957)" section reads "None left", so no code change this round: the five findings I converted in aae68e82ef are on the design's unkeyed list (DEC-343). `bio-plane/src/odf.mjs` is unchanged by the merge.
+
+Checks after the merge:
+- `node --test test/m/odf-reader/*.test.mjs` (bio-plane): 70 pass, 0 fail.
+- `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio odf-reader`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio odf-reader`: 47 of 47 live requirement ids named by a test.
+- `node checks/ownership.mjs /home/user/bio odf-reader tranche/T51 job/T51/odf-reader`: 1 file changed by odf-reader, 0 failures.
+- `node checks/run.mjs /home/user/bio`: no odf-reader or `odf.mjs` finding; the run exits 1 on other modules' failures only (4174 now, down from 4839 after the merge).
+- `node bio-plane/src/setup-words/build.mjs --check` (read-only): does not name odf-reader. It reports `rows.mjs` as stale for `doc-clean.images` (word 16640). That is another module's generated artifact; I did not regenerate it.
+
+Still open from J1 and J2: the eight inline strings in `ooxml.mjs` (for BOB to route to ooxml's owner) and the two regex assertions in `digest.test.mjs` (a question for BOB about moving them to key comparisons once rows are regenerated).
+
+Size (session_013zPuS6aCiGt1Nqw5Gii5vD): test runs 2, module lines 2413
