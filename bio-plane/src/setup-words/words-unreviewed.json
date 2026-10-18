@@ -20581,13 +20581,6 @@
       "line": 2404
     },
     {
-      "id": "odf-reader.odf.content_xml_with_text_list",
-      "en": "content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
-      "module": "odf-reader",
-      "file": "bio-plane/src/odf.mjs",
-      "line": 2265
-    },
-    {
       "id": "odf-reader.odf.no_flavour_export_has_been",
       "en": "no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",
       "module": "odf-reader",
@@ -24989,13 +24982,6 @@
       "module": "roster-reader",
       "file": "roster-reader/org-chart.mjs",
       "line": 104
-    },
-    {
-      "id": "roster-reader.org-chart.labelled_line_s_name_a",
-      "en": "{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labelled, {floor} boxes): this document does not lay out an organisation's boxes",
-      "module": "roster-reader",
-      "file": "roster-reader/org-chart.mjs",
-      "line": 98
     },
     {
       "id": "roster-reader.org-chart.neither_its_first_line_nor",

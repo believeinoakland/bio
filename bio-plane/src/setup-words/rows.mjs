@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (15344 design words, 933 protected; SHA-256
-   82216089b1f83bc32cb52afa99a76a345d6fc775ef7b42f26f5ee094f55a0209) followed by 3974 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (15346 design words, 933 protected; SHA-256
+   38d11e1bbaf24af47458c27672d6f0a5261d418b1a2a99e91402cdb987ee701f) followed by 3972 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "82216089b1";
+export const WORDS_COMMIT = "38d11e1bba";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -8203,6 +8203,8 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.WIZARD_ALREADY_ENDED","That guided script or version has already been retired or withdrawn. Nothing was written.","DEC-342: ending a wizard script already ended",null,false,"design"],
   ["refusal.WIZARD_REASON_REFUSED","Ending a guided script needs a reason of 1 to 300 characters. Nothing was written.","DEC-342: wizard retire or withdraw without a usable reason",null,false,"design"],
   ["refusal.ZONE_INVALID","Civicsmith does not recognize that time zone, so nothing was calculated. Use a standard zone name such as America/Los_Angeles.","DEC-342: time zone not recognized",null,false,"design"],
+  ["odf-reader.odf.content_xml_with_text_list","content.xml with text:list xml:id relabeled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents","DEC-344: reviewed from code (K3930, B343, SETUP-WORDS #7 J3): American spelling (DEC-221); translator: a builder's provenance note, kept verbatim but for the spelling",null,false,"design"],
+  ["roster-reader.org-chart.labelled_line_s_name_a","{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labeled, {floor} boxes): this document does not lay out an organization's boxes","DEC-344: reviewed from code (K3930, B343, SETUP-WORDS #7 J3): American spelling (DEC-221); {labelled}, {named}, {min_labels}, {floor} are counts; translator: keep the placeholder names",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -9164,14 +9166,14 @@ export const WORD_ROWS = Object.freeze([
   ["review.stated.author_chosen_level","its author has chosen a level for {case_id} edition {edition}","review, stated",null,false,"design"],
   ["review.stated.case_group_needs","every case of the team needs the approval of {list} before it is signed","review, stated",null,false,"design"],
   ["review.stated.group_requires_approvals","the team requires no approvals before a case is signed","review, stated",null,false,"design"],
-  ["refusal.NOT_A_COVERABLE_FORMAT","The photo is neither a JPEG nor an 8-bit PNG this module covers.","image-cover, refusal by its code",null,false,"design"],
-  ["refusal.UNSUPPORTED_JPEG_PROCESS","The JPEG is progressive, arithmetic-coded, lossless, 12-bit, or otherwise not a baseline or extended-sequential Huffman 8-bit JPEG in one scan.","image-cover, refusal by its code",null,false,"design"],
-  ["refusal.PNG_INTERLACED","The PNG is interlaced (Adam7).","image-cover, refusal by its code",null,false,"design"],
-  ["refusal.AREA_MALFORMED","An area is not four integers [x0, y0, x1, y1] with x0 < x1 and y0 < y1.","image-cover, refusal by its code",null,false,"design"],
-  ["refusal.AREA_OUTSIDE","An area lies wholly outside the picture.","image-cover, refusal by its code",null,false,"design"],
-  ["refusal.PHOTO_TOO_LARGE","The photo is larger, in bytes or in pixels, than the most this module covers.","image-cover, refusal by its code",null,false,"design"],
-  ["refusal.TRUNCATED_IMAGE_DATA","The image data ends before the image does.","image-cover, refusal by its code",null,false,"design"],
-  ["refusal.IMAGE_DATA_CORRUPT","The image data cannot be read: a bad Huffman code or table, a wrong restart marker, a PNG CRC or zlib error.","image-cover, refusal by its code",null,false,"design"],
+  ["refusal.NOT_A_COVERABLE_FORMAT","Areas can be covered only on a JPEG or an ordinary 8-bit PNG photo, and this file is neither. Save it as one of those and try again.","image-cover, refusal by its code; DEC-344: reworded for a member (B343)",null,false,"design"],
+  ["refusal.UNSUPPORTED_JPEG_PROCESS","This JPEG is saved in a form Civicsmith cannot cover, such as progressive or 12-bit. Save it again as an ordinary JPEG, or as a PNG, and try again.","image-cover, refusal by its code; DEC-344: reworded for a member (B343)",null,false,"design"],
+  ["refusal.PNG_INTERLACED","This PNG is interlaced, a form Civicsmith cannot cover. Save it again without interlacing and try again.","image-cover, refusal by its code; DEC-344: reworded for a member (B343)",null,false,"design"],
+  ["refusal.AREA_MALFORMED","An area to cover could not be read as a rectangle: its left edge must lie left of its right, and its top above its bottom. Mark the area again.","image-cover, refusal by its code; DEC-344: reworded for a member (B343)",null,false,"design"],
+  ["refusal.AREA_OUTSIDE","An area to cover lies wholly outside the photo. Mark the area again on the photo itself.","image-cover, refusal by its code; DEC-344: reworded for a member (B343)",null,false,"design"],
+  ["refusal.PHOTO_TOO_LARGE","This photo is larger, in file size or in pixels, than Civicsmith can cover. Save a smaller copy and try again.","image-cover, refusal by its code; DEC-344: reworded for a member (B343)",null,false,"design"],
+  ["refusal.TRUNCATED_IMAGE_DATA","This photo file ends before the picture does, so it may be incomplete. Copy it again from its source and try again.","image-cover, refusal by its code; DEC-344: reworded for a member (B343)",null,false,"design"],
+  ["refusal.IMAGE_DATA_CORRUPT","This photo file is damaged, so its picture cannot be read. Copy it again from its source and try again.","image-cover, refusal by its code; DEC-344: reworded for a member (B343)",null,false,"design"],
   ["refusal.NOT_A_STRIPPABLE_FORMAT","The image is none of JPEG, PNG, GIF, WebP, JP2 or a J2K codestream, or holds a structure this module cannot judge.","image-cover, refusal by its code",null,false,"design"],
   ["refusal.ANIMATED_IMAGE","The image is animated (a GIF of more than one frame, an animated PNG or WebP): one image is allowed.","image-cover, refusal by its code",null,false,"design"],
   ["refusal.REEXTRACT_FLAG_MALFORMED","That request asked for a re-read in a form your team's Civicsmith does not recognize. It answers ocr=1 or nothing, so that a request for a re-read is never quietly answered with the old text.","extraction, refusal by its code",null,false,"design"],
@@ -18292,7 +18294,6 @@ export const WORD_ROWS = Object.freeze([
   ["odf-reader.odf.content_xml_not_read_its","content.xml not read: its repeats expand past {boundName} (stated in evidentiary.undetermined and by text())",null,null,false,"code"],
   ["odf-reader.odf.content_xml_not_read_over","content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())",null,null,false,"code"],
   ["odf-reader.odf.content_xml_references_length_package","content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed",null,null,false,"code"],
-  ["odf-reader.odf.content_xml_with_text_list","content.xml with text:list xml:id relabelled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",null,null,false,"code"],
   ["odf-reader.odf.no_flavour_export_has_been","no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",null,null,false,"code"],
   ["odf-reader.odf.no_intra_link_odf_manifest","no intra link: {ODF_MANIFEST_PART} could not be read ({manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)",null,null,false,"code"],
   ["odf-reader.odf.no_intra_link_odf_manifest_2","no intra link: {ODF_MANIFEST_PART} lists no embedded member",null,null,false,"code"],
@@ -18922,7 +18923,6 @@ export const WORD_ROWS = Object.freeze([
   ["roster-reader.org-chart.it_names_itself_a_chart","it names itself a chart (\"{text}\")",null,null,false,"code"],
   ["roster-reader.org-chart.it_names_itself_with_the_views","it names itself, with the view's words, as a roster and not as a chart",null,null,false,"code"],
   ["roster-reader.org-chart.its_median_line_is_mid","its median line is {mid} words, longer than a box label ({CHART_SHORT}): this is running text",null,null,false,"code"],
-  ["roster-reader.org-chart.labelled_line_s_name_a","{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labelled, {floor} boxes): this document does not lay out an organisation's boxes",null,null,false,"code"],
   ["roster-reader.org-chart.neither_its_first_line_nor","neither its first line nor the line before its self-naming line is a heading that names an organisation",null,null,false,"code"],
   ["roster-reader.org-chart.no_line_among_the_documents_first","no line among the document's first eight, or beside its self-naming line, states a date",null,null,false,"code"],
   ["roster-reader.org-chart.no_reporting_relation_is_stated","no reporting relation is stated in words; the chart's boxes and connecting lines are a drawing that text does not carry, so no other pair is read",null,null,false,"code"],
