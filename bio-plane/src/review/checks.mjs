@@ -20,20 +20,17 @@ const at = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
  * impossible. This is D-507's finding one op over, and the same day: a surface lands, and the codes it can
  * now show turn out to have no sentence behind them.
  *
- * THE DEC-49 GUARD DID NOT AND COULD NOT SEE IT, which is the part worth keeping. `check-refusal-codes.mjs`
- * puts a code IN REACH by three rules, and TEN of these eleven satisfied none of them: R1 wants a catalogue
- * row (that is the defect), R2 wants a code LITERAL in `civicos-ui/app.html`, and R3 wants one in a harness
- * mock. UI-68's surface renders the plane's own `detail` and keys on NO code literal, so R2 is blind to it —
- * a surface can exist, and a member can meet the code on it, while the guard scores the code out of reach.
- * Measured on origin/main 9f8b69e6 before this landing: arm F sorted ten of the eleven into F6, *out of
- * reach, one site — needs a sentence WHEN its surface exists*, and its surface had existed for a day.
- * **SO "OUT OF REACH" IS A STATEMENT ABOUT THE WALK, NEVER ABOUT THE MEMBER**, and the guard's own header
- * says so ("in reach means a surface EXISTS today, never that a member could not otherwise meet the code").
+ * THE DEC-49 GUARD DID NOT AND COULD NOT SEE IT, which is the part worth keeping. The refusal-code guard of the time
+ * (deleted in T20; refusal rows are now held and tested per module) put a code IN REACH by three rules, and TEN of
+ * these eleven satisfied none of them: R1 wanted a catalogue row (that is the defect), R2 wanted a code LITERAL in the
+ * old single-page surface, and R3 wanted one in a harness mock. UI-68's surface renders the plane's own `detail` and
+ * keys on NO code literal, so R2 was blind to it: a surface could exist, and a member could meet the code on it,
+ * while the guard scored the code out of reach. Measured on origin/main 9f8b69e6 before this landing: arm F sorted ten
+ * of the eleven into F6, *out of reach, one site, needs a sentence WHEN its surface exists*, and its surface had
+ * existed for a day. **SO "OUT OF REACH" IS A STATEMENT ABOUT THE WALK, NEVER ABOUT THE MEMBER**, and the guard's own
+ * header said so ("in reach means a surface EXISTS today, never that a member could not otherwise meet the code").
  * A row here closes that by R1, which is the rule that does not depend on how a surface spells things.
- * D-542 carries the separate fix — teaching the walk reach-by-op, so the next surface built this way is
- * not invisible to it for a day. It is NOT done here on purpose: the reach rule is shared by every op in
- * the plane, so changing it moves the `reach` and `reachGap` ratchets for codes this item never touched,
- * and that is its own item with its own controls rather than a rider on this one.
+ * D-542 carried the separate fix, teaching the walk reach-by-op, which went with the guard.
  *
  * THE ELEVENTH IS A DIFFERENT SHAPE and is not rounded in with the ten. `NO_REVIEW_COPY` sat in arm F's F4
  * MULTI-SITE partition, not F6, because its literal occurs twice: the MINT in `noReviewCopy` and a READ in
