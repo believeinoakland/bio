@@ -469,9 +469,9 @@ export const BIAS_CHECKS = {
 
   /* ---------------------------------------------------------------------------
      REC-207 — SETTLING A BIAS DEBT (BOB #32, 2026-09-23 23:42Z). Seven rows, in
-     the EXISTING family rather than a new one, on SK-1's rule (made when the
-     legacy `civicos-ui/check-refusal-codes.mjs`, since deleted, walked every
-     `*_CHECKS` family), because these refusals are bias's in the plainest sense —
+     the EXISTING family rather than a new one, on SK-1's rule (made when a guard
+     walked every `*_CHECKS` family, deleted at T20), because these refusals are
+     bias's in the plainest sense —
      they are the conditions under which the record declines to record that a
      member has settled the obligation a lens change raised.
 
