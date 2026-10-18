@@ -18,3 +18,15 @@ Tests never copy a sentence people read (K3810); every new id needs an explicit 
 Inherited reds: none of yours. Coverage on R14–R18 is expected until you meet them.
 Model and effort: medium; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture 0 failures for your files; the words check does not read setup-words' own source; the format check must stay 0) and `node checks/ownership.mjs /home/user/bio setup-words tranche/T51 job/T51/setup-words`. Your Size line counts only your module's own code, never `rows.mjs` or the vendored parser (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3943, BOB #215). The marker `t` is renamed `localize`: 1,450 files of the tree bind `t` already, so the conversion could not place it in them. First merge `tranche/T51` into your branch (your requirements changed: setup-words R13, R14, R15, R18, R4 now say `localize`; R14 and R15 are re-marked *(not yet met: T51)*).
+
+Do:
+1. `index.mjs`: export `localize(id, en, vars)` in place of `t`, behaviour unchanged (R14). No alias named `t` is kept (nothing outside your module imports it; only your two test files do).
+2. `build.mjs`: the extraction reads `localize(id, en)` calls (R15), with its scope rule unchanged (a file's own local `localize` is not the marker; no file of the tree binds it today). Every message naming `t` says `localize`.
+3. Your tests (`extraction.test.mjs`, `word-list.test.mjs`) use `localize`; R14 and R15 tests still name their ids.
+4. Run your tests, `node bio-plane/src/setup-words/build.mjs --check`, and the process checks over your module (`node /home/user/civicos-process/checks/run.mjs .` — civicos-process `ebcc1a3` or later; its words check now reads the marker as `localize`). Then record completion (names R14, R15 as met) and post COMPLETE.
+
+Model and effort: as your START (sonnet, medium); workers haiku low if any. One small entry: finish in this session.
