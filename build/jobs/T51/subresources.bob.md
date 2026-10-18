@@ -20,3 +20,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3957, K3959): merge tranche/T51 into your branch and pull civicos-process (27aa50e) first. The words check gained a `plain` arm: lowercase, unpunctuated strings of 5+ words that it missed before (e.g. a `why:` reason a member reads). Your module has 13 of them, listed in the section "Plain findings (K3957)" of build/plan/words-pass/subresources.md (read it whole). Judge each by the words rule of your START: a sentence a member can read is read through localize('subresources.<file stem>.<slug>', en, vars) (or word(key) where a row exists), a test copying it compares with localize/word; text no member ever reads goes in a REPORT to BOB, each with why, for the design's unkeyed list (K3944). Then run your tests and checks again (the words check must show no finding in your module but those you REPORTed) and record COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K3960): the design's unkeyed list (DEC-343) is merged into tranche/T51 and your module's 'Plain findings (K3957)' section in build/plan/words-pass/subresources.md was recomputed (fewer, or none): merge tranche/T51 into your branch and work from the new section. Also run 'node bio-plane/src/setup-words/build.mjs --check' (read-only) before COMPLETE: it must not name your module.
