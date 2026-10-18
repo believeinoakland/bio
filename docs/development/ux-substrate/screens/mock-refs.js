@@ -110,7 +110,7 @@ const SCREEN_REFS = {
     ["passage 3","document","<b>Passage 3</b> of Administrative Instruction 4.12 · “within seven calendar days of the report, weather permitting”","The words your search matched; cite this passage, not the whole policy."],
     ["within seven calendar days","standard","<b>Repair reported potholes within seven calendar days</b> · a standard · Administrative Instruction 4.12, §3 · in force since 2023","The rule the city is checked against; the work orders show how often it was met."],
     ["public archive copy",null,"<b>Public archive copy</b> · captured from a public web archive, not the city's own site · hence capture C","Capture it from the city's site before relying on it; that copy would hold up better."],
-    ["2 documents held together",null,"<b>2 documents held together</b> · <span class=mk-data>the FY2025 work orders and Administrative Instruction 4.12</span> · held for you until 16:40 today","A held set can be counted, cited or acted on as one; let it go when you are done."]
+    ["2 documents held together",null,"<b>2 documents held together</b> · <span class=mk-data>the FY2025 work orders and Administrative Instruction 4.12</span> · held for you until 4:40 PM today","A held set can be counted, cited or acted on as one; let it go when you are done."]
   ],
   "capture": [
     ["the office's own site",null,"<b>The office's own site</b> · the website of the office that issued the document · for Oakland, <span class=mk-data>oaklandca.gov</span>","A copy fetched there carries its source with it, so a reader can fetch the same page and compare."],

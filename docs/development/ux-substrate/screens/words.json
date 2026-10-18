@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 365,
+  "queue": 429,
   "transcribe": 19,
   "capture": 71,
   "document": 62,
@@ -22,7 +22,7 @@
   "label": 207,
   "project": 53,
   "grouprule": 1,
-  "refusal": 1984,
+  "refusal": 1985,
   "signing": 17,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4410,
+  "screen": 4442,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,7 +63,7 @@
   "proceeding": 11,
   "duty": 6,
   "published": 9,
-  "shell": 158,
+  "shell": 159,
   "settings": 4,
   "entity": 33,
   "find": 34,
@@ -100,7 +100,7 @@
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
-  "time": 1,
+  "time": 4,
   "size": 4,
   "reference": 1,
   "form": 3,
@@ -122,6 +122,9 @@
   "case-account": 12,
   "instance-setup": 30,
   "list": 1,
+  "glossary": 9,
+  "people": 42,
+  "reading-pipeline": 80,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
@@ -200,12 +203,10 @@
   "action-plans": 55,
   "connections": 74,
   "run-rules": 24,
-  "reading-pipeline": 79,
   "investigation": 42,
   "calc-grammar": 58,
   "progressions": 33,
   "capture-requests": 21,
-  "people": 39,
   "provenance": 32,
   "credentials": 7,
   "local-facts": 41,
@@ -224,7 +225,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 14278,
+  "total": 14392,
   "protected": 923
  },
  "words": [
@@ -38533,7 +38534,28 @@
    "en": "{date}, {time}",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-299: a moment, in the team's time zone, such as \"October 16, 14:05\"; never an ISO time"
+   "note": "DEC-299: a moment, in the team's time zone, such as \"October 16, 2:05 PM\" (the 12-hour clock, American English); {time} is written through time.clock; never an ISO time or a 24-hour time"
+  },
+  {
+   "key": "time.clock",
+   "en": "{hour}:{minute} {ampm}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a time of day on the 12-hour clock, such as 2:05 PM: {hour} is 1 to 12 with no leading zero, {minute} is two digits (00 to 59), {ampm} is time.am or time.pm; midnight is 12:00 AM and noon 12:00 PM"
+  },
+  {
+   "key": "time.am",
+   "en": "AM",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: {ampm} for a time from midnight up to noon; after time.clock's hour and minute"
+  },
+  {
+   "key": "time.pm",
+   "en": "PM",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: {ampm} for a time from noon up to midnight; after time.clock's hour and minute"
   },
   {
    "key": "document.uploaded.by",
@@ -45908,7 +45930,7 @@
   },
   {
    "key": "queue.multi.result",
-   "en": "You acted on 4 items. 2 are done and left your queue; 2 were not handled and stay here.",
+   "en": "You acted on {n} items. {done} are done and left your queue; {kept} were not handled and stay here.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A58: per-item outcome head; counts are the mockup's"
@@ -45953,39 +45975,53 @@
    "en": "The items you dealt with, what you did, and when.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-330: B306 A61: sub-line"
+   "note": "DEC-330: B306 A61: sub-line; every answered row shows the moment it was answered, with its time of day"
+  },
+  {
+   "key": "queue.answered.byyou",
+   "en": "Answered by you, {when}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A61 receipt: when you answered; {when} is a moment read through time.at (the day, then the 12-hour time, such as today, 2:05 PM, or October 14, 9:40 AM); the answered rows show a time of day, not the date alone"
+  },
+  {
+   "key": "queue.answered.bymember",
+   "en": "Answered by {member}, {when}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A61 receipt: when another member did it for everyone; {when} as in queue.answered.byyou"
+  },
+  {
+   "key": "queue.answered.photos.one",
+   "en": "Vouched for a photo you captured on {place}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A61 receipt: the one-photo form of queue.answered.photos, which holds two or more"
   },
   {
    "key": "queue.answered.photos",
-   "en": "Vouched for 2 photos you captured on Seminary Avenue",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-330: B306 A61 receipt"
-  },
-  {
-   "key": "queue.answered.forwarded.note",
-   "en": "with your note “you know this clause best”",
+   "en": "Vouched for {n} photos you captured on {place}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A61 receipt"
   },
   {
    "key": "queue.answered.granted",
-   "en": "Granted Teo's request to join Pothole repairs",
+   "en": "Granted {member}'s request to join {project}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A61 receipt"
   },
   {
    "key": "queue.answered.granted.meta",
-   "en": "Teo saw your answer",
+   "en": "{member} saw your answer",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A61 receipt"
   },
   {
    "key": "queue.answered.snoozed.meta",
-   "en": "it comes back that day",
+   "en": "it and the case's other items come back that day",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A61 receipt"
@@ -45999,14 +46035,14 @@
   },
   {
    "key": "queue.aside.dismissed",
-   "en": "Dismissed by you, October 8",
+   "en": "Dismissed by you, {date}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A63 decision line"
   },
   {
    "key": "queue.aside.v2",
-   "en": "judged against the progression as it stood in version 2",
+   "en": "judged against the progression as it stood in version {n}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A63: the version each decision judged"
@@ -46020,14 +46056,14 @@
   },
   {
    "key": "queue.aside.deferred",
-   "en": "Deferred by you until November 1",
+   "en": "Deferred by you until {date}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A63"
   },
   {
    "key": "queue.aside.v3",
-   "en": "judged against the progression as it stood in version 3",
+   "en": "judged against the progression as it stood in version {n}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A63"
@@ -46118,7 +46154,7 @@
   },
   {
    "key": "screen.question.say000",
-   "en": "Deferred for Pothole repairs by you, October 18.",
+   "en": "Deferred for {project} by you, {date}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46174,7 +46210,7 @@
   },
   {
    "key": "screen.question.say008",
-   "en": "Dismissed for Pothole repairs by you, October 18.",
+   "en": "Dismissed for {project} by you, {date}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46202,7 +46238,7 @@
   },
   {
    "key": "screen.question.say012",
-   "en": "⁂Composed by the assistant, working for Mai, October 8",
+   "en": "⁂Composed by the assistant, working for {member}, {date}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46349,14 +46385,14 @@
   },
   {
    "key": "screen.question.say033",
-   "en": "Was: accepted by Ana, October 7.",
+   "en": "Was: accepted by {member}, {date}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
   {
    "key": "screen.question.say034",
-   "en": "Now: accepted by Dev, October 6, and Pothole repairs stands on it.",
+   "en": "Now: accepted by {member}, {date}, and {project} stands on it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46377,14 +46413,14 @@
   },
   {
    "key": "screen.question.say037",
-   "en": "written by Ana, the first reading",
+   "en": "written by {member}, the first reading",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
   {
    "key": "screen.question.say038",
-   "en": "built from it by Dev",
+   "en": "built from it by {member}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46405,7 +46441,7 @@
   },
   {
    "key": "screen.question.say041",
-   "en": "taken from it by Mai",
+   "en": "taken from it by {member}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46524,7 +46560,7 @@
   },
   {
    "key": "screen.question.say058",
-   "en": "Defer or dismiss this question for Pothole repairs",
+   "en": "Defer or dismiss this question for {project}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46573,7 +46609,7 @@
   },
   {
    "key": "screen.question.say065",
-   "en": "Pothole repairs stands on a reading of this question",
+   "en": "{project} stands on a reading of this question",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46615,7 +46651,7 @@
   },
   {
    "key": "screen.question.say071",
-   "en": "Street safety, 2026 cites it, published",
+   "en": "{title} cites it, published",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46636,7 +46672,7 @@
   },
   {
    "key": "screen.question.say074",
-   "en": "You are not a participant in Pothole repairs, so you cannot set the question aside for it.",
+   "en": "You are not a participant in {project}, so you cannot set the question aside for it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46706,7 +46742,7 @@
   },
   {
    "key": "screen.capture.a64.your_team_holds_a_capture_from_14_septem",
-   "en": "your team holds a capture from September 14, and the site now gives a different document",
+   "en": "your team holds a capture from {date}, and the site now gives a different document",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A64: capture drawn word"
@@ -46755,7 +46791,7 @@
   },
   {
    "key": "screen.document.a34.a_newer_copy_exists_captured_2_october",
-   "en": "a newer copy exists, captured October 2",
+   "en": "a newer copy exists, captured {date}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A34: document drawn word"
@@ -46832,7 +46868,7 @@
   },
   {
    "key": "screen.document.a27.vouched_for_by_dev",
-   "en": "Vouched for by Dev",
+   "en": "Vouched for by {member}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A27: document drawn word"
@@ -46909,7 +46945,7 @@
   },
   {
    "key": "screen.document.a27.vouched_for_by_dev.2",
-   "en": "Vouched for by: Dev",
+   "en": "Vouched for by: {member}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A27: document drawn word"
@@ -47238,17 +47274,24 @@
   },
   {
    "key": "screen.published.you.asked.for.findings.held",
-   "en": "You asked for findings held at B or better and linked at B or better.",
+   "en": "You asked for findings held at {capture} or better and linked at {connection} or better.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
    "key": "screen.published.this.is.part.of.the",
-   "en": "This is part of the case, not the case: 1 of 2 findings is shown, and the other falls below your minimum.",
+   "en": "This is part of the case, not the case: {n} of {total} findings is shown, and the other falls below your minimum.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.this.is.part.of.the.many",
+   "en": "This is part of the case, not the case: {n} of {total} findings are shown, and the other {hidden} fall below your minimum.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: the form of screen.published.this.is.part.of.the for two or more findings left out; the base key holds exactly one left out"
   },
   {
    "key": "screen.published.the.team.s.signature.covers",
@@ -47301,14 +47344,14 @@
   },
   {
    "key": "screen.published.council.minutes.12.january.2024",
-   "en": "Council minutes, January 12, 2024, item 7: the council approved amendment 1 and no later change.",
+   "en": "Council minutes, {date}, item {n}: the council approved amendment {amendment} and no later change.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
    "key": "screen.published.held.for.you.to.read",
-   "en": "Held for you to read and check: capture B.",
+   "en": "Held for you to read and check: capture {grade}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47329,14 +47372,14 @@
   },
   {
    "key": "screen.published.held.for.you.to.read_",
-   "en": "Held for you to read and check: capture C.",
+   "en": "Held for you to read and check: capture {grade}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
    "key": "screen.published.finding.4.of.another.team",
-   "en": "Finding 4 of another team's case, on the same lease.",
+   "en": "Finding {n} of another team's case, on the same lease.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47364,7 +47407,7 @@
   },
   {
    "key": "screen.published.hold.leg.1.which.supports",
-   "en": "hold Leg 1, which supports Finding 1",
+   "en": "hold Leg {leg}, which supports Finding {n}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47378,7 +47421,7 @@
   },
   {
    "key": "screen.published.holds.leg.2.which.supports",
-   "en": "holds Leg 2, which supports Finding 1",
+   "en": "holds Leg {leg}, which supports Finding {n}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47392,21 +47435,21 @@
   },
   {
    "key": "screen.published.holds.leg.3.which.cuts",
-   "en": "holds Leg 3, which cuts against Finding 1",
+   "en": "holds Leg {leg}, which cuts against Finding {n}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
    "key": "screen.published.finding.4.of.another.team_",
-   "en": "Finding 4 of another team's case",
+   "en": "Finding {n} of another team's case",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
    "key": "screen.published.is.leg.4.which.supports",
-   "en": "is Leg 4, which supports Finding 1; it rests on documents this edition does not hold",
+   "en": "is Leg {leg}, which supports Finding {n}; it rests on documents this edition does not hold",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47420,14 +47463,14 @@
   },
   {
    "key": "screen.published.finding.1.answers.one.part",
-   "en": "Finding 1 answers one part of a question the team divided in two.",
+   "en": "Finding {n} answers one part of a question the team divided in two.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
    "key": "screen.published.the.question.it.came.from",
-   "en": "The question it came from, \"Were the 2024 rent adjustments lawful?\", was set aside and cannot be published.",
+   "en": "The question it came from, \"{question}\", was set aside and cannot be published.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47455,7 +47498,7 @@
   },
   {
    "key": "screen.published.rests.on.the.council.minutes",
-   "en": "Rests on: the council minutes of January 12, 2024, item 7; the March 2024 rent schedule.",
+   "en": "Rests on: the council minutes of {date}, item {n}; {document}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47469,7 +47512,7 @@
   },
   {
    "key": "screen.published.signed.for.lakeshore.tenants.by",
-   "en": "Signed for Lakeshore Tenants by Rosa M. on September 18, 2026, with the key whose fingerprint is ab12 34cd.",
+   "en": "Signed for {team} by {member} on {date}, with the key whose fingerprint is {fingerprint}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47707,7 +47750,7 @@
   },
   {
    "key": "screen.members.key.registered.by.rosa.3",
-   "en": "key registered by Rosa, October 3",
+   "en": "key registered by {member}, {date}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A72/A74: drawn sentence"
@@ -47840,21 +47883,21 @@
   },
   {
    "key": "screen.members.this.takes.3.of.4",
-   "en": "This takes 3 of 4 administrators' votes.",
+   "en": "This takes {n} of {total} administrators' votes.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A72/A74: drawn sentence"
   },
   {
    "key": "screen.members.teo.is.counted.but.doesn",
-   "en": "Teo is counted but doesn't vote, so the 3 who may vote must all agree.",
+   "en": "{member} is counted but doesn't vote, so the {n} who may vote must all agree.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A72/A74: drawn sentence"
   },
   {
    "key": "screen.members.the.removal.waits.for.ana",
-   "en": "the removal waits for Ana",
+   "en": "the removal waits for {member}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A72/A74: drawn sentence"
@@ -47875,7 +47918,7 @@
   },
   {
    "key": "screen.members.2.of.3.have.agreed",
-   "en": "2 of 3 have agreed so far.",
+   "en": "{n} of {total} have agreed so far.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A72/A74: drawn sentence"
@@ -48029,7 +48072,7 @@
   },
   {
    "key": "screen.account.registered.for.you.by.rosa",
-   "en": "registered for you by Rosa, an administrator, on October 3.",
+   "en": "registered for you by {member}, an administrator, on {date}.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A74: drawn sentence"
@@ -48855,7 +48898,7 @@
   },
   {
    "key": "screen.actionnew.to.named",
-   "en": "A named office or person",
+   "en": "A named office or body",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A68: Start an action"
@@ -48995,7 +49038,7 @@
   },
   {
    "key": "screen.project.ownerstand.an.owner.is.named.dev",
-   "en": "An owner is named: Dev",
+   "en": "An owner is named: {member}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 A47: drawn sentence"
@@ -49471,7 +49514,7 @@
   },
   {
    "key": "screen.members.key.react.key.withdrawn.by.rosa.12",
-   "en": "key withdrawn by Rosa, October 12",
+   "en": "key withdrawn by {member}, {date}",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 A72/A74: drawn sentence"
@@ -49485,7 +49528,7 @@
   },
   {
    "key": "screen.members.key.react.reactivate.devs.signing.key",
-   "en": "Reactivate Dev's signing key",
+   "en": "Reactivate {member}'s signing key",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 A72/A74: drawn sentence"
@@ -49506,14 +49549,14 @@
   },
   {
    "key": "screen.members.founder.if.the.count.is.higher",
-   "en": "If the count is higher than the roster",
+   "en": "If more administrators are live than the roster shows as active",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 A72/B5: drawn sentence"
   },
   {
    "key": "screen.members.founder.the.count.includes.1.administrator",
-   "en": "The count includes 1 administrator the roster has no row for.",
+   "en": "The count includes 1 live administrator the roster has no active row for.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 A72/B5: drawn sentence"
@@ -49552,6 +49595,762 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "shell.reload",
+   "en": "Reload",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 shell: the button beside the update notice (shell.update.says)"
+  },
+  {
+   "key": "screen.glossary.money.heading",
+   "en": "Money and budgets",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: section heading"
+  },
+  {
+   "key": "glossary.term.acfr",
+   "en": "ACFR",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.money.acfr"
+  },
+  {
+   "key": "glossary.term.cafr",
+   "en": "CAFR",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.money.cafr"
+  },
+  {
+   "key": "glossary.term.gpf",
+   "en": "GPF",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.money.gpf"
+  },
+  {
+   "key": "glossary.term.fy",
+   "en": "FY",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.money.fy"
+  },
+  {
+   "key": "glossary.term.fingerprint",
+   "en": "Fingerprint",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.honest.fingerprint"
+  },
+  {
+   "key": "glossary.term.timestamp",
+   "en": "Timestamp",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.honest.timestamp"
+  },
+  {
+   "key": "glossary.term.signature",
+   "en": "Signature",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.honest.signature"
+  },
+  {
+   "key": "glossary.term.manifest",
+   "en": "Manifest",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.honest.manifest"
+  },
+  {
+   "key": "glossary.term.provenance",
+   "en": "Provenance",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 glossary: the term as Civicsmith names it; its explanation is screen.glossary.honest.provenance"
+  },
+  {
+   "key": "screen.members.keys.heading",
+   "en": "Signing keys",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 members: section heading; its explanation is screen.members.a.signing.key.lets.a"
+  },
+  {
+   "key": "screen.members.keys.whose",
+   "en": "Whose key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 members: column head"
+  },
+  {
+   "key": "screen.members.keys.public",
+   "en": "Their public key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 members: column head"
+  },
+  {
+   "key": "screen.members.keys.public.help",
+   "en": "The public half of a member's signing key. Anyone may see it: it only lets others check what the key signed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 members: what the public key is"
+  },
+  {
+   "key": "screen.finder.showas",
+   "en": "Show as",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 finder: label of the view control"
+  },
+  {
+   "key": "screen.finder.showas.list",
+   "en": "A list",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 finder: the list view"
+  },
+  {
+   "key": "screen.finder.showas.table",
+   "en": "One table",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 finder: the table view; its explanation is screen.finder.table.view.help"
+  },
+  {
+   "key": "screen.finder.showas.list.help",
+   "en": "A list: the results one under another, each with the words around the match.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 finder: what the list view shows"
+  },
+  {
+   "key": "screen.finder.subjects.heading",
+   "en": "Subjects named",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 finder: heading of the subjects route"
+  },
+  {
+   "key": "screen.finder.subjects.help",
+   "en": "The people, offices, laws, funds and other things whose names match your words.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 finder: what the subjects route lists"
+  },
+  {
+   "key": "screen.finder.scope.cases",
+   "en": "Cases",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 finder: scope label (the other scopes already have keys)"
+  },
+  {
+   "key": "queue.multi.choose",
+   "en": "Choose several items",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: the link that starts choosing"
+  },
+  {
+   "key": "queue.answered.title",
+   "en": "What you answered",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: the link to, and heading of, the answered list"
+  },
+  {
+   "key": "queue.tryagain",
+   "en": "Try again",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: asks the notices that did not answer again"
+  },
+  {
+   "key": "queue.answered.col.did",
+   "en": "What it did",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: column head of the answered list"
+  },
+  {
+   "key": "queue.feed.membership",
+   "en": "Your projects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.people",
+   "en": "People and organizations the record follows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.money-checks",
+   "en": "Money checks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.answers",
+   "en": "Standing questions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.duties",
+   "en": "Dates the record expects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.inquiry",
+   "en": "Questions waiting on something",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.credentials",
+   "en": "Your sign-in security",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.following",
+   "en": "Followed policies and cases",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.file-safety",
+   "en": "File scans",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.ai-use",
+   "en": "The assistant's use of an account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.ai-accounts",
+   "en": "Assistant accounts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.question-explorer",
+   "en": "What the assistant found for a question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.steps",
+   "en": "Steps in an investigation",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.investigation",
+   "en": "Milestones and quiet projects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.review",
+   "en": "Review comments",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.retrieval",
+   "en": "Documents your team watches",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.notice-producers",
+   "en": "Notices",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.noticeItems",
+   "en": "Notices",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.action-clock-overdue",
+   "en": "Action deadlines",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.plan-checkpoint-due",
+   "en": "Plan checkpoints",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.escalation-stage-proposed",
+   "en": "Proposed escalations",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.action-reminder",
+   "en": "Action reminders",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.litigation-hold",
+   "en": "Litigation holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.litigation-hold-released",
+   "en": "Released litigation holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.template-review-requested",
+   "en": "Template reviews",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.local-fact-due",
+   "en": "Local facts due",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.member-left-items",
+   "en": "Items of members who left",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.watch-keep-or-stop",
+   "en": "Watches to keep or stop",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.plan-review-due",
+   "en": "Plan reviews",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.plan-look-again",
+   "en": "Plans to look at again",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.feed.request-unsent",
+   "en": "Unsent requests",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
+  },
+  {
+   "key": "queue.fill.grade.a",
+   "en": "the same text, in the same place",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {grade} of queue.newer-capture-affects-reference.detail (content VERSION_NOTICE_GRADES)"
+  },
+  {
+   "key": "queue.fill.grade.b",
+   "en": "the same text, in another place",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {grade} of queue.newer-capture-affects-reference.detail (content VERSION_NOTICE_GRADES)"
+  },
+  {
+   "key": "queue.fill.grade.c",
+   "en": "similar text, so the passage has changed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {grade} of queue.newer-capture-affects-reference.detail (content VERSION_NOTICE_GRADES)"
+  },
+  {
+   "key": "queue.fill.grade.notfound",
+   "en": "neither the passage nor similar text",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {grade} of queue.newer-capture-affects-reference.detail (content VERSION_NOTICE_GRADES)"
+  },
+  {
+   "key": "queue.fill.grade.undetermined",
+   "en": "undetermined: the record lacks what it needs to tell",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {grade} of queue.newer-capture-affects-reference.detail (content VERSION_NOTICE_GRADES)"
+  },
+  {
+   "key": "queue.fill.affects.affected",
+   "en": "the passage this reference cites, which has changed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {affects} of queue.newer-capture-affects-reference.detail.affects (reevaluation)"
+  },
+  {
+   "key": "queue.fill.affects.undetermined",
+   "en": "the passage this reference cites, which may have changed: the record cannot tell yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {affects} of queue.newer-capture-affects-reference.detail.affects (reevaluation)"
+  },
+  {
+   "key": "queue.fill.affects.unaffected",
+   "en": "nothing: the passage reads the same",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {affects} of queue.newer-capture-affects-reference.detail.affects (reevaluation)"
+  },
+  {
+   "key": "queue.fill.state.suggested",
+   "en": "suggested, not yet weighed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {state} of queue.new-version-arrived-from-another-team.detail.state (basis-versions VERSION_STATES)"
+  },
+  {
+   "key": "queue.fill.state.considering",
+   "en": "being weighed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {state} of queue.new-version-arrived-from-another-team.detail.state (basis-versions VERSION_STATES)"
+  },
+  {
+   "key": "queue.fill.state.accepted",
+   "en": "accepted",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {state} of queue.new-version-arrived-from-another-team.detail.state (basis-versions VERSION_STATES)"
+  },
+  {
+   "key": "queue.fill.state.rejected",
+   "en": "rejected",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {state} of queue.new-version-arrived-from-another-team.detail.state (basis-versions VERSION_STATES)"
+  },
+  {
+   "key": "queue.fill.statement.member",
+   "en": "Your team's Civicsmith captured it at the request of {who}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {statement} of queue.out-of-inquiry-lead.detail: a member's own request (capture-requests R56)"
+  },
+  {
+   "key": "queue.fill.statement.run",
+   "en": "Your team's Civicsmith captured it at a research session's request (run {run}), asked by {who} and paid for by {payer}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {statement} of queue.out-of-inquiry-lead.detail: a run's request"
+  },
+  {
+   "key": "queue.fill.check.seq",
+   "en": "number",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {checks} of queue.cited-docket-entry-refused.* (case-import)"
+  },
+  {
+   "key": "queue.fill.check.seq.means",
+   "en": "An entry is already held under that number, and the held one stands.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: what failing this check means"
+  },
+  {
+   "key": "queue.fill.check.digest",
+   "en": "fingerprint",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {checks} of queue.cited-docket-entry-refused.* (case-import)"
+  },
+  {
+   "key": "queue.fill.check.digest.means",
+   "en": "The entry's text does not match the fingerprint it states.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: what failing this check means"
+  },
+  {
+   "key": "queue.fill.check.form",
+   "en": "form",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {checks} of queue.cited-docket-entry-refused.* (case-import)"
+  },
+  {
+   "key": "queue.fill.check.form.means",
+   "en": "It is not an entry of this case's docket at that number.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: what failing this check means"
+  },
+  {
+   "key": "queue.fill.check.signature",
+   "en": "signature",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {checks} of queue.cited-docket-entry-refused.* (case-import)"
+  },
+  {
+   "key": "queue.fill.check.signature.means",
+   "en": "Its signature does not check out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: what failing this check means"
+  },
+  {
+   "key": "queue.fill.check.chain",
+   "en": "chain of entries",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {checks} of queue.cited-docket-entry-refused.* (case-import)"
+  },
+  {
+   "key": "queue.fill.check.chain.means",
+   "en": "It does not follow from the entry before it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: what failing this check means"
+  },
+  {
+   "key": "queue.fill.check.undetermined",
+   "en": "an undetermined check",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue {checks} of queue.cited-docket-entry-refused.* (case-import)"
+  },
+  {
+   "key": "queue.fill.check.undetermined.means",
+   "en": "The record cannot say which check it failed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 queue: what failing this check means"
+  },
+  {
+   "key": "screen.capture.openit",
+   "en": "Open it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 capture: opens the document just captured"
+  },
+  {
+   "key": "screen.capture.openit.help",
+   "en": "Opens the document that was just captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 capture: what Open it does"
+  },
+  {
+   "key": "screen.capture.leaveit",
+   "en": "Leave it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 capture: stays on this page"
+  },
+  {
+   "key": "screen.capture.leaveit.help",
+   "en": "Stays here. The capture is kept and waits in Held captures.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 capture: what Leave it does"
+  },
+  {
+   "key": "screen.open-file.digest.checked",
+   "en": "Checked as it was handed to your browser: it matched the fingerprint it was captured under, so it is the file your team holds.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 open-file A28: the digest-check sentence"
+  },
+  {
+   "key": "refusal.DIGEST_MISMATCH",
+   "en": "The file your team holds no longer matches the fingerprint it was captured under, so it was not scanned, shown or opened. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 open-file A28: file-scanner DIGEST_MISMATCH (distinct from refusal.FILE_DIGEST_MISMATCH, a write)"
+  },
+  {
+   "key": "screen.dash-action.tile.clocks",
+   "en": "Clocks running",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: tile label"
+  },
+  {
+   "key": "screen.dash-action.tile.ours",
+   "en": "Our move",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: tile label (home.move.ours is lower case, inside a sentence)"
+  },
+  {
+   "key": "screen.dash-action.tile.theirs",
+   "en": "Their move",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: tile label"
+  },
+  {
+   "key": "screen.dash-action.tile.replies",
+   "en": "Replies to read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: tile label"
+  },
+  {
+   "key": "screen.dash-action.every.heading",
+   "en": "Every action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: section head"
+  },
+  {
+   "key": "screen.dash-action.col.to",
+   "en": "To",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: column head"
+  },
+  {
+   "key": "screen.dash-action.col.whose",
+   "en": "Whose move",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: column head"
+  },
+  {
+   "key": "screen.dash-action.col.clock",
+   "en": "The clock",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: column head"
+  },
+  {
+   "key": "screen.dash-action.col.next",
+   "en": "Next",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-action: column head"
+  },
+  {
+   "key": "screen.dash-project.tile.documents",
+   "en": "Documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-project: tile label"
+  },
+  {
+   "key": "screen.dash-project.tile.questions",
+   "en": "Questions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-project: tile label"
+  },
+  {
+   "key": "screen.dash-project.tile.events",
+   "en": "Events",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-project: tile label"
+  },
+  {
+   "key": "screen.dash-project.tile.members",
+   "en": "Members",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-project: tile label"
+  },
+  {
+   "key": "screen.dash-project.activity.heading",
+   "en": "Activity",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 dash-project: section head"
+  },
+  {
+   "key": "people.nearmatch.same",
+   "en": "The same name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 people (entities R60): a near match whose name is the same"
+  },
+  {
+   "key": "people.nearmatch.contains",
+   "en": "Contains the name you typed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 people (entities R60): a near match whose name contains the typed one"
+  },
+  {
+   "key": "people.nearmatch.spelling",
+   "en": "Spelled almost the same",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 people (entities R60): a near match with a close spelling"
+  },
+  {
+   "key": "reading-pipeline.no_evidence_store",
+   "en": "Your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 1 reading-pipeline N1247: the one refusal with no key yet"
+  },
+  {
+   "key": "queue.multi.snooze.help",
+   "en": "Hides each chosen item, and the other items in the same case, until the date you choose. They come back that day.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-335: B317 item 5b: snooze is per case"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -92255,7 +93054,7 @@
   },
   {
    "key": "act.taskforward.does",
-   "en": "Passes this item to another member better placed to act, with a note.",
+   "en": "Passes this item to another member better placed to act.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -92267,7 +93066,7 @@
   },
   {
    "key": "act.queuesnooze.does",
-   "en": "Hides the item until the date you choose, when it comes back.",
+   "en": "Hides the item, and the other items in its case, until the date you choose, when they come back.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
