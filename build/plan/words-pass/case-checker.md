@@ -177,3 +177,9 @@ Layer 8. 162 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - plain `bio-plane/src/case-checker/check.mjs:524` "a supplied document is not bytes, so it was not used"
 - plain `bio-plane/src/case-checker/check.mjs:537` "the calculations' provenance file the case file carries is not the rendering of the cal..."
 - plain `bio-plane/src/case-checker/check.mjs:866` "the criteria the case measures against are not judged, because the case document is not..."
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/case-checker/fixture.mjs:135` "\"completeness_acknowledgements\""

@@ -55,3 +55,10 @@ Layer 1.
 - plain `file-scanner/src/providers/routes.mjs:330` "the test address did not answer listed"
 - plain `file-scanner/src/providers/routes.mjs:333` "a test record of zero counts was accepted"
 - plain `file-scanner/src/render.mjs:42` "the renderer could not be reached"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `file-scanner/test/adapters.test.mjs:154` "\"PRIVATE_MODE_NOT_HONOURED\""
+- testcopy `file-scanner/test/contract.test.mjs:216` "\"civicsmith-security-counts\""

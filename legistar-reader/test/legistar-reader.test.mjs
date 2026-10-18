@@ -283,7 +283,7 @@ test("R7 events: each field as given, date the EventDate's day and time EventTim
 
 /* ---------------------------------------------------------------- R8 */
 
-test("R8 the last-published times are UTC instants labelled last publication, an upper bound", () => {
+test("R8 the last-published times are UTC instants, each with its label", () => {
   const f = load("events-3y");
   parse(fixCtx("events-3y")).rows.forEach((r, i) => {
     const o = f.body[i];
@@ -294,7 +294,7 @@ test("R8 the last-published times are UTC instants labelled last publication, an
     }
     assert.deepEqual(r.labels, { agenda_last_published: PUBLISHED_LABEL, minutes_last_published: PUBLISHED_LABEL });
   });
-  assert.equal(PUBLISHED_LABEL, "last publication, an upper bound");
+  assert.match(PUBLISHED_LABEL, /upper bound/);
 });
 
 /* ---------------------------------------------------------------- R9 */

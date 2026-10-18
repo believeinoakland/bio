@@ -77,3 +77,12 @@ Layer 8. 57 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/case-authoring/searched.mjs:59` "rather than about the case"
 - plain `bio-plane/src/case-authoring/searched.mjs:129` "carried this level. They are reported as undetermined"
 - plain `bio-plane/src/case-authoring/searched.mjs:133` "subject at this level at all, so nothing is claimed about them either way"
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/case-authoring/converts.test.mjs:185` "\"contributes to the work without putting the project's name on it\""
+- testcopy `bio-plane/test/m/case-authoring/dec149.test.mjs:57` "\"wrote is not a scope the team made\""
+- testcopy `bio-plane/test/m/case-authoring/document.test.mjs:318` "\"NO FROZEN STRENGTH WAS RECORDED FOR THIS MEMBER\""
+- testcopy `bio-plane/test/m/case-authoring/preflight.test.mjs:59` "\"A document acknowledged as self-attested only is either co-attested...\""

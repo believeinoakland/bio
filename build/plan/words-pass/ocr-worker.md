@@ -18,3 +18,16 @@ Layer 1.
 - plain `ocr-worker/src/contract.mjs:104` "a picture is a one-page document (page 0); the page asked for does not exist"
 - plain `ocr-worker/src/pngsamples.mjs:44` "a scanline uses a filter type this reader does not implement"
 - plain `ocr-worker/src/pngsamples.mjs:45` "the inflated raster is shorter than the header's dimensions require"
+
+## Test copies of code sentences (K3962)
+
+8 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `ocr-worker/test/ocr-worker.test.mjs:480` "\"MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD +...\""
+- testcopy `ocr-worker/test/ocr-worker.test.mjs:481` "\"deployed Workers runtime: 99.89% characters and 89/90 digits with Z...\""
+- testcopy `ocr-worker/test/ocr-worker.test.mjs:482` "\"human-ground-truthed page (Oakland Legistar attachment 15721260 p2,...\""
+- testcopy `ocr-worker/test/ocr-worker.test.mjs:483` "\"over identical bytes (9 images x 3 runs, no image gave more than on...\""
+- testcopy `ocr-worker/test/ocr-worker.test.mjs:484` "\"invention band EMPTY at every rung of CPDF-11's ladder. REACH, STAT...\""
+- testcopy `ocr-worker/test/ocr-worker.test.mjs:485` "\"page, ONE engine version, ONE model. Every other corpus figure in t...\""
+- testcopy `ocr-worker/test/ocr-worker.test.mjs:486` "\"agreement-with-the-local-floor and NOT accuracy — and D-314/CPDF-16...\""
+- testcopy `ocr-worker/test/ocr-worker.test.mjs:487` "\"local model passes the noise control, so no agreement figure may be...\""

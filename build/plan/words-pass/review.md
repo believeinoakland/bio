@@ -12,3 +12,10 @@ Layer 8. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 
 - plain `bio-plane/src/review/index.mjs:735` "is not evidence of who wrote the statement"
 - plain `bio-plane/src/review/index.mjs:858` "set the team's approval rule"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/review/copy.test.mjs:66` "\"this draft names a finding its editor cannot read, or one that does...\""
+- testcopy `bio-plane/test/m/review/copy.test.mjs:68` "\"this draft names a finding its editor cannot read, or one that does...\""

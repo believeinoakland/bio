@@ -2,7 +2,8 @@
  * profile's zone and on each profile's fiscal-year facts (R27). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { expandRecurrence, fiscalPeriod } from "../../../src/civil-time/index.mjs";
+import { expandRecurrence, fiscalPeriod, reasonText } from "../../../src/civil-time/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { firstView, testView, day, minute } from "./helpers.mjs";
 
 const LA = firstView().time_zone.value, HFX = testView().time_zone.value;
@@ -123,4 +124,24 @@ test("R21 fiscalPeriod: the fiscal year holding a date under the body's fiscal_y
   const c = testView(); delete c.fiscal_year; c.conflicts = [{ at: "fiscal_year", values: [], says: "disagree" }];
   assert.match(fiscalPeriod({ date: day("2026-10-05", HFX), body: SB, view: c }).why, /withheld/);
   assert.throws(() => fiscalPeriod({ date: day("2026-10-05", LA), view: v }), TypeError);
+});
+
+test("R30 R20 R21 the reasons of expandRecurrence and fiscalPeriod are {key, vars}: an open window, an open date, a band across two fiscal years, a fiscal fact of the wrong form", () => {
+  const t = testView();
+  const open = expandRecurrence({ rrule: "FREQ=WEEKLY", dtstart: "2026-10-06T18:00", zone: LA, from: "2026-10-01", to: { value: "2026-12-01/..", precision: "edtf", zone: LA } });
+  assert.equal(open.undetermined, true);
+  assert.deepEqual(open.why, { key: "civil-time.window_open_end", vars: {} });
+  const openDate = fiscalPeriod({ date: { value: "2026/..", precision: "edtf", zone: HFX }, body: "Port Ellery Selectboard", view: t });
+  assert.deepEqual(openDate.why, { key: "civil-time.date_open_unknown", vars: {} });
+  const two = fiscalPeriod({ date: { value: "2026", precision: "edtf", zone: HFX }, body: "Port Ellery Selectboard", view: t });
+  assert.deepEqual(two.why, { key: "civil-time.spans_two_fiscal", vars: { value: "2026", label: "FY2025-26", label_2: "FY2026-27" } });
+  const bad = testView(); bad.fiscal_year = [{ body: "Odd Body", start: "13-40", named_by: "start" }];
+  const form = fiscalPeriod({ date: day("2026-10-05", HFX), body: "Odd Body", view: bad });
+  assert.equal(form.code, "FACT_INVALID");
+  assert.deepEqual(form.why, { key: "civil-time.recurrence.fiscal_year_form", vars: { body: "Odd Body" } });
+  for (const a of [open, openDate, two, form]) {
+    for (const v of Object.values(a.why.vars)) assert.equal(typeof v, "string");
+    assert.ok(reasonText(a.why).length > 5, a.why.key);
+    if (hasWord(a.why.key)) assert.equal(word(a.why.key, a.why.vars), reasonText(a.why));
+  }
 });

@@ -23,3 +23,11 @@ Layer 10. 14 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 
 - plain `bio-plane/src/monitoring/index.mjs:1682` "address's end date; it is watched until it can be"
 - plain `bio-plane/src/monitoring/index.mjs:1924` "every earlier setting stays readable"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/monitoring/fixture.mjs:304` "\"' is not unique within the file\""
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:20` "\"application page was recognised and not compared against the captur...\""
+- testcopy `bio-plane/test/m/monitoring/voice.test.mjs:49` "\"A shape your team's Civicsmith cannot read is a shape it cannot pro...\""

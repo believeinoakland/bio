@@ -62,3 +62,10 @@ Layer 6. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/inquiry-grammar/grammar.mjs:1338` "follow the lead and cite the document the look captured instead"
 - plain `bio-plane/src/inquiry-grammar/grammar.mjs:1339` "or, if you saw the thing yourself, author it as your own observation and cite that"
 - plain `bio-plane/src/inquiry-grammar/grammar.mjs:1833` "or name another effect — a statement that changed no letter did not lower one"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/inquiry-grammar/grammar.test.mjs:138` "\"add a references[] entry for '\""
+- testcopy `bio-plane/test/m/inquiry-grammar/imported.test.mjs:128` "\"' is not a canonical record id\""

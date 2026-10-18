@@ -28,3 +28,12 @@ Layer 4. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/reading-pipeline/readingprov.mjs:177` "that differs is attributed to the document, not to a page"
 - plain `bio-plane/src/reading-pipeline/readingprov.mjs:230` "the text carries no per-page grain, so which part of the document changed is not said"
 - plain `bio-plane/src/reading-pipeline/readingprov.mjs:250` "how the pages were joined into the text the reader was handed"
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/reading-pipeline/origin.test.mjs:29` "\"an account-gated register is read only from a member's own capture\""
+- testcopy `bio-plane/test/m/reading-pipeline/origin.test.mjs:34` "\"a register of actions\""
+- testcopy `bio-plane/test/m/reading-pipeline/origin.test.mjs:35` "\"a register of actions\""
+- testcopy `bio-plane/test/m/reading-pipeline/origin.test.mjs:35` "\"a member's own capture\""

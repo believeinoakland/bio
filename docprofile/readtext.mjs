@@ -141,8 +141,7 @@ export function flattenText(supplied) {
   if (typeof supplied === "string")
     return { text: supplied, source: "string", chars: supplied.trim().length, undetermined: 0, reasons: [],
              segments: [],
-             position_why: "the text arrived as a bare string, which carries no container structure, so "
-                         + "where in the document a reference was read cannot be said" };
+             position_why: localize("docprofile.readtext.the_text_arrived_as_a", "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said") };
   if (!supplied || typeof supplied !== "object")
     return { text: "", source: null, chars: 0, undetermined: 0, reasons: [], segments: [],
              position_why: "no text was supplied" };
@@ -168,18 +167,15 @@ export function flattenText(supplied) {
       const j = joinItemised(pages, (p) => (p && typeof p.text === "string" ? p.text : ""),
                              (p) => (p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null));
       if (j.text === text) segments = j.segments;
-      else position_why = "this producer's document text is not its pages joined, so the page a reference "
-                        + "was read on cannot be established from it and is not guessed";
+      else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_pages", "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed");
     } else if (paras && paras.length) {
       const j = joinItemised(paras, (p) => (p && typeof p.text === "string" ? p.text : ""),
                              (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i,
                                                      p && p.ref));
       if (j.text === text) segments = j.segments;
-      else position_why = "this producer's document text is not its paragraphs joined, so the paragraph a "
-                        + "reference was read in cannot be established from it and is not guessed";
+      else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_paragraphs", "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed");
     } else {
-      position_why = "this producer emitted document text with no itemised pages or paragraphs beside it, "
-                   + "so where in the document a reference was read cannot be said";
+      position_why = localize("docprofile.readtext.this_producer_emitted_document_text", "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said");
     }
   } else if (Array.isArray(supplied.pages) && supplied.pages.length) {
     const j = joinItemised(supplied.pages, (p) => (p && typeof p.text === "string" ? p.text : ""),
@@ -260,7 +256,7 @@ export function readText(supplied, ctx = {}) {
       chars: 0, undetermined: flat.undetermined, reasons: flat.reasons,
       why: flat.undetermined > 0
         ? localize("docprofile.readtext.the_text_of_this_document", "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one", { undetermined: String(flat.undetermined), named: String(named) })
-        : "no text was supplied, so no reading was attempted",
+        : localize("docprofile.readtext.no_text_was_supplied_so_no", "no text was supplied, so no reading was attempted"),
     };
   }
   /* The plane's measured essentially-nothing line (needsTier2's predicate, the

@@ -34,3 +34,10 @@ Layer 9. 10 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/escalation/index.mjs:1560` "on a date the record does not state (undetermined)"
 - plain `bio-plane/src/escalation/index.mjs:1560` "the record does not state (undetermined)"
 - plain `bio-plane/src/escalation/index.mjs:1662` "comment and the like): context, never attached and never a trigger"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/escalation/stopped.test.mjs:15` "\"The escalation's stage moves only while it is open. A suspended one...\""
+- testcopy `bio-plane/test/m/escalation/stopped.test.mjs:16` "\"moves again. Nothing was written.\""

@@ -6,7 +6,8 @@ import { parseDay, dayText, dayNumber, civil, monthLength, weekdayOf, addMonths,
 import { wallToInstants, offsetAt, instantText, runtimeVersions } from "./zone.mjs";
 import { spanOf, isNo, refuse, undetermined, zoneRefusal } from "./values.mjs";
 import { missing } from "./calendar.mjs";
-import { word, localize } from "../setup-words/index.mjs";
+import { word } from "../setup-words/index.mjs";
+import { reason } from "./reasons.mjs";
 
 const SUBSET = ["FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "BYSETPOS", "EXDATE", "UNTIL"];
 const FREQS = ["WEEKLY", "MONTHLY", "YEARLY"];
@@ -155,7 +156,7 @@ export function expandRecurrence(args) {
   const fs = spanOf(typeof from === "string" && from.length === 10 ? { value: from, precision: "day", zone } : from);
   const ts = spanOf(typeof to === "string" && to.length === 10 ? { value: to, precision: "day", zone } : to);
   for (const s of [fs, ts]) if (isNo(s)) return s;
-  if (fs.lo === null || ts.hi === null) return undetermined(word("civil-time.window_open_end"));
+  if (fs.lo === null || ts.hi === null) return undetermined(reason("civil-time.window_open_end"));
   const wallStart = ds.lo + offsetAt(ds.lo, zone);
   const dtDay = Math.floor(wallStart / 86400), sec = ds.dt.precision === "day" ? 0 : wallStart - dtDay * 86400;
   const fromDay = Math.floor((fs.lo + offsetAt(fs.lo, zone)) / 86400);
@@ -235,16 +236,16 @@ export function fiscalPeriod(args) {
     return { undetermined: true, code: m.code, why: m.why };
   }
   if (typeof f.start !== "string" || !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(f.start) || (f.named_by !== "start" && f.named_by !== "end"))
-    return { undetermined: true, code: "FACT_INVALID", why: localize("civil-time.recurrence.fiscal_year_form", "the fiscal year held for {body} does not give a start day (MM-DD) and a named_by (start or end)", { body: String(body) }) };
+    return { undetermined: true, code: "FACT_INVALID", why: reason("civil-time.recurrence.fiscal_year_form", { body: String(body) }) };
   const s = typeof date === "string" && date.length === 10 ? spanOf({ value: date, precision: "day", zone: "UTC" }) : spanOf(date);
   if (isNo(s)) return s;
-  if (s.lo === null || s.hi === null) return undetermined(word("civil-time.date_open_unknown"));
+  if (s.lo === null || s.hi === null) return undetermined(reason("civil-time.date_open_unknown"));
   const z = s.dt.zone;
   const lo = s.dt.precision === "day" ? parseDay(s.dt.value) : Math.floor((s.lo + offsetAt(s.lo, z)) / 86400);
   const hi = s.dt.precision === "day" ? lo : Math.floor((s.hi - 1 + offsetAt(s.hi - 1, z)) / 86400);
   const yearOf = (n) => { const y = civil(n).y; const p = periodFor(y, f); return n >= p.startN ? p : periodFor(y - 1, f); };
   const a = yearOf(lo), b = yearOf(hi);
   const out = (p) => ({ label: p.label, start: p.start, end: p.end });
-  if (a.startN !== b.startN) return undetermined(word("civil-time.spans_two_fiscal", { value: String(s.dt.value), label: String(a.label), label_2: String(b.label) }), [out(a), out(b)]);
+  if (a.startN !== b.startN) return undetermined(reason("civil-time.spans_two_fiscal", { value: String(s.dt.value), label: String(a.label), label_2: String(b.label) }), [out(a), out(b)]);
   return out(a);
 }

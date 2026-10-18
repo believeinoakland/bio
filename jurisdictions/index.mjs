@@ -1811,7 +1811,7 @@ function merge(profiles) {
         basis: given[0].basis, profile: given[0].profile, bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
     else if (given.length)
       conflict("practice.minutes_due_days", given.map(({ written, ...g }) => g),
-        "the active profiles give different periods after which absent minutes raise a question, so none is given");
+        localize("jurisdictions.index.minutes_due_conflict", "the active profiles give different periods after which absent minutes raise a question, so none is given"));
   }
 
   /* locale: one value (N77), as practice's. */
@@ -1820,14 +1820,14 @@ function merge(profiles) {
     if (agree(given))
       view.locale = { value: given[0].value, basis: given[0].basis, profile: given[0].profile,
         bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
-    else conflict("locale", given, "the active profiles name different locales, so none is given: a render asks for its fallback");
+    else conflict("locale", given, localize("jurisdictions.index.locale_conflict", "the active profiles name different locales, so none is given: a render asks for its fallback"));
   }
 
   /* time_zone: one value (R41), its status part of it (R44). */
   if (has("time_zone")) {
     const given = profiles.filter((p) => p.time_zone).map((p) => ({ profile: p.id, value: p.time_zone, basis: p.time_zone.basis }));
     if (agree(given)) view.time_zone = keep(given);
-    else conflict("time_zone", given, "the active profiles name different time zones, so none is given: a time of day there is undetermined");
+    else conflict("time_zone", given, localize("jurisdictions.index.time_zone_conflict", "the active profiles name different time zones, so none is given: a time of day there is undetermined"));
   }
 
   for (const sec of ["search_terms", "legal_organisations", "phrasings"])
@@ -1838,7 +1838,7 @@ function merge(profiles) {
   if (has("records_help")) {
     const given = profiles.filter((p) => p.records_help).map((p) => ({ profile: p.id, value: p.records_help, basis: p.records_help.basis }));
     if (agree(given)) view.records_help = keep(given);
-    else conflict("records_help", given, "the active profiles give different records-request help, so none is given: the page has no figure to show");
+    else conflict("records_help", given, localize("jurisdictions.index.records_help_conflict", "the active profiles give different records-request help, so none is given: the page has no figure to show"));
   }
   /* R94 (T50): forums are unioned (R14), a forum given twice once. */
   if (has("forums")) { const v = []; for (const p of profiles) union(v, p.forums, p.id); view.forums = strip(v); }
@@ -1893,12 +1893,12 @@ function merge(profiles) {
         ["series.label", (e) => e.series.label, (e) => { delete e.series.label; }],
         ["cite", (e) => e.cite, (e) => { delete e.cite; }],
         ["normal", (e) => e.normal ?? null, (e) => { delete e.normal; }]],
-        FAMILY, "the family is dropped from the view: a citation of it is recognised by no profile until they agree"],
+        FAMILY, localize("jurisdictions.index.family_dropped_from_view", "the family is dropped from the view: a citation of it is recognised by no profile until they agree")],
       [(e) => `${e.source}\u0000${e.issuer}`, [
         ["level", (e) => e.level ?? null, (e) => { delete e.level; }],
         /* an entry with a level reads sector government when it gives none (R64) */
         ["sector", (e) => e.sector ?? (own(e, "level") ? "government" : null), (e) => { delete e.sector; }]],
-        "a standard source", "who issues it is undetermined"],
+        "a standard source", localize("jurisdictions.index.who_issues_undetermined", "who issues it is undetermined")],
     ];
     for (const [keyOf, facts, what, says] of ONE) {
       const groups = new Map();
@@ -1957,7 +1957,7 @@ function merge(profiles) {
       conflict(`counterparties[${role}/${body}].time_zone`, given,
         localize("jurisdictions.index.the_active_profiles_give_different_3", "the active profiles give different time zones for {role} ({body}), so its local day is undetermined", { role: String(role), body: String(body) }));
     }
-    const NAMED = { ids: "identifiers", within: "organisations it is part of", organisation: "body-variant keys" };
+    const NAMED = { ids: localize("jurisdictions.index.named_identifiers", "identifiers"), within: localize("jurisdictions.index.named_within", "organisations it is part of"), organisation: localize("jurisdictions.index.named_body_variants", "body-variant keys") };
     for (const [f, m] of Object.entries(named)) for (const [k, given] of m) {
       if (agree(given)) { each(k, (c) => { c[f] = clone(given[0].value); }); continue; }
       const [role, body] = k.split("\u0000");
@@ -1998,8 +1998,8 @@ function merge(profiles) {
       if (e.venue) {
         /* hours (R42), and the channel's cutoff and receipt rule (R48, R55), are one value each; outages are unioned. */
         const SAYS = { hours: "its hours are undetermined", cutoff: "its cutoff is undetermined",
-          receipt: "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined",
-          time_zone: "its local day is undetermined" };
+          receipt: localize("jurisdictions.index.receipt_on_closed_day", "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined"),
+          time_zone: localize("jurisdictions.index.local_day_undetermined", "its local day is undetermined") };
         for (const f of ["hours", "cutoff", "receipt", "time_zone"]) {
           const vs = given.filter((g) => isObj(g.k.venue) && own(g.k.venue, f))
             .map((g) => ({ profile: g.profile, value: g.k.venue[f], basis: g.k.venue[f].basis }));
@@ -2114,8 +2114,8 @@ function merge(profiles) {
     const given = profiles.filter((p) => p[sec]).map((p) => ({ profile: p.id, value: p[sec], basis: p[sec].basis }));
     if (agree(given)) view[sec] = keep(given);
     else conflict(sec, given, sec === "weekend"
-      ? "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined"
-      : "the active profiles give different instrument-key segments, so no key is composed");
+      ? localize("jurisdictions.index.weekend_conflict", "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined")
+      : localize("jurisdictions.index.instrument_key_conflict", "the active profiles give different instrument-key segments, so no key is composed"));
   }
   for (const [sec, keyOf, what] of ONE_PER_KEY) {
     if (!has(sec)) continue;
