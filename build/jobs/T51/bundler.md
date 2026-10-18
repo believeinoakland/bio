@@ -2,6 +2,28 @@
 
 **Status** · session_01Tfsgwbtwh4oCYrrgbCtzBG · depth 2 · WORKING · handled B2
 
+## Record (BUNDLER #21, B3: T51-144)
+
+**Entries applied (T51-144, R36 second half: the two digests agree)**
+- **Real fleet (`bundler.test.mjs`, R36 · T51-144):** `digestDisagreements(members)` compares, for each container class, the marker's `image.digest` with the digest the `wrangler.jsonc` `containers[]` entry of the same `class_name` names; it returns the disagreeing classes as text naming the member and the class. The real-fleet test holds it empty over `discoverMembers()` and counts the three classes (agent-runner's `AgentRunner`, file-scanner's `FileScanner` and `SafeViewRenderer`). Today the real pairs agree: agent-runner `954ac088…`, file-scanner `38d314ed…` and `27941d2a…`, the same in `fleet-member.json` and `wrangler.jsonc`. The test reads those files and never edits them.
+- **Control (fixture, R36 · T51-144):** a fixture member whose `wrangler.jsonc` digest is rewritten to a second digest fails the test with exactly `runner Runner: fleet-member.json names <digest>, wrangler.jsonc names <other>`; the same fixture with the digests equal passes.
+- **`--record-image` writes both (B3 note 2):** no change was needed. `recordContainerDigest` already writes `fleet-member.json` and `wrangler.jsonc` in one call, both or neither (refusals run before either write). The CLI test `release.test.mjs` R36 (the `--record-image` subprocess test) already asserts both files name the new digest and agree, so I did not duplicate it.
+
+**Deferred / not done**
+- Nothing deferred. `recordContainerDigest` still writes `fleet-member.json` before `wrangler.jsonc`, so a failure of the second write would leave the first written; both writes follow the refusal checks, so no refusal leaves one file changed. Not in T51-144's words; noted for BOB.
+
+**Reports (not my module, or for BOB)**
+1. The three real-fleet reds recorded at BUNDLER #20 (R24 and R35 real-fleet tests, and `fleetbundles` "agent-runner and file-scanner are listed as container members") are green on this tree: the members' markers now name `docker.io/civicsmith/…` (file-scanner T51-9 and agent-runner T51-64 have merged). Nothing for BOB to do there.
+2. The real markers still record no `source_sha256`, so the assembly refuses `CONTAINER_IMAGE_STALE` until the cut's `--record-image` runs (BOB's act at the cut, per the plan's BOB's acts; the workflow is not edited). Unchanged from #20.
+
+**Tests and checks** (from `/home/user/bio/bio-plane`, and the process repository)
+- `node --test --test-name-pattern='T51-144' test/m/bundler/bundler.test.mjs`: 2 pass.
+- `node --test` over `test/m/bundler/bundler.test.mjs`, `release.test.mjs`, `thirdparty.test.mjs`, `test/system/bundle.test.mjs`, `deploybindings.test.mjs`, `resolveversion.test.mjs`, `fleetbundles.test.mjs`: 122 pass, 0 fail.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage 33 failures, none in bundler (`coverage.mjs bundler`: 37 of 37 live ids named, 0 failures); words 2,821 failures repo-wide, none in bundler's files (T51's words pass and the R1 re-run carry them).
+- `node checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`: 0 failures (one file changed by bundler: `bio-plane/test/m/bundler/bundler.test.mjs`).
+
+Size (session_01Tfsgwbtwh4oCYrrgbCtzBG): test runs 4, module lines 3802
+
 ## Record (BUNDLER #20)
 
 **Entries applied (T51-5)**

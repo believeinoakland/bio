@@ -1027,3 +1027,37 @@ test("R36: a digest that is not sha256:<64 hex> (CONTAINER_DIGEST_INVALID), a cl
     assert.deepEqual(files(), before, "nothing was written by any refusal");
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+/* ------------------------------------------------------- R36 (T51-144): the two digests agree */
+
+/** T51-144: each container class whose marker `image.digest` is not the digest its `wrangler.jsonc` container block
+ *  (matched by class) names, as text naming the member and the class; `[]` when every class agrees. */
+const digestDisagreements = (members) => members.filter(isContainer).flatMap((m) => {
+  const cfg = parseJsonc(readFileSync(join(m.abs, "wrangler.jsonc"), "utf8"), `${m.dir}/wrangler.jsonc`);
+  const blocks = Array.isArray(cfg.containers) ? cfg.containers : [];
+  return containerClasses(m).classes.flatMap((cls) => {
+    const marked = cls.image && cls.image.digest;
+    const block = blocks.find((b) => b.class_name === cls.class_name);
+    const named = block && typeof block.image === "string" ? block.image.split("@")[1] : null;
+    return marked && marked === named ? [] : [`${m.name} ${cls.class_name}: fleet-member.json names ${marked}, wrangler.jsonc names ${named}`];
+  });
+});
+
+test("R36 (T51-144): over the real fleet, each container class's fleet-member.json image.digest is the digest its wrangler.jsonc containers[] entry names, so a cut cannot leave one stale", () => {
+  const members = discoverMembers();
+  assert.equal(members.filter(isContainer).flatMap((m) => containerClasses(m).classes).length, 3, "agent-runner's class and file-scanner's two, no other");
+  assert.deepEqual(digestDisagreements(members), []);
+});
+
+test("R36 (T51-144): control: a fixture whose two digests differ fails the agreement test naming the member and the class; the same fixture with them equal passes", () => {
+  const root = tmp("t144");
+  try {
+    imageMember(root);
+    const members = () => discoverMembers(root);
+    assert.deepEqual(digestDisagreements(members()), [], "the fixture's two digests agree");
+    const wrangler = join(root, "runner/wrangler.jsonc");
+    writeFileSync(wrangler, readFileSync(wrangler, "utf8").replace(DIGEST, NEW_DIGEST));
+    assert.deepEqual(digestDisagreements(members()),
+      [`runner Runner: fleet-member.json names ${DIGEST}, wrangler.jsonc names ${NEW_DIGEST}`]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
