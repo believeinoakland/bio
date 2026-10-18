@@ -77,9 +77,9 @@ const MINUTES_MASTHEAD = /^(?:Meeting\s+)?Minutes(?:\s*[-–—]\s*\S.*)?$/i;
 /* The legislative record's file number alone on its line. Same rule as the agenda's and
    for the same reason: an inline mention inside a recommendation's prose is a
    cross-reference, not an item of THIS meeting. Its SHAPE is the view's `file_numbers`
-   (N3). Named differently from the agenda's helpers because the flattened copy in
-   `civicos-ui/app.html` puts every doctype in ONE scope and a duplicate top-level name
-   is a runtime collision the bundler refuses. */
+   (N3). Named differently from the agenda's helpers because the plane's bundle
+   (`bio-plane/dist/bio-plane.bundled.mjs`) puts every doctype in ONE scope, and a
+   duplicate top-level name there is a runtime collision the bundler refuses. */
 const minutesFileLines = (ctx) => vocabPatterns(ctx, "file_numbers", (re) => `^\\s*(${re})\\s*$`);
 const minutesFileKey = (pats, line) => {
   for (const re of pats) { const m = re.exec(line); if (m) return m[1]; }

@@ -108,13 +108,15 @@ test("R31 docx, pptx and xlsx text() carry metadata: the core part's author, las
   for (const [fmt, entry] of Object.entries(entries)) {
     const t = await entry.text(build[fmt]({ core: F.core(CORE) }));
     assert.deepEqual(t.metadata, { author: "A. Clerk", lastModifiedBy: "B. Editor",
-      created: "2026-01-02T03:04:05Z", modified: "2026-02-03T04:05:06.7+08:00", source: "docProps/core.xml" }, fmt);
+      created: "2026-01-02T03:04:05Z", modified: "2026-02-03T04:05:06.7+08:00", source: "docProps/core.xml",
+      ...(fmt === "xlsx" ? {} : { title: "T" }) }, fmt);
     /* the same values the core-properties item holds (R10) */
     const item = (await entry.structure(build[fmt]({ core: F.core(CORE) }))).evidentiary.items.find((i) => i.kind === "core-properties");
     assert.deepEqual([t.metadata.author, t.metadata.lastModifiedBy, t.metadata.created, t.metadata.modified],
       [item.creator, item.lastModifiedBy, item.created, item.modified], fmt);
     const sparse = await entry.text(build[fmt]({ core: F.core({ title: "only" }) }));
-    assert.deepEqual(sparse.metadata, { author: null, lastModifiedBy: null, created: null, modified: null, source: "docProps/core.xml" }, fmt);
+    assert.deepEqual(sparse.metadata, { author: null, lastModifiedBy: null, created: null, modified: null, source: "docProps/core.xml",
+      ...(fmt === "xlsx" ? {} : { title: "only" }) }, fmt);
   }
 });
 
@@ -142,5 +144,23 @@ test("R31 metadata is null with no readable core part: absent (no marker) or unr
     assert.equal(t.document, null, fmt);
     assert.equal(t.metadata.author, "A. Clerk", fmt);
   }
+  assert.equal((await csvEntry.text(F.enc("a,b\n1,2\n"))).metadata, null);
+});
+
+test("R34 docx and pptx metadata carries the core part's title as written; no title key when absent, empty or blank; null with no core part; xlsx and csv unchanged", async () => {
+  for (const fmt of ["docx", "pptx"]) {
+    const entry = entries[fmt];
+    const titled = await entry.text(build[fmt]({ core: F.core({ creator: "A", title: "Budget  Memo " }) }));
+    assert.equal(titled.metadata.title, "Budget  Memo ", fmt);
+    assert.equal(titled.metadata.author, "A", fmt);
+    for (const core of [F.core({ creator: "A" }), F.core({ creator: "A", title: "" }), F.core({ creator: "A", title: "  \t " })]) {
+      const m = (await entry.text(build[fmt]({ core }))).metadata;
+      assert.ok(m && !("title" in m), fmt);
+      assert.equal(m.author, "A", fmt);
+    }
+    assert.equal((await entry.text(build[fmt]({}))).metadata, null, fmt);
+  }
+  const x = (await xlsxEntry.text(build.xlsx({ core: F.core({ title: "T" }) }))).metadata;
+  assert.ok(!("title" in x));
   assert.equal((await csvEntry.text(F.enc("a,b\n1,2\n"))).metadata, null);
 });

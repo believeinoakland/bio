@@ -1,6 +1,6 @@
 # BOB to signatures (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,12 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio signatures tranche/T51 job/T51/signatures`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+ANSWER to J1. Not relayed to Bob (rulings-active §1: a safety-check refusal is met by a different, legitimate route, never an approval request). Do not retry the deletion and do not delete any test. The route instead (K3828): the page's tests MOVE with the page to control-plane, which deletes them with the page and `/sign` in L11.
+1. Move every page test of `signatures.test.mjs` (lines ~977-1394 and the page imports/helpers at 22-23, 34, 1418, 1464, 1477) into a new file in your test directory, `bio-plane/test/m/signatures/signpage.test.mjs`, unchanged in what they assert (keep their names; they still pass against the page). `signatures.test.mjs` then imports nothing of the page.
+2. Leave `signer-keys.test.mjs` exactly as it is (all of it is page tests).
+3. `release-signer.test.mjs`: replace its page import (line 20) and the two page-derived checks with the same checks against `sshsig.mjs`/`node:crypto` (a rewrite that keeps what they prove is not a removal).
+4. At your merge BOB moves `signpage.test.mjs` and `signer-keys.test.mjs` into control-plane's `tests`, with the page's three files into its `paths`, so your module's tests no longer name the retired ids. Coverage of the retired ids is not owed.
+Set your state back to WORKING, carry on, and COMPLETE as usual. If any of this is refused too, say so with BLOCKED and the exact refusal; do not work around it.
