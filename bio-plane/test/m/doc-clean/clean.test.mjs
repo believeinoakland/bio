@@ -487,3 +487,20 @@ test("K3957 the refusal sentences are read by id, each refusal answering its cod
   await answered(odf("odt", { manifest: '<manifest:file-entry manifest:full-path="secret.xml" manifest:media-type="text/xml"><manifest:encryption-data manifest:checksum="x"/></manifest:file-entry>' }), "ENCRYPTED");
   await answered(makePdf(["42"], { trailer: "/Root 1 0 R" }), "DOCUMENT_UNREADABLE");
 });
+
+test("K3964 every member-readable refusal sentence is read by id, each refusal answering its code and a text: doc-clean.index.the_document_is_encrypted, doc-clean.index.the_document_carries_an_embedded, doc-clean.index.the_html_document_embeds_an, doc-clean.index.the_file_is_a_zip_archive, doc-clean.index.a_zip_archive_that_is_neither, doc-clean.index.the_file_is_neither_a_pdf, doc-clean.index.an_rtf_document_not_a_format, doc-clean.index.a_mime_message_not_a, doc-clean.index.an_xml_or_svg_document, doc-clean.images.a_truncated_segment_header, doc-clean.images.a_malformed_referred_to_count, doc-clean.images.a_segment_of_unstated_length, doc-clean.images.a_segment_longer_than_the_stream, doc-clean.images.the_image_could_not_be_stripped, doc-clean.images.where_an_svg_image_with_an, doc-clean.images.where_media_compressed, doc-clean.images.name_tiff, doc-clean.images.name_heif, doc-clean.images.name_jxl, doc-clean.images.name_emf, doc-clean.images.name_wmf, doc-clean.images.name_svm, doc-clean.package.part_cannot_be_read_why, doc-clean.package.part_n_media, doc-clean.pdf.the_pdf_cannot_be_opened, doc-clean.pdf.the_pdf_is_encrypted_a, doc-clean.pdf.the_pdf_has_no_readable, doc-clean.pdf.the_pdf_s_trailer_names_an, doc-clean.pdf.a_number_the_pdf_writer, doc-clean.pdf.a_string_the_pdf_reader, doc-clean.pdf.a_value_the_pdf_writer_cannot", async () => {
+  const answered = async (b, code) => {
+    const r = await cleanDocument(b);
+    refused(r, code);
+    assert.equal(typeof r.detail, "string");
+    assert.notEqual(r.detail, "");
+  };
+  await answered(enc("{\\rtf1 hello}"), "NOT_A_CLEANABLE_FORMAT");
+  await answered(enc("MIME-Version: 1.0\nSubject: a\n"), "NOT_A_CLEANABLE_FORMAT");
+  await answered(enc('<?xml version="1.0"?><a/>'), "NOT_A_CLEANABLE_FORMAT");
+  await answered(new Uint8Array([0x41, 0x00, 0x01, 0x42]), "NOT_A_CLEANABLE_FORMAT");
+  await answered(makeZip([{ name: "a", data: "b" }]), "ARCHIVE");
+  await answered(enc('<img src="data:image/png;base64,">'), "HTML_EMBEDS_IMAGE");
+  for (const k of ["ENCRYPTED", "EMBEDDED_FILE", "HTML_EMBEDS_IMAGE", "ARCHIVE", "IMAGE_NOT_CLEANABLE", "EMBEDDED_MEDIA", "NOT_A_CLEANABLE_FORMAT", "DOCUMENT_TOO_LARGE", "DOCUMENT_UNREADABLE"])
+    assert.equal(typeof CLEAN_REFUSALS[k], "string", k);
+});

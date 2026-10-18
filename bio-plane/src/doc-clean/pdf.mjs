@@ -34,11 +34,11 @@ const refusal = (code, detail) => new CleanRefusal(code, detail);
 /** Clean a PDF (`d` is its bytes). Answers `{clean:true}` or `{clean:false, bytes, images}`. */
 export async function cleanPdf(d, maxInflated) {
   const doc = await openPdf(d);
-  if (!doc) throw refusal("DOCUMENT_UNREADABLE", "the PDF cannot be opened");
-  if (doc.isEncrypted()) throw refusal("ENCRYPTED", "the PDF is encrypted (a Standard security handler)");
+  if (!doc) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.the_pdf_cannot_be_opened", "the PDF cannot be opened"));
+  if (doc.isEncrypted()) throw refusal("ENCRYPTED", localize("doc-clean.pdf.the_pdf_is_encrypted_a", "the PDF is encrypted (a Standard security handler)"));
   const read = doc.objects();
-  if (!read) throw refusal("DOCUMENT_UNREADABLE", "the PDF has no readable trailer");
-  if (read.trailer.Encrypt) throw refusal("ENCRYPTED", "the PDF's trailer names an /Encrypt dictionary");
+  if (!read) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.the_pdf_has_no_readable", "the PDF has no readable trailer"));
+  if (read.trailer.Encrypt) throw refusal("ENCRYPTED", localize("doc-clean.pdf.the_pdf_s_trailer_names_an", "the PDF's trailer names an /Encrypt dictionary"));
   if (read.unresolved.length) {
     const u = read.unresolved[0];
     throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.object_num_gen_is_referred", "object {num} {gen} is referred to and cannot be read", { num: String(u.num), gen: String(u.gen) }));
@@ -234,7 +234,7 @@ const HEX = "0123456789ABCDEF";
 const DELIM = new Set("()<>[]{}/%#".split(""));
 
 function num(n) {
-  if (!Number.isFinite(n) || Math.abs(n) >= 1e21) throw refusal("DOCUMENT_UNREADABLE", "a number the PDF writer cannot write");
+  if (!Number.isFinite(n) || Math.abs(n) >= 1e21) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.a_number_the_pdf_writer", "a number the PDF writer cannot write"));
   const s = String(n);
   return /e/i.test(s) ? n.toFixed(20).replace(/\.?0+$/, "") : s;
 }
@@ -250,7 +250,7 @@ function name(v) {
 /** A string written as a hex string of its exact bytes, `pdf-reader` R38's `raw`, never rebuilt from its text `v`
  *  (R10): a binary string, or a `FE FF` string of odd length, is read back byte for byte. */
 function str(raw) {
-  if (!(raw instanceof Uint8Array)) throw refusal("DOCUMENT_UNREADABLE", "a string the PDF reader answered without its bytes");
+  if (!(raw instanceof Uint8Array)) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.a_string_the_pdf_reader", "a string the PDF reader answered without its bytes"));
   let s = "<";
   for (const b of raw) s += HEX[b >> 4] + HEX[b & 15];
   return s + ">";
@@ -266,7 +266,7 @@ function ser(v, renum) {
     case "arr": return "[" + v.items.map((x) => ser(x, renum)).join(" ") + "]";
     case "dict": return "<<" + Object.entries(v.map).map(([k, x]) => `${name(k)} ${ser(x, renum)}`).join(" ") + ">>";
   }
-  throw refusal("DOCUMENT_UNREADABLE", "a value the PDF writer cannot write");
+  throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.pdf.a_value_the_pdf_writer_cannot", "a value the PDF writer cannot write"));
 }
 
 /** The copy: header, the kept objects renumbered from 1 in the order of their old numbers, the table, the trailer,

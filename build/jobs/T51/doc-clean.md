@@ -19,3 +19,19 @@ Checks, from civicos-process: format 0 failures; architecture (doc-clean) 0 fail
 checks/run.mjs /home/user/bio: format and architecture 0 failures, but its words arm reports 4,833 failures across the other 172 modules (none in doc-clean) and coverage 33 failures, none named doc-clean. These are the inherited reds of the words pass, not this module's.
 
 Size (session_01BeVLdPhs7muyDKyKa7EQFX): test runs 4, module lines 1056
+
+## J3 · COMPLETE
+
+T51-259 (words), answering B2 (CHANGE, K3964). Commit 7dff2f517e on job/T51/doc-clean; tranche/T51 merged in first (no conflict).
+
+Applied (B2): every member-readable refusal sentence in doc-clean is read through localize with an id doc-clean.<file>.<slug>, not only the 11 the check counts. That covers the table's ENCRYPTED, EMBEDDED_FILE, HTML_EMBEDS_IMAGE and ARCHIVE; index's other refusal details (ARCHIVE, the not-neither, RTF, MIME and XML/SVG refusals); images' segment-walk refusals, the fallback detail, the SVG-element and media-compressed refusals, and the format names in NAMES (name_tiff to name_svm); package's part-cannot-be-read and part-media refusals; pdf's cannot-open, encrypted, trailer, and writer/reader refusals. Relayed detail from image-cover is passed through as before. No refusal text, code or control changed.
+
+Test: clean.test.mjs names all the new ids in "K3964 every member-readable refusal sentence is read by id ...", and triggers the reachable refusals (RTF, MIME, XML, control-byte text, ARCHIVE, HTML_EMBEDS_IMAGE). The unreachable ones are named and their table values checked, not triggered.
+
+Tests: node --test bio-plane/test/m/doc-clean/*.test.mjs: 42 tests, 41 pass, 0 fail, 1 skipped (the LibreOffice and pdftotext oracle, skipped by name when the tool is missing).
+Checks: words doc-clean 0 failures (unkeyed 0); format 0; architecture 0; coverage (doc-clean) 0; ownership doc-clean tranche/T51 job/T51/doc-clean 0 failures. checks/run.mjs: no finding names doc-clean; the repo-wide reds are the other modules' (words 4,231, coverage 32).
+setup-words build.mjs --check: exits 1 on one item in jurisdictions (index.amount_is_amount_and_units, a formatted argument R18); nothing in doc-clean. Not mine to change; reported for BOB.
+
+Judgment for BOB: NAMES in images.mjs were fragments used inside sentences; I localized each one separately, so a translator sees whole words, not a fragment.
+
+Size (session_01BeVLdPhs7muyDKyKa7EQFX): test runs 4, module lines 1063
