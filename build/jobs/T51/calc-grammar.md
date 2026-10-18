@@ -22,3 +22,7 @@
 - Module suite `node --test test/m/calc-grammar/` (run from `bio-plane/`): `tests 35, pass 35, fail 0`, run before and after the edit (the baseline reported the two findings, the words check).
 
 **Size (session_01B2mwmPfGCqYRdkGsmH36wC): test runs 3, module lines 1348.**
+
+## J1 · COMPLETE
+
+T51-165 calc-grammar is complete on job/T51/calc-grammar (commit 4a489dc084). The two words-pass findings are fixed by the words rule: recipe.mjs:170 is localize(calc-grammar.recipe.field_shape, ...) with its types as a variable, and recipe.mjs:600 reads word(calc-grammar.composed_quantity). One test names both ids (R20). The module suite is 35 of 35 green (before and after the edit). words.mjs reads 0 for calc-grammar; format, architecture, coverage and ownership read 0 failures. Record: build/jobs/T51/calc-grammar.md (Completion section). Nothing deferred; no findings in other modules. Note: checks/run.mjs reports words failures in other modules, which are not this job's.
