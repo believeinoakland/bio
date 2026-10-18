@@ -316,7 +316,7 @@ export async function providerTest(deps, body) {
       // R32: what a rebuilding tool gives is, in members' words, a safe view.
       const out = await c.adapter.cdr(ctx, inMemory(macroDocument()));
       return out.bytes.length && (out.removed || []).length ? answer(true, `removed: ${out.removed.join(', ')}`)
-        : answer(false, out.bytes.length ? 'the safe view reported nothing removed' : 'no safe view');
+        : answer(false, out.bytes.length ? localize('file-scanner.routes.the_safe_view_reported_nothing', 'the safe view reported nothing removed') : 'no safe view');
     }
     if (kind === 'url_reputation') {
       // A tool with a local list fetches it first when it holds none, or none fresh (R26).
@@ -327,10 +327,10 @@ export async function providerTest(deps, body) {
         if (!f.ok) throw new ToolError(String(f.error).split(':')[0]);
         return look();
       });
-      return r.listed ? answer(true, 'the test address answered listed') : answer(false, 'the test address did not answer listed');
+      return r.listed ? answer(true, localize('file-scanner.routes.the_test_address_answered', 'the test address answered listed')) : answer(false, localize('file-scanner.routes.the_test_address_did', 'the test address did not answer listed'));
     }
     await c.adapter.forward(ctx, zeroCounts(deps.now()));
-    return answer(true, 'a test record of zero counts was accepted');
+    return answer(true, localize('file-scanner.routes.a_test_record_of', 'a test record of zero counts was accepted'));
   } catch (e) {
     return answer(false, `${reasonOf(e)}${detailOf(e) ? ` ${detailOf(e)}` : ''}`);
   }
