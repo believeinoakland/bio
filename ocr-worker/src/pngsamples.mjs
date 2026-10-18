@@ -31,6 +31,8 @@
  * hazard `textchain.mjs` exists for.
  */
 
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+
 /** Every reason this module can refuse with. Exported so the caller branches on
  *  the set rather than on a string, and so a suite can assert nothing is emitted
  *  that is not declared here. */
@@ -41,8 +43,8 @@ export const PNG_REFUSALS = {
   PNG_NO_IDAT: "the PNG carries no image data",
   PNG_INTERLACED: "the PNG is interlaced; this reader reads only the non-interlaced form it writes",
   PNG_UNSUPPORTED_SHAPE: "the PNG's colour type / bit depth pair is not one this estate writes",
-  PNG_FILTER_UNSUPPORTED: "a scanline uses a filter type this reader does not implement",
-  PNG_SHORT_RASTER: "the inflated raster is shorter than the header's dimensions require",
+  PNG_FILTER_UNSUPPORTED: localize("ocr-worker.pngsamples.a_scanline_uses_a_filter", "a scanline uses a filter type this reader does not implement"),
+  PNG_SHORT_RASTER: localize("ocr-worker.pngsamples.the_inflated_raster_is_shorter", "the inflated raster is shorter than the header's dimensions require"),
 };
 
 const refuse = (code, detail = {}) => ({ ok: false, reason: code, detail: PNG_REFUSALS[code], ...detail });
