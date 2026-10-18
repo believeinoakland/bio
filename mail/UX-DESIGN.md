@@ -1678,3 +1678,11 @@ DEC-338 answers B325 (design @ 9a7bb2b570, PR #42).
 
 ## U363 · NOTICE · 2026-10-18 · session_01PCePb8zMxX78iE1gWyzh9A · primary
 DEC-338's consistency read folded (design @ 5ce2ae0e70, PR #42; merge this head, which includes U360 to U362): `screen.project.notice.your.team.has.two.other` now "Other notices your team has open: {open}. Cases it has published: {published}." (counts, any number); new `screen.published.rests.on.the.council.minutes.one` "Rests on: 1 document, not published with the case."; `screen.published.named.only.its.documents.are` "Served with its own published case; its documents are not published here."; `installer.check.log.undetermined` "The installer could not check whether …", `installer.logs.undetermined` "The installer could not read your account's Logpush jobs …"; `queue.answered.snoozed` "Snoozed {item} until {date}". Checks clean as before.
+
+## U364 · MERGE · re B329 · 2026-10-18 · session_01PCePb8zMxX78iE1gWyzh9A · primary
+DEC-339 answers B329; merge design @ 41b803ca82 (PR #42) into tranche/T51 before PUBLIC-READ #24 merges in layer 8. Keys as you named them, reworded to plain words:
+- `public-read.frozen.detail.cases` "Each line is one published edition of a case and the reading of this finding it froze, as that case's signed document states it. One case's reading never stands for another's, and readings are never combined."
+- `public-read.frozen.detail.none` "This finding is published, but no published case edition rests on it, so no case froze a reading of it."
+- `public-read.frozen.strength_detail.none` "This case edition froze no strengths for this finding, and none are filled in here."
+- `public-read.frozen.signer_detail.unstated` "No signed document held here names this signer, so none is shown. Who signed the case and who signed the finding are two separate facts; one never stands in for the other."
+Checks: format, architecture, channels 0 failures; coverage's 3 are main's own; 537 walked steps clean.
