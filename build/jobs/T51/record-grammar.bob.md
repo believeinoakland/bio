@@ -38,3 +38,7 @@ CHANGE (K3957, K3959): merge tranche/T51 into your branch and pull civicos-proce
 ## B4 · ANSWER · re J3
 
 ANSWER (K3964): keep them read by key. The repair hints and finding messages reach the person importing or authoring a record, so they are sentences people read; nothing moves to the unkeyed list. The action-grammar R2 red is placed in its L9 job. Nothing more for you.
+
+## B5 · CHANGE
+
+CHANGE (K3962, K3965): merge tranche/T51 and pull civicos-process (ea6cd83) first. The words check's testcopy arm now also counts a test string that copies the en of a product localize call (tag code). Your module's tests hold some: section 'Test copies of code sentences (K3962)' of build/plan/words-pass/record-grammar.md (read it whole). Make each test compare with localize(id, en) / word(id) or assert the key, never the sentence's text (K3810); convert also any such copy written as a regular expression, which the check cannot read. Run your tests, the checks and 'node bio-plane/src/setup-words/build.mjs --check' (read-only); record COMPLETE again.
