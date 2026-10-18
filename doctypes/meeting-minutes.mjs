@@ -67,7 +67,6 @@
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, selfNaming, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
-import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The masthead, line-anchored. `Meeting Minutes`, `Minutes`, either followed by a
    qualifier the clerk appends (`- DRAFT`, `- FINAL`, `- Approved`). NOT a sentence
@@ -168,13 +167,13 @@ export default {
 
     const named = selfNaming(t, MINUTES_MASTHEAD);
     const furniture = named >= FURNITURE_RECURS;
-    if (furniture) signals.push(localize("doctypes.meeting-minutes.names_itself_as_minutes_on", "names itself as minutes on {named} lines, which is page furniture", { named: String(named) }));
-    else if (named) signals.push(localize("doctypes.meeting-minutes.names_itself_as_minutes_once", "names itself as minutes once ({named}), which a reference also does", { named: String(named) }));
+    if (furniture) signals.push(`names itself as minutes on ${named} lines, which is page furniture`);
+    else if (named) signals.push(`names itself as minutes once (${named}), which a reference also does`);
 
     const motion = MOTION_MADE.test(flat) && MOTION_RESULT.test(flat);
     if (motion) signals.push("motions made, seconded and carried or failed");
     const tallies = (flat.match(new RegExp(TALLY_LABEL.source, "gi")) || []).length;
-    if (tallies >= 2) signals.push(localize("doctypes.meeting-minutes.tallies_roll_call_vote_tally", "{tallies} roll-call vote tally label(s)", { tallies: String(tallies) }));
+    if (tallies >= 2) signals.push(`${tallies} roll-call vote tally label(s)`);
     const outcome = motion || tallies >= 2;
 
     const frame = CONVENED.test(flat) && ADJOURNED.test(flat);
@@ -469,8 +468,9 @@ export default {
       /* What was verified unchanged, or null when nothing was (R16). */
       confirmed: intact ? { entries: b.entities.length, intact } : null,
       why: events.length
-        ? localize("doctypes.meeting-minutes.intact_of_length_matters_unchanged", "{intact} of {length} matters unchanged; {length_2} gone, {length_3} added, {length_4} altered", { intact: String(intact), length: String(a.entities.length), length_2: String(d.gone.length), length_3: String(d.appeared.length), length_4: String(d.altered.length) })
-        : localize("doctypes.meeting-minutes.all_length_matters_in_these", "all {length} matters in these minutes are unchanged", { length: String(b.entities.length) }),
+        ? `${intact} of ${a.entities.length} matters unchanged; ${d.gone.length} gone, `
+          + `${d.appeared.length} added, ${d.altered.length} altered`
+        : `all ${b.entities.length} matters in these minutes are unchanged`,
     };
   },
 };

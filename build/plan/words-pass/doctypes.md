@@ -1,10 +1,54 @@
 # doctypes: the words check after the conversion (K3949)
 
-Layer 1. 6 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+Layer 1. 50 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
 
+- inline `doctypes/meeting-agenda.mjs:138` "{} legislation file number line(s)"
+- inline `doctypes/meeting-agenda.mjs:143` "names itself as an agenda on {} lines, which is page furniture"
+- inline `doctypes/meeting-agenda.mjs:144` "names itself as an agenda once ({}), which a reference also does"
+- inline `doctypes/meeting-agenda.mjs:316` "{} of {} items unchanged; {} pulled, {} added, {} altered"
+- inline `doctypes/meeting-agenda.mjs:317` "all {} items on this agenda are unchanged"
+- inline `doctypes/meeting-calendar.mjs:232` "a meeting's status changed from {} to {}"
+- inline `doctypes/meeting-calendar.mjs:250` "{} were published for a meeting that had none"
+- inline `doctypes/meeting-calendar.mjs:253` "{} that this calendar previously offered are no longer offered"
+- inline `doctypes/meeting-calendar.mjs:256` "the {} document for this meeting is a different document than before"
+- inline `doctypes/meeting-calendar.mjs:277` "{} no longer in the range shown, which is this calendar moving its ..."
+- inline `doctypes/meeting-calendar.mjs:286` [stitched] "{} of {} meetings unchanged{}"
+- inline `doctypes/meeting-calendar.mjs:287` "all {} meetings on this calendar are unchanged"
+- inline `doctypes/meeting-calendar.mjs:324` "this meeting has taken place and no minutes are offered yet; when t..."
+- inline `doctypes/meeting-calendar.mjs:326` "this meeting was held more than {} {} ago, longer than minutes usua..."
+- inline `doctypes/meeting-calendar.mjs:63` "the period could not be counted: {}"
+- inline `doctypes/meeting-calendar.mjs:66` "the jurisdiction's {} {} could not be counted from this meeting: {}"
+- inline `doctypes/meeting-minutes.mjs:170` "names itself as minutes on {} lines, which is page furniture"
+- inline `doctypes/meeting-minutes.mjs:171` "names itself as minutes once ({}), which a reference also does"
+- inline `doctypes/meeting-minutes.mjs:176` "{} roll-call vote tally label(s)"
+- inline `doctypes/meeting-minutes.mjs:471` "{} of {} matters unchanged; {} gone,"
+- inline `doctypes/meeting-minutes.mjs:473` "all {} matters in these minutes are unchanged"
+- inline `doctypes/policy-header.mjs:339` "\"{}\" is printed as the number, and {} does not read a number in tha..."
+- inline `doctypes/policy.mjs:379` "the header names {} but carries no number that series reads, so it ..."
+- inline `doctypes/policy.mjs:381` "a header naming {} {}"
+- inline `doctypes/policy.mjs:403` "this policy's {} as its header states it is not what it was at this..."
+- inline `doctypes/policy.mjs:405` [stitched] "{} gave a header, so nothing is said about the header"
+- inline `doctypes/policy.mjs:418` "section {} was read before and is not read now"
+- inline `doctypes/policy.mjs:425` "section {}'s {} is not what it was at this address"
+- inline `doctypes/policy.mjs:428` "section {} is read now and was not read before"
+- inline `doctypes/policy.mjs:429` [stitched] "{} gave sections, so nothing is said about sections: {}"
+- inline `doctypes/policy.mjs:438` "{} change(s) between two readings of a policy at the same address"
+- inline `doctypes/regulation.mjs:144` [stitched] "no section was read from either reading, so nothing is said about s..."
+- inline `doctypes/regulation.mjs:156` "section {} was read before and is not read now"
+- inline `doctypes/regulation.mjs:167` "section {}'s {} is not what it was at this address"
+- inline `doctypes/regulation.mjs:172` "section {} is read now and was not read before"
+- inline `doctypes/regulation.mjs:217` "a recital chain of {} WHEREAS clause(s)"
+- inline `doctypes/regulation.mjs:231` "{} section heading(s) of {}"
+- inline `doctypes/regulation.mjs:388` "this instrument's {} is not what it was at this address"
+- inline `doctypes/regulation.mjs:413` "{} change(s) to an instrument at the same address"
+- inline `doctypes/sections.mjs:227` [stitched] "this text was read as neither an instrument nor a code section, so ..."
 - inline `doctypes/staff-directory.mjs:144` "{} distinct contact address(es) at one organisation's domain ({})," — leaf: loads nothing
 - inline `doctypes/staff-directory.mjs:145` "{}% of the {} in the document" — leaf: loads nothing
 - inline `doctypes/staff-directory.mjs:153` "it names itself in its title line (\"{}\")" — leaf: loads nothing
 - inline `doctypes/staff-directory.mjs:219` "{} change(s) to the directory's entries" — leaf: loads nothing
+- inline `doctypes/staff-report.mjs:200` "a memorandum header of {} labels in {} characters at the top"
+- inline `doctypes/staff-report.mjs:202` "{} report template section heading(s)"
+- inline `doctypes/staff-report.mjs:341` "this report's {} changed"
+- inline `doctypes/staff-report.mjs:356` "{} change(s): {} citation(s) gone, {} added"
 - testcopy `doctypes/test/policies.mjs:20` [part] "Administrative Instruction" — part test copy
 - testcopy `doctypes/test/regulation-sections.test.mjs:269` [part] "the address it was fetched from" — part test copy

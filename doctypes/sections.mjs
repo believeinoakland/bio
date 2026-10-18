@@ -22,7 +22,6 @@
  * law relation: a definition or an exception is a reading, and a member records what it
  * means, in `standards` (R15). */
 import { vocabulary } from "../docprofile/doctypes/index.mjs";
-import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ---------------------------------------------------------------- the view's forms */
 
@@ -225,7 +224,8 @@ export function readSections(raw, form, ctx, locate) {
                       : "no active jurisdiction profile gives a section-number form for any code, so no code section is read")
       : form === "instrument"
         ? "no `SECTION 1.` heading opens a line of this instrument, so its text is not divided into sections"
-        : localize("doctypes.sections.this_text_was_read_as", "this text was read as neither an instrument nor a code section, so it is not divided into sections{v1}", { v1: String(forms.length ? "" : "; and no active jurisdiction profile gives a section-number form for any code") });
+        : "this text was read as neither an instrument nor a code section, so it is not divided into sections"
+          + (forms.length ? "" : "; and no active jurisdiction profile gives a section-number form for any code");
     return { sections: [], sections_why: why };
   }
   const sections = [];
