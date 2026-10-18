@@ -175,7 +175,7 @@ for (const [k, t] of [['day', 'daily'], ['month', 'monthly']]) add(`ai.period.${
 add('ai.when.day', 'tomorrow', false, 'DEC-189', '{when} for a daily limit');
 add('ai.when.month', 'on {month} 1', false, 'DEC-192', '{when} for a monthly limit, as in "It works again on November 1"; {month} from date.month.*; month before day, as date.daymonth (DEC-333)');
 add('ai.until.day', 'tomorrow', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a daily limit');
-add('ai.until.month', '1 {month}', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until November 1"');
+add('ai.until.month', '{month} 1', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until November 1" (DEC-333)');
 ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
   .forEach(m => add(`date.month.${m}`, m[0].toUpperCase() + m.slice(1), false, 'DEC-189', 'a month\'s name in a sentence'));
 add('ai.refused.limit.unjudged', 'The assistant stopped here: your team\'s Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
