@@ -78,10 +78,10 @@ test("R5 a failed interfacewords read is retried once on the next screen change,
 test("R5 a screen's own row under a WORD_ROWS key is drawn in place of WORD_ROWS' English (DEC-149's conformed form), and `w` fills each {name} HTML-escaped", async () => {
   const key = "act.groupkeyremove.does";
   assert.ok(WORD_ROWS.some((r) => r[0] === key));
-  const s = { id: "home", reads: () => ({}), acts: [], words: [[key, "Removes your group's key from your group's Civicsmith.", false], ["screen.home.t.fill", "Hello {who}", false]],
+  const s = { id: "home", reads: () => ({}), acts: [], words: [[key, "Removes your group's key from your team's Civicsmith.", false], ["screen.home.t.fill", "Hello {who}", false]],
     render: (cs) => "<p id=a>" + cs.w("act.groupkeyremove.does") + "</p><p id=b>" + cs.w("screen.home.t.fill", { who: "<b>x</b>" }) + "</p>" };
   const p = await boot({ screens: [s] });
-  assert.equal(p.doc.getElementById("a").textContent, "Removes your group's key from your group's Civicsmith.");
+  assert.equal(p.doc.getElementById("a").textContent, "Removes your group's key from your team's Civicsmith.");
   assert.equal(p.doc.getElementById("b").textContent, "Hello <b>x</b>");
   assert.equal(p.doc.getElementById("b").querySelectorAll("b").length, 0);
   assert.ok(FIXTURE_WORDS.length);

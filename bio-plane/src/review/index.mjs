@@ -104,7 +104,7 @@ export const REVIEW_LIST_MAX = 500;
 /** R11: the marking every copy carries. Read by members and by recipients outside the group, so it names no machine
  *  and addresses no one as the group (DEC-149, T34-87). */
 export const REVIEW_MARKING = "REVIEW COPY — NOT A PUBLICATION. This is a draft of a case, shown to the people it "
-  + "was addressed to without leaving the group that made it. It is not signed, it is not published, it may still "
+  + "was addressed to without leaving the team that made it. It is not signed, it is not published, it may still "
   + "change, and it may never be published at all. What a publication would require that this draft does "
   + "not yet have is listed under `missing`, in the publish gates' own words.";
 
@@ -145,7 +145,7 @@ export function noReviewCopy() {
 const AUTHORITY = Object.freeze({
   draft: "authoring a review copy's draft is EDITING the production, and needs the project's edit permission: "
        + "an owner, or a JOINED participant, holding `contribute` (BIO_Publication §6A.2; Membership v2 §7.5).",
-  grant: "handing the group's draft to someone outside it is the producing project's own act and is wielded by an "
+  grant: "handing the team's draft to someone outside it is the producing project's own act and is wielded by an "
        + "OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them.",
   revoke: "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing "
         + "one is (BIO_Publication §6A.2). An administrator sees every project and directs none of them.",
@@ -452,9 +452,9 @@ export class Review {
     /* DEC-49 REGION is-machine-review — REC-126/C-32.16. The fence alone. */
     if (!who || isMachineIdentity(who))
       return refusal("MACHINE_CANNOT_REVIEW",
-               "a review copy is an addressed act: somebody in this group hands a draft to a named "
+               "a review copy is an addressed act: somebody in this team hands a draft to a named "
              + "person and the record says who. A machine credential may prepare the material and "
-             + "may not put the group's draft in front of anyone. Sign in as a member.");
+             + "may not put the team's draft in front of anyone. Sign in as a member.");
     /* END DEC-49 REGION is-machine-review */
     if (act === "draft") return this.#draft(who, args);
     if (act === "grant") return this.#grant(who, args);
@@ -548,7 +548,7 @@ export class Review {
     if (!to || to.length > REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
       /* DEC-49 REGION is-review-recipient */
       return refusal("REVIEW_NO_RECIPIENT",
-               `name the person or group this copy is addressed to, in one line of at most `
+               `name the person or team this copy is addressed to, in one line of at most `
              + `${REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not `
              + `attributed, and the grant is the record of who was handed what.`);
       /* END DEC-49 REGION is-review-recipient */
@@ -881,7 +881,7 @@ export class Review {
   approvalRuleSet({ approvers, by = null } = {}) {
     const who = String(by ?? "").trim();
     if (!who || isMachineIdentity(who) || !this.membership.isAdministrator(who))
-      return notAnAdmin(who || null, "set the group's approval rule");
+      return notAnAdmin(who || null, "set the team's approval rule");
     let list = null;
     if (approvers !== null) {
       const ids = Array.isArray(approvers) ? approvers.map((a) => (typeof a === "string" ? a.trim() : "")) : [];
@@ -890,7 +890,7 @@ export class Review {
       /* DEC-49 REGION is-approval-rule-approvers */
       if (!ids.length || list.length > APPROVERS_MAX || !list.every(active))
         return refusal("APPROVAL_RULE_BAD_APPROVERS",
-                 `an approval rule names one or more active members of the group by member id, at most `
+                 `an approval rule names one or more active members of the team by member id, at most `
                + `${APPROVERS_MAX}; approvers: null turns the rule off. Nothing was changed.`);
       /* END DEC-49 REGION is-approval-rule-approvers */
     }
@@ -898,8 +898,8 @@ export class Review {
     this.sql.exec(`INSERT INTO approval_rules (approvers, set_by, set_at) VALUES (?,?,?)`,
                   list ? JSON.stringify(list) : null, who, when);
     return { ok: true, approvers: list, set_by: who, set_at: when,
-             stated: list ? `every case of the group needs the approval of ${list.join(", ")} before it is signed`
-                          : "the group requires no approvals before a case is signed" };
+             stated: list ? `every case of the team needs the approval of ${list.join(", ")} before it is signed`
+                          : "the team requires no approvals before a case is signed" };
   }
 
   /** R31 (D60): a named approver who may see the case's project approves one case edition's document at its
@@ -914,7 +914,7 @@ export class Review {
     if (!who || isMachineIdentity(who) || !rule || !rule.approvers.includes(who) || !project
         || !this.membership.inSight(project, `member:${who}`))
       return refusal("CASE_NOT_AN_APPROVER",
-               "an approval is given by a member the group's approval rule names, of a case whose project "
+               "an approval is given by a member the team's approval rule names, of a case whose project "
              + "they can see; a case you cannot see is answered exactly as one that does not exist. Nothing "
              + "was recorded.");
     /* END DEC-49 REGION is-not-an-approver */

@@ -23,7 +23,7 @@ test("R20 (was credentials R51): aiKeepAwaySet: an active administrator only (NO
   for (const by of ["ann", "dee", "nobody", "class:admin", "class:ai", "token:ai", null, ""])
     for (const on of [true, false])
       assert.deepEqual(w.c.aiKeepAwaySet({ on, reason: "r", by }),
-        notAnAdmin(by ?? null, "keeping the group's material away from every assistant"), `${String(by)} ${on}`);
+        notAnAdmin(by ?? null, "keeping the team's material away from every assistant"), `${String(by)} ${on}`);
   /* the second administrator is refused once no longer active */
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
   assert.equal(w.c.aiKeepAwaySet({ on: true, reason: "r", by: "second" }).reason, "NOT_AN_ADMIN");

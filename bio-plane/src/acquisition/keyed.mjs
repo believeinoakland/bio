@@ -63,7 +63,7 @@ async function readBounded(res, max = KEYED_ANSWER_MAX) {
 export async function keyedFetch(store, { service = null, request = null, purpose = "keyed-service", viewer = undefined, ownHosts = null } = {}) {
   const svc = typeof service === "string" && Object.prototype.hasOwnProperty.call(SERVICES, service) ? SERVICES[service] : null;
   if (!svc)
-    return refuse("UNKNOWN_KEYED_SERVICE", `the keyed services your group's Civicsmith speaks to are ${Object.keys(SERVICES).join(", ")}; nothing was fetched`,
+    return refuse("UNKNOWN_KEYED_SERVICE", `the keyed services your team's Civicsmith speaks to are ${Object.keys(SERVICES).join(", ")}; nothing was fetched`,
                   { service: typeof service === "string" ? service.slice(0, 40) : null });
   /* K1449: never one a daemon uses. An act with no viewer named is the in-plane caller's own; a machine's is refused. */
   if (viewer !== undefined && viewer !== null && isMachineIdentity(viewer))
@@ -81,7 +81,7 @@ export async function keyedFetch(store, { service = null, request = null, purpos
   const own = Array.isArray(ownHosts) ? ownHosts : store && Array.isArray(store.ownHosts) ? store.ownHosts : null;
   if (own && isOwnHost(hostOf(r.url), own)) {
     const row = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
-    return refuse("OWN_HOST_REFUSED", `${hostOf(r.url)} is one of your group's own hosts; nothing was fetched`,
+    return refuse("OWN_HOST_REFUSED", `${hostOf(r.url)} is one of your team's own hosts; nothing was fetched`,
                   { code: "OWN_HOST_REFUSED", check: row.check, translation: row.translation, service, host: hostOf(r.url) });
   }
   /* END DEC-49 REGION is-own-host */
@@ -91,7 +91,7 @@ export async function keyedFetch(store, { service = null, request = null, purpos
   try { k = creds ? await creds.keyedServiceFor({ service }) : null; } catch { k = null; }
   if (!k || k.ok !== true || typeof k.key !== "string" || !k.key) {
     if (k && k.ok === false) return { ...k, service };
-    return refuse("KEYED_SERVICE_OFF", "the group's key for this service is off or not held; the caller goes on without it",
+    return refuse("KEYED_SERVICE_OFF", "the team's key for this service is off or not held; the caller goes on without it",
                   { code: "KEYED_SERVICE_OFF", service });
   }
   const key = k.key;
@@ -109,7 +109,7 @@ export async function keyedFetch(store, { service = null, request = null, purpos
         ...(r.form ? { body: new URLSearchParams(r.form).toString() } : {}) }) });
   } catch {
     /* as R23: a thrown fetch's message can carry what rode the request, so none is carried */
-    return refuse("FETCH_FAILED", "the request to the service did not complete; its error is not carried because the group's key rode it", { service });
+    return refuse("FETCH_FAILED", "the request to the service did not complete; its error is not carried because the team's key rode it", { service });
   }
   if (out.refusedByGovernor)
     return refuse("HOST_COOLING_OFF", `the per-host governor is holding requests to ${svc.host} (${out.reason})`,

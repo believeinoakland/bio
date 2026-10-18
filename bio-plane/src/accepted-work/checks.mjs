@@ -8,13 +8,13 @@ export const ACCEPTED_WORK_CHECKS = {
   IMPORTED_NOT_ACCEPTED: {
     check: 'C-21.4',
     where: 'src/accepted-work/index.mjs acceptedLegRefusals > is-imported-accepted',
-    translation: "This finding rests on another group's finding that this group has not accepted at that edition. "
+    translation: "This finding rests on another team's finding that this team has not accepted at that edition. "
       + 'Accept that edition first, or take the leg out. Nothing was written.',
   },
   ACCEPTED_WORK_UNREADABLE: {
     check: 'C-21.5',
     where: 'src/accepted-work/index.mjs acceptedLegRefusals > is-accepted-work-readable',
-    translation: "Another group's work this finding rests on could not be read, so whether it is accepted is not known. "
+    translation: "Another team's work this finding rests on could not be read, so whether it is accepted is not known. "
       + 'Try again. Nothing was written.',
   },
 };

@@ -80,6 +80,6 @@ test("R34 (DEC-149): a written re-read names its candidates as what your group's
   const r = await withEntry(pdf(text, 2),
     () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
   assert.equal(r.body.reextraction.written, true);
-  assert.match(r.body.reextraction.candidates, /what your group's Civicsmith can read; this one is re-read now$/);
+  assert.match(r.body.reextraction.candidates, /what your team's Civicsmith can read; this one is re-read now$/);
   assert.doesNotMatch(r.body.reextraction.candidates, OLD);
 });

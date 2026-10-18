@@ -451,7 +451,7 @@ export class LocalFacts {
     const rank = (f) => (f.status === "corrected" || f.status === "disputed" ? 0 : 1);
     facts.sort((x, y) => rank(x) - rank(y) || (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));
     return { ok: true, facts, count: facts.length,
-             note: "corrections and disputes come first, for a member to report for a profile fix; your group's Civicsmith transmits nothing" };
+             note: "corrections and disputes come first, for a member to report for a profile fix; your team's Civicsmith transmits nothing" };
   }
 
   /* Every fact of the active profiles, once each, with its status. */
@@ -624,7 +624,7 @@ export class LocalFacts {
 function machineRefusal(by) {
   /* DEC-49 REGION is-fact-member */
   if (str(by) && !isMachineIdentity(str(by))) return null;
-  return refusal("MACHINE_CANNOT_CONFIRM", "confirming, correcting or disputing a local fact, or confirming a group's "
+  return refusal("MACHINE_CANNOT_CONFIRM", "confirming, correcting or disputing a local fact, or confirming a team's "
                  + "rule, is a named member's act; an assistant's re-check reaches a member as its run's output. "
                  + "Nothing was written.");
   /* END DEC-49 REGION is-fact-member */

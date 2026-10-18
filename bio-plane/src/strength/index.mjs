@@ -430,17 +430,17 @@ export class Strength {
     const edition = this.#editionOf(bundleId, leg, authored);
     if (ctx && ctx.refs) ctx.refs.set(leg.target_id, edition);
     if (edition == null)
-      return { stopped: "this leg rests on another group's finding without saying which edition, so what it rests on "
+      return { stopped: "this leg rests on another team's finding without saying which edition, so what it rests on "
                       + "is unknown here", unknown: true };
     const f = this.#acceptedFinding(leg.target_id, edition, null);
     if (f && f.absent)
-      return { stopped: "this leg rests on another group's finding, and your group's Civicsmith holds no accepted work to read it "
+      return { stopped: "this leg rests on another team's finding, and your team's Civicsmith holds no accepted work to read it "
                       + "from, so what it rests on is unknown here", unknown: true };
     if (f && f.unreadable)
-      return { stopped: "this leg rests on another group's finding that could not be read just now, so what it rests on "
+      return { stopped: "this leg rests on another team's finding that could not be read just now, so what it rests on "
                       + "is unknown here", unknown: true };
     if (!f || typeof f !== "object")
-      return { stopped: `this leg rests on another group's finding that your group's Civicsmith does not hold at edition ${edition}, `
+      return { stopped: `this leg rests on another team's finding that your team's Civicsmith does not hold at edition ${edition}, `
                       + "so what it rests on is unknown here", unknown: true };
     return { pair: f.pair && typeof f.pair === "object" ? f.pair : {}, from: leg.target_id,
              another_groups: { group: f.group ?? null, case: f.case ?? null, edition: f.edition ?? edition,
@@ -522,7 +522,7 @@ export class Strength {
   #deriveCalculation(id) {
     const f = this.#calcFacts(id);
     if (!f) return { stopped: `the grade facts of ${id} cannot be read here, so what this leg rests on is unknown` };
-    if (!f.found) return { stopped: `${id} is not a calculation your group's Civicsmith holds, so what this leg rests on is unknown` };
+    if (!f.found) return { stopped: `${id} is not a calculation your team's Civicsmith holds, so what this leg rests on is unknown` };
     if (!f.accepted) return { stopped: `the result of ${id} is not accepted, so what this leg rests on is unknown` };
     const inputs = Array.isArray(f.inputs) ? f.inputs : [];
     const engine = inputs.find((i) => i && i.engine && !i.engine_measured);
@@ -551,7 +551,7 @@ export class Strength {
     const d = this.duties;
     if (!parts || !d) return unknown("the obligation cannot be read here");
     const duty = (() => { try { return d.readDuty({ dutyId: parts.duty, viewer: RECORD_READER }); } catch { return null; } })();
-    if (!duty || !duty.found) return unknown(`${parts.duty} is not an obligation your group's Civicsmith holds`);
+    if (!duty || !duty.found) return unknown(`${parts.duty} is not an obligation your team's Civicsmith holds`);
     let read = null;
     try { read = d.occurrencesOf({ dutyId: parts.duty, asOf: this.#asOf(), viewer: RECORD_READER }); } catch { read = null; }
     const occ = read && Array.isArray(read.occurrences) ? read.occurrences.find((o) => o && o.key === parts.key) : null;
@@ -820,7 +820,7 @@ export class Strength {
       /* R33: a leg on another group's finding carries no grade of its own; the walk counts it at what the accepted
          edition publishes (DEC-96 item 1). */
       if (isImportedRef(r.target_id))
-        return inert("this leg rests on another group's finding and carries no grade of its own: it counts at what that "
+        return inert("this leg rests on another team's finding and carries no grade of its own: it counts at what that "
                      + "accepted edition publishes on each axis", "ungraded");
       /* R36, R38: a calculation or an occurrence carries no grade of its own; its capture grade is derived from what it
          rests on, and the walk derives it the same way (unknown there when it is unknown here). */
@@ -1371,13 +1371,13 @@ export class Strength {
    *  re-collapse the two axes in the one field a reader is most likely to quote. It is recorded with the administrator's
    *  reason (DEC-88), and its answer carries DEC-105's honest note. */
   strengthBarSet({ group = null, capture = null, connection = null, reason = undefined, author = null } = {}) {
-    const machine = machineCannotDeclare(author, "GROUP's");
+    const machine = machineCannotDeclare(author, "TEAM's");
     if (machine) return machine;
     const who = String(author).trim();
     /* DEC-49 REGION is-admin-strength-bar */
     if (!this.membership.isAdministrator(who))
       return barRefusal("STRENGTH_BAR_NOT_ADMIN",
-        "the default bar is declared for the whole group, so only an active administrator may set it. "
+        "the default bar is declared for the whole team, so only an active administrator may set it. "
         + "Nothing was declared.");
     /* END DEC-49 REGION is-admin-strength-bar */
     /* D-436: the default is the store's recorded group, never a literal; with none recorded and none named there is no
@@ -1388,7 +1388,7 @@ export class Strength {
       const row = PROMOTION_ROW_CHECKS.GROUP_UNDETERMINED;
       return { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", check: row.check,
                translation: row.translation, act: "strengthbar",
-               detail: "the default bar is the GROUP's declaration, keyed by its group; this request names no group "
+               detail: "the default bar is the TEAM's declaration, keyed by its team; this request names no team "
                      + "and this store records none. Nothing was declared." };
     }
     const bad = badGrade(capture, connection);
@@ -1403,9 +1403,9 @@ export class Strength {
     if (!why || why.length > BAR_REASON_MAX)
       return barRefusal("BAR_NO_REASON",
         typeof reason !== "string"
-          ? "give the reason the group sets this bar, as text in your own words (reason=…). Nothing was declared."
+          ? "give the reason the team sets this bar, as text in your own words (reason=…). Nothing was declared."
           : !why
-          ? "the reason given is blank; say in your own words why the group sets this bar. Nothing was declared."
+          ? "the reason given is blank; say in your own words why the team sets this bar. Nothing was declared."
           : `the reason given is ${why.length} characters, and a reason is at most ${BAR_REASON_MAX}. `
             + "Nothing was declared.",
         { limit: BAR_REASON_MAX });
@@ -1528,12 +1528,12 @@ export class Strength {
     const gid = String(group ?? "").trim() || this.producingGroup();
     if (!gid)
       return { ok: true, group: null, bar: null, seeds_new_projects: true,
-               detail: "no group is named and this store records no producing group, so there is no group default to "
+               detail: "no team is named and this store records no producing team, so there is no team default to "
                      + "read. An absent bar gates nothing and is not a bar of zero." };
     const g = this.#one(`SELECT group_id, capture, connection, author, at, reason FROM group_strength_bar WHERE group_id=?`,
                         gid);
     return { ok: true, group: gid, bar: g || null, seeds_new_projects: true,
-             detail: g ? null : "no group default is declared. An absent bar gates nothing and is not a bar of zero." };
+             detail: g ? null : "no team default is declared. An absent bar gates nothing and is not a bar of zero." };
   }
 }
 

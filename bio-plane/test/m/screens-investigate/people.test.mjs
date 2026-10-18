@@ -20,7 +20,7 @@ test("R12 the directory is people's peopledirectory, read whole at first; the co
   assert.ok(heads.indexOf(yours) < heads.indexOf(others));
   assert.ok(secs[heads.indexOf(yours)].textContent.includes("L. Chen"));
   assert.ok(secs[heads.indexOf(others)].textContent.includes("Public Works Department"));
-  assert.ok(m.querySelector('a[href="/app/members"]'), "the group's members are under Settings › Members");
+  assert.ok(m.querySelector('a[href="/app/members"]'), "the team's members are under Settings › Members");
 });
 
 test("R12 search: Name or office and the four filters read the directory again, as typed and chosen (control: a refused search is drawn, never as empty)", async () => {

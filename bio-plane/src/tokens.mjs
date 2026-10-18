@@ -62,8 +62,8 @@ export const CASCADE_PUBLISHED = "INSTANCE_ACCOUNT_REVOKED_BY_PUBLICATION";
 
 // Member-facing (DEC-149: "Your group's Civicsmith", never "the plane", "the instance" or "this group's copy"). It
 // states no limit of Anthropic's plans, so it cites none (K1763); where an account comes from is R13's, K1755's.
-const NO_INSTANCE_ACCOUNT_DETAIL = "Your group's Civicsmith binds no Claude account to its own settings, and none can "
-  + "be set there. The assistant is reached through a member's own Claude account or API key, or through the group's "
+const NO_INSTANCE_ACCOUNT_DETAIL = "Your team's Civicsmith binds no Claude account to its own settings, and none can "
+  + "be set there. The assistant is reached through a member's own Claude account or API key, or through the team's "
   + "API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.";
 
 /**

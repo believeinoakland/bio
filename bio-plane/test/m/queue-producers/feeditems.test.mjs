@@ -357,7 +357,7 @@ test("R24 (DEC-107; DEC-131; H15, H19): no member-facing sentence of any item ki
 test("T34-87 (DEC-149; K1784, K1811): each member-facing string that called the group's Civicsmith 'this instance' or 'this copy' says 'your group's Civicsmith'", () => {
   const r = everyKind().read("alice");
   const m = byId(r);
-  const YOURS = /your group's Civicsmith/;
+  const YOURS = /your team's Civicsmith/;
   const OLD = /\b(this|the) (instance|copy|plane)\b|\bserver\b/i;
   const said = [];
   /* the undetermined age's sentence (R36) moved with the Action layer's items to action-producers (T45; its R20) */

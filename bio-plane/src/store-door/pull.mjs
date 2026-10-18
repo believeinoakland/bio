@@ -43,7 +43,7 @@ function filing(record, doc, { knockId, by, identity, viewer, at }) {
     `  retrieved: ${doc.retrieved || at}`,
     "monitoring:", "  enabled: false", "  frequency: none",
     "---", "", "## Summary", "",
-    `Material handed to the group at its doorbell as knock ${knockId} by an unnamed knocker, and brought into the `
+    `Material handed to the team at its doorbell as knock ${knockId} by an unnamed knocker, and brought into the `
     + `record by ${by}. Its bytes are \`${doc.file}\`, exactly as received; nothing here summarises them.`, "",
     "## Provenance Notes", "",
     `Received, not fetched from any address: its digest was taken as it arrived at the doorbell. The knocker's note `

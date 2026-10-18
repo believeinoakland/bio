@@ -67,10 +67,10 @@ export const CONSENT_STATEMENT = "This consent is permanent for anything publish
 export const WITHDRAWAL_STATEMENT = "This withdrawal binds only later publications: what was published under the "
   + "consent stays published.";
 /** R4: what an entry recorded without its value reads as (DEC-78 item 5(c)). */
-export const NOT_RECORDED = "known to the group, not recorded";
+export const NOT_RECORDED = "known to the team, not recorded";
 /** R3: the sentence a hostile disclosure reads as (DEC-78 item 5(b)). */
 export const claimSentence = (claimedBy, at) =>
-  `named by ${claimedBy} on ${String(at).slice(0, 10)}; not confirmed by the group`;
+  `named by ${claimedBy} on ${String(at).slice(0, 10)}; not confirmed by the team`;
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;

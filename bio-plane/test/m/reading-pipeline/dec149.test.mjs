@@ -9,11 +9,11 @@ import { tier3Extend, tier2Escalate, tier2FailureNote } from "../../../src/readi
 import { fresh, hold, doc, withEntry, i2, noText } from "./fixture.mjs";
 
 const OLD_NAMES = /\binstance\b|\bthe plane\b/i;
-const NO_OCR = "this document has no text layer to read and no OCR engine is installed in your group's Civicsmith, "
+const NO_OCR = "this document has no text layer to read and no OCR engine is installed in your team's Civicsmith, "
              + "so nothing is claimed about what it says";
-const NO_TIER2 = "tier 1 read essentially nothing of this document and no pdf-worker member is set up in your group's "
+const NO_TIER2 = "tier 1 read essentially nothing of this document and no pdf-worker member is set up in your team's "
               + "Civicsmith, so tier 1's reading stands";
-const NO_STORE = "your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read";
+const NO_STORE = "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read";
 
 test("R24 R21 (DEC-149): with no evidence store handed in, the failed reading's basis is exactly \"your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read\", never \"this instance\"", async () => {
   const { reading } = await fresh({ evidence: null }).read(doc({ digest: "a".repeat(64), fromText: true }));

@@ -163,7 +163,7 @@ test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states
   assert.equal(noTemplates.filingTemplates, null);
   const nt = noTemplates.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   assert.equal(nt.reason, "NO_SUCH_TEMPLATE");
-  assert.match(nt.detail, /no module answers the group's templates/);
+  assert.match(nt.detail, /no module answers the team's templates/);
   assert.equal(noTemplates.filingPrepare({ action: A, text: WORDS, preparer: V("bo"), viewer: V("bo") }).ok, true);
   const block = noConformance.evidenceBlock({ caseId: "CASE-2026-0001", edition: 1, findings: ["INQ-2026-0001"] });
   assert.equal(block.determinations_read, false);

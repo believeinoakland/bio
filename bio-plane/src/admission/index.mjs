@@ -402,7 +402,7 @@ export function aiTaskScope(cred, op, spec, { named = [] } = {}) {
 
   if (!aiReachesAsMember(spec, op))
     return { refusal: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", ...aiScopeRow("AI_BEYOND_TASK_SCOPE"),
-      detail: `no member of this group reaches '${String(op).slice(0, 60)}', so no declared scope reaches it `
+      detail: `no member of this team reaches '${String(op).slice(0, 60)}', so no declared scope reaches it `
       + `either. An agent is confined to what a member could do themselves, which is a property of the `
       + `operation rather than a list kept anywhere.`,
       op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes, cls: "ai" } } };
@@ -488,7 +488,7 @@ export function aiScopeDeclaration(writes) {
             + `session, and no agent credential is among the credentials it admits, so it cannot be `
             + `handed to an agent. This is a property of the operation and not a list of forbidden `
             + `ones: its OPS row names the credentials that reach it, and an agent's is not one.`
-          : `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed `
+          : `'${op.slice(0, 60)}' is not reachable by a member of this team, so it cannot be handed `
             + `to an agent. This is a property of the operation and not a list of forbidden ones: the `
             + `unattended worker's own verbs carry no member class by construction, so they are `
             + `outside every scope anybody can author.`,
@@ -577,7 +577,7 @@ export function sessionOpGate(kind, op, spec, method, tables = DECLARED) {
       detail: `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only the founder's: `
       + `the password session made when this instance was claimed with its root credential. This is `
       + `a member's session, which is what every enrolled member signs in with, an administrator of `
-      + `this group included — so an administrator's session is refused this exactly as this one is, `
+      + `this team included — so an administrator's session is refused this exactly as this one is, `
       + `and nothing here says whether you are one. There is no machine credential to go and find: `
       + `the founder performs this from their own browser.`,
       op, session: kind, reachedBy: "founder" } };
@@ -665,7 +665,7 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
   if (bound === RETIRED)
     return { refusal: { status: 401, body: { ok: false, reason: "MEMBER_TOKEN_RETIRED", ...admissionRow("MEMBER_TOKEN_RETIRED"),
       error: "the shared member key is retired",
-      detail: "this request presented the group's shared member key, which is retired: it no longer signs anybody in, "
+      detail: "this request presented the team's shared member key, which is retired: it no longer signs anybody in, "
             + "and nothing was read or written. A member signs in with their own password, and an agent uses an "
             + "agent credential a member creates for it." } } };
   if (!cls) {
@@ -820,7 +820,7 @@ export function bearerFence(op, caller) {
   if (IDENTITY_ACTIONS.includes(op))
     return { status: 403, body: { ok: false, reason: "GROUP_IDENTITY_NEEDS_SESSION",
       ...identityFenceRow("GROUP_IDENTITY_NEEDS_SESSION"), op, tokenClass: cls,
-      detail: `the group's display name and its domain claim are set by a named administrator's own signed-in `
+      detail: `the team's display name and its domain claim are set by a named administrator's own signed-in `
             + `session, and the record names who set each one (Publication §7). The credential that asked is the `
             + `operator's \`${cls}\`-class bearer token, which holds no place on the roster. Nothing was changed.` } };
   /* END DEC-49 REGION is-group-identity-session */
@@ -950,7 +950,7 @@ export function doorRateLimited(retryAfter, { session = false } = {}) {
   /* DEC-49 REGION is-door-window */
   return { status: 429, body: { ok: false, reason: "DOOR_RATE_LIMITED", ...admissionRow("DOOR_RATE_LIMITED", { minutes },
       session ? "refusal.DOOR_RATE_LIMITED.session" : undefined),
-    detail: `too many requests to the operations anyone may call reached this group's Civicsmith from ${where} in `
+    detail: `too many requests to the operations anyone may call reached this team's Civicsmith from ${where} in `
       + `a short time, so this one was turned away before the operation ran; nothing was read or written. Try again `
       + `in ${wait} seconds.`,
     stated: session ? SESSION_WINDOW_STATED : DOOR_WINDOW_STATED, retryAfter: wait, minutes } };

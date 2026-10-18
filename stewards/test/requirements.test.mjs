@@ -221,7 +221,7 @@ test("R5: the open page's notice says what a report is for, the stewards' limits
   const notice = text.slice(text.indexOf('id="notice"'), text.indexOf("<form"));
   assert.ok(text.indexOf('id="notice"') < text.indexOf("<form"), "the notice is before the form");
   for (const re of [/abuse of Civicsmith itself/, /fabricated evidence/, /harassment/, /impersonation/, /only withdraw a shared service/,
-    /never edit or delete a group's record/, /contact field is optional and is used only to reply/, /Only Civicsmith&#39;s stewards read them/,
+    /never edit or delete a team's record/, /contact field is optional and is used only to reply/, /Only Civicsmith&#39;s stewards read them/,
     /erased 90 days after/, /deleted 365 days after/, new RegExp(`mailto:${ADDRESS}`), /gives no legal advice/,
     /Civicsmith&#39;s stewards decide every report\. Believe in Oakland, the publisher of Civicsmith, is responsible for them/])
     assert.match(notice, re);
@@ -260,7 +260,7 @@ test("R7: /guide serves the shared guide words byte for byte as stewards/guide.m
     assert.ok(text.indexOf('id="guide"') < text.indexOf('id="service"'));
   }
   /* the shared words carry installer R48's third part: what and where, who controls it, who could be compelled. */
-  for (const re of [/own hosting account/, /Whoever can sign in to that hosting account controls your group's Civicsmith/, /your group itself \(and anyone in it who keeps a copy\), and its hosting provider, under the law that binds/, /stewards hold none of it/, /not legal advice/])
+  for (const re of [/own hosting account/, /Whoever can sign in to that hosting account controls your team's Civicsmith/, /your team itself \(and anyone in it who keeps a copy\), and its hosting provider, under the law that binds/, /stewards hold none of it/, /not legal advice/])
     assert.match(shared, re);
 });
 
@@ -643,7 +643,7 @@ test("R19: every page names Civicsmith, says \"a group's Civicsmith\", never cop
     assert.doesNotMatch(words, /group(&#39;|')s (own )?cop(y|ies)|cop(y|ies) of (your |a )?(group(&#39;|')s )?Civicsmith|Civicsmith cop(y|ies)/i, p);
     for (const m of words.matchAll(/Believe in Oakland/g)) assert.match(words.slice(m.index, m.index + 60), /Believe in Oakland, the publisher of Civicsmith/, p);
   }
-  assert.match(out.find(([p]) => p === "/guide")[1], /your group&#39;s Civicsmith/);
+  assert.match(out.find(([p]) => p === "/guide")[1], /your team&#39;s Civicsmith/);
 });
 
 test("R20: every text a reporter supplied is escaped wherever shown; no AI; the notice holds no report text", async () => {

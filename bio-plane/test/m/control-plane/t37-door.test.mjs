@@ -156,7 +156,7 @@ test("R2, R32 (T47; K3167; signin-door R5; answer-envelope C-69.7): `signintrace
    owner's record. */
 function draftWorld({ drafted, status = 200, recordAnswer } = {}) {
   const WORDS = [{ key: "nav.home", en: "Home", note: null, means: null, protected: false },
-                 { key: "nav.cases", en: "Cases", note: "the group's cases", means: "Cases the group has made", protected: true }];
+                 { key: "nav.cases", en: "Cases", note: "the team's cases", means: "Cases the group has made", protected: true }];
   const asked = [];
   const c = callers({ answer: (q) => {
     if (q.route === "translationdraft")

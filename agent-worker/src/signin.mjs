@@ -93,17 +93,17 @@ const textHead = (text, code) => scrub(text, code).slice(0, TEXT_HEAD_MAX);
 
 /* R84: the member's words for this member's own refusals (DEC-149: "your group's Civicsmith", never the place). */
 const WORDS = {
-  RUNNER_NOT_CONFIGURED: "Your group's Civicsmith cannot connect a Claude account yet: the part that runs a member's own "
+  RUNNER_NOT_CONFIGURED: "Your team's Civicsmith cannot connect a Claude account yet: the part that runs a member's own "
     + "Claude sign-in is not installed. Nothing was sent. An administrator can install it.",
-  BAD_BODY: "Your group's Civicsmith could not read this sign-in request, so nothing was sent. Try again from your "
+  BAD_BODY: "Your team's Civicsmith could not read this sign-in request, so nothing was sent. Try again from your "
     + "settings.",
-  BAD_MEMBER: "Your group's Civicsmith could not tell whose sign-in this is, so nothing was sent. Sign in to your group's "
+  BAD_MEMBER: "Your team's Civicsmith could not tell whose sign-in this is, so nothing was sent. Sign in to your team's "
     + "Civicsmith again, then try again.",
-  BAD_STEP: "Your group's Civicsmith did not recognise this sign-in step, so nothing was sent. Try again from your "
+  BAD_STEP: "Your team's Civicsmith did not recognise this sign-in step, so nothing was sent. Try again from your "
     + "settings.",
   BAD_CODE: "The code from Anthropic's page was missing, so nothing was sent. Paste the whole code Anthropic's page shows "
     + "you, including any part after a # sign, and try again.",
-  RUNNER_SILENT: "Your group's Civicsmith could not reach the part that runs your Claude sign-in, so what happened to "
+  RUNNER_SILENT: "Your team's Civicsmith could not reach the part that runs your Claude sign-in, so what happened to "
     + "this step is not known. Wait a minute and try again; if it keeps happening, tell an administrator the reference.",
 };
 

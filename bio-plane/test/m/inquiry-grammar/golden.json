@@ -529,7 +529,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[1] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -560,7 +560,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[1] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -592,7 +592,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[1] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1697,7 +1697,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1709,7 +1709,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1721,7 +1721,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1735,7 +1735,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1747,7 +1747,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target is not a published case: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1759,7 +1759,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1787,7 +1787,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1848,7 +1848,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1876,7 +1876,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1968,7 +1968,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1978,7 +1978,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[1] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -1998,7 +1998,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[2] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[2] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -2034,7 +2034,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -2044,7 +2044,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[1] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -2092,7 +2092,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[0] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -8745,7 +8745,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[1] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else",
+     "message": "basis[1] states grade_source 'inherited' but its target cannot be checked against the published record here: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else",
      "repairable": true,
      "repairs": [
       "cite a published case and name its edition",
@@ -11674,7 +11674,7 @@
   "MACHINE_CANNOT_DIVIDE": {
    "check": "C-32.7",
    "where": "src/inquiry/index.mjs #divide > is-machine-divide",
-   "translation": "Dividing a question says the group asked one thing when it was really asking two, and that is a judgement about the group's own work. The credential that asked here is an automated one: it may raise questions and gather what they rest on, and may not restructure them. Sign in to divide it."
+   "translation": "Dividing a question says the team asked one thing when it was really asking two, and that is a judgement about the team's own work. The credential that asked here is an automated one: it may raise questions and gather what they rest on, and may not restructure them. Sign in to divide it."
   },
   "MACHINE_CANNOT_GROUND": {
    "check": "C-32.8",

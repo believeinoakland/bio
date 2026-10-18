@@ -67,7 +67,7 @@ test("R36: an accepted calculation leg counts on the capture axis at the weakest
   /* A calculation calculations does not hold: unknown, named. */
   const none = s.candidatePair({ legs: [{ target: "CALC-2026-aaaaaaaaaaaaaaaa" }] }).pair;
   assert.equal(none.capture.state, "undetermined");
-  assert.match(none.capture.undetermined_at[0].why, /is not a calculation your group's Civicsmith holds/);
+  assert.match(none.capture.undetermined_at[0].why, /is not a calculation your team's Civicsmith holds/);
 });
 
 test("R36, R6, R35, R32: strengthOf and gradingFacts read the same grade, recomputePair over the facts agrees, and inquiryStrength withholds a calculation calculations withholds from the viewer (its R10) while the grade stays the record's", async () => {

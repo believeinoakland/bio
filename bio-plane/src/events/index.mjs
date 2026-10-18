@@ -1171,7 +1171,7 @@ export class Events {
       return refuse("NO_SET", "a timeline is of an explicit set of entity or event ids, or of captures; a project's or inquiry's scope is resolved by its caller");
     /* R28: any audience but "public" or none is refused before anything is read */
     if (audience !== undefined && audience !== null && audience !== "public")
-      return refuse("AUDIENCE_UNKNOWN", `a timeline's audience is "public", or none for the group's own reading`, { audiences: ["public"] });
+      return refuse("AUDIENCE_UNKNOWN", `a timeline's audience is "public", or none for the team's own reading`, { audiences: ["public"] });
     if (shas.length > CAPTURES_MAX)
       return refuse("TOO_MANY_CAPTURES", `a timeline reads the dated facts of at most ${CAPTURES_MAX} captures`, { bound: CAPTURES_MAX });
     const told = audience === "public" ? { audience } : {};

@@ -10,7 +10,7 @@ import { makePromotion, doc, infoDoc, create, T0 } from "./fixtures.mjs";
 import { runGate, PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS, checkProjectNameUniqueness } from "../../../src/promotion/index.mjs";
 
-const OURS = "your group's Civicsmith";
+const OURS = word("queue.capture-completed-unattended.who");
 /* The words DEC-149 retires for the group's own Civicsmith. "copy" is asked only as the noun for it ("this copy",
    "a copy records"); a promotion's copy of a file in history is another meaning and is not served by these rows. */
 const RETIRED = /\binstance\b|\bplane\b|\bserver\b|\bthis copy\b|\ba copy records\b/i;
@@ -108,10 +108,10 @@ test("R19 (index.mjs NAME_TAKEN, #promote): NAME_TAKEN and NO_TITLE say a projec
   assert.equal(p.promote(mk("Sewer Fund")).ok, true);
   const taken = p.promote(mk("  sewer   FUND "));
   assert.equal(taken.reason, "NAME_TAKEN");
-  assert.equal(taken.detail, "a project by that name already exists in your group's Civicsmith, compared without regard "
+  assert.equal(taken.detail, "a project by that name already exists in your team's Civicsmith, compared without regard "
     + "to case or spacing. This holds for deactivated projects too, because their names are still cited.");
   const untitled = p.promote(mk("", { files: [{ path: "bundle.md", text: pd("") }] }));
-  assert.deepEqual([untitled.reason, untitled.detail], ["NO_TITLE", "a project needs a name, and it must be unique across your group's Civicsmith"]);
+  assert.deepEqual([untitled.reason, untitled.detail], ["NO_TITLE", "a project needs a name, and it must be unique across your team's Civicsmith"]);
   for (const x of [taken, untitled]) assert.doesNotMatch(x.detail, RETIRED);
 });
 

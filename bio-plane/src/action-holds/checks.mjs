@@ -51,7 +51,7 @@ export const ACTION_HOLDS_CHECKS = Object.freeze({
   HOLD_ALREADY_RELEASED: Object.freeze({
     check: 'C-149.5', where: at("actionHold", "is-hold-already-released"),
     translation: 'That litigation hold is already released, and a release is stated once. Nothing was written. If the '
-      + 'group is preserving again, place a new hold.',
+      + 'team is preserving again, place a new hold.',
   }),
   /* R1 (K597 (1)): a pressure mark on an entry already recorded. */
   PRESSURE_MARKED: Object.freeze({

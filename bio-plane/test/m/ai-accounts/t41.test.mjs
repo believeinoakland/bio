@@ -65,7 +65,7 @@ test("R14 R11 (was credentials R55, R56): each new kind is set by accountUsesSet
     assert.equal(w.c.accountUsesSet({ owner: "member:bob", switch: kind, on: "no", by: "bob" }).reason, "SWITCH_VALUE_INVALID", kind);
     assert.equal(w.c.accountUsesSet({ owner: "member:bob", switch: kind, on: false, by: "ann" }).reason, "NOT_YOUR_ACCOUNT", kind);
     assert.deepEqual(w.c.accountUsesSet({ owner: "group", switch: kind, on: false, by: "bob" }),
-      notAnAdmin("bob", "switching the group key's assistant settings"), kind);
+      notAnAdmin("bob", "switching the team key's assistant settings"), kind);
     /* the member's own, on: it serves; off: refused, the group key never reached */
     assert.equal((await w.c.accountFor({ member: "bob", act: act(kind, "bob") })).level, "member", kind);
     assert.deepEqual(w.c.accountUsesSet({ owner: "member:bob", switch: kind, on: false, by: "bob" }),
@@ -191,7 +191,7 @@ test("R15 (was credentials R60): accountUses answers one account's uses and keep
   const before = w.snapshot();
   /* refusals: R5's, R10's and R1's (were R33's, R54's and R22's) */
   for (const v of ["ann", "class:admin", null])
-    assert.deepEqual(w.c.accountUses({ owner: "group", viewer: v }), notAnAdmin(v, "reading the group key's assistant settings"), String(v));
+    assert.deepEqual(w.c.accountUses({ owner: "group", viewer: v }), notAnAdmin(v, "reading the team key's assistant settings"), String(v));
   assert.deepEqual(w.c.accountUses({ owner: "project:P", viewer: "bob" }), notTheOwner("bob", "P"));
   assert.deepEqual(w.c.accountUses({ owner: "project:P", viewer: "eve" }), noSuchProject("P"));
   for (const [v, code] of [["bob", "NOT_YOUR_ACCOUNT"], ["admin", "NOT_YOUR_ACCOUNT"], ["class:ai", "MACHINE_CANNOT_HOLD_ACCOUNT"]])

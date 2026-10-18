@@ -12,6 +12,7 @@
  * stores nothing, as ai-accounts' own tests do. The limits (`ai-use.useCheck`) and the AI itself are the caller's and
  * are scripted here. */
 import { test } from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -574,6 +575,6 @@ test("R30 (negative control): a stored reading with only OCR parts is seeded as 
   assert.ok(!t3.chain.some((s) => s.step === "ai_transcription"));
   /* and with no seed, a member-less re-read says what it always said */
   const none = await tier3Extend({}, { sha: "d", storeName: "bio", i2text: i2(SCAN4), wiredTier: 1, tier2PerPage: null, fmt: "pdf" });
-  assert.equal(none.ocrNote, "this document has no text layer to read and no OCR engine is installed in your group's Civicsmith, so nothing is claimed about what it says");
+  assert.equal(none.ocrNote, word("reading-pipeline.document_text_layer"));
   assert.deepEqual([none.chainSet, none.wiredTier, none.seeded], [false, 1, []]);
 });

@@ -104,7 +104,7 @@ const KEYS = ["actions.override.ground_not_stated", "actions.reply.not_owed", "a
 const SCOPE_KEY = "actions.scope.published_stays";
 /* The sentences as T45 worded them, which none of these answers any longer. */
 const T45 = ["This override was stated before a ground was asked for; it reads as written, with its reason alone.",
-  "This body owes the group no reply, so silence is never recorded as a non-response.",
+  "This body owes the team no reply, so silence is never recorded as a non-response.",
   "This changes what is published from now on; anything already signed and published stays as it was.",
   "This action is not addressed to an office, so no open items with an office are shown.",
   "This recognition rests on no compliant determination or success record: the fix is only promised."];

@@ -1331,7 +1331,7 @@ export class ActionClocks {
         const ref = { action: r.bundle_id, ord: i, date: e.date };
         if (!isGroupOwn(e)) {
           if (!kind && owedOf(e) === "undetermined")
-            notCounted.push({ ...ref, why: "the entry names no basis kind and no owed_by, so whether it is the group's own is not stated" });
+            notCounted.push({ ...ref, why: "the entry names no basis kind and no owed_by, so whether it is the team's own is not stated" });
           return;
         }
         if (e.status === "met") {
@@ -1375,7 +1375,7 @@ export class ActionClocks {
              entries: table.map((x) => ({ action: x.action, ord: x.ord, kind: x.kind, state: x.state, ...(x.days_late ? { days_late: x.days_late } : {}) })),
              not_counted: notCounted, actions_limit: LATENESS_ACTIONS_MAX, truncated: rows.length > LATENESS_ACTIONS_MAX,
              method: ev ? { recipe, trace: ev.trace } : { recipe, trace: [] },
-             says: "an index over the group's own deadlines (what the group owes, its dependencies and its own windows): "
+             says: "an index over the team's own deadlines (what the team owes, its dependencies and its own windows): "
                  + "never a finding about anyone else's conduct." };
   }
 }
@@ -1447,7 +1447,7 @@ function basisWords(b) {
   if (b.kind === "rule") return `Basis: a law or order${cite}${b.standard ? ` (standard ${b.standard.id}, ${b.standard.state.replace(/_/g, " ")})` : ""}`;
   if (b.kind === "commitment") return `Basis: a commitment${b.committed_by ? ` by ${b.committed_by}` : ""}${cite}`;
   if (b.kind === "dependency") return `Basis: it must precede ${b.precedes ?? "a later event"}${b.lead ? ` (lead ${b.lead})` : ""}${b.why ? `, because ${b.why}` : ""}${cite}`;
-  if (b.kind === "window") return `Basis: the group's own window${cite}`;
+  if (b.kind === "window") return `Basis: the team's own window${cite}`;
   if (b.kind === "stated") return `Basis: a date stated by ${b.stated_by ?? "the other side"}${b.held_in ? `, held in ${b.held_in}` : ""}${cite}`;
   return `Basis${cite || ": not stated"}`;
 }

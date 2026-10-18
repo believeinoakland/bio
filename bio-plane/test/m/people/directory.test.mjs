@@ -51,7 +51,7 @@ test("R37 peopleDirectory answers the people and organisations the record follow
   assert.ok(!ids.includes(director), "an office is a post, never a row");
   assert.ok(!ids.includes(source), "only the person and organisation kinds are rows");
   assert.ok(r.rows.every((x) => x.kind === "person" || ["institution", "body", "movement"].includes(x.kind)));
-  assert.ok(!r.rows.some((x) => /^(member:)?(ann|out|boss|admin)$/.test(x.entity)), "the group's members are never rows");
+  assert.ok(!r.rows.some((x) => /^(member:)?(ann|out|boss|admin)$/.test(x.entity)), "the team's members are never rows");
   const c = rowOf(r, chen);
   assert.deepEqual(Object.keys(c).sort(), ["documents", "entity", "kind", "mine", "name", "newest_added", "projects", "questions", "today"]);
   assert.equal(c.name, "Lee Chen");

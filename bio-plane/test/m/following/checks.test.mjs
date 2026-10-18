@@ -185,7 +185,7 @@ test("R1 C-137.1–C-137.20: following's own family, each row numbered once with
 test("R18 (DEC-149): no row's translation names a place, and none names the group's own system except as \"your group's Civicsmith\"", () => {
   for (const [code, r] of Object.entries(FOLLOWING_CHECKS)) {
     assert.doesNotMatch(r.translation, /oakland|alameda|california|ellery/i, code);
-    const t = r.translation.replace(/your group's Civicsmith/g, "");
+    const t = r.translation.replace(/your team's Civicsmith/g, "");
     assert.doesNotMatch(t, /\b(?:this|the|your|your own|our|its)\s+(?:Civicsmith\s+|group's\s+)?(?:instance|copy|plane)\b|\bservers?\b|Civicsmith/i, code);
   }
 });

@@ -20,13 +20,13 @@ test("R83 R86 no export names the page: setupPage, SETUP_HTML and groupLine are 
    run the same reading over a page that breaks it. The words are pinned here, in this test, not read from the block. */
 const OLD_CARD = /If you ever lose the\s+password you choose here/;
 const DEC_109 = [
-  /Before you choose a password: who controls your group's Civicsmith/,
-  /Whoever can sign in to the hosting account your group's Civicsmith runs in \(its Cloudflare account\) controls it\./,
-  /can replace the one-time password, claim it again, read everything in it and lock everyone else out,\s+and no vote of the group's administrators can stop them\./,
-  /Use a group account for it, not anyone's personal login\./,
+  /Before you choose a password: who controls your team's Civicsmith/,
+  /Whoever can sign in to the hosting account your team's Civicsmith runs in \(its Cloudflare account\) controls it\./,
+  /can replace the one-time password, claim it again, read everything in it and lock everyone else out,\s+and no vote of the team's administrators can stop them\./,
+  /Use a team account for it, not anyone's personal login\./,
   /Add at least one other trusted person to that account\./,
-  /Where possible, let someone other than the group's administrators hold it\./,
-  /The same account is the way back in if the password you choose is lost[^<]*your group's Civicsmith to be claimed again\./,
+  /Where possible, let someone other than the team's administrators hold it\./,
+  /The same account is the way back in if the password you choose is lost[^<]*your team's Civicsmith to be claimed again\./,
 ];
 function r47Fails(block) {
   const fails = [];
@@ -56,7 +56,7 @@ test("R47 R63 the block held once for the screens and the installer says DEC-109
 /* R47's T35 sentence (F10, K1874 (Q6)): the block ends by naming the guide to replacing the one-time password, in the
    same held words for the page and the installer. The words are pinned here, in this test. */
 const GUIDE = "If the one-time password may have been seen, replace it: follow the guide \u201cReplace the one-time password\u201d "
-  + "in your group's Civicsmith, on its first page and in its members and keys section.";
+  + "in your team's Civicsmith, on its first page and in its members and keys section.";
 const lastParagraph = (html) => (html.match(/<p[^>]*>((?:(?!<p[ >]).)*)<\/p><\/div>$/s) || [])[1] ?? null;
 const text = (html) => html.replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 

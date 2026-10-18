@@ -278,10 +278,10 @@ export class Standards {
   #view() {
     const ids = this.record.getSetting("jurisdiction_profiles");
     if (!Array.isArray(ids) || !ids.length)
-      return { view: null, why: "your group's Civicsmith has no active jurisdiction profile, so no source of standards is known" };
+      return { view: null, why: "your team's Civicsmith has no active jurisdiction profile, so no source of standards is known" };
     const c = this.combine(ids);
     if (!c || !c.ok)
-      return { view: null, why: "the active jurisdiction profiles of your group's Civicsmith could not be combined ("
+      return { view: null, why: "the active jurisdiction profiles of your team's Civicsmith could not be combined ("
                + `${[...new Set(((c && c.errors) || []).map((e) => e.code))].join(", ") || "unreadable"}), so no source `
                + "of standards is known" };
     return { view: c.view, why: null };
@@ -379,7 +379,7 @@ export class Standards {
     /* DEC-49 REGION is-standard-reason */
     if (fault)
       return refusal("STANDARD_NO_REASON", `this declaration ${fault}. The reason is the declarer's own words on why the `
-                     + "group holds its government to this standard, kept with it and read back with it. Nothing was "
+                     + "team holds its government to this standard, kept with it and read back with it. Nothing was "
                      + "written.", { max_chars: REASON_MAX });
     /* END DEC-49 REGION is-standard-reason */
     const heldAs = this.#heldFields(a);
@@ -545,7 +545,7 @@ export class Standards {
     }
     /* DEC-49 REGION is-commitment-not-own-letter */
     return refusal("COMMITMENT_OWN_LETTER", `${ids.join(", ").slice(0, 400)} ${ids.length === 1 ? "is" : "are each"} of the `
-                   + "group's own sending or a member's account of what was heard; the group's confirming letter is not the "
+                   + "team's own sending or a member's account of what was heard; the team's confirming letter is not the "
                    + "body's confirmation. Nothing was written.",
                    { content_ids: ids, own_sending: marked.filter((r) => r.is === "own").map((r) => r.content_id),
                      as_heard: marked.filter((r) => r.is === "heard").map((r) => r.content_id) });
@@ -877,7 +877,7 @@ export class Standards {
     const b = q ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, q) : null;
     /* DEC-49 REGION is-question-held */
     if (!b || b.object_type !== "inquiry" || !this.membership.inSight(q, str(a.author)))
-      return refusal("QUESTION_NOT_HELD", "no question your group's record holds that you may see answers to that id. "
+      return refusal("QUESTION_NOT_HELD", "no question your team's record holds that you may see answers to that id. "
                      + "Nothing was written.", { question: q.slice(0, 80) || null });
     /* END DEC-49 REGION is-question-held */
     return { ok: true, question: q };
@@ -1805,7 +1805,7 @@ export class Standards {
     /* DEC-49 REGION is-held-from-source */
     if (s.class !== "bundle" || s.released)
       return refusal("NOT_HELD_FROM_SOURCE", `${sid} is ${s.released ? "already released and " : ""}seen by every member of `
-                     + "your group. Nothing was written.", { standard: sid });
+                     + "your team. Nothing was written.", { standard: sid });
     /* END DEC-49 REGION is-held-from-source */
     const who = str(author).replace(/^member:/, "");
     const owners = this.#releaseBy(s);
@@ -1821,7 +1821,7 @@ export class Standards {
       this.sql.exec(`INSERT INTO standard_releases (standard_id, reason, released_by, released_at) VALUES (?,?,?,?)`,
                     sid, reason, str(author), at);
       return { ok: true, standard: sid, released: { by: str(author), at, reason },
-               says: "released to every member of your group from now on; a release is never undone" };
+               says: "released to every member of your team from now on; a release is never undone" };
     });
   }
 

@@ -358,7 +358,7 @@ export const BIAS_CHECKS = {
     check: 'C-26.2',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate',
     translation: 'That statement names its subject in prose rather than pointing at the subject registry. '
-      + 'Registry entries are what let the record notice when a project statement and a group '
+      + 'Registry entries are what let the record notice when a project statement and a team '
       + 'statement are about the same thing — in prose, nothing can tell, and a collision that is '
       + 'quiet is the one this construct exists to prevent.',
   },
@@ -412,8 +412,8 @@ export const BIAS_CHECKS = {
     check: 'C-26.8',
     where: 'src/bias/index.mjs biasInhale, reached from op=biasinhale',
     translation: 'Reading a policy proposes a bias set; it never adopts one. '
-      + 'Adopting is something a member does with their name on it, because otherwise a group could '
-      + 'say it follows an organisation\'s standards without anybody in the group having agreed to '
+      + 'Adopting is something a member does with their name on it, because otherwise a team could '
+      + 'say it follows an organisation\'s standards without anybody in the team having agreed to '
       + 'anything.',
   },
   /* The adoption's own two. A machine credential holds no name to put on an
@@ -494,7 +494,7 @@ export const BIAS_CHECKS = {
     check: 'C-26.14',
     where: 'src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
     translation: 'Nothing was settled, because this request has no member behind it. Deciding that a '
-      + 'change in the group\'s declared lens does not affect a piece of work is somebody\'s judgement, '
+      + 'change in the team\'s declared lens does not affect a piece of work is somebody\'s judgement, '
       + 'and the record keeps whose it was. Sign in and do it as yourself.',
   },
   BIAS_DEBT_MACHINE_CANNOT_RESOLVE: {
@@ -543,7 +543,7 @@ export const BIAS_CHECKS = {
   BIAS_ADOPTION_NO_REASON: {
     check: 'C-26.21',
     where: 'src/bias/index.mjs biasAdopt, reached from op=biasadopt',
-    translation: 'Nothing was adopted, because no reason was given. Adopting a lens changes how this group reads '
+    translation: 'Nothing was adopted, because no reason was given. Adopting a lens changes how this team reads '
       + 'evidence, so the record keeps, beside your name, why you are adopting it. Say why in a sentence or a '
       + 'short paragraph (at most 2,000 characters) and adopt it again.',
   },

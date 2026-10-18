@@ -183,7 +183,7 @@ section("R84 · trace on every /signin answer; the member's words on every refus
   for (const [code, r, status] of own) {
     t(`R84: ${code} carries the door's trace and a member-readable detail naming your group's Civicsmith or the thing itself, with no place word`,
       [codeOf(r), r.out?.trace, typeof r.out?.detail === "string" && r.out.detail.length > 20 && r.out.detail.length <= 300,
-       NEVER.test(r.out?.detail ?? ""), /your group's Civicsmith|Anthropic's page/i.test(r.out?.detail ?? "")],
+       NEVER.test(r.out?.detail ?? ""), /your team's Civicsmith|Anthropic's page/i.test(r.out?.detail ?? "")],
       [[status, code], TRACE, true, false, true]);
   }
   const success = await signin({ member: MEMBER, step: "signout" }, { headers: DOOR });

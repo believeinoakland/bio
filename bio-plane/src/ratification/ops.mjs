@@ -89,7 +89,7 @@ async function caseCeremony(req, stub, ctx, later) {
     if (later && (!body.at || typeof body.at !== "object" || Array.isArray(body.at)))
       return json({ ok: false, reason: "MALFORMED",
                     detail: "publishat requires caseId, edition (integer), expectedSha, sig (armored SSH signature over "
-                          + "the case document's sha) and at ({date: YYYY-MM-DD, time: HH:MM}, in the group's time zone)" }, 400);
+                          + "the case document's sha) and at ({date: YYYY-MM-DD, time: HH:MM}, in the team's time zone)" }, 400);
     /* R52: the sitting's members, `[{id, sha, signature}]`, each a finding the edition pins or evidence one rests on,
        signed by the same member in the same sitting; absent or empty is a case signed alone. */
     const sitting = body.members === undefined || body.members === null ? [] : body.members;

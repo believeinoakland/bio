@@ -74,7 +74,7 @@ export const LABEL_KEY_MARKED = "photo.obscured.label";
 export const LABEL_KEY_UNMARKED = "photo.published.label";
 export const LABEL_KEY_CLEANED = "document.cleaned.label";
 export const CLEANED_LABEL_AT_MARKER = "Details of who made this file, and of its pictures, removed for publication; the "
-  + "group holds the original";
+  + "team holds the original";
 const photoKeyOf = (obscured) => (obscured.marked === true ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
 const labelKeyOf = (obscured) => (obscured.kind === "document" ? LABEL_KEY_CLEANED
   : obscured.kind === "photo" ? photoKeyOf(obscured)
@@ -273,10 +273,10 @@ export class PublicRead {
   registerGroupIdentity({ identity } = {}) {
     if (typeof identity !== "function")
       return { ok: false, reason: "PROVIDER_MALFORMED",
-               detail: "the group's identity source is registered with its door, identity(); nothing was registered" };
+               detail: "the team's identity source is registered with its door, identity(); nothing was registered" };
     if (this.#groupIdentity)
       return { ok: false, reason: "PROVIDER_DECLARED",
-               detail: "the group's identity source is already registered; the first stands, and nothing was registered" };
+               detail: "the team's identity source is already registered; the first stands, and nothing was registered" };
     this.#groupIdentity = { identity };
     return { ok: true };
   }
@@ -407,7 +407,7 @@ export class PublicRead {
       /* DEC-49 REGION is-public-read-not-registered
        * C-98.10 (K1149): the code a STRING LITERAL at its site, its row from this module's table (R17). */
       return { ok: false, reason: "PUBLIC_READ_NOT_REGISTERED", ...rowOf("PUBLIC_READ_NOT_REGISTERED"), name: n,
-               detail: `no public read named ${JSON.stringify(n)} is registered on this group's Civicsmith, so there `
+               detail: `no public read named ${JSON.stringify(n)} is registered on this team's Civicsmith, so there `
                      + "is nothing to serve under that name" };
       /* END DEC-49 REGION is-public-read-not-registered */
     }
@@ -619,7 +619,7 @@ export class PublicRead {
                + "`strengthByCase` lists every ratified case edition's own pair, named by its case and "
                + "edition. None of them is the finding's pair; each is that case's.",
       detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or "
-            + "continued existence of this group's Civicsmith. Nothing unpublished appears, by construction: "
+            + "continued existence of this team's Civicsmith. Nothing unpublished appears, by construction: "
             + "this reads the published projection and never the working corpus." };
   }
 
@@ -1248,9 +1248,9 @@ export class PublicRead {
              case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
                         + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
                         + "the case carries the scope that brought them together, the completeness "
-                        + "assertion, and the group's acknowledgement of the bias the case was produced "
+                        + "assertion, and the team's acknowledgement of the bias the case was produced "
                         + "under — the last of these is a DISCLOSURE the reader weighs, never a verdict this "
-                        + "group's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: "
+                        + "team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: "
                         + "composing two findings' strengths into one letter is the substitution R2 forbids.",
              graph_detail: "each finding's serves[] is what this surface may hand over — every entry names a "
                          + "published edition. names[] is what it may only NAME. unresolved[] is an edge "

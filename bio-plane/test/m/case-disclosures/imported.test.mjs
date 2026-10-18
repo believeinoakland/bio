@@ -38,13 +38,13 @@ test("R13: acceptedWorkJudged reads, for each ref leg, case-import's acceptance 
     manifest_sha: "f".repeat(64), pair: { capture: "B", connection: "C" }, result: "recreated",
     gaps: "the third page's image was not carried", accepted_by: "alice", accepted_at: "2026-09-27T00:00:00Z",
     reason: "We recreated it whole." }]);
-  assert.equal(JSON.stringify(a).includes("every passage"), false, "what was checked stays inside the group");
+  assert.equal(JSON.stringify(a).includes("every passage"), false, "what was checked stays inside the team");
   assert.deepEqual(a.editions, [{ import: IMP, edition: 2, refs: [{ ref, finding: THEIRS, member: Q }] }]);
   /* the rows are case-grammar R16's, read back by its one reader */
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`, ...acceptedWorkBlockLines({ rows: a.rows, flags: [] }), "---", ""].join("\n"));
   assert.deepEqual(acceptedWorkOf(fm).rows.map((r) => [r.ref, r.edition, r.reason]), [[ref, 2, "We recreated it whole."]]);
   const body = acceptedBodyLines({ rows: a.rows, flags: [] }).join("\n");
-  assert.ok(body.includes("## Another Group's Work This Case Rests On"));
+  assert.ok(body.includes("## Another Team's Work This Case Rests On"));
   assert.ok(body.includes(`- ${Q} rests, through ${Q}, on ${THEIRS} of other-group's case CASE-2026-0900, edition 2: accepted by alice on 2026-09-27T00:00:00Z, because: We recreated it whole. It was recreated from that case file, with the gaps stated: the third page's image was not carried.`));
   /* the reason's own full stop is not doubled (N535) */
   assert.equal(body.includes(".."), false);
@@ -143,7 +143,7 @@ test("R14: disclosureBlocks' flags carry the issue, when it was flagged, the own
   const body = acceptedBodyLines({ rows: a.rows, flags }).join("\n");
   assert.ok(body.includes(`- Flag IMPFLAG-1 on ${ref}, edition 2, raised 2026-09-27T00:00:00Z: page 3 is misread. In the owner's words: we checked page 3 ourselves. Disclosed by alice on ${AT}.`));
   assert.equal((JSON.stringify(flags) + body).includes("bo"), false, "the flagging member is not named");
-  assert.equal(FLAG_SENTENCE, "Rests on another group's work that carries an open flag, disclosed with this case: ");
+  assert.equal(FLAG_SENTENCE, "Rests on another team's work that carries an open flag, disclosed with this case: ");
   assert.equal(FLAGS_SAY, "publishing discloses each of these flags, and is never blocked by one (DEC-96 item 4): list each in flagsDisclosed at op=publish, with your own words if you choose.");
 });
 

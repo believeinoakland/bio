@@ -784,7 +784,7 @@ export const CONCLUDE_ACT_CHECKS = {
     check: 'C-33.1',
     where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
     translation: 'Concluding records what was concluded, and this one says nothing. If the honest '
-      + 'answer is that the group could not settle it, write that down — an answer of undetermined '
+      + 'answer is that the team could not settle it, write that down — an answer of undetermined '
       + 'is a real answer here and is stated rather than left blank.',
   },
   /* REC-117 / BOB 2026-09-17: the translation now NAMES THE DOOR, and that is

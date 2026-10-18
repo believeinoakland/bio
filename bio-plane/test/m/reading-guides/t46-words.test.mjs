@@ -23,7 +23,7 @@ const en = (key) => word(key).en;
 const LABEL_KEY = "guide.procedure.legalinfo";
 /* T45's words, which none is answered any longer: the label and the two rows R14 first re-took. */
 const T45 = {
-  GUIDE_KIND_UNKNOWN: "A reading guide is for one kind of document your group's Civicsmith recognises (a meeting "
+  GUIDE_KIND_UNKNOWN: "A reading guide is for one kind of document your team's Civicsmith recognises (a meeting "
     + "calendar, minutes, an agenda, a staff report, an ordinance or code section, a policy, a staff directory, "
     + "or any other document); a procedure guide is for one kind of action your group's jurisdiction profiles list. "
     + "The kind or purpose given is not one of them. Nothing was written.",
@@ -136,7 +136,7 @@ const BRITISH = /\b(labell|cancell|modell|travell|organis|recognis|summaris|auth
 
 test("R14 R11 R12 DEC-221: every row, word, label and refusal this module answers is in American spelling; T48's two re-spellings answered (control: the British pattern catches the old words)", () => {
   /* the control: the pattern sees the words as they stood before T48 */
-  for (const old of ["your group's places recognise", "An offered guide is labelled with", "labelled as machine work"])
+  for (const old of ["your team's places recognise", "An offered guide is labelled with", "labelled as machine work"])
     assert.match(old, BRITISH, old);
   const texts = [...Object.values(READING_GUIDES_WORDS), ...Object.values(READING_GUIDES_CHECKS).map((r) => r.translation),
     ...Object.values(GUIDE_PROPOSAL_STATES), PROCEDURE_GUIDE_LABEL.says];
@@ -148,7 +148,7 @@ test("R14 R11 R12 DEC-221: every row, word, label and refusal this module answer
   const n = world({ slug: null });
   const slug = n.g.guideOffer({ guide: n.groupGuide(), by: ANN });
   row(slug, "GUIDE_NO_GROUP_SLUG");
-  assert.equal(slug.detail, "no group slug is recorded, so an offer cannot be labeled. Nothing was sent.");
+  assert.equal(slug.detail, "no team slug is recorded, so an offer cannot be labeled. Nothing was sent.");
   const w = world();
   const kind = w.g.guideDraft({ kind: "court_order", items: ITEMS, by: ANN });
   row(kind, "GUIDE_KIND_UNKNOWN");

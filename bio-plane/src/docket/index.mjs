@@ -127,8 +127,8 @@ export const OUTWARD_ACT_WARNING = Object.freeze({
  *  UX design stream's, and this module sends nothing. */
 export const RESEND_INVITATION = Object.freeze({
   code: "docket_resend_without_name",
-  meaning: "Your reply names a private person, so the group lists it as received without its text. Please send it "
-    + "again without the name, and the group will list it whole.",
+  meaning: "Your reply names a private person, so the team lists it as received without its text. Please send it "
+    + "again without the name, and the team will list it whole.",
 });
 /** R3: the plan checkpoint a contesting entry offers; `action-plans`' own act, never performed here. */
 export const CHECKPOINT_OFFER = Object.freeze({ code: "plan_checkpoint", act: "action-plans", performed: false });
@@ -572,7 +572,7 @@ export class Docket {
     if (counsel) return { refusal: counsel };
     /* DEC-49 REGION is-docket-manager */
     const slug = this.#slug();
-    if (!slug) return { refusal: refuse("DOCKET_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous entries") };
+    if (!slug) return { refusal: refuse("DOCKET_NO_GROUP_SLUG", "no team slug is recorded, and there are no anonymous entries") };
     /* END DEC-49 REGION is-docket-manager */
     return { c: k.c, member, slug };
   }

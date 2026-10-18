@@ -45,7 +45,7 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
   MACHINE_CANNOT_RATIFY_CASE: {
     check: 'C-32.13',
     where: 'src/ratification/refusals.mjs machineCaseRefusal > is-machine-ratify-case',
-    translation: 'Ratifying a case commits the group\'s own assertions about it — its scope, its '
+    translation: 'Ratifying a case commits the team\'s own assertions about it — its scope, its '
       + 'completeness, its position on the people it concerns — under a member\'s signature. The '
       + 'credential that asked here is an assistant\'s: it can assemble the case document, and it '
       + 'cannot be the one who commits it. Sign in and ratify it yourself.',
@@ -66,16 +66,16 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
     where: 'src/ratification/ops.mjs ratifyOp > is-operator-ratify-bundle',
     translation: 'Ratifying puts a finding into the published record under a member\'s signature, '
       + 'and it is delivered by that member signed in as themselves. The credential that asked here '
-      + 'is one of the operator\'s access tokens for your group\'s Civicsmith, not a person: a valid signature does '
+      + 'is one of the operator\'s access tokens for your team\'s Civicsmith, not a person: a valid signature does '
       + 'not change that, because the credential that carries it in decides when the record changes. '
       + 'Sign in as the member whose key signed it and ratify it there.',
   },
   OPERATOR_TOKEN_CANNOT_RATIFY_CASE: {
     check: 'C-32.15',
     where: 'src/ratification/refusals.mjs operatorCaseRefusal > is-operator-ratify-case',
-    translation: 'Ratifying a case commits the group\'s own assertions about it under a member\'s '
+    translation: 'Ratifying a case commits the team\'s own assertions about it under a member\'s '
       + 'signature, and it is delivered by that member signed in as themselves. The credential that '
-      + 'asked here is one of the operator\'s access tokens for your group\'s Civicsmith, not a person, and a valid '
+      + 'asked here is one of the operator\'s access tokens for your team\'s Civicsmith, not a person, and a valid '
       + 'signature does not change that. Sign in as the member whose key signed it and ratify it there.',
   },
 };
@@ -226,7 +226,7 @@ export const RATIFY_SCOPE_CHECKS = {
     where: 'src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony',
     /* Re-worded at T28 (N523; DEC-119 (3), K1275): awaiting the T29 stamp. */
     translation: 'This edition rests on testimony, or on material from an unnamed source attested by a member, '
-      + 'credited only to the group or the project, with no independent leg corroborating it. Such testimony or '
+      + 'credited only to the team or the project, with no independent leg corroborating it. Such testimony or '
       + 'evidence counts as an anonymous tip and supports a finding only beside an independent corroborating leg. '
       + 'Each such member, observation and document is named. Corroborate the claim with an independent leg, ask '
       + 'the author or the attesting member to choose cover or name, or drop the finding that rests on it. Nothing '
@@ -271,7 +271,7 @@ export const RATIFY_SCOPE_CHECKS = {
   APPROVAL_MISSING: {
     check: 'C-58.11',
     where: 'src/ratification/refusals.mjs approvalMissingRefusal > is-approval-missing',
-    translation: 'This case edition can\'t be signed yet: the group requires named members to approve a case before '
+    translation: 'This case edition can\'t be signed yet: the team requires named members to approve a case before '
       + 'it is signed, and some of them have not approved this version of it. They are named. Ask them to approve it, '
       + 'then sign. Nothing was signed.',
   },

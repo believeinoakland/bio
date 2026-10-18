@@ -54,16 +54,16 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_TIER3_FILE: {
     check: "C-115.36", where: at("#shapeRefusal", "is-template-shape"),
-    translation: "This kind's tier is 3: it requires competent counsel, so no template the group files in its own name "
+    translation: "This kind's tier is 3: it requires competent counsel, so no template the team files in its own name "
       + "is kept for it. A template that is the basis of a briefing to counsel may serve it.",
   },
   TEMPLATE_NAME_TAKEN: {
     check: "C-115.37", where: at("#shapeRefusal", "is-template-shape"),
-    translation: "The group's library already holds a template by this name. Choose another name.",
+    translation: "The team's library already holds a template by this name. Choose another name.",
   },
   NO_SUCH_TEMPLATE: {
     check: "C-115.38", where: at("#noTemplate", "is-no-such-template"),
-    translation: "There is no template by that id in the group's library that you can read here. One you may not see "
+    translation: "There is no template by that id in the team's library that you can read here. One you may not see "
       + "answers exactly as one that does not exist.",
   },
   /* ---- moved from filings in T48 (R33), unchanged ---- */
@@ -89,12 +89,12 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_USE_REFUSED: {
     check: "C-125.2", where: at("#shapeRefusal", "is-template-shape"),
-    translation: "Say what the template is for: file (wording the group files in its own name) or brief (the basis of "
+    translation: "Say what the template is for: file (wording the team files in its own name) or brief (the basis of "
       + "a briefing to counsel).",
   },
   TEMPLATE_PROFILE_UNKNOWN: {
     check: "C-125.3", where: at("#shapeRefusal", "is-template-shape"),
-    translation: "A template is written for jurisdiction profiles your group's Civicsmith holds, or for none in "
+    translation: "A template is written for jurisdiction profiles your team's Civicsmith holds, or for none in "
       + "particular (general), and a profile named is not held.",
   },
   TEMPLATE_BLANK_UNKNOWN: {
@@ -148,7 +148,7 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   GRANT_NO_SECRET: {
     check: "C-125.15", where: at("templateReviewGrant", "is-template-grant"),
-    translation: "A review grant opens by a secret link your group's Civicsmith makes, and none was made for this "
+    translation: "A review grant opens by a secret link your team's Civicsmith makes, and none was made for this "
       + "request. Nothing was granted.",
   },
   NO_SUCH_GRANT: {
@@ -185,12 +185,12 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_NOT_APPROVED: {
     check: "C-125.23", where: at("templateApprove", "is-template-approve"),
-    translation: "Only an approved version's template is made group-wide, and this version is not approved.",
+    translation: "Only an approved version's template is made team-wide, and this version is not approved.",
   },
   NOT_AN_APPROVER: {
     check: "C-125.24", where: at("#notAnApprover", "is-not-an-approver"),
-    translation: "An owner of the template's project approves or retires it, and an administrator makes it group-wide "
-      + "or retires a group-wide one. You are not the one who does this here.",
+    translation: "An owner of the template's project approves or retires it, and an administrator makes it team-wide "
+      + "or retires a team-wide one. You are not the one who does this here.",
   },
   APPROVER_IS_AUTHOR: {
     check: "C-125.25", where: at("templateApprove", "is-template-approve"),
@@ -236,7 +236,7 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_COURT_PETITION: {
     check: "C-125.34", where: at("#courtPetition", "is-court-petition"),
-    translation: "This kind is filed with a court, so no template the group files in its own name is kept for it until "
+    translation: "This kind is filed with a court, so no template the team files in its own name is kept for it until "
       + "a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it.",
   },
 });

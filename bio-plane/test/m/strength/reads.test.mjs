@@ -346,7 +346,7 @@ test("R16: target= is refused by name; an unseen project is NO_SUCH_PROJECT; NOT
   const none = w.s.strengthBarOf({ viewer: MACHINE });
   assert.equal(none.bar, null);
   assert.equal(none.seeds_new_projects, true);
-  assert.match(none.detail, /no group default is declared/);
+  assert.match(none.detail, /no team default is declared/);
   w.s.strengthBarSet({ reason: REASON, capture: "A", author: ADMIN });
   const def = w.s.strengthBarOf({ viewer: MACHINE });
   assert.equal(def.group, "grp-one");

@@ -24,7 +24,7 @@ export const DOORBELL_CHECKS = Object.freeze({
   KNOCKER_SECRET_WEAK: Object.freeze({
     check: 'C-118.3', where: atDoor("knockerSecretWeak", "is-knocker-secret-strong"),
     translation: 'A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a '
-               + 'longer one, or ask the doorbell to make one. Nothing was received. The group can see how often its doorbell turns people away.',
+               + 'longer one, or ask the doorbell to make one. Nothing was received. The team can see how often its doorbell turns people away.',
   }),
   KNOCK_DISCARDED: Object.freeze({
     check: 'C-118.4', where: inIndex("pullKnock", "is-knock-pullable"),
@@ -68,22 +68,22 @@ export const KNOCK_CHECKS = {
   RATE_IP: {
     check: 'C-85.1',
     where: inIndex("#knockRateRefusal", "is-knock-rate"),
-    translation: 'Your material was not received. This group\'s inbox is not taking any more material from where '
+    translation: 'Your material was not received. This team\'s inbox is not taking any more material from where '
       + 'you are sending it '
       + 'just now. It is a limit on how fast one sender may knock, not a judgement about you or '
       + 'about what you sent, and it lifts on its own shortly — the bound is published beside this '
       + 'message. Nothing was stored and nothing was read, so send the same material again a little '
-      + 'later and it will arrive. The group can see how often its doorbell turns people away.',
+      + 'later and it will arrive. The team can see how often its doorbell turns people away.',
   },
   RATE_GLOBAL: {
     check: 'C-85.2',
     where: inIndex("#knockRateRefusal", "is-knock-rate"),
-    translation: 'Your material was not received. This group\'s inbox is not taking any more material from anyone '
+    translation: 'Your material was not received. This team\'s inbox is not taking any more material from anyone '
       + 'just now. The whole '
       + 'instance is at its limit rather than you — the cap exists so that no one sender can fill '
       + 'the inbox — and it lifts on its own shortly; the bound is published beside this message. '
       + 'Nothing was stored and nothing was read, so send the same material again a little later. '
-      + 'The group can see how often its doorbell turns people away.',
+      + 'The team can see how often its doorbell turns people away.',
   },
   /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each `where` names a module-scope helper in
      `door.mjs` and the region inside it, because that is where each refusal is enforced; the two oversize rows are two
@@ -91,27 +91,27 @@ export const KNOCK_CHECKS = {
   KNOCK_ENVELOPE_TOO_LARGE: {
     check: 'C-85.3',
     where: atDoor("knockEnvelopeTooLarge", "is-knock-envelope-too-large"),
-    translation: 'This group\'s inbox did not read what you sent, because the request itself is larger '
+    translation: 'This team\'s inbox did not read what you sent, because the request itself is larger '
       + 'than this door accepts. Nothing was stored, nothing was opened, and nothing about your '
       + 'material was judged — its size was read off the request and it stopped there. The size this '
       + 'inbox will read is published beside this message. Send the material again smaller, or as '
-      + 'more than one knock, and it will be read. The group can see how often its doorbell turns people away.',
+      + 'more than one knock, and it will be read. The team can see how often its doorbell turns people away.',
   },
   KNOCK_PAYLOAD_TOO_LARGE: {
     check: 'C-85.4',
     where: atDoor("knockPayloadTooLarge", "is-knock-payload-too-large"),
-    translation: 'This group\'s inbox read your material and cannot keep it, because it is larger than '
-      + 'this inbox stores. That is a fact about how this group has set its Civicsmith up rather '
-      + 'than a judgement about what you sent — a group that has configured evidence storage can keep '
+    translation: 'This team\'s inbox read your material and cannot keep it, because it is larger than '
+      + 'this inbox stores. That is a fact about how this team has set its Civicsmith up rather '
+      + 'than a judgement about what you sent — a team that has configured evidence storage can keep '
       + 'far more — and the size this one can keep is published beside this message. Nothing was '
-      + 'stored. Send something smaller, or ask the group\'s members how to get the whole of it to them. The group can see how often its doorbell turns people away.',
+      + 'stored. Send something smaller, or ask the team\'s members how to get the whole of it to them. The team can see how often its doorbell turns people away.',
   },
   KNOCK_EMPTY: {
     check: 'C-85.5',
     where: atDoor("knockEmpty", "is-knock-empty"),
-    translation: 'This group\'s inbox has nothing to keep, because what you sent decoded to no bytes at '
+    translation: 'This team\'s inbox has nothing to keep, because what you sent decoded to no bytes at '
       + 'all. The request itself was well formed and named its content, so this is most likely an '
       + 'empty file or an empty box rather than anything wrong with how you sent it. Nothing was '
-      + 'stored. Check what you attached and knock again. The group can see how often its doorbell turns people away.',
+      + 'stored. Check what you attached and knock again. The team can see how often its doorbell turns people away.',
   },
 };

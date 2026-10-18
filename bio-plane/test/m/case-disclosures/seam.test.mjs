@@ -25,10 +25,10 @@ const ROWS = [
   ["SELF_ATTESTED_NO_REASON", "C-120.5", "selfAttestedJudged", "Publishing a document as self-attested only says why. Give the reason. Nothing was written."],
   ["SELF_ATTESTATION_NOT_STANDING", "C-120.6", "selfAttestedJudged", "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written."],
   ["UNCLEARED_HUNCH", "C-120.7", "hunchDebt", "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."],
-  ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written."],
-  ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "acceptedWorkJudged", "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written."],
-  ["FLAG_NOT_DISCLOSED", "C-120.11", "flagsJudged", "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published."],
-  ["FLAGS_UNDETERMINED", "C-120.12", "flagsJudged", "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published."],
+  ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", "A finding this case relies on rests on material your team's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written."],
+  ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "acceptedWorkJudged", "A finding in this case rests on another team's finding, and this team's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written."],
+  ["FLAG_NOT_DISCLOSED", "C-120.11", "flagsJudged", "Another team's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published."],
+  ["FLAGS_UNDETERMINED", "C-120.12", "flagsJudged", "The flags on another team's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published."],
   ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "flagsJudged", "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."],
   /* R22's new rows (T33-68), numbered provisionally until their stamp; the translations are drafts */
   ["PERSON_BASIS_UNRECORDED", "C-120.14", "peopleJudged", "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written."],
@@ -360,28 +360,28 @@ const ACCEPTED = {
 /* Each renderer over the fixed rows, and the SHA-256 of its lines joined by newlines as case-authoring's own renderers
    (`document.mjs` at tranche/T29's opening, before the split) produced them from the same rows. */
 const RENDERED = {
-  "4622dce4f877b09dd49359c991d211736923732ecee1fc4bc365f62380e70e38": ["tensionFrontmatterLines", [ROWS_T, UNREAD]],
+  "0d699014316555a1948c97c544874e942896cb58a0ad3825ee8d63f29bf23b88": ["tensionFrontmatterLines", [ROWS_T, UNREAD]],
   "147ca17cd4fca35ce473f33b01ba40847056d9a6b19feece651b7e5ba7955745": ["tensionFrontmatterLines", [[], []]],
   "7b4d64ee3bbd113a414cf7a9b7fbbe3b4a871838fcac7aaf624c8a183ce25f39": ["tensionBodyLines", [ROWS_T, UNREAD]],
   "8708f2958a9f13f2c9d49825b7b401a89b8057e9d9a85128bc72612a47a31dfa": ["tensionBodyLines", [[]]],
-  "69c79f41e94ef5e3d1e52e35cb912344feaed5350ded66be74bc0c7e293fbf5e": ["captureBodyLines", [CAPTURES, SOURCES]],
-  "fe16ace5dca89d8bb3ea1dd6f7371ae334b08cdc1e964be0800d11d388ff9eb1": ["captureBodyLines", [[], []]],
+  "102098b89d550e0f3cb834d0454b871580a4322e828e4a0eabe131e17e38375a": ["captureBodyLines", [CAPTURES, SOURCES]],
+  "9ea60ae78ed33be26f86625e3e92f016054fd666703bd1561cd47fc82d17a088": ["captureBodyLines", [[], []]],
   /* re-pinned by DEC-149 (T34-87): the supporting-material sentence names no copy */
   "f933b18ccb8a667748916216e9ddf568d6c992685df268ff5fc77261fd29ac04": ["carriesBodyLines", [METHOD, MATERIALS, "test-group"]],
   "90eb0ce32c1afc3fa9af5d11f4c768f7ff59c62daac0562ff4516428000324cb": ["carriesBodyLines", [null, { rows: [] }, null]],
   /* re-pinned by N535: the first row's reason ends in its own full stop, which is no longer doubled */
-  "ca07dd944ad664fbc7e30d31254e9c6b344aaedecbd8cf67071e9500e797ef17": ["acceptedBodyLines", [ACCEPTED]],
-  "c4da3290d6ee7b150705bd817934413dbab78b4a750388db92bec2be569fb2e1": ["acceptedBodyLines", [{ rows: ACCEPTED.rows, flags: [] }]],
+  "954d62fb382e1b37cda8ec7896eb2d4594132bfb5a8e52f8b3c82101b7e69521": ["acceptedBodyLines", [ACCEPTED]],
+  "0a17b93cc94882a110542f3de61d3794d53878537c5add0859df11d087d2f1bb": ["acceptedBodyLines", [{ rows: ACCEPTED.rows, flags: [] }]],
 };
 /* N535: the bytes case-authoring's renderer produced before the split, for the two sections that changed. */
 /* DEC-149: the bytes carriesBodyLines produced before T34-87, from the same rows. */
 const CARRIES_BEFORE_DEC149 = "54051f5fdfe26a6d6017163cb0115033e67c6076a0d9855e96a0c18bbf8b4d6f";
-const ACCEPTED_BEFORE_N535 = [["557eeb47abfb15756efe91a681364b912cc007dda9b7d40ec6b73286471a7145", ACCEPTED],
-  ["ad9a96ebac55e2784f2d60cee6ad7bfb581b2cd94cc6f355d4a4507123420cc3", { rows: ACCEPTED.rows, flags: [] }]];
+const ACCEPTED_BEFORE_N535 = [["cae5b4d209f44d2e979873dce8237130259883c311b6a38203b077c813fe43a7", ACCEPTED],
+  ["006cf3ad0fa6efdccbe67c65678a49d6641fd089009691826d541ae9c016a47b", { rows: ACCEPTED.rows, flags: [] }]];
 
 test("R1, R3, R5, R7, R13, R14 (K1333): the renderers moved byte for byte — each section rendered from fixed rows hashes to what case-authoring's renderers produced from them before the split, and so does each member's tension sentence (negative control: one changed byte in a row changes the hash)", () => {
   for (const [want, [fn, args]] of Object.entries(RENDERED)) assert.equal(hash(CD[fn](...args)), want, fn);
-  assert.equal(hash(ROWS_T.map(CD.tensionSentence)), "ea2712a31f72c703a3308c648cb20d048e210232c2eb1cda3995cf468c283417");
+  assert.equal(hash(ROWS_T.map(CD.tensionSentence)), "c198751f9028cc43d48d95bbaf15d69c3b4f153733dd90d9343a2d8c49be71c9");
   const changed = [{ ...ROWS_T[0], words: "we read the later page." }, ...ROWS_T.slice(1)];
   assert.notEqual(hash(CD.tensionBodyLines(changed, UNREAD)), "7b4d64ee3bbd113a414cf7a9b7fbbe3b4a871838fcac7aaf624c8a183ce25f39");
 });
@@ -403,11 +403,11 @@ const DEC149_OLD = /\b(this|the) (instance|copy|plane)\b/i;
 test("R6, R22 (DEC-149, T34-87): each member-facing string that named the group's Civicsmith \"this copy\" says \"your group's Civicsmith\" or needs no name — C-120.8's translation, RELIED_ON_NOT_PRESENTABLE's detail, and the case document's supporting-material sentence; and none of this module's member-facing text says \"this instance\", \"this copy\", \"this plane\" or \"the plane\" (negative control: the old wording matches)", () => {
   /* C-120.8's translation (checks.mjs) */
   assert.match(CASE_DISCLOSURE_CHECKS.RELIED_ON_NOT_PRESENTABLE.translation,
-    /^A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything /);
+    /^A finding this case relies on rests on material your team's Civicsmith does not hold whole, and everything /);
   /* RELIED_ON_NOT_PRESENTABLE's detail, raised (index.mjs) */
   const m = world(); m.member("alice"); m.doc(DOC, {}, { indexed: false }); m.finding(Q, [{ target: DOC }]);
   const r = m.cd.materialsJudged(m.prepared([Q]), m.roles([Q]), V("alice")).refusals[0];
-  assert.match(r.detail, /^1 document\(s\) or observation\(s\) a load-bearing finding of this case rests on are not held whole by your group's Civicsmith \(/);
+  assert.match(r.detail, /^1 document\(s\) or observation\(s\) a load-bearing finding of this case rests on are not held whole by your team's Civicsmith \(/);
   /* the case document's sentence (document.mjs, carriesBodyLines) */
   const body = CD.carriesBodyLines(METHOD, MATERIALS, "test-group");
   assert.ok(body.includes("Every document and observation this case's findings reach. One a load-bearing finding relies on travels "

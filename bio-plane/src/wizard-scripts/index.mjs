@@ -485,7 +485,7 @@ export class WizardScripts {
   }
   #notTheGroups(s) {
     /* DEC-49 REGION is-wizard-civicsmith */
-    return refuse("WIZARD_NOT_THE_GROUPS", "a Civicsmith script is read-only to every group: groups cannot edit or retire it",
+    return refuse("WIZARD_NOT_THE_GROUPS", "a Civicsmith script is read-only to every team: teams cannot edit or retire it",
                   { script: s.id, origin: "civicsmith" });
     /* END DEC-49 REGION is-wizard-civicsmith */
   }
@@ -1088,7 +1088,7 @@ export class WizardScripts {
       if (state !== "approved" || s.retired)
         return refuse("WIZARD_NOT_APPROVED", `the version is ${s.retired ? "of a retired script" : state}: only an approved project script is widened`,
                       { version: versionId(s.id, n), state });
-      if (!this.#isAdmin(member)) return this.#notAnApprover(s, "an administrator makes a script group-wide");
+      if (!this.#isAdmin(member)) return this.#notAnApprover(s, "an administrator makes a script team-wide");
       if (s.widened) return { ok: true, script: s.id, existed: true, widened: s.widened, scope: "group" };
       const at = this.#when();
       this.sql.exec(`INSERT INTO wiz_events (script_id, version, bundle_id, event, actor, actor_name, detail, at) VALUES (?,NULL,?,?,?,?,?,?)`,
@@ -1098,7 +1098,7 @@ export class WizardScripts {
     if (state !== "submitted")
       return refuse("NOT_SUBMITTED", `the version is ${state}, not submitted`, { version: versionId(s.id, n), state });
     if (!this.#mayApprove(s, member))
-      return this.#notAnApprover(s, s.widened ? "an administrator approves a group-wide script" : "an owner of the script's project approves it");
+      return this.#notAnApprover(s, s.widened ? "an administrator approves a team-wide script" : "an owner of the script's project approves it");
     const v = this.#one(`SELECT author FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n);
     const others = this.#contributors(s.id, n).filter((c) => c.kind === "member" && c.member !== v.author);
     if (v.author === member && !others.length)
@@ -1183,7 +1183,7 @@ export class WizardScripts {
     };
     if (version === null || version === undefined || version === "") {
       if (!this.#mayApprove(s, member))
-        return this.#notAnApprover(s, s.widened ? "an administrator retires a group-wide script" : "an owner of the script's project retires it");
+        return this.#notAnApprover(s, s.widened ? "an administrator retires a team-wide script" : "an owner of the script's project retires it");
       if (!why) return reasonRefused();
       if (s.retired) return this.#ended(s, { ending: "retired", ...s.retired });
       const at = this.#when();

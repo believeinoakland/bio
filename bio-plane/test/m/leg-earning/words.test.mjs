@@ -12,7 +12,7 @@ import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, BASIS_GRADES } from 
 
 const FORBIDDEN = /\b(this|the) (instance|copy|plane)\b/i;
 const CEILING = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody `
-              + `web archive, which your group's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
+              + `web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
 const ocr = (cap) => [{ step: "pixels" }, { step: "ocr", engine: "tesseract", version: "5.3.4", cap, confidence: { basis: "none" } }];
 const below = (g) => BASIS_GRADES[BASIS_GRADES.indexOf(g) + 1];
 const words = (e) => Object.values(e).filter((v) => typeof v === "string").join("\n");
@@ -27,7 +27,7 @@ test("R1 DEC-149: every capture entry names the group's Civicsmith as your group
   w.doc(OCR_C, ["ocr at C"], { chain: ocr("C") });
   const cap = w.k.earned(null, [PLAIN, OCR_A, REPLAY, OCR_C]).earned.capture;
   const fetched = (id) => `${id} holds 1 capture(s) in the record, so the strongest capture grade it can earn is `
-    + `${EARNED_CAPTURE_CEILING} — the bytes as your group's Civicsmith fetched them, hashed at receipt.`;
+    + `${EARNED_CAPTURE_CEILING} — the bytes as your team's Civicsmith fetched them, hashed at receipt.`;
   /* case 1, nothing transcribed; case 3, a measured transcription the bytes bound: the same sentence */
   assert.equal(cap[PLAIN].why, fetched(PLAIN));
   assert.equal(cap[OCR_A].why, fetched(OCR_A));
@@ -35,12 +35,12 @@ test("R1 DEC-149: every capture entry names the group's Civicsmith as your group
   const R = below(EARNED_CAPTURE_CEILING);
   assert.deepEqual([cap[REPLAY].grade, cap[REPLAY].bounded_by], [R, "CAPTURE_BOUNDED_BY_ROUTE"]);
   assert.equal(cap[REPLAY].why, `${REPLAY} holds 1 capture(s) in the record, and the strongest route by which your `
-    + `group's Civicsmith received them earns ${R} on the capture axis (provenance's capture grade: an archive replay `
+    + `team's Civicsmith received them earns ${R} on the capture axis (provenance's capture grade: an archive replay `
     + `stands one party further from the publisher than a direct fetch), so the strongest capture grade this document `
     + `can earn is ${R}.`);
   /* the fidelity binds */
   assert.equal(cap[OCR_C].bounded_by, "CAPTURE_BOUNDED_BY_FIDELITY");
-  assert.ok(cap[OCR_C].why.startsWith(`${OCR_C} holds 1 capture(s) in the record, and the bytes as your group's `
+  assert.ok(cap[OCR_C].why.startsWith(`${OCR_C} holds 1 capture(s) in the record, and the bytes as your team's `
     + `Civicsmith fetched them would be worth ${EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a `
     + `machine and that derivation is measured at C.`), cap[OCR_C].why);
   for (const id of [PLAIN, OCR_A, REPLAY, OCR_C]) {

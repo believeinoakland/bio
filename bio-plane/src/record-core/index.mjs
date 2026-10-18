@@ -142,7 +142,7 @@ export function mintExhausted(prefix, extra) {
   /* DEC-49 REGION is-mint-exhausted */
   return { ...own, ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: row.check,
            translation: row.translation, prefix: asked,
-           detail: `your group's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.` };
+           detail: `your team's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.` };
   /* END DEC-49 REGION is-mint-exhausted */
 }
 

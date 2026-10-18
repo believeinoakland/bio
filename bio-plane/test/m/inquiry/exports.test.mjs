@@ -57,7 +57,7 @@ test("R52 (1) R63: the registered figure counts the table as its SQL states, who
     assert.equal(w.record.counts(hid).inquiryMigrationReplays, pinnedCount(w, hid), `${viewer}: as the pinned count states it`);
   }
   /* negative control (D54): the project set discoverable, the founder sees it whole again (K2409), bob still does not */
-  const set = w.membership.projectVisibilitySet({ projectId: closedWork, setting: "discoverable", reason: "open to the group",
+  const set = w.membership.projectVisibilitySet({ projectId: closedWork, setting: "discoverable", reason: "open to the team",
                                                   by: "alice", viewer: V("alice") });
   assert.equal(set.ok, true, JSON.stringify(set));
   for (const [viewer, expected] of [["admin", 3], ["member:admin", 3], [V("bob"), 2]]) {

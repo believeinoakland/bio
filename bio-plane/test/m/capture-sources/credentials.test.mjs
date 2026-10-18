@@ -59,7 +59,7 @@ async function world({ key = KEY, clock = null, ownHosts = undefined } = {}) {
   bundle("P1", "project"); m.projectCreated({ projectId: "P1", ownerId: "ann", by: "ann" });
   bundle("P2", "project"); m.projectCreated({ projectId: "P2", ownerId: "dee", by: "dee" });
   bundle("P3", "project"); m.projectCreated({ projectId: "P3", ownerId: "dee", by: "dee" });
-  assert.equal(m.projectVisibilitySet({ projectId: "P3", setting: "discoverable", reason: "open to the group", by: "dee", viewer: "member:dee" }).ok, true);
+  assert.equal(m.projectVisibilitySet({ projectId: "P3", setting: "discoverable", reason: "open to the team", by: "dee", viewer: "member:dee" }).ok, true);
   bundle("P4", "project"); m.projectCreated({ projectId: "P4", ownerId: "admin", by: "admin" });
   m.projectInvite({ projectId: "P1", handle: "bob", by: "ann", viewer: "member:ann" });
   m.projectJoin({ projectId: "P1", by: "bob", viewer: "member:bob" });
@@ -680,7 +680,7 @@ test("R55, R65: a credential for one of the group's own hosts is refused OWN_HOS
   }
   const own = await w.supply({ host: "plane.grp.example" });
   assert.equal(own.check, "C-105.12");
-  assert.match(own.detail, /one of your group's own/);
+  assert.match(own.detail, /one of your team's own/);
   assert.equal(w.raw().length, 0);
   /* Not one of them: a parent of a suffix entry, a host beside the Civicsmith's, a look-alike. */
   for (const host of ["acct.workers.dev", "grp.example", "plane.grp.example.evil.example", HOST]) {
@@ -707,7 +707,7 @@ test("R56, R65: a credential for one of the group's own hosts is never answered 
   for (const host of ["plane.grp.example", "PLANE.GRP.EXAMPLE", "agent.acct.workers.dev"]) {
     const a = await ask(host);
     assert.deepEqual(a.credentials, [], host);
-    assert.match(a.reason, /^CAPTURE_CREDENTIAL_OWN_HOST: \S+ is one of your group's own hosts, so no credential is used for it and the fetch goes without credentials$/, host);
+    assert.match(a.reason, /^CAPTURE_CREDENTIAL_OWN_HOST: \S+ is one of your team's own hosts, so no credential is used for it and the fetch goes without credentials$/, host);
     noLeak(a, SECRET, host);
   }
   assert.equal((await ask(HOST)).credentials[0].credential, other.credential);
@@ -720,22 +720,22 @@ test("R55, R56 (DEC-149, credentials.mjs:60, :268, :302, :360, :368): the refusa
   const OLD = /\b(?:the|this) (?:plane|instance)\b|this instance's/i;
   /* :60, C-105.8's translation. */
   const row = CAPTURE_CREDENTIAL_CHECKS.CAPTURE_CREDENTIAL_NO_KEY;
-  assert.equal(row.translation, "No encryption key is set for your group's Civicsmith, so no credential is stored or used.");
+  assert.equal(row.translation, "No encryption key is set for your team's Civicsmith, so no credential is stored or used.");
   /* :268, the supplier who is not a member. */
   const w = await world();
-  assert.equal((await w.supply({ by: "nobody" })).detail, "the supplier named is not an active member of your group");
+  assert.equal((await w.supply({ by: "nobody" })).detail, "the supplier named is not an active member of your team");
   /* :302, no key at supply. */
   const k = await world({ key: null });
-  assert.equal((await k.supply({})).detail, "no encryption key is set for your group's Civicsmith, so nothing is stored in the clear");
+  assert.equal((await k.supply({})).detail, "no encryption key is set for your team's Civicsmith, so nothing is stored in the clear");
   /* :360, no key at a fetch. */
   k.db.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
              VALUES ('CRED-x','login','${HOST}','group',NULL,'dee','2026-09-28T00:00:00Z','AAAAAAAAAAAAAAAA','AAAA')`);
   assert.equal((await k.c.credentialsForFetch({ host: HOST, principalPlane: "member:dee", target: "Q0" })).reason,
-    "CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your group's Civicsmith, so no credential is used and the source's refusal stands");
+    "CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your team's Civicsmith, so no credential is used and the source's refusal stands");
   /* :368, a ciphertext that will not decrypt. */
   w.db.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
              VALUES ('CRED-y','login','${HOST}','group',NULL,'dee','2026-09-28T00:00:00Z','AAAAAAAAAAAAAAAA','AAAA')`);
   assert.equal((await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:dee", target: "Q0" })).reason,
-    "credential CRED-y will not decrypt under the key of your group's Civicsmith, so the fetch goes without credentials and the source's refusal stands");
+    "credential CRED-y will not decrypt under the key of your team's Civicsmith, so the fetch goes without credentials and the source's refusal stands");
   for (const c of Object.keys(CAPTURE_CREDENTIAL_CHECKS)) assert.doesNotMatch(CAPTURE_CREDENTIAL_CHECKS[c].translation, OLD, c);
 });

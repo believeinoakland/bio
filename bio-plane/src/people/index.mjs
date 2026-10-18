@@ -1225,7 +1225,7 @@ export class People {
     const truncated = rest.length > cap;
     return { ok: true, following: rows.length, in_your_projects: rows.filter((r) => r.mine).length, rows: page, limit: cap,
              truncated, cursor: truncated && last ? People.#cursorOf(last) : null,
-             detail: "the people and organisations the record follows, never the group's own members; each row counts the "
+             detail: "the people and organisations the record follows, never the team's own members; each row counts the "
                + "documents, questions and projects naming it among those you may see, and when the newest was added" };
   }
 

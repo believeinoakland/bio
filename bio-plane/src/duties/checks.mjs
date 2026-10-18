@@ -28,7 +28,7 @@ export const DUTIES_WORDS = Object.freeze({
    or requirement number. Words, not rows: a reason is no refusal and has no check. */
 export const DUTIES_REASON_WORDS = Object.freeze({
   "duty.reason.trigger_undated": "What starts the clock has no date in the record yet, so the due date can't be worked out.",
-  "duty.reason.deadline_not_held": "Your group's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
+  "duty.reason.deadline_not_held": "Your team's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
   "duty.reason.due_not_computed": "The due date couldn't be worked out from what the record holds.",
   "duty.reason.due_between_days": "The due date depends on a day the record doesn't settle, so it falls on one of two days.",
   "duty.reason.match_undated": "The event that met the duty has no settled date, so whether it was on time is open.",
@@ -70,14 +70,14 @@ export const DUTIES_CHECKS = Object.freeze({
     "The version of the law named is not one the record holds for that instrument. Name a held version. Nothing was "
     + "written."),
   UNKNOWN_TRIGGER: row(9, "fieldRefusal", "is-duty-trigger",
-    "An obligation says what starts it: an event concerning someone, a repeating schedule, an item the group's own "
-    + "work records (such as a request the group sent), or a stated date. This is none of them. Nothing was written."),
+    "An obligation says what starts it: an event concerning someone, a repeating schedule, an item the team's own "
+    + "work records (such as a request the team sent), or a stated date. This is none of them. Nothing was written."),
   BAD_RECURRENCE: row(10, "fieldRefusal", "is-duty-recurrence",
     "The repeating schedule could not be read. It is written as a recurrence rule of the supported kind (weekly, "
     + "monthly or yearly), with its first date. Nothing was written."),
   UNKNOWN_BASIS_KIND: row(11, "fieldRefusal", "is-duty-basis",
     "A due date rests on one of four things: a rule the law sets, the body's own commitment, the event it must "
-    + "precede, or the group's own window. This is none of them. Nothing was written."),
+    + "precede, or the team's own window. This is none of them. Nothing was written."),
   HOLDS_AMOUNT: row(12, "fieldRefusal", "is-duty-amount",
     "An obligation never holds an amount of money. A payment it requires cites the money facts the record holds. "
     + "Remove the amount and cite the facts. Nothing was written."),

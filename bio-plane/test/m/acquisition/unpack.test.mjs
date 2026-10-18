@@ -107,7 +107,7 @@ test("R38 R39 R26: each file is cut out exactly, stored under its own digest, re
   assert.equal(d0.provenance_chain.length, 1);
   const hop = d0.provenance_chain[0];
   assert.equal(hop.who, firstHopWho("inst", "9.9.9"));
-  assert.equal(hop.asserts, `these bytes are entry 0 (docs/a.pdf, the archive's own claim) of the archive ${archiveSha} held by your group's Civicsmith, cut out and verified by size and CRC-32 at ${d0.retrieved}`);
+  assert.equal(hop.asserts, `these bytes are entry 0 (docs/a.pdf, the archive's own claim) of the archive ${archiveSha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at ${d0.retrieved}`);
   assert.deepEqual([hop.bound, hop.via, hop.archive_sha256], [false, "unpacked", archiveSha]);
   assert.equal(JSON.stringify(d0.provenance_chain).includes("these bytes were served for"), false, "the archive's hop is cited, never copied");
   assert.deepEqual(d0.container, { archive_sha256: archiveSha, index: 0, path: "docs/a.pdf", name_raw: Buffer.from("docs/a.pdf").toString("hex"),

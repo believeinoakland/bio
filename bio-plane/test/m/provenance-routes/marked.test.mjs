@@ -32,7 +32,7 @@ test("R5: routeFinding states never-looked as the question never asked, not appl
     at: "t", by: V("r"), stateAt: "verified", seq: 3, register: "readable", undetermined: 1, documents: 2, note: ROUTE_MARK_NOTE });
   const present = routeFinding("information", { ...mark, finding: "PRESENT" });
   assert.deepEqual([present.marked, present.means], [false, OBSERVATION_MEANS.PRESENT]);
-  assert.match(ROUTE_MARK_NOTE, /this document stays where the group put it/);
+  assert.match(ROUTE_MARK_NOTE, /this document stays where the team put it/);
   assert.match(ROUTE_MARK_NOTE, /corrects FORWARD rather than un-saying one \(DEC-19\)/);
   assert.match(ROUTE_MARK_NOTE, /The state and this finding disagree deliberately, and neither is a defect in the other/);
   assert.deepEqual(FINDING_MEANS, { NEVER_LOOKED: OBSERVATION_MEANS.NEVER_LOOKED,

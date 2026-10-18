@@ -374,7 +374,7 @@ test("R43 every working screen's masthead opens with the mark (the plumb bob, be
     const mark = mast.children[0];
     assert.ok(mark.classList.contains("cs-mark"), path);
     assert.equal(mark.querySelector("use").getAttribute("href"), "/app/assets/icons.svg#i-mark");
-    assert.equal(mark.nextElementSibling.classList.contains("mk-grp"), true, "before the group's name");
+    assert.equal(mark.nextElementSibling.classList.contains("mk-grp"), true, "before the team's name");
     assert.equal(mark.getAttribute("aria-label"), word("shell.mark"));
     assert.ok(mark.getAttribute("data-tip").includes(word("shell.mark.means").replace(/'/g, "&#39;")));
     assert.equal(mark.getAttribute("data-level"), "1");

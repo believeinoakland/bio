@@ -13,7 +13,7 @@ import { HOSTING_CONTROL } from "../../../src/setup-fleet.mjs";
 /* The words DEC-149 retires for the group's own Civicsmith. "copy" keeps its other meanings, none of which this
    module's member-facing text uses, so any "copy" here is the retired one. */
 const RETIRED = /\b(?:copy|copies|instance|plane|server)\b/i;
-const OURS = "your group's Civicsmith";
+const OURS = word("queue.capture-completed-unattended.who");
 
 const world = async () => {
   const w = await boot({ env: { INSTANCE_NAME: "river-town" } });
@@ -31,10 +31,10 @@ test("R63 (T50; N1116, N1160) every check row's translation is its word by key, 
 });
 
 test("R63 R47 the hosting block's words (T34-87: setup-fleet.mjs :22, :24, :25, :31) say your group's Civicsmith, never the copy", () => {
-  assert.equal(HOSTING_CONTROL.heading, "Before you choose a password: who controls your group's Civicsmith");                    // :22
-  assert.match(HOSTING_CONTROL.sentences[0], /^Whoever can sign in to the hosting account your group's Civicsmith runs in \(its Cloudflare account\) controls it\./); // :24
+  assert.equal(HOSTING_CONTROL.heading, word("screen.hosting.heading"));                    // :22
+  assert.match(HOSTING_CONTROL.sentences[0], /^Whoever can sign in to the hosting account your team's Civicsmith runs in \(its Cloudflare account\) controls it\./); // :24
   assert.match(HOSTING_CONTROL.sentences[0], /They can replace the one-time password, claim it again, read everything in it/);    // :25
-  assert.match(HOSTING_CONTROL.sentences.at(-1), /for your group's Civicsmith to be claimed again\.$/);                           // :31 (K3240)
+  assert.match(HOSTING_CONTROL.sentences.at(-1), /for your team's Civicsmith to be claimed again\.$/);                           // :31 (K3240)
   for (const s of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences]) assert.doesNotMatch(s, RETIRED, s);
 });
 
@@ -43,26 +43,26 @@ test("R63 R53 R55 the assistant's sentences (T36: the keep-away state and its re
   w.prov.keepAway = { on: true, reason: "Kept here.", set_by: "admin", set_at: "2026-10-08T09:00:00Z" };
   const kept = w.m.assistantGate();
   assert.equal(kept.reason, "AI_KEPT_AWAY", "T37: ai-accounts' refusal, as given");
-  assert.match(kept.detail, /the group keeps its material away from every assistant/);
+  assert.match(kept.detail, /the team keeps its material away from every assistant/);
   w.prov.keepAway = { on: null, reason: null, set_by: null, set_at: null };
   const stateDetail = w.m.assistantState().detail;
-  assert.match(stateDetail, /^whether your group keeps its material away from every assistant could not be read/);
+  assert.match(stateDetail, /^whether your team keeps its material away from every assistant could not be read/);
   const unread = w.m.assistantGate();
-  assert.match(unread.detail, /^whether the group keeps its material away from every assistant could not be read/);
+  assert.match(unread.detail, /^whether the team keeps its material away from every assistant could not be read/);
   /* this module's own sentence on the gate: a provider that throws is the store's silence */
   const thrown = (await boot({ prov: { ...w.prov, aiAccounts: { aiKeptAway() { throw new Error("x"); } } } })).m.assistantGate();
-  assert.match(thrown.detail, /^whether your group keeps its material away from every assistant did not answer/);
+  assert.match(thrown.detail, /^whether your team keeps its material away from every assistant did not answer/);
   for (const s of [kept.detail, stateDetail, unread.detail, kept.translation, thrown.detail]) assert.doesNotMatch(s, RETIRED, s);
 });
 
 test("R63 the profiles' and the group identity's sentences (T34-87: setup.mjs :2245, :2451, :2479, :2493, :2502) say your group's Civicsmith", async () => {
   const w = await world();
-  assert.match(w.m.profiles().detail, /^no active profile: your group's Civicsmith reads no local facts/);                         // :2479
-  assert.match(w.m.profilesSet({ profiles: [], by: "ruth" }).detail, /an administrator's act, and your group's Civicsmith stamps who is asking/); // :2493
-  assert.match(w.m.profilesSet({ profiles: ["nowhere"], by: "admin" }).detail, /^your group's Civicsmith holds no profile "nowhere"/); // :2502
-  assert.match(w.m.groupNameSet({ name: "x", by: "ruth" }).detail, /your group's Civicsmith stamps who is asking from the signed-in session/); // :2245
+  assert.match(w.m.profiles().detail, /^no active profile: your team's Civicsmith reads no local facts/);                         // :2479
+  assert.match(w.m.profilesSet({ profiles: [], by: "ruth" }).detail, /an administrator's act, and your team's Civicsmith stamps who is asking/); // :2493
+  assert.match(w.m.profilesSet({ profiles: ["nowhere"], by: "admin" }).detail, /^your team's Civicsmith holds no profile "nowhere"/); // :2502
+  assert.match(w.m.groupNameSet({ name: "x", by: "ruth" }).detail, /your team's Civicsmith stamps who is asking from the signed-in session/); // :2245
   const bound = await boot({ env: { JURISDICTION_PROFILES: "nowhere-profile" } });
-  assert.match(bound.m.profiles().boot.why, /which your group's Civicsmith does not hold$/);                                        // :2451
+  assert.match(bound.m.profiles().boot.why, /which your team's Civicsmith does not hold$/);                                        // :2451
   for (const s of [w.m.profiles().detail, bound.m.profiles().boot.why]) assert.doesNotMatch(s, RETIRED, s);
 });
 
@@ -77,9 +77,9 @@ test("R63 the domain check's verdict details (T34-87: setup.mjs :2351, :2368, :2
   const verified = await verdict(json({ instance: ADDR, group: "river-town" }));
   assert.match(verified, new RegExp(`names ${OURS} \\(${ADDR.replace(/\./g, "\\.")}\\) and its slug \\(river-town\\)`));               // :2368
   const notObject = await verdict(() => new Response("[1]", { status: 200 }));
-  assert.match(notObject, /is not the JSON object your group's Civicsmith reads/);                                                // :2371
+  assert.match(notObject, /is not the JSON object your team's Civicsmith reads/);                                                // :2371
   const other = await verdict(json({ instance: "https://elsewhere.example", group: "x" }));
-  assert.match(other, /gives the address "https:\/\/elsewhere\.example" and the group "x"/);
+  assert.match(other, /gives the address "https:\/\/elsewhere\.example" and the team "x"/);
   assert.match(other, new RegExp(`; ${OURS} is ${ADDR.replace(/\./g, "\\.")} and its slug is river-town$`));                      // :2373
   const unfinished = await verdict(() => { throw new Error("connection refused"); });
   assert.match(unfinished, /did not complete, and why was not recorded/);                                                         // :2351

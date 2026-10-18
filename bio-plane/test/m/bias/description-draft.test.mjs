@@ -17,7 +17,7 @@ const tables = (w) => w.rows(`SELECT name FROM sqlite_master WHERE type='table' 
 const NONE = (r) => {
   assert.deepEqual({ ...r, stated: undefined }, { ok: true, description: null, offered: false, proposed: false, authored: false,
     statements: [], installed: false, adopted: false, writes: 0, stated: undefined });
-  assert.match(r.stated, /no description of the group to start a declared bias from/);
+  assert.match(r.stated, /no description of the team to start a declared bias from/);
 };
 
 async function described() {
@@ -43,7 +43,7 @@ test("R48: to an active member it answers the latest self-description (kinds, ot
     assert.deepEqual(r.description, { kinds: ["community"], otherKind: null, focus: "The harbour board.", purpose: null,
       by: "second", at: last.at }, `${viewer}: the latest record, never the history`);
     assert.deepEqual([r.ok, r.offered, r.proposed, r.authored, r.statements], [true, true, true, false, []], viewer);
-    assert.equal(r.label, "what the group wrote about itself");
+    assert.equal(r.label, "what the team wrote about itself");
     assert.equal(r.offers, "the opening text of a new bias set the member authors");
     assert.match(r.stated, /a member writes each statement, names its subject in the registry and justifies it/);
     assert.match(r.stated, /adopts it with a member's name on it/);

@@ -49,7 +49,7 @@ test("R63: a capture brought in by a member's upload is graded exactly as R51 gr
   assert.match(g.why, new RegExp(up(s)));
   assert.doesNotMatch(g.why, /doorbell/, "an upload is not said to have come through the doorbell");
   /* DEC-149's rule for outward words: the instance is "your group's Civicsmith", never "this instance" or "the plane". */
-  assert.match(g.why, new RegExp(` is proven by the receipt your group's Civicsmith itself made at ${up(s)}$`));
+  assert.match(g.why, new RegExp(` is proven by the receipt your team's Civicsmith itself made at ${up(s)}$`));
   assert.doesNotMatch(g.why, /\b(?:this|the) (?:instance|plane)\b|\bplane's\b|\binstance's\b/i);
   assert.equal(w.prov.captureGrade(`sha256:${s.toUpperCase()}`).route, "upload");
   /* A second sighting (bytes already held, R86's `existed`) writes a later receipt: the earliest still proves existence. */

@@ -462,7 +462,7 @@ export class Progressions {
     const cur = this.#current(key);
     if (!cur) {
       if (!stmt) return refusal("NO_BASIS", `'${key}' is declared for the first time; a first declaration states its basis -- why `
-                                 + `the group expects this flow -- and a citation may name where that is published or held `
+                                 + `the team expects this flow -- and a citation may name where that is published or held `
                                  + `(framework 8.2). Nothing was written.`,
                                 { progression_key: key, version: null });
     } else {

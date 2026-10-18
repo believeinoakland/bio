@@ -96,7 +96,7 @@ test("R56: op=publish recomputes and reads each calculation a member's chain rea
   assert.notEqual(rows[0].result_key, rows[1].result_key, "over its own inputs");
   assert.deepEqual(rows[0].results, { t: { value: "12", precision: "exact" } });
   const body = bodyOf(docOf(w, ok));
-  assert.ok(body.includes(`- ${C1}: ${CALCULATION_STATE_WORDS.differs}. Disclosed by the group: ${WORDS}`));
+  assert.ok(body.includes(`- ${C1}: ${CALCULATION_STATE_WORDS.differs}. Disclosed by the team: ${WORDS}`));
   assert.equal(body.includes("Each workbook below"), false, "no workbook, no workbook sentence");
 });
 

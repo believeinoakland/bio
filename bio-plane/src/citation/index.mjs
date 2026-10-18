@@ -283,7 +283,7 @@ export class Citation {
       if (retiredMembers.length)
         return { ok: false, reason: "RETIRED_NOT_CITABLE", ...rowOf(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
                  project, handle, offenders: retiredMembers.sort(), drift: sel.drift,
-                 detail: "the group has RETIRED these since the edge was severed, recording that they are "
+                 detail: "the team has RETIRED these since the edge was severed, recording that they are "
                        + "superseded or no longer stand, and reinstating the edge would read to every later "
                        + "member as live support. Cite what superseded them, or re-collect the source as a new "
                        + "record and cite that. The whole call is refused rather than narrowed to the members "
@@ -507,7 +507,7 @@ export class Citation {
                         || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
       return { ok: false, reason: "INQUIRY_UNAVAILABLE", project, handle, drift: sel.drift,
                detail: "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned "
-                     + "registry, and your group's Civicsmith was created without them, so nothing was written." };
+                     + "registry, and your team's Civicsmith was created without them, so nothing was written." };
     /* DEC-49 REGION is-cite-role — REC-64/C-33.16-18. */
     const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
     if (ontoInquiry) {
@@ -556,7 +556,7 @@ export class Citation {
            and `citable` carries the vocabulary. Renaming it is recorded as Bob's decision, not taken here. */
         : { ok: false, reason: "NOT_INFORMATION", project, handle,
             offenders: offenders.sort(), drift: sel.drift, citable: ["information", "inquiry"],
-            detail: "a case rests on material, or on a question the group is asking. These members of the "
+            detail: "a case rests on material, or on a question the team is asking. These members of the "
                   + "selection are neither, and the whole call is refused rather than narrowed to the ones "
                   + "that are." };
 
@@ -567,7 +567,7 @@ export class Citation {
     if (retiredMembers.length)
       return { ok: false, reason: "RETIRED_NOT_CITABLE", ...rowOf(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
                project, handle, offenders: retiredMembers.sort(), drift: sel.drift,
-               detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and "
+               detail: "the team has RETIRED these, recording that they are superseded or no longer stand, and "
                      + "a citation made now would read to every later member as live support. Cite what "
                      + "superseded them, or re-collect the source as a new record and cite that. The whole call "
                      + "is refused rather than narrowed to the members that are not retired." };
@@ -885,7 +885,7 @@ export class Citation {
     if (this.retiredNotCitable(qid))
       return { ok: false, reason: "RETIRED_NOT_CITABLE", ...rowOf(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
                project, handle: null, offenders: [qid], drift: false,
-               detail: "the group has RETIRED this, recording that it is superseded or no longer stands, and drawing "
+               detail: "the team has RETIRED this, recording that it is superseded or no longer stands, and drawing "
                      + "on it now would read to every later member as live support. Draw on what superseded it." };
 
     const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");

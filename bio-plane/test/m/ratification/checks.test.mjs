@@ -89,7 +89,7 @@ test("R14, R22, R35, R2: C-58.4 CONTESTED_IN_BATCH, C-58.5 ANONYMOUS_TESTIMONY_U
   assert.deepEqual(R.rowOf("ANONYMOUS_TESTIMONY_UNCORROBORATED"), { code: "ANONYMOUS_TESTIMONY_UNCORROBORATED",
     check: "C-58.5",
     translation: "This edition rests on testimony, or on material from an unnamed source attested by a member, "
-      + "credited only to the group or the project, with no independent leg corroborating it. Such testimony or "
+      + "credited only to the team or the project, with no independent leg corroborating it. Such testimony or "
       + "evidence counts as an anonymous tip and supports a finding only beside an independent corroborating leg. "
       + "Each such member, observation and document is named. Corroborate the claim with an independent leg, ask "
       + "the author or the attesting member to choose cover or name, or drop the finding that rests on it. Nothing "
@@ -122,9 +122,9 @@ test("R46: C-58.6–C-58.10 carry R46's translations word for word, each minted 
 
 test("R47: C-32.14's and C-32.15's translations say \"one of the operator's access tokens for your group's Civicsmith\", nothing else changed, and no row of this module calls it this copy, this instance or this plane", () => {
   assert.deepEqual(R.rowOf("OPERATOR_TOKEN_CANNOT_RATIFY"), { code: "OPERATOR_TOKEN_CANNOT_RATIFY", check: "C-32.14",
-    translation: "Ratifying puts a finding into the published record under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for your group's Civicsmith, not a person: a valid signature does not change that, because the credential that carries it in decides when the record changes. Sign in as the member whose key signed it and ratify it there." });
+    translation: "Ratifying puts a finding into the published record under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for your team's Civicsmith, not a person: a valid signature does not change that, because the credential that carries it in decides when the record changes. Sign in as the member whose key signed it and ratify it there." });
   assert.deepEqual(R.rowOf("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"), { code: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", check: "C-32.15",
-    translation: "Ratifying a case commits the group's own assertions about it under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for your group's Civicsmith, not a person, and a valid signature does not change that. Sign in as the member whose key signed it and ratify it there." });
+    translation: "Ratifying a case commits the team's own assertions about it under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for your team's Civicsmith, not a person, and a valid signature does not change that. Sign in as the member whose key signed it and ratify it there." });
   const rows = [R.RATIFY_MACHINE_FENCE_CHECKS, R.RATIFY_TESTIMONY_CHECKS, R.RATIFY_ATTRIBUTION_CHECKS,
                 R.CASE_CONCLUSION_CHECKS, R.RATIFY_SCOPE_CHECKS, R.RELEASE_CHECKS, R.RATIFY_REGISTRATION_CHECKS]
     .flatMap((f) => Object.values(f).map((r) => r.translation));

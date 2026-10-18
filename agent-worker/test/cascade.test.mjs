@@ -275,7 +275,7 @@ console.log("\n--- 5 · R10, R57: a run is continued only under the account of t
   const gRes = await run({ ...base, run_id: "run-sam", account: group(RUTH) });
   const gOut = await gRes.json();
   t("R10, R57 (K1755): the group's API key serving Ruth's act, on Sam's run, is REFUSED the same way: the group key serves "
-    + "a member's act, never the group's own", [gRes.status, gOut.reason, gOut.recorded, gOut.supplied, JSON.stringify(gOut).includes(GROUP_KEY)],
+    + "a member's act, never the team's own", [gRes.status, gOut.reason, gOut.recorded, gOut.supplied, JSON.stringify(gOut).includes(GROUP_KEY)],
     [409, "RUN_NAMES_A_DIFFERENT_PAYER", SAM, RUTH, false]);
   const gOwn = await run({ ...base, run_id: "run-sam", account: group(SAM) });
   t("R10, R57 (control): the group's API key serving Sam's own act on Sam's run drives, still Sam's act",

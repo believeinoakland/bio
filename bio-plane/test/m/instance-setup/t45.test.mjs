@@ -57,7 +57,7 @@ test("R77 R11 an administrator's set is recorded through record-core's setSettin
 test("R77 refusals: a by that is not an administrator, a machine credential included, is refused NOT_AN_ADMIN (membership.notAnAdmin) before the stake is read, and nothing is written (control: an administrator's set is recorded)", async () => {
   const prov = providers({ admins: ["admin", "class:admin"] });
   const w = await boot({ env: { INSTANCE_NAME: "river-town" }, prov });
-  const expected = notAnAdmin("member:bo", "declaring what your group has at stake");
+  const expected = notAnAdmin("member:bo", "declaring what your team has at stake");
   for (const by of ["member:bo", "class:admin", "class:ai", null, "", undefined, 7]) {
     /* a malformed stake from a non-administrator is still NOT_AN_ADMIN: the first refusal is who asks */
     for (const stake of ["Our stake.", "x".repeat(DECLARED_STAKE_MAX + 1)]) {

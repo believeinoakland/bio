@@ -230,7 +230,7 @@ test("R7 R16 R18 INQUIRY_GRAMMAR_CHECKS: the twelve rows, each {check, where, tr
   const imported = INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED;
   assert.deepEqual(Object.keys(imported), ["check", "where", "translation"]);
   assert.equal(imported.check, "C-21.3");
-  assert.equal(imported.translation, "A leg on another group's finding names that finding and one edition, and nothing else: "
+  assert.equal(imported.translation, "A leg on another team's finding names that finding and one edition, and nothing else: "
     + "its grades are that edition's. Correct the leg. Nothing was written.");
   assert.equal(imported.where, "src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form");
   for (const [k, row] of Object.entries(INQUIRY_GRAMMAR_CHECKS)) {

@@ -25,13 +25,13 @@ const row = (check, where, translation) => Object.freeze({ check, where, transla
    refusal answering one carries the fill beside it (`photo`, `member`, `date`). A key the words file lacks, or a
    sentence that is not its `en`, fails this module's test. */
 export const CASE_CARRIAGE_WORDS = Object.freeze({
-  'photo.obscured.label': 'Faces, plates and camera details removed for publication; the group holds the original',
-  'photo.published.label': 'Camera details removed for publication; the group holds the original',
+  'photo.obscured.label': 'Faces, plates and camera details removed for publication; the team holds the original',
+  'photo.published.label': 'Camera details removed for publication; the team holds the original',
   'photo.withdraw.refused.machine': 'Only a member can withdraw a mark; the machine never can.',
   'photo.withdraw.refused.nomark': 'There is no such mark on {photo}. Open the photo again to see the marks that stand.',
   'photo.withdraw.refused.already': '{member} already withdrew this mark on {date}.',
   'photo.withdraw.refused.noreason': 'Say why you are withdrawing this mark. Your reason is kept beside it.',
-  'document.cleaned.label': 'Details of who made this file, and of its pictures, removed for publication; the group holds the original',
+  'document.cleaned.label': 'Details of who made this file, and of its pictures, removed for publication; the team holds the original',
 });
 
 /** R11 (DEC-180 (4); T40: DEC-185 (1), DEC-187 (2)): the label a published case shows beside a photo's copy with a
@@ -57,7 +57,7 @@ export const CASE_CARRIAGE_CHECKS = Object.freeze({
     "Only a member can mark what to obscure in a photo. Nothing was recorded."),
   /* R9, R10, R14: the capture is not held, or the asker may not see it: one answer. */
   NO_SUCH_PHOTO: row("C-141.2", at("#photo", "is-photo-seen"),
-    "Your group's Civicsmith holds no photo you can see under that digest. Nothing was recorded."),
+    "Your team's Civicsmith holds no photo you can see under that digest. Nothing was recorded."),
   /* R9: the capture is not an image. */
   NOT_A_PHOTO: row("C-141.3", at("#photo", "is-photo"),
     "That capture is not a photo, so there is nothing in it to obscure. Nothing was recorded."),
@@ -87,5 +87,5 @@ export const CASE_CARRIAGE_CHECKS = Object.freeze({
     CASE_CARRIAGE_WORDS['photo.withdraw.refused.noreason']),
   /* R15 (T39; N806, K2333): copyBatch with no evidence store to read a member's document from or hold its copy in. */
   DOCUMENT_COPY_NO_STORE: row("C-141.11", at("copyBatch", "is-store-bound"),
-    "Your group's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made."),
+    "Your team's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made."),
 });

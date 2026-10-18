@@ -28,11 +28,11 @@ const T45_NOT_REVIEWED = "This template from the jurisdiction profile is not off
   + "once it names who wrote it, the public sources it was written from, a professional's review with no concerns, "
   + "and an approver other than its writer; what it lacks is named.";
 /* C-125.34 keeps its present translation in T46 (R29): words.json's names "Civicsmith" bare (DEC-149). */
-const COURT_PETITION = "This kind is filed with a court, so no template the group files in its own name is kept for it until "
+const COURT_PETITION = "This kind is filed with a court, so no template the team files in its own name is kept for it until "
   + "a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it.";
 /* Every other row (42, C-115.31–.38 less .34, C-115.45, .46, C-125.1–.32 and .34), as T45 left them: their canonical
    JSON's sha256, so no check, where or translation of theirs moves. */
-const KEPT = { count: 42, sha256: "85c06e21d331553b7e76494edabebfef4ba5efe534301fdaedbdff1a36a5f5f2" };
+const KEPT = { count: 42, sha256: "ff008625ee5af13cc4d06ed505c55eeb34d9b9aa46a0f2f5fbe3a4cfae76a2b3" };
 const editedOf = (edit, base = jurisdictions) => ({ ...base, get: (id) => { const p = base.get(id); if (p && p.id === TEST) edit(p); return p; } });
 
 test("R29 C-125.33 TEMPLATE_NOT_REVIEWED reads words.json's refusal.TEMPLATE_NOT_REVIEWED by key from FILING_TEMPLATES_WORDS, never a copy; its code, number and where unmoved; T45's words answered no longer", () => {

@@ -422,7 +422,7 @@ test("R53 the table is declared with the sight of the standard it names, exporte
  * ===================================================================== */
 
 test("R54 DEC-149's eight rows: each member-facing string says your group's Civicsmith, never this instance or this plane — :255 the unreadable host, :390 the door's detail, :712 the purpose, :757 the host in cool-off, :779 no scope check, :864 the fetch that did not complete, :933 the promotion that did not complete, :1316 an unknown sweep", async () => {
-  const CS = /[Yy]our group's Civicsmith/;
+  const CS = /[Yy]our team's Civicsmith/;
   const NOT = /this instance|this plane|\bthe plane\b|\bthe instance\b/;
   const said = (s, row) => { assert.match(s, CS, row); assert.doesNotMatch(s, NOT, row); };
   const w = world().scene();
@@ -464,7 +464,7 @@ test("R54 DEC-149's eight rows: each member-facing string says your group's Civi
   const unk = w2.ask({ address: "https://s.example.org/unknown", sweep: "INQ-1#gone" }).request;
   await w2.cr.drain({});
   said(w2.req(unk).detail, ":1316");
-  assert.match(w2.req(unk).detail, /INQ-1#gone is not a sweep your group's Civicsmith holds/);
+  assert.match(w2.req(unk).detail, /INQ-1#gone is not a sweep your team's Civicsmith holds/);
 });
 
 test("R54 R34 the new rows' translations and R49–R53's details say no copy, instance, plane or server for the group's Civicsmith", () => {

@@ -109,7 +109,7 @@ export function publishedObjectMissing() {
   /* DEC-49 REGION is-published-object-missing
    * THE SPAN C-98.2 names: its one mint, the code a STRING LITERAL at its site, the row's fields beside it. */
   return { ok: false, reason: "OBJECT_MISSING", ...rowOf("OBJECT_MISSING"),
-           detail: "that hash is published, and this group's Civicsmith holds no bytes for it in its published store, so "
+           detail: "that hash is published, and this team's Civicsmith holds no bytes for it in its published store, so "
                  + "they cannot be handed over. The hash is genuine." };
   /* END DEC-49 REGION is-published-object-missing */
 }
@@ -123,7 +123,7 @@ export function withheldByCourtOrder(sha256, withheld) {
   /* DEC-49 REGION is-withheld-by-court-order */
   return { ok: false, reason: "WITHHELD_BY_COURT_ORDER", ...rowOf("WITHHELD_BY_COURT_ORDER"), sha256,
            withheld,
-           detail: "a court order this group complied with keeps these contents from being served here. The order and the "
+           detail: "a court order this team complied with keeps these contents from being served here. The order and the "
                  + "record entry that names it are public, at the docket address each order gives, and nothing was "
                  + "deleted: the fingerprint still verifies." };
   /* END DEC-49 REGION is-withheld-by-court-order */
@@ -343,7 +343,7 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
                         + "sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) "
                         + "join parts[] as kind: rendering." },
           verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here "
-                + "makes one detectable by anyone holding it, without the cooperation of this group's Civicsmith. Each "
+                + "makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith. Each "
                 + "finding is signed on its own bytes; there is no case-level strength, because composing "
                 + "several findings' strengths into one letter is a claim the evidence does not support. "
                 /* CASE-5: THE INSTRUCTIONS A STRANGER ACTUALLY NEEDS, in the
@@ -363,8 +363,8 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
                 /* REC-128: the two principals of one ratification, told apart in
                    the artifact that travels. */
                 + "`attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED "
-                + "that signature to this group's Civicsmith — the authenticated session that performed the act, a "
-                + "member or its founder — and it is this group's Civicsmith's record, not covered by any "
+                + "that signature to this team's Civicsmith — the authenticated session that performed the act, a "
+                + "member or its founder — and it is this team's Civicsmith's record, not covered by any "
                 + "signature. `undetermined` there means the delivery was not recorded; it never means the "
                 + "signer delivered it."
                 /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (c): WHICH SIGNATURE COVERS A MEMBER'S
@@ -541,8 +541,8 @@ export async function publishedRoutes({ op, url, env, stub }) {
     const storeAbsent = publishedStoreAbsent(env);
     if (storeAbsent)
       return P.json({ ok: false, ...storeAbsent,
-        detail: "this group's Civicsmith has no published object store configured, so its published bytes are "
-              + "not servable. The hash is genuine and this group's Civicsmith cannot hand over the bytes." }, 503);
+        detail: "this team's Civicsmith has no published object store configured, so its published bytes are "
+              + "not servable. The hash is genuine and this team's Civicsmith cannot hand over the bytes." }, 503);
 
     /* DEC-34, THE CONTAINER. The manifest's own hash IS the container's
        identity — it names and hashes every part — so the zip is addressed
@@ -750,7 +750,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
                 + "bytes. `falsifier_override`, when it is not null, is the member who recorded that "
                 + "NO falsifier could be stated for this finding, and when they did so." }
       : { state: "unavailable", from_sha: fnd.bundle_sha, ...whyUnavailable,
-          detail: "this group's Civicsmith cannot hand over the bytes of that edition, so its conclusion is not "
+          detail: "this team's Civicsmith cannot hand over the bytes of that edition, so its conclusion is not "
                 + "rendered here. It is NOT read from the working record instead: the frozen strength "
                 + "and the rendered body must come from the same bytes." };
 
@@ -829,5 +829,5 @@ export async function publishedRoutes({ op, url, env, stub }) {
       detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the "
             + "manifest answers by its own sha256, and EACH FINDING's signature covers that finding's "
             + "own record sha. Nothing here prevents a modified copy; everything here makes one "
-            + "detectable by anyone holding it, without the cooperation of this group's Civicsmith.",
+            + "detectable by anyone holding it, without the cooperation of this team's Civicsmith.",
     } }, 200);}

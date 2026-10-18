@@ -12,7 +12,7 @@ import { mementoHop, readMementoAnswer, mementoRow } from "../../../src/capture-
 import { selectCapture } from "../../../src/cdx.mjs";
 
 const OLD = /\b(?:the|this) (?:plane|instance)\b/i;
-const CIVICSMITH = "your group's Civicsmith";
+const CIVICSMITH = "your team's Civicsmith";
 const ID = "1AbCdEfGhIjKlMnOpQrStUvWxYz_-0123456789";
 const DOC = `https://docs.google.com/document/d/${ID}/edit`;
 const EXPORT = `https://docs.google.com/document/d/${ID}/export?format=odt`;
@@ -32,7 +32,7 @@ test("R40 (DEC-149, drive.mjs:216): an unread Drive shape is not a document your
 test("R42 (DEC-149, drive.mjs:254): the export address was COMPOSED BY YOUR GROUP'S CIVICSMITH", () => {
   const h = driveHop(drive, { retrieved: "2026-09-27T01:00:00Z" });
   const line = h.evidence.split("; ").find((p) => p.startsWith("the export address was COMPOSED BY"));
-  assert.equal(line, `the export address was COMPOSED BY YOUR GROUP'S CIVICSMITH from the file id and the kind carried in ${DOC}, `
+  assert.equal(line, `the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the file id and the kind carried in ${DOC}, `
     + "and no part of it was read from the request (D-112)");
   assert.doesNotMatch(h.evidence, OLD);
 });

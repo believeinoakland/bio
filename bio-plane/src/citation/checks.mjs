@@ -50,7 +50,7 @@ export const CITE_CHECKS = {
   RETIRED_NOT_CITABLE: {
     check: 'C-33.39',
     where: 'src/citation/index.mjs cite > is-cite-retired',
-    translation: 'The group has retired this material, recording that it is superseded or no longer '
+    translation: 'The team has retired this material, recording that it is superseded or no longer '
       + 'stands, so a citation made now would read to everyone after you as live support nobody will '
       + 'look at again. Cite whatever superseded it, or collect the source again as a new item and '
       + 'cite that. A document its publisher withdrew or changed is a different thing and can still '
@@ -62,7 +62,7 @@ export const CITE_CHECKS = {
     check: 'C-33.52',
     where: 'src/citation/index.mjs cite > is-cite-question',
     translation: 'There is no question by that name that you can see, so this citation cannot be kept '
-      + 'with it. A question the group has not asked and one you have not been shown are answered '
+      + 'with it. A question the team has not asked and one you have not been shown are answered '
       + 'alike. Cite without naming a question, or name one you can open.',
   },
   NOT_AN_INQUIRY: {

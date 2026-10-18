@@ -60,13 +60,13 @@ export const CASE_SOURCES_CHECKS = {
   ACCEPTANCE_WITHDRAWN_SINCE: {
     check: 'C-122.3',
     where: 'src/publication/index.mjs commitCaseEdition > is-accepted-work-standing',
-    translation: "This group's acceptance of another group's work this case rests on was withdrawn after the case was "
+    translation: "This team's acceptance of another team's work this case rests on was withdrawn after the case was "
       + 'prepared. Prepare the case again. Nothing was published.',
   },
   FLAG_OPENED_SINCE: {
     check: 'C-122.4',
     where: 'src/publication/index.mjs commitCaseEdition > is-accepted-work-standing',
-    translation: "A flag was raised on another group's work this case rests on after the case was prepared, and the case "
+    translation: "A flag was raised on another team's work this case rests on after the case was prepared, and the case "
       + 'must disclose it. Prepare the case again. Nothing was published.',
   },
   /* C-122.6 (R33, R57; N757, DEC-180 (4), K2206): a photo the case carries no longer matches its marks (its copy no

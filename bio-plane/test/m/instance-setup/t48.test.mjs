@@ -501,13 +501,13 @@ test("R47 (T48; K3240) the member-facing forgot words say, in members' words, wh
   assert.doesNotMatch(said, /Before you choose a password|who controls your group/);
   assert.ok(Object.isFrozen(FORGOT_HELP) && Object.isFrozen(FORGOT_HELP.sentences));
   /* control: the founder's block does carry who controls the group's Civicsmith */
-  assert.match(HOSTING_CONTROL.heading, /^Before you choose a password: who controls your group's Civicsmith$/);
+  assert.match(HOSTING_CONTROL.heading, /^Before you choose a password: who controls your team's Civicsmith$/);
 });
 
 test("R47 (T48; K3240) the founder's block no longer carries the deployer's instruction: its last sentence says it in a founder's words, and the deployer's steps are kept apart for the installer's and DEPLOY.md's text, joined to the block only when asked (deployer: true); the block's other words and its guide are unchanged", () => {
   const all = [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences, HOSTING_CONTROL.guide.sentence].join(" ");
   assert.doesNotMatch(all, /ADMIN_TOKEN|worker's settings/);
-  assert.match(HOSTING_CONTROL.sentences.at(-1), /^The same account is the way back in if the password you choose is lost: whoever holds it can open the way for your group's Civicsmith to be claimed again\.$/);
+  assert.match(HOSTING_CONTROL.sentences.at(-1), /^The same account is the way back in if the password you choose is lost: whoever holds it can open the way for your team's Civicsmith to be claimed again\.$/);
   assert.match(HOSTING_RECOVERY_DEPLOYER, /ADMIN_TOKEN/);
   assert.doesNotMatch(HOSTING_RECOVERY_DEPLOYER, /\b(?:copy|copies|instance|plane|server)\b/i);
   assert.equal(hostingControlBlock("notice").includes("ADMIN_TOKEN"), false);

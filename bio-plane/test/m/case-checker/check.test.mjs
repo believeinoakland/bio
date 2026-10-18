@@ -525,7 +525,7 @@ test("R18: a finding resting on another group's accepted finding recreates up to
   assert.deepEqual(byId(r)[A].missing, []);
   assert.deepEqual(r.rests_on_another_group, [{ group: "riverside-watch", case: "CASE-2026-0007", edition: 2, finding: "INQ-2026-0042-lease", manifest_sha: sha("their manifest") }]);
   assert.equal(r.rests_on_another_group_statement, CC.REST_ON_ANOTHER_GROUP_STATEMENT);
-  assert.match(r.rests_on_another_group_statement, /checked against that group's own case file/);
+  assert.match(r.rests_on_another_group_statement, /checked against that team's own case file/);
   /* the imported finding is not itself a finding of this answer */
   assert.equal(r.findings.some((f) => f.finding === REF || f.finding === "INQ-2026-0042-lease"), false);
   /* the row's pair is that leg's fact: a recorded pair that differs from it differs */

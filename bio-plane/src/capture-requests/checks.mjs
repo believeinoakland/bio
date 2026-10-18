@@ -101,7 +101,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
     check: 'C-28.1',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'This request did not name the piece of work asking for it, or named one that is not '
-      + 'running here. Every fetch your group\'s Civicsmith makes on its own is traceable to a session somebody '
+      + 'running here. Every fetch your team\'s Civicsmith makes on its own is traceable to a session somebody '
       + 'opened, because that opening is what authorises it.',
   },
   CAPTURE_REQUEST_NOT_PUBLIC: {
@@ -129,7 +129,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
     check: 'C-28.4',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'A request asks for a document; it never brings one. The fetch is performed by your '
-      + 'group\'s Civicsmith itself so that where the bytes came from is something the record established rather '
+      + 'team\'s Civicsmith itself so that where the bytes came from is something the record established rather '
       + 'than something it was told, and a provenance chain anybody could hand us is one anybody could '
       + 'invent.',
   },
@@ -150,7 +150,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_CONDUCT_UA_ILLEGIBLE: {
     check: 'C-28.6',
     where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
-    translation: 'Your group\'s Civicsmith will not fetch without saying who is asking and how to reach whoever '
+    translation: 'Your team\'s Civicsmith will not fetch without saying who is asking and how to reach whoever '
       + 'is running it. Being refused honestly is a fact that can be recorded; being admitted by '
       + 'disguise is a claim that could not be defended later.',
   },
@@ -169,7 +169,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_CONDUCT_NO_PURPOSE: {
     check: 'C-28.8',
     where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
-    translation: 'Every request your group\'s Civicsmith makes says what it is for, so a source can tell a first '
+    translation: 'Every request your team\'s Civicsmith makes says what it is for, so a source can tell a first '
       + 'capture from a routine re-check and throttle one without blocking the other. This one names '
       + 'a purpose that is not one of the things it could truthfully be doing.',
   },
@@ -263,7 +263,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_RENDER_MALFORMED: {
     check: 'C-28.16',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'This asked for the page as a visitor would see it in a form your group\'s Civicsmith does not '
+    translation: 'This asked for the page as a visitor would see it in a form your team\'s Civicsmith does not '
       + 'recognise. It reads render: true, or nothing at all for the document as the site serves it, so a '
       + 'request for the rendered page is never quietly turned into a request for the page\'s empty frame. '
       + 'Nothing was queued.',
@@ -280,7 +280,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_FETCH_FAILED: {
     check: 'C-28.17',
     where: 'src/capture-requests/index.mjs drain > is-capture-fetch-failed',
-    translation: 'Your group\'s Civicsmith tried to fetch the document and the fetch did not land, so nothing was '
+    translation: 'Your team\'s Civicsmith tried to fetch the document and the fetch did not land, so nothing was '
       + 'captured. That says nothing about the document or the site beyond this one attempt, and it is '
       + 'recorded as a look that could not tell. The request is still queued and is tried again on a later '
       + 'round, until it expires.',
@@ -325,7 +325,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
     check: 'C-28.20',
     where: 'src/capture-requests/index.mjs memberCaptureOnly > is-capture-member-only',
     translation: 'This page is a private person\'s own site, or sits on a platform that asks for a login, and such a '
-      + 'page is captured only by a member, in their own browser, as their own act. Your group\'s Civicsmith does not fetch it '
+      + 'page is captured only by a member, in their own browser, as their own act. Your team\'s Civicsmith does not fetch it '
       + 'unattended or sign in to it, so nothing was fetched; a member who wants it captures it themselves.',
   },
   /* R46: the run's judgement of the site is one of two words or none; any other value is refused by name rather than
@@ -333,7 +333,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_SITE_KIND_UNKNOWN: {
     check: 'C-28.21',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'This request described the site it asks for in a way your group\'s Civicsmith does not recognise. It reads '
+    translation: 'This request described the site it asks for in a way your team\'s Civicsmith does not recognise. It reads '
       + 'site_kind: "personal" for a private person\'s own site, "platform" for a page on a platform that asks for a '
       + 'login, or nothing for an ordinary public page. Nothing was queued.',
   },
@@ -370,14 +370,14 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_CO_ARCHIVE_NOT_A_MEMBERS: {
     check: 'C-28.25',
     where: 'src/capture-requests/index.mjs coArchiveRefusal > is-capture-co-archive',
-    translation: 'Whether a capture also asks a public archive to keep a copy is a member\'s choice, or else the group\'s '
+    translation: 'Whether a capture also asks a public archive to keep a copy is a member\'s choice, or else the team\'s '
       + 'setting. This request was not made by a member, so it cannot choose. Nothing was queued.',
   },
   CAPTURE_REQUEST_CO_ARCHIVE_MALFORMED: {
     check: 'C-28.26',
     where: 'src/capture-requests/index.mjs coArchiveRefusal > is-capture-co-archive',
     translation: 'The choice about a public archive copy reads co_archive: true (ask for one), false (ask for none), or '
-      + 'nothing to let the group\'s setting decide. This request sent something else. Nothing was queued.',
+      + 'nothing to let the team\'s setting decide. This request sent something else. Nothing was queued.',
   },
   /* R51–R53 (T35; N646, POLICIES L2 PO3; K1724, K1740) — A RECORDS REQUEST FOR A POLICY KNOWN ONLY BY CITATION. The
      group's own record of asking the issuer for a policy's text, and of the answer; it fetches nothing and sends

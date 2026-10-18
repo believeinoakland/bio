@@ -284,7 +284,7 @@ test("R23 the lens is the reading member's, read afresh each time; the assessmen
   assert.deepEqual(w.ci.findingFacts({ ref, edition: 1 }), facts);
   const f1 = e.findings.find((f) => f.finding === F1);
   assert.deepEqual(f1.pair, { capture: g("B"), connection: g("C") });
-  assert.equal(f1.origin.another_groups.group, SOURCE, "still marked as another group's");
+  assert.equal(f1.origin.another_groups.group, SOURCE, "still marked as another team's");
   assert.equal(f1.origin.acceptance.reason, "r");
 });
 

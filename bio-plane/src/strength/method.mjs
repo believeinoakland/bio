@@ -118,7 +118,7 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
         grade: resolved ? resolved.grade : stated,
         why: noReferent
           ? (kind === "imported"
-              ? `the target is another group's finding, not a document, so a ${axis} grade on this leg has no referent`
+              ? `the target is another team's finding, not a document, so a ${axis} grade on this leg has no referent`
               : `the target is an inquiry, not a document, so a ${axis} grade on this leg has no referent`)
           : leg.grade == null ? `the leg carries no grade`
           : resolved && resolved.why ? resolved.why
@@ -209,8 +209,8 @@ function captureOnly(leg, kind, site, hunch, { capCapture, derive }, members, ex
    gives them, this plain sentence. The finding's own id, which is that group's and looks like one of this record's, is
    carried in `another_groups.finding` and never in the sentence, so R6's sweep of record ids cannot mistake it. */
 export function anotherGroupsWords(g) {
-  return `this leg rests on another group's finding, in that group's case ${g.case ?? "(not stated)"} at edition `
-    + `${g.edition ?? "(not stated)"}, published by ${g.group ?? "that group"}`;
+  return `this leg rests on another team's finding, in that team's case ${g.case ?? "(not stated)"} at edition `
+    + `${g.edition ?? "(not stated)"}, published by ${g.group ?? "that team"}`;
 }
 
 /** R29, R30, R34 (DEC-102 items 1, 2; DEC-119 (3)): for each leg of ONE basis credited anonymously, keyed by its

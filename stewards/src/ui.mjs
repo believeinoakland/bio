@@ -7,21 +7,21 @@ export const STEWARDS = "Civicsmith's stewards";
 export const RESPONSIBLE = `${STEWARDS} decide every report. ${PUBLISHER}, the publisher of Civicsmith, is responsible for them.`;
 
 /* The shared guide words (R7): byte for byte `stewards/guide.md`, which installer R48's README follows. */
-export const GUIDE_TEXT = `What a group holds, and who could compel it
+export const GUIDE_TEXT = `What a team holds, and who could compel it
 
-Your group's Civicsmith keeps its record and its evidence in your group's own hosting account (its Cloudflare account), and nowhere else. Civicsmith's stewards hold none of it, and your group's Civicsmith sends them nothing.
+Your team's Civicsmith keeps its record and its evidence in your team's own hosting account (its Cloudflare account), and nowhere else. Civicsmith's stewards hold none of it, and your team's Civicsmith sends them nothing.
 
-Whoever can sign in to that hosting account controls your group's Civicsmith. They can replace the one-time password, claim it again, read everything in it and lock everyone else out, and no vote of the group's administrators can stop them. Use a group account for it, not anyone's personal login, and add at least one other trusted person to it.
+Whoever can sign in to that hosting account controls your team's Civicsmith. They can replace the one-time password, claim it again, read everything in it and lock everyone else out, and no vote of the team's administrators can stop them. Use a team account for it, not anyone's personal login, and add at least one other trusted person to it.
 
-Those who could be asked or compelled to hand over what your group's Civicsmith holds are your group itself (and anyone in it who keeps a copy), and its hosting provider, under the law that binds that provider. Civicsmith's stewards cannot be, because they hold none of it.
+Those who could be asked or compelled to hand over what your team's Civicsmith holds are your team itself (and anyone in it who keeps a copy), and its hosting provider, under the law that binds that provider. Civicsmith's stewards cannot be, because they hold none of it.
 
-This guide is not legal advice. If you need to know what the law could require of your group, ask a lawyer.
+This guide is not legal advice. If you need to know what the law could require of your team, ask a lawyer.
 `;
 
 /* R7's second part: what this service holds and who could be asked for it. */
 export const SERVICE_HOLDS = [
   "What this reporting service holds",
-  "This service, which Civicsmith's stewards run apart from every group's Civicsmith, holds the reports sent to it, the stewards' decisions on them, and the register of withdrawn shared services.",
+  "This service, which Civicsmith's stewards run apart from every team's Civicsmith, holds the reports sent to it, the stewards' decisions on them, and the register of withdrawn shared services.",
   "Civicsmith's stewards could be asked or compelled to hand those over, and so could this service's hosting provider, under the law that binds it. What is kept, and for how long, is said on the reporting page.",
   "This is not legal advice.",
 ];
@@ -54,7 +54,7 @@ export function page(title, body, { steward = false } = {}) {
     + `<title>${esc(title)} · Civicsmith</title><style>${CSS}</style></head><body>`
     + `<header><p class="small">Civicsmith · ${steward ? "for Civicsmith's stewards" : "reporting abuse to Civicsmith's stewards"}</p></header>`
     + `<main>${body}</main><footer><p>${esc(RESPONSIBLE)}</p>`
-    + (steward ? "" : `<p><a href="/">Report abuse</a> · <a href="/guide">What a group holds, and who could compel it</a> · <a href="/withdrawals">Withdrawn shared services</a></p>`)
+    + (steward ? "" : `<p><a href="/">Report abuse</a> · <a href="/guide">What a team holds, and who could compel it</a> · <a href="/withdrawals">Withdrawn shared services</a></p>`)
     + `</footer></body></html>`;
 }
 
@@ -65,15 +65,15 @@ export const html = (body, status = 200, headers = {}) =>
 /* R1: while not yet open. */
 export const notYetOpenPage = () => page("Not yet open", `<h1>Reporting to Civicsmith's stewards is not yet open</h1>`
   + `<p>The service that receives reports of abuse of Civicsmith itself is not yet open, so it cannot take a report now.</p>`
-  + `<p><a href="/guide">What a group holds, and who could compel it</a></p>`);
+  + `<p><a href="/guide">What a team holds, and who could compel it</a></p>`);
 
 /* R5: the notice, then the form. */
 export function reportPage(cfg) {
   const kinds = KINDS.map((k) => `<option value="${k}">${esc(KIND_WORDS[k])}</option>`).join("");
   return page("Report abuse of Civicsmith", `<h1>Report abuse of Civicsmith</h1>
 <section class="notice" id="notice">
-<p>Use this form to report abuse of Civicsmith itself: fabricated evidence, harassment or impersonation, or other abuse, by or about a group's public identity or a published case.</p>
-<p>${esc(STEWARDS)} read every report. They may only withdraw a shared service (a shared profile contribution, an item of the template library, a public listing). They never edit or delete a group's record, and they have no way into any group's Civicsmith.</p>
+<p>Use this form to report abuse of Civicsmith itself: fabricated evidence, harassment or impersonation, or other abuse, by or about a team's public identity or a published case.</p>
+<p>${esc(STEWARDS)} read every report. They may only withdraw a shared service (a shared profile contribution, an item of the template library, a public listing). They never edit or delete a team's record, and they have no way into any team's Civicsmith.</p>
 <p>You do not need an account. The contact field is optional and is used only to reply to you; without it the stewards cannot reply.</p>
 <p>What is kept: your report and, if you give one, your contact. Only ${esc(STEWARDS)} read them. Your contact is erased ${cfg.contactDays} days after the stewards' latest decision on your report, and the report itself is deleted ${cfg.reportDays} days after it. A report not yet decided is kept until it is decided.</p>
 <p>You can also send a report by e-mail to <a href="mailto:${esc(cfg.address)}">${esc(cfg.address)}</a>.</p>
@@ -82,8 +82,8 @@ export function reportPage(cfg) {
 </section>
 <form method="post" action="/report">
 <label for="kind">What kind of abuse</label><select id="kind" name="kind" required>${kinds}</select>
-<label for="concerns">Which group or published case it concerns</label>
-<input id="concerns" name="concerns" required maxlength="${CAPS.concerns}" placeholder="a group's short name, or an https:// address">
+<label for="concerns">Which team or published case it concerns</label>
+<input id="concerns" name="concerns" required maxlength="${CAPS.concerns}" placeholder="a team's short name, or an https:// address">
 <label for="description">What happened</label>
 <textarea id="description" name="description" required maxlength="${CAPS.description}"></textarea>
 <label for="contact">How to reply to you (optional)</label>
@@ -104,14 +104,14 @@ export const refusedPage = (status, code, words, { steward = false } = {}) =>
 export function guidePage(open) {
   const [head, ...paras] = GUIDE_TEXT.trimEnd().split("\n\n");
   const [h2, ...more] = SERVICE_HOLDS;
-  return page("What a group holds", `<section id="guide"><h1>${esc(head)}</h1>${paras.map((p) => `<p>${esc(p)}</p>`).join("")}</section>`
+  return page("What a team holds", `<section id="guide"><h1>${esc(head)}</h1>${paras.map((p) => `<p>${esc(p)}</p>`).join("")}</section>`
     + `<section id="service"><h2>${esc(h2)}</h2>${more.map((p) => `<p>${esc(p)}</p>`).join("")}</section>`
     + (open ? `<p>To report abuse of Civicsmith itself, use <a href="/">the reporting page</a>.</p>` : ""));
 }
 
 /* R22. */
 export const publicRegisterPage = (rows) => page("Withdrawn shared services", `<h1>Shared services withdrawn by Civicsmith's stewards</h1>
-<p>Each line is a shared service the stewards have withdrawn and not reinstated, with the kind of abuse reported. No group's record is ever changed by a withdrawal.</p>`
+<p>Each line is a shared service the stewards have withdrawn and not reinstated, with the kind of abuse reported. No team's record is ever changed by a withdrawal.</p>`
   + (rows.length ? `<table><thead><tr><th>Shared service</th><th>Item</th><th>Since</th><th>Kind of abuse</th></tr></thead><tbody>`
     + rows.map((r) => `<tr><td>${esc(SERVICE_WORDS[r.service] || r.service)}</td><td>${esc(r.item)}</td><td>${esc(when(r.since))}</td><td>${esc(KIND_WORDS[r.kind] || r.kind)}</td></tr>`).join("")
     + `</tbody></table>` : `<p>None stands.</p>`));

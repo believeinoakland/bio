@@ -13,8 +13,8 @@ const OLD = /\b(?:this|the) (?:instance|plane)\b|\bplane's\b|\binstance's\b/i;
 
 test("R58, DEC-149 (checks.mjs:138, :139, C-103.7): 'Your group's Civicsmith holds no key to sign its receipts with' and 'Whoever hosts your group's Civicsmith can add one.'", () => {
   const t = PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.translation;
-  assert.match(t, /^Your group's Civicsmith holds no key to sign its receipts with, /);
-  assert.match(t, / Whoever hosts your group's Civicsmith can add one\.$/);
+  assert.match(t, /^Your team's Civicsmith holds no key to sign its receipts with, /);
+  assert.match(t, / Whoever hosts your team's Civicsmith can add one\.$/);
   assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.check, "C-103.7", "the number is unchanged");
   for (const [code, row] of Object.entries(PROVENANCE_ACT_CHECKS)) assert.doesNotMatch(row.translation, OLD, code);
 });
@@ -24,7 +24,7 @@ test("R24, DEC-149 (index.mjs:899): 'your group's Civicsmith fetched these bytes
   const s = sha("direct");
   w.prov.recordReceipt({ addressNorm: "e.org/d", captureSha: s, retrieved: T });
   const why = w.prov.captureGrade(s).why;
-  assert.match(why, /^your group's Civicsmith fetched these bytes directly from their address, /);
+  assert.match(why, /^your team's Civicsmith fetched these bytes directly from their address, /);
   assert.doesNotMatch(why, OLD);
 });
 
@@ -33,7 +33,7 @@ test("R25, DEC-149 (index.mjs:905): 'your group's Civicsmith fetched these bytes
   const s = sha("archived");
   w.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: s, retrieved: T, via: ARCHIVE_VIA });
   const why = w.prov.captureGrade(s).why;
-  assert.match(why, /^your group's Civicsmith fetched these bytes only through an archive replay \(archive\.org\), /);
+  assert.match(why, /^your team's Civicsmith fetched these bytes only through an archive replay \(archive\.org\), /);
   assert.doesNotMatch(why, OLD);
 });
 
@@ -42,7 +42,7 @@ test("R51, DEC-149 (index.mjs:923): '… is proven by the receipt your group's C
   const s = sha("handed over");
   w.prov.recordReceipt({ addressNorm: "knock:KNOCK-20260927-0a1b2c3d", captureSha: s, retrieved: T, via: DOORBELL_VIA });
   const why = w.prov.captureGrade(s).why;
-  assert.match(why, / is proven by the receipt your group's Civicsmith itself made at knock:KNOCK-20260927-0a1b2c3d$/);
+  assert.match(why, / is proven by the receipt your team's Civicsmith itself made at knock:KNOCK-20260927-0a1b2c3d$/);
   assert.doesNotMatch(why, OLD);
 });
 

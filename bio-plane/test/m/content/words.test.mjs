@@ -64,7 +64,7 @@ test("R32 (DEC-149, index.mjs:1404, :1405): a crop with no evidence store says y
   const cid = w.content.mint({ bundleId: DOC, captureSha: "e".repeat(64), extent: { kind: "image", page: 0, rect: [0, 0, 3, 2] }, mintedBy: V("bo") }).content_id;
   const r = await w.content.cropOf({ contentId: cid, viewer: V("bo") });
   assert.equal(r.reason, "CROP_NO_EVIDENCE_STORE");
-  assert.equal(r.detail, "your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no "
-    + "crop was made. That is a fact about how your group's Civicsmith is set up, not about the image");
+  assert.equal(r.detail, "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no "
+    + "crop was made. That is a fact about how your team's Civicsmith is set up, not about the image");
   assert.doesNotMatch(r.detail, OLD);
 });

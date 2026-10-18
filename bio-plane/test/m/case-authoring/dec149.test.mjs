@@ -11,7 +11,7 @@ import { calculationBodyLines } from "../../../src/case-authoring/document.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", C1 = "CALC-2026-0001";
 const ALICE = "member:alice";
-const YOURS = "your group's Civicsmith";
+const YOURS = "your team's Civicsmith";
 /* the names DEC-149 retires for the group's Civicsmith, in any of this module's member-facing words */
 const RETIRED = /\b(this|the) (plane|instance|copy)\b|\binstance statement\b/i;
 const says = (text, ...wanted) => { for (const s of wanted) assert.ok(String(text).includes(s), `says: ${s}`);
@@ -53,7 +53,7 @@ test("R3 (DEC-149): NO_SCOPE's detail says a scope your group's Civicsmith wrote
   const { w, P } = setup();
   const r = w.publish(P, "alice", [Q], { scope: "" });
   assert.equal(r.reason, "NO_SCOPE");
-  says(r.detail, `a scope ${YOURS} wrote is not a scope the group made`);
+  says(r.detail, `a scope ${YOURS} wrote is not a scope the team made`);
 });
 
 test("R4 (DEC-149): NOT_CONCLUDED's detail for an undetermined stance says the project's latest entry names an act your group's Civicsmith does not know", () => {
@@ -102,10 +102,10 @@ test("R14, R56 (DEC-149): the case document's Bias Manifest section (in force wi
   assert.equal(on.ok, true, JSON.stringify(on).slice(0, 300));
   const section = (t) => t.slice(t.indexOf("## Bias Manifest"), t.indexOf("## Citations"));
   says(section(docText(w, on)), `when it was published, computed then and frozen here`,
-    "1 project override(s) named a LOCKED group-wide statement and were refused their effect; the group-wide statement stands");
+    "1 project override(s) named a LOCKED team-wide statement and were refused their effect; the team-wide statement stands");
   const off = setup();
   const none = off.w.publish(off.P, "alice", [Q]);
-  says(section(docText(off.w, none)), "no bias set stood adopted for the group or this project");
+  says(section(docText(off.w, none)), "no bias set stood adopted for the team or this project");
   /* the calculations section, as the document writes it */
   says(calculationBodyLines([{ calc: C1, recompute: "agrees", disclosed: null }]).join("\n"),
     "Each calculation below was recomputed when the case was published, never on a later read.");

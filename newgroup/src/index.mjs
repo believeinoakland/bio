@@ -2197,9 +2197,9 @@ does not know which team produces it: it records that once, and one that already
 value arrived is not given a name nobody told it.`
     : `The installer could not read which version your team&#39;s Civicsmith ran before this update, so it cannot tell whether this
 applies to you. It does if it held a record before ${FIRST_GROUP_RELEASE}: it then does not know which
-group produces its record, and is not given a name nobody told it.`;
+team produces its record, and is not given a name nobody told it.`;
   return `<div class="notice"><p style="margin:0 0 .6em"><b>One thing this update does not do for you: record which
-group produces your record.</b></p>
+team produces your record.</b></p>
 <p>${why} Until it is recorded, your team&#39;s Civicsmith refuses the writes that must name their producing team &mdash; testimony,
 the setup page&#39;s saves, and a new document that names none &mdash; with <span class="mono">GROUP_UNDETERMINED</span>.
 A document that states its own team is kept as it says, and nothing already in your record changes.</p>

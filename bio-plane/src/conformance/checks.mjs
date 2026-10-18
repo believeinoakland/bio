@@ -99,7 +99,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   FINDING_NOT_PUBLISHED: {
     check: 'C-113.7', where: at("#pinFindings", "is-finding-published"),
     translation: 'A determination rests on findings of three kinds: published by this project in a ratified case '
-      + 'edition; checked for publication and held unsigned by this project; or another group\'s finding this group has '
+      + 'edition; checked for publication and held unsigned by this project; or another team\'s finding this team has '
       + 'accepted at the edition named. The finding named is none of these. Nothing was written.',
   },
   NO_STANDARDS: {
@@ -189,7 +189,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   STANDARD_SIDE_UNNAMED: {
     check: 'C-113.28', where: at("comparisonFacts", "is-standard-side-named"),
-    translation: 'Name which side of the question states what the standard requires, a or b. Your group\'s Civicsmith '
+    translation: 'Name which side of the question states what the standard requires, a or b. Your team\'s Civicsmith '
       + 'never chooses it. Nothing was written.',
   },
   STANDARD_NOT_BINDING: {
@@ -219,7 +219,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   DETERMINATION_VOID: {
     check: 'C-113.37', where: at("determinationVoided", "is-determination-standing"),
     translation: 'That determination reads undetermined: a finding it rests on no longer stands (its check was voided, or '
-      + 'the other group withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a '
+      + 'the other team withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a '
       + 'determination resting on findings that stand. Nothing was written.',
   },
   DETERMINATION_NOT_ADOPTABLE: {

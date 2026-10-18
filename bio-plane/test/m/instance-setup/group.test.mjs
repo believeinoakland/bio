@@ -50,7 +50,7 @@ test("R3 instanceGroup answers the row or the stated absence; instanceGroupPubli
   assert.deepEqual(none.m.instanceGroup(), { ok: true, group: null, recorded_at: null, source: null, recorded_by: null,
                                              detail: NO_GROUP_RECORDED });
   assert.deepEqual(none.m.instanceGroupPublic(), { ok: true, group: null, detail: NO_GROUP_RECORDED });
-  assert.match(NO_GROUP_RECORDED, /no producing group is recorded/);
+  assert.match(NO_GROUP_RECORDED, /no producing team is recorded/);
   const w = await boot({ env: { INSTANCE_NAME: "river-town" } });
   assert.deepEqual(Object.keys(w.m.instanceGroup()).sort(), ["group", "ok", "recorded_at", "recorded_by", "source"]);
   assert.deepEqual(w.m.instanceGroupPublic(), { ok: true, group: "river-town" });

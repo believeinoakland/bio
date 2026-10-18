@@ -3,6 +3,7 @@
    K585 (2)): the same in check, severity, message, repairs and code, and in order. Negative controls state each arm's
    answer by hand. Pure functions, driven with documents; the time is handed in. */
 import test from "node:test";
+import { word as tableWord } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import * as AG from "../../../src/action-grammar/index.mjs";
 import { proposalLabel, idPattern } from "../../../src/record-grammar/index.mjs";
@@ -169,7 +170,7 @@ test("R7 by hand: a missing counterparty and a pending clock entry past its date
   assert.match(late[0].message, /silently past-due/);
   for (const id of ["not-an-action", "no-object-type", "refs-bad"]) assert.deepEqual(audit(DOCS[id]).findings, [], id);
   assert.deepEqual(pushed((f) => AG.checkActionExtension(null, f)).findings, [], "never throws");
-  assert.deepEqual(audit(DOCS["kind-profile"]).findings.map((x) => x.message), ["action_kind 'bylaw_complaint' is not a kind your group's Civicsmith offers"]);
+  assert.deepEqual(audit(DOCS["kind-profile"]).findings.map((x) => x.message), ["action_kind 'bylaw_complaint' is not a kind your team's Civicsmith offers"]);
   assert.deepEqual(audit(DOCS["kind-profile"], { actionKinds: AG.actionKinds(TEST_VIEW) }).findings, []);
   t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-07-03T00:00:00Z") });
   const byClock = pushed((f) => AG.checkActionExtension({ fm: DOCS["clock-past-due"], zone: ZONE }, f)).findings;
@@ -235,7 +236,7 @@ const DEC113_ROWS = {
   HOLD_ALREADY_RELEASED: {
     check: "C-117.25",
     where: "src/actions/index.mjs actionHold > is-hold-already-released",
-    translation: "That litigation hold is already released, and a release is stated once. Nothing was written. If the group is preserving again, place a new hold.",
+    translation: tableWord("refusal.HOLD_ALREADY_RELEASED"),
   },
 };
 const RETIRED_HOLDS = Object.fromEntries(Object.entries(DEC113_ROWS).map(([c, r]) => [c, r.check]));
@@ -276,7 +277,7 @@ const T41_ROWS = {
 };
 /* R13: C-94.5's translation, which names the outcome vocabulary, names none_exists; a changed row, awaiting T42's stamp. */
 /* T45 (K2849 (4)): C-117.19 refuses the override's reason alone; its ground's refusals are R15's (C-117.31, .32). */
-const C117_19_NOW = "The reason the group acts without a determination is written in up to 500 characters with no quotation mark, backslash or line break. This reason was not, so nothing was written. The ground it rests on is checked on its own.";
+const C117_19_NOW = tableWord("refusal.PREMISE_OVERRIDE_REFUSED");
 const C94_5_NOW = "An outcome is one of granted, denied, partial, reversed, affirmed, none_exists when the body says no responsive record exists, or none_stated when the body stated none.";
 
 test("R9: the rows C-117.26 NO_SUBJECT (actions R62), and C-117.27 MACHINE_CANNOT_SET_PROCEEDING are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, in that order before T41's row, their wheres naming actions' minting sites; no other table holds them; their words name no op, ruling or check number", () => {
@@ -386,7 +387,7 @@ test("R11: no place is named in the module's outward text (rows, findings, readi
   for (const p of places) assert.ok(!text.includes(p), `outward text names '${p}'`);
   const unknown = { ...DOCS["kind-profile"], action_kind: "petition" };
   const kinds = AG.actionKinds(TEST_VIEW);
-  assert.deepEqual(audit(unknown, { actionKinds: kinds }).findings.map((x) => x.message), ["action_kind 'petition' is not a kind your group's Civicsmith offers"]);
+  assert.deepEqual(audit(unknown, { actionKinds: kinds }).findings.map((x) => x.message), ["action_kind 'petition' is not a kind your team's Civicsmith offers"]);
   for (const k of kinds.filter((x) => !AG.PRODUCT_KINDS.includes(x)))
     assert.deepEqual(audit({ ...DOCS["clean-other"], action_kind: k }, { actionKinds: kinds }).findings, [], k);
   assert.deepEqual(plain(AG.recordsLawRefusal({ ...DOCS["law-clean"], action_kind: "bylaw_complaint" })).code, "RECORDS_LAW_REFUSED");
@@ -450,16 +451,16 @@ test("R7 (K1444 (iii)): a pending clock entry is past its date only once the off
 
 test("R7, R8, R9 (T34-87; DEC-149, K1811): a member reads \"your group's Civicsmith\", never \"this instance\" or \"the plane\": requestLifecycleOf's says (R8), C-2.10's kind finding (R7) and C-101.1 ACTION_KIND_UNKNOWN's translation (R9) are re-worded, and no row, finding, repair or reading over the corpus holds the old names", () => {
   const says = AG.requestLifecycleOf(DOCS["lifecycle-clean"], TODAY).says;
-  assert.equal(says, "Each entry is dated as recorded and names the entry it follows. Your group's Civicsmith derives only the days "
+  assert.equal(says, "Each entry is dated as recorded and names the entry it follows. Your team's Civicsmith derives only the days "
     + "between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no "
     + "judgement about the body.");
   assert.deepEqual(audit({ ...DOCS["clean-other"], action_kind: "petition" }).findings,
-    [{ check: "C-2.10", severity: "error", message: "action_kind 'petition' is not a kind your group's Civicsmith offers" }]);
+    [{ check: "C-2.10", severity: "error", message: "action_kind 'petition' is not a kind your team's Civicsmith offers" }]);
   assert.deepEqual(AG.ACTION_CATALOGUE_CHECKS.ACTION_KIND_UNKNOWN, {
     check: "C-101.1",
     where: "src/actions/index.mjs #writeArms > is-promote-action-kind",
-    translation: "An action is one of the kinds your group's Civicsmith offers: a records request, a request for comment, "
-      + "\"other\", and the kinds the group's jurisdiction profile lists. This write named another kind, so nothing was written. "
+    translation: "An action is one of the kinds your team's Civicsmith offers: a records request, a request for comment, "
+      + "\"other\", and the kinds the team's jurisdiction profile lists. This write named another kind, so nothing was written. "
       + "Choose one of the listed kinds, or \"other\".",
   });
   const words = [];

@@ -1401,8 +1401,8 @@ export class Content {
     const store = this.record.evidenceStore();
     if (!store)
       return { ok: false, reason: "CROP_NO_EVIDENCE_STORE", content_id: r.content_id,
-               detail: "your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no "
-                     + "crop was made. That is a fact about how your group's Civicsmith is set up, not about the image" };
+               detail: "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no "
+                     + "crop was made. That is a fact about how your team's Civicsmith is set up, not about the image" };
     const obj = await store.get(r.capture_sha);
     if (!obj)
       return { ok: false, reason: "CROP_CAPTURE_NOT_HELD", content_id: r.content_id, capture_sha: r.capture_sha,

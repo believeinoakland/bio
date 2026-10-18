@@ -206,7 +206,7 @@ test("R1: the section lists each entry — the finding, both sides verbatim with
 
 test("R1: the four templates, by the candidate's standing — open or taken up is in tension, explained-not-shown is explained, resolved irreconcilable is held irreconcilable, and a highlighted one the last, not its state's own", () => {
   assert.deepEqual(TENSION_TEMPLATES, { in_tension: "In tension, not yet resolved: ", explained: "Explained, not yet shown: ",
-    irreconcilable: "Held irreconcilable by the group: ", unseen: "Rests on a side in conflict with a record not shown: " });
+    irreconcilable: "Held irreconcilable by the team: ", unseen: "Rests on a side in conflict with a record not shown: " });
   const side = (text) => tensionSide({ kind: "leg", text, source: { bundle: DOC } });
   const base = { candidate: "c1", finding: F, a: side("one"), b: side("two"), acknowledged_by: "alice", acknowledged_at: AT };
   for (const [over, k] of [[{ state: "open" }, "in_tension"], [{ state: "taken_up" }, "in_tension"],

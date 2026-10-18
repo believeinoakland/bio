@@ -40,7 +40,7 @@ const WORDS = {
   REPORT_BODY_TOO_LARGE: "The report is too large: it must be under 16 KiB in all.",
   BODY_TOO_LARGE: "The request is too large.",
   REPORT_KIND_UNKNOWN: "The kind of abuse must be one of: fabricated evidence, harassment, impersonation, other.",
-  REPORT_CONCERNS_INVALID: `What the report concerns must be a group's short name or an https:// address, at most ${CAPS.concerns} characters.`,
+  REPORT_CONCERNS_INVALID: `What the report concerns must be a team's short name or an https:// address, at most ${CAPS.concerns} characters.`,
   REPORT_DESCRIPTION_INVALID: `The description must be from 1 to ${CAPS.description} characters.`,
   REPORT_CONTACT_INVALID: `The contact must be at most ${CAPS.contact} characters.`,
   REPORT_RATE_LIMITED: "Too many reports have been sent for now. Please try again later.",

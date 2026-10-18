@@ -72,7 +72,7 @@ test("R17: op=moneyjunction — the answer and each junction check carry the mar
   const awardCap = w.held("INFO-2026-0101-award", "a".repeat(64)), signedCap = w.held("INFO-2026-0102-signed", "b".repeat(64));
   w.resolution(awardCap, "INFO-2026-0101-award", k.id);
   w.resolution(signedCap, "INFO-2026-0102-signed", k.id);
-  w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", basis: "the group's reading", declaredBy: ALICE,
+  w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", basis: "the team's reading", declaredBy: ALICE,
     stages: [{ key: "award", cardinality: "1", required: "always" }, { key: "signed", after: "award", cardinality: "1", required: "always" }] });
   await w.progressions.threadInstance({ progressionKey: "proc", entityId: k.id, threadedBy: ALICE,
     placements: [{ stageKey: "award", captureSha: awardCap }, { stageKey: "signed", captureSha: signedCap }] });

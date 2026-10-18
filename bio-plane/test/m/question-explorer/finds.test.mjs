@@ -177,7 +177,7 @@ test("R11: a group's own test investigations measure the explorer too; the resul
   const r = w.p.groupTestResults({ viewer: "member:alice" });
   assert.deepEqual(r.results, w.groupResults);
   assert.deepEqual(w.calledAs("groupTestResults")[0], { part: "explore", viewer: "member:alice" });
-  assert.equal(w.p.groupTestResults({ viewer: "member:stranger" }), null, "negative control: not a member of the group");
+  assert.equal(w.p.groupTestResults({ viewer: "member:stranger" }), null, "negative control: not a member of the team");
   assert.equal(w.p.groupTestResults({ viewer: CALLER }), null);
   assert.equal(w.p.gate().open, true, "a failing group result does not shut the gate");
   w.testBars = [bar("investigate")];

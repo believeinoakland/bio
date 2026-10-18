@@ -762,7 +762,7 @@ export function requestLifecycleOf(fm, today) {
     entries: chain,
     passed_unanswered: chain.filter((c) => c.due && c.due.status === 'passed_unanswered').map((c) => c.ord),
     as_of: day,
-    says: 'Each entry is dated as recorded and names the entry it follows. Your group\'s Civicsmith derives only the days '
+    says: 'Each entry is dated as recorded and names the entry it follows. Your team\'s Civicsmith derives only the days '
       + 'between entries and whether a STATED due date passed with nothing following it; it encodes no law\'s '
       + 'clock and states no judgement about the body.',
   };
@@ -1043,7 +1043,7 @@ export function entryFieldFindings(entries, i, facts) {
       const held = isBlock(facts) && Array.isArray(facts.responseStatuses)
         ? facts.responseStatuses.map((x) => (isBlock(x) ? x.status : x)).filter((x) => typeof x === 'string') : [];
       if (!held.includes(e.office_status))
-        out.push(coded(`${at}.office_status '${String(e.office_status).slice(0, 40)}' is not a status the group's `
+        out.push(coded(`${at}.office_status '${String(e.office_status).slice(0, 40)}' is not a status the team's `
           + 'jurisdiction profile holds for this kind (R22)', 'OFFICE_STATUS_UNKNOWN', ['quote the office\'s words alone, or name a status the profile holds']));
     }
   }
@@ -1064,7 +1064,7 @@ export function entryFieldFindings(entries, i, facts) {
     const sp = e.speaker;
     if (e.direction !== 'sent')
       out.push(coded(`${at} carries a speaker on a '${String(e.direction).slice(0, 40)}' entry: a speaker spoke for the `
-        + 'group in a sending (R22)', 'SPEAKER_REFUSED'));
+        + 'team in a sending (R22)', 'SPEAKER_REFUSED'));
     else if (!(writable(sp, SPEAKER_MAX) && sp.trim().replace(/^member:/, '')))
       out.push(coded(`${at}.speaker is not a member id of 1 to ${SPEAKER_MAX} characters (R22)`, 'SPEAKER_REFUSED'));
   }
@@ -1083,7 +1083,7 @@ export function actionFieldFindings(fm, ctx, findings) {
   /* DEC-49 REGION is-action-fields */
   if (stated(fm.reply_owed) && fm.reply_owed !== true && fm.reply_owed !== false)
     findings.push(coded(`reply_owed '${String(fm.reply_owed).slice(0, 40)}' is not true or false (R23)`, 'REPLY_OWED_REFUSED',
-      ['state reply_owed: false when the body owes the group no reply, or leave it out']));
+      ['state reply_owed: false when the body owes the team no reply, or leave it out']));
   /* K2859 (`actions` R82): reply_owed is stated with the member's reason, `reply_owed_reason`, and the reason with it; the
      one site of this condition, so `actions` answers its write through this arm (K231). */
   else if (stated(fm.reply_owed) !== stated(fm.reply_owed_reason)
@@ -1184,7 +1184,7 @@ export function checkActionExtension(ctx, findings) {
   /* R10: a kind this instance offers; a kind an action was written with before reads as written (R4). */
   const kinds = Array.isArray(ctx.actionKinds) ? ctx.actionKinds : PRODUCT_KINDS;
   if (!kinds.includes(fm.action_kind) && !kindReadsAsWritten(fm.action_kind))
-    findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not a kind your group's Civicsmith offers`));
+    findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not a kind your team's Civicsmith offers`));
   recordsLawFindings(fm, findings);
   /* D-182: 1, 2, 3 or undetermined (absent reads undetermined); the words are RISK_TIERS'. */
   if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
@@ -1219,7 +1219,7 @@ export function checkActionExtension(ctx, findings) {
     /* R7 (T45; N882; Actions D15): who owes the date, when stated; absent reads undetermined, never defaulted. */
     if (e.owed_by !== undefined && e.owed_by !== null && !CLOCK_OWED_BY.includes(e.owed_by))
       findings.push(f('C-11.1', 'error', `clock[${i}].owed_by '${String(e.owed_by).slice(0, 40)}' is not one of: ${CLOCK_OWED_BY.join(', ')}`,
-        ['state who owes the date: the group, the body, or undetermined']));
+        ['state who owes the date: the team, the body, or undetermined']));
     if (today && DATE_RE.test(e.date || '') && e.date < today && e.status === 'pending') {
       findings.push(f('C-11.1', 'error', `clock[${i}] '${e.text}' is silently past-due (${e.date} < today, status still pending)`,
         ['mark overdue', 'mark met', 'mark waived with reason']));
@@ -1292,7 +1292,7 @@ export const ACTION_ACT_CHECKS = {
     check: 'C-33.3',
     where: 'src/actions/index.mjs actionMove > is-move-resolution',
     translation: 'An action that has ended says how it ended, and this move does not: complied, denied, escalated, '
-      + 'withdrawn, or completed when the group carried it out and no answer was awaited. The record keeps a closed '
+      + 'withdrawn, or completed when the team carried it out and no answer was awaited. The record keeps a closed '
       + 'set of endings so that a reader later can tell what actually happened rather than only that something '
       + 'stopped.',
   },
@@ -1322,7 +1322,7 @@ export const ACTION_ACT_CHECKS = {
     where: 'src/action-records/index.mjs correspondEntryRefusal > is-correspond-entry',
     translation: 'An entry holds either the captured material or a named person who can speak to '
       + 'the exchange, and never both. A summary sitting beside the real thing is what a reader '
-      + 'would quote instead of the thing the group can actually defend.',
+      + 'would quote instead of the thing the team can actually defend.',
   },
   NEITHER_CAPTURE_NOR_TESTIMONY: {
     check: 'C-33.8',
@@ -1680,8 +1680,8 @@ export const ACTION_CATALOGUE_CHECKS = {
   ACTION_KIND_UNKNOWN: {
     check: 'C-101.1',
     where: 'src/actions/index.mjs #writeArms > is-promote-action-kind',
-    translation: 'An action is one of the kinds your group\'s Civicsmith offers: a records request, a request for comment, '
-      + '"other", and the kinds the group\'s jurisdiction profile lists. This write named another kind, so nothing '
+    translation: 'An action is one of the kinds your team\'s Civicsmith offers: a records request, a request for comment, '
+      + '"other", and the kinds the team\'s jurisdiction profile lists. This write named another kind, so nothing '
       + 'was written. Choose one of the listed kinds, or "other".',
   },
   RISK_TIER_REFUSED: {
@@ -1694,7 +1694,7 @@ export const ACTION_CATALOGUE_CHECKS = {
     check: 'C-101.3',
     where: 'src/actions/index.mjs #writeArms > is-promote-counterparty',
     translation: 'An action says who it is addressed to: an office by its official role and the body it belongs to; '
-      + 'a reporter, an organisation or another group by a role and the organisation; an audience described in '
+      + 'a reporter, an organisation or another team by a role and the organisation; an audience described in '
       + 'words; or an undetermined addressee with a few words on what is known and what would settle it. This write '
       + 'carried a placeholder, a bare name outside those shapes, a person, or an addressee that said two things at '
       + 'once, so nothing was written. Leaving the addressee out is allowed while the action is a draft.',
@@ -1703,7 +1703,7 @@ export const ACTION_CATALOGUE_CHECKS = {
     check: 'C-101.4',
     where: 'src/actions/index.mjs #writeArms > is-promote-action-resolution',
     translation: 'A resolved action says how it ended: complied, denied, escalated, withdrawn, or completed when the '
-      + 'group carried it out and no answer was awaited. This write marked the action resolved without one of those, '
+      + 'team carried it out and no answer was awaited. This write marked the action resolved without one of those, '
       + 'so nothing was written.',
   },
   CLOCK_REFUSED: {
@@ -1747,7 +1747,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   ACTION_NO_DETERMINATION: {
     check: 'C-117.6',
     where: 'src/actions/index.mjs #breachRefusal > is-breach-determination',
-    translation: 'An action taken for a breach rests on the group\'s recorded determination that the government '
+    translation: 'An action taken for a breach rests on the team\'s recorded determination that the government '
       + 'acted out of conformance, and this one names no such determination that you can see, so nothing was '
       + 'written. Name the determination it rests on.',
   },
@@ -1764,7 +1764,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   MACHINE_CANNOT_OVERRIDE: {
     check: 'C-117.8',
     where: 'src/actions/index.mjs #overrideAndAddressee > is-machine-override',
-    translation: 'Acting on a breach the group has not determined is a member\'s open decision, made with a reason '
+    translation: 'Acting on a breach the team has not determined is a member\'s open decision, made with a reason '
       + 'and answered for. The credential that asked here is an automated one, so it cannot state or change that '
       + 'override. Sign in to state it yourself.',
   },
@@ -1778,7 +1778,7 @@ export const ACTION_CATALOGUE_CHECKS = {
     check: 'C-117.19',
     where: 'src/actions/index.mjs #overrideAndAddressee > is-premise-override',
     /* T45 (K2849 (4)): the reason's refusal alone; the ground's are R15's (C-117.31, .32). Re-worded, awaiting T46's stamp. */
-    translation: 'The reason the group acts without a determination is written in up to 500 characters with no quotation '
+    translation: 'The reason the team acts without a determination is written in up to 500 characters with no quotation '
       + 'mark, backslash or line break. This reason was not, so nothing was written. The ground it rests on is checked on '
       + 'its own.',
   },
@@ -1786,13 +1786,13 @@ export const ACTION_CATALOGUE_CHECKS = {
   MACHINE_CANNOT_SET_CONTACT: {
     check: 'C-117.10',
     where: 'src/actions/index.mjs #contactAndPlan > is-machine-contact',
-    translation: 'Who the group\'s contact for an action is, is a member\'s choice. The credential that asked here is '
+    translation: 'Who the team\'s contact for an action is, is a member\'s choice. The credential that asked here is '
       + 'an automated one, so it cannot set or change it. Sign in to set it yourself.',
   },
   CONTACT_NOT_A_MEMBER: {
     check: 'C-117.11',
     where: 'src/actions/index.mjs contactNotAMember > is-contact-member',
-    translation: 'The contact for an action is a member of this group, named by their member id, and the id given '
+    translation: 'The contact for an action is a member of this team, named by their member id, and the id given '
       + 'names no member here. Nothing was written.',
   },
   /* R46 (Bob's ruling 1 of 2026-09-29, K590): the plan an action was started from. */
@@ -1826,7 +1826,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   PRESSURE_NOT_RECEIVED: {
     check: 'C-117.16',
     where: 'src/actions/index.mjs #pressureRefusal > is-pressure',
-    translation: 'Pressure is marked on something the group received. The entry named records something sent, or a '
+    translation: 'Pressure is marked on something the team received. The entry named records something sent, or a '
       + 'reply that never came, so nothing was written.',
   },
   /* T45 (K2845, K2859): the moved hold rows retired once `actions` deleted its copy of the hold code (`action-holds`'

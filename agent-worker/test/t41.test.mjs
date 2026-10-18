@@ -202,7 +202,7 @@ section("R6, R29, R71 · through POST /run: a project's account is taken, named 
     ["a project's account whose project is not a string", { ...PKEY(), project: ["PRJ-41"] }, 400, "BAD_ACCOUNT"],
     ["a project's account naming a project of over 200 characters", { ...PKEY(), project: "P".repeat(201) }, 400, "BAD_ACCOUNT"],
     ["a member's own account carrying a project", { ...MKEY(), project: PROJECT }, 400, "BAD_ACCOUNT"],
-    ["the group's API key carrying a project", { kind: "apikey", level: "group", secret: MEMBER_KEY, member: MEMBER, project: PROJECT }, 400, "BAD_ACCOUNT"],
+    ["the team's API key carrying a project", { kind: "apikey", level: "group", secret: MEMBER_KEY, member: MEMBER, project: PROJECT }, 400, "BAD_ACCOUNT"],
     ["a project's sign-in carrying no secret (R82, T47)", { ...PSIGNIN(), secret: undefined }, 409, "SIGNIN_NOT_HELD"],
     ["a project's sign-in carrying an empty secret (R82, T47)", { ...PSIGNIN(), secret: "" }, 409, "SIGNIN_NOT_HELD"],
     ["a project's sign-in with suggestions not a boolean (T46)", { ...PSIGNIN(), suggestions: "on" }, 400, "BAD_ACCOUNT"],

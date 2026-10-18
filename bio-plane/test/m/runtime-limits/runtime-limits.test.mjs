@@ -348,11 +348,7 @@ test("R13: instanceClaudeStatus answers not configured, CASCADE_UNSET, with a de
   // The detail says where the assistant's account comes from instead (K1755): a member's own Claude account or API
   // key, or the group's API key, each held in credentials, never a binding of the copy.
   const { detail } = await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v });
-  assert.match(detail, /a member's own Claude account or API key/);
-  assert.match(detail, /the group's API key/);
-  assert.match(detail, /administrator/);
-  assert.match(detail, /held sealed in Civicsmith's credentials, never as a setting/);
-  assert.match(detail, /binds no Claude account to its own settings, and none can be set there/);
+  assert.equal(detail, "Your team's Civicsmith binds no Claude account to its own settings, and none can be set there. The assistant is reached through a member's own Claude account or API key, or through the team's API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.", "K3810: the sentence is the word table's");
   // It claims no limit of Anthropic's plans (K1761, K1763): the retired "serves only its own holder" is gone, and
   // nothing says the group can hold no account at all.
   assert.doesNotMatch(detail, /serves only|only its own holder|subscription/i);
@@ -369,7 +365,7 @@ test("R13 (DEC-149 sweep, tokens.mjs:62): the detail says \"Your group's Civicsm
   const v = fresh();
   for (const env of [{}, { INSTANCE_CLAUDE_TOKEN: v }]) {
     const { detail } = await instanceClaudeStatus(env);
-    assert.ok(detail.startsWith("Your group's Civicsmith binds no Claude account"), detail);
+    assert.equal(detail, "Your team's Civicsmith binds no Claude account to its own settings, and none can be set there. The assistant is reached through a member's own Claude account or API key, or through the team's API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.", detail);
     assert.doesNotMatch(detail, /\bthe plane\b|\bthe instance\b|\bcopy\b|This group's/i);
   }
   // The sweep's old string is gone.

@@ -91,10 +91,10 @@ test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-
     ["DOCUMENT_COPY_PENDING", "C-120.21", "src/case-disclosures/index.mjs materialsJudged > is-document-copy-made"],
     ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "src/case-disclosures/index.mjs materialsJudged > is-document-cleanable"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
-    "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
-    "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
-    "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
-    "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
+    "A finding this case relies on rests on material your team's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
+    "A finding in this case rests on another team's finding, and this team's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
+    "Another team's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
+    "The flags on another team's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
     "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published.",
     "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written.",
     "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written.",
@@ -334,7 +334,7 @@ test("R55 (case-disclosures R4): a capture given to the group states only what s
   assert.match(caseDocumentBlocks(text).sources[0].stated, /Pat Q\. Example/);
   assert.equal(w.ratify(r2).ok, true, "the consented statement holds at the commit");
   for (const leak of [sourceId, name.entry, role.entry, "clerk"]) assert.equal(text.includes(leak), false, `names ${leak}`);
-  assert.ok(bodyOf(text).includes("## Sources Of Material Given To The Group"));
+  assert.ok(bodyOf(text).includes("## Sources Of Material Given To The Team"));
 });
 
 test("R14: the /5 document states the captures and sources blocks, always, empty included, read back through publication's caseDocumentBlocks", () => {

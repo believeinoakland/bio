@@ -65,7 +65,7 @@ for (const v of [V1, V2, V3]) test(`R14 R20: the specification of ${v} states ev
   /* the checks, one numbered rule each: integrity, signatures, passages, grades, the bar, publication checks,
      presentability, completion, the complete edition, another group's work, calculations (R20) */
   for (const h of ["Integrity", "Signatures", "Passages", "Grades", "The bar", "Publication checks", "Presentability", "Completion",
-                   "The complete edition", "Another group's work", "Calculations"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
+                   "The complete edition", "Another team's work", "Calculations"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
   /* the case document formats it reads, and the product name the complete edition renders by format (DEC-124) */
   for (const w of ["bio-case-document/7", "bio-case-document/6", "CivicOS", "Civicsmith"]) assert.ok(named(w), w);
   assert.match(SPEC, /`bio-case-document\/6` document, or an earlier one, renders `CivicOS`, and a `bio-case-document\/7` document renders `Civicsmith`/);
@@ -98,7 +98,7 @@ for (const v of [V2, V3]) test(`R14 R22 (K2129): ${v} states the kinds /2 adds w
   assert.match(SPEC, /it changes no finding's result/);
   /* /2 keeps every rule of /1 */
   for (const h of ["Integrity", "Signatures", "Passages", "Grades", "The bar", "Publication checks", "Presentability", "Completion",
-                   "The complete edition", "Another group's work", "Calculations", "Standards' use"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
+                   "The complete edition", "Another team's work", "Calculations", "Standards' use"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
 });
 
 test("R14 R8 R22 (T37; N757, N763; K2206): bio-case-file/3 states the obscured kind at its path with its departures, the materials row's obscured fields, the presentability of a photo carried as its copy, the complete edition's listing of it, and the criteria rows' captures over which the copyrighted arms are judged offline", () => {
@@ -123,7 +123,7 @@ test("R14 R8 R22 (T37; N757, N763; K2206): bio-case-file/3 states the obscured k
   assert.equal(SPEC.includes("this is not judged offline"), false);
   /* /3 keeps every rule of /2 */
   for (const h of ["Integrity", "Signatures", "Passages", "Grades", "The bar", "Publication checks", "Presentability", "Completion",
-                   "The complete edition", "Another group's work", "Calculations", "Standards' use"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
+                   "The complete edition", "Another team's work", "Calculations", "Standards' use"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
 });
 
 test("R14 (T39; N806; K2333, K2343): bio-case-file/3 names a member document's cleaned copy beside a photo's copy as material the obscured kind carries in place of its original, at every place it speaks of the copy, with no format change", () => {
@@ -197,7 +197,7 @@ test("R15 (DEC-149): at start the module registers casechecker and casefilespec 
   }
   /* DEC-149 (T34-87; K1821): the reader has no credential, so the detail speaks of this group's Civicsmith, never "this copy" */
   const unknown = pr.publicRead("casefilespec", { version: "bio-case-file/9" }).result.detail;
-  assert.equal(unknown, "this group's Civicsmith holds no specification of that version; it holds the specifications of bio-case-file/1, bio-case-file/2 and bio-case-file/3, each named as version");
+  assert.equal(unknown, "this team's Civicsmith holds no specification of that version; it holds the specifications of bio-case-file/1, bio-case-file/2 and bio-case-file/3, each named as version");
   assert.equal(/this (copy|plane|instance)/.test(unknown + CC.caseFileSpec(null).detail), false);
   /* another module cannot take the names */
   const again = new PublicRead({ storage: { sql: null } });

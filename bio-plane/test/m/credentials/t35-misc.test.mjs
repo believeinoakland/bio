@@ -183,29 +183,29 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   const has = (text, s) => assert.ok(String(text).includes(s), `${s}\n  in: ${text}`);
   /* checks.mjs :21, :27 (C-63.1, C-63.2) */
   const cal = w.c.signerAdd({ keyB64: "AAAAk", memberId: "cal", by: "admin" });
-  has(cal.translation, "until then your group's Civicsmith would refuse anything signed with it");
+  has(cal.translation, "until then your team's Civicsmith would refuse anything signed with it");
   has(w.c.signerAdd({ keyB64: "AAAAk", memberId: "dee", by: "admin" }).translation,
-    "so your group's Civicsmith would refuse anything signed with their key");
+    "so your team's Civicsmith would refuse anything signed with their key");
   /* index.mjs :342 (the bar's detail) */
-  has(cal.detail, "one your group's Civicsmith would refuse. Nothing was written.");
+  has(cal.detail, "one your team's Civicsmith would refuse. Nothing was written.");
   /* :39, :53, :66 (C-29.1, C-29.3, C-29.5) and index :588, :631 */
-  has(w.c.aiCredentialMint({ who: "class:ai" }).translation, "Only a named person signed in to your group's Civicsmith can create an agent credential.");
+  has(w.c.aiCredentialMint({ who: "class:ai" }).translation, "Only a named person signed in to your team's Civicsmith can create an agent credential.");
   w.c.aiCredentialMint({ tokenId: "t", secretSha: SHA("a"), principalKind: "member", who: "ann" });
   const taken = w.c.aiCredentialMint({ tokenId: "t", secretSha: SHA("b"), principalKind: "member", who: "ann" });
-  has(taken.translation, "That name already belongs to an agent credential in your group's Civicsmith.");
-  has(taken.detail, "'t' already names a credential in your group's Civicsmith.");
+  has(taken.translation, "That name already belongs to an agent credential in your team's Civicsmith.");
+  has(taken.detail, "'t' already names a credential in your team's Civicsmith.");
   const unknown = w.c.aiCredentialRevoke({ who: "ann", tokenId: "nope" });
-  has(unknown.translation, "There is no agent credential by that name in your group's Civicsmith, so nothing was");
-  has(unknown.detail, "no credential in your group's Civicsmith is called 'nope'.");
+  has(unknown.translation, "There is no agent credential by that name in your team's Civicsmith, so nothing was");
+  has(unknown.detail, "no credential in your team's Civicsmith is called 'nope'.");
   /* :153, :154 (C-29.22) and index :794 */
   const bare = await world({ sealSecret: null }).group("ann");
   const unsealed = await bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
   /* (T50; plan rule 6) ai-accounts' rows are read by key, never quoted: the row's translation is the word itself */
   assert.equal(unsealed.translation, word("refusal.ACCOUNT_SEAL_UNAVAILABLE"));
-  has(unsealed.detail, "your group's Civicsmith has no seal secret set, so a key cannot be kept sealed or read.");
+  has(unsealed.detail, "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read.");
   /* index :822 */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
-    "the kind your group's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
+    "the kind your team's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
   /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ handle: "nobody", password: "wrong-passphrase", source: "s" });
   has(refused.detail, "Either no active credential is held under that role");
@@ -220,12 +220,12 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by: "admin" });
   const other = credentialsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: `${SEAL}-changed` });
   has((await other.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).detail,
-    "the reference does not open under the seal secret of your group's Civicsmith, which has changed");
+    "the reference does not open under the seal secret of your team's Civicsmith, which has changed");
   w.c.groupKeyNoticeSeen({ member: "second", by: "second" });
   has((await other.accountFor({ member: "second", act: { kind: "ask", member: "second" } })).detail,
-    "the group's key does not open under the seal secret of your group's Civicsmith, which has changed");
+    "the team's key does not open under the seal secret of your team's Civicsmith, which has changed");
   has((await other.keyedServiceFor({ service: "courtlistener" })).detail,
-    "the key does not open under the seal secret of your group's Civicsmith, which has changed");
+    "the key does not open under the seal secret of your team's Civicsmith, which has changed");
 });
 
 test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string this module answers calls the group's Civicsmith a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {

@@ -1,6 +1,7 @@
 /* filing-templates: the template and its versions, drafting, the blanks and the vocabularies (R1, R2, R3, R19, R21),
    at the module's interface, under the test profile. */
 import { test } from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, draft, approved, V, MACHINE, TEST, HARBOUR, TEXT, sha, twoProfiles } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
@@ -168,7 +169,7 @@ test("R19 FILING_BLANKS and FILING_TEXT_MAX are exported frozen and unchanged fr
   assert.deepEqual(moved, {
     counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
     counterparty_body: "the body of that office (an office's arm only)",
-    counterparty_organisation: "the organisation of a reporter, an organisation or another group the action is addressed to",
+    counterparty_organisation: "the organisation of a reporter, an organisation or another team the action is addressed to",
     counterparty_description: "the audience the action is addressed to, as the action describes it",
     act: "what the government did, as the action's determination states it",
     act_date: "when it did it (a date, or a period from and to)",
@@ -179,7 +180,7 @@ test("R19 FILING_BLANKS and FILING_TEXT_MAX are exported frozen and unchanged fr
     clock: "the action's clock entries, each with its basis",
     venue: "where the kind is filed (the profile's venue name)",
     venue_how: "by what means it is filed (the profile's venue means)",
-    group: "the producing group",
+    group: word("filing-templates.group"),
     date: "the date the draft was prepared",
   });
   assert.ok(Object.isFrozen(ft.FILING_BLANKS));

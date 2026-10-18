@@ -437,7 +437,7 @@ test("R22 an undetermined occurrence whose trigger is undated answers the words 
 
 test("R22 each of duties' codes is answered as reason_code and its says fills {reason}; control: another code's words are not used", () => {
   const codes = { trigger_undated: "What starts the clock has no date in the record.", due_between_days: "The due date depends on a day the record does not settle.",
-                  deadline_not_held: "Your group's Civicsmith holds no rule for this deadline yet.", due_not_computed: "The due date could not be worked out.",
+                  deadline_not_held: "Your team's Civicsmith holds no rule for this deadline yet.", due_not_computed: "The due date could not be worked out.",
                   match_undated: "The event that met it has no settled date.", order_unsettled: "The dates held are not precise enough to say whether it was on time." };
   for (const [code, says] of Object.entries(codes)) {
     const it = reasoned({ code, says });

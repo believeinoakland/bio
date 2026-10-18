@@ -686,7 +686,7 @@ export class Filings {
     const version = isObj(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
     if (!t || typeof t.offeredVersion !== "function")
       return templatesRow({ ok: false, reason: "NO_SUCH_TEMPLATE", template: id,
-                            detail: "no module answers the group's templates here, so none is readable" });
+                            detail: "no module answers the team's templates here, so none is readable" });
     return t.offeredVersion({ template: id, version, viewer });
   }
 
@@ -1029,7 +1029,7 @@ export class Filings {
     if (language != null && (typeof language !== "string" || !/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$/.test(language)))
       return bad("language", "language is a language tag, such as en or en-GB");
     if (ownDoing != null && (!Array.isArray(ownDoing) || ownDoing.length > 5000 || !ownDoing.every((i) => Number.isInteger(i) && i >= 0)))
-      return bad("own_doing", "own_doing lists the indexes of sentences about the group's own doing");
+      return bad("own_doing", "own_doing lists the indexes of sentences about the team's own doing");
     if (pending != null && typeof pending !== "boolean") return bad("names_pending", "names_pending is true or false");
     let tc = null;
     if (textcheck != null) {
@@ -1271,7 +1271,7 @@ export class Filings {
     if (own.length)
       return { refusal: { ok: false, reason: "SELF_BENEFIT_ASK", filing,
                           sentences: [...new Set(own.map((p) => p.index))].map((i) => ({ index: i, text: sentences[i] })),
-                          detail: "rewrite each sentence that asks for the benefit of the group or its members; there is no override" } };
+                          detail: "rewrite each sentence that asks for the benefit of the team or its members; there is no override" } };
     /* END DEC-49 REGION is-self-benefit-ask */
     /* R57: the check is `filing-templates`' one (its R33), asked on the approved text and answered with its row */
     const unquoted = rfc ? rfcQuotingRefusal(String(body ?? ""), { filing }) : null;
@@ -1323,7 +1323,7 @@ export class Filings {
     /* DEC-49 REGION is-not-the-groups-act */
     if (marks.voice === "self")
       return { ok: false, reason: "NOT_THE_GROUPS_ACT", filing: d.filing_id, voice: "self",
-               detail: "prepared as yourself: your own notes are never approved, stamped or recorded as the group's act" };
+               detail: "prepared as yourself: your own notes are never approved, stamped or recorded as the team's act" };
     /* END DEC-49 REGION is-not-the-groups-act */
     return null;
   }
@@ -2325,7 +2325,7 @@ export class Filings {
     /* DEC-49 REGION is-counsel-packet */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_NAME_COUNSEL",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: the group names its counsel`
+               detail: who ? `'${who.slice(0, 60)}' is a machine identity: the team names its counsel`
                            : "no member is named as the one naming counsel" };
     /* R8 (DEC-88, C-115.44): the author's words on why, kept as written. Blank is empty after trim; the bound counts
        code points, as publication's attribution reason does (K1030). Asked before the action, so nothing is read or
@@ -2359,7 +2359,7 @@ export class Filings {
       /* DEC-49 REGION is-template-use-file */
       if (used.use !== "brief")
         return { ok: false, reason: "TEMPLATE_USE_FILE", template: used.template, version: used.version,
-                 detail: "this template is wording the group files in its own name: a briefing takes a brief template" };
+                 detail: "this template is wording the team files in its own name: a briefing takes a brief template" };
       /* END DEC-49 REGION is-template-use-file */
       const mismatch = Filings.#kindMismatch(used, a);
       if (mismatch) return mismatch;
@@ -2769,7 +2769,7 @@ export class Filings {
     const t = this.filingTemplates;
     if (!t || typeof t.templateDraft !== "function")
       return templatesRow({ ok: false, reason: "NO_SUCH_TEMPLATE", template: str(template),
-                            detail: "no module answers the group's templates here, so no template can be drafted" });
+                            detail: "no module answers the team's templates here, so no template can be drafted" });
     const named = template != null && template !== "";
     const defaults = {};
     if (!named) {

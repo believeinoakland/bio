@@ -164,7 +164,7 @@ const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detai
    write answers it through here, and so does every later module asking it (`action-plans` R18), so
    `CONTACT_NOT_A_MEMBER` is minted at one site with its one row (C-117.11). The detail is this write's own fixed
    sentence; `extra` adds a caller's fields beside these and never replaces one. Writes nothing and never throws. */
-const CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of your group by member id, and this one names none. "
+const CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of your team by member id, and this one names none. "
   + "Nothing was written.";
 const CONTACT_NOT_A_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "detail"]);
 export function contactNotAMember(extra = null) {
@@ -717,7 +717,7 @@ export class Actions {
       const kinds = this.kinds();
       if (!kinds.includes(nextFm.action_kind))
         return refuse("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind your `
-          + `group's Civicsmith offers: one of ${kinds.join(", ")}. Nothing was written.`, { legal: kinds });
+          + `team's Civicsmith offers: one of ${kinds.join(", ")}. Nothing was written.`, { legal: kinds });
     }
     /* END DEC-49 REGION is-promote-action-kind */
     /* DEC-49 REGION is-promote-tier-vocabulary */
@@ -822,7 +822,7 @@ export class Actions {
     if (held !== next) {
       /* DEC-49 REGION is-machine-override */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on "
+        return refuse("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the team acts on "
           + "a breach it has not determined, on a stated ground and with the reason why. A machine credential may not "
           + "state or change one. Nothing was written.");
       /* END DEC-49 REGION is-machine-override */
@@ -873,7 +873,7 @@ export class Actions {
     if (!same("contact")) {
       /* DEC-49 REGION is-machine-contact */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine "
+        return refuse("MACHINE_CANNOT_SET_CONTACT", "the team's contact for an action is a member's choice; a machine "
           + "credential may not set or change it. Nothing was written.");
       /* END DEC-49 REGION is-machine-contact */
       const id = contactId(nextFm.contact);
@@ -1036,7 +1036,7 @@ export class Actions {
     /* R82: whether the body owes the group a reply, with the member's reason (`reply_owed_reason`). */
     if (moved("reply_owed") || moved("reply_owed_reason")) {
       /* DEC-49 REGION is-machine-set-reply-owed */
-      if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the group a reply is a member's "
+      if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the team a reply is a member's "
         + "statement; a machine credential may not set or change it. Nothing was written.");
       /* END DEC-49 REGION is-machine-set-reply-owed */
       /* the value and its reason are judged together by action-grammar R23 (K2861): one site for REPLY_OWED_REFUSED */
@@ -1082,7 +1082,7 @@ export class Actions {
     if (speakerMoved && e.speaker !== undefined && e.speaker !== null) {
       /* DEC-49 REGION is-machine-contact-speaker */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_SET_CONTACT", "who spoke for the group in a sending is a member's statement; a "
+        return refuse("MACHINE_CANNOT_SET_CONTACT", "who spoke for the team in a sending is a member's statement; a "
           + "machine credential may not set it. Nothing was written.");
       /* END DEC-49 REGION is-machine-contact-speaker */
     }
@@ -1259,7 +1259,7 @@ export class Actions {
       ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. "
         + "None of its legs names one. Nothing was written."
       : "an action recorded for a breach rests on a conformance determination, and no determination can be read on "
-        + "your group's Civicsmith yet, so none could be found. Nothing was written.",
+        + "your team's Civicsmith yet, so none could be found. Nothing was written.",
       readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" });
     /* END DEC-49 REGION is-breach-determination */
   }
@@ -1727,7 +1727,7 @@ export class Actions {
     /* DEC-49 REGION is-no-reply-owed */
     if (direction === "no_response" && fm.reply_owed === false) {
       this.#releaseLease(target, who);
-      return refuse("NO_REPLY_OWED", "this action states that the body owes the group no reply, so silence is never "
+      return refuse("NO_REPLY_OWED", "this action states that the body owes the team no reply, so silence is never "
         + "recorded as a non-response. Nothing was written.", { target, reply_owed: false, ...T45_SENTENCES.reply_not_owed,
           reply_owed_reason: replyOwedReason(fm) });
     }
@@ -1829,7 +1829,7 @@ export class Actions {
       if (inLaw === "not_in_law") {
         this.#releaseLease(target, who);
         return refuse("STAGE_NOT_IN_LAW", `stage '${life.stage}' is not one the law this request is made under lists, as `
-          + "your group's jurisdiction states it. Nothing was written.", { target, stage: life.stage,
+          + "your team's jurisdiction states it. Nothing was written.", { target, stage: life.stage,
             stages: (this.#lawStages(fm.law) || []).map((x) => x && x.stage) });
       }
       /* END DEC-49 REGION is-stage-in-law */
@@ -1909,7 +1909,7 @@ export class Actions {
     const os = obj(officeStatus), fe = obj(foundElsewhere);
     /* DEC-49 REGION is-entry-writable */
     if (sp && !tok(sp))
-      return refuse("SPEAKER_REFUSED", "speaker is the member id of the member who spoke for the group in this sending. "
+      return refuse("SPEAKER_REFUSED", "speaker is the member id of the member who spoke for the team in this sending. "
         + "Nothing was written.");
     if (os && (os.bad || !text(os.words) || !tok(os.status)))
       return refuse("OFFICE_STATUS_WITHOUT_OUTCOME", "office_status is {words, status?}: the office's own wording, with no "
@@ -1945,7 +1945,7 @@ export class Actions {
   #pressureRefusal({ who, mark, direction }) {
     /* DEC-49 REGION is-pressure */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a "
+      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the team is a member's judgement; a "
         + "machine credential may not mark it. Nothing was written.");
     if (!mark || !PRESSURE_KINDS.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX || /["\\\r\n]/.test(mark.raw))
       return refuse("PRESSURE_REFUSED", `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS.join(", ")}, the note `
@@ -3017,7 +3017,7 @@ export class Actions {
       (Array.isArray(fm.correspondence) ? fm.correspondence : []).forEach((e, ord) => {
         if (!e || e.direction !== "sent" || !Actions.#inWindow(e.at, from, to)) return;
         out.push({ ref: `${id}#correspondence/${ord}`, date: String(e.at).slice(0, 10),
-                   label: `the group's ${fm.action_kind} sent to ${counterpartyName(fm.counterparty)}` });
+                   label: `the team's ${fm.action_kind} sent to ${counterpartyName(fm.counterparty)}` });
       });
     }
     return out;
@@ -3085,7 +3085,7 @@ export class Actions {
     }
     return { ok: true, office: { role: office.role, body: office.body, entity_id: office.entity_id ?? null }, items,
              overdue_replies: items.filter((x) => x.clock_overdue === true).length, truncated, limit: OPEN_ITEMS_MAX,
-             says: "the group's open actions with this office, shown as facts. Nothing is refused because of them." };
+             says: "the team's open actions with this office, shown as facts. Nothing is refused because of them." };
   }
   /* R92: R9's office equality: equal entity ids where both state one, else equal role and body. */
   static #sameOffice(a, b) {
@@ -3194,7 +3194,7 @@ const CORRESPOND_DETAIL = Object.freeze({
     + "non-response, which is dated by when the reply was due",
   CAPTURE_AND_TESTIMONY: "an entry carries the captured bytes OR a named account, never both: what comes back "
     + "is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader "
-    + "would quote instead of the thing the group can defend.",
+    + "would quote instead of the thing the team can defend.",
   NEITHER_CAPTURE_NOR_TESTIMONY: "an entry carries either an artifact_sha that resolves in the register or an account "
     + "with an author. Neither is an entry that asserts an exchange and offers no way "
     + "to check that it happened.",

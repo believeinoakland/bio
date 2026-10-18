@@ -152,7 +152,7 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
      active member as if no import exists, byte-identically. */
   importedcases: "names nothing: it lists the imports, each a read-only project held apart from the record's bundles, "
     + "and case-import answers a non-member as if none exists (its R4)",
-  importedcase: "`import` is an IMPORT's id (the SHA-256 of its source group, case and lens), never a bundle id, and "
+  importedcase: "`import` is an IMPORT's id (the SHA-256 of its source team, case and lens), never a bundle id, and "
     + "case-import answers a non-member with the same bytes as an absent import (its R4)",
   /* T36-48 (K2063): file-safety's reads that take a parameter: a capture's digest, a cursor over its own rows or a
      scanner's finding name, never a bundle id. */
@@ -169,7 +169,7 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   successread: "`id` is a SUCCESS RECORD's id — a row inside a project, whose existence is contents (consequences R20)",
   casecheck: "`case` is a CASE id, `edition` one of its editions and `check` a CHECK id, answered by the case's own fence "
     + "(case-check R2)",
-  ruleoffer: "`rule` is a GROUP RULE's id, never a bundle id (local-facts R13)",
+  ruleoffer: "`rule` is a TEAM RULE's id, never a bundle id (local-facts R13)",
   grouprules: "`section` is a profile's SECTION name, never a bundle id (local-facts R12)",
   /* R14 (T47; N970): a project's questions answer a project the viewer does not see at FULL as an empty page, never
      refused, as `projectholds` is (R3); the project list names no project. */
@@ -329,7 +329,7 @@ async function usageOwner(ctx, member, mode) {
 function adminRefusal(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
   if (membershipOf(ctx).isAdministrator(member && member.startsWith("member:") ? member.slice(7) : member)) return null;
-  return notAnAdmin(member, "asking the assistant to draft the group's description");
+  return notAnAdmin(member, "asking the assistant to draft the team's description");
 }
 
 /* R1: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R2;

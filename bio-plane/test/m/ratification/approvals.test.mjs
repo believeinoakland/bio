@@ -74,7 +74,7 @@ test("R49, R14: APPROVAL_MISSING is C-58.11 in this module's C-58 family, with i
   assert.deepEqual(RATIFY_SCOPE_CHECKS.APPROVAL_MISSING.check, "C-58.11");
   assert.equal(RATIFY_SCOPE_CHECKS.APPROVAL_MISSING.where, "src/ratification/refusals.mjs approvalMissingRefusal > is-approval-missing");
   assert.equal(rowOf("APPROVAL_MISSING").translation,
-    "This case edition can't be signed yet: the group requires named members to approve a case before it is signed, and "
+    "This case edition can't be signed yet: the team requires named members to approve a case before it is signed, and "
     + "some of them have not approved this version of it. They are named. Ask them to approve it, then sign. Nothing was signed.");
 });
 

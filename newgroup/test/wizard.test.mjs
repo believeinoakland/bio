@@ -1093,7 +1093,7 @@ console.log("\n--- update: replacing a version with itself is not a success ---"
   t("the outcome says nothing changed", body.includes("Nothing changed"), true);
   t("and does not claim an update happened", /<b>Updated (from|to)/.test(body), false);
   t("and says what to check instead", body.includes("newer release has actually been published"), true);
-  t("D-436: a no-op update tells nothing about the producing group", body.includes("op=instancegroupseed"), false);
+  t("D-436: a no-op update tells nothing about the producing team", body.includes("op=instancegroupseed"), false);
   globalThis.fetch = realFetch;
 }
 

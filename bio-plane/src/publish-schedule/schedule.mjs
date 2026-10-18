@@ -81,11 +81,11 @@ function resolveAt(p, at) {
   const zone = groupZone(p);
   if (!zone)
     return { ok: false, reason: "PUBLISH_AT_NO_ZONE",
-             detail: "the group holds no time zone, so a local time cannot be read; it is never read as UTC" };
+             detail: "the team holds no time zone, so a local time cannot be read; it is never read as UTC" };
   let b = null;
   try { b = bounds({ value: `${date}T${time}`, precision: "minute", zone }); } catch { b = null; }
   if (!b || !b.earliest)
-    return { ok: false, reason: "PUBLISH_AT_NO_ZONE", detail: `the group's time zone (${zone}) cannot be read` };
+    return { ok: false, reason: "PUBLISH_AT_NO_ZONE", detail: `the team's time zone (${zone}) cannot be read` };
   if (!(ms(b.earliest) > ms(clock(p))))
     return { ok: false, reason: "PUBLISH_AT_PAST", at: { date, time, zone }, publish_at: b.earliest,
              detail: "that time is not after now; publishing now is the ceremony's own commit" };

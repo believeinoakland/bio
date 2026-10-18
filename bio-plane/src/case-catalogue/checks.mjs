@@ -228,10 +228,10 @@ export function checkPublishedExtension(fm, findings) {
        passes, and nothing reads which one it is. */
     if (!SUBJECT_POSITIONS.includes(c.subject_position)) {
       findings.push(f('C-2.8', 'error', `a case member requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(', ')} (got '${c.subject_position}'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)`,
-        ['declare the group\'s position on putting this case to its subject']));
+        ['declare the team\'s position on putting this case to its subject']));
     }
     if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '') {
-      findings.push(f('C-2.8', 'error', 'a case member requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse. A group that sought comment says so and prints what came back; a group that deliberately did not says so and says why, and a reader weighs that justification exactly as they weigh any other declared bias (DEC-13)',
+      findings.push(f('C-2.8', 'error', 'a case member requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse. A team that sought comment says so and prints what came back; a team that deliberately did not says so and says why, and a reader weighs that justification exactly as they weigh any other declared bias (DEC-13)',
         ['justify the position — including a deliberate decision not to give notice']));
     }
   }
@@ -551,7 +551,7 @@ export function checkCaseDocument(fm, ctx = {}) {
      editions and a byte-check on it would pressure a member into inventing a
      difference (see checkCompletenessFreshness). */
   if (typeof fm?.case_scope !== 'string' || fm.case_scope.trim() === '') {
-    findings.push(f(C41.SCOPE, 'error', 'a case document requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the group and never derived from the findings\' titles — a scope this plane wrote is not a scope the group made (DEC-44)',
+    findings.push(f(C41.SCOPE, 'error', 'a case document requires case_scope: the case states what brought these findings together and what question it answers as a whole. It is AUTHORED by the team and never derived from the findings\' titles — a scope this plane wrote is not a scope the team made (DEC-44)',
       ['author the case scope on op=publish']));
   }
   /* REC-47 / DEC-46 (a). DEC-20 is the doctrine and it is worth stating at the
@@ -760,7 +760,7 @@ export function checkCaseDocument(fm, ctx = {}) {
       const list = fm?.bias_manifest_pins_proposed;
       const n = bm.pins_proposed;
       if (!Number.isInteger(n) || n < 0 || !Array.isArray(list)) {
-        findings.push(f(C41.PENDING, 'error', `a ${declared} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list) ? `of ${list.length}` : 'absent'}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication §3 rule 18)`,
+        findings.push(f(C41.PENDING, 'error', `a ${declared} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list) ? `of ${list.length}` : 'absent'}): "no manifest was in force" is true of a scope whose only adoption pins a revision the team has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication §3 rule 18)`,
           ['re-publish through op=publish, which states every adoption of the scope pinning a proposed revision at signing']));
       } else if (list.length !== n) {
         findings.push(f(C41.PENDING, 'error', `a ${declared} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
@@ -850,7 +850,7 @@ export function checkCaseDocument(fm, ctx = {}) {
      the absence of one. */
   const rq = (typeof fm?.required_strength === 'object' && fm.required_strength) || null;
   if (!rq || typeof rq.declared !== 'boolean') {
-    findings.push(f(C41.BAR, 'error', 'a case document requires required_strength with a declared flag: a case publishes the bar the group set for itself beside the strength each member reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17). An absent bar is not a bar of zero — a reader cannot tell "no bar was declared" from "nobody wrote this down"',
+    findings.push(f(C41.BAR, 'error', 'a case document requires required_strength with a declared flag: a case publishes the bar the team set for itself beside the strength each member reached, and an ABSENT bar is STATED as absent rather than shown as blank (DEC-17). An absent bar is not a bar of zero — a reader cannot tell "no bar was declared" from "nobody wrote this down"',
       ['declare the project bar with op=strengthbar, or publish with the bar stated absent']));
   } else if (rq.declared) {
     /* THE PAIR, PER R2, and the reason is the one the member-side arm carried:

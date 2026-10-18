@@ -77,7 +77,7 @@ test("R33 R2: (a) an edition move naming m > n gives each live leg at edition n 
     { source: CITED_CASE_MOVED, since: T2, ord: 0, role: "supports", state: "open", ref: REF, cited_edition: 1,
       move: "MV-e2", import: IMP, group: GROUP, case: CASE, kind: "edition", edition: 2, seq: 4, date: "2026-09-30",
       what_changed: "table 3 corrected", key_listed: true, taken_back: null, detail: undefined });
-  assert.match(c.detail, new RegExp(`another group's finding .* at edition 1, of case ${CASE} by ${GROUP}, and its `
+  assert.match(c.detail, new RegExp(`another team's finding .* at edition 1, of case ${CASE} by ${GROUP}, and its `
     + `publisher published edition 2 \\(docket entry 4, dated 2026-09-30: "table 3 corrected"\\)`));
   assert.match(c.detail, /leg is unchanged/);
   assert.ok(!/taken this entry back|signing key/.test(c.detail));
@@ -167,7 +167,7 @@ test("R33 R21: the moves are read through each cursor to null; with nothing regi
   /* nothing registered at all: absent, said as R1 and R31 say it */
   const none = world().r.reevaluations({ viewer: ADMIN });
   assert.deepEqual([none.accepted_work_absent, none.count], [true, 0]);
-  assert.match(none.accepted_work_why, /no module holding another group's work is registered/);
+  assert.match(none.accepted_work_why, /no module holding another team's work is registered/);
   /* negative control: registered with moves, nothing is said absent or unreadable */
   s.failing = false;
   const ok = w.r.reevaluations({ viewer: ADMIN });

@@ -11,7 +11,7 @@ import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.
 import { word } from "../../../src/setup-words/index.mjs";
 
 const NOT_MEMBER_WORDS = /copy|instance|plane|server/i;
-const INSTALLATION = /^Your group's Civicsmith /;
+const INSTALLATION = /^Your team's Civicsmith /;
 /* C-140.2 and C-140.13 as they stand: their numbers and `where`s unmoved (R42's control), their translations in R42a's
    terms (T47; DEC-200 (5)). */
 const ROWS = {
@@ -44,7 +44,7 @@ test("R42: with no scanner bound, each of the six sites (scanBatch, safeView, re
     assert.deepEqual({ ok: r.ok, code: r.code, check: r.check, translation: r.translation },
                      { ok: false, code, check: ROWS[code].check, translation: ROWS[code].translation }, site);
     assert.equal(typeof r.detail, "string", site);
-    assert.match(r.detail, INSTALLATION, `${site}: names your group's Civicsmith`);
+    assert.match(r.detail, INSTALLATION, `${site}: names your team's Civicsmith`);
     assert.doesNotMatch(r.detail, NOT_MEMBER_WORDS, `${site}: ${r.detail}`);
     assert.ok(r.detail.includes(notDone), `${site}: says what was not done (${r.detail})`);
   }

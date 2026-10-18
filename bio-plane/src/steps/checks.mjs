@@ -11,7 +11,7 @@ export const STEPS_CHECKS = {
   STEP_NO_WORK: { check: "C-142.1", where: at("stepCreate", "stepPropose", "stepAccept"),
     translation: "Say what the work is, in your own words, in at most 500 characters. Nothing was written." },
   STEP_BAD_PLACE: { check: "C-142.2", where: at("stepCreate", "stepPropose", "stepRefer"),
-    translation: "A step is taken on one or more questions, in one project, or for the whole group: exactly one of these, and a step is never placed inside another step. Nothing was written." },
+    translation: "A step is taken on one or more questions, in one project, or for the whole team: exactly one of these, and a step is never placed inside another step. Nothing was written." },
   NO_SUCH_BUNDLE: { check: "C-142.3", where: at("stepCreate", "stepRefer", "stepsOn", "questionFollow"),
     translation: "There is no question here by that id that you can see. Nothing was written." },
   STEP_BAD_BY_WHEN: { check: "C-142.4", where: at("stepCreate", "stepByWhen"),

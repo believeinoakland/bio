@@ -162,7 +162,7 @@ test("R29 (C-68.1, K794): acquire with no evidence storage is refused 503 with i
     const w = world({ evidence: false });
     const r = await run(w, { "https://a.example/x": text("x") }, body, o);
     assert.deepEqual([r.status, r.body.ok, r.body.reason, r.body.check, r.body.translation, r.body.op, r.body.error],
-                     [503, false, "EVIDENCE_STORAGE_NOT_CONFIGURED", row.check, row.translation, "acquire", "your group's Civicsmith has no evidence storage configured"], JSON.stringify(body));
+                     [503, false, "EVIDENCE_STORAGE_NOT_CONFIGURED", row.check, row.translation, "acquire", word("capture.response.group_civicsmith_evidence")], JSON.stringify(body));
     assert.deepEqual([r.net.seen.length, w.prov.receipts.length, w.b.calls.length], [0, 0, 0], "nothing fetched, filed or stored");
   }
   /* negative control: the same act with storage bound is a filed capture carrying no row */
@@ -204,7 +204,7 @@ test("R29 (C-68.1, K850): the exported raiser answers the door's body for the op
 });
 
 test("R29 (C-68.1, K850): acquire without evidence storage answers as before, byte for byte (its error in DEC-149's words), and its answer is the raiser's own", async () => {
-  const error = "your group's Civicsmith has no evidence storage configured";
+  const error = word("capture.response.group_civicsmith_evidence");
   const r = await run(world({ evidence: false }), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
   assert.equal(r.status, 503);
   assert.equal(JSON.stringify(r.body), JSON.stringify(acquireBody(error)), "acquire's body unchanged: ok, reason, check, translation, op, error; no code");

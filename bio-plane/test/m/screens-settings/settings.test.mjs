@@ -26,7 +26,7 @@ test("R17 settings: \"Yours\" then, to a session that administers, \"The group's
 test("R32 settings draws its sections as the design's link list: each its icon and its screen's name as the reference, its purpose beneath, the two never run together", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
   const lists = all(a.tree, (e) => /\bmk-links\b/.test(e.attrs.class || ""));
-  assert.equal(lists.length, 2, "Yours, and the group's");
+  assert.equal(lists.length, 2, "Yours, and the team's");
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(all(l, (e) => e.tag === "svg").length, 1, `${id} has its icon`);

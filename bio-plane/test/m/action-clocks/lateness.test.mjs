@@ -63,7 +63,7 @@ test("R15 lateness counts the group's own entries (owed_by: group, whatever thei
   /* T45 controls: a body's commitment (A:8) and a stated date not marked the group's (A:9) are never counted. */
   for (const ord of [4, 8, 9]) assert.ok(!r.entries.some((x) => x.action === A && x.ord === ord), `A:${ord}`);
   assert.deepEqual(r.not_counted.map((x) => [x.action, x.ord, x.why]), [
-    [A, 5, "the entry names no basis kind and no owed_by, so whether it is the group's own is not stated"],
+    [A, 5, "the entry names no basis kind and no owed_by, so whether it is the team's own is not stated"],
     [D, 0, "met, and the day it was met is not held"]]);
   /* the method is calc-grammar's: its recipe and trace answered, the counts its exact outputs. */
   assert.equal(r.method.recipe.method, "bio-calc/1");

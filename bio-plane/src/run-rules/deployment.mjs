@@ -216,7 +216,7 @@ export const DRAFT_REACH = Object.freeze({
   infractiondraft: Object.freeze({ scope: "matter_record", means: "through the asking member's grant, only the matter's own record the member may see: its plan, actions, correspondence and findings, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
   bearingdraft: Object.freeze({ scope: "action_reply", means: "through the asking member's grant, only the action and the reply it is asked about, with the request's claims, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
   statusreport: Object.freeze({ scope: "none", means: "nothing of the record: only the items plan-work R8 assembled for the plan's status report, handed in by the door" }),
-  reading: Object.freeze({ scope: "none", means: "nothing of the record: only the passage of the group's own writing the door hands in, to be put into the asking member's language" }),
+  reading: Object.freeze({ scope: "none", means: "nothing of the record: only the passage of the team's own writing the door hands in, to be put into the asking member's language" }),
 });
 
 /** R27 — THE ACTION DRAFTS' ONE DEPLOY FLAG, `action_drafts`, held here as `ask`'s and `draft`'s are on their modes. The

@@ -8,7 +8,7 @@ import { answersWorld, V } from "./fixture.mjs";
 import { ANSWERS_CHECKS } from "../../../src/answers/index.mjs";
 
 const BANNED = /\b(?:copy|copies|instance|instances|plane|planes|server|servers)\b/i;
-const OURS = "your group's Civicsmith";
+const OURS = "your team's Civicsmith";
 /* Every member-facing string of an answer, deep: translations, details, reasons and conditions. */
 function said(v, out = []) {
   if (Array.isArray(v)) for (const x of v) said(x, out);

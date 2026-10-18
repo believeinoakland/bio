@@ -77,7 +77,7 @@ test("R6: the finding never moves ok, clean, withErrors, tally or offenders, and
   assert.equal(Object.isFrozen(OBSERVATION_MEANS), true);
   assert.equal(ROUTE_TALLY_NOTE, "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in "
     + "`tally` or `withErrors`: each names a document whose route cannot be shown, standing where "
-    + "the group put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
+    + "the team put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
     + "assessment has run, not that anything is wrong.");
   for (const f of ["NEVER_LOOKED", "LOOKED_INDETERMINATE", "PRESENT"])
     assert.equal(routeFinding("information", f === "NEVER_LOOKED" ? null : { finding: f }).means, OBSERVATION_MEANS[f]);

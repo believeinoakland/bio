@@ -138,7 +138,7 @@
    "NO_RESOLUTION": {
     "check": "C-33.3",
     "where": "src/actions/index.mjs actionMove > is-move-resolution",
-    "translation": "An action that has ended says how it ended, and this move does not: complied, denied, escalated, withdrawn, or completed when the group carried it out and no answer was awaited. The record keeps a closed set of endings so that a reader later can tell what actually happened rather than only that something stopped."
+    "translation": "An action that has ended says how it ended, and this move does not: complied, denied, escalated, withdrawn, or completed when the team carried it out and no answer was awaited. The record keeps a closed set of endings so that a reader later can tell what actually happened rather than only that something stopped."
    },
    "RESOLUTION_WITHOUT_RESOLVING": {
     "check": "C-33.4",
@@ -158,7 +158,7 @@
    "CAPTURE_AND_TESTIMONY": {
     "check": "C-33.7",
     "where": "src/action-records/index.mjs correspondEntryRefusal > is-correspond-entry",
-    "translation": "An entry holds either the captured material or a named person who can speak to the exchange, and never both. A summary sitting beside the real thing is what a reader would quote instead of the thing the group can actually defend."
+    "translation": "An entry holds either the captured material or a named person who can speak to the exchange, and never both. A summary sitting beside the real thing is what a reader would quote instead of the thing the team can actually defend."
    },
    "NEITHER_CAPTURE_NOR_TESTIMONY": {
     "check": "C-33.8",
@@ -350,7 +350,7 @@
    "ACTION_KIND_UNKNOWN": {
     "check": "C-101.1",
     "where": "src/actions/index.mjs #writeArms > is-promote-action-kind",
-    "translation": "An action is one of the kinds this instance offers: a records request, a request for comment, \"other\", and the kinds the group's jurisdiction profile lists. This write named another kind, so nothing was written. Choose one of the listed kinds, or \"other\"."
+    "translation": "An action is one of the kinds this instance offers: a records request, a request for comment, \"other\", and the kinds the team's jurisdiction profile lists. This write named another kind, so nothing was written. Choose one of the listed kinds, or \"other\"."
    },
    "RISK_TIER_REFUSED": {
     "check": "C-101.2",
@@ -360,12 +360,12 @@
    "COUNTERPARTY_REFUSED": {
     "check": "C-101.3",
     "where": "src/actions/index.mjs #writeArms > is-promote-counterparty",
-    "translation": "An action says who it is addressed to: an office by its official role and the body it belongs to; a reporter, an organisation or another group by a role and the organisation; an audience described in words; or an undetermined addressee with a few words on what is known and what would settle it. This write carried a placeholder, a bare name outside those shapes, a person, or an addressee that said two things at once, so nothing was written. Leaving the addressee out is allowed while the action is a draft."
+    "translation": "An action says who it is addressed to: an office by its official role and the body it belongs to; a reporter, an organisation or another team by a role and the organisation; an audience described in words; or an undetermined addressee with a few words on what is known and what would settle it. This write carried a placeholder, a bare name outside those shapes, a person, or an addressee that said two things at once, so nothing was written. Leaving the addressee out is allowed while the action is a draft."
    },
    "ACTION_RESOLUTION_REFUSED": {
     "check": "C-101.4",
     "where": "src/actions/index.mjs #writeArms > is-promote-action-resolution",
-    "translation": "A resolved action says how it ended: complied, denied, escalated, withdrawn, or completed when the group carried it out and no answer was awaited. This write marked the action resolved without one of those, so nothing was written."
+    "translation": "A resolved action says how it ended: complied, denied, escalated, withdrawn, or completed when the team carried it out and no answer was awaited. This write marked the action resolved without one of those, so nothing was written."
    },
    "CLOCK_REFUSED": {
     "check": "C-101.5",
@@ -400,7 +400,7 @@
    "ACTION_NO_DETERMINATION": {
     "check": "C-117.6",
     "where": "src/actions/index.mjs #breachRefusal > is-breach-determination",
-    "translation": "An action taken for a breach rests on the group's recorded determination that the government acted out of conformance, and this one names no such determination that you can see, so nothing was written. Name the determination it rests on."
+    "translation": "An action taken for a breach rests on the team's recorded determination that the government acted out of conformance, and this one names no such determination that you can see, so nothing was written. Name the determination it rests on."
    },
    "ADDRESSEE_NOT_AN_OFFICE": {
     "check": "C-117.7",
@@ -410,7 +410,7 @@
    "MACHINE_CANNOT_OVERRIDE": {
     "check": "C-117.8",
     "where": "src/actions/index.mjs #overrideAndAddressee > is-machine-override",
-    "translation": "Acting on a breach the group has not determined is a member's open decision, made with a reason and answered for. The credential that asked here is an automated one, so it cannot state or change that override. Sign in to state it yourself."
+    "translation": "Acting on a breach the team has not determined is a member's open decision, made with a reason and answered for. The credential that asked here is an automated one, so it cannot state or change that override. Sign in to state it yourself."
    },
    "PREMISE_OVERRIDE_REWRITTEN": {
     "check": "C-117.9",
@@ -420,17 +420,17 @@
    "PREMISE_OVERRIDE_REFUSED": {
     "check": "C-117.19",
     "where": "src/actions/index.mjs #overrideAndAddressee > is-premise-override",
-    "translation": "A premise override carries one thing, the reason the group acts without a determination: up to 500 characters with no quotation mark, backslash or line break. This one did not, so nothing was written."
+    "translation": "A premise override carries one thing, the reason the team acts without a determination: up to 500 characters with no quotation mark, backslash or line break. This one did not, so nothing was written."
    },
    "MACHINE_CANNOT_SET_CONTACT": {
     "check": "C-117.10",
     "where": "src/actions/index.mjs #contactAndPlan > is-machine-contact",
-    "translation": "Who the group's contact for an action is, is a member's choice. The credential that asked here is an automated one, so it cannot set or change it. Sign in to set it yourself."
+    "translation": "Who the team's contact for an action is, is a member's choice. The credential that asked here is an automated one, so it cannot set or change it. Sign in to set it yourself."
    },
    "CONTACT_NOT_A_MEMBER": {
     "check": "C-117.11",
     "where": "src/actions/index.mjs #contactAndPlan > is-contact-member",
-    "translation": "The contact for an action is a member of this group, named by their member id, and the id given names no member here. Nothing was written."
+    "translation": "The contact for an action is a member of this team, named by their member id, and the id given names no member here. Nothing was written."
    },
    "PLAN_LINK_REWRITTEN": {
     "check": "C-117.12",
@@ -455,7 +455,7 @@
    "PRESSURE_NOT_RECEIVED": {
     "check": "C-117.16",
     "where": "src/actions/index.mjs #pressureRefusal > is-pressure",
-    "translation": "Pressure is marked on something the group received. The entry named records something sent, or a reply that never came, so nothing was written."
+    "translation": "Pressure is marked on something the team received. The entry named records something sent, or a reply that never came, so nothing was written."
    },
    "PRESSURE_MARKED": {
     "check": "C-117.17",
@@ -1728,7 +1728,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
       "repairable": true,
       "repairs": [
        "add a clock[] entry: the date the response was due, and the basis it derives from"
@@ -1739,7 +1739,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
       "repairable": true,
       "repairs": [
        "add a clock[] entry: the date the response was due, and the basis it derives from"
@@ -1750,7 +1750,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
       "repairable": true,
       "repairs": [
        "add a clock[] entry: the date the response was due, and the basis it derives from"
@@ -1762,7 +1762,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+     "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
      "repairable": true,
      "repairs": [
       "add a clock[] entry: the date the response was due, and the basis it derives from"
@@ -1835,7 +1835,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
       "repairable": true,
       "repairs": [
        "add a clock[] entry: the date the response was due, and the basis it derives from"
@@ -1855,7 +1855,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
       "repairable": true,
       "repairs": [
        "add a clock[] entry: the date the response was due, and the basis it derives from"
@@ -1875,7 +1875,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+      "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
       "repairable": true,
       "repairs": [
        "add a clock[] entry: the date the response was due, and the basis it derives from"
@@ -1896,7 +1896,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the group; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
+     "message": "a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; GAGAS / GAO agency-comment protocol (7-30 calendar days on a draft) is the precedent to reason from and is not a constant this record enforces (DEC-13)",
      "repairable": true,
      "repairs": [
       "add a clock[] entry: the date the response was due, and the basis it derives from"
@@ -2476,7 +2476,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a reader would quote instead",
+      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead",
       "repairable": true,
       "repairs": [
        "capture the artifact and record its sha256 (op=capture), or",
@@ -2488,7 +2488,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a reader would quote instead",
+      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead",
       "repairable": true,
       "repairs": [
        "capture the artifact and record its sha256 (op=capture), or",
@@ -2500,7 +2500,7 @@
      {
       "check": "C-2.10",
       "severity": "error",
-      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a reader would quote instead",
+      "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead",
       "repairable": true,
       "repairs": [
        "capture the artifact and record its sha256 (op=capture), or",
@@ -2514,7 +2514,7 @@
     {
      "check": "C-2.10",
      "severity": "error",
-     "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a reader would quote instead",
+     "message": "correspondence[0] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead",
      "repairable": true,
      "repairs": [
       "capture the artifact and record its sha256 (op=capture), or",

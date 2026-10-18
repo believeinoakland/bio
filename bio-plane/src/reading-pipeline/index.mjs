@@ -115,7 +115,7 @@ export async function tier2Escalate(env, { sha, storeName, text }) {
 export function tier2FailureNote(failure) {
   /* DEC-149 (T35-24, K1960): on the reading's basis, so it names the group's Civicsmith, never "this instance". */
   return failure === "unbound"
-    ? "tier 1 read essentially nothing of this document and no pdf-worker member is set up in your group's Civicsmith, so tier 1's reading stands"
+    ? "tier 1 read essentially nothing of this document and no pdf-worker member is set up in your team's Civicsmith, so tier 1's reading stands"
     : failure === "no_improvement"
       ? "tier 1 read essentially nothing of this document and the pdf-worker member answered without improving it, so tier 1's reading stands"
       : failure === "unavailable"
@@ -616,12 +616,12 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
       const rest = unanswered.length;
       ocrNote = `${seeded.length} page(s) of this document without a text layer were transcribed by an earlier reading `
               + `of this capture and kept`
-              + (rest ? `; the other ${rest} have no text layer to read and no OCR engine is installed in your group's `
+              + (rest ? `; the other ${rest} have no text layer to read and no OCR engine is installed in your team's `
                       + `Civicsmith, so nothing is claimed about what they say` : "");
     } else {
       /* DEC-149 (T35-24): member-facing, so it names the group's Civicsmith, never "this instance". */
       ocrNote = "this document has no text layer to read and no OCR engine is installed "
-              + "in your group's Civicsmith, so nothing is claimed about what it says";
+              + "in your team's Civicsmith, so nothing is claimed about what it says";
     }
   }
   /* D-418 (R6): a document still wants OCR when it was selected and nothing was filled, or a selected page is
@@ -1263,7 +1263,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   };
   if (!sha) return early(failed(doc, null, "the document names no capture digest, so there are no bytes to read"));
   /* DEC-149 (T35-24): member-facing, so it names the group's Civicsmith, never "this instance". */
-  if (!evidence) return early(failed(doc, null, "your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read"));
+  if (!evidence) return early(failed(doc, null, "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read"));
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, why: "the evidence store could not be read" }));
   const bytes = got.bytes;
   const textRead = !multipart && profile.profiled_from_text === true && bytes;

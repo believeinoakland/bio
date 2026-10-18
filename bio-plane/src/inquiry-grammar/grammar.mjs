@@ -1269,7 +1269,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   const entry = registry && target ? registry[target] : null;
   const pub = entry && (entry.object_type == null || entry.object_type === 'inquiry') ? entry : null;
   if (leg.grade_source === 'inherited' && !pub) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source 'inherited' but its target ${registry ? 'is not a published case' : 'cannot be checked against the published record here'}: a grade is inherited from a case the group SIGNED, at a stated edition, and from nothing else`,
+    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source 'inherited' but its target ${registry ? 'is not a published case' : 'cannot be checked against the published record here'}: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else`,
       ['cite a published case and name its edition', 'or state where this grade actually came from']));
     return;
   }
@@ -1395,25 +1395,25 @@ export function importedLegFindings(label, leg, findings, checkId = INQUIRY_GRAM
   const refusal = (message, repairs) => importedRefusal(checkId, message, repairs);
   const ed = l.target_edition;
   if (!Number.isInteger(ed) || ed < 1) {
-    findings.push(refusal(`${label}.target_edition '${String(ed).slice(0, 40)}' does not name an edition of ${ref}: a leg on another group's finding names the one edition it rests on, a positive whole number, because each edition is a separate document with its own published grades`,
-      [`set ${label}.target_edition to the edition this group accepted`]));
+    findings.push(refusal(`${label}.target_edition '${String(ed).slice(0, 40)}' does not name an edition of ${ref}: a leg on another team's finding names the one edition it rests on, a positive whole number, because each edition is a separate document with its own published grades`,
+      [`set ${label}.target_edition to the edition this team accepted`]));
   }
   for (const field of ['grade', 'grade_axis', 'grade_source']) {
     if (carries(l[field])) {
-      findings.push(refusal(`${label}.${field} is set on a leg on another group's finding (${ref}): that finding's grades are the ones its edition published, and the leg states none of its own`,
+      findings.push(refusal(`${label}.${field} is set on a leg on another team's finding (${ref}): that finding's grades are the ones its edition published, and the leg states none of its own`,
         [`remove ${field} from ${label}`]));
     }
   }
   if (carries(l.content_id)) {
-    findings.push(refusal(`${label}.content_id is set on a leg on another group's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that group's own case file`,
+    findings.push(refusal(`${label}.content_id is set on a leg on another team's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that team's own case file`,
       [`remove content_id from ${label}`]));
   }
   if (legHasAuthoredExtent(l)) {
-    findings.push(refusal(`${label} names an extent on a leg on another group's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that group's own case file`,
+    findings.push(refusal(`${label} names an extent on a leg on another team's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that team's own case file`,
       [`remove the extent fields from ${label}`]));
   }
   if (carries(l.extent_capture)) {
-    findings.push(refusal(`${label}.extent_capture is set on a leg on another group's finding (${ref}): no capture of this record holds that finding`,
+    findings.push(refusal(`${label}.extent_capture is set on a leg on another team's finding (${ref}): no capture of this record holds that finding`,
       [`remove extent_capture from ${label}`]));
   }
   return true;
@@ -1436,7 +1436,7 @@ function importedReferenceFindings(fm, findings) {
   refs.forEach((r, i) => {
     if (!r || typeof r !== 'object' || !isRef(r.target)) return;
     findings.push(importedRefusal(INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED.check,
-      `references[${i}].target names another group's finding (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
+      `references[${i}].target names another team's finding (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
       [`remove references[${i}]; the basis leg alone names that finding`]));
   });
 }
@@ -1475,7 +1475,7 @@ function standardLegFindings(label, leg, findings) {
   if (leg.grade_axis === 'connection' || leg.grade_axis === 'testimony') wrong.push(`a ${leg.grade_axis} axis`);
   if (leg.grade_source === 'hunch') wrong.push('a hunch');
   if (!wrong.length) return false;
-  findings.push(standardLegRefusal(`${label} rests on the standard ${leg.target} and states ${wrong.join(' and ')}: a standard is law the group holds in captured text, so the only grade a leg on it carries is the capture grade that text earns. Whether the standard bears on this question is the inquiry's own argument, not a grade`,
+  findings.push(standardLegRefusal(`${label} rests on the standard ${leg.target} and states ${wrong.join(' and ')}: a standard is law the team holds in captured text, so the only grade a leg on it carries is the capture grade that text earns. Whether the standard bears on this question is the inquiry's own argument, not a grade`,
     [`grade ${label} on the capture axis with grade_source: capture — op=earnedbasis answers what the standard's text earns`,
      `or state no grade on ${label} — the leg stays in the basis, present and not yet load-bearing`]));
   return true;

@@ -312,15 +312,15 @@ test("R22, R32, R33 (DEC-149, K1821; T34-87): the door's own rows call the group
   const OLD = /this copy|the copy\b|this instance|this plane|the plane\b/i;
   const rows = { ...CHECKS.DISPATCH_CHECKS, ...CHECKS.BOOTSTRAP_CHECKS, ...CHECKS.REPLAY_CHECKS };
   const byName = {
-    UNKNOWN_OP: "This group's Civicsmith has no operation by that name.",
-    STORE_DID_NOT_ANSWER: "This group's Civicsmith could not consult its own records just now",
-    PLANE_INTERNAL_ERROR: "That is a fault in this group's Civicsmith,",
-    STORE_INTERNAL_ERROR: "This group's Civicsmith failed inside its own record",
-    PURGE_HOLD_IN_PLACE: "Your group's Civicsmith is preserving records under a litigation hold",
-    BOOTSTRAP_CREDENTIAL_UNSET: "Your group's Civicsmith has no administrator token set",
-    BOOTSTRAP_CREDENTIAL_PUBLISHED: "Whoever installed your group's Civicsmith sets a fresh one",
-    BOOTSTRAP_CREDENTIAL_MISMATCH: "the one your group's Civicsmith holds, so it was not claimed",
-    REPLAY_UNVERIFIED: "your group's Civicsmith could not check that against the history it holds",
+    UNKNOWN_OP: "This team's Civicsmith has no operation by that name.",
+    STORE_DID_NOT_ANSWER: "This team's Civicsmith could not consult its own records just now",
+    PLANE_INTERNAL_ERROR: "That is a fault in this team's Civicsmith,",
+    STORE_INTERNAL_ERROR: "This team's Civicsmith failed inside its own record",
+    PURGE_HOLD_IN_PLACE: "Your team's Civicsmith is preserving records under a litigation hold",
+    BOOTSTRAP_CREDENTIAL_UNSET: "Your team's Civicsmith has no administrator token set",
+    BOOTSTRAP_CREDENTIAL_PUBLISHED: "Whoever installed your team's Civicsmith sets a fresh one",
+    BOOTSTRAP_CREDENTIAL_MISMATCH: "the one your team's Civicsmith holds, so it was not claimed",
+    REPLAY_UNVERIFIED: "your team's Civicsmith could not check that against the history it holds",
   };
   for (const [code, words] of Object.entries(byName)) {
     assert.ok(rows[code].translation.includes(words), code);
@@ -328,7 +328,7 @@ test("R22, R32, R33 (DEC-149, K1821; T34-87): the door's own rows call the group
     assert.equal(M.dec49Row(code).translation, rows[code].translation, `${code} decorates with its own words`);
   }
   for (const row of Object.values(rows)) assert.doesNotMatch(row.translation, OLD, row.check);
-  assert.ok(M.STORE_SILENT_DETAIL.startsWith("this group's Civicsmith could not consult its own record,"));
+  assert.ok(M.STORE_SILENT_DETAIL.startsWith("this team's Civicsmith could not consult its own record,"));
   assert.doesNotMatch(M.STORE_SILENT_DETAIL, OLD);
   /* the one-time answers, as a caller receives them */
   const { env, S } = world();

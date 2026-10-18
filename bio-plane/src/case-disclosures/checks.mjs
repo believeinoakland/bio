@@ -97,7 +97,7 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   RELIED_ON_NOT_PRESENTABLE: {
     check: 'C-120.8',
     where: at('materialsJudged', 'is-relied-on-presentable'),
-    translation: 'A finding this case relies on rests on material your group\'s Civicsmith does not hold whole, and '
+    translation: 'A finding this case relies on rests on material your team\'s Civicsmith does not hold whole, and '
       + 'everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or '
       + 'make the finding supporting. Nothing was written.',
   },
@@ -106,19 +106,19 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   ACCEPTED_WORK_NOT_IN_FORCE: {
     check: 'C-120.10',
     where: at('acceptedWorkJudged', 'is-accepted-work-in-force'),
-    translation: 'A finding in this case rests on another group\'s finding, and this group\'s acceptance of that edition '
+    translation: 'A finding in this case rests on another team\'s finding, and this team\'s acceptance of that edition '
       + 'is not in force. Accept it again, or take the leg out. Nothing was written.',
   },
   FLAG_NOT_DISCLOSED: {
     check: 'C-120.11',
     where: at('flagsJudged', 'is-flag-disclosed'),
-    translation: 'Another group\'s work this case rests on carries an open flag, and a case may be published with it '
+    translation: 'Another team\'s work this case rests on carries an open flag, and a case may be published with it '
       + 'only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.',
   },
   FLAGS_UNDETERMINED: {
     check: 'C-120.12',
     where: at('flagsJudged', 'is-flags-determined'),
-    translation: 'The flags on another group\'s work this case rests on could not be read completely, so what must be '
+    translation: 'The flags on another team\'s work this case rests on could not be read completely, so what must be '
       + 'disclosed is not known. Try again. Nothing was published.',
   },
   FLAG_DISCLOSURE_NOT_STANDING: {

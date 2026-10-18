@@ -12,7 +12,7 @@ const str = (v) => String(v ?? "").trim();
 
 /** R14: the plain sentence a member's block gains for each open flag disclosed on work it rests on, until the UX design
  *  stream gives the words. */
-export const FLAG_SENTENCE = "Rests on another group's work that carries an open flag, disclosed with this case: ";
+export const FLAG_SENTENCE = "Rests on another team's work that carries an open flag, disclosed with this case: ";
 /** R14 (`case-authoring` R53): what the ceremony says of the flags beside its R32's tensions. */
 export const FLAGS_SAY = "publishing discloses each of these flags, and is never blocked by one (DEC-96 item 4): list each "
   + "in flagsDisclosed at op=publish, with your own words if you choose.";

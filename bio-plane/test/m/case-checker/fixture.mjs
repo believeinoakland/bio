@@ -63,7 +63,7 @@ export function calcRow(over = {}) {
    label; `case-grammar` R12's `obscured`). */
 export const COPY_BYTES = "%PDF-1.7 the memo, faces and plates covered";
 export const COPY_SHA = sha(COPY_BYTES);
-export const OBSCURED_LABEL = "Faces and plates obscured for publication; the group holds the original";
+export const OBSCURED_LABEL = "Faces and plates obscured for publication; the team holds the original";
 export const ACCOUNT = "I pulled it from the records office's box on the 3rd.";
 export const MEMO_ACCOUNT = "A clerk handed me this memo in person.";
 

@@ -225,14 +225,14 @@ test("R28 no place is named in the module's outward text: every exported sentenc
 });
 
 test("R36 four served sentences name your group's Civicsmith (DEC-149): the actor class `plane`, the authority kind `objective`, the content detail for pages no engine could read, and `render-deferred`'s opening; every key and stored value unchanged; no served sentence says the plane, this or the instance, copy or server for it; rows already written keep their detail", () => {
-  const CIVICSMITH = "your group's Civicsmith";
+  const CIVICSMITH = "your team's Civicsmith";
   // the actor class `plane` and the authority kind `objective`: the keys stay the stored values (R29), the sentences move
-  assert.equal(ol.OBSERVATION_ACTOR_CLASSES.plane, "the scheduler of your group's Civicsmith looked, with no member and no machine behind it");
-  assert.equal(ol.OBSERVATION_AUTHORITY_KINDS.objective, "a standing objective your group's Civicsmith is monitoring for");
+  assert.equal(ol.OBSERVATION_ACTOR_CLASSES.plane, "the scheduler of your team's Civicsmith looked, with no member and no machine behind it");
+  assert.equal(ol.OBSERVATION_AUTHORITY_KINDS.objective, "a standing objective your team's Civicsmith is monitoring for");
   assert.deepEqual(Object.keys(ol.OBSERVATION_ACTOR_CLASSES), ["plane", "machine", "member"]);
   assert.ok("objective" in ol.OBSERVATION_AUTHORITY_KINDS);
   // R6's content-level detail for a reading with pages left unread, at every arm that composes it
-  const PAGES = "this document has pages no engine in your group's Civicsmith could read";
+  const PAGES = "this document has pages no engine in your team's Civicsmith could read";
   const tiers = () => ({ tiers: [{ tier: 1, covers: "all", steps: ["layer"] }], unclassified: [] });
   const base = { read_from_text: true, text_source: [{ step: "layer", tier: 1 }], page_count: 2, tier3_candidate: true };
   for (const r of [base, { ...base, read_from_text: false }, { ...base, text_chars: 0 }]) {
@@ -248,7 +248,7 @@ test("R36 four served sentences name your group's Civicsmith (DEC-149): the acto
   assert.ok(w.log().at(-1).detail.includes(PAGES));
   // `render-deferred`: its opening re-worded, the rest of its sentence unchanged
   assert.equal(ol.CONDITION_KINDS["render-deferred"],
-    "a render your group's Civicsmith could not do is held under its C-83 reason until its request expires, and is then "
+    "a render your team's Civicsmith could not do is held under its C-83 reason until its request expires, and is then "
     + "recorded undetermined (D-491, D-523) — LIVE: queue-producers #conditionsRenderDeferred");
   assert.equal(ol.checkCondition("render-deferred"), null, "the key is unchanged and still accepted");
   // no served sentence of this module says the plane, this or the instance, copy or server for the group's Civicsmith:

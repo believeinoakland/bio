@@ -9,12 +9,12 @@ const at = (fn, region) => `src/network-notices/index.mjs ${fn} > ${region}`;
 export const NETWORK_NOTICE_CHECKS = Object.freeze({
   MACHINE_CANNOT_POST_NOTICE: {
     check: "C-127.1", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "Only a member, signed in as themselves, prepares or posts a notice that the group is working on "
+    translation: "Only a member, signed in as themselves, prepares or posts a notice that the team is working on "
       + "something. A machine, the assistant or an operator token cannot. Nothing was published.",
   },
   NOTICE_NOT_THE_OWNER: {
     check: "C-127.2", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "Only an owner of the project tells the network the group is working on it. Nothing was published.",
+    translation: "Only an owner of the project tells the network the team is working on it. Nothing was published.",
   },
   NOTICE_PROJECT_CLOSED: {
     check: "C-127.3", where: at("#callerRefusal", "is-notice-caller"),
@@ -23,17 +23,17 @@ export const NETWORK_NOTICE_CHECKS = Object.freeze({
   },
   NOTICE_NO_GROUP_SLUG: {
     check: "C-127.4", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "Your group has no name recorded yet, and a notice is never anonymous. Record the group's name "
+    translation: "Your team has no name recorded yet, and a notice is never anonymous. Record the team's name "
       + "first. Nothing was published.",
   },
   NOTICE_NO_INSTANCE_KEY: {
     check: "C-127.5", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "Your group's Civicsmith holds no signing key of its own, so it cannot sign the activity level a "
+    translation: "Your team's Civicsmith holds no signing key of its own, so it cannot sign the activity level a "
       + "notice is always published with. The operator binds one. Nothing was published.",
   },
   NOTICE_WORDING_MALFORMED: {
     check: "C-127.6", where: at("#fieldRefusal", "is-notice-fields"),
-    translation: "Say what the group is working on in one line of at most 280 characters. A subject or a body named "
+    translation: "Say what the team is working on in one line of at most 280 characters. A subject or a body named "
       + "with it is one line of at most 120 characters, and a hand-off note one line of at most 280, given only when "
       + "stopping. Nothing was published.",
   },
@@ -61,7 +61,7 @@ export const NETWORK_NOTICE_CHECKS = Object.freeze({
   },
   NOTICE_STALE: {
     check: "C-127.12", where: at("postNotice", "is-notice-post"),
-    translation: "Your group's Civicsmith holds no prepared notice from you with this fingerprint, or it was prepared "
+    translation: "Your team's Civicsmith holds no prepared notice from you with this fingerprint, or it was prepared "
       + "more than an hour ago. Prepare it again and sign what it shows. Nothing was published.",
   },
   NOTICE_SIGNATURE_REFUSED: {

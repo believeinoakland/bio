@@ -793,7 +793,7 @@ export class Escalation {
       answer.suspended = { since: e.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep "
                            + "running in the actions, and it is not ended" };
     if (e.state === STOPPED)
-      answer.stopped = { since: e.stateSince, stage: e.stage, says: "stopped pursuing: the group decided to stop pursuing "
+      answer.stopped = { since: e.stateSince, stage: e.stage, says: "stopped pursuing: the team decided to stop pursuing "
                          + "this escalation. It proposes nothing, it is not ended and it is not a success; a member may reopen "
                          + "it at this stage" };
     if (e.state === "ended") answer.ended = { at: e.stateSince, says: "ended: compliance was restored and the consequences addressed" };
@@ -1278,7 +1278,7 @@ export class Escalation {
     /* END DEC-49 REGION is-consequences-addressed */
     /* DEC-49 REGION is-consequences-determined */
     if (q.state !== "met")
-      return refusal("CONSEQUENCES_UNDETERMINED", `whether the consequences are addressed is undetermined: ${q.why}. A group `
+      return refusal("CONSEQUENCES_UNDETERMINED", `whether the consequences are addressed is undetermined: ${q.why}. A team `
                      + "that judges the breach had no consequence records an assessed part saying so and addresses it. Nothing was written.",
                      { ids: q.ids });
     /* END DEC-49 REGION is-consequences-determined */
@@ -1468,7 +1468,7 @@ export class Escalation {
       return n;
     });
     return { ok: true, id: declineId(determination, seq), determination, reason: g.reason, author, at,
-             says: "recorded as the group's decline to escalate now; a later decline or an escalation opened later "
+             says: "recorded as the team's decline to escalate now; a later decline or an escalation opened later "
                  + "supersedes it, and it stays readable" };
   }
 
@@ -1708,7 +1708,7 @@ function timelineLabel(id, x) {
     case "decline": return `Escalation ${id}: the move from ${st(x.from)} to ${st(x.to)} declined for now`;
     case "suspend": return `Escalation ${id} suspended at ${st(x.from)}`;
     case "resume": return `Escalation ${id} resumed at ${st(x.from)}`;
-    case STOPPED: return `Escalation ${id}: the group stopped pursuing it at ${st(x.from)}`;
+    case STOPPED: return `Escalation ${id}: the team stopped pursuing it at ${st(x.from)}`;
     case "reopened": return `Escalation ${id} reopened at ${st(x.from)}`;
     default: return `Escalation ${id} ended`;
   }

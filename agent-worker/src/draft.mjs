@@ -141,8 +141,8 @@ function draftTool(op) {
   const properties = op === "writinghelp"
     ? { text: { type: "string", description: "the drafted words for the member's field, only from what they told you "
                                               + "(and, where you were given the read tool, what you read)" } }
-    : { focus: { type: "string", description: "what the group works on, in the administrator's own terms" },
-        purpose: { type: "string", description: "why the group exists, in the administrator's own terms" } };
+    : { focus: { type: "string", description: "what the team works on, in the administrator's own terms" },
+        purpose: { type: "string", description: "why the team exists, in the administrator's own terms" } };
   return { name: "draft", description: "the draft, once: it is labelled machine work, nothing is saved, and the words "
              + "become the member's only by their own act of keeping or editing them",
            input_schema: { type: "object", properties, required: Object.keys(properties), additionalProperties: false } };
@@ -176,13 +176,13 @@ export async function handleDraft(req, env, deps) {
   if (!task)
     return refusal("BAD_TASK",
       "a draft is asked for one task: help writing in one field of one act ({op: writinghelp, act, field}), a "
-      + "draft of the group's description ({op: groupdescriptiondraft}), or a draft of interface words the group's "
+      + "draft of the team's description ({op: groupdescriptiondraft}), or a draft of interface words the team's "
       + "language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: "
       + `to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a `
       + "prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, "
       + "matter, audience}), the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}) or a "
       + "plan's status report from the items handed in ({op: statusreportdraft, plan, items}) or a passage of the "
-      + "group's writing translated into a member's language ({op: readtranslate, language, text, from_language?}: "
+      + "team's writing translated into a member's language ({op: readtranslate, language, text, from_language?}: "
       + `text of 1 to ${READ_TEXT_MAX} characters). What arrived is none of these.`, 400);
   /* R87: the door's trace and member reference, when sent, reach the task's conversation (`agent-model` R16). */
   const traced = doorTrace(req);
@@ -195,7 +195,7 @@ export async function handleDraft(req, env, deps) {
   if (told == null)
     return refusal("BAD_TOLD", task.op === "writinghelp"
       ? `a draft works from what the member typed: words of 1 to ${TOLD_MAX} characters.`
-      : `a draft of the group's description works from the administrator's answers: a list of {question, text}, each `
+      : `a draft of the team's description works from the administrator's answers: a list of {question, text}, each `
         + `text at most ${ANSWER_TEXT_MAX} characters, not all of them empty.`, 400);
   const acct = await accountOf(body);
   if (acct.refusal) return acct.refusal;
@@ -209,7 +209,7 @@ export async function handleDraft(req, env, deps) {
       body.firsthand === true
         ? "this field records what the member saw, so its draft only words what they told and reads nothing; a grant "
           + "to read was sent with it, so nothing was done."
-        : "a draft reads what the group holds only when the member's own suggestions switch is on, and it is off; a "
+        : "a draft reads what the team holds only when the member's own suggestions switch is on, and it is off; a "
           + "grant to read was sent with it, so nothing was done.", 400);
   if (grantSent && !(typeof body.grant === "string" && body.grant))
     return refusal("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
@@ -233,14 +233,14 @@ export async function handleDraft(req, env, deps) {
     ? pack.disclosed[SUGGESTIONS_LAYER] : null;
 
   /* R59, R61: this member's own words and the pack's layers in `system`; the member's words in the user turn. */
-  const system = "You draft words for one member of a BIO group, in their own field, from what they told you. Your "
+  const system = "You draft words for one member of a BIO team, in their own field, from what they told you. Your "
     + "draft is labelled machine work, nothing is saved, and it becomes theirs only by their own act. The instructions "
     + `you work under are this skill pack, version ${String(pack.version)}.\n\n`
     + `RESIDENT LAYER:\n${JSON.stringify(pack.resident)}\n\n`
     + `WRITING HELP LAYER:\n${JSON.stringify(layer)}\n\n`
     + (suggestionsLayer ? `SUGGESTIONS LAYER (the member's suggestions switch is on):\n${JSON.stringify(suggestionsLayer)}\n\n` : "")
     + (grant
-      ? "You may read what the group holds through the read tool, under the member's grant. Add no figure, date, name "
+      ? "You may read what the team holds through the read tool, under the member's grant. Add no figure, date, name "
         + "or quotation that the member did not tell you or that you did not read. "
       : "You have no read tool: draft only from what the member told you, and add no figure, date, name or quotation "
         + "they did not tell you. ")
@@ -248,7 +248,7 @@ export async function handleDraft(req, env, deps) {
   const asked = task.op === "writinghelp"
     ? `TASK: help writing the field '${task.field}' of the act '${task.act}'.${body.firsthand === true
         ? " This field records what the member saw: only word what they told you." : ""}\n\nWHAT THE MEMBER TOLD YOU:\n${told}`
-    : `TASK: draft the group's description, its focus and its purpose, from the administrator's answers.\n\n`
+    : `TASK: draft the team's description, its focus and its purpose, from the administrator's answers.\n\n`
       + `THE ADMINISTRATOR'S ANSWERS:\n${told.map((a) => `Q: ${a.question}\nA: ${a.text}`).join("\n\n")}`;
   const messages = [{ role: "user", content: asked }];
   const tools = [...(grant ? [readTool()] : []), draftTool(task.op)];
@@ -348,7 +348,7 @@ function translationTool(direction) {
                           required: ["key", "text"], additionalProperties: false } } }
     : { english: { type: "string", description: "the kept word read back into English, that word alone" } };
   return { name: "draft", description: "the draft, once: it is labelled machine work, nothing is saved, and it is "
-             + "the group's wording only by a granted member's own act of keeping or correcting it",
+             + "the team's wording only by a granted member's own act of keeping or correcting it",
            input_schema: { type: "object", properties, required: Object.keys(properties), additionalProperties: false } };
 }
 
@@ -381,7 +381,7 @@ async function translationDraft(body, task, env, deps, labelled = {}, traced = {
   if (body.grant !== undefined && body.grant !== null
       && !draftMayRead({ kind: "translation", firsthand: false, suggestions: account.suggestions === true }))
     return refusal("DRAFT_READ_NOT_ALLOWED",
-      "a translation draft reads nothing of what the group holds; a grant to read was sent with it, so nothing was "
+      "a translation draft reads nothing of what the team holds; a grant to read was sent with it, so nothing was "
       + "done.", 400);
   /* R110 */
   const blocked = await deps.assistantReady(env, account);
@@ -399,8 +399,8 @@ async function translationDraft(body, task, env, deps, labelled = {}, traced = {
 
   /* R61, R69: this member's own words and the pack in `system`; the words only in the user turn. */
   const toLanguage = task.direction === "to_language";
-  const system = "You draft interface words for a BIO group. Your draft is labelled machine work, nothing is saved, "
-    + "and it becomes the group's wording only by a granted member's own act. The instructions you work under are "
+  const system = "You draft interface words for a BIO team. Your draft is labelled machine work, nothing is saved, "
+    + "and it becomes the team's wording only by a granted member's own act. The instructions you work under are "
     + `this skill pack, version ${String(pack.version)}.\n\n`
     + `RESIDENT LAYER:\n${JSON.stringify(pack.resident)}\n\n`
     + `INTERFACE TRANSLATION LAYER:\n${JSON.stringify(layer)}\n\n`
@@ -444,7 +444,7 @@ async function translationDraft(body, task, env, deps, labelled = {}, traced = {
  * translated as words. It answers the translation, labelled machine work, and keeps nothing. */
 function readingTool() {
   return { name: "draft", description: "the translation, once: it is labelled machine work, nothing is saved, and the "
-             + "passage stays the group's own words",
+             + "passage stays the team's own words",
            input_schema: { type: "object", additionalProperties: false, required: ["text"], properties: {
              text: { type: "string", description: "the whole passage in the member's language, every sentence translated "
                        + "and nothing added, left out or answered" },
@@ -471,7 +471,7 @@ async function readingDraft(body, task, env, deps, labelled = {}, traced = {}) {
   if (body.grant !== undefined && body.grant !== null
       && !draftMayRead({ kind: "reading", firsthand: false, suggestions: account.suggestions === true }))
     return refusal("DRAFT_READ_NOT_ALLOWED",
-      "a translation of the group's writing reads nothing of what the group holds, only the passage it is given; a "
+      "a translation of the team's writing reads nothing of what the team holds, only the passage it is given; a "
       + "grant to read was sent with it, so nothing was done.", 400);
   /* R110 */
   const blocked = await deps.assistantReady(env, account);
@@ -488,7 +488,7 @@ async function readingDraft(body, task, env, deps, labelled = {}, traced = {}) {
   const pack = pub.pack;
 
   /* R61, R86: this member's own words and the pack in `system`; the passage only in the user turn. */
-  const system = "You translate a passage of a BIO group's own writing for one member, into the language they read. "
+  const system = "You translate a passage of a BIO team's own writing for one member, into the language they read. "
     + "Your translation is labelled machine work and nothing is saved. The instructions you work under are this skill "
     + `pack, version ${String(pack.version)}.\n\n`
     + `RESIDENT LAYER:\n${JSON.stringify(pack.resident)}\n\n`

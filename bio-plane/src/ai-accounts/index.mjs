@@ -219,7 +219,7 @@ export class AiAccounts {
         + "was written."
       : scope === "project" ? "this project holds no Claude account. Nothing was written."
       : "no Claude account serves this member: they hold no reference of their own, they are not connected through "
-        + "their subscription, and the group's key is not held or not on, so there is no assistant for them. Nothing was "
+        + "their subscription, and the team's key is not held or not on, so there is no assistant for them. Nothing was "
         + "used.", { member });
     /* END DEC-49 REGION is-account-held */
   }
@@ -281,7 +281,7 @@ export class AiAccounts {
      never moves to the next account (Bob, K2352). `whose` is `project`, `own` or `group`. */
   static #switchedOff(whose, use, project = null) {
     /* DEC-49 REGION is-use-switched-on */
-    const name = whose === "project" ? "this project's" : whose === "group" ? "your group's" : "your own";
+    const name = whose === "project" ? "this project's" : whose === "group" ? "your team's" : "your own";
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_USE_SWITCHED_OFF", `the account used for this act is ${name} Claude `
       + `account, and its switch for ${use} is off; the act does not move to another account. Nothing was used.`,
       { whose, use, ...(project !== null ? { project } : {}) });
@@ -314,7 +314,7 @@ export class AiAccounts {
   #usesOwner(owner, by) {
     const said = (v) => (typeof v === "boolean" ? (v ? "on" : "off") : String(v));
     if (owner === "group") {
-      const bar = this.#adminBar(by, "switching the group key's assistant settings");
+      const bar = this.#adminBar(by, "switching the team key's assistant settings");
       return bar ? { refusal: bar } : { table: "group_key", where: "id=1", args: [],
         ensure: () => this.sql.exec(`INSERT INTO group_key (id) VALUES (1) ON CONFLICT(id) DO NOTHING`),
         act: (n, v) => this.#groupKeyAct(`switch:${n}`, said(v), by) };
@@ -365,7 +365,7 @@ export class AiAccounts {
   }
 
   #seal() {
-    return this.#sealSecret === null ? AiAccounts.#sealRefusal("your group's Civicsmith has no seal secret set, so a "
+    return this.#sealSecret === null ? AiAccounts.#sealRefusal("your team's Civicsmith has no seal secret set, so a "
       + "key cannot be kept sealed or read. Nothing was stored or read.") : null;
   }
 
@@ -394,7 +394,7 @@ export class AiAccounts {
     if (bar) return bar;
     /* DEC-49 REGION is-account-kind */
     if (!ACCOUNT_KINDS.includes(kind))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", `the kind your group's Civicsmith holds is `
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", `the kind your team's Civicsmith holds is `
         + `${ACCOUNT_KINDS.join(" and ")}; a Claude subscription is connected through Claude Code's own sign-in, never `
         + `held as a token. Nothing was written.`);
     /* END DEC-49 REGION is-account-kind */
@@ -590,7 +590,7 @@ export class AiAccounts {
   /* R15, R16: the owners of the account `owner` names are those R14 lets set its switches; anyone else is refused as
      R14 refuses them. Null when `viewer` is one of them. */
   #ownerBar(owner, viewer) {
-    if (owner === "group") return this.#adminBar(viewer, "reading the group key's assistant settings");
+    if (owner === "group") return this.#adminBar(viewer, "reading the team key's assistant settings");
     if (typeof owner === "string" && owner.startsWith("project:"))
       return this.#projectOwnerBar(owner.slice(8), viewer, "reading a project's assistant settings");
     if (typeof owner === "string" && owner.startsWith("member:")) return this.#accountBar(owner, viewer);
@@ -816,7 +816,7 @@ export class AiAccounts {
     if (unsealable) return { refusal: unsealable };
     const key = await this.#decrypt(`member:${id}`, "signin", r.sealed, r.iv);
     return key === null ? { refusal: AiAccounts.#sealRefusal("the sign-in does not open under the seal secret of your "
-      + "group's Civicsmith, which has changed; its member signs in again. Nothing was used.") } : { key };
+      + "team's Civicsmith, which has changed; its member signs in again. Nothing was used.") } : { key };
   }
 
   /* R19: SIGNIN_NOT_HELD, minted here alone: a sign-in account chosen whose token is not held. */
@@ -863,7 +863,7 @@ export class AiAccounts {
     if (unsealable) return unsealable;
     const secret = await this.#decrypt(`member:${id}`, r.kind, r.sealed, r.iv);
     if (secret === null)
-      return AiAccounts.#sealRefusal("the reference does not open under the seal secret of your group's Civicsmith, "
+      return AiAccounts.#sealRefusal("the reference does not open under the seal secret of your team's Civicsmith, "
         + "which has changed; the member connects their account again. Nothing was used.");
     return { ok: true, kind: r.kind, secret };
   }
@@ -921,7 +921,7 @@ export class AiAccounts {
   /* R5: one key for the group's copy, replacing any earlier one; off when first set (a replacement keeps the switch
      as it was). Answers `{ok, set_at}`, never the key. */
   async groupKeySet({ key = null, by = null } = {}) {
-    const bar = this.#adminBar(by, "setting the group's Anthropic API key");
+    const bar = this.#adminBar(by, "setting the team's Anthropic API key");
     if (bar) return bar;
     const empty = AiAccounts.#noSecret(key);
     if (empty) return empty;
@@ -945,7 +945,7 @@ export class AiAccounts {
   /* R5, R9: removes the key, which switches it off and turns both its switches off; (T40; R9) every R14 switch of
      it; with none, `removed: false`. */
   groupKeyRemove({ by = null } = {}) {
-    const bar = this.#adminBar(by, "removing the group's Anthropic API key");
+    const bar = this.#adminBar(by, "removing the team's Anthropic API key");
     if (bar) return bar;
     const held = this.#groupKeyFacts().held;
     const off = USE_SWITCHES.map((k) => `${AiAccounts.#USE_COLUMN[k]}=${k === "explore" ? "'no'" : "0"}`).join(", ");
@@ -958,7 +958,7 @@ export class AiAccounts {
 
   /* R5: switches the key on or off; only `true` is on, and it is on only while a key is held. */
   groupKeySwitch({ on = false, by = null } = {}) {
-    const bar = this.#adminBar(by, "switching the group's Anthropic API key");
+    const bar = this.#adminBar(by, "switching the team's Anthropic API key");
     if (bar) return bar;
     const v = on === true ? 1 : 0;
     this.#tx(() => {
@@ -980,7 +980,7 @@ export class AiAccounts {
     if (id !== null && !isMachineIdentity(viewer) && this.membership.isAdministrator(id)) return { ok: true, ...f };
     if (id !== null && !isMachineIdentity(viewer) && this.#memberFacts(id)?.status === "active")
       return { ok: true, on: f.on };
-    return notAnAdmin(viewer ?? null, "reading the group's Anthropic API key");
+    return notAnAdmin(viewer ?? null, "reading the team's Anthropic API key");
   }
 
   /* R9 (N674; K1798): the group key's switches, for `ai-runs`' dispatch of a `level: "group"` account; an in-plane
@@ -1018,7 +1018,7 @@ export class AiAccounts {
     /* DEC-49 REGION is-group-key-notice-seen */
     if (this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id)) return null;
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "GROUP_KEY_NOTICE_DUE", "this member has not yet read the notice that their "
-      + "questions go to Anthropic under the group's API account. Nothing was sent.", { member: id });
+      + "questions go to Anthropic under the team's API account. Nothing was sent.", { member: id });
     /* END DEC-49 REGION is-group-key-notice-seen */
   }
 
@@ -1070,13 +1070,13 @@ export class AiAccounts {
     if (r.level === "project") {
       const key = await this.#decrypt(`project:${r.project}`, "apikey", r.row.sealed, r.row.iv);
       if (key === null)
-        return AiAccounts.#sealRefusal("the project's key does not open under the seal secret of your group's "
+        return AiAccounts.#sealRefusal("the project's key does not open under the seal secret of your team's "
           + "Civicsmith, which has changed; one of the project's owners sets it again. Nothing was used.");
       return { ok: true, kind: "apikey", level: "project", project: r.project, key };
     }
     const key = await this.#decrypt(AiAccounts.#GROUP_KEY_OWNER, "apikey", r.row.sealed, r.row.iv);
     if (key === null)
-      return AiAccounts.#sealRefusal("the group's key does not open under the seal secret of your group's Civicsmith, "
+      return AiAccounts.#sealRefusal("the team's key does not open under the seal secret of your team's Civicsmith, "
         + "which has changed; an administrator sets it again. Nothing was used.");
     return { ok: true, kind: "apikey", level: "group", key };
   }
@@ -1126,7 +1126,7 @@ export class AiAccounts {
     if (!(g && g.sealed && g.is_on)) return { refusal: this.#noAccount(id) };
     if (!AiAccounts.#usesOf(g)[use]) return { refusal: AiAccounts.#switchedOff("group", use) };
     if (this.#memberFacts(id)?.status !== "active")
-      return { refusal: AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "the group's key serves only acts "
+      return { refusal: AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "the team's key serves only acts "
         + "of active members. Nothing was used.") };
     const due = notice ? this.#noticeDue(id) : null;
     if (due) return { refusal: due };
@@ -1196,7 +1196,7 @@ export class AiAccounts {
      blank; a reason given with `on: false` is kept under the same bounds. Each refusal writes nothing. (T40; R22) It
      takes `uses`, the kinds of use the limit covers (all when absent). */
   aiKeepAwaySet({ on = false, uses = null, reason = null, by = null } = {}) {
-    const bar = this.#adminBar(by, "keeping the group's material away from every assistant");
+    const bar = this.#adminBar(by, "keeping the team's material away from every assistant");
     if (bar) return bar;
     const turnOn = on === true;
     const noReason = AiAccounts.#keepAwayReason(turnOn, reason);
@@ -1240,8 +1240,8 @@ export class AiAccounts {
   static #keptAway(st) {
     /* DEC-49 REGION is-kept-away */
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEPT_AWAY", st.on === true
-      ? "the group keeps its material away from every assistant, so no account was read or used. Nothing was sent."
-      : "whether the group keeps its material away from every assistant could not be read, so no account was read or "
+      ? "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent."
+      : "whether the team keeps its material away from every assistant could not be read, so no account was read or "
         + "used. Nothing was sent.", { keep_away: { reason: st.reason, set_by: st.set_by, set_at: st.set_at } });
     /* END DEC-49 REGION is-kept-away */
   }
@@ -1607,7 +1607,7 @@ export class AiAccounts {
       const { sealed, iv } = await this.#encrypt(String(owner), String(kind), String(text));
       return { ok: true, sealed, iv };
     } catch {
-      return AiAccounts.#sealRefusal("the key could not be sealed by your group's Civicsmith. Nothing was stored or read.");
+      return AiAccounts.#sealRefusal("the key could not be sealed by your team's Civicsmith. Nothing was stored or read.");
     }
   }
 
@@ -1619,7 +1619,7 @@ export class AiAccounts {
     const text = typeof sealed === "string" && typeof iv === "string"
       ? await this.#decrypt(String(owner), String(kind), sealed, iv) : null;
     if (text === null)
-      return AiAccounts.#sealRefusal("the key does not open under the seal secret of your group's Civicsmith, which "
+      return AiAccounts.#sealRefusal("the key does not open under the seal secret of your team's Civicsmith, which "
         + "has changed; an administrator sets it again. Nothing was used.");
     return { ok: true, text };
   }

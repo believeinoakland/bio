@@ -99,7 +99,7 @@ export const OUTWARD_ACT_WARNING = Object.freeze({
 export const CAUTION_TWO_OPEN = "two_open_without_published_work";
 /** R21: how the keys of the group's own Civicsmith are labelled. The public reads it with no credential, so it says
  *  "this group's Civicsmith", never "your group's" nor "this copy" (DEC-149, K1821, K1833). */
-export const COPY_KEY_LABEL = "this group's Civicsmith key";
+export const COPY_KEY_LABEL = "this team's Civicsmith key";
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 /* R15: the user agent the timestamp requests carry, naming the product (DEC-124). */
@@ -253,9 +253,9 @@ export class NetworkNotices {
       if (!stopping) return { refusal: refuse("NOTICE_PROJECT_CLOSED", "the project is closed; only a stop of its open notice is taken", { project: pid }) };
     }
     const slug = this.#slug();
-    if (!slug) return { refusal: refuse("NOTICE_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous notices") };
+    if (!slug) return { refusal: refuse("NOTICE_NO_GROUP_SLUG", "no team slug is recorded, and there are no anonymous notices") };
     if (!(await this.#keyBound()))
-      return { refusal: refuse("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published "
+      return { refusal: refuse("NOTICE_NO_INSTANCE_KEY", "your team's Civicsmith holds no signing key of its own, and a notice is never published "
         + "without its signed level") };
     /* END DEC-49 REGION is-notice-caller */
     return { pid, member, slug };
@@ -392,7 +392,7 @@ export class NetworkNotices {
     const att = this.#attestation({ nid: held.nid, pid: held.pid, kind: "posted", asOfMs: nowMs,
                                     revisionDigest: held.digest, revisionStatus: held.revision.status });
     const signed = await this.#sign(att.digest);
-    if (!signed) return refuse("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published "
+    if (!signed) return refuse("NOTICE_NO_INSTANCE_KEY", "your team's Civicsmith holds no signing key of its own, and a notice is never published "
         + "without its signed level");
     const out = this.record.transact(() => {
       const latest = this.#latestRevision(held.nid);

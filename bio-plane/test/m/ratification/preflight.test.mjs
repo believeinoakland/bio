@@ -361,7 +361,7 @@ const R14_C92_10 = "This case edition uses a member's firsthand observation, or 
   + "level would be choosing for them. Ask that member to choose, or prepare the edition without the finding that "
   + "rests on it.";
 const R14_C58_5 = "This edition rests on testimony, or on material from an unnamed source attested by a member, credited "
-  + "only to the group or the project, with no independent leg corroborating it. Such testimony or evidence counts as "
+  + "only to the team or the project, with no independent leg corroborating it. Such testimony or evidence counts as "
   + "an anonymous tip and supports a finding only beside an independent corroborating leg. Each such member, "
   + "observation and document is named. Corroborate the claim with an independent leg, ask the author or the "
   + "attesting member to choose cover or name, or drop the finding that rests on it. Nothing was signed.";

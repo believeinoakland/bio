@@ -107,7 +107,7 @@ export const ACTION = { ok: true, id: ACT, kind: "records_request", counterparty
   clock: [{ text: "pra_10day", description: "The City Clerk's reply", date: "2026-10-14", basis: "Gov. Code §7922.535(a)", status: "pending" }], clock_next: "2026-10-14" };
 export const PROPOSALS = { ok: true, action: ACT, proposals: [{ key: "pra_10day@member:mai", rule: "pra_10day", date: "2026-10-14", undetermined: null, basis: "Gov. Code §7922.535(a) (profile basis: the 10-day window)",
   entry: {}, trace: { anchor_day: "2026-10-02", amount: 10, units: "days", count: "calendar", skipped: [{ day: "2026-10-12", why: "Indigenous Peoples' Day (office calendar)" }], zone: "America/Los_Angeles",
-    calendar: { entries: [{ day: "2026-10-12", basis: "the group's profile" }] } }, label: { by: "member:mai", state: "proposed", machine_work: false }, proposed_by: "member:mai" }], limit: 500, truncated: false };
+    calendar: { entries: [{ day: "2026-10-12", basis: "the team's profile" }] } }, label: { by: "member:mai", state: "proposed", machine_work: false }, proposed_by: "member:mai" }], limit: 500, truncated: false };
 /** `proceedingdates`' answer (following R30): the proceeding's own lane (a hearing, a filing deadline the body set) and the group's. */
 export const DATES = (o = {}) => ({ ok: true, proceeding: PROC, from: null, to: null, lanes: {
   proceeding: { items: [{ event: "EVT-2026-0050", kind: "hearing", status: "EventScheduled", label: "Hearing on the motion", when: { value: "2026-11-04", precision: "day" }, captures: [SHA] },

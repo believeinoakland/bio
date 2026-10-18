@@ -44,10 +44,10 @@ import { LENS_LIMIT_STATEMENT, lensOfArg, applicationOf, pairsUnderLens } from "
 export const RECREATION_STATEMENT = "Recreating a case shows that what it carries is intact and consistent with what "
   + "it states. It does not show that the case is true, and it is not an endorsement of it.";
 /** R18: the sentence beside the findings another group published that a finding rests on. The UX stream's words, later. */
-export const REST_ON_ANOTHER_GROUP_STATEMENT = "Part of this case rests on another group's published finding. That part "
-  + "is checked against that group's own case file, named here, and not on that group's behalf here.";
+export const REST_ON_ANOTHER_GROUP_STATEMENT = "Part of this case rests on another team's published finding. That part "
+  + "is checked against that team's own case file, named here, and not on that team's behalf here.";
 /** R3: the sentence an answer carries when no published keys were given. */
-export const KEYS_NOT_CHECKED_STATEMENT = "The signing keys were not checked against the group's published list of "
+export const KEYS_NOT_CHECKED_STATEMENT = "The signing keys were not checked against the team's published list of "
   + "keys, because no list was given to this check.";
 /** R7: the sentence when the stated catalogue version is not this checker's. */
 export const CHECKS_VERSION_STATEMENT = (stated, own) => `The publication checks ran at this checker's version, ${own}, `
@@ -369,7 +369,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     const v = await verifyOver(textOf(caseSig.content), caseRatifyStatement(fm.case_id, fm.case_edition, docSha));
     Object.assign(sigCase, { file: caseSig.path, ...v });
     if (!v.verified) caseLevel.differs.push(entry("signature", "case document",
-      v.reason === "NOT_PUBLISHED_KEY" ? "the case document's signature was made with a key that is not among the group's published keys"
+      v.reason === "NOT_PUBLISHED_KEY" ? "the case document's signature was made with a key that is not among the team's published keys"
         : `the case document's signature ${v.words}`));
   }
 
@@ -455,13 +455,13 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
           const v = await verifyOver(armored, captureAccountStatement(mat.sha, text));
           Object.assign(a, { key_fingerprint: v.key_fingerprint, listed_in_case_file: v.listed_in_case_file,
             ...(published ? { among_published_keys: v.among_published_keys } : {}) });
-          if (!v.verified) fail(`the member's signed account attesting ${ref} ${v.reason === "NOT_PUBLISHED_KEY" ? "was made with a key that is not among the group's published keys" : v.words}`);
+          if (!v.verified) fail(`the member's signed account attesting ${ref} ${v.reason === "NOT_PUBLISHED_KEY" ? "was made with a key that is not among the team's published keys" : v.words}`);
         }
       }
     } else if (row.by_kind === "group") {
-      if (row.signature !== "case") fail(`a group attestation of ${ref} names a signature other than the case document's own`);
-      else if (caseSig && !caseSig.content && caseSig.state === "missing") gap(`the group's attestation of ${ref} is the case document's signature, which is not carried`);
-      else if (!sigCase.verified) fail(`the group's attestation of ${ref} is the case document's signature, which ${caseSig ? "does not verify" : "the case file does not carry"}`);
+      if (row.signature !== "case") fail(`a team attestation of ${ref} names a signature other than the case document's own`);
+      else if (caseSig && !caseSig.content && caseSig.state === "missing") gap(`the team's attestation of ${ref} is the case document's signature, which is not carried`);
+      else if (!sigCase.verified) fail(`the team's attestation of ${ref} is the case document's signature, which ${caseSig ? "does not verify" : "the case file does not carry"}`);
     } else if (row.by_kind === "project" || row.by_kind === "co_attestation") {
       const carried = mat.included !== true || files.some((f) => f.ref === ref);
       if (!carried) fail(`a ${row.by_kind === "project" ? "project" : "co-"}attestation names ${ref}, which the case file's manifest does not list`);
@@ -574,7 +574,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
       else if (pin) {
         const v = await verifyOver(textOf(fs.content), ratifyStatement(id, pin));
         Object.assign(sig, v); delete sig.words;
-        if (!v.verified) differs.push(entry("signature", id, `finding ${id}'s signature ${v.reason === "NOT_PUBLISHED_KEY" ? "was made with a key that is not among the group's published keys" : v.words}`));
+        if (!v.verified) differs.push(entry("signature", id, `finding ${id}'s signature ${v.reason === "NOT_PUBLISHED_KEY" ? "was made with a key that is not among the team's published keys" : v.words}`));
       }
       findingSigs.push(sig);
     }

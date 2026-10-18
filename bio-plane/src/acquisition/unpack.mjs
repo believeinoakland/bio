@@ -353,7 +353,7 @@ export class Acquisition {
     const who = typeof by === "string" ? by : null;
     const admin = who && !isMachineIdentity(who) && this.#membership && typeof this.#membership.isAdministrator === "function"
       ? this.#membership.isAdministrator(who.replace(/^member:/, "")) : false;
-    if (!admin) return notAnAdmin(by ?? null, "set whether your group's captures ask a public archive for a copy");
+    if (!admin) return notAnAdmin(by ?? null, "set whether your team's captures ask a public archive for a copy");
     /* DEC-49 REGION is-co-archive-setting */
     if (typeof on !== "boolean")
       return refuse("CO_ARCHIVE_SETTING_INVALID", { on: on === undefined ? null : typeof on,
@@ -501,7 +501,7 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
     detail: "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened" };
   const core = st.core || inst.record;
   const rawEv = core && typeof core.evidenceStore === "function" ? core.evidenceStore() : null;
-  if (!rawEv) return evidenceStorageAbsent("unpack", "your group's Civicsmith has no evidence storage configured").body;
+  if (!rawEv) return evidenceStorageAbsent("unpack", "your team's Civicsmith has no evidence storage configured").body;
   const ev = readThrough(rawEv);
 
   /* DEC-49 REGION is-archive-held */
@@ -695,7 +695,7 @@ async function fileDocument(ctx, row, stored, receipt) {
     provenance_chain: [{
       who: firstHopWho(env.INSTANCE_NAME, env.VERSION),
       asserts: `these bytes are entry ${row.index} (${path === null ? "a name that is not valid UTF-8" : path}, the archive's own `
-        + `claim) of the archive ${sha} held by your group's Civicsmith, cut out and verified by size and CRC-32 at ${at}`,
+        + `claim) of the archive ${sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at ${at}`,
       evidence: `the archive's capture ${sha}; its central directory and the entry's local header agree on this entry`,
       bound: false, via: UNPACKED_VIA, archive_sha256: sha,
     }],
@@ -786,7 +786,7 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
   if (!inst) return { ok: false, reason: "ARCHIVE_RECORD_UNAVAILABLE", code: "ARCHIVE_RECORD_UNAVAILABLE",
     detail: "no acquisition instance holds this storage's archive records" };
   const p = inst.provenance;
-  const notHeld = () => refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: "no archive your group holds and you may see answers to that digest" });
+  const notHeld = () => refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: "no archive your team holds and you may see answers to that digest" });
   let home = null;
   try { home = p && typeof p.homeOf === "function" ? p.homeOf(sha) : null; } catch { home = null; }
   /* DEC-49 REGION is-archive-held

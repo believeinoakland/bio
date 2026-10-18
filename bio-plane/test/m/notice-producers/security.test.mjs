@@ -50,7 +50,7 @@ test("R12: while the level is Ordinary or Raised no item is raised; when it is H
   assert.equal(a[0].class, "FINDING");
   assert.equal(NOTICE_KINDS[KIND], "FINDING");
   assert.equal(a[0].label, "noticed");
-  assert.deepEqual(a[0].subject.kind, "civicsmith", "the group's Civicsmith, no bundle");
+  assert.deepEqual(a[0].subject.kind, "civicsmith", "the team's Civicsmith, no bundle");
   assert.equal(a[0].subject.id, null);
   assert.deepEqual(a[0].case.ancestors, []);
   for (const m of ["alice", "nobody", null]) assert.deepEqual(items(m), [], `not an administrator: ${m}`);
@@ -136,7 +136,7 @@ test("R12: its detail is one plain sentence: the level is High, since when, whet
   const { w, items } = await setup();
   for (let h = HOUR - 2; h < HOUR; h++) { lay(w, "signin", h, 30, "NZ"); lay(w, "rate", h, 30, "FR"); }
   const [it] = items("admin");
-  assert.equal(it.detail, `The security level of your group's Civicsmith has been High since ${iso((HOUR - 2) * H)}, and in that time nothing got through.`);
+  assert.equal(it.detail, `The security level of your team's Civicsmith has been High since ${iso((HOUR - 2) * H)}, and in that time nothing got through.`);
   const words = [it.summary, it.detail].join(" ");
   for (const x of ["NZ", "FR", "admin", "second", "alice", "cover of", "member:", "role"]) assert.ok(!words.includes(x), x);
   assert.doesNotMatch(words, JUDGMENT);

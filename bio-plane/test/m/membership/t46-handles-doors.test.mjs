@@ -137,7 +137,7 @@ test("R17 T46 memberList's rows carry no `formerly` key, for any caller, whateve
 
 /* ---------------------------------------------------------------- R130 --------------------------------------------- */
 
-const ACT = "reading the group's website key and join link";
+const ACT = "reading the team's website key and join link";
 const NONE = { live: false, current: null, history: [], limit: 200, truncated: false };
 
 test("R130 joinDoors refuses a caller who is not an administrator through notAnAdmin, byte for byte, writing nothing", async () => {

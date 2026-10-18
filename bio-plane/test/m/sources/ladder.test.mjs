@@ -47,7 +47,7 @@ test("R9 rungOf answers the ladder: unknown; same_knocker (proved by the secret)
   const n = w.disclose(k.sourceId, { recorded: false, revealed: { kind: "name" }, sight: undefined });
   const r3 = w.s.rungOf({ source: k.sourceId, viewer: V("carol") });
   assert.equal(r3.rung, "known_to_group");
-  assert.deepEqual(r3.basis.map((b) => [b.entry, b.note]), [[n.entry, "known to the group, not recorded"]]);
+  assert.deepEqual(r3.basis.map((b) => [b.entry, b.note]), [[n.entry, "known to the team, not recorded"]]);
   /* publicly_known: a name known to the public */
   const p = w.disclose(k.sourceId, { knownTo: "public", evidence: { cite: "a filing" }, sight: ["alice"] });
   const r4 = w.s.rungOf({ source: k.sourceId, viewer: V("alice") });

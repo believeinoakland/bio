@@ -230,7 +230,7 @@ test("R30 escalation registers once with events.registerEventSource at start; fo
   assert.equal(label("evaluate"), `A response evaluated in escalation ${w.E}: denied`);
   assert.equal(label("decline"), `Escalation ${w.E}: the move from stage 5 (legal_tools) to stage 7 (political_accountability) declined for now`);
   assert.equal(label("end"), `Escalation ${w.E} ended`);
-  assert.equal(label("stopped_pursuing"), `Escalation ${w.E}: the group stopped pursuing it at stage 5 (legal_tools)`);
+  assert.equal(label("stopped_pursuing"), `Escalation ${w.E}: the team stopped pursuing it at stage 5 (legal_tools)`);
   assert.equal(label("reopened"), `Escalation ${w.E} reopened at stage 5 (legal_tools)`);
   assert.ok(all.items.filter((x) => ["stopped_pursuing", "reopened"].includes(x.kind)).every((x) => x.public === true), "outward acts");
   assert.equal(JSON.stringify(all.items).includes("SECRET"), false, "R30: never the reason");

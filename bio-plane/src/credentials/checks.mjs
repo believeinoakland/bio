@@ -30,13 +30,13 @@ export const SIGNER_ENROLMENT_CHECKS = Object.freeze({
   SIGNER_MEMBER_NOT_ENROLLED: Object.freeze({
     check: 'C-63.1', where: at("#signerMemberBar", "is-signer-member-attesting"),
     translation: 'That person has not enrolled yet. A signing key belongs to a member who has taken up '
-      + 'their invitation and chosen a handle; until then your group\'s Civicsmith would refuse anything signed '
+      + 'their invitation and chosen a handle; until then your team\'s Civicsmith would refuse anything signed '
       + 'with it, so registering it now would put a key on the roster that cannot sign. Nothing was '
       + 'written. Send them their invitation link, and register the key once they have enrolled.',
   }),
   SIGNER_MEMBER_NOT_ACTIVE: Object.freeze({
     check: 'C-63.2', where: at("#signerMemberBar", "is-signer-member-attesting"),
-    translation: 'That member’s membership is not active, so your group\'s Civicsmith would refuse anything '
+    translation: 'That member’s membership is not active, so your team\'s Civicsmith would refuse anything '
       + 'signed with their key. Nothing was written. Reinstate the member first if they should be '
       + 'able to sign again.',
   }),
@@ -48,7 +48,7 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
   /* D-199 (3): "If an agent can request a broader token, the scoping is theatre." */
   AI_CREDENTIAL_MINT_NOT_A_MEMBER: Object.freeze({
     check: 'C-29.1', where: at("aiCredentialMint", "is-ai-credential-mint"),
-    translation: 'Only a named person signed in to your group\'s Civicsmith can create an agent credential. '
+    translation: 'Only a named person signed in to your team\'s Civicsmith can create an agent credential. '
       + 'Deciding what an automated worker is allowed to reach is a judgement somebody has to be '
       + 'accountable for, so an automated worker cannot make it — not even about itself.',
   }),
@@ -62,7 +62,7 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
   /* The identity is what acts cite, so it is never rebound. */
   AI_CREDENTIAL_IDENTITY_TAKEN: Object.freeze({
     check: 'C-29.3', where: at("aiCredentialMint", "is-ai-credential-mint"),
-    translation: 'That name already belongs to an agent credential in your group\'s Civicsmith. Acts in the '
+    translation: 'That name already belongs to an agent credential in your team\'s Civicsmith. Acts in the '
       + 'record cite the name, so binding it to something new would quietly change who did work that '
       + 'has already been done. Retire the old one or choose another name.',
   }),
@@ -75,7 +75,7 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
   }),
   AI_CREDENTIAL_UNKNOWN: Object.freeze({
     check: 'C-29.5', where: at("aiCredentialRevoke", "is-ai-credential-revoke"),
-    translation: 'There is no agent credential by that name in your group\'s Civicsmith, so nothing was '
+    translation: 'There is no agent credential by that name in your team\'s Civicsmith, so nothing was '
       + 'withdrawn. Being told that plainly matters more than it looks: believing you have taken an '
       + 'authority away when you have not is the worse of the two outcomes.',
   }),
@@ -98,9 +98,9 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
      awaiting promotion's stamp (T37-7). */
   AI_CREDENTIAL_NO_SECRET: Object.freeze({
     check: 'C-29.33', where: at("aiCredentialMint", "is-ai-credential-digest"),
-    translation: 'The agent credential could not be created, because your group\'s Civicsmith was not handed the '
+    translation: 'The agent credential could not be created, because your team\'s Civicsmith was not handed the '
       + 'fingerprint of its secret, and a credential without one could never be used. Nothing was created. Try again; '
-      + 'if it keeps happening, tell whoever hosts your group\'s Civicsmith.',
+      + 'if it keeps happening, tell whoever hosts your team\'s Civicsmith.',
   }),
   /* R63 (T47-9; N955, K2976): a run segment's credential asked for without its run, or with writes that are not the
      runner's, the next free number of C-29 after C-29.40 (this module's R64's then, `ai-accounts` R23's since T48). A
@@ -115,7 +115,7 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
 export const CREDENTIALS_CHECKS = Object.freeze({
   BAD_KEY: Object.freeze({
     check: 'C-96.8', where: at("signerAdd", "is-signer-key-shape"),
-    translation: 'That is not a public key this group can register. It takes the base64 part of an '
+    translation: 'That is not a public key this team can register. It takes the base64 part of an '
       + 'ssh-ed25519 public key, the part that begins AAAA. Nothing was written.',
   }),
   SIGNER_KEY_HELD_BY_ANOTHER: Object.freeze({
@@ -184,7 +184,7 @@ export const ACCOUNT_CHECKS = Object.freeze({
   }),
   RESET_LINK_MEMBER_NOT_ACTIVE: Object.freeze({
     check: 'C-29.47', where: at("passwordResetLinkMake", "is-reset-link-member"),
-    translation: 'A password reset link is made only for an active member of your group. Nothing was made.',
+    translation: 'A password reset link is made only for an active member of your team. Nothing was made.',
   }),
 });
 
@@ -193,7 +193,7 @@ export const ACCOUNT_CHECKS = Object.freeze({
 export const KEYED_SERVICE_CHECKS = Object.freeze({
   UNKNOWN_KEYED_SERVICE: Object.freeze({
     check: 'C-96.19', where: at("#keyedService", "is-keyed-service"),
-    translation: 'That is not an outside service this group can hold a key for. Nothing was changed.',
+    translation: 'That is not an outside service this team can hold a key for. Nothing was changed.',
   }),
   KEYED_SERVICE_NO_KEY: Object.freeze({
     check: 'C-96.20', where: at("keyedServiceSet", "is-keyed-service-key"),
@@ -201,7 +201,7 @@ export const KEYED_SERVICE_CHECKS = Object.freeze({
   }),
   KEYED_SERVICE_OFF: Object.freeze({
     check: 'C-96.21', where: at("keyedServiceFor", "is-keyed-service-on"),
-    translation: 'The group\'s key for this outside service is switched off, or no key is held, so it was not used. '
+    translation: 'The team\'s key for this outside service is switched off, or no key is held, so it was not used. '
       + 'Everything still works without it.',
   }),
 });
@@ -224,7 +224,7 @@ export const SIGN_IN_CHECKS = Object.freeze({
   SECURITY_KIND_UNKNOWN: Object.freeze({
     check: 'C-96.42', where: at("securityCount", "is-security-kind"),
     translation: 'That is not a kind of refused request the security count keeps, so nothing was counted. This is a '
-      + 'fault in how your group\'s Civicsmith was built, not in the record.',
+      + 'fault in how your team\'s Civicsmith was built, not in the record.',
   }),
   SECURITY_PERIOD_INVALID: Object.freeze({
     check: 'C-96.43', where: at("#periodRefusal", "is-security-period"),

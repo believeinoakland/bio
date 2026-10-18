@@ -185,12 +185,12 @@ test("R27 R36 This project's work: its plans by name and the calculations, stand
 
 test("R28 who can find it: the setting, its history newest first ending with how it started, and an owner's reasoned change", async () => {
   const vis = ok({ ok: true, projectId: P, setting: "discoverable", history: [{ setting: "hidden", set_by: "dev", at: "2026-10-01T09:00:00Z" },
-    { setting: "discoverable", set_by: "dev", reason: "the group should know", at: "2026-10-04T09:00:00Z" }] });
+    { setting: "discoverable", set_by: "dev", reason: "the team should know", at: "2026-10-04T09:00:00Z" }] });
   const p = await open(at(), { plane: { ...OWNERS, projectvisibility: vis, projectvisibilityset: ok({ ok: true }) } });
   const s = section(p, "project.visibility.title");
   assert.ok(says(s, "project.visibility.discoverable"));
   assert.ok(says(s.querySelector('[data-visibility="change"]'), "project.visibility.history",
-    { change: word("project.visibility.discoverable"), who: "dev", date: "4 October 2026", reason: "the group should know" }));
+    { change: word("project.visibility.discoverable"), who: "dev", date: "4 October 2026", reason: "the team should know" }));
   assert.ok(says(s.querySelector('[data-visibility="started"]'), "project.visibility.started", { setting: word("project.visibility.hidden"), date: "1 October 2026" }));
   fill(p, { "project-visibility-why": "a counsel matter now" });
   await press(p, "projectvisibilityset");

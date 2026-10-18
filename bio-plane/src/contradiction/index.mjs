@@ -134,7 +134,7 @@ export const CONTRADICTION_KEYS = Object.freeze({
            + "discrepancy itself as the conclusion shape" }),
   K2: Object.freeze({ key: "K2", name: "one subject, two held claims", feeds: "record",
         join: "two inquiries with the same subject entity, each with an ACCEPTED reading carrying a claim",
-        why: "two things the group HOLDS about one subject — the case that carries a duty" }),
+        why: "two things the team HOLDS about one subject — the case that carries a duty" }),
   K3: Object.freeze({ key: "K3", name: "one referent, two held claims", feeds: "record",
         join: "two accepted readings, of different inquiries, whose legs rest on the SAME passage "
             + "(or, where no passage is named, the same captured document)",
@@ -181,9 +181,9 @@ export const CONTRADICTION_ABSENCE = Object.freeze({
          + "this is absence at the SUBJECT level: the claims may well disagree and nothing here "
          + "can see it",
   reading: "questions exist and none of them holds an ACCEPTED reading. A suggested, considering "
-         + "or rejected reading is not something the group HOLDS, so there is no held assertion "
+         + "or rejected reading is not something the team HOLDS, so there is no held assertion "
          + "to pair. Nothing is claimed about what the questions would say if they were read",
-  claim: "accepted readings exist and none of them carries a CLAIM. What the group holds is "
+  claim: "accepted readings exist and none of them carries a CLAIM. What the team holds is "
        + "therefore unstated in the one field this key can read, which is absence in OUR record "
        + "rather than agreement in it",
   shared_entity: "cited passages and established resolutions exist, but no two documents resolve "
@@ -578,7 +578,7 @@ export class Contradiction {
       key: "K2", subject_entity: r.entity_id,
       a: { kind: "claim", inquiry: r.a_inquiry, title: r.a_title ?? null, version: r.a_version, claim: r.a_claim },
       b: { kind: "claim", inquiry: r.b_inquiry, title: r.b_title ?? null, version: r.b_version, claim: r.b_claim },
-      why: "two questions about the same registered subject, each with a reading the group ACCEPTED "
+      why: "two questions about the same registered subject, each with a reading the team ACCEPTED "
          + "and a claim it therefore holds. Whether they can both be so is not read here",
     }));
     return { pairs, truncated, notes: [] };

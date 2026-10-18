@@ -70,7 +70,7 @@ test("R68 R12 R100 with one active profile R100's zone is zoneOf(place()), a loc
   assert.equal(actions.actionFacts(md, at, w.a.place()).clock_overdue, false, "still the 28th where the office is");
   assert.equal(actions.actionFacts(md, at, actions.zoneOf(w.a.place())).clock_overdue, false, "the zone alone reads the same");
   assert.equal(actions.actionZone({ counterparty: { state: "named", role: "Town Clerk", body: "Town of Port Ellery" } }, w.a.place()),
-    actions.zoneOf(w.a.place()), "one profile: R100's zone is the group's");
+    actions.zoneOf(w.a.place()), "one profile: R100's zone is the team's");
   /* the active profiles changed: the next read follows them */
   w.record.setSetting("jurisdiction_profiles", ["oakland-alameda"], V("admin"));
   assert.equal(actions.localToday(at, actions.zoneOf(w.a.place())), "2026-09-28");
@@ -91,14 +91,14 @@ test("R10 R45 R8 (DEC-149, T34-87) the member-facing details name 'your group's 
   const w = world();
   const kind = w.promote(A, actionMd(A, [...CP, "action_kind: grand_jury"]));
   assert.equal(kind.reason, "ACTION_KIND_UNKNOWN");
-  assert.match(kind.detail, /^action_kind 'grand_jury' is not a kind your group's Civicsmith offers: one of records_request, /);
+  assert.match(kind.detail, /^action_kind 'grand_jury' is not a kind your team's Civicsmith offers: one of records_request, /);
   const contact = actions.contactNotAMember();
-  assert.equal(contact.detail, "contact names a member of your group by member id, and this one names none. Nothing was written.");
+  assert.equal(contact.detail, "contact names a member of your team by member id, and this one names none. Nothing was written.");
   assert.equal(w.promote(B, actionMd(B, [...CP, "action_kind: other", "contact: nobody-here"])).detail, contact.detail);
   const x = world({ conformance: {} });
   const det = x.promote(C, actionMd(C, [...CP, "action_kind: other", "breach: true"]));
   assert.deepEqual([det.reason, det.cause], ["ACTION_NO_DETERMINATION", "CONFORMANCE_UNAVAILABLE"]);
   assert.equal(det.detail, "an action recorded for a breach rests on a conformance determination, and no determination can be "
-    + "read on your group's Civicsmith yet, so none could be found. Nothing was written.");
+    + "read on your team's Civicsmith yet, so none could be found. Nothing was written.");
   for (const r of [kind, contact, det]) assert.doesNotMatch(r.detail, /this instance|this copy|this plane|the plane/i);
 });

@@ -151,7 +151,7 @@ test("R1 the model per mode comes from MODEL_FOR_MODE only; the call runs under 
     assert.ok(r.log.sent[0].system.includes("RESIDENT-LAYER-MARK"));
   }
   /* The reference that serves the act, as credentials.accountFor answers it (K1755): the member's own, with or
-     without its level, or the group's API key; each is the one the turn runs under. */
+     without its level, or the team's API key; each is the one the turn runs under. */
   const GROUP_KEY = "sk-ant-api03-GROUPKEY-0000";
   for (const reference of [{ kind: "apikey", level: "member", key: KEY }, { kind: "apikey", level: "group", key: GROUP_KEY }]) {
     replies.push(json(200, message([toolUse("t1", "answer", { v: "g" })])));
@@ -163,7 +163,7 @@ test("R1 the model per mode comes from MODEL_FOR_MODE only; the call runs under 
   const rm = fakeRunner([() => [{ tool_use: { id: "u1", name: "answer", input: { v: "m" } } }], () => [end()]]);
   assert.deepEqual((await converse(conv({ reference: { ...SUB, level: "member" }, runner: rm.ns }))).answer, { v: "m" });
   assert.deepEqual(rm.log.sent[0].credential, SIGNIN_CREDENTIAL);
-  assert.match((await modelCall(undefined, BODY)).refused.message, /group's API key/);
+  assert.match((await modelCall(undefined, BODY)).refused.message, /team's API key/);
   /* A mode the table does not hold is refused before any call; so is a key of Object's prototype. */
   for (const mode of ["investigate-all", "toString", undefined]) {
     const n = calls.length;
@@ -736,7 +736,7 @@ test("R10 it reaches no address but MODEL_ENDPOINT and the runner binding, and n
 
 /* ------------------------------------------------------------------ Purpose */
 
-test("Purpose a turn reaches the provider the account reference names (today Anthropic's Claude only): a member's own, a project's or the group's API key to the Messages API, a member's sign-in to that member's own runner; the reference arrives per call and is never kept", async () => {
+test("Purpose a turn reaches the provider the account reference names (today Anthropic's Claude only): a member's own, a project's or the team's API key to the Messages API, a member's sign-in to that member's own runner; the reference arrives per call and is never kept", async () => {
   const PKEY = "sk-ant-api03-SENTINELPROJECT-0000";
   const GKEY = "sk-ant-api03-SENTINELGROUP-0000";
   const r = fakeRunner([() => [end()]]);
@@ -767,7 +767,7 @@ test("Purpose a turn reaches the provider the account reference names (today Ant
 
 /* ------------------------------------------------------------------ R11 */
 
-test("R11 a group-level reference is the group's API key and a project-level one a project's, each sent exactly as a member's: only with kind apikey; a group or project reference of another kind, or a level other than member, project or group, is refused with no call", async () => {
+test("R11 a group-level reference is the team's API key and a project-level one a project's, each sent exactly as a member's: only with kind apikey; a group or project reference of another kind, or a level other than member, project or group, is refused with no call", async () => {
   const GKEY = "sk-ant-api03-SENTINELGROUP-0000";
   /* Sent exactly as a member's key: the same address, headers and body, cache marks included, the same usage. */
   const sent = [];

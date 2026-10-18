@@ -201,7 +201,7 @@ test("R13 capture R69 R16 R3: a pull holds the bytes under their own digest, wri
   assert.equal(doc.provenance_chain.length, 1);
   assert.deepEqual([doc.provenance_chain[0].via, doc.provenance_chain[0].bound], ["doorbell", false]);
   assert.match(doc.provenance_chain[0].who, /^instance inst \(Civicsmith\/9\.9\.9\)$/, "acquisition R16 (DEC-124): the product named Civicsmith");
-  assert.match(doc.provenance_chain[0].asserts, /received at the doorbell of your group's Civicsmith as knock .* not fetched/);
+  assert.match(doc.provenance_chain[0].asserts, /received at the doorbell of your team's Civicsmith as knock .* not fetched/);
   assert.deepEqual(doc.attestation_attempts, []);
   assert.ok(doc.profile && doc.profile.format && doc.profile.digests, "capture R17's profile over the bytes");
   /* R16: the contact is nowhere the pull reaches */

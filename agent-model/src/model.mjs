@@ -152,7 +152,7 @@ function precheck(reference, runner) {
   const ref = usable(reference);
   if (!ref) return { refusal: refused(null, "ACCOUNT_REFERENCE_UNUSABLE",
     "a model turn runs only under the account reference that serves a member's act: {kind: \"apikey\", key} or "
-    + "{kind: \"signin\", member, secret}, the member's own, or a project's or the group's API key {kind: \"apikey\", level: "
+    + "{kind: \"signin\", member, secret}, the member's own, or a project's or the team's API key {kind: \"apikey\", level: "
     + "\"project\" or \"group\", key}") };
   if (ref.kind === "signin" && !held(ref.secret)) return { refusal: refused(null, "SIGNIN_NOT_HELD",
     "this member's Claude sign-in is not held: they connect their Claude account again") };

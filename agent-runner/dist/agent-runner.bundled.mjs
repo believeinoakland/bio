@@ -1560,7 +1560,7 @@ var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
 var DISABLED = JSON.stringify({ ok: false, code: "LOCAL_RUNNER_DISABLED" });
 var HOLD_KEY = "signin_hold_until";
 var LIBRARY_DETAIL_MAX = 120;
-var STARTED_WORDS = "Your group's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.";
+var STARTED_WORDS = "Your team's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.";
 var log = (line) => console.log(JSON.stringify(line));
 var instanceRef = (id) => String(id ?? "").replace(/[^0-9a-f]/gi, "").slice(0, 12).toLowerCase();
 var pathTemplate = (url) => {

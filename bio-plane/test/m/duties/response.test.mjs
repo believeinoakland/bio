@@ -127,7 +127,7 @@ test("R23 the fifth basis kind, the other side's stated deadline, is a deadline 
     row(r, "UNKNOWN_BASIS_KIND");
     assert.deepEqual(r.bases, ["rule", "commitment", "dependency", "window"]);
     for (const b of r.bases) assert.ok(r.detail.includes(b), b);
-    assert.match(r.detail, /a deadline on the group/);
+    assert.match(r.detail, /a deadline on the team/);
   }
   assert.equal(STATED_BASIS, "stated", "action-clocks' spelling (its R7)");
   assert.ok(!BASIS_KINDS.includes(STATED_BASIS));
@@ -350,7 +350,7 @@ test("R5 over the real local-facts: a group rule a member drafts and another con
   const c = lf.ruleConfirm({ rule: d.rule, by: CAROL, viewer: CAROL });
   assert.equal(c.ok, true, JSON.stringify(c).slice(0, 300));
   const o = occ();
-  assert.equal(o.due.date.value, "2026-02-05", "the group's confirmed rule governs here");
+  assert.equal(o.due.date.value, "2026-02-05", "the team's confirmed rule governs here");
   assert.equal(o.due.basis_kind, "rule");
   assert.equal(o.due.trace.citation, "Test Bylaw § 10");
   assert.equal(lf.ruleWithdraw({ rule: d.rule, reason: "superseded", by: BOB, viewer: BOB }).ok, true);

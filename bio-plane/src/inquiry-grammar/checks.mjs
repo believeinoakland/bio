@@ -70,8 +70,8 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DIVIDE: {
     check: 'C-32.7',
     where: 'src/inquiry/index.mjs #divide > is-machine-divide',
-    translation: 'Dividing a question says the group asked one thing when it was really asking '
-      + 'two, and that is a judgement about the group\'s own work. The credential that asked here '
+    translation: 'Dividing a question says the team asked one thing when it was really asking '
+      + 'two, and that is a judgement about the team\'s own work. The credential that asked here '
       + 'is an automated one: it may raise questions and gather what they rest on, and may not '
       + 'restructure them. Sign in to divide it.',
   },
@@ -87,7 +87,7 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   IMPORTED_LEG_MALFORMED: {
     check: 'C-21.3',
     where: 'src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form',
-    translation: 'A leg on another group\'s finding names that finding and one edition, and nothing else: its '
+    translation: 'A leg on another team\'s finding names that finding and one edition, and nothing else: its '
       + 'grades are that edition\'s. Correct the leg. Nothing was written.',
   },
   /* R16 (T33-43; K1447): the three new leg kinds' departures, all C-2.8, each refused by its own site in
@@ -95,7 +95,7 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   STANDARD_LEG_AXIS: {
     check: 'C-2.8',
     where: 'src/inquiry-grammar/grammar.mjs standardLegRefusal > is-standard-leg-axis',
-    translation: 'A leg on a standard rests on the text of that law as the group captured it, so the only grade it '
+    translation: 'A leg on a standard rests on the text of that law as the team captured it, so the only grade it '
       + 'carries is the one that text earns. A connection, a testimony or a hunch is a different kind of claim. '
       + 'Correct the leg. Nothing was written.',
   },

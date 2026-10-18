@@ -79,7 +79,7 @@ function world(x) {
        hidden project only at EXISTENCE (its id, name and owners), never its lens. */
     lensNow: (viewer = "member:ruth") => bias.biasManifest({ scope: "project", scopeId: P, viewer, limit: 1 }).statements_sha,
     discoverable() {
-      const r = membershipOf(x.ctx).projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to the group",
+      const r = membershipOf(x.ctx).projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to the team",
                                                            by: "ruth", viewer: "member:ruth" });
       assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
     },

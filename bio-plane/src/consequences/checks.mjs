@@ -42,7 +42,7 @@ export const CONSEQUENCES_WORDS = Object.freeze({
     + "Choose the amounts it comes from. Nothing was written.",
   "refusal.SUCCESS_CAUSE_NOT_EVIDENCED": "A stated cause cites what shows it: at least one document or finding you can see. "
     + "Nothing was written.",
-  "refusal.SUCCESS_CAUSE_OWN_ACT_ONLY": "Everything cited for the cause is your group's own act, and your own act never "
+  "refusal.SUCCESS_CAUSE_OWN_ACT_ONLY": "Everything cited for the cause is your team's own act, and your own act never "
     + "shows that it caused the change. Cite what the body did or said, or leave the cause out. Nothing was written.",
   "refusal.NO_SUCH_SUCCESS_RECORD": "There is no success by that name, or none you can see. Nothing was written.",
   "refusal.SUCCESS_NO_REASON": "Say why you are revising it. Your reason is kept with the change. Nothing was written.",
@@ -118,11 +118,11 @@ export const CONSEQUENCES_CHECKS = Object.freeze({
   SUCCESS_NO_EVIDENCE: row(31, "#successRefusal", words("SUCCESS_NO_EVIDENCE")),
   SUCCESS_TOO_LARGE: row(32, "#successRefusal", words("SUCCESS_TOO_LARGE")),
   SUCCESS_FIGURE_NOT_COMPUTED: row(33, "#successFigures", words("SUCCESS_FIGURE_NOT_COMPUTED")),
-  SUCCESS_CAUSE_UNSTATED: row(34, "#causeRefusal", "Saying the group's action caused the change is a statement in your own "
+  SUCCESS_CAUSE_UNSTATED: row(34, "#causeRefusal", "Saying the team's action caused the change is a statement in your own "
     + "words, at most 2,000 characters. Nothing was written."),
   SUCCESS_CAUSE_NOT_EVIDENCED: row(35, "#causeRefusal", words("SUCCESS_CAUSE_NOT_EVIDENCED")),
   SUCCESS_CAUSE_OWN_ACT_ONLY: row(36, "#causeRefusal", words("SUCCESS_CAUSE_OWN_ACT_ONLY")),
-  SUCCESS_CAUSE_UNCHECKABLE: row(37, "#causeRefusal", "Whether the cause rests only on the group's own acts could not be "
+  SUCCESS_CAUSE_UNCHECKABLE: row(37, "#causeRefusal", "Whether the cause rests only on the team's own acts could not be "
     + "checked, so it is not recorded. You may state the sequence of events instead. Nothing was written."),
   NO_SUCH_SUCCESS_RECORD: row(38, "noSuchSuccessRecord", words("NO_SUCH_SUCCESS_RECORD")),
   SUCCESS_NO_REASON: row(39, "successRevise", words("SUCCESS_NO_REASON")),

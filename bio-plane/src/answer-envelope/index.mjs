@@ -248,7 +248,7 @@ function dec49Attach(o) {
    diagnostic a stranger cannot act on is not worth one. */
 const STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
 const STORE_SILENT_DETAIL =
-  "this group's Civicsmith could not consult its own record, so nothing here is a statement about the record. "
+  "this team's Civicsmith could not consult its own record, so nothing here is a statement about the record. "
   + "It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are "
   + "answers, and this is the absence of one. The question stands unanswered; ask again.";
 

@@ -3,6 +3,7 @@
    over the test profile (`test-port-ellery`: the Harbour Standing Orders, Board Rules, the ferry company's code and the
    Harbour Safety Institute's standards carry series). */
 import test from "node:test";
+import { word as tableWord } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, BYLAW, REASON, sha } from "./fixture.mjs";
 import { WORD } from "./words.mjs";
@@ -476,9 +477,9 @@ test("R45 every read carries says, the members' words of DEC-145 composed from t
 
 test("R46 where no active profile is held or the profiles cannot be combined, R3's why names your group's Civicsmith, never the instance", () => {
   const none = seeded({ profiles: null }).declare();
-  assert.equal(none.source.why, "your group's Civicsmith has no active jurisdiction profile, so no source of standards is known");
+  assert.equal(none.source.why, tableWord("standards.why.group_civicsmith_active"));
   const bad = seeded({ profiles: ["no-such-profile"] }).declare();
-  assert.equal(bad.source.why, "the active jurisdiction profiles of your group's Civicsmith could not be combined (UNKNOWN_PROFILE), so no source of standards is known");
+  assert.equal(bad.source.why, "the active jurisdiction profiles of your team's Civicsmith could not be combined (UNKNOWN_PROFILE), so no source of standards is known");
   assert.ok(![none.source.why, bad.source.why].some((s) => /instance/.test(s)));
 });
 

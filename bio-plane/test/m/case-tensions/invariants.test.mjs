@@ -79,7 +79,7 @@ test("R9 this module's table holds exactly C-92.1–.9 and C-92.13, moved with t
   assert.throws(() => rowOf("ATTRIBUTION_UNCHOSEN"), /no row with a canned translation/, "C-92.10–.12 are ratification's");
 });
 /* sha256 of the ten rows `{code, check, translation}` in table order, as publication held them at the copy. */
-const TRANSLATIONS_AT_COPY = "7073162639ab78ac35b926d374937a9fa804f46a124097aa68beed912afaac13";
+const TRANSLATIONS_AT_COPY = "b8a14de6c5033d30ef8000413b230680ef1ba4d97aaa10168ac0709e3fed08a6";
 
 test("R10 the case flags and the attribution choices are declared to record-core as publication declared them: flags and observation attributions cleared with their bundle, capture attributions by the whole-store purge only", () => {
   const { w, obs } = busy();

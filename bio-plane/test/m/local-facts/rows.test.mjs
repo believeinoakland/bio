@@ -74,7 +74,7 @@ test("R8 R2 R3 DEC-149: each member-facing string names the group's Civicsmith o
   assert.doesNotMatch(w.act("nowhere", "confirm").translation, NAMES_THE_COPY);
   /* factStatus's list note: "your group's Civicsmith transmits nothing" */
   const note = w.lf.factStatus({}).note;
-  assert.equal(note, "corrections and disputes come first, for a member to report for a profile fix; your group's Civicsmith transmits nothing");
+  assert.equal(note, "corrections and disputes come first, for a member to report for a profile fix; your team's Civicsmith transmits nothing");
   /* the undetermined horizon's why: reworded to need no name */
   const nozone = written("test-nozone", { holidays: [{ year: 2026, days: [{ date: "2026-01-01", name: "New Year's Day" }], status: "researched", basis: "TEST" }] });
   const n = world({ profiles: ["test-nozone"], own: [nozone] });

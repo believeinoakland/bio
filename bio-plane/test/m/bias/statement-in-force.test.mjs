@@ -59,7 +59,7 @@ test("R49: the group scope reads the group's lens alone; \"instance\" and {type:
       [true, "scrutiny", S("s2").text, I, "group", { type: "instance", id: "" }, m.statements_sha], String(scope));
   }
   assert.equal(w.bias.statementInForce({ statement: "s4", viewer: "admin" }).in_force, true, "replaced only in the project's lens");
-  assert.equal(w.bias.statementInForce({ statement: "p1", viewer: "admin" }).in_force, false, "a project statement is not the group's");
+  assert.equal(w.bias.statementInForce({ statement: "p1", viewer: "admin" }).in_force, false, "a project statement is not the team's");
 });
 
 test("R49: the whole effective set, never a page — a statement past the manifest's default page is in force", async () => {
@@ -103,7 +103,7 @@ test("R49: at R13's sight — a project scope the viewer may not see answers exa
   assert.equal(none.in_force, false);
   for (const viewer of ["member:mo", "nobody", null, "admin", "member:second"])
     assert.deepEqual(w.sif("s1", PROJ, viewer), none, String(viewer));
-  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "owner", reason: "open to the group" });
+  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "owner", reason: "open to the team" });
   for (const viewer of ["admin", "member:second"])
     assert.deepEqual([w.sif("p1", PROJ, viewer).in_force, w.sif("s3", PROJ, viewer).in_force], [true, true], viewer);
   assert.equal(w.sif("p1", PROJ, "member:mo").in_force, false, "a member outside a discoverable project is at EXISTENCE only");

@@ -258,7 +258,7 @@ export class Doorbell {
         return { knocker_digest: null, pseudonym: null, basis: "no secret was presented" };
       const key = this.#knockerKey({ create: false });
       if (!key) return { knocker_digest: null, pseudonym: null,
-                         basis: "no knock carrying a secret has been received by your group's Civicsmith, so no secret is recognised" };
+                         basis: "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised" };
       const knocker_digest = await Doorbell.#knockerDigest(key, secret);
       return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
     } catch { return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" }; }
@@ -608,7 +608,7 @@ export class Doorbell {
       const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
       return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
                translation: row.translation, status: 503, knockId,
-               detail: "this group's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
+               detail: "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
     }
     /* The bytes as received: the evidence bucket's inbox object, else the inline copy. They must hash to the row's digest. */
     let bytes = null;
@@ -712,12 +712,12 @@ export class Doorbell {
       file: `snapshots/${name}`, locator, retrieved: at,
       profile,
       authority_state: "undetermined",
-      authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
+      authority_basis: `material handed to the team through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
       provenance_chain: [{
         /* R13 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
            before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were received at the doorbell of your group's Civicsmith as knock ${row.knock_id} at ${row.received}, `
+        asserts: `these bytes were received at the doorbell of your team's Civicsmith as knock ${row.knock_id} at ${row.received}, `
                + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false, via: DOORBELL_VIA,

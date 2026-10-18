@@ -261,7 +261,7 @@ test("R8, R16: this module's table holds exactly the rows of the checks the door
       assert.ok(src.includes(`function ${where.split(" ")[1]}(`), `${code}: ${where}`);
     }
   }
-  assert.equal(digest(rows.PURGE_HOLD_IN_PLACE.translation), "3c0738c95a098d30");
+  assert.equal(digest(rows.PURGE_HOLD_IN_PLACE.translation), "ae6bd47138c83f85");
   /* the families read these rows, and each decorates with its own words */
   for (const [code, row] of Object.entries(rows)) assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
   /* store-door's two rows are DISPATCH_CHECKS' */

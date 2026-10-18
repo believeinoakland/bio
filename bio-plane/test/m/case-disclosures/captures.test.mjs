@@ -241,7 +241,7 @@ test("R4: sourcesStated states, for a capture given to the group, only what sour
   for (const leak of [sourceId, name.entry, role.entry, "clerk"]) assert.equal(JSON.stringify(named).includes(leak), false, leak);
   const body = captureBodyLines([], named).join("\n");
   assert.ok(body.includes(`- ${k}: ${named[0].stated}, stated with the source's consent.`));
-  assert.ok(captureBodyLines([], []).join("\n").includes("No document this case rests on was given to the group by a source"));
+  assert.ok(captureBodyLines([], []).join("\n").includes("No document this case rests on was given to the team by a source"));
 });
 
 test("R4, R18, R23: a source read that fails or throws states the Withheld row — less, never more — and never throws", () => {

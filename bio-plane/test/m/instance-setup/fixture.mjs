@@ -103,8 +103,8 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
       aiKeptAway: () => (p.keepAway.on === false ? null : {
         ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: AI_ACCOUNT_CHECKS.AI_KEPT_AWAY.check,
         translation: AI_ACCOUNT_CHECKS.AI_KEPT_AWAY.translation,
-        detail: p.keepAway.on === true ? "the group keeps its material away from every assistant, so no account was read or used. Nothing was sent."
-          : "whether the group keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent.",
+        detail: p.keepAway.on === true ? "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent."
+          : "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent.",
         keep_away: p.keepAway.on === true ? { reason: p.keepAway.reason, set_by: p.keepAway.set_by, set_at: p.keepAway.set_at }
           : { reason: null, set_by: null, set_at: null } }),
     },

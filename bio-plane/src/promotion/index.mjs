@@ -189,7 +189,7 @@ function stepDeclared(held, detail) {
 }
 
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
-  detail: "a project by that name already exists in your group's Civicsmith, compared without regard to case or spacing. This "
+  detail: "a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This "
         + "holds for deactivated projects too, because their names are still cited." });
 
 class Promotion {
@@ -541,8 +541,8 @@ class Promotion {
         /* DEC-49 REGION is-group-undetermined */
         if (!createdGroup)
           return refusal("GROUP_UNDETERMINED",
-            "this store records no producing group, and this creation names none — neither a group: line in its "
-            + "bundle.md nor a group in its meta. The record does not supply one. Nothing was created.",
+            "this store records no producing team, and this creation names none — neither a group: line in its "
+            + "bundle.md nor a team in its meta. The record does not supply one. Nothing was created.",
             { act: "promote" });
         /* END DEC-49 REGION is-group-undetermined */
       }
@@ -652,7 +652,7 @@ class Promotion {
       if (promotedType === "project") {
         const key = projectNameKey(promotedTitle);
         if (!key)
-          return { ok: false, reason: "NO_TITLE", detail: "a project needs a name, and it must be unique across your group's Civicsmith" };
+          return { ok: false, reason: "NO_TITLE", detail: "a project needs a name, and it must be unique across your team's Civicsmith" };
         if (this.#nameTaken(key, bundleId)) return NAME_TAKEN();
       }
 
@@ -708,7 +708,7 @@ class Promotion {
         return refusal("REVISION_REGROUPS_BUNDLE",
           `${cut(bundleId, 80)} was produced by '${cut(head.groupId, 40)}' and this revision says `
           + `'${cut(revisionGroup, 40)}'. A revision changes what a document says, never whose it is. Send it again `
-          + `with the group the record holds, or with none. Nothing was written.`,
+          + `with the team the record holds, or with none. Nothing was written.`,
           { head_group: cut(head.groupId, 80), revision_group: cut(revisionGroup, 80) });
       /* END DEC-49 REGION is-revision-regroups-bundle */
       /* R14: a document's id is the bundle it is filed under. */
@@ -1107,8 +1107,8 @@ class Promotion {
     /* DEC-49 REGION is-machine-reopen */
     if (!who || isMachineIdentity(who))
       return refusal("MACHINE_CANNOT_REOPEN",
-        "reopening is a named member's judgement that a question the group set down has to be worked again. A "
-        + "machine credential may surface a question and pursue one, and may not overturn the group's own "
+        "reopening is a named member's judgement that a question the team set down has to be worked again. A "
+        + "machine credential may surface a question and pursue one, and may not overturn the team's own "
         + "disposition. Sign in as a member.");
     /* END DEC-49 REGION is-machine-reopen */
     /* R22 */
@@ -1140,7 +1140,7 @@ class Promotion {
       if (!m.ok) return { ...m, target };
       if (!m.value)
         return { ok: false, reason: "NOT_SET_DOWN", target, from: head.currentState, reopenable: REOPENABLE_FROM,
-                 detail: "reopening picks up something the group SET DOWN (deferred or dismissed) or a finding that is "
+                 detail: "reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is "
                        + "a member of a published or prepared case. A concluded inquiry in no case moves forward by "
                        + "publishing a new edition rather than quietly reverting to open still wearing its conclusion." };
     }

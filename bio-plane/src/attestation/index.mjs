@@ -105,7 +105,7 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
     if (holdsAnswer && holdsAnswer.acquired === true) {
       held = { form: "parts", on: "acquisition_receipt",
                detail: "no object is stored under this hash, because the document was captured in parts "
-                     + "and only its parts are stored, each under its own hash. Your group's Civicsmith hashed "
+                     + "and only its parts are stored, each under its own hash. Your team's Civicsmith hashed "
                      + "the whole document as it arrived and recorded that receipt, which is what this "
                      + "attestation rests on." };
     } else {
@@ -115,14 +115,14 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
           check: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.check, translation: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.translation,
           sha256: sha,
           detail: "the record's register names these bytes, but no object is stored under this hash and "
-                + "your group's Civicsmith holds no receipt of having acquired them, which is the shape of a document "
+                + "your team's Civicsmith holds no receipt of having acquired them, which is the shape of a document "
                 + "kept only in parts. A register row is written from what the promoting caller named, so "
                 + "a timestamp is not rested on it alone. Nothing here says the bytes are missing." };
       /* END DEC-49 REGION is-attest-parts */
       return { ok: false, reason: "NO_SUCH_CAPTURE",
                detail: holdsAnswer
                  ? "no object is stored under that hash, the register holds no row for it under a "
-                   + "record that exists, and your group's Civicsmith holds no receipt of having acquired it"
+                   + "record that exists, and your team's Civicsmith holds no receipt of having acquired it"
                  : "no object is stored under that hash, and the store could not be asked whether "
                    + "its register or an acquisition receipt names it, so this is not a finding that "
                    + "the record lacks the bytes" };
@@ -199,7 +199,7 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
         kind: "rfc3161", service, sha256: tokenSha, bytes: token.length,
         over: sha,
       },
-      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; your group's Civicsmith obtains and stores it, and does not claim to have verified the signature.",
+      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; your team's Civicsmith obtains and stores it, and does not claim to have verified the signature.",
       ...(held ? { held } : {}),
     } : {
       reason: "NO_ATTESTATION",
@@ -237,7 +237,7 @@ export function receiptStatement({ instance, retrieved, retrievalLocator, captur
 }
 
 const noKey = () => actRefusal("RECEIPT_NO_KEY",
-  "your group's Civicsmith holds no receipt-signing key it can read, so nothing is signed. Whoever hosts your group's "
+  "your team's Civicsmith holds no receipt-signing key it can read, so nothing is signed. Whoever hosts your team's "
   + "Civicsmith sets one as a secret; "
   + "nothing is claimed signed until then");
 

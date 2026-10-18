@@ -38,7 +38,7 @@ const fm = (b) => ({ id: Q, object_type: "inquiry", basis_versions: b.versions, 
 test("R3: a version's leg on an imported finding reference passes C-25.10 and C-25.14 when inquiry-grammar R11 judges its form, and a malformed one is R11's C-21.3, never C-25.10", () => {
   const ok = [];
   basisVersionFindings(fm(withRefs("first", [[REF, 2]])), ok);
-  assert.deepEqual(ok, [], "a well-formed leg on another group's finding raises nothing");
+  assert.deepEqual(ok, [], "a well-formed leg on another team's finding raises nothing");
   for (const bad of [{ target_edition: undefined }, { grade: "A" }, { grade_axis: "capture" }, { extent_kind: "page", extent_page: 1 },
                      { content_id: "f".repeat(64) }, { extent_capture: "e".repeat(64) }]) {
     const b = withRefs("first", [[REF, 2, bad]]);
@@ -76,7 +76,7 @@ test("R3, R5: the edition a leg on another group's finding names is in the compo
   const w = versionAsWritten({ name: "x", description: "a reading of it", author: "member:alice", at: "2026-09-27T00:00:00Z",
     legs: [{ target: REF, target_edition: 3, role: "supports" }, { target: DOC, role: "supports" }] });
   assert.equal(w.legs[0].target_edition, 3);
-  assert.ok(!("extent_kind" in w.legs[0]), "a leg on another group's finding carries no extent");
+  assert.ok(!("extent_kind" in w.legs[0]), "a leg on another team's finding carries no extent");
   assert.equal(w.legs[1].extent_kind, "document");
 });
 

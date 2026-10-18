@@ -57,7 +57,7 @@ test("R33 OCCURRENCE_REASONS is exported frozen, one object from vocab.mjs and i
     const file = WORDS.find((x) => x.key === key);
     if (file) assert.equal(says, file.en, `${key}: the file's word`);
     assert.doesNotMatch(says, /\b(copy|instance|plane|server)\b/i, key);
-    if (/Civicsmith/.test(says)) assert.match(says, /your group's Civicsmith/i, key);
+    if (/Civicsmith/.test(says)) assert.match(says, /your team's Civicsmith/i, key);
   }
 });
 

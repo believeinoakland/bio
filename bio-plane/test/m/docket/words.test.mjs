@@ -9,9 +9,9 @@ import { DOCKET_CHECKS, OUTWARD_ACT_WARNING, RESEND_INVITATION, DOCKET_UNREADABL
 
 const A = V("alice");
 const OLD_NAME = /\b(this|the|our|its) +(civicsmith +|group's +)?(instance|copy|plane)\b/i;
-const NO_SLUG = "Your group has no name recorded yet, and a docket entry is never anonymous. Record the group's name "
+const NO_SLUG = "Your team has no name recorded yet, and a docket entry is never anonymous. Record the team's name "
   + "first. Nothing was published.";
-const STALE = "Your group's Civicsmith holds no prepared docket entry from you with this fingerprint, it was prepared more "
+const STALE = "Your team's Civicsmith holds no prepared docket entry from you with this fingerprint, it was prepared more "
   + "than an hour ago, or the docket has moved since. Prepare it again and sign what it shows. Nothing was published.";
 
 test("R4 R22 (DEC-149, N685) C-129.16 DOCKET_NO_GROUP_SLUG says \"Your group has no name recorded yet\", as C-127.4 says it, not \"This copy\"", () => {
