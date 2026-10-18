@@ -19,6 +19,9 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(DIR, "..");
 const SUITE = join(DIR, "t46.test.mjs");
 const INDEX = join(MEMBER, "src/index.mjs");
+/* T51 (R119): the plan reads and the payer check are `agent-steps`'. */
+const STEPS_DRIVE = join(MEMBER, "..", "agent-steps", "src/drive.mjs");
+const STEPS_WORK = join(MEMBER, "..", "agent-steps", "src/work.mjs");
 const TRANSCRIBE = join(MEMBER, "src/transcribe.mjs");
 const DRAFTS = join(MEMBER, "src/action-drafts.mjs");
 const UNTESTED = join(MEMBER, "src/untested.mjs");
@@ -29,11 +32,11 @@ const ARMS = [
     from: `|| (a.suggestions !== undefined && typeof a.suggestions !== "boolean")`,
     to: `|| (a.suggestions !== undefined && a.suggestions !== false)` },
   { name: "a sign-in's suggestions switch not honoured (the layer never loadable)", file: INDEX, ids: ["R6"],
-    from: `suggestions: account.suggestions })`, to: `suggestions: account.kind === "signin" ? false : account.suggestions })` },
-  { name: "/version's runner always true", file: INDEX, ids: ["R30"], from: `runner: runnerBound(env) });`, to: `runner: true });` },
-  { name: "the closing notes not counted in the read's trace", file: INDEX, ids: ["R51"],
+    from: `suggestions: account.suggestions, traced })`, to: `suggestions: account.kind === "signin" ? false : account.suggestions, traced })` },
+  { name: "/version's runner always true", file: INDEX, ids: ["R30"], from: `runner: (await remoteVersion(env)).answered });`, to: `runner: true });` },
+  { name: "the closing notes not counted in the read's trace", file: STEPS_WORK, ids: ["R51"],
     from: `const notes = [planDoc?.closed, ...earlier.map((p) => p?.closing_note)].filter(noted).length;`, to: `const notes = 0;` },
-  { name: "the earlier plans (op=plans) not read", file: INDEX, ids: ["R51"],
+  { name: "the earlier plans (op=plans) not read", file: STEPS_WORK, ids: ["R51"],
     from: `const plans = await ask(PLAN_READS.plans(project));`, to: `const plans = null;` },
   { name: "a sign-in refused TRANSCRIBE_NEEDS_API_KEY", file: TRANSCRIBE, ids: ["R72"],
     from: `  const { account } = acct;\n`,
@@ -50,7 +53,7 @@ const ARMS = [
     from: `const labelled = untested.label ? { untested: untested.label } : {};`, to: `const labelled = {};` },
   { name: "any object taken as a label", file: UNTESTED, ids: ["R79"],
     from: `  if (!want) return { bad: true };`, to: `  if (!want) return { label: v };` },
-  { name: "the payer check dropped for a sign-in", file: INDEX, ids: ["R80"],
+  { name: "the payer check dropped for a sign-in", file: STEPS_DRIVE, ids: ["R80"],
     from: `if (account && recordedPayer !== account.member)`, to: `if (account && account.kind !== "signin" && recordedPayer !== account.member)` },
 ];
 

@@ -82,7 +82,7 @@ import { PLANE_OPS } from "../src/ops.mjs";
    registry and refusal catalog. This suite stages ROWS through `CFG.meaningRows`
    and still can — what it may no longer do is stage a SUCCESS for an arm the
    record does not hold. */
-import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
+import { MEANING_ARMS, meaningRowsBranch } from "../../agent-steps/test/plane-meaning.mjs";
 /* D-323/D-324: the mock's `op=suggest` branch, DERIVED from the plane's own name
    grammar, kind set, level set and placeholder predicate — the same treatment
    `plane-meaning.mjs` gave `op=meaningrows` and for the same measured reason.
@@ -90,14 +90,14 @@ import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
    ANY level, so B6's `level-empty:<level>` assertion and B4/B5/B8/B9's
    `new-version` fixtures were all green over submissions a deployed plane
    refuses (VF-4, live at 0.57.0, MEASUREMENTS M-8). */
-import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
+import { suggestBranch, WIRE_CHECKS } from "../../agent-steps/test/plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
-import { captureRequestBranch } from "./plane-capturerequest.mjs";
+import { captureRequestBranch } from "../../agent-steps/test/plane-capturerequest.mjs";
 import { REPORTING_LEVEL } from "../../agent-harness/src/harness.mjs";
 /* agent-harness R18 (T50): an absence is written only for a level the shell shows was read over a document, so these
    direct calls state it the way the shell does: one read of each level, three documents in scope. */
 const SCOPE = Object.fromEntries(LEVELS.map((l) => [l, { reads: 1, documents: 3 }]));
-import { MEANING_ARM } from "../src/ops.mjs";
+import { MEANING_ARM } from "../../agent-steps/src/index.mjs";
 /* FL-8 / IC-67 — THE PLANE'S STATUS KEYING, TAKEN FROM THE PLANE INSTEAD OF
    REPRODUCED HERE, AND THE CORRECTION IS A MEASURED DEFECT RATHER THAN A TIDY-UP.
    The mock's `airunclose` branch computed the run's status by hand as

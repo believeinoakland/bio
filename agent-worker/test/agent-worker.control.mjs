@@ -47,6 +47,9 @@ const SRC = join(MEMBER, "src", "index.mjs");
 /* R65 (T35): `NAMESPACES` and `MEANING_ARM` are declared in `src/ops.mjs` (since T33-57); the arms that patched them
    through the deleted re-export `src/harness.mjs`, and so armed nothing, now patch them where they live. */
 const OPS_SRC = join(MEMBER, "src", "ops.mjs");
+/* T51 (R119): `MEANING_ARM` and `planeAnswer` are `agent-steps`' now; the arms that break them patch its files. */
+const NAMES_SRC = join(MEMBER, "..", "agent-steps", "src", "names.mjs");
+const PLANE_SRC = join(MEMBER, "..", "agent-steps", "src", "plane.mjs");
 const MANIFEST = join(MEMBER, "fleet-member.json");
 const COVERAGE = join(PLANE, "scripts", "coverage.mjs");
 
@@ -80,7 +83,9 @@ function runSuite() {
    scored against a suite that never asserts it. Same tail-line discipline: a
    suite that DIED reports `-1`, never `0`. */
 function runNamedSuite(name) {
-  const r = spawnSync(process.execPath, [join(HERE, `${name}.test.mjs`)],
+  /* T51 (R119): the fan-out through the op moved to `agent-steps`; its suite is the one these arms measure. */
+  const file = name === "fanout" ? join(HERE, "..", "..", "agent-steps", "test", "fanout.test.mjs") : join(HERE, `${name}.test.mjs`);
+  const r = spawnSync(process.execPath, [file],
     { cwd: MEMBER, encoding: "utf8", env: { ...process.env } });
   const out = (r.stdout || "") + (r.stderr || "");
   const m = out.match(new RegExp(`^${name}:\\s*(\\d+) passed,\\s*(\\d+) failed`, "m"));
@@ -581,7 +586,7 @@ arm({
  * ONLY thing that sees it is the section that drives the REAL plane.
  * ========================================================================== */
 
-const MEANING_MOCK = join(HERE, "plane-meaning.mjs");
+const MEANING_MOCK = join(HERE, "..", "..", "agent-steps", "test", "plane-meaning.mjs");
 
 /* The arm's exact spelling, as it stands in the source. */
 const ARM_FIND = `export const MEANING_ARM = "leg";`;
@@ -604,7 +609,7 @@ arm({
   what: `MEANING_ARM goes back to "legs", the spelling that shipped; the fixture and the answer check are held OPEN`,
   mustFail: "ALL THREE of this member's suites — the arm-is-known arms, the observation-entry arms in agent-worker and harness, and fanout's citations_reread",
   mustNot: "the bound, the refusal-passthrough, the version endpoint or the write arms — none of them is about the meaning layer",
-  patches: [{ file: OPS_SRC, find: ARM_FIND, replace: ARM_WRONG }],
+  patches: [{ file: NAMES_SRC, find: ARM_FIND, replace: ARM_WRONG }],
   run: () => {
     const s = threeSuites();
     const allRed = s.aw.fail > 0 && s.fo.fail > 0 && s.hs.fail > 0;
@@ -644,7 +649,7 @@ arm({
   what: "both halves of D-276 at once: MEANING_ARM back to \"legs\" and the fixture accepting anything. TWO defences down deliberately, which is why it is stated",
   mustFail: "agent-worker's REAL-plane arms; AND in fanout and harness EXACTLY ONE arm each — the STRUCTURAL one that reads the plane's registry without going through the mock",
   mustNot: "every BEHAVIOURAL arm in fanout and harness — the observation entries, the notes, the counts. A permissive fixture makes the behaviour unmeasurable, and that is the finding",
-  patches: [{ file: OPS_SRC, find: ARM_FIND, replace: ARM_WRONG },
+  patches: [{ file: NAMES_SRC, find: ARM_FIND, replace: ARM_WRONG },
             { file: MEANING_MOCK, find: MOCK_FIND, replace: MOCK_PERMISSIVE }],
   /* THIS ARM WAS DECLARED WRONG THE FIRST TIME AND THE DECLARATION WAS
      CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED — WORKER.md's rule,
@@ -678,8 +683,8 @@ arm({
   what: "the arm is wrong AND `planeAnswer` stops looking inside `result`, so it checks only the ENVELOPE's ok — which the plane sets to TRUE on a refused arm (measured: HTTP 200, ok:true, the refusal nested)",
   mustFail: "agent-worker and harness — the refusal reaches the note-writing code unrecognised, so the entry stops saying rows were queried",
   mustNot: "the FALSE ZERO. The entry must say UNDETERMINED and must NOT say `0 meaning-grain row(s) queried`, because the note has a second defence and this arm is what proves it",
-  patches: [{ file: OPS_SRC, find: ARM_FIND, replace: ARM_WRONG },
-            { file: SRC, find: NESTED_FIND, replace: NESTED_GONE }],
+  patches: [{ file: NAMES_SRC, find: ARM_FIND, replace: ARM_WRONG },
+            { file: PLANE_SRC, find: NESTED_FIND, replace: NESTED_GONE }],
   /* DECLARED WRONG THE FIRST TIME AND CORRECTED INTO SOMETHING STRONGER RATHER
      THAN SMOOTHED, and the correction is a real property of the fix rather than
      a wording change. It was declared as "the FALSE ZERO comes back" — on the
@@ -717,8 +722,8 @@ if (!only.length || only.includes("D5")) {
   console.log(`                     CORRECT WORK, and an arm that failed it would be a fence`);
   console.log(`                     tighter than its rule.`);
   console.log(`    MUST PASS      : all three suites, unchanged counts.`);
-  const o = takeOriginal(OPS_SRC);
-  const p = patch(OPS_SRC, ARM_FIND, `export const MEANING_ARM = "LEG";`);
+  const o = takeOriginal(NAMES_SRC);
+  const p = patch(NAMES_SRC, ARM_FIND, `export const MEANING_ARM = "LEG";`);
   let s = null;
   if (!p.armed) {
     console.log(`    >>> THE ARM DID NOT ARM: patch matched ${p.hits} time(s).`);

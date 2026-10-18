@@ -43,7 +43,7 @@
 import { ASK_BOUNDS, askBoundReached } from "../../bio-plane/src/run-rules/index.mjs";
 import { ANSWER_FIELDS, ANSWER_LABEL } from "../../bio-plane/src/answers/check.mjs";
 import { ASK_OPS } from "./ops.mjs";
-import { toolContent } from "./reads.mjs";
+import { toolContent } from "../../agent-steps/src/index.mjs";
 import { untestedOf, UNTESTED_BAD } from "./untested.mjs";
 import { doorTrace } from "./signin.mjs";
 import { remoteOf } from "./remote.mjs";

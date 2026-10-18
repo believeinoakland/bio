@@ -19,6 +19,8 @@ const MEMBER = join(DIR, "..");
 const SUITE = join(DIR, "t41.test.mjs");
 const INDEX = join(MEMBER, "src/index.mjs");
 const CASCADE = join(MEMBER, "src/cascade.mjs");
+/* T51 (R119): the payer check and the tick's reading are `agent-steps`'. */
+const STEPS_DRIVE = join(MEMBER, "..", "agent-steps", "src/drive.mjs");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 const ARMS = [
@@ -31,7 +33,7 @@ const ARMS = [
     from: `if (account.level === "project" && !projectOf(account)) return LEVEL_UNSET;`, to: "" },
   { name: "the project left out of claude_account", file: INDEX, ids: ["R29", "R71"],
     from: `...(cascade.level === "project" ? { project: cascade.project } : {}) },`, to: "}," },
-  { name: "the payer check skipped at the project level", file: INDEX, ids: ["R10", "R57", "R71"],
+  { name: "the payer check skipped at the project level", file: STEPS_DRIVE, ids: ["R10", "R57", "R71"],
     from: "if (account && recordedPayer !== account.member)",
     to: `if (account && account.level !== "project" && recordedPayer !== account.member)` },
   { name: "a sign-in refused on an ask (a standing AI half refused for being a sign-in)", file: INDEX, ids: ["R57"],
@@ -39,10 +41,10 @@ const ARMS = [
     to: `async function accountOf(body) {\n  if (body.question && body.account?.kind === "signin") return { refusal: refusal("BAD_ACCOUNT", "x", 400) };` },
   { name: "a project carried at another level taken", file: INDEX, ids: ["R6", "R71"],
     from: ": a.project !== undefined)", to: ": false)" },
-  { name: "the payer compared against principal.claude (who pays) instead of principal.ref (whose act)", file: INDEX,
+  { name: "the payer compared against principal.claude (who pays) instead of principal.ref (whose act)", file: STEPS_DRIVE,
     ids: ["R10", "R57"], from: "const recordedPayer = session.principal?.ref ?? null;",
     to: "const recordedPayer = session.principal?.claude ?? null;" },
-  { name: "a tick answered `found: false` (no such run) counted as landed (T41 B6)", file: INDEX, ids: ["R26"],
+  { name: "a tick answered `found: false` (no such run) counted as landed (T41 B6)", file: STEPS_DRIVE, ids: ["R26"],
     from: "const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;", to: "const noRun = false;" },
 ];
 

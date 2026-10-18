@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import worker from "../src/index.mjs";
-import { SEGMENT_END_BY } from "../src/ops.mjs";
+import { SEGMENT_END_BY } from "../../agent-steps/src/index.mjs";
 import { MEMBER, ACCOUNT, withAccount } from "./account.mjs";
 import { checkObservation } from "../../bio-plane/src/run-rules/index.mjs";
 

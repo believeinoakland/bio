@@ -29,11 +29,11 @@ import {
 import { MODEL_ENDPOINT, DEFAULT_MAX_SEGMENT_BYTES } from "../../agent-model/src/model.mjs";
 import { MEMBER, withAccount } from "./account.mjs";
 import { SURFACE } from "../src/index.mjs";
-import { meaningRowsBranch } from "./plane-meaning.mjs";
-import { versionReadBranches } from "./plane-versions.mjs";
+import { meaningRowsBranch } from "../../agent-steps/test/plane-meaning.mjs";
+import { versionReadBranches } from "../../agent-steps/test/plane-versions.mjs";
 import { PLANE_OPS_PINNED } from "./owners.mjs";
-import { suggestBranch } from "./plane-suggest.mjs";
-import { captureRequestBranch } from "./plane-capturerequest.mjs";
+import { suggestBranch } from "../../agent-steps/test/plane-suggest.mjs";
+import { captureRequestBranch } from "../../agent-steps/test/plane-capturerequest.mjs";
 
 /* THE PLANE'S OWN VOCABULARIES AND THE SKILL PACK, from their modules (uses: ai-runs, skills, legacy-checks). */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_ENDINGS, RUN_BOUNDS, runStatusFor } from "../../bio-plane/src/run-rules/index.mjs";
@@ -1484,8 +1484,9 @@ section("R45 · the committed bundle is a fresh build of src/index.mjs, its mani
   const fresh = await verifyFresh(member, stat.committed);
   t("R45: a fresh build is byte-identical to the committed bundle", [fresh.checked, fresh.findings], [true, []]);
   const inputs = (stat.manifest?.inputs || []).map((i) => i.path);
-  t("R45: the manifest names every input, bio-plane/src/tokens.mjs included",
-    ["../bio-plane/src/tokens.mjs", "src/index.mjs", "src/cascade.mjs", "src/ops.mjs", "src/ask.mjs", "src/draft.mjs", "src/reads.mjs",
+  t("R45, R119: the manifest names every input, bio-plane/src/tokens.mjs and the agent-steps files included",
+    ["../bio-plane/src/tokens.mjs", "src/index.mjs", "src/cascade.mjs", "src/ops.mjs", "src/ask.mjs", "src/draft.mjs",
+     "../agent-steps/src/index.mjs", "../agent-steps/src/drive.mjs", "../agent-steps/src/work.mjs",
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs", "../agent-model/src/model.mjs"]
       .filter((p) => !inputs.includes(p)), []);
 }

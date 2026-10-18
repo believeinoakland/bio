@@ -28,7 +28,7 @@ import {
   CASCADE_ORDER, CASCADE_NO_ACCOUNT, LEVEL_UNSET, LEVEL_REVOKED, LEVEL_AVAILABLE, ACCOUNT_KINDS,
   resolveClaudeCascade, cascadeToken,
 } from "../src/cascade.mjs";
-import { meaningRowsBranch } from "./plane-meaning.mjs";
+import { meaningRowsBranch } from "../../agent-steps/test/plane-meaning.mjs";
 
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC = readFileSync(WORKER_SRC, "utf8");

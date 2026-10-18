@@ -84,11 +84,11 @@ import { PLANE_OPS } from "../src/ops.mjs";
 /* D-276: the mock's `op=meaningrows` branch, DERIVED from the plane's own arm
    registry and refusal catalog rather than typed here. See `plane-meaning.mjs`
    for why a fixture that says yes to everything is not a fixture. */
-import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
+import { MEANING_ARMS, meaningRowsBranch } from "../../agent-steps/test/plane-meaning.mjs";
 /* D-276: the arm the MEMBER actually sends, imported rather than retyped — a
    suite asserting about its own copy of the value is the failure this item is
    about, one file over. */
-import { MEANING_ARM } from "../src/ops.mjs";
+import { MEANING_ARM } from "../../agent-steps/src/index.mjs";
 
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WRANGLER = fileURLToPath(new URL("../wrangler.jsonc", import.meta.url));

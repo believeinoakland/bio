@@ -88,7 +88,7 @@ const MEMBER = join(HERE, "..");
 /* R65 (N586, T35): this member re-exports no other module's code, so `src/harness.mjs` is gone, and with it every
    arm that patched it. Those arms had armed nothing since T33-57 made the file a seven-line re-export (the code they
    named moved to `agent-harness`, whose own suite holds it). W-B and W-C were those arms; W-A, W-D and W-E remain. */
-const MOCK = join(HERE, "plane-suggest.mjs");
+const MOCK = join(HERE, "..", "..", "agent-steps", "test", "plane-suggest.mjs");
 
 /* INSIDE THIS WORKTREE'S OWN TMPDIR. A shared scratchpad is not isolated between
    sessions, and a concurrent worker overwrote a control harness between ARM and
@@ -114,7 +114,7 @@ function runNamed(file, label) {
 }
 const runWire = () => runNamed("wire-vocabulary.test.mjs", "wire-vocabulary");
 const runHarness = () => runNamed("harness.test.mjs", "harness");
-const runFanout = () => runNamed("fanout.test.mjs", "fanout");
+const runFanout = () => runNamed(join("..", "..", "agent-steps", "test", "fanout.test.mjs"), "fanout");
 
 /* THE COPY'S NAME CARRIES A COUNTER — a name derived from the path alone is
    correct only while one snapshot of a file is live, and the second overwrote

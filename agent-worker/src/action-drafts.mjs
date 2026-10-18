@@ -40,7 +40,7 @@
  * the draft's own fields, which the door checks before the member sees a word (R77). */
 import { draftMayRead } from "../../bio-plane/src/run-rules/index.mjs";
 import { READ_FACTS } from "../../agent-model/src/model.mjs";
-import { toolContent } from "./reads.mjs";
+import { toolContent } from "../../agent-steps/src/index.mjs";
 import { remoteOf } from "./remote.mjs";
 
 /** R76 — the four tasks, in `run-rules`' `DRAFT_KINDS` order. */

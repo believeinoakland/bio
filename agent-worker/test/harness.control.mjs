@@ -210,6 +210,9 @@ const PLANE = join(REPO, "bio-plane");
    named moved to `agent-harness`, whose own suite holds it). The arms below edit this member's own driver, or the
    files named beside each. */
 const DRIVER = join(MEMBER, "src", "index.mjs");
+/* T51 (R119): the step code the driver arms break lives in `agent-steps`, which this member delegates to. */
+const STEPS_DRIVE = join(MEMBER, "..", "agent-steps", "src", "drive.mjs");
+const STEPS_WORK = join(MEMBER, "..", "agent-steps", "src", "work.mjs");
 
 const WORK = mkdtempSync(join(tmpdir(), "fl3-control-"));
 process.on("exit", () => { try { rmSync(WORK, { recursive: true, force: true }); } catch { /* */ } });
@@ -359,7 +362,7 @@ arm({
   what: "the driver skips its tick on the terminal step, so the last thing a run did is never recorded",
   mustFail: "the one-entry-per-step arm and the terminal-entry arms; §14b.6's whole point is that the log's value is the FAILURE path",
   mustNot: "the gate arm, the dedup arms, or the F10 arms",
-  file: DRIVER,
+  file: STEPS_DRIVE,
   /* ANCHOR MOVED 2026-09-18 BY REC-100 (IC-130), with the line it quotes: the
      entry is now built once as `entry` before the tick, so the drive loop can
      count a model-judged PRESENT it records as indeterminate. The arm's subject
@@ -369,10 +372,10 @@ arm({
      stated a look (`entry ? [entry] : []`), and B1's arm it fails by was renamed with it (every step TICKS). */
   /* RE-ANCHORED 2026-09-28 by AGENT-WORKER #2 (T10, R11/N153): the tick also publishes the table's state. */
   find: `    const tick = await call("airuntick", null,
-      { run: runId, log: entry ? [entry] : [], consume,`,
+      { run: runId, log: sentEntries, consume,`,
   replace: `    const tick = decision.step === "close"
       ? { reached: true, status: 200, body: { ok: true, result: {} } }
-      : await call("airuntick", null, { run: runId, log: entry ? [entry] : [], consume,`,
+      : await call("airuntick", null, { run: runId, log: sentEntries, consume,`,
   run: () => {
     const r = runHarness();
     const logArm = anyFailed(r, /every step the trace names ticked|last entry is terminal|and names the bound/);
@@ -389,7 +392,7 @@ arm({
   what: "the member gains an op nobody decided to give it — a SECOND meaning reader beside PL-9's",
   mustFail: "the pinned-op-set arms in BOTH suites (a GAINED call fails an exact equality just as a lost one does)",
   mustNot: "the write arms — the gained op is non-mutating, which is exactly why a write test alone would not catch it",
-  file: DRIVER,
+  file: STEPS_WORK,
   /* THE PATCH TARGET MOVED AT FL-5 AND IS CORRECTED HERE RATHER THAN LEFT TO GO
      STALE — "an arm that did not arm is a finding" is what this file is for, and
      an arm whose find-string no longer exists reports nothing while looking like
@@ -413,9 +416,9 @@ arm({
      (walkfloor's `stripper`, FL-5's H8 before this, and now D-276's) and the
      lesson is the same one: an arm whose find-string no longer exists proves
      nothing while looking exactly like a pass. */
-  find: `        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [address] });`,
+  find: `        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [record] });`,
   replace: `        await call("meaningquery", { q: address });
-        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [address] });`,
+        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [record] });`,
   run: () => {
     const rh = runHarness();
     const rm = runMember();
@@ -632,7 +635,7 @@ arm({
  * Each arm breaks ONE line of `src/index.mjs` and nothing else; the mocks are untouched, and they are what
  * refuses — derived from the plane, so a green under an arm would be a mock saying yes.
  * ========================================================================== */
-const runFanout = () => runNamed("fanout.test.mjs", "fanout");
+const runFanout = () => runNamed(join("..", "..", "agent-steps", "test", "fanout.test.mjs"), "fanout");
 
 arm({
   id: "T1", subject: "FL-11 — THE SEEDING DROPPED: the run never takes its context as its target",
@@ -652,15 +655,15 @@ arm({
     + "and still not compared), FT2b/FT2c/FT2e/FT2f (a project run never names the project, and several or no "
     + "published questions leave it UNDETERMINED) and the fanout suite's FL-12a (the mock alone). FT2, FT2d and FT2g "
     + "FAIL with the declared arms since D-451: a project run citing one question is seeded too",
-  file: DRIVER,
+  file: STEPS_DRIVE,
   find: `    target: seeded.target, targetBasis: seeded.basis,`,
   replace: `    targetBasis: seeded.basis,`,
   run() {
     const rh = runHarness();
     const rf = runFanout();
     const failedAsDeclared = [/^FT1 \(FL-11\)/, /^FT1b /, /^FT1c /, /^FT3 /, /^FT4 \(FL-12/, /FOUR level-empty suggestions/]
-      .every((re) => anyFailed(rh, re)) && anyFailed(rf, /^FL-12b /);
-    const held = !anyFailed(rh, /^FT0|^FT1d |^FT1e |^FT2b |^FT2c |^FT2e |^FT2f /) && !anyFailed(rf, /^FL-12a/);
+      .every((re) => anyFailed(rh, re)) && anyFailed(rf, /^R7: FL-12b /);
+    const held = !anyFailed(rh, /^FT0|^FT1d |^FT1e |^FT2b |^FT2c |^FT2e |^FT2f /) && !anyFailed(rf, /^R7: FL-12a/);
     return {
       observed: `harness ${rh.pass}/${rh.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by `
         + `name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
@@ -677,15 +680,15 @@ arm({
     + "ADDRESS arm) — each BY NAME, the mock answering CAPTURE_REQUEST_NOT_PUBLIC",
   mustNot: "FT0d/FT0e and fanout FL-12a (the mock refuses `url` and queues `address` when driven directly), and every "
     + "FL-11 arm (FT1*, FT2*, FT3) — the suggestion path shares no field with the request",
-  file: DRIVER,
+  file: STEPS_WORK,
   find: `{ run: runId, target: t.target ?? state.target ?? null, address: t.url ?? null }), "capturerequest");`,
   replace: `{ run: runId, target: t.target ?? state.target ?? null, url: t.url ?? null }), "capturerequest");`,
   run() {
     const rh = runHarness();
     const rf = runFanout();
     const failedAsDeclared = [/^FT4 \(FL-12/, /^FT4b /, /^FT4c /].every((re) => anyFailed(rh, re))
-      && anyFailed(rf, /^FL-12b /);
-    const held = !anyFailed(rh, /^FT0|^FT1|^FT2|^FT3 /) && !anyFailed(rf, /^FL-12a/);
+      && anyFailed(rf, /^R7: FL-12b /);
+    const held = !anyFailed(rh, /^FT0|^FT1|^FT2|^FT3 /) && !anyFailed(rf, /^R7: FL-12a/);
     return {
       observed: `harness ${rh.pass}/${rh.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by `
         + `name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
@@ -716,7 +719,7 @@ arm({
   mustNot: "`D-452: the rest of the pass is written` — which is exactly why that arm alone could not tell the fix from "
     + "the liar, and the sent-once/never-landed arm exists — and B4's adjusted landing, B6's four level-empty "
     + "suggestions, FT0*, FT1/FT1b/FT1c",
-  file: DRIVER,
+  file: STEPS_WORK,
   /* RE-ANCHORED T21 (AGENT-WORKER #8): the line occurs twice since mode plan's `adjust` (K660), so this arm had NOT
      ARMED; the anchor now includes the check-mode row's own note. */
   find: `      if (changed) queue.unshift(state.submission);\n      out.note = changed\n        ? "the submission was changed`,
@@ -744,7 +747,7 @@ arm({
   what: "the driver stops reading the tick's `refused[]`, so an entry the plane refused vanishes from the run's output",
   mustFail: "REC100-2, REC100-2b and REC100-2c by name — an entry the REAL plane refused is no longer named in `log_refused` or `refusals`, so what was SENT is neither held nor named",
   mustNot: "REC100-1 and REC100-1b — the entries this run sends are still the ones the plane accepts, and `logged` still counts what landed",
-  file: DRIVER,
+  file: STEPS_DRIVE,
   find: `      const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];`,
   replace: `      const refusedEntries = [];`,
   run() {
