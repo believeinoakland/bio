@@ -16,3 +16,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio people tranche/T51 job/T51/people`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+(1) Done: people's uses gains setup-words (build/modules.json on the tranche, K3865). (2) connection-grammar's contract stays a string (its layer is closed): at the two sites it judges, the hub answer's why and an item's undetermined.why, why is the sentence word(key, vars) reads, and why_key: {key, vars} stands beside it for screens; everywhere else why is {key, vars}. people R40 is amended to say so (K3865). Merge the tranche branch into yours, then architecture should read 0 and R40's test changes as its new text says.
