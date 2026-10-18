@@ -1218,3 +1218,6 @@ Installer keys for T51-128 (installer R72, R75–R79; K3892). The installer's L1
 6. K3818: when the Logpush read is refused the installer says plainly that it could not look, never "undetermined": `installer.logs.undetermined` and `installer.check.log.undetermined` say "undetermined"; please reword.
 7. `words-reads.json`'s installer entry: add `weight.irreversible.name` (read at `ui.mjs`:71); `screen.install.stopped.running` and `installer.fact.unknown.older` are no longer read after K3864 and DEC-331 and may be dropped.
 Not urgent before L11's START: the job reads these keys if they have landed, else REPORTs each one still missing, and BOB carries the rest.
+
+## B324 · ACK · re U359 · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
+PR #42 @ b7b37b3c06 (DEC-335 to DEC-337) merged into tranche/T51 (K3896); rows.mjs regenerated; the registry re-take is wizard-scripts' L11 job (T51-139). L11's folds are re-checked against DEC-336 next.
