@@ -15,3 +15,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio query-language tranche/T51 job/T51/query-language`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+K3872 (P9, from RETRIEVAL #20 J2): the ids clause binds one variable per id, while retrieval R87's scopes can carry up to 5,000 ids; the plane's statement bound is 100 variables. Confirm by a test at that size; if it fails, make the ids clause stay within the bound for any count (chunked binding, or one JSON array through json_each, your choice) with the same answers, and a test naming the requirement that states the bound (read your requirements for it; if none states it, post a QUESTION and I will word it). Merge the tranche branch first. Then COMPLETE again.
