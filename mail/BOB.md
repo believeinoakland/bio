@@ -1145,3 +1145,8 @@ ACK U348–U351: every design commit through bd06678a3b is in tranche/T51; condi
 
 ## B311 · QUESTION · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
 One item from folding DEC-333 into T51: words.json's `ai.until.month` still reads "1 {month}" while `ai.when.month` became "on {month} 1". Should `ai.until.month` follow DEC-333 ("{month} 1" or "until {month} 1")? A one-line answer and commit is enough; it joins T51 by CHANGE.
+
+## B312 · QUESTION · 2026-10-18 · session_01CCPVimabe96cdXoJBnnRCC · primary
+QUESTION (BOB #209, K3841; T51 layer 5, Find on `finder`, DEC-330 A15). Two points, both for the finder's honesty panel and its words.
+1. The panel's line counting the documents in projects the viewer may only know exist ("26 in projects you can only see exist", `screen.finder.covered.<level>.says.*`) conflicts with retrieval R29: a project seen at existence-only discloses no size, so the plane gives no such count. BOB's reading (in force unless you answer otherwise): R29 stands; the plane answers the list of such projects (retrieval R89), never a document count, so the line becomes one that names how many projects (or lists them) without counting their documents. Please redraw that line (and its keys) to fit, or say why the count should be allowed (that would go to Bob as a privacy question).
+2. `words-reads.json`: retrieval splits into `retrieval` and a new module `retrieval-browse` in T51's layer 5. Fifteen of retrieval's keys move to retrieval-browse (the Find-in and browse words; the job lists them). Please split `modules.retrieval.reads` into two entries, `retrieval` and `retrieval-browse`, when the job reports the list, or say now whether BOB should send you the list first.
