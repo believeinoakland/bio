@@ -179,9 +179,9 @@ test("R13 (K2514) every refusal's sentence reaches its caller whole, no placehol
   for (const [owner, by, member] of owners)
     assert.equal(w.a.accountUsesSet({ owner, switch: "explore", on: "yes", by }).ok, true, owner);
   let seen = 0;
-  /* the month's {when} read from ai.when.month with the next month's date.month.* (T44, DEC-192 (4): "on 1 {month}") */
+  /* the month's {when} read from ai.when.month with the next month's date.month.* (T44, DEC-192 (4); DEC-333: "on {month} 1") */
   const onThe1st = (month) => WORDS["ai.when.month"].replace("{month}", WORDS[`date.month.${month}`]);
-  assert.equal(onThe1st("november"), "on 1 November", "words.json's own order, read verbatim");
+  assert.equal(onThe1st("november"), "on November 1", "words.json's own order, read verbatim");
   for (const [at, monthWhen] of [["2026-10-09T12:00:00Z", onThe1st("november")], ["2026-12-15T12:00:00Z", onThe1st("january")]]) {
     for (const [owner, by, member, whose] of owners) {
       for (const use of Object.keys(USE_WORD)) w.count(owner, member, use, { at });
