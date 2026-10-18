@@ -30,3 +30,7 @@
 **Stale text noted, not changed.** The requirements' Size note says "about 1,050 lines"; the module's own code is 2,653 lines (`index.mjs` 1,943, `checks.mjs` 454, `schema.mjs` 256). The requirements file is not this job's to edit, so I report it to Bob.
 
 **Size (session_01Qs8rZ8r9tU9hSh4VTyESSo): test runs 3, module lines 2653.**
+
+## J1 · COMPLETE
+
+T51-59 done (red #27, N1243). plane.test.mjs R48 ghost arm: the 'for' naming no question is refused BAD_FOR (control-plane R105, C-139.21) before any fetch; the arm now asserts that refusal and no fetch. No source fault. Plane test 7/7; all module tests 127/127; format, architecture, coverage (56/56) and ownership pass. checks/run.mjs shows no capture-requests line (24 coverage gaps are other modules). For Bob to file in build/rulings.md: the plane cannot reach the withheld branch through acquire (R105 needs the question visible at acquire time); unit coverage in t50 stays. Pushed to job/T51/capture-requests at d552c1f40d. No PR opened, per JOB step 1. Full record: build/jobs/T51/capture-requests.md.
