@@ -42,7 +42,7 @@ import { recordOf, SETTING_UNREADABLE } from "../record-core/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
-         LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
+         lensClosingSentencesOf, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
@@ -1588,7 +1588,7 @@ export class PublicRead {
                        statements: l.statements.map((x) => ({ bundle: x.bundle, id: x.id, kind: x.kind,
                          subject: x.subject, text: x.text, justification: x.justification,
                          citations: x.citations, withheld: x.withheld })),
-                       closing: print ? LENS_CLOSING_SENTENCES.filter((c) => print.includes(c)) : [],
+                       closing: print ? lensClosingSentencesOf(doc.fm).filter((c) => print.includes(c)) : [],
                        print } };
     }
     if (!doc) return { what_changed, successor, lens: null, lens_fingerprint: null,
