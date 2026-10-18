@@ -518,6 +518,14 @@
      ]
     },
     {
+     "op": "signeradd",
+     "label": "Register a key for this member",
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
+    },
+    {
      "op": "membercaps",
      "label": "Change what a member may do",
      "status": "function",
@@ -3896,6 +3904,11 @@
      "modules": [
       "review"
      ]
+    },
+    {
+     "op": "owed:reviewexport DEC-330",
+     "label": "Save as a file",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4063,6 +4076,21 @@
       "public-read",
       "publication"
      ]
+    },
+    {
+     "op": "owed:pubfloorset DEC-330",
+     "label": "Show only findings this strong",
+     "status": "owed"
+    },
+    {
+     "op": "owed:pubfloorclear DEC-330",
+     "label": "Back to the whole case",
+     "status": "owed"
+    },
+    {
+     "op": "owed:pubprint DEC-330",
+     "label": "Print the case",
+     "status": "owed"
     }
    ],
    "journeys": [

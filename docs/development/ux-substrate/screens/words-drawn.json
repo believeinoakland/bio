@@ -13403,6 +13403,738 @@
    "en": "One already cited is left as it was, and you see what happened to each.",
    "protected": false,
    "note": "DEC-330: B306 A17: finder explanation"
+  },
+  {
+   "key": "screen.published.read.it.at.a.minimum",
+   "en": "Read it at a minimum strength",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.choose.the.weakest.strength.you",
+   "en": "Choose the weakest strength you will accept on each side.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.the.page.then.shows.only",
+   "en": "The page then shows only the findings at or above both.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.how.well.the.documents.are",
+   "en": "How well the documents are held",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.how.firmly.they.are.linked",
+   "en": "How firmly they are linked",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.show.only.findings.this.strong",
+   "en": "Show only findings this strong",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.a.filtered.view.you.constructed",
+   "en": "A filtered view you constructed.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.you.asked.for.findings.held",
+   "en": "You asked for findings held at B or better and linked at B or better.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.this.is.part.of.the",
+   "en": "This is part of the case, not the case: 1 of 2 findings is shown, and the other falls below your minimum.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.the.team.s.signature.covers",
+   "en": "The team's signature covers the whole case, not this view.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.back.to.the.whole.case",
+   "en": "Back to the whole case",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.when.no.finding.meets.the",
+   "en": "When no finding meets the minimum",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.no.finding.in.this.case",
+   "en": "No finding in this case is held and linked as strongly as you asked, so none is shown.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.lower.the.minimum.or.go",
+   "en": "Lower the minimum, or go back to the whole case.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.what.would.overturn.it",
+   "en": "What would overturn it",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.what.it.rests.on",
+   "en": "What it rests on",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.council.minutes.12.january.2024",
+   "en": "Council minutes, 12 January 2024, item 7: the council approved amendment 1 and no later change.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.held.for.you.to.read",
+   "en": "Held for you to read and check: capture B.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.the.march.2024.rent.schedule",
+   "en": "The March 2024 rent schedule, signed by the City Administrator.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.a.letter.from.the.city",
+   "en": "A letter from the City Administrator saying the council delegated rent changes.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.held.for.you.to.read_",
+   "en": "Held for you to read and check: capture C.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.finding.4.of.another.team",
+   "en": "Finding 4 of another team's case, on the same lease.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.named.only.its.documents.are",
+   "en": "Named only: its documents are not held here.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.what.rests.on.what",
+   "en": "What rests on what",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.read.each.line.from.the",
+   "en": "Read each line from the document up to the finding.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.hold.leg.1.which.supports",
+   "en": "hold Leg 1, which supports Finding 1",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.the.march.2024.rent.schedule_",
+   "en": "The March 2024 rent schedule",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.holds.leg.2.which.supports",
+   "en": "holds Leg 2, which supports Finding 1",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.the.city.administrator.s.letter",
+   "en": "The City Administrator's letter",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.holds.leg.3.which.cuts",
+   "en": "holds Leg 3, which cuts against Finding 1",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.finding.4.of.another.team_",
+   "en": "Finding 4 of another team's case",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.is.leg.4.which.supports",
+   "en": "is Leg 4, which supports Finding 1; it rests on documents this edition does not hold",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.whether.the.question.was.divided",
+   "en": "Whether the question was divided",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.finding.1.answers.one.part",
+   "en": "Finding 1 answers one part of a question the team divided in two.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.the.question.it.came.from",
+   "en": "The question it came from, \"Were the 2024 rent adjustments lawful?\", was set aside and cannot be published.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.the.other.part.is.named",
+   "en": "The other part is named below and nothing of it is shown.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.a.question.about.whether.the",
+   "en": "a question about whether the shortfall was reported; not in this edition",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.this.is.what.comes.out",
+   "en": "This is what comes out of the printer, not the page on screen: the whole case, every finding open with its sources, and the signature line at the foot.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.rests.on.the.council.minutes",
+   "en": "Rests on: the council minutes of 12 January 2024, item 7; the March 2024 rent schedule.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.cut.against.by.a.letter",
+   "en": "Cut against by: a letter from the City Administrator.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.signed.for.lakeshore.tenants.by",
+   "en": "Signed for Lakeshore Tenants by Rosa M. on 18 September 2026, with the key whose fingerprint is ab12 34cd.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.check.the.signature.at.the",
+   "en": "Check the signature at the address of this edition.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.printed.in.full.no.minimum",
+   "en": "Printed in full: no minimum strength was set.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.when.a.minimum.strength.was",
+   "en": "When a minimum strength was set",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.a.print.made.from.a",
+   "en": "A print made from a filtered view says so at its foot, and how many findings it leaves out, so no one holds it as the whole case.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.a.way.to.read.the.explain",
+   "en": "A way to read the case for yourself.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.it.changes.only.what.you.explain",
+   "en": "It changes only what you see on this page; the case stays as the team published it.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.each.leg.is.one.thing.explain",
+   "en": "Each leg is one thing the finding leans on, and says whether it supports the finding or cuts against it.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.a.leg.the.team.holds.explain",
+   "en": "A leg the team holds can be read and checked here; one it only cites is named, and nothing of it is handed over.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.the.chain.from.the.documents.explain",
+   "en": "The chain from the documents to this finding, so a reader can see what would have to be wrong for it to fall.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.published.a.reader.who.sees.one.explain",
+   "en": "A reader who sees one half of a divided question is entitled to know the other half exists.",
+   "protected": false,
+   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.save.this.copy.as.a",
+   "en": "Save this copy as a file",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.a.stamped.file.of.edition",
+   "en": "A stamped file of Edition 2 as it stands, for someone who can't open a link.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.a.file.can.t.be",
+   "en": "A file can't be recalled.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.once.it.leaves.your.device",
+   "en": "Once it leaves your device, by email, sharing, uploading or printing, nothing your team does afterwards reaches it.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.stopping.the.sharing.of.a",
+   "en": "Stopping the sharing of a link ends that reader's access here, and does not take back a file.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.if.what.you.need.is",
+   "en": "If what you need is confidentiality, a file gives it up.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.what.the.file.carries",
+   "en": "What the file carries",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.a.code.that.names.exactly",
+   "en": "a code that names exactly what the file holds, on every page",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.the.date.this.copy.last",
+   "en": "The date this copy last changed",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.the.minimum.strengths.it.was",
+   "en": "The minimum strengths it was read at",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.the.file.does.not.say",
+   "en": "The file does not say who this copy was shared with or hold the comments made on it.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.its.fingerprint.covers.them.so",
+   "en": "Its fingerprint covers them, so it can be checked against your team's record, not against the file alone.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.before.you.save.it",
+   "en": "Before you save it",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.i.understand.that.this.file",
+   "en": "I understand that this file can't be recalled",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.when.the.copy.can.t",
+   "en": "When the copy can't be stamped",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.this.copy.could.not.be",
+   "en": "This copy could not be stamped with its fingerprint, date, author and minimum strengths, and a copy may not leave without them.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.no.file.was.made",
+   "en": "No file was made.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.when.this.browser.doesn.t",
+   "en": "When this browser doesn't accept the file",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.this.browser.did.not.accept",
+   "en": "This browser did not accept the file, so none was made.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.review_copy.nothing.left.this.page",
+   "en": "Nothing left this page.",
+   "protected": false,
+   "note": "DEC-330: B306 A81: drawn sentence"
+  },
+  {
+   "key": "screen.members.a.signing.key.lets.a",
+   "en": "A signing key lets a member sign for the team, for instance when a case is published.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.civicsmith.holds.only.the.public",
+   "en": "Civicsmith holds only the public half.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.use.this.when.a.member",
+   "en": "Use this when a member can't register a key in their own browser.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.registered.by.rosa.3",
+   "en": "key registered by Rosa, 3 October",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.registered.by.teo.2",
+   "en": "key registered by Teo, 2 October",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.no.signing.key.yet",
+   "en": "no signing key yet",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.the.one.line.the.member",
+   "en": "The one line the member gives you, which begins with the kind of key.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.it.is.the.public.half",
+   "en": "It is the public half; never ask for the private half.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.register.a.key.for.this",
+   "en": "Register a key for this member",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.the.record.shows.that.you",
+   "en": "The record shows that you registered it for them, and when.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.they.see.it.under.your",
+   "en": "They see it under Your account and can revoke it there.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.what.removing.an.administrator.takes",
+   "en": "What removing an administrator takes",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.with.1.administrator.no.administrator",
+   "en": "With 1 administrator, no administrator can be removed by vote.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.a.majority.that.leaves.out",
+   "en": "A majority that leaves out the one facing removal can't be reached at this size.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.that.is.the.rule.holding",
+   "en": "That is the rule holding at the smallest team, not a fault.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.how.it.changes.with.the",
+   "en": "How it changes with the number of administrators",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.no.majority.that.leaves.out",
+   "en": "no majority that leaves out the one facing removal can be reached",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.removal.takes.a.majority.of",
+   "en": "Removal takes a majority of all administrators.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.the.one.facing.removal.is",
+   "en": "The one facing removal is counted but doesn't vote, and a tie removes no one.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.a.lone.administrator.can.never",
+   "en": "A lone administrator can never remove anyone, at any size; removal only gets easier as the team grows.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.removing.teo.as.an.administrator",
+   "en": "Removing Teo as an administrator",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.four.administrators.rosa.dev.ana",
+   "en": "Four administrators: Rosa, Dev, Ana and Teo.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.this.takes.3.of.4",
+   "en": "This takes 3 of 4 administrators' votes.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.teo.is.counted.but.doesn",
+   "en": "Teo is counted but doesn't vote, so the 3 who may vote must all agree.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.the.removal.waits.for.ana",
+   "en": "the removal waits for Ana",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.agree.remove.teo.as.administrator",
+   "en": "Agree: remove Teo as administrator",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.counted.in.the.4.doesn",
+   "en": "counted in the 4, doesn't vote",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.2.of.3.have.agreed",
+   "en": "2 of 3 have agreed so far.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.the.team.s.own.rule.explain",
+   "en": "The team's own rule for removing an administrator, worked out for the number you have, so you can check it yourself.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.nothing.here.changes.anything.explain",
+   "en": "Nothing here changes anything.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.how.many.must.agree.how.explain",
+   "en": "How many must agree, how many have, and who.",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.a.count.you.can.check.explain",
+   "en": "A count you can check against the roster, never just \"pending\".",
+   "protected": false,
+   "note": "DEC-330: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.project.dev.is.standing.down.as",
+   "en": "Dev is standing down as an owner.",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.this.takes.2.of.2",
+   "en": "This takes 2 of 2 owners' votes, and Dev's own is one of them.",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.with.two.owners.standing.down",
+   "en": "With two owners, standing down is a resignation the other owner agrees to: no owner can be removed against their will.",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.by.standing.down.17.october",
+   "en": "by standing down, 17 October",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.the.change.waits.for.ana",
+   "en": "the change waits for Ana",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.agree.dev.stands.down.as",
+   "en": "Agree: Dev stands down as owner",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.1.of.2.have.agreed",
+   "en": "1 of 2 have agreed so far.",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.how.it.changes.with.the",
+   "en": "How it changes with the number of owners",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.the.last.owner.stays",
+   "en": "the last owner stays",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.2.of.2.the.departing",
+   "en": "2 of 2, the departing owner's vote included",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.both.agree.a.resignation.the",
+   "en": "both agree: a resignation the other owner assents to",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.owners.follow.the.same.rule",
+   "en": "Owners follow the same rule as administrators, with one difference: at two owners the departing owner is one of the two votes.",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.a.project.can.always.be",
+   "en": "A project can always be left with one owner, so it is never stuck with two.",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.before.you.stand.down",
+   "en": "Before you stand down",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.check.that.another.owner.remains",
+   "en": "Check that another owner remains, and that the project doesn't depend on you alone: a project with no owner is hidden until an administrator takes it over.",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.how.many.owners.must.agree.explain",
+   "en": "How many owners must agree, how many have, and who.",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.a.count.you.can.check.explain",
+   "en": "A count you can check against the members below, never just \"pending\".",
+   "protected": false,
+   "note": "DEC-330: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.account.registered.for.you.by.rosa",
+   "en": "registered for you by Rosa, an administrator, on 3 October.",
+   "protected": false,
+   "note": "DEC-330: B306 A74: drawn sentence"
+  },
+  {
+   "key": "screen.account.only.you.can.sign.with",
+   "en": "Only you can sign with it; revoke it here if it isn't yours.",
+   "protected": false,
+   "note": "DEC-330: B306 A74: drawn sentence"
   }
  ],
  "rewrite": {
