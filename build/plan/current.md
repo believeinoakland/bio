@@ -2,6 +2,8 @@
 
 **Status** · OPEN · BOB #209 · session_01CCPVimabe96cdXoJBnnRCC · depth 1
 
+**Jobs** · record-grammar: RECORD-GRAMMAR #18 session_01MURMfVW6xakigf2Z7K2GRE
+
 **Aim (K3803).** T51 is T50's finish: K3666's focus less the assistant, that is a release walked unassisted through investigation journeys to completion, with every screen rendering properly and every control working, at 1280 and 390 px; and, added by Bob: (2) the container images also on Docker Hub, so every install pulls `file-scanner` and `agent-runner` (N1242, K3805); (3) "team" for "group" in every text a person reads, in all 115 modules of the census (the collection sense stays), done by K3811's one pass at the opening, not by jobs; (4) all 43 failing tests of T50's close fixed (journey-check's assistant tests re-scoped to its R18, "reported as not walked, never failed"; test-support R2 gets a job); (6) the old interface deleted and every feature it had reimplemented on the new design (K3807's carried list), with no excuse left. No walk before the release is cut and deployed; then BOB walks the running release. The bare words-by-key sweeps (the ~50 jobs of rule 6 of the earlier draft) are not here: T52 carries them without fail (K3804). No assistant work (K3717), no API-key work (K3347), nothing disabled.
 
 **Sources** · the files above; `reds-T50-map.md` for the 43 reds (its rows, here by entry); `rulings.md` K3666, K3717, K3797, K3803 to K3815; `DECISIONS.md` DEC-329 to DEC-333 and the design channel's U346 to U351; `PROCESS-DESIGN.md` (P6, P10, P17, P19).
