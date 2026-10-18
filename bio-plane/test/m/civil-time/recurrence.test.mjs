@@ -103,7 +103,7 @@ test("R21 fiscalPeriod: the fiscal year holding a date under the body's fiscal_y
   /* the first profile holds no fiscal_year: undetermined, never a guessed year */
   const none1 = fiscalPeriod({ date: day("2026-10-05", LA), body: "Oakland City Council", view: v });
   assert.equal(none1.undetermined, true);
-  assert.match(none1.why, /fiscal year for Oakland City Council is not held/);
+  assert.deepEqual(none1.why, { key: "civil-time.missing.fiscal_year_absent", vars: { body: "Oakland City Council" } });
   /* the test profile: every body from April, named by its start; the Harbour District from October, named by its end */
   const SB = "Port Ellery Selectboard", HD = "Port Ellery Harbour District";
   assert.deepEqual(fiscalPeriod({ date: day("2026-03-31", HFX), body: SB, view: t }), { label: "FY2025-26", start: "2025-04-01", end: "2026-03-31" });
@@ -122,7 +122,7 @@ test("R21 fiscalPeriod: the fiscal year holding a date under the body's fiscal_y
   assert.equal(fiscalPeriod({ date: { value: "2026-08", precision: "edtf", zone: HFX }, body: SB, view: t }).label, "FY2026-27");
   /* withheld as a conflict */
   const c = testView(); delete c.fiscal_year; c.conflicts = [{ at: "fiscal_year", values: [], says: "disagree" }];
-  assert.match(fiscalPeriod({ date: day("2026-10-05", HFX), body: SB, view: c }).why, /withheld/);
+  assert.deepEqual(fiscalPeriod({ date: day("2026-10-05", HFX), body: SB, view: c }).why, { key: "civil-time.missing.fiscal_year_withheld", vars: { body: SB, at: "fiscal_year" } });
   assert.throws(() => fiscalPeriod({ date: day("2026-10-05", LA), view: v }), TypeError);
 });
 
