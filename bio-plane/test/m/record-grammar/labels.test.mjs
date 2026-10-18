@@ -83,7 +83,7 @@ function newSubject(subject, after, what, until) {
 
 test("R43 PROPOSAL_STATES.edition_statement: after template, frozen, a new edition's statement of what changed and why, not the group's until a member adopts or rewrites it; machine work a draft", () => {
   newSubject("edition_statement", "template", /statement of what changed in this edition, and why/,
-    /not the group's statement until a member adopts or rewrites it/);
+    /not the team's statement until a member adopts or rewrites it/);
 });
 
 test("R44 PROPOSAL_STATES.escalation_reason: after edition_statement, frozen, a reason for opening an escalation assembled from the determination's record, not a member's until a member sends it; machine work a draft", () => {
@@ -132,7 +132,7 @@ test("R49 PROPOSAL_STATES.law_relation: after wizard, frozen, a law relation, co
 
 /* The twelve tables as they stood before R50, every sentence, as one digest over their canonical JSON (taken at T37's
    START, before the change). */
-const TWELVE_BEFORE_R50 = "2ecddc263952880900d36d3aec02ae0508f51a8f573d95c2f6f98a8e992bc705";
+const TWELVE_BEFORE_R50 = "091d110cdba03a5023d00bda44184a87699ba5cc8eb521b2e79b48aa8c4dda7c";
 
 test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two), frozen, a draft translation of an interface word shown as \"Draft\", not the group's wording until a member granted that language adopts it; machine work can draft one and never adopt or confirm one; the other tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
@@ -144,7 +144,7 @@ test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two)
   for (const s of STATES3) {
     assert.match(t[s], /translation of an interface word/, s);
     assert.match(t[s], /It is a draft, shown to members as "Draft",/, s);
-    assert.match(t[s], /not the group's wording until a member granted that language adopts it/, s);
+    assert.match(t[s], /not the team's wording until a member granted that language adopts it/, s);
   }
   assert.match(t.machine_proposed, /^a machine credential drafted /);
   assert.match(t.machine_proposed,
@@ -172,7 +172,7 @@ test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two)
 
 /* The thirteen tables as they stood before R54, every sentence, as one digest over their canonical JSON (taken at T42's
    START from the committed module, before the change). */
-const THIRTEEN_BEFORE_R54 = "a5e77c2a4787012223d187d07dba679b43c2072a84c803a94c85c056a85450ad";
+const THIRTEEN_BEFORE_R54 = "bd280de102e5754ec0ce6ef4e4bd5d366ce18e367e3079392e9bc72fc635009e";
 
 test("R54 PROPOSAL_STATES gains case_account and account_check after translation, each frozen with the three states: a draft of a case's account from its cited evidence, never the case's account, which a member writes in her own words; flagged sentences of a member's account the evidence they cite does not support, a draft and never a finding of the group; machine work labelled as machine work; the other thirteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
@@ -212,7 +212,7 @@ test("R54 PROPOSAL_STATES gains case_account and account_check after translation
      never a finding of the group, in every state. */
   for (const s of STATES3) {
     assert.match(ac[s], /flagged these sentences of a member's account as not supported by the evidence they cite/, s);
-    assert.match(ac[s], /never a finding of the group/, s);
+    assert.match(ac[s], /never a finding of the team/, s);
     assert.match(ac[s], /draft/, s);
   }
   /* The two subjects say different things: no sentence of one is the other's, and each names only its own object. */
@@ -357,7 +357,7 @@ test("R29 C-33.41's where names entities' and progressions' sites, not store.mjs
 
 /* The fifteen tables as they stood before R60, every sentence, as one digest over their canonical JSON (taken at T46's
    START from the committed module, before the change). */
-const FIFTEEN_BEFORE_R60 = "db441a5ef98dcae73fc67d5ff3a51c1d763301629b50d7aadc533d0102ba37dc";
+const FIFTEEN_BEFORE_R60 = "6206024c35bda51065196a3b0e7eee3f16472a81e9b638f05e40f40fc7b49197";
 
 test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the three states: a proposed reading of how a reply bears on each claim of an action, never the group's reading until a member records it; machine work labelled as machine work, which can propose a layout and never record one; the other fifteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
@@ -368,8 +368,8 @@ test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the thr
   assert.deepEqual(Object.keys(t), STATES3);
   for (const s of STATES3) {
     assert.match(t[s], /layout of how a reply bears on each claim of an action/, s);
-    assert.match(t[s], /It is a proposed reading and never the group's reading until a member records it/, s);
-    assert.doesNotMatch(t[s], /\bis the group's reading\b/, s);
+    assert.match(t[s], /It is a proposed reading and never the team's reading until a member records it/, s);
+    assert.doesNotMatch(t[s], /\bis the team's reading\b/, s);
   }
   assert.match(t.machine_proposed, /^a machine credential proposed /);
   assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it can propose a layout and it can never record one\./);
@@ -403,7 +403,7 @@ test("R60 R61 negative control: near spellings of bearing throw a RangeError nam
 
 /* The sixteen tables as they stood before R61, every sentence, as one digest over their canonical JSON (taken at T47's
    START from the committed module, before the change). */
-const SIXTEEN_BEFORE_R61 = "a4a9f5d9df1f8957d2d285de73af37fb589d1cc9d3c10bbe2dd0d4a9cca0a2ae";
+const SIXTEEN_BEFORE_R61 = "9b72a96870248a85f1fcc945fad900b4153c0cb98bf2bdec71b01e20d35370f8";
 
 test("R61 PROPOSAL_STATES gains status_report after bearing, last, frozen with the three states: a draft of a status report on a plan, kept with the plan and never published, the report kept the member's; machine work the assistant's draft, labelled as machine work, which can draft a report and never keep or publish one; the other sixteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);

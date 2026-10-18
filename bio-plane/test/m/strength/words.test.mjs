@@ -15,11 +15,11 @@ test("DEC-149 (R33, R26): another group's finding with no accepted work held, or
   const w = world();
   w.aw.mode = "absent";
   const absent = whyOf(w.s.candidatePair({ legs: [{ target: REF, target_edition: 2 }] }).pair.capture, REF);
-  assert.equal(absent, "this leg rests on another group's finding, and your group's Civicsmith holds no accepted work to read it "
+  assert.equal(absent, "this leg rests on another team's finding, and your team's Civicsmith holds no accepted work to read it "
     + "from, so what it rests on is unknown here");
   const n = world();
   const missing = whyOf(n.s.candidatePair({ legs: [{ target: REF, target_edition: 3 }] }).pair.capture, REF);
-  assert.equal(missing, "this leg rests on another group's finding that your group's Civicsmith does not hold at edition 3, "
+  assert.equal(missing, "this leg rests on another team's finding that your team's Civicsmith does not hold at edition 3, "
     + "so what it rests on is unknown here");
   for (const s of [absent, missing]) assert.doesNotMatch(s, OLD);
 });
@@ -28,8 +28,8 @@ test("DEC-149 (R36, R38): a calculation or an obligation not held says \"your gr
   const w = world();
   const calc = "CALC-2026-aaaaaaaaaaaaaaaa", occ = "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111";
   const p = w.s.candidatePair({ legs: [{ target: calc }, { target: occ }] }).pair;
-  assert.equal(whyOf(p.capture, calc), `${calc} is not a calculation your group's Civicsmith holds, so what this leg rests on is unknown`);
-  assert.equal(whyOf(p.capture, occ), `${occ}: DUT-2026-0009 is not an obligation your group's Civicsmith holds, so what this leg `
+  assert.equal(whyOf(p.capture, calc), `${calc} is not a calculation your team's Civicsmith holds, so what this leg rests on is unknown`);
+  assert.equal(whyOf(p.capture, occ), `${occ}: DUT-2026-0009 is not an obligation your team's Civicsmith holds, so what this leg `
     + "rests on is unknown");
   for (const m of p.capture.undetermined_at) assert.doesNotMatch(m.why, OLD);
 });

@@ -183,12 +183,12 @@ const DOCKET_ABSENT = "no module has registered the docket, so no withdrawn or c
 const DOCKET_UNREAD = "the docket's withdrawals or contesting entries could not all be read, so a withdrawal, contested or "
   + "wp_retraction cause may be missing; that is not the same as none";
 /** R1, R21, R31: what an answer says when no module registered accepted work, or a read of it could not be made. */
-const ACCEPTED_WORK_ABSENT_WHY = "no module holding another group's work is registered, so no acceptance withdrawal or "
+const ACCEPTED_WORK_ABSENT_WHY = "no module holding another team's work is registered, so no acceptance withdrawal or "
   + "publisher move was read and no acceptance or cited_case_moved cause could be derived; that is not the same as none";
 const ACCEPTANCE_UNREAD = "the acceptances withdrawn could not all be read, so an acceptance cause may be missing; that is "
   + "not the same as none";
 /** R33, R21: what an answer says when no module keeps the publisher moves, or a read of them could not be made. */
-const MOVES_ABSENT_WHY = "the module holding another group's work keeps no publisher moves here, so no new edition or withdrawal "
+const MOVES_ABSENT_WHY = "the module holding another team's work keeps no publisher moves here, so no new edition or withdrawal "
   + "of a cited case was read and no cited_case_moved cause could be derived; that is not the same as none";
 const MOVES_UNREAD = "the cited cases' publisher moves could not all be read, so a cited_case_moved cause may be missing; "
   + "that is not the same as none";
@@ -289,7 +289,7 @@ function movedDetail(ref, n, m, group, kase) {
   const what = m.kind === "edition" ? `published edition ${m.edition}`
     : m.edition === "all" ? "withdrew every edition" : `withdrew edition ${m.edition}`;
   const words = m.kind === "edition" ? m.what_changed : m.reason;
-  return `this leg rests on another group's finding ${ref} at edition ${n}${kase ? `, of case ${kase}` : ""}`
+  return `this leg rests on another team's finding ${ref} at edition ${n}${kase ? `, of case ${kase}` : ""}`
     + `${group ? ` by ${group}` : ""}, and its publisher ${what} (docket entry ${m.seq ?? "unnumbered"}`
     + `${m.date ? `, dated ${m.date}` : ""}${words ? `: "${words}"` : ""}).`
     + `${m.key_listed === false ? " The entry's signing key is not among the keys the imported case file lists." : ""}`
@@ -461,7 +461,7 @@ export class Reevaluation {
     /* THE LIFECYCLE ARMS (D-5), off the target's own state pair; the reversible acts RAISE rather than refuse. */
     if (row.current_state === "deferred")
       causes.push({ source: "deferred", since: row.last_updated,
-                    detail: `${targetId} has been set down. It is reversible and the group may pick it back `
+                    detail: `${targetId} has been set down. It is reversible and the team may pick it back `
                           + `up, and until it does, a claim resting on it rests on a question nobody is `
                           + `working.` });
     else if (row.current_state === "dismissed")
@@ -857,10 +857,10 @@ export class Reevaluation {
       byPair.get(pk).push({
         source: "acceptance", since: w.at, ord: l.ord, role: x.role ?? null, state: x.state ?? null, ref: l.target_id,
         edition, withdrawal: w.withdrawal, import: w.import, group: s.group, case: s.case,
-        detail: `this leg rests on another group's finding ${l.target_id} at edition ${edition}`
-          + `${s.case ? `, of case ${s.case}` : ""}${s.group ? ` by ${s.group}` : ""}, and this group's acceptance of that `
+        detail: `this leg rests on another team's finding ${l.target_id} at edition ${edition}`
+          + `${s.case ? `, of case ${s.case}` : ""}${s.group ? ` by ${s.group}` : ""}, and this team's acceptance of that `
           + `edition was withdrawn (${w.withdrawal}${w.at ? `, at ${w.at}` : ""}). The finding keeps answering as that `
-          + `group published it and the leg is unchanged; whether this finding still stands is the members' to decide.` });
+          + `team published it and the leg is unchanged; whether this finding still stands is the members' to decide.` });
     }
     for (const list of byPair.values())
       list.sort((a, b) => (a.ord - b.ord) || (a.withdrawal < b.withdrawal ? -1 : a.withdrawal > b.withdrawal ? 1 : 0));
@@ -1198,7 +1198,7 @@ export class Reevaluation {
         source: "source", since: m.at, ord: l.ord, source_id: m.source_id, entry: m.entry_id ?? null,
         rung_before: m.rung_before ?? null, rung_after: m.rung_after, capture_sha: cap,
         detail: `the source of capture ${cap.slice(0, 12)}, which this leg rests on, moved from `
-          + `${m.rung_before ?? "an unstated rung"} to ${m.rung_after} at ${m.at}: what the group knows of who gave it `
+          + `${m.rung_before ?? "an unstated rung"} to ${m.rung_after} at ${m.at}: what the team knows of who gave it `
           + `has changed. The leg's grade is unchanged; whether this finding still stands is the members' to decide.`,
       });
     }
@@ -2101,7 +2101,7 @@ export class Reevaluation {
                     ...(rec ? {} : { withdrawal_read: false }), ...aw.flags() };
       this.#tellAfterCommit({ kind: "acceptance", subject: id, source: "acceptance", since,
         import: rec ? rec.import : null, edition: rec ? rec.edition : null, refs: rec ? rec.refs : [],
-        detail: `this group's acceptance of another group's work was withdrawn (${id}`
+        detail: `this team's acceptance of another team's work was withdrawn (${id}`
           + `${rec ? `, edition ${rec.edition}` : ""}); ${dependents.length ? "what rests on it is named" : "nothing here rests on it"}`,
         dependents }, out);
       return out;
@@ -2158,7 +2158,7 @@ export class Reevaluation {
     return { ok: true, entries: listed, count: listed.length, limit: cap, truncated,
              cursor: truncated ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].move}` : null,
              wrote: false, ...mv.flags(), ...refs.flags(),
-             says: "each finding listed rests on another group's finding at an edition its publisher has since replaced "
+             says: "each finding listed rests on another team's finding at an edition its publisher has since replaced "
                  + "or withdrawn; nothing was moved or regraded, the finding keeps answering as that edition published it, "
                  + "and a recorded re-evaluation closes the cause" };
   }

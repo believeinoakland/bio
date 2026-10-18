@@ -1014,13 +1014,13 @@ class Provenance {
     /* R24 · D-177: a capture fetched `direct` earns the ceiling, measured. */
     if (vias.includes("direct"))
       answers.push({ grade: EARNED_CAPTURE_CEILING, route: "direct", determined: true, basis: "measured",
-                     why: `your group's Civicsmith fetched these bytes directly from their address, so their capture `
+                     why: `your team's Civicsmith fetched these bytes directly from their address, so their capture `
                         + `grade is ${EARNED_CAPTURE_CEILING} by that fact rather than by a member's account` });
     /* R25 · D-693: read only through an archive replay: one rank below, measured. */
     if (vias.includes(ARCHIVE_VIA))
       answers.push({ grade: ARCHIVE_CAPTURE_GRADE, route: "archive", determined: ARCHIVE_CAPTURE_GRADE !== null,
                      basis: "measured",
-                     why: `your group's Civicsmith fetched these bytes only through an archive replay (${ARCHIVE_VIA}), `
+                     why: `your team's Civicsmith fetched these bytes only through an archive replay (${ARCHIVE_VIA}), `
                         + `never from their publisher: one more party stands between the record and the publisher, so `
                         + `their capture grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture` });
     /* R59 · N688 (K1852 (1)): a file cut out of an archive the record holds: one answer per receipt, each its
@@ -1035,7 +1035,7 @@ class Provenance {
        held these bytes at the pull's instant, by its own receipt at the knock's address (the chain of custody from
        the knock's receipt), so the earliest such receipt is named. */
     if (vias.includes(DOORBELL_VIA))
-      answers.push(this.#received(s, DOORBELL_VIA, "handed to the group through the doorbell and brought in by a member"));
+      answers.push(this.#received(s, DOORBELL_VIA, "handed to the team through the doorbell and brought in by a member"));
     /* R63 · K2425 (4): a file a member holds, brought in by her upload: received, not fetched, graded exactly as the
        doorbell's material (R51), its existence at the upload's instant proven by the receipt the upload wrote. */
     if (vias.includes(UPLOAD_VIA))
@@ -1059,7 +1059,7 @@ class Provenance {
              why: `these bytes were ${how}, never fetched from an address, so no capture grade is measured from how `
                 + "they were fetched. A leg on them keeps the letter its author gave, under the ceiling "
                 + `(${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} `
-                + `is proven by the receipt your group's Civicsmith itself made at ${r.address}` };
+                + `is proven by the receipt your team's Civicsmith itself made at ${r.address}` };
   }
 
   /* R59: the strongest of several routes' answers: a determined grade before an undetermined one, a higher letter
@@ -1091,7 +1091,7 @@ class Provenance {
         + "UNDETERMINED");
     if (depth + 1 > ARCHIVE_DEPTH_MAX)
       return unresolved(`these bytes were cut out of archives nested more than ${ARCHIVE_DEPTH_MAX} deep, past the `
-        + "depth your group's Civicsmith reads an archive's grade through, so what they earn on the capture axis is "
+        + "depth your team's Civicsmith reads an archive's grade through, so what they earn on the capture axis is "
         + "UNDETERMINED");
     const archiveSha = m[1].toLowerCase();
     const a = this.#grade(archiveSha, depth + 1);

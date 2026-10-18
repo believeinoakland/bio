@@ -113,7 +113,7 @@ test("R22 the whole set moves or none of it does: a refusal after the first memb
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const wordOf = (key) => (Array.isArray(WORDS) ? WORDS : WORDS.words ?? Object.values(WORDS)).find((x) => x && x.key === key)?.en;
 const discoverable = (w, P, by) => {
-  const r = w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to the group",
+  const r = w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to the team",
                                                 by, viewer: V(by) });
   assert.equal(r.ok, true, JSON.stringify(r));
 };

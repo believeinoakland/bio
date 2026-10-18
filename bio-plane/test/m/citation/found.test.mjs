@@ -234,7 +234,7 @@ test("R12, R13: every member-facing string calls the group's own Civicsmith \"yo
   const r = bare.cite({ project: q, handle: h, ...ANN, role: "supports" });
   assert.equal(r.reason, "INQUIRY_UNAVAILABLE");
   assert.equal(r.detail, "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned "
-                       + "registry, and your group's Civicsmith was created without them, so nothing was written.");
+                       + "registry, and your team's Civicsmith was created without them, so nothing was written.");
   assert.equal(bare.cite({ project: q, found: match, ...ANN, role: "supports" }).reason, "INQUIRY_UNAVAILABLE");
   /* No member-facing string names the Civicsmith any other way: every row's translation, and the detail of every refusal
      and answer the three acts give, new and old. */

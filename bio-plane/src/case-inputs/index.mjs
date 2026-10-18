@@ -416,7 +416,7 @@ export class CaseInputs {
                      VALUES (?,?,?,?,?,?)`, id, seen.caseId, text, by, JSON.stringify(label), at);
       return { ok: true, draft: { id, case: seen.caseId, text, label, at },
                next: `a member adopts it as written, or rewrites it, at op=publish (whatChanged: {text, draft: "${id}"}); `
-                   + `until then it is a draft and never the group's statement` };
+                   + `until then it is a draft and never the team's statement` };
     });
   }
 
@@ -575,12 +575,12 @@ export class CaseInputs {
       return ack("STATEMENT_ACK_AUTHOR_UNDETERMINED",
                  (authorFromDraft
                    ? `this draft records no author for its exclusion statement: it was written before your `
-                   + `group's Civicsmith stamped one, and who wrote the sentence that now stands is UNDETERMINED. `
+                   + `team's Civicsmith stamped one, and who wrote the sentence that now stands is UNDETERMINED. `
                    : `this case document states that who wrote its exclusion statement could not be `
                    + `established, so the author of the sentence is UNDETERMINED — and it is not the member `
                    + `named as the case's author, who prepared and published it (BIO_Publication §3 rule 13). `)
                    + `An acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and your `
-                   + `group's Civicsmith cannot tell here whether you are the first — reading the draft's last editor `
+                   + `team's Civicsmith cannot tell here whether you are the first — reading the draft's last editor `
                    + `would attribute the statement to whoever last touched any part of it. `
                    + (authorFromDraft
                      ? `An editor of this project saves the statement again (op=casedraft with statement=), `

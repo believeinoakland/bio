@@ -165,7 +165,7 @@ test("R7: material_attestations states, per material, the attesting member's sig
   g.member("alice"); g.doc(DOC); g.finding(Q, [{ target: DOC }]);
   const og = blocks(g, [Q]).out;
   assert.deepEqual([og.group, og.materials.attestations.at(-1).by], [null, null]);
-  assert.ok(carriesBodyLines(null, og.materials, og.group).join("\n").includes("the group vouches for it by signing this case"));
+  assert.ok(carriesBodyLines(null, og.materials, og.group).join("\n").includes("the team vouches for it by signing this case"));
   /* negative control for "no new table": a table created inside the same read is counted (T42-23b) */
   let made = null;
   const n = world({ deps: { promotion: { fact: () => { made.st.sql.exec(`CREATE TABLE IF NOT EXISTS added_by_read (x)`); return { ok: true, value: "g" }; } } } });
@@ -240,7 +240,7 @@ test("R12: a chain stops at a leg on another group's finding — none of that gr
   w.finding(Q2, [{ target: Q }]);
   const r = judged(w, [Q2]);
   assert.deepEqual(r.refs, [{ member: Q2, leg_of: Q, ord: 1, ref }]);
-  assert.deepEqual(r.materials.map((m) => m.ref), [DOC], "only this group's document");
+  assert.deepEqual(r.materials.map((m) => m.ref), [DOC], "only this team's document");
   assert.deepEqual(r.refusals, []);
   /* chainsOf is the walk: a ref is never read as a local id */
   const asked = [];

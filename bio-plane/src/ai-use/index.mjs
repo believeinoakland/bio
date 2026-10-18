@@ -486,7 +486,7 @@ export class AiUse {
         : this.#refuse("NOT_YOUR_CEILING", `a member's limits and use of the assistant are that member's alone to ${act}. Nothing was changed.`);
     }
     if (p.kind === "group")
-      return this.#owns(p, by) && !isMachineIdentity(String(by)) ? null : notAnAdmin(by ?? null, `${act} the group account's limits and use`);
+      return this.#owns(p, by) && !isMachineIdentity(String(by)) ? null : notAnAdmin(by ?? null, `${act} the team account's limits and use`);
     return this.#accountsBar(p, by, act);
   }
 
@@ -568,7 +568,7 @@ export class AiUse {
       if (bar) return bar;
       const scopes = ["overall", ...USE_KINDS, ...(p.kind === "member" ? [] : ["per_member"])];
       if (!scopes.includes(scope))
-        return this.#invalid("scope", `a limit's scope is one of ${scopes.join(", ")}${p.kind === "member" ? " (per_member only for a group's or a project's account)" : ""}.`);
+        return this.#invalid("scope", `a limit's scope is one of ${scopes.join(", ")}${p.kind === "member" ? " (per_member only for a team's or a project's account)" : ""}.`);
       if (!LIMIT_UNITS.includes(unit)) return this.#invalid("unit", "a limit's unit is usd, tokens or calls.");
       if (!LIMIT_PERIODS.includes(period)) return this.#invalid("period", "a limit's period is day or month.");
       let stored = null;

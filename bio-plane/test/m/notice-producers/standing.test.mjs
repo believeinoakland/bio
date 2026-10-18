@@ -1,6 +1,7 @@
 /* R4: a member's standing-question answers, over the real `answers` (its R15–R20), on answers' own test world (the
    real retrieval runs each saved query; the AI half is off until its bar is met, plan Rules (7)). */
 import { test } from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { answersWorld, V } from "../answers/fixture.mjs";
 import { producers, reader, ofKind, sentences, notHintFailures } from "./fixture.mjs";
@@ -57,7 +58,7 @@ test("R4: the detail names the new finds and the answer as answers holds it, or 
   const it = ofKind(read("bob", { now: w.clock.now }), KIND)[0];
   assert.deepEqual(it.basis.held_back, { condition: "switch_off", switch: "copy" });
   assert.equal(it.basis.answer, null);
-  assert.match(it.detail, /did not answer, because the assistant's half of standing questions is switched off in your group's Civicsmith/);
+  assert.match(it.detail, /did not answer, because the assistant's half of standing questions is switched off in your team's Civicsmith/);
   for (const s of sentences(it)) assert.doesNotMatch(s, /\{|condition|switch_off/, s);
   /* an answer held is stated with it */
   const { NoticeProducers } = await import("../../../src/notice-producers/index.mjs");
@@ -100,8 +101,8 @@ test("R11: a standing answer is no hint: it carries no \"Hint · machine work\" 
 test("R4 (DEC-149, T34-87): what held the AI half back calls the group's Civicsmith \"your group's Civicsmith\", never this copy, plane, instance or server", () => {
   /* index.mjs:357 and :360 as BOB's rows name them */
   assert.equal(NoticeProducers.heldBackWords({ condition: "switch_off", switch: "copy" }),
-               "the assistant's half of standing questions is switched off in your group's Civicsmith");
-  assert.equal(NoticeProducers.heldBackWords({ condition: "not_deployed" }), "the assistant is not available in your group's Civicsmith");
+               word("notice-producers.assistant_half_standing"));
+  assert.equal(NoticeProducers.heldBackWords({ condition: "not_deployed" }), word("notice-producers.assistant_available_group"));
   for (const h of [null, {}, { condition: "switch_off", switch: "copy" }, { condition: "switch_off", switch: "member" }, { condition: "no_account" },
                    { condition: "limit" }, { condition: "not_deployed" }, { condition: "other" }])
     assert.doesNotMatch(NoticeProducers.heldBackWords(h), /\b(this (copy|instance|plane)|the plane|server)\b/i, JSON.stringify(h));

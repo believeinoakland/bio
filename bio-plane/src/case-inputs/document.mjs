@@ -83,10 +83,10 @@ function ackBodyHeadLines(acks, project) {
                               + "document lists)"] : [])]
     : (acks.unbound || acks.unboundWriterUndetermined)
       ? [`${ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never `
-         + "required to publish — a group may be one person — and its absence is stated rather than left "
+         + "required to publish — a team may be one person — and its absence is stated rather than left "
          + "for a reader to infer."]
       : [`${ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never `
-         + "required to publish — a group may be one person — and its absence is stated rather than left "
+         + "required to publish — a team may be one person — and its absence is stated rather than left "
          + "for a reader to infer."];
 }
 

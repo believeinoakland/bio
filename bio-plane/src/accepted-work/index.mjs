@@ -28,13 +28,13 @@ export const ACCEPTED_WORK_ABSENT = "accepted_work_absent";
 /** R2: what a read answers when the registered function failed. */
 export const ACCEPTED_WORK_UNREADABLE_WHY = "accepted_work_unreadable";
 
-const ABSENT_DETAIL = "no module holding another group's work is registered here, so none can be read";
+const ABSENT_DETAIL = "no module holding another team's work is registered here, so none can be read";
 /* R8, R9: a registration that holds the three functions but not the optional one read */
 const OPTIONAL_ABSENT_DETAIL = {
-  moves: "the module holding another group's work keeps no publisher moves here, so none can be read",
-  flagHistory: "the module holding another group's work keeps no flag history here, so none can be read",
+  moves: "the module holding another team's work keeps no publisher moves here, so none can be read",
+  flagHistory: "the module holding another team's work keeps no flag history here, so none can be read",
 };
-const UNREADABLE_DETAIL = "the module holding another group's work could not answer";
+const UNREADABLE_DETAIL = "the module holding another team's work could not answer";
 const DETAIL_MAX = 200;
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -167,7 +167,7 @@ class AcceptedWork {
     const findings = this.acceptedLegRefusals({ legs: asked, viewer });
     if (!findings.length) return null;
     return { ok: false, reason: "BASIS_REFUSED", findings,
-             detail: "a leg rests on another group's finding without an acceptance of that edition known to be in force. "
+             detail: "a leg rests on another team's finding without an acceptance of that edition known to be in force. "
                    + "Nothing was written." };
   }
 
@@ -197,7 +197,7 @@ function legFinding(code, ord, ref, edition) {
   const row = ACCEPTED_WORK_CHECKS[code];
   const at = Number.isInteger(edition) ? ` at edition ${edition}` : "";
   const detail = code === "IMPORTED_NOT_ACCEPTED"
-    ? `basis[${ord}] rests on ${ref}${at}, and no acceptance of that edition is in force for this group`
+    ? `basis[${ord}] rests on ${ref}${at}, and no acceptance of that edition is in force for this team`
     : `basis[${ord}] rests on ${ref}${at}, and whether it is accepted could not be read`;
   return { check: row.check, code, severity: "error", translation: row.translation, detail, ord, ref,
            edition: edition === undefined ? null : edition };

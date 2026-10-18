@@ -30,7 +30,7 @@ export const DISPATCH_CHECKS = {
   UNKNOWN_OP: {
     check: 'C-69.1',
     where: 'src/control-plane/index.mjs fetch > is-unknown-op',
-    translation: 'This group\'s Civicsmith has no operation by that name. A version older or newer than this one '
+    translation: 'This team\'s Civicsmith has no operation by that name. A version older or newer than this one '
       + 'can have a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
   },
   /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
@@ -41,7 +41,7 @@ export const DISPATCH_CHECKS = {
   STORE_DID_NOT_ANSWER: {
     check: 'C-69.2',
     where: 'src/answer-envelope/index.mjs storeSilent > is-store-silent',
-    translation: 'This group\'s Civicsmith could not consult its own records just now, so nothing in this reply is a '
+    translation: 'This team\'s Civicsmith could not consult its own records just now, so nothing in this reply is a '
       + 'statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your '
       + 'request was meant to change something, look before repeating it, because this reply cannot say whether it did.',
   },
@@ -53,8 +53,8 @@ export const DISPATCH_CHECKS = {
   PLANE_INTERNAL_ERROR: {
     check: 'C-69.3',
     where: 'src/answer-envelope/index.mjs planeInternalAnswer > is-plane-internal-error',
-    translation: 'This group\'s Civicsmith failed while handling the request, before it could produce an answer. '
-      + 'That is a fault in this group\'s Civicsmith, not a statement about what the record holds or about your '
+    translation: 'This team\'s Civicsmith failed while handling the request, before it could produce an answer. '
+      + 'That is a fault in this team\'s Civicsmith, not a statement about what the record holds or about your '
       + 'request; whether any part of it took effect is not known from here. The administrator can find the details '
       + 'in its logs under the reference given with this answer.',
   },
@@ -65,8 +65,8 @@ export const DISPATCH_CHECKS = {
   STORE_INTERNAL_ERROR: {
     check: 'C-69.4',
     where: 'src/store-door/dispatch.mjs internalAnswer > is-store-internal-error',
-    translation: 'This group\'s Civicsmith failed inside its own record while carrying out the request, so no answer '
-      + 'was produced. That is a fault in this group\'s Civicsmith, not a statement about what the record holds or '
+    translation: 'This team\'s Civicsmith failed inside its own record while carrying out the request, so no answer '
+      + 'was produced. That is a fault in this team\'s Civicsmith, not a statement about what the record holds or '
       + 'about your request; whether any part of it took effect is not known from here. The administrator can find '
       + 'the details in its logs under the reference given with this answer.',
   },
@@ -78,7 +78,7 @@ export const DISPATCH_CHECKS = {
   PURGE_HOLD_IN_PLACE: {
     check: 'C-69.5',
     where: 'src/store-door/dispatch.mjs purgeHoldRefusal > is-purge-hold-in-place',
-    translation: 'Your group\'s Civicsmith is preserving records under a litigation hold, and this removal would reach '
+    translation: 'Your team\'s Civicsmith is preserving records under a litigation hold, and this removal would reach '
       + 'material the '
       + 'hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold '
       + 'stands waits until the hold is released.',
@@ -90,7 +90,7 @@ export const DISPATCH_CHECKS = {
   SIGNINTRACE_NOT_TEST: {
     check: 'C-69.7',
     where: 'src/signin-door/index.mjs signintrace > is-signintrace-test-instance',
-    translation: 'This group\'s Civicsmith keeps a trace of sign-ins only when it runs as a test instance, and this one '
+    translation: 'This team\'s Civicsmith keeps a trace of sign-ins only when it runs as a test instance, and this one '
       + 'does not. Nothing was read or changed.',
   },
 };
@@ -102,20 +102,20 @@ export const BOOTSTRAP_CHECKS = {
   BOOTSTRAP_CREDENTIAL_UNSET: {
     check: 'C-68.2',
     where: 'src/control-plane/index.mjs fetch > is-bootstrap-claim',
-    translation: 'Your group\'s Civicsmith has no administrator token set, so it cannot be claimed yet. Whoever installed it '
+    translation: 'Your team\'s Civicsmith has no administrator token set, so it cannot be claimed yet. Whoever installed it '
       + 'sets one in the hosting account. Nothing was changed.',
   },
   BOOTSTRAP_CREDENTIAL_PUBLISHED: {
     check: 'C-68.3',
     where: 'src/control-plane/index.mjs fetch > is-bootstrap-claim',
-    translation: 'The administrator token of your group\'s Civicsmith is a value published in the project\'s public '
-      + 'repository, so it can never be used to claim it: anyone can read it. Whoever installed your group\'s '
+    translation: 'The administrator token of your team\'s Civicsmith is a value published in the project\'s public '
+      + 'repository, so it can never be used to claim it: anyone can read it. Whoever installed your team\'s '
       + 'Civicsmith sets a fresh one in the hosting account. Nothing was changed.',
   },
   BOOTSTRAP_CREDENTIAL_MISMATCH: {
     check: 'C-68.4',
     where: 'src/control-plane/index.mjs fetch > is-bootstrap-claim',
-    translation: 'The administrator token given does not match the one your group\'s Civicsmith holds, so it was '
+    translation: 'The administrator token given does not match the one your team\'s Civicsmith holds, so it was '
       + 'not claimed. Nothing was changed.',
   },
 };
@@ -139,7 +139,7 @@ export const REPLAY_CHECKS = {
   REPLAY_UNVERIFIED: {
     check: 'C-66.6',
     where: 'src/control-plane/index.mjs fetch > is-promote-replay-verified',
-    translation: 'This save says it is a replay of the record\'s own history, and your group\'s Civicsmith could not '
+    translation: 'This save says it is a replay of the record\'s own history, and your team\'s Civicsmith could not '
       + 'check that '
       + 'against the history it holds: the replay must name the provenance file for this document, already '
       + 'uploaded, whose records list this document and exactly this version of it. A replay is excused from '

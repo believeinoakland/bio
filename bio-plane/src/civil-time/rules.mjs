@@ -394,7 +394,7 @@ export function due(args) {
     if (date === undefined || date === null) throw new TypeError(`a ${basis} due needs its date`);
     const s = spanOf(date);
     if (isNo(s)) return { ...s, basis_kind: basis, law_set: false };
-    const trace = { basis_kind: basis, date, ...(basis === "commitment" ? { citation: args.citation ?? null, says: "the body's own stated date" } : { says: "the group's own date" }),
+    const trace = { basis_kind: basis, date, ...(basis === "commitment" ? { citation: args.citation ?? null, says: "the body's own stated date" } : { says: "the team's own date" }),
                     runtime: runtimeVersions() };
     return { due: date, basis_kind: basis, law_set: false, trace };
   }

@@ -284,7 +284,7 @@ export class ReadingGuides {
     if (refused) return refused;
     /* DEC-49 REGION is-guide-reviewable */
     if (row.state !== "usable_by_author" && row.state !== "draft")
-      return refusal("GUIDE_NOT_REVIEWABLE", `${row.guide_id} is already the group's. Nothing was written.`, { guide: row.guide_id });
+      return refusal("GUIDE_NOT_REVIEWABLE", `${row.guide_id} is already the team's. Nothing was written.`, { guide: row.guide_id });
     /* END DEC-49 REGION is-guide-reviewable */
     /* DEC-49 REGION is-guide-reviewer */
     if (row.author === member)
@@ -327,7 +327,7 @@ export class ReadingGuides {
     /* DEC-49 REGION is-guide-approver */
     if (!approver)
       return refusal("GUIDE_RETIRE_NOT_APPROVER", row.state === "group"
-        ? `${row.guide_id} is the group's, and is retired by a member other than its author. Nothing was written.`
+        ? `${row.guide_id} is the team's, and is retired by a member other than its author. Nothing was written.`
         : `${row.guide_id} is its author's, and is retired by its author. Nothing was written.`, { guide: row.guide_id });
     /* END DEC-49 REGION is-guide-approver */
     const bad = reasonRefusal(str(reason), true);
@@ -348,7 +348,7 @@ export class ReadingGuides {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "PROVIDER_MALFORMED", detail: "a channel names the module that registers it and its function" };
     if (this.#channel)
-      return { ok: false, reason: "PROVIDER_DECLARED", module, detail: `${this.#channel.module} already provides the channel between groups` };
+      return { ok: false, reason: "PROVIDER_DECLARED", module, detail: `${this.#channel.module} already provides the channel between teams` };
     this.#channel = { module, fn };
     return { ok: true, module };
   }
@@ -407,7 +407,7 @@ export class ReadingGuides {
           || (Object.keys(offer).sort().join() === "format,group,guide,items,kind,purpose" && offer.purpose === "procedure"));
     /* DEC-49 REGION is-guide-offer */
     if (!whole)
-      return refusal("GUIDE_OFFER_UNREADABLE", "what was given is not another group's offer of a reading guide, byte "
+      return refusal("GUIDE_OFFER_UNREADABLE", "what was given is not another team's offer of a reading guide, byte "
         + "for byte as offered. Nothing was written.");
     /* END DEC-49 REGION is-guide-offer */
     const purpose = purposeOf(offer.purpose);
@@ -592,8 +592,8 @@ function memberRefusal(act) {
 function kindRefusal(kind, purpose, kinds) {
   const detail = !kinds ? "a guide's purpose is reading or procedure."
     : purpose === "procedure"
-      ? (kinds.length ? `a procedure guide is for one of the action kinds of the group's jurisdiction profiles: ${kinds.join(", ")}.`
-                      : "a procedure guide is for an action kind of the group's jurisdiction profiles, and they list none.")
+      ? (kinds.length ? `a procedure guide is for one of the action kinds of the team's jurisdiction profiles: ${kinds.join(", ")}.`
+                      : "a procedure guide is for an action kind of the team's jurisdiction profiles, and they list none.")
       : `a reading guide is for one of these kinds of document: ${kinds.join(", ")}.`;
   /* DEC-49 REGION is-guide-kind */
   return refusal("GUIDE_KIND_UNKNOWN", `${detail} Nothing was written.`,
@@ -610,7 +610,7 @@ function noSuchGuide(id) {
 
 function readOnly(id) {
   /* DEC-49 REGION is-guide-ours */
-  return refusal("GUIDE_READ_ONLY", `${id} comes with every copy of Civicsmith and no group can change it. Nothing was written.`,
+  return refusal("GUIDE_READ_ONLY", `${id} comes with every copy of Civicsmith and no team can change it. Nothing was written.`,
     { guide: id });
   /* END DEC-49 REGION is-guide-ours */
 }
@@ -634,14 +634,14 @@ function reasonRefusal(why, required) {
 function offerable(row) {
   /* DEC-49 REGION is-guide-offerable */
   if (row.state !== "group")
-    return refusal("GUIDE_NOT_OFFERABLE", `${row.guide_id} is not yet the group's. Nothing was sent.`, { guide: row.guide_id });
+    return refusal("GUIDE_NOT_OFFERABLE", `${row.guide_id} is not yet the team's. Nothing was sent.`, { guide: row.guide_id });
   /* END DEC-49 REGION is-guide-offerable */
   return null;
 }
 
 function slugRefusal() {
   /* DEC-49 REGION is-guide-slug */
-  return refusal("GUIDE_NO_GROUP_SLUG", "no group slug is recorded, so an offer cannot be labeled. Nothing was sent.");
+  return refusal("GUIDE_NO_GROUP_SLUG", "no team slug is recorded, so an offer cannot be labeled. Nothing was sent.");
   /* END DEC-49 REGION is-guide-slug */
 }
 

@@ -60,7 +60,7 @@ export function caseFileSpec(version) {
   const v = typeof version === "string" ? version : null;
   if (v === null || !Object.hasOwn(CASE_FILE_SPECS, v))
     return { held: false, version: v === null ? null : v.slice(0, 80), versions: [...CASE_FILE_SPEC_VERSIONS],
-             detail: `${v === null ? "no version was named" : "this group's Civicsmith holds no specification of that version"}; it holds `
+             detail: `${v === null ? "no version was named" : "this team's Civicsmith holds no specification of that version"}; it holds `
                    + (CASE_FILE_SPEC_VERSIONS.length === 1 ? `the specification of ${CASE_FILE_SPEC_VERSIONS[0]}, named as version`
                      : `the specifications of ${CASE_FILE_SPEC_VERSIONS.slice(0, -1).join(", ")} and ${CASE_FILE_SPEC_VERSIONS.at(-1)}, each named as version`) };
   return { held: true, version: v, media_type: "text/markdown", text: CASE_FILE_SPECS[v], versions: [...CASE_FILE_SPEC_VERSIONS] };

@@ -217,7 +217,7 @@ test("R57 (T45; v0.2 rules 15, 17): the we_did lane is the case's published reco
   assert.deepEqual(r.timeline, { we_did: 2, withheld: 2 });
   for (const hidden of ["ACT-2026-0001", "met counsel", "ACT-2026-0003", "drafted a reply"])
     assert.equal(text.includes(hidden), false, `${hidden} is never written`);
-  assert.ok(bodyOf(text).includes("2 of the group's own act(s) were not marked public by the record that holds them and are left out of this published record of what we did."));
+  assert.ok(bodyOf(text).includes("2 of the team's own act(s) were not marked public by the record that holds them and are left out of this published record of what we did."));
   /* control: one item without the mark and one with it: only the second is written, withheld: 1 */
   const c = [];
   const one = eventsStandIn(c);

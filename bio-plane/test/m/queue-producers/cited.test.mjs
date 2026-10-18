@@ -62,7 +62,7 @@ test("R34 (reevaluation R33; DEC-101 (3)): FINDINGs cited-newer-edition and cite
   assert.match(wd.detail, /signing key is not among the keys the imported case file lists/, "key_listed false is said");
   assert.match(wd.detail, /taken this entry back \(entry 9, dated 2026-08-25\)/, "a move taken back is said");
   assert.doesNotMatch(ne.detail, /taken this entry back/);
-  assert.match(all2.detail, /withdrew every edition/); assert.match(all2.summary, /another group/, "group withheld: unnamed");
+  assert.match(all2.detail, /withdrew every edition/); assert.match(all2.summary, /another team/, "group withheld: unnamed");
   assert.equal(ne.basis.source, "reevaluation.citedCaseDependents"); assert.equal(ne.basis.what_changed, "a finding was corrected");
   assert.equal(wd.basis.reason, "a source was retracted"); assert.equal(wd.basis.key_listed, false);
   for (const it of [ne, wd, all2]) for (const s of [it.summary, it.detail, it.basis.detail]) assert.doesNotMatch(s, FORBIDDEN, s);

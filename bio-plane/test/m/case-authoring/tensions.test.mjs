@@ -319,9 +319,9 @@ test("R55 (case-disclosures R1): tensionsDisclosed absent or null is none; a can
     assert.deepEqual([r.reason, r.field], ["BAD_COMPLETENESS", field], JSON.stringify(list));
   }
   const a = seen();
-  const apostrophe = a.w.publish(a.P, "alice", [F], { tensionsDisclosed: disclose(a.id, "the group's reading") });
+  const apostrophe = a.w.publish(a.P, "alice", [F], { tensionsDisclosed: disclose(a.id, "the team's reading") });
   assert.equal(apostrophe.ok, true, "an apostrophe is legal inside the grammar's quoted string");
-  assert.equal(a.w.fm(docOf(a.w, apostrophe).text).case_tensions[0].words, "the group's reading");
+  assert.equal(a.w.fm(docOf(a.w, apostrophe).text).case_tensions[0].words, "the team's reading");
   const n = world(); n.member("alice"); n.doc(DOC); n.finding(F, [{ target: DOC }]);
   assert.equal(n.publish(n.project("Team", "alice", [F]), "alice", [F], { tensionsDisclosed: null }).ok, true);
 });

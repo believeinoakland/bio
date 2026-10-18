@@ -1258,7 +1258,7 @@ test("R32 the page's visible text names Civicsmith, never BIO and never the old 
   const markup = SIGN_HTML.replace(/<!--[\s\S]*?-->/g, "").replace(/<style>[\s\S]*?<\/style>/g, "")
     .replace(/<script>[\s\S]*?<\/script>/g, "");
   assert.deepEqual(markup.match(/civic\w*/gi), ["Civicsmith", "Civicsmith", "Civicsmith", "Civicsmith", "Civicsmith"],
-    "the title, the heading, and the ratify, notice and docket panes' \"your group's Civicsmith\" (DEC-149)");
+    "the title, the heading, and the ratify, notice and docket panes' \"your team's Civicsmith\" (DEC-149)");
   const page = loadPage(SIGN_HTML);
   await assert.rejects(page.parseKeyString("hello"), /^Error: that does not look like a Civicsmith private key$/);
   /* Every string the script writes into the page, on each path: none says BIO or CivicOS. */
@@ -1277,7 +1277,7 @@ test("R32 the page's visible text names Civicsmith, never BIO and never the old 
   assert.ok(wrapped.startsWith("BIOKEY1.bio-release."));
   assert.equal((await page.parseKeyString(wrapped, "a long passphrase")).label, "bio-release");
   await page.el("gen").onclick();
-  assert.match(page.el("gen-out").innerHTML, /When Civicsmith goes to real groups/);
+  assert.match(page.el("gen-out").innerHTML, /When Civicsmith goes to real teams/);
   written.push(page.el("gen-out").innerHTML);
   for (const id of ["rel-key", "rat-key", "not-key", "dock-key"]) written.push(page.el(id).innerHTML);
   page.el("forget").onclick();
@@ -1340,14 +1340,14 @@ test("R32 the page calls what a member ratifies a record, never a bundle (K899 (
   }
 });
 
-test("R32 (DEC-149) the page sends a member to \"your group's Civicsmith\", never to \"the instance\" or \"the plane\"", async () => {
+test("R32 (DEC-149) the page sends a member to \"your team's Civicsmith\", never to \"the instance\" or \"the plane\"", async () => {
   /* The sweep's 11 rows (T35-5; plan/draft-T35-dec149-l1-l7.md), each string as the member reads it. */
   const markup = SIGN_HTML.replace(/<!--[\s\S]*?-->/g, "").replace(/<style>[\s\S]*?<\/style>/g, "")
     .replace(/<script>[\s\S]*?<\/script>/g, "");
   for (const s of [
-    "Copy the record id and its current hash from its page in your group's Civicsmith.",                     /* :146 */
-    "Copy the notice id, its revision number and its hash from its page in your group's Civicsmith.",         /* :164 */
-    "Copy the case id, the entry number and the entry hash from its page in your group's Civicsmith.",        /* :185 */
+    "Copy the record id and its current hash from its page in your team's Civicsmith.",                     /* :146 */
+    "Copy the notice id, its revision number and its hash from its page in your team's Civicsmith.",         /* :164 */
+    "Copy the case id, the entry number and the entry hash from its page in your team's Civicsmith.",        /* :185 */
   ]) assert.ok(markup.includes(s), s);
   /* What the script writes, on every path of the ratify, notice and docket buttons. */
   const page = loadPage(SIGN_HTML);
@@ -1363,14 +1363,14 @@ test("R32 (DEC-149) the page sends a member to \"your group's Civicsmith\", neve
     docket: (await pageSignsDocket(page, "CASE-2026-3091", "1", DOCKET_SHA)).out,
   };
   for (const [where, s] of [
-    ["ratify", "Signature: paste this into the ratify box in your group's Civicsmith"],                     /* :456 */
-    ["ratify", "you submit it, your group's Civicsmith refuses this signature and you sign the new hash."],  /* :458 */
-    ["noticeBadId", "Paste the notice id, as your group's Civicsmith shows it."],                            /* :472 */
-    ["notice", "Signature: paste this into the notice box in your group's Civicsmith"],                     /* :479 */
-    ["notice", "you post it, your group's Civicsmith refuses this signature and you sign the new hash."],   /* :481 */
-    ["docketBadId", "Paste the case id, as your group's Civicsmith shows it."],                              /* :491 */
-    ["docket", "Signature: paste this into the docket box in your group's Civicsmith"],                     /* :498 */
-    ["docket", "you post it, your group's Civicsmith refuses this signature and you prepare and sign it again."], /* :500 */
+    ["ratify", "Signature: paste this into the ratify box in your team's Civicsmith"],                     /* :456 */
+    ["ratify", "you submit it, your team's Civicsmith refuses this signature and you sign the new hash."],  /* :458 */
+    ["noticeBadId", "Paste the notice id, as your team's Civicsmith shows it."],                            /* :472 */
+    ["notice", "Signature: paste this into the notice box in your team's Civicsmith"],                     /* :479 */
+    ["notice", "you post it, your team's Civicsmith refuses this signature and you sign the new hash."],   /* :481 */
+    ["docketBadId", "Paste the case id, as your team's Civicsmith shows it."],                              /* :491 */
+    ["docket", "Signature: paste this into the docket box in your team's Civicsmith"],                     /* :498 */
+    ["docket", "you post it, your team's Civicsmith refuses this signature and you prepare and sign it again."], /* :500 */
   ]) assert.ok(said[where].includes(s), `${where}: ${s}`);
   /* Nothing a member reads, markup or written by the script on any path, says "instance" or "plane",
      save the release asset's file name, bio-plane.bundled.mjs, a wire name (R32). */

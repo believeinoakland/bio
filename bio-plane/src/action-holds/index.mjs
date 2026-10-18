@@ -188,7 +188,7 @@ export class ActionHolds {
   #pressureRefusal({ who, mark, direction }) {
     /* DEC-49 REGION is-pressure */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a "
+      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the team is a member's judgement; a "
         + "machine credential may not mark it. Nothing was written.");
     if (!mark || !PRESSURE_KINDS.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX || /["\\\r\n]/.test(mark.raw))
       return refuse("PRESSURE_REFUSED", `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS.join(", ")}, the note `

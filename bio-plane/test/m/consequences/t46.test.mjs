@@ -47,8 +47,8 @@ const T45 = {
   SUCCESS_NO_EVIDENCE: "A success rests on evidence: content or findings this record holds and you may see. Nothing was written.",
   SUCCESS_TOO_LARGE: "A success record holds at most 50 items of evidence, 20 figures and a sequence of 1,000 characters. Nothing was written.",
   SUCCESS_FIGURE_NOT_COMPUTED: "A figure on a success record is computed from cited sources, never stated: give its computation and its operands. Nothing was written.",
-  SUCCESS_CAUSE_NOT_EVIDENCED: "Saying the group's action caused the change rests on evidence: between 1 and 50 items this record holds and you may see. Nothing was written.",
-  SUCCESS_CAUSE_OWN_ACT_ONLY: "The group's own act is never evidence that it caused the change: cite evidence other than the group's own actions and what it sent. You may state the sequence of events instead. Nothing was written.",
+  SUCCESS_CAUSE_NOT_EVIDENCED: "Saying the team's action caused the change rests on evidence: between 1 and 50 items this record holds and you may see. Nothing was written.",
+  SUCCESS_CAUSE_OWN_ACT_ONLY: "The team's own act is never evidence that it caused the change: cite evidence other than the group's own actions and what it sent. You may state the sequence of events instead. Nothing was written.",
   NO_SUCH_SUCCESS_RECORD: "No success record answers to that id. One you may not see is answered exactly as one that does not exist.",
   SUCCESS_NO_REASON: "A revision of a success record says why. Nothing was written.",
   SUCCESS_BAD_REASON: "A reason is at most 2,000 characters. Nothing was written.",
@@ -58,13 +58,13 @@ const T45 = {
 /* The three rows R25 keeps in T46, with their present words. */
 const KEPT_ROWS = {
   SUCCESS_NO_STATEMENT: ["C-114.29", "Say in your own words what changed: at most 2,000 characters. Nothing was written."],
-  SUCCESS_CAUSE_UNSTATED: ["C-114.34", "Saying the group's action caused the change is a statement in your own words, at most "
+  SUCCESS_CAUSE_UNSTATED: ["C-114.34", "Saying the team's action caused the change is a statement in your own words, at most "
     + "2,000 characters. Nothing was written."],
-  SUCCESS_CAUSE_UNCHECKABLE: ["C-114.37", "Whether the cause rests only on the group's own acts could not be checked, so it is "
+  SUCCESS_CAUSE_UNCHECKABLE: ["C-114.37", "Whether the cause rests only on the team's own acts could not be checked, so it is "
     + "not recorded. You may state the sequence of events instead. Nothing was written."],
 };
 /* Every row R25 does not take (25, the three kept among them), as T45 left them: their canonical JSON's sha256. */
-const KEPT = { count: 25, sha256: "8e5b63207635942fd3a6eeb0be1493fdff841e26b9ef2a78ecce5afa2830143a" };
+const KEPT = { count: 25, sha256: "1818d9398681db2ab5af86a9f9f62cef84ba3d4e92b0d4fc397907721be86223" };
 const SENTENCES = [SEQUENCE_NOT_CAUSE, CAUSE_NOT_STATED];
 
 test("R25 seventeen rows read words.json's refusal.<CODE> by key from CONSEQUENCES_WORDS, never a copy; codes, numbers and wheres unmoved; T45's words answered no longer", () => {
@@ -249,7 +249,7 @@ test("R24 (T47, N958) a success record, recorded before or after the promotion, 
 
 /* promotion as this module reaches it, refusing every success record's object as the record does with no producing group
    recorded (promotion R13, C-64.1); every other promotion as it is. */
-const REFUSED = { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", detail: "no producing group" };
+const REFUSED = { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", detail: "no producing team" };
 const refusing = (w) => new Proxy(w.promotion, { get: (t, p) => (p === "promote"
   ? (pkg) => (/^SUC-/.test(String(pkg && pkg.bundleId)) ? REFUSED : t.promote(pkg))
   : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });

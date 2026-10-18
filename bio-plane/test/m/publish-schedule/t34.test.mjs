@@ -30,7 +30,7 @@ function base({ zone = true, cases = [CASE] } = {}) {
 }
 /* D54's negative control: the owner sets the project discoverable (membership R45), which administrators see whole. */
 function discoverable(w, proj) {
-  const r = w.membership.projectVisibilitySet({ projectId: proj, setting: "discoverable", reason: "open to the group",
+  const r = w.membership.projectVisibilitySet({ projectId: proj, setting: "discoverable", reason: "open to the team",
                                                 by: "olive", viewer: V("olive") });
   assert.equal(r.ok, true, JSON.stringify(r));
 }

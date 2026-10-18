@@ -110,7 +110,7 @@ async function threaded(w, { hiddenSigned = false } = {}) {
   const signedCap = w.held("INFO-2026-0102-signed", "b".repeat(64), hiddenSigned ? "PROJ-2026-0009-hidden" : null);
   w.resolution(awardCap, "INFO-2026-0101-award", k.id);
   w.resolution(signedCap, "INFO-2026-0102-signed", k.id);
-  const d = w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", basis: "the group's reading", declaredBy: ALICE,
+  const d = w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", basis: "the team's reading", declaredBy: ALICE,
     stages: [{ key: "award", cardinality: "1", required: "always" }, { key: "signed", after: "award", cardinality: "1", required: "always" }] });
   assert.equal(d.ok, true, JSON.stringify(d));
   const t = await w.progressions.threadInstance({ progressionKey: "proc", entityId: k.id, threadedBy: ALICE,

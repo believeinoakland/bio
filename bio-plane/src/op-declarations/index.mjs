@@ -2503,7 +2503,7 @@ const UNATTENDED_BY_DECISION = Object.freeze({
   /* D-436: recorded by the D-436 worker as a PROVISIONAL decision, and stated as one in IC-172 — the seed is
      the root of trust's, as the claim and the export are. The citation is the OPS row's own sentence. */
   instancegroupseed: "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE "
-                   + "INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN "
+                   + "INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN "
                    + "THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION "
                    + "OF ANY ROLE REACHES IT.'",
   /* REC-155: the two §4.10 RULES unattended by decision (BOB #19, 2026-09-21). Each citation is the one §4.10

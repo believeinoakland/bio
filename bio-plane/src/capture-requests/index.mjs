@@ -84,7 +84,7 @@ const RENDER_FAILED_CHECK = "C-83.7";
 export const SITE_KINDS = Object.freeze(["personal", "platform"]);
 /** R46: the one sentence every MEMBER_CAPTURE_ONLY refusal carries, routing the page to the members. */
 export const MEMBER_ROUTE = "Such a page is captured only by a member's own act in their own browser (capture's member "
-  + "capture), never by the daemon: nothing was fetched, and your group's Civicsmith uses no login for it.";
+  + "capture), never by the daemon: nothing was fetched, and your team's Civicsmith uses no login for it.";
 /** R46: the kind of mark a member puts on a host (R41's scope record for a platform), and its one scope. */
 export const PLATFORM_KIND = "platform";
 /** R49 (T35; K1881): the longest address a capture request may carry, in characters; a longer one is refused whole. */
@@ -172,9 +172,9 @@ export function isMemberRequest(row) {
 }
 
 /** R56: the sentence a member's request carries while unattended capture is not configured (R11). */
-export const MEMBER_REQUEST_WAITS = "your request is kept, and it waits until your group's Civicsmith captures "
+export const MEMBER_REQUEST_WAITS = "your request is kept, and it waits until your team's Civicsmith captures "
   + "unattended: nothing is fetched for it until then.";
-export const MEMBER_REQUEST_DRAINS = "requested. Your group's Civicsmith captures it on its next unattended round, "
+export const MEMBER_REQUEST_DRAINS = "requested. Your team's Civicsmith captures it on its next unattended round, "
   + "under the conduct every capture it makes follows.";
 
 /** R11, R37: whether the instance's unattended capture is configured: a daemon or administrator credential is bound
@@ -294,7 +294,7 @@ export class CaptureRequests {
     try { host = new URL(address).host.toLowerCase(); } catch { host = null; }
     if (!host)
       return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
-        "this address has no host your group's Civicsmith can read, and the per-host pacing DEC-47 requires is "
+        "this address has no host your team's Civicsmith can read, and the per-host pacing DEC-47 requires is "
         + "computed from one.", { address });
     /* R49 (T35; F2 as Bob ruled it, K1880; K1881's bound): AN ADDRESS THE RECORD ALREADY HOLDS, query and fragment
        included, within 2,048 characters; judged here and again at the drain (R14), before anything is written. */
@@ -390,10 +390,10 @@ export class CaptureRequests {
     const coRaw = args.co_archive ?? null;
     if (coRaw !== null && coRaw !== true && coRaw !== false)
       return coArchiveRefusal("malformed", `co_archive=${shown(coRaw)} is not a choice this door reads. Send `
-        + `co_archive: true or false, or nothing to let the group's setting decide.`);
+        + `co_archive: true or false, or nothing to let the team's setting decide.`);
     if (coRaw !== null && !runPrincipalOf(caller).startsWith("member:"))
       return coArchiveRefusal("not-a-members", `the choice about a public archive copy is a member's, and this request `
-        + `was not made under a member's own credential. Send no co_archive to let the group's setting decide.`);
+        + `was not made under a member's own credential. Send no co_archive to let the team's setting decide.`);
     const coArchive = coRaw === null ? null : coRaw ? 1 : 0;
 
     /* END DEC-49 REGION is-capture-request */
@@ -474,7 +474,7 @@ export class CaptureRequests {
              state: written.state, requested: true, already: false,
              requested_at: written.requested_at, expires: written.expires,
              principals: { plane: written.principal_plane, claude: written.principal_claude ?? null },
-             detail: "requested. Your group's Civicsmith does not fetch on a caller's timing: the daemon drains "
+             detail: "requested. Your team's Civicsmith does not fetch on a caller's timing: the daemon drains "
                    + "this queue, and DEC-47's conduct rules are applied there.", ...told };
   }
 
@@ -518,7 +518,7 @@ export class CaptureRequests {
       return { ok: false, step: q.step, reason: (a && (a.reason || a.code)) || null,
                detail: String((a && a.detail) || "the step did not take the capture").slice(0, 300) };
     } catch {
-      return { ok: false, step: q.step, detail: "the tie to the step did not complete and your group's Civicsmith did not "
+      return { ok: false, step: q.step, detail: "the tie to the step did not complete and your team's Civicsmith did not "
                                               + "record why" };
     }
   }
@@ -659,7 +659,7 @@ export class CaptureRequests {
     const at = stampInstant("second", nowMs);
     if (!this.configured())
       return { configured: false, actor, at, drained: 0, captured: [], refused: [], held: [], expired: [], remaining: 0,
-               detail: "no daemon credential is bound: your group's Civicsmith drains nothing and holds no alarm for it" };
+               detail: "no daemon credential is bound: your team's Civicsmith drains nothing and holds no alarm for it" };
     /* R11: NOT RE-ENTRANT. The tick awaits its fetches, and a second tick while one is out would judge the same rows
        and could send the same fetch twice. */
     if (this.#draining)
@@ -907,7 +907,7 @@ export class CaptureRequests {
     if (!CAPTURE_PURPOSES.includes(q.purpose))
       return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_NO_PURPOSE",
                detail: `'${String(q.purpose || "").slice(0, 40) || "(none)"}' is not one of the purposes `
-                     + `your group's Civicsmith can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires `
+                     + `your team's Civicsmith can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires `
                      + `an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and `
                      + `borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.` };
     /* CONDUCT 1 — THE AGENT, and there are exactly TWO legible forms, legible for different reasons: the member's own
@@ -957,7 +957,7 @@ export class CaptureRequests {
                detail: `${q.host} is in cool-off: it refused us or asked us to slow down, and the `
                      + `per-host governor is holding the interval it named. DEC-47 bounds discovery `
                      + `more tightly than re-fetch because a stranger's server has no relationship `
-                     + `with your group's Civicsmith.` };
+                     + `with your team's Civicsmith.` };
     if ((hostsThisTick.get(q.host) || 0) >= CAPTURE_REQUEST_PER_HOST_PER_TICK)
       return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
                code: "CAPTURE_CONDUCT_TICK_SPENT",
@@ -979,7 +979,7 @@ export class CaptureRequests {
                              + `request`);
     const check = this.#sweepScope;
     if (!check)
-      return sweepOutOfScope(`no scope check is registered in your group's Civicsmith, so nothing can say that ${name} is `
+      return sweepOutOfScope(`no scope check is registered in your team's Civicsmith, so nothing can say that ${name} is `
                              + `ratified, not held and reaches ${q.address}`);
     let a = null;
     try { a = await check.fn({ sweep: name, locators: [q.address], run: q.run, target: q.target }); } catch { a = null; }
@@ -1067,7 +1067,7 @@ export class CaptureRequests {
                  ? out.render.state : null,
                detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
     } catch {
-      return { ok: false, reason: "the fetch did not complete and your group's Civicsmith did not record why", status: null };
+      return { ok: false, reason: "the fetch did not complete and your team's Civicsmith did not record why", status: null };
     }
   }
 
@@ -1140,7 +1140,7 @@ export class CaptureRequests {
                              detail: String((p && p.detail) || "the promotion was refused").slice(0, 300) };
       });
     } catch {
-      return { ok: false, detail: "the promotion did not complete and your group's Civicsmith did not record why" };
+      return { ok: false, detail: "the promotion did not complete and your team's Civicsmith did not record why" };
     }
   }
 
@@ -1739,7 +1739,7 @@ const CAPTURED_FOR_CHUNK = 100;
 const SWEEP_NAME = /^[^\s#]{1,200}#[a-z0-9][a-z0-9-]{0,39}$/;
 /** R45: what the scope check's `reason` says, in the refusal's words. */
 const SWEEP_REFUSALS = Object.freeze({
-  unknown: "is not a sweep your group's Civicsmith holds", unratified: "is not ratified", held: "is held",
+  unknown: "is not a sweep your team's Civicsmith holds", unratified: "is not ratified", held: "is held",
   "out-of-scope": "does not reach this address",
 });
 

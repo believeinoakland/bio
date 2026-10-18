@@ -28,12 +28,12 @@ export const ATTRIBUTION_ACT_CHECKS = {
     check: 'C-92.2',
     where: 'src/case-tensions/index.mjs attributeObservation > is-attribute-act',
     translation: 'No level was chosen. Choose what a published case shows of who said your observation: '
-      + 'the group, the project, the cover the group knows you by, or your handle. Nothing is filled in for you.',
+      + 'the team, the project, the cover the team knows you by, or your handle. Nothing is filled in for you.',
   },
   ATTRIBUTION_LEVEL_UNKNOWN: {
     check: 'C-92.3',
     where: 'src/case-tensions/index.mjs attributeObservation > is-attribute-act',
-    translation: 'That is not one of the four levels. Choose group, project, cover or name.',
+    translation: 'That is not one of the four levels. Choose team, project, cover or name.',
   },
   ATTRIBUTION_NOT_AN_OBSERVATION: {
     check: 'C-92.4',

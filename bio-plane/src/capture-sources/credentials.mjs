@@ -54,7 +54,7 @@ export const CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
   CAPTURE_CREDENTIAL_BAD_HOST: { check: "C-105.3", where: at("credentialSupply", "is-credential-host"),
     translation: "A credential is for one host, named as a bare host name: no scheme, path, port or user part." },
   CAPTURE_CREDENTIAL_BAD_SCOPE: { check: "C-105.4", where: at("credentialSupply", "is-credential-scope"),
-    translation: "A credential's scope is member, project or group, and only a project-scoped credential names a project." },
+    translation: "A credential's scope is member, project or team, and only a project-scoped credential names a project." },
   CAPTURE_CREDENTIAL_NO_PROJECT: { check: "C-105.5", where: at("credentialSupply", "is-credential-project"),
     translation: "A project-scoped credential names a project the record holds." },
   CAPTURE_CREDENTIAL_NO_SECRET: { check: "C-105.6", where: at("credentialSupply", "is-credential-secret"),
@@ -62,7 +62,7 @@ export const CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
   CAPTURE_CREDENTIAL_NOT_PERMITTED: { check: "C-105.7", where: at("#r63Refusal", "is-credential-permitted"),
     translation: "This member may not supply or withdraw a credential at that scope." },
   CAPTURE_CREDENTIAL_NO_KEY: { check: "C-105.8", where: at("credentialSupply", "is-credential-key-bound"),
-    translation: "No encryption key is set for your group's Civicsmith, so no credential is stored or used." },
+    translation: "No encryption key is set for your team's Civicsmith, so no credential is stored or used." },
   CAPTURE_CREDENTIAL_NO_SUCH: { check: "C-105.9", where: at("credentialWithdraw", "is-credential-seen"),
     translation: "No credential by that id is visible to you here. One that does not exist and one you may not see are "
       + "answered alike, so this is not a hint either way." },
@@ -73,7 +73,7 @@ export const CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
     translation: "The credential could not be read or withdrawn just now, so nothing was changed. Try again, and if it "
       + "keeps failing tell an administrator." },
   CAPTURE_CREDENTIAL_OWN_HOST: { check: "C-105.12", where: at("credentialSupply", "is-credential-host-foreign"),
-    translation: "A credential is never for one of your group's own hosts: the address your group's Civicsmith is "
+    translation: "A credential is never for one of your team's own hosts: the address your team's Civicsmith is "
       + "reached at, or one of its fleet's. A capture goes only to other sites, so a credential for these is refused." },
 });
 
@@ -285,7 +285,7 @@ export class CaptureCredentials {
     try {
       /* DEC-49 REGION is-credential-supplier-member */
       if (!this.#active(by))
-        return refusal("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of your group");
+        return refusal("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of your team");
       /* END DEC-49 REGION is-credential-supplier-member */
       /* DEC-49 REGION is-credential-kind */
       if (!CREDENTIAL_KINDS.includes(kind))
@@ -302,7 +302,7 @@ export class CaptureCredentials {
          or a fleet member by a capture; refused, nothing written. */
       if (isOwnHost(h, this.#ownHosts))
         return refusal("CAPTURE_CREDENTIAL_OWN_HOST",
-          "the host given is one of your group's own (where your group's Civicsmith or its fleet is reached), and a credential is never for one of them");
+          "the host given is one of your team's own (where your team's Civicsmith or its fleet is reached), and a credential is never for one of them");
       /* END DEC-49 REGION is-credential-host-foreign */
       const given = project !== undefined && project !== null;
       /* DEC-49 REGION is-credential-scope */
@@ -326,7 +326,7 @@ export class CaptureCredentials {
       const key = await this.#aesKey();
       /* DEC-49 REGION is-credential-key-bound */
       if (!key)
-        return refusal("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is set for your group's Civicsmith, so nothing is stored in the clear");
+        return refusal("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is set for your team's Civicsmith, so nothing is stored in the clear");
       /* END DEC-49 REGION is-credential-key-bound */
       return await this.#store({ kind, h, secret, scope, project, by, key });
     } catch {
@@ -369,7 +369,7 @@ export class CaptureCredentials {
       if (!h) return none("the fetch names no host a credential can be for, so it goes without credentials");
       /* F16 (R56, R65): never answered for one of the group's own hosts, one supplied before R55 refused them included. */
       if (isOwnHost(h, this.#ownHosts))
-        return none(`CAPTURE_CREDENTIAL_OWN_HOST: ${h} is one of your group's own hosts, so no credential is used for it and the fetch goes without credentials`);
+        return none(`CAPTURE_CREDENTIAL_OWN_HOST: ${h} is one of your team's own hosts, so no credential is used for it and the fetch goes without credentials`);
       /* A `member` credential is admitted only for its own supplier's request, so the one supplier whose revocation
          could leave such a row unwithdrawn is the requester: met here (R63), then never answered. */
       let who = principalMember(principalPlane);
@@ -387,7 +387,7 @@ export class CaptureCredentials {
         return none(`no credential supplied for ${h} is admitted for this request's scope, so the fetch goes without credentials and the source's refusal stands`);
       const key = await this.#aesKey();
       if (!key)
-        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your group's Civicsmith, so no credential is used and the source's refusal stands");
+        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your team's Civicsmith, so no credential is used and the source's refusal stands");
       let secret;
       try {
         const pt = await crypto.subtle.decrypt(
@@ -395,7 +395,7 @@ export class CaptureCredentials {
           key, unb64(r.ciphertext));
         secret = new TextDecoder("utf-8", { fatal: true }).decode(pt);
       } catch {
-        return none(`credential ${r.credential_id} will not decrypt under the key of your group's Civicsmith, so the fetch goes without credentials and the source's refusal stands`);
+        return none(`credential ${r.credential_id} will not decrypt under the key of your team's Civicsmith, so the fetch goes without credentials and the source's refusal stands`);
       }
       return { credentials: [{ credential: r.credential_id, kind: r.kind, secret, supplied_by: r.supplied_by,
                                scope: r.scope, project: r.project ?? null }], reason: null };

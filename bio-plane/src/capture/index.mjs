@@ -761,7 +761,7 @@ export class Capture {
       authority_basis: say("capture.authority_basis", { at }),
       provenance_chain: [{
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were uploaded to your group's Civicsmith by ${by} and hashed as they arrived, at ${at}; `
+        asserts: `these bytes were uploaded to your team's Civicsmith by ${by} and hashed as they arrived, at ${at}; `
                + "they were received from the member, not fetched from any address",
         evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false, via: UPLOAD_VIA,

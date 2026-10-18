@@ -147,7 +147,7 @@ test("R13 R2 R3 R7 R8 R12 hold for a procedure guide: drafted usable by its auth
   assert.deepEqual(ids({ viewer: ANN, kind: KIND }), [d.guide]);
   assert.deepEqual(ids({ viewer: ANN, kind: KIND, purpose: "reading" }), []);
   assert.deepEqual(ids({ viewer: ANN, purpose: "other" }), []);
-  assert.deepEqual(ids({ viewer: REV, purpose: "procedure" }), [], "outside the group: none of the group's");
+  assert.deepEqual(ids({ viewer: REV, purpose: "procedure" }), [], "outside the group: none of the team's");
   assert.deepEqual(w.g.guidesOf({ viewer: ANN }).guides.map((x) => x.purpose), ["procedure", "reading"]);
   /* R12: a machine proposes one apart, labelled; only a member's draft based on it is a guide */
   const p = w.g.guidePropose({ kind: KIND, purpose: "procedure", items: STEPS, run: "RUN-1", by: MACHINE });
@@ -201,7 +201,7 @@ test("R13 procedureGuidesFor: the profile's guide first, then the group's approv
   assert.deepEqual(r.label, { ...PROCEDURE_GUIDE_LABEL });
   assert.deepEqual(r.withheld, []);
   assert.deepEqual(r.guides.map((g) => [g.origin, g.guide]), [["profile", null], ["group", second], ["group", first]]);
-  assert.ok(!r.guides.some((g) => g.guide === mine), "a guide its author's alone is not the group's");
+  assert.ok(!r.guides.some((g) => g.guide === mine), "a guide its author's alone is not the team's");
   /* K2820's shape: each {guide, origin, items}; the profile's, as R80 holds it, its items in the profile's order, `after` carried */
   assert.deepEqual(Object.keys(r).sort(), ["guides", "kind", "label", "ok", "withheld"]);
   for (const g of r.guides) assert.deepEqual(Object.keys(g).sort(), ["guide", "items", "origin"]);

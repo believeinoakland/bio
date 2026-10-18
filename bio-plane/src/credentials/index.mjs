@@ -834,7 +834,7 @@ export class Credentials {
       return refusal("SIGNER_MEMBER_NOT_ENROLLED",
         `${memberId} has not enrolled: status '${m.status}', no handle chosen. op=ratify weighs a `
       + `signature against the member's own standing, so a key registered now would sit on the roster as `
-      + `one your group's Civicsmith would refuse. Nothing was written.`);
+      + `one your team's Civicsmith would refuse. Nothing was written.`);
     return refusal("SIGNER_MEMBER_NOT_ACTIVE",
       `${memberId} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a `
     + `signature against the member's own standing and would refuse this one. Nothing was written.`);
@@ -906,7 +906,7 @@ export class Credentials {
       const row = CREDENTIALS_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
       return { ok: false, reason: "SIGNER_KEY_HELD_BY_ANOTHER", code: "SIGNER_KEY_HELD_BY_ANOTHER", check: row.check,
                translation: row.translation,
-               detail: "this key is registered to another member of this group, and a registered key is never "
+               detail: "this key is registered to another member of this team, and a registered key is never "
                      + "rebound by its own member's act. Nothing was written." };
     }
     /* END DEC-49 REGION is-signer-key-held */
@@ -1074,13 +1074,13 @@ export class Credentials {
     if (!principal || principal === "member:")
       return refusal("AI_CREDENTIAL_PRINCIPAL_UNSTATED",
         `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for `
-        + `the group, nobody individual behind it) or 'member' (attributable to that member). They `
+        + `the team, nobody individual behind it) or 'member' (attributable to that member). They `
         + `carry different accountability and the record states which, never the token's value.`,
         { principalKind: kind || null });
 
     if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
       return refusal("AI_CREDENTIAL_IDENTITY_TAKEN",
-        id ? `'${id.slice(0, 60)}' already names a credential in your group's Civicsmith. Acts cite the `
+        id ? `'${id.slice(0, 60)}' already names a credential in your team's Civicsmith. Acts cite the `
              + `IDENTITY, so rebinding it would re-attribute work already done.`
            : "pass an identity for this credential: it is the name acts will cite, and a credential "
              + "nothing can name is one nothing can revoke either.",
@@ -1137,15 +1137,15 @@ export class Credentials {
     if (!who || isMachineIdentity(who))
       return refusal("AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
         who ? `'${String(who).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a `
-              + `machine name there would record the group withdrawing an authority nobody in the `
-              + `group decided to withdraw.`
+              + `machine name there would record the team withdrawing an authority nobody in the `
+              + `team decided to withdraw.`
             : "no member is named on this act, and a withdrawal nobody authored is not one.",
         { who: who || null });
 
     const row = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
     if (!row)
       return refusal("AI_CREDENTIAL_UNKNOWN",
-        `no credential in your group's Civicsmith is called '${id.slice(0, 60) || "(none)"}'. Nothing was `
+        `no credential in your team's Civicsmith is called '${id.slice(0, 60) || "(none)"}'. Nothing was `
         + `withdrawn, and being told so is the point: believing an authority is gone when it is not `
         + `is the worse of the two outcomes.`,
         { tokenId: id || null });
@@ -1265,7 +1265,7 @@ export class Credentials {
            minted_by, minted_at, confined_to, expires_at, run, project)
          VALUES (?, ?, 'member', ?, 'run', ?, ?, ?, ?, NULL, ?, ?, ?)`,
         tokenId, sha256HexSync(token), `member:${id}`, JSON.stringify(declared),
-        "minted by your group's Civicsmith for one segment of your run", id, now, expiresAt, run, named ? project : null);
+        "minted by your team's Civicsmith for one segment of your run", id, now, expiresAt, run, named ? project : null);
     });
     return { ok: true, tokenId, token, run, writes: declared, expiresAt };
   }
@@ -1437,7 +1437,7 @@ export class Credentials {
     /* DEC-49 REGION is-standing-grant */
     if (!serving.standing)
       return refuse("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group"
-        ? "group's key" : serving.signin ? "member's own sign-in" : "member's own account"}, `
+        ? "team's key" : serving.signin ? "member's own sign-in" : "member's own account"}, `
         + "which would serve this one. Nothing was minted.");
     if (typeof question !== "string" || question.trim() === "")
       return refuse("NO_QUESTION", "no standing question was named. Nothing was minted.");
@@ -1889,7 +1889,7 @@ export class Credentials {
     /* DEC-49 REGION is-reset-link-member */
     if (id === null || id === ROOT || isMachineIdentity(id) || this.#memberFacts(id)?.status !== "active")
       return Credentials.#row(ACCOUNT_CHECKS, "RESET_LINK_MEMBER_NOT_ACTIVE", "a reset link is made only for an active "
-        + "member of the group. Nothing was made.", { member: id });
+        + "member of the team. Nothing was made.", { member: id });
     /* END DEC-49 REGION is-reset-link-member */
     const link = `rl-${Credentials.#rand(32)}`;
     const now = Date.now();
@@ -1975,7 +1975,7 @@ export class Credentials {
   }
 
   async keyedServiceSet({ service = null, key = null, by = null } = {}) {
-    const bar = this.#adminBar(by, "setting the group's key for an outside service");
+    const bar = this.#adminBar(by, "setting the team's key for an outside service");
     if (bar) return bar;
     const unknown = this.#keyedService(service);
     if (unknown) return unknown;
@@ -2002,7 +2002,7 @@ export class Credentials {
   }
 
   keyedServiceSwitch({ service = null, on = false, by = null } = {}) {
-    const bar = this.#adminBar(by, "switching the group's key for an outside service");
+    const bar = this.#adminBar(by, "switching the team's key for an outside service");
     if (bar) return bar;
     const unknown = this.#keyedService(service);
     if (unknown) return unknown;
@@ -2030,7 +2030,7 @@ export class Credentials {
   async keyedServiceFor({ service = null } = {}) {
     const unknown = this.#keyedService(service);
     if (unknown) return unknown;
-    const off = () => Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_OFF", "the group's key for this service is "
+    const off = () => Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_OFF", "the team's key for this service is "
       + "off or not held; the caller goes on without it.", { service });
     /* DEC-49 REGION is-keyed-service-on */
     if (!this.#keyedState(service).on) return off();

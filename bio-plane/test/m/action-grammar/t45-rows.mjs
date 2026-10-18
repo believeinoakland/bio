@@ -59,7 +59,7 @@ export const T45_ROWS = {
   OFFICE_STATUS_UNKNOWN: {
     check: "C-117.40",
     where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
-    translation: "The office's own status was named with a status the group's jurisdiction profile does not hold for this kind of action. Quote the office's words alone, or name a status the profile lists. Nothing was written.",
+    translation: "The office's own status was named with a status the team's jurisdiction profile does not hold for this kind of action. Quote the office's words alone, or name a status the profile lists. Nothing was written.",
   },
   OFFICE_STATUS_WITHOUT_OUTCOME: {
     check: "C-117.41",
@@ -69,12 +69,12 @@ export const T45_ROWS = {
   MACHINE_CANNOT_SET_REPLY_OWED: {
     check: "C-117.42",
     where: "src/actions/index.mjs #t45Fields > is-machine-set-reply-owed",
-    translation: "Whether a body owes the group a reply is a member's statement, made with a reason. The credential that asked here is an automated one, so it cannot state or change it. Nothing was written. Sign in to state it yourself.",
+    translation: "Whether a body owes the team a reply is a member's statement, made with a reason. The credential that asked here is an automated one, so it cannot state or change it. Nothing was written. Sign in to state it yourself.",
   },
   NO_REPLY_OWED: {
     check: "C-117.43",
     where: "src/actions/index.mjs actionCorrespond > is-no-reply-owed",
-    translation: "This action is to a body that owes the group no reply, so silence is not recorded as a non-response. Nothing was written. If a reply is owed after all, a member states so first, with a reason.",
+    translation: "This action is to a body that owes the team no reply, so silence is not recorded as a non-response. Nothing was written. If a reply is owed after all, a member states so first, with a reason.",
   },
   FOUND_ELSEWHERE_NEEDS_CAPTURE: {
     check: "C-117.44",
@@ -114,7 +114,7 @@ export const T45_ROWS = {
   MACHINE_CANNOT_RECORD_PROMISE: {
     check: "C-117.51",
     where: "src/action-records/index.mjs actionPromise > is-promise",
-    translation: "A promise the group made to a person, an embargo or a source's anonymity, is recorded by a member who answers for it. The credential that asked here is an automated one, so it cannot record one. Nothing was written. Sign in to record it yourself.",
+    translation: "A promise the team made to a person, an embargo or a source's anonymity, is recorded by a member who answers for it. The credential that asked here is an automated one, so it cannot record one. Nothing was written. Sign in to record it yourself.",
   },
   PROMISE_REFUSED: {
     check: "C-117.52",

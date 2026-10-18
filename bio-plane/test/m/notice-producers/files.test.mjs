@@ -212,7 +212,7 @@ test("R15: one FINDING security-tool-off per event that switched a tool off, key
   assert.equal(NOTICE_KINDS[OFF], "FINDING");
   assert.deepEqual(got[0].recipients, ["boss"]);
   assert.deepEqual(got[0].subject, { kind: "civicsmith", id: null, tool: id, provider: "metadefender-core" });
-  assert.deepEqual(got[0].case.ancestors, [], "the group's Civicsmith, no bundle");
+  assert.deepEqual(got[0].case.ancestors, [], "the team's Civicsmith, no bundle");
   for (const m of ["m1", "m2", null]) assert.deepEqual(items(m), [], String(m));
   w.exec(`UPDATE members SET status='revoked' WHERE member_id='boss'`);
   assert.deepEqual(items("boss"), [], "an administrator no longer active");

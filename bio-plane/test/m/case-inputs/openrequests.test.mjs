@@ -150,7 +150,7 @@ test("R17: a row with no window reads signing.openrequest.nowindow.line, .nowind
 test("R17: when R8 reads undetermined the step's one sentence is signing.openrequest.unread's words, naming your group's Civicsmith (DEC-198 (7)); a readable source never answers it", () => {
   const { w } = setup();
   assert.equal(OPEN_REQUESTS_UNREAD_SENTENCE, en("signing.openrequest.unread"));
-  assert.match(OPEN_REQUESTS_UNREAD_SENTENCE, /Your group's Civicsmith/);
+  assert.match(OPEN_REQUESTS_UNREAD_SENTENCE, /Your team's Civicsmith/);
   w.ci.registerOpenRequests("action-replies", { openRequestsOn: () => { throw new Error("down"); } });
   const r = w.ci.openRequestsOn({ case: "CASE-2026-0001", members: [], viewer: V("alice") });
   assert.deepEqual([r.ok, r.undetermined], [false, true]);

@@ -19,9 +19,9 @@ test("R21 DEC-149: STANDARD_SIDE_UNNAMED (C-113.28) says your group's Civicsmith
   const r = w.c.comparisonFacts({ contradiction: x.inquiry, viewer: V("pat") });
   assert.deepEqual([r.ok, r.code, r.check], [false, "STANDARD_SIDE_UNNAMED", "C-113.28"]);
   assert.equal(r.translation, "Name which side of the question states what the standard requires, a or b. Your "
-    + "group's Civicsmith never chooses it. Nothing was written.");
+    + "team's Civicsmith never chooses it. Nothing was written.");
   assert.equal(r.translation, CONFORMANCE_CHECKS.STANDARD_SIDE_UNNAMED.translation);
-  assert.equal(r.detail, "name which side of the question states what the standard requires, a or b: your group's "
+  assert.equal(r.detail, "name which side of the question states what the standard requires, a or b: your team's "
     + "Civicsmith never chooses it. Nothing was written.");
   for (const s of [r.translation, r.detail]) assert.doesNotMatch(s, NAMES_THE_PLANE);
   /* the control: a named side is answered, and the same refusal answers every unnamed form */

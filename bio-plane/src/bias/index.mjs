@@ -51,9 +51,9 @@ import { BIAS_SCHEMA, BIAS_ADDITIVE_COLUMNS } from "./schema.mjs";
 
 /* R11 (N327, DEC-83): the instance-scope adoption's fixed act, and its next step, for `membership.notAnAdmin`. Its
    words say "the whole group", never "the instance" (DEC-149); the scope value stays `instance`. */
-export const INSTANCE_ADOPTION_ACT = "adopting a bias set for the whole group";
+export const INSTANCE_ADOPTION_ACT = "adopting a bias set for the whole team";
 export const INSTANCE_ADOPTION_REMEDY = "A project's owners set the lens over that project's work: adopt this set for "
-  + "a project you own, or ask an administrator to adopt it for the whole group.";
+  + "a project you own, or ask an administrator to adopt it for the whole team.";
 
 /* The manifest's bound (R18). 200 is the common read, "what lens is in force", which a group's whole declared bias
    fits inside many times over; 2,000 is for a regrade, two lenses re-run against each other, where a lens silently
@@ -372,7 +372,7 @@ class Bias {
              pins_proposed: h.currentState === "proposed",
              note: h.currentState === "adopted"
                ? "this set is in force for that scope"
-               : "PINS A PROPOSED REVISION: this adoption froze bytes the group has offered and not "
+               : "PINS A PROPOSED REVISION: this adoption froze bytes the team has offered and not "
                  + "yet accepted, so it REPLACES this scope's lens with them rather than "
                  + "pre-authorising whatever the proposal becomes; a lens is in force once the "
                  + "revision THIS ROW PINS stands at 'adopted', which is a member-authored "
@@ -428,7 +428,7 @@ class Bias {
     const marker = pinsProposed.length === 0 ? {} : {
       pins_proposed: pinsProposed,
       pins_proposed_stated:
-        "each entry is an adoption whose PINNED REVISION is one the group has offered and not "
+        "each entry is an adoption whose PINNED REVISION is one the team has offered and not "
         + "accepted: the member's act REPLACED that scope's lens with those bytes and is not a "
         + "pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin "
         + "puts no lens in force until the revision it names stands at 'adopted'",
@@ -467,8 +467,8 @@ class Bias {
           if (target && target.locked) {
             lockViolations.push({ project_bundle: a.bundle_id, statement_id: s.statement_id,
                                   nullifies: s.nullifies, instance_bundle: target.bundle_id,
-                                  detail: "a project override naming a LOCKED group statement is a "
-                                        + "conformance error; the group statement stands" });
+                                  detail: "a project override naming a LOCKED team statement is a "
+                                        + "conformance error; the team statement stands" });
           } else if (target) {
             effective.delete(s.nullifies);
             level.delete(s.nullifies);
@@ -567,9 +567,9 @@ class Bias {
       residue,
       lock_violations: lockViolations,
       interactions,
-      interactions_stated: "each entry is a project statement on a subject a group statement in force also "
+      interactions_stated: "each entry is a project statement on a subject a team statement in force also "
         + "addresses, which names no statement it overrides: it must carry a justification addressing the "
-        + "group statement, and it is listed so a reviewer reads the two together (safeguard 3). It refuses nothing.",
+        + "team statement, and it is listed so a reviewer reads the two together (safeguard 3). It refuses nothing.",
       unregistered_subjects: unregistered,
       unregistered_subjects_stated: unregistered === null
         ? "undetermined: the subject registry could not be asked, so whether every subject is registered is not known"
@@ -733,7 +733,7 @@ class Bias {
     const none = {
       ok: true, description: null, offered: false, proposed: false, authored: false, statements: [],
       installed: false, adopted: false, writes: 0,
-      stated: "there is no description of the group to start a declared bias from: a member writes the set's "
+      stated: "there is no description of the team to start a declared bias from: a member writes the set's "
             + "statements, each with its subject and justification, from the beginning",
     };
     let d = null;
@@ -752,11 +752,11 @@ class Bias {
     return {
       ok: true, description, offered: true, proposed: true, authored: false, statements: [],
       installed: false, adopted: false, writes: 0,
-      label: "what the group wrote about itself",
+      label: "what the team wrote about itself",
       offers: "the opening text of a new bias set the member authors",
-      stated: "this is the group's own description of itself, offered as the opening text of a declared bias. "
+      stated: "this is the team's own description of itself, offered as the opening text of a declared bias. "
             + "Nothing here is a statement: a member writes each statement, names its subject in the registry and "
-            + "justifies it, offers the set as 'proposed', and the group adopts it with a member's name on it. "
+            + "justifies it, offers the set as 'proposed', and the team adopts it with a member's name on it. "
             + "Nothing has been written and no lens has changed.",
     };
   }

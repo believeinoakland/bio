@@ -25,7 +25,7 @@ test("R17 ruleDraft and groupRules, given the same unknown section, answer RULE_
     assert.deepEqual([d.ok, d.reason, d.code, d.check], [false, "RULE_SECTION_UNKNOWN", "RULE_SECTION_UNKNOWN", "C-126.7"]);
     assert.equal(d.translation, WORD("refusal.RULE_SECTION_UNKNOWN"), "R16's key, kept");
     assert.equal(d.translation, LOCAL_FACTS_CHECKS.RULE_SECTION_UNKNOWN.translation);
-    assert.equal(d.detail, "a group's rule is drafted in deadlines or legal_facts.");
+    assert.equal(d.detail, "a team's rule is drafted in deadlines or legal_facts.");
     assert.equal(d.section, typeof section === "string" ? section.slice(0, 40) : null, "the given value cut to 40 characters, null when not a string");
     assert.deepEqual(d.sections, [...RULE_SECTIONS]);
     assert.deepEqual(d.sections, ["deadlines", "legal_facts"]);

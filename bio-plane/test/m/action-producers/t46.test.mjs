@@ -122,7 +122,7 @@ test("R23: each item's sentence is its words.json key's words filled from the it
   assert.equal(left.summary_key, "queue.member-left-items.summary");
   assert.equal(left.summary, FILLED("queue.member-left-items.summary", { member: "bob", n: 1 }));
   assert.equal(left.detail_key, "queue.member-left-items.detail");
-  assert.equal(left.detail, FILLED("queue.member-left-items.detail", { member: "bob", place: "the group",
+  assert.equal(left.detail, FILLED("queue.member-left-items.detail", { member: "bob", place: "the team",
     items: `the clock entry 0 on ACT-2 (${day(NOW - 3 * DAY)})` }));
   /* R10: the summary on every entry; the detail by key where watchanswer is offered; the relied-on entry keeps its own */
   const kept = m["OBLIGATION::watch-keep-or-stop::1"];

@@ -142,7 +142,7 @@ function correspondRefusal(reason, fields, detail, extra) {
 }
 /* R4's sentences for the five conditions, field for field as `actionReceipt` answered them before R16. */
 const RECEIPT_DETAIL = Object.freeze({
-  MACHINE_CANNOT_CORRESPOND: "a receipt is a named member's record that the group's sending reached its addressee. A machine "
+  MACHINE_CANNOT_CORRESPOND: "a receipt is a named member's record that the team's sending reached its addressee. A machine "
     + "credential may not record one. Sign in as a member.",
   BAD_DATE: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has",
   CAPTURE_AND_TESTIMONY: "a receipt is held as the captured bytes OR a named member's account, never both.",
@@ -687,7 +687,7 @@ export class ActionRecords {
       { target: target ?? null, legal: [...kinds], max: PROMISE_TEXT_MAX });
     /* DEC-49 REGION is-promise */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_RECORD_PROMISE", "a promise the group made to a person is recorded by a member; a "
+      return refuse("MACHINE_CANNOT_RECORD_PROMISE", "a promise the team made to a person is recorded by a member; a "
         + "machine credential may not record one. Nothing was written.", { target: target ?? null });
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     if (!kinds.includes(k) || !t || t.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))

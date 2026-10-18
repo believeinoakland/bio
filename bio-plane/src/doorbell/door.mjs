@@ -22,7 +22,7 @@ export const KNOCK = {
 KNOCK.statedPerIp =
   `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
 KNOCK.statedGlobal =
-  `at most ${KNOCK.global} knocks to this group's inbox in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
+  `at most ${KNOCK.global} knocks to this team's inbox in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
 
 /* D-513 / DEC-49 — THE THREE REFUSALS THE DOORBELL MAKES BEFORE THE STORE IS EVER CALLED, each behind ONE governed
  * helper. The envelope refusal and the payload refusal are TWO CONDITIONS with two remedies, so two codes: the
@@ -49,7 +49,7 @@ export function knockPayloadTooLarge(cap, evidence) {
                   + "canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
   return { ok: false, reason: "KNOCK_PAYLOAD_TOO_LARGE", code: "KNOCK_PAYLOAD_TOO_LARGE",
            check: row.check, translation: row.translation, maxBytes: cap,
-           detail: evidence ? undefined : "this group's inbox stores knocks inline; large material needs its evidence storage configured" };
+           detail: evidence ? undefined : "this team's inbox stores knocks inline; large material needs its evidence storage configured" };
   /* END DEC-49 REGION is-knock-payload-too-large */
 }
 
@@ -139,7 +139,7 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
   }
   /* R11, R14: the pseudonym (null without a secret), and a secret the doorbell made shown in this answer only. */
   return json({ ok: true, knockId: rec.knockId, sha256: rec.sha256, bytes: rec.bytes,
-                received: "Your material is in the group's inbox awaiting member review.",
+                received: "Your material is in the team's inbox awaiting member review.",
                 pseudonym: typeof rec.pseudonym === "string" ? rec.pseudonym : null,
                 ...(typeof rec.secret === "string" ? { secret: rec.secret } : {}) }, 200);
 }

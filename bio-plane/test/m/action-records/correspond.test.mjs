@@ -98,7 +98,7 @@ test("R16 actionReceipt answers the five conditions through the site, in R4's or
   const m = R({ author: MACHINE });
   assert.deepEqual([m.reason, m.target, m.check, m.detail],
     ["MACHINE_CANNOT_CORRESPOND", A, row("MACHINE_CANNOT_CORRESPOND").check,
-     "a receipt is a named member's record that the group's sending reached its addressee. A machine credential may not record one. Sign in as a member."]);
+     "a receipt is a named member's record that the team's sending reached its addressee. A machine credential may not record one. Sign in as a member."]);
   assert.equal(R({ author: "", target: "" }).reason, "MACHINE_CANNOT_CORRESPOND", "the fence is first");
   const bd = R({ at: "2026-02-30" });
   assert.deepEqual([bd.reason, bd.at, bd.target],  ["BAD_DATE", "2026-02-30", A]);

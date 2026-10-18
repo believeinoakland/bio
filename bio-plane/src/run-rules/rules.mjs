@@ -209,7 +209,7 @@ export const RUN_BOUNDS = {
      page is read (PLANE_COUNTED_BOUNDS below), never the caller. A page of a document under a "no AI" material limit
      (`ai-accounts` R22) is refused inside the run whatever this bound allows (`checkPagesRead`). AFTER `proposals` for
      `mints`' tie-break reason: appending it renames no existing ending. */
-  pages:       "pages of documents the group holds that the run may read inside — the run's reading bound",
+  pages:       "pages of documents the team holds that the run may read inside — the run's reading bound",
   lease:      "the run stopped heartbeating and its lease lapsed: it died rather than finished",
 };
 
@@ -447,7 +447,7 @@ export const STANDARD_BASIS = {
  * vocabulary): the open now REFUSES any word not a key here, before it looks at any bundle. REC-69's delegation
  * is discharged for new runs; rows stored before it are never rewritten (counted in MEASUREMENTS). */
 export const RUN_CONTEXTS = {
-  inquiry: "a question the group is working on, which any project may draw on",
+  inquiry: "a question the team is working on, which any project may draw on",
   project: "a body of work with its own members, its own bar and its own lens",
 };
 

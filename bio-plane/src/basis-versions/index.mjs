@@ -97,7 +97,7 @@ const LEG_COPY_KEYS = ["target", "target_edition", "role", "ground", "grade", "g
                        "extent_capture", ...Object.keys(EXTENT_FIELDS)];
 /** R51: the question has nothing for an own reading to rest on (inquiry R45's detail, one text for both doors). */
 const NO_BASIS_DETAIL = "a conclusion rests on something. An open inquiry may hold a claim with no legs at "
-  + "all — a standing objective the group means to pursue — but concluding one that "
+  + "all — a standing objective the team means to pursue — but concluding one that "
   + "rests on nothing would put the record's name to an assertion nothing supports. "
   + "Add a basis[] leg (and the same target in references[]) first.";
 
@@ -365,7 +365,7 @@ export class BasisVersions {
                    const owner = fresh.find((y) => y.leg.ord === ord);
                    return { ...x,
                             ...(owner ? { version: owner.version, detail: `basis_version_legs[${ord}] (version `
-                              + `'${owner.version}'): ${x?.detail ?? x?.message ?? "rests on another group's finding "
+                              + `'${owner.version}'): ${x?.detail ?? x?.message ?? "rests on another team's finding "
                               + "whose acceptance at the edition named could not be established"}` } : {}) };
                  }) };
     }
@@ -633,7 +633,7 @@ export class BasisVersions {
                        withdraws_at: s(r.withdraws_at), reason: s(r.reason) ?? "" });
       } else {
         history.push({ ...base, act: "unrecognised", state: "undetermined", recorded_act: act,
-                       detail: "this entry names an act your group's Civicsmith does not know, so what the project "
+                       detail: "this entry names an act your team's Civicsmith does not know, so what the project "
                              + "stood on after it is undetermined rather than guessed." });
       }
     }
@@ -1209,7 +1209,7 @@ export class BasisVersions {
     if (fals && noFals)
       return { ok: false, reason: "FALSIFIER_AND_NONE_STATED", ...concludeRow("FALSIFIER_AND_NONE_STATED"),
                detail: "you have both stated a falsifier and asked to record that none was stated. Those are "
-                     + "two different claims about this finding and your group's Civicsmith will not choose "
+                     + "two different claims about this finding and your team's Civicsmith will not choose "
                      + "between them. Send the falsifier, or send no_falsifier=1 with the falsifier empty." };
     /* END DEC-49 REGION is-conclude-answer */
     /* R51: 1 to 500 characters once made frontmatter-safe; it takes the place of a named reading (`version`) and, with
@@ -1325,7 +1325,7 @@ export class BasisVersions {
                    + "claim to adopt. Name a reading it does carry."
                  : v.state !== "accepted"
                  ? `${whose} '${want}', which is ${v.state || "in no recorded state"}, `
-                   + "not accepted. A conclusion adopts only what the group accepted."
+                   + "not accepted. A conclusion adopts only what the team accepted."
                  : `reading '${want}' states no claim, and the claim is what a conclusion adopts `
                    + "(§7.1). State the claim on a reading first — a claim with no support yet is legal "
                    + "to add (DEC-22) — then conclude on that reading." };
@@ -1657,7 +1657,7 @@ export class BasisVersions {
                  : rec.stance.act === "withdrawn"
                  ? `${pid}'s latest act on ${target} was already a withdrawal (${rec.stance.at || "undated"}), so `
                    + "it stands on no conclusion to withdraw. Its history is unchanged."
-                 : `${pid}'s latest entry on ${target} is one your group's Civicsmith cannot read, so what it `
+                 : `${pid}'s latest entry on ${target} is one your team's Civicsmith cannot read, so what it `
                    + "stands on is undetermined and a withdrawal would be withdrawing a guess." };
     /* END DEC-49 REGION is-withdraw-stance */
     const when = this.now();

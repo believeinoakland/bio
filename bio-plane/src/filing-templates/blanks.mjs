@@ -10,7 +10,7 @@
 export const FILING_BLANKS = Object.freeze({
   counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
   counterparty_body: "the body of that office (an office's arm only)",
-  counterparty_organisation: "the organisation of a reporter, an organisation or another group the action is addressed to",
+  counterparty_organisation: "the organisation of a reporter, an organisation or another team the action is addressed to",
   counterparty_description: "the audience the action is addressed to, as the action describes it",
   act: "what the government did, as the action's determination states it",
   act_date: "when it did it (a date, or a period from and to)",
@@ -21,13 +21,13 @@ export const FILING_BLANKS = Object.freeze({
   clock: "the action's clock entries, each with its basis",
   venue: "where the kind is filed (the profile's venue name)",
   venue_how: "by what means it is filed (the profile's venue means)",
-  group: "the producing group",
+  group: "the producing team",
   date: "the date the draft was prepared",
   /* R31 (T47; DEC-209 (3), K3120): four member-filled blanks, filled by `filings` R55's `fills`, never by the record */
   records: "the records asked for, in the member's words",
   period: "the period the records cover",
   form: "the form the records are wanted in",
-  cost_limit: "the most the group will pay for copies before being told",
+  cost_limit: "the most the team will pay for copies before being told",
 });
 /** R19 (was filings' R6): the longest text, in UTF-8 bytes. */
 export const FILING_TEXT_MAX = 65536;

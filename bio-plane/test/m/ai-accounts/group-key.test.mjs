@@ -27,9 +27,9 @@ test("R5 (was credentials R33) groupKeySet, groupKeyRemove, groupKeySwitch: acti
   const w = await groupWorld();
   const before = w.snapshot();
   for (const by of ["ann", "dee", "cal", "nobody", "class:admin", "class:ai", "token:ai", null, ""]) {
-    assert.deepEqual(await w.c.groupKeySet({ key: KEY, by }), notAnAdmin(by ?? null, "setting the group's Anthropic API key"), String(by));
-    assert.deepEqual(w.c.groupKeyRemove({ by }), notAnAdmin(by ?? null, "removing the group's Anthropic API key"), String(by));
-    assert.deepEqual(w.c.groupKeySwitch({ on: true, by }), notAnAdmin(by ?? null, "switching the group's Anthropic API key"), String(by));
+    assert.deepEqual(await w.c.groupKeySet({ key: KEY, by }), notAnAdmin(by ?? null, "setting the team's Anthropic API key"), String(by));
+    assert.deepEqual(w.c.groupKeyRemove({ by }), notAnAdmin(by ?? null, "removing the team's Anthropic API key"), String(by));
+    assert.deepEqual(w.c.groupKeySwitch({ on: true, by }), notAnAdmin(by ?? null, "switching the team's Anthropic API key"), String(by));
   }
   for (const key of [null, undefined, "", "   ", 7])
     assert.deepEqual(shape(await w.c.groupKeySet({ key, by: "second" })), refusal("NO_SECRET"), String(key));
@@ -146,7 +146,7 @@ test("R6 R9 (were credentials R34 R37) groupKeyState: an active administrator (t
   }
   for (const viewer of ["ann", "member:bob"]) assert.deepEqual(w.c.groupKeyState({ viewer }), { ok: true, on: true }, viewer);
   for (const viewer of ["dee", "cal", "ghost", "class:admin", "class:member", "token:ai", null, undefined, ""])
-    assert.deepEqual(w.c.groupKeyState({ viewer }), notAnAdmin(viewer ?? null, "reading the group's Anthropic API key"), String(viewer));
+    assert.deepEqual(w.c.groupKeyState({ viewer }), notAnAdmin(viewer ?? null, "reading the team's Anthropic API key"), String(viewer));
   assert.equal(w.snapshot(), before);
   w.c.groupKeySwitch({ on: false, by: "second" });
   assert.deepEqual(w.c.groupKeyState({ viewer: "ann" }), { ok: true, on: false });
@@ -233,7 +233,7 @@ test("R9 R14 (were credentials R37 R55) (T41: groupSwitchSet retired into accoun
   const before = w.snapshot();
   for (const by of ["ann", "dee", "class:admin", null])
     assert.deepEqual(w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by }),
-      notAnAdmin(by, "switching the group key's assistant settings"), String(by));
+      notAnAdmin(by, "switching the team key's assistant settings"), String(by));
   for (const name of [null, "", "Standing", "budget", "standing; DROP TABLE x"])
     assert.deepEqual(shape(w.c.accountUsesSet({ owner: "group", switch: name, on: true, by: "admin" })), refusal("UNKNOWN_SWITCH"), String(name));
   assert.equal(w.snapshot(), before, "no refusal writes");

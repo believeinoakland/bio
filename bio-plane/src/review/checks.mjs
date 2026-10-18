@@ -61,8 +61,8 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
   MACHINE_CANNOT_REVIEW: {
     check: 'C-32.16',
     where: at('act', 'is-machine-review'),
-    translation: 'Handing a draft of the group\'s case to a named person, or withdrawing it, is an act '
-      + 'somebody in the group answers for, and the record names who did it. The credential that asked '
+    translation: 'Handing a draft of the team\'s case to a named person, or withdrawing it, is an act '
+      + 'somebody in the team answers for, and the record names who did it. The credential that asked '
       + 'here is an automated one: it can help prepare the draft, and it cannot address it to anyone. '
       + 'Sign in to do this yourself.',
   },
@@ -84,7 +84,7 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
     check: 'C-87.3',
     where: at('notReviewOwner', 'is-review-authority'),
     translation: 'You do not hold this act\'s authority over this project. Drafting the case needs permission '
-      + 'to edit the project\'s work; handing the draft to someone outside the group, and withdrawing a copy '
+      + 'to edit the project\'s work; handing the draft to someone outside the team, and withdrawing a copy '
       + 'you handed over, are the project owner\'s own acts. A project, draft or grant you hold no such '
       + 'authority over is answered exactly as one that does not exist, so this answer does not tell you '
       + 'whether it is there.',
@@ -111,7 +111,7 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
   REVIEW_DRAFT_TOO_LARGE: {
     check: 'C-87.7',
     where: at('#draft', 'is-review-draft-too-large'),
-    translation: 'This draft\'s arguments are larger than your group\'s Civicsmith will store: the limit is 64 KiB, the same '
+    translation: 'This draft\'s arguments are larger than your team\'s Civicsmith will store: the limit is 64 KiB, the same '
       + 'size publishing the case would accept. Nothing was saved. Material this large belongs in the '
       + 'documents and content the case rests on rather than in the draft itself.',
   },
@@ -146,12 +146,12 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
     check: 'C-87.13',
     where: at('approvalRuleSet', 'is-approval-rule-approvers'),
     translation: 'Name the people whose approval every case needs before it is signed: one or more active members '
-      + 'of the group, at most 50. To stop requiring approvals, turn the rule off instead. Nothing was changed.',
+      + 'of the team, at most 50. To stop requiring approvals, turn the rule off instead. Nothing was changed.',
   },
   CASE_NOT_AN_APPROVER: {
     check: 'C-87.14',
     where: at('caseApprove', 'is-not-an-approver'),
-    translation: 'You are not one of the people the group named to approve its cases before they are signed, or '
+    translation: 'You are not one of the people the team named to approve its cases before they are signed, or '
       + 'this case is not one you can see. A case you cannot see is answered exactly as one that does not exist, '
       + 'so this answer does not tell you whether it is there. Nothing was recorded.',
   },

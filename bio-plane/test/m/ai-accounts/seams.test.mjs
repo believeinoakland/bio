@@ -380,9 +380,9 @@ test("R30 (T50; K3472, DEC-259): every member-facing string of its rows calls th
 test("R30: the refusals that name the installation in their detail say \"your group's Civicsmith\" (the seal, the kind)", async () => {
   const w = await world({ sealSecret: null }).group("ann");
   const s = await w.a.groupKeySet({ key: "sk-group-key-000000000000", by: "admin" });
-  assert.match(s.detail, /^your group's Civicsmith has no seal secret set/);
+  assert.match(s.detail, /^your team's Civicsmith has no seal secret set/);
   const k = await w.a.accountReferenceSet({ member: "ann", kind: "subscription", secret: SECRET, by: "member:ann" });
-  assert.match(k.detail, /^the kind your group's Civicsmith holds is apikey/);
+  assert.match(k.detail, /^the kind your team's Civicsmith holds is apikey/);
   for (const x of [s, k]) assert.doesNotMatch(x.detail, /\b(copy|instance|plane|server)\b/i);
 });
 
@@ -520,7 +520,7 @@ test("R34: KEPT_AWAY_UNREADABLE is exported frozen, the refusal R7 states with i
   assert.ok(Object.isFrozen(KEPT_AWAY_UNREADABLE.keep_away));
   assert.deepEqual(KEPT_AWAY_UNREADABLE, { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: "C-29.31",
     translation: AI_ACCOUNT_CHECKS.AI_KEPT_AWAY.translation,
-    detail: "whether the group keeps its material away from every assistant could not be read, so no account was read or "
+    detail: "whether the team keeps its material away from every assistant could not be read, so no account was read or "
       + "used. Nothing was sent.", keep_away: { reason: null, set_by: null, set_at: null } });
 });
 

@@ -558,7 +558,7 @@ function ownHostRefused(locator, extra = {}) {
   const row = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
   return { ok: false, reason: "OWN_HOST_REFUSED", code: "OWN_HOST_REFUSED", check: row.check, translation: row.translation,
            host: hostnameOf(locator), locator, ...extra,
-           detail: `${hostnameOf(locator)} is one of your group's own hosts; nothing was fetched or filed` };
+           detail: `${hostnameOf(locator)} is one of your team's own hosts; nothing was fetched or filed` };
 }
 
 /** R1–R23, R31, R32, R35, R40, R42–R44. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member`
@@ -573,7 +573,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const own = ownHostsOf(cap, ownHosts);
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
   /* C-68.1 (K794, K850): raised through this module's one raiser, its body as it has always been (no `code`). */
-  if (!ev) return evidenceStorageAbsent(op, "your group's Civicsmith has no evidence storage configured", { code: false });
+  if (!ev) return evidenceStorageAbsent(op, "your team's Civicsmith has no evidence storage configured", { code: false });
   /* R1, K58: THE CAPTURE-REQUEST ARM IS IN PROCESS ONLY. From outside, `via: "capture-request"` is refused
      C-28.13 whatever the caller: the AI does not capture, it REQUESTS, and the daemon captures. */
   if (!captureRequest && body.via === "capture-request") {
@@ -581,7 +581,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const row = CAPTURE_REQUEST_ARM_CHECKS.CAPTURE_NOT_DRAINING;
     return answer(403, { ok: false, reason: "CAPTURE_NOT_DRAINING", code: "CAPTURE_NOT_DRAINING",
       check: row.check, translation: row.translation, cls, request: body.request ?? null, op,
-      detail: "your group's Civicsmith fetches a requested document only from inside its own drain, and a request cannot "
+      detail: "your team's Civicsmith fetches a requested document only from inside its own drain, and a request cannot "
             + "reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with "
             + "provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it." });
     /* END DEC-49 REGION is-capture-request-arm */
@@ -678,7 +678,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (supplied.length)
       return answer(400, { ok: false, reason: "DRIVE_HOP_FACT_SUPPLIED", ...driveRow("DRIVE_HOP_FACT_SUPPLIED"), op, supplied,
         detail: `this request carried ${supplied.map((k) => `\`${k}\``).join(", ")}. The export `
-              + `address, the export format and the producer are DERIVED by your group's Civicsmith from the `
+              + `address, the export format and the producer are DERIVED by your team's Civicsmith from the `
               + `file id and the kind in the address, at the moment it performs the fetch, and are `
               + `never read from a request. A provenance hop a caller can hand us is a provenance `
               + `hop a caller can invent (D-112), and the whole value of a disclosed chain is that `
@@ -772,7 +772,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (adm && adm.state === "waiting")
       return answer(429, { ok: false, reason: "RENDER_AT_CAPACITY", ...renderRow("RENDER_AT_CAPACITY"),
         op, render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
-        detail: `${adm.running} renders are running in your group's Civicsmith, which runs at most ${adm.cap} at once; `
+        detail: `${adm.running} renders are running in your team's Civicsmith, which runs at most ${adm.cap} at once; `
               + `this render is waiting and nothing was fetched.` });
     if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
     if (!adm || adm.state !== "admitted")
@@ -896,7 +896,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     return answer(502, { ok: false, reason: "DRIVE_EXPORT_UNREACHABLE", ...driveRow("DRIVE_EXPORT_UNREACHABLE"), op,
       status: res.status, locator: driveCapture.address, export_address: driveCapture.exportAddress, drive: driveFacts,
       detail: `Google answered ${res.status} at the OpenDocument export address `
-            + `${driveCapture.exportAddress}, which your group's Civicsmith composed from the ${driveCapture.kind} `
+            + `${driveCapture.exportAddress}, which your team's Civicsmith composed from the ${driveCapture.kind} `
             + `id in ${driveCapture.address}. Nothing was captured, and the application page at the `
             + `document's own address was NOT captured in its place — a fallback to the shell would `
             + `record a success holding no document. A 404 usually means the id is wrong; a 403 `

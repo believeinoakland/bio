@@ -353,7 +353,7 @@ test("R48 (controls): a capture already opened costs no read; a file whose bytes
  * ======================================================================= */
 
 test("R29 (C-68.1, K850; T50, N1064): every path that answers EVIDENCE_STORAGE_NOT_CONFIGURED, with no evidence storage, answers byte for byte what evidenceStorageAbsent(op, error, {code}) answers for that op, and the row's where names the raiser; a path that holds nothing in the evidence store never answers it", async () => {
-  const error = "your group's Civicsmith has no evidence storage configured";
+  const error = word("capture.response.group_civicsmith_evidence");
   const C = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
   assert.equal(C.where, "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent", "the row names its one raiser");
   /* acquire, on every arm: its body has no `code` */

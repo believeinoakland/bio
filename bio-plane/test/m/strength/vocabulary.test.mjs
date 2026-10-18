@@ -284,7 +284,7 @@ test("R28: the sentences T28 added (another group's finding, R33; anonymous evid
                      legs: [{ target: REF, kind: "imported" }, { target: REF, kind: "imported", answer: { capture: "C" } },
                             { target: "INFO-2026-0001-a", kind: "document", grade: "B", grade_axis: "connection", captures: ["knock"] }] })];
   const corpus = answers.flatMap((a, i) => sentences(a, `answer ${i}`));
-  for (const re of [/another group's finding, in that group's case/, /publishes connection as undetermined/,
+  for (const re of [/another team's finding, in that team's case/, /publishes connection as undetermined/,
                     /without saying which edition/, /does not hold at edition 3/, /nothing here establishes what/,
                     /attests anonymously/, /case file states no answer/, /not a document, so a capture grade/])
     assert.ok(corpus.some(([, s]) => re.test(s)), `reached: ${re}`);
@@ -321,9 +321,9 @@ test("R28: the sentences T33 added (a calculation's, a held standard's and an oc
   const p = w.s.strengthOf("INQ-2026-0001-a"), q = w.s.strengthOf("INQ-2026-0002-a"), o = w.s.strengthOf("INQ-2026-0003-a");
   const corpus = STRENGTH_AXES.flatMap((axis) => [...sentences(p[axis], axis), ...sentences(q[axis], `standard ${axis}`),
                                                   ...sentences(o[axis], `occurrence ${axis}`)]);
-  for (const re of [/weakest capture among its inputs/, /is not accepted/, /another program computed/, /is not a calculation your group's Civicsmith holds/,
+  for (const re of [/weakest capture among its inputs/, /is not accepted/, /another program computed/, /is not a calculation your team's Civicsmith holds/,
                     /no more than B for STD-2026-0001/, /no captured text at that version/, /held standard, so a connection grade/,
-                    /capture axis only/, /It is overdue as known today/, /due date is undetermined/, /not an obligation your group's Civicsmith holds/])
+                    /capture axis only/, /It is overdue as known today/, /due date is undetermined/, /not an obligation your team's Civicsmith holds/])
     assert.ok(corpus.some(([, s]) => re.test(s)), `reached: ${re}`);
   corpus.push(["gradingMethodText v2", gradingMethodText(GRADING_METHOD_VERSION)]);
   clean(corpus);

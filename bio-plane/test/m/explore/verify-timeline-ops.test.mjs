@@ -150,8 +150,8 @@ test("R19 rederive reads the derivation's ends and the hops its inputs name with
 test("DEC-149 (T34-78) the timeline's member-facing refusal and note call the group's Civicsmith by name, never the instance", () => {
   const none = exploreOf(null, {}).timelineOver({ set: [A], viewer: V });
   assert.equal(none.refused, "NOT_AVAILABLE");
-  assert.equal(none.why, "your group's Civicsmith has no events record connected, so no timeline can be read");
+  assert.equal(none.why, "your team's Civicsmith has no events record connected, so no timeline can be read");
   const noMoney = exploreOf(null, { events: { timeline: () => ({ ok: true, world: { items: [] }, ours: { sources: [] } }) } }).timelineOver({ set: [A], viewer: V });
-  assert.equal(noMoney.money_note, "your group's Civicsmith has no money record connected, so no payer or payee is shown");
+  assert.equal(noMoney.money_note, "your team's Civicsmith has no money record connected, so no payer or payee is shown");
   for (const t of [none.why, noMoney.money_note]) assert.doesNotMatch(t, /\b(this instance|the instance|copy|plane|server)\b/);
 });

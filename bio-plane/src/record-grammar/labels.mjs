@@ -82,7 +82,7 @@ export const PROPOSAL_STATES = Object.freeze({
     machine_proposed: 'a machine credential proposed this standard. That is machine work, labelled as machine work: '
       + 'it can set a standard beside the record for members to consider and it can never enter one. Nothing here '
       + 'is a standard this record holds, and nothing becomes one until a member records it themselves',
-    member_proposed: 'a member proposed this standard to whoever records the group\'s standards. It is a proposal '
+    member_proposed: 'a member proposed this standard to whoever records the team\'s standards. It is a proposal '
       + 'and not a standard: only recording a standard enters one, and the record holds who made the proposal',
     unstated: 'the record does not say who proposed this standard',
   }),
@@ -107,9 +107,9 @@ export const PROPOSAL_STATES = Object.freeze({
   theory: Object.freeze({
     machine_proposed: 'a machine credential proposed this candidate theory and remedy. That is machine work, '
       + 'labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it '
-      + 'can never state the group\'s position. Nothing here is the group\'s position',
+      + 'can never state the team\'s position. Nothing here is the team\'s position',
     member_proposed: 'a member proposed this candidate theory and remedy. It is a candidate for members and counsel '
-      + 'to weigh and not the group\'s position, and the record holds who proposed it',
+      + 'to weigh and not the team\'s position, and the record holds who proposed it',
     unstated: 'the record does not say who proposed this candidate theory and remedy',
   }),
   /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
@@ -148,11 +148,11 @@ export const PROPOSAL_STATES = Object.freeze({
   edition_statement: Object.freeze({
     machine_proposed: 'a machine credential drafted this statement of what changed in this edition, and why. That is '
       + 'machine work, labelled as machine work: it is a draft, which can help members say what changed and can never '
-      + 'sign a statement. It is not the group\'s statement until a member adopts or rewrites it',
+      + 'sign a statement. It is not the team\'s statement until a member adopts or rewrites it',
     member_proposed: 'a member proposed this statement of what changed in this edition, and why. It is a proposal and '
-      + 'not the group\'s statement until a member adopts or rewrites it, and the record holds who proposed it',
+      + 'not the team\'s statement until a member adopts or rewrites it, and the record holds who proposed it',
     unstated: 'the record does not say who proposed this statement of what changed in this edition, and why, and it is '
-      + 'not the group\'s statement until a member adopts or rewrites it',
+      + 'not the team\'s statement until a member adopts or rewrites it',
   }),
   /* DEC-89 with Bob's addition (K1019; T23, R44): an escalation's opening reason assembled from the determination's
      record (escalation R29) is not a member's reason until a member sends it, as offered or edited; the reason then
@@ -199,11 +199,11 @@ export const PROPOSAL_STATES = Object.freeze({
   translation: Object.freeze({
     machine_proposed: 'a machine credential drafted this translation of an interface word. That is machine work, labelled '
       + 'as machine work: it can draft a translation and it can never adopt or confirm one. It is a draft, shown to members '
-      + 'as "Draft", and not the group\'s wording until a member granted that language adopts it',
+      + 'as "Draft", and not the team\'s wording until a member granted that language adopts it',
     member_proposed: 'a member proposed this translation of an interface word. It is a draft, shown to members as "Draft", '
-      + 'and not the group\'s wording until a member granted that language adopts it, and the record holds who proposed it',
+      + 'and not the team\'s wording until a member granted that language adopts it, and the record holds who proposed it',
     unstated: 'the record does not say who drafted this translation of an interface word. It is a draft, shown to members '
-      + 'as "Draft", and not the group\'s wording until a member granted that language adopts it',
+      + 'as "Draft", and not the team\'s wording until a member granted that language adopts it',
   }),
   /* N838 (K2540; T42, R54): a draft of a case's account drawn from its cited evidence (case-authoring R64, kind
      `case_account`) is never the case's account, which a member writes in her own words; and a check of a member's
@@ -221,11 +221,11 @@ export const PROPOSAL_STATES = Object.freeze({
   account_check: Object.freeze({
     machine_proposed: 'a machine credential flagged these sentences of a member\'s account as not supported by the evidence '
       + 'they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can '
-      + 'never find against one. It is never a finding of the group',
+      + 'never find against one. It is never a finding of the team',
     member_proposed: 'a member flagged these sentences of a member\'s account as not supported by the evidence they cite. '
-      + 'It is a draft and never a finding of the group, and the record holds who proposed it',
+      + 'It is a draft and never a finding of the team, and the record holds who proposed it',
     unstated: 'the record does not say who flagged these sentences of a member\'s account as not supported by the evidence '
-      + 'they cite. It is a draft and never a finding of the group',
+      + 'they cite. It is a draft and never a finding of the team',
   }),
   /* N912 (K2845; T46, R60): a layout of how a reply to a request for comment bears on each claim of the action
      (`action-replies` R1, `actionBearingPropose`) is a proposed reading, stored apart, and never the group's reading until a
@@ -234,11 +234,11 @@ export const PROPOSAL_STATES = Object.freeze({
   bearing: Object.freeze({
     machine_proposed: 'a machine credential proposed this layout of how a reply bears on each claim of an action. That is '
       + 'machine work, labelled as machine work: it can propose a layout and it can never record one. It is a proposed '
-      + 'reading and never the group\'s reading until a member records it',
+      + 'reading and never the team\'s reading until a member records it',
     member_proposed: 'a member proposed this layout of how a reply bears on each claim of an action. It is a proposed reading '
-      + 'and never the group\'s reading until a member records it, and the record holds who proposed it',
+      + 'and never the team\'s reading until a member records it, and the record holds who proposed it',
     unstated: 'the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a '
-      + 'proposed reading and never the group\'s reading until a member records it',
+      + 'proposed reading and never the team\'s reading until a member records it',
   }),
   /* N956 (K3028; T47, R61): a draft of a status report on a plan (`plan-work` R14, the assistant's draft) is kept with the
      plan and never published, and the report kept is the member's; a machine can draft one and never keep or publish one.

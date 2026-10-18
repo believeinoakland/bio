@@ -33,7 +33,7 @@ const TAKEN = {
 };
 /* The six as T45 worded them (BOB's drafts): none is answered any longer. */
 const T45 = {
-  DETERMINATION_NOT_ADOPTABLE: "Another group's determination is never adopted as this group's. Make your own "
+  DETERMINATION_NOT_ADOPTABLE: "Another team's determination is never adopted as this group's. Make your own "
     + "determination, against standards in your group's record, resting on findings this group published, holds checked, "
     + "or has accepted. Nothing was written.",
   MACHINE_CANNOT_LINK_CURE: "Naming a later act as the cure of a breach is a member's judgment. An assistant may not "
@@ -51,10 +51,10 @@ const T45 = {
 const KEPT_THREE = {
   FINDING_NOT_PUBLISHED: ["C-113.7", AT("#pinFindings", "is-finding-published"), "A determination rests on findings of "
     + "three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by "
-    + "this project; or another group's finding this group has accepted at the edition named. The finding named is none "
+    + "this project; or another team's finding this team has accepted at the edition named. The finding named is none "
     + "of these. Nothing was written."],
   DETERMINATION_VOID: ["C-113.37", AT("determinationVoided", "is-determination-standing"), "That determination reads "
-    + "undetermined: a finding it rests on no longer stands (its check was voided, or the other group withdrew or revised "
+    + "undetermined: a finding it rests on no longer stands (its check was voided, or the other team withdrew or revised "
     + "the edition accepted). A member re-evaluates it by superseding it with a determination resting on findings that "
     + "stand. Nothing was written."],
   CURE_LINKED: ["C-113.44", AT("#cureRefusal", "is-cure-unlinked"), "A cure is already recorded for that breach against "
@@ -62,7 +62,7 @@ const KEPT_THREE = {
 };
 /* Every row R38 does not re-word (34: the three above among them; not C-113.6, R40), as T45 left them: their canonical JSON's sha256, so
    no check, where or translation of theirs moves. */
-const KEPT = { count: 34, sha256: "969bae03b449a9723f5bd7a9f5c52a7e4abfecd0c0a234e72943c828709b194f" };
+const KEPT = { count: 34, sha256: "e19b29e2e575ef1fbbaf88b3f01f0863b1551f0fbe8e8404a4e57f1aee39f0d0" };
 /* T48 (R40) re-worded C-113.6 NO_FINDINGS, and T50 reads it by key; it leaves this set, and the R40 test below holds it. */
 const R40 = ["C-113.6", AT("#pinFindings", "is-finding-named")];
 

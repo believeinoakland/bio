@@ -294,7 +294,7 @@ test("R19 keep-away is never reported as no_account, nor an account's refusal as
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
   const calls = [];
   w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
-  const ROW = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", translation: "Your group keeps its material away." };
+  const ROW = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", translation: "Your team keeps its material away." };
   let n = 0;
   /* (T48-36) `accts` stands for ai-accounts (keep-away, the account), `creds` for credentials (the standing grant) */
   const step = async (accts, creds = w.credentials) => {

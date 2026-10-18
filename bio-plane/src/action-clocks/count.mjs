@@ -169,7 +169,7 @@ function calendarStated(calls, readable) {
   const years = calls.map(({ h, f }) => ({ year: Number(h.year), list: isListEntry(h) ? h.list : null,
     offices: Array.isArray(h.offices) ? h.offices : null, path: f.path ?? null, status: f.status, basis: h.basis ?? null,
     ...(f.status === "corrected" ? { corrected_by: f.by ?? null, corrected_at: f.at ?? null } : {}) }));
-  if (!readable) return { status: "not_read", years, says: ["whether your group has confirmed the calendar was not read"] };
+  if (!readable) return { status: "not_read", years, says: ["whether your team has confirmed the calendar was not read"] };
   const says = [];
   for (const { h, f } of calls) {
     const which = isListEntry(h) ? `: the closure list '${h.list}', ${h.year}` : "";
@@ -223,10 +223,10 @@ function startOf(starts, ledger, receipts) {
   if (starts === "served") {
     const s = latest(recs.filter((x) => x.kind === "service"));
     return s ? { day: s.at.slice(0, 10), from: "service" }
-      : { why: "no service of the group's papers on that party is recorded on this action, the event this rule starts from" };
+      : { why: "no service of the team's papers on that party is recorded on this action, the event this rule starts from" };
   }
   if (firstSent === -1) return { why: starts === "received"
-    ? "the action's ledger holds no sent entry: the counterparty's receipt of the group's request is counted from it"
+    ? "the action's ledger holds no sent entry: the counterparty's receipt of the team's request is counted from it"
     : "the action's ledger holds no sent entry, the event this rule starts from" };
   if (starts === "received") {
     const r = latest(recs.filter((x) => x.kind === "receipt" && Number(x.ord) === firstSent));

@@ -186,7 +186,7 @@ section("R72 · the refusals, before any model call, in order");
     t(`R72 (T46): ${label} is no longer refused TRANSCRIBE_NEEDS_API_KEY, and no plane call is made`,
       [x.out?.code === "TRANSCRIBE_NEEDS_API_KEY", x.text.includes("TRANSCRIBE_NEEDS_API_KEY"), x.plane.length], [false, false, 0]);
   }
-  for (const [label, account] of [["the group's API key", { ...ACCOUNT, level: "group" }],
+  for (const [label, account] of [["the team's API key", { ...ACCOUNT, level: "group" }],
                                   ["a project's API key (R71)", { ...ACCOUNT, level: "project", project: "PRJ-1" }]]) {
     const x = await transcribe(body({ account }));
     t(`R72: ${label} serves the act`, [x.status, x.out?.pages?.length], [200, 2]);

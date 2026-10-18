@@ -146,7 +146,7 @@ const BODY_CALL_MS = 5000;
    not. `data:` and `blob:` addresses reach no host and are let go. */
 export const RENDER_BLOCKED_REASONS = Object.freeze({
   NOT_A_PUBLIC_LOCATOR: "it is not a public https address",
-  OWN_HOST: "its host is one of your group's own (where your group's Civicsmith or its fleet is reached)",
+  OWN_HOST: "its host is one of your team's own (where your team's Civicsmith or its fleet is reached)",
 });
 const FETCH_PATTERNS = Object.freeze([{ urlPattern: "*", requestStage: "Request" }]);
 const SOCKET_PATTERNS = Object.freeze(["ws://*", "wss://*"]);

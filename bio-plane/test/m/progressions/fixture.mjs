@@ -75,7 +75,7 @@ export function meaning() {
 export const MEMBER = "class:member", BOB = "member:bob";
 export const DAY = 86400000;
 /** The basis statement a test's first declaration states (R2). */
-export const FIRST_BASIS = "the group's reading of how this body works";
+export const FIRST_BASIS = "the team's reading of how this body works";
 
 /** The governing zone the tests' profile gives (local-facts R2). */
 export const ZONE = "America/New_York";

@@ -341,7 +341,7 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     /** A standard declared by bob (standards R1) over a fresh passage, in force over `period`: its id. */
     standard(period) {
       const r = standards.standardDeclare({ cite: `Test Bylaw § ${++n}`, kind: "ordinance", issuer: "The Selectboard", text: [w.passage(`bylaw ${n}`)],
-        period, reason: "the group holds the town to its own bylaw", author: V("bob"), viewer: V("bob") });
+        period, reason: "the team holds the town to its own bylaw", author: V("bob"), viewer: V("bob") });
       if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 300)}`);
       return r.id;
     },

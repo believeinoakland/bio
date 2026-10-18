@@ -64,7 +64,7 @@ export const INTENT_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE_GOAL: {
     check: 'C-111.9', where: at("goalMachineRefusal", "is-goal-member"),
     translation: 'Declaring a goal, tying a project to it and closing it are members\' decisions. An assistant may '
-      + 'propose; it may not decide what the group pursues. Sign in as a member. Nothing was written.',
+      + 'propose; it may not decide what the team pursues. Sign in as a member. Nothing was written.',
   },
   PURSUIT_UNSTATED: {
     check: 'C-111.10', where: at("refusePursuitUnstated", "is-pursuit-stated"),
@@ -86,7 +86,7 @@ export const INTENT_CHECKS = Object.freeze({
   },
   MACHINE_CANNOT_DECLARE_ASPIRATION: {
     check: 'C-111.14', where: at("aspirationMachineRefusal", "is-aspiration-member"),
-    translation: 'What the group holds to is its members\' decision, and so is setting one aside. An assistant may '
+    translation: 'What the team holds to is its members\' decision, and so is setting one aside. An assistant may '
       + 'propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written.',
   },
   NOT_YOURS: {
@@ -96,7 +96,7 @@ export const INTENT_CHECKS = Object.freeze({
   },
   NO_LESSON: {
     check: 'C-111.17', where: at("refuseNoLesson", "is-retirement-taught"),
-    translation: 'Retiring an aspiration records what pursuing it taught the group, and nothing was written there. '
+    translation: 'Retiring an aspiration records what pursuing it taught the team, and nothing was written there. '
       + 'Say what was learned. Nothing was retired.',
   },
   MACHINE_CANNOT_TRIAGE: {
@@ -107,7 +107,7 @@ export const INTENT_CHECKS = Object.freeze({
   MACHINE_CANNOT_CHOOSE_THE_QUESTION: {
     check: 'C-111.19', where: at("workObjective", "is-objective-member"),
     translation: 'Setting an assistant to work on a project\'s objective is a member\'s act: the objective is the '
-      + 'group\'s, and so is the choice to pursue it. Sign in as a member. No run was opened.',
+      + 'team\'s, and so is the choice to pursue it. Sign in as a member. No run was opened.',
   },
   PURSUIT_STATE_MOVE_UNDECLARED: {
     check: 'C-111.20', where: at("#checkPursuit", "is-pursuit-state-move"),
@@ -116,7 +116,7 @@ export const INTENT_CHECKS = Object.freeze({
   },
   BAD_SCOPE: {
     check: 'C-111.21', where: at("refuseBadScope", "is-aspiration-scoped"),
-    translation: 'An aspiration belongs to the group, to one project, or to one member, and a project\'s or a '
+    translation: 'An aspiration belongs to the team, to one project, or to one member, and a project\'s or a '
       + 'member\'s names which one. This one does not. Nothing was written.',
   },
   NO_SUCH_PROPOSAL: {
@@ -131,7 +131,7 @@ export const INTENT_CHECKS = Object.freeze({
   },
   SOURCE_DECLARED: {
     check: 'C-111.24', where: at("registerSource", "is-source-once"),
-    translation: 'This source of proposals is already registered. A source registers once, when your group\'s '
+    translation: 'This source of proposals is already registered. A source registers once, when your team\'s '
       + 'Civicsmith starts.',
   },
   SOURCE_MALFORMED: {
@@ -151,7 +151,7 @@ export const INTENT_CHECKS = Object.freeze({
   NONE_EXISTS_READER_DECLARED: {
     check: 'C-111.29', where: at("registerNoneExistsReader", "is-none-exists-once"),
     translation: 'The reader of records requests answered that no such record exists is already registered. It '
-      + 'registers once, when your group\'s Civicsmith starts.',
+      + 'registers once, when your team\'s Civicsmith starts.',
   },
   NONE_EXISTS_READER_MALFORMED: {
     check: 'C-111.30', where: at("registerNoneExistsReader", "is-none-exists-shaped"),

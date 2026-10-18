@@ -13,9 +13,9 @@ export const ACTION_WORDS = Object.freeze({
   "queue.member-left-items.detail": "{member} is no longer in {place}, and these were routed to them: {items}. Take up the ones you can.",
   "queue.watch-keep-or-stop.summary": "Keep watching {what}?",
   "queue.watch-keep-or-stop.detail": "{plan} has closed, or its promises are all met. Keep this watch until a date, or stop it now. You are asked once.",
-  "queue.action-clock-overdue.ours.detail": "Your group's deadline to {what} with {venue} was {date}, and nothing is recorded as done. See what can still be done.",
+  "queue.action-clock-overdue.ours.detail": "Your team's deadline to {what} with {venue} was {date}, and nothing is recorded as done. See what can still be done.",
   "queue.plan-review-due.summary": "Review due: {plan}",
-  "queue.plan-review-due.detail": "Your group set {plan} to be reviewed every {rhythm}, and nothing has been reviewed since {date}. See what changed, then record the review.",
+  "queue.plan-review-due.detail": "Your team set {plan} to be reviewed every {rhythm}, and nothing has been reviewed since {date}. See what changed, then record the review.",
   "queue.plan-look-again.summary": "Look again at {plan}",
   "queue.litigation-hold.docket.summary": "A legal threat with no hold: {entry}",
   /* R11, R21, R23: the doors' labels, `door.<op>` */

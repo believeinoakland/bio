@@ -38,7 +38,7 @@ test("R33: a leg on an accepted finding contributes, per axis, the grade that ed
     assert.equal(m.inherited_from, REF);
     assert.deepEqual(m.another_groups, { group: "other-group", case: "CASE-1", edition: 2, finding: "INQ-2026-0500-a" });
     assert.ok(!("through" in m), "nothing past another group's finding is walked");
-    assert.match(m.why, /another group's finding, in that group's case CASE-1 at edition 2, published by other-group/);
+    assert.match(m.why, /another team's finding, in that team's case CASE-1 at edition 2, published by other-group/);
   }
   assert.match(memberOn(p.testimony, REF).why, /publishes no grade on testimony, so it is not load-bearing/);
   /* The edition read is the one the leg names, from the inquiry's authored basis (the projection does not hold it). */
@@ -123,7 +123,7 @@ test("R33: a capture or testimony grade written on a leg to another group's find
   w.inquiry(INQ, [{ target: REF, edition: 2, grade: "A", axis: "capture", source: "capture" }]);
   const p = w.s.strengthOf(INQ);
   const m = p.capture.not_load_bearing.find((x) => x.target_id === REF && x.via === "leg");
-  assert.match(m.why, /another group's finding, not a document/);
+  assert.match(m.why, /another team's finding, not a document/);
   assert.equal(p.capture.state, "unrated");
 });
 
@@ -155,7 +155,7 @@ test("R33: versionStrength counts a version's leg on an accepted finding at its 
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.equal(r.pair.capture.grade, "B");
   assert.equal(r.pair.connection.grade, "C");
-  assert.match(r.ungraded.find((x) => x.ord === 0).why, /another group's finding and carries no grade of its own/);
+  assert.match(r.ungraded.find((x) => x.ord === 0).why, /another team's finding and carries no grade of its own/);
   /* A version leg with no edition stored: undetermined, with why. */
   w.version(INQ, "v2", "accepted", [{ target: REF, ground: "" }]);
   const v2 = w.s.versionStrength({ id: INQ, version: "v2", viewer: MACHINE });

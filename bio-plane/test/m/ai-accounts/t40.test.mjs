@@ -48,7 +48,7 @@ test("R14 (was credentials R55): USE_KINDS is exported and frozen, ask, draft, r
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).uses, DEFAULTS, "a member's own reference");
   assert.deepEqual(w.c.accountReferenceState({ member: "cy", viewer: "cy" }).subscription.uses, DEFAULTS, "a member's sign-in (K2275's gap closed)");
   assert.deepEqual(w.c.projectAccountState({ project: "P", viewer: "ann" }).uses, DEFAULTS, "a project's key");
-  assert.deepEqual(w.c.groupKeyState({ viewer: "admin" }).uses, DEFAULTS, "the group key");
+  assert.deepEqual(w.c.groupKeyState({ viewer: "admin" }).uses, DEFAULTS, "the team key");
   /* negative control: an account not held answers no switches */
   assert.equal(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).uses, null);
   assert.equal(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).subscription.uses, null);
@@ -63,7 +63,7 @@ test("R14 (was credentials R55): accountUsesSet sets one switch of one account b
   /* the group: administrators only */
   for (const by of ["ann", "class:admin", null])
     assert.deepEqual(w.c.accountUsesSet({ owner: "group", switch: "ask", on: false, by }),
-      notAnAdmin(by, "switching the group key's assistant settings"), String(by));
+      notAnAdmin(by, "switching the team key's assistant settings"), String(by));
   /* a project: its owners only, after sight */
   assert.deepEqual(w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: false, by: "bob" }), notTheOwner("bob", "P"));
   assert.deepEqual(w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: false, by: "class:admin" }), notTheOwner("class:admin", "P"));
@@ -475,7 +475,7 @@ test("R7 R22 (was credentials R35 R57): aiKeptAway({project, use}) answers the g
   assert.deepEqual([k.project, k.use, k.keep_away], ["P", "ask", { reason: "Under seal until March.", set_by: "ann", set_at: set.set_at }]);
   assert.equal(w.c.aiKeptAway({ project: "P", use: "run" }), null, "a use it does not name");
   assert.equal(w.c.aiKeptAway({ project: "S", use: "ask" }), null, "another project");
-  assert.equal(w.c.aiKeptAway({ project: "P", use: "explore" }).reason, "AI_KEPT_AWAY", "the group's first");
+  assert.equal(w.c.aiKeptAway({ project: "P", use: "explore" }).reason, "AI_KEPT_AWAY", "the team's first");
   assert.equal(w.c.aiKeptAway({ project: "P" }).reason, "AI_KEPT_AWAY");
   w.c.aiKeepAwaySet({ on: false, by: "admin" });
   assert.equal(w.c.aiKeptAway({ project: "P" }).reason, "PROJECT_AI_KEPT_AWAY", "no use asked: covered while on");
@@ -492,7 +492,7 @@ test("R7 R22 (was credentials R35 R57): aiKeptAway({project, use}) answers the g
   const unread = w.c.aiKeptAway({ project: "P", use: "run" });
   assert.deepEqual([shape(unread), unread.keep_away], [refusal("PROJECT_AI_KEPT_AWAY"), { reason: null, set_by: null, set_at: null }]);
   assert.match(unread.detail, /could not be read/);
-  assert.equal(w.c.aiKeptAway({ use: "run" }), null, "the group's own read is unaffected");
+  assert.equal(w.c.aiKeptAway({ use: "run" }), null, "the team's own read is unaffected");
   assert.equal(w.c.projectsKeptAway({ use: "ask" }), null, "unknown, never an empty list");
 });
 

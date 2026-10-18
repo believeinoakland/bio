@@ -110,7 +110,7 @@ export function anonymousTestimonyRefusal(caseId, edition, offenders) {
   return { ok: false, reason: "ANONYMOUS_TESTIMONY_UNCORROBORATED", ...rowOf("ANONYMOUS_TESTIMONY_UNCORROBORATED"),
     caseId, edition, uncorroborated: offenders.slice(0, 50),
     detail: `case ${caseId} edition ${edition} rests on testimony, or on material from an unnamed source a member `
-          + `attests, credited only to the group or the project with no independent leg corroborating it: `
+          + `attests, credited only to the team or the project with no independent leg corroborating it: `
           + `${offenders.slice(0, 5).map((x) => `${x.member} on ${x.observation ?? x.document}`).join(", ")}. It counts `
           + `as an anonymous tip (DEC-102, DEC-119). Corroborate the claim with an independent leg, ask the author or `
           + `attesting member to choose cover or name (op=attribute), or drop the finding resting on it from the edition `
@@ -166,10 +166,10 @@ export function approvalMissingRefusal(caseId, edition, approvalSha, read, notCa
     approvalSha: approvalSha ?? null, approvers: read.approvers ?? null,
     missing: read.unreadable ? null : missing, not_carried: read.unreadable ? null : uncarried,
     detail: read.unreadable
-      ? `the group's approval rule, or the approvals given for case ${caseId} edition ${edition}, could not be read `
+      ? `the team's approval rule, or the approvals given for case ${caseId} edition ${edition}, could not be read `
         + `(${read.unreadable}), so whether every required approver has approved this document is undetermined and it `
         + `is not signed unchecked. Ask again. Nothing was signed.`
-      : `the group requires ${read.approvers.join(", ")} to approve a case before it is signed`
+      : `the team requires ${read.approvers.join(", ")} to approve a case before it is signed`
         + (missing.length ? `, and ${missing.join(", ")} ${missing.length === 1 ? "has" : "have"} not approved case `
           + `${caseId} edition ${edition} as this document stands (${String(approvalSha ?? "").slice(0, 12)}); an `
           + `approval of an earlier version does not carry over` : "")

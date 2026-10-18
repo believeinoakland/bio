@@ -661,23 +661,23 @@ export class Queue {
     "signer-self-registered": " This one is a signing key a member registered for themselves, which is keyed by the "
       + "KEY rather than by a task, so it leaves when an administrator revokes the key "
       + "(op=signerset), or when it is otherwise no longer active.",
-    "plan-checkpoint-due": " This one is a checkpoint your group set in an action plan, keyed by the plan, scenario "
+    "plan-checkpoint-due": " This one is a checkpoint your team set in an action plan, keyed by the plan, scenario "
       + "and phase rather than by a task: it leaves when a member records whether its condition was met "
       + "(op=checkpointrecord), or when the plan is closed.",
     "escalation-stage-proposed": " This one is an escalation's next stage, proposed because its trigger was met and "
       + "keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or "
       + "declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended.",
-    "action-reminder": " This one is a reminder you asked for on one of the group's action deadlines, keyed by the "
+    "action-reminder": " This one is a reminder you asked for on one of the team's action deadlines, keyed by the "
       + "action, the entry and the day rather than by a task: you answer it with another reminder or with none "
       + "(op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
-    "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry "
+    "litigation-hold": " This one is a reply your team marked as legal pressure, keyed by the action and the entry "
       + "rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place "
       + "by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act. A legal mark on a "
       + "docket entry, or a legal pressure record, is keyed by the mark instead, and leaves the same way.",
     "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by "
       + "the version and by you rather than by a task: it leaves when you review the version's present text "
       + "(op=templatereview), or when the version is no longer in review.",
-    "local-fact-due": " This one is a holiday calendar or office hours one of the group's deadlines reads, keyed by the "
+    "local-fact-due": " This one is a holiday calendar or office hours one of the team's deadlines reads, keyed by the "
       + "fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no "
       + "live action reads it.",
     "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed "
@@ -706,12 +706,12 @@ export class Queue {
       + "promise it watched is met, keyed by the watch rather than by a task: it leaves when you answer it, keeping the "
       + "watch until a date or stopping it (op=watchanswer), or when the watch ends. A watch relied on elsewhere is shown "
       + "with no door.",
-    "plan-review-due": " This one is a review day your group set for a plan, keyed by the plan and the day rather than by "
+    "plan-review-due": " This one is a review day your team set for a plan, keyed by the plan and the day rather than by "
       + "a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed.",
-    "plan-look-again": " This one is the date your group set to look again at a paused plan, keyed by the plan and the "
+    "plan-look-again": " This one is the date your team set to look again at a paused plan, keyed by the plan and the "
       + "day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it.",
     /* R54 (machinery-producers R11, instance-setup R89; DEC-226 (1)). */
-    "update-ready": " This one is a release of your group's Civicsmith that is ready to install, one to-do for every "
+    "update-ready": " This one is a release of your team's Civicsmith that is ready to install, one to-do for every "
       + "administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them "
       + "updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that "
       + "release or newer. A newer release replaces it.",
@@ -1986,7 +1986,7 @@ export class Queue {
         const zone = this.#zone();
         if (zone === null)
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "a calendar date is snoozed until the start of that day where this group is, and no time zone "
+            detail: "a calendar date is snoozed until the start of that day where this team is, and no time zone "
                   + "is held for this copy (its jurisdiction profile gives none), so the day cannot be read without "
                   + "guessing one. Send an instant instead (ISO-8601, with its time)." };
         const today = localDay(new Date(nowMs).toISOString().replace(/\.\d{3}Z$/, "Z"), zone);
@@ -1996,7 +1996,7 @@ export class Queue {
             detail: "the day could not be read in this copy's time zone; send an instant instead" };
         if (text < today)
           return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id, today,
-            detail: `that day is before today (${today}) where this group is; a snooze that has already expired is `
+            detail: `that day is before today (${today}) where this team is; a snooze that has already expired is `
                   + "not a snooze, it would report as deferred while deferring nothing" };
         day = text;
         ms = Date.parse(range.start);
@@ -2026,7 +2026,7 @@ export class Queue {
       ...(dated ? { until_day: dated.day } : {}),
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
       detail: dated && dated.lapsed
-        ? "that day has already begun where this group is, so the snooze, which holds until its start, has already "
+        ? "that day has already begun where this team is, so the snooze, which holds until its start, has already "
         + "lapsed and defers nothing. The items are unchanged and no other member's feed moved."
         : iso
         ? "re-notification about this case is deferred for YOU until that instant. The items themselves "

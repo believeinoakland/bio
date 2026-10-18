@@ -88,7 +88,7 @@ test("R39 (a) the assistant drafts only the words missing from the group's langu
      adopts it (its R50). */
   for (const s of Object.values(INTERFACE_TRANSLATION_LABELS)) {
     assert.match(s, /shown to members as "Draft"/);
-    assert.match(s, /not the group's wording until a member granted that language adopts it/);
+    assert.match(s, /not the team's wording until a member granted that language adopts it/);
   }
 });
 

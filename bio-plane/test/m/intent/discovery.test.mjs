@@ -48,7 +48,7 @@ test("R15 R22 (DEC-149, T35-51) a second registration of a source answers SOURCE
   const w = seeded();
   assert.equal(w.i.registerSource("monitoring", () => []).ok, true);
   const again = w.i.registerSource("monitoring", () => []);
-  const words = "This source of proposals is already registered. A source registers once, when your group's Civicsmith starts.";
+  const words = "This source of proposals is already registered. A source registers once, when your team's Civicsmith starts.";
   assert.deepEqual([again.ok, again.reason, again.code, again.check, again.translation],
                    [false, "SOURCE_DECLARED", "SOURCE_DECLARED", "C-111.24", words]);
   assert.equal(INTENT_CHECKS.SOURCE_DECLARED.translation, words, "the row carries the same sentence");

@@ -2389,12 +2389,12 @@ var PROVIDERS = Object.freeze([
       sends: ["file_bytes"],
       recipient: "Uva Software, LLC",
       sub_processors: ["Amazon Web Services"],
-      region: "chosen by the group: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it",
+      region: "chosen by the team: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it",
       file_retention: "deleted on completion of analysis",
       result_retention: "up to 400 days in the processing region",
       sample_sharing: "none"
     },
-    licence_note: "the group's own key; terms allow use within its own products made available to its clients",
+    licence_note: "the team's own key; terms allow use within its own products made available to its clients",
     source_urls: [
       "https://docs.scanii.com/article/142-privacy-policy",
       "https://docs.scanii.com/article/143-terms-of-service",
@@ -2707,13 +2707,13 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "test_address", address: "https://malware.testcategory.com/" },
     handling: {
       sends: ["url"],
-      recipient: "Cloudflare, Inc. (the group's own account)",
+      recipient: "Cloudflare, Inc. (the team's own account)",
       region: "Cloudflare's network",
       file_retention: "no file is sent",
       result_retention: "not stated",
       sample_sharing: "none"
     },
-    licence_note: "the group's own Cloudflare account, a token with Intel Read",
+    licence_note: "the team's own Cloudflare account, a token with Intel Read",
     source_urls: ["https://developers.cloudflare.com/api/resources/intel/subresources/urls/methods/get"]
   }),
   descriptor({

@@ -750,7 +750,7 @@ export class Monitoring {
         ...driveRow("DRIVE_SHAPE_UNRECOGNISED"), op, bundleId,
         drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
         locator: driveTick.address,
-        detail: driveTick.why + " A shape your group's Civicsmith cannot read is a shape it cannot promise to "
+        detail: driveTick.why + " A shape your team's Civicsmith cannot read is a shape it cannot promise to "
               + "be watching." }, 422);
     /* The address the tick FETCHES, which is the export for a harvestable Drive
        document and the locator itself for everything else. The document address
@@ -1700,7 +1700,7 @@ export class Monitoring {
         unscheduled.push({ bundle: r.bundle_id, frequency: word,
           last_checked: r.monitor_last_checked ?? null,
           reason: r.monitor_frequency === "per_meeting"
-            ? "cadence is a meeting schedule your group's Civicsmith does not hold"
+            ? "cadence is a meeting schedule your team's Civicsmith does not hold"
             : r.why ? r.why
             : word === "none" || word == null
               ? "no frequency declared"

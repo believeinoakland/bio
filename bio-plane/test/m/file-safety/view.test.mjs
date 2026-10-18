@@ -208,7 +208,7 @@ test("R43 (T47; N941, K231): with a renderer bound, a render queue that cannot b
     assert.ok(!(r instanceof Response), what);
     assert.deepEqual({ ok: r.ok, code: r.code, check: r.check, translation: r.translation },
                      { ok: false, code: "RENDER_QUEUE_UNREADABLE", ...row("RENDER_QUEUE_UNREADABLE") }, what);
-    assert.match(r.detail, /^Your group's Civicsmith /, what);
+    assert.match(r.detail, /^Your team's Civicsmith /, what);
     assert.doesNotMatch(r.detail, /copy|instance|plane|server/i, `${what}: ${r.detail}`);
   };
   /* the files queued to render cannot be read */

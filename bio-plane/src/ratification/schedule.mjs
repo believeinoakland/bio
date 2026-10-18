@@ -60,12 +60,12 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
     const lapsed = ask("sources", "what may be published of the sources", () => reads.sourcesLapsed(text, at));
     const accepted = acceptedWorkOf(fm).rows;
     const standing = accepted.length
-      ? ask("sources", "the acceptances of other groups' work", () => reads.acceptedWorkLapsed(fm, signer)) : null;
+      ? ask("sources", "the acceptances of other teams' work", () => reads.acceptedWorkLapsed(fm, signer)) : null;
     if (lapsed !== undefined && !Array.isArray(lapsed))
       unreadable.push({ part: "sources", what: "what may be published of the sources" });
     else if (standing !== undefined && standing !== null
              && (!Array.isArray(standing.withdrawn) || !Array.isArray(standing.undisclosed)))
-      unreadable.push({ part: "sources", what: "the acceptances of other groups' work" });
+      unreadable.push({ part: "sources", what: "the acceptances of other teams' work" });
     else if (lapsed !== undefined && standing !== undefined) {
       const key = (r) => canonicalJson([r.capture ?? null, r.stated ?? null, r.basis ?? null]);
       const gone = new Set(lapsed.map(key));
@@ -136,7 +136,7 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
 
   /* approvals (R50): the group's rule in force and the approvals given at the signed bytes */
   {
-    const a = ask("approvals", "the group's approvals", () => reads.approvals ? reads.approvals() : null);
+    const a = ask("approvals", "the team's approvals", () => reads.approvals ? reads.approvals() : null);
     if (a && a.unreadable) unreadable.push({ part: "approvals", what: a.unreadable });
     else if (a !== undefined)
       parts.approvals = a ? { rule: { approvers: a.approvers }, approvals: a.approvals } : { rule: null, approvals: [] };

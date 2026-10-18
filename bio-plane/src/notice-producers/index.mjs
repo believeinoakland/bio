@@ -525,11 +525,11 @@ export class NoticeProducers {
   static heldBackWords(h) {
     if (!h || typeof h !== "object") return "it was held back";
     if (h.condition === "switch_off") return h.switch === "member" ? "your own switch for standing questions is off"
-      : "the assistant's half of standing questions is switched off in your group's Civicsmith";
+      : "the assistant's half of standing questions is switched off in your team's Civicsmith";
     if (h.condition === "no_account") return "you have no account of your own set for the assistant";
     if (h.condition === "limit") return filled(h.translation) ? h.translation.replace(/\.$/, "")
       : "the limits of the account that would pay could not be checked";
-    if (h.condition === "not_deployed") return "the assistant is not available in your group's Civicsmith";
+    if (h.condition === "not_deployed") return "the assistant is not available in your team's Civicsmith";
     return filled(h.translation) ? h.translation.replace(/\.$/, "") : "it was held back";
   }
 
@@ -756,8 +756,8 @@ export class NoticeProducers {
       label: NOTICED_LABEL, by: "the machine's",
       case: this.#homesOf([]),
       subject: { kind: "civicsmith", id: null, episode: from },
-      summary: "The security level of your group's Civicsmith is High",
-      detail: `The security level of your group's Civicsmith has been High since ${from}, and in that time ${got}.`,
+      summary: "The security level of your team's Civicsmith is High",
+      detail: `The security level of your team's Civicsmith has been High since ${from}, and in that time ${got}.`,
       screen: { op: "securitymap", from, to },
       basis: { source: "credentials.securityLevel", level: lv.level, level_at: lv.levelAt ?? null, episode: { from, to },
                through, threshold: { ...SECURITY_THRESHOLD },
@@ -988,7 +988,7 @@ export class NoticeProducers {
       const summaryKey = "queue.security-tool-off.summary", detailKey = "queue.security-tool-off.detail";
       items.push({
         id: `FINDING::security-tool-off::${e.tool_id}::${e.at}`, class: "FINDING", kind: "security-tool-off",
-        by: "the group's Civicsmith",
+        by: "the team's Civicsmith",
         case: this.#homesOf([]),
         subject: { kind: "civicsmith", id: null, tool: e.tool_id, provider: tool ? tool.provider_id ?? null : null },
         summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
@@ -1069,7 +1069,7 @@ export class NoticeProducers {
       const text = wordsOf(word, fills);
       return {
         id: keyed("FINDING", "ai-limit-reached", e.key), class: "FINDING", kind: "ai-limit-reached",
-        label: NOTICED_LABEL, by: "the group's Civicsmith",
+        label: NOTICED_LABEL, by: "the team's Civicsmith",
         case: o.project ? this.#homesAt([o.project], viewer) : this.#homesOf([]),
         subject: { kind: "ai_account", id: o.ref, scope: e.scope, unit: e.unit ?? null, period: e.period, period_start: e.period_start ?? null },
         summary: text, detail: text, word, fills,
@@ -1096,7 +1096,7 @@ export class NoticeProducers {
       const text = wordsOf("ai.queue.suspended", fills);
       return {
         id: keyed("FINDING", "project-account-suspended", e.key), class: "FINDING", kind: "project-account-suspended",
-        label: NOTICED_LABEL, by: "the group's Civicsmith",
+        label: NOTICED_LABEL, by: "the team's Civicsmith",
         case: this.#homesAt([e.project], viewer),
         subject: { kind: "project", id: e.project, since: e.since ?? null },
         summary: text, detail: text, word: "ai.queue.suspended", fills,

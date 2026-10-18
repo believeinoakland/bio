@@ -290,7 +290,7 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
  *  marker, because the whole risk of this shape is a member meeting a
  *  `verified` document with a doubt on it and concluding the record is broken. */
 export const ROUTE_MARK_NOTE =
-  "this document stays where the group put it: a verification was an attested act by people, and "
+  "this document stays where the team put it: a verification was an attested act by people, and "
   + "this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that "
   + "its ROUTE cannot be shown from the evidence held — a statement about our evidence, not about the "
   + "bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
@@ -359,7 +359,7 @@ export const ROUTE_TALLY_MARKED_MAX = 20;
 export const ROUTE_TALLY_NOTE =
   "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in "
   + "`tally` or `withErrors`: each names a document whose route cannot be shown, standing where "
-  + "the group put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
+  + "the team put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
   + "assessment has run, not that anything is wrong.";
 
 /* The route-mark read's constants (R5). In the legacy store they were declared after the method that used them, so

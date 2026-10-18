@@ -191,13 +191,13 @@ export function actionDraftOf(task, answer) {
 const TASK_WORDS = {
   textcheck: "Read the member's prepared text sentence by sentence and point out each sentence that reads as an "
     + "assertion that the law or a rule was broken (assertion), a policy or vote position (position), an ask for the "
-    + "group's or its members' own benefit (own_benefit_ask), or a name of staff below the responsible official "
+    + "team's or its members' own benefit (own_benefit_ask), or a name of staff below the responsible official "
     + "(staff_named), quoting it exactly and saying why. Rewrite nothing and suggest no wording: the member decides. "
     + "You have no read tool and read nothing of the record.",
   infractiondraft: "Draft the documentation of an infraction for the audience named, from the matter's own record (the "
     + "result of read_facts, and what you read): the act and the office, the standard it is measured against, the evidence for each point with its "
     + "grade, and what is still uncertain, each part naming the record it rests on and an unread part stated as unread. "
-    + "Take no position, ask nothing for the group's own benefit, never say what to file or that anyone has a claim, "
+    + "Take no position, ask nothing for the team's own benefit, never say what to file or that anyone has a claim, "
     + "and state no breach the record's own determination does not.",
   bearingdraft: "Read the action and the reply (the result of read_facts), and for each claim of the request say how the reply bears on it: "
     + "new evidence (new_evidence), disputed without evidence (disputed_without_evidence), or not addressed "
@@ -225,12 +225,12 @@ export async function actionDraft(body, task, env, deps, shared) {
   const firsthand = body.firsthand === undefined ? null : body.firsthand;
   if (grantSent && !draftMayRead({ kind: KIND_OF[task.op], firsthand, suggestions: account.suggestions === true }))
     return refusal("DRAFT_READ_NOT_ALLOWED", task.op === "textcheck"
-      ? "a text check reads nothing of what the group holds, only the text it is asked about; a grant to read was sent "
+      ? "a text check reads nothing of what the team holds, only the text it is asked about; a grant to read was sent "
         + "with it, so nothing was done."
       : task.op === "statusreportdraft"
-      ? "a status report is drafted only from the items handed to it and reads nothing of what the group holds; a grant "
+      ? "a status report is drafted only from the items handed to it and reads nothing of what the team holds; a grant "
         + "to read was sent with it, so nothing was done."
-      : "this draft reads what the group holds only for a field that does not record what the member saw; a grant to "
+      : "this draft reads what the team holds only for a field that does not record what the member saw; a grant to "
         + "read was sent with one that does, so nothing was done.", 400);
   if (!grantSent && readsRecord(task.op))
     return refusal("DRAFT_NEEDS_GRANT",
@@ -258,7 +258,7 @@ export async function actionDraft(body, task, env, deps, shared) {
   const records = recordsOf(task);
   /* R61, R77: this member's own words and the pack's resident and action-drafting layers in `system`, never the
      `suggestions` or `writing_help` layer; the task in the user turn. */
-  const system = "You help one member of a BIO group with an action they are preparing. Your draft is labelled machine "
+  const system = "You help one member of a BIO team with an action they are preparing. Your draft is labelled machine "
     + "work, nothing is saved, and it is theirs only by their own act. The instructions you work under are this skill "
     + `pack, version ${String(pack.version)}.\n\n`
     + `RESIDENT LAYER:\n${JSON.stringify(pack.resident)}\n\n`

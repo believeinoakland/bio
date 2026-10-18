@@ -203,7 +203,7 @@ test("R20 T34's rows: WIZARD_VIA_REFUSED and the eight writing-help rows are C-1
   assert.equal(row("ASSISTANT_DRAFT_UNAVAILABLE").translation, "The assistant cannot draft this yet. Write it in your own words; nothing was changed.");
   assert.equal(row("WRITING_HELP_REASON_FIELD").translation, "The assistant never words your reason for an act: your reasons are yours alone. Nothing was changed.");
   assert.equal(row("WIZARD_DRAFT_REFUSED").translation, "A step's draft is the script's own words, a filing template offered here, or a labeled machine draft "
-    + "your group's Civicsmith registers, and this one is none of them.");
+    + "your team's Civicsmith registers, and this one is none of them.");
   for (const [code, r] of Object.entries(wz.WIZARD_SCRIPTS_CHECKS))
     for (const word of [/this instance/i, /the instance/i, /this copy/i, /this plane/i, /the plane/i, /\bserver\b/i]) assert.ok(!word.test(r.translation), `${code}: ${word}`);
 });

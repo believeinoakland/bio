@@ -7,6 +7,7 @@
    the bytes are put where R39 puts them. The case file is then built by the Worker's assembly and read back as a stranger
    reads it. Each claim has its negative control. */
 import { test } from "node:test";
+import { word as tableWord } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { world, stubOf, bucket, V, NOW, sha } from "./fixture.mjs";
@@ -36,7 +37,7 @@ const hex = (b) => createHash("sha256").update(b).digest("hex");
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001";
 const PHOTO = "INFO-2026-0020-photo", DOC = "INFO-2026-0001-minutes";
-const LABEL = "Faces and plates obscured for publication; the group holds the original";
+const LABEL = "Faces and plates obscured for publication; the team holds the original";
 /* The copy's bytes: what `image-cover` derived (any bytes do here; public-read never reads inside them). */
 const COPY = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, ...new TextEncoder().encode("the photo, its marked areas covered"), 0xff, 0xd9]);
 const COPY_SHA = hex(COPY);
@@ -340,7 +341,7 @@ test("R32 R23 the archive pool keeps only what this edition's commit held (K2223
    member document whole), its bytes in the published bucket: whatever registered it, it is never served. */
 
 const MEMDOC = "INFO-2026-0030-letter";
-const CLEANED_LABEL = "Details of who made this file, and of its pictures, removed for publication; the group holds the original";
+const CLEANED_LABEL = tableWord("document.cleaned.label");
 function pdfText() {
   const page = "BT /F1 12 Tf 72 720 Td (The letter the member was sent) Tj ET";
   const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",

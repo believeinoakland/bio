@@ -1219,7 +1219,7 @@ export class Consequences {
     if (cause === null || cause === undefined) return null;
     const c = isObj(cause) ? cause : {};
     if (!str(c.statement) || [...c.statement.trim()].length > STATEMENT_MAX)
-      return refuse("SUCCESS_CAUSE_UNSTATED", "that the group's action caused the change is stated in the member's words, "
+      return refuse("SUCCESS_CAUSE_UNSTATED", "that the team's action caused the change is stated in the member's words, "
         + `1 to ${STATEMENT_MAX} characters.${NOTHING}`);
     const ev = c.evidence;
     if (!Array.isArray(ev) || !ev.length || ev.length > SUCCESS_LIMITS.evidence
@@ -1230,11 +1230,11 @@ export class Consequences {
     let own = null;
     try { own = this.#ownActReader ? this.#ownActReader.fn({ ids: [...ids], viewer: who ?? INTERNAL }) : null; } catch { own = null; }
     if (!Array.isArray(own))
-      return refuse("SUCCESS_CAUSE_UNCHECKABLE", "whether the cause's evidence is only the group's own acts could not be "
+      return refuse("SUCCESS_CAUSE_UNCHECKABLE", "whether the cause's evidence is only the team's own acts could not be "
         + `read, so the cause is not accepted; the sequence of events may be stated instead.${NOTHING}`);
     const mine = new Set(own.map(String));
     if (ids.every((x) => mine.has(x)))
-      return refuse("SUCCESS_CAUSE_OWN_ACT_ONLY", "every item of the cause's evidence is the group's own act, which is "
+      return refuse("SUCCESS_CAUSE_OWN_ACT_ONLY", "every item of the cause's evidence is the team's own act, which is "
         + `never evidence that it caused the change; the sequence of events may be stated instead.${NOTHING}`);
     return { ok: true, cause: { statement: c.statement.trim(), evidence: ids } };
   }

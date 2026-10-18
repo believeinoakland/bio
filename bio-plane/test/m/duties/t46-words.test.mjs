@@ -40,7 +40,7 @@ const PROMISE_DATE_UNREAD = "A promise's date is read from the body's own words,
   + "as written and never completed. Nothing was written.";
 /* Every other row of the family (39, C-133.1–.40 less the retired .13 and .28, and .43), as T45 left them: their
    canonical JSON's sha256, so no check, where or translation of theirs moves. */
-const KEPT = { count: 39, sha256: "ec1cdde4690f018b44ec912bb1b2f065126eec4e058d8698301a905117ce151b" };
+const KEPT = { count: 39, sha256: "1f926059403fddc6de7ac38952fd7a6687955b73a85ff24cf75047c652a8a7d6" };
 
 test("R32 C-133.41, .42 and .44 read words.json's refusal.<CODE> by key from DUTIES_WORDS, never a copy; codes, numbers and wheres unmoved; T45's words answered no longer", () => {
   assert.ok(Object.isFrozen(DUTIES_WORDS));

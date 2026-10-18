@@ -135,8 +135,8 @@ export const PROVENANCE_ACT_CHECKS = {
   RECEIPT_NO_KEY: {
     check: 'C-103.7',
     where: 'src/attestation/index.mjs signReceipt',
-    translation: 'Your group\'s Civicsmith holds no key to sign its receipts with, so this receipt was not signed, '
-      + 'and nothing claims that it was. Whoever hosts your group\'s Civicsmith can add one.',
+    translation: 'Your team\'s Civicsmith holds no key to sign its receipts with, so this receipt was not signed, '
+      + 'and nothing claims that it was. Whoever hosts your team\'s Civicsmith can add one.',
   },
 };
 

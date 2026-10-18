@@ -149,7 +149,7 @@ test("R5: the instance limit of 10, RATE_GLOBAL 429 with its row and stated boun
   const r = await c.knock({ content: "g10", sourceAddress: "10.9.9.9", now: t0 });
   assert.deepEqual([r.reason, r.code, r.check, r.translation], ["RATE_GLOBAL", "RATE_GLOBAL", row("RATE_GLOBAL").check, row("RATE_GLOBAL").translation]);
   assert.deepEqual([rateRows(rows), inboxRows(rows), tallied(rows)], [...before, 1]);
-  assert.equal(KNOCK.statedGlobal, "at most 10 knocks to this group's inbox in any 10 minutes, estimated by a sliding window");
+  assert.equal(KNOCK.statedGlobal, "at most 10 knocks to this team's inbox in any 10 minutes, estimated by a sliding window");
   /* a source over its own limit and the instance's is RATE_IP */
   const both = setup();
   for (let i = 0; i < 5; i++) await both.c.knock({ content: `h${i}`, sourceAddress: "10.1.0.1", now: t0 });
@@ -219,7 +219,7 @@ test("R21 R4 R5 R6 R7 R8 (K649, K2627, N851): C-85's five rows are in this modul
 });
 
 test("R9: a C-85 translation is the row's sentence, names no figure, says the group can see how often its doorbell turns people away, and a code with no row fails as an internal error", async () => {
-  const SEEN = "The group can see how often its doorbell turns people away.";
+  const SEEN = "The team can see how often its doorbell turns people away.";
   for (const code of ["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY"]) {
     assert.equal(typeof row(code).translation, "string");
     assert.ok(!/\d/.test(row(code).translation), `${code}'s translation names no figure`);

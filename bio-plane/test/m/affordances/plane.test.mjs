@@ -794,7 +794,7 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
   const iris = "member:iris";
   const goal = must("goaldeclare", await DO(`goaldeclare?viewer=${E(iris)}`, { statement: "A goal", bounds: "This year", author: iris }));
   const asp = must("aspirationdeclare", await DO(`aspirationdeclare?viewer=admin`,
-    { scope: "group", statement: "An aspiration of the group", author: "member:ruth" }));
+    { scope: "group", statement: "An aspiration of the team", author: "member:ruth" }));
   const goalId = goal.goal ?? goal.id, aspId = asp.aspiration ?? asp.id;
   const DRIVE = {
     relationdeclare: () => POST(`op=relationdeclare&token=${W.IRIS}`, { fromEntity: "ENT-a", toEntity: "ENT-b", relation: "proxy_for", citation: "c" }),

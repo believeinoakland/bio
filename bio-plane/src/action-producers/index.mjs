@@ -218,7 +218,7 @@ export class ActionProducers {
     } catch { return null; }
   }
 
-  static ZONE_UNDETERMINED = "no time zone is held for it in your group's Civicsmith, so the local day it is counted from is "
+  static ZONE_UNDETERMINED = "no time zone is held for it in your team's Civicsmith, so the local day it is counted from is "
     + "undetermined; it is never counted on the UTC day";
 
   /** R20: an item's `age` from a day or an instant, counted on local days in `zone`: a day ages from its first local
@@ -819,7 +819,7 @@ export class ActionProducers {
           subject: { kind: "action", id: arrived.action, entry: arrived.ord, note: m.note ?? null, project },
           summary: `a legal threat was recorded on ${arrived.action} and no litigation hold is stated for it`,
           detail: `a received entry of this action (position ${arrived.ord}) was marked as a legal threat${said}. Record `
-                + "that the group is preserving what the matter may reach (a hold in place), or that it need not (a "
+                + "that the team is preserving what the matter may reach (a hold in place), or that it need not (a "
                 + "release), with a reason. This is told once; it leaves when a member records either.",
           basis: basisOf({ action: arrived.action, entry: arrived.ord }, {},
             "a legal pressure mark with no hold stated is action-holds' fact (its R2, R3), read here and never stored. It "
@@ -836,7 +836,7 @@ export class ActionProducers {
           /* R23: the summary by key (a protected word); the detail keeps its present text, returned to BOB */
           summary: say("queue.litigation-hold.docket.summary", { entry: arrived.docket_entry }),
           summary_key: "queue.litigation-hold.docket.summary",
-          detail: `an entry on this case's docket was marked as a legal threat${said}. Record that the group is preserving `
+          detail: `an entry on this case's docket was marked as a legal threat${said}. Record that the team is preserving `
                 + "what the matter may reach: a hold placed from this mark. This is told once; it leaves when a hold is "
                 + "stated on the mark.",
           basis: basisOf({ docket_entry: arrived.docket_entry, case: kase }, {},
@@ -852,7 +852,7 @@ export class ActionProducers {
           subject: { kind: "project", id: project, record: arrived.pressure, note: m.note ?? null },
           summary: `a legal threat was recorded in ${project} and no litigation hold is stated for it`,
           detail: `pressure that arrived outside any action was recorded here as a legal threat${said}. Record that the `
-                + "group is preserving what the matter may reach: a hold placed from this record. This is told once; it "
+                + "team is preserving what the matter may reach: a hold placed from this record. This is told once; it "
                 + "leaves when a hold is stated on the record.",
           basis: basisOf({ pressure: arrived.pressure }, {},
             "a legal pressure record with no hold placed from it is action-holds' fact (its R3, R12), read here and "
@@ -1223,7 +1223,7 @@ export class ActionProducers {
         /* R23: by key; {n} and {items} count and name only the items this recipient may see (R14) */
         summary: say("queue.member-left-items.summary", { member: g.member, n: listed.length }),
         summary_key: "queue.member-left-items.summary",
-        detail: say("queue.member-left-items.detail", { member: g.member, place: g.project || "the group",
+        detail: say("queue.member-left-items.detail", { member: g.member, place: g.project || "the team",
           items: ActionProducers.#itemsWords(named, listed.length - named.length) }),
         detail_key: "queue.member-left-items.detail",
         basis: { source: "membership.memberFacts + membership.participation + plan-work.takeUpsFor", member: g.member,
@@ -1357,7 +1357,7 @@ export class ActionProducers {
             detail_key: "queue.plan-review-due.detail" }
         : { detail: "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. "
               + "Open the review to see what changed, and record what the members decided. You are reminded only "
-              + "because the group asked for it." };
+              + "because the team asked for it." };
       out.push({
         id: `OBLIGATION::plan-review-due::${x.plan}::${day}`,
         class: "OBLIGATION",

@@ -150,7 +150,7 @@ export function recordedBy(c, memo, args) {
     if (!doc || !c.membership.inSight(doc, a.viewer)) return answer([], false);
     if (!c.inquiry || typeof c.inquiry.restingOn !== "function")
       return { ok: false, reason: "INQUIRY_UNAVAILABLE", detail: "the legs that cite a passage are found through the inquiry "
-               + "module's leg projection, and your group's Civicsmith was created without it, so this read could not be made." };
+               + "module's leg projection, and your team's Civicsmith was created without it, so this read could not be made." };
 
     /* The citing objects: a capture's legs through `inquiry`'s leg projection (its R12, which projects every leg this
        module writes; K2132), the inquiries holding a leg on the document; a project's `cites` edges, whose pin no

@@ -646,7 +646,7 @@ export class ProjectRoster {
     const held = clean.some((n) => n.kind) ? this.#actionKinds() : new Set();
     for (const [i, n] of clean.entries())
       if (n.kind && !held.has(n.kind))
-        return refusal("APPROVAL_KIND_UNKNOWN", `${JSON.stringify(n.kind)} is not a kind of action in your group's `
+        return refusal("APPROVAL_KIND_UNKNOWN", `${JSON.stringify(n.kind)} is not a kind of action in your team's `
           + "active jurisdiction profiles. Nothing was written.", { entry: n, index: i });
     /* END DEC-49 REGION is-project-approval-set */
     const why = ProjectRoster.#reason(reason);

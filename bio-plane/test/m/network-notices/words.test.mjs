@@ -28,7 +28,7 @@ test("R1 (DEC-149) NOTICE_NO_GROUP_SLUG and NOTICE_NO_INSTANCE_KEY tell the memb
   noSlug.P = noSlug.project("budget", "alice");
   const slug = await prepare(noSlug);
   assert.equal(slug.reason, "NOTICE_NO_GROUP_SLUG");
-  assert.equal(slug.translation, "Your group has no name recorded yet, and a notice is never anonymous. Record the group's name "
+  assert.equal(slug.translation, "Your team has no name recorded yet, and a notice is never anonymous. Record the team's name "
     + "first. Nothing was published.");
   noOldName(slug, "C-127.4");
 
@@ -38,9 +38,9 @@ test("R1 (DEC-149) NOTICE_NO_GROUP_SLUG and NOTICE_NO_INSTANCE_KEY tell the memb
   const key = await prepare(noKey);
   assert.equal(key.reason, "NOTICE_NO_INSTANCE_KEY");
   assert.equal(key.check, "C-127.5");
-  assert.equal(key.translation, "Your group's Civicsmith holds no signing key of its own, so it cannot sign the activity level a "
+  assert.equal(key.translation, "Your team's Civicsmith holds no signing key of its own, so it cannot sign the activity level a "
     + "notice is always published with. The operator binds one. Nothing was published.");
-  assert.equal(key.detail, "your group's Civicsmith holds no signing key of its own, and a notice is never published without "
+  assert.equal(key.detail, "your team's Civicsmith holds no signing key of its own, and a notice is never published without "
     + "its signed level");
   noOldName(key, "C-127.5");
 
@@ -60,7 +60,7 @@ test("R4 (DEC-149) NOTICE_STALE says your group's Civicsmith holds no prepared n
   const stale = await w.nn.postNotice({ digest: "0".repeat(64), signature: sign(p), acknowledged: true, by: A, viewer: A });
   assert.equal(stale.reason, "NOTICE_STALE");
   assert.equal(stale.check, "C-127.12");
-  assert.equal(stale.translation, "Your group's Civicsmith holds no prepared notice from you with this fingerprint, or it was "
+  assert.equal(stale.translation, "Your team's Civicsmith holds no prepared notice from you with this fingerprint, or it was "
     + "prepared more than an hour ago. Prepare it again and sign what it shows. Nothing was published.");
   noOldName(stale, "C-127.12");
   /* past its hour: the same row */
@@ -73,13 +73,13 @@ test("R21 (DEC-149) groupKeysPublic labels each key of the group's own Civicsmit
   const w = seeded();
   await post(w);
   const keys = w.nn.groupKeysPublic();
-  assert.equal(nn.COPY_KEY_LABEL, "this group's Civicsmith key");
+  assert.equal(nn.COPY_KEY_LABEL, "this team's Civicsmith key");
   assert.equal(keys.copy.length, 1);
-  assert.equal(keys.copy[0].label, "this group's Civicsmith key");
+  assert.equal(keys.copy[0].label, "this team's Civicsmith key");
   for (const k of keys.copy) assert.doesNotMatch(k.label, /copy|instance|plane|server|your/i);
   noOldName(keys, "groupkeyspublic");
   /* served the same with no credential (public-read R18) */
-  assert.deepEqual(w.publicRead.publicRead("groupkeyspublic", {}).result.copy.map((k) => k.label), ["this group's Civicsmith key"]);
+  assert.deepEqual(w.publicRead.publicRead("groupkeyspublic", {}).result.copy.map((k) => k.label), ["this team's Civicsmith key"]);
 });
 
 test("R1 R4 R21 (DEC-149) no row, refusal or answer of this module calls the group's Civicsmith this copy, this instance or the plane", async () => {

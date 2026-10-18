@@ -15,7 +15,7 @@ const dump = (s) => Object.fromEntries(
     .map((r) => [r.name, JSON.stringify(rows(s, `SELECT * FROM ${r.name} ORDER BY rowid`))]));
 
 const NEVER = /\b(copy|instance|plane|server)\b/i;
-const sentence = (what) => `your group's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.`;
+const sentence = (what) => `your team's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.`;
 const WCD = sentence("id for a draft of a new edition's statement of what changed");
 const OUTC = sentence("carried outcome id");
 /* Every other prefix R62 names, each with its sentence as it stood before T48, and the unnamed one. */
@@ -49,7 +49,7 @@ test("R62 (T48, N1018): mintExhausted(\"WCD\") and mintExhausted(\"OUTC\") each 
 });
 
 test("R62 (T48): control: CASE's sentence, and every other prefix's, is unchanged; a prefix that only resembles WCD or OUTC is named by no object", () => {
-  assert.equal(mintExhausted("CASE").detail, "your group's Civicsmith could not find a free case id: every one it drew was already taken. Nothing was written.");
+  assert.equal(mintExhausted("CASE").detail, "your team's Civicsmith could not find a free case id: every one it drew was already taken. Nothing was written.");
   for (const [p, what] of Object.entries(OTHERS)) assert.equal(mintExhausted(p).detail, sentence(`${what} id`), p);
   assert.deepEqual(Object.keys(OTHERS).slice(0, 5), [...RecordCore.GATED_ID_PREFIXES]);
   for (const near of ["WCDX", "XWCD", "wcd", "OUT", "OUTCOME", "outc", " OUTC", "WCD-2026"])

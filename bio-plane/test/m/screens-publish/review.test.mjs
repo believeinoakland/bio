@@ -161,7 +161,7 @@ test("R23 review-outside draws \"What the case says it does not cover\" with the
   assert.ok(head, "the section");
   assert.ok(tipOf(head).includes(word("review.statement.help")), "explained by review.statement.help");
   const section = head.closest("section");
-  assert.ok(section.textContent.includes(STATEMENT), "the group's statement");
+  assert.ok(section.textContent.includes(STATEMENT), "the team's statement");
   assert.ok(drewIn(section, "review.statement.note") && drewIn(section, "review.statement.note.help"), "the note and its help");
   assert.ok(p.doc.getElementById("ro-note"));
   assert.ok(section.querySelector('button[data-act="statementack"]').textContent.includes(word("review.statement.ack")), "Acknowledge it");

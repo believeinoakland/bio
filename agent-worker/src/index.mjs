@@ -440,7 +440,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     return { refusal: refusal("RUN_NAMES_A_DIFFERENT_PAYER",
       `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to `
       + `this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group"
-        ? "the group's API key, serving that member" : account.level === "project"
+        ? "the team's API key, serving that member" : account.level === "project"
         ? "the project's account, serving that member" : "that member's own reference"}). A run is continued only under `
       + "the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no "
       + "step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run "
@@ -1919,7 +1919,7 @@ async function accountOf(body) {
         || (a.suggestions !== undefined && typeof a.suggestions !== "boolean"))))
     return { refusal: refusal("BAD_ACCOUNT",
       `account is the account that serves the member's act: {kind, level, secret, member}, kind one of `
-      + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), `
+      + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the team's account an API key only), `
       + "and member the member whose act it serves; a project's account names its project, and no other does; a "
       + "signin account is the member's own, its secret the token held for that member, and its suggestions switch, "
       + "when sent, is true or false. What arrived is not one, and this member judges only what it is handed.",
@@ -2158,7 +2158,7 @@ async function segmentAnswer(env, checked, body, whoami, traced, deadline, prefl
     judgement_note: modelMode
       ? `the control-flow table ran and the judgements inside its steps were made by model turns run through `
         + `agent-model (${meter.turns}), under the Claude account that serves the member's act `
-        + `(${cascade.level === "group" ? "the group's API key" : cascade.level === "project" ? "the project's"
+        + `(${cascade.level === "group" ? "the team's API key" : cascade.level === "project" ? "the project's"
           : "the member's own"}) and the skill pack the run names; `
         + "the sub-sessions ran one per level and returned REPORTS"
       : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken "
@@ -2343,7 +2343,7 @@ const ASK_DEPS = { refusal, json, askPlane, planeAnswer, publishedPack, accountO
 /* R58 — ONE TRUTH FOR MODEL TURNS, the sentence this member states about itself on `GET /version`, and the same one its
    header and its `/run` answer state. */
 const MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the "
-  + "member's own reference or sign-in, a project's account, or the group's API key) arrives with the call and the mode of the run (/run), ask (/ask), "
+  + "member's own reference or sign-in, a project's account, or the team's API key) arrives with the call and the mode of the run (/run), ask (/ask), "
   + "draft (/draft) or transcription (/transcribe) has turns to run; a segment whose caller supplies the judgements runs none";
 
 export default {

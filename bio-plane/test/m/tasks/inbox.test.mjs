@@ -31,7 +31,7 @@ test("R1: drain takes queued events in order; unfiled waits, a live task folds, 
   assert.deepEqual(route[PRJ], ["olga", "project-manager", "owner of the referred project"], "an active owner of the project itself");
   assert.deepEqual(route[DOC], ["olga", "project-manager", `owner of ${PRJ}, which cites this record`],
     "an active owner of the first project with a live cites edge");
-  assert.deepEqual(route[DOC2], ["ada", "group-admin", "no project manager; the RULED fallback to a group admin"],
+  assert.deepEqual(route[DOC2], ["ada", "group-admin", "no project manager; the RULED fallback to a team admin"],
     "the earliest active administrator");
   for (const c of r.created) assert.match(c.id, /^TASK-2026-\d{4}-subject$/);
   // the stored task is the grammar's
@@ -728,7 +728,7 @@ test("R1 (K2575, D54): the administrator fallback picks the earliest active admi
   assert.deepEqual(route(() => {}), [["unassigned", "group-admin", "no project manager and no active administrator who can see it"]],
     "hidden, neither administrator invited nor joined: unassigned, never handed to one who cannot see it");
   assert.deepEqual(route((w) => w.join(PRJ, "cal", { state: "invited" })),
-    [["cal", "group-admin", "no project manager; the RULED fallback to a group admin"]], "the earliest one admitted, passing over bea");
+    [["cal", "group-admin", "no project manager; the RULED fallback to a team admin"]], "the earliest one admitted, passing over bea");
   // negative controls: the project discoverable, or both admitted: the earliest administrator, as before
   assert.deepEqual(route((w) => {
     // set discoverable by its owner while active, the owner then revoked, so no owner routes it

@@ -279,7 +279,7 @@ test("R40, R15 (K231): MACHINE_CANNOT_DECLARE and BAD_GRADE are each one row ans
   const p = w.s.projectBarSet(byBob(w, { author: "class:ai" }));
   for (const k of ["ok", "reason", "code", "check", "translation"]) assert.deepEqual(p[k], g[k], k);
   assert.equal(p.check, "C-32.9");
-  assert.match(g.detail, /GROUP's declaration/);
+  assert.match(g.detail, /TEAM's declaration/);
   assert.match(p.detail, /PROJECT's declaration/);
   const gb = w.s.strengthBarSet({ capture: "Q", reason: WHY, author: "ann" });
   const pb = w.s.projectBarSet(byBob(w, { capture: "Q" }));
@@ -288,7 +288,7 @@ test("R40, R15 (K231): MACHINE_CANNOT_DECLARE and BAD_GRADE are each one row ans
   const machine = STRENGTH_BAR_CHECKS.MACHINE_CANNOT_DECLARE, grade = STRENGTH_BAR_CHECKS.BAD_GRADE;
   assert.equal(machine.where, "src/strength/index.mjs machineCannotDeclare > is-machine-strength-bar");
   assert.equal(grade.where, "src/strength/index.mjs badGrade > is-strength-bar-grade");
-  assert.match(machine.translation, /^How much evidence this group requires of itself/);
+  assert.match(machine.translation, /^How much evidence this team requires of itself/);
   assert.match(grade.translation, /^A standard of evidence is stated in the grades the record uses/);
 });
 

@@ -17,10 +17,10 @@ test("R29 keyedServiceSet and keyedServiceSwitch: active administrators only (NO
   const before = w.snapshot();
   for (const by of ["ann", "dee", "nobody", "class:admin", "class:ai", null])
     assert.deepEqual(await w.c.keyedServiceSet({ service: "courtlistener", key: KEY, by }),
-      notAnAdmin(by, "setting the group's key for an outside service"), String(by));
+      notAnAdmin(by, "setting the team's key for an outside service"), String(by));
   for (const by of ["ann", "class:admin", null])
     assert.deepEqual(w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by }),
-      notAnAdmin(by, "switching the group's key for an outside service"), String(by));
+      notAnAdmin(by, "switching the team's key for an outside service"), String(by));
   for (const service of [null, "", "lexis", "CourtListener", "security:", "security:a b", "security:x/y", "Security:t1",
                          `security:${"t".repeat(121)}`, "securitytool"]) {
     assert.deepEqual(shape(await w.c.keyedServiceSet({ service, key: KEY, by: "second" })), row(KEYED_SERVICE_CHECKS, "UNKNOWN_KEYED_SERVICE"));

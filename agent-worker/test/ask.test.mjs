@@ -142,13 +142,13 @@ section("R54 · refusals before any model call, each by its code, as plain JSON"
     ["no account", () => ask({ account: undefined }), 409, "NO_ACCOUNT"],
     ["an account naming no member", () => ask({ account: { kind: "apikey", level: "member", secret: SECRET } }), 400, "BAD_ACCOUNT"],
     ["an account naming no level", () => ask({ account: { kind: "apikey", secret: SECRET, member: MEMBER } }), 400, "BAD_ACCOUNT"],
-    ["the group's account as a subscription", () => ask({ account: { ...GROUP, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
+    ["the team's account as a subscription", () => ask({ account: { ...GROUP, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
     ["(T38) a member's own subscription, retired", () => ask({ account: { ...ACCOUNT, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
     ["(T47, R82) a sign-in carrying no secret", () => ask({ account: { kind: "signin", level: "member", member: MEMBER } }), 409, "SIGNIN_NOT_HELD"],
     ["(T47, R82) a sign-in carrying an empty secret", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, secret: "" } }), 409, "SIGNIN_NOT_HELD"],
     ["(T38) a sign-in at the group level", () => ask({ account: { kind: "signin", level: "group", member: MEMBER, secret: SIGNIN_TOKEN } }), 400, "BAD_ACCOUNT"],
     ["(T46) a sign-in with suggestions not a boolean", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, secret: SIGNIN_TOKEN, suggestions: "yes" } }), 400, "BAD_ACCOUNT"],
-    ["the group's account with an empty key", () => ask({ account: { ...GROUP, secret: "" } }), 409, "NO_ACCOUNT"],
+    ["the team's account with an empty key", () => ask({ account: { ...GROUP, secret: "" } }), 409, "NO_ACCOUNT"],
     ["a namespace no instance holds", () => ask({ store: "biosmoke" }), 400, "NAMESPACE_UNKNOWN"],
     ["a conversation that is not this ask's turns", () => ask({ conversation: [{ role: "system", content: "x" }] }), 400, "BAD_CONVERSATION"],
   ];
@@ -362,7 +362,7 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
     ticks.filter((x) => !x.body.usage).length > 0 && ticks.filter((x) => x.body.usage).every((x) => x.body.usage.length > 0), true);
   const v = await (await worker.fetch(new Request("http://agent-worker/version"), { VERSION: "ask", PLANE: plane().binding })).json();
   t("R58: GET /version answers the one statement of when model turns run",
-    /exactly when the Claude account that serves the member's act \(the member's own reference or sign-in, a project's account, or the group's API key\) arrives/
+    /exactly when the Claude account that serves the member's act \(the member's own reference or sign-in, a project's account, or the team's API key\) arrives/
       .test(v.model_turns ?? ""), true);
   const all = TRANSCRIPTS;
   t("R36: no answer or event carried the grant, the ai credential, the member's secret or the group's key",

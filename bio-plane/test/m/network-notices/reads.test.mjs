@@ -23,7 +23,7 @@ async function busy() {
   w.clock.now = Date.parse("2026-11-01T00:10:00Z");
   await w.nn.attestTick();
   await post(w, { notice: p.notice, wording: "Changed", collaborate: true });
-  await post(w, { project: w.Q, notice: q.notice, final: "stopped", handoff: "Handed to another group" }, "dave");
+  await post(w, { project: w.Q, notice: q.notice, final: "stopped", handoff: "Handed to another team" }, "dave");
   return { w, p, q };
 }
 

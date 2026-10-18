@@ -12,10 +12,10 @@ import { DRIVE_TICK_CHECKS, MONITORING_CHECKS } from "../../../src/monitoring/in
 const OLD_NAMES = /\b(this|the|our|its|your)\s+(?:(?:civicsmith|group's)\s+)?(instance|copy|plane)\b/i;
 const IS_THE_SHELL = "The check of that Google Drive document did not run: the export address answered with a web page "
   + "rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. "
-  + "Nothing was compared and nothing about the record changed — what is known is that your group's Civicsmith could "
+  + "Nothing was compared and nothing about the record changed — what is known is that your team's Civicsmith could "
   + "not see the document today.";
 const BYTES_ARE_THE_SHELL = "The check of that Google Drive document did not run: the export address said it was sending a "
-  + "document and sent a web page instead. Your group's Civicsmith reads the bytes rather than the label, so the "
+  + "document and sent a web page instead. Your team's Civicsmith reads the bytes rather than the label, so the "
   + "application page was recognised and not compared against the captured document — comparing it would report a "
   + "change on every visit that nobody made.";
 const DOC = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/edit";
@@ -45,7 +45,7 @@ test("R1 DEC-149: a Drive address of an unrecognised shape is refused with a det
   w.promote(id, infoMd(id, "https://docs.google.com/zzz/abc"));
   const r = await tick(w, id);
   assert.equal(r.body.reason, "DRIVE_SHAPE_UNRECOGNISED");
-  const own = " A shape your group's Civicsmith cannot read is a shape it cannot promise to be watching.";
+  const own = " A shape your team's Civicsmith cannot read is a shape it cannot promise to be watching.";
   assert.ok(r.body.detail.endsWith(own), r.body.detail);
   assert.doesNotMatch(own, OLD_NAMES);
 });
@@ -67,7 +67,7 @@ test("R16 R32 DEC-149: an address checked per meeting is unscheduled with the re
   const w = world();
   const id = "INFO-2026-0904-meeting";
   w.monitored(id, "https://records.example.org/meetings", "m1", { freq: "per_meeting" });
-  const want = "cadence is a meeting schedule your group's Civicsmith does not hold";
+  const want = "cadence is a meeting schedule your team's Civicsmith does not hold";
   assert.equal(w.m.schedule(NOW_MS).unscheduled.find((r) => r.bundle === id).reason, want);
   const item = w.m.monitoring({ viewer: DAEMON, now: NOW_MS }).items.find((r) => r.bundle === id);
   assert.deepEqual([item.state, item.reason], ["unscheduled", want]);

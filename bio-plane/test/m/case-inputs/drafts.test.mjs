@@ -29,7 +29,7 @@ test("R6: a machine's draft is stored labelled machine work by proposalLabel(pro
   assert.deepEqual(m.draft.label, proposalLabel(AI, "edition_statement"));
   assert.deepEqual([m.draft.label.machine_work, m.draft.label.state, m.draft.label.says],
     [true, "machine_proposed", PROPOSAL_STATES.edition_statement.machine_proposed]);
-  assert.match(m.next, /never the group's statement/);
+  assert.match(m.next, /never the team's statement/);
   const b = w.ci.proposeWhatChanged({ case: caseId, text: "We excluded the amendments.", proposedBy: "bo", viewer: V("bo") });
   assert.deepEqual([b.draft.label.machine_work, b.draft.label.state, b.draft.label.by], [false, "member_proposed", "bo"]);
   /* never a statement: nothing authored, no edition, the published record untouched */

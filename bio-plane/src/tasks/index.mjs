@@ -223,7 +223,7 @@ export class Tasks {
     const first = this.#membership.activeAdmins()
       .find((m) => m !== "admin" && this.#membership.inSight(bundleId, `member:${m}`));
     const adm = first ? { member_id: first } : null;
-    if (adm) return { assignee: adm.member_id, assignee_role: "group-admin", basis: "no project manager; the RULED fallback to a group admin" };
+    if (adm) return { assignee: adm.member_id, assignee_role: "group-admin", basis: "no project manager; the RULED fallback to a team admin" };
     /* Named honestly rather than assigned to someone who does not exist. An
        unassigned task is still visible and still routable by hand; a task
        addressed to a phantom is not. */

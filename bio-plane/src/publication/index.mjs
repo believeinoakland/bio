@@ -1083,7 +1083,7 @@ export class Publication {
                       photo: photos.map((x) => x.ref ?? x.sha ?? "a photo").join(", "),
                       detail: `${marks.length} photo(s) this case document carries cannot be published as prepared (a mark `
                             + "made or withdrawn after the case was prepared, a photo carried whole rather than as the copy the "
-                            + "group marked, or marks that cannot be read), so nothing was committed. Prepare the case again." });
+                            + "team marked, or marks that cannot be read), so nothing was committed. Prepare the case again." });
       /* END DEC-49 REGION is-photo-marks-current */
     }
     if (docs.length) {
@@ -1108,11 +1108,11 @@ export class Publication {
       if (standing.withdrawn.length)
         return { ok: false, reason: "ACCEPTANCE_WITHDRAWN_SINCE", ...rowOf("ACCEPTANCE_WITHDRAWN_SINCE"), caseId: id,
                  edition: ed, accepted_work: standing.withdrawn,
-                 detail: `${standing.withdrawn.length} acceptance(s) of another group's work this case document rests on `
+                 detail: `${standing.withdrawn.length} acceptance(s) of another team's work this case document rests on `
                        + "are no longer known to be in force, so nothing was committed. Prepare the case again." };
       return { ok: false, reason: "FLAG_OPENED_SINCE", ...rowOf("FLAG_OPENED_SINCE"), caseId: id, edition: ed,
                flags: standing.undisclosed,
-               detail: `${standing.undisclosed.length} open flag(s) on another group's work this case document rests on `
+               detail: `${standing.undisclosed.length} open flag(s) on another team's work this case document rests on `
                      + "are not disclosed by it, so nothing was committed. Prepare the case again, disclosing them." };
       /* END DEC-49 REGION is-accepted-work-standing */
     }

@@ -149,7 +149,7 @@ test("R15 a read of the evidence store that fails leaves the document queued, tr
   assert.deepEqual({ ok: no.ok, code: no.code, check: no.check, translation: no.translation },
                    { ok: false, code: "DOCUMENT_COPY_NO_STORE", check: "C-141.11", translation: CASE_CARRIAGE_CHECKS.DOCUMENT_COPY_NO_STORE.translation });
   assert.equal(CASE_CARRIAGE_CHECKS.DOCUMENT_COPY_NO_STORE.translation,
-               "Your group's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made.");
+               "Your team's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made.");
   assert.deepEqual(w2.snapshot(), before, "nothing derived or written");
   assert.equal(w2.cc.documentCopy(s).state, "pending");
 });
@@ -381,7 +381,7 @@ test("R12 (T39) the queue and the record of member documents' copies are declare
   const now = w.rows(`SELECT * FROM document_copies`);
   assert.deepEqual(now.slice(0, kept.length), kept, "never rewritten or removed");
   assert.equal(now.length, kept.length + 1);
-  assert.equal(COPY_CLEANED_LABEL, "Details of who made this file, and of its pictures, removed for publication; the group holds the original");
+  assert.equal(COPY_CLEANED_LABEL, "Details of who made this file, and of its pictures, removed for publication; the team holds the original");
   assert.notEqual(COPY_CLEANED_LABEL, OBSCURED_LABEL);
 });
 

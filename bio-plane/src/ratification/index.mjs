@@ -726,7 +726,7 @@ export class Ratification {
   registerApprovalReader(reader) {
     if (this.#approvalReader)
       return { ok: false, reason: "APPROVAL_READER_DECLARED",
-               detail: "a reader of the group's approvals is already registered; there is one, registered once at start" };
+               detail: "a reader of the team's approvals is already registered; there is one, registered once at start" };
     if (!reader || typeof reader.rule !== "function" || typeof reader.approvals !== "function")
       return { ok: false, reason: "MALFORMED", detail: "registerApprovalReader takes {rule(), approvals({case, edition, docSha})}" };
     this.#approvalReader = reader;
@@ -1101,7 +1101,7 @@ export class Ratification {
                      + `roster, its load-bearing partition, its bias acknowledgement and its standard of `
                      + `evidence — are committed from BYTES A MEMBER SIGNED and from nothing else. This `
                      + `request carries no signature over case ${id} edition ${ed}, so committing it would `
-                     + `mean this plane asserting a group's case on their behalf. Review the case document `
+                     + `mean this plane asserting a team's case on their behalf. Review the case document `
                      + `(op=casedocument) and ratify it (op=caseratify).` };
     const hold = { seals: null };
     /* R52: the sitting's members (each `publish`'s arguments, verified by the Worker), committed after the case in this

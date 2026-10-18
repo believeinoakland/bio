@@ -1147,7 +1147,7 @@ export class QueueProducers {
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
         summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} records, ${r.files} files`,
-        detail: `An export of the ${r.scope} left your group's Civicsmith with the root-of-trust credential `
+        detail: `An export of the ${r.scope} left your team's Civicsmith with the root-of-trust credential `
               + `(Membership v2 §8.1). It is row ${r.seq} of the append-only export log`
               + (r.note ? `, noted "${r.note}"` : ", with no note") + `. Every administrator is told; `
               + `nobody else is. The log is the record of it and nothing here changes the log.`,
@@ -1347,7 +1347,7 @@ export class QueueProducers {
         summary: title
           ? (removed ? `${title} is gone from its source` : `${title} has changed at its source`)
           : (removed ? "A document is gone from its source" : "A document has changed at its source"),
-        detail: `Your group's Civicsmith noticed that the address this document was captured from ${removed
+        detail: `Your team's Civicsmith noticed that the address this document was captured from ${removed
                 ? "no longer has it" : "now shows something other than what was captured"}, `
               + "and flagged it for a second look. What the change means is not decided here.",
         basis: { source: "monitoring.flagged", bundle_id: id, source_status: r.source_status ?? null,
@@ -1853,7 +1853,7 @@ export class QueueProducers {
                      observation: obs },
           summary: `case ${e.case_id}, being prepared, uses your observation ${name}: choose how it credits you`,
           detail: `edition ${e.edition} of this case reaches what you observed, and you have chosen no level for how it `
-                + "shows who said it: the group, the project, your cover or your name. Nothing is published until it is "
+                + "shows who said it: the team, the project, your cover or your name. Nothing is published until it is "
                 + "signed, and nobody else is told you are its author. This is told once; it leaves when you choose, "
                 + "or the edition no longer uses it, or it is signed or replaced.",
           basis: { source: "publication.caseDocumentFacts + case_documents + register", case: e.case_id,
@@ -2046,7 +2046,7 @@ export class QueueProducers {
   /** The sentence naming another group's case, as far as the viewer is told it (reevaluation R33 states the group and
    *  case only where the viewer sees the imported reference). */
   static #citedCaseWords(group, cs) {
-    return `${cs ? `case ${cs}` : "a case"}${group ? ` of the group ${group}` : " of another group"}`;
+    return `${cs ? `case ${cs}` : "a case"}${group ? ` of the team ${group}` : " of another team"}`;
   }
 
   /** What one entry seen at a publisher's docket says, quoted: a move's `what_changed` or `reason`, and its signing key
@@ -2124,9 +2124,9 @@ export class QueueProducers {
                    cited_editions: cited, legs, cause_detail: e.detail ?? null, ...flags,
                    bound: { limit: QueueProducers.QUEUE_CITED_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
                             truncated: cut },
-                   detail: "the cause is reevaluation's (its R33): a live leg of this finding rests on another group's "
+                   detail: "the cause is reevaluation's (its R33): a live leg of this finding rests on another team's "
                          + "finding at an edition whose publisher has since listed a later edition or withdrawn it on its "
-                         + "docket, a verified entry your group's Civicsmith read. It is read here, never raised, and nothing was regraded." },
+                         + "docket, a verified entry your team's Civicsmith read. It is read here, never raised, and nothing was regraded." },
           age: Number.isFinite(sinceMs)
             ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
             : { state: "undetermined", reason: "no_cause_instant",
@@ -2199,7 +2199,7 @@ export class QueueProducers {
         case: this.#homesOf([]),
         subject: subjectOf(e),
         summary: `the publisher's docket for ${whose(e)}, which you follow, lists ${kindWords}`,
-        detail: `Entry ${e.seq} of the docket, ${kindWords}${e.date ? `, dated ${e.date}` : ""}, was read and verified by your group's Civicsmith. `
+        detail: `Entry ${e.seq} of the docket, ${kindWords}${e.date ? `, dated ${e.date}` : ""}, was read and verified by your team's Civicsmith. `
               + `Its signing key ${e.key_listed === false ? "is not" : "is"} among the keys the imported case file lists.`
               + QueueProducers.#entryWords({ ...e, key_listed: null })
               + (e.move ? " Anything here resting on an edition it moves is told to its own members as well."
@@ -2251,7 +2251,7 @@ export class QueueProducers {
         kind: "cited-docket-entry-refused",
         case: this.#homesOf([]),
         subject: subjectOf(e),
-        summary: `an entry on the publisher's docket for ${whose(e)}, which you follow, failed the checks your group's Civicsmith makes`,
+        summary: `an entry on the publisher's docket for ${whose(e)}, which you follow, failed the checks your team's Civicsmith makes`,
         detail: QueueProducers.#refusedWords(e, seq, [failed]),
         basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null, seq,
                  failed: [failed], entry_detail: e.detail ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
@@ -2380,12 +2380,12 @@ export class QueueProducers {
         detail: withdrawn
           ? `It is not offered to members while it fails its checks${words ? `. The first thing it failed: ${words}` : ""}. `
             + "A new version that passes them, approved as before, returns it. This is told once."
-          : "It passed its checks again when your group's Civicsmith started, and members are offered it as before. This is told once.",
+          : "It passed its checks again when your team's Civicsmith started, and members are offered it as before. This is told once.",
         basis: { source: "wizard-scripts.brokenScripts", script: x.script, version: x.version, name: x.name ?? null, project,
                  author, at: x.at, break_kind: x.kind, refusal, recipients_rule: project ? "project_owners_and_author" : "administrators_and_author",
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
                  detail: "a script's break or return is wizard-scripts' record (its R13), made when its checks are run "
-                       + "again at start, read here and never stored. It goes to the script's project owners (for a group "
+                       + "again at start, read here and never stored. It goes to the script's project owners (for a team "
                        + "script, the administrators) and its version's author, once (DEC-69, DEC-70)." },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: x.at, ms: Math.max(0, now - atMs) }
@@ -2540,7 +2540,7 @@ export class QueueProducers {
       let summary, detail, age, options;
       if (kind === "edition-scheduled") {
         summary = `Signed · publishes ${when} · ${which}`;
-        detail = `This edition is signed and waits to publish on ${when}${zone ? ` (${zone})` : ""}, the group's own time. `
+        detail = `This edition is signed and waits to publish on ${when}${zone ? ` (${zone})` : ""}, the team's own time. `
           + "Nothing of it is public until then. At that time every check it passed at signing is run again, and it is "
           + "published only if nothing has changed. An owner of the case's project may move the time or cancel it"
           + (moves.length ? `; its time has been moved ${moves.length === 1 ? "once" : `${moves.length} times`}` : "") + ".";
@@ -2575,7 +2575,7 @@ export class QueueProducers {
                  outcome_at: e.outcome_at ?? null, ...(kind === "scheduled-edition-stopped" ? { reasons } : {}),
                  recipients_rule: "setter_and_project_owners",
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the group's zone, and "
+                 detail: "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the team's zone, and "
                        + "its outcome, read here as the plane and never stored. It goes to the member who set the time and "
                        + "to the case's project's owners, and to nobody else (DEC-147)." },
         age,
@@ -2636,14 +2636,14 @@ export class QueueProducers {
         kind: "place-profile-arrived",
         case: this.#homesOf([]),
         subject: { kind: "place_profile", id: profile, name: pname ?? null, covers: coverage, place },
-        summary: `a profile for ${place ? `"${place}"` : "the place your group named"} is now held: ${named}`,
-        detail: `An installed update brought a profile that matches the place your group named${place ? `, "${place}"` : ""}: `
+        summary: `a profile for ${place ? `"${place}"` : "the place your team named"} is now held: ${named}`,
+        detail: `An installed update brought a profile that matches the place your team named${place ? `, "${place}"` : ""}: `
               + `${named}${coverage.length ? `, which covers ${coverage.join(", ")}` : ""}. An administrator may choose it under `
-              + "Places; the offices your group added stay. This status is told once, and it leaves when the profile is "
+              + "Places; the offices your team added stay. This status is told once, and it leaves when the profile is "
               + "chosen or the place's name is cleared or changed.",
         basis: { source: "instance-setup.placeArrivals", profile, profile_name: pname ?? null, covers: coverage, place,
                  found_at: a.found_at ?? null, recipients_rule: "administrators", raised_to: admins,
-                 detail: "an arrival is instance-setup's fact (its R62): a held profile matching the place the group named, "
+                 detail: "an arrival is instance-setup's fact (its R62): a held profile matching the place the team named, "
                        + "first found at a start, read here through the read it registered and never stored. It goes to "
                        + "every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves." },
         age: QueueProducers.#instantAge(a.found_at, now, "no_found_instant", "the arrival carries no instant this producer can read"),
@@ -2693,8 +2693,8 @@ export class QueueProducers {
         subject: { kind: "wizard", id: x.copy, name: x.name ?? null, copy_version: x.copy_version ?? null,
                    base: x.base ?? null, base_name: x.base_name ?? null, based_on: x.based_on ?? null,
                    base_version: baseVersion, project },
-        summary: `${baseName} has a newer approved version, ${baseVersion}, than your group's copy ${name} was made from`,
-        detail: `Your group's copy ${name} was made from ${x.based_on ? `version ${x.based_on} of ` : ""}${baseName}, and `
+        summary: `${baseName} has a newer approved version, ${baseVersion}, than your team's copy ${name} was made from`,
+        detail: `Your team's copy ${name} was made from ${x.based_on ? `version ${x.based_on} of ` : ""}${baseName}, and `
               + `version ${baseVersion} of it has since been approved. See what changed between the two; you may bring the `
               + "change across to your copy by your own revision, and nothing is changed in your copy unless you do. "
               + "This is told once.",

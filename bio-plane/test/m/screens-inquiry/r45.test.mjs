@@ -14,7 +14,7 @@ const mine = (o = {}) => ({ id: "RUN-" + "d".repeat(16), status: "running", tick
 test("R45 the press draws state d before airunopen answers, its stop disabled; a refusal then replaces it, drawn as R33 says", async () => {
   let release;
   const gate = new Promise((r) => { release = r; });
-  const limit = { status: 200, json: { ok: true, result: { run: "x", started: false, code: "AI_LIMIT_REACHED", whose: "the group's", period: "monthly", when: "on 1 November" } } };
+  const limit = { status: 200, json: { ok: true, result: { run: "x", started: false, code: "AI_LIMIT_REACHED", whose: "the team's", period: "monthly", when: "on 1 November" } } };
   const p = await open(at, reach({ images: { [Q]: { "bundle.md": empty } }, plane: { airunopen: async () => { await gate; return limit; } } }));
   assert.equal(section(p, "question.run.heading"), undefined, "nothing at work before the press");
   await press(p, "airunopen");
@@ -28,7 +28,7 @@ test("R45 the press draws state d before airunopen answers, its stop disabled; a
   release();
   await p.settle();
   assert.equal(section(p, "question.run.heading"), undefined, "the refusal replaces state d");
-  assert.ok(says(section(p, "question.empty.ask"), "ai.refused.limit.overall", { whose: "the group's", period: "monthly", when: "on 1 November" }));
+  assert.ok(says(section(p, "question.empty.ask"), "ai.refused.limit.overall", { whose: "the team's", period: "monthly", when: "on 1 November" }));
   assert.equal(p.byOp("airundispatch").length, 0);
 });
 

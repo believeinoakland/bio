@@ -455,7 +455,7 @@ export class Calculations {
     const held = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
     if (held) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
     const ev = this.record.evidenceStore();
-    if (!ev) return no("NO_EVIDENCE_STORE", "your group's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.");
+    if (!ev) return no("NO_EVIDENCE_STORE", "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.");
     try { await ev.put(tableSha, bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
     const at = this.now();
     const superseded = vintage && vintage.supersedes ? vintage.supersedes : null;
@@ -1910,7 +1910,7 @@ export class Calculations {
       says: `the held uses of powers you may see, ${ids.length} acts: a population, not a census of every use made` });
     if (this.#one(`SELECT 1 AS x FROM calc_uses WHERE sha=?`, built.sha)) return { ...answer(), already: true };
     const ev = this.record.evidenceStore();
-    if (!ev) return no("NO_EVIDENCE_STORE", "your group's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written.");
+    if (!ev) return no("NO_EVIDENCE_STORE", "your team's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written.");
     try { await ev.put(built.sha, built.bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
     const bundle = project ? str(project) : null;
     this.record.transact(() => {

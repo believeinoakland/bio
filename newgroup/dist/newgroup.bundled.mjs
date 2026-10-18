@@ -3541,7 +3541,7 @@ var PROPOSAL_STATES = Object.freeze({
   governing_laws: LAW_PROPOSAL_STATES,
   standard: Object.freeze({
     machine_proposed: "a machine credential proposed this standard. That is machine work, labelled as machine work: it can set a standard beside the record for members to consider and it can never enter one. Nothing here is a standard this record holds, and nothing becomes one until a member records it themselves",
-    member_proposed: "a member proposed this standard to whoever records the group's standards. It is a proposal and not a standard: only recording a standard enters one, and the record holds who made the proposal",
+    member_proposed: "a member proposed this standard to whoever records the team's standards. It is a proposal and not a standard: only recording a standard enters one, and the record holds who made the proposal",
     unstated: "the record does not say who proposed this standard"
   }),
   comparison: Object.freeze({
@@ -3555,8 +3555,8 @@ var PROPOSAL_STATES = Object.freeze({
     unstated: "the record does not say who prepared this draft, and nobody has approved or sent it"
   }),
   theory: Object.freeze({
-    machine_proposed: "a machine credential proposed this candidate theory and remedy. That is machine work, labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it can never state the group's position. Nothing here is the group's position",
-    member_proposed: "a member proposed this candidate theory and remedy. It is a candidate for members and counsel to weigh and not the group's position, and the record holds who proposed it",
+    machine_proposed: "a machine credential proposed this candidate theory and remedy. That is machine work, labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it can never state the team's position. Nothing here is the team's position",
+    member_proposed: "a member proposed this candidate theory and remedy. It is a candidate for members and counsel to weigh and not the team's position, and the record holds who proposed it",
     unstated: "the record does not say who proposed this candidate theory and remedy"
   }),
   /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
@@ -3583,9 +3583,9 @@ var PROPOSAL_STATES = Object.freeze({
      (`BIO_Publication_v0_1.md` §5A; case-authoring R39), is not the group's statement until a member adopts or rewrites
      it, and the record keeps that it began as a machine draft. */
   edition_statement: Object.freeze({
-    machine_proposed: "a machine credential drafted this statement of what changed in this edition, and why. That is machine work, labelled as machine work: it is a draft, which can help members say what changed and can never sign a statement. It is not the group's statement until a member adopts or rewrites it",
-    member_proposed: "a member proposed this statement of what changed in this edition, and why. It is a proposal and not the group's statement until a member adopts or rewrites it, and the record holds who proposed it",
-    unstated: "the record does not say who proposed this statement of what changed in this edition, and why, and it is not the group's statement until a member adopts or rewrites it"
+    machine_proposed: "a machine credential drafted this statement of what changed in this edition, and why. That is machine work, labelled as machine work: it is a draft, which can help members say what changed and can never sign a statement. It is not the team's statement until a member adopts or rewrites it",
+    member_proposed: "a member proposed this statement of what changed in this edition, and why. It is a proposal and not the team's statement until a member adopts or rewrites it, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this statement of what changed in this edition, and why, and it is not the team's statement until a member adopts or rewrites it"
   }),
   /* DEC-89 with Bob's addition (K1019; T23, R44): an escalation's opening reason assembled from the determination's
      record (escalation R29) is not a member's reason until a member sends it, as offered or edited; the reason then
@@ -3617,9 +3617,9 @@ var PROPOSAL_STATES = Object.freeze({
      group's wording until a member granted that language adopts it; a machine can draft one and never adopt or confirm
      one (DEC-157 (4)'s second check is a member's or an administrator's). */
   translation: Object.freeze({
-    machine_proposed: `a machine credential drafted this translation of an interface word. That is machine work, labelled as machine work: it can draft a translation and it can never adopt or confirm one. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it`,
-    member_proposed: `a member proposed this translation of an interface word. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it, and the record holds who proposed it`,
-    unstated: `the record does not say who drafted this translation of an interface word. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it`
+    machine_proposed: `a machine credential drafted this translation of an interface word. That is machine work, labelled as machine work: it can draft a translation and it can never adopt or confirm one. It is a draft, shown to members as "Draft", and not the team's wording until a member granted that language adopts it`,
+    member_proposed: `a member proposed this translation of an interface word. It is a draft, shown to members as "Draft", and not the team's wording until a member granted that language adopts it, and the record holds who proposed it`,
+    unstated: `the record does not say who drafted this translation of an interface word. It is a draft, shown to members as "Draft", and not the team's wording until a member granted that language adopts it`
   }),
   /* N838 (K2540; T42, R54): a draft of a case's account drawn from its cited evidence (case-authoring R64, kind
      `case_account`) is never the case's account, which a member writes in her own words; and a check of a member's
@@ -3631,18 +3631,18 @@ var PROPOSAL_STATES = Object.freeze({
     unstated: "the record does not say who drafted this account of a case from its cited evidence. It is a draft and never the case's account, which a member writes in her own words"
   }),
   account_check: Object.freeze({
-    machine_proposed: "a machine credential flagged these sentences of a member's account as not supported by the evidence they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can never find against one. It is never a finding of the group",
-    member_proposed: "a member flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the group, and the record holds who proposed it",
-    unstated: "the record does not say who flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the group"
+    machine_proposed: "a machine credential flagged these sentences of a member's account as not supported by the evidence they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can never find against one. It is never a finding of the team",
+    member_proposed: "a member flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the team, and the record holds who proposed it",
+    unstated: "the record does not say who flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the team"
   }),
   /* N912 (K2845; T46, R60): a layout of how a reply to a request for comment bears on each claim of the action
      (`action-replies` R1, `actionBearingPropose`) is a proposed reading, stored apart, and never the group's reading until a
      member records a layout themselves; a machine can propose one and never record one (action-replies R4). Before this
      subject action-replies labelled its proposals through `lawProposalState` with its own sentences. */
   bearing: Object.freeze({
-    machine_proposed: "a machine credential proposed this layout of how a reply bears on each claim of an action. That is machine work, labelled as machine work: it can propose a layout and it can never record one. It is a proposed reading and never the group's reading until a member records it",
-    member_proposed: "a member proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the group's reading until a member records it, and the record holds who proposed it",
-    unstated: "the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the group's reading until a member records it"
+    machine_proposed: "a machine credential proposed this layout of how a reply bears on each claim of an action. That is machine work, labelled as machine work: it can propose a layout and it can never record one. It is a proposed reading and never the team's reading until a member records it",
+    member_proposed: "a member proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the team's reading until a member records it, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the team's reading until a member records it"
   }),
   /* N956 (K3028; T47, R61): a draft of a status report on a plan (`plan-work` R14, the assistant's draft) is kept with the
      plan and never published, and the report kept is the member's; a machine can draft one and never keep or publish one.
@@ -4138,25 +4138,25 @@ var FLEET_BINDINGS = [
   ["file-scanner", "FILE_SCANNER"]
 ];
 var HOSTING_CONTROL = Object.freeze({
-  heading: "Before you choose a password: who controls your group's Civicsmith",
+  heading: "Before you choose a password: who controls your team's Civicsmith",
   sentences: Object.freeze([
-    "Whoever can sign in to the hosting account your group's Civicsmith runs in (its Cloudflare account) controls it. They can replace the one-time password, claim it again, read everything in it and lock everyone else out, and no vote of the group's administrators can stop them.",
-    "Use a group account for it, not anyone's personal login.",
+    "Whoever can sign in to the hosting account your team's Civicsmith runs in (its Cloudflare account) controls it. They can replace the one-time password, claim it again, read everything in it and lock everyone else out, and no vote of the team's administrators can stop them.",
+    "Use a team account for it, not anyone's personal login.",
     "Add at least one other trusted person to that account.",
-    "Where possible, let someone other than the group's administrators hold it.",
-    "The same account is the way back in if the password you choose is lost: whoever holds it can open the way for your group's Civicsmith to be claimed again."
+    "Where possible, let someone other than the team's administrators hold it.",
+    "The same account is the way back in if the password you choose is lost: whoever holds it can open the way for your team's Civicsmith to be claimed again."
   ]),
   guide: Object.freeze({
-    sentence: "If the one-time password may have been seen, replace it: follow the guide \u201CReplace the one-time password\u201D in your group's Civicsmith, on its first page and in its members and keys section.",
+    sentence: "If the one-time password may have been seen, replace it: follow the guide \u201CReplace the one-time password\u201D in your team's Civicsmith, on its first page and in its members and keys section.",
     name: "Replace the one-time password"
   })
 });
-var HOSTING_RECOVERY_DEPLOYER = "To open the way back in: sign in to the hosting account, replace the ADMIN_TOKEN value in this worker's settings, and your group's Civicsmith can be claimed again.";
+var HOSTING_RECOVERY_DEPLOYER = "To open the way back in: sign in to the hosting account, replace the ADMIN_TOKEN value in this worker's settings, and your team's Civicsmith can be claimed again.";
 var FORGOT_HELP = Object.freeze({
   heading: "If you cannot sign in",
   sentences: Object.freeze([
-    "Your group's administrators can help you: ask one of them for a reset link.",
-    "If none of them can sign in either, whoever holds your group's hosting account can open the way back in for them."
+    "Your team's administrators can help you: ask one of them for a reset link.",
+    "If none of them can sign in either, whoever holds your team's hosting account can open the way back in for them."
   ])
 });
 var escBlock = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -4887,15 +4887,15 @@ var ASSET_FILES = Object.freeze({
    GENERATED by build.py from palette.json (colors) + tokens.head.css + components.css.
    Edit those, never this file. One system for every member screen and the published case,
    replacing civicos-ui/tokens.css, the action-design sketches' look and the measures map's
-   placeholders. Faces: faces.css (shipped inside the group's copy, principle 9.6).
+   placeholders. Faces: faces.css (shipped inside the team's copy, principle 9.6).
 
    The system's rules:
    1. Color always means something. Verdigris (the patina on a brass plumb bob) is the one
       color for acting and for Civicsmith itself; rust is attention only (a clock, a change,
-      a refusal, something visible outside the group); each evidence scale has its own hue;
-      machine work and another group's work carry no hue and are told apart by edge, mark
+      a refusal, something visible outside the team); each evidence scale has its own hue;
+      machine work and another team's work carry no hue and are told apart by edge, mark
       and word.
-   2. Three voices in type: serif for words people wrote (the group's questions, findings and
+   2. Three voices in type: serif for words people wrote (the team's questions, findings and
       cases; passages quoted from documents), sans for Civicsmith's own words, mono only for
       identifiers machines check (fingerprints, short names, receipt numbers).
    3. Rules before shadows; corners nearly square, like a printed form; no pill shapes.
@@ -5110,9 +5110,9 @@ var ASSET_FILES = Object.freeze({
 
 /* ============================================================
    Frames: where you are (principles 5.1\u20135.4, DEC-106, DEC-112)
-   working: paper ground, the group's masthead, the standing band
-   published: the clean sheet, the group's name large, no band
-   imported: the working frame with another group's band and double edge
+   working: paper ground, the team's masthead, the standing band
+   published: the clean sheet, the team's name large, no band
+   imported: the working frame with another team's band and double edge
    ============================================================ */
 .cs-frame { background: var(--c-ground); color: var(--c-ink); min-width: 0; }
 .cs-frame[data-frame="published"] { background: var(--c-sheet); }
@@ -5411,7 +5411,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-ref:hover, .cs-ref:focus-visible { color: var(--c-accent-strong); }
 
 /* ============================================================
-   The security screen (K1875, DEC-165): the level against the group's usual, and a map of kinds over time.
+   The security screen (K1875, DEC-165): the level against the team's usual, and a map of kinds over time.
    Rust is attention, so it marks only what is above the usual; the highest step is also textured, and every cell
    names its count on hover, focus or tap, so color is never the only signal.
    ============================================================ */
@@ -5466,8 +5466,8 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-choice > label > .t { display: block; font-weight: 600; color: var(--c-ink); }
 .cs-choice > label > .help { display: block; grid-column: 2; font-size: var(--t-sm); color: var(--c-muted); }
 /* The faces (DEC-138): Source Serif 4, Source Sans 3 and Source Code Pro, SIL Open Font License 1.1 (fonts/OFL-*.txt),
-   shipped inside the group's copy and never fetched from outside (principle 9.6). Latin, Latin Extended and Vietnamese subsets;
-   other scripts fall back to the device's own faces until a group adds a language that needs them. */
+   shipped inside the team's copy and never fetched from outside (principle 9.6). Latin, Latin Extended and Vietnamese subsets;
+   other scripts fall back to the device's own faces until a team adds a language that needs them. */
 @font-face{font-family:"Civicsmith Serif";font-style:normal;font-weight:200 900;font-display:swap;src:url("/app/assets/fonts/source-serif-4-vietnamese-opsz-normal.woff2") format("woff2");unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}
 @font-face{font-family:"Civicsmith Serif";font-style:normal;font-weight:200 900;font-display:swap;src:url("/app/assets/fonts/source-serif-4-latin-ext-opsz-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Civicsmith Serif";font-style:normal;font-weight:200 900;font-display:swap;src:url("/app/assets/fonts/source-serif-4-latin-opsz-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -7944,9 +7944,9 @@ function groupNotice(kind, slug, before, base) {
 does not know which team produces it: it records that once, and one that already held a record when the
 value arrived is not given a name nobody told it.` : `The installer could not read which version your team&#39;s Civicsmith ran before this update, so it cannot tell whether this
 applies to you. It does if it held a record before ${FIRST_GROUP_RELEASE}: it then does not know which
-group produces its record, and is not given a name nobody told it.`;
+team produces its record, and is not given a name nobody told it.`;
   return `<div class="notice"><p style="margin:0 0 .6em"><b>One thing this update does not do for you: record which
-group produces your record.</b></p>
+team produces your record.</b></p>
 <p>${why} Until it is recorded, your team&#39;s Civicsmith refuses the writes that must name their producing team &mdash; testimony,
 the setup page&#39;s saves, and a new document that names none &mdash; with <span class="mono">GROUP_UNDETERMINED</span>.
 A document that states its own team is kept as it says, and nothing already in your record changes.</p>

@@ -20,7 +20,7 @@ const ENTRIES = [
 const ARCHIVE = { sha256: SHA, bundle: "INFO-2026-0010-packet", grade: { grade: "B", route: "direct", determined: true, basis: null },
                   bytes: 182 * 1048576, entries: 7, declared_total: 7, opened: true, refused: null };
 const LIST = ok({ ok: true, archive: ARCHIVE, summary: { filed: 3, already_held: 1, not_filed: 1, folders: 1, waiting: 0 }, entries: ENTRIES, truncated: false });
-const NOTE = ok({ ok: true, note: "Fetched by your group's Civicsmith from the city's own site." });
+const NOTE = ok({ ok: true, note: "Fetched by your team's Civicsmith from the city's own site." });
 const at = (plane = {}) => open(`/app/archive/${SHA}`, { plane: { archivelist: LIST, gradenote: NOTE, ...plane } });
 const pick = async (p, id) => p.click(main(p).querySelector(`#pick-archive-${id}`));
 
@@ -73,7 +73,7 @@ test("R15 gradenote draws the grade note beside the grade", async () => {
   const p = await at();
   assert.doesNotMatch(text(p), /from the city's own site/);
   await press(p, "gradenote");
-  assert.match(text(p), /Fetched by your group's Civicsmith from the city's own site\./);
+  assert.match(text(p), /Fetched by your team's Civicsmith from the city's own site\./);
   /* control: no note held is said */
   const q = await at({ gradenote: ok({ ok: true, note: null }) });
   await press(q, "gradenote");

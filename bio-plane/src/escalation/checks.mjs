@@ -21,7 +21,7 @@
    `translation` is the word itself, never a copy. `refusal.NOT_OPEN` is not taken (R35). */
 export const ESCALATION_WORDS = Object.freeze({
   'refusal.MACHINE_CANNOT_STOP': 'Only a member stops or reopens an escalation. Nothing was written.',
-  'refusal.NOT_STOPPED': 'Only an escalation your group stopped pursuing can be reopened. Nothing was written.',
+  'refusal.NOT_STOPPED': 'Only an escalation your team stopped pursuing can be reopened. Nothing was written.',
   'refusal.ESCALATION_BY_ACT_ONLY': 'An escalation changes only through its own acts: open, attach, evaluate, advance, decline, '
     + 'suspend, resume, stop pursuing, reopen and end, so its record never disagrees with itself. Nothing was written.',
   'refusal.ALREADY_ATTACHED': 'This action is already attached to an escalation. An action is attached to one escalation, at '
@@ -194,7 +194,7 @@ export const ESCALATION_CHECKS = Object.freeze({
   CONSEQUENCES_UNDETERMINED: {
     check: 'C-116.35', where: at("escalationEnd", "is-consequences-determined"),
     translation: 'Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is '
-      + 'undetermined or unproven. If the group judges the breach had no consequence, record that as an assessed '
+      + 'undetermined or unproven. If the team judges the breach had no consequence, record that as an assessed '
       + 'consequence and address it. Nothing was written.',
   },
   MACHINE_CANNOT_SUSPEND: {
@@ -232,7 +232,7 @@ export const ESCALATION_CHECKS = Object.freeze({
   },
   MACHINE_CANNOT_DECLINE_TO_ESCALATE: {
     check: 'C-116.46', where: at("declineToEscalate", "is-decline-member"),
-    translation: 'Recording that the group is not pursuing a breach is a member\'s act, in the member\'s own words. An '
+    translation: 'Recording that the team is not pursuing a breach is a member\'s act, in the member\'s own words. An '
       + 'assistant may point out a breach; it may not decline it. Nothing was written.',
   },
   MACHINE_CANNOT_STOP: {
@@ -245,7 +245,7 @@ export const ESCALATION_CHECKS = Object.freeze({
   },
   PROVIDER_UNAVAILABLE: {
     check: 'C-116.44', where: at("refuseProviderUnavailable", "is-provider-present"),
-    translation: 'Part of the record this answer depends on cannot be read by your group\'s Civicsmith yet, so nothing '
+    translation: 'Part of the record this answer depends on cannot be read by your team\'s Civicsmith yet, so nothing '
       + 'is answered in its place. Nothing was written.',
   },
 });

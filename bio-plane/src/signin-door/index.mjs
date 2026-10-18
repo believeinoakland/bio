@@ -38,8 +38,8 @@ const KEPT_AWAY_STEPS = Object.freeze(["start", "code"]);
 const DISCLOSURE_STEPS = Object.freeze(["start"]);
 /* R1: the door's member words under the UX stream's keys, read by key until `words.json` holds them. */
 export const SIGNIN_WORDS = Object.freeze({
-  "ai.refused.signinabsent": "Signing in with Claude is not installed in your group's Civicsmith yet. Whoever installed "
-    + "your group's Civicsmith can add it.",
+  "ai.refused.signinabsent": "Signing in with Claude is not installed in your team's Civicsmith yet. Whoever installed "
+    + "your team's Civicsmith can add it.",
 });
 /* R3 (`agent-worker` R83): the two headers the door sends, and no other of its own. */
 export const TRACE_HEADER = "x-civicsmith-trace";
@@ -107,7 +107,7 @@ async function ask(store, path, init = { method: "POST", body: "{}" }) {
 }
 
 const unbound = () => ({ status: 503, body: { ok: false, reason: "AGENT_WORKER_UNBOUND",
-  detail: "your group's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in." } });
+  detail: "your team's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in." } });
 const silent = (why) => ({ status: 502, body: { ok: false, reason: "AGENT_WORKER_SILENT",
   detail: `the assistant member ${why}. Nothing was kept.` } });
 
@@ -267,7 +267,7 @@ export async function signintrace({ env, store }) {
      C-69.7 (`answer-envelope`'s DISPATCH_CHECKS row, K3143): the one site of the code (K231). */
   if (!testInstanceOf(env))
     return { status: 403, body: { ok: false, reason: "SIGNINTRACE_NOT_TEST", detail: "the sign-in trace is kept only "
-      + "on a test instance of Civicsmith, and your group's Civicsmith is not one. Nothing was read." } };
+      + "on a test instance of Civicsmith, and your team's Civicsmith is not one. Nothing was read." } };
   /* END DEC-49 REGION is-signintrace-test-instance */
   const out = await ask(store, STORE_ROUTES.traceRead, { method: "GET" });
   if (out.refused || !out.answered) return unreadAnswer("signintrace", out, undefined);

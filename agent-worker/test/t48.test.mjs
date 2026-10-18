@@ -144,7 +144,7 @@ const pathOf = (k) => k.split(" ")[0];
 
 /* ================================================================================================ R86 */
 
-section("R86 · POST /draft readtranslate: a passage of the group's writing in the member's language, reading nothing");
+section("R86 · POST /draft readtranslate: a passage of the team's writing in the member's language, reading nothing");
 {
   const said = (from) => (b) => ["draft", { text: "El grupo se reúne los martes.", ...(from === undefined ? {} : { from_language: from }) }];
   const r = await drive("draft", readBody(), {}, said("en"));

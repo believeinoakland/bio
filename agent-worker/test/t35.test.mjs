@@ -579,9 +579,9 @@ section("R64 · the words members read: your group's Civicsmith, or the thing it
   const PUBLISHED_VALUE = readFileSync(join(REPO, "bio-plane/dist/SECRETS.txt"), "utf8").split("\n")
     .find((l) => l.startsWith("ADMIN_TOKEN=")).split("=")[1].trim();
   const revoked = await resolveClaudeCascade({ ...ACCOUNT, secret: PUBLISHED_VALUE });
-  rows.push(["cascade.mjs:73", revoked.detail, "until then the group's API key serves them only while your group's Civicsmith holds it and it is on."]);
+  rows.push(["cascade.mjs:73", revoked.detail, "until then the team's API key serves them only while your team's Civicsmith holds it and it is on."]);
   const unset = await resolveClaudeCascade({ ...ACCOUNT, secret: "" });
-  rows.push(["cascade.mjs:75", unset.detail, "Which account serves a member's act is your group's Civicsmith's to answer"]);
+  rows.push(["cascade.mjs:75", unset.detail, "Which account serves a member's act is your team's Civicsmith's to answer"]);
   for (const [row, detail, words] of rows)
     t(`R64 (${row}): the member reads "${words.slice(0, 70)}…", and never plane, instance, copy or server`,
       [typeof detail === "string" && detail.includes(words), typeof detail === "string" && NEVER.test(detail)], [true, false]);

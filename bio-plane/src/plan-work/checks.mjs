@@ -44,7 +44,7 @@ export const PLAN_WORK_CHECKS = Object.freeze({
   },
   PLAN_WORK_PROVIDER_UNAVAILABLE: {
     check: 'C-151.8', where: at("refuseProviderUnavailable", "is-provider-present"),
-    translation: 'This reads part of the record that is not in your group\'s Civicsmith yet, so it is not answered in '
+    translation: 'This reads part of the record that is not in your team\'s Civicsmith yet, so it is not answered in '
       + 'part. Nothing was written.',
   },
 });

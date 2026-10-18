@@ -58,9 +58,9 @@ export { PROJECT_GRAMMAR, CLOSED_REASONS, checkProjectExtension, registerProject
 
 /** R9 (N327, DEC-83): the group aspiration's fixed act, and its next step, for `membership.notAnAdmin` (its R84), which
  *  answers `NOT_AN_ADMIN` in place of the retired `GROUP_ASPIRATION_NOT_ADMIN` (C-111.16, its number not reused). */
-export const GROUP_ASPIRATION_ACT = "declaring, revising or retiring an aspiration the whole group holds";
+export const GROUP_ASPIRATION_ACT = "declaring, revising or retiring an aspiration the whole team holds";
 export const GROUP_ASPIRATION_REMEDY = "Ask an active administrator: they declare, revise or retire an aspiration the "
-  + "whole group holds in their own name, and the act carries their name and date.";
+  + "whole team holds in their own name, and the act carries their name and date.";
 /** R16: the four acts on a proposal. */
 export const TRIAGE_ACTS = Object.freeze(["adopt", "question", "defer", "dismiss"]);
 /** R17 (Suggestions): the ageing interval's setting in record-core, and its default in days (C-10.1's staleness age). */
@@ -294,7 +294,7 @@ export class Intent {
   #aspirationAuthority(scope, owner, author, viewer) {
     const who = this.#memberOf(author);
     if (!ASPIRATION_SCOPES.includes(scope) || (scope !== "group" && !str(owner)) || (scope === "group" && owner != null))
-      return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming "
+      return refuseBadScope("an aspiration is the team's (naming no owner), a project's or a member's (naming "
                      + "which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
     if (scope === "member" && str(owner) !== who)
       /* DEC-49 REGION is-aspiration-yours */
@@ -929,7 +929,7 @@ export class Intent {
     if (byMachine) return byMachine;
     const own = scope === "group" ? null : str(owner) || null;
     if (!ASPIRATION_SCOPES.includes(scope) || (scope !== "group" && !own) || (scope === "group" && str(owner)))
-      return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming "
+      return refuseBadScope("an aspiration is the team's (naming no owner), a project's or a member's (naming "
                      + "which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
     if (!str(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
     const denied = this.#aspirationAuthority(scope, own, author, viewer ?? author);
@@ -961,12 +961,12 @@ export class Intent {
     if (!a) return refuseNoSuchAspiration("no aspiration answers to that id here. Nothing was written.",
                            { aspiration: aspiration ?? null });
     if (a.fm.scope !== "group")
-      return refuseBadScope("a project departs only from an aspiration the whole group holds; a project's or a "
+      return refuseBadScope("a project departs only from an aspiration the whole team holds; a project's or a "
                      + "member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
     if (a.head.currentState === "retired")
       return refusePursuitEnded("a retired aspiration is held by no project, so there is nothing to depart from. "
                      + "Nothing was written.", { aspiration });
-    if (!str(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
+    if (!str(reason)) return refuseNoReason("a departure from the team's aspiration records why. Nothing was written.");
     const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
     if (denied) return denied;
     const at = this.#when();

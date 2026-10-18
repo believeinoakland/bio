@@ -232,7 +232,7 @@ export class Answers {
    *  as a draft (R30); a log already open keeps the use it opened with. */
   async ruleAnswer({ service = null, args = null, viewer = null, at = null, grant = null, use = "ask" } = {}) {
     if (this.record.getSetting(RULE_SERVICES_SETTING) !== true)
-      return refusal("RULE_SERVICES_OFF", "the rule services are switched off in your group's Civicsmith");
+      return refusal("RULE_SERVICES_OFF", "the rule services are switched off in your team's Civicsmith");
     const fn = BUILT_IN_SERVICES[service] || this.services.get(service);
     if (typeof fn !== "function" || !Object.hasOwn(BUILT_IN_SERVICES, service) && !this.services.has(service))
       return refusal("RULE_SERVICE_UNKNOWN", `no rule service is named ${service}`, { service: service ?? null });

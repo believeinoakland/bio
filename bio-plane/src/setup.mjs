@@ -446,7 +446,7 @@ export const INSTANCE_SETUP_TABLE_DECLARATIONS = Object.freeze([
 ]);
 export const INSTANCE_SETUP_SCHEMA = `
 -- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG, ONE VALUE FOR THE WHOLE
--- INSTANCE. Every bundle this instance writes names it as its group, in the bytes that get signed, and nothing else may
+-- INSTANCE. Every bundle this instance writes names it as its team, in the bytes that get signed, and nothing else may
 -- supply that name: not a literal in the code, and not a deploy-time variable, which a redeploy could move silently.
 -- One row, id=1, WRITTEN ONCE: every writer is an INSERT that does nothing on conflict, and no statement anywhere
 -- updates or deletes it (R26).
@@ -575,7 +575,7 @@ CREATE TABLE IF NOT EXISTS seed_bodies (
   seeded_at    TEXT NOT NULL,
   PRIMARY KEY (profile, role, body)
 );
--- R60 (DEC-150 (1)): the place the group works in that no held profile covers, named by an administrator; the latest row
+-- R60 (DEC-150 (1)): the place the team works in that no held profile covers, named by an administrator; the latest row
 -- is the name, and a row with name NULL clears it. Held only here: nothing reads it outward. Append-only.
 CREATE TABLE IF NOT EXISTS place_wanted (
   seq     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -619,7 +619,7 @@ CREATE TABLE IF NOT EXISTS member_info_levels (
   asked_at  TEXT,
   set_at    TEXT NOT NULL
 );
--- R77, R11 (T45; N892 (d)): each set or clear of the group's declared stake, with who and when, appended after
+-- R77, R11 (T45; N892 (d)): each set or clear of the team's declared stake, with who and when, appended after
 -- record-core's setting 'declared_stake' recorded it (the value public-read reads). stake NULL is a clear. Append-only.
 CREATE TABLE IF NOT EXISTS declared_stake_history (
   seq     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -627,7 +627,7 @@ CREATE TABLE IF NOT EXISTS declared_stake_history (
   set_by  TEXT NOT NULL,
   set_at  TEXT NOT NULL
 );
--- R84 (T47; DEC-205 (2)): the group's logo, each set or clear by an administrator appended; the latest row is the logo,
+-- R84 (T47; DEC-205 (2)): the team's logo, each set or clear by an administrator appended; the latest row is the logo,
 -- and a row with data NULL clears it. 'data' is the picture's bytes in base64, 'type' read from its magic bytes.
 CREATE TABLE IF NOT EXISTS group_logos (
   seq     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -807,10 +807,10 @@ const unitOfMetric = (metric) => (/_bytes$/.test(String(metric)) ? "bytes" : "ms
  * ===================================================================== */
 
 /* What a store recording no group SAYS, in ONE copy: the credentialed read and the public reads both answer with it. */
-export const NO_GROUP_RECORDED = "no producing group is recorded for this store. A store records it once: at its first "
+export const NO_GROUP_RECORDED = "no producing team is recorded for this store. A store records it once: at its first "
   + "boot, from the slug its installer bound, or — on a store that already held documents when the value "
   + "arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must "
-  + "name its producing group is given no default: a caller's own statement of its group is kept "
+  + "name its producing team is given no default: a caller's own statement of its team is kept "
   + "as the caller's, and a write stating none is refused.";
 
 /* REC-164 — THE DISPLAY NAME AND THE DOMAIN (R5–R11): the bounds and the file. */
@@ -1063,13 +1063,13 @@ export class InstanceSetup {
     /* DEC-49 REGION is-instance-group-seed */
     if (!GROUP_SLUG_RE.test(s))
       return refusal("GROUP_SLUG_MALFORMED",
-        `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a group is recorded as"} a slug in the `
+        `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a team is recorded as"} a slug in the `
         + `installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). `
         + `Nothing was recorded.`);
     const held = this.#one(`SELECT slug, recorded_at, source FROM instance_group WHERE id=1`);
     if (held)
       return refusal("GROUP_ALREADY_RECORDED",
-        `this store has recorded its producing group since ${held.recorded_at} (${held.source}), and it is `
+        `this store has recorded its producing team since ${held.recorded_at} (${held.source}), and it is `
         + `recorded once. Nothing was changed.`, { group: held.slug, recorded_at: held.recorded_at, source: held.source });
     /* END DEC-49 REGION is-instance-group-seed */
     const at = this.#iso();
@@ -1077,8 +1077,8 @@ export class InstanceSetup {
     this.#sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
                     VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at, who);
     return { ok: true, group: s, recorded_at: at, source: "seed", recorded_by: who,
-             note: "every document this store writes from now on names this group. Documents already written are "
-                 + "NOT rewritten: whatever group their bytes name is what they were signed under." };
+             note: "every document this store writes from now on names this team. Documents already written are "
+                 + "NOT rewritten: whatever team their bytes name is what they were signed under." };
   }
 
   /* =====================================================================
@@ -1108,8 +1108,8 @@ export class InstanceSetup {
     /* DEC-49 REGION is-group-identity-admin */
     if (!by || !this.#membership().isAdministrator(by))
       return refusal("GROUP_IDENTITY_NOT_ADMIN",
-        "setting the group's display name or claiming its domain is an administrator's act (Publication §7), and "
-        + "your group's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This "
+        "setting the team's display name or claiming its domain is an administrator's act (Publication §7), and "
+        + "your team's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This "
         + "caller is not one of the active administrators.", { by: by ?? null });
     /* END DEC-49 REGION is-group-identity-admin */
     return null;
@@ -1181,7 +1181,7 @@ export class InstanceSetup {
     const address = cur.instance_address || null;
     let verdict = "undetermined", status = null, detail;
     if (!slug || !address) {
-      detail = !slug ? "this store records no producing group, so there is no slug for the file to name"
+      detail = !slug ? "this store records no producing team, so there is no slug for the file to name"
                      : "the claim carries no instance address for the file to name";
     } else {
       const first = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH, address, slug);
@@ -1232,12 +1232,12 @@ export class InstanceSetup {
     const inst = isObject && typeof f.instance === "string" ? instanceAddress(f.instance) : null;
     const grp = isObject && typeof f.group === "string" ? f.group.trim() : null;
     if (inst === address && grp === slug)
-      return { verdict: "verified", status, detail: `${path} names your group's Civicsmith (${address}) and its slug (${slug})` };
+      return { verdict: "verified", status, detail: `${path} names your team's Civicsmith (${address}) and its slug (${slug})` };
     return { verdict: "mismatched", status,
              detail: !isObject
-               ? `${path} is not the JSON object your group's Civicsmith reads ({ instance, group })`
-               : `${path} gives the address ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and the group `
-                 + `${JSON.stringify(grp).slice(0, 60)}; your group's Civicsmith is ${address} and its slug is ${slug}` };
+               ? `${path} is not the JSON object your team's Civicsmith reads ({ instance, group })`
+               : `${path} gives the address ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and the team `
+                 + `${JSON.stringify(grp).slice(0, 60)}; your team's Civicsmith is ${address} and its slug is ${slug}` };
   }
 
   /** R9, the alarm consumer's two halves: the next re-check is due one interval after the current claim's latest
@@ -1317,7 +1317,7 @@ export class InstanceSetup {
   declaredStakeSet({ stake = undefined, by = null } = {}) {
     const who = typeof by === "string" ? by.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
-      return notAnAdmin(by ?? null, "declaring what your group has at stake");
+      return notAnAdmin(by ?? null, "declaring what your team has at stake");
     let value = null;
     if (stake !== null) {
       const s = typeof stake === "string" ? stake.trim() : "";
@@ -1336,9 +1336,9 @@ export class InstanceSetup {
     this.#sql.exec(`INSERT INTO declared_stake_history (stake, set_by, set_at) VALUES (?, ?, ?)`, value, who, at);
     return { ok: true, stake: value, set_by: who, set_at: at, history: this.#declaredStake().declared_stake_history,
              note: value === null
-               ? "no stake is declared from now on: what your group sends or publishes says it has declared none. "
+               ? "no stake is declared from now on: what your team sends or publishes says it has declared none. "
                  + "Nothing already sent or published changes."
-               : "carried beside your group's public identity on everything it sends or publishes from now on. Nothing "
+               : "carried beside your team's public identity on everything it sends or publishes from now on. Nothing "
                  + "already signed, sent or published changes." };
   }
 
@@ -1362,7 +1362,7 @@ export class InstanceSetup {
   async groupLogoSet({ raw = undefined, rawType = null, by = null } = {}) {
     const who = typeof by === "string" ? by.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
-      return notAnAdmin(by ?? null, "setting your group's logo");
+      return notAnAdmin(by ?? null, "setting your team's logo");
     let logo = null;
     if (raw !== null) {
       const read = await readLogo(raw, rawType);
@@ -1376,8 +1376,8 @@ export class InstanceSetup {
                    logo ? logo.data : null, logo ? logo.type : null, logo ? logo.bytes : null, logo ? logo.sha256 : null, who, at);
     return { ok: true, logo: !!logo, ...(logo ? { type: logo.type, bytes: logo.bytes, sha256: logo.sha256 } : {}),
              set_by: who, set_at: at,
-             note: logo ? "shown beside your group's name on its page, its masthead and its published cases from now on."
-                        : "no logo from now on: your group's name stands alone." };
+             note: logo ? "shown beside your team's name on its page, its masthead and its published cases from now on."
+                        : "no logo from now on: your team's name stands alone." };
   }
 
   /** R84, in-process: `{ok: true, logo: {type, bytes, sha256, data, set_at}}` with the picture in base64, or `logo: null`
@@ -1409,7 +1409,7 @@ export class InstanceSetup {
   groupLanguagesSet({ languages = undefined, by = null } = {}) {
     const who = typeof by === "string" ? by.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
-      return notAnAdmin(by ?? null, "setting the languages your group's members use");
+      return notAnAdmin(by ?? null, "setting the languages your team's members use");
     const tags = Array.isArray(languages) ? languages.map((t) => (typeof t === "string" ? t.trim() : t)) : null;
     const bad = tags ? tags.find((t) => typeof t !== "string" || !isLocale(t)) : undefined;
     if (!tags || tags.length < 1 || tags.length > GROUP_LANGUAGES_MAX || bad !== undefined)
@@ -1476,7 +1476,7 @@ export class InstanceSetup {
     const { ids, unknown, tests } = this.#checkProfileList(raw.split(",").map((s) => s.trim()).filter(Boolean));
     const unique = [...new Set(ids)];
     let why = null;
-    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which your group's Civicsmith does not hold`;
+    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which your team's Civicsmith does not hold`;
     else if (tests.length) why = `the installer bound ${tests.join(", ")}, a profile made up for testing`;
     const core = this.#record();
     if (why) {
@@ -1505,7 +1505,7 @@ export class InstanceSetup {
                   ...(combined.ok ? {} : { errors: combined.errors }), view: profileView(combined), choices,
                   ...this.#stageFindings(combined) };
     if (!ids.length) {
-      out.detail = "no active profile: your group's Civicsmith reads no local facts, which is valid, and every fact that needs one "
+      out.detail = "no active profile: your team's Civicsmith reads no local facts, which is valid, and every fact that needs one "
         + "is answered as undetermined until an administrator chooses";
       const note = core.getSetting(InstanceSetup.PROFILES_BOOT_NOTE);
       if (note && note.recorded === false && typeof note.why === "string")
@@ -1546,7 +1546,7 @@ export class InstanceSetup {
     /* DEC-49 REGION is-profiles-admin */
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
       return refusal("PROFILES_NOT_ADMIN",
-        "choosing the jurisdiction profiles is an administrator's act, and your group's Civicsmith stamps who is asking from the "
+        "choosing the jurisdiction profiles is an administrator's act, and your team's Civicsmith stamps who is asking from the "
         + "signed-in session. This caller is not one of the active administrators.", { by: by ?? null });
     /* END DEC-49 REGION is-profiles-admin */
     /* DEC-49 REGION is-profiles-list */
@@ -1555,7 +1555,7 @@ export class InstanceSetup {
         + "empty list chooses none. Nothing was changed.");
     const { ids, unknown, tests } = this.#checkProfileList(profiles);
     if (unknown.length)
-      return refusal("UNKNOWN_PROFILE", `your group's Civicsmith holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. `
+      return refusal("UNKNOWN_PROFILE", `your team's Civicsmith holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. `
         + "Nothing was changed.", { profiles: unknown });
     if (tests.length)
       return refusal("PROFILE_IS_TEST", `${tests.join(", ")} ${tests.length > 1 ? "are profiles" : "is a profile"} made up `
@@ -2056,7 +2056,7 @@ export class InstanceSetup {
     if (k && k.on === true)
       return { ok: true, on: false, set_by: k.set_by ?? null, set_at: k.set_at ?? null, reason: k.reason ?? null };
     return { ok: true, on: false, set_by: null, set_at: null, reason: null, read: false,
-             detail: "whether your group keeps its material away from every assistant could not be read, so it is read "
+             detail: "whether your team keeps its material away from every assistant could not be read, so it is read "
                + "as kept away and the assistant is off" };
   }
 
@@ -2069,7 +2069,7 @@ export class InstanceSetup {
     try { return this.#aiAccounts().aiKeptAway(); }
     catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `whether your group keeps its material away from every assistant did not answer (${String(e && e.message || e)
+               detail: `whether your team keeps its material away from every assistant did not answer (${String(e && e.message || e)
                  .slice(0, 160)}), so no ask is put to an assistant and no run starts.` };
     }
   }
@@ -2153,7 +2153,7 @@ export class InstanceSetup {
    *  it with `name: null`. `by` is the control plane's stamp (R29). Each set or clear is appended with who and when. */
   placeWantedSet({ name = undefined, by = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
-      return notAnAdmin(by ?? null, "naming the place your group works in");
+      return notAnAdmin(by ?? null, "naming the place your team works in");
     let value = null;
     if (name !== null) {
       const s = typeof name === "string" ? name.trim() : "";
@@ -2178,14 +2178,14 @@ export class InstanceSetup {
              history: this.#rows(`SELECT name, set_by, set_at FROM place_wanted ORDER BY seq`).map((r) => ({ ...r })),
              note: value === null
                ? "no place is named. Nothing about it was ever sent anywhere."
-               : "the name is kept only in your group's Civicsmith and sent nowhere. When an installed update brings a "
+               : "the name is kept only in your team's Civicsmith and sent nowhere. When an installed update brings a "
                  + "profile for it, the administrators are told once and may choose it under Places." };
   }
 
   /** R60, op=placewantedstate: the named place, to an administrator only, with R62's open arrivals as `matches`. */
   placeWanted({ viewer = null } = {}) {
     if (typeof viewer !== "string" || !viewer || !this.#membership().isAdministrator(viewer))
-      return notAnAdmin(viewer ?? null, "reading the place your group named");
+      return notAnAdmin(viewer ?? null, "reading the place your team named");
     const cur = this.#placeCurrent();
     return { ok: true, name: cur ? cur.name : null, set_by: cur ? cur.set_by : null, set_at: cur ? cur.set_at : null,
              matches: this.placeArrivals({ viewer }).arrivals };
@@ -2371,7 +2371,7 @@ export class InstanceSetup {
    *  `/draft` (`{answers, account, holdings}` → `{focus, purpose, readLog}`), else the one this module was built with. */
   async groupDescriptionDraft({ answers = undefined, assistant = null, viewer = null, by = null, turn = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
-      return notAnAdmin(by ?? null, "asking the assistant to draft your group's description");
+      return notAnAdmin(by ?? null, "asking the assistant to draft your team's description");
     const off = this.assistantGate();
     if (off) return off;
     /* The door resolved no assistant for this request (store-door R10's `{on}`), though the gate now answers open: the
@@ -2390,7 +2390,7 @@ export class InstanceSetup {
     if (given.every((a) => !a.text.trim()))
       return refusal("GROUP_DRAFT_NO_ANSWERS", "every answer is empty, so there is nothing to draft from. Nothing was saved.");
     /* END DEC-49 REGION is-group-draft-answers */
-    const unavailable = () => draftUnavailable("the assistant could not serve a draft of the group's description, so "
+    const unavailable = () => draftUnavailable("the assistant could not serve a draft of the team's description, so "
       + "nothing was drafted and the fields are as they were.");
     const draftTurn = typeof turn === "function" ? turn : this.#deps.groupDraftTurn;
     if (typeof draftTurn !== "function") return unavailable();
@@ -2413,7 +2413,7 @@ export class InstanceSetup {
       out[field] = { text: checked.text, label: { kind: "machine", asked_by: askedBy } };
       out.withheld.push(...(checked.withheld || []).map((w) => ({ field, ...w })));
     }
-    out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your group's.";
+    out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your team's.";
     return out;
   }
 
@@ -2630,7 +2630,7 @@ export class InstanceSetup {
   updateNotice({ viewer = null } = {}) {
     const who = typeof viewer === "string" ? viewer.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
-      return notAnAdmin(viewer ?? null, "reading the updates of your group's Civicsmith");
+      return notAnAdmin(viewer ?? null, "reading the updates of your team's Civicsmith");
     try {
       const running = this.#runningOut();
       const last = this.#one(`SELECT at, outcome FROM update_checks ORDER BY seq DESC LIMIT 1`);
@@ -2661,7 +2661,7 @@ export class InstanceSetup {
       } catch { holder = null; viewerHolds = null; }
       return { ok: true, running, last_check: last ? { at: last.at, outcome: last.outcome } : null, ready, earlier,
                earlier_limit: UPDATE_EARLIER_MAX, earlier_truncated: rest.length > UPDATE_EARLIER_MAX, holder, viewer_holds: viewerHolds };
-    } catch (e) { return this.#updateSilence("the updates of your group's Civicsmith", e); }
+    } catch (e) { return this.#updateSilence("the updates of your team's Civicsmith", e); }
   }
 
   /* R89: whether the text a group recorded as who holds the hosting account names `id`, by the member's id or handle as a
@@ -2681,7 +2681,7 @@ export class InstanceSetup {
       const readyRow = this.#readyNotice();
       return { ok: true, running: this.#runningOut(), ready: readyRow ? this.#readyOut(readyRow) : null,
                decisions: readyRow ? this.#decisionsOf(readyRow.version) : [] };
-    } catch (e) { return this.#updateSilence("the updates of your group's Civicsmith", e); }
+    } catch (e) { return this.#updateSilence("the updates of your team's Civicsmith", e); }
   }
 
   /* R90: an update act is an administrator's (`by` the control plane's stamp, R29): `{who}`, or `NOT_AN_ADMIN` first, a
@@ -2713,20 +2713,20 @@ export class InstanceSetup {
   /** R90, op=updatestart: an administrator chooses to update to the release ready, and gets the installer's update page
    *  set to that release and no other. Nothing is installed by this act, which carries no credential, slug or member. */
   updateStart({ version = null, by = null } = {}) {
-    const a = this.#updateActor(by, "choosing to update your group's Civicsmith");
+    const a = this.#updateActor(by, "choosing to update your team's Civicsmith");
     if (a.refused) return a.refused;
     const r = this.#updateReady(version);
     if (r.refused) return r.refused;
     const at = this.#decide(r.ready.version, "start", a.who);
     return { ok: true, version: r.ready.version, kind: "start", by: a.who, at,
              address: `${INSTALLER_UPDATE_ADDRESS}?version=${encodeURIComponent(r.ready.version)}`,
-             note: "nothing is installed by this: whoever holds your group's hosting account installs it, through Cloudflare's own consent." };
+             note: "nothing is installed by this: whoever holds your team's hosting account installs it, through Cloudflare's own consent." };
   }
 
   /** R90, op=updatelater: an administrator sets the release ready aside: for 14 days, or, for a security release, until
    *  the start of the next local day (`civil-time`, the profile's zone, else UTC). A newer release replaces it at once. */
   updateLater({ version = null, by = null } = {}) {
-    const a = this.#updateActor(by, "setting aside an update of your group's Civicsmith");
+    const a = this.#updateActor(by, "setting aside an update of your team's Civicsmith");
     if (a.refused) return a.refused;
     const r = this.#updateReady(version);
     if (r.refused) return r.refused;
@@ -2754,7 +2754,7 @@ export class InstanceSetup {
   /** R90, op=updateskip: an administrator skips the release ready, with a reason (1 to 1,000 characters on one line):
    *  recorded with who and when and never erased; the release is never ready again, and the next one is offered. */
   updateSkip({ version = null, reason = null, by = null } = {}) {
-    const a = this.#updateActor(by, "skipping an update of your group's Civicsmith");
+    const a = this.#updateActor(by, "skipping an update of your team's Civicsmith");
     if (a.refused) return a.refused;
     const r = this.#updateReady(version);
     if (r.refused) return r.refused;

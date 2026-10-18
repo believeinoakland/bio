@@ -121,7 +121,7 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_NO_GROUP_SLUG: {
     check: "C-129.16", where: MANAGER,
-    translation: "Your group has no name recorded yet, and a docket entry is never anonymous. Record the group's "
+    translation: "Your team has no name recorded yet, and a docket entry is never anonymous. Record the team's "
       + "name first. Nothing was published.",
   },
   DOCKET_ENTRY_SETTLED: {
@@ -137,7 +137,7 @@ export const DOCKET_CHECKS = Object.freeze({
   DOCKET_NO_SUMMARY: {
     check: "C-129.19", where: KIND,
     translation: "A summary is one paragraph of at most 600 characters: a reaction elsewhere is shown with one in the "
-      + "group's own words, and an outcome is filed with one in yours. Nothing was written.",
+      + "team's own words, and an outcome is filed with one in yours. Nothing was written.",
   },
   DOCKET_NO_ARCHIVE_COPY: {
     check: "C-129.20", where: KIND,
@@ -151,7 +151,7 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_STALE: {
     check: "C-129.22", where: POST,
-    translation: "Your group's Civicsmith holds no prepared docket entry from you with this fingerprint, it was "
+    translation: "Your team's Civicsmith holds no prepared docket entry from you with this fingerprint, it was "
       + "prepared more than an hour ago, or the docket has moved since. Prepare it again and sign what it shows. "
       + "Nothing was published.",
   },

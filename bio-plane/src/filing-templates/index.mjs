@@ -315,7 +315,7 @@ export class FilingTemplates {
   #courtPetition(kind, profile, extra = {}) {
     /* DEC-49 REGION is-court-petition */
     return refuse("TEMPLATE_COURT_PETITION", `the kind's venue in the profile '${String(profile).slice(0, 60)}' is a court: no template the `
-      + "group files in its own name is kept for it until a licensed professional can certify one; a brief template may serve it",
+      + "team files in its own name is kept for it until a licensed professional can certify one; a brief template may serve it",
       { kind, profile, ...extra });
     /* END DEC-49 REGION is-court-petition */
   }
@@ -618,7 +618,7 @@ export class FilingTemplates {
     const scopeProject = t ? t.project : str(project);
     /* DEC-49 REGION is-template-draft */
     if (!scopeProject || !member || !this.#call(() => this.membership.isJoinedParticipant(scopeProject, member)))
-      return this.#scope(t, t && t.origin === "profile" ? "a profile's template is read-only here: draft the group's own from it (from=)"
+      return this.#scope(t, t && t.origin === "profile" ? "a profile's template is read-only here: draft the team's own from it (from=)"
         : "a template is drafted by a joined participant of its project");
     let events = [];
     if (t) {
@@ -843,7 +843,7 @@ export class FilingTemplates {
                     { max: GRANT_FIELD_MAX });
     const s = typeof secretSha === "string" ? secretSha.trim() : "";
     if (!SHA_RE.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
-      return refuse("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: your group's Civicsmith makes the secret");
+      return refuse("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: your team's Civicsmith makes the secret");
     /* END DEC-49 REGION is-template-grant */
     const at = this.#when();
     return this.record.transact(() => {
@@ -966,12 +966,12 @@ export class FilingTemplates {
     const name_ = member ? this.#nameOf(member) : null;
     /* DEC-49 REGION is-template-approve */
     if (widening) {
-      if (t.origin === "profile") return this.#notAnApprover(t, "a profile's template is already offered to the whole group");
+      if (t.origin === "profile") return this.#notAnApprover(t, "a profile's template is already offered to the whole team");
       if (!OFFERED.includes(state) || t.retired)
         return refuse("TEMPLATE_NOT_APPROVED", `the version is ${t.retired ? "of a retired template" : state}: only an approved project template is widened`,
                       { version: versionId(t.id, n), state });
       if (!member || this.#call(() => this.membership.isAdministrator(member)) !== true)
-        return this.#notAnApprover(t, "an administrator makes a template group-wide");
+        return this.#notAnApprover(t, "an administrator makes a template team-wide");
       if (t.widened) return { ok: true, template: t.id, existed: true, widened: t.widened, scope: "group" };
       const at = this.#when();
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
@@ -1036,7 +1036,7 @@ export class FilingTemplates {
         ? this.#call(() => this.membership.isAdministrator(member)) === true
         : this.#call(() => this.membership.isProjectOwner(t.project, member)) === true);
       if (!approver) return this.#notAnApprover(t, t.origin === "profile" ? "a profile's template is read-only here"
-        : t.widened ? "an administrator retires a group-wide template" : "an owner of the template's project retires it");
+        : t.widened ? "an administrator retires a team-wide template" : "an owner of the template's project retires it");
       /* DEC-49 REGION is-template-retire */
       if (!why) return refuse("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
       if (t.retired) return refuse("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t.id, ended: { ending: "retired", ...t.retired } });

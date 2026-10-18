@@ -120,7 +120,7 @@ test("R20 a watch ends when its policy is superseded, its listeners told; each c
   w.t = DUE;
   await w.f.followTick(w.t);
   const land = (addr) => w.landed.find((l) => l.request.locators[0] === addr);
-  assert.equal(land(ADDR).request.bundle, null, "a policy every member sees: its capture is the group's");
+  assert.equal(land(ADDR).request.bundle, null, "a policy every member sees: its capture is the team's");
   assert.equal(land("https://ellery.example/policies/sources").request.bundle, "INFO-2026-0310-src", "kept from the public: its capture lands in its source's project");
   /* superseded: the watch ends, told with no next due */
   p.superseded_by = "STD-2026-0009-policy";

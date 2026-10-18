@@ -63,14 +63,14 @@ export function captureBodyLines(captures, sources) {
                 "```", a.text, "```", "", "    Its signature:", "", "```", a.signature ?? "(none held)", "```", ""]))])]
       : ["This case's findings rest on no document the record holds a capture of, one level deep."]),
     "",
-    "## Sources Of Material Given To The Group",
+    "## Sources Of Material Given To The Team",
     "",
     ...(sources.length
-      ? ["What may be said of whoever gave the group a document this case rests on: only what the source consented to, "
+      ? ["What may be said of whoever gave the team a document this case rests on: only what the source consented to, "
          + "or what is already public elsewhere. Nothing else is stated, and no identifier links this source to any "
          + "other case.", "",
          ...sources.map((x) => `- ${x.capture}: ${x.stated}` + (x.basis ? `, ${BASIS_WORDS[x.basis] ?? x.basis}.` : "."))]
-      : ["No document this case rests on was given to the group by a source: each was fetched, or brought in by a member."]),
+      : ["No document this case rests on was given to the team by a source: each was fetched, or brought in by a member."]),
     ""];
 }
 
@@ -84,7 +84,7 @@ const MATERIAL_KIND_WORDS = Object.freeze({ document: "a document", observation:
 
 /* R10: who attests a material, as the row states them, never more. */
 function attesterWords(a, group) {
-  if (a.by_kind === "group") return `${group ?? "the group"} vouches for it by signing this case`;
+  if (a.by_kind === "group") return `${group ?? "the team"} vouches for it by signing this case`;
   if (a.by_kind === "project") return `the record of ${a.by} holds it, registered ${a.at ?? "at a time not stated"}, in ${a.recorded_in}`;
   if (a.by_kind === "co_attestation")
     return a.by === "timestamp" ? `a trusted timestamp of ${a.at ?? "a time not stated"}` : `a third party's co-archive at ${a.by}`;
@@ -99,7 +99,7 @@ function attesterWords(a, group) {
    with the case as that copy, printed with the copy's fingerprint and, word for word, the label shown beside it; never
    as "NOT INCLUDED". Only a row stating `obscured` prints so, so every row without it renders byte for byte as before. */
 const copyCarried = (o) => !!o && typeof o === "object" && typeof o.copy === "string" && o.copy !== "";
-const copyWords = (o) => `travels with this case as its copy, fingerprint ${o.copy}, the original kept by the group`
+const copyWords = (o) => `travels with this case as its copy, fingerprint ${o.copy}, the original kept by the team`
   + (typeof o.label === "string" && o.label ? `, shown with the label "${o.label}"` : "");
 
 export function carriesBodyLines(method, materials, group) {
@@ -140,10 +140,10 @@ export function acceptedBodyLines(accepted) {
   const rows = accepted && Array.isArray(accepted.rows) ? accepted.rows : [];
   const flags = accepted && Array.isArray(accepted.flags) ? accepted.flags : [];
   if (!rows.length) return [];
-  return ["## Another Group's Work This Case Rests On", "",
-    "A finding of this case rests on a finding of another group's published case, which this group accepted. That "
-    + "work, and everything it rests on, is the other group's, in its own case file: check it there.", "",
-    ...rows.map((r) => `- ${r.member} rests, through ${r.leg_of}, on ${r.finding} of ${r.group ?? "another group"}'s case `
+  return ["## Another Team's Work This Case Rests On", "",
+    "A finding of this case rests on a finding of another team's published case, which this team accepted. That "
+    + "work, and everything it rests on, is the other team's, in its own case file: check it there.", "",
+    ...rows.map((r) => `- ${r.member} rests, through ${r.leg_of}, on ${r.finding} of ${r.group ?? "another team"}'s case `
       + `${r.case ?? "(not stated)"}, edition ${r.edition}: accepted by ${r.accepted_by} on ${r.accepted_at}, because: `
       + `${sentence(r.reason)} It was ${String(r.result ?? "not recorded").replace(/_/g, " ")} from that case file`
       + (r.gaps ? `, with the gaps stated: ${sentence(r.gaps)}` : ".") + ` Its grades as that edition publishes them: ${pairLine(r.pair)}. `
@@ -169,7 +169,7 @@ export function acceptedBodyLines(accepted) {
 export const TENSION_TEMPLATES = Object.freeze({
   in_tension: "In tension, not yet resolved: ",
   explained: "Explained, not yet shown: ",
-  irreconcilable: "Held irreconcilable by the group: ",
+  irreconcilable: "Held irreconcilable by the team: ",
   unseen: "Rests on a side in conflict with a record not shown: ",
 });
 /** R1 (DEC-85): the highlighted entry's fixed sentence. */

@@ -352,7 +352,7 @@ export class Following {
     const row = this.#follow(follow);
     if (!row || !this.#sees(row, viewer ?? by)) return refuse("NO_SUCH_FOLLOW", "no follow by that id you may see is held");
     if (row.kind === "policy")
-      return refuse("WATCH_END_REFUSED", "a policy's watch is the group's standing watch: it takes no end date and ends only with the policy");
+      return refuse("WATCH_END_REFUSED", "a policy's watch is the team's standing watch: it takes no end date and ends only with the policy");
     if (by !== row.author) return refuse("NOT_THE_AUTHOR", "a follow's end date is set by the member who made it");
     if (row.ended_at) return refuse("WATCH_ENDED", "the follow has already ended");
     const e = this.#endsGiven(ends);

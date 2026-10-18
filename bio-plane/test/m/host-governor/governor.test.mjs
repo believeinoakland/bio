@@ -260,7 +260,7 @@ test("R12: an appetite that is present and not a positive finite number is refus
 });
 
 test("R12: BAD_APPETITE's words say \"your group's default\", never \"the instance\" (DEC-149; T35-17, the sweep's row index.mjs:44)", async () => {
-  const WORDS = "appetite_per_min must be a positive number, or omit it to reset to your group's default";
+  const WORDS = "appetite_per_min must be a positive number, or omit it to reset to your team's default";
   const w = world();
   const answers = [w.g.governorConfig({ host: "b.example", appetite_per_min: -1 }),
                    w.g.governorConfig({ host: "b.example", appetite_per_min: "abc" })];

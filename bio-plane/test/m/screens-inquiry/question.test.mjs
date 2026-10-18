@@ -311,12 +311,12 @@ test("R41 state e: the assistant's proposal, machine work, accepted or declined 
 
 test("R41 R42 state f: the limit's words naming no cost, the note, and the other reasons; control: a reachable assistant draws none", async () => {
   const empty = inquiryMd(P, [], { legs: [] });
-  const limit = { status: 200, json: { ok: true, result: { run: "x", started: false, code: "AI_LIMIT_REACHED", whose: "the group's", period: "monthly", when: "on 1 November" } } };
+  const limit = { status: 200, json: { ok: true, result: { run: "x", started: false, code: "AI_LIMIT_REACHED", whose: "the team's", period: "monthly", when: "on 1 November" } } };
   const p = await open(at, reach({ images: { [Q]: { "bundle.md": empty } }, plane: { airunopen: limit } }));
   assert.equal(main(p).querySelector('[data-reasons="question"]'), null, "nothing refused: no reasons drawn");
   await press(p, "airunopen");
   const f = section(p, "question.empty.ask");
-  assert.ok(says(f, "ai.refused.limit.overall", { whose: "the group's", period: "monthly", when: "on 1 November" }));
+  assert.ok(says(f, "ai.refused.limit.overall", { whose: "the team's", period: "monthly", when: "on 1 November" }));
   assert.ok(says(f, "question.limit.note") && says(f, "question.ai.other") && says(f, "question.ai.whose"));
   assert.ok(!/\$\d/.test(f.textContent), "no cost named");
   assert.equal(p.byOp("airundispatch").length, 0, "started: false dispatches nothing");

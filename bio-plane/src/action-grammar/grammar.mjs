@@ -188,7 +188,7 @@ export function actionBasisFindings(fm, findings) {
     if (!clock.length) {
       findings.push(f('C-2.10', 'error',
         'a request_for_comment states the response window it gave, as a clock[] entry with its own basis. '
-        + `The window is AUTHORED by the group; ${RFC_RESPONSE_WINDOW_PRECEDENT.source} is the precedent to `
+        + `The window is AUTHORED by the team; ${RFC_RESPONSE_WINDOW_PRECEDENT.source} is the precedent to `
         + 'reason from and is not a constant this record enforces (DEC-13)',
         ['add a clock[] entry: the date the response was due, and the basis it derives from']));
     }
@@ -247,7 +247,7 @@ export function correspondenceFindings(fm, findings) {
     if (sha && account) {
       findings.push(f('C-2.10', 'error',
         `correspondence[${i}] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not `
-        + 'summarised (DEC-13). The bytes are what the group can defend; a paraphrase beside them is what a '
+        + 'summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a '
         + 'reader would quote instead', CHOICE));
     } else if (!sha && !account) {
       findings.push(f('C-2.10', 'error',

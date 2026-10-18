@@ -24,20 +24,20 @@ export const FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", 
    caller's own; with `guideHref` (a screen's address of the guide) the guide's name is a link to it, and without (the
    installer's) it is text; with `deployer: true` (the installer's last screen, K3240) the deployer's steps follow. */
 export const HOSTING_CONTROL = Object.freeze({
-  heading: "Before you choose a password: who controls your group's Civicsmith",
+  heading: "Before you choose a password: who controls your team's Civicsmith",
   sentences: Object.freeze([
-    "Whoever can sign in to the hosting account your group's Civicsmith runs in (its Cloudflare account) controls it. "
+    "Whoever can sign in to the hosting account your team's Civicsmith runs in (its Cloudflare account) controls it. "
       + "They can replace the one-time password, claim it again, read everything in it and lock everyone else out, "
-      + "and no vote of the group's administrators can stop them.",
-    "Use a group account for it, not anyone's personal login.",
+      + "and no vote of the team's administrators can stop them.",
+    "Use a team account for it, not anyone's personal login.",
     "Add at least one other trusted person to that account.",
-    "Where possible, let someone other than the group's administrators hold it.",
+    "Where possible, let someone other than the team's administrators hold it.",
     "The same account is the way back in if the password you choose is lost: whoever holds it can open the way for "
-      + "your group's Civicsmith to be claimed again.",
+      + "your team's Civicsmith to be claimed again.",
   ]),
   guide: Object.freeze({
     sentence: "If the one-time password may have been seen, replace it: follow the guide \u201cReplace the one-time "
-      + "password\u201d in your group's Civicsmith, on its first page and in its members and keys section.",
+      + "password\u201d in your team's Civicsmith, on its first page and in its members and keys section.",
     name: "Replace the one-time password",
   }),
 });
@@ -45,7 +45,7 @@ export const HOSTING_CONTROL = Object.freeze({
    no member reads them: they belong to the installer's last screen and DEPLOY.md, whose texts add them after the block.
    The block itself says it in a founder's words (its last sentence above). */
 export const HOSTING_RECOVERY_DEPLOYER = "To open the way back in: sign in to the hosting account, replace the ADMIN_TOKEN "
-  + "value in this worker's settings, and your group's Civicsmith can be claimed again.";
+  + "value in this worker's settings, and your team's Civicsmith can be claimed again.";
 
 /* R47 (T48; K3240): what a member who cannot sign in is told on `forgot`, in members' words (DEC-149): who can help,
    and no more. Wording is BOB's draft, owed to UX-DESIGN to re-word. The founder-only block above ("who controls your
@@ -53,8 +53,8 @@ export const HOSTING_RECOVERY_DEPLOYER = "To open the way back in: sign in to th
 export const FORGOT_HELP = Object.freeze({
   heading: "If you cannot sign in",
   sentences: Object.freeze([
-    "Your group's administrators can help you: ask one of them for a reset link.",
-    "If none of them can sign in either, whoever holds your group's hosting account can open the way back in for them.",
+    "Your team's administrators can help you: ask one of them for a reset link.",
+    "If none of them can sign in either, whoever holds your team's hosting account can open the way back in for them.",
   ]),
 });
 

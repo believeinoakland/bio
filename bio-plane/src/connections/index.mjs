@@ -1006,7 +1006,7 @@ export class Connections {
           + "skipped_unregistered counts targets whose BYTES the record holds while no record claims "
           + "them: those become edges when the target is promoted. Each edge is written into the source "
           + "document's references as links_to and never cites, because the source asserted it and not the "
-          + "group; a member promoting it to cites is a member's act." };
+          + "team; a member promoting it to cites is a member's act." };
   }
 
   /* R28: the links not already in the source document's references[], appended there by ONE promotion of the source
@@ -1035,7 +1035,7 @@ export class Connections {
     const entry = `### Session ${when} | Projected ${add.length} link${add.length === 1 ? "" : "s"} | ${by}\n`
       + `Trigger: op=linkproject\n`
       + `Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the source's own link, resolved `
-      + `to a held document; asserted by the source, never by the group.\n`;
+      + `to a held document; asserted by the source, never by the team.\n`;
     const logAt = text.indexOf("## Session Log");
     if (logAt < 0) text += "\n## Session Log\n\n" + entry;
     else {

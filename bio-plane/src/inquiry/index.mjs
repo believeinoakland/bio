@@ -1784,7 +1784,7 @@ export class Inquiry {
       return { ok: false, reason: "PUBLISHED_CANNOT_BE_SET_DOWN", to,
                offenders: published.sort((a, b) => a.id < b.id ? -1 : 1),
                detail: "a finding that is a member of a published case cannot be deferred or dismissed. "
-                     + "AGEING IS WHAT HAPPENS TO A FINDING NOBODY PUBLISHED (D-79): a question the group "
+                     + "AGEING IS WHAT HAPPENS TO A FINDING NOBODY PUBLISHED (D-79): a question the team "
                      + "quietly stopped working is indistinguishable from one that was never asked, which "
                      + "is why it is made visible rather than left to vanish. A published case is already "
                      + "out in the world and cannot stop being worked on quietly — a reader is holding it. "
@@ -2009,7 +2009,7 @@ export class Inquiry {
     /* DEC-49 REGION is-machine-divide — REC-64/C-32.7. The fence alone. */
     if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
       return { ok: false, reason: "MACHINE_CANNOT_DIVIDE",
-               detail: "dividing is a named member's judgement that the group's own question was malformed — "
+               detail: "dividing is a named member's judgement that the team's own question was malformed — "
                      + "that it was two questions — and that judgement carries a name. A machine credential "
                      + "may surface a question and gather what it rests on; it may not restructure the "
                      + "record's questions. Sign in as a member." };
@@ -2203,7 +2203,7 @@ export class Inquiry {
     const pg = this.promotion.fact("producingGroup");
     if (!(pg.ok && pg.value) && !(typeof fm.group === "string" && fm.group.trim()))
       return this.#groupUndetermined("inquirydivide",
-        `${target}'s children would be new documents that must name the group that produced them; this store `
+        `${target}'s children would be new documents that must name the team that produced them; this store `
         + `records none and ${target}'s own document names none, so nothing was divided.`);
 
     /* THE CHILDREN ARE DERIVED FROM THE PARENT'S OWN DOCUMENT, not built from a

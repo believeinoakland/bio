@@ -36,11 +36,11 @@ test("R6 rows C-21.4 IMPORTED_NOT_ACCEPTED and C-21.5 ACCEPTED_WORK_UNREADABLE a
   assert.deepEqual(Object.keys(ROWS_FILE).sort(), ["ACCEPTED_WORK_UNREADABLE", "IMPORTED_NOT_ACCEPTED"]);
   assert.equal(ROWS_FILE.IMPORTED_NOT_ACCEPTED.check, "C-21.4");
   assert.equal(ROWS_FILE.IMPORTED_NOT_ACCEPTED.translation,
-    "This finding rests on another group's finding that this group has not accepted at that edition. Accept that edition "
+    "This finding rests on another team's finding that this team has not accepted at that edition. Accept that edition "
     + "first, or take the leg out. Nothing was written.");
   assert.equal(ROWS_FILE.ACCEPTED_WORK_UNREADABLE.check, "C-21.5");
   assert.equal(ROWS_FILE.ACCEPTED_WORK_UNREADABLE.translation,
-    "Another group's work this finding rests on could not be read, so whether it is accepted is not known. Try again. "
+    "Another team's work this finding rests on could not be read, so whether it is accepted is not known. Try again. "
     + "Nothing was written.");
   for (const row of Object.values(ROWS_FILE)) {
     assert.match(row.check, /^C-\d+/);

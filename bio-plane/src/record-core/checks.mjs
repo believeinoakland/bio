@@ -41,24 +41,24 @@
  * ending with `BUILD_FAULT` (R82). `awaiting stamp` for promotion's T47 layer-2 stamp (T47-10). */
 
 const at = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
-const BUILD_FAULT = 'This is a fault in how your group\'s Civicsmith was built, not in the record, and nothing in the record changed.';
+const BUILD_FAULT = 'This is a fault in how your team\'s Civicsmith was built, not in the record, and nothing in the record changed.';
 
 export const RECORD_CORE_CHECKS = Object.freeze({
   MINT_EXHAUSTED: Object.freeze({
     check: 'C-59.6', where: at("mintExhausted", "is-mint-exhausted"),
-    translation: 'Your group\'s Civicsmith could not find a free identifier for this, so nothing was saved and nothing was '
+    translation: 'Your team\'s Civicsmith could not find a free identifier for this, so nothing was saved and nothing was '
       + 'issued. Identifiers are drawn at random so that none of them says how many others exist, and every '
       + 'one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever hosts '
-      + 'your group\'s Civicsmith.',
+      + 'your team\'s Civicsmith.',
   }),
   COUNTS_DECLARED: Object.freeze({
     check: 'C-102.13', where: at("registerCounts", "is-counts-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to report a figure another part already reports, or to register '
+    translation: 'A part of your team\'s Civicsmith tried to report a figure another part already reports, or to register '
       + 'its figures twice, so the second registration was refused and the first still stands. ' + BUILD_FAULT,
   }),
   COUNTS_MALFORMED: Object.freeze({
     check: 'C-102.14', where: at("registerCounts", "is-counts-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register its figures without naming itself, the figures or a '
+    translation: 'A part of your team\'s Civicsmith tried to register its figures without naming itself, the figures or a '
       + 'function to count them, so nothing was registered. ' + BUILD_FAULT,
   }),
   /* Copied from the catalogue's PROJECT_ID_CHECKS (REC-151, Membership v2 §7, "A MINTED ID CARRIES NO COUNT"). */
@@ -71,12 +71,12 @@ export const RECORD_CORE_CHECKS = Object.freeze({
   /* Copied from the catalogue's REGISTRATION_CHECKS (K31; N94). */
   AUDIT_CHECK_DECLARED: Object.freeze({
     check: 'C-102.1', where: at("registerAuditCheck", "is-audit-check-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register its audit check a second time. Each part '
+    translation: 'A part of your team\'s Civicsmith tried to register its audit check a second time. Each part '
       + 'registers once, when it starts, so the second was refused and the first still runs. ' + BUILD_FAULT,
   }),
   AUDIT_CHECK_MALFORMED: Object.freeze({
     check: 'C-102.2', where: at("registerAuditCheck", "is-audit-check-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register an audit check without naming itself or without '
+    translation: 'A part of your team\'s Civicsmith tried to register an audit check without naming itself or without '
       + 'a check to run, so nothing was registered. ' + BUILD_FAULT,
   }),
   AUDIT_CHECK_FAILED: Object.freeze({
@@ -88,94 +88,94 @@ export const RECORD_CORE_CHECKS = Object.freeze({
   /* New (§1b): a type grammar registered for record-grammar's `checkBundle` (its R39). */
   GRAMMAR_DECLARED: Object.freeze({
     check: 'C-102.15', where: at("registerGrammar", "is-grammar-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register a document grammar a second time, or to claim a check '
+    translation: 'A part of your team\'s Civicsmith tried to register a document grammar a second time, or to claim a check '
       + 'another part\'s grammar already claims, so the second registration was refused and the first still stands. '
       + BUILD_FAULT,
   }),
   GRAMMAR_MALFORMED: Object.freeze({
     check: 'C-102.16', where: at("registerGrammar", "is-grammar-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register a document grammar without naming itself, the checks it '
+    translation: 'A part of your team\'s Civicsmith tried to register a document grammar without naming itself, the checks it '
       + 'takes over or a function to run, or claimed only part of one of the record\'s own checks, so nothing was '
       + 'registered. ' + BUILD_FAULT,
   }),
   /* New (R64's source, K621): the one registered source of the instance's figures. */
   STATS_SOURCE_DECLARED: Object.freeze({
     check: 'C-102.17', where: at("registerStatsSource", "is-stats-source-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to supply its figures when another part already supplies '
+    translation: 'A part of your team\'s Civicsmith tried to supply its figures when another part already supplies '
       + 'them, so the second was refused and the first still stands. ' + BUILD_FAULT,
   }),
   STATS_SOURCE_MALFORMED: Object.freeze({
     check: 'C-102.18', where: at("registerStatsSource", "is-stats-source-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to supply its figures without naming itself or without a '
+    translation: 'A part of your team\'s Civicsmith tried to supply its figures without naming itself or without a '
       + 'function to count them, so nothing was registered. ' + BUILD_FAULT,
   }),
   /* New (T24, R75, N503): a chosen opaque id recorded in the ledger inside its caller's transaction. Beside C-59.5 and
      C-59.6 in the id-allocation family; `awaiting stamp` for promotion's T24 layer-2 stamp. */
   OPAQUE_ID_MALFORMED: Object.freeze({
     check: 'C-59.7', where: at("recordOpaqueId", "is-opaque-id-refused"),
-    translation: 'A part of your group\'s Civicsmith tried to reserve an identifier without giving one, so nothing was reserved. '
+    translation: 'A part of your team\'s Civicsmith tried to reserve an identifier without giving one, so nothing was reserved. '
       + BUILD_FAULT,
   }),
   OPAQUE_ID_SPENT: Object.freeze({
     check: 'C-59.8', where: at("recordOpaqueId", "is-opaque-id-refused"),
     translation: 'That identifier has already been used, so it was not given out again and nothing was saved. An '
       + 'identifier names one thing only, even after what it named is gone. Trying again gives the thing a new one; if it '
-      + 'keeps happening, tell whoever hosts your group\'s Civicsmith.',
+      + 'keeps happening, tell whoever hosts your team\'s Civicsmith.',
   }),
   OPAQUE_ID_NO_TRANSACTION: Object.freeze({
     check: 'C-59.9', where: at("recordOpaqueId", "is-opaque-id-refused"),
-    translation: 'A part of your group\'s Civicsmith tried to reserve an identifier outside the change that would use it, so nothing '
+    translation: 'A part of your team\'s Civicsmith tried to reserve an identifier outside the change that would use it, so nothing '
       + 'was reserved: a reservation is kept only with the change it belongs to. ' + BUILD_FAULT,
   }),
   /* New (T19, R70; `build/extraction/legacy-store.md` §4.2 (3)): a module's seed sources for the opaque-id ledger. */
   MINT_SEED_DECLARED: Object.freeze({
     check: 'C-102.19', where: at("registerMintSeed", "is-mint-seed-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to name the identifiers it holds a second time, so the second was '
+    translation: 'A part of your team\'s Civicsmith tried to name the identifiers it holds a second time, so the second was '
       + 'refused and the first still stands. ' + BUILD_FAULT,
   }),
   MINT_SEED_MALFORMED: Object.freeze({
     check: 'C-102.20', where: at("registerMintSeed", "is-mint-seed-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to name the identifiers it holds without naming itself, or named a '
+    translation: 'A part of your team\'s Civicsmith tried to name the identifiers it holds without naming itself, or named a '
       + 'place to read them that is not a table and a column, so nothing was registered. ' + BUILD_FAULT,
   }),
   /* New (T33, R21; S0-3): `declareTable`'s classes. */
   TABLE_CLASS_MISSING: Object.freeze({
     check: 'C-102.21', where: at("#declare", "is-table-declaration"),
-    translation: 'A part of your group\'s Civicsmith tried to declare a table without saying how it is purged, removed, exported, '
+    translation: 'A part of your team\'s Civicsmith tried to declare a table without saying how it is purged, removed, exported, '
       + 'seen, derived or versioned, so nothing was declared. ' + BUILD_FAULT,
   }),
   TABLE_CLASS_UNKNOWN: Object.freeze({
     check: 'C-102.22', where: at("#declare", "is-table-declaration"),
-    translation: 'A part of your group\'s Civicsmith tried to declare a table with a class the record does not know, so nothing was '
+    translation: 'A part of your team\'s Civicsmith tried to declare a table with a class the record does not know, so nothing was '
       + 'declared. ' + BUILD_FAULT,
   }),
   /* New (T34, R80; N554): the declaration's two older refusals, given their rows. */
   TABLE_NAME_INVALID: Object.freeze({
     check: 'C-102.26', where: at("#declare", "is-table-declaration"),
-    translation: 'A part of your group\'s Civicsmith tried to declare a table whose name, or a column or table its declaration names, '
+    translation: 'A part of your team\'s Civicsmith tried to declare a table whose name, or a column or table its declaration names, '
       + 'is not a plain name, so nothing was declared. ' + BUILD_FAULT,
   }),
   TABLE_DECLARED: Object.freeze({
     check: 'C-102.27', where: at("#declare", "is-table-declaration"),
-    translation: 'A part of your group\'s Civicsmith tried to declare a table that is already declared, by itself or by another part, '
+    translation: 'A part of your team\'s Civicsmith tried to declare a table that is already declared, by itself or by another part, '
       + 'so the second declaration was refused and the first still stands. ' + BUILD_FAULT,
   }),
   /* New (T33, R78; S0-3): the store gate, one table's one-home and shape checks. */
   STORE_GATE_DECLARED: Object.freeze({
     check: 'C-102.23', where: at("registerStoreGate", "is-store-gate-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register the checks of a table that already has them, so the second '
+    translation: 'A part of your team\'s Civicsmith tried to register the checks of a table that already has them, so the second '
       + 'registration was refused and the first still runs. ' + BUILD_FAULT,
   }),
   STORE_GATE_MALFORMED: Object.freeze({
     check: 'C-102.24', where: at("registerStoreGate", "is-store-gate-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register or run the checks of a table without naming itself, a table it '
+    translation: 'A part of your team\'s Civicsmith tried to register or run the checks of a table without naming itself, a table it '
       + 'declared or a check to run, so nothing was registered and nothing was written. ' + BUILD_FAULT,
   }),
   STORE_GATE_FAILED: Object.freeze({
     check: 'C-102.25', where: at("storeGate", "is-store-gate-failed"),
     translation: 'One of the checks the record runs before saving this stopped with an error instead of answering, so '
       + 'nothing was saved. The error is in the check and says nothing yet about what you sent. If it keeps happening, '
-      + 'tell whoever hosts your group\'s Civicsmith.',
+      + 'tell whoever hosts your team\'s Civicsmith.',
   }),
   /* New family (T33, R79; K1493, State Rules I-19): expunge with a tombstone, the one removal outside purge. */
   EXPUNGE_GROUND_UNKNOWN: Object.freeze({
@@ -209,27 +209,27 @@ export const RECORD_CORE_CHECKS = Object.freeze({
      (R84) asked after the value is required and before R26's setting. */
   SETTING_NAME_REQUIRED: Object.freeze({
     check: 'C-102.29', where: at("setSetting", "is-setting-refused"),
-    translation: 'A part of your group\'s Civicsmith tried to record a setting without naming it, so nothing was recorded. '
+    translation: 'A part of your team\'s Civicsmith tried to record a setting without naming it, so nothing was recorded. '
       + BUILD_FAULT,
   }),
   SETTING_BY_REQUIRED: Object.freeze({
     check: 'C-102.30', where: at("setSetting", "is-setting-refused"),
-    translation: 'A part of your group\'s Civicsmith tried to record a setting without saying who set it, so nothing was '
+    translation: 'A part of your team\'s Civicsmith tried to record a setting without saying who set it, so nothing was '
       + 'recorded. ' + BUILD_FAULT,
   }),
   SETTING_VALUE_REQUIRED: Object.freeze({
     check: 'C-102.31', where: at("setSetting", "is-setting-refused"),
-    translation: 'A part of your group\'s Civicsmith tried to record a setting without giving it a value, so nothing was '
+    translation: 'A part of your team\'s Civicsmith tried to record a setting without giving it a value, so nothing was '
       + 'recorded. ' + BUILD_FAULT,
   }),
   SETTING_NOT_JSON: Object.freeze({
     check: 'C-102.33', where: at("setSetting", "is-setting-refused"),
-    translation: 'A part of your group\'s Civicsmith tried to record a setting with a value that cannot be stored as it was '
+    translation: 'A part of your team\'s Civicsmith tried to record a setting with a value that cannot be stored as it was '
       + 'given, so nothing was recorded. ' + BUILD_FAULT,
   }),
   SETTING_INVALID: Object.freeze({
     check: 'C-102.32', where: at("setSetting", "is-setting-refused"),
-    translation: 'The setting was not changed, because the value given is not one it takes. The jurisdictions your group '
+    translation: 'The setting was not changed, because the value given is not one it takes. The jurisdictions your team '
       + 'follows are set as a list of profiles, each named once, in the order they apply.',
   }),
 });

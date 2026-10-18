@@ -136,7 +136,7 @@ test("R1 with no evidence store bound a table's bytes cannot be held: refused NO
   const cells = [["A1", "vendor"], ["B1", "amount"], ["C1", "paid"], ["A2", "Acme"], ["B2", "12"], ["C2", "2025-08-01"]].map(([cell, value]) => ({ source: { cell }, value, type: "s" }));
   const r = await w.c.declareTable({ source: w.sheet(cells, "A1:C2"), schema: { fields: F }, header: HEADER, by: V("bob") });
   assert.equal(code(r), "NO_EVIDENCE_STORE");
-  assert.equal(r.detail, "your group's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.");
+  assert.equal(r.detail, "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.");
   assert.doesNotMatch(r.detail, /\b(this|the) instance\b|\bcopy\b|\bplane\b|\bserver\b|\bbound\b/);
   assert.equal(w.count("calc_tables"), 0);
 });

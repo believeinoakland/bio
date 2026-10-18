@@ -224,7 +224,7 @@ export const CHECK_REQUEST_CHECKS = Object.freeze({
     'Asking for a check, taking one and recording one are each a person\'s act, and the credential that asked here is '
     + 'an automated one. Nothing was written. Sign in as a member to do this.'),
   NO_SUCH_CHECK_TARGET: checkRow(2, "checkRequest", "is-check-target",
-    'There is nothing here you can ask a check on: the item is not in the group\'s record, or it is not one you can see. '
+    'There is nothing here you can ask a check on: the item is not in the team\'s record, or it is not one you can see. '
     + 'Nothing was written.'),
   CHECK_NOT_AN_OWNER: checkRow(3, "checkRequest", "is-check-owner",
     'Only an owner of the project this item belongs to can ask for a check on it. Nothing was written. Ask one of the '
@@ -247,7 +247,7 @@ export const CHECK_REQUEST_CHECKS = Object.freeze({
   CHECK_VERDICT_UNKNOWN: checkRow(10, "checkRecord", "is-check-verdict",
     'A check is recorded either as checked or as a concern, and this was neither. Nothing was written.'),
   CHECK_NO_REASON: checkRow(11, "checkRecord", "is-check-reason",
-    'A concern needs its reason, so the owner and the group can see what to look at. Nothing was written. Say what '
+    'A concern needs its reason, so the owner and the team can see what to look at. Nothing was written. Say what '
     + 'concerns you and record it again.'),
   CHECK_REASON_TOO_LONG: checkRow(12, "checkRecord", "is-check-reason-length",
     'The reason is longer than 4,000 characters. Nothing was written. Shorten it and record it again.'),

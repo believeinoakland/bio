@@ -387,8 +387,8 @@ section("R2–R7 · each malformed request refused by its code, in order, with n
     ["R6", "account naming no level", { ...base, account: { kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER } }, 400, "BAD_ACCOUNT"],
     ["R6, R71", "account at the project level naming no project", { ...base, account: { ...ACCOUNTS, level: "project" } }, 400, "BAD_ACCOUNT"],
     ["R6", "account at the instance level (there is none)", { ...base, account: { ...ACCOUNTS, level: "instance" } }, 400, "BAD_ACCOUNT"],
-    ["R6", "the group's account as a subscription (the group's is an API key only)", { ...base, account: { ...GROUP_ACCOUNT, kind: "subscription" } }, 400, "BAD_ACCOUNT"],
-    ["R6", "the group's account with an empty secret", { ...base, account: { ...GROUP_ACCOUNT, secret: "" } }, 409, "NO_ACCOUNT"],
+    ["R6", "the team's account as a subscription (the group's is an API key only)", { ...base, account: { ...GROUP_ACCOUNT, kind: "subscription" } }, 400, "BAD_ACCOUNT"],
+    ["R6", "the team's account with an empty secret", { ...base, account: { ...GROUP_ACCOUNT, secret: "" } }, 409, "NO_ACCOUNT"],
     ["R6", "a body still carrying claude_accounts", { ...base, account: ACCOUNTS, claude_accounts: {} }, 400, "BAD_ACCOUNT"],
     ["R6", "account with an empty secret", { ...base, account: { ...ACCOUNTS, secret: "" } }, 409, "NO_ACCOUNT"],
     ["R6", "(T38) a member's own subscription, retired (credentials R22)", { ...base, account: { ...ACCOUNTS, kind: "subscription" } }, 400, "BAD_ACCOUNT"],
@@ -499,7 +499,7 @@ section("R10, R57 · the run's recorded account holder must be the member whose 
   await reset(mf, { payer: "member:sam" });
   const group = await runOp(mf, { ...base, account: GROUP_ACCOUNT, judgements: J() });
   t("R10, R57 (K1755): the group's API key serving Ruth's act, on Sam's run -> refused the same way: the group key serves "
-    + "a member's act, never the group's own",
+    + "a member's act, never the team's own",
     [group.status, group.out.code, group.out.recorded, group.out.supplied, JSON.stringify(group.out).includes(CLAUDE_TOKEN)],
     [409, "RUN_NAMES_A_DIFFERENT_PAYER", "member:sam", MEMBER, false]);
   await reset(mf, { payer: "member:sam" });
@@ -1124,7 +1124,7 @@ section("R30, R31 · GET /version; anything else 404 UNKNOWN");
 {
   const v = await call(mf, "version", { method: "GET" });
   t("R30, R58: GET /version -> 200 {ok, name, version: env.VERSION} and the one statement of when model turns run",
-    [v.status, v.out.ok, v.out.name, v.out.version, /through agent-model exactly when the Claude account that serves the member's act \(the member's own reference or sign-in, a project's account, or the group's API key\) arrives/.test(v.out.model_turns)],
+    [v.status, v.out.ok, v.out.name, v.out.version, /through agent-model exactly when the Claude account that serves the member's act \(the member's own reference or sign-in, a project's account, or the team's API key\) arrives/.test(v.out.model_turns)],
     [200, true, "agent-worker", "req-test", true]);
   const bare = newMf({ VERSION: "" });
   t("R30: and \"0.0.0\" when env.VERSION is empty", (await call(bare, "version", { method: "GET" })).out.version, "0.0.0");

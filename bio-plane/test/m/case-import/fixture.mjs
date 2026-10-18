@@ -274,7 +274,7 @@ export function world({ minimal = false, realChecker = false } = {}) {
     /** This group's default bar, as `strengthBarSet` leaves it. */
     bar({ capture = null, connection = null } = {}) {
       st.sql.exec(`INSERT OR REPLACE INTO group_strength_bar (group_id, capture, connection, author, at, reason) VALUES (?,?,?,?,?,?)`,
-                  SLUG, capture, connection, "member:alice", "2026-10-01T00:00:00Z", "the group's standard");
+                  SLUG, capture, connection, "member:alice", "2026-10-01T00:00:00Z", "the team's standard");
     },
   };
   w.ci = caseImportOf(host, { record, membership, strength, acceptedWork, reevaluation: reeval,

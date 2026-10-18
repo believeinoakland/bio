@@ -2,13 +2,14 @@
    (`filings` R55's `fills`), each with its sentence; every earlier blank and its sentence unchanged; `blanksOf` reads the
    four as it reads the others. At the interface: the exported set, `blanksOf`, and a draft naming each. */
 import { test } from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, V, TEST } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 
 const A = V("alice");
 const R31 = { records: "the records asked for, in the member's words", period: "the period the records cover",
-              form: "the form the records are wanted in", cost_limit: "the most the group will pay for copies before being told" };
+              form: "the form the records are wanted in", cost_limit: word("filing-templates.cost_limit") };
 
 test("R31 FILING_BLANKS gains records, period, form and cost_limit, each with its sentence, after the fifteen moved, which are unchanged; still frozen", () => {
   const entries = Object.entries(ft.FILING_BLANKS);

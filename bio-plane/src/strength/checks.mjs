@@ -230,7 +230,7 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE: {
     check: 'C-32.9',
     where: at('machineCannotDeclare', 'is-machine-strength-bar'),
-    translation: 'How much evidence this group requires of itself is the group\'s own declaration '
+    translation: 'How much evidence this team requires of itself is the team\'s own declaration '
       + 'about the standard it works to, and everything filed afterwards is measured against it. '
       + 'An automated credential cannot set that bar for the people it works for. Sign in to '
       + 'change it.',
@@ -238,7 +238,7 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
   STRENGTH_BAR_NOT_ADMIN: {
     check: 'C-107.1',
     where: at('strengthBarSet', 'is-admin-strength-bar'),
-    translation: 'The standard of evidence a new project starts from is set for the whole group, so only '
+    translation: 'The standard of evidence a new project starts from is set for the whole team, so only '
       + 'an administrator can change it. A project can still declare its own standard in its own document. '
       + 'Nothing was changed.',
   },
@@ -255,7 +255,7 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
   BAR_NO_REASON: {
     check: 'C-107.3',
     where: at('strengthBarSet', 'is-strength-bar-reason'),
-    translation: 'A standard of evidence for the whole group is set with a reason: say in your own words why the group '
+    translation: 'A standard of evidence for the whole team is set with a reason: say in your own words why the team '
       + 'works to this standard, in at most 2,000 characters. The reason is kept with it and shown wherever it is read. '
       + 'Nothing was changed.',
   },

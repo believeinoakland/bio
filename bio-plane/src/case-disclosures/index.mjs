@@ -496,7 +496,7 @@ export class CaseDisclosures {
       const named = byMember(short, (m) => ({ ref: m.ref, kind: m.kind, sha: m.sha, missing: m.held.missing }));
       refusals.push(disclosureRefusal("RELIED_ON_NOT_PRESENTABLE", { not_presentable: named,
         detail: `${short.length} document(s) or observation(s) a load-bearing finding of this case rests on are not held `
-              + `whole by your group's Civicsmith (` + named.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
+              + `whole by your team's Civicsmith (` + named.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
                 + `${m.sha} lacks ${m.missing.join(" and ")}`).join(", ")).join("; ")
               + `). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop `
               + `relying on the material, or make the finding supporting. Nothing was written.` }));
@@ -684,7 +684,7 @@ export class CaseDisclosures {
     /* DEC-49 REGION is-accepted-work-in-force */
     if (missing.length)
       refusals.push(disclosureRefusal("ACCEPTED_WORK_NOT_IN_FORCE", { not_in_force: missing,
-        detail: `${missing.length} leg(s) of this case's findings rest on another group's finding with no acceptance of `
+        detail: `${missing.length} leg(s) of this case's findings rest on another team's finding with no acceptance of `
               + `that edition in force (` + missing.map((m) => `${m.target}: ${m.leg_of} leg ${m.ord} on ${m.ref}, `
                 + `${m.source.case ?? "an imported case"} edition ${m.source.edition ?? "not stated"}`).join("; ")
               + `). Accept that edition again (op=importaccept), or take the leg out. Nothing was written.` }));
@@ -710,7 +710,7 @@ export class CaseDisclosures {
     /* DEC-49 REGION is-flags-determined */
     if (j.failed.length)
       return { refusals: [disclosureRefusal("FLAGS_UNDETERMINED", { undetermined: j.failed,
-        detail: `the flags on another group's work this case rests on could not be read whole (`
+        detail: `the flags on another team's work this case rests on could not be read whole (`
               + j.failed.map((f) => `edition ${f.edition} of import ${f.import}: ${f.why}`).join("; ")
               + `), so what this case must disclose is not known. Try again. Nothing was published.` })],
         open: [], byFlag: listed.byFlag };
@@ -719,7 +719,7 @@ export class CaseDisclosures {
     if (j.undisclosed.length)
       refusals.push(disclosureRefusal("FLAG_NOT_DISCLOSED", {
         undisclosed: j.undisclosed.map((f) => ({ flag: f.flag, ref: f.ref, edition: f.edition, issue: f.issue })),
-        detail: `${j.undisclosed.length} open flag(s) on another group's work this case rests on are not disclosed (`
+        detail: `${j.undisclosed.length} open flag(s) on another team's work this case rests on are not disclosed (`
               + j.undisclosed.map((f) => `flag ${f.flag} on ${f.ref} edition ${f.edition}`).join("; ")
               + `). A case is published with its open flags disclosed, never refused because one is open (DEC-96 item `
               + `4): list each in flagsDisclosed, or clear it first. Nothing was published.` }));

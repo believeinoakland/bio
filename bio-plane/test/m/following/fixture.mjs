@@ -12,6 +12,7 @@
    R20 and R21 use (its R5, R8, R34, R37; `law-relations` R11 through its R48), over the policies a test holds in
    `w.policies`, with `content`'s table (its R45 read contract, a policy's text passages) created for the test. */
 import { DatabaseSync } from "node:sqlite";
+import { word } from "../../../src/setup-words/index.mjs";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -161,7 +162,7 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
   const monitoring = {
     sweepHost: () => sweepHost,
     schedule: () => ({ due: [], scheduled: [], unscheduled: w.watched.map((s) => ({ bundle: s.bundle, address: s.address, frequency: "per_meeting",
-      reason: "cadence is a meeting schedule your group's Civicsmith does not hold" })) }),
+      reason: word("monitoring.cadence_meeting_schedule") })) }),
     async monitor({ bundleId }) { w.monitored.push({ bundleId, at: w.t }); return { status: 200, body: { ok: true, status: "unchanged", capture: { sha256: sha(`m${w.monitored.length}`) } } }; },
   };
   w.bundle = (id, { type = "information", project = "" } = {}) => {

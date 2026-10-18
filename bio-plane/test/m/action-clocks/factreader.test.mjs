@@ -61,7 +61,7 @@ test("R12 factReader answers each holiday entry as R10's count reads it, over th
   assert.deepEqual([s.path, s.status, s.by, s.at, s.corrected], [pathOf(ALL26), "disputed", BOB, d.at.slice(0, 10), false]);
   /* each as the count reads it: the corrected Clerk's closure is not counted, the disputed year leaves it undetermined. */
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: read });
-  assert.equal(n.date, null); assert.match(n.why, /disputed in your group's Civicsmith by member:bob/);
+  assert.equal(n.date, null); assert.match(n.why, /disputed in your team's Civicsmith by member:bob/);
   /* the reads wrote nothing beyond the members' own acts. */
   const acts = counts(w);
   read(CLERK26); read(ALL26); clocks.computeDeadline(R5, FM, TEST, { factOf: read });
@@ -115,7 +115,7 @@ test("R12 negative controls: an entry naming no local fact, a factStatus that th
   assert.deepEqual([trap.status, trap.why], ["absent", "local facts answered in a shape the count cannot read"]);
   /* each such answer makes a business count undetermined, with why, and nothing is thrown. */
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: clocks.factReader({ factStatus: () => { throw new Error("storage gone"); } }, M) });
-  assert.equal(n.date, null); assert.match(n.why, /cannot be read in your group's Civicsmith: local facts' read failed: storage gone/);
+  assert.equal(n.date, null); assert.match(n.why, /cannot be read in your team's Civicsmith: local facts' read failed: storage gone/);
   /* the viewer is passed through: local-facts reads for the viewer named. */
   const seen = [];
   clocks.factReader({ factStatus: (a) => { seen.push(a); return { ok: true, status: "confirmed" }; } }, BOB)(CLERK26);
@@ -128,7 +128,7 @@ test("R12 factReader answers null when localFacts has no factStatus, and the cou
     assert.equal(clocks.factReader(lf, M), null, String(lf));
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: clocks.factReader({}, M) });
   assert.deepEqual([n.date, n.calendar.status, n.calendar.says], ["2026-08-19", "not_read",
-    ["whether your group has confirmed the calendar was not read"]]);
+    ["whether your team has confirmed the calendar was not read"]]);
   assert.ok(!/this instance|this copy|the plane/.test(JSON.stringify(n.calendar)), "DEC-149");
   /* an instance whose local-facts has no factStatus: the count's own path states not_read too, and counts. */
   const w = world({ override: { "test-port-ellery": officeCalendarProfile() } });

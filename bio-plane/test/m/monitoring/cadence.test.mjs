@@ -113,7 +113,7 @@ test("R16 the plan: never checked is due; nothing authored and nothing read is d
   assert.deepEqual(due.slice(0, 2), [never, unread].sort());
   assert.deepEqual(due.slice(2), [overdue2, overdue1], "then longest-overdue first");
   const un = Object.fromEntries(p.unscheduled.map((x) => [x.bundle, x.reason]));
-  assert.equal(un[meeting], "cadence is a meeting schedule your group's Civicsmith does not hold");
+  assert.equal(un[meeting], "cadence is a meeting schedule your team's Civicsmith does not hold");
   assert.equal(un[none], "no frequency declared");
   assert.match(un[unknown], /which is not one the catalog knows/);
   assert.match(un[checkedUnread], /no check has read a document at this address/);
@@ -287,7 +287,7 @@ test("R17 an address's own frequency, when set, governs over its versions' and R
   const e = tick.ticked.find((x) => x.address === ADDR);
   assert.deepEqual([e.frequency, e.frequency_source, e.address_frequency.reason], ["daily", "address", "legal_deadline_approaching"]);
   /* an address set to per_meeting or none is unscheduled, with its reason */
-  for (const [frequency, reason] of [["per_meeting", "cadence is a meeting schedule your group's Civicsmith does not hold"],
+  for (const [frequency, reason] of [["per_meeting", "cadence is a meeting schedule your team's Civicsmith does not hold"],
                                      ["none", "the address's own frequency, set by a member, is none: it is not checked on a clock"]]) {
     assert.equal(set(w, { frequency, reason: "source_changes_rarely" }).ok, true);
     const u = w.m.schedule(NOW_MS + 3 * DAY).unscheduled.find((r) => r.address === ADDR);

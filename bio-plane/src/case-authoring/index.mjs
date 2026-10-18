@@ -137,7 +137,7 @@ export const MEMBER_ROLES = Object.freeze(["load_bearing", "supporting"]);
 export const SEARCHED_SUBJECT_MAX = 500;
 /** R42 (DEC-111; K1119): what step one adds when the project has a notice (R41), one plain sentence until the UX design
  *  stream gives the words. */
-export const NOTICE_SEALS_SENTENCE = "This project has a public notice that the group is working on it, so publishing "
+export const NOTICE_SEALS_SENTENCE = "This project has a public notice that the team is working on it, so publishing "
   + "this edition also opens the notice's sealed weeks for the work this edition publishes.";
 /** R75 (N683; DEC-147): what the sign step says of "Publish at…" when ratification's pre-flight is not reached, and
  *  when it is reached and answers no offer; in neither case is one made. */
@@ -147,7 +147,7 @@ export const PUBLISH_AT_UNANSWERED_SENTENCE = "The signing check did not say whe
   + "set time, so only publishing now is offered.";
 /** R34 (DEC-112 (4)): what step one adds, one plain sentence until the UX design stream gives the words. */
 export const REPUBLISH_SENTENCE = "The published case republishes in full every document it includes, and judging whether "
-  + "they may be republished, copyright included, is the group's.";
+  + "they may be republished, copyright included, is the team's.";
 /** R14, R40 (D54; K2442): the viewer the manifest is read as, the plane's machine credential, which sees every bundle
  *  (membership R43's machine arm): the lens is a fact about the project's scope, read inside an act whose own authority
  *  fences (R2) have already admitted the publisher. Never the founder's viewer, which D54 leaves blind to a hidden
@@ -471,7 +471,7 @@ export class CaseAuthoring {
     if (undisclosed.length)
       return { refusal: actRefusal("CALCULATION_NOT_DISCLOSED", { calculations: undisclosed,
         detail: `${undisclosed.map((u) => `${u.calc} (${u.recompute}; ${u.members.join(", ")})`).join("; ")}: a load-bearing `
-              + "finding rests on a calculation that gives a different result when your group's Civicsmith recomputes it, or on "
+              + "finding rests on a calculation that gives a different result when your team's Civicsmith recomputes it, or on "
               + "an input typed with no source, and this act does not disclose it. List each in calculationsDisclosed, "
               + "with your own words if you choose, and the published case states it. A disclosed one never blocks "
               + "(DEC-76 item 4). Nothing was written." }), rows, money };
@@ -574,7 +574,7 @@ export class CaseAuthoring {
     /* DEC-49 REGION is-machine-publish — R1 / C-32.6. The fence alone, before anything else is read. */
     if (!who || isMachineIdentity(who))
       return actRefusal("MACHINE_CANNOT_PUBLISH", {
-        detail: "publishing puts the group's name on a case. A machine credential may prepare one and "
+        detail: "publishing puts the team's name on a case. A machine credential may prepare one and "
               + "may never author the completeness assertion or the position on putting it to its "
               + "subject, both of which are declared bias. Sign in as a member." });
     /* END DEC-49 REGION is-machine-publish */
@@ -623,14 +623,14 @@ export class CaseAuthoring {
     /* END DEC-49 REGION is-publish-statement */
     if (!SUBJECT_POSITIONS.includes(pos))
       return { ok: false, reason: "NO_SUBJECT_POSITION", allowed: SUBJECT_POSITIONS,
-               detail: "declare the group's position on putting this case to its subject. The gate is that the "
+               detail: "declare the team's position on putting this case to its subject. The gate is that the "
                      + "position is DECLARED — never that contact happened, and never that the answer was "
                      + "favourable (DEC-13). Deciding not to give notice is a legitimate position and is "
                      + "declared like any other." };
     if (!just)
       return { ok: false, reason: "NO_SUBJECT_JUSTIFICATION",
                detail: "a declared position with no reasoning behind it is the checkbox this gate exists to "
-                     + "refuse. Say why — including why the group chose not to give notice — and a reader "
+                     + "refuse. Say why — including why the team chose not to give notice — and a reader "
                      + "weighs it exactly as they weigh any other declared bias." };
     if (!Array.isArray(excluded))
       return { ok: false, reason: "NO_EXCLUSION_FIELD",
@@ -641,8 +641,8 @@ export class CaseAuthoring {
     if (!scp)
       return { ok: false, reason: "NO_SCOPE",
                detail: "a published case states its own SCOPE — what brought these findings together and what "
-                     + "question the case as a whole answers. It is authored by the group and never derived "
-                     + "from the findings' titles: a scope your group's Civicsmith wrote is not a scope the group made "
+                     + "question the case as a whole answers. It is authored by the team and never derived "
+                     + "from the findings' titles: a scope your team's Civicsmith wrote is not a scope the team made "
                      + "(DEC-44). Completeness says what the case left OUT; scope says what it is ABOUT." };
     if (!back)
       return { ok: false, reason: "NO_BIAS_ACKNOWLEDGEMENT",
@@ -1330,7 +1330,7 @@ export class CaseAuthoring {
     if (text === null || !text.trim())
       return { ok: false, reason: "NO_WHAT_CHANGED", caseId, edition,
                detail: `edition ${edition} of ${caseId} must say what changed in it since the edition before, and why `
-                     + `(whatChanged: {text}): a reader of a later edition is owed the difference in the group's own `
+                     + `(whatChanged: {text}): a reader of a later edition is owed the difference in the team's own `
                      + `words, not left to compare two documents (DEC-101). A first edition carries none. Nothing was `
                      + `written.` };
     const length = [...text].length;
@@ -1419,7 +1419,7 @@ export class CaseAuthoring {
                      + "asserted over a question with no conclusion, and `concluded` is asked of the "
                      + "PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). "
                      + (conc.why === "question_not_case_bearing"
-                     ? `This question is ${b.current_state}, and a case cannot be asserted over one the group `
+                     ? `This question is ${b.current_state}, and a case cannot be asserted over one the team `
                        + `has set down or carried forward. Reopen it (op=reopen) or work the children a `
                        + `division produced (DEC-28); a conclusion a project wrote while the question was `
                        + `open does not survive the question leaving the states a case can rest on. `
@@ -1428,7 +1428,7 @@ export class CaseAuthoring {
                        + `today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the `
                        + `stance). Conclude it again for this project (op=conclude&project=${proj}). `
                      : conc.why === "project_stance_undetermined"
-                     ? `${proj}'s latest entry about this question names an act your group's Civicsmith does not know, so `
+                     ? `${proj}'s latest entry about this question names an act your team's Civicsmith does not know, so `
                        + `what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. `
                      : `${proj} has not concluded this question. A conclusion belongs to the project's `
                        + `relationship with the inquiry (§7.1): another team's conclusion, and a conclusion `
@@ -1719,11 +1719,11 @@ export class CaseAuthoring {
     if (approvals && !ratify.refusals.some((x) => x.reason === "APPROVAL_MISSING")) {
       if (approvals.ok === false)
         found.push({ ok: false, reason: "APPROVAL_MISSING", code: "APPROVAL_MISSING", missing: null,
-                     detail: "the approvals the group's rule requires could not be read, so whether every one is given is not "
+                     detail: "the approvals the team's rule requires could not be read, so whether every one is given is not "
                            + "known. Signing is refused until they can be. Nothing was written." });
       else if (approvals.missing.length)
         found.push({ ok: false, reason: "APPROVAL_MISSING", code: "APPROVAL_MISSING", missing: approvals.missing,
-                     detail: `${approvals.missing.join(", ")}: the group requires their approval of this version of the case `
+                     detail: `${approvals.missing.join(", ")}: the team requires their approval of this version of the case `
                            + "before it is signed, and it is not given. Ask them to approve it, then prepare it again so the "
                            + "document carries the approvals. Nothing was written." });
     }
@@ -1829,14 +1829,14 @@ export class CaseAuthoring {
       { step: 7, name: "approvals",
         ...(!ok ? { stated: notReached }
           : !seen.approvals || seen.approvals.ok === false
-            ? { stated: "the approvals the group's rule requires could not be read" }
+            ? { stated: "the approvals the team's rule requires could not be read" }
             : { rule: seen.approvals.rule, required: seen.approvals.rule ? seen.approvals.rule.approvers ?? [] : [],
                 given: seen.approvals.approvals, missing: seen.approvals.missing, digest: seen.approvals.digest,
-                says: !seen.approvals.rule ? "The group requires no approval before a case is signed."
+                says: !seen.approvals.rule ? "The team requires no approval before a case is signed."
                   : seen.approvals.missing.length
-                    ? "Signing waits until every approver the group names has approved this version. An approval given "
+                    ? "Signing waits until every approver the team names has approved this version. An approval given "
                       + "after this preparation is carried once the case is prepared again; its version does not change."
-                    : "Every approval the group requires is given for this version, and the document carries them." }) },
+                    : "Every approval the team requires is given for this version, and the document carries them." }) },
       /* R34 (T45; N880; Actions D13; v0.2 rule 8): the open requests for comment, in this step and nowhere else, never a
          blocker, never `first`, never `ready` (DEC-13: no reason is asked for signing while a window is open). */
       { step: 8, name: "sign", signer: str(a.author) || null,

@@ -124,7 +124,7 @@ test("R3 earnedBasis lists a leg on an imported finding reference as the questio
   assert.equal(e.legs_out_of_view, undefined); assert.equal(e.out_of_view, undefined);
   const leg = e.legs.find((l) => l.ord === 1);
   assert.equal(leg.target, IMP); assert.equal(leg.content_id, null); assert.equal(leg.null_case, "IMPORTED_TARGET");
-  assert.match(leg.why_no_content, /another group's finding/);
+  assert.match(leg.why_no_content, /another team's finding/);
   assert.equal(leg.version, undefined, "no version: this record holds no capture of it");
   assert.ok(e.asked.includes(IMP));
   assert.equal(e.earned.connection[IMP], undefined); assert.equal(e.earned.capture[IMP], undefined);

@@ -77,22 +77,22 @@ export async function resolveClaudeCascade(account) {
     return { available: true, level, kind: account.kind,
              member: typeof account.member === "string" ? account.member : null,
              ...(level === "project" ? { project: projectOf(account) } : {}), levels };
-  const whose = level === "group" ? "the group's API key"
+  const whose = level === "group" ? "the team's API key"
     : level === "project" ? "the project's Claude account" : "the member's own Claude account reference";
   return {
     available: false, reason: CASCADE_NO_ACCOUNT, level, levels,
     detail: state === LEVEL_REVOKED
       ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. `
         + (level === "group"
-          ? "An administrator sets a new key for the group, or members connect their own."
+          ? "An administrator sets a new key for the team, or members connect their own."
           : level === "project"
-          ? "An owner of the project sets a new one; until then the member's own account, else the group's API key, "
-            + "serves them only while your group's Civicsmith holds it and it is on."
-          : "The member connects a new one; until then the group's API key serves them only while your group's "
+          ? "An owner of the project sets a new one; until then the member's own account, else the team's API key, "
+            + "serves them only while your team's Civicsmith holds it and it is on."
+          : "The member connects a new one; until then the team's API key serves them only while your team's "
             + "Civicsmith holds it and it is on.")
       : `no usable Claude account arrived for this act (${whose} was absent, empty, named no member${level === "project"
           ? " or no project" : ""}, or of a kind its level does not hold). Which account serves a member's act is your `
-        + "group's Civicsmith's to answer (the project's, else the member's own, else the group's API key while it is "
+        + "team's Civicsmith's to answer (the project's, else the member's own, else the team's API key while it is "
         + "held and on); a member whom none serves has no assistant.",
   };
 }

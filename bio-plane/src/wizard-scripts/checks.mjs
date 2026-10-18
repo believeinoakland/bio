@@ -67,12 +67,12 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   },
   WIZARD_NOT_APPROVED: {
     check: "C-131.13", where: at("wizardApprove", "is-wizard-approve"),
-    translation: "Only an approved script is made group-wide, and this version is not the script's approved one.",
+    translation: "Only an approved script is made team-wide, and this version is not the script's approved one.",
   },
   NOT_AN_APPROVER: {
     check: "C-131.14", where: at("#notAnApprover", "is-wizard-not-an-approver"),
-    translation: "An owner of the script's project approves or retires it, and an administrator makes it group-wide or "
-      + "approves and retires a group-wide one. You are not the one who does this here.",
+    translation: "An owner of the script's project approves or retires it, and an administrator makes it team-wide or "
+      + "approves and retires a team-wide one. You are not the one who does this here.",
   },
   APPROVER_IS_AUTHOR: {
     check: "C-131.15", where: at("wizardApprove", "is-wizard-approve"),
@@ -84,8 +84,8 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   },
   WIZARD_NOT_THE_GROUPS: {
     check: "C-131.17", where: at("#notTheGroups", "is-wizard-civicsmith"),
-    translation: "This script is from the Civicsmith library, shipped with the release and read-only to every group. A "
-      + "group cannot edit, retire or withdraw it; it may write its own.",
+    translation: "This script is from the Civicsmith library, shipped with the release and read-only to every team. A "
+      + "team cannot edit, retire or withdraw it; it may write its own.",
   },
   WIZARD_ALREADY_ENDED: {
     check: "C-131.18", where: at("#ended", "is-wizard-ended"),
@@ -114,7 +114,7 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   WIZARD_DRAFT_REFUSED: {
     check: "C-131.24", where: at("checkScript", "is-wizard-check"),
     translation: "A step's draft is the script's own words, a filing template offered here, or a labeled machine draft "
-      + "your group's Civicsmith registers, and this one is none of them.",
+      + "your team's Civicsmith registers, and this one is none of them.",
   },
   WIZARD_STEP_CONCLUDES: {
     check: "C-131.25", where: at("checkScript", "is-wizard-check"),
@@ -145,7 +145,7 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   },
   WIZARD_EDITOR_MEMBER_UNKNOWN: {
     check: "C-131.31", where: at("wizardEditorGrant", "is-wizard-editor-grant"),
-    translation: "The advanced editor is granted to a member of the group, and the one named is not one.",
+    translation: "The advanced editor is granted to a member of the team, and the one named is not one.",
   },
   WIZARD_NO_SUCH_GRANT: {
     check: "C-131.32", where: at("wizardEditorRevoke", "is-wizard-editor-grant"),
@@ -173,18 +173,18 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   },
   WRITING_HELP_NOTHING_TOLD: {
     check: "C-131.37", where: at("writingHelp", "is-writing-help-request"),
-    translation: "Tell the assistant what you want to say first: it works only from what you tell it and what your group "
+    translation: "Tell the assistant what you want to say first: it works only from what you tell it and what your team "
       + "holds.",
   },
   WRITING_HELP_FACT_ADDED: {
     check: "C-131.38", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),
-    translation: "A sentence was left out because it said something you did not tell the assistant and your group's record "
+    translation: "A sentence was left out because it said something you did not tell the assistant and your team's record "
       + "does not hold.",
   },
   WRITING_HELP_SUGGESTIONS_OFF: {
     check: "C-131.39", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),
     translation: "Your suggestions are switched off, so the assistant works only from what you typed and reads nothing your "
-      + "group holds.",
+      + "team holds.",
   },
   WRITING_HELP_FIRSTHAND_READ: {
     check: "C-131.40", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),

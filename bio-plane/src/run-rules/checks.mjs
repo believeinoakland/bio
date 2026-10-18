@@ -277,7 +277,7 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_READ_NO_AI: {
     check: 'C-22.23',
     where: 'src/run-rules/rules.mjs checkPagesRead, called from the run\'s read inside a held document',
-    translation: 'Nothing was read, because this document is kept away from the assistant by a limit your group put on '
+    translation: 'Nothing was read, because this document is kept away from the assistant by a limit your team put on '
       + 'its material. The investigation goes on without it; a person can still read it.',
   },
   /* B3 (K2482; AI-RUNS #14 J1): A GROUP'S OWN TEST MATTER THAT IS MALFORMED, refused by `ai-runs` R75's `groupTestSet`
@@ -286,9 +286,9 @@ export const AI_RUN_OWN_CHECKS = {
      opens or closes a deploy gate. */
   AI_GROUP_TEST_INVALID: {
     check: 'C-22.24',
-    where: 'src/ai-runs/index.mjs groupTestSet, reached from the group\'s test investigations',
+    where: 'src/ai-runs/index.mjs groupTestSet, reached from the team\'s test investigations',
     translation: 'This test investigation was not added, because it does not say all it must: which part of the '
-      + 'assistant it tests, the matter itself, and the answers people wrote for it. Your group\'s own tests show how '
+      + 'assistant it tests, the matter itself, and the answers people wrote for it. Your team\'s own tests show how '
       + 'the assistant does on your matters; they never switch a part on or off.',
   },
   /* R23 (T41-21; N820; B4, K2485): A RUN'S ORIGIN outside RUN_ORIGINS, or none. Minted by `originAllowed`, the one site,
@@ -336,7 +336,7 @@ export const AI_RUN_OWN_CHECKS = {
     where: 'src/run-rules/test-bar.mjs partRefusal, called from the doors partAdmittedOn does not admit (plane R40\'s ask '
       + 'and drafts)',
     translation: 'This part of the assistant has not yet passed Civicsmith\'s tests, so it is not switched on in your '
-      + 'group\'s Civicsmith. Everything else works without it.',
+      + 'team\'s Civicsmith. Everything else works without it.',
   },
   /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
      a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
@@ -431,7 +431,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
   AI_RUN_CAPABILITY_UNAVAILABLE: {
     check: 'C-33.29',
     where: 'src/ai-runs/index.mjs open > is-airun-open-capability, reached from op=airunopen',
-    translation: 'Nothing was run, because your group\'s Civicsmith could not find an account to run it under. '
+    translation: 'Nothing was run, because your team\'s Civicsmith could not find an account to run it under. '
       + 'That is a fact about our setup and not an answer about your question: no searching '
       + 'happened, so nothing here should be read as having looked and found nothing.',
   },
@@ -508,7 +508,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
     where: 'src/ai-runs/index.mjs open, reached from op=airunopen',
     translation: 'Nothing was run, because the earlier run it says it repeats belongs to a different '
       + 'question or project. Repeating work means asking the same question again under the lens that is '
-      + 'in force for it — somewhere else the group\'s declared lens can be a different one, so the two '
+      + 'in force for it — somewhere else the team\'s declared lens can be a different one, so the two '
       + 'runs would not be comparable and settling anything on that basis would be wrong.',
   },
 };
@@ -650,7 +650,7 @@ export const AI_RUN_OPEN_CHECKS = {
     check: 'C-109.1',
     where: 'src/ai-runs/index.mjs open > is-airun-open-mode, reached from op=airunopen',
     translation: 'Nothing was run, because the kind of work this run asked for is not switched on for your '
-      + 'group\'s Civicsmith yet. Kinds of work are switched on one at a time, each only after the one before it has been '
+      + 'team\'s Civicsmith yet. Kinds of work are switched on one at a time, each only after the one before it has been '
       + 'checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is.',
   },
 };
@@ -687,7 +687,7 @@ export const AI_RUN_PLAN_CHECKS = {
   AI_RUN_PLAN_NEEDS_MEMBER: {
     check: 'C-109.5',
     where: 'src/ai-runs/index.mjs open > is-airun-open-plan, reached from op=airunopen',
-    translation: 'Nothing was run, because a planning run is started only by a member of the group, for one plan '
+    translation: 'Nothing was run, because a planning run is started only by a member of the team, for one plan '
       + 'at a time. Nothing starts one by itself, so a request that has no member behind it cannot start one.',
   },
   /* R46: a planning run declares `fetches` 0 and `subsessions` 0; it works from the record and does not search. */
@@ -738,8 +738,8 @@ export const AI_USE_CHECKS = {
     check: 'C-109.10',
     where: 'src/ai-runs/index.mjs open and the ask\'s account, reached from op=airunopen and an ask',
     translation: 'Nothing was run, because no account serves your request: you have not connected a Claude account or '
-      + 'an API key of your own, and your group has no API key of its own switched on, or the account that would serve '
-      + 'has this use switched off. Connect yours, or ask an administrator about the group\'s.',
+      + 'an API key of your own, and your team has no API key of its own switched on, or the account that would serve '
+      + 'has this use switched off. Connect yours, or ask an administrator about the team\'s.',
   },
   /* R50 (K1601, K1610): a member's ceiling is that member's own to set and read. The copy's ceiling is an
      administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. Stays at T40 (`ai-use` R2),

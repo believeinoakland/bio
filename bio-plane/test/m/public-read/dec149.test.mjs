@@ -27,7 +27,7 @@ const call = async (w, env, op, q) => {
 };
 
 const OLD_VOICE = /this copy|this instance|the instance's|this plane/i;
-const VOICE = "this group's Civicsmith";
+const VOICE = "this team's Civicsmith";
 /* the rows are read by key (plan rule 6): their voice is the design's, "team" never "group" in text people read */
 const ROW_VOICE = "this team's Civicsmith";
 const F = "INQ-2026-0001", CASE = "CASE-2026-0001";
@@ -103,7 +103,7 @@ test("R3 R4 R5 (T34-87, DEC-149) publishedManifest's detail, publishedCase's cas
   /* the published case's case_detail */
   const c = w.read("publishedcase", { id: CASE });
   assert.equal(c.ok, true);
-  assert.match(c.case_detail, /the last of these is a DISCLOSURE the reader weighs, never a verdict this group's Civicsmith reached \(DEC-20, DEC-46\)/);
+  assert.match(c.case_detail, /the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached \(DEC-20, DEC-46\)/);
   /* the Worker's verification sentence */
   const served = await (await call(w, env, "publishedcase", { id: CASE })).json();
   assert.equal(served.verification.detail,

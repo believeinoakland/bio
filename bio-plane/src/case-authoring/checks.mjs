@@ -24,7 +24,7 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
   MACHINE_CANNOT_PUBLISH: {
     check: 'C-32.6',
     where: at('#publishCase', 'is-machine-publish'),
-    translation: 'Publishing puts the group\'s name on a case, together with an assertion that it '
+    translation: 'Publishing puts the team\'s name on a case, together with an assertion that it '
       + 'is complete and a stated position on putting it to the people it concerns. Both of those '
       + 'are declared judgements, and the credential that asked here is an automated one. It can '
       + 'assemble the case; sign in to publish it.',
@@ -44,7 +44,7 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
   CALCULATION_NOT_DISCLOSED: {
     check: 'C-136.1',
     where: at('#calculationsJudged', 'is-calculation-disclosed'),
-    translation: 'A calculation a load-bearing finding rests on gives a different result when your group\'s Civicsmith '
+    translation: 'A calculation a load-bearing finding rests on gives a different result when your team\'s Civicsmith '
       + 'recomputes it, or rests on a figure typed in without a source, and this publication does not say so. List it '
       + 'with your own words, and publish again; the published case will state it. Nothing was published.',
   },

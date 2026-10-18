@@ -45,7 +45,7 @@ test("R60 placeWantedSet is an administrator's act only (NOT_AN_ADMIN, membershi
   assert.equal(w.m.placeWantedSet({ name: "é".repeat(200), by: "admin" }).ok, true);           // characters, not bytes
   const set = w.m.placeWantedSet({ name: "  Lake Shore  ", by: "member:ada" });
   assert.deepEqual([set.ok, set.name, set.set_by, set.set_at], [true, "Lake Shore", "member:ada", "2026-10-06T08:00:00.000Z"]);
-  assert.match(set.note, /kept only in your group's Civicsmith and sent nowhere/);
+  assert.match(set.note, /kept only in your team's Civicsmith and sent nowhere/);
   w.tick();
   const clear = w.m.placeWantedSet({ name: null, by: "admin" });
   assert.deepEqual([clear.ok, clear.name], [true, null]);

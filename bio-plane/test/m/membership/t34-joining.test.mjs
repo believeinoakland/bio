@@ -165,7 +165,7 @@ test("R98 inviteWithdraw: NOT_AN_ADMIN (R84), NO_SUCH_MEMBER, NO_UNUSED_INVITATI
 test("R99 websiteKeyCreate: refusals in order; one live key; the key once, hashed; capabilities, cap and days; the warning exactly", async () => {
   const w = await world().group("ann");
   for (const by of ["ann", null, `${MACHINE_CLASS_PREFIX}admin`])
-    assert.deepEqual(w.m.websiteKeyCreate({ dailyCap: 5, by }), notAnAdmin(by, "creating the group's website key"));
+    assert.deepEqual(w.m.websiteKeyCreate({ dailyCap: 5, by }), notAnAdmin(by, "creating the team's website key"));
   const caps = (c) => w.m.websiteKeyCreate({ capabilities: c, dailyCap: 5, by: "admin" });
   assert.deepEqual([caps("publish").reason, caps("publish").detail], ["BAD_CAPABILITY", "capabilities is an array"]);
   const fly = caps(["publish", "fly", "administer"]);
@@ -192,7 +192,7 @@ test("R99 websiteKeyCreate: refusals in order; one live key; the key once, hashe
 
 test("R100 websiteKeySet and websiteKeyRevoke: refusals; each setting judged as R99, kept when not given; revocation kills the key at once and keeps its invitations; every act appended", async () => {
   const w = await world().group("ann");
-  for (const [fn, act] of [["websiteKeySet", "changing the group's website key"], ["websiteKeyRevoke", "switching off the group's website key"]]) {
+  for (const [fn, act] of [["websiteKeySet", "changing the team's website key"], ["websiteKeyRevoke", "switching off the team's website key"]]) {
     assert.deepEqual(w.m[fn]({ dailyCap: 2, by: "ann" }), notAnAdmin("ann", act));
     rowOf(w.m[fn]({ dailyCap: 2, by: "admin" }), "NO_WEBSITE_KEY");
   }
@@ -268,7 +268,7 @@ test("R101 websiteInvite: WEBSITE_KEY_UNKNOWN alike for never made, revoked and 
 
 test("R102 joinLinkEnable: refusals in order; off until enabled, one live link; the link once, hashed; the warning", async () => {
   const w = await world().group("ann");
-  assert.deepEqual(w.m.joinLinkEnable({ dailyCap: 5, by: "ann" }), notAnAdmin("ann", "switching on the group's join link"));
+  assert.deepEqual(w.m.joinLinkEnable({ dailyCap: 5, by: "ann" }), notAnAdmin("ann", "switching on the team's join link"));
   rowOf(await w.m.joinLinkInvite({ link: "a".repeat(64), cover: "x" }), "NO_SUCH_JOIN_LINK");
   assert.equal(w.m.joinLinkEnable({ capabilities: ["administer"], dailyCap: 5, by: "admin" }).reason, "BAD_CAPABILITY");
   rowOf(w.m.joinLinkEnable({ by: "admin" }), "BAD_DAILY_CAP");
@@ -287,8 +287,8 @@ test("R102 joinLinkEnable: refusals in order; off until enabled, one live link; 
 
 test("R103 joinLinkSet, joinLinkReplace, joinLinkOff: refusals; settings kept on replacement; the old link dead at once; every act appended", async () => {
   const w = await world().group("ann");
-  for (const [fn, act] of [["joinLinkSet", "changing the group's join link"], ["joinLinkReplace", "replacing the group's join link"],
-                           ["joinLinkOff", "switching off the group's join link"]]) {
+  for (const [fn, act] of [["joinLinkSet", "changing the team's join link"], ["joinLinkReplace", "replacing the team's join link"],
+                           ["joinLinkOff", "switching off the team's join link"]]) {
     assert.deepEqual(w.m[fn]({ by: "ann" }), notAnAdmin("ann", act));
     rowOf(w.m[fn]({ dailyCap: 3, by: "admin" }), "JOIN_LINK_OFF");
   }

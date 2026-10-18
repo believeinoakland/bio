@@ -388,7 +388,7 @@ export class Steps {
     }
     if (w.on_kind === "date") {
       if (!today) return { wait: Number(w.wait_id), on: { date: w.on_date }, met: "undetermined",
-                           why: "no time zone is held for your group's Civicsmith, so the local day is not known" };
+                           why: "no time zone is held for your team's Civicsmith, so the local day is not known" };
       return { wait: Number(w.wait_id), on: { date: w.on_date }, met: w.on_date <= today };
     }
     const src = this.#arrivals.get(w.arrival_kind);
@@ -451,7 +451,7 @@ export class Steps {
     const b = parse(row.by_when_json);
     if (!isObj(b)) return null;
     const nearing = today ? (dayNumber(b.date) - dayNumber(today) >= 0 && dayNumber(b.date) - dayNumber(today) <= NEARING_DAYS) : null;
-    return { ...b, nearing, ...(today ? {} : { why: "no time zone is held for your group's Civicsmith, so the local day is not known" }) };
+    return { ...b, nearing, ...(today ? {} : { why: "no time zone is held for your team's Civicsmith, so the local day is not known" }) };
   }
 
   /* R29: whether the registered holder holds the step's date as an action's clock entry: `{module, entry}`, or null
@@ -560,7 +560,7 @@ export class Steps {
     if (kinds.length !== 1 || Object.keys(place).some((k) => !["questions", "project", "group"].includes(k)))
       return { refusal: refuse("STEP_BAD_PLACE", "a step's place is exactly one of {questions}, {project} or {group: true}, and never a step (R21)") };
     if (kinds[0] === "group") {
-      if (place.group !== true) return { refusal: refuse("STEP_BAD_PLACE", "a group step's place is {group: true}") };
+      if (place.group !== true) return { refusal: refuse("STEP_BAD_PLACE", "a team step's place is {group: true}") };
       return { kind: "group" };
     }
     if (kinds[0] === "project") {
@@ -842,7 +842,7 @@ export class Steps {
       return refuse("NO_SUCH_BUNDLE", "no question by that id is held, or it is not one you may see", { question: filled(question) ? question : null });
     if (row.place_kind === "project")
       return refuse("STEP_NARROWER_THAN_QUESTION", "a project's step is seen only in its project; a question's use would widen it", { step: row.step_id });
-    if (row.place_kind === "group") return refuse("STEP_BAD_PLACE", "a group step is the group's, and its place is fixed at creation", { step: row.step_id });
+    if (row.place_kind === "group") return refuse("STEP_BAD_PLACE", "a team step is the team's, and its place is fixed at creation", { step: row.step_id });
     if (this.#refs(row.step_id).includes(question)) return { ok: true, step: row.step_id, question, already: true };
     const at = this.#at();
     return this.#record.transact(() => {
@@ -1084,7 +1084,7 @@ export class Steps {
     const member = this.#memberOf(viewer);
     const today = filled(at) ? this.#today(at) : null;
     if (!member) return { ok: true, due: [] };
-    if (!today) return { ok: true, due: [], undetermined: true, why: "no time zone is held for your group's Civicsmith, or no instant was given" };
+    if (!today) return { ok: true, due: [], undetermined: true, why: "no time zone is held for your team's Civicsmith, or no instant was given" };
     const due = [];
     const dated = this.#rows(`SELECT * FROM steps WHERE by_when_by = ? AND state NOT IN ('ended', 'set_aside') ORDER BY step_id LIMIT ?`, member, DUE_READ_MAX + 1);
     const reminders = this.#rows(`SELECT m.seq, m.day, s.* FROM step_reminders m JOIN steps s ON s.step_id = m.step_id

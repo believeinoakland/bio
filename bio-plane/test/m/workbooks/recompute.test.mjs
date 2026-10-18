@@ -111,10 +111,10 @@ test("R8 every answer stating a recompute calls it agreement between the two eng
   assert.equal(before.recompute, null, "nothing is recomputed on a read");
   const r = (await w.wb.recompute({ ...w.at, by: V("bob") })).recompute;
   /* DEC-149's wording (T35-39): the engine is named as the one your group's Civicsmith runs, never "the instance's" */
-  const text = `recomputed by the engine your group's Civicsmith runs (${ENGINE_MEASURE.engine} ${ENGINE_MEASURE.engine_version}); open it in any spreadsheet program`;
+  const text = `recomputed by the engine your team's Civicsmith runs (${ENGINE_MEASURE.engine} ${ENGINE_MEASURE.engine_version}); open it in any spreadsheet program`;
   for (const x of [r, (await w.wb.readWorkbook({ ...w.at, viewer: V("carol") })).recompute]) {
     assert.equal(x.meaning, RECOMPUTE_MEANING);
-    assert.equal(x.meaning, "agreement between the file's engine and the engine your group's Civicsmith runs, never accuracy");
+    assert.equal(x.meaning, "agreement between the file's engine and the engine your team's Civicsmith runs, never accuracy");
     assert.ok(!/\b(the|this) (instance|plane)\b/i.test(`${x.meaning} ${x.disclosure.text}`), "no 'the instance' or 'the plane' in what a member reads");
     assert.equal(x.disclosure.text, text);
     assert.deepEqual(x.disclosure.measure, ENGINE_MEASURE);

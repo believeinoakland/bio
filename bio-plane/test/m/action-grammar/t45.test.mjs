@@ -602,7 +602,7 @@ test("R9 (T45; K2845, K2849): the rows C-117.30–.58 are held in ACTION_CATALOG
     "PARTNERS_REFUSED", "PRESS_TERMS_NOT_PRESS", "PRESS_TERMS_REFUSED", "REPLY_OWED_REFUSED", "SPEAKER_REFUSED"]);
   assert.deepEqual(codes(pushed((f) => AG.bearingFindings([], [], f)).findings), ["BEARING_REFUSED"], "R24's code, action-replies' row");
   /* C-117.19, the override's reason (K2849 (4)) */
-  assert.match(C.PREMISE_OVERRIDE_REFUSED.translation, /^The reason the group acts without a determination/);
+  assert.match(C.PREMISE_OVERRIDE_REFUSED.translation, /^The reason the team acts without a determination/);
 });
 
 /* ------------------------------------------------------------------------------------------------ R11 */

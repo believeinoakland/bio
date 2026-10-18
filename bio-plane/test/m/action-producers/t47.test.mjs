@@ -45,7 +45,7 @@ test("R24: the group's own date owed to an office answers queue.action-clock-ove
   const K = "queue.action-clock-overdue.ours.detail";
   assert.equal(m[0].detail_key, K);
   assert.equal(m[0].detail, FILLED(K, { what: "file the reply brief", venue: "the Clerk, the City Council", date: "25 August" }));
-  assert.equal(m[0].detail, "Your group's deadline to file the reply brief with the Clerk, the City Council was 25 August, and nothing is recorded as done. See what can still be done.");
+  assert.equal(m[0].detail, "Your team's deadline to file the reply brief with the Clerk, the City Council was 25 August, and nothing is recorded as done. See what can still be done.");
   assert.equal(m[0].summary, FILLED("queue.action-clock-overdue.ours.summary", { what: "file the reply brief" }), "the summary is unchanged (R23)");
   assert.deepEqual(m[0].basis.venue, office, "the venue as the record states it");
   assert.equal(m[1].detail, FILLED(K, { what: "file the reply brief", venue: "the Board of Appeals", date: "25 August" }), "a venue by its name");
@@ -78,7 +78,7 @@ test("R24: a plan's review reads queue.plan-review-due.detail naming the plan's 
   const K = "queue.plan-review-due.detail";
   assert.equal(m["PLN-1"].detail_key, K);
   assert.equal(m["PLN-1"].detail, FILLED(K, { plan: '"Library hours"', rhythm: "week", date: "17 August" }), "reviewed once: that review's day");
-  assert.equal(m["PLN-1"].detail, 'Your group set "Library hours" to be reviewed every week, and nothing has been reviewed since 17 August. See what changed, then record the review.');
+  assert.equal(m["PLN-1"].detail, 'Your team set "Library hours" to be reviewed every week, and nothing has been reviewed since 17 August. See what changed, then record the review.');
   assert.equal(m["PLN-2"].detail, FILLED(K, { plan: "PLN-2", rhythm: "2 weeks", date: "2 August" }), "never reviewed: the day its rhythm was set; a plan with no title by its id");
   assert.equal(m["PLN-3"].detail, FILLED(K, { plan: "PLN-3", rhythm: "month", date: "30 November 2025" }), "another year's day names its year");
   assert.equal(m["PLN-4"].detail, FILLED(K, { plan: "PLN-4", rhythm: "3 years", date: "5 January" }));
@@ -99,7 +99,7 @@ test("R24: a rhythm not one occurrence a period, an unreadable one, or no day si
   assert.equal(m["PLN-1"].detail_key, "queue.plan-review-due.detail", "control");
   for (const p of ["PLN-5", "PLN-6", "PLN-7", "PLN-8"]) {
     assert.equal("detail_key" in m[p], false, p);
-    assert.match(m[p].detail, /You are reminded only because the group asked for it/, p);
+    assert.match(m[p].detail, /You are reminded only because the team asked for it/, p);
   }
   assert.ok(KEPT.includes("queue.plan-review-due.detail (no rhythm in words, or no day since)"));
 });

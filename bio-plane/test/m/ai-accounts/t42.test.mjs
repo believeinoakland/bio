@@ -185,5 +185,5 @@ test("R17 R27 (was credentials R62, R16) (K2620) a revoked member's member:<id> 
   /* a roster that cannot be read is no answer of "not revoked": it fails closed */
   w.m.memberFacts = () => { throw new Error("roster unreadable"); };
   assert.deepEqual(w.c.accountUsesOf({ owner: "member:ann" }), { ok: true, owner: "member:ann", held: null, uses: null, unreadable: true });
-  assert.equal(w.c.accountUsesOf({ owner: "group" }).held, true, "the group's account asks no roster");
+  assert.equal(w.c.accountUsesOf({ owner: "group" }).held, true, "the team's account asks no roster");
 });

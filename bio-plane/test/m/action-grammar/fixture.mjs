@@ -17,9 +17,9 @@ export const REWORDED = [
   ["point the edge at the ACTN- bundle whose correspondence this answers", "point the edge at the ACTN- record whose correspondence this answers"],
   /* T34-87 (DEC-149, K1811): a member reads "your group's Civicsmith" where three sentences said "the plane" or "this
      instance": `requestLifecycleOf`'s `says` (R8), C-2.10's kind finding (R7) and C-101.1's translation (R9). */
-  ["The plane derives only the days", "Your group's Civicsmith derives only the days"],
-  ["' is not a kind this instance offers", "' is not a kind your group's Civicsmith offers"],
-  ["An action is one of the kinds this instance offers:", "An action is one of the kinds your group's Civicsmith offers:"],
+  ["The plane derives only the days", "Your team's Civicsmith derives only the days"],
+  ["' is not a kind this instance offers", "' is not a kind your team's Civicsmith offers"],
+  ["An action is one of the kinds this instance offers:", "An action is one of the kinds your team's Civicsmith offers:"],
 ];
 /* R13 (T41-46a): the outcome vocabulary gained `none_exists`, so C-94.5's finding, which names the vocabulary from the
    array itself, names it too (`lifecycleFindings`, and through it C-2.10's ledger arm and the audit). Each recorded

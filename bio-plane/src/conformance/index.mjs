@@ -153,7 +153,7 @@ const measureWords = (calc) => `what the office does, as measured by ${calc}`;
 
 const ACT_RE = idPattern("ACT");
 /** R32: an accepted finding's label. */
-export const ACCEPTED_SAYS = "Another group's finding, accepted by this group at the edition named: read-only, never "
+export const ACCEPTED_SAYS = "Another team's finding, accepted by this team at the edition named: read-only, never "
   + "stronger than that edition.";
 /** R32 (K2832; DEC-328 (6)): what an accepted finding reads while the source's identity and stake are not recorded at
  *  import; the key `case-import.group_fields_none`, read by key (plan rule 6). */
@@ -371,8 +371,8 @@ export class Conformance {
     const imported = isObj(input) && typeof input.supersedes === "string" && /^imported:/.test(input.supersedes.trim());
     /* DEC-49 REGION is-own-determination */
     if (keys.length || imported)
-      return refusal("DETERMINATION_NOT_ADOPTABLE", "another group's determination is never adopted as this group's: a "
-        + "member of this group determines, against standards in this group's record. Nothing was written.",
+      return refusal("DETERMINATION_NOT_ADOPTABLE", "another team's determination is never adopted as this team's: a "
+        + "member of this team determines, against standards in this team's record. Nothing was written.",
         { keys: imported ? [...keys, "supersedes"] : keys });
     /* END DEC-49 REGION is-own-determination */
     return null;
@@ -671,7 +671,7 @@ export class Conformance {
     /* DEC-49 REGION is-finding-named */
     if (!list.length)
       return refusal("NO_FINDINGS", "a determination rests on at least one finding: published, checked and held, or "
-        + "accepted from another group (R14). Nothing was written.");
+        + "accepted from another team (R14). Nothing was written.");
     /* END DEC-49 REGION is-finding-named */
     const pins = [], seen = new Set();
     for (const item of list) {
@@ -690,7 +690,7 @@ export class Conformance {
       if (!pin)
         return refusal("FINDING_NOT_PUBLISHED", `${String(f.finding ?? "a finding named").slice(0, 80)} is none of the `
           + "three kinds a determination rests on: a finding this project published in a ratified case edition, one "
-          + "checked for publication and held unsigned by this project, or another group's finding accepted at the "
+          + "checked for publication and held unsigned by this project, or another team's finding accepted at the "
           + "edition named. A finding published only by another project is not one. Nothing was written.",
           { finding: f.finding, kinds: [...FINDING_KINDS] });
       /* END DEC-49 REGION is-finding-published */
@@ -1269,14 +1269,14 @@ export class Conformance {
                              says: ACCEPTED_SAYS }, live, hidden });
       const moves = once("moves", () => this.#allMoves());
       if (!Array.isArray(moves)) {
-        causes.push({ finding: x.finding_id, cause: "unreadable", what: "the source group's moves could not be read", date: null });
+        causes.push({ finding: x.finding_id, cause: "unreadable", what: "the source team's moves could not be read", date: null });
         continue;
       }
       for (const m of moves) {
         if (m.import !== imp || m.taken_back || !m.at || instantOrder(m.at, r.at) <= 0) continue;
         if (m.kind === "withdrawal" && (m.edition === "all" || Number(m.edition) === ed))
           causes.push({ finding: x.finding_id, cause: "source_withdrawn", edition: m.edition, date: m.date ?? null, at: m.at,
-                        what: "the source group withdrew the edition this determination rests on" });
+                        what: "the source team withdrew the edition this determination rests on" });
         else if (m.kind === "edition" && typeof m.edition === "number" && m.edition > ed) {
           const acc = once(`acc:${x.finding_id}:${m.edition}:`, () =>
             this.acceptedWork.acceptedFinding({ ref: x.finding_id, edition: m.edition, viewer: null }));
@@ -1284,7 +1284,7 @@ export class Conformance {
             causes.push({ finding: x.finding_id, cause: "unreadable", what: "whether the revision is accepted could not be read", date: null });
           else if (!isObj(acc) || !isObj(acc.acceptance))
             causes.push({ finding: x.finding_id, cause: "source_revised", edition: m.edition, date: m.date ?? null, at: m.at,
-                          what: "the source group published a newer edition, not accepted here" });
+                          what: "the source team published a newer edition, not accepted here" });
         }
       }
     }
@@ -1777,7 +1777,7 @@ export class Conformance {
     /* DEC-49 REGION is-standard-side-named */
     if (side !== "a" && side !== "b")
       return refusal("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or "
-        + "b: your group's Civicsmith never chooses it. Nothing was written.", { contradiction: from.inquiry });
+        + "b: your team's Civicsmith never chooses it. Nothing was written.", { contradiction: from.inquiry });
     /* END DEC-49 REGION is-standard-side-named */
     let listed = null;
     try { listed = this.contradiction.candidatesFor({ on: { candidate: from.candidate }, viewer }); } catch { listed = null; }

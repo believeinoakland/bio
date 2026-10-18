@@ -95,7 +95,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
   const pending = Array.isArray(lens.pins_proposed) ? lens.pins_proposed : [];
   const pendingStated = pending.length === 0
     ? "no adoption in this scope pinned a proposed revision when this case was signed"
-    : "each row is an adoption in this scope whose pinned revision the group had proposed and not "
+    : "each row is an adoption in this scope whose pinned revision the team had proposed and not "
       + "accepted when this case was signed; that revision was not in force at signing";
   const frozenOf = (m) => (frozen && frozen.get(m)) || null;
   const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
@@ -430,19 +430,19 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
          "",
          `Hash of the effective statement set: ${lens.statements_sha}.`,
          ...(lens.lock_violations
-           ? ["", `${lens.lock_violations} project override(s) named a LOCKED group-wide statement and were `
-                 + "refused their effect; the group-wide statement stands in the set hashed above."]
+           ? ["", `${lens.lock_violations} project override(s) named a LOCKED team-wide statement and were `
+                 + "refused their effect; the team-wide statement stands in the set hashed above."]
            : [])]
       : lens.in_force === null
       ? [`THE MANIFEST IS UNDETERMINED for ${lens.scope_id}: ${lens.stated}. Nothing is claimed either way.`]
       : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood `
-         + "adopted for the group or this project. That is stated, not left blank — it is a different "
+         + "adopted for the team or this project. That is stated, not left blank — it is a different "
          + "fact from a lens with nothing in it."]),
     /* REC-219 / §3 rule 18: the second fact, in prose, when there is something to say. */
     ...(pending.length
       ? ["",
          `AN ADOPTION PINNED A PROPOSED REVISION when this case was signed: ${pending.length === 1 ? "one adoption" : `${pending.length} adoptions`} `
-         + "in this scope pinned a revision the group had proposed and not accepted. It was not in force at "
+         + "in this scope pinned a revision the team had proposed and not accepted. It was not in force at "
          + "signing, and it is not part of any lens this document names.",
          "",
          ...pending.map((x) => `- ${x.bundle_id} (${x.scope}) pinned revision ${x.revision}, `
@@ -519,14 +519,14 @@ export function calculationBodyLines(rows) {
   const books = rows.some(isWorkbookRow);
   return ["## Calculations This Case Rests On", "",
     "Each calculation below was recomputed when the case was published, never on a later read. A "
-    + "result that differs, or an input typed in with no source, is disclosed here by the group and does not stop "
+    + "result that differs, or an input typed in with no source, is disclosed here by the team and does not stop "
     + "publication.", "",
     ...(books ? ["Each workbook below was read when the case was published and not recomputed then. What is stated of it "
       + "is its own engine's latest recompute against the values the file stores: agreement between two engines, never "
       + "a check that the figures are right. Open it in any spreadsheet program.", ""] : []),
     ...rows.map((r) => `- ${r.calc}: ${(isWorkbookRow(r) ? WORKBOOK_STATE_WORDS : CALCULATION_STATE_WORDS)[r.recompute]
         ?? r.recompute}${isWorkbookRow(r) && r.method_version ? ` (${r.method_version})` : ""}.`
-      + (r.disclosed != null ? ` Disclosed by the group: ${r.disclosed}` : "")),
+      + (r.disclosed != null ? ` Disclosed by the team: ${r.disclosed}` : "")),
     ""];
 }
 
@@ -537,7 +537,7 @@ export function calculationBodyLines(rows) {
  *  stated rather than read as an empty timeline (R26). */
 export function timelineBodyLines(rows, leftOut = 0, { cut = [], unread = null, withheld = 0 } = {}) {
   if (unread) return ["## Timeline", "", `The timeline could not be read when this case was published (${unread}). It is `
-    + "stated as not read, not as empty: this case claims nothing about what happened or what the group did.", ""];
+    + "stated as not read, not as empty: this case claims nothing about what happened or what the team did.", ""];
   const cuts = Array.isArray(cut) ? cut : [];
   const kept = Math.max(0, Math.floor(Number(withheld) || 0));
   if ((!rows || !rows.length) && !leftOut && !cuts.length && !kept) return [];
@@ -547,13 +547,13 @@ export function timelineBodyLines(rows, leftOut = 0, { cut = [], unread = null, 
       : ["Nothing in this lane."]), ""];
   };
   return ["## Timeline", "",
-    "Frozen when this case was published. What happened in the world and what the group did are two lists and are never "
+    "Frozen when this case was published. What happened in the world and what the team did are two lists and are never "
     + "merged into one.", "",
     ...lane("they_did", "### What they did"), ...lane("we_did", "### What we did"),
     ...(leftOut ? [`${leftOut} item(s) had no source this record could cite and are left out.`, ""] : []),
     /* R57 (T45; v0.2 rules 15, 17): what we did is the case's published record of actions; an act its source did not
        mark for the public is left out and counted, never written. */
-    ...(kept ? [`${kept} of the group's own act(s) were not marked public by the record that holds them and are left out of `
+    ...(kept ? [`${kept} of the team's own act(s) were not marked public by the record that holds them and are left out of `
       + "this published record of what we did.", ""] : []),
     ...cuts.map((c) => (c === "they_did" ? "The list of what they did stops at its bound: the record holds more than this case lists."
       : `What we did, from ${c.slice("we_did:".length)}, stops at its bound: that source holds more than this case lists.`)),

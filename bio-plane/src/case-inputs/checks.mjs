@@ -41,7 +41,7 @@ export const CASE_INPUTS_WORDS = Object.freeze({
     + 'close; no reply is recorded.',
   'signing.openrequest.nowindow.notlaidout': '{whom} was asked for comment on {asked_at}, with no date given for the window '
     + 'to close; no reply laid out claim by claim is recorded.',
-  'signing.openrequest.unread': 'Your group\'s Civicsmith couldn\'t read whether any request for comment on this case is '
+  'signing.openrequest.unread': 'Your team\'s Civicsmith couldn\'t read whether any request for comment on this case is '
     + 'still open, so none is listed here.',
   'signing.openrequest.noquote': '{whom}\'s reply asks not to be quoted, so the case says what it says without quoting '
     + 'its words.',

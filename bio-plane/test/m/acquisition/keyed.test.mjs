@@ -14,14 +14,14 @@ import { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
 const KEY = "SENTINEL-KEY-9f3a7c1e5b";
 const HOST = "www.courtlistener.com";
 const OFF = { ok: false, reason: "KEYED_SERVICE_OFF", code: "KEYED_SERVICE_OFF", check: "C-96.21",
-              translation: "The group's key for this service is off.", service: "courtlistener" };
+              translation: "The team's key for this service is off.", service: "courtlistener" };
 
 /* credentials R29's `keyedServiceFor`, as the store hands it in: each call recorded. */
 const credentials = ({ on = true, key = KEY, answer = null } = {}) => {
   const calls = [];
   return { calls, async keyedServiceFor({ service }) { calls.push(service);
     if (answer) return answer;
-    return on ? { ok: true, service, key } : { ...OFF, detail: "the group's key for this service is off or not held; the caller goes on without it." }; } };
+    return on ? { ok: true, service, key } : { ...OFF, detail: "the team's key for this service is off or not held; the caller goes on without it." }; } };
 };
 const withCreds = (w, c) => { w.store.credentials = c; return w; };
 
@@ -119,7 +119,7 @@ test("R36 R9 R23: a governed refusal, a thrown fetch, a redirect and a refusal a
   const thrown = withCreds(world(), credentials());
   const t = await call(thrown, () => new Error(`connection reset carrying Token ${KEY}`), (s) => keyedFetch(s, req()));
   assert.deepEqual([t.out.ok, t.out.reason], [false, "FETCH_FAILED"]);
-  assert.match(t.out.detail, /not carried because the group's key rode it/);
+  assert.match(t.out.detail, /not carried because the team's key rode it/);
   keyNowhere(thrown, t, "thrown");
   const moved = withCreds(world(), credentials());
   const m = await call(moved, { [LOOKUP]: new Response("", { status: 302, headers: { location: "https://elsewhere.example/" } }) }, (s) => keyedFetch(s, req()));

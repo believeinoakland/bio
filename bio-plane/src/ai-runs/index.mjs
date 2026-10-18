@@ -1470,7 +1470,7 @@ export class AiRuns {
       const context = place.project ? { type: "project", id: place.project, place: { project: place.project } }
         : questions.length ? { type: "inquiry", id: questions[0], place: { questions } } : null;
       if (!context) {
-        runs.push({ step: stepId, refusal: this.#refuse("AI_RUN_NO_CONTEXT", "a group's own step has no question or project for "
+        runs.push({ step: stepId, refusal: this.#refuse("AI_RUN_NO_CONTEXT", "a team's own step has no question or project for "
           + "a run to sit in. Nothing was started for it.") });
         continue;
       }
@@ -2196,7 +2196,7 @@ export class AiRuns {
     if (resumer && resumer.ready && principal === resumer.stamp && !(payer && (projectPaid || this.#accountServing(payer))))
       return { dispatch: false, withheld: "NO_ACCOUNT",
                says: "Resumption: NOT dispatched — no Claude account serves the member whose act started this run (none of "
-                   + "their own is connected, and the group's key is not set or not on), and a run continues only on the "
+                   + "their own is connected, and the team's key is not set or not on), and a run continues only on the "
                    + "account that serves that member's act (K1503, K1755). It waits." };
     if (resumer && resumer.ready && principal === resumer.stamp)
       return { dispatch: true, withheld: null,
@@ -2205,8 +2205,8 @@ export class AiRuns {
     const withheld = member ? "MEMBER_PRINCIPAL_RUN"
       : (resumer && !resumer.ready) ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
     const why = member
-      ? "a member's credential opened it, and your group's Civicsmith resumes only runs its own organisation credential "
-        + "opened (D-260, DEC-55 (4): continuing a member's run under the group's key would re-attribute its acts). "
+      ? "a member's credential opened it, and your team's Civicsmith resumes only runs its own organisation credential "
+        + "opened (D-260, DEC-55 (4): continuing a member's run under the team's key would re-attribute its acts). "
         + "It waits for its own principal"
       : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN"
         ? word("ai-runs.text.principal_opened_organization")
@@ -3378,7 +3378,7 @@ export class AiRuns {
     /* DEC-49 REGION is-ai-no-account */
     return this.#refuse("AI_NO_ACCOUNT", member
       ? `${what} needs a Claude account to serve the member whose act started it, and none serves that member: they have `
-        + `connected none of their own, and the group's key is not set or not on. Nothing was started.`
+        + `connected none of their own, and the team's key is not set or not on. Nothing was started.`
       : `${what} names no member whose Claude account carries it. Nothing was started.`);
     /* END DEC-49 REGION is-ai-no-account */
   }
@@ -3488,8 +3488,8 @@ export class AiRuns {
     try { const f = who ? this.#membership().memberFacts(who) : null; active = !!f && f.status === "active"; } catch { active = false; }
     /* DEC-49 REGION is-ai-group-test */
     if (!p || !m || !a || !active)
-      return this.#refuse("AI_GROUP_TEST_INVALID", !active ? "a group's test investigation is added by one of its active members. "
-        + "Nothing was added." : `a group's test investigation names its part, its matter and the answers your members wrote `
+      return this.#refuse("AI_GROUP_TEST_INVALID", !active ? "a team's test investigation is added by one of its active members. "
+        + "Nothing was added." : `a team's test investigation names its part, its matter and the answers your members wrote `
         + `(missing: ${[!p && "part", !m && "matter", !a && "answers"].filter(Boolean).join(", ")}). Nothing was added.`);
     /* END DEC-49 REGION is-ai-group-test */
     const now = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());

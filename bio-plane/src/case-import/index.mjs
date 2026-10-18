@@ -499,7 +499,7 @@ export class CaseImport {
         ? "an import, and every act on one, is a member's, signed in as themselves; this caller is not one"
         : "no member is named as the one acting: this call carries nobody") };
     if (!this.#isActiveMember(str(viewer) || by))
-      return { refusal: refuse("IMPORT_NOT_A_MEMBER", "only an active member of this group imports, or acts on an import") };
+      return { refusal: refuse("IMPORT_NOT_A_MEMBER", "only an active member of this team imports, or acts on an import") };
     /* END DEC-49 REGION is-import-caller */
     return { member };
   }
@@ -659,7 +659,7 @@ export class CaseImport {
     const who = CaseImport.#manifestIdentity(read.manifest);
     if (!who.group || !who.case || !who.edition)
       return refuse("IMPORT_NOT_A_CASE_FILE", "the manifest departs from the case-file format",
-                    { departures: ["the manifest does not name its group, case and edition"] });
+                    { departures: ["the manifest does not name its team, case and edition"] });
     /* END DEC-49 REGION is-import-case-file */
     const listed = new Map(CaseImport.#manifestFiles(read.manifest).map((f) => [f.path, f]));
     const files = (Array.isArray(read.files) ? read.files : []).filter((f) => isObj(f) && str(f.path) && f.content instanceof Uint8Array);
@@ -1417,7 +1417,7 @@ export class CaseImport {
       if (!json || !isSha(digest) || sha256HexSync(json) !== digest) { fail("digest", "the SHA-256 of the entry's JSON is not its digest"); continue; }
       if (!isObj(f) || !DOCKET_ENTRY_FORMATS.includes(f.format) || f.group !== i.source_group || f.case !== i.case_id
           || seq === null || f.seq !== seq) {
-        fail("form", "the entry is not a docket entry of this group's case at its number"); continue;
+        fail("form", "the entry is not a docket entry of this team's case at its number"); continue;
       }
       /* check 2: the signature, against the key it embeds; listed when a held manifest lists that key */
       let statement = null;

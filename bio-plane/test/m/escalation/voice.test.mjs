@@ -7,7 +7,7 @@ import { seeded, toStage, V } from "./fixture.mjs";
 import { ESCALATION_CHECKS } from "../../../src/escalation/index.mjs";
 
 const OLD_NAMES = /\b(this|the|our|its|your)\s+(?:(?:civicsmith|group's)\s+)?(instance|copy|plane)\b/i;
-const PROVIDER_UNAVAILABLE = "Part of the record this answer depends on cannot be read by your group's Civicsmith yet, "
+const PROVIDER_UNAVAILABLE = "Part of the record this answer depends on cannot be read by your team's Civicsmith yet, "
   + "so nothing is answered in its place. Nothing was written.";
 
 test("R3 R14 DEC-149: PROVIDER_UNAVAILABLE's translation (C-116.44) says your group's Civicsmith, and a read and an act refused for an absent provider carry it", () => {

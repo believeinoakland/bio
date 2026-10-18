@@ -13,9 +13,9 @@ const OWNER = { reason: WHY, scope: "project", scopeId: P, author: "owner", iden
 /* DEC-149's retired words, as the sweep's own check reads them (case-authoring `dec149.test.mjs`). */
 const RETIRED = /\b(this|the|whole) (plane|instance|copy)\b|\binstance statement\b/i;
 
-const LOCKED_DETAIL = "a project override naming a LOCKED group statement is a conformance error; the group statement stands";
-const INTERACTIONS_STATED = "each entry is a project statement on a subject a group statement in force also addresses, "
-  + "which names no statement it overrides: it must carry a justification addressing the group statement, and it is "
+const LOCKED_DETAIL = "a project override naming a LOCKED team statement is a conformance error; the team statement stands";
+const INTERACTIONS_STATED = "each entry is a project statement on a subject a team statement in force also addresses, "
+  + "which names no statement it overrides: it must carry a justification addressing the team statement, and it is "
   + "listed so a reviewer reads the two together (safeguard 3). It refuses nothing.";
 
 /* A group lens with a locked statement and a project lens that nullifies it, adds one on its subject and names none. */
@@ -38,7 +38,7 @@ test("R16: each lock_violations entry's detail reads 'a project override naming 
                                          detail: LOCKED_DETAIL }]);
   assert.doesNotMatch(m.lock_violations[0].detail, RETIRED);
   assert.deepEqual(m.statements.filter((s) => s.statement_id === "s3").map((s) => [s.scope, s.locked]), [["instance", true]],
-    "the group statement stands, its stored scope value unchanged");
+    "the team statement stands, its stored scope value unchanged");
   /* the op answers the same sentence */
   assert.equal(w.ops(`scope=project&scopeId=${P}&viewer=member:owner`).biasmanifest().lock_violations[0].detail, LOCKED_DETAIL);
 });
@@ -53,21 +53,21 @@ test("R24: interactions_stated reads 'each entry is a project statement on a sub
 });
 
 test("R11: the group-scope adoption's act reads 'adopting a bias set for the whole group' and its remedy 'A project's owners set the lens over that project's work: adopt this set for a project you own, or ask an administrator to adopt it for the whole group.'; the scope value instance stays", async () => {
-  assert.equal(INSTANCE_ADOPTION_ACT, "adopting a bias set for the whole group");
+  assert.equal(INSTANCE_ADOPTION_ACT, "adopting a bias set for the whole team");
   assert.equal(INSTANCE_ADOPTION_REMEDY, "A project's owners set the lens over that project's work: adopt this set for "
-    + "a project you own, or ask an administrator to adopt it for the whole group.");
+    + "a project you own, or ask an administrator to adopt it for the whole team.");
   const w = await lensWorld();
   const r = w.bias.biasAdopt({ bundleId: A, reason: WHY, author: "owner", identity: "member:owner", viewer: "member:owner" });
   assert.deepEqual(r, notAnAdmin("owner", INSTANCE_ADOPTION_ACT, { remedy: INSTANCE_ADOPTION_REMEDY, scope: "instance" }));
-  assert.ok(r.detail.startsWith("adopting a bias set for the whole group is an administrator's act"), r.detail);
-  assert.ok(r.message.endsWith("ask an administrator to adopt it for the whole group."), r.message);
+  assert.ok(r.detail.startsWith("adopting a bias set for the whole team is an administrator's act"), r.detail);
+  assert.ok(r.message.endsWith("ask an administrator to adopt it for the whole team."), r.message);
   for (const t of [r.detail, r.remedy, r.message]) assert.doesNotMatch(t, RETIRED);
 });
 
 test("R29: C-26.2's translation reads 'Registry entries are what let the record notice when a project statement and a group statement are about the same thing'; no C-26 row's translation says 'instance statement' or 'the instance'", () => {
   assert.equal(BIAS_CHECKS.BIAS_STATEMENT_SUBJECT_NOT_REGISTERED.translation,
     "That statement names its subject in prose rather than pointing at the subject registry. "
-    + "Registry entries are what let the record notice when a project statement and a group "
+    + "Registry entries are what let the record notice when a project statement and a team "
     + "statement are about the same thing — in prose, nothing can tell, and a collision that is "
     + "quiet is the one this construct exists to prevent.");
   for (const [code, row] of Object.entries(BIAS_CHECKS)) assert.doesNotMatch(row.translation, RETIRED, code);

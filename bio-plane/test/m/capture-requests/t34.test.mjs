@@ -129,14 +129,14 @@ test("DEC-149 each changed member-facing string says your group's Civicsmith, or
   const OLD = /\bthis (instance|copy|plane)\b/i;
   const tr = (code) => CAPTURE_REQUEST_CHECKS[code].translation;
   const named = {
-    "C-28.1": ["CAPTURE_REQUEST_NO_RUN", "Every fetch your group's Civicsmith makes on its own"],
-    "C-28.4": ["CAPTURE_REQUEST_CARRIES_A_CAPTURE", "The fetch is performed by your group's Civicsmith itself"],
-    "C-28.6": ["CAPTURE_CONDUCT_UA_ILLEGIBLE", "Your group's Civicsmith will not fetch without saying who is asking"],
-    "C-28.8": ["CAPTURE_CONDUCT_NO_PURPOSE", "Every request your group's Civicsmith makes says what it is for"],
-    "C-28.16": ["CAPTURE_REQUEST_RENDER_MALFORMED", "in a form your group's Civicsmith does not recognise"],
-    "C-28.17": ["CAPTURE_FETCH_FAILED", "Your group's Civicsmith tried to fetch the document"],
-    "C-28.20": ["MEMBER_CAPTURE_ONLY", "Your group's Civicsmith does not fetch it unattended or sign in to it"],
-    "C-28.21": ["CAPTURE_REQUEST_SITE_KIND_UNKNOWN", "in a way your group's Civicsmith does not recognise"],
+    "C-28.1": ["CAPTURE_REQUEST_NO_RUN", "Every fetch your team's Civicsmith makes on its own"],
+    "C-28.4": ["CAPTURE_REQUEST_CARRIES_A_CAPTURE", "The fetch is performed by your team's Civicsmith itself"],
+    "C-28.6": ["CAPTURE_CONDUCT_UA_ILLEGIBLE", "Your team's Civicsmith will not fetch without saying who is asking"],
+    "C-28.8": ["CAPTURE_CONDUCT_NO_PURPOSE", "Every request your team's Civicsmith makes says what it is for"],
+    "C-28.16": ["CAPTURE_REQUEST_RENDER_MALFORMED", "in a form your team's Civicsmith does not recognise"],
+    "C-28.17": ["CAPTURE_FETCH_FAILED", "Your team's Civicsmith tried to fetch the document"],
+    "C-28.20": ["MEMBER_CAPTURE_ONLY", "Your team's Civicsmith does not fetch it unattended or sign in to it"],
+    "C-28.21": ["CAPTURE_REQUEST_SITE_KIND_UNKNOWN", "in a way your team's Civicsmith does not recognise"],
   };
   for (const [check, [code, says]] of Object.entries(named)) {
     assert.equal(CAPTURE_REQUEST_CHECKS[code].check, check);
@@ -144,12 +144,12 @@ test("DEC-149 each changed member-facing string says your group's Civicsmith, or
   }
   /* no translation of the family calls it "this instance", "this copy" or "this plane" */
   for (const [code, row] of Object.entries(CAPTURE_REQUEST_CHECKS)) assert.doesNotMatch(row.translation, OLD, code);
-  assert.match(MEMBER_ROUTE, /your group's Civicsmith uses no login for it\.$/);
+  assert.match(MEMBER_ROUTE, /your team's Civicsmith uses no login for it\.$/);
   assert.doesNotMatch(MEMBER_ROUTE, OLD);
   /* the unconfigured drain, as its answer says it */
   const off = world({ configured: () => false });
   const d = await off.cr.drain({});
-  assert.equal(d.detail, "no daemon credential is bound: your group's Civicsmith drains nothing and holds no alarm for it");
+  assert.equal(d.detail, "no daemon credential is bound: your team's Civicsmith drains nothing and holds no alarm for it");
   /* the platform mark's two failures need no name */
   const w = world().scene();
   w.st.sql.exec(`DROP TABLE capture_request_platforms`);

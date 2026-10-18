@@ -71,7 +71,7 @@ test("R15 C-149.11 HOLD_NOT_IN_PLACE and C-149.8 HOLD_PLACE_REFUSED keep their p
   /* every row but the one R15 re-words, pinned whole as T45 left it (KEPT measured on the T46 START's tree) */
   const kept = Object.fromEntries(Object.entries(rows).filter(([c]) => c !== "MACHINE_CANNOT_SEND"));
   assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))],
-    [10, "9cd0476d5536ccec4eb498903f4cd88041fce7850b7f4c44c05b29d266c8ec48"], "no other row's check, where or translation moved");
+    [10, "b0293c72d8993f9f16b991128102756fcaddf0ec953fb649b2824041c4d7ced6"], "no other row's check, where or translation moved");
   for (const [code, r] of Object.entries(kept)) assert.ok(!Object.values(holds.ACTION_HOLDS_WORDS).includes(r.translation), code);
   /* filings relays HOLD_NOT_IN_PLACE unchanged: the minter answers the kept row */
   assert.equal(holds.holdNotInPlace({ project: "PROJ-2026-0001-x" }).translation, KEPT_WORDS.HOLD_NOT_IN_PLACE[2]);

@@ -628,7 +628,7 @@ export class Membership {
     /* DEC-49 REGION is-admin-resign-last */
     if (admins.length <= 1)
       return Membership.#rowRefusal("LAST_ADMIN",
-        "the group would be left with no administrator, so its last one does not step down (DEC-134 (4)). Add "
+        "the team would be left with no administrator, so its last one does not step down (DEC-134 (4)). Add "
       + "another administrator first. Nothing was written.", { administrators: admins.length });
     /* END DEC-49 REGION is-admin-resign-last */
     const now = new Date().toISOString();
@@ -646,7 +646,7 @@ export class Membership {
     const h = String(holders ?? "").trim().slice(0, 500);
     if (!h)
       return refusal("NO_HOLDERS",
-        "name who holds hosting access: the record keeps the group's answer as it was given, and an empty "
+        "name who holds hosting access: the record keeps the team's answer as it was given, and an empty "
       + "answer records nobody. Nothing was written.");
     /* END DEC-49 REGION is-hosting-access-holders */
     const at = new Date().toISOString();
@@ -1999,7 +1999,7 @@ export class Membership {
     if (memberId === Membership.ROOT_ADMIN)
       return { ok: false, reason: "ROOT_OF_TRUST",
                detail: "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the "
-                     + "application. Whoever can set ADMIN_TOKEN can take the group over, and there is no "
+                     + "application. Whoever can set ADMIN_TOKEN can take the team over, and there is no "
                      + "arrangement in which nobody holds that power, because your team's Civicsmith runs in "
                      + "somebody's hosting account. The remedy is at the hosting account, not here (section 4.6)." };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
@@ -2573,7 +2573,7 @@ export class Membership {
     if (status === "revoked" && m.status !== "revoked") this.#announceRevoked(memberId, actor, now);   /* N123, R20 */
     return { ok: true, memberId, status, by: Membership.#statusBy(actor), ...(demoted ? { demoted: true,
       detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: "
-            + "the group voted them out under 4.7, and putting them back is an appointment, which needs "
+            + "the team voted them out under 4.7, and putting them back is an appointment, which needs "
             + "the consensus of all existing administrators like any other." } : {}) };
   }
 
@@ -2722,7 +2722,7 @@ export class Membership {
     if (now) return now;
     /* DEC-49 REGION is-website-key-live */
     return Membership.#rowRefusal("NO_WEBSITE_KEY",
-      `${act} acts on the group's live website key, and there is none. Nothing was written.`);
+      `${act} acts on the team's live website key, and there is none. Nothing was written.`);
     /* END DEC-49 REGION is-website-key-live */
   }
 
@@ -2731,17 +2731,17 @@ export class Membership {
     if (now) return now;
     /* DEC-49 REGION is-join-link-live */
     return Membership.#rowRefusal("JOIN_LINK_OFF",
-      `${act} acts on the group's join link, and it is off. Nothing was written.`);
+      `${act} acts on the team's join link, and it is off. Nothing was written.`);
     /* END DEC-49 REGION is-join-link-live */
   }
 
   /** R99: an administrator creates the website key, at most one live. The key is answered once and never again. */
   websiteKeyCreate({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "creating the group's website key");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "creating the team's website key");   /* R84 */
     /* DEC-49 REGION is-website-key-one */
     if (this.#doorNow("website"))
       return Membership.#rowRefusal("WEBSITE_KEY_EXISTS",
-        "the group holds one live website key at a time (DEC-133). Nothing was created.");
+        "the team holds one live website key at a time (DEC-133). Nothing was created.");
     /* END DEC-49 REGION is-website-key-one */
     const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
     if (!s.ok) return s;
@@ -2753,7 +2753,7 @@ export class Membership {
 
   /** R100: the live key's scope, cap or invitation days changed, each as R99 judges it, each kept when not given. */
   websiteKeySet({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "changing the group's website key");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "changing the team's website key");   /* R84 */
     const live = this.#liveWebsiteKey("changing the website key");
     if (live.ok === false) return live;
     const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
@@ -2766,7 +2766,7 @@ export class Membership {
 
   /** R100: the live key is dead at once; the invitations it made stay as they are (R98 withdraws them). */
   websiteKeyRevoke({ by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching off the group's website key");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching off the team's website key");   /* R84 */
     const live = this.#liveWebsiteKey("switching off the website key");
     if (live.ok === false) return live;
     const at = new Date().toISOString();
@@ -2818,12 +2818,12 @@ export class Membership {
     /* DEC-49 REGION is-website-key-known */
     if (!live)
       return Membership.#rowRefusal("WEBSITE_KEY_UNKNOWN",
-        "this key opens no door of this group: it was never made, was switched off, or is not a key, and the answer "
+        "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer "
         + "is the same for each. Nothing was written.");
     /* END DEC-49 REGION is-website-key-known */
     const label = Membership.#doorCover(cover);
     if (!label) return Membership.#custodialRefusal("NO_COVER",
-      "the website names the person by the cover the group will know them by. Nothing was written.");
+      "the website names the person by the cover the team will know them by. Nothing was written.");
     /* DEC-49 REGION is-website-daily-cap */
     if (this.#doorToday(`website:${live.id}`) >= live.dailyCap)
       return Membership.#rowRefusal("WEBSITE_DAILY_CAP",
@@ -2836,11 +2836,11 @@ export class Membership {
 
   /** R102: an administrator switches the join link on, at most one live. The link is answered once and never again. */
   joinLinkEnable({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching on the group's join link");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching on the team's join link");   /* R84 */
     /* DEC-49 REGION is-join-link-one */
     if (this.#doorNow("link"))
       return Membership.#rowRefusal("JOIN_LINK_ON",
-        "the group holds one live join link at a time (DEC-133 (6)). Nothing was changed.");
+        "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.");
     /* END DEC-49 REGION is-join-link-one */
     const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
     if (!s.ok) return s;
@@ -2852,7 +2852,7 @@ export class Membership {
 
   /** R103: the live link's settings changed, as R100 changes the key's. */
   joinLinkSet({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "changing the group's join link");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "changing the team's join link");   /* R84 */
     const live = this.#liveJoinLink("changing the join link");
     if (live.ok === false) return live;
     const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
@@ -2865,7 +2865,7 @@ export class Membership {
 
   /** R103: a new link, answered once, its settings kept; the old one is dead at once. */
   joinLinkReplace({ by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "replacing the group's join link");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "replacing the team's join link");   /* R84 */
     const live = this.#liveJoinLink("replacing the join link");
     if (live.ok === false) return live;
     const link = Membership.#secret(), linkId = Membership.#doorIdOf(), at = new Date().toISOString();
@@ -2876,7 +2876,7 @@ export class Membership {
 
   /** R103: the live link is dead at once. */
   joinLinkOff({ by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching off the group's join link");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching off the team's join link");   /* R84 */
     const live = this.#liveJoinLink("switching off the join link");
     if (live.ok === false) return live;
     const at = new Date().toISOString();
@@ -2890,12 +2890,12 @@ export class Membership {
     /* DEC-49 REGION is-join-link-known */
     if (!live)
       return Membership.#rowRefusal("NO_SUCH_JOIN_LINK",
-        "this link opens no door of this group: it was never made, was replaced or switched off, or is not a link, "
+        "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, "
         + "and the answer is the same for each. Nothing was written.");
     /* END DEC-49 REGION is-join-link-known */
     const label = Membership.#doorCover(cover);
     if (!label) return Membership.#custodialRefusal("NO_COVER",
-      "choose the name the group will know you by: it need not be, and often should not be, a legal name. Nothing "
+      "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing "
       + "was written.");
     /* DEC-49 REGION is-join-link-daily-cap */
     if (this.#doorToday(`join-link:${live.id}`) >= live.dailyCap)
@@ -2919,7 +2919,7 @@ export class Membership {
   joinDoors(args = {}) {
     const { by = null, limit = null } = isObj(args) ? args : {};
     try {
-      if (!this.isAdministrator(by)) return notAnAdmin(by, "reading the group's website key and join link");   /* R84 */
+      if (!this.isAdministrator(by)) return notAnAdmin(by, "reading the team's website key and join link");   /* R84 */
       const cap = Math.max(1, Math.min(Number(limit) || Membership.JOIN_DOORS_LIMIT, Membership.JOIN_DOORS_LIMIT));
       const record = (r) => ({ id: r.door_id, event: r.event, capabilities: this.#capsOf(r), dailyCap: r.daily_cap,
                                expiresInDays: r.expires_days, by: r.set_by, at: r.at });
@@ -3046,7 +3046,7 @@ export class Membership {
 
   /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
   groupDescriptionSet({ kinds, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the group");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the team");   /* R84 */
     const refuse = (code, detail, extra) => Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
     /* DEC-49 REGION is-group-description */
     if (!Array.isArray(kinds) || kinds.some((k) => !Membership.GROUP_KINDS.includes(k)))

@@ -573,9 +573,9 @@ test("R34 the wizard's last screen shows, before the hand-over to your team's Ci
   /* DEC-109's five points, each held in the one export both pages read. The words are instance-setup's (R47, which its
      own T34 job re-words for DEC-149), so each point is read by its meaning, not its exact wording. */
   const S = HOSTING_CONTROL.sentences;
-  for (const [i, says] of [[0, /hosting account.*controls.*replace the one-time password.*claim.*again.*read everything.*lock everyone else out.*no vote of the group's administrators can stop them/s],
-      [1, /group account.*not anyone's personal login/], [2, /at least one other trusted person/],
-      [3, /someone other than the group's administrators hold it/], [4, /same account is the way back in if the password you choose is lost/]])
+  for (const [i, says] of [[0, /hosting account.*controls.*replace the one-time password.*claim.*again.*read everything.*lock everyone else out.*no vote of the team's administrators can stop them/s],
+      [1, /team account.*not anyone's personal login/], [2, /at least one other trusted person/],
+      [3, /someone other than the team's administrators hold it/], [4, /same account is the way back in if the password you choose is lost/]])
     assert.match(S[i], says, `point ${i + 1}`);
   const block = hostingControlBlock("notice", { deployer: true });
   armWith(SIGNER.line);

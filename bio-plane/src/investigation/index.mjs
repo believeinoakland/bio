@@ -478,7 +478,7 @@ export class Investigation {
       ...(stuck.length ? { stuck_on: stuck.map((i) => ({ kind: i.kind, ref: i.ref, why: i.why })) } : {}),
       nearing: delta === null ? null : state !== "met" && delta >= 0 && delta <= NEARING_DAYS,
       overdue: delta === null ? null : state !== "met" && delta < 0,
-      ...(today ? {} : { why: "no time zone is held for your group's Civicsmith, so the local day is not known" }),
+      ...(today ? {} : { why: "no time zone is held for your team's Civicsmith, so the local day is not known" }),
       items, by: this.#shown(m.by_actor), at: m.at,
       history: this.#rows(`SELECT act, detail_json, by_actor, at FROM inv_milestone_history WHERE milestone_id = ? ORDER BY seq`, m.milestone_id)
         .map((h) => ({ act: h.act, detail: parse(h.detail_json), by: this.#shown(h.by_actor), at: h.at })),
@@ -515,7 +515,7 @@ export class Investigation {
     const member = this.#memberOf(viewer);
     if (!member) return { ok: true, due: [] };
     const today = filled(at) ? this.#today(at) : null;
-    if (!today) return { ok: true, due: [], undetermined: true, why: "no time zone is held for your group's Civicsmith, or no instant was given" };
+    if (!today) return { ok: true, due: [], undetermined: true, why: "no time zone is held for your team's Civicsmith, or no instant was given" };
     const due = [];
     try {
       for (const project of this.#joinedProjects(member)) {

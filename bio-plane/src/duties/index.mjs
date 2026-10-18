@@ -323,8 +323,8 @@ export class Duties {
     /* DEC-49 REGION is-duty-basis */
     if (!BASIS_KINDS.includes(tm.basis))
       return refusal("UNKNOWN_BASIS_KIND", `a due date's basis is one of ${BASIS_KINDS.join(", ")}.${tm.basis === STATED_BASIS
-        ? " A deadline the other side has stated is a deadline on the group, as are the group's own obligations to a venue: "
-          + "they are the group's own deadlines on its actions, never a body's obligation here." : ""}`, { bases: [...BASIS_KINDS] });
+        ? " A deadline the other side has stated is a deadline on the team, as are the team's own obligations to a venue: "
+          + "they are the team's own deadlines on its actions, never a body's obligation here." : ""}`, { bases: [...BASIS_KINDS] });
     /* END DEC-49 REGION is-duty-basis */
     /* DEC-49 REGION is-duty-time */
     if (tm.basis === "rule" && !said(tm.rule) && !isObj(tm.response_to))

@@ -122,7 +122,7 @@ test("R30: partRefusal(part) is AI_PART_NOT_DEPLOYED (C-22.29, the next free C-2
   assert.equal(AI_RUN_CHECKS.AI_PART_NOT_DEPLOYED, row);
   assert.match(row.where, /^src\/run-rules\/test-bar\.mjs partRefusal, /);
   assert.equal(row.translation, "This part of the assistant has not yet passed Civicsmith's tests, so it is not switched on "
-    + "in your group's Civicsmith. Everything else works without it.");
+    + "in your team's Civicsmith. Everything else works without it.");
   assert.equal(translationOf("AI_PART_NOT_DEPLOYED"), row.translation);
   for (const p of ["ask", "draft:own_words", "draft:statusreport", "plan"]) {
     const r = refusal(partRefusal(p), "AI_PART_NOT_DEPLOYED");

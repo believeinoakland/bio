@@ -308,7 +308,7 @@ test("R54: every member-facing string the sweep names says \"your group's Civics
   await w.group("ann"); w.bundle(INQ);
   w.ctx.id = { equals: (x) => x === "id:bio" };
   w.credentials.aiCredentialMint({ who: "admin", tokenId: "tok-org", secretSha: sha(TOKEN), principalKind: "organisation",
-    taskScope: "investigative", writes: ["airuntick"], note: "the group's key" });
+    taskScope: "investigative", writes: ["airuntick"], note: word("ai.run.cost.on.team") });
   const cred = w.credentials.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
   const runs = { INST: `${cred.principal}/${cred.tokenId}`, MEM: "member:ann/tok-m", OTHER: "class:ai/other" };
   for (const [run, principalPlane] of Object.entries(runs)) await w.runs.open(OPEN({ run, principalPlane }));
@@ -319,8 +319,8 @@ test("R54: every member-facing string the sweep names says \"your group's Civics
   const says = (d) => d.slice(d.indexOf("Resumption:"));
   const rows = {
     "index.mjs:1688": [served(w, "INST"), word("ai-runs.says.resumption_handed_agent", { token_id: "tok-org" })],
-    "index.mjs:1694": [served(w, "MEM"), "Resumption: NOT dispatched — a member's credential opened it, and your group's Civicsmith resumes "
-      + "only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the group's key would "
+    "index.mjs:1694": [served(w, "MEM"), "Resumption: NOT dispatched — a member's credential opened it, and your team's Civicsmith resumes "
+      + "only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the team's key would "
       + "re-attribute its acts). It waits for its own principal."],
     "index.mjs:1698": [served(w, "OTHER"), word("ai-runs.says.resumption_dispatched", { why: word("ai-runs.text.principal_opened_organization") })],
   };

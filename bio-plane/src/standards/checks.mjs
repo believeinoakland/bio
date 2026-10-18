@@ -114,7 +114,7 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   STANDARD_NO_REASON: {
     check: 'C-112.20', where: at("#declareRefusal", "is-standard-reason"),
-    translation: 'A standard is recorded with your reason: in your own words, why the group holds its government to '
+    translation: 'A standard is recorded with your reason: in your own words, why the team holds its government to '
       + 'it, in at most 2,000 characters. None was given, or it is not words, or it is too long. Nothing was written.',
   },
   /* T33-31 (R18–R27; K1438, K1442, K1446, K1447, K1449): rows minted in T33, awaiting promotion's stamp (T34). */
@@ -143,7 +143,7 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   FAMILY_UNKNOWN: {
     check: 'C-112.34', where: at("#familyField", "is-family-known"),
-    translation: 'The series named for this standard is not one your group\'s jurisdiction profiles list. Name a series '
+    translation: 'The series named for this standard is not one your team\'s jurisdiction profiles list. Name a series '
       + 'they list, or none. Nothing was written.',
   },
   STANDARD_CITED_BY_MISSING: {
@@ -205,7 +205,7 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   NOT_HELD_FROM_SOURCE: {
     check: 'C-112.46', where: at("releaseStandard", "is-held-from-source"),
-    translation: 'This standard is already seen by every member of your group, so there is nothing to release. Nothing '
+    translation: 'This standard is already seen by every member of your team, so there is nothing to release. Nothing '
       + 'was written.',
   },
   VERSION_BASIS_INVALID: {
@@ -256,7 +256,7 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   QUESTION_NOT_HELD: {
     check: 'C-112.57', where: at("#questionField", "is-question-held"),
-    translation: 'The question named is not one your group\'s record holds that you may see. Name one, or none. '
+    translation: 'The question named is not one your team\'s record holds that you may see. Name one, or none. '
       + 'Nothing was written.',
   },
   NO_SUCH_FORCE: {

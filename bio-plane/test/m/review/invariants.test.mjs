@@ -202,7 +202,7 @@ const MACHINE_WORDS = /\b(?:this|the|your|our)\s+(?:group's\s+)?(?:instance|plan
 test("R11 (DEC-149): the marking every copy carries calls the group's Civicsmith no machine word and addresses no reader as the group", () => {
   assert.doesNotMatch(REVIEW_MARKING, MACHINE_WORDS);
   assert.doesNotMatch(REVIEW_MARKING, /your group/i, "a recipient outside the group reads it too");
-  assert.match(REVIEW_MARKING, /^REVIEW COPY — NOT A PUBLICATION\. This is a draft of a case, shown to the people it was addressed to without leaving the group that made it\. /);
+  assert.match(REVIEW_MARKING, /^REVIEW COPY — NOT A PUBLICATION\. This is a draft of a case, shown to the people it was addressed to without leaving the team that made it\. /);
   /* what every copy carries, on both doors */
   const w = standard();
   const d = w.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
@@ -215,7 +215,7 @@ test("R11 (DEC-149): the marking every copy carries calls the group's Civicsmith
 
 test("R3, R23 (DEC-149): C-87.7 REVIEW_DRAFT_TOO_LARGE's translation says \"your group's Civicsmith\", and no member's translation calls it a machine", () => {
   const t = REVIEW_COPY_CHECKS.REVIEW_DRAFT_TOO_LARGE.translation;
-  assert.match(t, /^This draft's arguments are larger than your group's Civicsmith will store: the limit is 64 KiB, /);
+  assert.match(t, /^This draft's arguments are larger than your team's Civicsmith will store: the limit is 64 KiB, /);
   const w = standard();
   const r = w.r.act({ act: "draft", author: "ann", project: P, scope: "x".repeat(70000) });
   assert.deepEqual([r.code, r.check, r.translation], ["REVIEW_DRAFT_TOO_LARGE", "C-87.7", t]);
