@@ -36,3 +36,7 @@
 - `node checks/ownership.mjs /home/user/bio civil-time tranche/T51 job/T51/civil-time`: run after the commit (below).
 
 Size (session_01BcmjtWcShwiAerhfkmJdjL): test runs 4, module lines 1450
+
+## J1 · COMPLETE
+
+CR-1 applied: R30 met. localClock(instant, zone) -> {hour, minute} is exported beside localDay; every undetermined answer of values.mjs (compare, joinLocal, validAt) answers why as {key, vars} (reasons.mjs; a second reason rides in 'also'); refusals keep code + detail string (my reading of R30: say if they should be keys). 5 words findings fixed, zero in checks/run.mjs. civil-time tests 68/68; format, architecture, coverage (30/30), ownership 0 failures. REPORT: the new shape breaks 27 baseline-green consumer tests (lines 4, events 3, standards 2, law-relations 2, duties 2, calculations 1, money 1, people 2, connection-grammar 10); names and causes in my record's Completion section. New public export reasonText for BOB to add to Provides. Size line is in the record.
