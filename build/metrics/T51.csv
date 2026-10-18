@@ -1,2 +1,10 @@
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
 session_01AfJfDxrHQgXBXzF2faa9h5,BOB-final,,176210761,10545832,79472,590317,,,
+session_01MURMfVW6xakigf2Z7K2GRE,job,record-grammar,1861160,75996,38,11438,,1,2618
+session_01KsgH5RfwYGuB5JXagtzuu5,job,test-support,4210967,85813,74,23787,,6,721
+session_01JKKYXh9GYPEvo5f4RVmsfZ,job,doctypes,4204236,155173,64,17474,,1,3493
+session_017CLfp2cx6WQCCmCguGYJu2,job,file-scanner,5750605,123918,90,14935,,4,2777
+session_01X7jKAKCTDrVKXvoacZ8mWN,job,bundler,13603621,226242,136,54511,,18,3768
+session_01QsLuHE3aQNFW5i1HvNqNBC,job,office-readers,1614360,57628,34,6413,,2,3819
+session_01KswWpSMer2zv2tpsG99AC5,job,pdf-reader,4803548,147005,64,16076,,9,3247
+session_01JyN2szAX3kLAZzz8syqiPy,job,signatures,8761154,177055,106,32355,,6,917
