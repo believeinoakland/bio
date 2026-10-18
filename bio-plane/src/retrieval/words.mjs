@@ -9,19 +9,15 @@ import { word } from "../setup-words/index.mjs";
 
 /** Every key this module reads. */
 export const WORD_KEYS = Object.freeze([
-  "monitoring.reason_given",
   "refusal.MEANING_ROWS_NO_ARM",
   "refusal.MEANING_ROWS_UNKNOWN_ARM",
   "refusal.NO_SUCH_SELECTION",
   "refusal.SET_MOVED",
   "retrieval.capture_text_skipped_says",
-  "retrieval.column_why",
-  "retrieval.extent_why",
   "retrieval.lead",
   "retrieval.note.content_axis_read",
   "retrieval.note.read_level_failed",
   "retrieval.note.record_holds_capture",
-  "retrieval.recorded_none_registered",
   "retrieval.syntax.bare_field_leg",
   "retrieval.syntax.bare_words_ranked",
   "retrieval.syntax.content_cap_apply",
@@ -52,8 +48,6 @@ export const WORD_KEYS = Object.freeze([
   "retrieval.text.passage_matched_over",
   "retrieval.text.row_over_document",
   "retrieval.text.tally_covers_first",
-  "retrieval.unread.read_followed_people",
-  "retrieval.unread.read_followed_people_offices",
   "retrieval.why.answer_lists_indexed",
   "retrieval.why.anybody_looked_all",
   "retrieval.why.arm_answers_meaning",
@@ -64,15 +58,6 @@ export const WORD_KEYS = Object.freeze([
   "retrieval.why.document_scope_holds",
   "retrieval.why.finding_rests_rows",
   "retrieval.why.matching_unit_over",
-  "retrieval.why.names_day_calendar",
-  "retrieval.why.offers_recordedby_read",
-  "retrieval.why.reachable",
-  "retrieval.why.read_answered_promise",
-  "retrieval.why.read_refused",
-  "retrieval.why.read_threw",
-  "retrieval.why.words_name_month",
-  "retrieval.why.words_write_day",
-  "state.empty",
 ]);
 
 const KEYS = new Set(WORD_KEYS);

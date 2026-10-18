@@ -121,3 +121,112 @@ test("R89: a viewer with every project in full sight, and a machine credential, 
   const s = w.retrieval.meaningRows({ q: "passage:sewer", rows: "passage", viewer: V("ann") }).scope;
   assert.deepEqual(Object.keys(s).slice(0, 3), ["documents", "documents_with_rows", "documents_without_rows"]);
 });
+
+/* ---- R87: the scopes ---- */
+import { BROWSE_SCOPES } from "../../../src/retrieval/index.mjs";
+import { T0 } from "./fixture.mjs";
+
+/* Two documents, two questions (one holding legs), an action only ann sees (a hidden project's) and no plan. */
+function scoped() {
+  const w = world({ members: ["ann", "vera"] });
+  w.doc("INFO-1", { title: "Water rates", current_state: "collected" }, { files: [{ path: "n.md", text: "water rates rose" }] });
+  w.doc("INFO-2", { title: "Water bonds", current_state: "verified" }, { files: [{ path: "n.md", text: "water bonds" }] });
+  w.doc("INQ-1", { object_type: "inquiry", title: "Water question" });
+  w.doc("INQ-2", { object_type: "inquiry", title: "Parks question" });
+  w.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, target_id, target_type, role, grade, grade_axis, grade_source, at)
+                 VALUES ('INQ-1', 0, 'INFO-1', 'information', 'supports', 'A', 'capture', 'capture', ?)`, T0);
+  return w;
+}
+const idsOf = (a) => a.hits.map((h) => h.bundle_id).sort();
+
+test("R87: searchFields().scopes is retrieval-browse's BROWSE_SCOPES as it gives them, each {key, kinds, only}, no name in English", () => {
+  const w = scoped();
+  const f = w.retrieval.searchFields();
+  assert.deepEqual(f.scopes, BROWSE_SCOPES.map((s) => ({ key: s.key, kinds: [...s.kinds], only: s.only })));
+  assert.deepEqual(f.scopes.map((s) => s.key), ["everything", "question", "document", "action", "awaiting_review", "watched", "flagged"]);
+  for (const s of f.scopes) assert.deepEqual(Object.keys(s), ["key", "kinds", "only"]);
+});
+
+test("R87: search takes a scope, narrowing the bundles read to those the scope names for the viewer; the answer states it, and the total equals a type search of the same words", () => {
+  const w = scoped();
+  const viewer = V("vera");
+  const q = "water";
+  const question = w.retrieval.search({ q, viewer, scope: "question" });
+  assert.equal(question.query.scope, "question");
+  assert.deepEqual(idsOf(question), ["INQ-1"]);
+  assert.equal(question.total, w.retrieval.search({ q: "water type:inquiry", viewer }).total);
+  /* A question and a document scope partition the bundles; facets and the page read only the scope. */
+  const doc = w.retrieval.search({ q: "", viewer, scope: "document" });
+  assert.deepEqual([doc.total, idsOf(doc)], [2, ["INFO-1", "INFO-2"]]);
+  assert.equal(doc.facets.state.reduce((n, f) => n + f.n, 0), 2);
+  assert.deepEqual(w.retrieval.search({ q: "", viewer, scope: "awaiting_review" }).hits.map((h) => h.bundle_id), ["INFO-1"]);
+  assert.equal(w.retrieval.search({ q: "", viewer, scope: "everything", mode: "count" }).total, 4);
+  /* A scope with nothing in it reads nothing, never everything. */
+  assert.deepEqual([w.retrieval.search({ q: "", viewer, scope: "action" }).total, w.retrieval.search({ q: "", viewer, scope: "action", mode: "ids" }).ids],
+    [0, []]);
+  /* The scope meets the caller's ids. */
+  assert.deepEqual(idsOf(w.retrieval.search({ q: "", viewer, scope: "document", ids: ["INFO-2", "INQ-1"] })), ["INFO-2"]);
+  /* A scope over a hidden bundle lists no such id: the hidden project's own bundle is in nobody's scope but its owner's. */
+  w.doc("ACT-H", { object_type: "action", title: "Hidden action" });
+  assert.equal(w.retrieval.search({ q: "", viewer, scope: "action" }).total, 1);
+  w.project("Secret", "ann");
+  assert.equal(w.retrieval.search({ q: "", viewer, scope: "everything", mode: "count" }).total, 5, "projects are not a browse kind");
+  assert.equal(w.retrieval.search({ q: "", viewer: null, scope: "question" }).total, 0, "an absent viewer sees nothing in any scope");
+});
+
+test("R87: watched reads the viewer's own marks through retrieval-browse's registered read, never another member's; truncation and unreadable marks are stated", () => {
+  const w = scoped();
+  const watches = { [V("vera")]: ["INFO-1"], [V("ann")]: ["INQ-2", "INFO-2"] };
+  let truncated = false;
+  assert.equal(w.retrieval.registerBrowseMarks("following", (a) => (a.ids ? { watched: a.ids.filter((i) => (watches[a.viewer] || []).includes(i)), flagged: [] }
+    : { items: [...(watches[a.viewer] || [])], truncated })).ok, true);
+  const mine = (v) => idsOf(w.retrieval.search({ q: "", viewer: v, scope: "watched" }));
+  assert.deepEqual(mine(V("vera")), ["INFO-1"]);
+  assert.deepEqual(mine(V("ann")), ["INFO-2", "INQ-2"]);
+  assert.equal(w.retrieval.search({ q: "", viewer: V("vera"), scope: "watched" }).query.scope_truncated, undefined);
+  truncated = true;
+  assert.equal(w.retrieval.search({ q: "", viewer: V("vera"), scope: "watched" }).query.scope_truncated, true);
+  assert.equal(w.retrieval.meaningRows({ q: "", rows: "leg", viewer: V("vera"), scope: "watched" }).query.scope_truncated, true);
+  /* No registered read: the scope is empty and says why, rather than reading as a fact about the record. */
+  const bare = scoped();
+  const none = bare.retrieval.search({ q: "", viewer: V("vera"), scope: "flagged" });
+  assert.equal(none.total, 0);
+  assert.equal(typeof none.query.scope_undetermined, "string");
+});
+
+test("R87: meaningRows takes a scope too: its rows, total and the four-level statement's scope.documents are those of the same query over only the scope's bundles, and an absence is measured against it", () => {
+  const w = scoped();
+  const viewer = V("vera");
+  const whole = w.retrieval.meaningRows({ q: "", rows: "leg", viewer });
+  const q = w.retrieval.meaningRows({ q: "", rows: "leg", viewer, scope: "question" });
+  const d = w.retrieval.meaningRows({ q: "", rows: "leg", viewer, scope: "document" });
+  assert.deepEqual([whole.scope.documents, q.scope.documents, d.scope.documents], [4, 2, 2]);
+  assert.deepEqual([q.total, q.scope.documents_with_rows, q.scope.documents_without_rows], [whole.total, 1, 1]);
+  assert.deepEqual([d.total, d.scope.documents_with_rows], [0, 0], "no leg is held in the documents: said of that scope only");
+  assert.equal(q.query.scope, "question");
+  assert.equal(d.rows.length, 0);
+});
+
+test("R87: an unknown scope is refused SCOPE_UNKNOWN naming scopes, in search and meaningRows, running nothing and writing nothing; with no scope the answer is as before, scope null", () => {
+  const w = scoped();
+  const viewer = V("vera");
+  const before = snapshot(w);
+  const runs = [];
+  const run = w.retrieval.runQuery.bind(w.retrieval);
+  w.retrieval.runQuery = (...a) => { runs.push(a[0]); return run(...a); };
+  for (const a of [w.retrieval.search({ q: "water", viewer, scope: "nope" }), w.retrieval.meaningRows({ q: "", rows: "leg", viewer, scope: "nope" })]) {
+    assert.deepEqual([a.ok, a.reason, a.code, a.scopes], [false, "SCOPE_UNKNOWN", "SCOPE_UNKNOWN", BROWSE_SCOPES.map((s) => s.key)]);
+    assert.ok(BROWSE_SCOPES.every((s) => a.detail.includes(s.key)));
+  }
+  assert.deepEqual(runs, []);
+  assert.equal(snapshot(w), before);
+  delete w.retrieval.runQuery;
+  /* Control: no scope, null, or the empty string answer alike, with scope null. */
+  const plain = w.retrieval.search({ q: "water", viewer });
+  assert.equal(plain.query.scope, null);
+  assert.deepEqual(w.retrieval.search({ q: "water", viewer, scope: null }), plain);
+  assert.deepEqual(w.retrieval.search({ q: "water", viewer, scope: "" }), plain);
+  const { scope: _s, ...rest } = plain.query;
+  assert.deepEqual(Object.keys(rest), ["q", "terms", "match", "sort", "warnings", "mode"]);
+  assert.deepEqual(w.retrieval.meaningRows({ q: "", rows: "leg", viewer, scope: null }), w.retrieval.meaningRows({ q: "", rows: "leg", viewer }));
+});

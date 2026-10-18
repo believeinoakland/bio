@@ -7,19 +7,19 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { hasWord, word as WORD } from "../../../src/setup-words/index.mjs";
 import { WORD_KEYS, say, keysRead } from "../../../src/retrieval/words.mjs";
-import { MEANING_READ_CHECKS, SELECTION_CHECKS, RECORDED_NONE_REGISTERED, CAPTURE_TEXT_SKIPPED_SAYS, matchDates } from "../../../src/retrieval/index.mjs";
-import { FIND_MATCHERS } from "../../../src/retrieval/index.mjs";
+import { MEANING_READ_CHECKS, SELECTION_CHECKS, CAPTURE_TEXT_SKIPPED_SAYS } from "../../../src/retrieval/index.mjs";
 import { world, V } from "./fixture.mjs";
 
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8"))
   .modules.retrieval.reads;
 
-test("R10, R16, R19, R20, R73 (plan rule 6): the module's keys are the owner's declared list for retrieval, every one held by the word list; a key outside it is refused, a placeholder with no value is refused", () => {
+test("R10, R16, R19, R20 (plan rule 6): the module's keys are the owner's declared list for retrieval, every one held by the word list; a key outside it is refused, a placeholder with no value is refused", () => {
   assert.deepEqual([...WORD_KEYS].sort(), [...READS].sort());
   for (const k of WORD_KEYS) assert.equal(hasWord(k), true, k);
   assert.throws(() => say("not.a.key"), /not one of this module's word keys/);
-  assert.throws(() => say("retrieval.why.read_threw"), /WORD_VAR_MISSING/);
-  assert.equal(say("retrieval.why.read_threw", { e: "boom" }), WORD("retrieval.why.read_threw", { e: "boom" }));
+  assert.equal(WORD_KEYS.length, 49, "DEC-334: the 15 keys of the find and the browse left with the split");
+  assert.throws(() => say("retrieval.text.tally_covers_first"), /WORD_VAR_MISSING/);
+  assert.equal(say("retrieval.text.tally_covers_first", { bound: 500 }), WORD("retrieval.text.tally_covers_first", { bound: 500 }));
 });
 
 test("R10, R19, R20, R31 (plan rule 6): every refusal row's translation is the word of its refusal key, no two alike", () => {
@@ -32,7 +32,7 @@ test("R10, R19, R20, R31 (plan rule 6): every refusal row's translation is the w
   for (const t of all) assert.doesNotMatch(t, /\bgroup\b/i, "DEC-149: team, never group");
 });
 
-test("R16, R27, R73, R74, R13 (plan rule 6): the sentences the module answers are the list's words — the syntax sentences, the content-axis notes, the no-later-module line, the 'not indexed' words, the date matcher's whys, 'Nothing here'", () => {
+test("R16, R27, R13 (plan rule 6): the sentences the module answers are the list's words — the syntax sentences, the content-axis notes, the no-later-module line, the 'not indexed' words", () => {
   const w = world();
   w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "member:ann");
   const syntax = w.retrieval.searchFields().syntax;
@@ -44,15 +44,10 @@ test("R16, R27, R73, R74, R13 (plan rule 6): the sentences the module answers ar
   assert.equal(w.retrieval.contentAxis({}).note, WORD("retrieval.note.content_axis_read"));
   const held = w.retrieval.contentAxis({ captureSha: "f".repeat(64), viewer: V("ann") });
   assert.equal(held.note, WORD("retrieval.note.record_holds_capture", { content_axis_states: Object.keys(held.vocabulary)[3] }));
-  assert.equal(RECORDED_NONE_REGISTERED, WORD("retrieval.recorded_none_registered"));
   assert.equal(CAPTURE_TEXT_SKIPPED_SAYS, WORD("retrieval.capture_text_skipped_says"));
-  const dates = matchDates("On 2026-02-31, 3/4/2026 and June 2026.", FIND_MATCHERS.en);
-  assert.deepEqual(dates.map((d) => d.date_why), [WORD("retrieval.why.names_day_calendar", { date: "2026-02-31" }),
-    WORD("retrieval.why.words_write_day"), WORD("retrieval.why.words_name_month")]);
   const f = w.retrieval.frontier({ level: "document" });
   assert.equal(f.found, true);
-  assert.equal(WORD("state.empty"), "Nothing here");
-  for (const k of ["retrieval.note.content_axis_read", "retrieval.note.record_holds_capture", "retrieval.why.words_name_month", "retrieval.syntax.near_finds_words"])
+  for (const k of ["retrieval.note.content_axis_read", "retrieval.note.record_holds_capture", "retrieval.syntax.near_finds_words"])
     assert.ok(keysRead().has(k), k);
 });
 
