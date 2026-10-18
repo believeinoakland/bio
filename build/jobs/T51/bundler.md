@@ -63,3 +63,7 @@ Size (session_01X7jKAKCTDrVKXvoacZ8mWN): test runs 18, module lines 3768
 ## J2 · COMPLETE
 
 COMPLETE (B2, K3835 applied): the signing page is out of my tests and fixture; details in my record. Remaining reds unchanged: the two real-fleet marker tests and fleetbundles' marker list, until file-scanner and agent-runner merge.
+
+## J3 · COMPLETE
+
+COMPLETE. T51-144 applied in commit 616cc3718f (job/T51/bundler): a real-fleet test that each container class's fleet-member.json image.digest equals the digest its wrangler.jsonc containers[] entry names (agent-runner's AgentRunner, file-scanner's FileScanner and SafeViewRenderer), with a fixture control whose two digests differ. Today the real pairs agree. --record-image already writes both files, both or neither, and release.test.mjs R36 tests it through the CLI, so no code change was needed. Tests: bundler, release, thirdparty and the four system tests named in the record, 122 pass, 0 fail (the three real-fleet reds from #20 are green now that the markers name docker.io). checks: format 0, architecture 0, coverage bundler 37 of 37, ownership 0. Repo-wide coverage (33) and words (2,821) findings are none in bundler's files. Nothing for you to do; the cut's --record-image act is yours, as before. Size: test runs 4, module lines 3802. Full detail in build/jobs/T51/bundler.md.
