@@ -26,3 +26,11 @@
 - process repo: `format.mjs`: 0 failures; `architecture.mjs bundler`: 0 failures; `coverage.mjs bundler`: 37 of 37 live ids named, 0 failures.
 
 Size (session_01X7jKAKCTDrVKXvoacZ8mWN): test runs 14, module lines 3768
+
+## J1 · COMPLETE
+
+COMPLETE. T51-5 applied: R16/R17/R19 text and comments (K3807), R35 tests, R36/R37 (field `image.source_sha256`; `bundles.mjs --containers` lists classes the code outran, `--record-image <member> <class> <digest>` writes digest + source into the marker and wrangler.jsonc; release assembly refuses CONTAINER_IMAGE_STALE). Details and the Size line are in my record.
+For BOB (exact changes, not mine):
+1. bio-plane/package.json is plane's: set "build": "node scripts/build-plane.mjs" and delete "embed:sign" (ownership refused my edit; reverted).
+2. container-images.yml (BOB's): after each image build+push run `node bio-plane/scripts/bundles.mjs --record-image <member> <class> sha256:<digest>` and commit the two files; `--containers` first lists what to build. The real markers record no source yet, so the real assembly refuses CONTAINER_IMAGE_STALE until then.
+3. Three real-fleet tests are red until file-scanner (T51-9) and agent-runner (T51-64) merge docker.io/civicsmith markers: bundler.test R24 (real fleet) and R35 (real fleet), fleetbundles "agent-runner and file-scanner are listed as container members".
