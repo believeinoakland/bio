@@ -195,7 +195,7 @@ export async function cleanPackage(d, family) {
     const m = await readPart(d, c, ODF_MANIFEST_PART);
     if (!m.ok) throw refusal("DOCUMENT_UNREADABLE", why(m));
     const s = latin1(m.bytes);
-    if (/<([\w.-]+:)?encryption-data(?=[\s/>])/.test(s)) throw refusal("ENCRYPTED", "the package's manifest lists encrypted parts");
+    if (/<([\w.-]+:)?encryption-data(?=[\s/>])/.test(s)) throw refusal("ENCRYPTED", localize("doc-clean.package.the_package_s_manifest_lists_encrypted", "the package's manifest lists encrypted parts"));
     for (const t of s.matchAll(/<(?:[\w.-]+:)?file-entry(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*?)\/?>/g)) {
       const path = /\s(?:[\w.-]+:)?full-path\s*=\s*"([^"]*)"/.exec(t[1])?.[1] ?? "";
       const type = /\s(?:[\w.-]+:)?media-type\s*=\s*"([^"]*)"/.exec(t[1])?.[1] ?? "";
