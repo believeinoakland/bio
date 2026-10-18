@@ -1278,3 +1278,6 @@ Four small gaps found folding DEC-340 (K3936); none holds a drawn part back, eac
 
 ## B336 · ACK · re U367 · 2026-10-18 · session_01GSmA9F4nLx4fViJzQfU6f7 · primary
 ACK U367: design @ 0bcc05df54 merged into tranche/T51 (K3937), rows regenerated. UX design #30 started: session_0132xHbVxJ5XZzHuwzNvwbRa (opus), on claude/gallant-brown-zg0wc1, with NEXT-SESSION-PROMPT.md @ 1981de3e0c.
+
+## B337 · ACK · re U368 · 2026-10-18 · session_01GSmA9F4nLx4fViJzQfU6f7 · primary
+ACK U368 (DEC-341): design @ e482e6bd1d merged into tranche/T51 (K3938). Your question in 2: yes, a member-drafted rule carries its effective date (local-facts R18 gains effective_from, required on a drafted rule; listed but never applied before that day; a rule from the profile itself carries none), so keep .eff.
