@@ -3,7 +3,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createRegistry, BOUNDS, ownerConformance } from "../../../src/connection-grammar/index.mjs";
-import { KINDS, NODE, HUB, AT, INQUIRY, makeNeighbours, fixture } from "./fixtures/owner.mjs";
+import { validAt } from "../../../src/civil-time/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { KINDS, NODE, HUB, AT, INQUIRY, makeNeighbours, fixture, valid } from "./fixtures/owner.mjs";
 
 const withOwner = (broken) => {
   const r = createRegistry();
@@ -142,4 +144,12 @@ test("R20 R19 an owner may add unread: [{what, why}], carried unchanged; an answ
   assert.equal(ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(undefined, { unread }), fixture: fixture() }).ok, true);
   const bad = ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(undefined, { unread: [{ what: "w" }] }), fixture: fixture() });
   assert.ok(checks(bad).includes("unread"));
+});
+
+test("R6 an undetermined item not marked so breaks the at rule, its reason read by connection-grammar.reads.name_is_undetermined_at_the", () => {
+  const a = firstRefusal(withOwner("unmarked"));
+  assert.equal(a.refused, "OWNER_NONCONFORMING");
+  const why = validAt({ valid: valid("2025-01-01", null) }, AT).why;
+  assert.ok(a.failures.some((f) => f.check === "at" && f.why === localize("connection-grammar.reads.name_is_undetermined_at_the",
+    "{name} is undetermined at the date asked and is not marked undetermined: {why}", { name: "c-undetermined", why })), a.failures[0].why);
 });
