@@ -17,3 +17,12 @@ COMPLETE. Entry T51-9 applied on the reading posted in J1 (no answer yet; bundle
 - Deferred: none. Found in other modules: none.
 - Ran: file-scanner tests 68 tests, 58 pass, 0 fail, 10 skipped (clamscan and sigtool not installed here, as before); format 0 failures; architecture 0 failures; coverage file-scanner 32 of 32 ids named; ownership 4 files changed, 0 failures; checks/run.mjs: only other modules' coverage reds (agent-harness R17, agent-runner R36 R37 R38 R40, bundler R36 R37, journey-check R19, office-readers R34, pdf-reader R39, project-roster R35 R36).
 - Size (session_017CLfp2cx6WQCCmCguGYJu2): test runs 4, module lines 2777
+
+## J3 · COMPLETE
+
+COMPLETE for B3 (CR-3, layer 1 re-run, R1), commit 51324ae678 on job/T51/file-scanner.
+
+- Entries applied: CR-3. (1) `src/store.mjs`: removed `targetBytes` and `captureKey`, which had no callers in the module, its tests, or the bundle (`dist/` holds no reference to either, so the bundle is not stale). (2) `src/render.mjs`:12 comment restated: `checkOne` returns `{t, store}` or `{refusal}`, not `{ok, t, bytes}`, and copies nothing. (3) The Uses line was already corrected by BOB (`runtime-limits` `sha256hex`; `setup-words` `word`, `localize`); no change. (4) `release/` not touched.
+- Deferred: none. Found in other modules: none.
+- Ran: `node --test test/` in file-scanner: 68 tests, 58 pass, 0 fail, 10 skipped (clamscan and sigtool not installed here, as before). `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words: 0 findings in file-scanner (remaining 2821 failures are other modules' testcopy/inline words and coverage, not this module). `checks/coverage.mjs /home/user/bio file-scanner`: 32 of 32 live ids named, 0 failures. `checks/architecture.mjs`: 0 failures. `checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`: 3 files changed by file-scanner, 0 failures.
+- Size (session_01CQsZuxrAShje62YCqQbMMf): test runs 1, module lines 4430 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)
