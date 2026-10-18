@@ -283,10 +283,9 @@ const json = (obj, status = 200) =>
    OMISSION. DEC-49's reach is "every code a SURFACE can receive", which the
    guard's own header records as SMALLER than every refusal code in the plane. No
    member ever receives these codes: this Worker has no member-facing surface and
-   its only caller is the plane. The DEC-49 guard that walked the plane's codes
-   (`civicos-ui/check-refusal-codes.mjs`, deleted with the old battery in T20)
-   never walked the fleet — correct for the same reason, and why `pdf-worker`'s
-   BAD_SHA/NOT_FOUND carry no rows.
+   its only caller is the plane. DEC-49's guard has never walked the fleet —
+   correct for the same reason, and why `pdf-worker`'s BAD_SHA/NOT_FOUND carry
+   no rows.
 
    The convention is followed anyway because it costs nothing and it is what gives
    the guard teeth the day it is pointed here: a local helper taking the code in a
