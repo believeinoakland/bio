@@ -11876,9 +11876,9 @@
   },
   {
    "key": "installer.logs.undetermined",
-   "en": "Undetermined: the installer couldn't read your account's Logpush jobs (Cloudflare said: {said}), so it can't say whether one keeps a record of each request to your team's Civicsmith, which would be a log of who opened which file. To check it yourself, open Analytics & Logs in the Cloudflare dashboard, then Logpush, and look for a job over Workers Trace Events. None should cover {programs}.",
+   "en": "The installer could not look at your account's Logpush jobs (Cloudflare said: {said}), so it can't say whether one keeps a record of each request to your team's Civicsmith, which would be a log of who opened which file. To check it yourself, open Analytics & Logs in the Cloudflare dashboard, then Logpush, and look for a job over Workers Trace Events. None should cover {programs}.",
    "protected": false,
-   "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1509; {said} {programs}"
+   "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1509; {said} {programs}; B323 6: K3818: says plainly it could not look; never \"undetermined\""
   },
   {
    "key": "installer.logs.unreadable",
@@ -12152,9 +12152,9 @@
   },
   {
    "key": "installer.check.log.undetermined",
-   "en": "Whether a log on your Cloudflare account records who opens which file: undetermined. The step above says how to check it yourself.",
+   "en": "The installer could not look at whether a log on your Cloudflare account records who opens which file. The step above says how to check it yourself.",
    "protected": false,
-   "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2064"
+   "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2064; B323 6: K3818: says plainly it could not look; never \"undetermined\""
   },
   {
    "key": "installer.update.before.known",
@@ -12272,9 +12272,9 @@
   },
   {
    "key": "installer.team.unrecorded.suggest",
-   "en": "A suggestion, not a default: your team's Civicsmith was installed under the name {slug}. Your team's short name may differ from it: the name an installation is given and the name of the team producing its record need not be the same. The installer does not choose it for you: which team produces your record is yours to say.",
+   "en": "Your team's Civicsmith was installed under the name {slug}. Unless you give another, the installer records that name as your team's short name. Which team produces your record is yours to say.",
    "protected": false,
-   "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2213; {slug}"
+   "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2213; {slug}; B323 4: the installer records the name it was installed under unless a name is given (K3868, DEC-336); no longer says the name may differ"
   },
   {
    "key": "installer.image.nopermission",
@@ -12518,9 +12518,9 @@
   },
   {
    "key": "screen.question.say001",
-   "en": "Recorded with your name, for Pothole repairs alone: the question itself has not moved, and no other project is affected.",
+   "en": "Recorded with your name, for {project} alone: the question itself has not moved, and no other project is affected.",
    "protected": false,
-   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence; B325 2: {project} replaces the sample name"
   },
   {
    "key": "screen.question.say002",
@@ -12830,15 +12830,15 @@
   },
   {
    "key": "screen.question.say053",
-   "en": "Pothole repairs, the first year",
+   "en": "{title}",
    "protected": false,
-   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence; B325 2: a published case's title as its team wrote it (words people wrote, drawn as such); {title}"
   },
   {
    "key": "screen.question.say054",
-   "en": "stronger now, since the audit was cited",
+   "en": "Captured: {change}, since {source} was cited",
    "protected": false,
-   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence; B325 2: {change} the way the strength moved (such as stronger now); {source} what was cited (such as the audit)"
   },
   {
    "key": "screen.question.say055",
@@ -12866,9 +12866,9 @@
   },
   {
    "key": "screen.question.say059",
-   "en": "This is Pothole repairs' own decision about the question.",
+   "en": "This is the decision of {project} itself about the question.",
    "protected": false,
-   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence; B325 2: {project}; reworded so that the possessive of a plural name (repairs) never arises"
   },
   {
    "key": "screen.question.say060",
@@ -12914,9 +12914,9 @@
   },
   {
    "key": "screen.question.say067",
-   "en": "Its plan, Repairs: closed is not repaired",
+   "en": "Its plan, {plan}",
    "protected": false,
-   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence; B325 2: {plan} the plan's name as the team wrote it"
   },
   {
    "key": "screen.question.say068",
@@ -13064,9 +13064,9 @@
   },
   {
    "key": "screen.document.a34.section_3_reads_the_same_in_both",
-   "en": "section 3 reads the same in both",
+   "en": "section {section} reads the same in both",
    "protected": false,
-   "note": "DEC-330: B306 A34: document drawn word"
+   "note": "DEC-330: B306 A34: document drawn word; B325 2: {section} replaces the sample 3"
   },
   {
    "key": "screen.document.a34.not_checked_yet",
@@ -13531,24 +13531,6 @@
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
-   "key": "screen.published.council.minutes.12.january.2024",
-   "en": "Council minutes, {date}, item {n}: the council approved amendment {amendment} and no later change.",
-   "protected": false,
-   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
-  },
-  {
-   "key": "screen.published.the.march.2024.rent.schedule",
-   "en": "The March 2024 rent schedule, signed by the City Administrator.",
-   "protected": false,
-   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
-  },
-  {
-   "key": "screen.published.a.letter.from.the.city",
-   "en": "A letter from the City Administrator saying the council delegated rent changes.",
-   "protected": false,
-   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
-  },
-  {
    "key": "screen.published.finding.4.of.another.team",
    "en": "Finding {n} of another team's case, on the same lease.",
    "protected": false,
@@ -13569,12 +13551,6 @@
   {
    "key": "screen.published.read.each.line.from.the",
    "en": "Read each line from the document up to the finding.",
-   "protected": false,
-   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
-  },
-  {
-   "key": "screen.published.hold.leg.1.which.supports",
-   "en": "hold Leg {leg}, which supports Finding {n}",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -13646,19 +13622,19 @@
   },
   {
    "key": "screen.published.this.is.what.comes.out",
-   "en": "This is what comes out of the printer, not the page on screen: the whole case, every finding open with its sources, and the signature line at the foot.",
+   "en": "Below the acts is what comes out of the printer: the whole case, every finding open with its sources, and the signature line at the foot. This note and the two acts are on screen only; they are not printed.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
    "key": "screen.published.rests.on.the.council.minutes",
-   "en": "Rests on: the council minutes of {date}, item {n}; {document}.",
+   "en": "Rests on: {count} documents, not published with the case.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
    "key": "screen.published.cut.against.by.a.letter",
-   "en": "Cut against by: a letter from the City Administrator.",
+   "en": "Cut against by: a document, not published with the case.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -13922,9 +13898,9 @@
   },
   {
    "key": "screen.members.with.1.administrator.no.administrator",
-   "en": "With 1 administrator, no administrator can be removed by vote.",
+   "en": "With {n} administrator, no administrator can be removed by vote.",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; B325 2: {n} replaces the sample 1 (the sentence is for a team of one)"
   },
   {
    "key": "screen.members.a.majority.that.leaves.out",
@@ -15032,9 +15008,9 @@
   },
   {
    "key": "screen.project.notice.a.notice.your.team.signs",
-   "en": "A notice your team signs and publishes at its own address, saying Pothole repairs is being worked on.",
+   "en": "A notice your team signs and publishes at its own address, saying {project} is being worked on.",
    "protected": false,
-   "note": "DEC-332: B306 C6: drawn sentence"
+   "note": "DEC-332: B306 C6: drawn sentence; B325 2: {project} replaces the sample name"
   },
   {
    "key": "screen.project.notice.only.an.owner.can.do",
@@ -15146,9 +15122,9 @@
   },
   {
    "key": "screen.project.notice.the.date.is.before.the",
-   "en": "The date is before the project began, on October 3.",
+   "en": "The date is before the project began, on {date}.",
    "protected": false,
-   "note": "DEC-332: B306 C6: drawn sentence"
+   "note": "DEC-332: B306 C6: drawn sentence; B325 2: {date} (the day the project began) replaces the sample"
   },
   {
    "key": "screen.project.notice.your.teams.public.address.or",
@@ -15206,9 +15182,9 @@
   },
   {
    "key": "screen.project.notice.working.on.it.since.3",
-   "en": "Working on it since October 3, 2026",
+   "en": "Working on it since {date}",
    "protected": false,
-   "note": "DEC-332: B306 C6: drawn sentence"
+   "note": "DEC-332: B306 C6: drawn sentence; B325 2: {date} replaces the sample"
   },
   {
    "key": "screen.project.notice.anyone.can.read.this.including",
@@ -15224,9 +15200,9 @@
   },
   {
    "key": "screen.project.notice.your.team.has.two.other",
-   "en": "Your team has two other notices open and has published no case yet.",
+   "en": "Your team has {open} other notices open and has published {published} yet.",
    "protected": false,
-   "note": "DEC-332: B306 C6: drawn sentence"
+   "note": "DEC-332: B306 C6: drawn sentence; B325 2: {open} is a count in words (such as two); {published} is the cases published so far, in words (such as no case, one case, three cases)"
   },
   {
    "key": "screen.project.notice.you.can.still.publish.readers",
@@ -15272,15 +15248,15 @@
   },
   {
    "key": "screen.project.notice.as.the.teams.civicsmith.worked",
-   "en": "as the team's Civicsmith worked it out on October 17",
+   "en": "as the team's Civicsmith worked it out on {date}",
    "protected": false,
-   "note": "DEC-332: B306 C6: drawn sentence"
+   "note": "DEC-332: B306 C6: drawn sentence; B325 2: {date} replaces the sample"
   },
   {
    "key": "screen.project.notice.the.next.monthly.check.is",
-   "en": "The next monthly check is on November 1.",
+   "en": "The next monthly check is on {date}.",
    "protected": false,
-   "note": "DEC-332: B306 C6: drawn sentence"
+   "note": "DEC-332: B306 C6: drawn sentence; B325 2: {date} replaces the sample"
   },
   {
    "key": "screen.project.notice.a.notice.that.stays.dormant",
@@ -15290,9 +15266,9 @@
   },
   {
    "key": "screen.project.notice.1.case.published.from.this",
-   "en": "1 case published from this project",
+   "en": "{n} case published from this project",
    "protected": false,
-   "note": "DEC-332: B306 C6: drawn sentence"
+   "note": "DEC-332: B306 C6: drawn sentence; B325 2: {n} replaces the sample 1 (the one-case form)"
   },
   {
    "key": "screen.project.notice.anyone.can.read.this.at",
@@ -15410,9 +15386,9 @@
   },
   {
    "key": "screen.members.founder.the.count.includes.1.administrator",
-   "en": "The count includes 1 administrator the roster has no entry for.",
+   "en": "The count includes {n} administrator the roster has no entry for.",
    "protected": false,
-   "note": "DEC-332: B306 A72/B5: drawn sentence"
+   "note": "DEC-332: B306 A72/B5: drawn sentence; B325 2: {n} replaces the sample 1; the one-administrator form"
   },
   {
    "key": "screen.members.founder.the.founder.holds.the.team",
@@ -15950,9 +15926,9 @@
   },
   {
    "key": "screen.capture.openit.help",
-   "en": "Opens the document that was just captured.",
+   "en": "Opens the copy your team already holds.",
    "protected": false,
-   "note": "DEC-335: B317 item 1 capture: what Open it does"
+   "note": "DEC-335: B317 item 1 capture: what Open it does; DEC-338: B326 6: the card on the already-held row says the copy your team already holds, not one just captured"
   },
   {
    "key": "screen.capture.leaveit",
@@ -15962,7 +15938,7 @@
   },
   {
    "key": "screen.capture.leaveit.help",
-   "en": "Stays here. The capture is kept and waits in Held captures.",
+   "en": "Stays here. Nothing new is captured, and the copy your team already holds stays as it is.",
    "protected": false,
    "note": "DEC-335: B317 item 1 capture: what Leave it does"
   },
@@ -16096,19 +16072,19 @@
    "key": "screen.group-identity.seed.recorded",
    "en": "Your team's short name was recorded when Civicsmith was installed.",
    "protected": false,
-   "note": "DEC-336: B318 1: the installer records the name itself; no screen offers it"
+   "note": "DEC-336: B318 1: the installer records the name itself; no screen offers it; DEC-338: B325 1: shown only when a short name is recorded (instancegroup group is not null); otherwise .seed.unrecorded"
   },
   {
    "key": "screen.published.leg.namedonly",
-   "en": "Named only",
+   "en": "A document, not published with the case",
    "protected": false,
    "note": "DEC-336: B318 4: a document leg that rests on no published finding (public-read R39)"
   },
   {
    "key": "screen.published.leg.namedonly.explain",
-   "en": "The case names this document, but it is not published with the case, so a reader can't open it here.",
+   "en": "The case rests on a document it does not publish, so neither its name nor its contents are shown here.",
    "protected": false,
-   "note": "DEC-336: B318 4: the explanation of \"Named only\" on a document leg"
+   "note": "DEC-336: B318 4: the explanation of a document leg the case only names; DEC-338: B326 4 (screens-publish R37, R39)"
   },
   {
    "key": "screen.document.fingerprint.setonly",
@@ -16487,6 +16463,438 @@
    "en": "This question holds no reading by that name, so nothing was compared. Choose two of this question's own readings.",
    "protected": false,
    "note": "DEC-337: B321, basis-versions R55 compareVersions; shown where question compares two readings (A40)"
+  },
+  {
+   "key": "screen.person.ties.none.ordinance",
+   "en": "None yet. A tie between this ordinance and another subject the record follows goes here, with why and where it is said.",
+   "protected": false,
+   "note": "DEC-338: B326 1: an ordinance's page, under Ties a member declared (entity.relation.title); the act is relationdeclare"
+  },
+  {
+   "key": "screen.person.ties.none.office",
+   "en": "None yet. A tie between this office and another subject the record follows goes here, with why and where it is said.",
+   "protected": false,
+   "note": "DEC-338: B326 1: an office's page, under Ties a member declared; the act is relationdeclare"
+  },
+  {
+   "key": "screen.question.compare.captured.explain",
+   "en": "How well the documents were captured, today against when the case published.",
+   "protected": false,
+   "note": "DEC-338: B326 2: the line \"Captured: ...\" in the case list, one verdict for this axis"
+  },
+  {
+   "key": "screen.question.compare.connected.explain",
+   "en": "How firmly the documents connect to this question, today against when the case published.",
+   "protected": false,
+   "note": "DEC-338: B326 2: the line \"Connected: ...\" in the case list, one verdict for this axis"
+  },
+  {
+   "key": "screen.published.falsifier.override.summary",
+   "en": "When the finding states nothing that would overturn it",
+   "protected": false,
+   "note": "DEC-338: B326 3 (screens-publish R37): the variant for a falsifier_override"
+  },
+  {
+   "key": "screen.published.falsifier.override",
+   "en": "No falsifier is stated. {member} chose to publish without one, on {date}.",
+   "protected": false,
+   "note": "DEC-338: B326 3: who set the override and when, as signed; never composed"
+  },
+  {
+   "key": "screen.published.falsifier.override.explain",
+   "en": "A finding is normally published with what would overturn it. A member may publish without one, and the signed finding then records who chose that and when.",
+   "protected": false,
+   "note": "DEC-338: B326 3: what the override means"
+  },
+  {
+   "key": "screen.published.leg.grade.explain",
+   "en": "Beside each leg is the grade the case gives it, on the scale that fits what it rests on.",
+   "protected": false,
+   "note": "DEC-338: B326 3: the grade drawn on each leg (grade, grade_axis), added to the legs explanation"
+  },
+  {
+   "key": "screen.group-identity.seed.unrecorded",
+   "en": "Your team's short name is not recorded yet. Run the installer again: it asks for it once and records it.",
+   "protected": false,
+   "note": "DEC-338: B325 1: an older installation (instancegroup group: null) has recorded no short name; drawn instead of .seed.recorded"
+  },
+  {
+   "key": "screen.published.sources.nonepublished",
+   "en": "Sources: none published with this case. It rests on {count} documents it does not publish, so they are not listed.",
+   "protected": false,
+   "note": "DEC-338: B326 4 (R39): the print lists no source the case does not publish"
+  },
+  {
+   "key": "screen.members.founder.the.count.includes.n.administrators",
+   "en": "The count includes {n} administrators the roster has no entry for.",
+   "protected": false,
+   "note": "DEC-338: B325 2: the form for two or more; {n}"
+  },
+  {
+   "key": "screen.project.notice.cases.published.from.this",
+   "en": "{n} cases published from this project",
+   "protected": false,
+   "note": "DEC-338: B325 2: the form for two or more cases; {n}"
+  },
+  {
+   "key": "screen.question.say000.bymember",
+   "en": "Deferred for {project} by {member}, {date}.",
+   "protected": false,
+   "note": "DEC-338: B325 2: another member's decision, beside say000 (by you)"
+  },
+  {
+   "key": "screen.question.say008.bymember",
+   "en": "Dismissed for {project} by {member}, {date}.",
+   "protected": false,
+   "note": "DEC-338: B325 2: another member's decision, beside say008 (by you)"
+  },
+  {
+   "key": "queue.aside.dismissed.bymember",
+   "en": "Dismissed by {member}, {date}",
+   "protected": false,
+   "note": "DEC-338: B325 2: another member's decision, beside queue.aside.dismissed (by you)"
+  },
+  {
+   "key": "queue.aside.deferred.bymember",
+   "en": "Deferred by {member} until {date}",
+   "protected": false,
+   "note": "DEC-338: B325 2: another member's decision, beside queue.aside.deferred (by you)"
+  },
+  {
+   "key": "queue.answered.forwarded",
+   "en": "Forwarded {item} to {member}",
+   "protected": false,
+   "note": "DEC-338: B325 2: an answered row: what was forwarded (words people wrote, as the item names it) and to whom"
+  },
+  {
+   "key": "queue.answered.snoozed",
+   "en": "Snoozed {item} to {date}",
+   "protected": false,
+   "note": "DEC-338: B325 2: an answered row: what was snoozed (as the item names it) and the day it comes back"
+  },
+  {
+   "key": "queue.allclear.failed.feed",
+   "en": "“{feed}” did not answer.",
+   "protected": false,
+   "note": "DEC-338: B325 2: any feed other than the documents your team watches (queue.allclear.failed): {feed} is the feed's name, queue.feed.<id>"
+  },
+  {
+   "key": "queue.multi.result.one",
+   "en": "You acted on 1 item. Done and out of your queue: {done}. Not handled, still here: {kept}.",
+   "protected": false,
+   "note": "DEC-338: B325 2: the one-item form of queue.multi.result"
+  },
+  {
+   "key": "screen.document.fingerprints.head",
+   "en": "Fingerprints",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: heading of the section"
+  },
+  {
+   "key": "screen.document.revisions.compare",
+   "en": "Compare",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: the first of the two revision pickers"
+  },
+  {
+   "key": "screen.document.revisions.with",
+   "en": "With",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: the second revision picker"
+  },
+  {
+   "key": "screen.document.revisions.compare.act",
+   "en": "Compare these two",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: the button"
+  },
+  {
+   "key": "screen.document.revision.title",
+   "en": "Revision {n}",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: a revision's heading; {n}"
+  },
+  {
+   "key": "screen.document.links.group.inside",
+   "en": "Inside this document · {n}",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: link group; {n} links"
+  },
+  {
+   "key": "screen.document.links.group.beside",
+   "en": "Beside it · {n}",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: link group; {n} links"
+  },
+  {
+   "key": "screen.document.links.group.held",
+   "en": "Held by the team · {n}",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: link group; {n} links"
+  },
+  {
+   "key": "screen.document.links.group.outside",
+   "en": "Outside the record · {n}",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: link group; {n} links"
+  },
+  {
+   "key": "screen.document.links.group.refused",
+   "en": "Refused when captured · {n}",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: link group; {n} links"
+  },
+  {
+   "key": "screen.document.links.verdict.final",
+   "en": "Final",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: a link verdict: a pointer into this very copy"
+  },
+  {
+   "key": "screen.document.links.verdict.checked",
+   "en": "Checked here",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: a link verdict: captured with the page and checked against its fingerprint"
+  },
+  {
+   "key": "screen.document.links.verdict.same",
+   "en": "Same version",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: a link verdict: the team holds the copy the page pointed at"
+  },
+  {
+   "key": "screen.document.links.verdict.different",
+   "en": "Different version",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: a link verdict: the team holds another version than the one the page pointed at"
+  },
+  {
+   "key": "screen.document.links.verdict.notestablished",
+   "en": "Not established",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: a link verdict: the record cannot say either way"
+  },
+  {
+   "key": "screen.document.links.verdict.nocapture",
+   "en": "No capture held",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: a link verdict: an outside link the team holds no capture of"
+  },
+  {
+   "key": "screen.document.links.verdict.refused",
+   "en": "Refused",
+   "protected": false,
+   "note": "DEC-338: B325 2: the document page's label, drawn literal: a link verdict: an address the record will not carry"
+  },
+  {
+   "key": "installer.profiles.refused.update",
+   "en": "An update never changes which jurisdiction profiles your team's Civicsmith reads; an administrator changes them in its settings, under Places and offices.",
+   "protected": false,
+   "note": "DEC-338: B323 1: newgroup/src/index.mjs:643"
+  },
+  {
+   "key": "installer.profiles.refused.notalist",
+   "en": "The jurisdiction profiles must be a list of the profiles offered.",
+   "protected": false,
+   "note": "DEC-338: B323 1: newgroup/src/index.mjs:644"
+  },
+  {
+   "key": "installer.profiles.refused.unknown",
+   "en": "Not a jurisdiction profile this installer offers: {list}.",
+   "protected": false,
+   "note": "DEC-338: B323 1: newgroup/src/index.mjs:646; {list} the values sent, each in quotation marks, joined by commas"
+  },
+  {
+   "key": "installer.profiles.refused.twice",
+   "en": "A jurisdiction profile was chosen twice.",
+   "protected": false,
+   "note": "DEC-338: B323 1: newgroup/src/index.mjs:647"
+  },
+  {
+   "key": "installer.need.heading",
+   "en": "What you need",
+   "protected": false,
+   "note": "DEC-338: B323 2: newgroup/src/ui.mjs:220"
+  },
+  {
+   "key": "installer.need.time",
+   "en": "About twenty minutes, at a computer.",
+   "protected": false,
+   "note": "DEC-338: B323 2: newgroup/src/ui.mjs:226"
+  },
+  {
+   "key": "installer.success.otp",
+   "en": "One-time password",
+   "protected": false,
+   "note": "DEC-338: B323 3: newgroup/src/index.mjs:2146, the row label"
+  },
+  {
+   "key": "installer.success.copy",
+   "en": "Copy",
+   "protected": false,
+   "note": "DEC-338: B323 3: newgroup/src/index.mjs:2146 and 2147, the button beside each value"
+  },
+  {
+   "key": "installer.step.record",
+   "en": "Recording your team's short name",
+   "protected": false,
+   "note": "DEC-338: B323 4: DEC-336 (K3868): the progress step in which the installer records the short name itself, after the address answers"
+  },
+  {
+   "key": "installer.step.record.done",
+   "en": "Recorded your team's short name: {slug}",
+   "protected": false,
+   "note": "DEC-338: B323 4: DEC-336: the step's success line; {slug} the name recorded"
+  },
+  {
+   "key": "installer.step.record.refused",
+   "en": "Your team's Civicsmith did not record the short name {slug} (it said: {said}). Everything else is in place. Run the installer again to record it.",
+   "protected": false,
+   "note": "DEC-338: B323 4: DEC-336: the step's refusal line; {slug} {said}"
+  },
+  {
+   "key": "installer.invite.title",
+   "en": "Start your team's own Civicsmith",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the page title and heading; the page also reads public-read.free_software_groups, public-read.neighborhood_issue_groups and installer.publisher"
+  },
+  {
+   "key": "installer.invite.lede1",
+   "en": "Every capture is signed, every change kept, nothing quietly rewritten.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the lead paragraph, first sentence"
+  },
+  {
+   "key": "installer.invite.lede2",
+   "en": "Your team can run its own Civicsmith for the government it watches, the agency it holds to account, the fight it is in.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the lead paragraph, second sentence"
+  },
+  {
+   "key": "installer.invite.lede3",
+   "en": "Not an account on someone else's servers: your team's own, in your own infrastructure, from the first second.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the lead paragraph, third sentence"
+  },
+  {
+   "key": "installer.invite.get.head",
+   "en": "What you get",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): heading"
+  },
+  {
+   "key": "installer.invite.get.own",
+   "en": "Your team's own Civicsmith, running in your own Cloudflare account, at your own web address.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item"
+  },
+  {
+   "key": "installer.invite.get.control",
+   "en": "Full control: your passwords, your credentials, your data. No one else, the publisher of Civicsmith releases included, holds a key to any of it or can see inside it.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item"
+  },
+  {
+   "key": "installer.invite.get.history",
+   "en": "A history that is only ever added to, so what your team has established can be shown and cannot be silently altered, by anyone, including you.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item"
+  },
+  {
+   "key": "installer.invite.needs.head",
+   "en": "What it needs, honestly",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): heading"
+  },
+  {
+   "key": "installer.invite.needs.cloudflare",
+   "en": "A Cloudflare account. An email address and a couple of minutes. {link} if you do not have one.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item; the words up to the first period are bold; {link} = installer.invite.needs.cloudflare.link, a link to Cloudflare's sign-up"
+  },
+  {
+   "key": "installer.invite.needs.cloudflare.link",
+   "en": "Create one here",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the link"
+  },
+  {
+   "key": "installer.invite.needs.plan",
+   "en": "The Workers Paid plan, $5 a month from Cloudflare. Your team's Civicsmith reads documents and assembles evidence, and the free plan's processing allowance is too small for that work.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item; the words up to the first comma are bold"
+  },
+  {
+   "key": "installer.invite.needs.payment",
+   "en": "A payment method on the account. Cloudflare requires one before it turns on the file storage your team's Civicsmith keeps its evidence in. The installer checks for the plan and the storage before it creates anything, and stops, saying which is missing, if either is.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item; the first sentence is bold"
+  },
+  {
+   "key": "installer.invite.needs.containers",
+   "en": "The Workers Containers permission, which the setup asks for. It installs the built-in file scanner and safe view: without it, files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made. Everything else installs either way.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item; the words up to the first comma are bold"
+  },
+  {
+   "key": "installer.invite.needs.assistant",
+   "en": "For the assistant, a Claude plan with cloud sessions, which an organization can turn off. The assistant is optional, and the installer takes no Claude credential of any kind.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item; the words up to the second comma are bold"
+  },
+  {
+   "key": "installer.invite.needs.time",
+   "en": "About twenty minutes, in a browser. No terminal, no code, nothing to download.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): list item; the words up to the first comma are bold"
+  },
+  {
+   "key": "installer.invite.happens.head",
+   "en": "What happens, and what we can and cannot see",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): heading"
+  },
+  {
+   "key": "installer.invite.happens.permission",
+   "en": "The installer asks Cloudflare to show you a permission screen naming exactly what it may do in your account: install the software, set up its storage, and set up the containers for the file scanner and safe view. You approve it on Cloudflare's own page, and you can revoke it any time from your dashboard.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): paragraph"
+  },
+  {
+   "key": "installer.invite.happens.passes",
+   "en": "That permission passes through the installer for the seconds the installation takes, is stored nowhere, and is never seen by a person. After setup, nothing your team does routes through the installer, or its publisher, at all.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): paragraph"
+  },
+  {
+   "key": "installer.invite.manual",
+   "en": "Prefer that nothing pass through the installer even once? The manual path is documented and permanently supported, using only the Cloudflare dashboard. It exists so your team could stand its Civicsmith up even if the publisher of Civicsmith releases disappeared tomorrow. Find it in the project documentation.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): small paragraph"
+  },
+  {
+   "key": "installer.invite.before.lead",
+   "en": "One thing before you press the button.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the bold opening of the boxed note"
+  },
+  {
+   "key": "installer.invite.before",
+   "en": "It takes you to {address}. That is the Civicsmith installer, run by the publisher of Civicsmith releases on Cloudflare's worker platform, which is why the address ends the way it does. You will see the name in your address bar the whole time. We send you there with a button rather than a silent redirect, so you always know where you are.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the boxed note; {address} the installer's address, shown as code"
+  },
+  {
+   "key": "installer.invite.button",
+   "en": "Set up my team's Civicsmith",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the button"
+  },
+  {
+   "key": "installer.invite.update",
+   "en": "Already running your team's Civicsmith and want the latest software? That is a separate page: {address}. Updates never touch your passwords or your record.",
+   "protected": false,
+   "note": "DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): small paragraph; {address} the update page's address, shown as code"
   }
  ],
  "rewrite": {

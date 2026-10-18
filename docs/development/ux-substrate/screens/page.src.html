@@ -335,6 +335,8 @@ button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; 
 .mk-tray { border: 1px dotted var(--c-machine); background: var(--c-machine-tint); padding: 10px; display: grid; gap: 8px; }
 .mk-checks2 { background: var(--c-surface); border: var(--hair); border-left: 3px solid var(--c-ink); padding: 8px 12px; font-size: var(--t-sm); display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
 .mk-sortrow { font-size: var(--t-sm); gap: 6px; display: flex; }
+.mk-screenonly { display: grid; gap: var(--s-3); padding: var(--s-3); border: 1px dashed currentColor; border-radius: 4px; }
+@media print { .mk-screenonly { display: none; } }
 .mk-pubtitle h1 { font: 600 var(--t-3xl)/1.15 var(--f-serif); margin: 0; }
 .mk-pubtitle p { color: var(--c-ink-2); margin: 4px 0 0; }
 .mk-explain { background: var(--c-surface); border: var(--hair); padding: 10px 12px; font-size: var(--t-sm); margin: 0; }
