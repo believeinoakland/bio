@@ -688,17 +688,16 @@ export class Review {
        the draft (every grant here is this draft's, so live is unrevoked, not lapsed (R34: each states its `until`) and bound to the identity it stands at now). A
        grant bound to no case was given at (NULL, 1) for a draft either new or derived, and the row does not record
        which: a live one states the draft's own stated edition, a dead one null (D-568). */
+    const zone = this.#zone();
     let grantPart;
     if (grant) {
       grantPart = { grant: { grant_id: grant.grant_id, recipient: grant.recipient, issued_by: grant.issued_by,
-                             issued_at: grant.issued_at, until: grant.until ?? null,
-                             zone: this.#zone() } };
+                             issued_at: grant.issued_at, until: grant.until ?? null, zone } };
     } else {
       const lapseAt = this.#when();
       const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,
                                            revoked_by, revoked_at, until FROM review_grants WHERE draft_id=?
                                     ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, cap + 1);
-      const zone = this.#zone();
       const grants = grantRows.slice(0, cap).map((g) => {
         const live = !g.revoked_at && !this.#lapsed(g.until, lapseAt)
                      && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition;
@@ -736,6 +735,10 @@ export class Review {
       signature: { signed: false, detail: "a review copy is never signed. A signature is given only over a case "
                                         + "document at publication (op=caseratify)." },
       draft: d.draft_id, project: d.project_id, reader,
+      /* R35 (N1229, K3765): the member door also answers the governing zone at the top level, with or without a grant,
+         so a draft's first share reads it before the member chooses an end day. The recipient door's copy keeps it in
+         its grant part alone. */
+      ...(reader === "member" ? { zone } : {}),
       /* REC-199: `newCase` IS SAID BACK, beside the case it is the other half of one choice with, as the gates read it
          (a boolean), because a read that drops a field an edit writes back loses it. */
       case: { case_id: ident.caseId, edition: statedEdition(ident, !!params.newCase),
