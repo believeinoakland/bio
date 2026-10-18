@@ -9,3 +9,7 @@
 - **Deferred:** none. **Found in other modules:** none. The requirements file still marks R34 "not yet met: T51"; that line is BOB's to change.
 - **Ran:** `node --test bio-plane/test/m/office-readers/` 108 pass, 0 fail; format 0 failures; architecture 0 failures; coverage 34 of 34 ids named, 0 failures; ownership 0 failures.
 - Size (session_01QsLuHE3aQNFW5i1HvNqNBC): test runs 2, module lines 3819
+
+## J1 · COMPLETE
+
+T51-6 applied: R34 met (docx and pptx metadata.title; no key when absent/empty/blank). 108 tests pass; format, architecture, coverage, ownership 0 failures. See record.
