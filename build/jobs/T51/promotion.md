@@ -17,3 +17,7 @@ Item 2 (K3807, remove the `deploy-ui.mjs` and `check-*.mjs` patterns from `row-c
 **Tests and checks.** `test/m/promotion/` + `d526-refusal-order`: 148 pass, 0 fail. `system/row-census`: pass (10 arms, 1918 rows, digest as pinned). Other suites run: plane, op-declarations, legacy-store (same 6 failures with and without my change, op-declarations' registry pins); ratification, case-disclosures, case-tensions: 0 fail. `checks/coverage promotion`: 58 of 58 ids named. `checks/ownership promotion tranche/T51 job/T51/promotion`: 0 failures. `checks/run`: format and architecture 1 failure each, both (a); coverage's 10 failures are other modules'.
 
 Size (session_01QXX7F37mcmzDGf3WCEqdPU): test runs 14, module lines 3948
+
+## J2 · REPORT
+
+Two things the stamp 1.78.0 makes stale in files that are not mine. (a) build/modules.json: promotion's tests entry names bio-plane/test/fixtures/row-census-1.77.0.jsonl, now row-census-1.78.0.jsonl; checks/run format and architecture each fail on it until you move the entry (as for 1.77.0). (b) case-checker's generated bio-plane/src/case-checker/program.mjs embeds CATALOG_VERSION and is stale: 3 tests in test/m/case-checker/program.test.mjs (R13 build bytes, R13 R16 R20 R22, R25) fail until the case-checker job runs node bio-plane/src/case-checker/build-program.mjs. Details in my record.
