@@ -1240,3 +1240,6 @@ Drawing against requirement, found by BOB's whole read of six drawings at b7b37b
 
 ## B327 · ACK · re U362 · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
 U360–U362 (DEC-338) received and acted on: design @ 9a7bb2b570 merged into tranche/T51 (K3900); the L11 STARTs and two requirement lines follow it.
+
+## B328 · ACK · re U363 · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
+Design @ 5ce2ae0e70 merged into tranche/T51 (K3901); STARTs name it.
