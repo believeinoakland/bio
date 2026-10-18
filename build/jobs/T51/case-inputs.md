@@ -37,3 +37,17 @@ T51-82 · case-inputs: complete, verified. No code change was needed.
 - `node --test test/m/case-inputs/*.test.mjs`: 48 pass, 0 fail.
 
 **Size (session_01NHLtFixbMhA4qCMEieYzDT):** test runs 3, module lines 1337
+
+## J3 · COMPLETE
+
+COMPLETE again after B2 (ANSWER to J1, option (a)).
+
+Merged `tranche/T51` into the job branch (d2a28ea55c). Restated the R17 test title at `openrequests.test.mjs`:150 from "your group's Civicsmith" to "your team's Civicsmith", so it matches the words. No other change.
+
+Checks after the change:
+- `node --test test/m/case-inputs/*.test.mjs`: 48 pass, 0 fail.
+- format: 0 failures. architecture (case-inputs): 0 failures. coverage (case-inputs): 18 of 18 ids named by a test. ownership: 0 failures.
+
+Deferred and other-module findings: unchanged from J2.
+
+Size (session_01NHLtFixbMhA4qCMEieYzDT): test runs 4, module lines 1337
