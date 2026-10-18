@@ -54,6 +54,9 @@ const samples = (note, extra = {}) => new JpxRefusal("UNSUPPORTED_SAMPLES", { no
 const corrupt = (note, extra = {}) => new JpxRefusal("CORRUPT", { note, ...extra });
 const truncated = (note, extra = {}) => new JpxRefusal("TRUNCATED", { note, ...extra });
 
+/** The `feature` of the memory refusal: an identifier read by code (pdf-pixels maps it), never localized. */
+export const MEMORY_FEATURE = "image-past-memory-bound";
+
 /** Every `feature` an UNSUPPORTED refusal can carry. */
 export const JPX_REFUSES = Object.freeze({
   "high-throughput coding": localize("image-codecs.jpxdecode.the_codestream_uses_part_15", "the codestream uses Part 15 (HTJ2K) block coding"),
@@ -61,7 +64,7 @@ export const JPX_REFUSES = Object.freeze({
   "sYCC colour": localize("image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined"),
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  [localize("image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound")]: localize("image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"),
+  [MEMORY_FEATURE]: localize("image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"),
 });
 
 /* THE MEMORY BOUND (N34), a workload size and never a share of 128 MB (D-312).
@@ -942,7 +945,7 @@ export function decodeJpx(d) {
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
   const need = workingSet(cs, nTiles);
   if (need > MEMORY_BOUND) {
-    throw unsupported(localize("image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound"), { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: nc });
+    throw unsupported(MEMORY_FEATURE, { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: nc });
   }
   if (cs.tiles.size < nTiles) throw truncated(localize("image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", { size: String(cs.tiles.size), nTiles: String(nTiles) }));
   let out = null;
