@@ -318,15 +318,6 @@
      "modules": [
       "instance-setup"
      ]
-    },
-    {
-     "op": "instancegroupseed",
-     "label": "Record your team's short name",
-     "status": "declared",
-     "modules": [
-      "installer",
-      "instance-setup"
-     ]
     }
    ],
    "journeys": [

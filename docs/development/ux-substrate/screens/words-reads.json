@@ -5071,7 +5071,6 @@
     "act.inquiryground.does",
     "act.inquiryground.name",
     "act.instance.does",
-    "act.instancegroupseed.does",
     "act.invitelook.does",
     "act.invitewithdraw.does",
     "act.itemtakeup.does",
@@ -5450,14 +5449,14 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 550,
+    "reads": 549,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 43,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 410,
+    "computedKeys": 409,
     "actHelp": 344,
     "vocabulary": 120
    },
@@ -6268,7 +6267,6 @@
     "act.infractiondraft.does",
     "act.inquiryground.does",
     "act.instance.does",
-    "act.instancegroupseed.does",
     "act.invitelook.does",
     "act.invitewithdraw.does",
     "act.itemtakeup.does",
@@ -7004,14 +7002,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 900,
+    "reads": 899,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 360,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 540
+    "computedKeys": 539
    },
    "unkeyed": []
   },
@@ -7174,7 +7172,6 @@
     "act.infractiondraft.does",
     "act.inquiryground.does",
     "act.instance.does",
-    "act.instancegroupseed.does",
     "act.invitelook.does",
     "act.invitewithdraw.does",
     "act.itemtakeup.does",
@@ -7531,11 +7528,14 @@
     "find.query.placeholder",
     "find.row.kind.action",
     "find.row.kind.document",
+    "find.row.kind.ordinance",
     "find.row.kind.organization",
     "find.row.kind.passage",
     "find.row.kind.person",
+    "find.row.kind.place",
     "find.row.kind.plan",
     "find.row.kind.question",
+    "find.row.kind.source",
     "find.row.new",
     "find.row.secondlook",
     "find.row.unwatch",
@@ -8048,14 +8048,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 1029,
+    "reads": 1031,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 422,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 607
+    "computedKeys": 609
    },
    "unkeyed": [
     {
@@ -8229,7 +8229,6 @@
     "act.infractiondraft.does",
     "act.inquiryground.does",
     "act.instance.does",
-    "act.instancegroupseed.does",
     "act.invitelook.does",
     "act.invitelook.label.join",
     "act.invitewithdraw.does",
@@ -8770,14 +8769,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 694,
+    "reads": 693,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 113,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 581
+    "computedKeys": 580
    },
    "unkeyed": [],
    "retired": [
@@ -11305,7 +11304,6 @@
     "act.infractiondraft.does",
     "act.inquiryground.does",
     "act.instance.does",
-    "act.instancegroupseed.does",
     "act.invitelook.does",
     "act.invitewithdraw.does",
     "act.invitewithdraw.label.members",
@@ -12440,14 +12438,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1311,
+    "reads": 1310,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 1182,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 129
+    "computedKeys": 128
    },
    "unkeyed": []
   },

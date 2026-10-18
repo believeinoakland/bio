@@ -35,7 +35,6 @@ const ACT_HELP = {
   owed_updateskip: 'Says your team will not install this release, with your reason kept on the record for every administrator to see. The next release is offered as usual.',
   securitytooladd: 'Adds a security tool your organization uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.',
   memberadd: 'Creates an invitation for one person, under the cover the team knows them by. Nothing about them is public.',
-  instancegroupseed: 'Records, once, which team produces this Civicsmith\'s record, by the team\'s short name. An installation that held a record before it knew its team asks for this once; it cannot be changed after.',
   groupdescriptionset: 'Saves what your team is, what it focuses on and why, and who may see each part: members only, or also the public.',
   groupdescriptiondraft: 'Asks the assistant for a draft of your team\'s description, labeled as its draft. Nothing is saved until you keep it.',
   invitelook: 'Shows who invited you, to which team, and what joining means, before you decide.',

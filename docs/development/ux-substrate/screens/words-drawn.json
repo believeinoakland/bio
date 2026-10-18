@@ -12260,9 +12260,9 @@
   },
   {
    "key": "installer.team.unrecorded.how",
-   "en": "To record it, sign in to your team's Civicsmith as an administrator and open Settings › Who your team is: it asks for your team's short name once.",
+   "en": "To record it, run the installer again: it asks for your team's short name once and records it.",
    "protected": false,
-   "note": "DEC-331: replaces the technical request the source states (newgroup/src/index.mjs:2205); the control is drawn on group-identity"
+   "note": "DEC-331: replaces the technical request the source states (newgroup/src/index.mjs:2205); the installer records it (K3868; DEC-336)"
   },
   {
    "key": "installer.team.unrecorded.address",
@@ -12272,7 +12272,7 @@
   },
   {
    "key": "installer.team.unrecorded.suggest",
-   "en": "A suggestion, not a default: your team's Civicsmith was installed under the name {slug}. Your team's short name may differ from it: the name an installation is given and the name of the team producing its record need not be the same. The installer does not record it for you: which team produces your record is yours to say.",
+   "en": "A suggestion, not a default: your team's Civicsmith was installed under the name {slug}. Your team's short name may differ from it: the name an installation is given and the name of the team producing its record need not be the same. The installer does not choose it for you: which team produces your record is yours to say.",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2213; {slug}"
   },
@@ -12287,30 +12287,6 @@
    "en": "{part} is left out: the installer couldn't confirm that the permission you approved includes Workers Containers. (Cloudflare said: {said})",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1014; {part} {said}"
-  },
-  {
-   "key": "screen.group-identity.seed.heading",
-   "en": "Which team produces this record",
-   "protected": false,
-   "note": "DEC-331: group-identity, an older installation that does not yet know its team (instancegroupseed)"
-  },
-  {
-   "key": "screen.group-identity.seed.note",
-   "en": "This Civicsmith held a record before it was told which team produces it. Until you record it, it refuses what must name its team: testimony, the setup page's saves, and a new document that names none. Nothing already in your record changes.",
-   "protected": false,
-   "note": "DEC-331"
-  },
-  {
-   "key": "screen.group-identity.seed.field",
-   "en": "Your team's short name",
-   "protected": false,
-   "note": "DEC-331"
-  },
-  {
-   "key": "screen.group-identity.seed.help",
-   "en": "The first part of your team's address, before the first dot. It was installed under the name “{slug}”; your team's short name may differ. It is recorded once and cannot be changed.",
-   "protected": false,
-   "note": "DEC-331: {slug} the installed name"
   },
   {
    "key": "queue.multi.head",
@@ -13561,12 +13537,6 @@
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
-   "key": "screen.published.held.for.you.to.read",
-   "en": "Held for you to read and check: capture {grade}.",
-   "protected": false,
-   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
-  },
-  {
    "key": "screen.published.the.march.2024.rent.schedule",
    "en": "The March 2024 rent schedule, signed by the City Administrator.",
    "protected": false,
@@ -13579,12 +13549,6 @@
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
   {
-   "key": "screen.published.held.for.you.to.read_",
-   "en": "Held for you to read and check: capture {grade}.",
-   "protected": false,
-   "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
-  },
-  {
    "key": "screen.published.finding.4.of.another.team",
    "en": "Finding {n} of another team's case, on the same lease.",
    "protected": false,
@@ -13592,7 +13556,7 @@
   },
   {
    "key": "screen.published.named.only.its.documents.are",
-   "en": "Named only: its documents are not held here.",
+   "en": "Served with its own published case; its documents are not held here.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -13748,7 +13712,7 @@
   },
   {
    "key": "screen.published.a.leg.the.team.holds.explain",
-   "en": "A leg the team holds can be read and checked here; one it only cites is named, and nothing of it is handed over.",
+   "en": "A leg that rests on a published finding is served with the case; a document the case only names is not published with it, and nothing of it is handed over.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -14666,7 +14630,7 @@
   },
   {
    "key": "screen.glossary.intro",
-   "en": "A term underlined with dots in the record explains itself when you rest on it or tap it. This page lists them all.",
+   "en": "A term underlined with dots in the record explains itself when you rest on it, and opens this page when you choose it. This page lists them all.",
    "protected": false,
    "note": "DEC-330: B306 A11: the Glossary"
   },
@@ -14817,12 +14781,6 @@
   {
    "key": "screen.person.cited",
    "en": "Where the record cites it",
-   "protected": false,
-   "note": "DEC-330: B306 A50: Person, state d (an ordinance)"
-  },
-  {
-   "key": "screen.person.says.it",
-   "en": "What the record says about it",
    "protected": false,
    "note": "DEC-330: B306 A50: Person, state d (an ordinance)"
   },
@@ -16133,6 +16091,384 @@
    "en": "Hides each chosen item, and the other items in the same case, until the date you choose. They come back that day.",
    "protected": false,
    "note": "DEC-335: B317 item 5b: snooze is per case"
+  },
+  {
+   "key": "screen.group-identity.seed.recorded",
+   "en": "Your team's short name was recorded when Civicsmith was installed.",
+   "protected": false,
+   "note": "DEC-336: B318 1: the installer records the name itself; no screen offers it"
+  },
+  {
+   "key": "screen.published.leg.namedonly",
+   "en": "Named only",
+   "protected": false,
+   "note": "DEC-336: B318 4: a document leg that rests on no published finding (public-read R39)"
+  },
+  {
+   "key": "screen.published.leg.namedonly.explain",
+   "en": "The case names this document, but it is not published with the case, so a reader can't open it here.",
+   "protected": false,
+   "note": "DEC-336: B318 4: the explanation of \"Named only\" on a document leg"
+  },
+  {
+   "key": "screen.document.fingerprint.setonly",
+   "en": "A copy that is a single file has only the first fingerprint; the second is for a set of files, such as this page with the map captured beside it.",
+   "protected": false,
+   "note": "DEC-336: B318 5 (A26): one fingerprint for a single file; the second only for a set"
+  },
+  {
+   "key": "state.item.deferred.name",
+   "en": "Deferred",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.deferred.means",
+   "en": "Put off by a member of this project, with a reason, to come back to later.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.deferred.can",
+   "en": "You can read it and the reason, and reopen it.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.deferred.cannot",
+   "en": "You cannot conclude or publish it until it is reopened.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.dismissed.name",
+   "en": "Dismissed",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.dismissed.means",
+   "en": "Set aside by a member of this project, with a reason, as not worth pursuing. Nothing is deleted.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.dismissed.can",
+   "en": "You can read it and the reason, and reopen it.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.dismissed.cannot",
+   "en": "You cannot conclude or publish it until it is reopened.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.divided.name",
+   "en": "Divided",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.divided.means",
+   "en": "Split into smaller questions that carry it on. Its own record is closed.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.divided.can",
+   "en": "You can read it and follow the questions it was divided into.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.divided.cannot",
+   "en": "You cannot change it: the questions it was divided into carry the work.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of a question, and the Glossary"
+  },
+  {
+   "key": "state.item.planned.name",
+   "en": "Planned",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.planned.means",
+   "en": "Decided on, but not yet under way.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.planned.can",
+   "en": "You can move it on or abandon it, each with a reason.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.active.name",
+   "en": "Active",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.active.means",
+   "en": "Under way: it has been sent or begun, and its dates are running.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.active.can",
+   "en": "You can record what came back and move it on, each with a reason. Resolving it also says how it ended.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.resolved.name",
+   "en": "Resolved",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.resolved.means",
+   "en": "Finished, with the way it ended.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.resolved.can",
+   "en": "You can read it and how it ended.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.resolved.cannot",
+   "en": "You cannot move it on: it is the end of the action.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.abandoned.name",
+   "en": "Abandoned",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.abandoned.means",
+   "en": "Stopped by a member, with a reason, before it ended.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.abandoned.can",
+   "en": "You can read it and the reason.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.item.abandoned.cannot",
+   "en": "You cannot move it on: it is the end of the action.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the state chip of an action, and the Glossary"
+  },
+  {
+   "key": "state.plan.open.means",
+   "en": "The plan is under way: what it set running is running, and its checkpoints fall due on their dates.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the plan chip; the name is screen.plan.state.open"
+  },
+  {
+   "key": "state.plan.open.can",
+   "en": "You can start its options, record what happened, pause it or close it.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the plan chip"
+  },
+  {
+   "key": "state.plan.paused.means",
+   "en": "The plan is paused: what it set running continues, and its own checkpoints are not due until it is resumed.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the plan chip; the name is screen.plan.state.paused (action-plans R40)"
+  },
+  {
+   "key": "state.plan.paused.can",
+   "en": "Every act stays open to members. You can resume it with a reason.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the plan chip"
+  },
+  {
+   "key": "state.plan.closed.means",
+   "en": "The plan is finished and kept as it was.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the plan chip; the name is screen.plan.state.closed"
+  },
+  {
+   "key": "state.plan.closed.can",
+   "en": "You can read it and what each option became.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the plan chip"
+  },
+  {
+   "key": "queue.multi.done",
+   "en": "Mark them done",
+   "protected": false,
+   "note": "DEC-336: B318 9: the act on a chosen set; its explanation is queue.multi.done.help"
+  },
+  {
+   "key": "queue.multi.chosen",
+   "en": "{n} items chosen",
+   "protected": false,
+   "note": "DEC-336: B318 9: the count while choosing several"
+  },
+  {
+   "key": "queue.multi.chosen.one",
+   "en": "1 item chosen",
+   "protected": false,
+   "note": "DEC-336: B318 9: the count of one while choosing several"
+  },
+  {
+   "key": "queue.answered.heading",
+   "en": "Answered",
+   "protected": false,
+   "note": "DEC-336: B318 9: the heading over the items you answered (the page title is queue.answered.title)"
+  },
+  {
+   "key": "queue.none.noticed",
+   "en": "Noticed: none here.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the empty queue, beside queue.none.noticed2 (as queue.none.todo is beside queue.none.todo2)"
+  },
+  {
+   "key": "queue.none.status",
+   "en": "Status: none here.",
+   "protected": false,
+   "note": "DEC-336: B318 9: the empty queue, beside queue.none.status2"
+  },
+  {
+   "key": "findin.match.sheet.norow",
+   "en": "Sheet {sheet}",
+   "protected": false,
+   "note": "DEC-336: B318 9: retrieval R83: a sheet match with no row to name (findin.match.sheet names the row)"
+  },
+  {
+   "key": "find.row.kind.source",
+   "en": "Source",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "find.row.kind.office",
+   "en": "Office",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "find.row.kind.ordinance",
+   "en": "Ordinance",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "find.row.kind.parcel",
+   "en": "Parcel",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "find.row.kind.contract",
+   "en": "Contract",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "find.row.kind.fund",
+   "en": "Fund",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "find.row.kind.program",
+   "en": "Program",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "find.row.kind.place",
+   "en": "Place",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "find.row.kind.proceeding",
+   "en": "Proceeding",
+   "protected": false,
+   "note": "DEC-336: B318 9: the kind of a subject a search names, beside find.row.kind.person and .organization (institution, body and movement read as Organization)"
+  },
+  {
+   "key": "screen.finder.named.nodoc",
+   "en": "named in {n} documents",
+   "protected": false,
+   "note": "DEC-336: B318 9: a subject named in several documents, none to show among them (screen.finder.named names one)"
+  },
+  {
+   "key": "screen.finder.named.nodoc.one",
+   "en": "named in 1 document",
+   "protected": false,
+   "note": "DEC-336: B318 9: the same for one document"
+  },
+  {
+   "key": "screen.people.today.heldby",
+   "en": "held today by {who}",
+   "protected": false,
+   "note": "DEC-336: B318 9: an office on the list of other things the record follows: who holds it today"
+  },
+  {
+   "key": "screen.actionnew.to.undetermined.label",
+   "en": "Not determined yet",
+   "protected": false,
+   "note": "DEC-336: B318 9: the choice that nobody is named yet (screen.actionnew.to.undetermined is its hint)"
+  },
+  {
+   "key": "screen.actionnew.to.who",
+   "en": "Who",
+   "protected": false,
+   "note": "DEC-336: B318 9: the label of the field that names the office or body"
+  },
+  {
+   "key": "screen.actionnew.kind.other",
+   "en": "Another kind",
+   "protected": false,
+   "note": "DEC-336: B318 9: the last kind in the list of action kinds"
+  },
+  {
+   "key": "refusal.ACTION_BASIS_REFUSED",
+   "en": "What this action rests on or advances was refused, so nothing was written. Each reason points at one finding it rests on or one question it advances, and it must be in your team's record; an action cannot rest on another action. Choose again, or leave it out.",
+   "protected": false,
+   "note": "DEC-336: B318 9: actions: action_basis legs (C-2.10)"
+  },
+  {
+   "key": "refusal.DIGEST_MISMATCH.unheld",
+   "en": "What was found under this fingerprint does not match it, and your team does not hold a file with this fingerprint, so nothing was scanned, shown or opened. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-336: B318 9: file-scanner DIGEST_MISMATCH on a file the team does not hold; refusal.DIGEST_MISMATCH is for one it holds"
+  },
+  {
+   "key": "screen.members.key.registered.unrecorded",
+   "en": "key registered; who and when not recorded",
+   "protected": false,
+   "note": "DEC-336: B318 9: a key row from before the roster recorded who and when (credentials R21)"
+  },
+  {
+   "key": "screen.members.key.withdrawn.unrecorded",
+   "en": "key withdrawn; who and when not recorded",
+   "protected": false,
+   "note": "DEC-336: B318 9: the same for a withdrawn key"
+  },
+  {
+   "key": "screen.members.signer.held.nodate",
+   "en": "Signing key ending {key}, registered; when not recorded",
+   "protected": false,
+   "note": "DEC-336: B318 9: beside screen.members.signer.held when the date is not recorded"
   }
  ],
  "rewrite": {
