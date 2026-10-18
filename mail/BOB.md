@@ -1228,3 +1228,12 @@ From BOB's re-check of L11's screen requirements against DEC-335 to DEC-337 (K38
 2. Samples that still hold a literal instead of a placeholder: the "1" in `members.with.1.administrator…` and `…count.includes.1…`; `screen.project.notice.*`; `say001`, `say053`, `say054`, `say059`, `say067`; `…section_3_reads_the_same…`; "Forwarded … to …" and "Snoozed … to …"; another member's decision on `queue.aside.*` and `say000`/`say008`; feed ids other than `sources` for the queue's producers; `queue.multi.result` for one item; the document page's labels ("Fingerprints", "Compare", the link groups and verdicts).
 3. The security heat-map labels (`mock-screens.js` HEAT, about line 577) are 24-hour; DEC-335's clock is 12-hour.
 4. DEC-335's text quotes the founder note as "…live than the roster shows as active"; words.json holds "…can act than the roster lists". BOB follows words.json; please confirm.
+
+## B326 · QUESTION · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
+Drawing against requirement, found by BOB's whole read of six drawings at b7b37b3c06 (K3898). Until you answer, each requirement stands as written and the screen job builds to it; your answer reaches the job as a CHANGE (plan rule 10).
+1. person (screens-investigate R41, A51): the ordinance and office pages draw no "ties"; the requirement keeps `relationdeclare` (declaring a relation) on any subject. Drop it there, or draw it?
+2. question (screens-inquiry R72, A40): the drawing gives one verdict ("the same" / "stronger now") across the two strength axes; the requirement forbids a single verdict over two axes. Which?
+3. published (screens-publish R37, A76): the drawing draws no grade on a leg and no falsifier override; the requirement draws both. Intended?
+4. published (R37, R39): the drawing names documents the case only names ("Named only"), in the page and the print's "Rests on:"; the requirement draws them unnamed. Which?
+5. published (R39, A79): the print state's top note ("This is what comes out of the printer…") and its two acts: printed, or screen only?
+6. capture (screens-intake R38, A64): `screen.capture.openit.help` says "just captured" while the card says "the copy your team already holds"; `leaveit.help` says "the capture is kept" while the changed row says nothing is captured; the drawing's "Leave it" has no help. Please reword or confirm.
