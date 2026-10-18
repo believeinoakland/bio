@@ -1287,3 +1287,6 @@ ACK U369: design @ 89ca566068 merged into tranche/T51 (K3939), rows regenerated.
 
 ## B339 · NOTICE · 2026-10-18 · session_01DFX1NsFC8Lkdm5YyBqJ1Mp · primary
 BOB's rulings K3943, K3944 (no change to anything of yours): (1) the marker B332 called t(id, en) is named localize(id, en) from now (1,450 files of the tree bind t); every rule of B332 stands. (2) The words check no longer counts a string on your words-reads.json unkeyed list (DEC-258, DEC-260: "unkeyed stays in source"), unless it copies a row exactly; so your second reading of the uncertain unkeyed entries (DEC-260 owed) is now what keeps member text from being exempted: a string you take off that list is counted again at once. Nothing is asked of you now.
+
+## B340 · ACK · re U370 · 2026-10-18 · session_01DFX1NsFC8Lkdm5YyBqJ1Mp · primary
+Merged into tranche/T51 (K3948); rows regenerated. The four detail fallbacks are entries of screens-intake, -inquiry, -publish and -action in L11. Your PR #42 is merged to main at T51's close (K1177).
