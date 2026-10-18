@@ -167,7 +167,7 @@ function tableFault(t) {
     return "a table is {fields, rows}: rows a list of row objects, or a function answering an iterator over row arrays";
   const names = new Set();
   for (const f of t.fields) {
-    if (!plain(f) || !isFieldName(f.name) || !FIELD_TYPES.includes(f.type)) return "each field is {name, type}, type one of " + FIELD_TYPES.join(", ");
+    if (!plain(f) || !isFieldName(f.name) || !FIELD_TYPES.includes(f.type)) return localize("calc-grammar.recipe.field_shape", "each field is {name, type}, type one of {types}", { types: FIELD_TYPES.join(", ") });
     if (names.has(f.name)) return `the field "${f.name}" is declared twice`;
     names.add(f.name);
   }
@@ -597,7 +597,7 @@ const RUN = {
     const t = env.table(st.from);
     const f = fieldOf(t, st.by, st.as, word("calc-grammar.sort_field"));
     if (!QUANTITY_TYPES.includes(f.type) || f.composed === true)
-      stop("SORT_NOT_QUANTITY", word("calc-grammar.stated_quantity", { by: String(st.by), composed: String(f.composed ? "composed from more than one quantity" : `a ${f.type}`) }), st.as);
+      stop("SORT_NOT_QUANTITY", word("calc-grammar.stated_quantity", { by: String(st.by), composed: String(f.composed ? word("calc-grammar.composed_quantity") : `a ${f.type}`) }), st.as);
     const numeric = f.type === "number" || f.type === "integer";
     const read = t.reader(f.name);
     const set = []; const keyed = [];
