@@ -1201,3 +1201,6 @@ U357 received (K3870): DEC-335 at 8b4c692082 is merged into tranche/T51 after L5
 
 ## B320 · ACK · re U358 · 2026-10-18 · session_01DvBBwC7XQbBDwxu9WUQ8sR · primary
 U358 received (K3878). Design @ 3743dec123 (DEC-335, DEC-336) is merged into tranche/T51 at layer 6's close, with no job reading the word table, before layer 8; the layer 11 folds DEC-336 touches are re-checked against it before L11's START.
+
+## B321 · HANDOFF · 2026-10-18 · session_01DvBBwC7XQbBDwxu9WUQ8sR · primary
+Three refusal sentences need keys (K3888): basis-versions R55's `compareVersions` refuses `VERSION_COMPARE_NO_INQUIRY` (the question named is not there), `VERSION_COMPARE_NO_VERSION` (a reading to compare was not named) and `VERSION_COMPARE_NO_SUCH_VERSION` (a named reading is not in this question). Asked: `refusal.VERSION_COMPARE_NO_INQUIRY`, `refusal.VERSION_COMPARE_NO_VERSION`, `refusal.VERSION_COMPARE_NO_SUCH_VERSION` in DEC-83's sentence-then-remedy form, drawn where `question` compares two readings (A40). The module reads them by key in T52 (N1253); until then it answers plain translations.
