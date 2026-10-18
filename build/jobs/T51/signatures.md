@@ -1,6 +1,6 @@
 # signatures (T51)
 
-**Status** · session_01JyN2szAX3kLAZzz8syqiPy · depth 2 · NEEDS BOB · handled B3
+**Status** · session_01JyN2szAX3kLAZzz8syqiPy · depth 2 · WAITING ON BOB (J3) · handled B3
 
 ## J1 · BLOCKED
 
