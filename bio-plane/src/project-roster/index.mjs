@@ -1,7 +1,7 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R33). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R37). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `said`); T47 (R26) lists the
@@ -858,8 +858,10 @@ export class ProjectRoster {
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked = {}) {
-    const { viewer = null, limit = null } = asked && typeof asked === "object" ? asked : {};
+    const { viewer = null, limit = null, after = null } = asked && typeof asked === "object" ? asked : {};
     const gate = viewerPredicate(viewer);
+    /* R36: `after` is a project id, read only when a non-empty string; anything else starts from the first. */
+    const cursor = typeof after === "string" && after !== "" ? after : null;
     const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_LIST_LIMIT);
     /* R27: the opener joined in the same statement, so the page and its owners cannot disagree: the project's first
        manifest entry's `author` (record-core R37: `manifest`, first by `created`, then `rowid`, the order it recorded
@@ -873,9 +875,9 @@ export class ProjectRoster {
                              ORDER BY x.created, x.rowid LIMIT 1) AS opener
                  FROM bundles b WHERE b.object_type = 'project') b
          LEFT JOIN members o ON o.status = 'active' AND o.member_id = b.opener
-        WHERE b.object_type = 'project' AND (${gate.sql})
+        WHERE b.object_type = 'project' AND (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
         ORDER BY b.bundle_id
-        LIMIT ?`, ROOT_ADMIN, ...gate.args, cap + 1);
+        LIMIT ?`, ROOT_ADMIN, ...gate.args, cursor, cursor, cap + 1);
     const truncated = rows.length > cap;
     const page = truncated ? rows.slice(0, cap) : rows;
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
@@ -890,8 +892,41 @@ export class ProjectRoster {
         : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
       members: members.get(r.id) ?? [], activity: activity.get(r.id) ?? Array(ProjectRoster.ACTIVITY_WEEKS).fill(0),
       lastChange: lastChange.get(r.id) ?? null }));
-    return { ok: true, projects, count: projects.length, limit: cap, truncated };
+    return { ok: true, projects, count: projects.length, limit: cap, truncated,
+             next: truncated ? projects[projects.length - 1].id : null };
   }
+
+  /** R35 (T51; N1209): THE VIEWER'S OWN INVITATIONS, each project where her participation is `invited`, `{projectId, name,
+   *  invited_by, invited_at}` in project id order; `invited_by` is `{member, handle}` (the founder as R29 names her) or
+   *  null when none was recorded or it names no member. Only her own rows; a viewer naming no active member gets an empty
+   *  list. Paged as R36 pages (`after`, `next`). Writes nothing, never throws. */
+  projectInvitations(asked = {}) {
+    const { viewer = null, limit = null, after = null } = asked && typeof asked === "object" ? asked : {};
+    const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_INVITATIONS_LIMIT);
+    const empty = { ok: true, invitations: [], count: 0, limit: cap, truncated: false, next: null };
+    try {
+      const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : viewerPredicate(viewer).member;
+      if (!me || !this.#activeMemberRow(me)) return empty;
+      const cursor = typeof after === "string" && after !== "" ? after : null;
+      /* `invited_by` is read beside the contract's columns (membership R120 lacks it: asked of BOB, J1). */
+      const rows = this.#rows(
+        `SELECT p.project_id AS id, p.created AS at, p.invited_by AS by_id, i.member_id AS inviter, i.handle AS inviter_handle
+           FROM project_participants p JOIN bundles b ON b.bundle_id = p.project_id AND b.object_type = 'project'
+           LEFT JOIN members i ON i.member_id = p.invited_by
+          WHERE p.member_id = ? AND p.state = 'invited' AND (? IS NULL OR p.project_id > ?)
+          ORDER BY p.project_id LIMIT ?`, me, cursor, cursor, cap + 1);
+      const truncated = rows.length > cap;
+      const page = truncated ? rows.slice(0, cap) : rows;
+      const invitations = page.map((r) => ({ projectId: r.id, name: this.#bundle(r.id)?.title ?? null,
+        invited_by: r.by_id === ROOT_ADMIN ? this.#person(ROOT_ADMIN, null)
+          : r.inviter ? { member: r.inviter, handle: r.inviter_handle ?? null } : null,
+        invited_at: r.at ?? null }));
+      return { ok: true, invitations, count: invitations.length, limit: cap, truncated,
+               next: truncated ? invitations[invitations.length - 1].projectId : null };
+    } catch { return empty; }
+  }
+
+  static PROJECT_INVITATIONS_LIMIT = 200;
 
   /* R26's page size, R9's rule: a chosen ceiling, lowered by the caller and never raised. */
   static PROJECT_LIST_LIMIT = 200;
@@ -1181,7 +1216,7 @@ export class ProjectRoster {
    *  asking — so a request LAPSED by a project going hidden is still the requester's to read, and names nothing they had
    *  not already seen. Its answering owner is NOT in the requester's view: who owns a project is contents. Both lists
    *  are bounded as R9's directory is (the first `limit` in the order made). */
-  projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {
+  projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {   /* R37: rows carry `member_id` */
     const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_REQUESTS_LIMIT);
     const refusal = (code, detail) => {
       const row = PROJECT_JOIN_REQUEST_CHECKS[code];
@@ -1195,7 +1230,7 @@ export class ProjectRoster {
           "a member's own requests to join are read by that member, signed in. A credential with no active "
           + "member behind it has made none.");
       const mine = this.#rows(
-        `SELECT project_id AS project, project_name AS name, comment, state, asked_at AS asked,
+        `SELECT project_id AS project, member_id, project_name AS name, comment, state, asked_at AS asked,
                 closed_comment, closed_at AS closed
            FROM project_join_requests WHERE member_id=? ORDER BY seq LIMIT ?`, me.member_id, cap + 1);
       const mineCut = mine.length > cap;
@@ -1214,7 +1249,7 @@ export class ProjectRoster {
         + "participant (§7.8). Your own requests are read without naming a project.");
     /* END DEC-49 REGION is-join-requests-project */
     const theirs = this.#rows(
-      `SELECT m.handle, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
+      `SELECT m.handle, r.member_id, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
               r.closed_comment, r.closed_at AS closed
          FROM project_join_requests r JOIN members m ON m.member_id = r.member_id
          LEFT JOIN members cb ON cb.member_id = r.closed_by
@@ -1277,7 +1312,9 @@ export function projectRosterOps(r, url, body, env) {
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
     /* T47 (R26–R28): the projects the stamped viewer sees at FULL, with each one's recorded stage, opener, members and
        activity; the instant is the server's, never a query's. */
-    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit") }),
+    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after") }),
+    /* T51 (R35): the stamped viewer's own invitations. */
+    projectinvitations: () => r.projectInvitations({ viewer: q("viewer"), limit: q("limit"), after: q("after") }),
     projectparticipants: () => r.projectParticipants({ projectId: q("projectId"), by: q("by") }),
     /* REC-150: `by` and `viewer` are the control plane's stamps. */
     projectrequest: () => r.projectRequest({ projectId: q("projectId"), comment: q("comment"), by: q("by"),
