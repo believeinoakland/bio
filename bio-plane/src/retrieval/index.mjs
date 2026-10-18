@@ -113,6 +113,36 @@ function digestOf(ids) {
   return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
 }
 
+/* R88: the two routes a search reads apart, as the refusal names them: `passages` (a `passage:` term, read at meaning
+   grain) and `fields` (the record's own text and fields, and every other arm). */
+const ROUTES = Object.freeze(["fields", "passages"]);
+
+/* R88: whether an `OR` of the parsed query (`query-language`'s `ast`, R1) joins, at any depth, a `passage:` term to a term
+   of another route: some branch of one `OR` holds a passage term and another branch of the same `OR` holds any other. An
+   `AND` (the default) joins the routes without crossing them, and a `NOT` keeps its operand's route. */
+function routesCrossed(ast) {
+  const routesOf = (n) => !n || typeof n !== "object" ? new Set()
+    : n.op === "not" ? routesOf(n.kid)
+    : Array.isArray(n.kids) ? new Set(n.kids.flatMap((k) => [...routesOf(k)]))
+    : new Set([n.op === "meaning" && n.arm === "passage" ? "passages" : "fields"]);
+  const walk = (n) => {
+    if (!n || typeof n !== "object") return false;
+    if (n.op === "not") return walk(n.kid);
+    if (!Array.isArray(n.kids)) return false;
+    if (n.op === "or") {
+      const sets = n.kids.map(routesOf);
+      if (sets.some((s, i) => s.has("passages") && sets.some((t, j) => j !== i && t.has("fields")))) return true;
+    }
+    return n.kids.some(walk);
+  };
+  return walk(ast);
+}
+
+/* R88: the refusal, with no row run. */
+const crossedRefusal = () => ({ ok: false, reason: "ROUTES_CROSSED", code: "ROUTES_CROSSED", routes: [...ROUTES],
+  detail: "an OR joins a passage: term (the passages route) to a term of another route (the fields route: the record's "
+        + "own text and fields); each route is counted by its own read, so ask them apart or join them with AND" });
+
 const rand = (n = 12) => [...crypto.getRandomValues(new Uint8Array(n))]
   .map((b) => b.toString(16).padStart(2, "0")).join("");
 
@@ -783,6 +813,7 @@ export class Retrieval {
   search(input = {}) {
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
     const plan = this.#compile(input);
+    if (routesCrossed(plan.ast)) return crossedRefusal();
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const out = {
@@ -813,7 +844,8 @@ export class Retrieval {
     out.widen = null;
     if (total === 0 && plan.widenable && input.widen !== false) {
       const or = this.#compile({ ...input, implicitOp: "or" });
-      const n = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
+      /* R88: the OR reading is never offered across routes, since it would count what the query was refused for. */
+      const n = routesCrossed(or.ast) ? 0 : this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
                                detail: "no record matches all of these terms; this many match any of them" };
     }
@@ -881,6 +913,7 @@ export class Retrieval {
       /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
       snippetChars: Number(input.snippetChars) || undefined,
     });
+    if (routesCrossed(plan.ast)) return crossedRefusal();
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
     const total = this.runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
@@ -902,11 +935,26 @@ export class Retrieval {
       cached: cachedNotes(plan.cached, { facets: false, ordered: false }),
       rows, count: rows.length,
       limit: plan.meaning.limit, offset: plan.meaning.offset, total,
-      ...meaningLevels(plan.meaning.level, Number(lv.documents || 0), Number(lv.documents_with_rows || 0), total,
+      ...this.#withExistenceOnly(meaningLevels(plan.meaning.level, Number(lv.documents || 0), Number(lv.documents_with_rows || 0), total,
                        { arm: plan.meaning.arm, matched: plan.meaning.matched, axis,
                          vocab: obs ? { states: obs.vocabulary.CONTENT_AXIS_STATES,
-                                        undetermined: obs.vocabulary.CONTENT_AXIS_UNDETERMINED } : null }),
+                                        undetermined: obs.vocabulary.CONTENT_AXIS_UNDETERMINED } : null }), input.viewer ?? null),
     };
+  }
+
+  /* R89: R13's `scope` also names the projects the viewer's sight of is existence only (`membership` R44), each
+     `{project, name}` as R77 gives them (never its `owners`), and their count: the projects, never a count of the
+     documents in them, and never a project the viewer has no sight of at all (R29's exception). */
+  #withExistenceOnly(levels, viewer) {
+    const seen = [];
+    try {
+      if (typeof this.membership.existenceAct === "function")
+        for (const { bundle_id: id } of this.#rows(`SELECT bundle_id FROM bundles WHERE object_type = 'project' ORDER BY bundle_id`)) {
+          const act = this.membership.existenceAct(id, viewer);
+          if (act && act.project === id) seen.push({ project: act.project, name: act.name ?? null });
+        }
+    } catch { seen.length = 0; }
+    return { ...levels, scope: { ...levels.scope, existence_only_projects: seen, existence_only_count: seen.length } };
   }
 
   /** REC-114 / D-383 (R12) — A LEG LISTING'S CAPTURE LETTER, RESOLVED AGAINST WHAT THE RECORD CAN EARN FOR THAT LEG'S

@@ -69,8 +69,8 @@ export const SELECTION_CHECKS = {
      graded refusals by the literal `ok: false`, so a region `where` around it
      would have judged zero and failed as a drifted marker — and REC-64 therefore
      could not give this code a region, and so could not give it a row, and so
-     could not give it a translation. The surface has keyed on `SET_MOVED` in
-     `app.html` since long before that.
+     could not give it a translation. The member surfaces have keyed on
+     `SET_MOVED` since long before that.
 
      THE TRANSLATION SAYS WHAT THE MEMBER MUST DO, because this refusal is one of
      the few in the plane with a remedy the member can actually take: look again

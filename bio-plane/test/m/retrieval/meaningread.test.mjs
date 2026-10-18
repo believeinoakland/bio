@@ -68,7 +68,7 @@ test("R11, R14: the envelope is an object carrying exactly its keys and no other
     assert.deepEqual([r.arm, r.table, r.grain, r.identity], [arm, MEANING[arm].table, MEANING[arm].rowGrain, MEANING[arm].identity], arm);
     assert.deepEqual(Object.keys(r.gate).sort(), ["applied", "scope"], arm);
     assert.deepEqual(Object.keys(r.levels), ["internet", "document", "content", "meaning"], arm);
-    const scopeKeys = ["documents", "documents_with_rows", "documents_without_rows"];
+    const scopeKeys = ["documents", "documents_with_rows", "documents_without_rows", "existence_only_projects", "existence_only_count"];   /* R89 */
     if (arm === "passage")
       scopeKeys.push("captures_counted", "captures_truncated", "captures_bound", ...Object.keys(r.content_axis.vocabulary),
                      r.content_axis.undetermined_value, "not_read");
