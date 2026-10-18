@@ -17,3 +17,4 @@ Cause: needs Bob. Done and pushed: worker.test.mjs R12 now asserts the RUNNER bi
 ## J2 · COMPLETE
 
 T51-64 done and pushed. R12 test fixed (red #26); image now docker.io/civicsmith/agent-runner@sha256:954ac088... in fleet-member.json, wrangler.jsonc, container.test.mjs; bundle rebuilt. bundler.test.mjs 38 pass/0 fail (R24, R35 green); fleetbundles 1 pass/0 fail; agent-runner 55 pass/0 fail/11 suspended. format/architecture/ownership 0 failures; coverage names only R36 R37 R38 R40 (not yet met T50). Details in my record.
+- Ringing BOB after COMPLETE (J2) was refused by the permission check; the pushed J2 entry is the message (BOB's backstop reads it).
