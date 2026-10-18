@@ -1,6 +1,6 @@
 # file-scanner (T51)
 
-**Status** · session_01CQsZuxrAShje62YCqQbMMf · depth 2 · COMPLETE · handled B4
+**Status** · session_01CQsZuxrAShje62YCqQbMMf · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
@@ -42,3 +42,17 @@ COMPLETE for B4 (CHANGE, K3957), commit 3cc0aed52e on job/T51/file-scanner (tran
 - Generated artifact made stale: `file-scanner/dist/file-scanner.bundled.mjs` and `dist/file-scanner.bundle.json` are built from the sources I changed (the keyed literals). Not regenerated here (manifest §14); the release's re-cut rebuilds them.
 - Ran: `node --test test/` in file-scanner: 68 tests, 58 pass, 0 fail, 10 skipped (clamscan and sigtool not installed here, as before). `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words: the only file-scanner finding is `container/renderer.mjs:105`, REPORTed above. `checks/coverage.mjs /home/user/bio file-scanner`: 32 of 32 live ids named, 0 failures. `checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`: 4 files changed by file-scanner, 0 failures.
 - Size (session_01CQsZuxrAShje62YCqQbMMf): test runs 2 (B3 and B4), module lines 4431 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)
+
+## J6 · REPORT
+
+REPORT for B5 (CHANGE, K3962). Not this module's: `node bio-plane/src/setup-words/build.mjs --check` exits 1 with one line: "setup-words build: jurisdictions.index.amount_is_amount_and_units holds a formatted argument ({name, …}); word and localize do not render these yet (R18)". The module is `jurisdictions` (layer 1), not file-scanner. Reported for BOB to route.
+
+## J7 · COMPLETE
+
+COMPLETE for B5 (CHANGE, K3962), commit 8b159eacd4 on job/T51/file-scanner (tranche/T51 merged in, civicos-process at ea6cd83).
+
+- Entries applied: the 2 test copies of product localize sentences or codes in build/plan/words-pass/file-scanner.md. (1) `test/adapters.test.mjs`: the refusal code `PRIVATE_MODE_NOT_HONOURED` is now the exported `NOT_HONOURED_CODE` of `src/providers/routes.mjs`, which the module's own answer uses. (2) `test/contract.test.mjs`: the Elastic default index is now the exported `ELASTIC_DEFAULT_INDEX` of `src/providers/sinks.mjs`, which the adapter uses. No regular-expression copy existed in the module's tests.
+- Deferred: none. Found in other modules: the setup-words build check, reported in a REPORT (jurisdictions, not this module).
+- Generated artifact stale: `file-scanner/dist/` (as in B4), not regenerated (manifest §14).
+- Ran: `node --test test/` in file-scanner: 68 tests, 58 pass, 0 fail, 10 skipped. `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words: the file-scanner testcopy findings are gone; the one remaining file-scanner finding is `container/renderer.mjs:105`, REPORTed in B4. `node bio-plane/src/setup-words/build.mjs --check`: exit 1, the jurisdictions finding above (none in file-scanner). `checks/coverage.mjs`: 32 of 32 ids named, 0 failures. `checks/architecture.mjs`: 0 failures. `checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`: 4 files changed, 0 failures.
+- Size (session_01CQsZuxrAShje62YCqQbMMf): test runs 3 (B3, B4, B5), module lines 4435 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)

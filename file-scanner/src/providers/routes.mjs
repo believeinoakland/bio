@@ -130,7 +130,8 @@ async function prepare(deps, body, kind) {
   return { c, ctx, sha, started, file, intact };
 }
 
-const notHonoured = (id) => reply(502, { ok: false, code: 'PRIVATE_MODE_NOT_HONOURED', provider_id: id });
+export const NOT_HONOURED_CODE = 'PRIVATE_MODE_NOT_HONOURED';
+const notHonoured = (id) => reply(502, { ok: false, code: NOT_HONOURED_CODE, provider_id: id });
 
 /** POST /provider/scan (R5). */
 export async function providerScan(deps, body) {
