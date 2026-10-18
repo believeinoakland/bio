@@ -17,7 +17,7 @@
 - **R88, R89**: as in the work notes above.
 
 **Tests.** `node --test bio-plane/test/m/retrieval/`: 167 tests, 167 pass. Moved out with the code (their copies are in `retrieval-browse`): `browse.test.mjs`, `findin.test.mjs`, `t50.test.mjs`, `t37.test.mjs` deleted; `t36.test.mjs` keeps R77 `selectionRead`, `findIn` over a real selection and the real-`recordedBy` test; new `delegation.test.mjs` (R90: op equality with an independently built module, a registered stub reaching both, second registration refused, the re-exports, `BROWSE_ID_CHUNK === SELECTION_ID_CHUNK`, no copy, under 4,000 lines, the five host reads); `t51.test.mjs` R87 x5, R88 x2, R89 x2. Others run: `answers` 64, `following` 112, `queue` 164, `question-explorer` 46 all pass; `citation` 90 pass, 1 fail (below).
-**Checks** (process repo): format 0 failures; coverage retrieval 79 of 79 live ids named, 0 failures; ownership retrieval 0 failures; architecture: 2 failures, both "imports retrieval-browse, which retrieval does not declare in uses" (modules.json is BOB's). Size: `retrieval/*.mjs` 2,939 lines (was 4,001).
+**Checks** (process repo): format 0 failures; coverage retrieval 79 of 79 live ids named, 0 failures; ownership retrieval 0 failures; architecture: 2 failures, both "imports retrieval-browse, which retrieval does not declare in uses" (modules.json is BOB's). Size: `retrieval/*.mjs` 2,940 lines (was 4,001).
 
 **For BOB (modules.json, K1043).** retrieval `uses`: add `retrieval-browse`; drop `civil-time` and `calc-grammar` (nothing of mine imports them any more, grepped); `events`, `standards`, `money`, `people`, `entities` stay as the table read contracts of R68 (their factories are no longer imported).
 **Found in other modules.**
@@ -27,7 +27,7 @@
 4. Sentences with no key (REPORT'd by the design lane's list, mine): `ROUTES_CROSSED`, `SCOPE_UNKNOWN`, `scope_undetermined` `detail`/`why` are inline English beside their codes; no word key added (the reads list is the design lane's).
 **Deferred.** None.
 
-Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 14, module lines 2939
+Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 14, module lines 2940
 
 ## J1 · REPORT
 
