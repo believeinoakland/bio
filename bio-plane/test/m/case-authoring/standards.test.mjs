@@ -11,6 +11,7 @@ import { world, sha, V } from "./fixture.mjs";
 import { PUBLISH_ACT_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { materialsOf, passagesOf, memberSubjectOf } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
+import { hasWord, word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", SDOC = "INFO-2026-0002-std";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -60,12 +61,13 @@ function setup() {
   return { w, standards, capP, A: ent("Fire Department"), B: ent("Water Board") };
 }
 const subject = (id) => [`subject_entity: ${id}`];
-/* case-checker R26: each departure carries `says`, its key `refusal.<code>` and its own fields as vars; the members' words
-   are read from setup-words by the caller (layer 11), which this module (layer 8) does not import. Each `says` is checked
-   here and removed, so the departure's identifiers are compared as before. */
+/* case-checker R26: each departure carries `says`, its key `refusal.<code>` and its own fields as vars. Each `says` is
+   checked here and removed, so the departure's identifiers are compared as before. */
 function saidOf(refusals) {
   return refusals.map(({ says, ...departure }) => {
     assert.equal(says.key, `refusal.${departure.code}`);
+    assert.equal(hasWord(says.key), true, says.key);
+    assert.notEqual(word(says.key, says.vars).length, 0, says.key);
     assert.deepEqual(says.vars, Object.fromEntries(Object.entries(departure).filter(([k]) => k !== "code")));
     return departure;
   });

@@ -26,3 +26,17 @@
 ## J1 · COMPLETE
 
 R61 tests now read case-checker R26's says shape (test-only; the source relays refusals unchanged). 190 of 190 module tests pass. Format, architecture, coverage and ownership pass for case-authoring (ownership: 2 files, the record and the test). Concern for you, in the record: standardsUseWords (bio-plane/src/case-authoring/index.mjs 197-207) is inline English beside says; the words belong to the layer-11 screen, since setup-words is layer 11. Your decision. run.mjs shows 23 coverage failures in other modules, none case-authoring. Full record: build/jobs/T51/case-authoring.md on job/T51/case-authoring, commit 22472313f0.
+
+## Completion record for B2 (CHANGE, K3912)
+
+**Entries applied.** `standardsUseWords` (`bio-plane/src/case-authoring/index.mjs`) no longer holds English. Each sentence is `word(key, vars)` from setup-words, the `case-authoring.text.*` rows that already exist in `rows.mjs`: `case_would_carry` ({sha}, {standard}), `case_quotes_passage` ({content}, {standard}), `rests_benchmarks_binds` ({finding}, {standard}, {word}), `case_use_standards` ({arguments}, the default arm). Each key's placeholders match what the code passes, so nothing needed reporting. `setup-words` is in this module's `uses` (BOB's edge in `build/modules.json`, read after the merge of `tranche/T51`). The `standards.test.mjs` helper `saidOf` now also asserts that each `says.key` is held (`hasWord`) and that `word(says.key, says.vars)` is non-empty; it never copies a sentence.
+
+**Deferred.** None.
+
+**Found in other modules.** The same 23 coverage failures under `checks/run.mjs` as before, none in case-authoring.
+
+**Tests and checks.**
+- All 30 files of `bio-plane/test/m/case-authoring/`: 190 of 190 pass.
+- `format`: 0 failures. `architecture` (case-authoring): 0 failures; across all product files 0 failures. `coverage` (case-authoring): 48 of 48. `ownership`: 0 failures. `channels`: 0 failures.
+
+**Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 3, module lines 3008**, `bio-plane/src/case-authoring/*.mjs` (all lines; `index.mjs` changes are a net few lines).

@@ -107,6 +107,7 @@ import { outcomesLines, outcomesSectionLines } from "../case-grammar/index.mjs";
 import { caseInputsOf, openRequestLine, OPEN_REQUEST_KEYS, OPEN_REQUESTS_UNREAD_SENTENCE, WHAT_CHANGED_MAX } from "../case-inputs/index.mjs";
 /* R61 (N717; K2129): how a case uses the standards it measures against, judged by `case-checker`'s pure R21. */
 import { checkStandardsUse } from "../case-checker/standards.mjs";
+import { word } from "../setup-words/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { workbooksOf } from "../workbooks/index.mjs";
 import { eventsOf } from "../events/index.mjs";
@@ -193,17 +194,18 @@ const subjectStated = (fm) => (fm && typeof fm.subject_entity === "string" && EN
 /* R55 (case-disclosures R27): the signer's attestation of no undeclared tie is the act's own: `tieAttested: true` from the
    publishing owner, stamped with the author and the act's instant (R25), never a body's names or times. */
 const attestedBy = (who, tieAttested, at) => (tieAttested === true ? [{ signer: who, at }] : null);
-/** R61: each of `case-checker` R21's refusals, named to the publisher in one sentence. */
+/** R61: each of `case-checker` R21's refusals, named to the publisher in one sentence: the words are setup-words'
+ *  `case-authoring.text.*` rows, read by key with the refusal's own fields as their fills (K3912; no English here). */
 function standardsUseWords(r) {
   switch (r && r.code) {
     case "COPYRIGHTED_TEXT_CARRIED":
-      return `The case would carry whole the capture ${r.sha} of ${r.standard}, a standard that is not free to read.`;
+      return word("case-authoring.text.case_would_carry", { sha: r.sha, standard: r.standard });
     case "COPYRIGHTED_PASSAGE_UNRELIED":
-      return `The case quotes passage ${r.content} of ${r.standard}, a standard that is not free to read, and no finding relies on it.`;
+      return word("case-authoring.text.case_quotes_passage", { content: r.content, standard: r.standard });
     case "BENCHMARK_CALLED_NONCONFORMING":
-      return `${r.finding} rests only on benchmarks of ${r.standard}, which binds no body it is measured against, and the case calls it "${r.word}".`;
+      return word("case-authoring.text.rests_benchmarks_binds", { finding: r.finding, standard: r.standard, word: r.word });
     default:
-      return `The case's use of its standards could not be judged (${r && r.field ? r.field : "its arguments"} malformed).`;
+      return word("case-authoring.text.case_use_standards", { arguments: r && r.field ? r.field : "its arguments" });
   }
 }
 /* R3's set: `targets` as a list, a comma-separated string, or the one `target`. */
