@@ -167,7 +167,7 @@ function tableFault(t) {
     return "a table is {fields, rows}: rows a list of row objects, or a function answering an iterator over row arrays";
   const names = new Set();
   for (const f of t.fields) {
-    if (!plain(f) || !isFieldName(f.name) || !FIELD_TYPES.includes(f.type)) return localize("calc-grammar.recipe.field_shape", "each field is {name, type}, type one of {types}", { types: FIELD_TYPES.join(", ") });
+    if (!plain(f) || !isFieldName(f.name) || !FIELD_TYPES.includes(f.type)) return localize("calc-grammar.recipe.field_shape", "each field states its name and its type, the type one of {types}",{ types: FIELD_TYPES.join(", ") });
     if (names.has(f.name)) return `the field "${f.name}" is declared twice`;
     names.add(f.name);
   }

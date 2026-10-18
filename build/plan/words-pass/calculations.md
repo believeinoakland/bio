@@ -20,3 +20,12 @@ Layer 5. 8 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/calculations/index.mjs:1554` "an id space normalises a value but names no entity; declare the column's entity scheme ..."
 - plain `bio-plane/src/calculations/index.mjs:1968` "an organisation and a date are needed"
 - plain `bio-plane/src/calculations/tables.mjs:123` "a Table Schema is {fields: [{name, type}]} with one field per column"
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/calculations/analysis.test.mjs:33` "\"each total within one phase\""
+- testcopy `bio-plane/test/m/calculations/analysis.test.mjs:61` "\"a measure across mixed kinds of link\""
+- testcopy `bio-plane/test/m/calculations/money.test.mjs:99` "\"only at a member's request\""
+- testcopy `bio-plane/test/m/calculations/tables.test.mjs:139` "\"your team's Civicsmith has no evidence store set up, so a table's b...\""

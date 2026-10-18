@@ -1017,8 +1017,7 @@ export function checkConfidence(confidence) {
   if (confidence === "none") return null;
   if (!confidence || typeof confidence !== "object")
     return refusal("TEXT_CONFIDENCE_SHAPE",
-      `a region's confidence is either the stated string 'none' or {value, basis}; `
-      + `an absent confidence is not the same claim as a stated absent one`);
+      localize("text-chain.textchain.a_region_confidence_is_either", "a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one"));
   if (!Object.prototype.hasOwnProperty.call(CONFIDENCE_BASES, confidence.basis))
     return refusal("TEXT_CONFIDENCE_PSEUDO",
       localize("text-chain.textchain.confidence_basis_v1_is_not", "confidence basis '{v1}' is not {keys}. A number a model reported about itself is not a calibrated confidence and may not be thresholded as one — it costs nothing to produce, which is exactly what makes it worthless as evidence", { v1: String(confidence.basis == null ? "(absent)" : String(confidence.basis)), keys: String(Object.keys(CONFIDENCE_BASES).join(" or ")) }));
@@ -1098,17 +1097,16 @@ export function checkAnchor(source) {
   /* DEC-49 REGION is-text-anchor */
   if (!source || typeof source !== "object")
     return refusal("TEXT_ANCHOR_MISSING",
-      `text produced by a machine carries the image region a reader can check it against; `
-      + `without one, nothing in the record can be verified against the pixels it came from`);
+      localize("text-chain.textchain.a_machine_reading_carries_its_anchor", "text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from"));
   if (source.kind !== "pdf-page")
     return refusal("TEXT_ANCHOR_MISSING",
       localize("text-chain.textchain.the_anchor_names_kind_string", "the anchor names kind '{String}'; a transcription's anchor is a pdf-page reference (I2 IC-1), because that is the arm carrying page and rect", { String: String(String(source.kind)) }));
   if (!Number.isInteger(source.page) || source.page < 0)
-    return refusal("TEXT_ANCHOR_MISSING", `the anchor names no page (0-based integer required)`);
+    return refusal("TEXT_ANCHOR_MISSING", localize("text-chain.textchain.the_anchor_names_no_page", "the anchor names no page (0-based integer required)"));
   if (!Array.isArray(source.rect) || source.rect.length !== 4
       || !source.rect.every((n) => typeof n === "number" && Number.isFinite(n)))
     return refusal("TEXT_ANCHOR_MISSING",
-      `the anchor names no rect; a page alone is not a region a reader can be pointed at`);
+      localize("text-chain.textchain.the_anchor_names_no_rect", "the anchor names no rect; a page alone is not a region a reader can be pointed at"));
   /* END DEC-49 REGION is-text-anchor */
   return null;
 }
@@ -1143,15 +1141,15 @@ export function checkAttestation(att) {
       localize("text-chain.textchain.string_is_a_machine_credential", "'{String}' is a machine credential. Attesting is a person saying they checked this text against the image — an act with a name behind it. A machine cannot perform it, and recording one would put a claim on the record that nobody holds", { String: String(String(a.member)) }));
   if (!(typeof a.member === "string" && a.member.trim()))
     return refusal("TEXT_ATTEST_MACHINE",
-      `an attestation names no member. Nobody said this, and unattributed is not the same as attested`);
+      localize("text-chain.textchain.an_attestation_names_no_member", "an attestation names no member. Nobody said this, and unattributed is not the same as attested"));
   if (!(typeof a.at === "string" && a.at.trim()))
-    return refusal("TEXT_ATTEST_EXTENT", `an attestation carries the date it was made`);
+    return refusal("TEXT_ATTEST_EXTENT", localize("text-chain.textchain.an_attestation_carries_the_date", "an attestation carries the date it was made"));
   const e = a.extent;
   if (!e || typeof e !== "object" || !Object.prototype.hasOwnProperty.call(EXTENT_KINDS, e.kind))
     return refusal("TEXT_ATTEST_EXTENT",
       localize("text-chain.textchain.an_attestation_is_scoped_to", "an attestation is scoped to what was actually checked — one of {keys}. An unscoped attestation would be read as covering the whole document, which is the generous reading of a claim nobody made", { keys: String(Object.keys(EXTENT_KINDS).join(", ")) }));
   if (e.kind === "page" && !(Number.isInteger(e.page) && e.page >= 0))
-    return refusal("TEXT_ATTEST_EXTENT", `a page extent names which page (0-based)`);
+    return refusal("TEXT_ATTEST_EXTENT", localize("text-chain.textchain.a_page_extent_names_which_page", "a page extent names which page (0-based)"));
   if (e.kind === "region") {
     const bad = checkAnchor(e.source);
     if (bad) return refusal("TEXT_ATTEST_EXTENT",
@@ -1502,12 +1500,12 @@ function a1Range(s) {
 export const CONTENT_EXTENT_KINDS = {
   document:      { landed: true,  human: word("content.why.whole_document") },
   "pdf-page":    { landed: true,  human: "a page of a PDF" },
-  "sheet-cell":  { landed: true,  human: "a cell of a spreadsheet" },
-  "slide-shape": { landed: true,  human: "a shape on a slide" },
-  "doc-para":    { landed: true,  human: "a paragraph of a document" },
-  "sheet-range": { landed: true,  human: "a range of cells in a spreadsheet" },
-  "doc-table":   { landed: true,  human: "a table in a document" },
-  image:         { landed: true,  human: "an image in a document" },
+  "sheet-cell":  { landed: true,  human: localize("text-chain.textchain.a_cell_of_a_spreadsheet", "a cell of a spreadsheet") },
+  "slide-shape": { landed: true,  human: localize("text-chain.textchain.a_shape_on_a_slide", "a shape on a slide") },
+  "doc-para":    { landed: true,  human: localize("text-chain.textchain.a_paragraph_of_a_document", "a paragraph of a document") },
+  "sheet-range": { landed: true,  human: localize("text-chain.textchain.a_range_of_cells_in_a_spreadsheet", "a range of cells in a spreadsheet") },
+  "doc-table":   { landed: true,  human: localize("text-chain.textchain.a_table_in_a_document", "a table in a document") },
+  image:         { landed: true,  human: localize("text-chain.textchain.an_image_in_a_document", "an image in a document") },
 };
 
 /** A CELL IN A1 NOTATION (R93), as the container emits it and as a member may paste it. `$` markers and
@@ -1753,10 +1751,7 @@ export function describeExtent(extent) {
 
 /** The rule in one sentence, so the probe, the suite and any report quote ONE
  *  spelling of it rather than three that drift. */
-export const TIER_RULE =
-  "per page, tier 2 replaces tier 1 only when it has strictly fewer undetermined "
-+ "characters AND strictly more decoded GLYPHS — non-whitespace code points, so "
-+ "neither tier's whitespace policy can move the award; anything else keeps tier 1";
+export const TIER_RULE = word("textchain.tier_rule");
 
 const undeterminedChars = (page) =>
   (page && Array.isArray(page.undetermined))
@@ -1914,12 +1909,9 @@ export function mergeTier2Text(base, t2) {
     const reported = (base && base.counts && Number.isFinite(base.counts.chars)) ? base.counts.chars : 0;
     if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return { ok: false, replaced: [], kept: [], perPageTier: null,
-               why: `this document's tier-1 reading has no per-page grain and already holds `
-                  + `${baseGlyphs === null
-                        ? `${reported} character(s) its producer counted and no text this merge can read`
-                        : `${baseGlyphs} decoded glyph(s)`}`
-                  + `, so a tier-2 decode was refused rather `
-                  + `than allowed to replace text page by page it cannot be compared against` };
+               why: word("textchain.why.document_tier_reading", { held: baseGlyphs === null
+                        ? localize("text-chain.textchain.reported_characters_no_text_read", "{reported} character(s) its producer counted and no text this merge can read", { reported: String(reported) })
+                        : localize("text-chain.textchain.decoded_glyphs_held", "{count} decoded glyph(s)", { count: String(baseGlyphs) }) }) };
     /* Nothing to lose — the wholly-unread document. Tier 2 takes it whole, and
        the per-page statement says so honestly rather than inventing pages. */
     return { ok: true, text: t2, wholesale: true, perPageTier: null,

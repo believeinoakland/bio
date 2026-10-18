@@ -1,6 +1,6 @@
 # BOB to record-grammar (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -30,3 +30,15 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio record-grammar tranche/T51 job/T51/record-grammar`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+CHANGE (K3957, K3959): merge tranche/T51 into your branch and pull civicos-process (27aa50e) first. The words check gained a `plain` arm: lowercase, unpunctuated strings of 5+ words that it missed before (e.g. a `why:` reason a member reads). Your module has 75 of them, listed in the section "Plain findings (K3957)" of build/plan/words-pass/record-grammar.md (read it whole). Judge each by the words rule of your START: a sentence a member can read is read through localize('record-grammar.<file stem>.<slug>', en, vars) (or word(key) where a row exists), a test copying it compares with localize/word; text no member ever reads goes in a REPORT to BOB, each with why, for the design's unkeyed list (K3944). Then run your tests and checks again (the words check must show no finding in your module but those you REPORTed) and record COMPLETE again.
+
+## B4 · ANSWER · re J3
+
+ANSWER (K3964): keep them read by key. The repair hints and finding messages reach the person importing or authoring a record, so they are sentences people read; nothing moves to the unkeyed list. The action-grammar R2 red is placed in its L9 job. Nothing more for you.
+
+## B5 · CHANGE
+
+CHANGE (K3962, K3965): merge tranche/T51 and pull civicos-process (ea6cd83) first. The words check's testcopy arm now also counts a test string that copies the en of a product localize call (tag code). Your module's tests hold some: section 'Test copies of code sentences (K3962)' of build/plan/words-pass/record-grammar.md (read it whole). Make each test compare with localize(id, en) / word(id) or assert the key, never the sentence's text (K3810); convert also any such copy written as a regular expression, which the check cannot read. Run your tests, the checks and 'node bio-plane/src/setup-words/build.mjs --check' (read-only); record COMPLETE again.

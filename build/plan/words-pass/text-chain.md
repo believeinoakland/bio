@@ -21,3 +21,14 @@ Layer 1.
 - plain `bio-plane/src/textchain.mjs:1510` "an image in a document"
 - plain `bio-plane/src/textchain.mjs:1759` "neither tier's whitespace policy can move the award; anything else keeps tier 1"
 - plain `bio-plane/src/textchain.mjs:1922` "than allowed to replace text page by page it cannot be compared against"
+
+## Test copies of code sentences (K3962)
+
+6 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/text-chain/extent.test.mjs:26` "\"a cell of a spreadsheet\""
+- testcopy `bio-plane/test/m/text-chain/extent.test.mjs:27` "\"a shape on a slide\""
+- testcopy `bio-plane/test/m/text-chain/extent.test.mjs:28` "\"a paragraph of a document\""
+- testcopy `bio-plane/test/m/text-chain/extent.test.mjs:29` "\"a range of cells in a spreadsheet\""
+- testcopy `bio-plane/test/m/text-chain/extent.test.mjs:30` "\"a table in a document\""
+- testcopy `bio-plane/test/m/text-chain/extent.test.mjs:31` "\"an image in a document\""

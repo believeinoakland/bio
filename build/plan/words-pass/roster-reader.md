@@ -47,3 +47,10 @@ Layer 1. 2 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `roster-reader/staff-roster.mjs:221` "no short line names it a roster with the view's words, so it is read as a roster on its..."
 - plain `roster-reader/staff-roster.mjs:240` "no line among the document's first eight, or beside its self-naming line, states a date"
 - plain `roster-reader/staff-roster.mjs:242` "neither its first line nor the line before its self-naming line is a heading that names..."
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `roster-reader/test/source.test.mjs:28` "\"held as a table, read by roster-reader\""
+- testcopy `roster-reader/test/source.test.mjs:70` "\"no column is named `name` or `employee_id`, so this table is not re...\""

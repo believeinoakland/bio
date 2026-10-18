@@ -27,3 +27,21 @@ Layer 9. 19 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('action-grammar.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
 
 - plain `bio-plane/src/action-grammar/checks.mjs:1187` "state who owes the date: the team, the body, or undetermined"
+
+## Test copies of code sentences (K3962)
+
+13 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/action-grammar/fixture.mjs:16` "\"' is not a canonical record id\""
+- testcopy `bio-plane/test/m/action-grammar/fixture.mjs:21` "\"' is not a kind your team's Civicsmith offers\""
+- testcopy `bio-plane/test/m/action-grammar/fixture.mjs:49` "\"CORRESPONDENCE_DIRECTIONS\""
+- testcopy `bio-plane/test/m/action-grammar/grammar.test.mjs:212` "\"Saying whether a litigation hold is in place is a member's judgemen...\""
+- testcopy `bio-plane/test/m/action-grammar/grammar.test.mjs:411` "\"' is not a subject registry key (ENT-YYYY-NNNN)\""
+- testcopy `bio-plane/test/m/action-grammar/grammar.test.mjs:456` "\"judgement about the body.\""
+- testcopy `bio-plane/test/m/action-grammar/seeks.test.mjs:102` "\"' action: only a records_request names the stages it asks the recor...\""
+- testcopy `bio-plane/test/m/action-grammar/t45-rows.mjs:23` "\"The ground stated for acting without a determination was incomplete...\""
+- testcopy `bio-plane/test/m/action-grammar/t45-rows.mjs:68` "\"The office's own wording of its status is quoted beside the outcome...\""
+- testcopy `bio-plane/test/m/action-grammar/t45-rows.mjs:138` "\"Whether a reply is owed is stated as yes or no, or left out, which ...\""
+- testcopy `bio-plane/test/m/action-grammar/t45-rows.mjs:148` "\"A records law in the jurisdiction profile lists a stage the record ...\""
+- testcopy `bio-plane/test/m/action-grammar/t45.test.mjs:37` "\"disputed_without_evidence\""
+- testcopy `bio-plane/test/m/action-grammar/t45.test.mjs:151` "\"' is not a canonical record id\""

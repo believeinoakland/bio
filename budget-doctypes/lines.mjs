@@ -84,22 +84,20 @@ export function readLines(ctx) {
   const sheets = supplied && Array.isArray(supplied.sheets) ? supplied.sheets : [];
   const out = { rows: [], codes: [], groupings: [], unread: [] };
   if (!sheets.length) {
-    out.unread.push({ sheet: null, why: "no sheet was supplied with this text, so no budget line could be read" });
+    out.unread.push({ sheet: null, why: localize("budget-doctypes.lines.no_sheet_was_supplied", "no sheet was supplied with this text, so no budget line could be read") });
     return out;
   }
   const codes = new Map();
   for (const sheet of sheets) {
     const name = sheet && typeof sheet.name === "string" ? sheet.name : null;
     if (!sheet || !Array.isArray(sheet.cells)) {
-      out.unread.push({ sheet: name, why: "the sheet's typed cells (office-readers R30) were not supplied: its "
-        + "tab-joined text drops an empty cell, so no value could be placed in its column" });
+      out.unread.push({ sheet: name, why: localize("budget-doctypes.lines.the_sheet_s_typed_cells", "the sheet's typed cells (office-readers R30) were not supplied: its tab-joined text drops an empty cell, so no value could be placed in its column") });
       continue;
     }
     const rows = sheetRows(sheet);
     const head = findHeader(ctx, rows);
     if (!head) {
-      out.unread.push({ sheet: name, why: "no header row names a fund or org column and an amount column by the "
-        + "view's header words" });
+      out.unread.push({ sheet: name, why: localize("budget-doctypes.lines.no_header_row_names_a", "no header row names a fund or org column and an amount column by the view's header words") });
       continue;
     }
     const first = (column) => (head.map[column] ? head.map[column][0] : null);
@@ -118,7 +116,9 @@ export function readLines(ctx) {
       const source = (cell("fund") || cell("org") || [...r.cells.values()][0]).source || null;
       if (!fund || !org) {
         out.unread.push({ sheet: name, row: r.row, source,
-          why: !fund && !org ? "the row holds no fund and no org code" : !fund ? "the row holds no fund code" : "the row holds no org code" });
+          why: !fund && !org ? localize("budget-doctypes.lines.the_row_holds_no_fund_and_no", "the row holds no fund and no org code")
+            : !fund ? localize("budget-doctypes.lines.the_row_holds_no_fund_code", "the row holds no fund code")
+            : localize("budget-doctypes.lines.the_row_holds_no_org_code", "the row holds no org code") });
         continue;
       }
       const code = (column) => (text(cell(column)).trim() ? readCode(ctx, column, text(cell(column))) : null);

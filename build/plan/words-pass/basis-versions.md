@@ -70,3 +70,12 @@ Layer 6. 28 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/basis-versions/grammar.mjs:445` "or leave the partition as it was inherited — an edit that only changes the evidence is ..."
 - plain `bio-plane/src/basis-versions/index.mjs:1473` "a different place, not a part of it"
 - plain `bio-plane/src/basis-versions/index.mjs:1474` "not one this record can compare with it"
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/basis-versions/dec149-strings.test.mjs:35` "\"this entry names an act your team's Civicsmith does not know, so wh...\""
+- testcopy `bio-plane/test/m/basis-versions/dec149-strings.test.mjs:36` "\"stood on after it is undetermined rather than guessed.\""
+- testcopy `bio-plane/test/m/basis-versions/dec149-strings.test.mjs:56` "\"is one your team's Civicsmith cannot read, so what it stands\""
+- testcopy `bio-plane/test/m/basis-versions/dec149-strings.test.mjs:57` "\"on is undetermined and a withdrawal would be withdrawing a guess.\""

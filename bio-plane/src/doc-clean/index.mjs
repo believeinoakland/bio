@@ -22,13 +22,13 @@ export const CLEAN_MAX_BYTES = 16 * 1024 * 1024;
 export const CLEAN_REFUSALS = Object.freeze({
   ENCRYPTED: "the document is encrypted",
   EMBEDDED_FILE: "the document carries an embedded file: a PDF attachment, an office file's embedding or macro project, or an ODF embedded object",
-  IMAGE_NOT_CLEANABLE: "an embedded image is of a kind whose metadata cannot be stripped",
+  IMAGE_NOT_CLEANABLE: localize("doc-clean.index.an_embedded_image_is_of_a_kind", "an embedded image is of a kind whose metadata cannot be stripped"),
   HTML_EMBEDS_IMAGE: "the HTML document embeds an image as a data: URI",
-  EMBEDDED_MEDIA: "the document carries a video, audio, RichMedia or 3D part, whose own metadata can hold a time and place",
+  EMBEDDED_MEDIA: localize("doc-clean.index.the_document_carries_a_video_audio", "the document carries a video, audio, RichMedia or 3D part, whose own metadata can hold a time and place"),
   ARCHIVE: "the file is a ZIP archive, not an office package; a member-supplied archive is never carried",
-  NOT_A_CLEANABLE_FORMAT: "the file is of no format this module cleans",
-  DOCUMENT_TOO_LARGE: "the document, or one of its parts, is larger than this module reads",
-  DOCUMENT_UNREADABLE: "the document's structure cannot be read whole",
+  NOT_A_CLEANABLE_FORMAT: localize("doc-clean.index.the_file_is_of_no_format", "the file is of no format this module cleans"),
+  DOCUMENT_TOO_LARGE: localize("doc-clean.index.the_document_or_one_of", "the document, or one of its parts, is larger than this module reads"),
+  DOCUMENT_UNREADABLE: localize("doc-clean.index.the_document_s_structure_cannot", "the document's structure cannot be read whole"),
 });
 
 const FAMILY = { docx: "ooxml", xlsx: "ooxml", pptx: "ooxml", odt: "odf", ods: "odf", odp: "odf" };
@@ -37,7 +37,7 @@ const FAMILY = { docx: "ooxml", xlsx: "ooxml", pptx: "ooxml", odt: "odf", ods: "
 export async function cleanDocument(bytes) {
   try {
     const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
-    if (!d) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", "the document's bytes are not a byte array");
+    if (!d) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.the_document_s_bytes_are_not", "the document's bytes are not a byte array"));
     if (d.length > CLEAN_MAX_BYTES)
       throw new CleanRefusal("DOCUMENT_TOO_LARGE", localize("doc-clean.index.the_document_is_length_bytes", "the document is {length} bytes, over the {CLEAN_MAX_BYTES} this module reads", { length: String(d.length), CLEAN_MAX_BYTES: String(CLEAN_MAX_BYTES) }));
     let format, done;
@@ -75,14 +75,14 @@ async function packageFormat(d) {
 function textFormat(d) {
   if (d.length >= 8 && d[0] === 0xd0 && d[1] === 0xcf && d[2] === 0x11 && d[3] === 0xe0 && d[4] === 0xa1 && d[5] === 0xb1 && d[6] === 0x1a && d[7] === 0xe1) {
     if (latin1(d).includes("E\0n\0c\0r\0y\0p\0t\0e\0d\0P\0a\0c\0k\0a\0g\0e\0"))
-      throw new CleanRefusal("ENCRYPTED", "an encrypted office document (an EncryptedPackage compound file)");
-    throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", "a compound file (a legacy office document), not a format this module cleans");
+      throw new CleanRefusal("ENCRYPTED", localize("doc-clean.index.an_encrypted_office_document_an", "an encrypted office document (an EncryptedPackage compound file)"));
+    throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.a_compound_file_a_legacy", "a compound file (a legacy office document), not a format this module cleans"));
   }
   const s = decodeText(d);
   if (s === null || /[\x00-\x08\x0b\x0e-\x1f\x7f]/.test(s)) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", "the file is neither a PDF, an office package nor text");
   const head = s.slice(0, 4096).replace(/^﻿/, "").trimStart();
   if (/^\{\\rtf/.test(head)) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", "an RTF document, not a format this module cleans");
-  if (/^%!PS/.test(head)) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", "a PostScript document, not a format this module cleans");
+  if (/^%!PS/.test(head)) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.a_postscript_document_not", "a PostScript document, not a format this module cleans"));
   if (/^MIME-Version\s*:/im.test(head)) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", "a MIME message, not a format this module cleans");
   if (/^<(?:\?xml|svg[\s>])/i.test(head) && !/<html(?=[\s>])/i.test(s))
     throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", "an XML or SVG document, not a format this module cleans");

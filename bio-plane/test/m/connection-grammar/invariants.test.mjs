@@ -63,7 +63,7 @@ test("R18 every refusal and every undetermined answer says which kind of no and 
   const hunchGrade = cg.chainGrade([{ ...said("d", NODE, "ENT-2026-0007"), label: cg.HUNCH_LABEL }]);
   assert.ok(hunchGrade.why.length > 10);
   const items = r.neighbours({ owner: "sample", node: NODE, at: AT, viewer: "alice", scope: INQUIRY }).items;
-  for (const i of items.filter((x) => x.undetermined)) assert.ok(i.undetermined.why.length);
+  for (const i of items.filter((x) => x.undetermined)) assert.ok(i.undetermined.why.key.length && typeof i.undetermined.why.vars === "object");
   const bad = r.checkConnection({});
   assert.ok(bad.errors.every((e) => e.field && e.why.length > 5));
 });

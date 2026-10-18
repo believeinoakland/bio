@@ -19,10 +19,11 @@
  */
 import { CONFIDENCE } from "../recogniser.mjs";
 import { REGION } from "../region.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 export default {
   key: "wordpress",
-  label: "a page published with WordPress",
+  label: localize("site-profiles.wordpress.a_page_published_with_wordpress", "a page published with WordPress"),
   version: 1,
   textual: true,
 
@@ -83,9 +84,9 @@ export default {
          is captured and hashed on its own, so the stamp is addressing rather than
          content. Kept narrow deliberately: only ?ver= and only on an asset-looking
          path, because a bare ?v= elsewhere is content often enough to matter. */
-      { key: "wp_asset_version", region: REGION.MECHANICAL, label: "a version stamp on a design file",
+      { key: "wp_asset_version", region: REGION.MECHANICAL, label: localize("site-profiles.wordpress.a_version_stamp_on_a_design", "a version stamp on a design file"),
         patterns: [/((?:\/wp-content\/|\/wp-includes\/)[^"'\s>]*[?&]ver=)([^"'&\s>]+)()/gi] },
-      { key: "wp_ads", region: REGION.MECHANICAL, label: "an advertising or analytics slot",
+      { key: "wp_ads", region: REGION.MECHANICAL, label: localize("site-profiles.wordpress.an_advertising_or_analytics", "an advertising or analytics slot"),
         patterns: [
           /(\bdata-google-query-id=")([^"]*)(")/gi,
           /(\bid="div-gpt-ad-)([0-9]{6,}[^"]*)(")/gi,

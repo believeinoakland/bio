@@ -41,7 +41,7 @@ const rebuild = () => { types = makeRegistry(); for (const m of members) types.r
    `readText` states that it has no reader and `assess` claims nothing about what changed
    (R13). R4's "always returns a type" holds, and R35's no says which no. */
 export const NO_TYPE = Object.freeze({
-  key: "unregistered", label: "no content type is registered", version: 0, fallback: true,
+  key: "unregistered", label: localize("docprofile.registry.no_content_type_is_registered", "no content type is registered"), version: 0, fallback: true,
   contract: CONTRACT.SUBSTANCE,
 });
 
@@ -91,11 +91,9 @@ export function doctypeFor(ctx) {
                 also: alsoFor(ctx, r.member.key) };
   /* A "no" says which no (R35): nothing recognised, and so the registered fallback's reading. */
   if (r.member === NO_TYPE)
-    out.why = "no content type is registered to recognise documents, so this one is not read as any type: "
-            + "nothing is read from it and what changes in it is not described";
+    out.why = localize("docprofile.registry.no_content_type_is_registered_to_recognise", "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described");
   else if (!r.matched)
-    out.why = "no registered content type recognised this document, so it is read as a document of no "
-            + "recognised type: any substantive difference is reported and not described";
+    out.why = localize("docprofile.registry.no_registered_content_type_recognised", "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described");
   return out;
 }
 

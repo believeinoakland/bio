@@ -12,23 +12,16 @@ Layer 5. 7 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 
 ## Plain findings (K3957)
 
-18 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('query-language.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+3 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('query-language.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
 
 - plain `bio-plane/src/query.mjs:97` "a capture letter is bounded by the fidelity of the text the leg rests on"
 - plain `bio-plane/src/query.mjs:127` "the clock's next date is projected when the action is written, and an entry met, waived"
 - plain `bio-plane/src/query.mjs:132` "the flag was computed on the local day of that write, so an action whose date has passed"
-- plain `bio-plane/src/query.mjs:465` "the inquiry whose basis carries such a leg"
-- plain `bio-plane/src/query.mjs:499` "rests on cannot support B"
-- plain `bio-plane/src/query.mjs:568` "the authored letter stands unchanged"
-- plain `bio-plane/src/query.mjs:573` "an inquiry resting on four legs answers with four rows"
-- plain `bio-plane/src/query.mjs:584` "the record carrying a capture whose reference resolved so"
-- plain `bio-plane/src/query.mjs:587` "the record carrying a capture that concerns the subject"
-- plain `bio-plane/src/query.mjs:629` "the document holding such a content row"
-- plain `bio-plane/src/query.mjs:816` "cited or citable, and it says which"
-- plain `bio-plane/src/query.mjs:866` "the document holding an indexed unit whose text matches"
-- plain `bio-plane/src/query.mjs:920` "not a content row until a member cites it or the assistant proposes it"
-- plain `bio-plane/src/query.mjs:2008` "projection: not a table and a key; the projection is read from bundles"
-- plain `bio-plane/src/query.mjs:2022` "fields: not a map of fields to relations; every field is read as before"
-- plain `bio-plane/src/query.mjs:2985` "it carries ids: a selection, not a search, and a selection is not re-run"
-- plain `bio-plane/src/query.mjs:2999` "no term of it compiles"
-- plain `bio-plane/src/query.mjs:3003` "its sort cannot be read, so what would be saved is not what would run"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/query-language/t33.test.mjs:214` "\"is not available here; read as nothing\""
+- testcopy `bio-plane/test/m/query-language/t33.test.mjs:226` "\"can hold many values per record; not a sort\""
+- testcopy `bio-plane/test/m/query-language/t33.test.mjs:230` "\"can hold many values per record; not a facet\""

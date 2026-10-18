@@ -139,7 +139,7 @@ export function addressOf(ctx, key, label) {
   const locator = ctx && ctx.locator != null ? String(ctx.locator) : "";
   if (!locator) return { ok: false, why: localize("court-doctypes.common.the_capture_names_no_address", "the capture names no address, so whether it is {label} is not established by its address", { label: String(label) }) };
   let r;
-  try { r = systemOf(readerView(ctx), [locator]); } catch { r = { origin: null, why: "its address could not be read" }; }
+  try { r = systemOf(readerView(ctx), [locator]); } catch { r = { origin: null, why: localize("court-doctypes.common.its_address_could_not_be_read", "its address could not be read") }; }
   if (r && r.origin === key) return { ok: true, name: r.name || key };
   if (r && r.origin) return { ok: false, why: localize("court-doctypes.common.its_address_is_one_of", "its address is one of {v1}, not an address the active profiles name for {label}", { v1: String(r.name || r.origin), label: String(label) }) };
   return { ok: false, why: localize("court-doctypes.common.no_active_profile_names_its", "no active profile names its address as {label}'s ({v1})", { label: String(label), v1: String((r && r.why) || "no system matches") }) };
@@ -168,7 +168,7 @@ export function notRegisterWhy(html, what) {
 /** The proceeding's number as `id-spaces.recognise(view, "proceeding", written)` gives it, or null with
  *  why when no form of the view's `proceeding` space matches (R3, R17). */
 export function proceedingNumber(ctx, asWritten) {
-  if (!asWritten) return { number: null, why: "the page states no proceeding number" };
+  if (!asWritten) return { number: null, why: localize("court-doctypes.common.the_page_states_no_proceeding", "the page states no proceeding number") };
   let r = null;
   try { r = recognise(readerView(ctx), "proceeding", asWritten); } catch { r = null; }
   if (r) return { number: r, why: null };
@@ -228,7 +228,7 @@ function rowEntity(r) {
  *  and whether the reading is complete: true only when it is the register's one and only page. */
 export function pageOf(n, of) {
   if (n == null || of == null) return { page: { n: null, of: null, may_continue: false }, complete: false,
-    complete_why: "the page states no pagination, so whether it holds every row of the register is not established" };
+    complete_why: localize("court-doctypes.common.the_page_states_no_pagination", "the page states no pagination, so whether it holds every row of the register is not established") };
   const complete = n === 1 && of === 1;
   return { page: { n, of, may_continue: n < of }, complete,
     complete_why: complete ? null : localize("court-doctypes.common.this_is_page_n_of", "this is page {n} of the register's {of}, so it holds only some of its rows", { n: String(n), of: String(of) }) };
@@ -244,7 +244,7 @@ export function reading({ type, proceeding, parties, rows, key_basis, pagination
     provisional, register, entities: rows.map(rowEntity), at,
   };
   if (failed) out.failed = failed;
-  else if (register && !rows.length) out.failed = "no register row could be read on this page";
+  else if (register && !rows.length) out.failed = localize("court-doctypes.common.no_register_row_could_be_read", "no register row could be read on this page");
   if (notes) out.notes = notes;
   return out;
 }
@@ -291,14 +291,14 @@ export function assessRegister(before, after) {
   if (a.failed || b.failed)
     return failedRead(localize("court-doctypes.common.a_reading_failed_v1", "a reading failed ({v1})", { v1: String(a.failed ? "before: " + a.failed : "after: " + b.failed) }));
   if (a.type && b.type && a.type !== b.type)
-    return failedRead("the two readings are of different kinds of register");
+    return failedRead(localize("court-doctypes.common.the_two_readings_are_of_kinds", "the two readings are of different kinds of register"));
   const na = a.proceeding && a.proceeding.number_as_written, nb = b.proceeding && b.proceeding.number_as_written;
   if (na && nb && na !== nb)
     return failedRead(localize("court-doctypes.common.the_two_readings_are_of", "the two readings are of different proceedings ({na} and {nb})", { na: String(na), nb: String(nb) }));
   const rowsA = Array.isArray(a.rows) ? a.rows : [], rowsB = Array.isArray(b.rows) ? b.rows : [];
   const registers = a.register !== false || b.register !== false;
   if (registers && (!rowsA.length || !rowsB.length))
-    return failedRead(!rowsA.length && !rowsB.length ? "no register row was read in either reading" : localize("court-doctypes.common.no_register_row_was_read", "no register row was read in the {v1} reading", { v1: String(!rowsA.length ? "earlier" : "later") }));
+    return failedRead(!rowsA.length && !rowsB.length ? localize("court-doctypes.common.no_register_row_was_read_either", "no register row was read in either reading") : localize("court-doctypes.common.no_register_row_was_read", "no register row was read in the {v1} reading", { v1: String(!rowsA.length ? "earlier" : "later") }));
 
   const events = [];
   /* The proceeding: its status, its caption and its parties, as written. */
@@ -308,7 +308,7 @@ export function assessRegister(before, after) {
       why: localize("court-doctypes.common.the_proceedings_status_as_written", "the proceeding's status as written changed from {show} to {show_2}", { show: String(show(pa.status_as_written)), show_2: String(show(pb.status_as_written)) }) }));
   if ((pa.caption ?? null) !== (pb.caption ?? null))
     events.push(event("item_changed", { field: "caption", was: pa.caption ?? null, now: pb.caption ?? null,
-      why: "the proceeding's caption as written changed" }));
+      why: localize("court-doctypes.common.the_proceedings_caption_as_written", "the proceeding's caption as written changed") }));
   for (const f of PROCEEDING_FIELDS)
     if ((pa[f] ?? null) !== (pb[f] ?? null))
       events.push(event("item_changed", { field: f, was: pa[f] ?? null, now: pb[f] ?? null,

@@ -23,3 +23,9 @@ Layer 9. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/filings/index.mjs:1327` "prepared as yourself: your own notes are never approved, stamped or recorded as the tea..."
 - plain `bio-plane/src/filings/index.mjs:2363` "this template is wording the team files in its own name: a briefing takes a brief template"
 - plain `bio-plane/src/filings/index.mjs:2773` "no module answers the team's templates here, so no template can be drafted"
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/filings/packet.test.mjs:106` "\"recorded with the version\""
