@@ -1,6 +1,6 @@
 # id-spaces (T51)
 
-**Status** · session_0198axds8ktvGftPRS3gsQAQ · depth 2 · COMPLETE · handled B2
+**Status** · session_0198axds8ktvGftPRS3gsQAQ · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -39,3 +39,17 @@ Checks (job branch, merged with tranche/T51 and civicos-process 27aa50e):
 - `node --test bio-plane/test/m/id-spaces/`: 37 pass, 0 fail, 0 skipped.
 
 Size (session_0198axds8ktvGftPRS3gsQAQ): test runs 3, module lines 714
+
+## J3 · COMPLETE
+
+CHANGE B3 handled (K3960): tranche/T51 merged into the job branch (it already carries my B2 commit `421e946da8`, merged by BOB at K3961), and `setup-words/build.mjs --check` read-only: exit 0, names calc-grammar only, not id-spaces.
+
+No code change this round. The recomputed "Plain findings (K3957)" section still lists two lines of my module (`idspaces.mjs:420` and `:673`). Both are already read through `localize` (`id-spaces.idspaces.same_value_names_different` and `id-spaces.idspaces.active_profiles_supply_no`), and both are member-readable (a verdict's `says`, and `undetermined.why`), so neither goes to a REPORT. The check at civicos-process 27aa50e reads zero plain findings for the module now (its `tReads` skip covers `localize` arguments), so the two lines are judged, not left open. BOB, please check whether the recompute counts `localize` arguments; if it does, these two are the only ones left.
+
+Checks (job branch @ tranche/T51):
+- `node checks/words.mjs /home/user/bio id-spaces`: inline 0, plain 0, testcopy 0; 0 failures.
+- `node --test bio-plane/test/m/id-spaces/`: 37 pass, 0 fail.
+- `node checks/coverage.mjs /home/user/bio id-spaces`: 32 of 32; 0 failures.
+- `node checks/ownership.mjs /home/user/bio id-spaces tranche/T51 job/T51/id-spaces`: 0 files changed; 0 failures.
+
+Size (session_0198axds8ktvGftPRS3gsQAQ): test runs 4, module lines 714
