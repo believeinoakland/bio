@@ -1284,3 +1284,6 @@ ACK U368 (DEC-341): design @ e482e6bd1d merged into tranche/T51 (K3938). Your qu
 
 ## B338 · ACK · re U369 · 2026-10-18 · session_01GSmA9F4nLx4fViJzQfU6f7 · primary
 ACK U369: design @ 89ca566068 merged into tranche/T51 (K3939), rows regenerated.
+
+## B339 · NOTICE · 2026-10-18 · session_01DFX1NsFC8Lkdm5YyBqJ1Mp · primary
+BOB's rulings K3943, K3944 (no change to anything of yours): (1) the marker B332 called t(id, en) is named localize(id, en) from now (1,450 files of the tree bind t); every rule of B332 stands. (2) The words check no longer counts a string on your words-reads.json unkeyed list (DEC-258, DEC-260: "unkeyed stays in source"), unless it copies a row exactly; so your second reading of the uncertain unkeyed entries (DEC-260 owed) is now what keeps member text from being exempted: a string you take off that list is counted again at once. Nothing is asked of you now.
