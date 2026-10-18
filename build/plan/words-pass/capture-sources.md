@@ -25,7 +25,7 @@ Layer 3. 20 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 
 ## Plain findings (K3957)
 
-20 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('capture-sources.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+18 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('capture-sources.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
 
 - plain `bio-plane/src/browserrender.mjs:149` "it is not a public https address"
 - plain `bio-plane/src/browserrender.mjs:150` "its host is one of your team's own (where your team's Civicsmith or its fleet is reached)"
@@ -44,6 +44,4 @@ Layer 3. 20 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/capture-sources/memento.mjs:202` "the TimeGate's Location is not an address"
 - plain `bio-plane/src/capture-sources/memento.mjs:251` "no Memento-Datetime was recorded with this hop"
 - plain `bio-plane/src/cdx.mjs:45` "the first row does not name timestamp and original"
-- plain `bio-plane/src/cdx.mjs:83` "digest is the empty-body digest: the capture holds nothing"
 - plain `bio-plane/src/cdx.mjs:109` "the index holds no 200 response with a non-empty body for this address"
-- plain `bio-plane/src/render.mjs:426` "requests: the renderer did not record the page's requests, so render.requests and rende..."
