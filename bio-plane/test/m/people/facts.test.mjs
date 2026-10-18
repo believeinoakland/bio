@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, doc, ANN, OUT, BOSS, MACHINE } from "./fixture.mjs";
 import { FACT_KINDS, EXPUNGE_GROUNDS, PEOPLE_TABLES } from "../../../src/people/index.mjs";
+import { validAt } from "../../../src/civil-time/index.mjs";
 
 const valid = { from: "2020-01-01", to: "2030-12-31", precision: "day", zone: "America/Los_Angeles" };
 
@@ -40,7 +41,7 @@ test("R9 recordPersonFact records one PFA- fact (kind closed: name, birth, death
   const read = w.p.personAt({ entityId: p, at: "2024-05-05", viewer: ANN });
   assert.equal(read.facts.length, 4);
   assert.deepEqual(read.undetermined.map((f) => f.fact_id), [open.fact_id], "no end stated: undetermined, never current");
-  assert.match(read.undetermined[0].undetermined.why, /no end is stated/);
+  assert.deepEqual(read.undetermined[0].undetermined.why, validAt({ valid: { ...valid, to: null }, basis: null }, { value: "2024-05-05", precision: "day", zone: valid.zone }).why, "R40: civil-time's reason passed on as it answers");
   for (const f of read.facts) { assert.deepEqual(f.citation, doc(c)); assert.ok("grade" in f); }
 });
 

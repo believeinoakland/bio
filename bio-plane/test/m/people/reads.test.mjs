@@ -4,6 +4,11 @@ import assert from "node:assert/strict";
 import { world, doc, ANN, OUT } from "./fixture.mjs";
 import { READ_LIST_MAX, peopleOf } from "../../../src/people/index.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
+import { validAt } from "../../../src/civil-time/index.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
+
+/* civil-time's own reason for a validity open at the end, at a date: what personAt passes on or fills a key with (R40) */
+const openEnd = (from, at) => validAt({ valid: { from, to: null, precision: "day", zone: "UTC" }, basis: null }, { value: at, precision: "day", zone: "UTC" }).why;
 
 const span = (from, to) => ({ from, to });
 
@@ -69,7 +74,7 @@ test("R14 personAt refuses NO_ENTITY and NO_DATE and answers names and life fact
   assert.ok(r.duties.some((d) => d.duty_id === duty));
   assert.ok(!r.duties.some((d) => d.duty_id === gone), "a withdrawn duty binds nothing");
   assert.deepEqual(r.undetermined.map((x) => x.line_id), [open]);
-  assert.match(r.undetermined[0].undetermined.why, /no end is stated/);
+  assert.deepEqual(r.undetermined[0].undetermined.why, openEnd("2018-01-01", "2020-06-01"), "R40: an owner's reason passed on exactly as it answers");
   assert.equal(w.p.personAt({ entityId: p, at: "2020-06-01", viewer: null }).ok, false, "fails closed with no viewer");
 });
 
@@ -243,13 +248,15 @@ test("R14 peopleOf given no services reaches the real modules on the same host (
   const after = plane.personAt({ entityId: p, at: "2024-06-01", viewer: ANN });
   assert.deepEqual(after.posts, []);
   assert.deepEqual(after.undetermined.map((x) => x.line_id), [open]);
-  assert.match(after.undetermined[0].undetermined.why, /current through 2022-12-31/);
+  assert.deepEqual(after.undetermined[0].undetermined.why, { key: "lines.why.stated_current_through", vars: { why: openEnd("2018-01-01", "2024-06-01"), day: "2022-12-31" } }, "R40");
+  assert.ok(hasWord("lines.why.stated_current_through"));
   /* a stale bound cache (lines R7) */
   const shut = w.line("holds", p, w.entity("office", "Dock Warden"), span("2010-01-01", "2030-01-01"));
   w.st.sql.exec(`UPDATE line_bound_cache SET to_instant='2011-01-01' WHERE line_id=?`, shut);
   const stale = plane.personAt({ entityId: p, at: "2020-06-01", viewer: ANN });
   assert.ok(!stale.posts.some((x) => x.line_id === shut));
-  assert.match(stale.undetermined.find((x) => x.line_id === shut).undetermined.why, /cache stale/);
+  assert.deepEqual(stale.undetermined.find((x) => x.line_id === shut).undetermined.why, w.lines.readLine({ lineId: shut, viewer: ANN }).line.valid.why,
+    "R40: the owner's reason, passed on exactly as lines answers it");
   /* the other services resolve too: candidates (entities), statements (events), interests (money), duties */
   for (const r of [plane.samePersonCandidates({ entityId: p, viewer: ANN }), plane.statementsOf({ entityId: p, viewer: ANN }),
                    plane.interestsOf({ entityId: p, viewer: ANN }), plane.careerOf({ entityId: p, viewer: ANN })]) assert.equal(r.ok, true);

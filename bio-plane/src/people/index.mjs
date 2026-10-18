@@ -21,7 +21,7 @@ import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, checkContentExtent, canonicalExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
-import { noSuchEntity, noEntity, entitiesOf, ORGANISATION_KINDS } from "../entities/index.mjs";
+import { noSuchEntity, noEntity, entitiesOf, ORGANISATION_KINDS, ENTITY_KINDS } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
@@ -68,9 +68,16 @@ export const RECORDED_BY_MAX = 500;
 export const DIRECTORY_DEFAULT = 50;
 export const DIRECTORY_MAX = 200;
 export const DIRECTORY_Q_MAX = 200;
-export const DIRECTORY_SHOW = Object.freeze(["both", "people", "organisations"]);
+/* R41 (DEC-330 A50): `show` also lists the record's other kinds; `everything` is every kind of entities R1 but `proceeding`, which
+   has its screen of its own. `both` (people and organisations) stays the default. */
+export const DIRECTORY_SHOW = Object.freeze(["both", "people", "organisations", "offices", "ordinances", "contracts", "funds", "sources", "everything"]);
+export const DIRECTORY_HOLDERS_MAX = 5;
 export const DIRECTORY_SINCE = Object.freeze([30, 90, 365]);
 const ORG_KINDS = ORGANISATION_KINDS;
+const SHOW_KINDS = Object.freeze({
+  people: ["person"], organisations: [...ORG_KINDS], both: ["person", ...ORG_KINDS], offices: ["office"], ordinances: ["ordinance"],
+  contracts: ["contract"], funds: ["fund", "program"], sources: ["source"], everything: ENTITY_KINDS.filter((k) => k !== "proceeding"),
+});
 /* R24 (K1504, M-C8): a machine check's results are shown only at a measured false-alarm rate at most this. */
 export const GATE_RATE_MAX = 0.2;
 /* R24 (DEC-131; N694, K1863): the mark every answered check result carries where it reaches a member, DEC-131's words
@@ -87,6 +94,10 @@ const filled = (v) => typeof v === "string" && v.trim() !== "";
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const clean = (v, max = TEXT_MAX) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+/* R40 (N1226): an undetermined answer's reason is a key with its fills, `{key, vars}`, drawn through `word(key, vars)`;
+   never English. A reason an owner answers (civil-time, lines, events, duties) is passed on as that owner answers it. */
+const why = (key, vars = {}) => ({ key, vars });
+const answered = (w) => filled(w) || (isObj(w) && filled(w.key));
 /* N617: every act is recorded under the control plane's stamp; a row never carries a null `by`. */
 const noBy = (what) => refuse("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
 const json = (v) => { try { return JSON.parse(v); } catch { return null; } };
@@ -319,21 +330,22 @@ export class People {
      a date no later than it the line is `in`, and after it stays undetermined. Event bounds are read as their owner
      answers them, with the resolved edge as their `at`. */
   static #judge(valid, at, currentThrough = null) {
-    if (!isObj(valid)) return { undetermined: true, why: "no validity is stated" };
-    if (valid.undetermined) return { undetermined: true, why: filled(valid.why) ? valid.why : "its owner does not settle its validity" };
+    if (!isObj(valid)) return { undetermined: true, why: why("people.why.validity_stated") };
+    if (valid.undetermined) return { undetermined: true, why: answered(valid.why) ? valid.why : why("people.why.owner_settle_validity") };
     const v = { from: valid.from ?? null, to: valid.to ?? null, precision: valid.precision || "day", zone: valid.zone || "UTC" };
     const judge = (x) => {
       try {
         const r = validAt({ valid: x, basis: null }, People.#dateOf(at, x.zone));
         if (r === "in" || r === "out") return r;
-        if (r && r.refused) return { undetermined: true, why: r.why };
-        return { undetermined: true, why: (r && r.why) || "undetermined" };
-      } catch (e) { return { undetermined: true, why: String((e && e.message) || e) }; }
+        if (r && r.refused) return { undetermined: true, why: answered(r.why) ? r.why : why("people.why.owner_settle_validity") };
+        return { undetermined: true, why: r && answered(r.why) ? r.why : why("people.why.owner_settle_validity") };
+      } catch { return { undetermined: true, why: why("people.why.owner_settle_validity") }; }
     };
     const r = judge(v);
     if (r === "in" || r === "out" || !filled(currentThrough) || v.to !== null) return r;
     if (judge({ ...v, to: currentThrough, precision: "day" }) === "in") return "in";
-    return { undetermined: true, why: `${r.why}; it is stated current through ${currentThrough}, and the date is after that` };
+    /* lines R21's composed reason takes its owner's as text; an owner's key is passed on as it answered (R40) */
+    return { undetermined: true, why: filled(r.why) ? why("lines.why.stated_current_through", { why: r.why, day: currentThrough }) : r.why };
   }
   /* R9: a validity as civil-time's value, or the bound it refuses. */
   static #validity(valid) {
@@ -545,7 +557,7 @@ export class People {
     if (!this.#one(`SELECT 1 AS x FROM identity_claims WHERE (a=? OR b=?) AND withdrawn_at IS NULL LIMIT 1`, entityId, entityId))
       return alone("linked");
     const held = this.#record.readDerived(MODULE, CLUSTER_TABLE, entityId);
-    if (!held || held.stale) return alone("undetermined", "the identity cluster's cache is stale or missing, so no cluster is answered until it is rebuilt");
+    if (!held || held.stale) return alone("undetermined", why("people.identity_cluster_cache"));
     const cached = new Set(this.#rows(`SELECT entity_id FROM identity_cluster WHERE component=?`, held.row.component).map((r) => r.entity_id));
     const live = new Set([entityId]);
     for (let frontier = [entityId]; frontier.length;) {
@@ -556,7 +568,7 @@ export class People {
       frontier = next;
     }
     const sameAs = cached.size === live.size && [...live].every((x) => cached.has(x));
-    if (!sameAs) return alone("undetermined", "the identity cluster's cache differs from its rebuild, so no cluster is answered until it is rebuilt");
+    if (!sameAs) return alone("undetermined", why("people.identity_cluster_cache_differs"));
     /* The viewer's own component: only the claims it may see join (R31), bounded (R5). */
     const seen = (c) => this.#seesProject(c.project, viewer);
     const members = new Set([entityId]), links = [], claimIds = new Set();
@@ -593,7 +605,7 @@ export class People {
     const apart = touching("not_same_as").filter(inside).map(People.#claimView);
     const unsure = touching("unsure").map(People.#claimView);
     return { state: apart.length ? "undetermined" : "linked",
-             ...(apart.length ? { why: `a not_same_as claim (${apart.map((c) => c.claim_id).join(", ")}) joins two members of this component, so the cluster is undetermined` } : {}),
+             ...(apart.length ? { why: why("people.why.claim_joins_two", { apart: apart.map((c) => c.claim_id).join(", ") }) } : {}),
              members: ids, links, unsure, not_same_as: apart, truncated };
   }
 
@@ -968,8 +980,8 @@ export class People {
         const state = isObj(x.in_force) ? x.in_force.state : null;
         if (state === "not_in_force") continue;
         if (state === "in_force") duties.push({ member: m, ...x });
-        else dutiesUnsettled.push({ member: m, ...x, undetermined: { why: isObj(x.in_force) && filled(x.in_force.why) ? x.in_force.why
-          : "whether its source is in force at the date is not settled" } });
+        else dutiesUnsettled.push({ member: m, ...x, undetermined: { why: isObj(x.in_force) && answered(x.in_force.why) ? x.in_force.why
+          : why("people.why.whether_source_force") } });
       }
     }
     const n = bounded(names), f = bounded(facts.held), p = bounded(postsAt.held, READ_LIST_MAX, posts.truncated);
@@ -1106,7 +1118,7 @@ export class People {
       }
     }
     const items = [...byId.values()];
-    const seq = (a, b) => { try { return this.#events.sequence({ a: a.event_id, b: b.event_id }); } catch (e) { return { undetermined: true, why: String((e && e.message) || e) }; } };
+    const seq = (a, b) => { try { return this.#events.sequence({ a: a.event_id, b: b.event_id }); } catch { return { undetermined: true, why: why("people.why.record_settle_order") }; } };
     const memo = new Map();
     const order = (a, b) => {
       const k = `${a.event_id}\u0000${b.event_id}`;
@@ -1125,7 +1137,7 @@ export class People {
       const s = order(items[i - 1], items[i]);
       const v = typeof s === "string" ? s : isObj(s) ? s.order ?? s.answer ?? null : null;
       if (v !== "before" && v !== "after")
-        unsettled.push({ a: items[i - 1].event_id, b: items[i].event_id, why: isObj(s) && filled(s.why) ? s.why : "the record does not settle their order" });
+        unsettled.push({ a: items[i - 1].event_id, b: items[i].event_id, why: isObj(s) && answered(s.why) ? s.why : why("people.why.record_settle_order") });
     }
     const b = bounded(items, READ_LIST_MAX, truncated);
     return { ok: true, found: true, entity_id: entityId, cluster, items: b.items, order_undetermined: unsettled.filter((u) =>
@@ -1162,7 +1174,7 @@ export class People {
     const nowIso = this.#now();
     const today = nowIso.slice(0, 10);
     const member = viewerPredicate(viewer).member;
-    const kinds = shown === "people" ? ["person"] : shown === "organisations" ? [...ORG_KINDS] : ["person", ...ORG_KINDS];
+    const kinds = SHOW_KINDS[shown];
     const marks = kinds.map(() => "?").join(",");
     const followed = this.#rows(`SELECT entity_id, kind FROM entities WHERE kind IN (${marks}) ORDER BY entity_id`, ...kinds);
     /* The mentions the viewer may see (membership R88: one rule), each with its bundle's type and project and its
@@ -1219,7 +1231,8 @@ export class People {
     const page = rest.slice(0, cap).map((r) => {
       const look = r.look || this.#directoryLook({ entity_id: r.entity, kind: r.kind }, today, viewer);
       return { entity: r.entity, kind: r.kind, name: look.name, today: look.today, documents: r.t.documents.size,
-               questions: r.t.questions.size, projects: r.t.projects.size, newest_added: r.newest_added, mine: r.mine };
+               questions: r.t.questions.size, projects: r.t.projects.size, newest_added: r.newest_added, mine: r.mine,
+               ...(r.kind === "office" ? { holders: look.holders } : {}) };
     });
     const last = page.length ? rest[page.length - 1] : null;
     const truncated = rest.length > cap;
@@ -1261,7 +1274,8 @@ export class People {
     if (e.kind !== "person") {
       const noteBy = filled(ent.declared_by) ? ent.declared_by : null;
       return { name, words, posts: [], today: { kind: e.kind, sector: ent.sector ?? null, note: ent.note ?? null, note_by: noteBy,
-                                                machine: isMachineIdentity(noteBy) === true } };
+                                                machine: isMachineIdentity(noteBy) === true },
+               ...(e.kind === "office" ? { holders: this.#holdersOf(e.entity_id, today, viewer) } : {}) };
     }
     const label = (id) => { const x = filled(id) ? this.#entity(id) : null; return x ? { entity: id, label: x.label ?? null } : null; };
     const heldOn = (l) => !l.withdrawn && People.#judge(l.valid, today, People.#through(l)) === "in";
@@ -1276,6 +1290,20 @@ export class People {
     }
     for (const x of posts) for (const s of [x.office.label, x.body?.label, x.title]) if (filled(s)) words.push(s.trim().replace(/\s+/g, " ").toLowerCase());
     return { name, words, posts, today: { posts } };
+  }
+
+  /* R41: the persons holding an office today, at most DIRECTORY_HOLDERS_MAX, by entity id: a `holds` line to it whose
+     validity civil-time does not rule `out` at `today` (an open end is not out), as the viewer sees the line. */
+  #holdersOf(office, today, viewer) {
+    const found = new Map();
+    for (const l of listOf(this.#lines ? this.#lines.linesOf({ entity: office, kinds: ["holds"], direction: "to", limit: READ_LIST_MAX, viewer }) : null)) {
+      const who = lineFrom(l);
+      if (l.withdrawn || l.kind !== "holds" || lineTo(l) !== office || !filled(who) || found.has(who)) continue;
+      if (People.#judge(l.valid, today, People.#through(l)) === "out") continue;
+      const e = this.#entity(who);
+      if (e && e.kind === "person") found.set(who, { entity: who, label: e.label ?? null });
+    }
+    return [...found.values()].sort((a, b) => (a.entity < b.entity ? -1 : a.entity > b.entity ? 1 : 0)).slice(0, DIRECTORY_HOLDERS_MAX);
   }
 
   /* ===================================================================== *
@@ -1737,7 +1765,7 @@ export class People {
                    ...(j === "in" ? {} : { undetermined: { why: j.why } }) });
     }
     if (items.length > BOUNDS.hub)
-      return { items: [], hub: { set_size: items.length, why: `this person is an end of more than ${BOUNDS.hub} identity claims you can see` } };
+      return { items: [], hub: { set_size: items.length, why: why("people.why.person_end_identity", { hub: BOUNDS.hub }) } };
     const start = Number.isInteger(page) && page > 0 ? page : 0;
     const slice = items.slice(start, start + BOUNDS.fanout);
     return { items: slice, ...(start + BOUNDS.fanout < items.length ? { next: start + BOUNDS.fanout } : {}) };
