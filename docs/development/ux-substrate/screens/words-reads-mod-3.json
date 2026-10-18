@@ -1416,19 +1416,15 @@
  },
  "retrieval": {
   "reads": [
-   "monitoring.reason_given",
    "refusal.MEANING_ROWS_NO_ARM",
    "refusal.MEANING_ROWS_UNKNOWN_ARM",
    "refusal.NO_SUCH_SELECTION",
    "refusal.SET_MOVED",
    "retrieval.capture_text_skipped_says",
-   "retrieval.column_why",
-   "retrieval.extent_why",
    "retrieval.lead",
    "retrieval.note.content_axis_read",
    "retrieval.note.read_level_failed",
    "retrieval.note.record_holds_capture",
-   "retrieval.recorded_none_registered",
    "retrieval.syntax.bare_field_leg",
    "retrieval.syntax.bare_words_ranked",
    "retrieval.syntax.content_cap_apply",
@@ -1459,8 +1455,6 @@
    "retrieval.text.passage_matched_over",
    "retrieval.text.row_over_document",
    "retrieval.text.tally_covers_first",
-   "retrieval.unread.read_followed_people",
-   "retrieval.unread.read_followed_people_offices",
    "retrieval.why.answer_lists_indexed",
    "retrieval.why.anybody_looked_all",
    "retrieval.why.arm_answers_meaning",
@@ -1470,66 +1464,9 @@
    "retrieval.why.document_scope_hold_rows",
    "retrieval.why.document_scope_holds",
    "retrieval.why.finding_rests_rows",
-   "retrieval.why.matching_unit_over",
-   "retrieval.why.names_day_calendar",
-   "retrieval.why.offers_recordedby_read",
-   "retrieval.why.reachable",
-   "retrieval.why.read_answered_promise",
-   "retrieval.why.read_refused",
-   "retrieval.why.read_threw",
-   "retrieval.why.words_name_month",
-   "retrieval.why.words_write_day",
-   "state.empty"
+   "retrieval.why.matching_unit_over"
   ],
   "unkeyed": [
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 69,
-    "text": "no later than",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 69,
-    "text": "not later than",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 69,
-    "text": "not more than",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 69,
-    "text": "no more than",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 76,
-    "text": "one hundred twenty",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 76,
-    "text": "one hundred eighty",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 80,
-    "text": "is required to",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
-   {
-    "file": "retrieval/findin.mjs",
-    "line": 80,
-    "text": "are required to",
-    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
-   },
    {
     "file": "retrieval/frontier.mjs",
     "line": 317,
@@ -1574,6 +1511,77 @@
    }
   ],
   "renamed": {}
+ },
+ "retrieval-browse": {
+  "reads": [
+   "monitoring.reason_given",
+   "retrieval.column_why",
+   "retrieval.extent_why",
+   "retrieval.recorded_none_registered",
+   "retrieval.unread.read_followed_people",
+   "retrieval.unread.read_followed_people_offices",
+   "retrieval.why.names_day_calendar",
+   "retrieval.why.offers_recordedby_read",
+   "retrieval.why.reachable",
+   "retrieval.why.read_answered_promise",
+   "retrieval.why.read_refused",
+   "retrieval.why.read_threw",
+   "retrieval.why.words_name_month",
+   "retrieval.why.words_write_day",
+   "state.empty"
+  ],
+  "unkeyed": [
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 69,
+    "text": "no later than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 69,
+    "text": "not later than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 69,
+    "text": "not more than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 69,
+    "text": "no more than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 76,
+    "text": "one hundred twenty",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 76,
+    "text": "one hundred eighty",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 80,
+    "text": "is required to",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval-browse/findin.mjs",
+    "line": 80,
+    "text": "are required to",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   }
+  ],
+  "renamed": {},
+  "note": "split from retrieval (DEC-334; build/extraction/retrieval-browse.md, K3841): findin.mjs and browse.mjs move whole, the key names unchanged"
  },
  "case-checker": {
   "reads": [

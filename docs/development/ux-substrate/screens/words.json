@@ -46202,7 +46202,7 @@
   },
   {
    "key": "screen.question.say012",
-   "en": "⁂Composed by the assistant, working for Mai, October 8Stated bias it was composed under: ⁂Stated bias now: ⁂",
+   "en": "⁂Composed by the assistant, working for Mai, October 8",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46768,8 +46768,8 @@
    "note": "DEC-330: B306 A34: document drawn word"
   },
   {
-   "key": "screen.document.a34.nobody_has_asked_yet_whether_a_newer_cop",
-   "en": "nobody has asked yet whether a newer copy exists",
+   "key": "screen.document.a34.not_checked_yet",
+   "en": "not yet checked for a newer copy",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A34: document drawn word"
@@ -48309,14 +48309,14 @@
   },
   {
    "key": "screen.finder.covered.docs.says.other",
-   "en": "Searched {n} of the {all} documents your team holds. {hidden} are in projects where you can see only that they exist, so they were not searched for you.",
+   "en": "Searched the {n} documents you may read. {p} projects you can see only by name were not searched for you, and what they hold is not shown.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see"
+   "note": "DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see; B312 (retrieval R29, R89): counts the projects, never their documents"
   },
   {
    "key": "screen.finder.covered.docs.says.one",
-   "en": "Searched {n} of the {all} documents your team holds. 1 is in a project where you can see only that it exists, so it was not searched for you.",
+   "en": "Searched the {n} documents you may read. 1 project you can see only by name was not searched for you, and what it holds is not shown.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: the count of one (consistency read)"
