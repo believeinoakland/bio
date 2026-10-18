@@ -24145,8 +24145,8 @@ var PNG_REFUSALS = {
   PNG_NO_IDAT: "the PNG carries no image data",
   PNG_INTERLACED: "the PNG is interlaced; this reader reads only the non-interlaced form it writes",
   PNG_UNSUPPORTED_SHAPE: "the PNG's colour type / bit depth pair is not one this estate writes",
-  PNG_FILTER_UNSUPPORTED: "a scanline uses a filter type this reader does not implement",
-  PNG_SHORT_RASTER: "the inflated raster is shorter than the header's dimensions require"
+  PNG_FILTER_UNSUPPORTED: localize("ocr-worker.pngsamples.a_scanline_uses_a_filter", "a scanline uses a filter type this reader does not implement"),
+  PNG_SHORT_RASTER: localize("ocr-worker.pngsamples.the_inflated_raster_is_shorter", "the inflated raster is shorter than the header's dimensions require")
 };
 var refuse2 = (code, detail = {}) => ({ ok: false, reason: code, detail: PNG_REFUSALS[code], ...detail });
 var SIG2 = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -24753,22 +24753,22 @@ var PLANE_OPS = Object.freeze({});
 var REFUSALS2 = {
   R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
   BAD_SHA: "capture_sha must be 64 lowercase hex",
-  BAD_STORE: "store must be named: this member reads a capture from one namespace and guesses none",
+  BAD_STORE: localize("ocr-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none"),
   /* D-478. Deliberately says what it is NOT as well as what it is: the answer this replaces was NOT_FOUND, and a
      reader who cannot tell the two apart reads "there is no such capture" where the truth is "there is no such
      namespace" (CLAUDE.md §1 — *not found* is not *absent*). */
-  NAMESPACE_UNKNOWN: "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
-  BAD_PAGES: "pages must be a non-empty array of 0-based page numbers",
-  NOT_FOUND: "no capture with that sha in that store",
+  NAMESPACE_UNKNOWN: localize("ocr-worker.contract.no_namespace_by_that_name", "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture"),
+  BAD_PAGES: localize("ocr-worker.contract.pages_must_be_a_non", "pages must be a non-empty array of 0-based page numbers"),
+  NOT_FOUND: localize("ocr-worker.contract.no_capture_with_that", "no capture with that sha in that store"),
   ENGINE_ABSENT: "the OCR engine did not load; this member cannot transcribe anything",
-  PAGE_NOT_RENDERABLE: "the page could not be turned into pixels, and the renderer says why",
-  FRAME_OVER_MEASURED_BOUND: "this page's frame is larger than the largest frame measured to complete",
-  PIXELS_UNREADABLE: "the rendered container could not be read back to samples",
-  ENGINE_FAILED: "the engine refused or failed on this frame",
-  NOTHING_TRANSCRIBED: "the engine returned no anchorable word for this page",
+  PAGE_NOT_RENDERABLE: localize("ocr-worker.contract.the_page_could_not", "the page could not be turned into pixels, and the renderer says why"),
+  FRAME_OVER_MEASURED_BOUND: localize("ocr-worker.contract.this_page_s_frame_is", "this page's frame is larger than the largest frame measured to complete"),
+  PIXELS_UNREADABLE: localize("ocr-worker.contract.the_rendered_container_could_not", "the rendered container could not be read back to samples"),
+  ENGINE_FAILED: localize("ocr-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this frame"),
+  NOTHING_TRANSCRIBED: localize("ocr-worker.contract.the_engine_returned_no_anchorable", "the engine returned no anchorable word for this page"),
   /* R23. A picture is a one-page document; this is not the renderer's refusal (R7 step 2) but the member's own,
      stated before any pixel is made, so the page asked for is named. */
-  NO_SUCH_PAGE: "a picture is a one-page document (page 0); the page asked for does not exist"
+  NO_SUCH_PAGE: localize("ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist")
 };
 var PICTURE_MAX_EDGE = 4096;
 function isPicture(bytes) {

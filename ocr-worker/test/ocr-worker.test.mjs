@@ -31,6 +31,7 @@ import { deflateSync } from "node:zlib";
 import { ocrWorkerDef, WASM, MODEL } from "./memberworker.mjs";
 import { makeMember, NAMESPACES } from "../src/member.mjs";
 import { MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES as CONTRACT_NAMESPACES, PICTURE_MAX_EDGE, PLANE_OPS, REFUSALS } from "../src/contract.mjs";
+import { PNG_REFUSALS } from "../src/pngsamples.mjs";
 import { renderPageToPixels } from "../../pdf-worker/src/pagepixels.mjs";
 import { renderPictureToPixels } from "../../pdf-worker/src/picturepixels.mjs";
 import { checkAnchor, checkConfidence } from "../../bio-plane/src/textchain.mjs";
@@ -950,6 +951,30 @@ console.log("\n--- B7 · R20: no place is named in behaviour ---");
   t("R20 no wire answer names a place outside the measurement citation", /oakland|alameda|legistar|california/i.test(text), false);
   t("R20 and the citation is provenance, the same string in every answer",
     [...new Set(WIRE.filter((b) => b.measured_by).map((b) => b.measured_by))], [MEASURED_BY]);
+}
+
+console.log("\n--- B8 · the words rule: each refusal read through localize under its own id (K874, K3949) ---");
+{
+  /* Each id the words check assigned to a refusal text, named here so every id has a test. The text itself is
+     never held by the suite (K3810): the check is that the refusal is a sentence the id reads, present and
+     non-blank, and that the wire answer carries it (the refusal tests above). Whether the word table holds a row
+     for the id is the words check's, not this suite's. */
+  const READ_BY_ID = [
+    ["ocr-worker.contract.store_must_be_named_this", REFUSALS.BAD_STORE],
+    ["ocr-worker.contract.no_namespace_by_that_name", REFUSALS.NAMESPACE_UNKNOWN],
+    ["ocr-worker.contract.pages_must_be_a_non", REFUSALS.BAD_PAGES],
+    ["ocr-worker.contract.no_capture_with_that", REFUSALS.NOT_FOUND],
+    ["ocr-worker.contract.the_page_could_not", REFUSALS.PAGE_NOT_RENDERABLE],
+    ["ocr-worker.contract.this_page_s_frame_is", REFUSALS.FRAME_OVER_MEASURED_BOUND],
+    ["ocr-worker.contract.the_rendered_container_could_not", REFUSALS.PIXELS_UNREADABLE],
+    ["ocr-worker.contract.the_engine_refused_or_failed", REFUSALS.ENGINE_FAILED],
+    ["ocr-worker.contract.the_engine_returned_no_anchorable", REFUSALS.NOTHING_TRANSCRIBED],
+    ["ocr-worker.contract.a_picture_is_a_one", REFUSALS.NO_SUCH_PAGE],
+    ["ocr-worker.pngsamples.a_scanline_uses_a_filter", PNG_REFUSALS.PNG_FILTER_UNSUPPORTED],
+    ["ocr-worker.pngsamples.the_inflated_raster_is_shorter", PNG_REFUSALS.PNG_SHORT_RASTER],
+  ];
+  for (const [id, text] of READ_BY_ID)
+    t(`${id} names a non-blank refusal sentence`, typeof text === "string" && text.trim().length > 0, true);
 }
 
 footReached = true;
