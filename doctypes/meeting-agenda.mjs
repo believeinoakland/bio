@@ -214,8 +214,8 @@ export default {
       if (date && body) break;
     }
     const body_why = body ? null
-      : bodyEnds.length ? "no line at the head of this agenda names a body in the words the active jurisdiction profiles give"
-      : "no active jurisdiction profile says how a body is named, so which body meets is not read";
+      : bodyEnds.length ? localize("doctypes.meeting-agenda.no_body_line", "no line at the head of this agenda names a body in the words the active jurisdiction profiles give")
+      : localize("doctypes.meeting-agenda.no_body_profile", "no active jurisdiction profile says how a body is named, so which body meets is not read");
     const filePats = agendaFileLines(ctx);
     const isFurniture = agendaFurniture(ctx);
 
@@ -274,7 +274,7 @@ export default {
        as an agenda does not let that single verdict stand for the whole document. */
     return { entities, body, body_why, date,
              references_why: filePats.length ? null
-               : "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no item was read",
+               : localize("doctypes.meeting-agenda.no_file_shape", "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no item was read"),
              also_satisfies: alsoSatisfies(ctx, "meeting_agenda"),
              at: ctx.at || null };
   },
@@ -284,8 +284,7 @@ export default {
     /* A read that found nothing is a failed reader, never an emptied agenda. */
     if (!a.entities.length || !b.entities.length)
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               why: "the items on this agenda could not be read this time, so nothing is "
-                  + "claimed about them either way" };
+               why: localize("doctypes.meeting-agenda.unread", "the items on this agenda could not be read this time, so nothing is claimed about them either way") };
 
     const d = diffEntities(a.entities, b.entities);
     const events = [];
@@ -295,16 +294,16 @@ export default {
        lesson does not transfer: an agenda is one meeting's list, not a range). */
     for (const e of d.gone)
       events.push(event("item_pulled", { key: e.key, label: e.label,
-        why: "an item of legislation this agenda listed is no longer on it" }));
+        why: localize("doctypes.meeting-agenda.pulled", "an item of legislation this agenda listed is no longer on it") }));
     for (const alt of d.altered)
       events.push(event("item_changed", { key: alt.entity.key, label: alt.entity.label,
         moved: alt.moved,
-        why: "what this agenda says about an item changed" }));
+        why: localize("doctypes.meeting-agenda.altered", "what this agenda says about an item changed") }));
     /* Items arriving is what a supplemental agenda IS (the measured document is
        one); routine, and recorded. */
     for (const e of d.appeared)
       events.push(event("item_added", { key: e.key, label: e.label,
-        why: "an item of legislation was added to this agenda" }));
+        why: localize("doctypes.meeting-agenda.added", "an item of legislation was added to this agenda") }));
 
     bySeverity(events);
     const intact = a.entities.filter((e) =>

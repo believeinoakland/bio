@@ -1,6 +1,6 @@
 # doctypes (T51)
 
-**Status** · session_01PbhX4XrTyKrafF9MPnkqXP · depth 2 · COMPLETE · handled B1
+**Status** · session_01PbhX4XrTyKrafF9MPnkqXP · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -79,3 +79,30 @@ Plain (unformatted) member-facing sentences remain in doctypes and the words che
 **M-T51-1:** module raw source lines = 3507 (`wc -l doctypes/*.mjs`, the module's own code; excludes doctypes/test/).
 
 Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 1, module lines 3507
+
+## J5 · REPORT
+
+Two strings in doctypes/index.mjs stay plain. They are the `why` of registerDoctypes' return value (index.mjs:48, "the types are already registered here", and :58, "every type was already held by this registry"). The composition root reads them at wiring time, and no member sees them. The R2 test matches /already/ on them. Please put them on the design's unkeyed list (K3944), or say if they should be keyed instead.
+
+## J6 · COMPLETE
+
+**Entries applied**
+- B3 (CHANGE, K3957, K3959) read and acted on. Merged tranche/T51 (fast-forward to 3bc25c6685) and pulled civicos-process (27aa50e) first.
+- The 79 plain findings in build/plan/words-pass/doctypes.md are judged. Every sentence a member reads now goes through localize('doctypes.<file stem>.<slug>', en, vars): labels, reasons, signals, and the whole sentence of each two-line concatenation (commit 247c693374 on job/T51/doctypes). Test assertions match the same text, so no test changed.
+- Two strings remain plain and are REPORTed to BOB (index.mjs:48 and :58), as wiring text.
+
+**Deferred:** none.
+
+**Other modules:** none.
+
+**Tests and checks** (from civicos-process)
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0.
+- `checks/words.mjs /home/user/bio doctypes`: 2 findings, both REPORTed above (index.mjs:48, :58); inline 0 other, testcopy 0, missingkey 0.
+- `checks/format.mjs /home/user/bio`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 74 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 10 files changed by doctypes; 0 failures.
+
+**M-T51-1:** module raw source lines = 3498 (`wc -l doctypes/*.mjs`; excludes doctypes/test/).
+
+Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 2, module lines 3498
