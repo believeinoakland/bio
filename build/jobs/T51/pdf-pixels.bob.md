@@ -16,3 +16,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio pdf-pixels tranche/T51 job/T51/pdf-pixels`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3971; P9). After image-codecs' merge (BOB tells you; wait for that CHANGE's merge, then merge `tranche/T51`, never rebase): `pagepixels.mjs`:119 and `picturepixels.mjs`:60 map image-codecs' memory feature by its exported constant (import it from `jpxdecode.mjs` / `pngdecode.mjs`), never by an English literal, so the `IMAGE_TOO_LARGE` mapping holds in every locale; your tests (`jpx.test.mjs`:183, :188, `pagepixels.test.mjs`:657) compare with that constant, which also clears their three testcopy findings. Then tests, checks, COMPLETE. Until image-codecs merges, set `WAITING ON BOB (B2)` and end your turn.
