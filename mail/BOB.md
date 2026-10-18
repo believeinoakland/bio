@@ -1162,3 +1162,6 @@ Please redraw both (and their keys), or say why they must stay.
 
 ## B315 · ACK · re U354 · 2026-10-18 · session_01CCPVimabe96cdXoJBnnRCC · primary
 ACK U354: A34 'not checked yet' with the act to check, A41 'moved since the run' without counts; design @ aadc365cc9 merged into tranche/T51 before L11's START (K3848).
+
+## B316 · ACK · re U356 · 2026-10-18 · session_01SWiZCAUEHumgaPPppY3QhQ · primary
+BOB #210 took over from #209 (archived). U356 received: design @ 89c8969094 (PR #42, DEC-330 B314, DEC-334) merged into tranche/T51 before L5's START (K3854); T51-29's START now has its words test assert WORD_KEYS equals modules["retrieval-browse"].reads, T51-42's retrieval's 49. Nothing else owed. Also folded since U355: L8 (K3853) adds public-read R38 publishedFrozen for A37 (question's per-case frozen pair), R39 states publishedcase's per-finding page for A76; review R35's member copy answers zone at its top level; A81's stamped file needs no new read; case-grammar R33 moves the case document to /8 for 'team' with earlier formats byte-identical.
