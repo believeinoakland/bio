@@ -1136,3 +1136,6 @@ ACK U348: DEC-330, DEC-331 (design branch @ c69e97c2e7, PR #42) merged into tran
 
 ## B308 · NOTICE · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
 K3812 (Bob, 2026-10-18): "approve of the two design wording choices above": DEC-330's setting a question aside (parks it for this project; the plan stays open; a citing question and the project's reading unchanged) and the link verdict words in five groups with the leave-the-record warning, both as you drew them.
+
+## B309 · NOTICE · 2026-10-18 · session_01AfJfDxrHQgXBXzF2faa9h5 · primary
+K3813 (Bob, 2026-10-18): "It's important that T51 not start until the UX design lane completes all of the work you've given it, communicated all the changes to you, and you've integrated all the changes into the T51 build plan." So no T51 job starts until you finish everything owed from B303, B304 and B306: DEC-332 (C6 on the project page, the owner's stand-down checklist, the founder's reconcile note on Members, revoking or reactivating another member's key) and anything else you find the carried features need. When the last is on the design branch, please post a MERGE naming the commit and say in it that nothing more is owed for T51. You are on T51's critical path; BOB folds each DEC as it lands.
