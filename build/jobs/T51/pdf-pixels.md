@@ -1,6 +1,6 @@
 # pdf-pixels (T51)
 
-**Status** · session_01CDmjLZR4AnXcUoKjGVUyEk · depth 2 · WAITING ON BOB (B2) · handled B1
+**Status** · session_01CDmjLZR4AnXcUoKjGVUyEk · depth 2 · WAITING ON BOB (B2) · handled B2
 
 ## J1 · REPORT
 
