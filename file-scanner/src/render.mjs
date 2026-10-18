@@ -39,7 +39,7 @@ export async function render(deps, body) {
     o = { ok: true };
   }
   if (!o.ok) return refuse(STATUS[o.reason] || 409, o.reason in STATUS ? o.reason : 'DIGEST_MISMATCH');
-  if (!r) return refuse(503, 'RENDER_FAILED', { message: 'the renderer could not be reached' });
+  if (!r) return refuse(503, 'RENDER_FAILED', { message: localize('file-scanner.render.the_renderer_could_not', 'the renderer could not be reached') });
   if (r.status !== 200) {
     const e = await r.json().catch(() => ({}));
     const code = KNOWN.has(e.code) ? e.code : 'RENDER_FAILED';
