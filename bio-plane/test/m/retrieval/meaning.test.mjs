@@ -47,7 +47,7 @@ test("R11: the answer carries arm, table, grain, identity, query, gate, cached, 
     assert.ok(Object.prototype.hasOwnProperty.call(r, k), k);
   assert.deepEqual([r.arm, r.table, r.grain, r.identity], ["leg", MEANING.leg.table, MEANING.leg.rowGrain, MEANING.leg.identity]);
   assert.deepEqual([r.count, r.limit, r.offset, r.total], [2, 2, 0, 5]);
-  assert.deepEqual(Object.keys(r.query), ["q", "warnings", "meaningArms"]);
+  assert.deepEqual(Object.keys(r.query), ["q", "warnings", "meaningArms", "scope"]);
   assert.equal(r.gate.applied, 3, "count, rows, levels");
   assert.deepEqual(r.cached, []);
   const rest = w.retrieval.meaningRows({ q: "", rows: "leg", viewer: V("vera"), limit: 2, offset: 4 });

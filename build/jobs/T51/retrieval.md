@@ -1,0 +1,50 @@
+# retrieval (T51)
+
+**Status** · session_01JxyVZhdF7dFTzuF5dsCwRc · depth 2 · COMPLETE · handled B4
+
+## Work notes (RETRIEVAL #20)
+
+- **R88 met** (`index.mjs`): `routesCrossed(ast)` over `query-language`'s parse (`plan.ast`, its R1: no new requirement needed there; a `meaning` node of arm `passage` is the passages route, every other leaf the fields route). `search` and `meaningRows` refuse `ROUTES_CROSSED` (`routes: ["fields","passages"]`, `detail` naming both) before any statement runs. Readings I took: an `OR` is crossed when one branch holds a passage term and another branch of the same `OR` holds any other term, at any depth, a `NOT` keeping its operand's route; the parse is the plan's own, so under `rows=passage` bare words are already passage words (query-language R31) and `sewer OR parks` is not crossed there, and under `rows=leg` bare words are dropped (R32). The widened (OR) reading of an empty conjunction is not offered when it would cross routes (`widen` null). Tests: `t51.test.mjs` (R88 twice).
+- **R89 met**: `scope.existence_only_projects` (`[{project, name}]` from `membership.existenceAct`, never `owners`) and `scope.existence_only_count`, on every meaning arm. The key `existence_only_count` for "their count" is my choice. Three existing tests that deep-equal the scope's keys (`content-arm.test.mjs` x3 assertions, `meaningread.test.mjs`) gained the two keys. Tests: `t51.test.mjs` (R89 twice).
+- Stale comment `checks.mjs`:73 reworded (no longer cites `app.html`).
+- Waited for `retrieval-browse` (B3 CHANGE); merged `tranche/T51`.
+
+## Completion (T51-42)
+
+**Entries applied.** R87, R88, R89, R90, the stale comment `checks.mjs`:73.
+- **R90**: `findin.mjs` and `browse.mjs` deleted; from `index.mjs` `findIn`, `#findScope`, `registerRecordedBy`, `registerBrowseMarks`, `browseMarks`, `recordedReads`, `entitiesFor`, the four fields and the imports only they used. The constructor builds `retrievalBrowseOf` with `sql, membership, host, order, entities, recorders` and the five host reads (`sight`, `planOf`, `runQuery`, `localeOf`, `selectionRead`, bound arrows). `findIn`, `browse`, the two registrations and (kept because `answers`' and `citation`'s tests read it) `recordedReads` are one-line delegates; the `findin` and `browse` route arms are unchanged. Every old export is re-exported from `retrieval-browse` (identity-equal, tested), `BROWSE_SCOPES` and `BROWSE_ID_CHUNK` added. `words.mjs` is down to 49 keys; its test asserts `WORD_KEYS` equals `modules.retrieval.reads`.
+- **R87**: `searchFields().scopes` (copies of `BROWSE_SCOPES`); `search` and `meaningRows` take `scope` (also the routes' `scope` query parameter). The scope is `scopeMembers`' ids for the viewer, intersected with any `ids` given, handed to the compile as its `ids` (an empty scope is the sentinel `[""]`, since the compile reads an empty list as no restriction). The answer states it in `query.scope` (null when none; this is the only change to a no-scope answer, and the `query` key-list assertions of R6/R11 gained `scope`), `query.scope_truncated` only when true, `query.scope_undetermined` (why) when the marks could not be read. Unknown key: `SCOPE_UNKNOWN` with `scopes`. I put the applied scope in `query` because `meaningRows` already answers a top-level `scope` (the four-level statement's).
+- **R88, R89**: as in the work notes above.
+
+**Tests.** `node --test bio-plane/test/m/retrieval/`: 167 tests, 167 pass. Moved out with the code (their copies are in `retrieval-browse`): `browse.test.mjs`, `findin.test.mjs`, `t50.test.mjs`, `t37.test.mjs` deleted; `t36.test.mjs` keeps R77 `selectionRead`, `findIn` over a real selection and the real-`recordedBy` test; new `delegation.test.mjs` (R90: op equality with an independently built module, a registered stub reaching both, second registration refused, the re-exports, `BROWSE_ID_CHUNK === SELECTION_ID_CHUNK`, no copy, under 4,000 lines, the five host reads); `t51.test.mjs` R87 x5, R88 x2, R89 x2. Others run: `answers` 64, `following` 112, `queue` 164, `question-explorer` 46 all pass; `citation` 90 pass, 1 fail (below).
+**Checks** (process repo): format 0 failures; coverage retrieval 79 of 79 live ids named, 0 failures; ownership retrieval 0 failures; architecture: 2 failures, both "imports retrieval-browse, which retrieval does not declare in uses" (modules.json is BOB's). Size: `retrieval/*.mjs` 2,942 lines (was 4,001).
+
+**For BOB (modules.json, K1043).** retrieval `uses`: add `retrieval-browse`; drop `civil-time` and `calc-grammar` (nothing of mine imports them any more, grepped); `events`, `standards`, `money`, `people`, `entities` stay as the table read contracts of R68 (their factories are no longer imported).
+**Found in other modules.**
+1. `citation` `test/m/citation/recorded.test.mjs`:7 imports `RECORDED_NONE_REGISTERED` from `src/retrieval/findin.mjs` (deleted): change it to `src/retrieval/index.mjs` (re-exported, identity-equal). It is the one red outside this module.
+2. `op-declarations` (declares `search` and `meaningrows` params): `scope` is a new query parameter of both; `retrievalRoutes` reads it. Not edited here.
+3. `query-language`: the `ids` restriction binds one SQL variable per id; a scope can hold up to 5,000 ids, and the Durable Object's SQL binds at most 100 per statement (the selections chunk at 64). The compile (not chunkable for sorted pages and facets) needs `ids` bound as one JSON parameter or a chunk-safe form. `meaningRows`' caller-given `ids` already had the same limit; scopes make it likelier.
+4. Sentences with no key (REPORT'd by the design lane's list, mine): `ROUTES_CROSSED`, `SCOPE_UNKNOWN`, `scope_undetermined` `detail`/`why` are inline English beside their codes; no word key added (the reads list is the design lane's).
+**Deferred.** None.
+
+Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 14, module lines 2942
+
+## J1 · REPORT
+
+R88 and R89 are met and pushed (index.mjs, t51.test.mjs; module suite 197 pass, 1 fail). R88 needed nothing new from query-language: I read each term's route from plan.ast. R89 adds scope.existence_only_projects and scope.existence_only_count. The stale checks.mjs:73 comment is reworded. Three existing tests that deep-equal the scope's keys gained the two R89 keys. R87 and R90 both need retrieval-browse (BROWSE_SCOPES/scopeMembers; the delegation), which is not built yet, so I am waiting for your CHANGE after it merges. The one red is words.test.mjs 'keys are the owner's declared list': it clears when the 15 moved keys leave words.mjs with the R90 delete. Record: build/jobs/T51/retrieval.md, Work notes.
+
+## J2 · COMPLETE
+
+T51-42 retrieval complete (record: Completion (T51-42)). R87 (scopes on searchFields, search, meaningRows; the applied scope in query.scope), R88, R89, R90 (moved code deleted, delegation through retrievalBrowseOf with the five host reads, old exports re-exported), words test on 49 keys, stale comment fixed. Tests: bio-plane/test/m/retrieval 167/167 pass; answers, following, queue, question-explorer pass. Checks: format 0, coverage 79/79 ids 0, ownership 0, architecture 2 failures only because modules.json lacks retrieval-browse in retrieval's uses (yours to add; also drop civil-time and calc-grammar). One red outside the module: citation recorded.test.mjs:7 imports retrieval/findin.mjs, to re-point to retrieval/index.mjs (its owner). Also reported: op-declarations needs the scope parameter; query-language's ids binds one variable per id (scopes up to 5,000 vs the 100-variable bound). Source 2,942 lines (was 4,001). Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 14, module lines 2942
+
+## Change B4 (K3872)
+
+Merged `tranche/T51` (retrieval's `uses` now gain `retrieval-browse`, drop `civil-time` and `calc-grammar`). `bio-plane/src/retrieval/findin.mjs` is back as a one-line re-export of `retrieval-browse`'s findin, so `citation`'s `recorded.test.mjs` stays green; the R90 no-copy test now asserts the file is only that re-export. Reran: `bio-plane/test/m/retrieval/` and `citation/recorded.test.mjs` 179 pass, 0 fail; architecture 0 failures, format 0, coverage 79 of 79, ownership 0 failures. Source 2,942 lines.
+
+Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942
+
+## J3 · COMPLETE
+
+B4 applied: merged tranche/T51, findin.mjs is a one-line re-export of retrieval-browse's findin (the R90 no-copy test now asserts exactly that). retrieval tests plus citation recorded.test.mjs: 179 pass, 0 fail. Architecture, format, coverage (79/79) and ownership: 0 failures. Source 2,942 lines. Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942
+
+Ringing BOB for J3 failed (its session session_01SWiZCAUEHumgaPPppY3QhQ is archived: triggers bind only to active or paused sessions); J3 is pushed, and is the message for BOB's backstop (mechanics §13).

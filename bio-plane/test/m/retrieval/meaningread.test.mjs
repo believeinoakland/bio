@@ -68,7 +68,7 @@ test("R11, R14: the envelope is an object carrying exactly its keys and no other
     assert.deepEqual([r.arm, r.table, r.grain, r.identity], [arm, MEANING[arm].table, MEANING[arm].rowGrain, MEANING[arm].identity], arm);
     assert.deepEqual(Object.keys(r.gate).sort(), ["applied", "scope"], arm);
     assert.deepEqual(Object.keys(r.levels), ["internet", "document", "content", "meaning"], arm);
-    const scopeKeys = ["documents", "documents_with_rows", "documents_without_rows"];
+    const scopeKeys = ["documents", "documents_with_rows", "documents_without_rows", "existence_only_projects", "existence_only_count"];   /* R89 */
     if (arm === "passage")
       scopeKeys.push("captures_counted", "captures_truncated", "captures_bound", ...Object.keys(r.content_axis.vocabulary),
                      r.content_axis.undetermined_value, "not_read");
@@ -116,7 +116,7 @@ test("R11: query carries q verbatim, the shared parser's warnings and the meanin
   for (const q of ["leg:sorce=hunch", "leg:hunch", "passage:budget leg:hunch", "", "resolves:>=B"]) {
     const r = w.retrieval.meaningRows({ q, rows: "leg", viewer: V("vera") });
     const plan = compile({ q, viewer: V("vera"), rows: "leg" }, via);
-    assert.deepEqual(r.query, { q, warnings: plan.warnings, meaningArms: plan.meaningArms }, q);
+    assert.deepEqual(r.query, { q, warnings: plan.warnings, meaningArms: plan.meaningArms, scope: null }, q);
   }
   const warned = w.retrieval.meaningRows({ q: "leg:sorce=hunch", rows: "leg", viewer: V("vera") });
   assert.ok(warned.query.warnings.some((x) => /sorce/.test(x)), "a mistyped sub-field is told here too");

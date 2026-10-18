@@ -20,7 +20,7 @@ function corpus() {
 test("R6: mode page (default), ids or count; the answer carries query, gate {scope, applied}, total, limit, offset; hits carry the provenance columns and a snippet and no score; ids every id in the page's order with truncated at the cap", () => {
   const { w } = corpus();
   const s = w.retrieval.search({ q: "water", viewer: V("vera") });
-  assert.deepEqual(Object.keys(s.query), ["q", "terms", "match", "sort", "warnings", "mode"]);
+  assert.deepEqual(Object.keys(s.query), ["q", "terms", "match", "sort", "warnings", "mode", "scope"]);
   assert.equal(s.query.mode, "page");
   assert.deepEqual([s.gate.scope, s.total, s.limit, s.offset], ["participant", 2, 50, 0]);
   assert.equal(s.gate.applied, 1 + 1 + 1, "count, page and the facet scan each ran through the gate");

@@ -86,7 +86,7 @@ test("R11, R13: rows=content answers at content grain and says so — arm, table
   assert.deepEqual(r.gate, { scope: "participant", applied: 3 }, "count, rows and the levels tally, each through the gate");
   /* The statement: `has:content` is the arm itself, so the scope is every document vera may see (the query has no other
      arm), four of the six holding content rows. */
-  assert.deepEqual(r.scope, { documents: 6, documents_with_rows: 4, documents_without_rows: 2 });
+  assert.deepEqual(r.scope, { documents: 6, documents_with_rows: 4, documents_without_rows: 2, existence_only_projects: [], existence_only_count: 0 });   /* R89 */
   assert.deepEqual(Object.keys(r.levels), ["internet", "document", "content", "meaning"]);
   assert.deepEqual([r.levels.document.state, r.levels.document.documents], ["COUNTED", 6]);
   assert.deepEqual(r.levels.content, { state: "COUNTED", documents_with_rows: 4, rows_matched: 6,
@@ -106,7 +106,7 @@ test("R13: which level was empty is said by the envelope — a document in scope
   /* A document in scope holding no content row. */
   const e = rows(w, `id:${DOC_NONE}`);
   assert.deepEqual([e.ok, e.total, e.rows], [true, 0, []]);
-  assert.deepEqual(e.scope, { documents: 1, documents_with_rows: 0, documents_without_rows: 1 });
+  assert.deepEqual(e.scope, { documents: 1, documents_with_rows: 0, documents_without_rows: 1, existence_only_projects: [], existence_only_count: 0 });   /* R89 */
   assert.equal(e.levels.content.state, "COUNTED");
   /* The sentences are the word list's, read by key (plan rule 6): the test reads the owner's words, never a copy. */
   assert.equal(e.levels.content.why, WORD("retrieval.why.document_scope_holds", { count: 1 }));
@@ -125,7 +125,7 @@ test("R13: which level was empty is said by the envelope — a document in scope
   /* A document holding content rows, none of which the filter admits. */
   const cut = rows(w, `id:${DOC_OCR} content:machine`);
   assert.deepEqual([cut.total, cut.rows], [0, []]);
-  assert.deepEqual(cut.scope, { documents: 1, documents_with_rows: 1, documents_without_rows: 0 });
+  assert.deepEqual(cut.scope, { documents: 1, documents_with_rows: 1, documents_without_rows: 0, existence_only_projects: [], existence_only_count: 0 });   /* R89 */
   assert.equal(cut.says, WORD("retrieval.text.matched_over_document_scope", { documents: 1, with_rows: 1 }));
   assert.ok(![e.says, none.says].includes(cut.says));
   /* A meaning-level arm carries the same block at its own level, and sends the content question to rows=content. */
