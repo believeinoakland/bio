@@ -98,6 +98,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { parse as acornParse } from "../src/setup-words/vendor/acorn.mjs";   /* R38: the parser setup-words reads calls with */
 /* THIS WALK IS GUARDED RATHER THAN NAMED. Found by the census in the old
    `hygiene.test.mjs` (deleted in T20): it went red on this file the first full
    run after it was written, before anyone read the diff, the sixth time that
@@ -238,6 +239,7 @@ export function planeMember(repoRoot = REPO_ROOT) {
     dir: "bio-plane",
     name: "bio-plane",
     abs: join(repoRoot, "bio-plane"),
+    wholeWordTable: true,                /* R38: the plane carries the whole word table */
     entry: PLANE_ENTRY,
     bundle: {
       entry: PLANE_ENTRY,
@@ -718,10 +720,215 @@ export function assetsOf(member) {
   return Array.isArray(a) ? a.filter((p) => typeof p === "string" && p) : [];
 }
 
+/* ---- THE WORD ROWS A MEMBER CARRIES (bundler R38; K3953) ----------------------------------------------------------
+ *
+ * `setup-words/rows.mjs` is the interface's whole word table (some 18,000 rows, 3.4 MB). A fleet member reads a few
+ * dozen keys of it, yet bundled whole it is parsed on every cold start. So a member's bundle carries only the rows its
+ * own inputs can read, found in two steps: a PROBE build (the table stubbed empty) names the member's first-party
+ * inputs; each is parsed with the vendored parser setup-words itself uses (never a pattern), and every call of `word`,
+ * `localize` or `hasWord` gives its first argument's literal key, or the literal prefix a built key starts with
+ * (`'refusal.' + code`, `` `refusal.${code}` ``). The real build then replaces the `rows.mjs` import with a module of
+ * exactly those rows (all the rows named, all the rows under a prefix), in the table's own order.
+ *
+ * A key with no literal prefix (a bare variable, a call's result: a wrapper reading a variable key) cannot be bounded, and
+ * neither can anything that could read the table other than through a call: `word` used as a value, `WORD_ROWS`
+ * imported outside setup-words' own index, a dynamic import of the table. For such a member the build keeps the WHOLE
+ * table, never failing and never leaving a row out, and its manifest says `words: "all"` with `wordSites`, every site by
+ * file and line (K3958): each is an entry of its own module's job, and once none is left every member keeps only its own
+ * rows. The plane's bundle carries the whole table (`wholeWordTable`), as does any build that is not a fleet member's
+ * (the standalone case checker's), and a member whose inputs do not reach the table
+ * is built exactly as before and records nothing. */
+const WORD_FUNCTIONS = new Set(["word", "localize", "hasWord"]);
+const WORD_ROWS_PATH = /(^|[\\/])setup-words[\\/]rows\.mjs$/;
+const WORD_INDEX_PATH = /(^|[\\/])setup-words[\\/]index\.mjs$/;
+const SCOPES = /^(Program|BlockStatement|StaticBlock|SwitchStatement|CatchClause|ForStatement|ForInStatement|ForOfStatement|FunctionDeclaration|FunctionExpression|ArrowFunctionExpression)$/;
+
+/** The names a binding pattern declares. */
+function patternNames(p, into) {
+  if (!p) return;
+  if (p.type === "Identifier") into.add(p.name);
+  else if (p.type === "ObjectPattern") p.properties.forEach((q) => patternNames(q.type === "RestElement" ? q.argument : q.value, into));
+  else if (p.type === "ArrayPattern") p.elements.forEach((q) => patternNames(q, into));
+  else if (p.type === "AssignmentPattern") patternNames(p.left, into);
+  else if (p.type === "RestElement") patternNames(p.argument, into);
+}
+
+/** The names a scope-making node declares for its own body (parameters and function name, `var`s anywhere inside it
+ *  but a nested function, the lets, consts, classes and functions of its statement lists, an exported one too). Import
+ *  bindings are left out: `word` imported is the call this reads. The rule of setup-words' build, so both agree on
+ *  what a call is. */
+function declaredNames(node) {
+  const into = new Set();
+  const hoist = (n, top) => {
+    if (!n || typeof n.type !== "string") return;
+    if ((n.type === "ExportNamedDeclaration" || n.type === "ExportDefaultDeclaration") && n.declaration) return hoist(n.declaration, top);
+    if (n.type === "VariableDeclaration") for (const d of n.declarations) { if (n.kind === "var" || top) patternNames(d.id, into); }
+    else if ((n.type === "FunctionDeclaration" || n.type === "ClassDeclaration") && n.id) { if (top) into.add(n.id.name); return; }
+    if (/Function/.test(n.type) || n.type === "ClassBody") return;
+    for (const k of Object.keys(n)) {
+      const v = n[k];
+      if (Array.isArray(v)) v.forEach((c) => hoist(c, false));
+      else if (v && typeof v.type === "string") hoist(v, false);
+    }
+  };
+  if (/Function/.test(node.type)) {
+    node.params.forEach((q) => patternNames(q, into));
+    if (node.type === "FunctionExpression" && node.id) into.add(node.id.name);
+    hoist(node.body, false);
+    if (node.body.type === "BlockStatement") node.body.body.forEach((st) => hoist(st, true));
+  } else if (node.type === "Program" || node.type === "BlockStatement" || node.type === "StaticBlock") {
+    node.body.forEach((st) => hoist(st, true));
+    node.body.forEach((st) => hoist(st, false));
+  } else if (node.type === "SwitchStatement") node.cases.forEach((c) => c.consequent.forEach((st) => hoist(st, true)));
+  else if (node.type === "CatchClause") patternNames(node.param, into);
+  else if (/^For(In|Of)?Statement$/.test(node.type)) { const i = node.init ?? node.left; if (i?.type === "VariableDeclaration") hoist(i, true); }
+  return into;
+}
+
+/** What a key expression starts with, as `[{text, whole}]` (`whole`: the text is the entire key), or null when some
+ *  branch has no literal prefix: a string, a template, a `+` chain from its left, both arms of a `?:`, `||` or `??`. */
+function keyShapes(node) {
+  if (!node) return null;
+  if (node.type === "Literal") return typeof node.value === "string" ? [{ text: node.value, whole: true }] : null;
+  if (node.type === "TemplateLiteral") {
+    if (node.expressions.length === 0) return [{ text: node.quasis[0].value.cooked, whole: true }];
+    const head = node.quasis[0].value.cooked;
+    return head ? [{ text: head, whole: false }] : null;
+  }
+  if (node.type === "BinaryExpression" && node.operator === "+") {
+    const left = keyShapes(node.left);
+    if (!left) return null;
+    const right = keyShapes(node.right);
+    return left.flatMap((l) => {
+      if (!l.whole) return [l];
+      return right ? right.map((r) => ({ text: l.text + r.text, whole: r.whole })) : [{ text: l.text, whole: false }];
+    });
+  }
+  if (node.type === "ConditionalExpression") {
+    const a = keyShapes(node.consequent), b = keyShapes(node.alternate);
+    return a && b ? [...a, ...b] : null;
+  }
+  if (node.type === "LogicalExpression" && (node.operator === "||" || node.operator === "??")) {
+    const a = keyShapes(node.left), b = keyShapes(node.right);
+    return a && b ? [...a, ...b] : null;
+  }
+  return null;
+}
+
+/** R38: what one source text asks of the word table: `{exact, prefixes, sites}` (sets of keys and of literal prefixes,
+ *  and a `where:line: why` for each call whose key has no literal prefix, each use of `word` other than as a callee,
+ *  and each read of the whole table). `index` is true for setup-words' own index, the one input that holds `WORD_ROWS`. */
+export function wordKeysOf(source, where, { index = false } = {}) {
+  const options = { ecmaVersion: "latest", locations: true, allowHashBang: true, allowReturnOutsideFunction: true };
+  let ast;
+  try { ast = acornParse(source, { ...options, sourceType: "module" }); }
+  catch { try { ast = acornParse(source, { ...options, sourceType: "script" }); }
+    catch (e) { throw new Error(`${where} cannot be parsed to find the word rows it reads: ${e.message}`); } }
+  const exact = new Set(), prefixes = new Set();
+  const sites = [];
+  const refuse = (node, why) => { sites.push(`${where}:${node.loc.start.line}: ${why}`); };
+  const visit = (node, parent, shadowed) => {
+    if (!node || typeof node.type !== "string") return;
+    if (SCOPES.test(node.type)) {
+      const own = declaredNames(node);
+      if ([...WORD_FUNCTIONS].some((f) => own.has(f))) shadowed = new Set([...shadowed, ...[...WORD_FUNCTIONS].filter((f) => own.has(f))]);
+    }
+    if (node.type === "CallExpression" && node.callee.type === "Identifier" && WORD_FUNCTIONS.has(node.callee.name) && !shadowed.has(node.callee.name)) {
+      const name = node.callee.name;
+      const arg = node.arguments[0];
+      const shapes = arg && arg.type !== "SpreadElement" ? keyShapes(arg) : null;
+      if (!shapes || shapes.some((s) => s.text === "")) refuse(node, `the key of ${name}(…) has no literal prefix, so the word rows it can read are unknown; write the key, or a literal prefix and the rest (bundler R38)`);
+      else for (const s of shapes) (s.whole ? exact : prefixes).add(s.text);
+    } else if (node.type === "Identifier" && WORD_FUNCTIONS.has(node.name) && !shadowed.has(node.name)) {
+      const p = parent;
+      const named = !p
+        || (p.type === "CallExpression" && p.callee === node)
+        || p.type === "ImportSpecifier" || p.type === "ExportSpecifier" || p.type === "ImportDefaultSpecifier"
+        || (p.type === "MemberExpression" && p.property === node && !p.computed)
+        || (p.type === "Property" && p.key === node && !p.computed && !p.shorthand)
+        || (p.type === "MethodDefinition" && p.key === node && !p.computed) || (p.type === "PropertyDefinition" && p.key === node && !p.computed)
+        || (p.type === "FunctionDeclaration" && p.id === node) || (p.type === "VariableDeclarator" && p.id === node);
+      if (!named) refuse(node, `${node.name} is used other than as a call, so the word rows it can read are unknown (bundler R38)`);
+    }
+    if (!index && node.type === "ImportDeclaration" && (WORD_ROWS_PATH.test(String(node.source.value))
+        || node.specifiers.some((s) => s.type === "ImportSpecifier" && s.imported.name === "WORD_ROWS")))
+      refuse(node, "imports the whole word table, which a member's bundle does not carry (bundler R38)");
+    if (!index && (node.type === "ExportNamedDeclaration" || node.type === "ExportAllDeclaration") && node.source
+        && (WORD_ROWS_PATH.test(String(node.source.value))
+          || (node.specifiers || []).some((s) => s.local && s.local.name === "WORD_ROWS")))
+      refuse(node, "re-exports the whole word table, which a member's bundle does not carry (bundler R38)");
+    if (node.type === "ImportExpression" && !(node.source.type === "Literal" && !WORD_ROWS_PATH.test(String(node.source.value))))
+      refuse(node, "imports a module by a dynamic address, which could read the whole word table (bundler R38)");
+    for (const k of Object.keys(node)) {
+      const v = node[k];
+      if (Array.isArray(v)) v.forEach((c) => visit(c, node, shadowed));
+      else if (v && typeof v.type === "string") visit(v, node, shadowed);
+    }
+  };
+  visit(ast, null, new Set());
+  return { exact, prefixes, sites };
+}
+
+/** R38 trims the bundle of a fleet member (one a `fleet-member.json` enrols, which `discoverMembers` marks). The plane
+ *  (`wholeWordTable`) and any other descriptor handed to `buildMember` (the standalone case checker's) carry the table whole. */
+const trimsWords = (member) => !!member.marker && !member.wholeWordTable;
+const isWordRows = (p) => WORD_ROWS_PATH.test(p);
+const SOURCE_EXT = /\.(mjs|js|cjs)$/;
+const WORD_STUB = "export const WORDS_COMMIT = \"\";\nexport const WORD_ROWS = Object.freeze([]);\n";
+
+/** An esbuild plugin that answers the `rows.mjs` import with `contents` (the stub, or the trimmed module). */
+const wordRowsPlugin = (contents) => ({
+  name: "bundler-r38-word-rows",
+  setup(b) { b.onLoad({ filter: WORD_ROWS_PATH }, () => ({ contents, loader: "js" })); },
+});
+
+/** R38: the word rows a member keeps, or null when its inputs do not reach the table (or it is the plane, which
+ *  carries the whole table). `probe` is a build of the member with the table stubbed out. Returns `{rows, total,
+ *  text, sha256}`: the kept rows' count, the table's size, the module that stands for the table in the bundle and the
+ *  SHA-256 of the kept rows; or, when some site could read any row (K3958), `{rows: "all", total, sites, text: null}`
+ *  and the table is left whole. */
+export async function keptWordRows(member, probe) {
+  const paths = Object.keys(probe.metafile.inputs);
+  const rowsInput = paths.find(isWordRows);
+  if (!trimsWords(member) || !rowsInput) return null;
+  const exact = new Set(), prefixes = new Set(), sites = [];
+  for (const p of paths) {
+    if (isWordRows(p) || isVendored(p) || !SOURCE_EXT.test(p)) continue;
+    const keys = wordKeysOf(readFileSync(join(member.abs, p), "utf8"), p, { index: WORD_INDEX_PATH.test(p) });
+    keys.exact.forEach((k) => exact.add(k));
+    keys.prefixes.forEach((k) => prefixes.add(k));
+    sites.push(...keys.sites);
+  }
+  const table = await import(pathToFileURL(join(member.abs, rowsInput)).href);
+  if (sites.length)
+    return { rows: "all", total: table.WORD_ROWS.length, text: null, sha256: null,
+      sites: [...new Set(sites.map((x) => x.match(/^(.*?:\d+): /)[1]))].sort() };
+  const prefixList = [...prefixes];
+  const kept = table.WORD_ROWS.filter((r) => exact.has(r[0]) || prefixList.some((pre) => r[0].startsWith(pre)));
+  const body = kept.map((r) => `  ${JSON.stringify(r)},`).join("\n");
+  const text = "/* GENERATED INTO THE BUNDLE by bundler R38: the rows of the word table this member's inputs can read, "
+    + `${kept.length} of ${table.WORD_ROWS.length}, in the table's order. */\n`
+    + `export const WORDS_COMMIT = ${JSON.stringify(table.WORDS_COMMIT)};\n`
+    + `export const WORD_ROWS = Object.freeze([\n${body}\n]);\n`;
+  return { rows: kept.length, total: table.WORD_ROWS.length, text, sha256: sha256(JSON.stringify(kept)) };
+}
+
+/** R38: the manifest's account of the word rows a build carries, as the fields to spread into it: `{words: {rows,
+ *  sha256}}` for a trimmed table, `{words: "all", wordSites}` for the whole table kept for the sites named, `{}` for a
+ *  member whose inputs do not reach the table or the plane. */
+export const wordsManifest = (w) => !w ? {} : w.rows === "all" ? { words: "all", wordSites: w.sites } : { words: { rows: w.rows, sha256: w.sha256 } };
+
 /** Build one member. `write: false` (the default) NEVER touches the tree. */
 export async function buildMember(member, { write = false, mutateEntry = null } = {}) {
   /* Silent: a failure arrives as the thrown error, never as stray stderr. */
   const opts = { ...optionsFor(member), write, logLevel: "silent" };
+  /* R38: which word rows this member's bundle carries (null: the whole table, or none reachable). */
+  let words = null;
+  if (trimsWords(member)) {
+    const probe = await build({ ...optionsFor(member), write: false, logLevel: "silent", plugins: [wordRowsPlugin(WORD_STUB)] });
+    words = await keptWordRows(member, probe);
+  }
+  opts.plugins = words && words.text ? [wordRowsPlugin(words.text)] : [];
   /* The independence proof's hook, and the ONLY way anything mutates a source
      here: an in-memory suffix on the ENTRY's contents. Nothing on disk moves.
      **A CALLER MUST PASS SOMETHING THAT SURVIVES THE BUILD.** esbuild STRIPS
@@ -729,7 +936,7 @@ export async function buildMember(member, { write = false, mutateEntry = null } 
      — measured 2026-09-10, and it is the reason the input-hash arm is not
      redundant with the byte-identity arm but STRICTER than it. */
   if (mutateEntry) {
-    opts.plugins = [{
+    opts.plugins.push({
       name: "fl9-mutate-entry",
       setup(b) {
         const entryAbs = join(member.abs, member.bundle.entry);
@@ -738,7 +945,7 @@ export async function buildMember(member, { write = false, mutateEntry = null } 
           return { contents: readFileSync(args.path, "utf8") + mutateEntry, loader: "js" };
         });
       },
-    }];
+    });
   }
   const res = await build(opts);
   const bytes = write
@@ -747,7 +954,7 @@ export async function buildMember(member, { write = false, mutateEntry = null } 
   const inputs = Object.entries(res.metafile.inputs)
     .map(([path, v]) => ({ path, bytes: v.bytes }))
     .sort((a, b) => a.path.localeCompare(b.path));
-  return { bytes, sha256: sha256(bytes), inputs, metafile: res.metafile };
+  return { bytes, sha256: sha256(bytes), inputs, metafile: res.metafile, words };
 }
 
 /** The committed manifest, computed from a build. */
@@ -812,6 +1019,8 @@ export function manifestFrom(member, built) {
       bytes: (() => { try { return readFileSync(join(member.abs, rel)).length; } catch { return null; } })(),
       sha256: hashOf(rel),
     })) } : {}),
+    /* R38: the word rows the bundle carries, only for a member whose inputs reach the table. */
+    ...wordsManifest(built.words),
     lock,
   };
 }
@@ -1071,6 +1280,15 @@ export async function verifyFresh(member, committed) {
       + `${built.bytes.length} B / sha256 ${built.sha256}, the committed ${member.bundle.outfile} is `
       + `${committed.length} B / sha256 ${sha256(committed)}. They must be byte-identical. `
       + `${REBUILD}, and commit the artifacts with the change.`);
+
+  /* R38: the rows kept are covered too. The bytes already carry them; this names the disagreement, and catches a
+     manifest that records rows a fresh build no longer keeps (or keeps none of). */
+  if (manifest) {
+    const was = JSON.stringify({ words: manifest.words, wordSites: manifest.wordSites });
+    const now = JSON.stringify(wordsManifest(built.words));
+    if (was !== now)
+      findings.push(`${member.name}: STALE BUNDLE — the manifest's word rows are ${was}, a fresh build's are ${now}. ${REBUILD}, and commit the artifacts with the change.`);
+  }
 
   /* THE PARSER'S OWN ANSWER to "what does this output still import", which is the
      half a lexical scan of the bytes cannot give honestly — it covers DYNAMIC
