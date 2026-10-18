@@ -383,6 +383,7 @@ export async function convert(root, { write = false, coerce = true, leaves = LEA
             used.add(nm); text += `{${nm}}`; vars.push([nm, exprSrc(exprs[i])]);
           }
         }
+        if (BANNED.test(text)) { jj('spelling: fix in the module\'s job (a placeholder name)'); continue; }
         const base = `${it.module}.${stemOf(file)}.${slug(text)}`; id = base;
         for (let k = 2; usedIds.has(id); k++) id = `${base}_${k}`;
         usedIds.add(id);
