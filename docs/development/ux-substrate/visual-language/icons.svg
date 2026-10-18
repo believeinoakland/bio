@@ -57,4 +57,8 @@
 <symbol id="i-camera" viewBox="0 0 16 16"><path class="s" d="M1.75 4.75h3l1.25-2h4l1.25 2h3v8.5H1.75z"/><circle class="s" cx="8" cy="8.75" r="2.5"/></symbol>
 <symbol id="i-expand" viewBox="0 0 16 16"><path class="s" d="M9.5 2.25h4.25V6.5 M6.5 13.75H2.25V9.5 M13.5 2.5L9.5 6.5 M2.5 13.5l4-4"/></symbol>
 <symbol id="i-dock" viewBox="0 0 16 16"><rect class="s" x="1.75" y="2.75" width="12.5" height="10.5" rx="1"/><path class="s" d="M10 2.75v10.5"/></symbol>
+<!-- B317: a document, a date that falls due, a link let go -->
+<symbol id="i-document" viewBox="0 0 16 16"><rect class="s" x="3" y="1.75" width="10" height="12.5" rx="1"/><path class="s" d="M5.5 5.25h5 M5.5 8h5 M5.5 10.75h3"/></symbol>
+<symbol id="i-due" viewBox="0 0 16 16"><rect class="s" x="2.5" y="3.25" width="11" height="10.5" rx="1"/><path class="s" d="M2.5 6.5h11 M5.5 1.75v3 M10.5 1.75v3"/><circle class="f" cx="8" cy="10.25" r="1.25"/></symbol>
+<symbol id="i-sever" viewBox="0 0 16 16"><path class="s" d="M6.5 5H5a3 3 0 0 0 0 6h1.5 M9.5 5H11a3 3 0 0 1 0 6H9.5 M8 1.75v2 M8 12.25v2"/></symbol>
 </svg>

@@ -5194,3 +5194,48 @@ decided: 2026-10-18 · the design session (P17)
 the design: `words-reads-mod-3.json` gains `retrieval-browse`, reading the split map's fifteen keys (`monitoring.reason_given`, `retrieval.column_why`, `retrieval.extent_why`, `retrieval.recorded_none_registered`, `retrieval.unread.read_followed_people`, `retrieval.unread.read_followed_people_offices`, `retrieval.why.names_day_calendar`, `retrieval.why.offers_recordedby_read`, `retrieval.why.reachable`, `retrieval.why.read_answered_promise`, `retrieval.why.read_refused`, `retrieval.why.read_threw`, `retrieval.why.words_name_month`, `retrieval.why.words_write_day`, `state.empty`), with `findin.mjs`'s eight matching-lexicon phrases stated unkeyed under `retrieval-browse/findin.mjs`; `retrieval` keeps the other 49 keys and 7 unkeyed strings. No key is renamed and no word changes; `words-reads.json` lists 172 modules.
 reasoning recorded in: this entry; `screens/words-reads-mod-3.json`, `screens/words-reads.json`.
 owed: (BOB, T51-29) retrieval-browse's words test asserts `WORD_KEYS` equals `modules["retrieval-browse"].reads`; (T51-42) retrieval's equals its 49.
+
+### DEC-335 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (BOB's HANDOFF B317, K3861: words and icons T51's layer 11 screens need)
+for: design
+question: B317's five points: keys absent; keys holding a sample instead of a placeholder; the time of day's format; three icons; four drawing points.
+why it is Bob's: it is not (P17): word and drawing detail beneath his rulings (American English, DEC-266 onward; actions R9's named office).
+provisional: as below.
+alternative: none weighed: each point follows the record or an earlier ruling.
+recommendation: as below.
+reversal cost: low (words read by key; drawings).
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) 108 keys new or reworded, each named in U357: `shell.reload`; `glossary.term.*`; members' `screen.members.keys.*`; the finder's `screen.finder.showas*`, `.subjects.*`, `.scope.cases` (its other scopes already keyed: `find.kind.*`, `find.state.*`); the queue's `queue.multi.choose`, `queue.answered.title`, `queue.answered.col.did`, `queue.tryagain`, `queue.feed.<name>` for each notice-producers provider and action-producers kind, and keyed fills `queue.fill.grade.*`, `.affects.*`, `.state.*`, `.statement.*`, `.check.*`; capture's `screen.capture.openit`, `.leaveit`; open-file's `screen.open-file.digest.checked` and `refusal.DIGEST_MISMATCH`; dash-action's and dash-project's tiles and heads; `people.nearmatch.*`; `reading-pipeline.no_evidence_store` (the other two refusals already keyed: `reading-pipeline.tier_read_essentially`, `.document_text_layer`). (2) The listed sample keys now hold placeholders (`{member}`, `{date}`, `{n}`, `{total}`, `{project}`, `{team}`, …), key names unchanged; `screen.published.this.is.part.of.the.many` and `queue.answered.photos.one` added for number; the answered rows read "Answered by you, {when}" (`queue.answered.byyou`, `.bymember`). (3) The time of day is the 12-hour clock: `time.at` "October 16, 2:05 PM", `{time}` written through `time.clock` "{hour}:{minute} {ampm}" with `time.am`, `time.pm`; answered rows show a moment through `time.at`; every drawn 24-hour time redrawn. (4) `i-document`, `i-due`, `i-sever` added to `icons.svg`. (5) `queue.answered.forwarded.note` dropped and "with a note" struck from `act.taskforward.does` (a task carries no note); snooze says it hides the case's other items too (`act.queuesnooze.does`, `queue.multi.snooze.help`, `queue.answered.snoozed.meta`); the founder's reconcile note reads "If more administrators are live than the roster shows as active"; actionnew's `screen.actionnew.to.named` is "A named office or public body"; the consistency reader's clearer wordings folded (feed names, `queue.multi.result` without number agreement, the founder's note without "live", `queue.answered.col.did` "What you did").
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-*.js`, `screens/question.html`, `visual-language/icons.svg`.
+owed: (BOB, T51 L11) the screens read these keys; the shell writes `{time}` through `time.clock`; nothing else.
+
+### DEC-336 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (BOB's HANDOFF B318, K3869: L11's folds verified against the drawings)
+for: design
+question: B318's nine points: `instancegroupseed`'s place; the owner standing down; facts on other kinds' pages; a published document leg's words; one fingerprint or two; set-aside's preselection; one's own key and the account's register label; a glossary term's card; words still missing.
+why it is Bob's: it is not (P17): drawing and word detail beneath the record's facts (people R9, public-read R39, K3868).
+provisional: BOB's readings as built.
+alternative: none weighed: each follows the record.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) `instancegroupseed` is drawn nowhere (the installer records the name, K3868); group-identity says once "Your team's short name was recorded when Civicsmith was installed." (`screen.group-identity.seed.recorded`); `installer.team.unrecorded.how` reads "To record it, run the installer again: it asks for your team's short name once and records it." (2) As BOB read it: "Agree" on the viewer's own row only; from 3 owners the one standing down does not vote. (3) As BOB read it: an ordinance's or office's page draws no facts and no "Add a fact from a document"; the add form has no "A proceeding". (4) A document leg reads "Named only" (`screen.published.leg.namedonly`, explained by `.namedonly.explain`); a leg resting on another team's published finding reads "Served with its own published case; its documents are not held here." (5) One fingerprint for a single file; the drawn copy is a set (`screen.document.fingerprint.setonly` says so). (6) Nothing preselected on set-aside or its change forms (screens-daily's rule). (7) As BOB read it: no Withdraw on one's own key on members; account draws `act.signerregisterown.label.account`. (8) As built: the card on rest, `glossary` on choosing (`screen.glossary.intro` says both). (9) The missing words minted, each named in U358.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/registry.src.py`.
+owed: (BOB, T51 L11) the screens read these keys; `act.instancegroupseed.*` stays the installer's.
+
+### DEC-337 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (BOB's HANDOFF B321, K3888)
+for: design
+question: Words for basis-versions R55's three `compareVersions` refusals.
+why it is Bob's: it is not (P17): refusal words in DEC-83's form.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: `refusal.VERSION_COMPARE_NO_INQUIRY` "The question named for this comparison is not one you can read here, so nothing was compared. Open the question and choose two of its readings." (a question the viewer may not see answers as one that is not there); `refusal.VERSION_COMPARE_NO_VERSION` "One of the two readings to compare was not named, so nothing was compared. Choose both readings."; `refusal.VERSION_COMPARE_NO_SUCH_VERSION` "This question holds no reading by that name, so nothing was compared. Choose two of this question's own readings." Shown where `question` compares two readings (A40), as every refusal is: in the place of the answer.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: (BOB, T52, N1253) basis-versions reads the three keys.
