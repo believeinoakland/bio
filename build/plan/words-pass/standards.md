@@ -8,3 +8,12 @@ Layer 5. 6 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - inline `bio-plane/src/standards/index.mjs:2392` "names the captured passages that hold the standard's words (R9)."
 - inline `bio-plane/src/standards/index.mjs:450` "extent}, a passage of a held capture you may see. Nothing was written."
 - inline `bio-plane/src/standards/index.mjs:970` "'s {} is a held passage {passage: content id} or an enactment event"
+
+## Plain findings (K3957)
+
+4 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('standards.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/standards/index.mjs:303` "the standard is held all the same, and where it comes from is undetermined"
+- plain `bio-plane/src/standards/index.mjs:309` "it, and none is chosen between them, so where it comes from is undetermined"
+- plain `bio-plane/src/standards/index.mjs:745` "the captures, never on an enactment date"
+- plain `bio-plane/src/standards/index.mjs:1541` "see is neither answered nor counted"

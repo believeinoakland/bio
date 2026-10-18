@@ -44,3 +44,9 @@ Layer 11. 42 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - handlist `bio-plane/test/m/op-grades/t50.test.mjs:17` [?] ops: watchitem, secondlook, secondlookclear, ... (5 of 5 not the module's own) — handlist
 - handlist `bio-plane/test/m/op-grades/t50.test.mjs:19` [?] ops: lookedat, browse, opencaptures, ... (9 of 9 not the module's own) — handlist
 - handlist `bio-plane/test/m/op-grades/t50.test.mjs:60` [?] ops: watchitem, secondlook, secondlookclear, ... (6 of 6 not the module's own) — handlist
+
+## Plain findings (K3957)
+
+1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('op-grades.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/op-grades/t36.mjs:18` "scheduler: the security wakes; name no member and move no bundle"

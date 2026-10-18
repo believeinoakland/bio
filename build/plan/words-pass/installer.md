@@ -251,3 +251,39 @@ Layer 11. 249 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranch
 - testcopy `newgroup/test/requirements.test.mjs:843` "This installer is run by the publisher of Civicsmith releases." — drawn module: its L11 job
 - testcopy `newgroup/test/t47.test.mjs:205` "If a step stops, your team's Civicsmith keeps running as it was." — drawn module: its L11 job
 - testcopy `newgroup/test/t48.test.mjs:42` [part] "Cloudflare refused the upload" — part test copy
+
+## Plain findings (K3957)
+
+31 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('installer.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `newgroup/src/account.mjs:254` "objects in its evidence storage"
+- plain `newgroup/src/account.mjs:255` "objects in its published storage"
+- plain `newgroup/src/cfx.mjs:24` "the permission was revoked or has expired"
+- plain `newgroup/src/images.mjs:14` "this release does not pin its image to one exact build (a sha256 digest), so it cannot ..."
+- plain `newgroup/src/images.mjs:15` "this release's image is not yet published where your Cloudflare account can pull it"
+- plain `newgroup/src/images.mjs:28` "scanned, and a high-risk file opens only in its safe view once one can be made"
+- plain `newgroup/src/images.mjs:30` "what it provides is missing from your team's Civicsmith until it is installed"
+- plain `newgroup/src/index.mjs:548` "the Claude credential an earlier installer bound into your team's Civicsmith"
+- plain `newgroup/src/index.mjs:549` "the shared member key an earlier installer bound into your team's Civicsmith (members n..."
+- plain `newgroup/src/index.mjs:550` "the assistant choice an earlier installer bound into your team's Civicsmith (the assist..."
+- plain `newgroup/src/index.mjs:616` "states no limits for your team's Civicsmith to run under"
+- plain `newgroup/src/index.mjs:617` "states the limits your team's Civicsmith runs under unreadably"
+- plain `newgroup/src/index.mjs:934` "its container description does not parse"
+- plain `newgroup/src/index.mjs:935` "its container description is not an object"
+- plain `newgroup/src/index.mjs:936` "its container description names no class"
+- plain `newgroup/src/index.mjs:940` "its scheduling policy is not the default one"
+- plain `newgroup/src/index.mjs:942` "its container description states no maximum number of instances"
+- plain `newgroup/src/index.mjs:945` "its container description states its size unreadably"
+- plain `newgroup/src/index.mjs:949` "its container description names its bindings unreadably"
+- plain `newgroup/src/index.mjs:978` "its Worker description does not parse"
+- plain `newgroup/src/index.mjs:979` "its Worker description is not an object"
+- plain `newgroup/src/index.mjs:983` "its Worker description names its buckets unreadably"
+- plain `newgroup/src/index.mjs:985` "its Worker description states its schedule unreadably"
+- plain `newgroup/src/index.mjs:992` "captured files or refresh its virus signatures, and files are not scanned until a relea..."
+- plain `newgroup/src/index.mjs:1011` "the permission you approved does not include Workers Containers"
+- plain `newgroup/src/index.mjs:1020` "your account is on Workers Free, and containers need Workers Paid"
+- plain `newgroup/src/index.mjs:1385` "the address of your team's Civicsmith did not answer"
+- plain `newgroup/src/index.mjs:1391` "the record store of your team's Civicsmith has not reported its version, so it is still..."
+- plain `newgroup/src/index.mjs:1392` "the record store of your team's Civicsmith cannot say which version it runs"
+- plain `newgroup/src/index.mjs:1396` "your team's Civicsmith did not report its capability workers"
+- plain `newgroup/src/index.mjs:2193` "the address of your team&#39;s Civicsmith"

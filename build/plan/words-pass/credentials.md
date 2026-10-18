@@ -12,3 +12,12 @@ Layer 2. 10 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/credentials/t35-misc.test.mjs:192` [part] "Only a named person signed in to your team's Civicsmith can create ..." — part test copy
 - testcopy `bio-plane/test/m/credentials/t35-misc.test.mjs:195` [part] "That name already belongs to an agent credential in your team's Civ..." — part test copy
 - testcopy `bio-plane/test/m/credentials/t35-misc.test.mjs:198` [part] "There is no agent credential by that name in your team's Civicsmith..." — part test copy
+
+## Plain findings (K3957)
+
+4 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('credentials.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/credentials/index.mjs:1258` "minted by your team's Civicsmith for one segment of your run"
+- plain `bio-plane/src/credentials/index.mjs:1291` "a run in a project"
+- plain `bio-plane/src/credentials/index.mjs:1966` "setting the team's key for an outside service"
+- plain `bio-plane/src/credentials/index.mjs:1993` "switching the team's key for an outside service"

@@ -21,3 +21,9 @@ Layer 9. 19 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/action-grammar/seeks.test.mjs:216` [part] "Which stages a records request asks the records for is a statement ..." — part test copy
 - testcopy `bio-plane/test/m/action-grammar/seeks.test.mjs:217` [part] "The credential that asked here is an automated one, or no member is..." — part test copy
 - testcopy `bio-plane/test/m/action-grammar/seeks.test.mjs:218` [part] "consider, but it cannot state or change what the request seeks. Not..." — part test copy
+
+## Plain findings (K3957)
+
+1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('action-grammar.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/action-grammar/checks.mjs:1187` "state who owes the date: the team, the body, or undetermined"

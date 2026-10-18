@@ -75,3 +75,22 @@ Layer 8. 73 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/publication/t39.test.mjs:46` [part] "A document a member supplied now needs a different publication copy..." — part test copy
 - testcopy `bio-plane/test/m/publication/t39.test.mjs:47` [part] "prepared with. Prepare the case again. Nothing was published." — part test copy
 - testcopy `bio-plane/test/m/publication/t45.test.mjs:16` "This case rests on a counsel matter, and a counsel matter is never ..." — signed or pinned text
+
+## Plain findings (K3957)
+
+14 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('publication.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/publication/index.mjs:204` "no module has registered the review provider, so no grant admits and no draft is read t..."
+- plain `bio-plane/src/publication/index.mjs:332` "the court-order source gives the door courtOrderOf"
+- plain `bio-plane/src/publication/index.mjs:467` "a case document names its case, a positive edition and its text"
+- plain `bio-plane/src/publication/index.mjs:498` "and its front matter and body lines"
+- plain `bio-plane/src/publication/index.mjs:994` "the attesting key, the gate version and its roster"
+- plain `bio-plane/src/publication/index.mjs:1028` "the project this case belongs to is a counsel matter"
+- plain `bio-plane/src/publication/index.mjs:1031` "made in a counsel matter"
+- plain `bio-plane/src/publication/index.mjs:1411` "that entry is not a posted court-order entry of this case with this effect, so nothing ..."
+- plain `bio-plane/src/publication/index.mjs:1412` "no court-order source is registered, so no entry can be confirmed and nothing was stamped"
+- plain `bio-plane/src/publication/index.mjs:1433` "stampsOf names a case and a positive edition"
+- plain `bio-plane/src/publication/index.mjs:1468` "editionTimeline names a case and a positive edition"
+- plain `bio-plane/src/publication/index.mjs:1471` "no ratified edition of that case answers here, so it states no published timeline"
+- plain `bio-plane/src/publication/index.mjs:1544` "no ratified edition of that case answers here, so it cites nothing yet"
+- plain `bio-plane/src/publication/index.mjs:2181` "every finding in this case edition is ratified, so the container can be assembled whole"

@@ -331,6 +331,7 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
   `readVbaProject` with `VBA_AUTORUN_NAMES`/`VBA_SUSPICIOUS_KEYWORDS` and the limits
   `MEMBER_MAX`/`ARCHIVE_TOTAL_MAX` (its R30–R33). `csv.mjs` uses
   only the measured bound constant, not the container walk (it is not a container).
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

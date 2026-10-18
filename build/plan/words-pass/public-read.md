@@ -16,3 +16,10 @@ Layer 8. 14 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/public-read/obscured.test.mjs:246` [part] "a file cut out of an archive" — part test copy
 - testcopy `bio-plane/test/m/public-read/tensions.test.mjs:104` [part] "This finding rests on a side in conflict with a record not shown he..." — part test copy
 - testcopy `bio-plane/test/m/public-read/tensions.test.mjs:105` [part] "record and who holds it are not named."
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('public-read.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/public-read/index.mjs:276` "the team's identity source is registered with its door, identity(); nothing was registered"
+- plain `bio-plane/src/public-read/index.mjs:279` "the team's identity source is already registered; the first stands, and nothing was reg..."

@@ -11,3 +11,9 @@ Layer 3. 9 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/provenance/seam.test.mjs:28` [part] "with, so this receipt was not signed, and nothing claims that it wa..."
 - testcopy `bio-plane/test/m/provenance/upload.test.mjs:204` "for resolution through the task list" — partial test copy (template not matched to a row)
 - testcopy `bio-plane/test/m/provenance/upload.test.mjs:52` "is proven by the receipt your team's Civicsmith itself made at" — regex
+
+## Plain findings (K3957)
+
+1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('provenance.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/provenance/index.mjs:1650` "words were not read in from anywhere, so it earns no letter here"

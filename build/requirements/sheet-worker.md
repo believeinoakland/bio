@@ -42,6 +42,7 @@ A standalone Cloudflare Worker, reached only through the plane's `SHEET_WORKER` 
 - `bundler`: `writeMember` (the member's artifact and manifest, with the wasm's hash, as `ocr-worker`'s), and `verifyFresh`.
 - `runtime-limits`: `makeMeter` for the time measured against `TIME_BUDGET_MS` (R3), `sha256hex`.
 - `test-support`: the fleet member's test harness and fixtures.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

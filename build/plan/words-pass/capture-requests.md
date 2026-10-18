@@ -20,3 +20,11 @@ Layer 6. 18 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/capture-requests/t34.test.mjs:137` [part] "Your team's Civicsmith tried to fetch the document" — part test copy
 - testcopy `bio-plane/test/m/capture-requests/t34.test.mjs:138` [part] "Your team's Civicsmith does not fetch it unattended or sign in to it" — part test copy
 - testcopy `bio-plane/test/m/capture-requests/t50.test.mjs:11` [part] "registered once, at start" — part test copy
+
+## Plain findings (K3957)
+
+3 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('capture-requests.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/capture-requests/index.mjs:647` "no daemon credential is bound: your team's Civicsmith drains nothing and holds no alarm..."
+- plain `bio-plane/src/capture-requests/index.mjs:1111` "the promotion did not complete and your team's Civicsmith did not record why"
+- plain `bio-plane/src/capture-requests/index.mjs:1708` "is not a sweep your team's Civicsmith holds"

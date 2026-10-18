@@ -215,3 +215,20 @@ Layer 6. 213 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - testcopy `bio-plane/test/m/strength/words.test.mjs:19` [part] "from, so what it rests on is unknown here" — part test copy
 - testcopy `bio-plane/test/m/strength/words.test.mjs:23` [part] "so what it rests on is unknown here" — part test copy
 - testcopy `bio-plane/test/m/strength/words.test.mjs:31` "is not a calculation your team's Civicsmith holds, so what this leg..." — signed or pinned text
+
+## Plain findings (K3957)
+
+12 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('strength.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/strength/index.mjs:438` "from, so what it rests on is unknown here"
+- plain `bio-plane/src/strength/index.mjs:444` "so what it rests on is unknown here"
+- plain `bio-plane/src/strength/index.mjs:531` "program's agreement is not measured, so what this leg rests on is unknown"
+- plain `bio-plane/src/strength/index.mjs:541` "from; the recipe's arithmetic does not weaken it. Its method is stated beside the grade"
+- plain `bio-plane/src/strength/index.mjs:824` "accepted edition publishes on each axis"
+- plain `bio-plane/src/strength/index.mjs:847` "subject, so this leg is present and not yet load-bearing"
+- plain `bio-plane/src/strength/index.mjs:856` "testimony grade for it and this leg is present and not yet load-bearing"
+- plain `bio-plane/src/strength/index.mjs:870` "to measure how it was captured"
+- plain `bio-plane/src/strength/index.mjs:873` "the record cannot mint one — what it holds is a ceiling, not a measurement"
+- plain `bio-plane/src/strength/method.mjs:36` "this rests on bears it out, so it is visible here and does not count as evidence"
+- plain `bio-plane/src/strength/method.mjs:132` "so it does not apply here"
+- plain `bio-plane/src/strength/method.mjs:384` "this grading method version is not one that has been published, so the grade cannot be ..."

@@ -10,3 +10,11 @@ Layer 7. 8 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/intent/grammar.test.mjs:223` [part] "why, so the next reader is not left guessing. Nothing was written." — part test copy
 - testcopy `bio-plane/test/m/intent/pursuits.test.mjs:12` [part] "Ask an active administrator: they declare, revise or retire an aspi..." — part test copy
 - testcopy `bio-plane/test/m/intent/pursuits.test.mjs:13` [part] "own name, and the act carries their name and date."
+
+## Plain findings (K3957)
+
+3 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('intent.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/intent/index.mjs:62` "declaring, revising or retiring an aspiration the whole team holds"
+- plain `bio-plane/src/intent/index.mjs:529` "stage's grade unknown), so whether it reaches the required grade is not known"
+- plain `bio-plane/src/intent/index.mjs:605` "not known; it is never taken as zero"

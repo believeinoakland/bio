@@ -5,3 +5,9 @@ Layer 9. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - inline `bio-plane/src/plan-work/index.mjs:357` "a rhythm is {rrule, dtstart: YYYY-MM-DD, zone?} in the recurrence s..."
 - inline `bio-plane/src/plan-work/index.mjs:564` "a comment is on {option}, {action} or {draft} of this plan, one you..." — text holds a literal {name}, filled by its caller
 - inline `bio-plane/src/plan-work/index.mjs:565` "see. Nothing was written."
+
+## Plain findings (K3957)
+
+1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('plan-work.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/plan-work/index.mjs:1067` "text began as the assistant's draft"

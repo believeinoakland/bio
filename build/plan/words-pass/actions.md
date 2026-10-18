@@ -10,3 +10,10 @@ Layer 9. 8 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/actions/t11.test.mjs:133` [part] "no module answers an action's read here" — part test copy
 - testcopy `bio-plane/test/m/actions/t11.test.mjs:134` [part] "no module answers an action's read here" — part test copy
 - testcopy `bio-plane/test/m/actions/t50.test.mjs:104` [part] "this is not a hint either way." — part test copy
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('actions.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/actions/index.mjs:1960` "place, so it was written without one"
+- plain `bio-plane/src/actions/index.mjs:2378` "is reachable only by its request"

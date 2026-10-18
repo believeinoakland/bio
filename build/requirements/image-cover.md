@@ -26,6 +26,7 @@ Covers marked areas of a photo with solid colour and answers a new image carryin
 ### Uses
 
 - `image-codecs`: `readJpegHeader` (the header and process it reads, and its refusal codes). `test-support` for tests.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

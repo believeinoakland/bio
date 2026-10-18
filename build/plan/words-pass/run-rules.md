@@ -13,3 +13,19 @@ Layer 6. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/run-rules/table.test.mjs:227` [part] "Nothing was run, because the kind of work this run asked for is not..." — part test copy
 - testcopy `bio-plane/test/m/run-rules/table.test.mjs:228` [part] "team's Civicsmith yet. Kinds of work are switched on one at a time,..." — part test copy
 - testcopy `bio-plane/test/m/run-rules/table.test.mjs:229` [part] "checked in real use. Ask for a kind that is switched on, or leave t..." — part test copy
+
+## Plain findings (K3957)
+
+11 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('run-rules.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/run-rules/checks.mjs:259` "src/ai-runs/index.mjs groupTestSet, reached from the team's test investigations"
+- plain `bio-plane/src/run-rules/checks.mjs:321` "src/run-rules/rules.mjs levelEmptyHolds, called from agent-harness before it composes a..."
+- plain `bio-plane/src/run-rules/deployment.mjs:71` "threat model the doctrine names"
+- plain `bio-plane/src/run-rules/deployment.mjs:213` "nothing of the record: only the passage of the team's own writing the door hands in, to..."
+- plain `bio-plane/src/run-rules/deployment.mjs:230` "and draft's flag alone never deploys them"
+- plain `bio-plane/src/run-rules/deployment.mjs:296` "no run: it writes no run row and keeps nothing itself"
+- plain `bio-plane/src/run-rules/deployment.mjs:300` "modes' state and whatever ask's or draft's flag"
+- plain `bio-plane/src/run-rules/rules.mjs:201` "questions an assistant opened inside this run (§11 item 5, rule 2) — the run's bound on..."
+- plain `bio-plane/src/run-rules/rules.mjs:264` "no member stopped it and no budget ran out"
+- plain `bio-plane/src/run-rules/rules.mjs:267` "is not deployed yet, so no member stopped this run and no budget ran out"
+- plain `bio-plane/src/run-rules/rules.mjs:413` "no bar was recorded when this run was formed, and none is filled in afterwards"

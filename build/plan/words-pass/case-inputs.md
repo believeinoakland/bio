@@ -32,3 +32,11 @@ Layer 8. 30 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/case-inputs/t46-words.test.mjs:154` "is missing or isn't in that form" — partial test copy (template not matched to a row)
 - testcopy `bio-plane/test/m/case-inputs/t46-words.test.mjs:76` [part] "An acknowledgement of a statement is recorded" — part test copy
 - testcopy `bio-plane/test/m/case-inputs/t46-words.test.mjs:77` [part] "with your own words on it, and none were given, or they are longer ..." — part test copy
+
+## Plain findings (K3957)
+
+3 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('case-inputs.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/case-inputs/index.mjs:398` "the words given were blank"
+- plain `bio-plane/src/case-inputs/index.mjs:411` "until then it is a draft and never the team's statement"
+- plain `bio-plane/src/case-inputs/index.mjs:688` "to add to; it is left exactly as it was signed-for-review"

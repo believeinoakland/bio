@@ -246,6 +246,7 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
 - `office-readers`: `docParaRef`, `docTableRef` (`docx.mjs`); `sheetCellRef`, `usedSheetRange`
   (`formats-xlsx.mjs`); `a1Corner`, `rangeUnitFor` (`formats-xlsx.mjs`, R44; N27); `slideShapeRef` (`pptx.mjs`) — the one reference builder per IC-1 arm,
   never re-derived here.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

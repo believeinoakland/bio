@@ -16,3 +16,19 @@ Layer 5. 14 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/connections/dec149.test.mjs:14` [part] "neither end to the other, so this is an inference from position, to..." — part test copy
 - testcopy `bio-plane/test/m/connections/dec149.test.mjs:15` "is printed under the agenda item" — partial test copy (template not matched to a row)
 - testcopy `bio-plane/test/m/connections/owner.test.mjs:122` [part] "co-mention states no dates" — part test copy
+
+## Plain findings (K3957)
+
+11 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('connections.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/connections/index.mjs:365` "relevance. It is a machine selection and not the mention on point"
+- plain `bio-plane/src/connections/index.mjs:369` "a machine selection and not the mention on point"
+- plain `bio-plane/src/connections/index.mjs:498` "connections were ever derived, and whether a derivation was cut at its bound, is undete..."
+- plain `bio-plane/src/connections/index.mjs:631` "connection the document has is inside it"
+- plain `bio-plane/src/connections/index.mjs:660` "subject's connections records the pair"
+- plain `bio-plane/src/connections/index.mjs:763` "no place the reading recorded"
+- plain `bio-plane/src/connections/index.mjs:1144` "each labelled with who asserts it and kept apart from the connections derived from reso..."
+- plain `bio-plane/src/connections/index.mjs:1213` "may confirm or reject it. A pair whose documents are not both held is served only at th..."
+- plain `bio-plane/src/connections/index.mjs:1260` "linked neither end to the other, so this is an inference from position, to be confirmed..."
+- plain `bio-plane/src/connections/mentioned.mjs:32` "stated, so whether this connection holds at the date asked is undetermined, never out"
+- plain `bio-plane/src/connections/stepsources.mjs:31` "date asked is undetermined, never out"

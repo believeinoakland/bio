@@ -4,3 +4,20 @@ Layer 3. 2 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 
 - testcopy `bio-plane/test/m/provenance-routes/marked.test.mjs:27` [part] "no assessment of this document's route has ever been recorded. This..." — part test copy
 - testcopy `bio-plane/test/m/provenance-routes/marked.test.mjs:28` [part] "that the route cannot be shown; it is the absence of the question h..."
+
+## Plain findings (K3957)
+
+12 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('provenance-routes.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/provenance-routes/index.mjs:56` "nobody looked at this level for this subject"
+- plain `bio-plane/src/provenance-routes/index.mjs:57` "we looked and it is positively not there"
+- plain `bio-plane/src/provenance-routes/index.mjs:58` "we looked and could not tell"
+- plain `bio-plane/src/provenance-routes/index.mjs:59` "we looked and it is there"
+- plain `bio-plane/src/provenance-routes/index.mjs:382` "be shown. Nobody has looked"
+- plain `bio-plane/src/provenance-routes/index.mjs:385` "route showable. This is the earned statement that no document carries a marker: somebod..."
+- plain `bio-plane/src/provenance-routes/index.mjs:462` "that the evidence supported this route"
+- plain `bio-plane/src/provenance-routes/index.mjs:479` "this record carries no readable data/provenance.json, so there is no capture record to ..."
+- plain `bio-plane/src/provenance-routes/index.mjs:526` "every document already records a chain"
+- plain `bio-plane/src/provenance-routes/index.mjs:745` "record adds when something changed rather than repeating itself"
+- plain `bio-plane/src/provenance-routes/index.mjs:749` "recorded: every document in this register can show its route"
+- plain `bio-plane/src/provenance-routes/index.mjs:970` "is complete over the corpus"

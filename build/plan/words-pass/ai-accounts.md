@@ -5,3 +5,11 @@ Layer 2. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - inline `bio-plane/src/ai-accounts/index.mjs:1169` "; this one has {}"
 - testcopy `bio-plane/test/m/ai-accounts/t35-misc.test.mjs:140` [part] "Your team's Civicsmith cannot keep a key sealed right now, because ..." — part test copy
 - testcopy `bio-plane/test/m/ai-accounts/t35-misc.test.mjs:141` [part] "Ask whoever hosts your team's Civicsmith to set it." — part test copy
+
+## Plain findings (K3957)
+
+3 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('ai-accounts.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/ai-accounts/index.mjs:313` "switching the team key's assistant settings"
+- plain `bio-plane/src/ai-accounts/index.mjs:585` "reading the team key's assistant settings"
+- plain `bio-plane/src/ai-accounts/index.mjs:1178` "keeping the team's material away from every assistant"

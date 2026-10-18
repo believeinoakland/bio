@@ -4,3 +4,9 @@ Layer 5. 2 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 
 - testcopy `bio-plane/test/m/progressions/dispose.test.mjs:61` [part] "Setting something down means deferring it (set aside for now) or di..." — part test copy
 - testcopy `bio-plane/test/m/progressions/dispose.test.mjs:62` [part] "is a different act. Choose deferred or dismissed. Nothing was written." — part test copy
+
+## Plain findings (K3957)
+
+1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('progressions.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/progressions/index.mjs:997` "from the project; none was named"

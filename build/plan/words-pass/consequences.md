@@ -16,3 +16,11 @@ Layer 9. 14 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/consequences/addressed.test.mjs:116` [part] "the team judges the breach had no consequence"
 - testcopy `bio-plane/test/m/consequences/reads.test.mjs:253` [part] "could not be read for you"
 - testcopy `bio-plane/test/m/consequences/t46.test.mjs:62` [part] "2,000 characters. Nothing was written." — part test copy
+
+## Plain findings (K3957)
+
+3 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('consequences.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/consequences/index.mjs:456` "an affected person names the person entity"
+- plain `bio-plane/src/consequences/index.mjs:965` "into one figure, and nothing ranks it"
+- plain `bio-plane/src/consequences/index.mjs:1175` "a success record's figures are a list, each {label, basis: {op, operands}}"

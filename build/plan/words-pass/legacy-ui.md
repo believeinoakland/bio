@@ -17,3 +17,12 @@ Layer 11. 15 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - testcopy `civicos-ui/test/notifications.test.mjs:294` [part] "no member could be named inside this run's read gate, so" — part test copy
 - testcopy `civicos-ui/test/notifications.test.mjs:295` [part] "it is offered to every member who can read the run"
 - testcopy `civicos-ui/test/project-workspace.test.mjs:342` [part] "resignation with the other"
+
+## Plain findings (K3957)
+
+4 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('legacy-ui.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `civicos-ui/check-mock-envelope.mjs:247` "app.html has no runtime script block — arm A could not run at all"
+- plain `civicos-ui/check-mock-envelope.mjs:313` "test/envelope-probe.mjs is missing — arm B cannot run"
+- plain `civicos-ui/check-mock-envelope.mjs:358` "arm B observed no op answers in any suite — the probe is not reaching the mocks"
+- plain `civicos-ui/check-mock-envelope.mjs:476` "arm C could not read bio-plane/src/store.mjs — the census has no authority to compare a..."

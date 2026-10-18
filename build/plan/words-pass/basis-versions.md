@@ -30,3 +30,43 @@ Layer 6. 28 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - inline `bio-plane/src/basis-versions/index.mjs:905` "wrong one is worse than being asked which was meant."
 - testcopy `bio-plane/test/m/basis-versions/grammar.test.mjs:14` [part] "a reading of the evidence" — part test copy
 - testcopy `bio-plane/test/m/basis-versions/imported-legs.test.mjs:21` [part] "not accepted at that edition" — part test copy
+
+## Plain findings (K3957)
+
+35 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('basis-versions.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/basis-versions/checks.mjs:498` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:503` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:508` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:513` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:522` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:527` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:532` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:565` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:576` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:581` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:588` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:593` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:598` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:612` "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts"
+- plain `bio-plane/src/basis-versions/checks.mjs:631` "src/basis-versions/index.mjs #moveVersionState, reached from the four acts that move a ..."
+- plain `bio-plane/src/basis-versions/checks.mjs:658` "composition with its legs, its branches and its description (section 6)"
+- plain `bio-plane/src/basis-versions/checks.mjs:660` "separated (section 8). The separation is carried as the version's claim"
+- plain `bio-plane/src/basis-versions/checks.mjs:662` "(section 8, under section 3's basis ruling)"
+- plain `bio-plane/src/basis-versions/checks.mjs:668` "only act available is a new edition, and it is the member's"
+- plain `bio-plane/src/basis-versions/conclude.mjs:130` "this inquiry has no readable bundle.md, so its state cannot be moved"
+- plain `bio-plane/src/basis-versions/conclude.mjs:156` "this project has no readable bundle.md, so its conclusion cannot be recorded"
+- plain `bio-plane/src/basis-versions/conclude.mjs:372` "this project has no readable bundle.md, so its conclusion cannot be recorded"
+- plain `bio-plane/src/basis-versions/grammar.mjs:166` "describe what this reading of the evidence is and why it differs from the others"
+- plain `bio-plane/src/basis-versions/grammar.mjs:194` "or leave the version suggested — a state nobody has moved it into needs no reason"
+- plain `bio-plane/src/basis-versions/grammar.mjs:314` "name the member asserting that this ground is independently sufficient"
+- plain `bio-plane/src/basis-versions/grammar.mjs:320` "name the member asserting that this ground is independently sufficient"
+- plain `bio-plane/src/basis-versions/grammar.mjs:409` "give every leg of this version a ground — a leg needed whatever else holds belongs in e..."
+- plain `bio-plane/src/basis-versions/grammar.mjs:410` "or put every leg in one ground and say relationship: and"
+- plain `bio-plane/src/basis-versions/grammar.mjs:416` "relationship: and — every ground is necessary and the finding is no stronger than its w..."
+- plain `bio-plane/src/basis-versions/grammar.mjs:417` "relationship: or — the grounds are alternatives, each claimed sufficient on its own by ..."
+- plain `bio-plane/src/basis-versions/grammar.mjs:423` "or split the legs into the grounds you meant to be alternatives"
+- plain `bio-plane/src/basis-versions/grammar.mjs:424` "or merge the grounds into one — legs in one ground are all necessary"
+- plain `bio-plane/src/basis-versions/grammar.mjs:445` "or leave the partition as it was inherited — an edit that only changes the evidence is ..."
+- plain `bio-plane/src/basis-versions/index.mjs:1473` "a different place, not a part of it"
+- plain `bio-plane/src/basis-versions/index.mjs:1474` "not one this record can compare with it"

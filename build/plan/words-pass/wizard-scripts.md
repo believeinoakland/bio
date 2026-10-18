@@ -243,3 +243,44 @@ Layer 11. 241 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranch
 - testcopy `bio-plane/test/m/wizard-scripts/writing-help.test.mjs:204` "The assistant never words your reason for an act: your reasons are ..." — drawn module: its L11 job
 - testcopy `bio-plane/test/m/wizard-scripts/writing-help.test.mjs:205` [part] "A step's draft is the script's own words, a filing template offered..." — part test copy
 - testcopy `bio-plane/test/m/wizard-scripts/writing-help.test.mjs:206` [part] "your team's Civicsmith registers, and this one is none of them." — part test copy
+
+## Plain findings (K3957)
+
+36 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('wizard-scripts.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/wizard-scripts/index.mjs:165` "a step is {screen, act, what, why, draft?, via?}"
+- plain `bio-plane/src/wizard-scripts/index.mjs:298` "a script has at least one step"
+- plain `bio-plane/src/wizard-scripts/index.mjs:310` "the step does not say what the member does and why"
+- plain `bio-plane/src/wizard-scripts/index.mjs:334` "the script has one step"
+- plain `bio-plane/src/wizard-scripts/index.mjs:338` "an offered script walks the same screens and acts"
+- plain `bio-plane/src/wizard-scripts/index.mjs:453` "no member is named as the one acting: this call carries nobody"
+- plain `bio-plane/src/wizard-scripts/index.mjs:462` "no wizard script by that id is readable here; one you may not see answers the same"
+- plain `bio-plane/src/wizard-scripts/index.mjs:488` "a Civicsmith script is read-only to every team: teams cannot edit or retire it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:494` "the script was already retired"
+- plain `bio-plane/src/wizard-scripts/index.mjs:494` "the version was already withdrawn"
+- plain `bio-plane/src/wizard-scripts/index.mjs:791` "the registration is made once per construction, and it was"
+- plain `bio-plane/src/wizard-scripts/index.mjs:863` "a recording is a list of {screen, act}"
+- plain `bio-plane/src/wizard-scripts/index.mjs:868` "a recorded step holds its screen and act, never a typed value"
+- plain `bio-plane/src/wizard-scripts/index.mjs:914` "a script is drafted by a joined participant of its project"
+- plain `bio-plane/src/wizard-scripts/index.mjs:918` "a draft starts from one of a recording, a source or a copy"
+- plain `bio-plane/src/wizard-scripts/index.mjs:967` "a draft is revised by its author"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1013` "no stamped proposer: a proposal names who made it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1057` "a draft is submitted by its author"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1091` "an administrator makes a script team-wide"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1101` "an administrator approves a team-wide script"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1101` "an owner of the script's project approves it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1105` "you are the version's author and its only member contributor: another member approves it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1130` "granting the advanced wizard editor"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1134` "no member by that id"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1153` "revoking the advanced wizard editor"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1156` "no editor grant by that id"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1186` "an administrator retires a team-wide script"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1186` "an owner of the script's project retires it"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1200` "a version is withdrawn by its author"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1527` "the assistant does not help word this field"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1536` "the assistant's draft is not served yet: nothing was drafted and the field is unchanged"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1566` "use is counted as start, step or finish: stopping is not an event"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1569` "only a step reached names a step"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1585` "a script's use is read by the owners of its project and its authors"
+- plain `bio-plane/src/wizard-scripts/index.mjs:1612` "candidates are read by project owners and administrators"
+- plain `bio-plane/src/wizard-scripts/start.mjs:86` "a rumour part is proposed as a question: it is proposed as a lead"

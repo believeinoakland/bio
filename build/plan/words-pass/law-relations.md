@@ -6,3 +6,10 @@ Layer 5. 4 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - inline `bio-plane/src/law-relations/index.mjs:618` "; only the first {} court standards were read"
 - inline `bio-plane/src/law-relations/index.mjs:662` [copy] "a read names the member reading; an absent viewer is neither an adm..."
 - inline `bio-plane/src/law-relations/index.mjs:672` [copy] "undetermined at the date asked"
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('law-relations.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/law-relations/index.mjs:339` "excepts, implements, incorporates) are kept apart and never read as one list (D192)"
+- plain `bio-plane/src/law-relations/index.mjs:627` "refused); this answer stands without it"
