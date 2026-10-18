@@ -147,7 +147,7 @@ Each closed layer L1 to L8 runs again as a layer (the Sequence, step 2), lowest 
 - **T51-177 · record-core** · (W) words (K3949): the 89 findings the conversion left in `build/plan/words-pass/record-core.md`, each fixed by the words rule (§5.10 (3): a judgment, so its own job) · Text: none · claude-sonnet-5-5
 
 #### R3 (L3)
-- **T51-178 · acquisition** · (W) words (K3949): the 3 findings the conversion left in `build/plan/words-pass/acquisition.md`, each fixed by the words rule (§5.10 (3): a judgment, so its own job) · Text: none · claude-haiku-5-5
+- **T51-178 · acquisition** · (W) words (K3949): the 3 findings the conversion left in `build/plan/words-pass/acquisition.md`, each fixed by the words rule (§5.10 (3): a judgment, so its own job); also (K3955, SUBRESOURCES #5 J1) `bio-plane/test/m/acquisition/subresources-walk.test.mjs`:100 copies subresources' derived-artifact banner (`/DERIVED ARTIFACT, not evidence/`): assert the key `subresources.subresources.derived_banner` or compare with `localize` · Text: none · claude-haiku-5-5
 - **T51-179 · attestation** · (W) words (K3949): the 4 findings the conversion left in `build/plan/words-pass/attestation.md`, each fixed by the words rule (§5.10 (3): a judgment, so its own job) · Text: none · claude-haiku-5-5
 - **T51-180 · capture** · (W) words (K3949): the 3 findings the conversion left in `build/plan/words-pass/capture.md`, each fixed by the words rule (§5.10 (3): a judgment, so its own job) · Text: none · claude-haiku-5-5
 - **T51-181 · capture-sources** · (W) words (K3949): the 20 findings the conversion left in `build/plan/words-pass/capture-sources.md`, each fixed by the words rule (§5.10 (3): a judgment, so its own job) · Text: none · claude-haiku-5-5
