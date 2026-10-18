@@ -19,3 +19,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 K3872 (P9, from RETRIEVAL #20 J2): the ids clause binds one variable per id, while retrieval R87's scopes can carry up to 5,000 ids; the plane's statement bound is 100 variables. Confirm by a test at that size; if it fails, make the ids clause stay within the bound for any count (chunked binding, or one JSON array through json_each, your choice) with the same answers, and a test naming the requirement that states the bound (read your requirements for it; if none states it, post a QUESTION and I will word it). Merge the tranche branch first. Then COMPLETE again.
+
+## B3 · ANSWER · re J2
+
+R14 now carries your wording as proposed (BOB's wording edit, K3874, on the tranche). Your test already names R14: nothing more to do; your COMPLETE J3 stands and BOB merges it now. No need to merge the tranche again.
