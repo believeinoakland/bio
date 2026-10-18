@@ -34913,7 +34913,8 @@ var Membership = class _Membership {
     };
   }
   /* R11 (section 4.8; DEC-134 (3)): the group's answer to who holds hosting access. It is asked at setup
-     (the setup page's act, `setup-page` R15; K1851), never on adding an administrator, so `memberAdd` asks nothing about it. The group's answer, recorded by an administrator; append-only, the latest record is the answer. */
+     (the setup screen's act, `screens-entry` R6, and the group's settings, `screens-settings` R18; the setup page's
+     `setup-page` R15 is retired, K1851), never on adding an administrator, so `memberAdd` asks nothing about it. The group's answer, recorded by an administrator; append-only, the latest record is the answer. */
   hostingAccessSet({ holders = null, note = null, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "recording who holds hosting access (4.8)");
     const refusal8 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
@@ -43967,8 +43968,9 @@ var ProjectRoster = class _ProjectRoster {
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked3 = {}) {
-    const { viewer = null, limit = null } = asked3 && typeof asked3 === "object" ? asked3 : {};
+    const { viewer = null, limit = null, after = null } = asked3 && typeof asked3 === "object" ? asked3 : {};
     const gate = viewerPredicate(viewer);
+    const cursor = typeof after === "string" && after !== "" ? after : null;
     const cap = _ProjectRoster.#cap(limit, _ProjectRoster.PROJECT_LIST_LIMIT);
     const rows = this.#rows(
       `SELECT b.bundle_id AS id, b.current_state AS state, o.member_id AS owner, o.handle AS owner_handle,
@@ -43977,11 +43979,13 @@ var ProjectRoster = class _ProjectRoster {
                              ORDER BY x.created, x.rowid LIMIT 1) AS opener
                  FROM bundles b WHERE b.object_type = 'project') b
          LEFT JOIN members o ON o.status = 'active' AND o.member_id = b.opener
-        WHERE b.object_type = 'project' AND (${gate.sql})
+        WHERE b.object_type = 'project' AND (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
         ORDER BY b.bundle_id
         LIMIT ?`,
       ROOT_ADMIN,
       ...gate.args,
+      cursor,
+      cursor,
       cap + 1
     );
     const truncated = rows.length > cap;
@@ -44003,8 +44007,59 @@ var ProjectRoster = class _ProjectRoster {
       activity: activity.get(r.id) ?? Array(_ProjectRoster.ACTIVITY_WEEKS).fill(0),
       lastChange: lastChange.get(r.id) ?? null
     }));
-    return { ok: true, projects, count: projects.length, limit: cap, truncated };
+    return {
+      ok: true,
+      projects,
+      count: projects.length,
+      limit: cap,
+      truncated,
+      next: truncated ? projects[projects.length - 1].id : null
+    };
   }
+  /** R35 (T51; N1209): THE VIEWER'S OWN INVITATIONS, each project where her participation is `invited`, `{projectId, name,
+   *  invited_by, invited_at}` in project id order; `invited_by` is `{member, handle}` (the founder as R29 names her) or
+   *  null when none was recorded or it names no member. Only her own rows; a viewer naming no active member gets an empty
+   *  list. Paged as R36 pages (`after`, `next`). Writes nothing, never throws. */
+  projectInvitations(asked3 = {}) {
+    const { viewer = null, limit = null, after = null } = asked3 && typeof asked3 === "object" ? asked3 : {};
+    const cap = _ProjectRoster.#cap(limit, _ProjectRoster.PROJECT_INVITATIONS_LIMIT);
+    const empty = { ok: true, invitations: [], count: 0, limit: cap, truncated: false, next: null };
+    try {
+      const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : viewerPredicate(viewer).member;
+      if (!me || !this.#activeMemberRow(me)) return empty;
+      const cursor = typeof after === "string" && after !== "" ? after : null;
+      const rows = this.#rows(
+        `SELECT p.project_id AS id, p.created AS at, p.invited_by AS by_id, i.member_id AS inviter, i.handle AS inviter_handle
+           FROM project_participants p JOIN bundles b ON b.bundle_id = p.project_id AND b.object_type = 'project'
+           LEFT JOIN members i ON i.member_id = p.invited_by
+          WHERE p.member_id = ? AND p.state = 'invited' AND (? IS NULL OR p.project_id > ?)
+          ORDER BY p.project_id LIMIT ?`,
+        me,
+        cursor,
+        cursor,
+        cap + 1
+      );
+      const truncated = rows.length > cap;
+      const page = truncated ? rows.slice(0, cap) : rows;
+      const invitations = page.map((r) => ({
+        projectId: r.id,
+        name: this.#bundle(r.id)?.title ?? null,
+        invited_by: r.by_id === ROOT_ADMIN ? this.#person(ROOT_ADMIN, null) : r.inviter ? { member: r.inviter, handle: r.inviter_handle ?? null } : null,
+        invited_at: r.at ?? null
+      }));
+      return {
+        ok: true,
+        invitations,
+        count: invitations.length,
+        limit: cap,
+        truncated,
+        next: truncated ? invitations[invitations.length - 1].projectId : null
+      };
+    } catch {
+      return empty;
+    }
+  }
+  static PROJECT_INVITATIONS_LIMIT = 200;
   /* R26's page size, R9's rule: a chosen ceiling, lowered by the caller and never raised. */
   static PROJECT_LIST_LIMIT = 200;
   /* R28 (T47; N1025; DEC-214 (3)): eight weeks of activity, oldest first, each week seven days back from the server's
@@ -44367,7 +44422,7 @@ var ProjectRoster = class _ProjectRoster {
           "a member's own requests to join are read by that member, signed in. A credential with no active member behind it has made none."
         );
       const mine = this.#rows(
-        `SELECT project_id AS project, project_name AS name, comment, state, asked_at AS asked,
+        `SELECT project_id AS project, member_id, project_name AS name, comment, state, asked_at AS asked,
                 closed_comment, closed_at AS closed
            FROM project_join_requests WHERE member_id=? ORDER BY seq LIMIT ?`,
         me.member_id,
@@ -44390,7 +44445,7 @@ var ProjectRoster = class _ProjectRoster {
         "a project's requests to join are seen by the requester, the project's owners and administrators (Membership Architecture v2 \xA77.14), and not by other participants: a pending requester is not a participant (\xA77.8). Your own requests are read without naming a project."
       );
     const theirs = this.#rows(
-      `SELECT m.handle, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
+      `SELECT m.handle, r.member_id, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
               r.closed_comment, r.closed_at AS closed
          FROM project_join_requests r JOIN members m ON m.member_id = r.member_id
          LEFT JOIN members cb ON cb.member_id = r.closed_by
@@ -44765,12 +44820,12 @@ async function checkInfo2Contract(ctx, findings) {
 var INFO2_GRAMMAR = Object.freeze({ ids: Object.freeze(["C-18.6", "C-18.7"]), arm: checkInfo2Contract });
 
 // ../bio-plane/src/gate.mjs
-var CATALOG_VERSION = "1.77.0";
+var CATALOG_VERSION = "1.78.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 1909,
-  digest: "962db2b0fc620f04b8edfe7ebf5e489543d0721b4b6638764dd2c7e7e024d766"
+  rows: 1918,
+  digest: "31b4a129bc1b2c99b586c27c455d014fe1570c4287e4cc77c501e071f0d5864f"
 });
 var te3 = new TextEncoder();
 
