@@ -31,3 +31,17 @@ T51-260 · ocr-worker (the words findings, K3957). Layer 1, re-run R1.
 - `bio-plane/test/ocr-measure-probe.mjs` is a probe, not a suite (its header says so); not run.
 
 Size (session_01GcznjZ3hvv6U15cyGqiVkP): test runs 2, module lines 799 (ocr-worker/src excluding the generated src/tesslib.mjs; 1,698 with it)
+
+## J2 · COMPLETE
+
+Re-run after CHANGE B2 (K3962, K3965): merged tranche/T51 and civicos-process ea6cd83.
+
+**Entries applied.** The 8 test copies in `ocr-worker/test/ocr-worker.test.mjs` (the `measured_by` citation, lines 480 to 487, split across string pieces) are replaced by one comparison with the contract's `MEASURED_BY` constant, which is the text read through its key `ocr-worker.contract.measurements_md_2026_09_10`. The suite holds no copy of the sentence (K3810). A test cannot call `localize` with a non-literal `en` (the marker arm would fail), so the comparison is with the constant, not with a fresh `localize` call. The byte pin is kept at the wire (B7 compares every answer's citation with the same constant).
+
+**Deferred.** None. **Found in other modules.** None.
+
+**Checks run.** `node checks/format.mjs`: 0 failures. `node checks/architecture.mjs bio ocr-worker`: 0 failures. `node checks/coverage.mjs bio ocr-worker`: 23 of 23 ids, 0 failures. `node checks/run.mjs /home/user/bio`: no ocr-worker finding in the words check (testcopy, plain or any other). `node bio-plane/src/setup-words/build.mjs --check`: ran read-only; it printed one note about `jurisdictions.index.amount_is_amount_and_units` (R18), not this module. `node checks/ownership.mjs bio ocr-worker tranche/T51 job/T51/ocr-worker`: 0 failures.
+
+**Tests.** `node test/ocr-worker.test.mjs`: 249 passed, 0 failed. The first run after the merge failed R19 (stale bundle); `npm run build` regenerated `dist/` (this module's own output), and the rerun is green.
+
+Size (session_01GcznjZ3hvv6U15cyGqiVkP): test runs 4, module lines 799 (ocr-worker/src excluding the generated src/tesslib.mjs).
