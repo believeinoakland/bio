@@ -293,11 +293,11 @@ export class Credentials {
   }
 
   /* R2 (REC-41, closing D-188). `op=bootstrap` is reached by any stranger, and it answers ONE question, the one the
-     setup page asks before it can show anything: has this instance been claimed, and is there a live bootstrap
-     credential to claim it with. It no longer answers `roles` (every role holding a credential and when its password
-     was set: a roster handed to anyone in one unauthenticated request), and nothing consumed it; the credentials table
-     is not read here at all, so there is no roster in this answer for a later refactor to leak. `consumedAt` stays: it
-     is the instant the INSTANCE was claimed, a fact about this copy of the software that names nobody. */
+     setup screen (`screens-entry` R18) asks before it can show anything: has this instance been claimed, and is there
+     a live bootstrap credential to claim it with. It answers no roster (every role holding a credential and when its
+     password was set): the credentials table is not read here at all, so there is no roster in this answer for a later
+     refactor to leak. `consumedAt` stays: it is the instant the INSTANCE was claimed, a fact about this copy of the
+     software that names nobody. */
   bootstrapState(tokenFp = null) {
     const b = this.#one(`SELECT consumed_at, token_fp FROM bootstrap WHERE id=1`);
     const spent = !!(b && b.consumed_at);
