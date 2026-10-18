@@ -1,6 +1,6 @@
 # query-language (T51)
 
-**Status** · session_01FS8FKWSy2DYXTK38z1ksz2 · depth 2 · COMPLETE · handled B1
+**Status** · session_01FS8FKWSy2DYXTK38z1ksz2 · depth 2 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -23,3 +23,33 @@ Tests and checks:
 - `checks/run.mjs /home/user/bio`: architecture 0 failures; coverage 13 failures, all in other modules (above); channels 0 failures.
 
 Size (session_01FS8FKWSy2DYXTK38z1ksz2): test runs 1, module lines 3030
+
+## J2 · QUESTION
+
+T51-41 · query-language · CHANGE B2 (K3872): one question on wording.
+
+The ids arm now binds the list once, as a single JSON argument read through json_each, so a statement binds one variable at any count (commit a1cc6dbb39). Measured before the fix, with the fixture's SQLite capped at 100 bound variables (the plane's ceiling, D-36): 100 ids run, 101 are refused "too many SQL variables", so 5,000 ids failed. The new test "R14 an ids list binds one variable whatever its count" passes after the change and fails before it.
+
+No requirement states the bound. R12 bounds the select-all count at IDS_MAX (50,000) and R14 says an ids list is an arm; neither names the bound-variable ceiling, and the number is only in the code comments and the measurement records (about 100). Proposed wording for R14, to add:
+
+"An `ids` list of any length is bound as one statement argument (a JSON array read through `json_each`), so every statement stays within the plane's bound-variable ceiling (D-36, about 100) however many ids a scope holds."
+
+Please word it, or tell me the wording you want; I will then name it in the test title and post COMPLETE again.
+
+## J3 · COMPLETE
+
+T51-41 · query-language · CHANGE B2 (K3872): done, commit a1cc6dbb39 on job/T51/query-language. Tranche T51 is merged in (the merge is in this branch).
+
+Applied:
+- K3872: the ids arm (`compile`'s `ids`, both the bundle and the projection forms) binds the list once, as a JSON argument read through `json_each`. Same answers at any count. Test: `R14 an ids list binds one variable whatever its count` (statements.test.mjs): 5,000 ids answer the three held, a control with two ids answers the one held. Before the change the same test fails with "too many SQL variables" under the ceiling.
+- Fixture: `test/m/query-language/fixture.mjs` now caps each test database at `PLANE_VARIABLE_CEILING` = 100 bound variables, the plane's bound (D-36). Every existing test still passes under it.
+- Earlier entry T51-41 (the comment) is unchanged.
+
+Requirement wording: a QUESTION is posted for it (no requirement states the bound yet). The test names R14 in the meantime.
+
+Tests and checks:
+- `node --test test/m/query-language/` (bio-plane): 57 pass, 0 fail.
+- `node --test test/m/retrieval/`: 193 of 194 pass. The one failure, "R10, R16, R19, R20, R73 (plan rule 6): the module's keys are the owner's declared list", fails without my change too (checked with my changes stashed): retrieval's word list, not query-language. Reporting it, not touching it.
+- format: 174 modules, 0 failures. architecture (query-language): 0 failures. coverage (query-language): 33 of 33 live ids named, 0 failures. ownership (query-language, tranche/T51): 0 failures.
+
+Size (session_01FS8FKWSy2DYXTK38z1ksz2): test runs 6, module lines 3034

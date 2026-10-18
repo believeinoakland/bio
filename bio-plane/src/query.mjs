@@ -2433,11 +2433,14 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        everything else: it passes the viewer gate, it obeys the sort, and it is
        executed by the one guarded executor. A selection resolved by any other
        route would be the second query path this design exists to prevent.
-       The caller chunks the list; SQLite bounds how many variables one statement
-       may bind, and a 10,000-item selection would exceed it. */
+       The list is bound as ONE JSON argument read through json_each, so a
+       statement binds one variable whatever the count. One variable per id
+       exceeded the plane's bound-variable ceiling (D-36) at a 5,000-id scope
+       (K3872). */
     const idArm = Array.isArray(ids) && ids.length
-      ? { sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE ${rel.key} IN (${ids.map(() => "?").join(",")})`
-                   : `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids }
+      ? { sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE ${rel.key} IN (SELECT value FROM json_each(?))`
+                   : `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`,
+          args: [JSON.stringify(ids)] }
       : null;
     /* `picked` exists only when there IS an id restriction. The first version
        emitted a match-all CTE and intersected it unconditionally, which is a

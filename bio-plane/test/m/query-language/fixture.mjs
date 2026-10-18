@@ -25,8 +25,12 @@ export const PROJECTION_COLS = ["schema_id", "produced_mode", "capability_tier",
 /* workerd's measured ceiling on the terms of one compound SELECT. */
 export const WORKERD_COMPOUND_SELECT = 5;
 
+/* The plane's bound on the variables one statement may bind (D-36, about 100; the `ids` arm met it at 5,000 ids, K3872).
+   Every database here refuses a statement that binds more, so a statement that would fail on the plane fails here. */
+export const PLANE_VARIABLE_CEILING = 100;
+
 export function world({ projection = null, fields = null } = {}) {
-  const db = new DatabaseSync(":memory:", { limits: { compoundSelect: WORKERD_COMPOUND_SELECT } });
+  const db = new DatabaseSync(":memory:", { limits: { compoundSelect: WORKERD_COMPOUND_SELECT, variableNumber: PLANE_VARIABLE_CEILING } });
   const P = projection;
   /* R26: each named field's registry column, held in its own table and on neither `bundles` nor the projection. */
   const F = new Map(Object.entries(fields || {}).map(([name, r]) => [FIELDS[name].col, r]));
