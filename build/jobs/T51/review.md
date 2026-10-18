@@ -19,7 +19,7 @@ Generated artifacts made stale: `bio-plane/dist/bio-plane.bundled.mjs` and `rele
 
 **Tests and checks**
 - `node --test bio-plane/test/m/review/`: tests 61, pass 61, fail 0.
-- Users of `reviewcopy` (publication, control-plane, screens-publish, case-authoring): see below.
+- Users of `reviewcopy` (publication, control-plane, screens-publish, case-authoring): 29 failing lines before and after my change, identical lists (diffed), so inherited reds, none caused by this job.
 - format: 174 modules, 173 requirements files; 0 failures. architecture: 11 product files, 57 relative imports; 0 failures. coverage: 36 of 36 live requirement ids named by a test; 0 failures. ownership: 0 failures.
 
 Size (session_01DDca1CLodht7Fy36DU9DUp): test runs 6, module lines 1430
