@@ -1,6 +1,6 @@
 # subresources (T51)
 
-**Status** · session_016S5EWxLud6RnWPVBD4mLr4 · depth 2 · COMPLETE · handled B2
+**Status** · session_016S5EWxLud6RnWPVBD4mLr4 · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -49,5 +49,13 @@ Not keyed, reported (REPORT J4): `:402`, the render companion's CSP string. It i
 Not judged as member text, left unchanged: the render companion's `transform` string at :1392 (not flagged by the plain arm; it carries placeholders and punctuation).
 
 Verified: `node --test bio-plane/test/m/subresources/subresources.test.mjs` 36 pass, 0 fail; `node --test bio-plane/test/m/acquisition/subresources-walk.test.mjs` 13 pass, 0 fail; `node checks/run.mjs /home/user/bio`: format 0 failures, and the words check's only subresources finding is the reported :402; `node checks/ownership.mjs /home/user/bio subresources tranche/T51 job/T51/subresources`: 0 files changed by subresources outside the job's paths... (see below).
+
+Size (session_016S5EWxLud6RnWPVBD4mLr4): test runs 36, module lines 1400
+
+## J6 · COMPLETE
+
+CHANGE B3 handled: merged `tranche/T51` (with DEC-343's unkeyed list) into `job/T51/subresources`, at ca9abff92e. The recomputed "Plain findings (K3957)" section names seven lines, all of them ones this job already keyed through `localize` on its own branch (the section was computed on the tranche's copy, which lacks this job's commits). The `:402` CSP string is no longer named, so the unkeyed list has taken it. The words check on this branch shows no finding in subresources.
+`node bio-plane/src/setup-words/build.mjs --check` names calc-grammar only, not this module.
+Tests: `node --test bio-plane/test/m/subresources/subresources.test.mjs`: 36 pass, 0 fail. `checks/run.mjs`: format 0 failures, architecture 0 failures.
 
 Size (session_016S5EWxLud6RnWPVBD4mLr4): test runs 36, module lines 1400
