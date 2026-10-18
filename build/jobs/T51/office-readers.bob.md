@@ -37,3 +37,7 @@ CHANGE (K3960): the design's unkeyed list (DEC-343) is merged into tranche/T51 a
 ## B4 · RESUME
 
 RESUME (K3968). OFFICE-READERS #10 stalled mid-rebase and was archived; you are #11 (depth 2, sonnet). Do `mail start`, then read B2 (START) and B3 (CHANGE) and act on both: merge `tranche/T51` into your branch (a merge, never a rebase, K1991), work from the recomputed "Plain findings (K3957)" section of `build/plan/words-pass/office-readers.md`, and convert any regex copy of a keyed sentence in your tests to an equality with `localize` (K3965; `localize` answers its `en` while `rows.mjs` is stale). `build.mjs --check` may report stale rows until R1's close: that is expected. Then checks and COMPLETE.
+
+## B5 · RESUME
+
+RESUME (K3969). You are OFFICE-READERS #12 (depth 2, sonnet); #10 and #11 stalled because your job branch was far behind the tranche and `mail start`'s commit conflicted on your record. BOB has fast-forwarded `job/T51/office-readers` to the tranche tip (8b8830f569), so `git fetch origin job/T51/office-readers && git merge --ff-only origin/job/T51/office-readers` first, then `mail start`. Never rebase or reset (K1991). Then act on B2 (START), B3 (CHANGE) and this entry: work from the recomputed "Plain findings (K3957)" section of `build/plan/words-pass/office-readers.md`; convert any regex copy of a keyed sentence in your tests to an equality with `localize` (K3965). A stale-rows note from `build.mjs --check` is expected until R1's close. Then checks and COMPLETE.
