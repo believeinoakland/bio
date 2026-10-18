@@ -1500,12 +1500,12 @@ function a1Range(s) {
 export const CONTENT_EXTENT_KINDS = {
   document:      { landed: true,  human: word("content.why.whole_document") },
   "pdf-page":    { landed: true,  human: "a page of a PDF" },
-  "sheet-cell":  { landed: true,  human: localize("text-chain.textchain.a_cell_of_a_spreadsheet", "a cell of a spreadsheet") },
-  "slide-shape": { landed: true,  human: localize("text-chain.textchain.a_shape_on_a_slide", "a shape on a slide") },
-  "doc-para":    { landed: true,  human: localize("text-chain.textchain.a_paragraph_of_a_document", "a paragraph of a document") },
-  "sheet-range": { landed: true,  human: localize("text-chain.textchain.a_range_of_cells_in_a_spreadsheet", "a range of cells in a spreadsheet") },
-  "doc-table":   { landed: true,  human: localize("text-chain.textchain.a_table_in_a_document", "a table in a document") },
-  image:         { landed: true,  human: localize("text-chain.textchain.an_image_in_a_document", "an image in a document") },
+  "sheet-cell":  { landed: true,  human: word("textchain.text.cell_spreadsheet") },
+  "slide-shape": { landed: true,  human: word("textchain.text.shape_deck") },
+  "doc-para":    { landed: true,  human: word("textchain.text.paragraph_document") },
+  "sheet-range": { landed: true,  human: word("textchain.text.range_cells_spreadsheet") },
+  "doc-table":   { landed: true,  human: word("textchain.text.table_document") },
+  image:         { landed: true,  human: word("textchain.text.image_document") },
 };
 
 /** A CELL IN A1 NOTATION (R93), as the container emits it and as a member may paste it. `$` markers and

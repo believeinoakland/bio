@@ -23,12 +23,12 @@ test("R92: CONTENT_EXTENT_KINDS is the eight landed kinds, in order, each with i
   assert.deepEqual(CONTENT_EXTENT_KINDS, {
     document: { landed: true, human: word("content.why.whole_document") },
     "pdf-page": { landed: true, human: "a page of a PDF" },
-    "sheet-cell": { landed: true, human: "a cell of a spreadsheet" },
-    "slide-shape": { landed: true, human: "a shape on a slide" },
-    "doc-para": { landed: true, human: "a paragraph of a document" },
-    "sheet-range": { landed: true, human: "a range of cells in a spreadsheet" },
-    "doc-table": { landed: true, human: "a table in a document" },
-    image: { landed: true, human: "an image in a document" },
+    "sheet-cell": { landed: true, human: word("textchain.text.cell_spreadsheet") },
+    "slide-shape": { landed: true, human: word("textchain.text.shape_deck") },
+    "doc-para": { landed: true, human: word("textchain.text.paragraph_document") },
+    "sheet-range": { landed: true, human: word("textchain.text.range_cells_spreadsheet") },
+    "doc-table": { landed: true, human: word("textchain.text.table_document") },
+    image: { landed: true, human: word("textchain.text.image_document") },
   });
   assert.equal(Object.hasOwn(CONTENT_EXTENT_KINDS, "dom"), false);
 });
