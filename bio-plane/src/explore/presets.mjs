@@ -5,6 +5,7 @@
 import { checkWalkArgs, walk, resolveKinds } from './walk.mjs';
 import { kindsByOwner, makeReader } from './reader.mjs';
 import { intersect, spanOfValidity, spanOfWindow } from './intervals.mjs';
+import { nameEnds } from './labels.mjs';
 import { refuse, isObj, viewerRefusal, nodeRefusal, dateRefusal, NOT_ASSERTED } from './answer.mjs';
 
 /** The rules of each preset's kind set (R10): an owner's kinds named, or every kind of an owner (K1563 (8): duties' power kind). */
@@ -131,6 +132,8 @@ export function overlaps(ctx, arg) {
         others: sharedSet(ctx, reader, { kind, node, span, a: a.a, b: a.b }), sentence: OVERLAP_SENTENCE });
     }
   }
+  const named = nameEnds(ctx, found.flatMap((o) => o.hops), a.viewer);
+  for (const o of found) o.hops = o.hops.map(named);
   const s = reader.s;
   return {
     ok: true, a: a.a, b: a.b, ...(a.at !== undefined && a.at !== null ? { at: a.at } : { period: a.period }), kinds, overlaps: found,
