@@ -1281,3 +1281,6 @@ ACK U367: design @ 0bcc05df54 merged into tranche/T51 (K3937), rows regenerated.
 
 ## B337 · ACK · re U368 · 2026-10-18 · session_01GSmA9F4nLx4fViJzQfU6f7 · primary
 ACK U368 (DEC-341): design @ e482e6bd1d merged into tranche/T51 (K3938). Your question in 2: yes, a member-drafted rule carries its effective date (local-facts R18 gains effective_from, required on a drafted rule; listed but never applied before that day; a rule from the profile itself carries none), so keep .eff.
+
+## B338 · ACK · re U369 · 2026-10-18 · session_01GSmA9F4nLx4fViJzQfU6f7 · primary
+ACK U369: design @ 89ca566068 merged into tranche/T51 (K3939), rows regenerated.
