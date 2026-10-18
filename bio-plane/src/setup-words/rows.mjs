@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (14765 design words, 933 protected; SHA-256
-   706be995476ecff0619ddbc0c957a44f5ece640dee7f3f0047505d77b6ae5c39) followed by 0 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   68e765c96c54fb2b38c4a1cf90f0fcc784cb30c8ba99f483de3f409b1b3384f9) followed by 0 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a t(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "706be99547";
+export const WORDS_COMMIT = "68e765c96c";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -7572,7 +7572,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.hold.where.tip1","Every legal threat the team marked or recorded that has no hold yet, wherever it arrived.","DEC-340: B330 N858 D10: explanation of the heading",null,false,"design"],
   ["screen.hold.where.tip2","Choose the one the hold is for.","DEC-340: B330 N858 D10: explanation of the heading",null,false,"design"],
   ["screen.counsel.chal.heading","The statements challenged","DEC-341: B335 1: counsel: heading of the field list (filings R9)",null,false,"design"],
-  ["screen.counsel.chal.says","Name each statement of your team's that the other side challenges, as it was made.","DEC-341: B335 1: counsel: what the section asks (filings R9 challenged)",null,false,"design"],
+  ["screen.counsel.chal.says","List each statement the other side challenges.","DEC-341: B335 1: counsel: what the section asks (filings R9 challenged)",null,false,"design"],
   ["screen.counsel.chal.text.label","The statement, as your team made it","DEC-341: B335 1: counsel: field, the quoted text",null,false,"design"],
   ["screen.counsel.chal.text.help1","Quote it word for word, as it appears where it was said.","DEC-341: B335 1: counsel: field help",null,false,"design"],
   ["screen.counsel.chal.where.label","Where it was said","DEC-341: B335 1: counsel: field, the place of the statement",null,false,"design"],
@@ -7588,12 +7588,12 @@ export const WORD_ROWS = Object.freeze([
   ["screen.grouprules.trigger.label","What sets it off","DEC-341: B335 2: grouprules: field, the trigger",null,false,"design"],
   ["screen.grouprules.trigger.help1","For a legal fact, the situation in which it is shown.","DEC-341: B335 2: grouprules: field help (LEGAL_FACT_TRIGGERS)",null,false,"design"],
   ["screen.grouprules.trigger.help2","For a deadline, the event that starts its count.","DEC-341: B335 2: grouprules: field help (deadline starts)",null,false,"design"],
-  ["screen.grouprules.trigger.start.received","The office receives our request","DEC-341: B335 2: grouprules: trigger option, deadline start received",null,false,"design"],
-  ["screen.grouprules.trigger.start.filed","We file a paper","DEC-341: B335 2: grouprules: trigger option, deadline start filed",null,false,"design"],
+  ["screen.grouprules.trigger.start.received","The office receives your team's request","DEC-341: B335 2: grouprules: trigger option, deadline start received",null,false,"design"],
+  ["screen.grouprules.trigger.start.filed","Your team files a document","DEC-341: B335 2: grouprules: trigger option, deadline start filed",null,false,"design"],
   ["screen.grouprules.trigger.start.act","The office acts","DEC-341: B335 2: grouprules: trigger option, deadline start act",null,false,"design"],
-  ["screen.grouprules.trigger.start.known","We learn of it","DEC-341: B335 2: grouprules: trigger option, deadline start known",null,false,"design"],
+  ["screen.grouprules.trigger.start.known","Your team learns of it","DEC-341: B335 2: grouprules: trigger option, deadline start known",null,false,"design"],
   ["screen.grouprules.trigger.start.entered","A judgment is entered","DEC-341: B335 2: grouprules: trigger option, deadline start entered",null,false,"design"],
-  ["screen.grouprules.trigger.start.served","We are served","DEC-341: B335 2: grouprules: trigger option, deadline start served",null,false,"design"],
+  ["screen.grouprules.trigger.start.served","Your team is served","DEC-341: B335 2: grouprules: trigger option, deadline start served",null,false,"design"],
   ["screen.grouprules.trigger.start.hearing","A hearing is held","DEC-341: B335 2: grouprules: trigger option, deadline start hearing",null,false,"design"],
   ["screen.grouprules.trigger.fact.paid_attendee","Someone pays to attend","DEC-341: B335 2: grouprules: trigger option, legal-fact trigger paid_attendee",null,false,"design"],
   ["screen.grouprules.trigger.fact.recording","A recording is made","DEC-341: B335 2: grouprules: trigger option, legal-fact trigger recording",null,false,"design"],
@@ -7610,18 +7610,18 @@ export const WORD_ROWS = Object.freeze([
   ["screen.grouprules.row.requires","Requires: {requires}","DEC-341: B335 2: grouprules: a drafted rule's row",null,false,"design"],
   ["screen.grouprules.row.cite","Citation: {citation}","DEC-341: B335 2: grouprules: a drafted rule's row",null,false,"design"],
   ["screen.grouprules.row.eff","In effect from {date}","DEC-341: B335 2: grouprules: a drafted rule's row",null,false,"design"],
-  ["screen.action.minutes.heading","Record a reply to a request for comment","DEC-341: B335 3: action: heading of the form (actions R108)",null,false,"design"],
+  ["screen.action.minutes.heading","Record a reply to your team's public comment","DEC-341: B335 3: action: heading of the form (actions R108)",null,false,"design"],
   ["screen.action.minutes.says","A reply that is the minutes of a meeting can carry the passage where they record your team's comment.","DEC-341: B335 3: action: what the form is for (actions R108)",null,false,"design"],
   ["screen.action.minutes.legend","Where the minutes record your team's comment","DEC-341: B335 3: action: group label",null,false,"design"],
   ["screen.action.minutes.meeting.label","The meeting","DEC-341: B335 3: action: field, minutes.meeting",null,false,"design"],
   ["screen.action.minutes.meeting.help1","The body and the meeting, in one line of up to 200 characters.","DEC-341: B335 3: action: field help",null,false,"design"],
   ["screen.action.minutes.date.label","The meeting's date","DEC-341: B335 3: action: field, minutes.date",null,false,"design"],
-  ["screen.action.minutes.date.help1","The day the meeting was held.","DEC-341: B335 3: action: field help",null,false,"design"],
+  ["screen.action.minutes.date.help1","The day of the meeting, as the minutes date it.","DEC-341: B335 3: action: field help",null,false,"design"],
   ["screen.action.minutes.doc.label","The document that holds the minutes","DEC-341: B335 3: action: field, the capture of minutes.passage",null,false,"design"],
-  ["screen.action.minutes.doc.help1","A capture your team can see.","DEC-341: B335 3: action: field help",null,false,"design"],
+  ["screen.action.minutes.doc.help1","A capture your team holds.","DEC-341: B335 3: action: field help",null,false,"design"],
   ["screen.action.minutes.passage.label","The passage","DEC-341: B335 3: action: field, minutes.passage extent",null,false,"design"],
-  ["screen.action.minutes.passage.help1","The words of the minutes that record your team's comment, as they are written there.","DEC-341: B335 3: action: field help",null,false,"design"],
-  ["screen.action.minutes.notpublic","This reply is not to a public comment, so the passage of the minutes cannot be kept with it. Nothing was recorded.","DEC-341: B335 3: action: refusal MINUTES_NOT_PUBLIC_COMMENT",null,false,"design"],
+  ["screen.action.minutes.passage.help1","Copy the words exactly as the minutes write them.","DEC-341: B335 3: action: field help",null,false,"design"],
+  ["screen.action.minutes.notpublic","This reply is not to a public comment, so the passage of the minutes cannot be kept with it. Nothing was written.","DEC-341: B335 3: action: refusal MINUTES_NOT_PUBLIC_COMMENT",null,false,"design"],
   ["screen.action.minutes.record","Record the reply","DEC-341: B335 3: action: the act, here",null,false,"design"],
   ["signing.minutes.unread","The minutes this case relies on can't be read right now, so the comparison with the team's public comment is not shown.","DEC-341: B335 4: ceremony: the sign step when the minutes source cannot be read",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
