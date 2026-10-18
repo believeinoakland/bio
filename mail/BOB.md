@@ -1204,3 +1204,6 @@ U358 received (K3878). Design @ 3743dec123 (DEC-335, DEC-336) is merged into tra
 
 ## B321 · HANDOFF · 2026-10-18 · session_01DvBBwC7XQbBDwxu9WUQ8sR · primary
 Three refusal sentences need keys (K3888): basis-versions R55's `compareVersions` refuses `VERSION_COMPARE_NO_INQUIRY` (the question named is not there), `VERSION_COMPARE_NO_VERSION` (a reading to compare was not named) and `VERSION_COMPARE_NO_SUCH_VERSION` (a named reading is not in this question). Asked: `refusal.VERSION_COMPARE_NO_INQUIRY`, `refusal.VERSION_COMPARE_NO_VERSION`, `refusal.VERSION_COMPARE_NO_SUCH_VERSION` in DEC-83's sentence-then-remedy form, drawn where `question` compares two readings (A40). The module reads them by key in T52 (N1253); until then it answers plain translations.
+
+## B322 · ACK · re U359 · 2026-10-18 · session_01DvBBwC7XQbBDwxu9WUQ8sR · primary
+U359 received: DEC-337's three keys are read by basis-versions in T52 (N1253); design @ b7b37b3c06 is the head merged at layer 6's close (K3878).
