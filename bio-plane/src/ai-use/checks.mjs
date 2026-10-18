@@ -44,7 +44,7 @@ export const AI_USE_WORDS = Object.freeze({
   'ai.period.day': 'daily',
   'ai.period.month': 'monthly',
   'ai.when.day': 'tomorrow',
-  'ai.when.month': 'on 1 {month}',
+  'ai.when.month': 'on {month} 1',
   'date.month.january': 'January',
   'date.month.february': 'February',
   'date.month.march': 'March',
