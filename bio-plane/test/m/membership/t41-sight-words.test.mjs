@@ -202,7 +202,7 @@ test("R120 T41 the sight the contract tables give is R43's: an administrator is 
   /* the contract's columns stand, by name */
   const cols = (t) => w.rows(`PRAGMA table_info(${t})`).map((c) => c.name);
   for (const [t, want] of [["members", ["member_id", "handle", "status"]],
-    ["project_participants", ["project_id", "member_id", "state", "owner", "owner_order", "comment", "created"]],
+    ["project_participants", ["project_id", "member_id", "state", "owner", "owner_order", "invited_by", "comment", "created"]],
     ["project_visibility", ["seq", "project_id", "setting", "set_by", "reason", "at"]],
     ["project_removals", ["seq", "project_id", "member_id", "removed_by", "comment", "at"]]])
     for (const c of want) assert.ok(cols(t).includes(c), `${t}.${c}`);

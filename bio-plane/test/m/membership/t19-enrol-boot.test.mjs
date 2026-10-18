@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { world, V, sqlOver } from "./fixture.mjs";
 import { Membership, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 /* An invitation for `ann`, issued in a group with two administrators. */
 async function invited(setter = undefined) {
@@ -140,12 +141,14 @@ test("R12 R57 the audit reports a member held under the reserved id, never renam
   const finding = found[0].finding;
   assert.deepEqual(finding({ bundles: [] }), {
     reservedId: "admin", held: false, role: null, status: null, check: "C-55.1",
-    says: "no member holds the reserved id 'admin'" });
+    says: word("membership.says.member_holds_reserved", { id: "admin" }) });
   /* an instance that enrolled `admin` before the reservation */
   w.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, created, updated)
               VALUES ('admin', 'old', 'oldadmin', 'member', 'active', 't', 't')`);
   const held = finding({ bundles: [] });
   assert.deepEqual([held.held, held.role, held.status, held.check], [true, "member", "active", "C-55.1"]);
-  assert.match(held.says, /has NOT been renamed/);
+  assert.ok(hasWord("membership.says.member_enrolled_under"), "the key is held by setup-words");
+  assert.equal(held.says, word("membership.says.member_enrolled_under", { id: "admin", role: "member", status: "active" }),
+    "the finding's words are the key's, read from the word table");
   assert.equal(w.row(`SELECT member_id FROM members WHERE member_id='admin'`).member_id, "admin", "never renamed");
 });
