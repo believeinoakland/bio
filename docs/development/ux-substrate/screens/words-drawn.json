@@ -12344,7 +12344,7 @@
   },
   {
    "key": "queue.multi.result",
-   "en": "You acted on {n} items. {done} are done and left your queue; {kept} were not handled and stay here.",
+   "en": "You acted on {n} items. Done and out of your queue: {done}. Not handled, still here: {kept}.",
    "protected": false,
    "note": "DEC-330: B306 A58: per-item outcome head; counts are the mockup's"
   },
@@ -12422,7 +12422,7 @@
   },
   {
    "key": "queue.answered.snoozed.meta",
-   "en": "it and the case's other items come back that day",
+   "en": "it and the case's other items come back on the day you chose",
    "protected": false,
    "note": "DEC-330: B306 A61 receipt"
   },
@@ -14888,7 +14888,7 @@
   },
   {
    "key": "screen.actionnew.to.named",
-   "en": "A named office or body",
+   "en": "A named office or public body",
    "protected": false,
    "note": "DEC-330: B306 A68: Start an action"
   },
@@ -15446,13 +15446,13 @@
   },
   {
    "key": "screen.members.founder.if.the.count.is.higher",
-   "en": "If more administrators are live than the roster shows as active",
+   "en": "If more administrators can act than the roster lists",
    "protected": false,
    "note": "DEC-332: B306 A72/B5: drawn sentence"
   },
   {
    "key": "screen.members.founder.the.count.includes.1.administrator",
-   "en": "The count includes 1 live administrator the roster has no active row for.",
+   "en": "The count includes 1 administrator the roster has no entry for.",
    "protected": false,
    "note": "DEC-332: B306 A72/B5: drawn sentence"
   },
@@ -15638,7 +15638,7 @@
   },
   {
    "key": "queue.answered.col.did",
-   "en": "What it did",
+   "en": "What you did",
    "protected": false,
    "note": "DEC-335: B317 item 1 queue: column head of the answered list"
   },
@@ -15650,7 +15650,7 @@
   },
   {
    "key": "queue.feed.people",
-   "en": "People and organizations the record follows",
+   "en": "Followed people and organizations",
    "protected": false,
    "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
   },
@@ -15668,13 +15668,13 @@
   },
   {
    "key": "queue.feed.duties",
-   "en": "Dates the record expects",
+   "en": "Deadlines and due dates",
    "protected": false,
    "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
   },
   {
    "key": "queue.feed.inquiry",
-   "en": "Questions waiting on something",
+   "en": "Questions waiting on a document or an answer",
    "protected": false,
    "note": "DEC-335: B317 item 1 queue: a feed's name, as the failed list names it (notice-producers or action-producers); queue.allclear.failed is the retrieval feed's sentence"
   },
