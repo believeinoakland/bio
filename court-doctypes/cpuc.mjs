@@ -17,7 +17,7 @@ import { CONTRACT, TAG, written, element, elements, linksIn, sourceAt,
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 const KEY = "cpuc_proceeding";
-const LABEL = "a CPUC proceeding card or documents report";
+const LABEL = localize("court-doctypes.cpuc.label", "a CPUC proceeding card or documents report");
 const CARD_FIELD = /\bid\s*=\s*["']P[0-9]+_(FILED_BY|FILING_DATE|CATEGORY|STATUS|DESCRIPTION|STAFF|INDUSTRY)["']/gi;
 const REPORT_COLUMNS = ["FILING_DATE", "DOCUMENT_TYPE", "FILED_BY", "DESCRIPTION"];
 
@@ -33,7 +33,7 @@ function detect(ctx) {
   const card = cardFieldCount(html) >= 3, report = hasReport(html);
   const signals = [];
   if (card) signals.push("the proceeding card's fields");
-  if (report) signals.push("the documents report (Filing Date, Document Type, Filed By, Description)");
+  if (report) signals.push(localize("court-doctypes.cpuc.the_documents_report_filing", "the documents report (Filing Date, Document Type, Filed By, Description)"));
   return detectAnswer({ ctx, key: KEY, label: LABEL, what: "a CPUC proceeding card or documents report",
     structure: card || report, structureSignals: signals });
 }
@@ -74,11 +74,11 @@ function parse(ctx) {
     filed: value("Filing Date"), source: h1 ? sourceAt(ctx, h1.index) : null,
     fields_as_written: Object.fromEntries([...fields].map(([k, v]) => [k, v.value])),
   };
-  const why = { forum_as_written: "the page names no forum in its text (only its banner image does), so none is given" };
+  const why = { forum_as_written: localize("court-doctypes.cpuc.the_page_names_no_forum", "the page names no forum in its text (only its banner image does), so none is given") };
   if (n.why) why.number = n.why;
   if (!card) {
     why.caption = why.status_as_written = why.kind_as_written = why.filed =
-      "the documents report states only the proceeding's number; its caption, status, category and filing date are the card's";
+      localize("court-doctypes.cpuc.the_documents_report_states_only", "the documents report states only the proceeding's number; its caption, status, category and filing date are the card's");
   }
   proceeding.why = why;
 
@@ -100,7 +100,7 @@ function parse(ctx) {
   const report = hasReport(html);
   const rows = [];
   let pagination = { page: { n: null, of: null, may_continue: false }, complete: false,
-    complete_why: "the page holds no documents report, so it lists no register rows" };
+    complete_why: localize("court-doctypes.cpuc.the_page_holds_no_documents", "the page holds no documents report, so it lists no register rows") };
   if (report) {
     const table = new RegExp(`<table\\b(?=${TAG}\\bclass\\s*=\\s*["'][^"']*\\ba-IRR-table\\b)${TAG}>`, "i").exec(html);
     const t = table ? element(html, table.index) : null;
@@ -132,17 +132,14 @@ function parse(ctx) {
           : localize("court-doctypes.cpuc.the_report_says_it_holds", "the report says it holds {total} rows and this reading holds rows {first} to {last} ({length} read)", { total: String(total), first: String(first), last: String(last), length: String(rows.length) }) };
     } else {
       pagination = { page: { n: null, of: null, may_continue: false }, complete: false,
-        complete_why: "the report states no pagination, so whether it holds every row of the register is not established" };
+        complete_why: localize("court-doctypes.cpuc.the_report_states_no_pagination", "the report states no pagination, so whether it holds every row of the register is not established") };
     }
   }
   return reading({
     type: KEY, proceeding, parties, rows, pagination, provisional: false, register: report,
     at: (ctx && ctx.at) || null,
-    failed: !card && !report ? "the page holds neither the proceeding card nor its documents report" : null,
-    key_basis: "cpuc_proceeding: the commission assigns its documents report no row id, so a row is keyed by "
-      + "the composite of its filing date, document type, filer and description as written, plus its document "
-      + "link where it has one; identical twins on one reading are told apart by their order; an edit to any "
-      + "of these reads as one row gone and one added, reported together",
+    failed: !card && !report ? localize("court-doctypes.cpuc.the_page_holds_neither_the", "the page holds neither the proceeding card nor its documents report") : null,
+    key_basis: localize("court-doctypes.cpuc.key_basis", "cpuc_proceeding: the commission assigns its documents report no row id, so a row is keyed by the composite of its filing date, document type, filer and description as written, plus its document link where it has one; identical twins on one reading are told apart by their order; an edit to any of these reads as one row gone and one added, reported together"),
   });
 }
 
