@@ -417,7 +417,7 @@ export function judgePair(v, space, a, b, reading = null) {
       ? localize("id-spaces.idspaces.the_fund_names_differ_as", "the fund names differ as written ({name} / {name_2}); whether they name one fund is a reading nobody has supplied, so the match is not counted", { name: String(a.name), name_2: String(b.name) })
       : localize("id-spaces.idspaces.one_value_via_in_two", "one value{via} in two independent systems, but the referent has not been read: a match counts only when what the value names agrees in both, and that is read, never inferred from the string", { via: String(via) }));
   if (reading === "disagrees")
-    return verdict("REFERENT_DISAGREES", "the same value names different things, on the caller's reading: not a match",
+    return verdict("REFERENT_DISAGREES", localize("id-spaces.idspaces.same_value_names_different", "the same value names different things, on the caller's reading: not a match"),
       { referent: { by: word("idspaces.by.caller_reading"), agrees: false } });
   return verdict("SHARED", localize("id-spaces.idspaces.one_value_via_two_independent_2", "one value{via}, two independent systems ({origin}, {origin_2}), and the referent agrees on the caller's reading — a reading this module did not make and cannot check", { via: String(via), origin: String(sa.origin), origin_2: String(sb.origin) }),
     { referent: { by: word("idspaces.by.caller_reading"), agrees: true } });
@@ -531,8 +531,8 @@ export function recogniseCitations(text, reporters = undefined) {
       return { citations: [], undetermined: { why: word("idspaces.why.text_given_string") } };
     if (!data) {
       const why = passed
-        ? "no reporter data is held for this reading: the data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS)"
-        : "no reporter data is held (court-citations' data is not readable here, and none was passed)";
+        ? localize("id-spaces.idspaces.no_reporter_data_held_for", "no reporter data is held for this reading: the data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS)")
+        : localize("id-spaces.idspaces.no_reporter_data_held", "no reporter data is held (court-citations' data is not readable here, and none was passed)");
       const unrecognised = shapes(t);
       return { citations: [], undetermined: { why: localize("id-spaces.idspaces.why_no_citation_can_be", "{why}: no citation can be recognised, and finding none says nothing about what the text cites", { why: String(why) }), ...(unrecognised.length ? { unrecognised } : {}) } };
     }
@@ -669,8 +669,7 @@ export function recogniseSeries(v, text) {
       says: says.length ? says.join("; ") : word("idspaces.says.active_profiles_disagree") }));
     const extra = { ...(named.length ? { conflicts: named } : {}), ...(unreadable.length ? { unreadable } : {}) };
     if (!held)
-      return noSeries("the active profiles supply no policy series or standard designation, so no citation of one can be "
-        + "recognised: finding none says nothing about whether the text cites a policy or a standard", extra);
+      return noSeries(localize("id-spaces.idspaces.active_profiles_supply_no", "the active profiles supply no policy series or standard designation, so no citation of one can be recognised: finding none says nothing about whether the text cites a policy or a standard"), extra);
     /* every entry's matches, then grouped where they overlap */
     const found = [];
     for (const { entry, re } of readable) {
