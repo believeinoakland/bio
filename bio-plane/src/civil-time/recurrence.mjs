@@ -232,7 +232,7 @@ export function fiscalPeriod(args) {
   const list = Array.isArray(view.fiscal_year) ? view.fiscal_year : [];
   const f = list.find((x) => x && x.body === body) || list.find((x) => x && x.body === "*");
   if (!f) {
-    const m = missing(view, "fiscal_year", word("civil-time.fiscal_year", { body: String(body) }));
+    const m = missing(view, "fiscal_year", "fiscal_year", { body: String(body) });
     return { undetermined: true, code: m.code, why: m.why };
   }
   if (typeof f.start !== "string" || !/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(f.start) || (f.named_by !== "start" && f.named_by !== "end"))

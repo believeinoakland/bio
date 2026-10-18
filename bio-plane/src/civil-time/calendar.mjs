@@ -4,8 +4,11 @@
  * zero: it makes the answer that needs it undetermined, with why. */
 import { civil, dayText, weekdayOf, parseDay } from "./days.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+import { reason } from "./reasons.mjs";
 
 const no = (code, why) => ({ undetermined: true, code, why });
+/* R30: the office a reason names, as a value: a role, or a venue kind; "" for every office */
+const officeName = (o) => (o === null || o === undefined ? "" : typeof o === "string" ? o : o && o.venue ? String(o.venue) : String(o));
 
 /** The conflicts of the view about one fact (`jurisdictions` R15: a fact profiles disagree on is withheld). */
 export function conflictsAbout(view, key) {
@@ -13,11 +16,12 @@ export function conflictsAbout(view, key) {
   return cs.filter((c) => c && typeof c.at === "string" && (c.at === key || c.at.startsWith(`${key}.`) || c.at.startsWith(`${key}[`)));
 }
 
-/** Why a fact the count needs is absent: withheld as a conflict, or not held. */
-export function missing(view, key, words) {
+/** Why a fact the count needs is absent: withheld as a conflict, or not held. `subject` names which (R30): `weekend`,
+ *  `weekend_counting`, `computation`, `fiscal_year`, `closure_list`; `vars` its fills. */
+export function missing(view, key, subject, vars = {}) {
   const c = conflictsAbout(view, key);
-  if (c.length) return no("FACT_WITHHELD", `${words} is withheld: the active profiles disagree on it (${c.map((x) => x.at).join(", ")})`);
-  return no("FACT_ABSENT", `${words} is not held by the jurisdiction view`);
+  if (c.length) return no("FACT_WITHHELD", reason(`civil-time.missing.${subject}_withheld`, { ...vars, at: c.map((x) => x.at).join(", ") }));
+  return no("FACT_ABSENT", reason(`civil-time.missing.${subject}_absent`, vars));
 }
 
 const officeWords = (o) => (o === null || o === undefined ? "every office" : typeof o === "string" ? o : o && o.venue ? word("civil-time.venue", { venue: String(o.venue) }) : String(o));
@@ -58,11 +62,12 @@ export function calendar({ view, list = null, office = null, factOf = null }) {
     if (years.has(y)) return years.get(y);
     let out;
     const entries = selected.filter((h) => Number(h.year) === y);
-    if (!listHeld) out = missing(view, "holidays", word("civil-time.rule_names", { list_words: String(listWords) }));
+    if (!listHeld) out = missing(view, "holidays", "closure_list", { list: String(list) });
     else if (!entries.length) {
       const c = conflictsAbout(view, "holidays").filter((x) => x.at.includes(String(y)));
-      out = c.length ? no("FACT_WITHHELD", `${listWords} for ${y} is withheld: the active profiles disagree on it`)
-        : no("CALENDAR_UNCOVERED", `the count reaches ${y}, a year ${listWords} does not cover for ${officeWords(office)}`);
+      const kind = list ? "list" : "office", who = officeName(office), fills = { ...(list ? { list: String(list) } : {}), year: String(y), ...(who ? { office: who } : {}) };
+      out = c.length ? no("FACT_WITHHELD", reason(`civil-time.calendar.${kind}_year_withheld`, fills))
+        : no("CALENDAR_UNCOVERED", reason(`civil-time.calendar.uncovered_${kind}${who ? "_office" : ""}`, fills));
     } else {
       const days = new Map();
       for (const h of entries) {
@@ -74,11 +79,12 @@ export function calendar({ view, list = null, office = null, factOf = null }) {
                     ...(f && f.status === "corrected" ? { corrected_by: f.by ?? null, corrected_at: f.at ?? null } : {}),
                     ...(governs ? { governs: "correction", ...(typeof f.says === "string" ? { says: f.says } : {}) } : {}) });
         if (f && (f.status === "disputed" || f.status === "absent")) {
-          const at = { list_words: String(listWords), year: String(y), offices: Array.isArray(h.offices) ? ` (${h.offices.map(officeWords).join(", ")})` : "" };
+          const kind = list ? "list" : "office";
+          const at = { ...(list ? { list: String(list) } : {}), year: String(y), offices: Array.isArray(h.offices) ? ` (${h.offices.map(officeWords).join(", ")})` : "" };
           out = no(f.status === "disputed" ? "FACT_DISPUTED" : "FACT_ABSENT",
-            f.status === "disputed" ? localize("civil-time.calendar.disputed", "{list_words} for {year}{offices} is disputed in your team's Civicsmith", at)
-              : f.why ? localize("civil-time.calendar.cannot_read_why", "{list_words} for {year}{offices} cannot be read in your team's Civicsmith: {why}", { ...at, why: String(f.why) })
-                : localize("civil-time.calendar.cannot_read", "{list_words} for {year}{offices} cannot be read in your team's Civicsmith", at));
+            f.status === "disputed" ? reason(`civil-time.calendar.${kind}_disputed`, at)
+              : f.why ? reason(`civil-time.calendar.${kind}_cannot_read_why`, { ...at, why: String(f.why) })
+                : reason(`civil-time.calendar.${kind}_cannot_read`, at));
           break;
         }
         const list2 = governs || h.days;
@@ -94,7 +100,7 @@ export function calendar({ view, list = null, office = null, factOf = null }) {
   }
 
   function closedOn(n) {
-    if (!weekend) return missing(view, "weekend", "the weekend");
+    if (!weekend) return missing(view, "weekend", "weekend");
     const wd = weekdayOf(n);
     if (weekend.has(wd)) return { closed: true, why: `weekend (${wd})` };
     const y = year(civil(n).y);
