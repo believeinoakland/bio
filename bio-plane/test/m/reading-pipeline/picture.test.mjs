@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { fresh, hold, doc, member, ocrAnswer } from "./fixture.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 registerDoctypes(registerDoctype);
 
@@ -15,8 +16,7 @@ const PICTURES = {
   jpeg: { ct: "image/jpeg", bytes: Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01]) },
   png: { ct: "image/png", bytes: Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]) },
 };
-const NO_OCR = "this document has no text layer to read and no OCR engine is installed in your team's Civicsmith, "
-             + "so nothing is claimed about what it says";
+const NO_OCR = word("reading-pipeline.document_text_layer");
 const readPicture = async (format, env = {}) => {
   const w = fresh();
   const { ct, bytes } = PICTURES[format];
