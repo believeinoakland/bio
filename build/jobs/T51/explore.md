@@ -15,3 +15,7 @@
 **Tests and checks.** `hop-names.test.mjs` (4 tests, R26; all pass); `walk.test.mjs` R3 test now strips the two labels before comparing to the owner's hop. All non-M-X1a explore tests: 49 pass (after that fix, 0 fail). hypotheses, plane t33: pass. Checks: format 0 failures; architecture explore 0 failures; coverage 26 of 26 ids named; ownership 0 failures.
 
 Size (session_0116nsZX4FFi5h4wdkKtE4rd): test runs 14, module lines 1081
+
+## J1 · COMPLETE
+
+R26 met: from_label/to_label on every hop of explore paths, presets, overlaps and exploregraph steps. Checks clean (format, architecture, coverage 26/26, ownership). Open: M-X1a wall-clock tests fail on this container with or without my change; ai-use R13 words tests fail (not mine). Details in my record.
