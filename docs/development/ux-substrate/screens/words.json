@@ -5,7 +5,7 @@
  "counts": {
   "weight": 11,
   "mark": 55,
-  "state": 4,
+  "state": 37,
   "draft": 5,
   "photo": 13,
   "handle": 7,
@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4229,
+  "screen": 4316,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,7 +63,7 @@
   "proceeding": 11,
   "duty": 6,
   "published": 9,
-  "shell": 153,
+  "shell": 158,
   "settings": 4,
   "entity": 33,
   "find": 34,
@@ -121,6 +121,7 @@
   "retrieval": 71,
   "case-account": 12,
   "instance-setup": 30,
+  "list": 1,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
@@ -222,8 +223,8 @@
   "tokens": 1,
   "rail": 17,
   "tab": 2,
-  "column": 39,
-  "total": 14039,
+  "column": 47,
+  "total": 14173,
   "protected": 917
  },
  "words": [
@@ -48020,6 +48021,888 @@
    "note": "DEC-330: B306 A74: drawn sentence"
   },
   {
+   "key": "shell.update.title",
+   "en": "A newer version is ready",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A9: the band across the top of every page; mock-shell.js updBand"
+  },
+  {
+   "key": "shell.update.says",
+   "en": "Your team's Civicsmith has been updated since this page opened. Reload when you are ready: nothing reloads by itself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A9: the band across the top of every page"
+  },
+  {
+   "key": "shell.update.reload.does",
+   "en": "Brings in the newest version of Civicsmith.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A9: the Reload button's explanation"
+  },
+  {
+   "key": "shell.update.reload.warn",
+   "en": "Anything you have typed and not saved is lost, so save it first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A9: the Reload button's explanation"
+  },
+  {
+   "key": "screen.account.update.note",
+   "en": "Reloading brings in the newest version. It changes only the program in your browser, never your team's record.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A9: Your account, state b, under the band"
+  },
+  {
+   "key": "list.fresh",
+   "en": "Updated just now. This list checks for changes by itself while it is on your screen.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A10: under any list that re-reads itself: Find browsing and the table, the queue, a question's documents"
+  },
+  {
+   "key": "shell.readonly",
+   "en": "You can read this {noun} and cannot act on it. What each member may do is set under Settings › Members.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A13: once at the top of a page, for a member who may read and not act (Contribute off in Settings › Members); no other credential exists since token login was retired"
+  },
+  {
+   "key": "screen.account.key.make.heading",
+   "en": "Make your signing key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 C1: Your account, state c"
+  },
+  {
+   "key": "screen.account.key.passphrase",
+   "en": "A passphrase for the key file (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 C1: Your account, state c"
+  },
+  {
+   "key": "screen.account.key.passphrase.help",
+   "en": "Without one, anyone who gets the file can sign as you. With one, a stolen file is useless without it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 C1: Your account, state c"
+  },
+  {
+   "key": "screen.account.key.made.heading",
+   "en": "Your key is made",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 C1: Your account, state c, after the key is made"
+  },
+  {
+   "key": "screen.account.key.save",
+   "en": "Save your key file now. It was made here and never sent to Civicsmith, so if you lose the file and did not keep the key on this device, no one can recover it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 C1: Your account, state c"
+  },
+  {
+   "key": "screen.account.key.lost",
+   "en": "Lose a key later? Withdraw it here and make a new one; cases it already signed can still be checked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 C1: Your account, state c"
+  },
+  {
+   "key": "screen.finder.table.view.help",
+   "en": "One table: every item your team holds, a row each, with its kind, its state and when it last changed. Choose a column heading to sort by it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A14: the Show as choice in Find"
+  },
+  {
+   "key": "screen.finder.table.intro",
+   "en": "The whole record, one row for each item. Choose a column heading to sort by it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A14: Find, state g"
+  },
+  {
+   "key": "screen.finder.table.count",
+   "en": "{n} items · {m} awaiting review",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A14: Find, state g: the count line"
+  },
+  {
+   "key": "screen.finder.table.sorting",
+   "en": "Sorting changes only your view of the table, never the record.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A14: Find, state g"
+  },
+  {
+   "key": "screen.finder.scope.help",
+   "en": "Narrows the search to one part of your team's record. It also sets what \"nothing found\" is measured against below.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the Look in choice"
+  },
+  {
+   "key": "screen.finder.scope.everything",
+   "en": "Everything your team holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the first scope"
+  },
+  {
+   "key": "screen.finder.route.fields",
+   "en": "In titles, notes and details",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the first route of three"
+  },
+  {
+   "key": "screen.finder.route.fields.holds",
+   "en": "Looks at titles, your team's notes and each document's details. {n} documents match.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the first route: documents matched on their fields"
+  },
+  {
+   "key": "screen.finder.route.passages",
+   "en": "In what the documents say",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the second route of three"
+  },
+  {
+   "key": "screen.finder.route.passages.holds",
+   "en": "Looks at what the documents say, passage by passage. {n} passages in {m} documents match.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the second route: passages"
+  },
+  {
+   "key": "screen.finder.route.subjects.holds",
+   "en": "Looks at the names of the people, offices, laws, funds and other things your team's record follows. {n} match.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the third route: subjects"
+  },
+  {
+   "key": "screen.finder.route.apart",
+   "en": "These three are counted apart and never added: a document, a passage and a subject are different things.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: under the three routes"
+  },
+  {
+   "key": "screen.finder.route.cross.heading",
+   "en": "When a search crosses routes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: a folded note"
+  },
+  {
+   "key": "screen.finder.route.cross",
+   "en": "A search that joins a field and a passage with “or” is refused, because the routes answer apart and their answers cannot be added. Run each on its own.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the refusal of a query that crosses seams"
+  },
+  {
+   "key": "screen.finder.covered.heading",
+   "en": "What this search covered",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the honesty panel"
+  },
+  {
+   "key": "screen.finder.covered.levels",
+   "en": "The record answers at four levels, and they are different facts. Finding nothing at one of them is not evidence of nothing at the next.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: the honesty panel"
+  },
+  {
+   "key": "screen.finder.covered.rests",
+   "en": "What anything rests on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: level 1 of 4"
+  },
+  {
+   "key": "screen.finder.covered.rests.says",
+   "en": "Findings and connections that match: {n}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: level 1 of 4"
+  },
+  {
+   "key": "screen.finder.covered.read",
+   "en": "What has been read out of the documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: level 2 of 4"
+  },
+  {
+   "key": "screen.finder.covered.read.says",
+   "en": "Passages were read from {read} of the {n} documents searched. The other {rest} have not been read passage by passage yet, so their words were not searched.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: level 2 of 4: how much was read at passage grain"
+  },
+  {
+   "key": "screen.finder.covered.docs.says",
+   "en": "Searched {n} of the {all} documents your team holds. {hidden} are in projects where you can see only that they exist, so they were not searched for you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see"
+  },
+  {
+   "key": "screen.finder.covered.looked",
+   "en": "Whether anybody looked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: level 4 of 4"
+  },
+  {
+   "key": "screen.finder.covered.docs",
+   "en": "The documents themselves",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A15: level 3 of 4"
+  },
+  {
+   "key": "state.item.review.means",
+   "en": "Captured into your team's record and waiting for a member to review it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.review.can",
+   "en": "You can read it and its captured source, mark it reviewed, and revise it; every revision is kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.review.cannot",
+   "en": "You cannot publish it: only signed work is published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.reviewed.means",
+   "en": "A member attested that it appears to be what it claims to be, never that it is accurate.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.reviewed.can",
+   "en": "You can cite it from a project, and retire it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.reviewed.cannot",
+   "en": "You cannot edit it silently: revisions are added and the history is permanent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.retired.means",
+   "en": "Withdrawn from use by a member. Kept for good; nothing leaves the record.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.retired.can",
+   "en": "You can read it and its history.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.retired.cannot",
+   "en": "You cannot cite it in new work: projects cite active material.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.open.means",
+   "en": "A question your team is working on. It may rest on nothing yet, because a question worth asking is not a claim.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.open.can",
+   "en": "You can gather what it rests on, conclude it, or defer or dismiss it with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.open.cannot",
+   "en": "You cannot publish it: only a concluded question can be put to anyone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.concluded.means",
+   "en": "A finding: your team has answered the question, named what it rests on, and named what would overturn it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.concluded.can",
+   "en": "You can read the conclusion, publish it as a case, or reopen it if the answer stops holding.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.concluded.cannot",
+   "en": "You cannot revise it silently: reopening is recorded, and republishing makes a new edition.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.published.means",
+   "en": "A case: signed, public, and checkable by anyone against its published fingerprint without your team's help.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.published.can",
+   "en": "You can read it and its editions, and sign a newer edition.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.published.cannot",
+   "en": "You cannot change an edition already signed: a correction is a new edition.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.waiting.means",
+   "en": "Sent to an office that has not replied yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.waiting.can",
+   "en": "You can record the reply when it comes, and ask about the silence once the date the law gives has passed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.flagged.means",
+   "en": "A member asked the team to look at this again, with a note saying why.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.flagged.can",
+   "en": "You can read the note, look again, and clear the flag.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.watched.means",
+   "en": "On your watch list, so a change to it reaches your queue. Only you see what you watch.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.watched.can",
+   "en": "You can take it off your list at any time.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's explanation and the Glossary"
+  },
+  {
+   "key": "state.item.review.name",
+   "en": "Awaiting review",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "state.item.reviewed.name",
+   "en": "Reviewed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "state.item.retired.name",
+   "en": "Retired",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "state.item.open.name",
+   "en": "Open",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "state.item.concluded.name",
+   "en": "Concluded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "state.item.published.name",
+   "en": "Published",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "state.item.waiting.name",
+   "en": "Waiting for a reply",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "state.item.flagged.name",
+   "en": "Flagged for a second look",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "state.item.watched.name",
+   "en": "Watched by you",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the state chip's own word"
+  },
+  {
+   "key": "screen.account.key.savefile",
+   "en": "Save the key file",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 C1: Your account, state c"
+  },
+  {
+   "key": "screen.account.key.copyline",
+   "en": "Copy the public line",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 C1: Your account, state c"
+  },
+  {
+   "key": "screen.glossary.help",
+   "en": "What the terms and marks in the record mean, in plain words: money terms, how the record is kept honest, and what each state allows.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the screen help"
+  },
+  {
+   "key": "screen.glossary.sub",
+   "en": "What the terms and marks in the record mean.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary under Settings"
+  },
+  {
+   "key": "screen.glossary.intro",
+   "en": "A term underlined with dots in the record explains itself when you rest on it or tap it. This page lists them all.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary"
+  },
+  {
+   "key": "screen.glossary.money.acfr",
+   "en": "Annual Comprehensive Financial Report: a government's audited year-end financial statements.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: ACFR"
+  },
+  {
+   "key": "screen.glossary.money.cafr",
+   "en": "The older name for the ACFR, the audited year-end financial statements.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: CAFR"
+  },
+  {
+   "key": "screen.glossary.money.gpf",
+   "en": "General Purpose Fund: the city's main discretionary operating fund.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: GPF"
+  },
+  {
+   "key": "screen.glossary.money.fy",
+   "en": "Fiscal year: the twelve-month period a government budgets and reports by, which need not match the calendar year. It is usually named for the year it ends in; the government's own documents give its dates.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: FY"
+  },
+  {
+   "key": "screen.glossary.honest.heading",
+   "en": "How the record is kept honest",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary"
+  },
+  {
+   "key": "screen.glossary.honest.fingerprint",
+   "en": "A short code worked out from a file. If even one byte changes, the code changes, so matching fingerprints mean identical bytes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: fingerprint (the old sha256)"
+  },
+  {
+   "key": "screen.glossary.honest.timestamp",
+   "en": "An independent authority attests that these exact bytes existed no later than a certain moment.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: timestamp (the old RFC 3161)"
+  },
+  {
+   "key": "screen.glossary.honest.signature",
+   "en": "A mark made with a member's signing key that anyone can check with ordinary tools, without Civicsmith.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: signature (the old SSHSIG)"
+  },
+  {
+   "key": "screen.glossary.honest.manifest",
+   "en": "The published list of everything in a signed case, with the fingerprint of each item, so anyone can check any part on its own.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: manifest"
+  },
+  {
+   "key": "screen.glossary.honest.provenance",
+   "en": "Where a document came from: who issued it, where it was retrieved, when, and under what authority.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: provenance"
+  },
+  {
+   "key": "screen.glossary.states.heading",
+   "en": "What each state allows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary"
+  },
+  {
+   "key": "screen.glossary.documentterms",
+   "en": "A document can bring terms of its own. They open from the word on that document and are kept with it, not listed here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A11: the Glossary: per-document terms"
+  },
+  {
+   "key": "screen.people.show.everything",
+   "en": "Everything the record follows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A50: the Show choice"
+  },
+  {
+   "key": "screen.people.other.note",
+   "en": "The record follows more than people and organizations: an office as a post, a law, a contract, a fund, a source. Each opens a page like a person's, with the facts that fit its kind.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A50: People, state f"
+  },
+  {
+   "key": "screen.people.other.heading",
+   "en": "Other things the record follows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A50: People, state f"
+  },
+  {
+   "key": "screen.people.addother.head",
+   "en": "Add something the record follows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g"
+  },
+  {
+   "key": "screen.people.addother.name",
+   "en": "What it is called",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g"
+  },
+  {
+   "key": "screen.people.addother.kind",
+   "en": "What kind of thing is it?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g: the record's kind vocabulary"
+  },
+  {
+   "key": "screen.people.addother.kind.help",
+   "en": "The kinds the record knows. A court case is added under Proceedings, where its court and number are asked for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g"
+  },
+  {
+   "key": "screen.people.addother.aliases",
+   "en": "Other names it answers to, one per line",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g"
+  },
+  {
+   "key": "screen.people.addother.aliases.help",
+   "en": "An identifier the source uses, such as a section number, is the most useful thing to put here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g"
+  },
+  {
+   "key": "screen.people.addother.note",
+   "en": "Your note: what it is, and why the team follows it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g"
+  },
+  {
+   "key": "screen.people.addother.note.help",
+   "en": "Facts about it are then added from documents, each cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g"
+  },
+  {
+   "key": "screen.people.addother.preflight",
+   "en": "Nothing the record follows answers to “{name}” yet. Close names are listed here, so you do not make a second page for the same thing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A51: People, state g: the preflight, before the record takes it"
+  },
+  {
+   "key": "screen.person.cited",
+   "en": "Where the record cites it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A50: Person, state d (an ordinance)"
+  },
+  {
+   "key": "screen.person.says.it",
+   "en": "What the record says about it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A50: Person, state d (an ordinance)"
+  },
+  {
+   "key": "screen.person.holders",
+   "en": "Who has held it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A50: Person, state e (an office as a post)"
+  },
+  {
+   "key": "screen.action.ask.heading",
+   "en": "Ask about the silence",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A71: Action, state c"
+  },
+  {
+   "key": "screen.action.ask.done",
+   "en": "Your question is open in {project}, with this action as its reference.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A71: Action, state c, after the question is opened"
+  },
+  {
+   "key": "screen.request.other",
+   "en": "Asking for something other than records?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Request records, above the steps"
+  },
+  {
+   "key": "screen.request.other.go",
+   "en": "Start another kind of action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Request records"
+  },
+  {
+   "key": "screen.actionnew.sub",
+   "en": "Something your team does to get an answer, a record or a decision from someone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.kind",
+   "en": "What kind of action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.kind.help",
+   "en": "The kinds your team's record knows. Each is a different way of asking, so the dates and the people it goes to differ.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.records",
+   "en": "A records request has its own steps, which work out the law and the due date for you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.to",
+   "en": "Who it goes to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.to.named",
+   "en": "A named office or person",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.to.undetermined",
+   "en": "Say what is known so far and what would settle it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.to.basis",
+   "en": "What is known so far, and what would settle it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.to.unsent",
+   "en": "This action will not be sent while who it goes to is undetermined.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.asks",
+   "en": "In a line, what this action asks for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.care",
+   "en": "How carefully to act",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.care.field",
+   "en": "How careful to be",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.care.help",
+   "en": "A member's judgment of the legal exposure of sending it. You can revise it later, with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.rests",
+   "en": "What it rests on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.rests.point",
+   "en": "Point at what this rests on or advances",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.rests.does",
+   "en": "What the link does",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.rests.needed",
+   "en": "Some kinds of action must name what they rest on or advance.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.due",
+   "en": "When things are due",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.due.because",
+   "en": "Because: where this date comes from",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.due.note",
+   "en": "A date with no basis is a deadline the record invented, so every date says where it comes from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: Start an action"
+  },
+  {
+   "key": "screen.actionnew.help",
+   "en": "Start an action of any kind: who it goes to, what it asks, how carefully to act, what it rests on, and when it is due and why.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-330: B306 A68: the screen help"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -92304,6 +93187,54 @@
    "en": "Hands the material to the team. You need no account; tell them only what you choose.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "column.finder.item.name",
+   "en": "Item",
+   "protected": false,
+   "source": "mock-refs.js COL_HELP"
+  },
+  {
+   "key": "column.finder.item.shows",
+   "en": "The item's own title, as your team holds it. Open it to read it.",
+   "protected": false,
+   "source": "mock-refs.js COL_HELP"
+  },
+  {
+   "key": "column.finder.kind.name",
+   "en": "Kind",
+   "protected": false,
+   "source": "mock-refs.js COL_HELP"
+  },
+  {
+   "key": "column.finder.kind.shows",
+   "en": "What sort of item it is: a document, a question, an action or a case.",
+   "protected": false,
+   "source": "mock-refs.js COL_HELP"
+  },
+  {
+   "key": "column.finder.state.name",
+   "en": "State",
+   "protected": false,
+   "source": "mock-refs.js COL_HELP"
+  },
+  {
+   "key": "column.finder.state.shows",
+   "en": "Where the item stands in your team's work. Rest on a state to see what it means and what it allows.",
+   "protected": false,
+   "source": "mock-refs.js COL_HELP"
+  },
+  {
+   "key": "column.finder.updated.name",
+   "en": "Updated",
+   "protected": false,
+   "source": "mock-refs.js COL_HELP"
+  },
+  {
+   "key": "column.finder.updated.shows",
+   "en": "The day the item last changed in your team's record, not the day it was written.",
+   "protected": false,
+   "source": "mock-refs.js COL_HELP"
   },
   {
    "key": "column.members.member.name",

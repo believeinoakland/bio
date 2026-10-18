@@ -3597,6 +3597,47 @@
    ]
   },
   {
+   "id": "glossary",
+   "name": "Glossary",
+   "frame": "working",
+   "purpose": "What the terms and marks in the record mean: money terms, how the record is kept honest, what each state of an item means and allows; a term in text explains itself where it appears (DEC-330, B306 census A11).",
+   "acts": [],
+   "journeys": []
+  },
+  {
+   "id": "actionnew",
+   "name": "Start an action",
+   "frame": "working",
+   "purpose": "The composer for a new action of any kind: the kind, who it goes to (named, or undetermined with the reason), what it asks, how carefully to act, what it rests on and the dates it is due with where each comes from; a records request has its own steps (DEC-330, B306 census A68).",
+   "acts": [
+    {
+     "op": "actioncreate",
+     "label": "Start the action",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
+    },
+    {
+     "op": "addresseesuggest",
+     "label": "Choose the office",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
+  },
+  {
    "id": "request",
    "name": "Request records",
    "frame": "working",
@@ -3737,6 +3778,14 @@
      "op": "owed:actioninquiry DEC-239",
      "label": "Open a question from this",
      "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
     }
    ],
    "journeys": [

@@ -422,6 +422,8 @@ const SCREEN_HELP = {
   update: 'Updates your team\'s Civicsmith to the signed release chosen in Settings › Updates, and no other. Records, members and settings are kept.',
   updates: 'Administrators only: the release your team\'s Civicsmith runs, the release ready to install and what changes in it, and the choice: Update, Not now or Skip this version.',
   front: 'Your team\'s own page: who it is, what it has published, how to hand it material and how it works, with members\' sign-in beside it.',
+  glossary: 'What the terms and marks in the record mean, in plain words: money terms, how the record is kept honest, and what each state allows.',
+  actionnew: 'Start an action of any kind: who it goes to, what it asks, how carefully to act, what it rests on, and when it is due and why.',
   'help-records': 'What the law requires of the office you ask for records, the faster request, and what the city\'s portal shows.',
   tour: 'How your team works, in six short steps, for anyone: no account needed, nothing recorded.',
   reset: 'Choose a new password from the one-time reset link an administrator made for you.',
@@ -500,6 +502,10 @@ const RAIL_HELP = {
 
 // What each table column shows, by screen and heading: the heading's explanation, at the level of names (always on).
 const COL_HELP = {
+  'finder|Item': 'The item\'s own title, as your team holds it. Open it to read it.',
+  'finder|Kind': 'What sort of item it is: a document, a question, an action or a case.',
+  'finder|State': 'Where the item stands in your team\'s work. Rest on a state to see what it means and what it allows.',
+  'finder|Updated': 'The day the item last changed in your team\'s record, not the day it was written.',
   'members|Member': 'Each member by the handle the record shows, and whether they are an administrator.',
   'members|May do': 'What each member may do here, as the administrators set it: add and revise work, start projects, sign and publish cases. An administrator may do all of it, and also looks after the team\'s Civicsmith.',
   'members|Expertise': 'What a member says they know, such as accounting or engineering, so others can ask them to check work in that field. Each member declares it in their account; an administrator can confirm it.',
