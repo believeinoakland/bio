@@ -20,7 +20,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { deflateSync } from "node:zlib";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
-import { JPX_REFUSES, JpxRefusal, decodeJpx } from "../src/jpxdecode.mjs";
+import { JPX_REFUSES, JpxRefusal, decodeJpx, MEMORY_FEATURE } from "../src/jpxdecode.mjs";
 import { cropImage } from "../src/imagecrop.mjs";
 import { onePage, readPng, turn, hex, runner } from "./make-pdf.mjs";
 
@@ -180,12 +180,12 @@ console.log("\n--- R25, R39: what the decoder refuses, by name, and what is cut 
     t(`R25 (a ${label} codestream with ${comps} component${comps > 1 ? "s" : ""} to patch)`, found, [true, comps]);
     const e = codecRefusal(d);
     t(`R25 (the codec refuses the ${size}x${size} ${label} image for memory, its working set past its bound)`,
-      [e?.code, e?.detail.feature, e?.detail.working_set_bytes > e?.detail.bound_bytes], ["UNSUPPORTED", "an image past the memory bound", true]);
+      [e?.code, e?.detail.feature, e?.detail.working_set_bytes > e?.detail.bound_bytes], ["UNSUPPORTED", MEMORY_FEATURE, true]);
     const r = await render(jpxPage(d, size, size), 0);
     if (r.feature) named.add(r.feature);
     t(`R25 a ${size}x${size} ${label} image past the memory bound: IMAGE_TOO_LARGE with the codec's figures, no bytes`,
       fields(r, "ok", "reason", "filter", "feature", "working_set_bytes", "bound_bytes", "width", "height", "components", "bytes"),
-      [false, "IMAGE_TOO_LARGE", "JPXDecode", "an image past the memory bound", e?.detail.working_set_bytes, e?.detail.bound_bytes, size, size, comps, undefined]);
+      [false, "IMAGE_TOO_LARGE", "JPXDecode", MEMORY_FEATURE, e?.detail.working_set_bytes, e?.detail.bound_bytes, size, size, comps, undefined]);
   }
   {
     const { d, found } = patched(1, 5000);
