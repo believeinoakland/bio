@@ -1,6 +1,6 @@
 # ooxml (T51)
 
-**Status** · session_01DQhDYhUjhzaGm67YZSpeDZ · depth 2 · WORKING · handled B0
+**Status** · session_01DQhDYhUjhzaGm67YZSpeDZ · depth 2 · WAITING ON BOB (J2) · handled B0
 
 ## J1 · REPORT
 
