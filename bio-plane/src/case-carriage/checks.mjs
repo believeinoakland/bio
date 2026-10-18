@@ -16,23 +16,32 @@
  * Every sentence of this module's own names no place (R7) and carries no figure; those of C-141.1–.6 and .11 speak in
  * DEC-149's voice ("your group's Civicsmith"), and the words read by key are the design stream's. */
 
-const at = (fn, region) => `src/case-carriage/index.mjs ${fn} > ${region}`;
+import { word, WORD_ROWS } from "../setup-words/index.mjs";
+
+const at =(fn, region) => `src/case-carriage/index.mjs ${fn} > ${region}`;
 const row = (check, where, translation) => Object.freeze({ check, where, translation });
 
-/* R11, R14, R15 (T40; DEC-185 (1), DEC-187 (2), (3); DEC-188 (7); N798, N811): the words of `words.json`
-   (`docs/development/ux-substrate/screens/words.json`) this module holds, each `en` verbatim, read by key; the design
-   stream re-words them under their keys. Placeholders (`{photo}`, `{member}`, `{date}`) are left for the screen: the
-   refusal answering one carries the fill beside it (`photo`, `member`, `date`). A key the words file lacks, or a
-   sentence that is not its `en`, fails this module's test. */
-export const CASE_CARRIAGE_WORDS = Object.freeze({
-  'photo.obscured.label': 'Faces, plates and camera details removed for publication; the team holds the original',
-  'photo.published.label': 'Camera details removed for publication; the team holds the original',
-  'photo.withdraw.refused.machine': 'Only a member can withdraw a mark; the machine never can.',
-  'photo.withdraw.refused.nomark': 'There is no such mark on {photo}. Open the photo again to see the marks that stand.',
-  'photo.withdraw.refused.already': '{member} already withdrew this mark on {date}.',
-  'photo.withdraw.refused.noreason': 'Say why you are withdrawing this mark. Your reason is kept beside it.',
-  'document.cleaned.label': 'Details of who made this file, and of its pictures, removed for publication; the team holds the original',
-});
+/* R11, R14, R15 (T40; DEC-185 (1), DEC-187 (2), (3); DEC-188 (7); N798, N811; K3366 (3)): the words this module reads,
+   each by its key from `setup-words`' list (`words.json`), never copied here. The design stream re-words them under
+   their keys. Placeholders (`{photo}`, `{member}`, `{date}`) are left for the screen: the refusal answering one carries
+   the fill beside it (`photo`, `member`, `date`). A key the list lacks fails at load. */
+const CASE_CARRIAGE_WORD_KEYS = Object.freeze([
+  'photo.obscured.label',
+  'photo.published.label',
+  'photo.withdraw.refused.machine',
+  'photo.withdraw.refused.nomark',
+  'photo.withdraw.refused.already',
+  'photo.withdraw.refused.noreason',
+  'document.cleaned.label',
+]);
+
+/* A key's English with its placeholders left as written: `word` fills each `{name}` with `{name}` itself. */
+const keptWord = (key) => {
+  const en = WORD_ROWS.find((r) => r[0] === key)?.[1] ?? "";
+  return word(key, Object.fromEntries([...en.matchAll(/\{([A-Za-z0-9_]+)\}/g)].map(([, name]) => [name, `{${name}}`])));
+};
+
+export const CASE_CARRIAGE_WORDS = Object.freeze(Object.fromEntries(CASE_CARRIAGE_WORD_KEYS.map((key) => [key, keptWord(key)])));
 
 /** R11 (DEC-180 (4); T40: DEC-185 (1), DEC-187 (2)): the label a published case shows beside a photo's copy with a
  *  covered area, `photo.obscured.label`, read by key. Protected words. */
