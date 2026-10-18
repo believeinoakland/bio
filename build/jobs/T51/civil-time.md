@@ -60,3 +60,5 @@ Size (session_01BcmjtWcShwiAerhfkmJdjL): test runs 12, module lines 1514
 ## J3 · COMPLETE
 
 B3 applied: every undetermined why of civil-time is {key, vars} (missing(), calendar year answers, RULE_INVALID, anchors, dues, spans, possibly-overdue, fiscalPeriod's absent fiscal_year); a caller's keyed why is passed on as given; each key named by a test; tranche merged. civil-time tests 70/70; format/architecture/coverage/ownership 0 failures. build.mjs --check fails only on jurisdictions.index.amount_is_amount_and_units (not mine).
+
+Ring failed (J3): BOB session_0179mNWMLZgYg8Zp7SuP3BPK is archived, so no doorbell was set; the pushed COMPLETE entry J3 is the message (mechanics §13).
