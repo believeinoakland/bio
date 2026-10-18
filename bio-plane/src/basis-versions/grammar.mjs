@@ -10,7 +10,8 @@
 import { BUNDLE_ID_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
          GRADE_SOURCES } from "../record-grammar/index.mjs";
 import { GROUND_LABEL_RE, leadLegFindings, checkLegExtentGrammar, registerInquiryGrammar, IMPORTED_FINDING_RE,
-         importedLegFindings } from "../inquiry-grammar/index.mjs";
+         importedLegFindings, calculationLegFindings, occurrenceLegFindings, derivedConnectionLegFindings,
+         DERIVATION_FIELDS, parseOccurrenceRef, DERIVED_CONNECTION_ID_RE, CALCULATION_REF_RE } from "../inquiry-grammar/index.mjs";
 import { themeLegFindings } from "../connections/index.mjs";
 import { legContentId, legExtent } from "../content/index.mjs";
 import { canonicalExtent } from "../textchain.mjs";
@@ -35,6 +36,12 @@ function f(check, severity, message, repairs, code) {
 /** R3 (N522): whether a leg's target is an imported finding reference (`inquiry-grammar` R11), never a local id. */
 export function isImportedRef(t) {
   return typeof t === "string" && IMPORTED_FINDING_RE.test(t.trim());
+}
+
+/** R3 (K3873): whether a leg's target is a calculation's id, a duty occurrence ref or a derived connection's id: named by
+ *  the leg, not a bundle of this record. */
+export function isDerivedKindRef(t) {
+  return typeof t === "string" && (CALCULATION_REF_RE.test(t) || parseOccurrenceRef(t) !== null || DERIVED_CONNECTION_ID_RE.test(t));
 }
 
 /** PL-1 / IS-1 — the version block's grammar, at BOTH gates through one function.
@@ -333,9 +340,15 @@ export function basisVersionFindings(fm, findings) {
       /* R3 (N522; DEC-112 (6)): a leg on another group's finding (`inquiry-grammar` R11's reference) has its form
          judged there (C-21.3) in place of the id, grade and extent arms: it names a finding and one edition, carries
          no grade and no extent. Whether an acceptance is in force is the promotion check's (`./index.mjs`, R6). */
-      const imported = importedLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings);
-      if (imported) {
-        /* judged by R11's arm, its findings C-21.3 */
+      const lbl = `basis_version_legs[${li}] (version '${name}')`;
+      const imported = importedLegFindings(lbl, leg, findings);
+      /* R3 (K3873; N1215): a leg on a calculation, a duty occurrence or a derived connection is judged by the same arms
+         as the question's own (`inquiry-grammar` R14, R15, R17), in place of the id, grade and extent arms: its grades are
+         derived, so it states none and no part. Role and note are asked as of any leg. */
+      const derived = !imported && (calculationLegFindings(lbl, leg, findings) || occurrenceLegFindings(lbl, leg, findings)
+                                    || derivedConnectionLegFindings(lbl, leg, findings));
+      if (imported || derived) {
+        /* judged by R11's arm, its findings C-21.3; or by the derived arm just run */
       } else if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical record id`);
       } else if (typeof fm?.id === 'string' && t === fm.id) {
@@ -343,12 +356,13 @@ export function basisVersionFindings(fm, findings) {
       } else {
         const tt = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
         if (tt !== 'information' && tt !== 'inquiry')
-          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else (D-184)`);
+          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${t}' is a ${tt}: a leg rests on information, a calculation, a duty occurrence, a derived connection or another inquiry, nothing else (D-184)`);
       }
       if (!BASIS_ROLES.includes(leg.role))
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').role '${String(leg.role).slice(0, 40)}' is not one of: ${BASIS_ROLES.join(', ')}`);
-      /* the grade and extent arms do not ask a leg on another group's finding: R11's arm refuses either outright */
-      if (!imported) {
+      /* the grade and extent arms do not ask a leg on another group's finding (R11's arm refuses either outright) or a
+         derived one (its arm did) */
+      if (!imported && !derived) {
         if (leg.grade !== undefined && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
           push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade '${String(leg.grade).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')} (absent or null means undetermined, and is STATED as such)`);
         if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))
@@ -440,6 +454,15 @@ function canon(v) {
   return String(v ?? "").replace(/\\/g, "\\\\").replace(/\t/g, "\\t").replace(/\n/g, "\\n");
 }
 
+/* R3, R7: the type a leg's target names. A calculation's id is a row, an occurrence ref and a derived connection's id are
+   no bundle's, so each is named for what it is; any other target by its id's prefix. */
+function legTargetType(target) {
+  const t = String(target || "").trim();
+  if (parseOccurrenceRef(t) !== null) return "occurrence";
+  if (DERIVED_CONNECTION_ID_RE.test(t)) return "derived_connection";
+  return normalizeType(OBJECT_TYPES[t.split("-")[0]]) ?? "";
+}
+
 /** R5: the document's version block, normalised into the rows the two tables take, each with its legs, grounds and
  *  composition. THE GROUND ROWS ARE SORTED and the legs are NOT: a ground is a set member, while a leg carries an
  *  ordinal that makes it addressable, so reordering legs IS a change to the composition. What happened TO a version
@@ -474,7 +497,10 @@ export function versionsIn(fm) {
           return ce === canonicalExtent({ kind: "document" }) ? null : ce;
         })(),
         target_id: typeof l.target === "string" ? l.target : "",
-        target_type: normalizeType(OBJECT_TYPES[String(l.target || "").split("-")[0]]) ?? "",
+        target_type: legTargetType(l.target),
+        /* R3 (K3873): a derived connection's five fields, inside the composition so the freeze sees them; null on every
+           other leg */
+        derivation: DERIVATION_FIELDS.some((k) => str(l[k]) !== null) ? DERIVATION_FIELDS.map((k) => str(l[k])) : null,
         role: typeof l.role === "string" ? l.role : "",
         grade: l.grade ?? null, grade_axis: l.grade_axis ?? null, grade_source: l.grade_source ?? null,
         note: typeof l.note === "string" ? l.note : null,
@@ -511,6 +537,8 @@ export function versionsIn(fm) {
       ...legs.flatMap((l, k) => (l.capture === null ? [] : [`leg_capture\t${k}\t${c(l.capture)}`])),
       /* and the edition a leg on another group's finding names (N522), last, for the same byte-identity reason */
       ...legs.flatMap((l, k) => (l.edition === null ? [] : [`leg_edition\t${k}\t${c(l.edition)}`])),
+      /* and a derived connection's derivation (K3873), after those, for the same reason */
+      ...legs.flatMap((l, k) => (l.derivation === null ? [] : [`leg_derivation\t${k}\t${l.derivation.map(c).join("\t")}`])),
     ].join("\n");
     out.push({
       name, ord: i,

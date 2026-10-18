@@ -163,6 +163,6 @@ test("R12–R15 through the ops: the six dispatch entries read the stamps from t
   const ops = basisVersionsOps(w.bv, url, { author: "member:mallory", reason: "moved by body" });
   const r = ops.versionreject();
   assert.deepEqual([r.ok, r.author, r.reason], [true, ALICE, "moved by body"]);
-  assert.deepEqual(Object.keys(ops).sort(), ["basisversions", "conclude", "narrow", "narrowcandidates", "projectquestions", "versionaccept", "versionconsider",
+  assert.deepEqual(Object.keys(ops).sort(), ["basisversions", "conclude", "narrow", "narrowcandidates", "projectquestions", "versionaccept", "versioncompare", "versionconsider",
     "versioncurrent", "versionhide", "versionreject", "versionrevert", "withdrawconclusion"]);
 });
