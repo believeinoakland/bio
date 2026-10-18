@@ -23,7 +23,7 @@
   "project": 53,
   "grouprule": 1,
   "refusal": 1990,
-  "signing": 17,
+  "signing": 22,
   "case": 18,
   "docket": 7,
   "advocacy": 3,
@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4476,
+  "screen": 4648,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 878,
+  "act": 891,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -225,8 +225,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 14522,
-  "protected": 922
+  "total": 14712,
+  "protected": 933
  },
  "words": [
   {
@@ -38629,7 +38629,7 @@
   },
   {
    "key": "person.graph.none",
-   "en": "No connections recorded yet. They appear as documents name this person beside others.",
+   "en": "No connections are recorded yet. One is added when a document names this person beside another, or when you add a fact from a document, below.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-299: in place of an empty graph"
@@ -51275,6 +51275,1189 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-339: B329, public-read R38 publishedfrozen (question, A37)"
+  },
+  {
+   "key": "screen.projects.search.label",
+   "en": "Search projects by name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 B-23: the Projects search box's name"
+  },
+  {
+   "key": "screen.projects.search.help",
+   "en": "Finds the projects you can see whose names hold the words you type.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 B-23: explains the search box"
+  },
+  {
+   "key": "screen.projects.filter.label",
+   "en": "Show only",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 B-23: the Projects filter's name"
+  },
+  {
+   "key": "screen.projects.filter.help",
+   "en": "Narrows the list below to the projects you are in, or to the ones you own. It changes nothing in any project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 B-23: explains the filter"
+  },
+  {
+   "key": "screen.projects.filter.all",
+   "en": "All you can see",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 B-23: the filter's first choice"
+  },
+  {
+   "key": "screen.projects.filter.in",
+   "en": "Ones you are in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 B-23: the filter's second choice"
+  },
+  {
+   "key": "screen.projects.filter.own",
+   "en": "Ones you own",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 B-23: the filter's third choice"
+  },
+  {
+   "key": "screen.projects.search.go",
+   "en": "Search projects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 B-23: the search button, named for what it searches"
+  },
+  {
+   "key": "screen.ceremony.openrequests.heading",
+   "en": "Open requests for comment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880: the signing view's section of open requests, one fact line each (signing.openrequest.*)"
+  },
+  {
+   "key": "screen.ceremony.openrequests.says",
+   "en": "The requests for comment the team has sent about this case and not yet closed, one line each. They are shown here once: you are asked for no reason, and nothing waits on them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880: explains the section; shown once, no reason asked, no gate"
+  },
+  {
+   "key": "screen.ceremony.minutes.heading",
+   "en": "The minutes beside the team's public comment",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880 (U4): the signing view's minutes comparison"
+  },
+  {
+   "key": "screen.ceremony.minutes.says",
+   "en": "Where the case relies on the minutes of a meeting at which the team spoke, what the minutes record of the team's comment sits beside the comment the team filed. It is shown here once: you are asked for no reason, and nothing waits on it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880 (U4): explains the section; shown once, no reason asked, no gate"
+  },
+  {
+   "key": "signing.minutes.line",
+   "en": "At {meeting} on {date}: what the minutes record of the team's public comment, beside the comment the team filed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880 (U4): the one fact line"
+  },
+  {
+   "key": "signing.minutes.left",
+   "en": "As the minutes record it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880 (U4): the left passage's label"
+  },
+  {
+   "key": "signing.minutes.right",
+   "en": "As the team filed it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880 (U4): the right passage's label"
+  },
+  {
+   "key": "signing.minutes.same",
+   "en": "The two read the same.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880 (U4): when the two passages are the same"
+  },
+  {
+   "key": "signing.minutes.differs",
+   "en": "The two differ. Both stand as written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N880 (U4): when they differ; a fact, never a gate"
+  },
+  {
+   "key": "screen.places.noprofile.heading",
+   "en": "Your state has no profile",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: places, a state with no profile: heading"
+  },
+  {
+   "key": "screen.places.noprofile.says",
+   "en": "Civicsmith holds no profile for {state} yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: places, a state with no profile: {state} the state the team is in"
+  },
+  {
+   "key": "screen.places.noprofile.offers",
+   "en": "It offers no deadlines, holidays, offices, records laws, procedure guides or templates for it, and it does not fill them in from another state's profile.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: no generic fallback (jurisdictions R83): what Civicsmith then does not offer"
+  },
+  {
+   "key": "screen.places.noprofile.still",
+   "en": "You can still enter due dates and offices yourself, and draft a rule from its primary source for a second member to confirm.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: what a team can still do"
+  },
+  {
+   "key": "screen.places.noprofile.asks",
+   "en": "A profile for your state is added when a team there asks for it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: v0.2 rule 11, a real profile for another state only when a team there asks"
+  },
+  {
+   "key": "screen.places.noprofile.want",
+   "en": "Tell us the place you want",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: field label, a state with no profile"
+  },
+  {
+   "key": "screen.places.noprofile.want.help",
+   "en": "When an update brings its rules, administrators are told once in their queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: field help, a state with no profile"
+  },
+  {
+   "key": "screen.places.rules.note",
+   "en": "A deadline or a legal fact that your places' rules lack can be drafted by a member and confirmed by another.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: places, the way to the team's own rules"
+  },
+  {
+   "key": "screen.actionnew.templates.after",
+   "en": "Templates are offered once the action is started, for its kind.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: filings R41, the composer"
+  },
+  {
+   "key": "screen.actionnew.templates.none",
+   "en": "None is suggested here, before you have chosen what to do.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: filings R41, the composer"
+  },
+  {
+   "key": "screen.action.templates.heading",
+   "en": "Templates for this action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: action, templates offered after the act is chosen (filings R41)"
+  },
+  {
+   "key": "screen.action.templates.offered",
+   "en": "Offered because you chose this action, a records request to this office.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: filings R41"
+  },
+  {
+   "key": "screen.action.templates.nocourt",
+   "en": "No template is offered for a petition filed with a court.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: filing-templates R28"
+  },
+  {
+   "key": "screen.action.templates.approved",
+   "en": "approved by {member}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: a team template's approval"
+  },
+  {
+   "key": "screen.action.templates.notyet",
+   "en": "Not offered yet: it needs a named writer, the public sources it was written from, and a professional's review.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: filing-templates R15, TEMPLATE_NOT_REVIEWED; the template text is Bob's to review"
+  },
+  {
+   "key": "screen.action.templates.own",
+   "en": "Civicsmith's own templates are offered only with all three, and a second member's approval.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: filing-templates R15"
+  },
+  {
+   "key": "screen.action.templates.never",
+   "en": "Templates are never suggested before you choose an action.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: filings R41"
+  },
+  {
+   "key": "screen.action.guide.heading",
+   "en": "How this kind of action goes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: action, the sourced procedure guide (jurisdictions R80, reading-guides R13)"
+  },
+  {
+   "key": "screen.action.guide.order",
+   "en": "listed in the profile's order, not ranked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: no rank"
+  },
+  {
+   "key": "screen.action.guide.sourced",
+   "en": "Every route names the law or rule it comes from; one without a source is never shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: GUIDE_ITEM_UNSOURCED"
+  },
+  {
+   "key": "screen.action.guide.team",
+   "en": "Your team's own approved guides follow the profile's, each marked with who approved it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: reading-guides R13"
+  },
+  {
+   "key": "screen.action.guide.teamnone",
+   "en": "None is approved for this kind yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8"
+  },
+  {
+   "key": "screen.action.profilefact.from",
+   "en": "From your jurisdiction's profile",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: a profile fact shown with its source (also on the counsel packet and an undetermined deadline)"
+  },
+  {
+   "key": "screen.action.profilefact.shown",
+   "en": "The fact is shown here once, because a reply was marked as a legal threat.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: jurisdictions R79, filings R49, a legal fact on its trigger"
+  },
+  {
+   "key": "screen.action.legalmark",
+   "en": "a reply marked as a legal threat by {member}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action, pressure on this action"
+  },
+  {
+   "key": "screen.action.holdnone",
+   "en": "No litigation hold is stated for it yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action, pressure on this action"
+  },
+  {
+   "key": "screen.action.hold.link",
+   "en": "Place a litigation hold",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: the entry point to the hold, from the action, the docket and the packet"
+  },
+  {
+   "key": "screen.action.rule.link",
+   "en": "Draft a rule your profile lacks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: the way from a profile fact to the team's own rules"
+  },
+  {
+   "key": "screen.grouprules.sub1",
+   "en": "A deadline or a legal fact that your jurisdiction's profile lacks.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R10"
+  },
+  {
+   "key": "screen.grouprules.sub2",
+   "en": "A member drafts it from its primary source, and a second member confirms it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R10, R11"
+  },
+  {
+   "key": "screen.grouprules.note",
+   "en": "A drafted rule counts for nothing until a member other than its drafter confirms it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R11"
+  },
+  {
+   "key": "screen.grouprules.note2",
+   "en": "Until then it is shown as drafted, and no date or notice relies on it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R12, governingView"
+  },
+  {
+   "key": "screen.grouprules.waiting",
+   "en": "Waiting for a second member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: heading"
+  },
+  {
+   "key": "screen.grouprules.deadline.for",
+   "en": "A deadline for {kind}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: a drafted deadline"
+  },
+  {
+   "key": "screen.grouprules.fact.for",
+   "en": "A legal fact for {kind}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: a drafted legal fact"
+  },
+  {
+   "key": "screen.grouprules.drafted",
+   "en": "Drafted by {member}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: a rule waiting, shown as drafted by {member}"
+  },
+  {
+   "key": "screen.grouprules.drafted.you",
+   "en": "Drafted by you, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: the viewer's own draft"
+  },
+  {
+   "key": "screen.grouprules.confirmed",
+   "en": "Confirmed by {member}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: a rule in force"
+  },
+  {
+   "key": "screen.grouprules.applies",
+   "en": "Applies in your team since then",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: a rule in force"
+  },
+  {
+   "key": "screen.grouprules.self",
+   "en": "You drafted this rule, so a different member has to confirm it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R11, RULE_SELF_CONFIRM: no confirm act is drawn on one's own draft"
+  },
+  {
+   "key": "screen.grouprules.inprofile",
+   "en": "A rule the profile already holds is not drafted again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R10, RULE_IN_PROFILE"
+  },
+  {
+   "key": "screen.grouprules.inprofile2",
+   "en": "Where the profile's own fact is wrong, correct it there.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R10"
+  },
+  {
+   "key": "screen.grouprules.confirm.heading",
+   "en": "What confirming asks of you",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: heading"
+  },
+  {
+   "key": "screen.grouprules.confirm.says",
+   "en": "Confirming says you read the source and the rule matches it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R11"
+  },
+  {
+   "key": "screen.grouprules.confirm.qual",
+   "en": "For a rule about a tier 2 or tier 3 kind of action you also say, in your own words, what qualifies you to confirm it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R11, RULE_NEEDS_QUALIFICATION"
+  },
+  {
+   "key": "screen.grouprules.confirm.kept",
+   "en": "That statement is kept with your confirmation alone, shown only beside that rule, and never counted or used anywhere else.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R11"
+  },
+  {
+   "key": "screen.grouprules.qual.label",
+   "en": "What qualifies you to confirm this rule (tier 2 or 3 only)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: field"
+  },
+  {
+   "key": "screen.grouprules.qual.help",
+   "en": "In your own words, up to 500 characters, such as your work or training.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: field help"
+  },
+  {
+   "key": "screen.grouprules.withdrawn",
+   "en": "A withdrawn rule is kept, never deleted, and stops applying from then on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R13"
+  },
+  {
+   "key": "screen.grouprules.kind.label",
+   "en": "What kind of rule",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: draft form"
+  },
+  {
+   "key": "screen.grouprules.text.label",
+   "en": "The rule, as its source states it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: draft form"
+  },
+  {
+   "key": "screen.grouprules.text.help1",
+   "en": "The deadline or fact in plain words, with the law or rule it applies to.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: draft form"
+  },
+  {
+   "key": "screen.grouprules.text.help2",
+   "en": "It must be valid as an entry of your jurisdiction's profile.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: RULE_ENTRY_INVALID"
+  },
+  {
+   "key": "screen.grouprules.src.help1",
+   "en": "The passage of a captured document that states the rule.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: RULE_NO_SOURCE"
+  },
+  {
+   "key": "screen.grouprules.src.help2",
+   "en": "A rule with no source held here is not drafted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: RULE_NO_SOURCE"
+  },
+  {
+   "key": "screen.grouprules.src.held",
+   "en": "A capture your team holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: option"
+  },
+  {
+   "key": "screen.grouprules.src.first",
+   "en": "Capture the source first",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: option"
+  },
+  {
+   "key": "screen.grouprules.why.label",
+   "en": "Why your team needs it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: RULE_NO_REASON"
+  },
+  {
+   "key": "screen.grouprules.machine",
+   "en": "The assistant may show you a draft.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R14"
+  },
+  {
+   "key": "screen.grouprules.machine2",
+   "en": "It cannot draft, confirm or withdraw a rule: only a member does.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: local-facts R14"
+  },
+  {
+   "key": "screen.counsel.sub",
+   "en": "A packet for your team's lawyer about one action: what the record holds on it, as it stands.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: filings R8, R9"
+  },
+  {
+   "key": "screen.counsel.who.heading",
+   "en": "Who it is for, and why",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: heading"
+  },
+  {
+   "key": "screen.counsel.who.required",
+   "en": "Naming counsel is required when the action's tier is 3 or not yet judged.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: filings R8, NO_COUNSEL"
+  },
+  {
+   "key": "screen.counsel.who.optional",
+   "en": "At tier 1 or 2 it is optional.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: filings R8"
+  },
+  {
+   "key": "screen.counsel.purpose.label",
+   "en": "What the packet is for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: the defense purpose (filings R8, R9)"
+  },
+  {
+   "key": "screen.counsel.purpose.claim",
+   "en": "Our claim: a case the team may bring",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: option"
+  },
+  {
+   "key": "screen.counsel.purpose.defense",
+   "en": "Our defense: pressure or a claim against the team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: option"
+  },
+  {
+   "key": "screen.counsel.purpose.help1",
+   "en": "A packet for a claim gathers what supports a case the team may bring.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: help"
+  },
+  {
+   "key": "screen.counsel.purpose.help2",
+   "en": "A packet for a defense adds the statements challenged, the pressure received and the deadlines that apply to a defense.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: help"
+  },
+  {
+   "key": "screen.counsel.reason.label",
+   "en": "Why you are assembling it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: PACKET_NO_REASON"
+  },
+  {
+   "key": "screen.counsel.reason.help1",
+   "en": "In your own words, up to 2,000 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9"
+  },
+  {
+   "key": "screen.counsel.reason.help2",
+   "en": "It is kept with this version of the packet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9"
+  },
+  {
+   "key": "screen.counsel.matters.heading",
+   "en": "What the packet says about each matter",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: heading"
+  },
+  {
+   "key": "screen.counsel.matters.each",
+   "en": "Each matter the action rests on appears as the record stands today.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: filings R9, the facts section"
+  },
+  {
+   "key": "screen.counsel.matters.determined",
+   "en": "A matter with a determination shows it with its findings.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9"
+  },
+  {
+   "key": "screen.counsel.matters.undetermined",
+   "en": "A matter without one shows its question and its findings, each with how far it has gone and its grade, and is stated as not determined.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: NO_DETERMINATION retired"
+  },
+  {
+   "key": "screen.counsel.matters.nothing",
+   "en": "Nothing here stops the packet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: no refusal for lack of a determination"
+  },
+  {
+   "key": "screen.counsel.matters.held",
+   "en": "A determination is held: {state}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9"
+  },
+  {
+   "key": "screen.counsel.matters.findings",
+   "en": "{n} findings: {checked} checked and held, {unpublished} unpublished",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: findings by kind"
+  },
+  {
+   "key": "screen.counsel.matters.other",
+   "en": "The packet also holds the chronology, the exhibits with their fingerprints, the standards, the candidate theories and remedies, each labeled as a candidate, and the deadlines, each dated only from a recorded start.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: filings R9"
+  },
+  {
+   "key": "screen.counsel.defense.heading",
+   "en": "Added for a defense",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: heading"
+  },
+  {
+   "key": "screen.counsel.defense.challenged",
+   "en": "The team's statements the other side challenges, as a member names them, each with the findings and sources it rests on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: challenged statements"
+  },
+  {
+   "key": "screen.counsel.defense.restson",
+   "en": "rests on {findings} findings and {sources} source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9"
+  },
+  {
+   "key": "screen.counsel.defense.pressure",
+   "en": "Every pressure mark and record on the action and its project, and every legal mark on the case's docket, each with its date.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: pressure received"
+  },
+  {
+   "key": "screen.counsel.defense.mark",
+   "en": "a reply marked as a legal threat",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9"
+  },
+  {
+   "key": "screen.counsel.defense.deadlines",
+   "en": "Each deadline that applies to a defense, dated only from a recorded start event, otherwise stated as undetermined, with why.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: defense deadlines"
+  },
+  {
+   "key": "screen.counsel.defense.undetermined",
+   "en": "Date undetermined: no start event is recorded yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9"
+  },
+  {
+   "key": "screen.counsel.matter.heading",
+   "en": "If the action belongs to a counsel matter",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: the counsel matter's entry to a hold"
+  },
+  {
+   "key": "screen.counsel.matter.seen",
+   "en": "Its correspondence and dates are seen only by the matter's members and are never published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.counsel.matter.hold",
+   "en": "The packet then carries the privilege marking too, and a legal threat on the matter can still carry a hold.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.counsel.marked.heading",
+   "en": "How the packet is marked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: filings R10"
+  },
+  {
+   "key": "screen.counsel.marked.every",
+   "en": "Every section and every export carries this marking.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: filings R10"
+  },
+  {
+   "key": "screen.counsel.marked.none",
+   "en": "The packet holds no court caption, no signature block and no form of relief.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D9: filings R10"
+  },
+  {
+   "key": "screen.docket.pressure.heading",
+   "en": "Pressure marked on this case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: docket, the pressure marks (docket R27)"
+  },
+  {
+   "key": "screen.docket.pressure.mark",
+   "en": "marked as a legal threat by {member}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: docket"
+  },
+  {
+   "key": "screen.docket.pressure.counsel",
+   "en": "If this case belongs to a counsel matter, its entries are not published, but a legal mark on it can still carry a hold.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: docket R28"
+  },
+  {
+   "key": "screen.hold.nohold",
+   "en": "No hold is placed for it yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: a mark with no hold"
+  },
+  {
+   "key": "screen.hold.sub1",
+   "en": "Says the team is keeping what a legal matter may reach.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action-holds R2"
+  },
+  {
+   "key": "screen.hold.sub2",
+   "en": "While a hold lasts, what it covers is not purged, a scheduled publication of it does not go out, and the doorbell clears nothing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action-holds"
+  },
+  {
+   "key": "screen.hold.where.heading",
+   "en": "Where the pressure arrived",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: the entry points (a reply, a docket mark, pressure recorded elsewhere, a counsel matter)"
+  },
+  {
+   "key": "screen.hold.marked",
+   "en": "Marked as a legal threat by {member}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.hold.outside",
+   "en": "Pressure recorded outside any action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action-holds R12"
+  },
+  {
+   "key": "screen.hold.counsel.row",
+   "en": "Its entries are never published, but a legal mark on its docket can still carry a hold.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: a counsel matter"
+  },
+  {
+   "key": "screen.hold.for.label",
+   "en": "The hold is for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field"
+  },
+  {
+   "key": "screen.hold.for.help1",
+   "en": "The mark or record the hold is placed on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.hold.for.help2",
+   "en": "A hold covers the project of that action or case.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.hold.reason.label",
+   "en": "Why the team is keeping this",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: the reason a hold takes"
+  },
+  {
+   "key": "screen.hold.reason.help1",
+   "en": "In your own words, up to 500 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.hold.reason.help2",
+   "en": "It is kept with the hold, and any member who can see the matter reads it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.hold.projects.label",
+   "en": "Other projects it should cover (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field"
+  },
+  {
+   "key": "screen.hold.projects.help1",
+   "en": "Name a project the matter may also reach.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.hold.projects.help2",
+   "en": "You can name only a project you can see.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.hold.who",
+   "en": "Any member who can see the action or the case may place a hold, and release it later with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: any member who can see it"
+  },
+  {
+   "key": "screen.hold.who.own",
+   "en": "You place it yourself; nobody has to approve it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.hold.tell.heading",
+   "en": "Tell members what to keep",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: heading"
+  },
+  {
+   "key": "screen.hold.tell.inside",
+   "en": "A hold keeps what is inside Civicsmith.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.hold.tell.outside",
+   "en": "Members also hold messages, notes and files outside it, so a plain notice tells them what to keep.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.hold.notice.link",
+   "en": "Prepare the hold notice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: the way to the notice"
+  },
+  {
+   "key": "screen.hold.press.heading",
+   "en": "Pressure that arrived outside any action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action-holds R12"
+  },
+  {
+   "key": "screen.hold.press.label",
+   "en": "What it was and how it arrived",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field"
+  },
+  {
+   "key": "screen.hold.press.help1",
+   "en": "Pressure is evidence wherever it arrives.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.hold.press.help2",
+   "en": "Recording it creates no action, and a legal threat recorded here can carry a hold.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.hold.release",
+   "en": "Any member who can see the matter can release a hold, with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action-holds R5"
+  },
+  {
+   "key": "screen.hold.release.form",
+   "en": "The release form first says what will start being deleted again, and releasing cannot be undone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action-holds R6"
+  },
+  {
+   "key": "screen.holdnotice.sub1",
+   "en": "A plain-words notice telling members what to keep outside Civicsmith.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: filings R47"
+  },
+  {
+   "key": "screen.holdnotice.sub2",
+   "en": "You send it yourself; Civicsmith sends nothing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action-holds R11"
+  },
+  {
+   "key": "screen.holdnotice.label",
+   "en": "The notice, as prepared",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field"
+  },
+  {
+   "key": "screen.holdnotice.help1",
+   "en": "Assembled from the record: the place the hold is for, your reason, the date and the kinds of material to keep.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: filings R47"
+  },
+  {
+   "key": "screen.holdnotice.help2",
+   "en": "Edit it before you send it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.holdnotice.released",
+   "en": "A released hold prepares no notice.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: filings R47"
+  },
+  {
+   "key": "screen.holdnotice.sent.heading",
+   "en": "Sent by your own hand",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: heading"
+  },
+  {
+   "key": "screen.holdnotice.sent.how",
+   "en": "Copy the notice and send it by the means your team uses: an email, a message or in person.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.holdnotice.sent.none",
+   "en": "Civicsmith sends it to no one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10"
+  },
+  {
+   "key": "screen.holdnotice.outward.1",
+   "en": "The notice goes to the members you choose, by your own message.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: the outward mark"
+  },
+  {
+   "key": "screen.holdnotice.outward.2",
+   "en": "What it says about the matter leaves Civicsmith with it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: the outward mark"
+  },
+  {
+   "key": "screen.holdnotice.account.label",
+   "en": "A copy of what you sent, or your account of it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: action-holds R11"
+  },
+  {
+   "key": "screen.holdnotice.account.help",
+   "en": "Either a copy of the notice as sent, or your own account of how you sent it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: field help"
+  },
+  {
+   "key": "screen.holdnotice.not.heading",
+   "en": "What is not recorded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: heading"
+  },
+  {
+   "key": "screen.holdnotice.not.records",
+   "en": "Civicsmith records that you sent the notice, with a copy or your account of it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: no per-member record"
+  },
+  {
+   "key": "screen.holdnotice.not.nomember",
+   "en": "It records no recipient, no one's reading and no one's compliance: there is no record of any member, here or anywhere else.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: no per-member record (action-holds R11, v0.2 rule 10)"
+  },
+  {
+   "key": "screen.hold.reply",
+   "en": "A reply on an action",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: the entry point from a reply marked as a legal threat"
+  },
+  {
+   "key": "screen.action.pressure.tip1",
+   "en": "Pressure that reached the team over this action, with any fact from your jurisdiction's profile that applies to it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8, D10: explanation of the heading"
+  },
+  {
+   "key": "screen.action.guide.tip1",
+   "en": "The routes your jurisdiction's profile gives for this kind of action, each with the law or rule it cites.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: explanation of the heading"
+  },
+  {
+   "key": "screen.action.guide.tip2",
+   "en": "They describe what usually happens; none is recommended over another.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: explanation of the heading"
+  },
+  {
+   "key": "screen.action.templates.tip1",
+   "en": "The wording your team can start this action's text from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: explanation of the heading"
+  },
+  {
+   "key": "screen.action.templates.tip2",
+   "en": "Each is offered only once the action is chosen, and only if it is reviewed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: explanation of the heading"
+  },
+  {
+   "key": "screen.docket.pressure.tip1",
+   "en": "Legal threats a member marked on this case's docket.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: explanation of the heading"
+  },
+  {
+   "key": "screen.docket.pressure.tip2",
+   "en": "A mark is not a hold: a member places the hold, with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: explanation of the heading"
+  },
+  {
+   "key": "screen.grouprules.waiting.tip1",
+   "en": "Rules drafted by a member that no other member has confirmed yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: explanation of the heading"
+  },
+  {
+   "key": "screen.grouprules.waiting.tip2",
+   "en": "Each shows who drafted it and the source it rests on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D8: explanation of the heading"
+  },
+  {
+   "key": "screen.hold.where.tip1",
+   "en": "Every legal threat the team marked or recorded that has no hold yet, wherever it arrived.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: explanation of the heading"
+  },
+  {
+   "key": "screen.hold.where.tip2",
+   "en": "Choose the one the hold is for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-340: B330 N858 D10: explanation of the heading"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -90743,6 +91926,54 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.hold.name",
+   "en": "Litigation hold",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.hold.purpose",
+   "en": "Where a legal threat reached the team and what it keeps because of it: any member who can see the action or the case places a hold, with a reason.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.holdnotice.name",
+   "en": "Hold notice",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.holdnotice.purpose",
+   "en": "The notice that tells members what to keep outside Civicsmith. You send it yourself; Civicsmith records that you did and nothing about anyone else.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.counsel.name",
+   "en": "Brief counsel",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.counsel.purpose",
+   "en": "A packet for the team's lawyer: what the record holds on one action, as it stands, for a claim or for a defense. It is never published or filed.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.grouprules.name",
+   "en": "Your team's own rules",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.grouprules.purpose",
+   "en": "A deadline or a legal fact your jurisdiction's profile lacks, drafted by one member and applied only after another member confirms it.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.matter.name",
    "en": "Matter",
    "protected": false,
@@ -93143,8 +94374,8 @@
    "source": "registry.json"
   },
   {
-   "key": "act.actionhold.label.action",
-   "en": "Record a litigation hold",
+   "key": "act.procedureguides.label.action",
+   "en": "Show the routes",
    "protected": true,
    "source": "registry.json"
   },
@@ -93180,6 +94411,72 @@
   },
   {
    "key": "act.writinghelp.label.action",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.actionhold.label.hold",
+   "en": "Place the hold, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.pressurerecord.label.hold",
+   "en": "Record pressure from elsewhere",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.hold",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.holdnoticeprepare.label.holdnotice",
+   "en": "Prepare the notice",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.holdnoticesent.label.holdnotice",
+   "en": "Record that I sent it",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.holdnotice",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.counselpacket.label.counsel",
+   "en": "Assemble the packet, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.ruledraft.label.grouprules",
+   "en": "Draft the rule",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.ruleconfirm.label.grouprules",
+   "en": "Confirm this rule",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.rulewithdraw.label.grouprules",
+   "en": "Withdraw this rule, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.grouprules",
    "en": "Help me write this",
    "protected": true,
    "source": "registry.json"
@@ -94730,7 +96027,7 @@
   },
   {
    "key": "act.holdnoticesent.does",
-   "en": "Records that you sent the litigation hold notice, with a copy or your account of how.",
+   "en": "Records that you sent the litigation hold notice, with a copy or your account of how. It records no recipient and nothing about any member.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -95438,7 +96735,19 @@
   },
   {
    "key": "act.actionhold.does",
-   "en": "Records a litigation hold: nothing about this may be removed while it lasts.",
+   "en": "Records a litigation hold with your reason. While it lasts, what it covers is not purged, a scheduled publication of it does not go out, and the doorbell clears nothing. Any member who can see the action or the case may place one.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.holdnoticeprepare.does",
+   "en": "Assembles a plain notice from the record: the place the hold is for, your reason, the date and the kinds of material to keep. Nothing is sent.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.counselpacket.does",
+   "en": "Assembles what the record holds on this action as one packet for your team's lawyer, as it stands today, with your reason kept beside it. It is never published and never filed.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
