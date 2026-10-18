@@ -40,3 +40,7 @@ R61 tests now read case-checker R26's says shape (test-only; the source relays r
 - `format`: 0 failures. `architecture` (case-authoring): 0 failures; across all product files 0 failures. `coverage` (case-authoring): 48 of 48. `ownership`: 0 failures. `channels`: 0 failures.
 
 **Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 3, module lines 3010**, `bio-plane/src/case-authoring/*.mjs` (all lines).
+
+## J2 · COMPLETE
+
+CHANGE B2 done. Inline English in standardsUseWords replaced by setup-words word(key, vars) over the four case-authoring.text.* keys; their placeholders match what the code passes. The standards test also checks each says key is held and reads non-empty. Module tests 190/190; format, architecture, coverage and ownership pass (ownership: 3 files). run.mjs shows the same 23 coverage failures in other modules. Record: build/jobs/T51/case-authoring.md, branch job/T51/case-authoring, pushed.
