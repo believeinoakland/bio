@@ -31,3 +31,26 @@ K3957 plain findings in jurisdictions/index.mjs: 113 listed. Eleven are now loca
 Two points for BOB to settle with the design stream:
 1. Whether validate's details reach any installer or member surface. If they do, the 102 move to localize, with a test naming each id. I have not verified every consumer; I judged by R10, which names the author as reader.
 2. Consistency: the six validate diagnostics I localized earlier (T51-170, first pass, K3949: lines 704, 847, 894, 897, 1143, 1317) are of the same kind as these 102. I left them localized, since BOB's first-pass instruction was to fix every one. If you rule the diagnostics unkeyed, those six can go back to inline text.
+
+## J4 · COMPLETE
+
+CHANGE B2 (K3957) processed: tranche/T51 merged into job/T51/jurisdictions; civicos-process at 27aa50e.
+
+Entries applied: the 113 plain findings in build/plan/words-pass/jurisdictions.md, judged as the CHANGE asks.
+- 11 localized (conflict notes from combine and their named fragments): ids jurisdictions.index.{minutes_due_conflict, locale_conflict, time_zone_conflict, records_help_conflict, weekend_conflict, instrument_key_conflict, family_dropped_from_view, who_issues_undetermined, receipt_on_closed_day, local_day_undetermined, named_identifiers, named_within, named_body_variants}. Each English text is unchanged. Commit 942a00744f.
+- 102 reported (REPORT J3): validate's error details for a profile's author, and combine's NOT_A_LIST detail. The words check still shows them under the inline arm, as the CHANGE allows.
+- The six earlier validate diagnostics (K3949) stay localized; see the REPORT for the consistency point.
+
+New tests: jurisdictions/test/t51-conflicts.test.mjs (11 tests, one per conflict id; each drives a real disagreement through combine and checks the field and its note, with an identical-profile control).
+
+Deferred: none. Found in another module: none new (the repo-wide words findings in other modules are as in J1).
+
+Tests and checks (after commit 942a00744f):
+- node --test jurisdictions/test/: 166 tests, 166 pass, 0 fail.
+- checks/format.mjs /home/user/bio: 174 modules, 173 requirements files; 0 failures.
+- checks/architecture.mjs /home/user/bio jurisdictions: 19 product files; 0 failures.
+- checks/coverage.mjs /home/user/bio jurisdictions: 94 of 94 live requirement ids named by a test; 0 failures.
+- checks/ownership.mjs /home/user/bio jurisdictions tranche/T51 job/T51/jurisdictions: 2 files changed; 0 failures.
+- checks/run.mjs /home/user/bio: the words check shows no finding in jurisdictions except the 102 REPORTed in J3 (inline arm). Repo-wide: 4833 failures, all outside this module.
+
+Size (session_01AZpJJo3TrPbwZo9jEzUze1): test runs 6, module lines 3731 (index.mjs 2202 + profiles 1529, before this CHANGE; this CHANGE adds about 22 lines to index.mjs).
