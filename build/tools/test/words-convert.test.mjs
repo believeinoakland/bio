@@ -41,6 +41,7 @@ function fixture() {
     '',
   ].join('\n'));
   put(root, 'bio-plane/src/alpha/shadow.mjs', "export const M = (f) => { const localize = f; return localize('This sentence has a local marker in the file.'); };\nexport const N = 'Another sentence in a file that binds the marker.';\nexport const O = 'Welcome back to your workspace';\n");
+  put(root, 'bio-plane/src/alpha/wordbound.mjs', "const word = (w) => w.trim();\nexport const Q = word(' x ');\nexport const R = 'Welcome back to your workspace';\n");
   put(root, 'bio-plane/src/alpha/words.mjs', "export const TEXT = {\n  empty: \"Nobody has replied to this notice yet.\",\n  due: 'Noticed: no reply recorded by {date}',\n};\n");
   put(root, 'bio-plane/src/alpha/legacy.cjs', "module.exports = { s: 'A sentence in a CommonJS file here.' };\n");
   put(root, 'bio-plane/src/screens-beta/index.mjs', "export const S = 'A drawn screen sentence with no row.';\nexport const W = 'Welcome back to your workspace';\n");
@@ -85,6 +86,7 @@ test('rules a, b, c, d and the judgment cases', async () => {
   assert.match(idx, /K = \(n\) => localize\('alpha\.index\.showing_v1_of_n_results', 'Showing \{v1\} of \{n\} results now\.', \{ v1: String\(n \+ 1\), n: String\(n\) \}\);/);
   assert.equal(rd(root, 'bio-plane/src/alpha/shadow.mjs').includes("N = 'Another sentence in a file that binds the marker.'"), true);
   assert.match(rd(root, 'bio-plane/src/alpha/shadow.mjs'), /O = word\('alpha\.greeting'\)/); // rule (a) still applies where the marker is bound; localize already bound anywhere in the file: untouched
+  assert.match(rd(root, 'bio-plane/src/alpha/wordbound.mjs'), /R = localize\('alpha\.greeting', 'Welcome back to your workspace'\);/); // a file binding word reads the row through the marker by its key
   const words = rd(root, 'bio-plane/src/alpha/words.mjs');
   assert.match(words, /^import \{ localize \} from '\.\.\/setup-words\/index\.mjs';/);
   assert.match(words, /empty: localize\("alpha\.words\.nobody_has_replied_to_this", "Nobody has replied to this notice yet\."\)/); // quote style kept
@@ -99,7 +101,7 @@ test('rules a, b, c, d and the judgment cases', async () => {
   assert.match(tst, /includes\('Welcome back to your workspace and more'\)/);
   const reasons = Object.keys(rep.judgmentCounts);
   for (const r of ['comment', 'object property key', 'default parameter', 'switch case', 'ambiguous', 'drawn module', 'signed or pinned text', 'localize already bound', 'non-module', 'text holds a literal']) assert.ok(reasons.some((x) => x.startsWith(r)), `reason ${r} in ${reasons.join(' | ')}`);
-  assert.deepEqual(rep.totals, { a: 3, b: 6, c: 1, d: 2 });
+  assert.deepEqual(rep.totals, { a: 4, b: 6, c: 1, d: 2 });
   // verifier: clean, then catches a doctored edit
   assert.deepEqual(verify(rep), []);
   const bad = JSON.parse(JSON.stringify(rep));

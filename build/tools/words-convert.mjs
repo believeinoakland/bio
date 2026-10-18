@@ -20,6 +20,7 @@ const { readModules, ownerIndex } = await import(pathToFileURL(`${CHECKS}/lib.mj
 
 const SIGNED = new Set(['case-grammar', 'case-checker', 'publication', 'contradiction', 'strength']);
 const OWN = 'setup-words';
+const KEY_ID = /^[a-z][a-z0-9_-]*(\.[A-Za-z0-9_-]+)+$/; // the words check's KEY_RE: an id the marker may carry
 const MARKER = 'localize'; // setup-words R14's marker, named so no file of the tree binds it already (K3943)
 const WORDS_INDEX = 'bio-plane/src/setup-words/index.mjs';
 const PH = /\{([A-Za-z0-9_]+)\}/g;
@@ -362,10 +363,14 @@ export async function convert(root, { write = false, coerce = true, leaves = LEA
         if (BANNED.test(cooked.join(' '))) { jj('spelling: fix in the module\'s job'); continue; }
         rule = it.tag === 'table' ? 'c' : 'b'; fn = 't';
       }
+      // a row-equal sentence in a file that binds `word` itself reads the row through the marker by its key (the table wins)
+      let keyed = false;
+      if (fn === 'word' && boundFn.word && !boundFn.t && KEY_ID.test(rowKey)) { fn = 't'; keyed = true; }
       if (boundFn[fn]) { jj(`${local[fn]} already bound`); continue; }
       const quote = node.type === 'Literal' ? node.raw[0] : q1;
       let id = null, enArg = null, enText = null;
-      if (fn === 't') {
+      if (keyed) { id = rowKey; enText = rows.en.get(rowKey); enArg = quoteStr(enText, quote); }
+      else if (fn === 't') {
         const used = new Set(); let vi = 0; let text = '';
         vars = [];
         for (let i = 0; i < cooked.length; i++) {
