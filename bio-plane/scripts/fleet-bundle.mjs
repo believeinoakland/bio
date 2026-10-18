@@ -95,7 +95,7 @@
  */
 import { build, version as ESBUILD_VERSION } from "esbuild";
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
 /* THIS WALK IS GUARDED RATHER THAN NAMED. Found by the census in the old
@@ -226,12 +226,8 @@ export function discoverMembers(repoRoot = REPO_ROOT) {
  * `scripts/build-plane.mjs`, and `discoverMembers`' walk and the fleet gate's
  * `GUARDED_FLOOR` keep their meaning untouched.
  *
- * The plane's build has ONE pre-step no member has: `embed:sign` regenerates
- * `src/signpage.mjs` from `src/sign-release.html` (K33), deterministically. The
- * generated file is COMMITTED and input-hashed like any other source, and the
- * gate closes the loop the input hashes cannot see — a changed
- * `sign-release.html` whose render was never re-run — by comparing the
- * committed module against `renderSignpage()` in memory. Nothing writes.
+ * The plane's build has no pre-step (bundler R16, K3807): the bundle is cut from the committed sources alone, and
+ * no step generates a source file before it.
  *
  * The entry is the plane's own Worker entry, `src/plane/index.mjs` (plane R6),
  * the same file `wrangler.jsonc`'s `main` names, so the bundle and a wrangler
@@ -478,6 +474,152 @@ export function containerParts(member, memberNames = [], { packages = true } = {
       descriptor: d.descriptor, bytes: d.bytes });
   }
   return { parts };
+}
+
+/* ---- WHAT A CONTAINER IMAGE WAS BUILT FROM (bundler R36, R37; N1210, K3674) ------------------------------------------
+ *
+ * The image itself is built by the GitHub workflow, never in a session (rulings-active §4, K1898). What a session and
+ * the release assembly can do is compare, so "container code changed under an unchanged digest" is a comparison and
+ * not a rebuild: each class's `image` block records, beside its `digest`, `source_sha256`, the SHA-256 of the files
+ * the image is built from. Those files are the class's Dockerfile (`build.dockerfile`, on the class or the member,
+ * member-relative) and every file or directory it COPYs or ADDs from the build context (the member's directory), each
+ * hashed with its member-relative path, in path order, so a changed byte, a renamed or removed file or an added one in
+ * a copied directory moves the hash. The Dockerfile's base image digest is a line of the Dockerfile, so a base moved
+ * moves the hash too. A `COPY --from=` copies from another stage and names no context file; a wildcard, a URL or a
+ * path outside the context cannot be hashed and is unread, never skipped. */
+export const SOURCE_FIELD = "source_sha256";
+const HEX64 = /^[0-9a-f]{64}$/;
+
+const copiedSources = (dockerfile) => {
+  const out = [];
+  const logical = dockerfile.replace(/\\\r?\n/g, " ").split(/\r?\n/);
+  for (const line of logical) {
+    const m = /^\s*(?:COPY|ADD)\s+(.*)$/i.exec(line);
+    if (!m) continue;
+    let rest = m[1].trim(), fromStage = false;
+    while (rest.startsWith("--")) {
+      const flag = /^(--\S+)\s*(.*)$/.exec(rest);
+      if (!flag) break;
+      if (/^--from=/i.test(flag[1])) fromStage = true;
+      rest = flag[2];
+    }
+    if (fromStage) continue;
+    let args;
+    if (rest.startsWith("[")) { try { args = JSON.parse(rest); } catch { return { unread: `a COPY or ADD line it cannot read: ${line.trim()}` }; } }
+    else args = rest.split(/\s+/).filter(Boolean);
+    if (!Array.isArray(args) || args.length < 2 || !args.every((a) => typeof a === "string"))
+      return { unread: `a COPY or ADD line it cannot read: ${line.trim()}` };
+    out.push(...args.slice(0, -1));
+  }
+  return { sources: out };
+};
+
+const filesUnder = (abs, rel, acc) => {
+  let entries;
+  try { entries = readdirSync(abs, { withFileTypes: true }); } catch { return false; }
+  for (const e of entries) {
+    const r = `${rel}/${e.name}`;
+    if (e.isDirectory()) { if (!filesUnder(join(abs, e.name), r, acc)) return false; }
+    else acc.push(r);
+  }
+  return true;
+};
+
+/** The class's `build` block: its own where the marker states several classes, else the member's. */
+const buildOf = (member, className) => {
+  const meta = (member && member.marker) || {};
+  const list = classList(meta);
+  const entry = list ? list.find((c) => c.class_name === className) : null;
+  return isBlock(entry && entry.build) ? entry.build : (isBlock(meta.build) ? meta.build : {});
+};
+
+/** R36, R37: `{sha256}` of the files one class's image is built from, or `{unread}` saying which cannot be read. */
+export function containerSourceHash(member, className) {
+  const dockerfileRel = buildOf(member, className).dockerfile;
+  const label = `${member.dir}/fleet-member.json`;
+  if (typeof dockerfileRel !== "string" || !dockerfileRel || dockerfileRel.startsWith("/") || dockerfileRel.split("/").includes(".."))
+    return { unread: `${label} names no member-relative \`build.dockerfile\` for ${className}` };
+  let text;
+  try { text = readFileSync(join(member.abs, dockerfileRel), "utf8"); }
+  catch { return { unread: `${member.dir}/${dockerfileRel} cannot be read` }; }
+  const copied = copiedSources(text);
+  if (copied.unread) return { unread: `${member.dir}/${dockerfileRel} has ${copied.unread}` };
+  const files = new Set([dockerfileRel.replace(/^\.\//, "")]);
+  for (const src of copied.sources) {
+    const rel = src.replace(/^\.\//, "").replace(/\/+$/, "") || ".";
+    if (/[*?[\]]/.test(rel) || /^[a-z]+:\/\//i.test(rel) || rel.startsWith("/") || rel.split("/").includes(".."))
+      return { unread: `${member.dir}/${dockerfileRel} copies ${src}, which is a wildcard, an address or a path outside the build context` };
+    let st;
+    try { st = statSync(join(member.abs, rel)); } catch { return { unread: `${member.dir}/${dockerfileRel} copies ${src}, which is not in the tree` }; }
+    if (st.isDirectory()) {
+      const acc = [];
+      if (!filesUnder(join(member.abs, rel), rel === "." ? "" : rel, acc)) return { unread: `${member.dir}/${rel} cannot be read` };
+      for (const f of acc) files.add(f.replace(/^\//, ""));
+    } else files.add(rel);
+  }
+  const h = createHash("sha256");
+  for (const f of [...files].sort()) h.update(`${f}\0${sha256(readFileSync(join(member.abs, f)))}\n`);
+  return { sha256: h.digest("hex") };
+}
+
+/** R37: every class of a container member against what its image was built from: `[{class_name, state, why}]`, `state`
+ *  `current`, `stale` (the files differ from what the recorded digest was built from), `unrecorded` (the marker
+ *  records nothing it was built from) or `unread` (the files cannot be hashed). Makes no request and writes nothing. */
+export function containerImageStates(member) {
+  const { classes } = containerClasses(member);
+  return classes.map((cls) => {
+    const name = typeof cls.class_name === "string" && cls.class_name ? cls.class_name : "(unnamed)";
+    const now = containerSourceHash(member, name);
+    if (now.unread) return { class_name: name, state: "unread", why: now.unread };
+    const recorded = isBlock(cls.image) ? cls.image[SOURCE_FIELD] : undefined;
+    if (typeof recorded !== "string" || !HEX64.test(recorded))
+      return { class_name: name, state: "unrecorded", why: `its image block records no \`${SOURCE_FIELD}\`, so what the digest was built from is unknown` };
+    if (recorded !== now.sha256)
+      return { class_name: name, state: "stale", why: `its image files are now ${now.sha256.slice(0, 16)}…, the digest was built from ${recorded.slice(0, 16)}…` };
+    return { class_name: name, state: "current", why: null };
+  });
+}
+
+/** R37: the findings, each `{class_name, text}`, for the classes whose image is not provably built from the files now. */
+export function containerImageFindings(member) {
+  return containerImageStates(member).filter((s) => s.state !== "current").map((s) => ({ class_name: s.class_name,
+    text: `${member.name}: the image of its class ${s.class_name} is not provably built from the code now in the tree — ${s.why}.` }));
+}
+
+/** R36: record the digest the build produced for one class, in both files that name it, in one step: the marker's image
+ *  block (`digest`, and `source_sha256` of the files now) and the image the member's `wrangler.jsonc` container block
+ *  names (its repository kept, its digest replaced). Returns `{files: [member-relative paths written]}` or
+ *  `{refused: CODE, message}`, having written nothing. */
+export function recordContainerDigest(member, className, digest) {
+  const refuse = (refused, message) => ({ refused, message });
+  if (typeof digest !== "string" || !DIGEST.test(digest))
+    return refuse("CONTAINER_DIGEST_INVALID", `${JSON.stringify(digest)} is not an image digest, sha256:<64 hex>`);
+  if (!isContainer(member)) return refuse("CONTAINER_UNDESCRIBED", `${member.name} is not a container member`);
+  const meta = JSON.parse(JSON.stringify(member.marker));
+  const list = classList(meta);
+  const entry = list ? list.find((c) => c.class_name === className) : (meta.class_name === className ? meta : null);
+  if (!entry || !isBlock(entry.image)) return refuse("CONTAINER_UNDESCRIBED", `${member.name} states no container class ${className}`);
+  const src = containerSourceHash(member, className);
+  if (src.unread) return refuse("CONTAINER_UNDESCRIBED", `${member.name}'s class ${className}: ${src.unread}`);
+  const wranglerPath = join(member.abs, "wrangler.jsonc");
+  let wtext, cfg;
+  try { wtext = readFileSync(wranglerPath, "utf8"); cfg = parseJsonc(wtext, `${member.dir}/wrangler.jsonc`); }
+  catch (e) { return refuse("CONTAINER_UNDESCRIBED", `${member.dir}/wrangler.jsonc cannot be read: ${String(e.message).split("\n")[0]}`); }
+  const block = (isBlock(cfg) && Array.isArray(cfg.containers) ? cfg.containers : []).find((c) => isBlock(c) && c.class_name === className);
+  const named = block && typeof block.image === "string" ? /^(.+)@(sha256:[0-9a-f]{64})$/.exec(block.image) : null;
+  if (!named) return refuse("CONTAINER_UNDESCRIBED", `${member.dir}/wrangler.jsonc names no \`<repository>@sha256:<64 hex>\` image for the container of ${className}`);
+  if (wtext.split(block.image).length !== 2)
+    return refuse("CONTAINER_UNDESCRIBED", `${member.dir}/wrangler.jsonc names the image ${block.image} more than once, so which is ${className}'s is not clear`);
+  const image = {};
+  for (const [k, v] of Object.entries(entry.image)) {
+    if (k === SOURCE_FIELD) continue;
+    image[k] = k === "digest" ? digest : v;
+    if (k === "digest") image[SOURCE_FIELD] = src.sha256;
+  }
+  entry.image = image;
+  writeFileSync(join(member.abs, "fleet-member.json"), JSON.stringify(meta, null, 2) + "\n");
+  writeFileSync(wranglerPath, wtext.replace(block.image, `${named[1]}@${digest}`));
+  return { files: [`${member.dir}/fleet-member.json`, `${member.dir}/wrangler.jsonc`] };
 }
 
 /* ---- A MEMBER'S OWN BUCKETS AND SCHEDULE (bundler R25; N772, K2155) -----------

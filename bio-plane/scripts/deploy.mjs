@@ -99,20 +99,12 @@ if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
  * merely deploy the wrong code: it binds the plane's vars, buckets and services
  * into that worker and DROPS every binding of a class it neither sends nor keeps.
  *
- * `civicos`, the UI worker, is what makes /api reach the plane at all; through
- * this script it would be overwritten with the plane's code and the plane's
- * bindings. Until now the only thing standing between that and a live outage
- * was that nobody had tried it.
- *
  * A slug ALLOWLIST is not available: plane instances are named by the groups
  * that install them, so their slugs are arbitrary by design and cannot be
  * enumerated here. What CAN be enumerated is the workers in this project that
  * are known NOT to be planes, each with its own deploy path.
  */
 const NOT_A_PLANE = {
-  civicos: "the UI worker. Its only binding is `service PLANE -> biosmoke7`, which this " +
-           "script's keep_bindings would delete. Deploy it with civicos-ui/deploy-ui.mjs, " +
-           "which carries the UI's own metadata and the same read-back-and-hash discipline.",
   "pdf-worker": "a fleet member, not a plane. It reads R2 CAPTURES, holds no PUBLISHED " +
                 "binding and no Durable Object, and writes nothing — this script's metadata " +
                 "would bind it all three. Deploy it with scripts/deploy-fleet.mjs.",
