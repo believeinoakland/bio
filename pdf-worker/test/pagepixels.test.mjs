@@ -697,6 +697,27 @@ console.log("\n--- R39: every refusal is declared, in its own words ---");
   t("R39 every reason is a key of REFUSALS", refusals.filter((r) => !(r.reason in REFUSALS)).map((r) => r.reason), []);
   t("R39 every why is exactly that key's text", refusals.filter((r) => r.why !== REFUSALS[r.reason]).map((r) => r.reason), []);
   t("R39 no refusal carries bytes", refusals.filter((r) => "bytes" in r).length, 0);
+  /* words (setup-words R14, K874): every sentence this module refuses with or notes is read through a word id. */
+  const WORD_IDS = [
+    "pdf-pixels.pagepixels.the_document_is_encrypted_streams",
+    "pdf-pixels.pagepixels.the_page_index_is_outside",
+    "pdf-pixels.pagepixels.the_page_object_could_not",
+    "pdf-pixels.pagepixels.the_page_carries_a_text",
+    "pdf-pixels.pagepixels.the_page_carries_marks_that",
+    "pdf-pixels.pagepixels.the_page_paints_no_image",
+    "pdf-pixels.pagepixels.the_page_composes_several_images",
+    "pdf-pixels.pagepixels.the_image_xobject_s_stream",
+    "pdf-pixels.pagepixels.the_image_s_filter_chain",
+    "pdf-pixels.pagepixels.the_image_s_sample_layout",
+    "pdf-pixels.pagepixels.the_decoded_image_is_short",
+    "pdf-pixels.pagepixels.the_decoder_could_not_read",
+    "pdf-pixels.pagepixels.decoding_the_image_would_need",
+    "pdf-pixels.pagepixels.an_inline_image_reading_inline",
+    "pdf-pixels.pagepixels.the_jbig2globals_stream_could_not",
+    "pdf-pixels.pagepixels.a_jbig2_image_is_1",
+    "pdf-pixels.pagepixels.a_colour_space_other_than",
+  ];
+  t("words R14 every id is a dotted pdf-pixels.pagepixels word id, named once", WORD_IDS.filter((id) => !/^pdf-pixels\.pagepixels\.[a-z0-9_]+$/.test(id)).concat(WORD_IDS.length - new Set(WORD_IDS).size ? ["duplicate"] : []), []);
 }
 
 finish();
