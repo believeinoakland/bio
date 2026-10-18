@@ -70,7 +70,7 @@ export const ENTITY_CHECKS = Object.freeze({
      here once. */
   NO_ALIAS: Object.freeze({
     check: 'C-33.25',
-    where: 'src/entities/index.mjs addAlias > is-alias-named',
+    where: 'src/entities/index.mjs noAlias > is-alias-named',
     translation: rowWord("NO_ALIAS"),
   }),
   /* R29, R38 (N345, DEC-76 item 3): a defect report names a resolution (capture, reference, subject) the record does

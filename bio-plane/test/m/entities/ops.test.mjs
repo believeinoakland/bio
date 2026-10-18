@@ -8,7 +8,7 @@ import { hiddenBundles } from "../../../src/membership/index.mjs";
 
 const OPS = ["readingname", "readingnameplan", "entitycreate", "entityalias", "relationdeclare", "aliaswithdraw",
              "relationwithdraw", "resolutiondefect", "entity", "entitybyalias", "relation", "resolutions", "concerns",
-             "idmatch", "resolve", "resolvetestify", "entityidentify", "entitieskind"];
+             "idmatch", "resolve", "resolvetestify", "entityidentify", "entitieskind", "entityidonly", "subjectsnamed", "entitysimilar"];
 
 /* A world with a registry, a reading, resolutions, a relation and a defect report, the same every time it is built. */
 function seeded() {
@@ -29,7 +29,7 @@ const dump = (w) => ["entities", "entity_aliases", "entity_relations", "resoluti
   .map((t) => w.rows(`SELECT * FROM ${t}`));
 const url = (q) => new URL(`https://do.invalid/?${new URLSearchParams(q)}`);
 
-test("R40 R43 R51 entitiesOps holds exactly the fourteen ops it held, resolve and resolvetestify, R43's entityidentify and R51's entitieskind, each a function of no arguments", () => {
+test("R40 R43 R51 R57 R59 R60 entitiesOps holds exactly the ops it holds, resolve and resolvetestify, R43's entityidentify, R51's entitieskind and T51's entityidonly, subjectsnamed and entitysimilar, each a function of no arguments", () => {
   const { e } = seeded();
   const map = entitiesOps(e, url({}), {});
   assert.deepEqual(Object.keys(map).sort(), [...OPS].sort());
@@ -90,6 +90,14 @@ test("R40 every arm answers what its named service answers, reading its paramete
     ["entitieskind", () => [{ kind: "office", limit: "1", after: "ENT-2026-0001", viewer: "member:ann" }, null],
                      (e) => e.entitiesOfKind({ kind: "office", limit: "1", after: "ENT-2026-0001", viewer: "member:ann" })],
     ["entitieskind", () => [{}, null], (e) => e.entitiesOfKind({ kind: null, limit: null, after: null, viewer: null })],
+    ["entityidonly", (s) => [{ ids: `${s.a}, ${s.b}`, viewer: MACHINE }, null], (e, s) => e.onlyByIdentifier({ ids: [s.a, s.b], viewer: MACHINE })],
+    ["entityidonly", () => [{}, null], (e) => e.onlyByIdentifier({ ids: [], viewer: null })],
+    ["subjectsnamed", () => [{ q: "harbour", kinds: "office, body", limit: "1", viewer: MACHINE }, null],
+                      (e) => e.subjectsNamed({ q: "harbour", kinds: ["office", "body"], limit: "1", after: null, viewer: MACHINE })],
+    ["subjectsnamed", () => [{}, null], (e) => e.subjectsNamed({ q: null, kinds: [], limit: null, after: null, viewer: null })],
+    ["entitysimilar", () => [{ name: "Harbour Offic", kind: "office", limit: "5", viewer: MACHINE }, null],
+                      (e) => e.similarSubjects({ name: "Harbour Offic", kind: "office", limit: "5", viewer: MACHINE })],
+    ["entitysimilar", () => [{}, null], (e) => e.similarSubjects({ name: null, kind: null, limit: null, viewer: null })],
   ];
   assert.deepEqual([...new Set(cases.map(([op]) => op))].sort(), [...OPS].sort(), "every op is driven");
   for (const [op, input, direct] of cases) {
