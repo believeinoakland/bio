@@ -73,6 +73,7 @@
  *     entry's `line` fact is that line, verbatim, never a pairing this reader guessed. */
 import { CONFIDENCE, CONTRACT, entity, diffEntities, flatten, alsoSatisfies } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The smallest number of distinct addresses at one domain that makes contact points the
    BODY of a document rather than a signature block. A staff report names one contact;
@@ -141,8 +142,8 @@ export default {
        through it; nothing else can make a directory. */
     if (atDomain < DIRECTORY_FLOOR || atDomain / all.length < ONE_ORGANISATION)
       return { match: false, confidence: CONFIDENCE.NONE };
-    const signals = [`${atDomain} distinct contact address(es) at one organisation's domain (${domain}), `
-                   + `${Math.round((atDomain / all.length) * 100)}% of the ${all.length} in the document`];
+    const signals = [localize("doctypes.staff-directory.addresses", "{count} distinct contact address(es) at one organisation's domain ({domain}), {percent}% of the {total} in the document",
+                              { count: String(atDomain), domain: String(domain), percent: String(Math.round((atDomain / all.length) * 100)), total: String(all.length) })];
     /* (3) NOT DATED. A schedule names its contacts; its rows are events. */
     const dates = (flatten(raw).match(SD_DATE) || []).length;
     if (dates >= Math.max(3, atDomain / 2)) return { match: false, confidence: CONFIDENCE.NONE };
@@ -150,7 +151,7 @@ export default {
     if (phones) signals.push(`${phones} distinct phone number(s)`);
     const title = sdTitleLine(raw);
     if (title) {
-      signals.push(`it names itself in its title line ("${title.slice(0, 80)}")`);
+      signals.push(localize("doctypes.staff-directory.title_line", "it names itself in its title line (\"{title}\")", { title: title.slice(0, 80) }));
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     }
     return { match: true, confidence: CONFIDENCE.LIKELY, signals };
@@ -216,7 +217,7 @@ export default {
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
       confirmed: sdConfirmed(a, b),
-      why: events.length ? `${events.length} change(s) to the directory's entries`
+      why: events.length ? localize("doctypes.staff-directory.changes", "{count} change(s) to the directory's entries", { count: String(events.length) })
                          : "the directory lists the same addresses, each saying what it said",
     };
   },

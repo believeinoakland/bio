@@ -8,3 +8,12 @@ Layer 6. 6 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - inline `bio-plane/src/steps/index.mjs:562` "a step's place is exactly one of {questions}, {project} or {group: ..."
 - inline `bio-plane/src/steps/index.mjs:585` "a date is {date: YYYY-MM-DD, basis: {}, source?}"
 - inline `bio-plane/src/steps/index.mjs:995` "a wait is on one of {step}, {arrival: {kind, id}} or {date}"
+
+## Plain findings (K3957)
+
+4 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('steps.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/steps/index.mjs:564` "a team step's place is {group: true}"
+- plain `bio-plane/src/steps/index.mjs:703` "a step on questions records an outcome per question: {<question>: outcome}"
+- plain `bio-plane/src/steps/index.mjs:737` "the system records neither an outcome nor a learned line (D33)"
+- plain `bio-plane/src/steps/index.mjs:846` "a team step is the team's, and its place is fixed at creation"

@@ -7,3 +7,20 @@ Layer 8. 5 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/case-carriage/documents.test.mjs:86` [part] "the original is unchanged"
 - testcopy `bio-plane/test/m/case-carriage/marks.test.mjs:258` [part] "the original is unchanged" — part test copy
 - testcopy `bio-plane/test/m/case-carriage/obscured.test.mjs:210` "nothing to obscure"
+
+## Plain findings (K3957)
+
+12 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('case-carriage.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/case-carriage/index.mjs:785` "no photo you can see is held under that digest"
+- plain `bio-plane/src/case-carriage/index.mjs:842` "no photo you can see is held under that digest"
+- plain `bio-plane/src/case-carriage/index.mjs:854` "a mark is made by a member; an assistant's proposal of areas is not a mark"
+- plain `bio-plane/src/case-carriage/index.mjs:857` "that capture is not an image"
+- plain `bio-plane/src/case-carriage/index.mjs:859` "areas is not a list"
+- plain `bio-plane/src/case-carriage/index.mjs:877` "no photo you can see is held under that digest"
+- plain `bio-plane/src/case-carriage/index.mjs:889` "a mark is withdrawn by a member, never by an assistant or the daemon"
+- plain `bio-plane/src/case-carriage/index.mjs:895` "no photo you can see is held under that digest"
+- plain `bio-plane/src/case-carriage/index.mjs:905` "no mark of that number is on that photo"
+- plain `bio-plane/src/case-carriage/index.mjs:968` "an area lies wholly outside the picture"
+- plain `bio-plane/src/case-carriage/index.mjs:1190` "no provenance onReceipt to register the receipt listener with"
+- plain `bio-plane/src/case-carriage/index.mjs:1257` "no evidence store is bound to read a member's document from and hold its copy in"

@@ -12,3 +12,21 @@ Layer 3. 10 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/doorbell/rows.test.mjs:27` [part] "This team's inbox has nothing to keep, because what you sent decode..."
 - testcopy `bio-plane/test/m/doorbell/t35.test.mjs:52` [part] "The size this inbox will read is published beside this message." — part test copy
 - testcopy `bio-plane/test/m/doorbell/t35.test.mjs:62` [part] "larger than this inbox stores. That is a fact about how this team h..." — part test copy
+
+## Plain findings (K3957)
+
+13 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('doorbell.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/doorbell/door.mjs:53` "this team's inbox stores knocks inline; large material needs its evidence storage confi..."
+- plain `bio-plane/src/doorbell/index.mjs:262` "no knock carrying a secret has been received by your team's Civicsmith, so no secret is..."
+- plain `bio-plane/src/doorbell/index.mjs:358` "the doorbell's tally is read by a signed-in member; nothing was read"
+- plain `bio-plane/src/doorbell/index.mjs:418` "the content did not decode"
+- plain `bio-plane/src/doorbell/index.mjs:434` "the material could not be stored, so nothing was received and no inbox row was written"
+- plain `bio-plane/src/doorbell/index.mjs:577` "a knock is brought in by a member, whose stamp names them; none was given, so nothing w..."
+- plain `bio-plane/src/doorbell/index.mjs:611` "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot ..."
+- plain `bio-plane/src/doorbell/index.mjs:629` "the knock's bytes are no longer held as received (gone, or no longer hashing to the kno..."
+- plain `bio-plane/src/doorbell/index.mjs:635` "the knock's bytes could not be held under their own digest, so nothing was written"
+- plain `bio-plane/src/doorbell/index.mjs:656` "the acquisition receipt could not be written, so the knock stays as it was and nothing ..."
+- plain `bio-plane/src/doorbell/index.mjs:721` "the knock's receipt: its digest, taken as the bytes arrived, and its instant"
+- plain `bio-plane/src/doorbell/index.mjs:725` "doorbell knock, received, hashed at receipt"
+- plain `bio-plane/src/doorbell/index.mjs:742` "knocksOf names the pseudonym whose knocks it lists"

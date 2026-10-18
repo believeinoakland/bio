@@ -11,3 +11,11 @@ Layer 6. 9 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/leg-earning/words.test.mjs:30` "— the bytes as your team's Civicsmith fetched them, hashed at receipt." — partial test copy (template not matched to a row)
 - testcopy `bio-plane/test/m/leg-earning/words.test.mjs:38` "team's Civicsmith received them earns" — partial test copy (template not matched to a row)
 - testcopy `bio-plane/test/m/leg-earning/words.test.mjs:39` [part] "stands one party further from the publisher than a direct fetch), s..." — part test copy
+
+## Plain findings (K3957)
+
+3 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('leg-earning.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/leg-earning/index.mjs:156` "writeBasis requires a bundle id"
+- plain `bio-plane/src/leg-earning/index.mjs:715` "capture route — the bytes of this document were served by a route no ruling grades"
+- plain `bio-plane/src/leg-earning/index.mjs:821` "until its accuracy is measured or a member checks it against the page"

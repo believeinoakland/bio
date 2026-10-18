@@ -17,3 +17,10 @@ Layer 9. 15 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/action-plans/runs.test.mjs:85` "Suggested by the assistant (machine work) in run" — partial test copy (template not matched to a row)
 - testcopy `bio-plane/test/m/action-plans/runs.test.mjs:86` [part] "decision; it becomes an option only when a member adopts it." — part test copy
 - testcopy `bio-plane/test/m/action-plans/words.test.mjs:191` [part] "Suggested by the assistant" — part test copy
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('action-plans.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/action-plans/index.mjs:1288` "the phase that leads here has not led here yet, so no occurrence is read"
+- plain `bio-plane/src/action-plans/index.mjs:2139` "work) after a response was recorded; it decides nothing, and what the team chose change..."

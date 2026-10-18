@@ -29,6 +29,7 @@ Given a member-supplied document, answers a copy whose embedded images carry not
 - `ooxml`: `hasZipMagic` (R1), `readContainer` (R3), `readPart` (R5, R31), `crc32` (R4), `discriminate` with `CONTAINER_FLAVOURS` (R10–R13), `ODF_MIMETYPE_PART` and `ODF_MANIFEST_PART` (R14), `CORE_PROPERTIES_PART` (R18), `IMAGE_MIME_BY_EXT` (R20).
 - `office-readers` and `odf-reader`: their entries' `text`, read by R5's test only (K2346).
 - `test-support` for tests.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

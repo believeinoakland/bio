@@ -16,3 +16,10 @@ Layer 10. 14 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - testcopy `bio-plane/test/m/monitoring/voice.test.mjs:19` [part] "document and sent a web page instead. Your team's Civicsmith reads ..."
 - testcopy `bio-plane/test/m/monitoring/voice.test.mjs:21` [part] "change on every visit that nobody made."
 - testcopy `bio-plane/test/m/monitoring/watch.test.mjs:45` [part] "the objective states no condition"
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('monitoring.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/monitoring/index.mjs:1682` "address's end date; it is watched until it can be"
+- plain `bio-plane/src/monitoring/index.mjs:1924` "every earlier setting stays readable"

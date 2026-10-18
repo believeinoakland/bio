@@ -91,3 +91,9 @@ Layer 2. 89 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/record-core/t35.test.mjs:84` [part] "A part of your team's Civicsmith tried to record a setting without ..."
 - testcopy `bio-plane/test/m/record-core/t35.test.mjs:86` [part] "A part of your team's Civicsmith tried to record a setting without ..."
 - testcopy `bio-plane/test/m/record-core/t35.test.mjs:88` [part] "A part of your team's Civicsmith tried to record a setting without ..."
+
+## Plain findings (K3957)
+
+1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('record-core.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/record-core/index.mjs:121` "a draft of a new edition's statement of what changed"

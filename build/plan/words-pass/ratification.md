@@ -34,3 +34,23 @@ Layer 8. 32 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/ratification/preflight.test.mjs:366` [part] "observation and document is named. Corroborate the claim with an in..." — part test copy
 - testcopy `bio-plane/test/m/ratification/preflight.test.mjs:367` [part] "attesting member to choose cover or name, or drop the finding that ..." — part test copy
 - testcopy `bio-plane/test/m/ratification/scheduled-commit.test.mjs:149` [part] "its copy is no longer the one the case names" — part test copy
+
+## Plain findings (K3957)
+
+15 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('ratification.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/ratification/finding.mjs:66` "the record has changed since it was reviewed; read it again and re-sign"
+- plain `bio-plane/src/ratification/finding.mjs:256` "and not a calibrated ceiling"
+- plain `bio-plane/src/ratification/finding.mjs:273` "cannot be re-checked; ratified with the bytes captured on the day"
+- plain `bio-plane/src/ratification/finding.mjs:298` "on the day, the divergence recorded as the dated fact it is"
+- plain `bio-plane/src/ratification/index.mjs:543` "the case document has changed since it was reviewed; read it again and re-sign"
+- plain `bio-plane/src/ratification/index.mjs:725` "a reader of the team's approvals is already registered; there is one, registered once a..."
+- plain `bio-plane/src/ratification/index.mjs:780` "a reader of litigation holds is already registered; there is one, registered once at start"
+- plain `bio-plane/src/ratification/index.mjs:911` "no active registered signing keys"
+- plain `bio-plane/src/ratification/ops.mjs:140` "the case document has changed since it was reviewed; read it again and re-sign"
+- plain `bio-plane/src/ratification/ops.mjs:156` "no active registered signing keys; an admin must register a member key before anything ..."
+- plain `bio-plane/src/ratification/ops.mjs:470` "no active registered signing keys; an admin must register a member key before anything ..."
+- plain `bio-plane/src/ratification/refusals.mjs:151` "approval of an earlier version does not carry over"
+- plain `bio-plane/src/ratification/release.mjs:85` "this selection resolves to no members, so there is nothing to release"
+- plain `bio-plane/src/ratification/retire.mjs:62` "this selection resolves to no members, so there is nothing to retire"
+- plain `bio-plane/src/ratification/retire.mjs:103` "history the document does not carry (C-4.2)"

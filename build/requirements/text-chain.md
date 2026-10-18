@@ -371,6 +371,7 @@ new refusal condition in this module mints the next one in the family and is add
   `EARNED_CAPTURE_CEILING` (the strongest letter `captureBound` may answer); `isMachineIdentity`
   (whether an attestation's `.member` names a machine credential). (K634; until T18's text-chain job
   re-points, read through `legacy-checks`' re-exports.)
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

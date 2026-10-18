@@ -51,3 +51,17 @@ Layer 11. 49 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - inline `stewards/src/ui.mjs:73` "<h1>Report abuse of Civicsmith</h1> <section class=\"notice\" id=\"not..." — leaf: loads nothing
 - inline `stewards/src/ui.mjs:73` "Report abuse of Civicsmith" — leaf: loads nothing
 - inline `stewards/src/ui.mjs:95` "<h1>Your report has been received</h1> <p>Its reference is <strong ..." — leaf: loads nothing
+
+## Plain findings (K3957)
+
+9 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('stewards.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `stewards/src/config.mjs:86` "the deploy configuration could not be read"
+- plain `stewards/src/config.mjs:88` "is not set: the stewards' contact address is missing"
+- plain `stewards/src/config.mjs:89` "is not exactly one e-mail address"
+- plain `stewards/src/config.mjs:91` "is not set: a retention period in days is missing"
+- plain `stewards/src/config.mjs:92` "is not a whole number of days from 1 to 3650"
+- plain `stewards/src/config.mjs:95` "is not among the Worker's secrets"
+- plain `stewards/src/config.mjs:96` "must be a secret, never a plain variable"
+- plain `stewards/src/config.mjs:105` "the deploy configuration could not be read"
+- plain `stewards/src/ui.mjs:63` "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"

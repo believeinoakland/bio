@@ -178,6 +178,7 @@ content type's own declaration of its contract is `doctypes` R4 (T33-12).
   module needs the kinds of fact above, keyed by content-type key, and needs no fact about a
   place's identity beyond that. The four built-in stack handlers use nothing from this section
   (see Purpose).
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

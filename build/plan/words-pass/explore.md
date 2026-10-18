@@ -11,3 +11,14 @@ Layer 5. 9 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/explore/graph-chain.test.mjs:106` "declared, not evidenced" — ambiguous: 4 rows share this en (screen.person.g.declared, screen.explore.g.declared, screen.explore.declared)
 - testcopy `bio-plane/test/m/explore/walk.test.mjs:260` "declared, not evidenced"
 - testcopy `bio-plane/test/m/explore/walk.test.mjs:346` "declared, not evidenced"
+
+## Plain findings (K3957)
+
+6 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('explore.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/explore/graph.mjs:58` "rings is 1 or 2: the graph shows the records one or two steps from the centre"
+- plain `bio-plane/src/explore/presets.mjs:73` "no to is named: a path between two records names both"
+- plain `bio-plane/src/explore/timeline.mjs:30` "a timeline is over a set of record ids the caller names"
+- plain `bio-plane/src/explore/timeline.mjs:33` "your team's Civicsmith has no events record connected, so no timeline can be read"
+- plain `bio-plane/src/explore/walk.mjs:29` "kinds is a list of the kinds owners registered"
+- plain `bio-plane/src/explore/walk.mjs:47` "sortBy names a quantity a step states"

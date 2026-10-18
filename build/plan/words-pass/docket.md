@@ -7,3 +7,9 @@ Layer 8. 5 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/docket/words.test.mjs:13` [part] "first. Nothing was published." — part test copy
 - testcopy `bio-plane/test/m/docket/words.test.mjs:14` [part] "Your team's Civicsmith holds no prepared docket entry from you with..." — part test copy
 - testcopy `bio-plane/test/m/docket/words.test.mjs:15` [part] "than an hour ago, or the docket has moved since. Prepare it again a..." — part test copy
+
+## Plain findings (K3957)
+
+1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('docket.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/docket/index.mjs:575` "no team slug is recorded, and there are no anonymous entries"

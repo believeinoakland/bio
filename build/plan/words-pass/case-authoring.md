@@ -59,3 +59,21 @@ Layer 8. 57 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/case-authoring/standards.test.mjs:119` "rests only on benchmarks of" — regex
 - testcopy `bio-plane/test/m/case-authoring/whatchanged.test.mjs:219` [part] "undetermined: an adoption pins a revision whose bytes this record c..." — part test copy
 - testcopy `bio-plane/test/m/case-authoring/whatchanged.test.mjs:225` [part] "undetermined: an adoption pins a revision whose bytes this record c..." — part test copy
+
+## Plain findings (K3957)
+
+13 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('case-authoring.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/case-authoring/document.mjs:98` "accepted when this case was signed; that revision was not in force at signing"
+- plain `bio-plane/src/case-authoring/document.mjs:311` "relationship's conclusion, which is not this project's (§7.1 item 5)"
+- plain `bio-plane/src/case-authoring/document.mjs:368` "resolved to a subject at all"
+- plain `bio-plane/src/case-authoring/index.mjs:1323` "this inquiry has no readable bundle.md, so its state cannot be moved"
+- plain `bio-plane/src/case-authoring/index.mjs:1653` "ratification's pre-flight gave no answer"
+- plain `bio-plane/src/case-authoring/searched.mjs:27` "what was looked for and what came of it"
+- plain `bio-plane/src/case-authoring/searched.mjs:29` "some could not be identified at all -- the coverage is stated and is not complete"
+- plain `bio-plane/src/case-authoring/searched.mjs:32` "licenses a positive statement about the absence"
+- plain `bio-plane/src/case-authoring/searched.mjs:35` "this record, and that is stated rather than resolved in either direction"
+- plain `bio-plane/src/case-authoring/searched.mjs:38` "not askable here rather than that it was answered"
+- plain `bio-plane/src/case-authoring/searched.mjs:59` "rather than about the case"
+- plain `bio-plane/src/case-authoring/searched.mjs:129` "carried this level. They are reported as undetermined"
+- plain `bio-plane/src/case-authoring/searched.mjs:133` "subject at this level at all, so nothing is claimed about them either way"

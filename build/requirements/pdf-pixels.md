@@ -103,6 +103,7 @@ Status.
   `streamDecoded`, `isEncrypted`), `pageShowsText(doc, pageMap)`, `pdfPageImages(doc, pageIndex)` and
   `imagePlacementSource(placement)`: named services only, never a private field (N9, K28).
 - `image-codecs`: the JPEG, CCITT, JBIG2 and JPX decoders and their refusal sets (R1–R4, R7); `decodePng` (R10, T43); the strip-wise JPEG decode (R11, T44).
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

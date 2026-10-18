@@ -8,3 +8,9 @@ Layer 8. 6 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - testcopy `bio-plane/test/m/network-notices/words.test.mjs:43` [part] "notice is always published with. The operator binds one. Nothing wa..."
 - testcopy `bio-plane/test/m/network-notices/words.test.mjs:64` [part] "Your team's Civicsmith holds no prepared notice from you with this ..." — part test copy
 - testcopy `bio-plane/test/m/network-notices/words.test.mjs:65` [part] "prepared more than an hour ago. Prepare it again and sign what it s..."
+
+## Plain findings (K3957)
+
+1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('network-notices.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/network-notices/index.mjs:257` "no team slug is recorded, and there are no anonymous notices"

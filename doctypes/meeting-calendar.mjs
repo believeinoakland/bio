@@ -31,6 +31,7 @@
 import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, readerView, practiceValue } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity, unescapeHtml } from "../site-profiles/index.mjs";
 import { evaluateRule, localDay } from "../bio-plane/src/civil-time/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* How long after a meeting minutes stop being merely late is the JURISDICTION'S
    practice, not this reader's: it is the view's `practice.minutes_due_days`, with the
@@ -60,10 +61,10 @@ function minutesDue(ctx, day) {
                  basis: p.basis || null, starts: "act", ...(closures ? { closures } : {}) };
   let r;
   try { r = evaluateRule({ rule, anchor: { value: day, precision: "day", zone }, view }); }
-  catch (e) { return { due: null, why: `the period could not be counted: ${String((e && e.message) || e)}` }; }
+  catch (e) { return { due: null, why: localize("doctypes.meeting-calendar.period_uncounted", "the period could not be counted: {reason}", { reason: String((e && e.message) || e) }) }; }
   const unit = count === "business" ? "business days" : "days";
   if (!r || r.refused || r.undetermined || !r.due)
-    return { due: null, unit, why: `the jurisdiction's ${p.value} ${unit} could not be counted from this meeting: ${(r && r.why) || "no due day"}` };
+    return { due: null, unit, why: localize("doctypes.meeting-calendar.period_not_counted_here", "the jurisdiction's {amount} {unit} could not be counted from this meeting: {reason}", { amount: String(p.value), unit, reason: String((r && r.why) || "no due day") }) };
   /* An uncertain due is the body's latest candidate: lateness is only raised after it (K1444 (i)). */
   const d = r.due.candidates ? r.due.candidates[r.due.candidates.length - 1] : r.due;
   return { due: String(d.value).slice(0, 10), unit, amount: p.value, zone };
@@ -229,7 +230,7 @@ export default {
         const now = f.get("status").now;
         events.push(event(now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
                       { key: alt.entity.key, label: alt.entity.label, was: f.get("status").was, now,
-                        why: `a meeting's status changed from ${f.get("status").was} to ${now}` }));
+                        why: localize("doctypes.meeting-calendar.status_changed", "a meeting's status changed from {was} to {now}", { was: String(f.get("status").was), now: String(now) }) }));
       }
       if (f.has("date"))
         events.push(event("moved", { key: alt.entity.key, label: alt.entity.label,
@@ -247,13 +248,13 @@ export default {
         const { was, now } = f.get(kind);
         if (!was && now)
           events.push(event(`${kind}_published`, { key: alt.entity.key, label: alt.entity.label,
-                        document: now, why: `${kind} were published for a meeting that had none` }));
+                        document: now, why: localize("doctypes.meeting-calendar.published", "{kind} were published for a meeting that had none", { kind }) }));
         else if (was && !now)
           events.push(event(`${kind}_withdrawn`, { key: alt.entity.key, label: alt.entity.label,
-                        why: `${kind} that this calendar previously offered are no longer offered` }));
+                        why: localize("doctypes.meeting-calendar.withdrawn", "{kind} that this calendar previously offered are no longer offered", { kind }) }));
         else
           events.push(event(`${kind}_replaced`, { key: alt.entity.key, label: alt.entity.label,
-                        was, now, why: `the ${kind} document for this meeting is a different document than before` }));
+                        was, now, why: localize("doctypes.meeting-calendar.replaced", "the {kind} document for this meeting is a different document than before", { kind }) }));
       }
     }
 
@@ -274,7 +275,7 @@ export default {
     const parts = [];
     if (events.some((e) => e.significance === "event"))
       parts.push(events.filter((e) => e.significance === "event").length + " needing attention");
-    if (scrolled) parts.push(`${scrolled} no longer in the range shown, which is this calendar moving its window`);
+    if (scrolled) parts.push(localize("doctypes.meeting-calendar.scrolled", "{count} no longer in the range shown, which is this calendar moving its window", { count: String(scrolled) }));
     if (d.appeared.length) parts.push(`${d.appeared.length} newly listed`);
 
     return {
@@ -283,8 +284,8 @@ export default {
       confirmed: intact ? { entries: b.entities.length, intact, window: w.named || null,
                             scrolled_out: scrolled } : null,
       why: events.length || scrolled
-        ? `${intact} of ${a.entities.length} meetings unchanged` + (parts.length ? "; " + parts.join(", ") : "")
-        : `all ${b.entities.length} meetings on this calendar are unchanged`,
+        ? localize("doctypes.meeting-calendar.unchanged_of", "{intact} of {total} meetings unchanged{parts}", { intact: String(intact), total: String(a.entities.length), parts: parts.length ? "; " + parts.join(", ") : "" })
+        : localize("doctypes.meeting-calendar.all_unchanged", "all {count} meetings on this calendar are unchanged", { count: String(b.entities.length) }),
     };
   },
 
@@ -321,11 +322,10 @@ export default {
         out.push(temporal(self, null, "minutes_not_yet_published",
           { at: m.facts.date, expected_by: due.due,
             why: !due.due
-              ? `this meeting has taken place and no minutes are offered yet; when they are due is not known, because ${due.why}`
+              ? localize("doctypes.meeting-calendar.due_unknown", "this meeting has taken place and no minutes are offered yet; when they are due is not known, because {why}", { why: String(due.why) })
               : typeof today === "string" && today > due.due
-              ? `this meeting was held more than ${due.amount} ${due.unit} ago, longer than minutes usually take here `
-                + "(the jurisdiction's measured practice), and this calendar still offers no minutes"
-              : "this meeting has taken place and no minutes are offered yet" }));
+              ? localize("doctypes.meeting-calendar.overdue", "this meeting was held more than {amount} {unit} ago, longer than minutes usually take here (the jurisdiction's measured practice), and this calendar still offers no minutes", { amount: String(due.amount), unit: String(due.unit) })
+              : localize("doctypes.meeting-calendar.taken_place", "this meeting has taken place and no minutes are offered yet") }));
       }
       if (!m.facts.agenda && when > now)
         out.push(temporal(self, null, "agenda_not_yet_published",

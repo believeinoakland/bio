@@ -5,3 +5,10 @@ Layer 8. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - inline `bio-plane/src/review/index.mjs:231` "{} was recorded to the second"
 - inline `bio-plane/src/review/index.mjs:231` [copy] "both were recorded to the second"
 - inline `bio-plane/src/review/index.mjs:563` "It also ends at {}."
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('review.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/review/index.mjs:735` "is not evidence of who wrote the statement"
+- plain `bio-plane/src/review/index.mjs:858` "set the team's approval rule"

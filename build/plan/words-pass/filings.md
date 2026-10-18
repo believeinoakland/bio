@@ -13,3 +13,13 @@ Layer 9. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/filings/words.test.mjs:119` "a time for review and response" — computed member key
 - testcopy `bio-plane/test/m/filings/words.test.mjs:124` "correcting the act" — computed member key
 - testcopy `bio-plane/test/m/filings/words.test.mjs:125` "remedying the harm" — computed member key
+
+## Plain findings (K3957)
+
+5 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('filings.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/filings/index.mjs:690` "no module answers the team's templates here, so none is readable"
+- plain `bio-plane/src/filings/index.mjs:1275` "rewrite each sentence that asks for the benefit of the team or its members; there is no..."
+- plain `bio-plane/src/filings/index.mjs:1327` "prepared as yourself: your own notes are never approved, stamped or recorded as the tea..."
+- plain `bio-plane/src/filings/index.mjs:2363` "this template is wording the team files in its own name: a briefing takes a brief template"
+- plain `bio-plane/src/filings/index.mjs:2773` "no module answers the team's templates here, so no template can be drafted"

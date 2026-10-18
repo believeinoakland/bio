@@ -85,9 +85,9 @@ test("R1: a budget line-item sheet is matched by header words naming a fund or o
 
 test("R1: anything else does not match, and says why", () => {
   const cases = [
-    [financialReport, ctxFor("Annual Comprehensive Financial Report\n" + "Cash 1 2\n".repeat(20), FIRST), /not a PDF/],
+    [financialReport, ctxFor("Cash 1 2\n".repeat(20), FIRST), /not a PDF/],
     [financialReport, ctxFor(testPdf(["A letter to the council", "Cash 1 2\n".repeat(20)]), FIRST), /does not name it/],
-    [financialReport, ctxFor(testPdf(["Annual Comprehensive Financial Report", "Cash 1 2\nLand 3 4"]), FIRST), /floor/],
+    [financialReport, ctxFor(testPdf(["Statement of Accounts", "Cash 1 2\nLand 3 4"]), TESTV), /floor/],
     [budgetBook, ctxFor(testPdf(["Adopted Policy Budget", "Cash 1 2\n".repeat(20)]), { vocabulary: {} }), /view holds no words/],
     [budgetTable, ctxFor(testPdf([COVER]), FIRST), /not a CSV/],
   ];

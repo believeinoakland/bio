@@ -267,3 +267,30 @@ Layer 8. 265 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - testcopy `bio-plane/test/m/case-grammar/words.test.mjs:141` "a team not named" — signed or pinned text
 - testcopy `bio-plane/test/m/case-grammar/words.test.mjs:170` [part] "its author has chosen no level" — part test copy
 - testcopy `bio-plane/test/m/case-grammar/words.test.mjs:256` "a team not named" — signed or pinned text
+
+## Plain findings (K3957)
+
+22 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('case-grammar.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/case-grammar/blocks.mjs:40` "co-attestation and source, so it states none; that is not a statement that there were none"
+- plain `bio-plane/src/case-grammar/blocks.mjs:43` "co-attestation and source, but carries no readable block for it, so what it stated is u..."
+- plain `bio-plane/src/case-grammar/casefile.mjs:203` "the manifest names at least one signing key, with its fingerprint"
+- plain `bio-plane/src/case-grammar/casefile.mjs:210` "a signing key is its public key on one line"
+- plain `bio-plane/src/case-grammar/casefile.mjs:219` "the manifest lists at least one part"
+- plain `bio-plane/src/case-grammar/casefile.mjs:231` "the manifest lists every file of the case file"
+- plain `bio-plane/src/case-grammar/casefile.mjs:262` "the files are listed in path order"
+- plain `bio-plane/src/case-grammar/casefile.mjs:318` "the manifest could not be read whole"
+- plain `bio-plane/src/case-grammar/edition.mjs:141` "printed and nothing is claimed either way"
+- plain `bio-plane/src/case-grammar/index.mjs:175` "signed before a case's citation edges were pinned to the capture they were made against..."
+- plain `bio-plane/src/case-grammar/tensions.mjs:38` "directly; deeper findings disclose their own when published"
+- plain `bio-plane/src/case-grammar/tensions.mjs:41` "states none; that is not a statement that none existed"
+- plain `bio-plane/src/case-grammar/tensions.mjs:44` "carries no readable tension section, so what it disclosed is undetermined"
+- plain `bio-plane/src/case-grammar/words.mjs:39` "a source this group checks more closely before relying on it"
+- plain `bio-plane/src/case-grammar/words.mjs:40` "an inference this group allows or refuses to draw"
+- plain `bio-plane/src/case-grammar/words.mjs:41` "a pattern this group has evidence an institution or source follows"
+- plain `bio-plane/src/case-grammar/words.mjs:50` "known to the group, not recorded"
+- plain `bio-plane/src/case-grammar/words.mjs:52` "the group that publishes this case"
+- plain `bio-plane/src/case-grammar/words.mjs:53` "the cover the group knows its author by"
+- plain `bio-plane/src/case-grammar/words.mjs:54` "a member of this group"
+- plain `bio-plane/src/case-grammar/words.mjs:61` "not recomputed here: a workbook this group's Civicsmith did not recompute"
+- plain `bio-plane/src/case-grammar/words.mjs:88` "a member of this team"

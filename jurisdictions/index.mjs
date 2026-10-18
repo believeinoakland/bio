@@ -701,7 +701,7 @@ function validateInto(p, errors) {
   /* R82: an amount in R26's units */
   const amountOf = (path, a) => {
     if (!isObj(a) || Object.keys(a).some((k) => k !== "amount" && k !== "units") || !isPosInt(a.amount) || !UNITS.includes(a.units))
-      err(path, "VALUE_INVALID", `an amount is {amount, units}, a positive integer of one of ${UNITS.join(", ")}`);
+      err(path, "VALUE_INVALID", localize("jurisdictions.index.amount_is_amount_and_units", "an amount is {amount, units}, a positive integer of one of {units_list}", { units_list: UNITS.join(", ") }));
   };
 
   /* R46: how a day period is computed; R47: the named closure lists. Read first: rules name them. */
@@ -844,7 +844,7 @@ function validateInto(p, errors) {
   /* R40, R81, R87 (b): one template, attributed; in a kind's `templates` it also carries its purpose (judged by the
      caller), its name and the public sources it was written from. */
   const templateOf = (ta, t, k, inList) => {
-    if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", `a template is {${TEMPLATE_FIELDS.join(", ")}}, never bare text`);
+    if (!isObj(t)) err(ta, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.a_template_is_fields_never_bare", "a template is {{fields}}, never bare text", { fields: TEMPLATE_FIELDS.join(", ") }));
     else {
       fields(ta, t, [...TEMPLATE_FIELDS, "name", "sources", ...(inList ? ["purpose"] : [])]);
       for (const f of TEMPLATE_FIELDS)
@@ -891,10 +891,10 @@ function validateInto(p, errors) {
         err(`${ta}.name`, "VALUE_INVALID", localize("jurisdictions.index.name_is_a_title_of", "name is a title of at most {TEMPLATE_NAME_MAX} characters on one line", { TEMPLATE_NAME_MAX: String(TEMPLATE_NAME_MAX) }));
     }
     if (isObj(t) && (inList || own(t, "sources"))) {
-      if (!Array.isArray(t.sources) || !t.sources.length) err(`${ta}.sources`, "VALUE_INVALID", "sources lists at least one public source {citation}");
+      if (!Array.isArray(t.sources) || !t.sources.length) err(`${ta}.sources`, "VALUE_INVALID", localize("jurisdictions.index.sources_lists_one_public_source", "sources lists at least one public source, each with a citation"));
       else t.sources.forEach((x, j) => {
         if (!isObj(x) || Object.keys(x).some((f) => f !== "citation") || !isStr(x.citation))
-          err(`${ta}.sources[${j}]`, "VALUE_INVALID", "a source is {citation}, non-empty");
+          err(`${ta}.sources[${j}]`, "VALUE_INVALID", localize("jurisdictions.index.a_source_has_a_citation", "a source has one field, citation, which is non-empty"));
       });
     }
   };
@@ -1140,7 +1140,13 @@ function validateInto(p, errors) {
       key = `${listKey(h)}\u0003${key}`;
       if (!isYear(h.year)) err(`${at}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
       else if (years.has(`${h.year}\u0000${key}`)) err(`${at}.year`, "HOLIDAY_INVALID",
-        localize("jurisdictions.index.year_is_listed_twice_for", "{year} is listed twice for {v1}{v2}", { year: String(h.year), v1: String(own(h, "list") ? `the list ${String(h.list)} and ` : ""), v2: String(own(h, "offices") ? "the same offices" : "all offices") }));
+        own(h, "list")
+          ? (own(h, "offices")
+            ? localize("jurisdictions.index.year_listed_twice_for_list_and_the_same_offices", "{year} is listed twice for the list {list} and the same offices", { year: String(h.year), list: String(h.list) })
+            : localize("jurisdictions.index.year_listed_twice_for_list_and_all_offices", "{year} is listed twice for the list {list} and all offices", { year: String(h.year), list: String(h.list) }))
+          : own(h, "offices")
+            ? localize("jurisdictions.index.year_listed_twice_for_the_same_offices", "{year} is listed twice for the same offices", { year: String(h.year) })
+            : localize("jurisdictions.index.year_listed_twice_for_all_offices", "{year} is listed twice for all offices", { year: String(h.year) }));
       else years.add(`${h.year}\u0000${key}`);
       const dates = new Set();
       list(`${at}.days`, h.days).forEach((d, j) => {
@@ -1314,7 +1320,7 @@ function validateInto(p, errors) {
         err(`${at}.covers`, "DEMAND_INVALID", localize("jurisdictions.index.covers_is_a_non_empty", "covers is a non-empty list from {DEMAND_COVERS}", { DEMAND_COVERS: String(DEMAND_COVERS.join(", ")) }));
       const w = d.within;
       if (!isObj(w) || Object.keys(w).some((k) => k !== "amount" && k !== "units") || !isPosInt(w.amount) || !UNITS.includes(w.units))
-        err(`${at}.within`, "DEMAND_INVALID", `within is {amount, units}, units one of ${UNITS.join(", ")}`);
+        err(`${at}.within`, "DEMAND_INVALID", localize("jurisdictions.index.within_is_amount_and_units", "within is {amount, units}, units one of {units_list}", { units_list: UNITS.join(", ") }));
       str(`${at}.citation`, d.citation, "citation");
       statusBasis(at, d);
     });

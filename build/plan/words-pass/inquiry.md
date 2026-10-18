@@ -15,3 +15,14 @@ Layer 6. 13 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/inquiry/surfaced.test.mjs:17` [part] "This revision changes who surfaced the question, a member or an ass..." — part test copy
 - testcopy `bio-plane/test/m/inquiry/surfaced.test.mjs:18` [part] "once, when the question is opened, and a later edit cannot rewrite ..." — part test copy
 - testcopy `bio-plane/test/m/inquiry/surfaced.test.mjs:19` [part] "value the current version carries and save the revision again." — part test copy
+
+## Plain findings (K3957)
+
+6 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('inquiry.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/inquiry/index.mjs:726` "no duty the record holds derives it"
+- plain `bio-plane/src/inquiry/index.mjs:1713` "this selection resolves to no members, so there is nothing to dispose"
+- plain `bio-plane/src/inquiry/index.mjs:1831` "this inquiry has no readable bundle.md, so its state cannot be moved; nothing was moved"
+- plain `bio-plane/src/inquiry/index.mjs:1839` "pointing at a history the document does not carry (C-4.2); nothing was moved"
+- plain `bio-plane/src/inquiry/index.mjs:1997` "this inquiry has no readable bundle.md, so its state cannot be moved"
+- plain `bio-plane/src/inquiry/index.mjs:2571` "this inquiry has no readable bundle.md, so its structure cannot be authored"

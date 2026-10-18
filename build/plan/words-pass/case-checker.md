@@ -164,3 +164,16 @@ Layer 8. 162 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - testcopy `bio-plane/test/m/case-checker/says.test.mjs:30` "Free to read" — signed or pinned text
 - testcopy `bio-plane/test/m/case-checker/standards-offline.test.mjs:30` "Behind a paywall" — signed or pinned text
 - testcopy `bio-plane/test/m/case-checker/standards-offline.test.mjs:32` "Free to read" — signed or pinned text
+
+## Plain findings (K3957)
+
+8 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('case-checker.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/case-checker/check.mjs:278` "the case file could not be read, so its complete edition was not compared"
+- plain `bio-plane/src/case-checker/check.mjs:317` "the case document carries no front matter this checker can read"
+- plain `bio-plane/src/case-checker/check.mjs:320` "the manifest lists no case document"
+- plain `bio-plane/src/case-checker/check.mjs:364` "the case file carries no signature of the case document, so nobody can be shown to have..."
+- plain `bio-plane/src/case-checker/check.mjs:372` "the case document's signature was made with a key that is not among the team's publishe..."
+- plain `bio-plane/src/case-checker/check.mjs:524` "a supplied document is not bytes, so it was not used"
+- plain `bio-plane/src/case-checker/check.mjs:537` "the calculations' provenance file the case file carries is not the rendering of the cal..."
+- plain `bio-plane/src/case-checker/check.mjs:866` "the criteria the case measures against are not judged, because the case document is not..."

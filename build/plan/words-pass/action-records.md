@@ -5,3 +5,13 @@ Layer 9. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - handlist `bio-plane/test/m/action-records/instance.test.mjs:144` [?] ops: actionlawspropose, actionseekspropose, actionriskpropose, ... (6 of 8 not the module's own) — handlist
 - inline `bio-plane/src/action-records/index.mjs:442` "is {} law(s) stated by a member"
 - inline `bio-plane/src/action-records/index.mjs:497` "it names {} stage(s) a"
+
+## Plain findings (K3957)
+
+5 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('action-records.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/action-records/index.mjs:498` "no member has stated what it seeks"
+- plain `bio-plane/src/action-records/index.mjs:825` "action's risk tier, and nothing becomes it until a member states it themselves"
+- plain `bio-plane/src/action-records/index.mjs:827` "risk-tier act sets that, and the record holds who made the proposal"
+- plain `bio-plane/src/action-records/index.mjs:833` "becomes it until a member states it themselves"
+- plain `bio-plane/src/action-records/index.mjs:835` "the action's seeks: only a member's own write states that, and the record holds who mad..."

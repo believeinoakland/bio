@@ -110,7 +110,7 @@ test("R43 with no passphrase, Generate gives the raw form as before: both privat
   const rel = b["Release key: private, keep this"], rat = b["Ratification key: private, keep this"];
   assert.match(rel, /^BIOKEY-RAW1\.bio-release\.[A-Za-z0-9+/]{43}=$/);
   assert.match(rat, /^BIOKEY-RAW1\.bio-ratify\.[A-Za-z0-9+/]{43}=$/);
-  const pubs = b["Both public keys: paste these into the session"].split("\n");
+  const pubs = b[word("sign-release.public.both")].split("\n");
   assert.equal(pubs.length, 2);
   assert.match(pubs[0], PUB_LINE("bio-release"));
   assert.match(pubs[1], PUB_LINE("bio-ratify"));
@@ -142,7 +142,7 @@ test("R43 with a passphrase, every private key Generate shows, copies or downloa
     const rel = b["Release key: private, keep this"], rat = b["Ratification key: private, keep this"];
     assert.match(rel, /^BIOKEY1\.bio-release\.[A-Za-z0-9+/=]+\.[A-Za-z0-9+/=]+\.[A-Za-z0-9+/=]+\.600000$/);
     assert.match(rat, /^BIOKEY1\.bio-ratify\.[A-Za-z0-9+/=]+\.[A-Za-z0-9+/=]+\.[A-Za-z0-9+/=]+\.600000$/);
-    const pubs = b["Both public keys: paste these into the session"].split("\n");
+    const pubs = b[word("sign-release.public.both")].split("\n");
     assert.match(pubs[0], PUB_LINE("bio-release"));
     assert.match(pubs[1], PUB_LINE("bio-ratify"));
     /* Unlocked with the passphrase, each is the key its public line names, and the one loaded into the tab. */
@@ -176,7 +176,7 @@ test("R43 the page's own load reads a protected key back with its passphrase, an
   const maker = loadPage();
   const b = boxes(await generate(maker, PASS));
   const rel = b["Release key: private, keep this"], rat = b["Ratification key: private, keep this"];
-  const pubs = b["Both public keys: paste these into the session"].split("\n");
+  const pubs = b[word("sign-release.public.both")].split("\n");
   for (const [blob, pub, slot, title] of [[rel, pubs[0], "release", "Release key"], [rat, pubs[1], "ratify", "Ratification key"]]) {
     for (const wrong of ["", "wrong", PASS.toUpperCase(), `${PASS} `, PASS.slice(0, -1)]) {
       const page = loadPage();
@@ -211,7 +211,7 @@ test("R43 with a passphrase, the release key's raw form is shown once, only when
   const out = await generate(page, PASS);
   const b = boxes(out);
   const rel = b["Release key: private, keep this"];
-  const relPub = b["Both public keys: paste these into the session"].split("\n")[0];
+  const relPub = b[word("sign-release.public.both")].split("\n")[0];
   const { seed } = await page.parseKeyString(rel, PASS);
   const raw = `BIOKEY-RAW1.bio-release.${b64(seed)}`;
   /* Not shown until asked: only the offer. */
@@ -220,7 +220,7 @@ test("R43 with a passphrase, the release key's raw form is shown once, only when
   assert.equal(page.el("raw-once").innerHTML, "");
   page.el("show-raw").onclick();
   const shown = page.el("raw-once").innerHTML;
-  const box = boxes(shown)["Release key: raw, for the signing secret only"];
+  const box = boxes(shown)[word("sign-release.raw.title")];
   assert.equal(box, raw);
   /* It is the release key: the release signer accepts it, and its signature verifies under the release key's public line. */
   assert.deepEqual([...seedFromEnvelope(box).seed], [...seed]);
@@ -277,8 +277,8 @@ test("R44 the page makes a recovery key named the recovery key in its private an
     const out = await makeRecovery(page, pass);
     const b = boxes(out);
     assert.deepEqual(Object.keys(b), [word("sign-release.recovery.public"), word("sign-release.recovery.private")]);
-    const pub = b["Recovery key: public, paste this into the session"];
-    const priv = b["Recovery key: private, keep this offline"];
+    const pub = b[word("sign-release.recovery.public")];
+    const priv = b[word("sign-release.recovery.private")];
     assert.match(pub, PUB_LINE(RECOVERY));
     assert.match(priv, pass ? /^BIOKEY1\.bio-release-recovery\./ : /^BIOKEY-RAW1\.bio-release-recovery\./);
     assert.doesNotMatch(out, /Release key:/, "never labelled as the release key");
@@ -305,8 +305,8 @@ test("R44 the page makes a recovery key named the recovery key in its private an
 test("R44 the recovery key is a release key: loaded, it is named the recovery key and signs bio-release statements that verify under its public line", async () => {
   const maker = loadPage();
   const b = boxes(await makeRecovery(maker, PASS));
-  const pub = b["Recovery key: public, paste this into the session"];
-  const priv = b["Recovery key: private, keep this offline"];
+  const pub = b[word("sign-release.recovery.public")];
+  const priv = b[word("sign-release.recovery.private")];
   assert.match(await load(loadPage(), priv, "wrong"), /wrong passphrase/);
   const page = loadPage();
   const said = await load(page, priv, PASS);
@@ -322,8 +322,8 @@ test("R44 the recovery key is a release key: loaded, it is named the recovery ke
   assert.equal((await verifySshsig(m.sig, ASSET, NS_RATIFY, [pub])).reason, "NAMESPACE");
   /* Its raw form, made without a passphrase, is a BIOKEY-RAW1 envelope the release signer reads. */
   const rawPage = loadPage();
-  const raw = boxes(await makeRecovery(rawPage, ""))["Recovery key: private, keep this offline"];
-  const rawPub = boxes(rawPage.el("rec-out").innerHTML)["Recovery key: public, paste this into the session"];
+  const raw = boxes(await makeRecovery(rawPage, ""))[word("sign-release.recovery.private")];
+  const rawPub = boxes(rawPage.el("rec-out").innerHTML)[word("sign-release.recovery.public")];
   assert.equal(seedFromEnvelope(raw).label, RECOVERY);
   assert.equal(signerPublicLine(raw, RECOVERY), rawPub);
   assert.equal((await verifySshsig(signSshsig(raw, ASSET, NS_RELEASE), ASSET, NS_RELEASE, [rawPub])).ok, true);
@@ -333,9 +333,9 @@ test("R44 the recovery key is a release key: loaded, it is named the recovery ke
 test("R44 the recovery key's release signature from the page is accepted by stock ssh-keygen -Y verify in bio-release", { skip: NO_SSH_KEYGEN }, async () => {
   const maker = loadPage();
   const b = boxes(await makeRecovery(maker, PASS));
-  const pub = b["Recovery key: public, paste this into the session"];
+  const pub = b[word("sign-release.recovery.public")];
   const page = loadPage();
-  await load(page, b["Recovery key: private, keep this offline"], PASS);
+  await load(page, b[word("sign-release.recovery.private")], PASS);
   const m = await signRelease(page, ASSET);
   const d = mkdtempSync(join(DIR, "kv-"));
   writeFileSync(join(d, "allowed"), `release@test ${pub}\n`);
@@ -358,7 +358,7 @@ test("R32 R43 R44 what the new paths write names no BIO, bundle, instance or pla
   page.el("hide-raw").onclick();
   said.push(page.el("raw-once").innerHTML, await makeRecovery(page, PASS), await makeRecovery(page, ""),
     await generate(page, "a", "b"), await makeRecovery(page, "a", "b"));
-  const rec = boxes(said[3])["Recovery key: private, keep this offline"];
+  const rec = boxes(said[3])[word("sign-release.recovery.private")];
   said.push(await load(page, rec, PASS), page.el("rel-key").innerHTML);
   for (const s of said) {
     const text = s.replace(ANY_PRIVATE, "").replace(/ssh-ed25519 \S+/g, "");

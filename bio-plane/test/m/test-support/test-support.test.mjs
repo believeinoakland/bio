@@ -27,12 +27,22 @@ const MARK = "@@RESULT@@";
 /** A fresh, empty host directory for one child to use as its $TMPDIR. */
 const host = () => mkdtempSync(join(tmpdir(), "host-"));
 
+/** The environment a child is handed: this process's, plus `extra`, without
+ *  NODE_EXTRA_CA_CERTS. Node reads that file at start and warns on stderr when it
+ *  cannot, which a uid that is not root does for the proxy's CA bundle; a child's
+ *  silence is then the warning's, not the module's. */
+const childEnv = (extra) => {
+  const env = { ...process.env, ...extra };
+  delete env.NODE_EXTRA_CA_CERTS;
+  return env;
+};
+
 /** Runs `body` (module code) in a child with $TMPDIR = `hostDir`. `body` may
  *  call `report(obj)` to send one JSON result line on stdout. */
 function child(body, { hostDir, stdio, env = {}, cwd } = {}) {
   const code = `const report = (o) => process.stdout.write(${JSON.stringify(MARK)} + JSON.stringify(o) + "\\n");\n${body}`;
   const r = spawnSync(process.execPath, ["--input-type=module", "-e", code], {
-    env: { ...process.env, TMPDIR: hostDir, ...env }, encoding: "utf8", stdio, cwd,
+    env: childEnv({ TMPDIR: hostDir, ...env }), encoding: "utf8", stdio, cwd,
     maxBuffer: 64 * 1024 * 1024, timeout: 60_000,
   });
   const line = (r.stdout ?? "").split("\n").find((l) => l.startsWith(MARK));
@@ -354,6 +364,26 @@ test("R3 importing more than once in one process (static, dynamic, via stdio fir
   assert.deepEqual(readdirSync(H), [], "and removed");
 });
 
+test("R3 and R6 a child the suite starts is not handed NODE_EXTRA_CA_CERTS: with it set to an unreadable path the child runs silent and does not see the variable, while an unstripped child warns", () => {
+  const H = host();
+  const unreadable = join(H, "no-such-ca.pem");
+  const saved = process.env.NODE_EXTRA_CA_CERTS;
+  process.env.NODE_EXTRA_CA_CERTS = unreadable;
+  try {
+    /* The control: a child given the variable as it is warns, so silence below is the strip's doing. */
+    const bare = spawnSync(process.execPath, ["-e", "0"], { env: { ...process.env, TMPDIR: H }, encoding: "utf8" });
+    assert.notEqual(bare.stderr, "", "an unstripped child reads the unreadable file and warns");
+    const r = child(`report({ seen: "NODE_EXTRA_CA_CERTS" in process.env });`, { hostDir: H });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.stderr, "", "the child warns about nothing");
+    assert.deepEqual(r.result, { seen: false }, "the variable is absent in the child");
+  } finally {
+    if (saved === undefined) delete process.env.NODE_EXTRA_CA_CERTS;
+    else process.env.NODE_EXTRA_CA_CERTS = saved;
+  }
+  assert.deepEqual(readdirSync(H), [], "nothing is left under the host temp directory");
+});
+
 /* ------------------------------------------------------------------ R4 */
 
 test("R4 SANDBOX is the absolute path of the directory R1 created", () => {
@@ -446,7 +476,7 @@ test("R6 synchronousStdio() makes stdout and stderr synchronous through a pipe: 
     const H = host();
     const got = await new Promise((resolve, reject) => {
       const p = spawn(process.execPath, ["--input-type=module", "-e", FLOOD(STDIO_URL, total, chunk)],
-        { env: { ...process.env, TMPDIR: H }, stdio: ["ignore", "pipe", "pipe"] });
+        { env: childEnv({ TMPDIR: H }), stdio: ["ignore", "pipe", "pipe"] });
       const out = [], err = [];
       /* A slow reader: pause between chunks so the child's writes outrun it. */
       p.stdout.on("data", (b) => { out.push(b); p.stdout.pause(); setTimeout(() => p.stdout.resume(), 1); });

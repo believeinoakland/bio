@@ -10,6 +10,8 @@ export const ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/policies-a
    `capture-policies.mjs` as the 50 were, and the member's answers, written before the reader was run on them. */
 export const FRESH = JSON.parse(fs.readFileSync(new URL("./fixtures/policies-fresh.json", import.meta.url), "utf8"));
 export const FRESH_ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/policies-fresh-answers.json", import.meta.url), "utf8")).answers;
+/* The series labels the held profile prints, kept as fixture data beside the captures (the words check reads no fixture). */
+const SERIES = JSON.parse(fs.readFileSync(new URL("./fixtures/policy-series.json", import.meta.url), "utf8"));
 
 const p = (re, flags) => (flags ? { re, flags } : { re });
 const label = (field, re, flags) => ({ field, pattern: p(re, flags), basis: "MEASURED: doctypes R35, the 50 captured policies, 2026-10-07" });
@@ -17,7 +19,7 @@ const label = (field, re, flags) => ({ field, pattern: p(re, flags), basis: "MEA
 export const MEASURED_VIEW = {
   standard_sources: [
     { source: "Oakland Administrative Instructions", kind: "policy", issuer: "City Administrator", level: "city", key: "oakland",
-      series: { key: "ai", label: "Administrative Instruction" },
+      series: { key: "ai", label: SERIES.ai },
       cite: p("(?:Administrative\\s+Instruction|A\\.?I\\.?)\\s+(?:No\\.?\\s*)?(?<number>\\d{1,4})", "i"), basis: "MEASURED" },
     { source: "OPD Departmental General Orders", kind: "policy", issuer: "Chief of Police", level: "city", key: "opd",
       series: { key: "dgo", label: "Departmental General Order" },

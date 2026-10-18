@@ -7,3 +7,10 @@ Layer 8. 5 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - inline `bio-plane/src/project-stage/index.mjs:52` "the project holds {read} questions and none has a leg in its basis;..."
 - inline `bio-plane/src/project-stage/index.mjs:54` "the project has concluded {concluded} of the {read} held questions ..."
 - inline `bio-plane/src/project-stage/index.mjs:56` "the project has concluded none of the {read} held questions read an..."
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('project-stage.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/project-stage/index.mjs:57` "edition; concluding one of them, or a ratified case edition of a case it owns, reaches ..."
+- plain `bio-plane/src/project-stage/index.mjs:61` "stage the record grows into"

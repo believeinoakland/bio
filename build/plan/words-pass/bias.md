@@ -12,3 +12,19 @@ Layer 5. 10 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/bias/dec149.test.mjs:70` [part] "Registry entries are what let the record notice when a project stat..." — part test copy
 - testcopy `bio-plane/test/m/bias/dec149.test.mjs:71` [part] "statement are about the same thing — in prose, nothing can tell, an..." — part test copy
 - testcopy `bio-plane/test/m/bias/dec149.test.mjs:72` [part] "quiet is the one this construct exists to prevent." — part test copy
+
+## Plain findings (K3957)
+
+11 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('bias.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/bias/index.mjs:55` "adopting a bias set for the whole team"
+- plain `bio-plane/src/bias/index.mjs:434` "puts no lens in force until the revision it names stands at 'adopted'"
+- plain `bio-plane/src/bias/index.mjs:443` "so which statements are in force cannot be computed"
+- plain `bio-plane/src/bias/index.mjs:471` "conformance error; the team statement stands"
+- plain `bio-plane/src/bias/index.mjs:655` "issue verdicts — refused for the machine exactly as for a member"
+- plain `bio-plane/src/bias/index.mjs:726` "statements, each with its subject and justification, from the beginning"
+- plain `bio-plane/src/bias/index.mjs:971` "the settlement to an act nobody recorded"
+- plain `bio-plane/src/bias/index.mjs:997` "may raise the obligation, surface it and prepare what it needs, and may not answer it"
+- plain `bio-plane/src/bias/index.mjs:1032` "one this reader can open"
+- plain `bio-plane/src/bias/index.mjs:1165` "force is undetermined and it discharges nothing"
+- plain `bio-plane/src/bias/index.mjs:1167` "undetermined and it discharges nothing"

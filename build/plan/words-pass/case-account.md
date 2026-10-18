@@ -13,3 +13,11 @@ Layer 8. 11 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/case-account/t45-judgment.test.mjs:127` [part] "Cite something else, or leave it out. Nothing was written." — part test copy
 - testcopy `bio-plane/test/m/case-account/t46.test.mjs:91` [part] "Your own text is checked only in your own project: a hidden project..." — part test copy
 - testcopy `bio-plane/test/m/case-account/t46.test.mjs:92` [part] "member. Nothing was written." — part test copy
+
+## Plain findings (K3957)
+
+3 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('case-account.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/case-account/index.mjs:521` "the review comments' reader is a function of {case, edition, viewer, draft}"
+- plain `bio-plane/src/case-account/index.mjs:524` "a reader of the case's review comments is already registered, once, at start"
+- plain `bio-plane/src/case-account/index.mjs:733` "from nothing; until then it is a draft and never the case's account"
