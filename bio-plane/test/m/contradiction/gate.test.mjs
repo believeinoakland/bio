@@ -218,8 +218,8 @@ test("R13, R15, R16: the recorded judgement enters through propose as one propos
     assert.match(c.a_version, /^[0-9a-f]{64}$/);
     assert.match(c.b_version, /^[0-9a-f]{64}$/);
   }
-  /* the labels written are the judgement's, pair for pair: 9 conflicts proposed, 17 not */
-  assert.equal(r.candidates.filter((c) => c.label === "world" || c.label === "record").length, 9);
+  /* the labels written are the judgement's, pair for pair: 8 conflicts proposed, 18 not (the re-measured run, T51) */
+  assert.equal(r.candidates.filter((c) => c.label === "world" || c.label === "record").length, 8);
   assert.match(r.says, /never a finding/);
 });
 
