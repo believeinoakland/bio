@@ -1,4 +1,4 @@
-/* The interface's word list at the module's interface (R3, R4, R10–R13; DEC-179, DEC-257; K3366). `WORD_ROWS` is read
+/* The interface's word list at the module's interface (R3, R4, R10–R13, the design rows of R15; DEC-179, DEC-257; K3366). `WORD_ROWS` is read
    against `docs/development/ux-substrate/screens/words.json` as it stands in the tree, word by word, with R1's rule
    stated here independently of the generator. Nothing here pins a commit, a count or a key: the file is the contract. */
 import test from "node:test";
@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import * as words from "../../../src/setup-words/index.mjs";
-import { WORD_ROWS, WORDS_COMMIT, word, hasWord } from "../../../src/setup-words/index.mjs";
+import { WORD_ROWS, WORDS_COMMIT, word, hasWord, t } from "../../../src/setup-words/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const SOURCE = join(ROOT, "bio-plane/src/setup-words/index.mjs");
@@ -36,10 +36,12 @@ function siblingOf(key, byKey) {
 function failures(rows, f) {
   const out = [];
   const byKey = new Map(f.words.map((w) => [w.key, w]));
-  if (rows.length !== f.words.length) out.push(`rows ${rows.length}, file ${f.words.length}`);
+  const designRows = rows.filter((r) => r[5] === "design");
+  if (designRows.length !== f.words.length) out.push(`design rows ${designRows.length}, file ${f.words.length}`);
+  if (rows.slice(0, f.words.length).some((r) => r[5] !== "design")) out.push("the file's rows do not come first");
   if (new Set(rows.map((r) => r[0])).size !== rows.length) out.push("keys not distinct");
   f.words.forEach((w, i) => {
-    const want = [w.key, w.en, w.note ?? null, siblingOf(w.key, byKey), w.protected === true];
+    const want = [w.key, w.en, w.note ?? null, siblingOf(w.key, byKey), w.protected === true, "design"];
     try { assert.deepEqual(rows[i], want); } catch { out.push(`row ${i} (${w.key})`); }
   });
   return out;
@@ -53,15 +55,17 @@ const run = (...args) => {
 test("R10 WORD_ROWS equals words.json in the tree word by word: one row per word of the file, in its order, keys distinct, each [key, en, note, means, protected] with key, en, protected and note (or null) as the file gives them and means the en of its sibling .means or .does entry, or null", () => {
   assert.ok(file.words.length > 0);
   assert.deepEqual(failures(WORD_ROWS, file), []);
-  assert.equal(WORD_ROWS.length, file.counts.total);
-  assert.equal(WORD_ROWS.filter((r) => r[4]).length, file.counts.protected);
+  const design = WORD_ROWS.filter((r) => r[5] === "design");
+  assert.equal(design.length, file.counts.total);
+  assert.equal(design.filter((r) => r[4]).length, file.counts.protected);
   WORD_ROWS.forEach((r) => {
-    assert.equal(r.length, 5);
+    assert.equal(r.length, 6);
     assert.equal(typeof r[0], "string");
     assert.equal(typeof r[1], "string");
     assert.ok(r[2] === null || typeof r[2] === "string");
     assert.ok(r[3] === null || typeof r[3] === "string");
     assert.equal(typeof r[4], "boolean");
+    assert.ok(r[5] === "design" || r[5] === "code");
   });
   /* the sibling rule by example */
   const at = (k) => WORD_ROWS.find((r) => r[0] === k);
@@ -110,7 +114,7 @@ test("R10 control: a fixture file with one en changed makes --check fail, naming
   const swap = (f) => { const c = WORD_ROWS.map((r) => [...r]); f(c); return c; };
   assert.notDeepEqual(failures(swap((c) => { c[3][1] += "!"; }), file), []);
   assert.notDeepEqual(failures(swap((c) => { [c[0], c[1]] = [c[1], c[0]]; }), file), []);
-  assert.notDeepEqual(failures(swap((c) => { c.pop(); }), file), []);
+  assert.notDeepEqual(failures(swap((c) => { c.splice(file.words.length - 1, 1); }), file), []);
   assert.notDeepEqual(failures(swap((c) => { c.push([...c[0]]); }), file), []);
   const noted = WORD_ROWS.findIndex((r) => r[2] !== null);
   assert.notDeepEqual(failures(swap((c) => { c[noted][2] = null; }), file), []);
@@ -137,7 +141,7 @@ test("R3 WORD_ROWS and each of its rows are frozen: no write changes the list, a
   assert.equal(JSON.stringify(WORD_ROWS[0]), first);
 });
 
-test("R4 the module does nothing when loaded beyond defining its exports and imports only its own generated list: its exports are exactly WORDS_COMMIT, WORD_ROWS, hasWord and word; its code never imports the generator or any other module; every load answers the same", async () => {
+test("R4 the module does nothing when loaded beyond defining its exports and imports only its own generated list: its exports are exactly WORDS_COMMIT, WORD_ROWS, hasWord, t and word; its code never imports the generator or any other module; every load answers the same", async () => {
   const code = readFileSync(SOURCE, "utf8")
     .replace(/\/\*[^]*?\*\//g, " ")
     .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
@@ -145,7 +149,7 @@ test("R4 the module does nothing when loaded beyond defining its exports and imp
   assert.equal(imports.length, 1);
   assert.match(readFileSync(SOURCE, "utf8"), /import \{ WORD_ROWS, WORDS_COMMIT \} from "\.\/rows\.mjs";/);
   assert.doesNotMatch(code, /\brequire\b|build\.mjs|\bprocess\b|\bDate\b|\bMath\b|\bfetch\b|\bsetTimeout\b/);
-  assert.deepEqual(Object.keys(words).sort(), ["WORDS_COMMIT", "WORD_ROWS", "hasWord", "word"]);
+  assert.deepEqual(Object.keys(words).sort(), ["WORDS_COMMIT", "WORD_ROWS", "hasWord", "t", "word"]);
   const again = await import(`${pathToFileURL(SOURCE).href}?again`);
   assert.equal(again.WORDS_COMMIT, WORDS_COMMIT);
   assert.deepEqual(again.WORD_ROWS, WORD_ROWS);
@@ -226,7 +230,7 @@ test("R2 R5 R6 R7 R8 (their pinned commits and counts retired by R10): WORDS_COM
   for (const pinned of ["3660c18803", "e08cd35ecb", "3f40899950", "a0fab7abf0", "6f0d88d8d5", "4664e8efd4", "f498560a37"])
     assert.notEqual(WORDS_COMMIT, pinned);
   assert.equal(WORDS_COMMIT, createHash("sha256").update(bytes).digest("hex").slice(0, 10));
-  assert.equal(WORD_ROWS.length, file.words.length);
+  assert.equal(WORD_ROWS.filter((r) => r[5] === "design").length, file.words.length);
   assert.deepEqual(WORD_ROWS.filter((r) => /labelled/i.test(r[1])).map((r) => r[0]), []);
   const i = WORD_ROWS.findIndex((r) => /labeled/.test(r[1]));
   if (i >= 0) {
