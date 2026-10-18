@@ -82,7 +82,7 @@ function detectPdf(ctx, key, what) {
 function readPdf(ctx, budget) {
   const r = readTables(ctx, { budget });
   if (!r.tables.length)
-    r.why = "no table was read: no run of rows with two or more figures was found in the text read";
+    r.why = localize("budget-doctypes.index.no_table_was_read_no", "no table was read: no run of rows with two or more figures was found in the text read");
   return r;
 }
 
@@ -117,8 +117,8 @@ export const budgetTable = {
     const lines = String(ctx.text || "").split("\n").slice(0, 20);
     if (lines.some((l) => headerLineMatches(ctx, l)))
       return { match: true, confidence: CONFIDENCE.CERTAIN,
-               signals: ["its header row names a fund or org column and an amount column"] };
-    return no("no header row names a fund or org column and an amount column by the view's header words");
+               signals: [localize("budget-doctypes.index.its_header_row_names", "its header row names a fund or org column and an amount column")] };
+    return no(localize("budget-doctypes.index.no_header_row_names_a", "no header row names a fund or org column and an amount column by the view's header words"));
   },
   parse(ctx) { return readLines(ctx); },
   assess(before, after) { return assessLines(before, after); },
