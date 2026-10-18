@@ -2,7 +2,8 @@
  * `build/requirements/public-read.md`; BIO_Publication_v0_1.md §1, §2, §3 rules 9–12 and 16). The public reads by hash,
  * by finding and by case, and the whole projection (R1–R4), and the evidence-package block beside a published case
  * (R8), and the named credential-free reads a later module registers (R18); beside a case, `docket`'s withdrawal stamp
- * and last entry (R20), and the docket and its feed served (R21); a case's criteria as `publication` froze them (R31).
+ * and last entry (R20), and the docket and its feed served (R21); a case's criteria as `publication` froze them (R31);
+ * what each published case froze for one question, with its signers and the pin check (R38).
  * It writes nothing (R16): every table it reads is `publication`'s, read under `publication` R40, and it reaches
  * `publication` and `docket` only through the services named below.
  *
@@ -810,6 +811,85 @@ export class PublicRead {
     }) };
   }
 
+  /** R38 (T51-75; DEC-330 A37): what each published case froze for one question. `id` is the question's record id, the
+   *  `bundle_id` of the finding published from it. One entry for every published case edition whose roster pins a
+   *  published edition of that finding, in `case_id` then case `edition` order (an edition waiting to be published has
+   *  no row in the published projection and is not listed, R29): the case, its `project`, `signed_at` and `published_at`
+   *  (R29) and `withdrawn` (R20); `finding`, the published finding edition the pin names (the member's own edition, never
+   *  the case's), `version_sha` (what the case pinned) and `pinned` (true when they are the same bytes, false when not,
+   *  null when the case pinned none: never true by default, R13); `strength`, that case's frozen pair read from the
+   *  signed case document where it states one (else the member's own, `strength_from`), `{capture, connection}` and
+   *  `testimony` where the pair carries one, each axis as `publication` R53 gives it, never combined across cases (R11);
+   *  `signed_by` (the case document's signer) and `delivered_by` beside it (R12) and `finding_signed_by`. An edition a
+   *  court order withholds whole, or whose case document one withholds, states `withheld` and no pair or signer (R28).
+   *  A finding in no case answers `cases: []`; no id is `NO_ID`; an id nothing published answers is `publishedCase`'s
+   *  `NOT_PUBLISHED` for an absent case, byte for byte (R14). One set-based read of the pins and one `caseEditionState` per
+   *  case edition; no finding's bytes are fetched. Reads the published projection only (R10, R16), writes nothing and
+   *  never throws on what it reads. */
+  publishedFrozen({ id = null } = {}) {
+    const want = str(id);
+    if (!want) return { ok: false, reason: "NO_ID", detail: "publishedfrozen requires ?id=" };
+    if (!this.#one(`SELECT 1 AS x FROM published_bundles WHERE bundle_id=? LIMIT 1`, want)) return this.#absentCase();
+    const index = this.#withheldIndex();
+    const pins = this.#rows(
+      `SELECT m.case_id, m.edition, m.version_sha FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.bundle_id=? ORDER BY m.case_id, m.edition`, want);
+    const cases = [];
+    for (const pin of pins) {
+      const ced = Number(pin.edition);
+      const state = this.publication.caseEditionState(pin.case_id, ced);
+      if (!state) continue;
+      const held = (state.findings || []).find((f) => f.bundle_id === want) || null;
+      /* The finding edition the pin names. A pin that names nothing published leaves the member awaiting; the edition the
+         signed case document states for it (`case_roles[].edition`), when that edition is published at other bytes, is
+         the finding whose bytes the pin does not match (`pinned: false`); a pin and a document naming nothing published
+         pin no published edition of this finding, and the case is not listed. */
+      const stated = held ? null : (this.publication.caseDocMemberFrozen(pin.case_id, ced) || new Map()).get(want) || null;
+      const row = held ? null : Number.isInteger(stated && stated.edition)
+        ? this.#one(`SELECT edition, bundle_sha, attestor_key, attestor_member, strength FROM published_bundles
+                      WHERE bundle_id=? AND edition=?`, want, stated.edition) : null;
+      if (!held && !row) continue;
+      const finding = held
+        ? { edition: Number(held.edition), bundle_sha: held.bundle_sha }
+        : { edition: Number(row.edition), bundle_sha: row.bundle_sha };
+      const pair = held ? held.strength : stated.strength;
+      const from = held ? held.frozen_from : "case_document";
+      const attestor = held ? held.attestor : { member: row.attestor_member, key_b64: row.attestor_key };
+      const version = pin.version_sha ?? null;
+      const dates = this.#one(`SELECT signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`,
+                              pin.case_id, ced);
+      const mine = index.editions.get(`${pin.case_id}\u0000${ced}`);
+      const docBy = state.document ? index.bySha.get(state.document.doc_sha) : null;
+      const withheld = (mine && mine.whole) || docBy
+        ? { whole: !!(mine && mine.whole), document: true, orders: mine && mine.whole ? mine.orders : docBy,
+            detail: WITHHELD_SENTENCE } : null;
+      const rows = Array.isArray(pair) ? pair.filter((a) => a && typeof a.axis === "string") : [];
+      const strength = withheld || !rows.length ? null
+        : { capture: rows.find((a) => a.axis === "capture") ?? null, connection: rows.find((a) => a.axis === "connection") ?? null,
+            ...(rows.some((a) => a.axis === "testimony") ? { testimony: rows.find((a) => a.axis === "testimony") } : {}) };
+      const signer = (a) => (a && (a.member != null || a.key_b64 != null) ? { member: a.member ?? null, key_b64: a.key_b64 ?? null } : null);
+      const signedBy = withheld || !state.document ? null : signer(state.document.attestor);
+      const findingBy = signer(attestor);
+      cases.push({
+        case_id: pin.case_id, edition: ced, project: state.project ?? null,
+        signed_at: dates ? dates.signed_at ?? null : null, published_at: dates ? dates.published_at ?? null : null,
+        withdrawn: this.#withdrawnStamp(pin.case_id, ced),
+        finding, version_sha: version, pinned: version === null ? null : version === finding.bundle_sha,
+        strength, strength_from: strength ? from : null,
+        ...(!withheld && !rows.length ? { strength_detail: "this case edition records no frozen pair for this finding, and none is supplied here" } : {}),
+        signed_by: signedBy, delivered_by: withheld || !state.document ? null : state.document.delivered_by ?? null,
+        finding_signed_by: findingBy,
+        ...(!withheld && (!signedBy || !findingBy)
+          ? { signer_detail: "a signer this answer does not state is one no signed document held here names; the case document's signer and the finding's own are two facts, and neither stands in for the other" } : {}),
+        withheld });
+    }
+    return { ok: true, id: want, cases,
+             detail: cases.length
+               ? "each entry is one published case edition's own frozen reading of this finding, as that case's signed document states it; no case's reading stands for another, and none is combined with any other"
+               : "this finding is published and no published case edition pins it, so no case froze a reading of it" };
+  }
+
   /* REC-22: ONE PUBLISHED EDITION, everything the public read path can say about
      it from the store side. Reads published_bundles and published_edges and
      NOTHING else -- it never joins the working corpus, never reports a working
@@ -1156,9 +1236,9 @@ export class PublicRead {
              /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
                 the instant the case edition was opened, and NOTHING read it —
                 re-measured across the whole repository rather than inherited
-                from the item that found it: zero reads in `civicos-ui`, in
-                `newgroup`, in `docprofile`, in `pdf-worker`, in `tools`, and not
-                one assertion in the test battery of the day. The surface renders `ratified_at`,
+                from the item that found it: no screen of the interface reads it
+                (`screens-publish`, which draws this answer, holds no read of it),
+                and no test of the day asserted it. The surface renders `ratified_at`,
                 which is the instant the record can actually stand behind.
                 Removed rather than blanked, on REC-41's precedent: there is no
                 key in the answer for a later refactor to re-expose and a caller
@@ -1874,6 +1954,8 @@ export function publicReadOps(r, url) {
   const q = (k) => url.searchParams.get(k);
   return {
     publishededitions: () => r.publishedEditions(q("id")),
+    /* R38: what each published case froze for a question, by the question's id; no credential (R10). */
+    publishedfrozen: () => r.publishedFrozen({ id: q("id") }),
     /* REC-22: the public read path's store side. */
     publishedcase: () => r.publishedCaseWithCorrections({ id: q("id"), edition: q("edition"), caseId: q("caseId") || null,
                                            sha256: (q("sha256") || "").toLowerCase() || null }),
