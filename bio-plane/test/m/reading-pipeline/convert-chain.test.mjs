@@ -19,6 +19,7 @@ import { readDriveAddress, driveHop, driveConvertStep } from "../../../src/drive
 import { archiveHop } from "../../../src/cdx.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -342,5 +343,5 @@ test("R11 R21 (reading-wire): text tier 1 could not determine is a failed readin
   const cid = (await readPdf(w, CID, LEGISTAR("cid.pdf"))).r;
   assert.deepEqual([cid.found, cid.entities, cid.read_from_text, cid.text_tier], [false, [], false, 1]);
   assert.match(cid.basis, /no_tounicode/);
-  assert.match(cid.basis, /no pdf-worker member is set up in your team's Civicsmith/, "the tier-2 note");
+  assert.equal(cid.basis.includes(word("reading-pipeline.tier_read_essentially")), true, "the tier-2 note");
 });

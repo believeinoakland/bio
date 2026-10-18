@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, hold, doc, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration, sha, EVIDENCE_PREFIX } from "./fixture.mjs";
 import { identify, doctypeFor, registerDoctype } from "../../../../docprofile/registry.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { OCR_INVOCATIONS_PER_REQUEST, ACQUIRE_TEXT_UNITS_BUDGET, ACQUIRE_TEXT_UNIT_ENVELOPE, CAPTURE_TEXT_UNIT_CAP, tier2Escalate, tier3Extend } from "../../../src/reading-pipeline/index.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
@@ -153,12 +154,12 @@ test("R3 R11: a tier-2 member that fails, refuses or is unbound leaves tier 1 st
   const w = fresh();
   const bad = { page: 0, reason: "no_tounicode", count: 1 };
   const t1 = i2([{ page: 0, text: "x", undetermined: [bad, bad, bad] }]);
-  for (const [env, says] of [[{}, /no pdf-worker member is set up in your team's Civicsmith/],
-                             [{ PDF_WORKER: member(() => ({ status: 500, body: { ok: false } })) }, /answered without improving/],
-                             [{ PDF_WORKER: member(() => new Error("down")) }, /could not be reached/]]) {
+  for (const [env, key] of [[{}, "reading-pipeline.tier_read_essentially"],
+                            [{ PDF_WORKER: member(() => ({ status: 500, body: { ok: false } })) }, "reading-pipeline.tier_read_essentially_nothing"],
+                            [{ PDF_WORKER: member(() => new Error("down")) }, "reading-pipeline.tier_read_essentially_nothing_document"]]) {
     const r = (await readPdf(w, t1, { env })).reading;
     assert.equal(r.text_tier, 1);
-    assert.match(r.basis, says);
+    assert.equal(r.basis.includes(word(key)), true, `the basis carries the word ${key}`);
   }
 });
 
@@ -337,7 +338,7 @@ test("R11: a determined reading carries text_source, text_tier, text_container a
   const u = (await readPdf(w, i2([{ page: 0, text: "", undetermined: [bad, bad] }]))).reading;
   assert.equal(u.found, false);
   assert.equal(u.read_from_text, false);
-  assert.match(u.basis, /no pdf-worker member is set up in your team's Civicsmith/);
+  assert.equal(u.basis.includes(word("reading-pipeline.tier_read_essentially")), true);
 });
 
 test("R12 R21: page_count is the structure's count when positive, else null, never zero; container_extent itemises by the keys the entry emitted, absent when no entry answered", async () => {
