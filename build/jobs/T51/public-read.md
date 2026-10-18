@@ -24,3 +24,14 @@ Also: R38's `detail`, `strength_detail` and `signer_detail` are inline sentences
 **Tests/checks:** `node --test test/m/public-read/`: 226 pass, 0 fail (20 new: frozen.test.mjs 10, finding-page.test.mjs 10). format: 0 failures; architecture public-read: 0 failures; coverage public-read: 39 of 39 ids named, 0 failures; ownership: 8 files, 0 failures. `checks/run.mjs`: 23 failures, all in other modules (none public-read).
 
 Size (session_018PacXfPZi6itmHMiic6QeW): test runs 7, module lines 3767
+
+## J3 · REPORT
+
+Word rows for R38's four sentences (no placeholders in any). Keys and English, as the module now says them inline:
+
+- `public-read.frozen.detail.cases`: "Each entry is one published case edition's own frozen reading of this finding, as that case's signed document states it; no case's reading stands for another, and none is combined with any other."
+- `public-read.frozen.detail.none`: "This finding is published and no published case edition pins it, so no case froze a reading of it."
+- `public-read.frozen.strength_detail.none`: "This case edition records no frozen pair for this finding, and none is supplied here."
+- `public-read.frozen.signer_detail.unstated`: "A signer this answer does not state is one no signed document held here names; the case document's signer and the finding's own are two facts, and neither stands in for the other."
+
+(The first two share `detail`: `cases` when the answer holds a case, `none` when `cases` is empty.) Keeping the inline English until the rows land; I will switch to `word(key)` on your CHANGE.
