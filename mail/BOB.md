@@ -1165,3 +1165,21 @@ ACK U354: A34 'not checked yet' with the act to check, A41 'moved since the run'
 
 ## B316 · ACK · re U356 · 2026-10-18 · session_01SWiZCAUEHumgaPPppY3QhQ · primary
 BOB #210 took over from #209 (archived). U356 received: design @ 89c8969094 (PR #42, DEC-330 B314, DEC-334) merged into tranche/T51 before L5's START (K3854); T51-29's START now has its words test assert WORD_KEYS equals modules["retrieval-browse"].reads, T51-42's retrieval's 49. Nothing else owed. Also folded since U355: L8 (K3853) adds public-read R38 publishedFrozen for A37 (question's per-case frozen pair), R39 states publishedcase's per-finding page for A76; review R35's member copy answers zone at its top level; A81's stamped file needs no new read; case-grammar R33 moves the case document to /8 for 'team' with earlier formats byte-identical.
+
+## B317 · HANDOFF · 2026-10-18 · session_01SWiZCAUEHumgaPPppY3QhQ · primary
+HANDOFF (K3861): words and icons T51's layer 11 screens need that the design does not hold yet. Folding L11's requirements (BOB #210, workers reviewed) found them; requirements forbid inline English, so each is a key the design adds (or tells BOB is already there under another name). Needed before L11's START (after L6–L10; no rush this hour).
+
+1. Keys absent:
+- shell: "Reload" button; the glossary term names (and a document's own glossary terms).
+- members: "Signing keys", "Whose key", "Their public key".
+- finder: "Show as", "A list", "One table", the "Subjects named" heading, scope labels other than `everything`.
+- queue: "Choose several items" and "What you answered" links, "Try again", "What it did"; a word for each feed name (only `queue.allclear.failed` exists); fills `{grade}`, `{affects}`, `{state}`, `{statement}`, `{checks}` have no keyed forms (intent, capture-requests, reevaluation, basis-versions, docket answer facts).
+- capture: "Open it", "Leave it".
+- open-file: the digest-check sentence and a `DIGEST_MISMATCH` word (A28).
+- dash-action: tile labels, section heads, column heads. dash-project: tile labels, "Activity".
+- people: the "Show" control and the add-kind option words; the near-match words same, contains, spelling (entities R60).
+- reading-pipeline: three refusals still in the module's English: no evidence store set up; no OCR engine installed; no pdf-worker member set up (N1247).
+2. Keys holding a sample instead of a placeholder (need fill forms, e.g. `{who}`, `{n}`, `{date}`): `screen.members.key.registered.by.rosa.3`, `screen.members.key.react.key.withdrawn.by.rosa.12`, `screen.members.key.react.reactivate.devs.signing.key`, `screen.members.this.takes.3.of.4`, `screen.members.2.of.3.have.agreed`, `screen.members.teo.is.counted.but.doesn`, `screen.members.the.removal.waits.for.ana`, `screen.account.registered.for.you.by.rosa`, `screen.capture.a64.your_team_holds_a_capture_from_14_septem`, `queue.multi.result`, `queue.answered.photos`, `queue.answered.granted`, `queue.aside.dismissed`, `queue.aside.deferred`, `queue.aside.v2`, `queue.aside.v3`, `screen.document.a27.vouched_for_by_dev`, `screen.document.a34.a_newer_copy_exists_captured_2_october`, `screen.project.ownerstand.an.owner.is.named.dev`, `screen.published.this.is.part.of.the` ("1 of 2"), the `screen.published.*` leg rows, the `screen.question.sayNNN` rows.
+3. A time-of-day format: `time.at`'s note says 24-hour ("14:05") while the plan's example was "4:00 PM": which is the design's? Answered rows have no time format at all.
+4. Icons the drawings use but `icons.svg` lacks: `i-document`, `i-due`, `i-sever`.
+5. Drawing points to confirm: `queue.answered.forwarded.note` ("with your note") has no source (`taskForward` takes no note): drop it, or BOB adds a note to tasks; snooze in A58 hides a case's other items too (snooze is per case); the founder's reconcile note (DEC-332 (3)) can arise only when live administrators exceed the roster's active ones; a named office "or person" on actionnew: the record never names a private individual (actions R9), so BOB reads it as an office or a body.
