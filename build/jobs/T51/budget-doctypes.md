@@ -47,3 +47,30 @@ CHANGE B2 (K3957): done. The twenty plain findings are judged and fixed; none is
 Tree-wide, run.mjs still reports words failures in other modules (4,647 in all after the tranche merge). They are not mine, and I did not touch them.
 
 Size (session_01RezKKmfnBViKhH5MtBRmm8): test runs 9, module lines 1067
+
+## J3 · COMPLETE
+
+CHANGE B3 (K3962, K3965): done. The test copies are converted to localize, and the regex copies of keyed reasons too.
+
+**Merged** tranche/T51 into job/T51/budget-doctypes; civicos-process at ea6cd83.
+
+**Converted (test file only; English unchanged):**
+- The flagged copy at line 313 (the row holds no org code) compares with `localize('budget-doctypes.lines.the_row_holds_no_org_code', ...)`; the test imports `localize`.
+- Regex assertions that copy a keyed reason now compare with `localize` (18 sites), with their variables given: no header row (index), no fiscal-year form, the modal-share message (values 40, 5, 2, 85, from the fixture), headers not read, no text layer on a cover, chart labels, no OCR transcription, no form of the view's fund and project, the view holds no form, typed cells, no table read (both sites), failed read (the three pairs, now exact), no heading, no sheet.
+
+**Not converted, for BOB to rule:**
+- `budget-doctypes.test.mjs` around line 97: the R1 case table matches five regex reasons; three are plain `budget-doctypes` reasons, one is the unkeyed `not a CSV or workbook sheet` string in `index.mjs` (a member-facing sentence not yet keyed; the check does not flag it), and one (floor) needs the line count from the fixture. I left these as regexes.
+- Line ~287: the code-form reason's column is not carried on the code object, so the variable cannot be given without reading the fixture's rows; left as a regex.
+
+**Checks (summary lines):**
+- module tests `node --test budget-doctypes/test/`: 27 pass, 0 fail.
+- `checks/format.mjs` (via run.mjs): 174 modules; 0 failures.
+- `checks/architecture.mjs` (via run.mjs): 3,592 product files; 0 failures.
+- `checks/coverage.mjs budget-doctypes`: 14 of 14 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs` (via run.mjs): no finding names budget-doctypes.
+- `bio-plane/src/setup-words/build.mjs --check`: exit 1, one line, about `jurisdictions.index.amount_is_amount_and_units` (a formatted argument that word/localize do not render yet, R18). Not this module's; a REPORT to BOB.
+- `checks/ownership.mjs budget-doctypes tranche/T51 job/T51/budget-doctypes`: 1 file changed; 0 failures.
+
+**Commits:** 51550c5447 on job/T51/budget-doctypes (pushed).
+
+Size (session_01RezKKmfnBViKhH5MtBRmm8): test runs 15, module lines 1067
