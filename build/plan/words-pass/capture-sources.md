@@ -45,3 +45,26 @@ Layer 3. 20 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/capture-sources/memento.mjs:251` "no Memento-Datetime was recorded with this hop"
 - plain `bio-plane/src/cdx.mjs:45` "the first row does not name timestamp and original"
 - plain `bio-plane/src/cdx.mjs:109` "the index holds no 200 response with a non-empty body for this address"
+
+## Test copies of code sentences (K3962)
+
+18 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/capture-sources/cdx.test.mjs:122` "\"these bytes were served for\""
+- testcopy `bio-plane/test/m/capture-sources/credentials.test.mjs:666` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/capture-sources/credentials.test.mjs:667` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/capture-sources/credentials.test.mjs:668` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/capture-sources/credentials.test.mjs:669` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/capture-sources/credentials.test.mjs:670` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/capture-sources/credentials.test.mjs:671` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/capture-sources/credentials.test.mjs:672` "\"CAPTURE_CREDENTIAL_OWN_HOST\""
+- testcopy `bio-plane/test/m/capture-sources/dec149.test.mjs:35` "\"the export address was COMPOSED BY\""
+- testcopy `bio-plane/test/m/capture-sources/dec149.test.mjs:36` "\"the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the ...\""
+- testcopy `bio-plane/test/m/capture-sources/dec149.test.mjs:37` "\"and no part of it was read from the request (D-112)\""
+- testcopy `bio-plane/test/m/capture-sources/dec149.test.mjs:46` "\"recorded fetching the export address\""
+- testcopy `bio-plane/test/m/capture-sources/dec149.test.mjs:99` "\"over the bytes it received, not a digest the archive stated\""
+- testcopy `bio-plane/test/m/capture-sources/drive.test.mjs:106` "\"COMPOSED BY YOUR TEAM'S CIVICSMITH\""
+- testcopy `bio-plane/test/m/capture-sources/drive.test.mjs:106` "\"no part of it was read from the request\""
+- testcopy `bio-plane/test/m/capture-sources/memento.test.mjs:176` "\"these bytes were served for\""
+- testcopy `bio-plane/test/m/capture-sources/memento.test.mjs:179` "\", computed by your team's Civicsmith over the bytes it received, no...\""
+- testcopy `bio-plane/test/m/capture-sources/render.test.mjs:362` "\"A person resolves this by an assertion carrying its basis\""

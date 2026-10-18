@@ -41,3 +41,14 @@ Layer 8. 39 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:47` "The publication copy of a document a member supplied is still being..." — text holds a literal {name}, filled by its caller
 - testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:48` "A document a member supplied can't be cleaned of the details that c..."
 - testcopy `bio-plane/test/m/case-disclosures/tensions.test.mjs:204` [part] "The record held no unresolved conflict"
+
+## Test copies of code sentences (K3962)
+
+6 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/case-disclosures/imported.test.mjs:147` "\"Rests on another team's work that carries an open flag, disclosed w...\""
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:27` "\"A document acknowledged as self-attested only is either co-attested...\""
+- testcopy `bio-plane/test/m/case-disclosures/tensions.test.mjs:209` "\"In tension, not yet resolved:\""
+- testcopy `bio-plane/test/m/case-disclosures/tensions.test.mjs:209` "\"Explained, not yet shown:\""
+- testcopy `bio-plane/test/m/case-disclosures/tensions.test.mjs:210` "\"Held irreconcilable by the team:\""
+- testcopy `bio-plane/test/m/case-disclosures/tensions.test.mjs:210` "\"Rests on a side in conflict with a record not shown:\""

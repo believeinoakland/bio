@@ -17,3 +17,10 @@ Layer 3. 9 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 1 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('provenance.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
 
 - plain `bio-plane/src/provenance/index.mjs:1650` "words were not read in from anywhere, so it earns no letter here"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/provenance/register-checks.test.mjs:196` "\"these bytes were received at the doorbell of your team's Civicsmith...\""
+- testcopy `bio-plane/test/m/provenance/upload.test.mjs:207` "\"; they were received, not fetched from any address\""

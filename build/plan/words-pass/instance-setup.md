@@ -95,3 +95,11 @@ Layer 11. 33 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - plain `bio-plane/src/setup.mjs:2678` "choosing to update your team's Civicsmith"
 - plain `bio-plane/src/setup.mjs:2691` "setting aside an update of your team's Civicsmith"
 - plain `bio-plane/src/setup.mjs:2719` "skipping an update of your team's Civicsmith"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/instance-setup/fixture.mjs:106` "\"the team keeps its material away from every assistant, so no accoun...\""
+- testcopy `bio-plane/test/m/instance-setup/fixture.mjs:107` "\"whether the team keeps its material away from every assistant could...\""
+- testcopy `bio-plane/test/m/instance-setup/words.test.mjs:95` "\"is an administrator's act\""

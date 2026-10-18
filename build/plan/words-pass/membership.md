@@ -30,3 +30,17 @@ Layer 2. 1 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/membership/index.mjs:2876` "reading the team's website key and join link"
 - plain `bio-plane/src/membership/index.mjs:2930` "choosing whether members are told what a court can reach"
 - plain `bio-plane/src/membership/order-build.mjs:59` "the generated list is absent"
+
+## Test copies of code sentences (K3962)
+
+9 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/membership/t14-rows-remedy-order.test.mjs:54` "\"is an administrator's act\""
+- testcopy `bio-plane/test/m/membership/t19-enrol-boot.test.mjs:52` "\"the invitation is still live\""
+- testcopy `bio-plane/test/m/membership/t34-joining.test.mjs:411` "\"is an administrator's act\""
+- testcopy `bio-plane/test/m/membership/t35-words.test.mjs:59` "\"is an administrator's act (Membership Architecture v2 §4.9), and yo...\""
+- testcopy `bio-plane/test/m/membership/t35-words.test.mjs:60` "\"Civicsmith takes who is asking from the signed-in session rather th...\""
+- testcopy `bio-plane/test/m/membership/t35-words.test.mjs:61` "\"the active administrators. Nothing was changed.\""
+- testcopy `bio-plane/test/m/membership/t47-r142.test.mjs:69` "\"a member joins a project they were invited to. Being uninvited is n...\""
+- testcopy `bio-plane/test/m/membership/t47-r142.test.mjs:72` "\"only an owner of this project removes a participant from it. This R...\""
+- testcopy `bio-plane/test/m/membership/t47-r142.test.mjs:73` "\"administrator removed and an owner could not.\""

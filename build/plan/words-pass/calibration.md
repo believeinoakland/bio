@@ -20,3 +20,10 @@ Layer 4. 6 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/calibration/index.mjs:266` "none are named here (null, not none found)"
 - plain `bio-plane/src/calibration/index.mjs:299` "and this consumer holds no alarm at all"
 - plain `bio-plane/src/calibration/index.mjs:342` "for it to accelerate — the announcement is kept as a fact and does nothing else"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/calibration/words.test.mjs:33` "\"this engine now measures BETTER. Nothing is raised and nothing move...\""
+- testcopy `bio-plane/test/m/calibration/words.test.mjs:34` "\"so an automatic upgrade here would be your team's Civicsmith making...\""

@@ -20,3 +20,11 @@ Layer 11. 2 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/queuestate.mjs:220` "a connection's grade is improvable (D-72)"
 - plain `bio-plane/src/queuestate.mjs:222` "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)"
 - plain `bio-plane/src/queuestate.mjs:228` "a register entry's bytes are unbacked (D-9, D-45)"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/queue/catalogue.test.mjs:37` "\"new-version-arrived-from-another-team\""
+- testcopy `bio-plane/test/m/queue/t50.test.mjs:84` "\"a machine credential has no member\""
+- testcopy `bio-plane/test/m/queue/words.test.mjs:140` "\"whether its condition was met\""

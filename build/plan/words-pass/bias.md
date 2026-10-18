@@ -28,3 +28,10 @@ Layer 5. 10 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `bio-plane/src/bias/index.mjs:1032` "one this reader can open"
 - plain `bio-plane/src/bias/index.mjs:1165` "force is undetermined and it discharges nothing"
 - plain `bio-plane/src/bias/index.mjs:1167` "undetermined and it discharges nothing"
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/bias/adopt-manifest.test.mjs:55` "\"an administrator directs no project\""
+- testcopy `bio-plane/test/m/bias/adopt-manifest.test.mjs:64` "\"is an administrator's act\""

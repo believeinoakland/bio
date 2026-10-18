@@ -136,3 +136,9 @@ Layer 1. 50 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 - plain `doctypes/staff-report.mjs:347` "an instrument or code section this report pointed at is no longer cited in it"
 - plain `doctypes/staff-report.mjs:350` "this report now points at an instrument or code section it did not cite before"
 - plain `doctypes/staff-report.mjs:360` "this report says what it said, and points at the same instruments"
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `doctypes/test/doctypes.test.mjs:258` "\"this meeting has taken place and no minutes are offered yet\""

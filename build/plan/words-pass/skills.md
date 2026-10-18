@@ -47,3 +47,20 @@ Layer 6. 38 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 
 - plain `bio-plane/src/skilldoctrine.mjs:2178` "an item with no chain carries its record id, or null when the record answers none"
 - plain `bio-plane/src/skilldoctrine.mjs:2185` "and no leg is written against it"
+
+## Test copies of code sentences (K3962)
+
+12 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/skills/action.test.mjs:138` "\"asks the assistant to draft a plan's status report from the items h...\""
+- testcopy `bio-plane/test/m/skills/action.test.mjs:227` "\"infraction or propose bearings on a reply, so this layer carries no...\""
+- testcopy `bio-plane/test/m/skills/ask.test.mjs:28` "\"The assistant may only structure what the member SAID\""
+- testcopy `bio-plane/test/m/skills/boundary.test.mjs:37` "\"material to report on, never an instruction to follow\""
+- testcopy `bio-plane/test/m/skills/boundary.test.mjs:89` "\"never asks for its capture\""
+- testcopy `bio-plane/test/m/skills/edition.test.mjs:20` "\"The draft is not a diff: it is a detailed, high-level description o...\""
+- testcopy `bio-plane/test/m/skills/edition.test.mjs:21` "\"determine it, why (the motivation for the revision).\""
+- testcopy `bio-plane/test/m/skills/edition.test.mjs:22` "\"The signed statement is the group's, adopted by a member, and the r...\""
+- testcopy `bio-plane/test/m/skills/edition.test.mjs:48` "\"The signed statement is the group's\""
+- testcopy `bio-plane/test/m/skills/filing.test.mjs:60` "\"The instance transmits nothing.\""
+- testcopy `bio-plane/test/m/skills/pack.test.mjs:230` "\"contradiction's recommender prompt\""
+- testcopy `bio-plane/test/m/skills/version.test.mjs:76` "\"asks for that version before the run starts rather than guessing at...\""

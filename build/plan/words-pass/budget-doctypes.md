@@ -28,3 +28,9 @@ Layer 1. 1 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `budget-doctypes/tables.mjs:256` "no heading the view names, and no table caption, was read above or below the table"
 - plain `budget-doctypes/tables.mjs:258` "no fiscal-year form the view holds was read above, below or in the header of the table"
 - plain `budget-doctypes/tables.mjs:376` "layer only, and no table is read from this page"
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `budget-doctypes/test/budget-doctypes.test.mjs:313` "\"the row holds no org code\""

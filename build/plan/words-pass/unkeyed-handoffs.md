@@ -10,3 +10,8 @@ BOB batches these into one HANDOFF per R layer close. Each: module, file:line, t
 - roster-reader `roster-reader/lines.mjs`:24 (`NOT_NAME_WORDS`), :40 (`UNIT_WORDS`). Why: recognition vocabulary, word lists the reader matches against, not sentences (ROSTER-READER #3 J2).
 - subresources `bio-plane/src/subresources.mjs`:402, the render companion's Content-Security-Policy string. Why: wire grammar read by the browser (SUBRESOURCES #5 J4).
 - file-scanner `file-scanner/container/renderer.mjs`:105 "route must be pdf or office". Why: the renderer's refusal of a route `render.mjs` never sends; not passed to a member (FILE-SCANNER #7 J4).
+- docprofile `docprofile/doctypes/registry.mjs`:54 "a content type is registered by its key, and this one carries no key". Why: `registerDoctype`'s refusal to the plane's wiring (`wiring.mjs` `registerReaders`) (DOCPROFILE #6 J1).
+- pdf-pixels `pdf-worker/src/pagepixels.mjs`:119 and `picturepixels.mjs`:60 "an image past the memory bound". Why: a codec mapping key, not a sentence (PDF-PIXELS #6 J1).
+
+## Rows asked of the design (R1)
+- image-cover: `refusal.NOT_A_COVERABLE_FORMAT`, `refusal.UNSUPPORTED_JPEG_PROCESS`, `refusal.PNG_INTERLACED`, `refusal.AREA_MALFORMED` have no member row; the module's `COVER_REFUSALS` English stands until they exist (IMAGE-COVER #3 J1).

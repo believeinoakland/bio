@@ -91,3 +91,11 @@ Layer 1. 9 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/record-grammar/labels.mjs:253` "published, and the report kept is the member's"
 - plain `bio-plane/src/record-grammar/labels.mjs:338` "it is the address of what that member pointed at, and not a separate claim about the do..."
 - plain `bio-plane/src/record-grammar/labels.mjs:341` "page, and nothing here is part of a finding until a member cites it themselves"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/record-grammar/bundle.test.mjs:45` "\"record has been updated but carries no Session Log entry\""
+- testcopy `bio-plane/test/m/record-grammar/bundle.test.mjs:246` "\"' does not equal frontmatter id '\""
+- testcopy `bio-plane/test/m/record-grammar/invariants.test.mjs:78` "\"UNREACHABLE_CAPTURE_GRADE\""

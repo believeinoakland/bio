@@ -17,3 +17,11 @@ Layer 5. 7 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/query.mjs:97` "a capture letter is bounded by the fidelity of the text the leg rests on"
 - plain `bio-plane/src/query.mjs:127` "the clock's next date is projected when the action is written, and an entry met, waived"
 - plain `bio-plane/src/query.mjs:132` "the flag was computed on the local day of that write, so an action whose date has passed"
+
+## Test copies of code sentences (K3962)
+
+3 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/query-language/t33.test.mjs:214` "\"is not available here; read as nothing\""
+- testcopy `bio-plane/test/m/query-language/t33.test.mjs:226` "\"can hold many values per record; not a sort\""
+- testcopy `bio-plane/test/m/query-language/t33.test.mjs:230` "\"can hold many values per record; not a facet\""

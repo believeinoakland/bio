@@ -26,3 +26,12 @@ Layer 8. 1 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/case-catalogue/checks.mjs:830` "publish the searched section computed from the observation log over this case's own sub..."
 - plain `bio-plane/src/case-catalogue/checks.mjs:834` "compute the section over the case's own subjects — its members' basis legs and the cont..."
 - plain `bio-plane/src/case-catalogue/checks.mjs:877` "publish with the bar stated absent (declared: false), or declare a grade on at least on..."
+
+## Test copies of code sentences (K3962)
+
+4 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/case-catalogue/checks.test.mjs:114` "\"A new edition of a case says what changed in it, and why, before it...\""
+- testcopy `bio-plane/test/m/case-catalogue/checks.test.mjs:115` "\"statement, then sign. Nothing was signed.\""
+- testcopy `bio-plane/test/m/case-catalogue/checks.test.mjs:302` "\"case document requires completeness.statement_by\""
+- testcopy `bio-plane/test/m/case-catalogue/checks.test.mjs:307` "\"a case document declares format '\""

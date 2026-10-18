@@ -23,3 +23,19 @@ Layer 8. 14 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/
 
 - plain `bio-plane/src/public-read/index.mjs:276` "the team's identity source is registered with its door, identity(); nothing was registered"
 - plain `bio-plane/src/public-read/index.mjs:279` "the team's identity source is already registered; the first stands, and nothing was reg..."
+
+## Test copies of code sentences (K3962)
+
+11 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/public-read/convert-multifinding.test.mjs:238` "\"the manifest answers by its own sha256\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:75` "\", so there is nothing to serve under that name\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:83` "\"has no published object store configured, so its published bytes ar...\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:84` "\"cannot hand over the bytes.\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:87` "\"that hash is published, and\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:88` "\"handed over. The hash is genuine.\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:110` "\"tamper-EVIDENT, not tamper-proof: every part is named by sha256 in ...\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:111` "\"its own sha256, and EACH FINDING's signature covers that finding's ...\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:112` "\"a modified copy; everything here makes one detectable by anyone hol...\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:117` "\"cannot hand over the bytes of that edition, so its conclusion is no...\""
+- testcopy `bio-plane/test/m/public-read/dec149.test.mjs:118` "\"It is NOT read from the working record instead: the frozen strength...\""

@@ -34,3 +34,10 @@ Layer 11. 32 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche
 - testcopy `bio-plane/test/m/control-plane/t34-routes.test.mjs:322` [part] "the one your team's Civicsmith holds, so it was not claimed" — part test copy
 - testcopy `bio-plane/test/m/control-plane/t34-routes.test.mjs:323` [part] "your team's Civicsmith could not check that against the history it ..." — part test copy
 - testcopy `bio-plane/test/m/control-plane/t46-door.test.mjs:186` [part] "a run is continued by its principal alone" — part test copy
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/control-plane/door-routes.mjs:43` "\"stamped from the session\""
+- testcopy `bio-plane/test/m/control-plane/t34-routes.test.mjs:331` "\"this team's Civicsmith could not consult its own record,\""

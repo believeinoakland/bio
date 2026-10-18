@@ -15,3 +15,9 @@ Layer 9. 3 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T
 - plain `bio-plane/src/action-records/index.mjs:827` "risk-tier act sets that, and the record holds who made the proposal"
 - plain `bio-plane/src/action-records/index.mjs:833` "becomes it until a member states it themselves"
 - plain `bio-plane/src/action-records/index.mjs:835` "the action's seeks: only a member's own write states that, and the record holds who mad..."
+
+## Test copies of code sentences (K3962)
+
+1 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/action-records/t50.test.mjs:140` "\"no action answers to that id here. An action you may not see is ans...\""
