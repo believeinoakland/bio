@@ -21,3 +21,11 @@ T51-156 setup-words: done, committed on `job/T51/setup-words`.
 5. Deferred / flaws in other modules: none found. journey-check's 58 failures are environmental (`playwright-core`).
 
 Size (session_01YQJWyJVbKFAY8sdhq1JwY5): test runs 5, module lines 346
+
+## J2 · COMPLETE
+
+B2 (K3943) applied: `tranche/T51` merged first, then `t` renamed `localize` in `index.mjs` (export, behaviour unchanged, no alias), `build.mjs` (the extraction reads `localize(id, en)`, scope rule unchanged, every message says `localize`) and both test files. R14 and R15 are met; R13 and R18 restated by the rename hold.
+
+Tests: `node --test bio-plane/test/m/setup-words/`: 19 pass, 0 fail. `build.mjs --check`: matches (rows.mjs regenerated: only its header wording changed; still 0 code rows). Process checks (civicos-process ebcc1a3): format 0 failures; architecture 0 failures; coverage: setup-words has no failure (12 of 12 ids named); words: marker 0, none in setup-words; ownership: 6 files, 0 failures.
+
+Size (session_01YQJWyJVbKFAY8sdhq1JwY5): test runs 8, module lines 346
