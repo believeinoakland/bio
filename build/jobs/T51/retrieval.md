@@ -9,3 +9,7 @@
 - Stale comment `checks.mjs`:73 reworded (no longer cites `app.html`).
 - **R87 and R90 not started**: both need `retrieval-browse` (R87 reads its `BROWSE_SCOPES` and `scopeMembers`, R13 there; R90 delegates to it). It is not built yet (its job just started). Waiting for BOB's CHANGE.
 - Inherited/expected red: `words.test.mjs` "keys are the owner's declared list": `words-reads` already lists retrieval's 49 keys; the 15 moved keys leave `words.mjs` with the delete (R90).
+
+## J1 · REPORT
+
+R88 and R89 are met and pushed (index.mjs, t51.test.mjs; module suite 197 pass, 1 fail). R88 needed nothing new from query-language: I read each term's route from plan.ast. R89 adds scope.existence_only_projects and scope.existence_only_count. The stale checks.mjs:73 comment is reworded. Three existing tests that deep-equal the scope's keys gained the two R89 keys. R87 and R90 both need retrieval-browse (BROWSE_SCOPES/scopeMembers; the delegation), which is not built yet, so I am waiting for your CHANGE after it merges. The one red is words.test.mjs 'keys are the owner's declared list': it clears when the 15 moved keys leave words.mjs with the R90 delete. Record: build/jobs/T51/retrieval.md, Work notes.
