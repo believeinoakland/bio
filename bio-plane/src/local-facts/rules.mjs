@@ -24,6 +24,7 @@ import { canonicalJson } from "../record-grammar/json.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { refusal } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R10: the sections a group's rule may be drafted in (`jurisdictions` R26, R79). */
 export const RULE_SECTIONS = Object.freeze(["deadlines", "legal_facts"]);
@@ -146,7 +147,7 @@ export class GroupRules {
         if (k === null || held) {
           conflicts.push({ at: `${r.section}[${JSON.stringify(keyWords(r.section, r.entry || {}))}]`,
                            values: [{ profile: held ? held.profile : null, rule: r.rule }],
-                           says: `the team's rule ${r.rule} holds a key the view already holds, so the view's entry stands and the rule is not added` });
+                           says: word("local-facts.says.group_rule_holds", { rule: String(r.rule) }) });
           continue;
         }
         const basis = `${this.#day(c.view, r.confirmation.at)} ${r.rule}`;
@@ -218,7 +219,7 @@ export class GroupRules {
      entry's own path are answered. */
   #entryErrors(section, entry, view, at) {
     if (!isObj(entry)) return [{ path: `${section}[0]`, code: "VALUE_INVALID", detail: "the entry is an object" }];
-    const p = { id: "group-rule", name: "The team's rule", covers: ["the team"], test: !!(isObj(view) && view.test) };
+    const p = { id: "group-rule", name: word("local-facts.group_rule"), covers: ["the team"], test: !!(isObj(view) && view.test) };
     if (isObj(view)) for (const s of CONTEXT_SECTIONS) if (view[s] !== undefined && s !== section) p[s] = untagged(view[s]);
     p[section] = [{ ...clone(entry), status: "researched", basis: this.#day(view, at) }];
     let v;
@@ -302,7 +303,7 @@ export class GroupRules {
       }));
       return { ok: true, rules, count: rules.length };
     } catch (e) {
-      return { ok: true, rules: [], count: 0, why: `undetermined: the rules could not be read (${String(e && e.message || e).slice(0, 200)})` };
+      return { ok: true, rules: [], count: 0, why: word("local-facts.why.undetermined_rules_read", { entry: String(String(e && e.message || e).slice(0, 200)) }) };
     }
   }
 
@@ -341,14 +342,14 @@ export class GroupRules {
     if (!r) return noSuchRule(b.rule);
     /* DEC-49 REGION is-rule-confirmed */
     if (r.state !== "confirmed")
-      return refusal("RULE_NOT_CONFIRMED", `the rule is ${r.state}; only a confirmed rule the team still applies is offered.`,
+      return refusal("RULE_NOT_CONFIRMED", localize("local-facts.rules.the_rule_is_state_only", "the rule is {state}; only a confirmed rule the team still applies is offered.", { state: String(r.state) }),
                      { rule: r.rule, state: r.state });
     /* END DEC-49 REGION is-rule-confirmed */
     const offer = { section: r.section, entry: r.entry, source: r.source,
                     confirmed: { at: r.confirmation.at, with_statement: !!r.confirmation.statement } };
     const bytes = canonicalJson(offer);
     return { ok: true, rule: r.rule, offer, bytes, digest: sha256HexSync(bytes),
-             note: "carry these bytes to the shared profile's maintainers yourself; your team's Civicsmith transmits nothing" };
+             note: word("local-facts.note.carry_bytes_shared") };
   }
 }
 
@@ -367,7 +368,7 @@ function machineRuleRefusal(by) {
    rules; the one builder of RULE_SECTION_UNKNOWN, so both answer the same refusal. */
 function sectionRefusal(section) {
   /* DEC-49 REGION is-rule-section */
-  return refusal("RULE_SECTION_UNKNOWN", `a team's rule is drafted in ${RULE_SECTIONS.join(" or ")}.`,
+  return refusal("RULE_SECTION_UNKNOWN", localize("local-facts.rules.a_teams_rule_is_drafted", "a team's rule is drafted in {RULE_SECTIONS}.", { RULE_SECTIONS: String(RULE_SECTIONS.join(" or ")) }),
                  { section: typeof section === "string" ? section.slice(0, 40) : null, sections: [...RULE_SECTIONS] });
   /* END DEC-49 REGION is-rule-section */
 }
@@ -384,7 +385,7 @@ function reasonRefusal(reason) {
    `action-clocks` answers a bare NO_SUCH_RULE for a profile's deadline). */
 function noSuchRule(id) {
   /* DEC-49 REGION is-rule-named */
-  return refusal("NO_SUCH_GROUP_RULE", "the team holds no rule of its own by that id.",
+  return refusal("NO_SUCH_GROUP_RULE", localize("local-facts.rules.the_team_holds_no_rule", "the team holds no rule of its own by that id."),
                  { rule: typeof id === "string" ? id.slice(0, 40) : null });
   /* END DEC-49 REGION is-rule-named */
 }

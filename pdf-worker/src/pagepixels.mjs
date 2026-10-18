@@ -83,6 +83,7 @@ import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
 import { decodeJbig2, Jbig2Refusal, JBIG2_REFUSES } from "./jbig2decode.mjs";
 import { decodeJpx, JpxRefusal, JPX_REFUSES } from "./jpxdecode.mjs";
 import { ccittDecode } from "./ccittdecode.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
 
@@ -582,10 +583,10 @@ export async function decodeImage(doc, im, opts) {
       return refuse(reason, { filter: last, filters, jpx: e.code, ...e.detail });
     }
     if (pdfComps !== null && pdfComps !== out.comps) {
-      return refuse("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
+      return refuse("UNSUPPORTED_SAMPLES", { filters, note: localize("pdf-pixels.pagepixels.the_colour_space_has_pdfcomps", "the colour space has {pdfComps} components; the image has {comps}", { pdfComps: String(pdfComps), comps: String(out.comps) }) });
     }
     if (out.width !== im.width || out.height !== im.height) {
-      return refuse("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
+      return refuse("DECODE_FAILED", { filters, note: localize("pdf-pixels.pagepixels.the_jpeg_2000_image_is", "the JPEG 2000 image is {width}x{height}; the PDF declares {width_2}x{height_2}", { width: String(out.width), height: String(out.height), width_2: String(im.width), height_2: String(im.height) }) });
     }
     const rot = rotate8(out.samples, out.width, out.height, out.comps, opts.rotate || 0);
     out.samples = null;

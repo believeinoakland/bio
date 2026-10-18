@@ -18,6 +18,7 @@
 
 import { OBSERVATION_LEVELS, OBSERVATION_SUBJECT_KINDS, MEANING_EVIDENCE_IS_ONE_SIDED } from "../observation-log/index.mjs";
 import { SEARCHED_SUBJECT_SOURCES } from "../ratification/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R17: what a level's answer can be. `no_subjects` and `undetermined` exist so the other three cannot be reached
  *  dishonestly. */
@@ -48,7 +49,7 @@ export const SEARCHED_LEVEL_OUTCOMES = Object.freeze({
  *  cannot say what was searched fails the ceremony rather than publishing a blank. */
 export function searchedSection({ at = null, subjectSource = null, levels = null } = {}) {
   if (typeof at !== "string" || at.trim() === "")
-    return { ok: false, why: "a searched section requires the time it was computed at" };
+    return { ok: false, why: word("case-authoring.why.searched_section_requires") };
   if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(subjectSource)))
     return { ok: false,
              why: `a searched section requires a subject source this vocabulary names (got `
@@ -57,7 +58,7 @@ export function searchedSection({ at = null, subjectSource = null, levels = null
                 + `subjects is 100% searched by construction and is a statement about the log `
                 + `rather than about the case` };
   if (!Array.isArray(levels))
-    return { ok: false, why: "a searched section requires a levels array, empty if the case names none" };
+    return { ok: false, why: word("case-authoring.why.searched_section_requires_levels") };
 
   const out = [];
   let totalSubjects = 0, totalLooked = 0, totalUnidentified = 0;
@@ -66,9 +67,9 @@ export function searchedSection({ at = null, subjectSource = null, levels = null
     const level = entry && entry.level;
     const kind = entry && entry.subject_kind;
     if (!Object.prototype.hasOwnProperty.call(OBSERVATION_LEVELS, String(level)))
-      return { ok: false, why: `a searched section names a level this vocabulary does not: '${level}'` };
+      return { ok: false, why: word("case-authoring.why.searched_section_names", { level: String(level) }) };
     if (!Object.prototype.hasOwnProperty.call(OBSERVATION_SUBJECT_KINDS, String(kind)))
-      return { ok: false, why: `a searched section names a subject kind this vocabulary does not: '${kind}'` };
+      return { ok: false, why: word("case-authoring.why.searched_section_names_subject", { kind: String(kind) }) };
 
     const subjects = Array.isArray(entry.subjects) ? entry.subjects : [];
     const unidentified = Math.max(0, Math.floor(Number(entry.unidentified) || 0));

@@ -7,7 +7,7 @@ import { biasAppliedFindings } from "../inquiry-grammar/index.mjs";
 import { actNoBasis, biasNotInForce } from "../inquiry/index.mjs";
 import { EDGE_REASON_MAX } from "../promotion/index.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from "../promotion/text.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { CONCLUDE_ACT_CHECKS, VERSION_ACT_CHECKS, SUFFICIENCY_UNCLAIMED } from "./checks.mjs";
 import { fmSafe, quoted, setCurrentVersionRow, appendConclusionEntry } from "./text.mjs";
 import { VERSION_REASON_MAX, drawsOn, LEG_COPY_KEYS } from "./shared.mjs";
@@ -64,9 +64,7 @@ export class ConcludeFamily {
     /* DEC-49 REGION is-machine-conclude — REC-64/C-32.2. */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE", ...concludeRow("MACHINE_CANNOT_CONCLUDE"),
-               detail: "a conclusion is a named member's assertion about what the record shows. A machine "
-                     + "credential may SURFACE a question, gather what it rests on and prepare the answer, "
-                     + "and may never author the conclusion. Sign in as a member." };
+               detail: localize("basis-versions.conclude.a_conclusion_is_a_named", "a conclusion is a named member's assertion about what the record shows. A machine credential may SURFACE a question, gather what it rests on and prepare the answer, and may never author the conclusion. Sign in as a member.") };
     /* END DEC-49 REGION is-machine-conclude */
     if (withdraw === true) return this.withdrawConclusion({ target, project, reason, viewer, who, identity });
     const concl = String(conclusion ?? "").trim();
@@ -84,9 +82,7 @@ export class ConcludeFamily {
     /* DEC-49 REGION is-conclude-answer — REC-64/C-33.1-2. */
     if (!concl && !pid && !hasReading)
       return { ok: false, reason: "NO_CONCLUSION", ...concludeRow("NO_CONCLUSION"),
-               detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the "
-                     + "concluded state, so a conclusion with nothing in it would produce a record the "
-                     + "catalog rejects. An undetermined answer is stated as undetermined, never left blank." };
+               detail: localize("basis-versions.conclude.concluding_records_what_was_concluded", "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the concluded state, so a conclusion with nothing in it would produce a record the catalog rejects. An undetermined answer is stated as undetermined, never left blank.") };
     if (concl && pid)
       return { ok: false, reason: "CONCLUSION_IS_THE_CLAIM", ...concludeRow("CONCLUSION_IS_THE_CLAIM"),
                detail: "a project concludes by ADOPTING the claim of the reading it stands on, and that claim "
@@ -96,12 +92,7 @@ export class ConcludeFamily {
                      + "reading first." };
     if (!fals && !noFals)
       return { ok: false, reason: "NO_FALSIFIER", ...concludeRow("NO_FALSIFIER"),
-               detail: "a conclusion states what would OVERTURN it. Without that the finding cannot be "
-                     + "checked by anyone, including its author, and a record that cannot be checked claims "
-                     + "more than it can support. If no falsifier can honestly be stated, SAY SO rather than "
-                     + "inventing one: conclude again with no_falsifier=1 and the record will carry `no "
-                     + "falsifier stated` in your name and with today's date, on every surface this finding "
-                     + "appears on and in the signed bytes if it is ever published." };
+               detail: localize("basis-versions.conclude.a_conclusion_states_what_would", "a conclusion states what would OVERTURN it. Without that the finding cannot be checked by anyone, including its author, and a record that cannot be checked claims more than it can support. If no falsifier can honestly be stated, SAY SO rather than inventing one: conclude again with no_falsifier=1 and the record will carry `no falsifier stated` in your name and with today's date, on every surface this finding appears on and in the signed bytes if it is ever published.") };
     if (fals && noFals)
       return { ok: false, reason: "FALSIFIER_AND_NONE_STATED", ...concludeRow("FALSIFIER_AND_NONE_STATED"),
                detail: "you have both stated a falsifier and asked to record that none was stated. Those are "
@@ -112,13 +103,11 @@ export class ConcludeFamily {
        no project, has nowhere for commentary to go */
     if (hasReading && (ownText.length < READING_MIN || ownText.length > VERSION_REASON_MAX || vname || (comm && !pid)))
       return { ok: false, reason: "BAD_READING", code: "BAD_READING", translation: word("refusal.BAD_READING"),
-               detail: `reading is ${READING_MIN} to ${VERSION_REASON_MAX} characters${vname ? ", and it takes the place of version, which was also named" : ""}`
-                     + `${comm && !pid ? "; commentary beside it needs a project" : ""}` };
+               detail: localize("basis-versions.conclude.reading_is_reading_min_to", "reading is {READING_MIN} to {VERSION_REASON_MAX} characters{v1}{v2}", { READING_MIN: String(READING_MIN), VERSION_REASON_MAX: String(VERSION_REASON_MAX), v1: String(vname ? ", and it takes the place of version, which was also named" : ""), v2: String(comm && !pid ? "; commentary beside it needs a project" : "") }) };
     for (const [name, v] of [["conclusion", concl], ["falsifier", fals], ["commentary", comm]])
       if (v.length > VERSION_REASON_MAX || /["\\\r\n]/.test(v))
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
-                 detail: `${name} is at most ${VERSION_REASON_MAX} characters and cannot contain a `
-                       + `quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+                 detail: localize("basis-versions.conclude.name_is_at_most_version", "{name} is at most {VERSION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { name: String(name), VERSION_REASON_MAX: String(VERSION_REASON_MAX) }) };
     /* R48: the bias applications' shape, with the other malformed fields; only a project's conclusion carries them */
     const bias = conclusionBiasApplied(biasApplied);
     if (bias.refused) return bias.refused;
@@ -134,7 +123,7 @@ export class ConcludeFamily {
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(b.object_type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
-               detail: "concluding answers a question, and only an inquiry carries one." };
+               detail: localize("basis-versions.conclude.concluding_answers_a_question_and", "concluding answers a question, and only an inquiry carries one.") };
     let text = this.k.doc(target);
     if (text === null)
       return { ok: false, reason: "NO_DOCUMENT", target,
@@ -150,18 +139,14 @@ export class ConcludeFamily {
     if (!legalFrom.includes("concluded") && !(pid && b.current_state === "concluded"))
       return { ok: false, reason: "ILLEGAL_TRANSITION", to: "concluded", target,
                from: b.current_state, object_type: fm.object_type ?? b.object_type,
-               detail: "this is not a legal move in the catalog's state table for this document's own "
-                     + "vocabulary. An inquiry concludes from open (or its `surfaced` alias); something "
-                     + "deferred or dismissed is reopened first, and a legacy focus/problem document has "
-                     + "no concluded state at all until its frontmatter is modernized." };
+               detail: localize("basis-versions.conclude.this_is_not_a_legal", "this is not a legal move in the catalog's state table for this document's own vocabulary. An inquiry concludes from open (or its `surfaced` alias); something deferred or dismissed is reopened first, and a legacy focus/problem document has no concluded state at all until its frontmatter is modernized.") };
     let projRow = null, pfm = null;
     if (pid) {
       projRow = this.k.visible(pid, viewer);
       if (!projRow) { const existence = this.k.bv.membership.existenceAct(pid, viewer); if (existence) return existence; }
       if (!projRow || normalizeType(projRow.object_type) !== "project")
         return { ok: false, reason: "NOT_A_PROJECT", target, project: pid,
-                 detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship `
-                       + "with this question to conclude in." };
+                 detail: localize("basis-versions.conclude.pid_is_not_a_project", "{pid} is not a project readable here, so there is no relationship with this question to conclude in.", { pid: String(pid.slice(0, 60)) }) };
       /* REC-134: a conclusion takes CURRENT's position — the actor must have JOINED the project */
       const denied = this.k.bv.membership.projectAuthority(pid, identity, "joined", "conclude");
       if (denied) return denied;
@@ -194,37 +179,27 @@ export class ConcludeFamily {
     if (pid) {
       if (!drawsOn(pfm, target))
         return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, project: pid,
-                 detail: `${pid} does not draw on ${target}, so it stands on no reading of it and has no `
-                       + "claim to adopt. Cite the question into the project, make a reading current, then "
-                       + "conclude." };
+                 detail: localize("basis-versions.conclude.pid_does_not_draw_on", "{pid} does not draw on {target}, so it stands on no reading of it and has no claim to adopt. Cite the question into the project, make a reading current, then conclude.", { pid: String(pid), target: String(target) }) };
       const cur = this.k.bv.currentOf(pid, target, viewer);
       if (!cur)
         return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, project: pid,
-                 detail: `${pid} stands on no reading of ${target}. Concluding adopts the claim of the `
-                       + "reading a project stands on (§7.1), so make an accepted reading current "
-                       + "(op=versioncurrent) first." };
+                 detail: localize("basis-versions.conclude.pid_stands_on_no_reading", "{pid} stands on no reading of {target}. Concluding adopts the claim of the reading a project stands on (§7.1), so make an accepted reading current (op=versioncurrent) first.", { pid: String(pid), target: String(target) }) };
       if (vname && vname !== cur.version)
         return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, project: pid, version: vname,
-                 detail: `${pid} stands on reading '${cur.version}', not '${vname.slice(0, 80)}'. A project `
-                       + "concludes on the reading it stands on (§7.1 item 1): make that reading current "
-                       + "first, or conclude without version=." };
+                 detail: localize("basis-versions.conclude.pid_stands_on_reading_version", "{pid} stands on reading '{version}', not '{vname}'. A project concludes on the reading it stands on (§7.1 item 1): make that reading current first, or conclude without version=.", { pid: String(pid), version: String(cur.version), vname: String(vname.slice(0, 80)) }) };
       want = cur.version;
     }
     const v = this.k.one(`SELECT name, state, claim, leg_count FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`,
                         target, want);
     const claimText = String(v?.claim ?? "").trim();
-    const whose = pid ? `${pid} stands on reading` : "this conclusion names reading";
+    const whose = pid ? word("basis-versions.text.stands_reading", { pid: String(pid) }) : word("basis-versions.text.conclusion_names_reading");
     if (!v || v.state !== "accepted" || !claimText)
       return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, ...(pid ? { project: pid } : {}), version: want,
                detail: !v
-                 ? `${whose} '${String(want).slice(0, 80)}', which ${target} does not carry, so there is no `
-                   + "claim to adopt. Name a reading it does carry."
+                 ? localize("basis-versions.conclude.whose_string_which_target_does", "{whose} '{String}', which {target} does not carry, so there is no claim to adopt. Name a reading it does carry.", { whose: String(whose), String: String(String(want).slice(0, 80)), target: String(target) })
                  : v.state !== "accepted"
-                 ? `${whose} '${want}', which is ${v.state || "in no recorded state"}, `
-                   + "not accepted. A conclusion adopts only what the team accepted."
-                 : `reading '${want}' states no claim, and the claim is what a conclusion adopts `
-                   + "(§7.1). State the claim on a reading first — a claim with no support yet is legal "
-                   + "to add (DEC-22) — then conclude on that reading." };
+                 ? localize("basis-versions.conclude.whose_want_which_is_v1", "{whose} '{want}', which is {v1}, not accepted. A conclusion adopts only what the team accepted.", { whose: String(whose), want: String(want), v1: String(v.state || "in no recorded state") })
+                 : localize("basis-versions.conclude.reading_want_states_no_claim", "reading '{want}' states no claim, and the claim is what a conclusion adopts (§7.1). State the claim on a reading first — a claim with no support yet is legal to add (DEC-22) — then conclude on that reading.", { want: String(want) }) };
     const adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };
     /* END DEC-49 REGION is-conclude-claim */
 
@@ -281,7 +256,7 @@ export class ConcludeFamily {
       const ans = this.#statementInForce({ statement: e.statement, scope: { type: "project", id: pid }, viewer });
       if (!ans || ans.in_force !== true) {
         const inForce = ans && ans.in_force === false ? false : null;
-        const row = biasNotInForce({ statement: e.statement, where: `the conclusion of ${pid} on ${target}`, inForce,
+        const row = biasNotInForce({ statement: e.statement, where: localize("basis-versions.conclude.the_conclusion_of_pid_on", "the conclusion of {pid} on {target}", { pid: String(pid), target: String(target) }), inForce,
                                      scope: { type: "project", id: pid } });
         return { refused: { ok: false, reason: "BIAS_APPLICATION_NOT_IN_FORCE", code: row.code, check: row.check,
                             translation: row.translation, detail: row.detail, findings: [row], target, project: pid,
@@ -321,12 +296,7 @@ export class ConcludeFamily {
     }
     text = setScalar(text, "last_updated", `"${when}"`);
     text = appendSessionLog(text,
-      `### Session ${when} | Concluded | ${who}\n`
-      + `Trigger: op=conclude on ${b.bundle_id}\n`
-      + `Changes: state ${b.current_state} to concluded.\n`
-      + `Conclusion: ${concl}\n`
-      + `Adopted: reading '${adopted.version}', claim: ${adopted.claim}\n`
-      + (noFals ? `Falsifier: NO FALSIFIER STATED — recorded by ${who} at ${when}\n` : `Falsifier: ${fals}\n`));
+      localize("basis-versions.conclude.session_when_concluded_who_trigger", "### Session {when} | Concluded | {who}\nTrigger: op=conclude on {bundle_id}\nChanges: state {current_state} to concluded.\nConclusion: {concl}\nAdopted: reading '{version}', claim: {claim}\n{v1}", { when: String(when), who: String(who), bundle_id: String(b.bundle_id), current_state: String(b.current_state), concl: String(concl), version: String(adopted.version), claim: String(adopted.claim), v1: String(noFals ? `Falsifier: NO FALSIFIER STATED — recorded by ${who} at ${when}\n` : `Falsifier: ${fals}\n`) }));
     return { text };
   }
 
@@ -340,8 +310,7 @@ export class ConcludeFamily {
                         affirmed, preview }) {
     if (pid && !drawsOn(pfm, target))
       return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target, project: pid,
-               detail: `${pid} does not draw on ${target}, so it has no stance on it to conclude. Cite the question `
-                     + "into the project first." };
+               detail: localize("basis-versions.conclude.pid_does_not_draw_on_2", "{pid} does not draw on {target}, so it has no stance on it to conclude. Cite the question into the project first.", { pid: String(pid), target: String(target) }) };
     /* the legs the question stands on: its basis legs whose `cites` edge the question has not severed */
     const refs = Array.isArray(fm.references) ? fm.references : [];
     const live = (Array.isArray(fm.basis) ? fm.basis : []).filter((l) => {
@@ -387,8 +356,7 @@ export class ConcludeFamily {
     if (qtext !== null) qtext = setScalar(qtext, "last_updated", `"${when}"`);
     if (qtext === null)
       return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
-               detail: "this question's version block is in a shape the restricted frontmatter grammar "
-                     + "cannot extend in place, so nothing was written." };
+               detail: localize("basis-versions.conclude.this_questions_version_block_is", "this question's version block is in a shape the restricted frontmatter grammar cannot extend in place, so nothing was written.") };
     const facts = { act: "concluded", version: name, claim: reading, falsifier: fals, noFals, commentary: comm,
                     bias: bias.entries, biasSha: pid && bias.entries.length ? forced.lensSha : null, who, when };
     const base = { ok: true, target, own_reading: true, version: name, author: who, at: when, weight: "single",
@@ -407,17 +375,15 @@ export class ConcludeFamily {
         const row = VERSION_ACT_CHECKS.VERSION_ACT_UNWRITABLE;
         return { ok: false, reason: "VERSION_ACT_UNWRITABLE", check: row.check, code: "VERSION_ACT_UNWRITABLE",
                  translation: row.translation, target, version: name, project: pid,
-                 detail: `${pid}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.` };
+                 detail: localize("basis-versions.conclude.pid_s_current_versions_block", "{pid}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.", { pid: String(pid) }) };
       }
       if (appendConclusionEntry(withCurrent, target, facts) === null)
         return { ok: false, reason: "UNSPLICEABLE_CONCLUSIONS", ...concludeRow("UNSPLICEABLE_CONCLUSIONS"), target, project: pid,
-                 detail: `${pid}'s conclusions block could not be extended in place` };
+                 detail: localize("basis-versions.conclude.pid_s_conclusions_block_could", "{pid}'s conclusions block could not be extended in place", { pid: String(pid) }) };
       const priorRec = this.k.bv.conclusionRecordOf(pid, target, viewer);
       const prior = priorRec.history.length ? priorRec.history[priorRec.history.length - 1] : null;
       qtext = appendSessionLog(qtext,
-        `### Session ${when} | Own reading accepted | ${who}\n`
-        + `Trigger: op=conclude on ${target} for ${pid}\n`
-        + `Changes: reading '${name}' written by ${who} from the question's own legs, in state accepted.\n`);
+        localize("basis-versions.conclude.session_when_own_reading_accepted", "### Session {when} | Own reading accepted | {who}\nTrigger: op=conclude on {target} for {pid}\nChanges: reading '{name}' written by {who_2} from the question's own legs, in state accepted.\n", { when: String(when), who: String(who), target: String(target), pid: String(pid), name: String(name), who_2: String(who) }));
       receipt = { ...base, project: pid, relationship: "project", to: "concluded", inquiry_state: b.current_state,
                   inquiry_moved: false, current: { project: pid, version: name },
                   commentary: comm ? { text: comm, by: who, at: when, evidence: false } : null,
@@ -430,9 +396,7 @@ export class ConcludeFamily {
       };
     } else {
       qtext = appendSessionLog(qtext,
-        `### Session ${when} | Own reading accepted | ${who}\n`
-        + `Trigger: op=conclude on ${target}\n`
-        + `Changes: reading '${name}' written by ${who} from the question's own legs, in state accepted.\n`);
+        localize("basis-versions.conclude.session_when_own_reading_accepted_2", "### Session {when} | Own reading accepted | {who}\nTrigger: op=conclude on {target}\nChanges: reading '{name}' written by {who_2} from the question's own legs, in state accepted.\n", { when: String(when), who: String(who), target: String(target), name: String(name), who_2: String(who) }));
       const concluded = ConcludeFamily.#concludedText(qtext, b, { concl: concl || reading, adopted, fals, noFals, who, when });
       if (concluded.refused) return concluded.refused;
       qtext = concluded.text;
@@ -472,7 +436,7 @@ export class ConcludeFamily {
     const pid = projectRow.bundle_id;
     const md = this.k.doc(pid);
     if (md === null)
-      return { ok: false, reason: "NO_DOCUMENT", detail: `${pid} has no readable file, so its conclusion cannot be recorded` };
+      return { ok: false, reason: "NO_DOCUMENT", detail: localize("basis-versions.conclude.pid_has_no_readable_file", "{pid} has no readable file, so its conclusion cannot be recorded", { pid: String(pid) }) };
     const pfm = parseFrontmatter(md).data || {};
     /* R51: an own reading is also what the project stands on, written in the same promotion as its conclusion */
     let text = f.alsoCurrent ? setCurrentVersionRow(md, inquiryId, f.version, f.who, f.when) : md;
@@ -480,26 +444,15 @@ export class ConcludeFamily {
     if (text === null)
       /* DEC-49 REGION is-conclusion-row — REC-124/C-33.36. */
       return { ok: false, reason: "UNSPLICEABLE_CONCLUSIONS", ...concludeRow("UNSPLICEABLE_CONCLUSIONS"),
-               detail: `${pid}'s conclusions block could not be extended in place` };
+               detail: localize("basis-versions.conclude.pid_s_conclusions_block_could_2", "{pid}'s conclusions block could not be extended in place", { pid: String(pid) }) };
       /* END DEC-49 REGION is-conclusion-row */
     text = setScalar(text, "last_updated", `"${f.when}"`);
     text = appendSessionLog(text, f.act === "withdrawn"
-      ? `### Session ${f.when} | Conclusion withdrawn | ${f.who}\n`
-        + `Trigger: op=withdrawconclusion on ${inquiryId} for ${pid}\n`
-        + `Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f.version}', concluded `
-        + `${f.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.\n`
-        + `Reason: ${f.reason}\n`
-      : (f.alsoCurrent ? `### Session ${f.when} | Stands on | ${f.who}\n`
+      ? localize("basis-versions.conclude.session_when_conclusion_withdrawn_who", "### Session {when} | Conclusion withdrawn | {who}\nTrigger: op=withdrawconclusion on {inquiryId} for {pid}\nChanges: this project withdrew its conclusion on {inquiryId_2} (reading '{version}', concluded {withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.\nReason: {reason}\n", { when: String(f.when), who: String(f.who), inquiryId: String(inquiryId), pid: String(pid), inquiryId_2: String(inquiryId), version: String(f.version), withdrawsAt: String(f.withdrawsAt), reason: String(f.reason) })
+      : localize("basis-versions.conclude.v1_session_when_concluded_who", "{v1}### Session {when} | Concluded | {who}\nTrigger: op=conclude on {inquiryId} for {pid}\nChanges: this project concluded {inquiryId_2} on reading '{version}', adopting its claim.\nClaim: {claim}\n{v2}{v3}{v4}", { v1: String(f.alsoCurrent ? `### Session ${f.when} | Stands on | ${f.who}\n`
           + `Trigger: op=conclude on ${inquiryId}\n`
-          + `Changes: this project now stands on reading '${f.version}' of ${inquiryId}, written by ${f.who}.\n` : ``)
-        + `### Session ${f.when} | Concluded | ${f.who}\n`
-        + `Trigger: op=conclude on ${inquiryId} for ${pid}\n`
-        + `Changes: this project concluded ${inquiryId} on reading '${f.version}', adopting its claim.\n`
-        + `Claim: ${f.claim}\n`
-        + (f.noFals ? `Falsifier: NO FALSIFIER STATED — recorded by ${f.who} at ${f.when}\n` : `Falsifier: ${f.falsifier}\n`)
-        + (f.commentary ? `Commentary (${f.who}, not evidence): ${f.commentary}\n` : "")
-        + (f.bias && f.bias.length
-          ? `Bias applied: ${f.bias.map((e) => `${e.statement} (${e.effect})`).join("; ")}\n` : ""));
+          + `Changes: this project now stands on reading '${f.version}' of ${inquiryId}, written by ${f.who}.\n` : ``), when: String(f.when), who: String(f.who), inquiryId: String(inquiryId), pid: String(pid), inquiryId_2: String(inquiryId), version: String(f.version), claim: String(f.claim), v2: String(f.noFals ? `Falsifier: NO FALSIFIER STATED — recorded by ${f.who} at ${f.when}\n` : `Falsifier: ${f.falsifier}\n`), v3: String(f.commentary ? `Commentary (${f.who}, not evidence): ${f.commentary}\n` : ""), v4: String(f.bias && f.bias.length
+          ? `Bias applied: ${f.bias.map((e) => `${e.statement} (${e.effect})`).join("; ")}\n` : "") }));
     return this.k.repromote({ bundleId: pid, base: projectRow.bundle_sha, text, when: f.when, author: f.who,
       meta: { object_type: pfm.object_type ?? "project", title: pfm.title, current_state: pfm.current_state ?? "forming",
               prior_state: pfm.prior_state ?? null, created: pfm.created, last_updated: f.when,
@@ -516,13 +469,10 @@ export class ConcludeFamily {
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
-               detail: "withdrawing a conclusion records WHY the project no longer stands on it. The conclusion "
-                     + "stays in the record beside the withdrawal, and a withdrawal with no account would leave "
-                     + "a reader unable to tell a correction from a change of mind. Nothing here is prefilled." };
+               detail: localize("basis-versions.conclude.withdrawing_a_conclusion_records_why", "withdrawing a conclusion records WHY the project no longer stands on it. The conclusion stays in the record beside the withdrawal, and a withdrawal with no account would leave a reader unable to tell a correction from a change of mind. Nothing here is prefilled.") };
     if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
-               detail: `a reason is at most ${EDGE_REASON_MAX} characters and cannot contain a quote, `
-                     + "a backslash, or a newline: the restricted frontmatter grammar has no escapes" };
+               detail: localize("basis-versions.conclude.a_reason_is_at_most", "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { EDGE_REASON_MAX: String(EDGE_REASON_MAX) }) };
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "a withdrawal answers ONE question: pass target=<inquiry id>" };
     const pid = String(project ?? "").trim();
@@ -530,15 +480,14 @@ export class ConcludeFamily {
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(b.object_type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
-               detail: "a conclusion answers a question, and only an inquiry carries one." };
+               detail: localize("basis-versions.conclude.a_conclusion_answers_a_question", "a conclusion answers a question, and only an inquiry carries one.") };
     const projRow = pid ? this.k.visible(pid, viewer) : null;
     /* REC-149: at EXISTENCE the positional C-70.1, as conclude and make-current answer (membership R44) */
     if (pid && !projRow) { const existence = this.k.bv.membership.existenceAct(pid, viewer); if (existence) return existence; }
     if (!projRow || normalizeType(projRow.object_type) !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", target, project: pid || null,
                detail: pid
-                 ? `${pid.slice(0, 60)} is not a project readable here, so there is no relationship with this `
-                   + "question to withdraw a conclusion from."
+                 ? localize("basis-versions.conclude.pid_is_not_a_project_2", "{pid} is not a project readable here, so there is no relationship with this question to withdraw a conclusion from.", { pid: String(pid.slice(0, 60)) })
                  : "a withdrawal is a PROJECT's act on its own conclusion: pass project=<project id>. A "
                    + "conclusion drawn with no project is the inquiry's own state, and moving it is op=reopen's." };
     const denied = this.k.bv.membership.projectAuthority(pid, identity, "joined", "withdrawconclusion");
@@ -549,12 +498,10 @@ export class ConcludeFamily {
       return { ok: false, reason: "NOTHING_TO_WITHDRAW", ...concludeRow("NOTHING_TO_WITHDRAW"), target, project: pid,
                stance: rec.stance ? rec.stance.state : "none",
                detail: !rec.stance
-                 ? `${pid} has never concluded ${target}, so there is no conclusion to withdraw.`
+                 ? localize("basis-versions.conclude.pid_has_never_concluded_target", "{pid} has never concluded {target}, so there is no conclusion to withdraw.", { pid: String(pid), target: String(target) })
                  : rec.stance.act === "withdrawn"
-                 ? `${pid}'s latest act on ${target} was already a withdrawal (${rec.stance.at || "undated"}), so `
-                   + "it stands on no conclusion to withdraw. Its history is unchanged."
-                 : `${pid}'s latest entry on ${target} is one your team's Civicsmith cannot read, so what it `
-                   + "stands on is undetermined and a withdrawal would be withdrawing a guess." };
+                 ? localize("basis-versions.conclude.pid_s_latest_act_on", "{pid}'s latest act on {target} was already a withdrawal ({v1}), so it stands on no conclusion to withdraw. Its history is unchanged.", { pid: String(pid), target: String(target), v1: String(rec.stance.at || "undated") })
+                 : localize("basis-versions.conclude.pid_s_latest_entry_on", "{pid}'s latest entry on {target} is one your team's Civicsmith cannot read, so what it stands on is undetermined and a withdrawal would be withdrawing a guess.", { pid: String(pid), target: String(target) }) };
     /* END DEC-49 REGION is-withdraw-stance */
     const when = this.k.bv.now();
     const w = this.#setProjectConclusion(projRow, target, {

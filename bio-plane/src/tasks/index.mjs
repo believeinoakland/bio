@@ -41,6 +41,7 @@ import { schedulerOf } from "../scheduler/index.mjs";
 import { PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { TASKS_SCHEMA, TASKS_TABLES } from "./schema.mjs";
 import { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, TASK_EVENT_KIND, checkInboxGrammar } from "./checks.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export { TASKS_SCHEMA, TASKS_TABLES, tasksOwns } from "./schema.mjs";
 export { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, TASK_EVENT_KIND, checkInboxGrammar } from "./checks.mjs";
@@ -188,7 +189,7 @@ export class Tasks {
     };
     if (b && b.object_type === "project") {
       const o = ownerOf(bundleId);
-      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: "owner of the referred project" };
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: word("tasks.why.owner_referred_project") };
     }
     /* D-280, site (b), and it is D-267's own harm one op over: `refs` carries
        the RELATION and DROPS the STATUS, so the project this arm hands the
@@ -214,7 +215,7 @@ export class Tasks {
       !kinds.every((k) => this.#connections.edgeSevered(pid, bundleId, k || null)));
     if (cite) {
       const o = ownerOf(cite[0]);
-      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this record` };
+      if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: word("tasks.why.owner_cites_record", { cite: String(cite[0]) }) };
     }
     /* membership's active administrators (its R86), in the order the roster holds them, the founder (who is no member
        row, and holds no task) aside: the earliest that membership R80 admits to the subject (K2575, D54: an
@@ -227,7 +228,7 @@ export class Tasks {
     /* Named honestly rather than assigned to someone who does not exist. An
        unassigned task is still visible and still routable by hand; a task
        addressed to a phantom is not. */
-    return { assignee: "unassigned", assignee_role: "group-admin", basis: "no project manager and no active administrator who can see it" };
+    return { assignee: "unassigned", assignee_role: "group-admin", basis: word("tasks.why.project_manager_active") };
   }
 
   /** A stored row as the grammar's task: the shape `taskList` gives (R2) and R6's reads give. */
@@ -762,7 +763,7 @@ export class Tasks {
     const id = this.#record.mintOpaqueId("TASK", at.slice(0, 4), "-check",
       (x) => !!this.#one(`SELECT 1 AS x FROM tasks WHERE id=?`, x));
     if (!id) throw Object.assign(new Error("MINT_EXHAUSTED"), { exhausted: true });
-    const subject = req.label ? `A check is asked: ${req.label}` : "A check is asked of you by name";
+    const subject = req.label ? word("tasks.check_asked", { label: String(req.label) }) : word("tasks.check_asked_name");
     this.sql.exec(
       `INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, subject_desc, locators,
                           assignee, assignee_role, status, created, resolved_at, history)
@@ -1081,7 +1082,7 @@ export class Tasks {
         const first = this.#one(`SELECT request FROM sign_requests WHERE case_id=? AND edition=?`, caseId, ed);
         if (!first || first.request !== request) return;
         won = true;
-        const subject = `Edition ${ed} of ${caseId} is prepared and ready to sign`;
+        const subject = word("tasks.edition_prepared_ready", { ed: String(ed), case_id: String(caseId) });
         for (const m of owners) {
           this.seedLedger();
           const id = this.#record.mintOpaqueId("TASK", at.slice(0, 4), "-sign",

@@ -51,6 +51,7 @@ import { inquiryOf, checkLegExtentGrammar, BASIS_ROLES } from "../inquiry/index.
 import { CITE_CHECKS, CITE_EXTENT_CHECKS } from "./checks.mjs";
 import { spliceEdgeStatus, spliceReferences, spliceBasis, setScalar, appendSessionLog } from "./splice.mjs";
 import { recordedBy } from "./recorded.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { CITE_CHECKS, CITE_EXTENT_CHECKS } from "./checks.mjs";
 export { spliceEdgeStatus, spliceReferences, spliceBasis, legExtentLines } from "./splice.mjs";
@@ -435,9 +436,7 @@ export class Citation {
       if (pinned !== sha)
         return { ok: false, reason: "FOUND_CAPTURE_MOVED", ...rowOf(CITE_EXTENT_CHECKS, "FOUND_CAPTURE_MOVED"), project,
                  document: doc, found_capture: sha, pinned_capture: pinned ?? null,
-                 detail: `this passage was found in capture ${sha} of ${doc}, and a citation of ${doc} is pinned to `
-                       + `${pinned ? `capture ${pinned}` : "no capture"}, so its part could name different words. `
-                       + "Nothing was written." };
+                 detail: localize("citation.index.this_passage_was_found_in", "this passage was found in capture {sha} of {doc}, and a citation of {doc_2} is pinned to {v1}, so its part could name different words. Nothing was written.", { sha: String(sha), doc: String(doc), doc_2: String(doc), v1: String(pinned ? `capture ${pinned}` : "no capture") }) };
       foundDoc = doc; foundCapture = sha;
       extent = foundExtentBag(found.extent);
     }
@@ -506,8 +505,7 @@ export class Citation {
     if (ontoInquiry && (!this.inquiry || typeof this.inquiry.earned !== "function"
                         || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
       return { ok: false, reason: "INQUIRY_UNAVAILABLE", project, handle, drift: sel.drift,
-               detail: "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned "
-                     + "registry, and your team's Civicsmith was created without them, so nothing was written." };
+               detail: localize("citation.index.citing_onto_a_question_needs", "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written.") };
     /* DEC-49 REGION is-cite-role — REC-64/C-33.16-18. */
     const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
     if (ontoInquiry) {
@@ -698,12 +696,11 @@ export class Citation {
       return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
                cited: [], alreadyCited: already.sort(), severed: [], question: questionId,
                bundleSha: p.bundleSha, rowVersion: null,
-               detail: "every member of the selection was already cited; nothing was written"
-                     + (authored.length
+               detail: localize("citation.index.every_member_of_the_selection", "every member of the selection was already cited; nothing was written{v1}", { v1: String(authored.length
                         ? ". The part of the document this call named was written NOWHERE, because no leg "
                         + "was written at all: making an existing citation more specific is a separate "
                         + "authored act on this record's own plan."
-                        : "") };
+                        : "") }) };
 
     /* THE WRITE, PER ARM; both go through the document (R6). */
     let spliced = null, filled = [];

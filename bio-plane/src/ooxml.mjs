@@ -64,6 +64,8 @@
  * imports nothing from it.
  */
 
+import { localize } from "./setup-words/index.mjs";
+
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 const LATIN1 = new TextDecoder("latin1");
 
@@ -770,7 +772,7 @@ export async function discriminate(bytes, contentType = null, flavours = CONTAIN
   if (contentType) {
     let declared;
     try { declared = String(contentType); } catch { declared = "(not a string)"; }
-    signals.push(`declared-content-type:${declared} (not used for the determination)`);
+    signals.push(localize("ooxml.ooxml.declared_content_type_declared_not", "declared-content-type:{declared} (not used for the determination)", { declared: String(declared) }));
   }
 
   if (!hasZipMagic(b)) {
@@ -831,7 +833,7 @@ export async function discriminate(bytes, contentType = null, flavours = CONTAIN
     signals.push(`part:${CONTENT_TYPES_PART} present but unparseable`);
     return { ok: true, format: "undetermined", why: "content_types_unparseable", signals };
   }
-  signals.push(`part:${CONTENT_TYPES_PART} parsed (${types.defaults.size} defaults, ${types.overrides.size} overrides)`);
+  signals.push(localize("ooxml.ooxml.part_content_types_part_parsed", "part:{CONTENT_TYPES_PART} parsed ({size} defaults, {size_2} overrides)", { CONTENT_TYPES_PART: String(CONTENT_TYPES_PART), size: String(types.defaults.size), size_2: String(types.overrides.size) }));
 
   for (const f of opcRows) {
     /* The declaration half: any part whose computed content type is this
@@ -851,7 +853,7 @@ export async function discriminate(bytes, contentType = null, flavours = CONTAIN
     const present = container.byName.has(declared)
       || container.entries.some((e) => normalizePartName(e.name) === declared);
     if (!present) {
-      signals.push(`ct:${f.mainContentType} declared for ${declared}, but the part is ABSENT`);
+      signals.push(localize("ooxml.ooxml.ct_maincontenttype_declared_for_declared", "ct:{mainContentType} declared for {declared}, but the part is ABSENT", { mainContentType: String(f.mainContentType), declared: String(declared) }));
       return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f.flavour, signals };
     }
     signals.push(`ct:${f.mainContentType}`, `part:${declared} present`);
@@ -924,13 +926,11 @@ async function discriminateOdf(bytes, container, rows, signals) {
   let earliest = Infinity;
   for (const e of container.entries) if (e.localHeaderOffset < earliest) earliest = e.localHeaderOffset;
   if (container.entries[0] !== mimeEntry || mimeEntry.localHeaderOffset !== earliest) {
-    signals.push(`odf:${ODF_MIMETYPE_PART} present but NOT the first archive member`
-      + ` (central-directory index ${container.entries.indexOf(mimeEntry)},`
-      + ` local-header offset ${mimeEntry.localHeaderOffset}, earliest ${earliest})`);
+    signals.push(localize("ooxml.ooxml.odf_odf_mimetype_part_present", "odf:{ODF_MIMETYPE_PART} present but NOT the first archive member (central-directory index {indexOf}, local-header offset {localHeaderOffset}, earliest {earliest})", { ODF_MIMETYPE_PART: String(ODF_MIMETYPE_PART), indexOf: String(container.entries.indexOf(mimeEntry)), localHeaderOffset: String(mimeEntry.localHeaderOffset), earliest: String(earliest) }));
     return { ok: true, format: "undetermined", why: "odf_mimetype_not_first", signals };
   }
   if (mimeEntry.method !== 0) {
-    signals.push(`odf:${ODF_MIMETYPE_PART} is first but COMPRESSED (method ${mimeEntry.method}, ODF requires stored)`);
+    signals.push(localize("ooxml.ooxml.odf_odf_mimetype_part_is", "odf:{ODF_MIMETYPE_PART} is first but COMPRESSED (method {method}, ODF requires stored)", { ODF_MIMETYPE_PART: String(ODF_MIMETYPE_PART), method: String(mimeEntry.method) }));
     return { ok: true, format: "undetermined", why: "odf_mimetype_not_stored", signals };
   }
   if (mimeEntry.uncompressedSize > ODF_MIMETYPE_MAX_BYTES) {
@@ -962,7 +962,7 @@ async function discriminateOdf(bytes, container, rows, signals) {
     signals.push(`odf:${ODF_MIMETYPE_PART}=${JSON.stringify(declared)} is no known OpenDocument media type`);
     return { ok: true, format: "undetermined", why: "odf_mimetype_unrecognized", signals };
   }
-  signals.push(`odf:${ODF_MIMETYPE_PART} ${declared} (first member, stored)`);
+  signals.push(localize("ooxml.ooxml.odf_odf_mimetype_part_declared", "odf:{ODF_MIMETYPE_PART} {declared} (first member, stored)", { ODF_MIMETYPE_PART: String(ODF_MIMETYPE_PART), declared: String(declared) }));
 
   /* The parts half — the same both-halves rule the OPC branch applies. */
   const manifestPresent = container.byName.has(ODF_MANIFEST_PART)
@@ -975,7 +975,7 @@ async function discriminateOdf(bytes, container, rows, signals) {
   const mainPresent = container.byName.has(main)
     || container.entries.some((e) => normalizePartName(e.name) === main);
   if (!mainPresent) {
-    signals.push(`odf:mimetype declares ${row.flavour}, but ${main} is ABSENT`);
+    signals.push(localize("ooxml.ooxml.odf_mimetype_declares_flavour_but", "odf:mimetype declares {flavour}, but {main} is ABSENT", { flavour: String(row.flavour), main: String(main) }));
     return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: row.flavour, signals };
   }
 

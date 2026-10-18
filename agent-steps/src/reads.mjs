@@ -12,6 +12,8 @@
  * What stays: every other value as the plane answered it, `active` included, and a field NAMED like bytes whose value is
  * not bytes (a `bytes: 1234` length is a number, kept). Pure: no network, no state. */
 
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+
 const DATA_URL = /^\s*data:[^,]{0,200};base64,/i;
 /* Controls other than tab, newline and carriage return: a string carrying them is a binary string, not text. */
 const BINARY = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/;
@@ -68,9 +70,7 @@ export function textOnly(answer) {
 export function droppedNote(dropped) {
   if (!dropped || !dropped.length) return null;
   const listed = dropped.slice(0, 10).map((d) => `${d.path} (${d.held})`).join(", ");
-  return `${dropped.length} field(s) of the answer held a file's bytes and were dropped before the model saw it, `
-    + `never decoded: ${listed}${dropped.length > 10 ? ", …" : ""}. A file is read only as the text the plane's readers `
-    + "extracted from it, with its active list";
+  return localize("agent-steps.reads.length_field_s_of_the", "{length} field(s) of the answer held a file's bytes and were dropped before the model saw it, never decoded: {listed}{v1}. A file is read only as the text the plane's readers extracted from it, with its active list", { length: String(dropped.length), listed: String(listed), v1: String(dropped.length > 10 ? ", …" : "") });
 }
 
 /** A read tool's result for the model (R61, R63): the answer, text only; when something was dropped, the answer and

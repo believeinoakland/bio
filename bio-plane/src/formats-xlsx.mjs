@@ -84,6 +84,7 @@ import {
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
 import { withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
@@ -1013,7 +1014,7 @@ export const xlsxEntry = {
       if (c.byName.has(CONTENT_TYPES_PART) && c.byName.has(WORKBOOK_PART)) {
         return { format: "xlsx", confidence: "likely", signals: [
           "magic: PK\\x03\\x04 with a readable central directory",
-          `parts: ${CONTENT_TYPES_PART} and ${WORKBOOK_PART} present`,
+          localize("office-readers.formats-xlsx.parts_content_types_part_and", "parts: {CONTENT_TYPES_PART} and {WORKBOOK_PART} present", { CONTENT_TYPES_PART: String(CONTENT_TYPES_PART), WORKBOOK_PART: String(WORKBOOK_PART) }),
           "likely, not certain: the declared main content type lives in a deflated part; parts() completes the discrimination",
         ] };
       }

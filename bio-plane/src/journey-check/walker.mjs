@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { designRule, groupIn, senseKeys, withoutGroupSense } from "./group-words.mjs";
 import { wordPattern } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* The interface page's mark: every document the copy serves to a browser is `interfacePage`, which links the shell's own
    stylesheet (interface-shell R1). A document without it is an old page. */
@@ -134,14 +135,14 @@ export class Walk {
     /* JOURNEY_DEBUG=bodies prints each answer that carries a refusal, JOURNEY_DEBUG_OP=<op> every answer of that op,
        redacted, to diagnose them; never into the report */
     if (process.env.JOURNEY_DEBUG_OP && url.searchParams.get("op") === process.env.JOURNEY_DEBUG_OP)
-      process.stderr.write(`BODY ${where} (HTTP ${res.status()}, ${type}): ${this.redact(body ? JSON.stringify(body) : "(not JSON)").slice(0, 6000)}\n`);
+      process.stderr.write(localize("journey-check.walker.body_where_http_status_type", "BODY {where} (HTTP {status}, {type}): {redact}\n", { where: String(where), status: String(res.status()), type: String(type), redact: String(this.redact(body ? JSON.stringify(body) : "(not JSON)").slice(0, 6000)) }));
     if (process.env.JOURNEY_DEBUG === "bodies" && refusals.length) process.stderr.write(`BODY ${where}: ${this.redact(JSON.stringify(body)).slice(0, 4000)}\n`);
     const excused = refusals.some((r) => expected(r)) || (!refusals.length && expect.includes(res.status()));
     if (!unexcused.length && res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
     if (req.resourceType() === "document" && url.host === this.copyHost && res.status() < 300) {
       const kind = documentKind(await res.text().catch(() => null));
-      if (kind === "setup-page") this.fail(FAIL.OLD_PAGE, `${url.pathname} is the setup page`);
-      else if (kind !== "interface") this.fail(FAIL.OLD_PAGE, `${url.pathname} is not the interface page`);
+      if (kind === "setup-page") this.fail(FAIL.OLD_PAGE, localize("journey-check.walker.pathname_is_the_setup_page", "{pathname} is the setup page", { pathname: String(url.pathname) }));
+      else if (kind !== "interface") this.fail(FAIL.OLD_PAGE, localize("journey-check.walker.pathname_is_not_the_interface", "{pathname} is not the interface page", { pathname: String(url.pathname) }));
     }
   }
 
@@ -168,9 +169,9 @@ export class Walk {
       this.group ||= { rule: designRule() };
       this.group.patterns ||= senseKeys({ rule: this.group.rule }).flatMap((k) => { try { return [wordPattern(k)]; } catch { return []; } });
       const found = groupIn(withoutGroupSense(text, this.group.patterns), { rule: this.group.rule });
-      for (const f of found.slice(0, 5)) this.fail(FAIL.GROUP, `${url.pathname} says group for a team: …${f.at}…`);
+      for (const f of found.slice(0, 5)) this.fail(FAIL.GROUP, localize("journey-check.walker.pathname_says_group_for_a", "{pathname} says group for a team: …{at}…", { pathname: String(url.pathname), at: String(f.at) }));
     } catch (e) {
-      if (!this.groupUnread) { this.groupUnread = true; this.fail(FAIL.GROUP, `the design's rule for "group" could not be read: ${e.message.split("\n")[0]}`); }
+      if (!this.groupUnread) { this.groupUnread = true; this.fail(FAIL.GROUP, localize("journey-check.walker.the_designs_rule_for_group", "the design's rule for \"group\" could not be read: {v1}", { v1: String(e.message.split("\n")[0]) })); }
     }
   }
 
@@ -178,7 +179,7 @@ export class Walk {
   foreign(url) {
     const u = new URL(url);
     if (u.host.split(".")[0] === LEGACY_UI_WORKER) return this.fail(FAIL.OLD_PAGE, `${u.host} is legacy-ui`);
-    return this.fail(FAIL.ADDRESS, `${u.host}${u.pathname} is outside the walk`);
+    return this.fail(FAIL.ADDRESS, localize("journey-check.walker.host_pathname_is_outside_the", "{host}{pathname} is outside the walk", { host: String(u.host), pathname: String(u.pathname) }));
   }
 
   /* One step: `fn(page)` performs it; `expect` names the refusal codes (a string or a pattern, or `{at, code}` for a code
@@ -203,11 +204,11 @@ export class Walk {
   }
 
   report() {
-    const lines = [`journey-check (${this.arm}): ${this.steps.length} steps, ${this.failures.length} failures`];
+    const lines = [localize("journey-check.walker.journey_check_arm_length_steps", "journey-check ({arm}): {length} steps, {length_2} failures", { arm: String(this.arm), length: String(this.steps.length), length_2: String(this.failures.length) })];
     for (const s of this.steps) lines.push(`${s.ok ? "ok  " : "FAIL"} ${s.journey} · ${s.label} (${s.screenshot})`);
-    for (const f of this.failures) lines.push(`  ${f.kind}: ${f.journey} · ${f.step ?? "between steps"}: ${f.detail}`);
+    for (const f of this.failures) lines.push(localize("journey-check.walker.kind_journey_v1_detail", "  {kind}: {journey} · {v1}: {detail}", { kind: String(f.kind), journey: String(f.journey), v1: String(f.step ?? "between steps"), detail: String(f.detail) }));
     for (const n of this.notes) lines.push(`note: ${n}`);
-    if (this.pairs.length) lines.push(`${this.pairs.length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):`, ...this.pairs.map((p) => `  ${p}`));
+    if (this.pairs.length) lines.push(localize("journey-check.walker.length_pairs_live_beside_design", "{length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):", { length: String(this.pairs.length) }), ...this.pairs.map((p) => `  ${p}`));
     const text = this.redact(lines.join("\n")) + "\n";
     writeFileSync(join(this.out, "report.txt"), text);
     writeFileSync(join(this.out, "report.json"), this.redact(JSON.stringify({ arm: this.arm, steps: this.steps, failures: this.failures, pairs: this.pairs, notes: this.notes }, null, 1)));
@@ -216,7 +217,7 @@ export class Walk {
 }
 
 export class StepFailed extends Error {
-  constructor(label, cause) { super(`step "${label}" failed: ${cause.message.split("\n")[0]}`); this.cause = cause; }
+  constructor(label, cause) { super(localize("journey-check.walker.step_label_failed_v1", "step \"{label}\" failed: {v1}", { label: String(label), v1: String(cause.message.split("\n")[0]) })); this.cause = cause; }
 }
 
 /* Settled: the document loaded, the network quiet for a moment, no loading state drawn. */

@@ -7,6 +7,7 @@
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
 /* R8: the doors' own rows. */
 import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R6 (was control-plane R51; DEC-122 (3); N528; F17, K1881): the policy every `text/html` response the plane serves
    carries, so a browser loads no script, style, font, image or connection from another origin and sends nothing
@@ -248,9 +249,7 @@ function dec49Attach(o) {
    diagnostic a stranger cannot act on is not worth one. */
 const STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
 const STORE_SILENT_DETAIL =
-  "this team's Civicsmith could not consult its own record, so nothing here is a statement about the record. "
-  + "It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are "
-  + "answers, and this is the absence of one. The question stands unanswered; ask again.";
+  localize("answer-envelope.index.this_teams_civicsmith_could_not", "this team's Civicsmith could not consult its own record, so nothing here is a statement about the record. It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are answers, and this is the absence of one. The question stands unanswered; ask again.");
 
 /* Takes the Response (or a promise of one) from a Durable Object stub fetch and
    returns `{ answered, result }`. A body that is not JSON at all is not an
@@ -365,8 +364,7 @@ function requiredArgument(op, argument, shape, error) {
   return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING",
            ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
            error, op, argument, shape,
-           detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
-                 + `none the operation could use. Nothing was changed.` };
+           detail: localize("answer-envelope.index.op_op_needs_argument_in", "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was changed.", { op: String(op), argument: String(argument), shape: String(shape) }) };
   /* END DEC-49 REGION is-required-argument */
 }
 
@@ -402,7 +400,7 @@ const dispatchRow = (code) => {
    refusal. A sentinel class and not a bare string, so a genuine crash on the
    same path is re-thrown instead of being reported as a polite silence. */
 class StoreSilent extends Error {
-  constructor(op) { super(`the store did not answer ${op}`); this.op = op; }
+  constructor(op) { super(word("publication.super.store_did_answer", { op: String(op) })); this.op = op; }
 }
 
 export { PAGE_POLICY, pagePolicy, withPagePolicy, NONCE_SLOT, json, dec49Attach, dec49Row, CHECK_FAMILIES, CHECK_FAMILY_FILES,

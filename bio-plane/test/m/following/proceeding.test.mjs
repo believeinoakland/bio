@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, proceedingEvent, MEMBER, BOB, OUTSIDER, MACHINE, T0, DAY } from "./fixture.mjs";
 import { notAProceeding, noSuchEntity } from "../../../src/entities/index.mjs";
 import { FOLLOWING_CHECKS } from "../../../src/following/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const REG = "https://dockets.registry.example/case/2";
 const REG2 = "https://dockets.registry.example/case/3";
@@ -114,7 +115,7 @@ test("R29 a refusal events answers (CAPTURE_NOT_HELD, NOT_A_REGISTER) is counted
   const w = docketWorld();
   const proc = w.proceeding("Commitment suit");
   const a = w.f.followRegister({ address: REG, proceeding: proc, author: MEMBER, viewer: MEMBER });
-  w.override = () => ({ ok: false, reason: "CAPTURE_NOT_HELD", detail: "the record holds no such capture" });
+  w.override = () => ({ ok: false, reason: "CAPTURE_NOT_HELD", detail: word("events.why.record_holds_capture") });
   const t = await w.f.followTick(T0);
   assert.deepEqual(t.failed.map((x) => [x.follow, x.reason]), [[a.follow, "CAPTURE_NOT_HELD"]]);
   assert.equal(t.read.find((x) => x.follow === a.follow).outcome, "failed");

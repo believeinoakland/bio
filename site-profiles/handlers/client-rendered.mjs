@@ -19,6 +19,7 @@
  * document, this handler's job is to report that what was captured is a shell.
  */
 import { CONFIDENCE } from "../recogniser.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 export default {
   key: "client_rendered",
@@ -72,7 +73,5 @@ export default {
   ignorable() { return false; },
 
   /* What a member is told, and it is the only handler that speaks up on its own. */
-  warning: "This address builds its page in the browser, so what was collected is the "
-         + "empty frame and not the figures. It cannot be relied on as evidence of what "
-         + "the page shows. Collecting it properly needs the page to be rendered first.",
+  warning: localize("site-profiles.client-rendered.this_address_builds_its_page", "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first."),
 };

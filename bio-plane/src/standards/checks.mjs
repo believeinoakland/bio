@@ -22,65 +22,55 @@ export const REFUSAL_WORDS = Object.freeze(Object.fromEntries(
 export const STANDARDS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE_STANDARD: {
     check: 'C-112.1', where: at("machineRefusal", "is-standard-member"),
-    translation: 'Recording a standard is a member\'s act. An assistant may propose one for members to consider; it '
-      + 'may not enter one in the record. Sign in as a member. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_DECLARE_STANDARD'),
   },
   STANDARD_NO_CITE: {
     check: 'C-112.2', where: at("refuseNoCite", "is-standard-cited"),
-    translation: 'A standard is recorded with its citation: how it is cited, in at most 200 characters. None was '
-      + 'given, or it is too long. Nothing was written.',
+    translation: word('refusal.STANDARD_NO_CITE'),
   },
   STANDARD_KIND_UNKNOWN: {
     check: 'C-112.3', where: at("refuseKindUnknown", "is-standard-kind"),
-    translation: 'A standard is a statute, a regulation, an ordinance, a court decision or order, an adopted policy, '
-      + 'a public commitment, or a documented standard set by a standards body, a profession, a regulator or an '
-      + 'accreditor. This one names none of them. Nothing was written.',
+    translation: word('refusal.STANDARD_KIND_UNKNOWN'),
   },
   STANDARD_NO_ISSUER: {
     check: 'C-112.4', where: at("#declareRefusal", "is-standard-issuer"),
-    translation: 'A standard names the body that made it. None was given. Nothing was written.',
+    translation: word('refusal.STANDARD_NO_ISSUER'),
   },
   STANDARD_NO_TEXT: {
     check: 'C-112.5', where: at("#declareRefusal", "is-standard-text"),
-    translation: 'A standard is held with its own words as captured: name at least one passage of a captured '
-      + 'document that holds its text. None was named. Nothing was written.',
+    translation: word('refusal.STANDARD_NO_TEXT'),
   },
   STANDARD_TEXT_UNRESOLVED: {
     check: 'C-112.6', where: at("refuseTextUnresolved", "is-standard-text-held"),
-    translation: 'A passage named as this standard\'s text is not held in the record. Capture the document and cite '
-      + 'the passage first. Nothing was written.',
+    translation: word('refusal.STANDARD_TEXT_UNRESOLVED'),
   },
   STANDARD_PERIOD_INVALID: {
     check: 'C-112.7', where: at("#declareRefusal", "is-standard-period"),
-    translation: 'A standard\'s period in force is a start and an end, each a date written YYYY-MM-DD or left '
-      + 'unstated, and the end is not before the start. Nothing was written.',
+    translation: word('refusal.STANDARD_PERIOD_INVALID'),
   },
   STANDARD_SUPERSEDES_UNKNOWN: {
     check: 'C-112.8', where: at("#declareRefusal", "is-superseded-held"),
-    translation: 'The standard this one is said to supersede is not held in the record. Name one that is. Nothing '
-      + 'was written.',
+    translation: word('refusal.STANDARD_SUPERSEDES_UNKNOWN'),
   },
   STANDARD_ALREADY_SUPERSEDED: {
     check: 'C-112.9', where: at("#declareRefusal", "is-supersession-once"),
-    translation: 'The standard named is already superseded by another, which the answer names. A standard is '
-      + 'superseded once; supersede the later one instead. Nothing was written.',
+    translation: word('refusal.STANDARD_ALREADY_SUPERSEDED'),
   },
   NO_SUCH_STANDARD: {
     check: 'C-112.10', where: at("noSuchStandard", "is-standard-held"),
-    translation: 'No standard answers to that id here. Nothing was written.',
+    translation: word('refusal.NO_SUCH_STANDARD'),
   },
   STANDARD_NO_ID: {
     check: 'C-112.11', where: at("refuseNoId", "is-standard-named"),
-    translation: 'A standard is read by its id, and none was named. Name the standard to read. Nothing was answered.',
+    translation: word('refusal.STANDARD_NO_ID'),
   },
   STANDARD_DATE_INVALID: {
     check: 'C-112.12', where: at("refuseDateInvalid", "is-date-readable"),
-    translation: 'The date asked about is written YYYY-MM-DD, and this one is not. Nothing was answered.',
+    translation: word('refusal.STANDARD_DATE_INVALID'),
   },
   STANDARD_WHY_INVALID: {
     check: 'C-112.13', where: at("standardPropose", "is-proposal-why"),
-    translation: 'A proposal says why the standard applies, in at most 240 characters. None was given, or it is too '
-      + 'long. Nothing was written.',
+    translation: word('refusal.STANDARD_WHY_INVALID'),
   },
   STANDARD_PROPOSER_UNNAMED: {
     check: 'C-112.14', where: at("standardPropose", "is-proposer-named"),
@@ -89,67 +79,54 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   STANDARD_NO_SUCH_PROPOSAL: {
     check: 'C-112.15', where: at("standardAdopt", "is-proposal-held"),
-    translation: 'No proposal of a standard answers to that id here. Nothing was written.',
+    translation: word('refusal.STANDARD_NO_SUCH_PROPOSAL'),
   },
   STANDARD_PROPOSAL_ADOPTED: {
     check: 'C-112.16', where: at("#adoptRefusal", "is-proposal-open"),
-    translation: 'This proposal was already adopted, as the standard the answer names. A proposal is adopted once. '
-      + 'Nothing was written.',
+    translation: word('refusal.STANDARD_PROPOSAL_ADOPTED'),
   },
   STANDARD_FIELD_UNKNOWN: {
     check: 'C-112.17', where: at("refuseFieldUnknown", "is-standard-field"),
-    translation: 'This act takes only the fields it names, and the ones listed are not among them. The record holds a '
-      + 'standard\'s citation, kind, issuer, text, period and reason, and never a view of its merit. Nothing was '
-      + 'written.',
+    translation: word('refusal.STANDARD_FIELD_UNKNOWN'),
   },
   STANDARD_WRITTEN_ELSEWHERE: {
     check: 'C-112.18', where: at("#checkStandard", "is-standard-written-here"),
-    translation: 'A standard enters the record only when a member records or adopts one, and it is never edited: a '
-      + 'correction is a new standard that supersedes it. This write is neither. Nothing was written.',
+    translation: word('refusal.STANDARD_WRITTEN_ELSEWHERE'),
   },
   STANDARD_ACT_INVALID: {
     check: 'C-112.19', where: at("standardPropose", "is-proposal-act"),
-    translation: 'The government act a proposal names is given by its id, in at most 200 characters, and this one is '
-      + 'not. Nothing was written.',
+    translation: word('refusal.STANDARD_ACT_INVALID'),
   },
   STANDARD_NO_REASON: {
     check: 'C-112.20', where: at("#declareRefusal", "is-standard-reason"),
-    translation: 'A standard is recorded with your reason: in your own words, why the team holds its government to '
-      + 'it, in at most 2,000 characters. None was given, or it is not words, or it is too long. Nothing was written.',
+    translation: word('refusal.STANDARD_NO_REASON'),
   },
   /* T33-31 (R18–R27; K1438, K1442, K1446, K1447, K1449): rows minted in T33, awaiting promotion's stamp (T34). */
   STANDARD_FIELD_INVALID: {
     check: 'C-112.21', where: at("refuseFieldInvalid", "is-standard-law-field"),
-    translation: 'A field of this act (where the standard sits in its law, how much of it is held, its family, '
-      + 'designation or edition, or when an adoption took effect) is not in the form it takes. The answer names the '
-      + 'field. Nothing was written.',
+    translation: word('refusal.STANDARD_FIELD_INVALID'),
   },
   STANDARD_PORTION_NOT_IN_TEXT: {
     check: 'C-112.22', where: at("#lawFields", "is-portion-in-text"),
-    translation: 'A portion of a standard is one of the passages recorded as its own words. The passage named is not '
-      + 'one of them. Nothing was written.',
+    translation: word('refusal.STANDARD_PORTION_NOT_IN_TEXT'),
   },
   PORTION_UNKNOWN: {
     check: 'C-112.25', where: at("portionUnknown", "is-portion-held"),
-    translation: 'The portion named is not a portion recorded for that standard. Name the portion as it was recorded, '
-      + 'or none. Nothing was written.',
+    translation: word('refusal.PORTION_UNKNOWN'),
   },
   /* T35-31 (R1, R33–R47; K1713, K1722–K1724, K1739, K1740; DEC-145): rows minted in T35, awaiting promotion's stamp
      (T36). C-112.53 is left for `law-relations`' LAW_RELATION_NO_EDITION (its R9). */
   STANDARD_TEXT_NOT_HELD_AS: {
     check: 'C-112.33', where: at("#heldFields", "is-held-text"),
-    translation: 'A standard recorded as cited, or as looked for and not found, holds none of its own words, so no '
-      + 'passage is named as its text. Record it as held with its text instead, or name no text. Nothing was written.',
+    translation: word('refusal.STANDARD_TEXT_NOT_HELD_AS'),
   },
   FAMILY_UNKNOWN: {
     check: 'C-112.34', where: at("#familyField", "is-family-known"),
-    translation: 'The series named for this standard is not one your team\'s jurisdiction profiles list. Name a series '
-      + 'they list, or none. Nothing was written.',
+    translation: word('refusal.FAMILY_UNKNOWN'),
   },
   STANDARD_CITED_BY_MISSING: {
     check: 'C-112.35', where: at("#heldFields", "is-cited-by-held"),
-    translation: 'A standard known only because a document cites it is recorded with where it is cited: the captured '
-      + 'document and the passage that cites it. None was given, or it is not held. Nothing was written.',
+    translation: word('refusal.STANDARD_CITED_BY_MISSING'),
   },
   STANDARD_SEARCH_MISSING: {
     check: 'C-112.36', where: at("#heldFields", "is-search-stated"),
@@ -159,33 +136,27 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   FORCE_UNKNOWN: {
     check: 'C-112.37', where: at("#forceRefusal", "is-force-known"),
-    translation: 'A provision requires, recommends or allows; a policy\'s provision may also be required or at an '
-      + 'office\'s discretion. This one names none of these for its kind. Nothing was written.',
+    translation: word('refusal.FORCE_UNKNOWN'),
   },
   FORCE_NO_HOLDER: {
     check: 'C-112.38', where: at("#forceRefusal", "is-force-holder"),
-    translation: 'A provision at someone\'s discretion names the office or body that holds the discretion, as an '
-      + 'entity the record holds. None was named. Nothing was written.',
+    translation: word('refusal.FORCE_NO_HOLDER'),
   },
   FORCE_NO_CRITERIA: {
     check: 'C-112.39', where: at("#forceRefusal", "is-force-criteria"),
-    translation: 'A provision at someone\'s discretion names the passage stating the criteria for using it, or says '
-      + 'that none are stated. Neither was given. Nothing was written.',
+    translation: word('refusal.FORCE_NO_CRITERIA'),
   },
   FORCE_NO_CITATION: {
     check: 'C-112.40', where: at("#forceRefusal", "is-force-cited"),
-    translation: 'A provision\'s force is recorded with the provision\'s own words that state it: a passage of the '
-      + 'standard\'s text. None was named. Nothing was written.',
+    translation: word('refusal.FORCE_NO_CITATION'),
   },
   FORCE_TEXT_NOT_HELD: {
     check: 'C-112.41', where: at("refuseTextNotHeld", "is-force-text-held"),
-    translation: 'The force of a provision is read from its own words, and this standard\'s text is not held. Hold its '
-      + 'text first. Nothing was written.',
+    translation: word('refusal.FORCE_TEXT_NOT_HELD'),
   },
   FORCE_ALREADY_CONFIRMED: {
     check: 'C-112.42', where: at("#forceRefusal", "is-force-once"),
-    translation: 'This provision already has a confirmed force, which the answer names. Withdraw it, with your reason, '
-      + 'before recording another. Nothing was written.',
+    translation: word('refusal.FORCE_ALREADY_CONFIRMED'),
   },
   COPY_UNKNOWN: {
     check: 'C-112.43', where: at("#copyFields", "is-copy-known"),
@@ -195,93 +166,76 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   COPY_CLAIM_NOT_CITED: {
     check: 'C-112.44', where: at("#copyFields", "is-copy-claim-cited"),
-    translation: 'What a copy says of itself is recorded with the passage of its text that says it. None was named, or '
-      + 'it is not one of the standard\'s passages. Nothing was written.',
+    translation: word('refusal.COPY_CLAIM_NOT_CITED'),
   },
   RELEASE_NOT_OWNER: {
     check: 'C-112.45', where: at("releaseStandard", "is-release-owner"),
-    translation: 'A policy that is not public is released by an owner of the project its source material is filed '
-      + 'in. You are not one. Nothing was written.',
+    translation: word('refusal.RELEASE_NOT_OWNER'),
   },
   NOT_HELD_FROM_SOURCE: {
     check: 'C-112.46', where: at("releaseStandard", "is-held-from-source"),
-    translation: 'This standard is already seen by every member of your team, so there is nothing to release. Nothing '
-      + 'was written.',
+    translation: word('refusal.NOT_HELD_FROM_SOURCE'),
   },
   VERSION_BASIS_INVALID: {
     check: 'C-112.47', where: at("#versionFields", "is-version-basis"),
-    translation: 'A version read from two captures names two held captures of one address whose texts differ, and the '
-      + 'version it supersedes. These are not that. Nothing was written.',
+    translation: word('refusal.VERSION_BASIS_INVALID'),
   },
   OVERRIDE_INVALID: {
     check: 'C-112.48', where: at("#versionFields", "is-override-form"),
-    translation: 'An override names the held standard and portion it displaces, and until when: a recorded event or a '
-      + 'later revision of this standard. The answer names the field not in that form. Nothing was written.',
+    translation: word('refusal.OVERRIDE_INVALID'),
   },
   FORCE_SOURCE_INVALID: {
     check: 'C-112.49', where: at("#versionFields", "is-force-source"),
-    translation: 'Where a standard\'s force comes from is a delegation, a resolution, an oversight approval, a court '
-      + 'order or a contract, with the passage of the instrument stating it. This is not that. Nothing was written.',
+    translation: word('refusal.FORCE_SOURCE_INVALID'),
   },
   ADOPTION_MODE_UNKNOWN: {
     check: 'C-112.50', where: at("adoptionRecord", "is-adoption-mode"),
-    translation: 'An adoption is by reference, voluntary or by accreditation. This one names none of these. Nothing '
-      + 'was written.',
+    translation: word('refusal.ADOPTION_MODE_UNKNOWN'),
   },
   ADOPTION_NO_EDITION: {
     check: 'C-112.51', where: at("adoptionRecord", "is-adoption-edition"),
-    translation: 'An adoption names the edition adopted, as it is written, in at most 50 characters. None was given. '
-      + 'Nothing was written.',
+    translation: word('refusal.ADOPTION_NO_EDITION'),
   },
   ADOPTION_NO_CITATION: {
     check: 'C-112.52', where: at("adoptionRecord", "is-adoption-cited"),
-    translation: 'An adoption is recorded with the passage of the adopting act that states it. None was named, or it is '
-      + 'not one of the act\'s passages. Nothing was written.',
+    translation: word('refusal.ADOPTION_NO_CITATION'),
   },
   ACCESS_UNKNOWN: {
     check: 'C-112.54', where: at("#accessFields", "is-access-known"),
-    translation: 'A standard is free to read, readable only in a reading room, or behind a paywall. This one names none '
-      + 'of these. Nothing was written.',
+    translation: word('refusal.ACCESS_UNKNOWN'),
   },
   TEXT_NOT_MEMBER_CAPTURED: {
     check: 'C-112.55', where: at("#accessFields", "is-text-member-captured"),
-    translation: 'The text of a standard behind a paywall or in a reading room is held only from a capture a member made '
-      + 'themselves. A passage named was captured another way. Nothing was written.',
+    translation: word('refusal.TEXT_NOT_MEMBER_CAPTURED'),
   },
   TARGET_INVALID: {
     check: 'C-112.56', where: at("#targetField", "is-target-form"),
-    translation: 'A target names what is measured and the passage stating it, a threshold (at least, at most or '
-      + 'within, an exact number and its unit), the period it applies to, and the body\'s definition of the measure '
-      + 'or that none is stated. The answer names the field not in that form. Nothing was written.',
+    translation: word('refusal.TARGET_INVALID'),
   },
   QUESTION_NOT_HELD: {
     check: 'C-112.57', where: at("#questionField", "is-question-held"),
-    translation: 'The question named is not one your team\'s record holds that you may see. Name one, or none. '
-      + 'Nothing was written.',
+    translation: word('refusal.QUESTION_NOT_HELD'),
   },
   NO_SUCH_FORCE: {
     check: 'C-112.58', where: at("forceWithdraw", "is-force-held"),
-    translation: 'No confirmed force of a provision answers to that id here. Nothing was written.',
+    translation: word('refusal.NO_SUCH_FORCE'),
   },
   /* T36-15 (R50; N736, K2021, K2092): rows minted in T36, awaiting promotion's stamp (T37). */
   THROUGH_INVALID: {
     check: 'C-112.59', where: at("inForceThroughRecord", "is-through-date"),
-    translation: 'The date a version is known in force through is a day written YYYY-MM-DD, and not before the day the '
-      + 'version came into force. This one is not. Nothing was written.',
+    translation: word('refusal.THROUGH_INVALID'),
   },
   THROUGH_NO_SOURCE: {
     check: 'C-112.60', where: at("inForceThroughRecord", "is-through-sourced"),
-    translation: 'A version known in force through a date is recorded with the passage of the source checked that day, '
-      + 'a captured document you may see. None was named, or it is not held. Nothing was written.',
+    translation: word('refusal.THROUGH_NO_SOURCE'),
   },
   THROUGH_AFTER_CHECK: {
     check: 'C-112.61', where: at("inForceThroughRecord", "is-through-checked"),
-    translation: 'A source shows a version in force only up to the day it was last retrieved, and the date given is '
-      + 'later than that. Give that day or an earlier one, or capture the source again. Nothing was written.',
+    translation: word('refusal.THROUGH_AFTER_CHECK'),
   },
   NO_SUCH_RECORD: {
     check: 'C-112.62', where: at("inForceThroughWithdraw", "is-through-record-held"),
-    translation: 'No record of a version known in force through a date answers to that id here. Nothing was written.',
+    translation: word('refusal.NO_SUCH_RECORD'),
   },
   /* T45-7 (R52, R53; Actions D7; v0.2 §3 Standard): rows minted in T45. T46-10 (R55; DEC-194, N913): their translations
      are `words.json`'s `refusal.<CODE>`, read by key (`REFUSAL_WORDS` above), never a copy; awaiting T47's stamp. */

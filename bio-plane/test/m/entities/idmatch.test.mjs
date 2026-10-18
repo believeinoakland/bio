@@ -118,7 +118,7 @@ test("R24 the verdict is id-spaces.judgePair's; referent is read only as agrees 
   const q = { space: "project", a: "WO-0001", b: "wo0001", aCapture: a, bCapture: b, viewer: MACHINE };
   const before = JSON.stringify(w.rows(`SELECT * FROM sqlite_master`)) + w.rows(`SELECT COUNT(*) AS n FROM captured_locators`)[0].n;
   const agree = w.e.idMatch({ ...q, referent: "agrees" });
-  assert.deepEqual([agree.verdict, agree.counts, agree.referent.by], ["SHARED", true, "the caller's reading"]);
+  assert.deepEqual([agree.verdict, agree.counts, agree.referent.by], ["SHARED", true, word("idspaces.by.caller_reading")]);
   assert.match(agree.referent_reading, /caller's/);
   const dis = w.e.idMatch({ ...q, referent: "disagrees" });
   assert.deepEqual([dis.verdict, dis.counts], ["REFERENT_DISAGREES", false]);

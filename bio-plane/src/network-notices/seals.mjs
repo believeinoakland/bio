@@ -15,6 +15,7 @@
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
 import { parseTimestampResponse } from "../tsa.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* ---------------------------------------------------------------- weeks (the Terms: a UTC ISO week) */
 
@@ -77,18 +78,12 @@ export const ACTIVITY_METHOD_EARLIER_LABELS = Object.freeze(["civicos-working-on
 export const ACTIVITY_METHOD = Object.freeze({
   version: ACTIVITY_METHOD_VERSION,
   earlier_labels: ACTIVITY_METHOD_EARLIER_LABELS,
-  same_method: "Each earlier label names this same method: an attestation that carries one was computed exactly as "
-    + "stated here. Only the label's name changed.",
-  window: `The ${ACTIVITY_WINDOW} complete UTC ISO weeks (Monday 00:00Z to the next Monday 00:00Z) before the date the `
-    + "level is computed.",
-  counted: "A week counts when it holds at least one member act on the project. How many acts a week holds never "
-    + "changes the level; only whether it holds one does.",
-  member_act: "A member act is a write to one of the project's records whose history entry names a member as its "
-    + "author: not a machine, an automated process or a run of the assistant, and not a mechanical writer. A member's "
-    + "adoption of a machine draft counts; the draft does not.",
-  levels: ACTIVITY_LEVELS.map((l) => `${l.level}: ${l.min === l.max ? l.min : `${l.min} to ${l.max}`} counted weeks`),
-  never_counted: "Never counted: the assistant's work, machine and mechanical writes, the number of acts in a week, "
-    + "and anything outside the project's own records.",
+  same_method: word("network-notices.earlier_label_names"),
+  window: word("network-notices.complete_utc_iso", { activity_window: String(ACTIVITY_WINDOW) }),
+  counted: word("network-notices.week_counts_holds"),
+  member_act: word("network-notices.member_act_write"),
+  levels: ACTIVITY_LEVELS.map((l) => localize("network-notices.seals.level_v1_counted_weeks", "{level}: {v1} counted weeks", { level: String(l.level), v1: String(l.min === l.max ? l.min : `${l.min} to ${l.max}`) })),
+  never_counted: word("network-notices.counted_assistant_work"),
 });
 
 /** R7: the level for a number of counted weeks. */

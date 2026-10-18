@@ -36,6 +36,7 @@ import { ARCHIVE_DEPTH_MAX } from "../ooxml.mjs";
 import { migrateProvenance } from "./schema.mjs";
 import { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
 import { REGISTER_ENTRY_CHECKS, TESTIMONY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
@@ -293,7 +294,7 @@ export async function partsHeld(bucket, keyOf, parts) {
       const o = await bucket.get(keyOf(p.sha256));
       if (o) digest = hexBytes(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
     }
-    if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
+    if (!digest) unverified.push({ ...name, why: word("provenance.why.stored_checksum_too") });
     else if (digest !== p.sha256) disagree.push({ ...name, stored_sha256: digest });
   }
   return { missing, disagree, unverified };
@@ -313,8 +314,8 @@ export async function registerAuditReport(r, evidence) {
   const canProbe = !!(evidence && typeof evidence.head === "function");
   const captured = [], unbacked = [], mismatched = [], heldInParts = [], undetermined = [];
   for (const { named_parts: named, ...row } of r.unresolved || []) {
-    if (row.class === "orphan") { unbacked.push({ ...row, why: "the record itself is absent" }); continue; }
-    if (!canProbe) { unbacked.push({ ...row, why: "no capture bucket is configured to check" }); continue; }
+    if (row.class === "orphan") { unbacked.push({ ...row, why: word("provenance.why.record_itself_absent") }); continue; }
+    if (!canProbe) { unbacked.push({ ...row, why: word("provenance.why.capture_bucket_configured") }); continue; }
     const h = await evidence.head(row.capture_sha);
     if (h) {
       if (typeof row.bytes === "number" && h.size !== row.bytes)
@@ -329,18 +330,16 @@ export async function registerAuditReport(r, evidence) {
        ("held in parts, all present"); a missing part is NAMED; and a row resolving neither way is
        UNDETERMINED, counted outside `sound`, never inside it. */
     if (named?.state === "unreadable") { undetermined.push({ ...row, why: named.why }); continue; }
-    if (named?.state !== "named") { unbacked.push({ ...row, why: "no bytes in the working bucket" }); continue; }
+    if (named?.state !== "named") { unbacked.push({ ...row, why: word("provenance.why.bytes_working_bucket") }); continue; }
     const v = await partsHeld(evidence, (s) => s, named.parts);
     const sum = named.parts.reduce((n, p) => n + p.bytes, 0);
     if (v.missing.length)
-      unbacked.push({ ...row, why: `${v.missing.length} of the ${named.parts.length} parts the record names `
-                                 + `are not in the working bucket`, missing_parts: v.missing });
+      unbacked.push({ ...row, why: word("provenance.why.parts_record_names", { missing: String(v.missing.length), parts: String(named.parts.length) }), missing_parts: v.missing });
     else if (v.disagree.length || (typeof row.bytes === "number" && sum !== row.bytes))
       mismatched.push({ ...row, registered: row.bytes, stored: sum,
                         ...(v.disagree.length ? { disagreeing_parts: v.disagree } : {}) });
     else if (v.unverified.length)
-      undetermined.push({ ...row, why: `every part the record names is present, but the digest of `
-                                     + `${v.unverified.length} could not be verified`, unverified_parts: v.unverified });
+      undetermined.push({ ...row, why: word("provenance.why.part_record_names", { unverified: String(v.unverified.length) }), unverified_parts: v.unverified });
     else heldInParts.push(row);
   }
   return {
@@ -449,7 +448,7 @@ class Provenance {
       const shown = typeof bytes === "string" ? JSON.stringify(bytes).slice(0, 40)
                   : bytes !== null && typeof bytes === "object" ? (Array.isArray(bytes) ? "a list" : "an object")
                   : String(bytes);
-      const said = bytes === undefined ? "states no bytes" : `states bytes ${shown}`;
+      const said = bytes === undefined ? word("provenance.states_bytes") : `states bytes ${shown}`;
       /* DEC-49 REGION is-register-bytes */
       return refusal("REGISTER_BYTES_UNSTATED",
         `register[${i}] (${sha256 ? `capture ${sha256.slice(0, 16)}…` : "no capture named"}, `
@@ -693,17 +692,17 @@ class Provenance {
     const f = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
     if (!f) return { state: "none" };
     if (typeof f.text !== "string")
-      return { state: "unreadable", why: "the record's data/provenance.json is held as a blob, which the store cannot read" };
+      return { state: "unreadable", why: word("provenance.why.record_data_provenance") };
     let reg;
     try { reg = JSON.parse(f.text); } catch {
-      return { state: "unreadable", why: "the record's data/provenance.json does not parse" };
+      return { state: "unreadable", why: word("provenance.why.record_data_provenance_json") };
     }
     const doc = (Array.isArray(reg?.documents) ? reg.documents : [])
       .find((d) => d && bareSha(d.capture?.sha256) === bareSha(sha) && d.parts !== undefined);
     if (!doc) return { state: "none" };
     const ok = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) =>
       p && /^[0-9a-f]{64}$/.test(bareSha(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
-    if (!ok) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
+    if (!ok) return { state: "unreadable", why: word("provenance.why.register_document_names") };
     return { state: "named", parts: doc.parts.map((p) => ({ file: typeof p.file === "string" ? p.file : null,
                                                             sha256: bareSha(p.sha256), bytes: p.bytes })) };
   }
@@ -998,8 +997,7 @@ class Provenance {
     if (reg && Number(reg.authored) === 1)
       return { grade: null, route: "authored", determined: false, basis: "CAPTURE_AXIS_AUTHORED",
                testimony: TESTIMONY_GRADE,
-               why: "a member's own words were not read in from anywhere, so the capture axis earns no letter; the "
-                  + `observation is graded as testimony, ${TESTIMONY_GRADE}, and nothing raises that` };
+               why: word("provenance.why.member_words_read", { testimony_grade: String(TESTIMONY_GRADE) }) };
     const vias = s ? this.#rows(`SELECT DISTINCT via FROM captured_locators WHERE capture_sha = ? ORDER BY via`, s)
       .map((r) => r.via) : [];
     /* R26 · D-709: no recorded route at all: stated, never guessed. A leg on it keeps its author's letter, under the
@@ -1007,22 +1005,17 @@ class Provenance {
     if (!vias.length)
       return { grade: null, route: "unrecorded", determined: false, basis: "CAPTURE_ROUTE_UNRECORDED",
                ceiling: EARNED_CAPTURE_CEILING,
-               why: "no fetch route is recorded for these bytes (bytes a provenance document carried), so no "
-                  + "capture grade is measured from how they were fetched. A leg on them keeps the "
-                  + `letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored` };
+               why: word("provenance.why.fetch_route_recorded", { earned_capture_ceiling: String(EARNED_CAPTURE_CEILING) }) };
     const answers = [];
     /* R24 · D-177: a capture fetched `direct` earns the ceiling, measured. */
     if (vias.includes("direct"))
       answers.push({ grade: EARNED_CAPTURE_CEILING, route: "direct", determined: true, basis: "measured",
-                     why: `your team's Civicsmith fetched these bytes directly from their address, so their capture `
-                        + `grade is ${EARNED_CAPTURE_CEILING} by that fact rather than by a member's account` });
+                     why: word("provenance.why.group_civicsmith_fetched", { earned_capture_ceiling: String(EARNED_CAPTURE_CEILING) }) });
     /* R25 · D-693: read only through an archive replay: one rank below, measured. */
     if (vias.includes(ARCHIVE_VIA))
       answers.push({ grade: ARCHIVE_CAPTURE_GRADE, route: "archive", determined: ARCHIVE_CAPTURE_GRADE !== null,
                      basis: "measured",
-                     why: `your team's Civicsmith fetched these bytes only through an archive replay (${ARCHIVE_VIA}), `
-                        + `never from their publisher: one more party stands between the record and the publisher, so `
-                        + `their capture grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture` });
+                     why: word("provenance.why.group_civicsmith_fetched_bytes", { archive_via: String(ARCHIVE_VIA), archive_capture_grade: String(ARCHIVE_CAPTURE_GRADE) }) });
     /* R59 · N688 (K1852 (1)): a file cut out of an archive the record holds: one answer per receipt, each its
        archive's, in the receipts' locator order so that between two equal archives the answer is always the same. */
     if (vias.includes(UNPACKED_VIA))
@@ -1035,18 +1028,17 @@ class Provenance {
        held these bytes at the pull's instant, by its own receipt at the knock's address (the chain of custody from
        the knock's receipt), so the earliest such receipt is named. */
     if (vias.includes(DOORBELL_VIA))
-      answers.push(this.#received(s, DOORBELL_VIA, "handed to the team through the doorbell and brought in by a member"));
+      answers.push(this.#received(s, DOORBELL_VIA, word("provenance.handed_group_through")));
     /* R63 · K2425 (4): a file a member holds, brought in by her upload: received, not fetched, graded exactly as the
        doorbell's material (R51), its existence at the upload's instant proven by the receipt the upload wrote. */
     if (vias.includes(UPLOAD_VIA))
-      answers.push(this.#received(s, UPLOAD_VIA, "brought in by a member who holds the file"));
+      answers.push(this.#received(s, UPLOAD_VIA, word("provenance.brought_member_holds")));
     if (answers.length) return this.#strongest(answers);
     /* R26: a route no ruling grades is NAMED, and the grade is undetermined. It answers only when no ruled route
        does (R59: it never outranks a ruled one). */
     return { grade: null, route: vias.join(","), determined: false, basis: "CAPTURE_GRADE_VIA_UNRULED",
              ceiling: EARNED_CAPTURE_CEILING,
-             why: `these bytes were served by a route no ruling grades (${vias.join(", ")}), so what they earn on the `
-                + "capture axis is UNDETERMINED" };
+             why: word("provenance.why.bytes_served_route", { vias: String(vias.join(", ")) }) };
   }
 
   /* R51, R63: the answer of material RECEIVED by route `via` (`doorbell` or `upload`), never fetched: no letter, the
@@ -1056,10 +1048,7 @@ class Provenance {
                           WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`, s, via);
     return { grade: null, route: via, determined: false, basis: RECEIVED_NOT_FETCHED, ceiling: EARNED_CAPTURE_CEILING,
              received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
-             why: `these bytes were ${how}, never fetched from an address, so no capture grade is measured from how `
-                + "they were fetched. A leg on them keeps the letter its author gave, under the ceiling "
-                + `(${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} `
-                + `is proven by the receipt your team's Civicsmith itself made at ${r.address}` };
+             why: word("provenance.why.bytes_fetched_address", { how: String(how), earned_capture_ceiling: String(EARNED_CAPTURE_CEILING), first_retrieved: String(r.first_retrieved), address: String(r.address) }) };
   }
 
   /* R59: the strongest of several routes' answers: a determined grade before an undetermined one, a higher letter
@@ -1090,9 +1079,7 @@ class Provenance {
         + "entry's number>, so the archive they came from cannot be read and what they earn on the capture axis is "
         + "UNDETERMINED");
     if (depth + 1 > ARCHIVE_DEPTH_MAX)
-      return unresolved(`these bytes were cut out of archives nested more than ${ARCHIVE_DEPTH_MAX} deep, past the `
-        + "depth your team's Civicsmith reads an archive's grade through, so what they earn on the capture axis is "
-        + "UNDETERMINED");
+      return unresolved(word("provenance.bytes_cut_archives", { archive_depth_max: String(ARCHIVE_DEPTH_MAX) }));
     const archiveSha = m[1].toLowerCase();
     const a = this.#grade(archiveSha, depth + 1);
     if (a.basis === UNPACKED_UNRESOLVED) return unresolved(a.why);
@@ -1101,9 +1088,7 @@ class Provenance {
       ? { sha256: inner.sha256, through: [...inner.through, index], route: inner.route, basis: inner.basis }
       : { sha256: archiveSha, through: [index], route, basis };
     return { ...rest, route: "unpacked", basis: UNPACKED_FROM_ARCHIVE, archive,
-             why: `these bytes are entry ${index} of an archive the record holds (${archiveSha.slice(0, 16)}…), cut `
-                + "out of it, so on the capture axis they earn exactly what that archive earns, never more and never "
-                + `less. Of the archive: ${why}` };
+             why: word("provenance.why.bytes_entry_archive", { index: String(index), archive_sha: String(archiveSha.slice(0, 16)), why: String(why) }) };
   }
 
   /** R62 · N806 (K2333): whether this copy fetched the capture itself, the one definition of the source condition
@@ -1542,7 +1527,7 @@ class Provenance {
        the id it allocated, so no id is spent on a document that is not written. */
     const heading = (typeof title === "string" ? title : "")
       .replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200)
-      || `Firsthand observation, observed ${obs}`;
+      || word("provenance.firsthand_observation_observed", { obs: String(obs) });
     /* THE CANONICAL ID (`BUNDLE_ID_RE`) carries a slug after the allocated
        number. It is the fixed word `observation` rather than one derived from
        the title or the words, so an id — which travels further than a document
@@ -1566,7 +1551,7 @@ class Provenance {
          refusal itself is made below, outside it (is-testify-bytes). */
       if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha)) return { spent: { id, sha } };
       const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
-      const locator = "a member's firsthand observation, authored in this record";
+      const locator = word("provenance.member_firsthand_observation");
       /* MK-6 (§4.1): every file below names the author by this reference, never
          by `who`. `who` goes to the register row and the private rows beside it
          (the content row's minter, the log's actor), which no publication carries. */
@@ -1584,8 +1569,7 @@ class Provenance {
         `  retrieved: ${recorded}`,
         "monitoring:", "  enabled: false", "  frequency: none",
         "---", "", "## Summary", "",
-        `A member's firsthand observation. Their words are \`${file}\`, below its canonical header, exactly as written; nothing here `
-        + `paraphrases or summarises them.`, "",
+        localize("provenance.index.a_members_firsthand_observation_their", "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.", { file: String(file) }), "",
         "## Provenance Notes", "",
         `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, `
         + `by this record's clock. The author is taken from the signed-in session, not from the request. It stands on `
@@ -1593,7 +1577,7 @@ class Provenance {
         "## Session Log", "",
         `### Session ${recorded} | Authored | ${observer}`,
         "Trigger: testify",
-        "Changes: created as a member's authored observation.", "",
+        word("provenance.changes_created_member"), "",
         "## Review Notes", ""].join("\n");
       const doc = {
         file, locator, retrieved: recorded,
@@ -1602,7 +1586,7 @@ class Provenance {
            not this field); the author is the STAMP, recorded in the register and
            named here only by its opaque reference (MK-6, §4.1); the two dates are apart. */
         authored: true, author: observer, observed_at: obs, recorded_at: recorded,
-        authority: "the observing member", authority_state: "determined",
+        authority: word("provenance.observing_member"), authority_state: "determined",
         authority_basis: `the author of these bytes is the signed-in member taken from the session `
                        + `at op=testify, ${recorded}; the request could not name it`,
         provenance_chain: [{
@@ -1665,7 +1649,7 @@ class Provenance {
                    why: "the capture axis measures the act of reading a document in, and a member's own "
                       + "words were not read in from anywhere, so it earns no letter here" },
         connection: { grade: null, determined: false,
-                      why: "no reader ran over these words and nothing resolved them to a subject" },
+                      why: word("provenance.why.reader_ran_words") },
         /* MK-2 / IC-142: the letter is the registry's own constant, so this answer and a leg's refusal cannot
            name different letters. */
         testimony: { grade: TESTIMONY_GRADE, determined: true,
@@ -1675,9 +1659,7 @@ class Provenance {
                         + "nothing raises it — another member agreeing is a co-signature, not a second "
                         + "observation" },
       },
-      says: `${who} recorded a firsthand observation, observed ${obs}. The words are held exactly as `
-          + `written and are the document; they stand on ${who}'s trust. This record takes the author from `
-          + `the signed-in account and never from the request.`,
+      says: word("provenance.says.recorded_firsthand_observation", { who: String(who), obs: String(obs), who_2: String(who) }),
     };
   }
 

@@ -10,6 +10,7 @@ import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
          resolutionLines, INQUIRY_CONTRADICTION_CHECKS, INQUIRY_TABLES, QUALIFIER_MAX, HYPOTHESIS_MAX }
   from "../../../src/inquiry/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 const CAND = "a".repeat(64), CAND2 = "b".repeat(64);
@@ -263,14 +264,14 @@ test("R24 R47 a division's children do not carry the parent's contradiction link
 
 test("R38 C-2.11–C-2.18 are held in this module's own table, each with its code and translation as the requirement words it", () => {
   const T = {
-    "C-2.11": ["CONTRADICTION_LINK_MALFORMED", "A contradiction inquiry names the candidate it was taken up from by that candidate's id, and this document's link is not one. Take the candidate up again from where it is shown. Nothing was written."],
-    "C-2.12": ["RESOLUTION_WITHOUT_CONTRADICTION", "Only an inquiry taken up from a contradiction records what kind of contradiction it turned out to be, and this one was not taken up from one. Remove the resolution, or take the contradiction up first. Nothing was written."],
-    "C-2.13": ["RESOLUTION_MISSING", "A contradiction inquiry is concluded by saying what the conflict turned out to be: how the two sides differ, which one is wrong, or that the conflict is real. This conclusion does not say. Name its kind. Nothing was written."],
-    "C-2.14": ["RESOLUTION_KIND_UNKNOWN", "That is not one of the kinds a contradiction can be resolved as. The kinds are listed with the question. Nothing was written."],
-    "C-2.15": ["RESOLUTION_INCOMPLETE", "This resolution is not complete. A resolution gives its kind together with what that kind needs: the respect in which the sides differ, which side is wrong and why, or the rule that reconciles them. The part that is missing or not in that form is named. Nothing was written."],
-    "C-2.16": ["EXPLORES_MALFORMED", "A question that explores a contradiction names one thing it explores: one respect in which the sides may differ, one rule that may reconcile them, or one hypothesis. This one names none, several, or one the record does not know. Nothing was written."],
-    "C-2.17": ["CANDIDATE_ALREADY_TAKEN_UP", "That contradiction has already been taken up as another question, which is named. Work on it there, so that one conflict has one place where it is resolved. Nothing was written."],
-    "C-2.18": ["CONTRADICTION_ARM_FAILED", "The check of this question's contradiction fields (its link, its resolution, what it explores) stopped with an error instead of answering, so the question is refused rather than let through. The error is in the check and says nothing yet about the document. Nothing was written."],
+    "C-2.11": ["CONTRADICTION_LINK_MALFORMED", word("refusal.CONTRADICTION_LINK_MALFORMED")],
+    "C-2.12": ["RESOLUTION_WITHOUT_CONTRADICTION", word("refusal.RESOLUTION_WITHOUT_CONTRADICTION")],
+    "C-2.13": ["RESOLUTION_MISSING", word("refusal.RESOLUTION_MISSING")],
+    "C-2.14": ["RESOLUTION_KIND_UNKNOWN", word("refusal.RESOLUTION_KIND_UNKNOWN")],
+    "C-2.15": ["RESOLUTION_INCOMPLETE", word("refusal.RESOLUTION_INCOMPLETE")],
+    "C-2.16": ["EXPLORES_MALFORMED", word("refusal.EXPLORES_MALFORMED")],
+    "C-2.17": ["CANDIDATE_ALREADY_TAKEN_UP", word("refusal.CANDIDATE_ALREADY_TAKEN_UP")],
+    "C-2.18": ["CONTRADICTION_ARM_FAILED", word("refusal.CONTRADICTION_ARM_FAILED")],
   };
   const held = Object.entries(INQUIRY_CONTRADICTION_CHECKS).map(([code, r]) => [r.check, code, r.translation]);
   assert.deepEqual(held, Object.entries(T).map(([check, [code, tr]]) => [check, code, tr]));

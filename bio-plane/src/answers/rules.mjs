@@ -7,6 +7,7 @@
  * `not_held` with its reason (R7). */
 
 import { evaluateRule } from "../civil-time/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const filled = (v) => typeof v === "string" && v.trim() !== "";
@@ -90,7 +91,7 @@ function deadlinecompute(args, ctx) {
     const r = ev ? ev.readEvent({ eventId: anchor, viewer: ctx.viewer }) : null;
     if (!r || r.ok === false || !r.found) return notHeld("meaning", `the start event ${anchor} is not held`, "capturerequest");
     const w = r.event && r.event.when;
-    if (!w || w === "undetermined" || !w.value) return { value: { undetermined: true, why: `the start event has no date the record can read` },
+    if (!w || w === "undetermined" || !w.value) return { value: { undetermined: true, why: word("answers.why.start_event_date") },
       basis: rule.citation, grade: null, status: "undetermined", label: "computed_fact" };
     anchor = { value: w.value, precision: w.precision, zone: w.zone };
   }

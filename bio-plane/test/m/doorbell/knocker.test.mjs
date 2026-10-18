@@ -15,6 +15,7 @@ import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs"
 import { NS_RATIFY } from "../../../src/sshsig.mjs";
 import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 import { INSTALLATION_CHECKS, firstHopWho } from "../../../src/acquisition/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -155,7 +156,7 @@ test("R15 R16: knocksOf answers the knocks sharing a pseudonym, oldest first, wi
   await c.knock({ content: "anon", sourceAddress: "a", now: W * 10 + 600 });
   const p = (await c.knockerDigestOf(SECRET)).pseudonym;
   const all = c.knocksOf({ pseudonym: p });
-  assert.deepEqual([all.ok, all.continuity, all.count, all.limit, all.truncated, all.next], [true, "the same knocker secret was presented", 7, READ_LIMIT.default, false, null]);
+  assert.deepEqual([all.ok, all.continuity, all.count, all.limit, all.truncated, all.next], [true, word("doorbell.continuity"), 7, READ_LIMIT.default, false, null]);
   assert.deepEqual(all.knocks.map((k) => k.knock_id), ids, "oldest first, and only this pseudonym's");
   assert.ok(!JSON.stringify(all).includes("@example.org"), "no contact");
   assert.ok(all.knocks.every((k) => !("contact" in k)));

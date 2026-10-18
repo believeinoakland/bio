@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { ID_TABLE, idPattern } from "../../../src/record-grammar/index.mjs";
 import { recordOf, RecordCore, mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
 import { storage } from "./storage.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const fresh = () => { const s = storage(); const rc = recordOf({ storage: s }); rc.migrate(); return { s, rc }; };
 const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
@@ -35,7 +36,7 @@ const bytesFor = (tail) => [...tail].map((c) => ALPHABET.indexOf(c));
 
 const SEQUENTIAL = ID_TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
 const OPAQUE = ID_TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix);
-const BUILD_FAULT = "This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.";
+const BUILD_FAULT = word("record-core.build_fault");
 
 /* ---- R1, R76, R40, R62: ids from ID_TABLE ---- */
 

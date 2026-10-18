@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { recordOf, recordCoreOps, mintExhausted, RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "../../../src/record-core/index.mjs";
 import { storage } from "./storage.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const fresh = () => { const s = storage(); const rc = recordOf({ storage: s }); rc.migrate(); return { s, rc }; };
 const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
@@ -18,8 +19,8 @@ const dump = (s) => Object.fromEntries(
   rows(s, `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
     .map((r) => [r.name, JSON.stringify(rows(s, `SELECT * FROM ${r.name} ORDER BY rowid`))]));
 
-const CIVICSMITH = "your team's Civicsmith";
-const BUILD_FAULT = "This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.";
+const CIVICSMITH = word("queue.capture-completed-unattended.who");
+const BUILD_FAULT = word("record-core.build_fault");
 /* R82: the words that never name the group's own Civicsmith in a sentence a member reads. */
 const NEVER = /\b(copy|instance|plane|server)\b/i;
 const AT = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
@@ -287,7 +288,7 @@ test("R82: every member-facing sentence this module answers calls the group's ow
       assert.match(before, /^[Yy]our team's $/, `${what}: the Civicsmith is "your group's"`);
     }
   }
-  assert.ok(sentences.filter(([, t]) => t.includes(CIVICSMITH) || t.includes("Your team's Civicsmith")).length >= 25);
+  assert.ok(sentences.filter(([, t]) => t.includes(CIVICSMITH) || t.includes(word("queue.update.section"))).length >= 25);
   /* the answers themselves carry these sentences: a refusal read live, not only the table */
   const { rc } = fresh();
   assert.equal(rc.registerCounts("", [], null).translation, MOVED.COUNTS_MALFORMED);

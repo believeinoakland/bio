@@ -19,6 +19,7 @@
  * from its text layer only, R4). */
 import { classify, wraps, TOTAL, scaleIn, CAPTION, isProse, isSentence, isYear } from "./figures.mjs";
 import { KEYS, matchIn } from "./view.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /** R3's usability bar: the share of rows with two or more figures that have the
  *  table's modal number of cells (`measures-T33/money-people.md` §7). */
@@ -237,8 +238,7 @@ function buildTable(ctx, page, live, reg, prevEnd, nextStart, method, engine) {
   if (!counted.length) { usable = false; why = "no row holds two or more figures"; }
   else if (modal_share < USABLE_SHARE) {
     usable = false;
-    why = `only ${counted.length ? Math.round(modal_share * 100) : 0}% of the ${counted.length} rows holding two or more `
-        + `figures have the table's modal ${modal} cells (at least ${USABLE_SHARE * 100}% needed)`;
+    why = localize("budget-doctypes.tables.only_v1_of_the_length", "only {v1}% of the {length} rows holding two or more figures have the table's modal {modal} cells (at least {v2}% needed)", { v1: String(counted.length ? Math.round(modal_share * 100) : 0), length: String(counted.length), modal: String(modal), v2: String(USABLE_SHARE * 100) });
   } else if (!columns.length) { usable = false; why = "the table's headers are not in the text read"; }
 
   /* Title, period and scale from the lines above the table (to the previous

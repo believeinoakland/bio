@@ -20,6 +20,7 @@
 import { BUNDLE_ID_RE, OBJECT_TYPES, proposalLabel } from "../record-grammar/index.mjs";
 import { leadLegFindings } from "../inquiry-grammar/grammar.mjs";
 import { themeLegFindings } from "../connections/checks.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 /** A finding, record-grammar's shape (its R11), with the optional `code` (REC-56 / D-206). */
 function f(check, severity, message, repairs, code) {
@@ -67,9 +68,9 @@ export const ACTION_KINDS = ['cpra_request', 'grand_jury', 'controller_referral'
  * that did would press a writer to invent the one value nobody assessed (CLAUDE.md §4). */
 export const RISK_TIERS = {
   1: 'file freely',
-  2: 'file with caution',
-  3: 'do not file without counsel',
-  undetermined: 'not assessed: no member has stated a risk tier for this action',
+  2: word('risk.tier.2'),
+  3: word('risk.tier.3'),
+  undetermined: word('risk.tier.undetermined'),
 };
 /* The stored value -> one of RISK_TIERS' keys, or null for a value the vocabulary does not hold (which
  * C-2.10 refuses by name). Absent and the literal `undetermined` read as undetermined; the NUMBERS 1, 2 and
@@ -163,8 +164,7 @@ export function actionBasisFindings(fm, findings) {
         `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical record id`, REPAIRS));
     } else if (OBJECT_TYPES[target.split('-')[0]] === 'action') {
       findings.push(f('C-2.10', 'error',
-        `action_basis[${i}].target '${target}' is an ACTION: an action does not rest on our own action. `
-        + `Evidence for what we did is evidence somebody else produced (DEC-14)`,
+        localize('action-grammar.grammar.action_basis_i_target_target', 'action_basis[{i}].target \'{target}\' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)', { i: String(i), target: String(target) }),
         ['point the leg at the finding or the question, not at another action']));
     }
     if (!ACTION_BASIS_KINDS.includes(l.kind)) {
@@ -187,9 +187,7 @@ export function actionBasisFindings(fm, findings) {
     const clock = Array.isArray(fm.clock) ? fm.clock : [];
     if (!clock.length) {
       findings.push(f('C-2.10', 'error',
-        'a request_for_comment states the response window it gave, as a clock[] entry with its own basis. '
-        + `The window is AUTHORED by the team; ${RFC_RESPONSE_WINDOW_PRECEDENT.source} is the precedent to `
-        + 'reason from and is not a constant this record enforces (DEC-13)',
+        localize('action-grammar.grammar.a_request_for_comment_states', 'a request_for_comment states the response window it gave, as a clock[] entry with its own basis. The window is AUTHORED by the team; {source} is the precedent to reason from and is not a constant this record enforces (DEC-13)', { source: String(RFC_RESPONSE_WINDOW_PRECEDENT.source) }),
         ['add a clock[] entry: the date the response was due, and the basis it derives from']));
     }
   }
@@ -246,9 +244,7 @@ export function correspondenceFindings(fm, findings) {
     ];
     if (sha && account) {
       findings.push(f('C-2.10', 'error',
-        `correspondence[${i}] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not `
-        + 'summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a '
-        + 'reader would quote instead', CHOICE));
+        localize('action-grammar.grammar.correspondence_i_carries_both_an', 'correspondence[{i}] carries BOTH an artifact_sha and an account: what came back is CAPTURED, not summarised (DEC-13). The bytes are what the team can defend; a paraphrase beside them is what a reader would quote instead', { i: String(i) }), CHOICE));
     } else if (!sha && !account) {
       findings.push(f('C-2.10', 'error',
         `correspondence[${i}] carries NEITHER an artifact_sha nor an account: it asserts an exchange and `
@@ -260,8 +256,7 @@ export function correspondenceFindings(fm, findings) {
       }
       if (e.direction === 'no_response') {
         findings.push(f('C-2.10', 'error',
-          `correspondence[${i}] is a no_response carrying an artifact_sha: nothing arrived, so there are no `
-          + 'bytes to hash. A non-response is recorded as a named account with its date (DEC-13)',
+          localize('action-grammar.grammar.correspondence_i_is_a_no', 'correspondence[{i}] is a no_response carrying an artifact_sha: nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)', { i: String(i) }),
           ['record the non-response as an account: what was due, when, and that nothing came']));
       }
     } else if (!author) {
@@ -417,8 +412,7 @@ export function lifecycleFindings(entries, i) {
     const legal = CORRESPONDENCE_STAGES[e.direction] || [];
     if (!legal.includes(stage)) {
       out.push({ code: 'STAGE_NOT_OF_DIRECTION', message:
-        `correspondence[${i}].stage '${stage.slice(0, 40)}' is not a stage of a '${e.direction}' entry: `
-        + (legal.length ? `one of ${legal.join(', ')}` : 'a non-response carries no stage, it names what it awaited by follows') });
+        localize('action-grammar.grammar.correspondence_i_stage_stage_is', 'correspondence[{i}].stage \'{stage}\' is not a stage of a \'{direction}\' entry: {v1}', { i: String(i), stage: String(stage.slice(0, 40)), direction: String(e.direction), v1: String(legal.length ? `one of ${legal.join(', ')}` : 'a non-response carries no stage, it names what it awaited by follows') }) });
     }
   }
   let prior = null;

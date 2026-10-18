@@ -11,6 +11,7 @@ import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
 import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CALCULATION_STATE_WORDS, WORKBOOK_STATE_WORDS, DISCLOSED_WITHOUT_WORDS }
   from "../../../src/case-authoring/index.mjs";
 import { calculationsOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
 const C1 = "CALC-2026-0001", C2 = "CALC-2026-0002";
@@ -169,7 +170,7 @@ test("R56 (K1570, K1594): a workbook among the captures a member rests on is rea
   assert.equal((await op(w, P, { targets: [Q], roles: roles([Q]) })).calculations[0].recompute, "differs", "a differing binding");
   Object.assign(answer, { status: "agrees", binding: true, bound: false });
   assert.equal((await op(w, P, { targets: [Q], roles: roles([Q]) })).calculations[0].recompute, "unbound");
-  Object.assign(answer, { status: "not recomputed here", binding: true, bound: true });
+  Object.assign(answer, { status: word("workbooks.recomputed"), binding: true, bound: true });
   const ok = await op(w, P, { targets: [Q], roles: roles([Q]) });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
   const row = calcs(w, ok)[0];

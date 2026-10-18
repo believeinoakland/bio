@@ -17,6 +17,7 @@ import { SWEEP_CADENCES, sweepRefusal } from "./checks.mjs";
 import { compileTerm, inScope, isCut } from "./sweep-match.mjs";
 import { sweepGrammar } from "./checks.mjs";
 import { migrateLinkSweep } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** The name this module registers under (monitoring R66; capture-requests R45). */
 export const LINK_SWEEP_MODULE = "link-sweep";
@@ -178,8 +179,7 @@ export class LinkSweep {
     const author = typeof c.author === "string" ? c.author.trim() : "";
     /* DEC-49 REGION is-sweep-member */
     if (!author || isMachineIdentity(author))
-      return sweepRefusal("SWEEP_NOT_A_MEMBER", `${author || "an unnamed writer"} is not a member, and only a member adds, removes `
-        + "or changes a sweep; any writer may unratify one. Nothing was written.", { sweeps: touched.map((t) => t.id) });
+      return sweepRefusal("SWEEP_NOT_A_MEMBER", localize("link-sweep.sweep.v1_is_not_a_member", "{v1} is not a member, and only a member adds, removes or changes a sweep; any writer may unratify one. Nothing was written.", { v1: String(author || "an unnamed writer") }), { sweeps: touched.map((t) => t.id) });
     /* END DEC-49 REGION is-sweep-member */
     const ratifying = touched.filter((t) => t.ratified);
     if (!ratifying.length) return null;
@@ -191,8 +191,8 @@ export class LinkSweep {
     /* DEC-49 REGION is-sweep-owner */
     if (!owns)
       return sweepRefusal("SWEEP_RATIFY_NOT_AN_OWNER", project
-        ? `${member} is not an owner of ${project}, and only an owner ratifies a sweep or changes a ratified one. Nothing was written.`
-        : "this list belongs to no project, so it has no owner who could ratify a sweep. Nothing was written.",
+        ? localize("link-sweep.sweep.member_is_not_an_owner", "{member} is not an owner of {project}, and only an owner ratifies a sweep or changes a ratified one. Nothing was written.", { member: String(member), project: String(project) })
+        : localize("link-sweep.sweep.this_list_belongs_to_no", "this list belongs to no project, so it has no owner who could ratify a sweep. Nothing was written."),
         { sweeps: ratifying.map((t) => t.id), project });
     /* END DEC-49 REGION is-sweep-owner */
     return null;
@@ -276,10 +276,10 @@ export class LinkSweep {
     const h = this.#held(x);
     const no = (why) => ({ due: false, why, due_at: dueAt, next: null, ...h });
     if (s.ratified !== true) return no("not ratified");
-    if (!runnable(s)) return no("its definition is not one a run can read");
-    if (paused) return no("the daemon is paused");
+    if (!runnable(s)) return no(word("link-sweep.no.definition_run_read"));
+    if (paused) return no(word("link-sweep.no.daemon_paused"));
     if (x.daemon.enabled === false) return no("its bundle's daemon block says enabled: false");
-    if (this.#closed(x.bundle)) return no("its project is closed");
+    if (this.#closed(x.bundle)) return no(word("link-sweep.no.project_closed"));
     if (h.held) return no("held: backlog");
     return dueAt <= nowMs ? { due: true, due_at: dueAt, next: null, ...h } : { due: false, due_at: dueAt, next: dueAt, ...h };
   }
@@ -344,7 +344,7 @@ export class LinkSweep {
       const epoch = h.openEpoch(SWEEP_CONSUMER, nowMs, INTERVAL.daily);
       const ran = [], skipped = [], failed = [], spentBy = new Map();
       for (const x of batch) {
-        if (!h.claim(SWEEP_CONSUMER, x.name, epoch)) { skipped.push({ sweep: x.name, reason: "claimed by a tick that did not finish" }); continue; }
+        if (!h.claim(SWEEP_CONSUMER, x.name, epoch)) { skipped.push({ sweep: x.name, reason: word("monitoring.claimed_tick_finish") }); continue; }
         const cap = Number.isInteger(x.daemon.sweep_budget) && x.daemon.sweep_budget >= 0 ? x.daemon.sweep_budget - (spentBy.get(x.bundle) || 0) : null;
         try {
           const r = await this.#run(x, nowMs, cap);
@@ -425,10 +425,10 @@ export class LinkSweep {
         const entry = { seed, outcome: unchanged ? "unchanged" : "captured", sha };
         if (!unchanged) { const f = await this.#fileSeed(x, a.document, at); entry.file = f.file; if (f.why) entry.why = f.why; }
         d.seeds.push(entry);
-        this.#look(x, seed, { state: "PRESENT", ref: sha, detail: `seed ${entry.outcome} for the sweep ${x.name}` }, at);
+        this.#look(x, seed, { state: "PRESENT", ref: sha, detail: localize("link-sweep.sweep.seed_outcome_for_the_sweep", "seed {outcome} for the sweep {name}", { outcome: String(entry.outcome), name: String(x.name) }) }, at);
         const bytes = await this.#bytes(sha);
         if (bytes) lists.push({ seed, sha, links: linksOf(new TextDecoder("utf-8", { fatal: false }).decode(bytes), a.document?.locator || seed) });
-        else entry.unread = "the seed's bytes could not be read back from the capture store";
+        else entry.unread = word("link-sweep.unread");
         continue;
       }
       const reason = a.code === "SWEEP_REDIRECT_OUT_OF_SCOPE" ? "out_of_scope_redirect" : a.reason || a.code || "failed";
@@ -475,13 +475,12 @@ export class LinkSweep {
         this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `format_excluded; ${format ?? "undetermined"}` }, at);
         continue;
       }
-      this.#look(x, link.address, { state: "PRESENT", ref: sha, detail: `fetched for the sweep ${x.name}` }, at);
+      this.#look(x, link.address, { state: "PRESENT", ref: sha, detail: localize("link-sweep.sweep.fetched_for_the_sweep_name", "fetched for the sweep {name}", { name: String(x.name) }) }, at);
       if (a.existed === true) { d.skipped.already_held++; continue; }
       const landed = this.host.land({ id: x.name, bundle: x.bundle, locators: [link.address], target: link.text || null }, { locator: link.address, doc }, at, {
-        title: `Swept by ${x.name}: ${link.text || link.address}`,
-        notes: `Brought in by the ratified sweep ${x.name}, one hop from the seed ${l.seed}, whose capture ${l.sha} listed it. `
-             + `Collected ${at}. Filed at collected and never higher: verifying it is a named member's decision.`,
-        trigger: `ratified sweep ${x.name}`, summary: `The document served at ${link.address}, brought in by the sweep ${x.name}.` });
+        title: word("link-sweep.title.swept", { name: String(x.name), address: String(link.text || link.address) }),
+        notes: word("link-sweep.notes", { name: String(x.name), seed: String(l.seed), sha: String(l.sha), at: String(at) }),
+        trigger: `ratified sweep ${x.name}`, summary: word("link-sweep.summary", { address: String(link.address), name: String(x.name) }) });
       if (landed && landed.ok) {
         this.sql.exec(`INSERT OR IGNORE INTO sweep_filed (sweep, address_norm, bundle_id, filed, at) VALUES (?, ?, ?, ?, ?)`,
                          x.name, norm, x.bundle, landed.bundle_id, at);
@@ -510,7 +509,7 @@ export class LinkSweep {
     const leaf = (String(doc.locator || "").split("?")[0].split("/").pop() || "seed").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 80) || "seed";
     const file = `snapshots/monitor-${sha.slice(0, 12)}-${leaf}`;
     const img = this.record.readImage(x.bundle);
-    if (!img || typeof img["bundle.md"] !== "string" || !Number.isSafeInteger(bytes)) return { file: null, why: "the sweep's bundle or the capture's size could not be read" };
+    if (!img || typeof img["bundle.md"] !== "string" || !Number.isSafeInteger(bytes)) return { file: null, why: word("link-sweep.why.sweep_bundle_capture") };
     const hex = (t) => createSha256().update(new TextEncoder().encode(t)).hex();
     const files = [];
     let has = false;
@@ -519,14 +518,14 @@ export class LinkSweep {
       if (typeof v === "string") files.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: hex(v) });
       else { files.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes }); if (v.sha256 === sha) has = true; }
     }
-    if (has) return { file: null, why: "the sweep's bundle already holds these bytes" };
+    if (has) return { file: null, why: word("link-sweep.why.sweep_bundle_already") };
     const fm = this.record.head(x.bundle);
     const p = await this.promotion.promote({ bundleId: x.bundle, base: hex(img["bundle.md"]), author: SWEEP_ACTOR,
       snapKey: `${at.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("")}`,
       writer: "mechanical", operation: "sweep", meta: { object_type: fm?.type, title: fm?.title, current_state: fm?.currentState },
       files: [...files, { path: file, blobSha: sha, sha256: sha, bytes }],
       register: [{ sha256: sha, path: file, encoding: "binary", bytes }] });
-    return p && p.ok ? { file } : { file: null, why: `the promotion filing it was refused (${p?.reason || p?.code || "no reason given"})` };
+    return p && p.ok ? { file } : { file: null, why: word("link-sweep.why.promotion_filing_refused", { given: String(p?.reason || p?.code || "no reason given") }) };
   }
 
   /* ================================================================== *
@@ -581,12 +580,12 @@ export class LinkSweep {
    *  matcher a run uses (R1's `inScope`). */
   scopeCheck({ sweep = null, locators = [] } = {}) {
     const x = this.#all().find((y) => y.name === sweep);
-    if (!x) return { ok: false, reason: "unknown", detail: `no sweep is named ${String(sweep).slice(0, 80)}` };
+    if (!x) return { ok: false, reason: "unknown", detail: localize("link-sweep.sweep.no_sweep_is_named_string", "no sweep is named {String}", { String: String(String(sweep).slice(0, 80)) }) };
     if (x.sweep.ratified !== true || !runnable(x.sweep)) return { ok: false, reason: "unratified" };
     if (this.#held(x).held) return { ok: false, reason: "held", detail: "the sweep's backlog is at or over its limit" };
     const out = (Array.isArray(locators) ? locators : []).filter((l) => !inScope(l, x.sweep.sources));
     if (!Array.isArray(locators) || !locators.length || out.length)
-      return { ok: false, reason: "out-of-scope", detail: out.length ? `${String(out[0]).slice(0, 120)} is outside the sweep's sources` : "no locator was named" };
+      return { ok: false, reason: "out-of-scope", detail: out.length ? localize("link-sweep.sweep.string_is_outside_the_sweeps", "{String} is outside the sweep's sources", { String: String(String(out[0]).slice(0, 120)) }) : "no locator was named" };
     return { ok: true, scope: [...x.sweep.sources] };
   }
 }

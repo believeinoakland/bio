@@ -40,6 +40,7 @@ import { caseAuthoringOf } from "../case-authoring/index.mjs";
 import { parseFrontmatter, createSha256 } from "../record-grammar/index.mjs";
 import { CASE_CHECK_CHECKS } from "./checks.mjs";
 import { CASE_CHECK_TABLES, migrateCaseCheck } from "./schema.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { CASE_CHECK_CHECKS } from "./checks.mjs";
 export { CASE_CHECK_SCHEMA, CASE_CHECK_TABLES } from "./schema.mjs";
@@ -65,8 +66,7 @@ function refusal(code, detail, extra) {
 /** R2: NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER, built from no argument so its bytes vary with nothing. */
 export function noSuchCase() {
   /* DEC-49 REGION is-case-check-case */
-  return refusal("NO_SUCH_CASE", "no case by that name answers this read: a case being prepared in a project the "
-                 + "viewer has no standing in is answered exactly as one that does not exist.");
+  return refusal("NO_SUCH_CASE", localize("case-check.index.no_case_by_that_name", "no case by that name answers this read: a case being prepared in a project the viewer has no standing in is answered exactly as one that does not exist."));
   /* END DEC-49 REGION is-case-check-case */
 }
 
@@ -285,7 +285,7 @@ export class CaseCheck {
     const id = str(finding);
     if (!id) {
       /* DEC-49 REGION is-case-check-finding */
-      return refusal("NO_ID", "a finding's id is required; nothing was read.");
+      return refusal("NO_ID", localize("case-check.index.a_findings_id_is_required", "a finding's id is required; nothing was read."));
       /* END DEC-49 REGION is-case-check-finding */
     }
     const v = str(version), p = str(project);

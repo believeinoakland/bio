@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON } from "./fixture.mjs";
 import { monitorObservationFor, monitoringOps } from "../../../src/monitoring/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LOC = "https://records.example.org/agenda.txt";
 const ADDR = "https://records.example.org/agenda.txt";
@@ -36,7 +37,7 @@ test("R11 one observation row per look, authority sweep naming the bundle, level
   assert.equal(w.looks().length, n0 + 6);
   /* unchanged or changed with no baseline, and any other outcome, write nothing and say why */
   const nb = w.m.recordLook({ bundleId: id, address: ADDR, outcome: "unchanged" });
-  assert.deepEqual([nb.written, nb.why], [false, "no captured baseline, so the look has no capture to refer to and is not recorded"]);
+  assert.deepEqual([nb.written, nb.why], [false, word("monitoring.why.captured_baseline_look")]);
   assert.equal(w.m.recordLook({ bundleId: id, address: ADDR, outcome: "changed" }).written, false);
   const other = w.m.recordLook({ bundleId: id, address: ADDR, outcome: "unbaselined", baseline: b.cap });
   assert.deepEqual([other.written, other.why], [false, "no observation is recorded for the outcome 'unbaselined'"]);
@@ -44,7 +45,7 @@ test("R11 one observation row per look, authority sweep naming the bundle, level
   /* a look naming no bundle or no address writes nothing and says why, in member-read words (K899 (1)) */
   for (const missing of [{ bundleId: null }, { address: null }])
     assert.deepEqual(w.m.recordLook({ bundleId: id, address: ADDR, outcome: "removed", ...missing }),
-                     { ok: false, written: false, why: "a monitor look needs a record and an address" });
+                     { ok: false, written: false, why: word("monitoring.why.monitor_look_needs") });
   assert.equal(w.looks().length, n0 + 6);
   /* a rendered tick's detail says frame and that the content is undetermined */
   assert.equal(monitorObservationFor({ outcome: "unchanged", baseline: b.cap, scope: "frame" }).detail, "frame unchanged; content undetermined");
@@ -65,9 +66,9 @@ test("R12 a changed look names a capture only when the register holds it under t
   const look = (captured, seen) => w.m.recordLook({ bundleId: id, address: ADDR, locator: LOC, outcome: "changed", baseline: b.cap,
                                                    seen, captured });
   const notSeen = look({ sha256: o.cap }, H("zzz"));
-  assert.deepEqual([notSeen.captured, notSeen.uncaptured], [null, "the capture offered is not the sha this tick saw"]);
+  assert.deepEqual([notSeen.captured, notSeen.uncaptured], [null, word("monitoring.capture_offered_sha")]);
   const elsewhere = look({ sha256: o.cap }, o.cap);
-  assert.deepEqual([elsewhere.captured, elsewhere.uncaptured], [null, "the served bytes are not registered under this record"]);
+  assert.deepEqual([elsewhere.captured, elsewhere.uncaptured], [null, word("monitoring.served_bytes_registered")]);
   assert.equal(w.looks().at(-1).result_ref, b.cap);
   assert.equal(w.rows(`SELECT count(*) c FROM captured_locators WHERE capture_sha=?`, o.cap)[0].c, 0, "no version recorded");
   /* a tick that captured: the look names the new capture and the version is recorded at the address, once */

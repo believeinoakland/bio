@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, F, CASE, WHY, sha } from "./fixture.mjs";
 import { CHRONOLOGY_MAX, LANE_WORDS, counselMarking, Filings } from "../../../src/filings/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const OFFICE_ARM = { state: "named", role: "Selectboard", body: "Port Ellery Selectboard", level: "city" };
@@ -35,8 +36,8 @@ test("R33 the chronology is events' timeline over the act's event, the counterpa
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   const ch = p.sections.chronology;
   /* the set, each member naming what it is and the record it was read from */
-  assert.deepEqual(ch.set, [{ id: ACT, is: "the act's event", source: x.D }, { id: x.OFFICE, is: "the counterparty office", source: A },
-                            { id: x.SUBJECT, is: "an entity a finding concerns", source: `${F}@${CASE}/1` }]);
+  assert.deepEqual(ch.set, [{ id: ACT, is: word("filings.the_act_s_event"), source: x.D }, { id: x.OFFICE, is: word("filings.counterparty_office"), source: A },
+                            { id: x.SUBJECT, is: word("filings.entity_finding_concerns"), source: `${F}@${CASE}/1` }]);
   assert.deepEqual([ch.title, ch.marking, ch.from, ch.to], ["Chronology", counselMarking(COUNSEL), "2026-03-02", "2026-09-28"]);
   /* the world's lane: events' own answer for that set and those dates, in its order, each item naming its source */
   const ids = ch.set.map((i) => i.id);
@@ -114,7 +115,7 @@ test("R33 a truncated lane says so; a set the record cannot name, a timeline no 
     return { ...r, world: { ...r.world, truncated: true }, ...(r.ours ? { ours: { ...r.ours, sources: r.ours.sources.map((s) => ({ ...s, truncated: true })) } } : {}) };
   }, readEvent: (q) => real.readEvent(q) };
   const t = pack(x.filingsWith({ events: cut }), A).sections.chronology.lanes;
-  assert.deepEqual([t.world.truncated, t.world.says], [true, `more events than the ${CHRONOLOGY_MAX} this lane lists are held: the lane is truncated`]);
+  assert.deepEqual([t.world.truncated, t.world.says], [true, word("filings.says.events_lane_lists", { chronology_max: String(CHRONOLOGY_MAX) })]);
   assert.ok(t.ours.sources.length && t.ours.sources.every((s) => s.truncated && /truncated/.test(s.says)));
   /* no module answering the timeline, and one refusing */
   for (const [events, says] of [[{}, /no module answers the timeline/], [{ timeline: () => ({ ok: false, reason: "BAD_DATE" }) }, /could not be read \(BAD_DATE\)/],

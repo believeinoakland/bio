@@ -270,11 +270,7 @@ export function cachedNotes(routes, { facets = true, ordered = true } = {}) {
       field: CACHED_FIELDS[col].field, column: col, via,
       as_of: CACHED_FIELDS[col].asOf,
       authority: CACHED_FIELDS[col].authority,
-      detail: `${CACHED_FIELDS[col].field}: this is the value computed at `
-            + `${CACHED_FIELDS[col].asOf}, not at this query — `
-            + `${CACHED_FIELDS[col].why}. `
-            + `${CACHED_FIELDS[col].authority} derives the current answer and reads no column; `
-            + `this ${via.join(" and ")} ${via.length > 1 ? "are" : "is"} a projection and not the authority.`,
+      detail: localize("query-language.query.field_this_is_the_value", "{field}: this is the value computed at {asOf}, not at this query — {why}. {authority} derives the current answer and reads no column; this {via} {v1} a projection and not the authority.", { field: String(CACHED_FIELDS[col].field), asOf: String(CACHED_FIELDS[col].asOf), why: String(CACHED_FIELDS[col].why), authority: String(CACHED_FIELDS[col].authority), via: String(via.join(" and ")), v1: String(via.length > 1 ? "are" : "is") }),
     }));
 }
 
@@ -747,9 +743,7 @@ export const MEANING = {
          answer "no machine text here" about text a machine produced. The literal
          travels as an argument, like every value here. */
       chain:  { col: "chain_kind", case: "lower", vocab: [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED],
-                selects: "how the unit was read (`chain_last` on the row). A machine reading "
-                       + `(${MACHINE_READ_KINDS.join(", ")}) also selects the units read in more `
-                       + `than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
+                selects: localize("query-language.query.how_the_unit_was_read", "how the unit was read (`chain_last` on the row). A machine reading ({MACHINE_READ_KINDS}) also selects the units read in more than one way (`{CHAIN_KIND_MIXED}`), which contain machine-read text", { MACHINE_READ_KINDS: String(MACHINE_READ_KINDS.join(", ")), CHAIN_KIND_MIXED: String(CHAIN_KIND_MIXED) }),
                 pred: (cmp, v) => v === "undetermined"
                     ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] }
                   : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] }
@@ -1057,6 +1051,7 @@ import { MONEY_KINDS, PHASES, STAGES, BASES } from "./money/vocab.mjs";
 const MONEY_WORDS = { kinds: MONEY_KINDS, phases: PHASES, stages: STAGES, bases: BASES };
 /* R27 (T33-39): a date on a time field is a local day in the caller's zone, its bounds `civil-time`'s. */
 import { isCalendarDate, dayRange } from "./civil-time/index.mjs";
+import { localize } from "./setup-words/index.mjs";
 export { viewerPredicate, GATE_MARK };
 
 export const FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
@@ -1332,9 +1327,9 @@ function nearGroup(body, closed) {
   }
   const kept = terms.filter((t) => /[\p{L}\p{N}]/u.test(t.quoted ? t.value : t.value.replace(/\*$/, "")));
   let n = NEAR_DEFAULT, clamped = null, why = null;
-  if (!closed) why = "it has no closing parenthesis";
-  else if (kept.length < 2) why = `it has ${kept.length === 1 ? "one term" : "no term"}, and a proximity needs two`;
-  else if (sawComma && !/^[+-]?\d+$/.test(dist)) why = `its distance ${JSON.stringify(dist)} is not a whole number`;
+  if (!closed) why = localize("query.why.closing_parenthesis", "it has no closing parenthesis");
+  else if (kept.length < 2) why = localize("query.why.proximity_needs_two", "it has {kept}, and a proximity needs two", { kept: String(kept.length === 1 ? "one term" : "no term") });
+  else if (sawComma && !/^[+-]?\d+$/.test(dist)) why = localize("query.why.distance_whole_number", "its distance {dist} is not a whole number", { dist: String(JSON.stringify(dist)) });
   else if (sawComma) {
     const v = Number(dist);
     n = Math.max(0, Math.min(NEAR_MAX, v));
@@ -1362,7 +1357,7 @@ function parseTokens(tokens, implicitOp, ctx) {
       eat();
       const e = orExpr();
       if (peek()?.k === ")") eat();
-      else ctx.warnings.push("unclosed parenthesis; read to the end of the query");
+      else ctx.warnings.push(localize("query.unclosed_parenthesis_read", "unclosed parenthesis; read to the end of the query"));
       return e;
     }
     if (t.k === ")") return null;
@@ -1462,12 +1457,12 @@ function textAtom(column, value, quoted, ctx) {
    terms joined by AND, and the warning says why. */
 function nearAtom(g, mkTerm, mkNear, ctx) {
   if (g.why) {
-    ctx.warnings.push(`${g.source}: read as its terms joined by AND, because ${g.why}`);
+    ctx.warnings.push(localize("query.read_terms_joined", "{source}: read as its terms joined by AND, because {why}", { source: String(g.source), why: String(g.why) }));
     const kids = g.terms.map(mkTerm).filter(Boolean);
     return kids.length === 0 ? null : kids.length === 1 ? kids[0] : { op: "and", kids, explicit: true };
   }
   if (g.clamped !== null)
-    ctx.warnings.push(`${g.source}: the distance ${g.clamped} is outside 0–${NEAR_MAX}; read as ${g.n}`);
+    ctx.warnings.push(localize("query.distance_outside_read", "{source}: the distance {clamped} is outside 0–{near_max}; read as {n}", { source: String(g.source), clamped: String(g.clamped), near_max: String(NEAR_MAX), n: String(g.n) }));
   const sink = { textAtoms: [] };
   const near = g.terms.map((t) => textAtom(null, t.value, t.quoted, sink));
   return mkNear({ op: "text", column: null, value: near.map((a) => a.value).join(" "), prefix: false,
@@ -1488,7 +1483,7 @@ function selector(tok, ctx) {
        projection that has not been rewritten. */
     if (v in MEANING) return { op: "meaning", arm: v, col: null, cmp: "present", value: null };
     const f = FIELDS[v];
-    if (!f) { drop(ctx, `has: unknown field ${JSON.stringify(tok.value)}`); return null; }
+    if (!f) { drop(ctx, localize("query-language.query.has_unknown_field_stringify", "has: unknown field {stringify}", { stringify: String(JSON.stringify(tok.value)) })); return null; }
     if (!available(v, f, ctx)) return null;
     return { op: "meta", col: f.col, cmp: "present", value: null };
   }
@@ -1505,7 +1500,7 @@ function selector(tok, ctx) {
     const path = at < 0 ? tok.value : tok.value.slice(0, at);
     const val = at < 0 ? null : tok.value.slice(at + 1);
     if (!/^[A-Za-z0-9_.[\]]{1,120}$/.test(path)) {
-      drop(ctx, `fm: path ${JSON.stringify(path)} is not a frontmatter path`);
+      drop(ctx, localize("query-language.query.fm_path_stringify_is_not", "fm: path {stringify} is not a frontmatter path", { stringify: String(JSON.stringify(path)) }));
       return null;
     }
     return val === null
@@ -1522,7 +1517,7 @@ function selector(tok, ctx) {
        typing `sewer:fund` meant to search, and answering "no such field" for a
        string that is obviously a search is the control feeling broken. The
        warning still says what happened. */
-    drop(ctx, `unknown field ${JSON.stringify(tok.field)}; read as free text`);
+    drop(ctx, localize("query-language.query.unknown_field_stringify_read_as", "unknown field {stringify}; read as free text", { stringify: String(JSON.stringify(tok.field)) }));
     return textAtom(null, `${tok.field} ${tok.value}`.trim(), true, ctx);
   }
   if (!available(name, f, ctx)) return null;
@@ -1611,7 +1606,7 @@ function meaningAtom(arm, tok, ctx) {
       /* A comparison against nothing. DROPPED WITH A WARNING, in the visible
          direction this function already chose twice: compiling it would be a
          predicate no row satisfies, which is the silent narrowing above. */
-      drop(ctx, `${arm}: ${JSON.stringify(String(tok.value))} compares ${subName} against nothing`);
+      drop(ctx, localize("query-language.query.arm_stringify_compares_subname_against", "{arm}: {stringify} compares {subName} against nothing", { arm: String(arm), stringify: String(JSON.stringify(String(tok.value))), subName: String(subName) }));
       return null;
     }
   }
@@ -1628,7 +1623,7 @@ function meaningAtom(arm, tok, ctx) {
          failure that overclaims coverage is the one this item was raised to
          close, so the arm fails in the visible direction. Same shape as `has:`
          above, for the same reason. */
-      drop(ctx, `${arm}: unknown sub-field ${JSON.stringify(lhs)}; known: ${Object.keys(m.sub).join(", ")}`);
+      drop(ctx, localize("query-language.query.arm_unknown_sub_field_stringify", "{arm}: unknown sub-field {stringify}; known: {keys}", { arm: String(arm), stringify: String(JSON.stringify(lhs)), keys: String(Object.keys(m.sub).join(", ")) }));
       return null;
     }
   }
@@ -1643,8 +1638,7 @@ function meaningAtom(arm, tok, ctx) {
          visible direction as the unknown sub-field above: the arm is dropped,
          which widens, rather than compiled to one reading, which would answer
          confidently and wrongly. */
-      drop(ctx, `${arm}: ${JSON.stringify(raw)} is both ${claims.join(" and ")}; `
-        + `say ${claims.map((c) => `${arm}:${c}=${raw}`).join(" or ")}`);
+      drop(ctx, localize("query-language.query.arm_stringify_is_both_claims", "{arm}: {stringify} is both {claims}; say {map}", { arm: String(arm), stringify: String(JSON.stringify(raw)), claims: String(claims.join(" and ")), map: String(claims.map((c) => `${arm}:${c}=${raw}`).join(" or ")) }));
       return null;
     }
     subName = (claims && claims[0]) || m.bare;
@@ -1676,8 +1670,7 @@ function meaningAtom(arm, tok, ctx) {
        MATCH, and compiling it to one anyway would answer a question the member
        did not ask. */
     if (subCmp || CMP.some(([lead]) => raw.startsWith(lead))) {
-      drop(ctx, `${arm}: ${JSON.stringify(String(tok.value))} compares a full-text field; `
-        + `${arm}: matches text and does not order it`);
+      drop(ctx, localize("query-language.query.arm_stringify_compares_a_full", "{arm}: {stringify} compares a full-text field; {arm_2}: matches text and does not order it", { arm: String(arm), stringify: String(JSON.stringify(String(tok.value))), arm_2: String(arm) }));
       return null;
     }
     /* `passage:*` — HAS THIS DOCUMENT ANY INDEXED TEXT AT ALL. It falls to the
@@ -1716,7 +1709,7 @@ function meaningAtom(arm, tok, ctx) {
       /* `textAtom` refuses a term with no letter or digit in it, because an
          FTS5 literal built from punctuation matches no row and would silently
          empty an otherwise good query. Dropped and SAID, which widens. */
-      drop(ctx, `${arm}: ${JSON.stringify(raw)} has no word in it to match`);
+      drop(ctx, localize("query-language.query.arm_stringify_has_no_word", "{arm}: {stringify} has no word in it to match", { arm: String(arm), stringify: String(JSON.stringify(raw)) }));
       return null;
     }
     return matchNode(atom);
@@ -1759,7 +1752,7 @@ function drop(ctx, msg) {
    said, never read from a column of `bundles`. */
 function available(name, f, ctx) {
   if (!f.rel || ctx.frs.has(f.col)) return true;
-  drop(ctx, `${JSON.stringify(name)} is not available here; read as nothing`);
+  drop(ctx, localize("query-language.query.stringify_is_not_available_here", "{stringify} is not available here; read as nothing", { stringify: String(JSON.stringify(name)) }));
   return false;
 }
 
@@ -1770,7 +1763,7 @@ function closedWord(name, f, raw, ctx) {
   if (raw === "" || raw === "*") return true;
   const words = MONEY_WORDS[f.words].map((w) => String(w).toLowerCase());
   if (words.includes(raw.toLowerCase())) return true;
-  drop(ctx, `${name}: ${JSON.stringify(raw)} is not one of money's ${f.words} (${words.join(", ")}); dropped`);
+  drop(ctx, localize("query-language.query.name_stringify_is_not_one", "{name}: {stringify} is not one of money's {words} ({words_2}); dropped", { name: String(name), stringify: String(JSON.stringify(raw)), words: String(f.words), words_2: String(words.join(", ")) }));
   return false;
 }
 
@@ -1806,20 +1799,20 @@ function timeAtom(name, f, raw, ctx) {
   const days = [a, b].filter((x) => x !== null && DAY_RE.test(x));
   if (!days.length) return undefined;
   const bad = days.find((d) => !isCalendarDate(d));
-  if (bad !== undefined) { drop(ctx, `${name}: ${JSON.stringify(bad)} is not a calendar date; dropped`); return null; }
+  if (bad !== undefined) { drop(ctx, localize("query-language.query.name_stringify_is_not_a", "{name}: {stringify} is not a calendar date; dropped", { name: String(name), stringify: String(JSON.stringify(bad)) })); return null; }
   let lo = null, hi = null;
   if (f.day) {
     if (cmp === "..") { lo = [">=", a]; hi = ["<=", b]; }
     else return { op: "meta", col: f.col, cmp, value: a };
   } else {
     if (typeof ctx.zone !== "string" || ctx.zone === "") {
-      drop(ctx, `${name}: ${JSON.stringify(raw)} names a local day and no time zone is given; dropped`);
+      drop(ctx, localize("query-language.query.name_stringify_names_a_local", "{name}: {stringify} names a local day and no time zone is given; dropped", { name: String(name), stringify: String(JSON.stringify(raw)) }));
       return null;
     }
     const bounds = {};
     for (const d of days) {
       const r = dayRange(d, d, ctx.zone);
-      if (r.refused) { drop(ctx, `${name}: ${JSON.stringify(raw)}: ${r.why}; dropped`); return null; }
+      if (r.refused) { drop(ctx, localize("query-language.query.name_stringify_why_dropped", "{name}: {stringify}: {why}; dropped", { name: String(name), stringify: String(JSON.stringify(raw)), why: String(r.why) })); return null; }
       bounds[d] = { start: noZ(r.start), end: noZ(r.end) };
     }
     const isDay = (x) => x !== null && DAY_RE.test(x);
@@ -1832,7 +1825,7 @@ function timeAtom(name, f, raw, ctx) {
     hi = isDay(b) ? ["<", bounds[b].end] : ["<=", b];
   }
   if (lo[1] > hi[1] || (lo[1] === hi[1] && hi[0] === "<")) {
-    drop(ctx, `${name}: ${JSON.stringify(raw)} ends before it starts; dropped`);
+    drop(ctx, localize("query-language.query.name_stringify_ends_before_it", "{name}: {stringify} ends before it starts; dropped", { name: String(name), stringify: String(JSON.stringify(raw)) }));
     return null;
   }
   return span(f.col, lo, hi);
@@ -1855,8 +1848,8 @@ function applySort(spec, ctx) {
   const [name, tail] = s.split(":");
   if (tail) dir = /^d/i.test(tail) ? "DESC" : "ASC";
   const key = String(name || "").toLowerCase();
-  if (FIELDS[key]?.rel) { drop(ctx, `sort: ${JSON.stringify(name)} can hold many values per record; not a sort`); return; }
-  if (!(key in SORTABLE)) { drop(ctx, `sort: unknown field ${JSON.stringify(name)}`); return; }
+  if (FIELDS[key]?.rel) { drop(ctx, localize("query-language.query.sort_stringify_can_hold_many", "sort: {stringify} can hold many values per record; not a sort", { stringify: String(JSON.stringify(name)) })); return; }
+  if (!(key in SORTABLE)) { drop(ctx, localize("query-language.query.sort_unknown_field_stringify", "sort: unknown field {stringify}", { stringify: String(JSON.stringify(name)) })); return; }
   ctx.sort = { field: key, dir: dir || (key === "relevance" ? "ASC" : "DESC") };
 }
 
@@ -1968,8 +1961,7 @@ function visibleBm25({ terms, gate, rel }) {
              + `FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM vis))`);
     args.push(e);
     const hs = FTS_COLUMNS.map((_, c) => `highlight(bundles_fts, ${c}, char(1), '') AS h${c}`).join(", ");
-    parts.push(`tf${i}(fid, tf) AS (SELECT fid, ${FTS_COLUMNS.map((_, c) => marks(`h${c}`)).join(" + ")} `
-             + `FROM (SELECT rowid AS fid, ${hs} FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM scope)))`);
+    parts.push(localize("query-language.query.tf_i_fid_tf_as", "tf{i}(fid, tf) AS (SELECT fid, {map} FROM (SELECT rowid AS fid, {hs} FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM scope)))", { i: String(i), map: String(FTS_COLUMNS.map((_, c) => marks(`h${c}`)).join(" + ")), hs: String(hs) }));
     args.push(e);
   });
   const sum = terms.map((_, i) => `COALESCE((SELECT idf FROM df${i}) * tf${i}.tf * ${K1 + 1} / (tf${i}.tf + ${K1}), 0)`).join(" + ");
@@ -2032,11 +2024,11 @@ function fieldRelationsOf(second, warnings) {
   }
   for (const [name, r] of Object.entries(fs)) {
     if (!Object.prototype.hasOwnProperty.call(FIELDS, name)) {
-      warnings.push(`fields: ${JSON.stringify(name)} is not a field; ignored`);
+      warnings.push(localize("query-language.query.fields_stringify_is_not_a", "fields: {stringify} is not a field; ignored", { stringify: String(JSON.stringify(name)) }));
       continue;
     }
     if (!r || typeof r !== "object" || ![r.table, r.key, r.col].every((x) => typeof x === "string" && IDENT.test(x))) {
-      warnings.push(`fields: ${JSON.stringify(name)} is not a table, a key and a column; read as before`);
+      warnings.push(localize("query-language.query.fields_stringify_is_not_a_2", "fields: {stringify} is not a table, a key and a column; read as before", { stringify: String(JSON.stringify(name)) }));
       continue;
     }
     out.set(FIELDS[name].col, { table: r.table, key: r.key, col: r.col });
@@ -2331,7 +2323,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   const allTerms = rankAtomList(positive.text);
   const rankTerms = allTerms.length <= RANK_ATOMS_MAX ? allTerms : (rank ? [rank] : []);
   if (allTerms.length > RANK_ATOMS_MAX)
-    ctx.warnings.push(`relevance weighs these ${allTerms.length} terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`);
+    ctx.warnings.push(localize("query.relevance_weighs_terms", "relevance weighs these {all_terms} terms as one: more than {rank_atoms_max} are not weighed separately", { all_terms: String(allTerms.length), rank_atoms_max: String(RANK_ATOMS_MAX) }));
   /* REC-92 — the ONE expression the `rows=passage` projection matches and
      snippets on, OR'd over every `passage:` selector this query compiled.
      OR AND NOT AND, and that is a decision about what a member means rather
@@ -2473,7 +2465,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   else if (sortField === "relevance") order = `b.last_updated DESC, b.bundle_id ASC`;
   else {
     const col = fieldRef(SORTABLE[sortField]);
-    order = `(${col} IS NULL) ASC, ${col} ${sortDir}, b.bundle_id ASC`;
+    order = localize("query-language.query.col_is_null_asc_col", "({col} IS NULL) ASC, {col_2} {sortDir}, b.bundle_id ASC", { col: String(col), col_2: String(col), sortDir: String(sortDir) });
   }
 
   const cols = PROVENANCE_COLS.map(ref).join(", ");
@@ -2550,7 +2542,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     .map((f) => String(f).toLowerCase()).filter((f) => {
       if (!(f in FIELDS)) return false;
       /* A field a bundle can hold many values of (R28) is not a facet: it is said, and the rest are counted. */
-      if (FIELDS[f].rel) { ctx.warnings.push(`facets: ${JSON.stringify(f)} can hold many values per record; not a facet`); return false; }
+      if (FIELDS[f].rel) { ctx.warnings.push(localize("query-language.query.facets_stringify_can_hold_many", "facets: {stringify} can hold many values per record; not a facet", { stringify: String(JSON.stringify(f)) })); return false; }
       return true;
     });
   /* ALL the facets in ONE statement. The first version ran one statement per
@@ -2570,9 +2562,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       const c = cte(false);
       const arms = group.map((name) => {
         const f = FIELDS[name];
-        return `SELECT '${name}' AS field, ${fieldRef(f.col)} AS value, count(*) AS n\n`
-             + `  FROM scope s ${rowJoin}\n`
-             + `  WHERE ${gate.sql} AND ${fieldRef(f.col)} IS NOT NULL GROUP BY ${fieldRef(f.col)}`;
+        return localize("query-language.query.select_name_as_field_fieldref", "SELECT '{name}' AS field, {fieldRef} AS value, count(*) AS n\n  FROM scope s {rowJoin}\n  WHERE {sql} AND {fieldRef_2} IS NOT NULL GROUP BY {fieldRef_3}", { name: String(name), fieldRef: String(fieldRef(f.col)), rowJoin: String(rowJoin), sql: String(gate.sql), fieldRef_2: String(fieldRef(f.col)), fieldRef_3: String(fieldRef(f.col)) });
       });
       out.push({ sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}\n`
                     + arms.join("\nUNION ALL\n") + `\nORDER BY field ASC, n DESC, value ASC`,
@@ -2759,22 +2749,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     if (mode === "axis") {
       /* The scope WITHOUT this arm's own text filter — §4.4's *other arms*. */
       const ac = cte(false, armSet(rowArm));
-      return { sql: `${ac.sql}\nSELECT r.capture_sha AS capture_sha, r.registered AS registered,`
-                  + `\n       ex.state AS extract_state, ex.condition AS extract_condition,`
-                  + `\n       ex.detail AS extract_detail,`
-                  + `\n       ix.state AS index_state, ix.bound AS index_bound,`
-                  + `\n       ix.detail AS index_detail,`
-                  + `\n       EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha)`
-                  + ` AS has_reading`
-                  + `\nFROM scope s ${rowJoin}`
-                  + `\n JOIN register r ON r.bundle_id = b.bundle_id`
-                  + `\n LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log`
-                  + `\n      WHERE level = 'content' AND subject_kind = 'capture'`
-                  + `\n        AND authority_kind = 'extract' AND subject = r.capture_sha)`
-                  + `\n LEFT JOIN observation_log ix ON ix.seq = (SELECT MAX(seq) FROM observation_log`
-                  + `\n      WHERE level = 'content' AND subject_kind = 'capture'`
-                  + `\n        AND authority_kind = 'derive' AND subject = r.capture_sha)`
-                  + `\nWHERE ${gate.sql}\nORDER BY r.capture_sha ASC LIMIT ?`,
+      return { sql: localize("query-language.query.sql_select_r_capture_sha", "{sql}\nSELECT r.capture_sha AS capture_sha, r.registered AS registered,\n       ex.state AS extract_state, ex.condition AS extract_condition,\n       ex.detail AS extract_detail,\n       ix.state AS index_state, ix.bound AS index_bound,\n       ix.detail AS index_detail,\n       EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha) AS has_reading\nFROM scope s {rowJoin}\n JOIN register r ON r.bundle_id = b.bundle_id\n LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log\n      WHERE level = 'content' AND subject_kind = 'capture'\n        AND authority_kind = 'extract' AND subject = r.capture_sha)\n LEFT JOIN observation_log ix ON ix.seq = (SELECT MAX(seq) FROM observation_log\n      WHERE level = 'content' AND subject_kind = 'capture'\n        AND authority_kind = 'derive' AND subject = r.capture_sha)\nWHERE {sql_2}\nORDER BY r.capture_sha ASC LIMIT ?", { sql: String(ac.sql), rowJoin: String(rowJoin), sql_2: String(gate.sql) }),
                args: [...ac.args, ...gate.args, MEANING_AXIS_CAP + 1] };
     }
     /* REC-90: a descriptor may reach ONE more table for columns the grain needs
@@ -2824,9 +2799,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        to a viewer predicate. */
     const ftsWhere = fts ? ` AND ${fts.name} MATCH ?` : "";
     const ftsArgs = fts ? [fts.expr] : [];
-    const from = `FROM scope s ${rowJoin}`
-               + `\n JOIN ${m.table} m ON m.${m.key} = b.bundle_id${ftsJoin}${joined}`
-               + `\nWHERE ${gate.sql}${refSql}${ftsWhere}`;
+    const from = localize("query-language.query.from_scope_s_rowjoin_join", "FROM scope s {rowJoin}\n JOIN {table} m ON m.{key} = b.bundle_id{ftsJoin}{joined}\nWHERE {sql}{refSql}{ftsWhere}", { rowJoin: String(rowJoin), table: String(m.table), key: String(m.key), ftsJoin: String(ftsJoin), joined: String(joined), sql: String(gate.sql), refSql: String(refSql), ftsWhere: String(ftsWhere) });
     /* THE COUNT CARRIES THE SAME MATCH AS THE PAGE, for the reason the `rowJoin`
        note above gives one relation over: a filter present in one statement and
        not the other is how `total` and the page come to describe different
@@ -3016,14 +2989,13 @@ export function savedForm(query = {}, relation = null) {
     let sort = null, dir = null;
     if (o.sort !== undefined && o.sort !== null && o.sort !== "") {
       const key = String(o.sort).toLowerCase();
-      if (!(key in SORTABLE)) drops.push(`sort: ${JSON.stringify(String(o.sort))} is not a sort key`);
+      if (!(key in SORTABLE)) drops.push(localize("query-language.query.sort_stringify_is_not_a", "sort: {stringify} is not a sort key", { stringify: String(JSON.stringify(String(o.sort))) }));
       else { sort = key; dir = /^d/i.test(String(o.dir ?? "")) ? "desc" : o.dir ? "asc" : null; }
     }
     const plan = compile({ q, implicitOp, zone: o.zone ?? null }, relation);
     drops.push(...plan.drops);
     if (drops.length)
-      return refuse("SAVED_QUERY_DROPS", `compiling it drops ${drops.length === 1 ? "a term" : `${drops.length} terms`}, `
-        + "so what would be saved is not what would run", drops);
+      return refuse("SAVED_QUERY_DROPS", localize("query-language.query.compiling_it_drops_v1_so", "compiling it drops {v1}, so what would be saved is not what would run", { v1: String(drops.length === 1 ? "a term" : `${drops.length} terms`) }), drops);
     if (plan.ast === null) return refuse("SAVED_QUERY_EMPTY", "no term of it compiles");
     return { ok: true, form: { v: 1, q, implicitOp, sort, dir } };
   } catch {

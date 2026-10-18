@@ -8,6 +8,7 @@
  * column a value was in, and a sheet supplied without cells is not read (R14).
  * Header words, and the forms of each code, are the view's (R12). */
 import { headerWords, codeForms } from "./view.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /** How many of a sheet's first rows are searched for its header row. */
 export const HEADER_SEARCH_ROWS = 20;
@@ -73,8 +74,8 @@ export function readCode(ctx, column, written) {
   const forms = codeForms(ctx, column);
   for (const f of forms) if (f.re.test(s.trim())) return { as_written: s, form: f.label, scheme: f.scheme };
   return { as_written: s, form: null,
-           why: forms.length ? `no form of the view's ${column} classification matches "${s.trim()}"`
-                             : `the view holds no form for a ${column} code` };
+           why: forms.length ? localize("budget-doctypes.lines.no_form_of_the_views", "no form of the view's {column} classification matches \"{s}\"", { column: String(column), s: String(s.trim()) })
+                             : localize("budget-doctypes.lines.the_view_holds_no_form", "the view holds no form for a {column} code", { column: String(column) }) };
 }
 
 /** R7, R8: the budget lines of every sheet supplied. */

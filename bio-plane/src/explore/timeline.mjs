@@ -4,6 +4,7 @@
    "what they did" (`world`) and "what we did" (`ours`) kept apart exactly as `events` answers them. It reads no project or inquiry; the
    caller resolves the set (R-3 I-6). */
 import { refuse, isObj, isRefusal, viewerRefusal } from './answer.mjs';
+import { word } from '../setup-words/index.mjs';
 
 const EVENT_ID = /^EVT-/;
 
@@ -44,5 +45,5 @@ export function timelineOver(ctx, arg) {
         ...(f.stage ? { stage: f.stage } : {}), source: f.source, citation: f.citation, grade: f.grade })), ...(m.truncated ? { truncated: true } : {}) });
     }
   }
-  return { ok: true, set: a.set, timeline: t, money: out, ...(wired ? {} : { money_note: 'your team\'s Civicsmith has no money record connected, so no payer or payee is shown' }) };
+  return { ok: true, set: a.set, timeline: t, money: out, ...(wired ? {} : { money_note: word('explore.money_note') }) };
 }

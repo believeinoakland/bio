@@ -22,6 +22,7 @@ import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf, PROJECT_QUESTIONS_MAX } from "../basis-versions/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R2: the held questions one `projectStage` reads, in pages of basis-versions' PROJECT_QUESTIONS_MAX (500). */
 export const STAGE_QUESTIONS_MAX = 2000;
@@ -43,19 +44,19 @@ export const STAGE_NEEDS = Object.freeze({
  *  `{editions}`); never a member, a question's text or a place (R9). The undetermined answers' `detail` stands in for
  *  a stage the read could not decide. */
 export const STAGE_SENTENCES = Object.freeze({
-  forming_reached: "every project starts forming; this stage needs nothing from the record",
+  forming_reached: word("project-stage.project_starts_forming"),
   investigating_reached: "{with_legs} of the {read} held questions read have at least one leg in their basis",
   investigating_skipped: "reached because a later stage is reached; none of the {read} held questions read has a leg "
                        + "in its basis",
-  investigating_none_held: "the project holds no question yet; a held question with a leg in its basis reaches this stage",
+  investigating_none_held: word("project-stage.project_holds_question"),
   investigating_no_leg: "the project holds {read} questions and none has a leg in its basis; a leg on any one of them "
                       + "reaches this stage",
   matured_reached: "the project has concluded {concluded} of the {read} held questions read and owns {editions} "
                  + "ratified case editions",
   matured_not_reached: "the project has concluded none of the {read} held questions read and owns no ratified case "
                      + "edition; concluding one of them, or a ratified case edition of a case it owns, reaches this stage",
-  closed_project: "the project is closed, so no further stage is needed; a reopening is the owner's act",
-  closed_reached: "the owner recorded the close with its reason; a reopening is the owner's act",
+  closed_project: word("project-stage.project_closed_further"),
+  closed_reached: word("project-stage.owner_recorded_close"),
   closed_not_recorded: "a close is the owner's recorded act with its reason (resolved, superseded or abandoned), not a "
                      + "stage the record grows into",
   closed_unrecognised: "the document records a close, but its reason is not resolved, superseded or abandoned, so the "
@@ -151,7 +152,7 @@ export class ProjectStage {
     if (work.failed) {
       /* R1, R7: never thrown; the cases it owns could not be read, so what rule 2's second half and R3 would say is
          undetermined, stated as for an unread document. */
-      const detail = "the cases this project owns could not be read, so its stage and its readiness are undetermined";
+      const detail = word("project-stage.cases_project_owns");
       return { ok: true, project: pid, stage: "undetermined", closed_reason: null,
                questions: { read: 0, with_legs: 0, concluded: 0, truncated: false }, published_editions: null,
                work_products: [], work_products_limit: WORK_PRODUCTS_MAX, work_products_truncated: false,
@@ -166,7 +167,7 @@ export class ProjectStage {
        `forming`, `investigating` or `matured` is never read (R2, R5). */
     const text = this.#fileText(pid, "bundle.md");
     if (!text) {
-      const detail = "the project's own document could not be read, so whether its owner closed it is undetermined";
+      const detail = word("project-stage.project_document_read");
       return { ...out, stage: "undetermined", detail, stages: this.#stages({ unread: detail }) };
     }
     const fm = parseFrontmatter(text.content).data || {};
@@ -326,12 +327,12 @@ export class ProjectStage {
       const ed = this.#one(`SELECT COUNT(*) AS n, MAX(edition) AS latest FROM published_cases
                              WHERE case_id=? AND ratified_at IS NOT NULL`, id) || {};
       const editions = Number(ed.n) || 0;
-      const notEvaluated = { met: false, why: "no evaluation is recorded" };
+      const notEvaluated = { met: false, why: word("project-stage.why.evaluation_recorded") };
       const rungs = {
-        draft: drafted ? { met: true } : { met: false, why: "no unsigned case document of this case is stored" },
+        draft: drafted ? { met: true } : { met: false, why: word("project-stage.why.unsigned_case_document") },
         internally_checked: notEvaluated,
         externally_compliant: notEvaluated,
-        distributed: editions ? { met: true } : { met: false, why: "no edition of this case is ratified" },
+        distributed: editions ? { met: true } : { met: false, why: word("project-stage.why.edition_case_ratified") },
       };
       const readiness = [...READINESS_RUNGS].reverse().find((r) => rungs[r].met) ?? "none";
       items.push({ case: id, readiness, editions, latest_edition: editions ? Number(ed.latest) : null, rungs });

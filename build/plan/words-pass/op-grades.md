@@ -1,0 +1,46 @@
+# op-grades: the words check after the conversion (K3949)
+
+Layer 11. 42 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- handlist `bio-plane/test/m/op-grades/ladder.test.mjs:178` [?] ops: contradictioncandidates, contradictiontensions, contradictionfacts, ... (5 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/ladder.test.mjs:196` [?] ops: publish, retire, attest, ... (6 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/ladder.test.mjs:71` [?] codes: NO_TARGET, NO_ID, NO_KIND, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/owners.test.mjs:120` [?] ops: wizardread, wizardsat, wizarduse, ... (6 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/owners.test.mjs:161` [?] ops: event, eventforact, datedfacts, ... (83 of 83 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/owners.test.mjs:283` [?] ops: checkrequests, checksof, groupkeystate, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/owners.test.mjs:46` [?] ops: escalationreasondraft, whatchangeddrafts, sweeps, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:114` [?] ops: actionholdrelease, escalationend, filingapprove, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:123` [?] ops: contradictionrecommend, contradictionoptin, contradictionrespond, ... (19 of 19 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:165` [?] ops: standarddeclare, standardpropose, standardadopt, ... (28 of 29 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:176` [?] ops: standard, standards, determination, ... (23 of 26 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:187` [?] ops: actionhold, actionpressure, escalationopen, ... (8 of 10 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:287` [?] codes: NO_TARGET, NO_ID, NO_KIND, ... (53 of 54 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:318` [?] ops: sourceof, sourcepublishable, knocksof, ... (31 of 36 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:32` [?] ops: suggest, extractpropose, contradictionpropose, ... (24 of 25 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:331` [?] ops: contradictioncandidates, contradictiontensions, contradictionfacts, ... (5 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:336` [?] ops: activitymethod, noticespublic, groupkeyspublic, ... (8 of 8 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:342` [?] ops: knockerconsent, contradictionrecommend, contradictionoptin, ... (26 of 28 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:36` [?] ops: testify, lead, leadlook, ... (27 of 30 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:43` [?] ops: projectaikeepaway, milestoneremove, milestoneitemremove, ... (8 of 8 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:45` [?] ops: stepcreate, stepstart, stepend, ... (19 of 19 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:48` [?] ops: stepdelete, steprefer, stepproduct, ... (23 of 23 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/pins.test.mjs:57` [?] ops: attest, caseratify, ratify, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t35.test.mjs:108` [?] ops: signout, signouteverywhere, recoverycodesissue, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t35.test.mjs:72` [?] ops: bindsat, editioninforce, forcesof, ... (8 of 8 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t35.test.mjs:74` [?] ops: archivelist, coarchivestate, findin, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t36.test.mjs:126` [?] ops: aikeepaway, releasescanhold, spotcheckvisit, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t36.test.mjs:45` [?] ops: verdictnotes, threatof, originalstate, ... (11 of 11 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t41.test.mjs:197` [?] ops: guidepropose, guideproposetocivicsmith, guidefor, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t41.test.mjs:72` [?] ops: projectaccountstate, projectkeynotice, projectaikeepawaystate, ... (38 of 38 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t45.test.mjs:143` [?] codes: SCOPE_UNCHANGED, NO_SUCH_SCENARIO, SCENARIO_ALREADY_SET_ASIDE, ... (26 of 27 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t45.test.mjs:225` [?] ops: grouprules, advocacycheck, advocacychecks, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t45.test.mjs:68` [?] ops: dutiesarising, openitemswith, watchquestions, ... (21 of 21 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t45.test.mjs:78` [?] ops: holdnoticesent, actionreceipt, actionscope, ... (10 of 10 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t47.test.mjs:21` [?] ops: projectlist, projectquestions, passwordresetlook, ... (6 of 6 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t48.test.mjs:129` [?] ops: aiuseovertime, exploregraph, standardproposals, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t48.test.mjs:154` [?] ops: planask, stepsource, stepsourcewithdraw, ... (9 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t48.test.mjs:169` [?] codes: STEP_SOURCE_NOT_A_MEMBER, NO_SUCH_RELATION, CAPTURE_NOT_HELD, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t48.test.mjs:25` [?] ops: proceedingdates, updatenotice, aiuseovertime, ... (7 of 7 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t50.test.mjs:17` [?] ops: watchitem, secondlook, secondlookclear, ... (5 of 5 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t50.test.mjs:19` [?] ops: lookedat, browse, opencaptures, ... (9 of 9 not the module's own) — handlist
+- handlist `bio-plane/test/m/op-grades/t50.test.mjs:60` [?] ops: watchitem, secondlook, secondlookclear, ... (6 of 6 not the module's own) — handlist

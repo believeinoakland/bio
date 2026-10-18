@@ -8,6 +8,7 @@ import { webcrypto } from "node:crypto";
 import { world, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
 import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, AI_WORDS, KEPT_AWAY_UNREADABLE, AI_ACCOUNTS_TABLES,
          AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const SECRET = "sk-ant-api03-SENTINEL-reference-9f8e7d6c5b4a";
 const ask = (member, extra = {}) => ({ kind: "ask", member: `member:${member}`, ...extra });
@@ -370,8 +371,8 @@ test("R28: migrate keeps a running store's rows: the tables, names and columns u
 test("R30 (T50; K3472, DEC-259): every member-facing string of its rows calls the installation \"your team's Civicsmith\" as words.json says it, never copy, instance, plane or server, and never \"group\"", () => {
   for (const [code, r] of Object.entries(AI_ACCOUNT_CHECKS)) {
     assert.doesNotMatch(r.translation, /\b(copy|instance|plane|server|group)\b/i, code);
-    if (/Civicsmith/.test(r.translation)) assert.doesNotMatch(r.translation.replaceAll("your team's Civicsmith", "")
-      .replaceAll("Your team's Civicsmith", ""), /Civicsmith/, code);
+    if (/Civicsmith/.test(r.translation)) assert.doesNotMatch(r.translation.replaceAll(word("queue.capture-completed-unattended.who"), "")
+      .replaceAll(word("queue.update.section"), ""), /Civicsmith/, code);
   }
   for (const [k, v] of Object.entries(AI_WORDS)) assert.doesNotMatch(v, /\b(copy|instance|plane|server|group)\b/i, k);
   assert.match(AI_ACCOUNT_CHECKS.ACCOUNT_SEAL_UNAVAILABLE.translation, /^Your team's Civicsmith /);

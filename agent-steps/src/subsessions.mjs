@@ -6,6 +6,7 @@ import { checkCondition } from "../../bio-plane/src/run-rules/index.mjs";
 import { toolContent } from "./reads.mjs";
 import { loggable, conditionFault } from "./entries.mjs";
 import { planeAnswer, meaningRead } from "./plane.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /** agent-harness R7 — THE SUB-SESSIONS. Each gets a fresh transcript (nothing shared with the parent or another level), its
  *  frozen contract, the contract's `scope` as its only plane tool, and `report` as its answer. Its look is logged
@@ -40,7 +41,7 @@ export async function runSubsessions(call, state, runId, model, logSeq, contract
       },
       onTool: async (name, input) => {
         if (!contract.scope.includes(name))
-          return { content: `'${String(name)}' is not in this sub-session's scope (${contract.scope.join(", ")})`, error: true };
+          return { content: localize("agent-steps.subsessions.string_is_not_in_this", "'{String}' is not in this sub-session's scope ({scope})", { String: String(String(name)), scope: String(contract.scope.join(", ")) }), error: true };
         const lim = Math.min(50, Math.max(1, Math.floor(Number(input.limit)) || 20));
         /* R96: `ids` limits a read to named records: at most 20, each a non-empty string, others dropped. */
         const ids = (Array.isArray(input.ids) ? input.ids : [])

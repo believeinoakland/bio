@@ -10,6 +10,7 @@ import { isUpgrade, accept } from './ws.mjs';
 import { converse } from './runner.mjs';
 import { signinOf, memberOk, WORDS } from './signin.mjs';
 import { WAITING_HEADER, TRACE_HEADER, MEMBER_REF_HEADER } from './waits.mjs';
+import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 export const NAME = 'agent-runner';
 export const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
@@ -93,7 +94,7 @@ export function agentRunnerOf({ sdk, tmpRoot, signin = signinOf(), log = (line) 
   server.on('upgrade', (req, socket, head) => {
     if (req.method !== 'GET' || pathOf(req) !== CONVERSATION_PATH || !isUpgrade(req)) {
       const body = JSON.stringify(unknown);
-      socket.end(`HTTP/1.1 404 Not Found\r\ncontent-type: application/json\r\ncontent-length: ${body.length}\r\nconnection: close\r\n\r\n${body}`);
+      socket.end(localize('agent-runner.entry.http_1_1_404_not', 'HTTP/1.1 404 Not Found\r\ncontent-type: application/json\r\ncontent-length: {length}\r\nconnection: close\r\n\r\n{body}', { length: String(body.length), body: String(body) }));
       return;
     }
     served = true;

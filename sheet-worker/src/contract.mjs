@@ -5,6 +5,8 @@
 
 /* ---- the engine (R13) --------------------------------------------------------------------------------------- */
 
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
+
 export const ENGINE_NAME = "ironcalc";
 /** The IronCalc commit the engine is built from (`engine/Cargo.toml`), with the `xlsx` feature's reader: npm's
  *  `@ironcalc/wasm` reads no XLSX (courts-workbooks.md §3(c)). */
@@ -52,7 +54,7 @@ export const PLANE_OPS = Object.freeze({});
 
 /* ---- answers --------------------------------------------------------------------------------------------------- */
 
-export const NOT_RECOMPUTED = "not recomputed here";
+export const NOT_RECOMPUTED = word("workbooks.recomputed");
 
 /** The volatile functions R6 names. The engine marks a formula cell volatile when it calls one of them. */
 export const VOLATILE_FUNCTIONS = Object.freeze(["NOW", "TODAY", "RAND", "RANDBETWEEN", "OFFSET", "INDIRECT", "CELL",

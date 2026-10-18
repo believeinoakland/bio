@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import * as AG from "../../../src/action-grammar/index.mjs";
 import { GOLDEN, ROW_NAMES } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const RECORDS_FILE = "src/action-records/index.mjs";
 const ACTIONS_FILE = "src/actions/index.mjs";
@@ -108,8 +109,8 @@ test("R29 (the census arm): every one of the six rows' where names a region that
 });
 
 test("R29 (N1053; DEC-221): ACTION_GRAMMAR_WORDS' two frozen copies, refusal.MACHINE_CANNOT_SET_PARTNERS and refusal.PARTNERS_REFUSED, are in American spelling, and C-117.34 and C-117.35 translate by them; control: no sentence of the table holds a British -isation or -ised form", () => {
-  assert.equal(AG.ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PARTNERS"], "Only a member names the organizations acting with your team. Nothing was written.");
-  assert.equal(AG.ACTION_GRAMMAR_WORDS["refusal.PARTNERS_REFUSED"], "Each partner is a named organization, listed once. Nothing was written.");
+  assert.equal(AG.ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PARTNERS"], word("refusal.MACHINE_CANNOT_SET_PARTNERS"));
+  assert.equal(AG.ACTION_GRAMMAR_WORDS["refusal.PARTNERS_REFUSED"], word("refusal.PARTNERS_REFUSED"));
   assert.equal(AG.ACTION_CATALOGUE_CHECKS.MACHINE_CANNOT_SET_PARTNERS.translation, AG.ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PARTNERS"]);
   assert.equal(AG.ACTION_CATALOGUE_CHECKS.PARTNERS_REFUSED.translation, AG.ACTION_GRAMMAR_WORDS["refusal.PARTNERS_REFUSED"]);
   for (const [key, text] of Object.entries(AG.ACTION_GRAMMAR_WORDS)) assert.doesNotMatch(text, /organis|labelled/i, key);

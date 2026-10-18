@@ -19,6 +19,7 @@
  * opening and the act and rule words do not. Its items are `{route, expect?, citation}`, the citation required
  * (`GUIDE_ITEM_UNSOURCED`). */
 import { refusal } from "./checks.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R4: an item's `look_for` is a look-for statement when it opens with one of these (case-insensitive, then a word
  *  boundary). */
@@ -168,17 +169,14 @@ function procedureShapeOf(item) {
 function judgeProcedure(items) {
   const list = Array.isArray(items) ? items : null;
   if (!list || list.length < 1 || list.length > ITEMS_MAX)
-    return shapeRefusal(`a guide holds from 1 to ${ITEMS_MAX} items; ${list ? `${list.length} were given` : "no list was given"}. `
-      + "Nothing was written.", null);
+    return shapeRefusal(localize("reading-guides.check.a_guide_holds_from_1", "a guide holds from 1 to {ITEMS_MAX} items; {v1}. Nothing was written.", { ITEMS_MAX: String(ITEMS_MAX), v1: String(list ? `${list.length} were given` : "no list was given") }), null);
   const shaped = list.map(procedureShapeOf);
   for (let i = 0; i < shaped.length; i++) {
     if (shaped[i] === null)
-      return shapeRefusal(`item ${i + 1} is not a route, an optional expected reply and a citation, as short plain text. `
-        + "Nothing was written.", i);
+      return shapeRefusal(localize("reading-guides.check.item_v1_is_not_a", "item {v1} is not a route, an optional expected reply and a citation, as short plain text. Nothing was written.", { v1: String(i + 1) }), i);
     /* DEC-49 REGION is-guide-sourced */
     if (shaped[i].unsourced)
-      return refusal("GUIDE_ITEM_UNSOURCED", `item ${i + 1} of a procedure guide names no citation for its route. `
-        + "Nothing was written.", { item: i });
+      return refusal("GUIDE_ITEM_UNSOURCED", localize("reading-guides.check.item_v1_of_a_procedure", "item {v1} of a procedure guide names no citation for its route. Nothing was written.", { v1: String(i + 1) }), { item: i });
     /* END DEC-49 REGION is-guide-sourced */
   }
   for (let i = 0; i < shaped.length; i++) {
@@ -198,8 +196,7 @@ function judgeProcedure(items) {
    its route) alike. */
 function conductRefusal(i, label, field, found) {
   /* DEC-49 REGION is-guide-look-for */
-  return refusal("GUIDE_CARRIES_CONDUCT", `item ${i + 1} ("${label.slice(0, 80)}") ${sayFound(found)} in its ${field}. `
-    + "Nothing was written.", { item: i, label, field, found });
+  return refusal("GUIDE_CARRIES_CONDUCT", localize("reading-guides.check.item_v1_label_sayfound_in", "item {v1} (\"{label}\") {sayFound} in its {field}. Nothing was written.", { v1: String(i + 1), label: String(label.slice(0, 80)), sayFound: String(sayFound(found)), field: String(field) }), { item: i, label, field, found });
   /* END DEC-49 REGION is-guide-look-for */
 }
 

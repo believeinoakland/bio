@@ -30,14 +30,13 @@
  * it as a document, which is exactly the liar arriving by the front door.
  * ===================================================================== */
 
+import { word, localize } from '../setup-words/index.mjs';
+
 export const LEAD_CHECKS = {
   LEAD_NOT_EVIDENCE: {
     check: 'C-54.1',
     where: 'src/inquiry-grammar/grammar.mjs leadLegFindings > is-lead-not-evidence',
-    translation: 'That leg points at a LEAD. A lead is somewhere to look — what a member was told or '
-      + 'suspects — and it is never evidence, so nothing can rest on it. Follow the lead: if the '
-      + 'look finds the document, capture it and cite THAT; if you saw the thing yourself, write it '
-      + 'up as your own observation.',
+    translation: word('refusal.LEAD_NOT_EVIDENCE'),
   },
 };
 
@@ -50,78 +49,57 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   NOT_INQUIRIES: {
     check: 'C-33.13',
     where: 'src/inquiry/index.mjs #dispose > is-dispose-inquiries',
-    translation: 'This act moves a question along, and the selection carries things that are not '
-      + 'questions. The whole set is refused rather than quietly narrowed to the part that fits, '
-      + 'because a set that acted on less than you selected is a set you were not shown.',
+    translation: word('refusal.NOT_INQUIRIES'),
   },
   SELF_BASIS: {
     check: 'C-33.22',
     where: 'src/inquiry/index.mjs check > is-basis-acyclic, reached from op=promote through the step inquiry registers with promotion (K31)',
-    translation: 'A question cannot be the evidence for its own answer. This write would have it '
-      + 'rest on itself, which reads as support and adds nothing anybody outside could check.',
+    translation: word('refusal.SELF_BASIS'),
   },
   BASIS_CYCLE: {
     check: 'C-33.23',
     where: 'src/inquiry/index.mjs check > is-basis-acyclic, reached from op=promote through the step inquiry registers with promotion (K31)',
-    translation: 'This write would close a loop: the chain it would join already rests, somewhere '
-      + 'further along, on the thing being written. The path is named so the loop can be seen '
-      + 'rather than re-derived, and support that circles back is support that rests on nothing.',
+    translation: word('refusal.BASIS_CYCLE'),
   },
   MACHINE_CANNOT_DIVIDE: {
     check: 'C-32.7',
     where: 'src/inquiry/index.mjs #divide > is-machine-divide',
-    translation: 'Dividing a question says the team asked one thing when it was really asking '
-      + 'two, and that is a judgement about the team\'s own work. The credential that asked here '
-      + 'is an automated one: it may raise questions and gather what they rest on, and may not '
-      + 'restructure them. Sign in to divide it.',
+    translation: localize('inquiry-grammar.checks.dividing_a_question_says_the', 'Dividing a question says the team asked one thing when it was really asking two, and that is a judgement about the team\'s own work. The credential that asked here is an automated one: it may raise questions and gather what they rest on, and may not restructure them. Sign in to divide it.'),
   },
   MACHINE_CANNOT_GROUND: {
     check: 'C-32.8',
     where: 'src/inquiry/index.mjs #ground > is-machine-ground',
-    translation: 'Grounding says some of the reasons behind an answer are strong enough to carry '
-      + 'it on their own, and it is the one act here that makes a finding stronger rather than '
-      + 'weaker. That decision needs a person behind it, and the credential that asked is an '
-      + 'automated one. Sign in to ground it.',
+    translation: word('refusal.MACHINE_CANNOT_GROUND'),
   },
   /* R11 (N522): a leg on another group's finding, refused by `importedLegFindings` (`./grammar.mjs`). */
   IMPORTED_LEG_MALFORMED: {
     check: 'C-21.3',
     where: 'src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form',
-    translation: 'A leg on another team\'s finding names that finding and one edition, and nothing else: its '
-      + 'grades are that edition\'s. Correct the leg. Nothing was written.',
+    translation: word('refusal.IMPORTED_LEG_MALFORMED'),
   },
   /* R16 (T33-43; K1447): the three new leg kinds' departures, all C-2.8, each refused by its own site in
      `./grammar.mjs`. Stamped by promotion's next stamping (T34). */
   STANDARD_LEG_AXIS: {
     check: 'C-2.8',
     where: 'src/inquiry-grammar/grammar.mjs standardLegRefusal > is-standard-leg-axis',
-    translation: 'A leg on a standard rests on the text of that law as the team captured it, so the only grade it '
-      + 'carries is the one that text earns. A connection, a testimony or a hunch is a different kind of claim. '
-      + 'Correct the leg. Nothing was written.',
+    translation: word('refusal.STANDARD_LEG_AXIS'),
   },
   CALCULATION_LEG_MALFORMED: {
     check: 'C-2.8',
     where: 'src/inquiry-grammar/grammar.mjs calculationLegRefusal > is-calculation-leg-form',
-    translation: 'A leg on a calculation names the calculation and nothing else: how strong it is comes from the '
-      + 'figures it was worked from, so the leg states no grade and names no part of its own. Correct the leg. '
-      + 'Nothing was written.',
+    translation: word('refusal.CALCULATION_LEG_MALFORMED'),
   },
   OCCURRENCE_LEG_MALFORMED: {
     check: 'C-2.8',
     where: 'src/inquiry-grammar/grammar.mjs occurrenceLegRefusal > is-occurrence-leg-form',
-    translation: 'A leg on a duty\'s occurrence names the duty and that one occurrence, and nothing else: how strong '
-      + 'it is comes from the law that sets the duty and the dates that started and end it, so the leg states no '
-      + 'grade, names no part, and is not listed among the references. Correct the leg. Nothing was written.',
+    translation: word('refusal.OCCURRENCE_LEG_MALFORMED'),
   },
   /* R16, R17 (T34-28; N582): a leg on a derived connection's departures, C-2.8, refused by `derivedLegRefusal` in
      `./grammar.mjs`. Stamped by promotion's next stamping (T35). */
   DERIVED_LEG_MALFORMED: {
     check: 'C-2.8',
     where: 'src/inquiry-grammar/grammar.mjs derivedLegRefusal > is-derived-leg-form',
-    translation: 'A leg on a connection the record worked out names that connection and the five facts it was worked '
-      + 'out from: what kind it is, its two ends, the date it holds as of, and the method. Its name must be the one '
-      + 'those five give, and it states no grade or part of its own: how strong it is comes from the links it was '
-      + 'worked out over. Correct the leg. Nothing was written.',
+    translation: word('refusal.DERIVED_LEG_MALFORMED'),
   },
   /* R18 (T41-13; D59): a bias application at a leg whose form departs from R18's shape, C-2.8, refused by
      `biasApplicationRefusal` in `./grammar.mjs` (carried inside `BASIS_REFUSED` by `inquiry`'s write, its R11).
@@ -129,10 +107,6 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   BIAS_APPLICATION_MALFORMED: {
     check: 'C-2.8',
     where: 'src/inquiry-grammar/grammar.mjs biasApplicationRefusal > is-bias-application-form',
-    translation: 'A leg can record each statement of your project\'s declared bias that was applied to it: the '
-      + 'statement, and what it did, which is one of three things: it lowered the leg\'s grade (from one letter to a '
-      + 'weaker one), it set the leg aside, or it refused an inference. This record of it is not in that form. '
-      + 'Recording it moves no grade: the grade on the leg is still the one you state. Correct the record. '
-      + 'Nothing was written.',
+    translation: word('refusal.BIAS_APPLICATION_MALFORMED'),
   },
 });

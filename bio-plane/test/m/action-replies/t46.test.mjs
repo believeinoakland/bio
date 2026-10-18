@@ -8,6 +8,7 @@ import { readFile } from "node:fs/promises";
 import { world, M, BOB, MACHINE, INQ, INQ3, INFO, RFC, REQ, PROJ, PROJ2, PLAN, PLAN2, leg } from "./fixture.mjs";
 import { ACTION_REPLY_CHECKS, bearingProposalLabel } from "../../../src/action-replies/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -176,7 +177,7 @@ test("R7 each act answers the re-worded row's words beside its control, BEARING_
   tr(w.r.actionReplyBearing({ target: RFC, ord: got, claims: [{ claim: INQ3, bearing: "new_evidence" }], author: M, viewer: M }), "BEARING_REFUSED",
      `Claim 1 (${INQ3})`);
   tr(w.r.actionBearingPropose({ target: RFC, ord: got, claims: [], proposer: MACHINE, viewer: MACHINE }), "BEARING_REFUSED",
-     "The list of claims");
+     word("action-replies.list_claims"));
   assert.equal(w.r.actionReplyBearing({ target: RFC, ord: got, claims: good, author: M, viewer: M }).ok, true, "the control lands");
   w.bundle(PROJ, "project");
   w.participant(PROJ, "alice");

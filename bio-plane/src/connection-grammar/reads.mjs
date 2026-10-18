@@ -5,6 +5,7 @@
 import { validAt } from '../civil-time/index.mjs';
 import { BOUNDS, hubBoundOf } from './bounds.mjs';
 import { connectionErrors } from './shape.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const filled = (v) => typeof v === 'string' && v.trim() !== '';
@@ -32,7 +33,7 @@ export function answerFailures(answer, ctx) {
       fail('unread', 'unread is a list of {what, why}, each a non-empty string');
     }
   }
-  if (items.length > BOUNDS.fanout) fail('fanout', `a page holds at most ${BOUNDS.fanout} items; this one holds ${items.length}`);
+  if (items.length > BOUNDS.fanout) fail('fanout', localize('connection-grammar.reads.a_page_holds_at_most', 'a page holds at most {fanout} items; this one holds {length}', { fanout: String(BOUNDS.fanout), length: String(items.length) }));
   const asked = Array.isArray(ctx.kinds) ? ctx.kinds : null;
   if (answer.hub !== undefined) {
     // R6, R10: a hub is a node whose set of one kind exceeds that kind's bound. The answer names no kind, so its set
@@ -42,31 +43,31 @@ export function answerFailures(answer, ctx) {
     const pool = mine.length ? mine : ctx.ownKinds;
     const bound = pool.length ? Math.min(...pool.map(hubBoundOf)) : BOUNDS.hub;
     if (!isObj(h) || !Number.isInteger(h.set_size) || !filled(h.why)) fail('hub', 'a hub is answered {set_size, why}');
-    else if (h.set_size <= bound) fail('hub', `a hub's set of one kind exceeds that kind's bound, here at least ${bound}; ${h.set_size} does not`);
+    else if (h.set_size <= bound) fail('hub', localize('connection-grammar.reads.a_hubs_set_of_one', 'a hub\'s set of one kind exceeds that kind\'s bound, here at least {bound}; {set_size} does not', { bound: String(bound), set_size: String(h.set_size) }));
     if (items.length) fail('hub', 'a hub is answered with no items, never a partial set shown as whole');
   }
   const seen = new Set();
   for (const item of items) {
-    const name = isObj(item) && filled(item.id) ? item.id : '(an item without an id)';
+    const name = isObj(item) && filled(item.id) ? item.id : word('connection-grammar.item_without');
     const errors = connectionErrors(item, ctx.kindOf);
     for (const e of errors) {
       const check = e.field === 'label' ? 'label' : e.field === 'id' && /derivedId/.test(e.why) ? 'derived_id' : 'shape';
       fail(check, `${name}: ${e.why}`);
     }
     if (!isObj(item)) continue;
-    if (seen.has(item.id)) fail('paging', `${name} is answered twice on one page`);
+    if (seen.has(item.id)) fail('paging', localize('connection-grammar.reads.name_is_answered_twice_on', '{name} is answered twice on one page', { name: String(name) }));
     seen.add(item.id);
-    if (item.owner !== ctx.owner || !ctx.ownKinds.includes(item.kind)) fail('kinds', `${name} is not of ${ctx.owner}'s own kinds`);
-    else if (asked && !asked.includes(item.kind)) fail('kinds', `${name} is of kind ${item.kind}, which was not asked`);
-    if (item.from !== ctx.node && item.to !== ctx.node) fail('node', `${name} does not have the node at either end`);
+    if (item.owner !== ctx.owner || !ctx.ownKinds.includes(item.kind)) fail('kinds', localize('connection-grammar.reads.name_is_not_of_owner', '{name} is not of {owner}\'s own kinds', { name: String(name), owner: String(ctx.owner) }));
+    else if (asked && !asked.includes(item.kind)) fail('kinds', localize('connection-grammar.reads.name_is_of_kind_kind', '{name} is of kind {kind}, which was not asked', { name: String(name), kind: String(item.kind) }));
+    if (item.from !== ctx.node && item.to !== ctx.node) fail('node', localize('connection-grammar.reads.name_does_not_have_the', '{name} does not have the node at either end', { name: String(name) }));
     if (errors.some((e) => e.field === 'valid')) continue;
     let v;
     try { v = validAt({ valid: item.valid, basis: item.basis }, ctx.at); } catch (e) { v = { undetermined: true, why: String(e?.message ?? e) }; }
-    if (v === 'out') fail('at', `${name} is out at the date asked, so it is not returned`);
-    else if (v === 'in') { if (item.undetermined !== undefined) fail('at', `${name} is in at the date asked, yet marked undetermined`); }
+    if (v === 'out') fail('at', localize('connection-grammar.reads.name_is_out_at_the', '{name} is out at the date asked, so it is not returned', { name: String(name) }));
+    else if (v === 'in') { if (item.undetermined !== undefined) fail('at', localize('connection-grammar.reads.name_is_in_at_the', '{name} is in at the date asked, yet marked undetermined', { name: String(name) })); }
     else if (!isObj(item.undetermined) || !filled(item.undetermined.why)) fail('at', `${name} is undetermined at the date asked and is not marked undetermined: {why}`);
     if (ctx.kindOf(item.kind)?.class === 'hunch' && (ctx.scope === null || ctx.scope === undefined || item.scope !== ctx.scope)) {
-      fail('scope', `${name} is a hunch returned outside the working inquiry that holds it`);
+      fail('scope', localize('connection-grammar.reads.name_is_a_hunch_returned', '{name} is a hunch returned outside the working inquiry that holds it', { name: String(name) }));
     }
   }
   return out;

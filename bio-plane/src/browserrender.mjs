@@ -76,6 +76,7 @@
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "./subresources.mjs";
 import { isPublicHttpsLocator } from "./record-grammar/index.mjs";
 import { isOwnHost } from "./capture-sources/own-hosts.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 
 /* The host the binding ignores; puppeteer's own constant, kept identical so the
    two clients are visibly speaking to the same endpoints. */
@@ -160,7 +161,7 @@ function requestRefusal(url, ownHosts) {
   try { host = new URL(url).hostname; } catch { return "NOT_A_PUBLIC_LOCATOR"; }
   return isOwnHost(host, ownHosts) ? "OWN_HOST" : null;
 }
-const refusedSentence = (url, reason) => `${url} was refused before it was sent (${reason}: ${RENDER_BLOCKED_REASONS[reason]})`;
+const refusedSentence = (url, reason) => word("browserrender.text.refused_sent", { url: String(url), reason: String(reason), render_blocked_reasons: String(RENDER_BLOCKED_REASONS[reason]) });
 
 /** Open a CDP socket on a fresh browser session. Throws with a sentence naming
  *  which of the two calls failed and what it answered — never a bare `undefined`. */
@@ -197,30 +198,30 @@ export async function collectBodies(conn, sessionId, entries, { now = () => Date
   let taken = 0, spent = 0;
   for (const e of entries) {
     if (e.outcome !== "completed") continue;
-    if (e.redirect) { e.body_unavailable = "a redirect hop, whose body the browser does not keep"; continue; }
-    if (!e.rid) { e.body_unavailable = "the browser gave this request no id to ask its body by"; continue; }
+    if (e.redirect) { e.body_unavailable = word("browserrender.body_unavailable.redirect_hop_whose"); continue; }
+    if (!e.rid) { e.body_unavailable = word("browserrender.body_unavailable.browser_gave_request"); continue; }
     if (taken >= SUBRESOURCE_CAP) { e.body_unavailable = `past the ${SUBRESOURCE_CAP}-body ceiling`; continue; }
-    if (spent >= SUBRESOURCE_BUDGET) { e.body_unavailable = `the ${SUBRESOURCE_BUDGET}-byte body budget was spent`; continue; }
+    if (spent >= SUBRESOURCE_BUDGET) { e.body_unavailable = word("browserrender.body_unavailable.byte_body_budget", { subresource_budget: String(SUBRESOURCE_BUDGET) }); continue; }
     const left = deadline - now();
     if (left <= 0) {
       e.body_unavailable = deadline === until
-        ? "the render's reserved bound (navigation + wait) was spent before this body was collected"
-        : `the ${BODY_PHASE_MS} ms body-collection bound was spent`;
+        ? word("browserrender.text.render_reserved_bound")
+        : word("browserrender.text.ms_body_collection", { body_phase_ms: String(BODY_PHASE_MS) });
       continue;
     }
     try {
       const b = await conn.send("Network.getResponseBody", { requestId: e.rid }, sessionId, Math.min(BODY_CALL_MS, left));
-      if (typeof b.body !== "string") { e.body_unavailable = "the browser answered with no body"; continue; }
+      if (typeof b.body !== "string") { e.body_unavailable = word("browserrender.body_unavailable.browser_answered_body"); continue; }
       /* The bound is on what the PLANE will keep, so it is taken on the decoded size;
          base64 is 4/3 of it and a text body is at least its character count. */
       const size = b.base64Encoded ? Math.floor(b.body.length * 3 / 4) : b.body.length;
-      if (size > SUBRESOURCE_MAX) { e.body_unavailable = `the body is about ${size} bytes, over the ${SUBRESOURCE_MAX}-byte ceiling`; continue; }
+      if (size > SUBRESOURCE_MAX) { e.body_unavailable = word("browserrender.body_unavailable.body_bytes_over", { size: String(size), subresource_max: String(SUBRESOURCE_MAX) }); continue; }
       if (b.base64Encoded) e.body_base64 = b.body; else e.body_text = b.body;
       taken++; spent += size;
     } catch (err) {
       /* The browser REFUSES bodies it no longer holds (evicted, or a resource type it
          never buffers). Its own words are the reason, never ours. */
-      e.body_unavailable = `the browser would not give the body: ${String((err && err.message) || err).slice(0, 200)}`;
+      e.body_unavailable = word("browserrender.body_unavailable.browser_would_give", { err: String(String((err && err.message) || err).slice(0, 200)) });
     }
   }
 }
@@ -327,7 +328,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
   const ownHosts = Array.isArray(asked.own_hosts) ? asked.own_hosts : [];
   /* R64: an address the hold would refuse is refused before a browser is spent on it. */
   const refusedAddress = requestRefusal(String(asked.url || ""), ownHosts);
-  if (refusedAddress) return { ok: false, error: `the browser could not navigate to ${String(asked.url || "")}: ${refusedSentence(String(asked.url || ""), refusedAddress)}` };
+  if (refusedAddress) return { ok: false, error: localize("capture-sources.browserrender.the_browser_could_not_navigate", "the browser could not navigate to {String}: {refusedSentence}", { String: String(String(asked.url || "")), refusedSentence: String(refusedSentence(String(asked.url || ""), refusedAddress)) }) };
   let sess = null, conn = null, targetId = null;
   const started = now();
   const navDeadline = started + navMs;

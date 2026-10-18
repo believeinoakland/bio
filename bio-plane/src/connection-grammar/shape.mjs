@@ -2,6 +2,7 @@
 /* connection-grammar: the one shape every relationship the record holds is presented in (R1), and the derived id a
    leg cites and a checker re-derives (R11). Pure: nothing here reads a store, the network or a clock (R16). */
 import { BASIS_GRADES, idPattern, canonicalJson, sha256HexSync } from '../record-grammar/index.mjs';
+import { word } from '../setup-words/index.mjs';
 
 /** The four classes of kind, closed (R2). None is a measure of how connected a node is (R17). */
 export const CLASSES = Object.freeze(['evidentiary', 'derived', 'declared', 'hunch']);
@@ -91,7 +92,7 @@ export function derivedId(f) {
  * @returns {{field: string, why: string}[]}
  */
 export function connectionErrors(c, kindOf) {
-  if (!isObj(c)) return [{ field: 'connection', why: 'a connection is an object' }];
+  if (!isObj(c)) return [{ field: 'connection', why: word('connection-grammar.why.connection_object') }];
   const errors = [];
   const err = (field, why) => errors.push({ field, why });
   for (const f of FIELDS) if (!(f in c)) err(f, `${f} is absent; every field of the shape is present`);

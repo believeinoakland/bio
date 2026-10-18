@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { recordOf, RECORD_CORE_CHECKS, SETTING_UNREADABLE } from "../../../src/record-core/index.mjs";
 import { storage } from "./storage.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const fresh = () => { const s = storage(); const rc = recordOf({ storage: s }); rc.migrate(); return { s, rc }; };
 const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
@@ -13,7 +14,7 @@ const dump = (s) => Object.fromEntries(
   rows(s, `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
     .map((r) => [r.name, JSON.stringify(rows(s, `SELECT * FROM ${r.name} ORDER BY rowid`))]));
 
-const BUILD_FAULT = "This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.";
+const BUILD_FAULT = word("record-core.build_fault");
 const NEVER = /\b(copy|instance|plane|server)\b/i;
 const AT = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
 const TRANSLATION = "A part of your team's Civicsmith tried to record a setting with a value that cannot be stored as it was given, so "

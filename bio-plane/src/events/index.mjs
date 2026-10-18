@@ -25,7 +25,7 @@ import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } f
 import { neighboursOf, OWNER_KINDS } from "./owner.mjs";
 import { USE_KINDS, OUTCOMES, recordDiscretion, recordAssessment, withdrawUse, facetOf, usesOf } from "./uses.mjs";
 import { recordedBy } from "./recorded.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { EVENTS_SCHEMA, EVENT_CHECKS, USE_KINDS, OUTCOMES };
 
@@ -104,11 +104,11 @@ const ID_FIELDS = ["event_id", "entity_id", "end_id", "from_event", "to_event", 
 function oneHome(row) {
   if (!isObj(row)) return null;
   const k = Object.keys(row).find((x) => AMOUNT_KEYS.test(x));
-  if (k) return { code: "AMOUNT_NOT_HERE", detail: `an event row holds no amount (${k}); an amount's one home is the money fact` };
+  if (k) return { code: "AMOUNT_NOT_HERE", detail: localize("events.index.an_event_row_holds_no", "an event row holds no amount ({k}); an amount's one home is the money fact", { k: String(k) }) };
   if (row.role === "payer" || row.role === "payee")
     return { code: "UNKNOWN_ROLE", detail: "a payer or payee lives on the money fact, never on an event" };
   const h = ID_FIELDS.find((f) => isHypothesisId(row[f]));
-  if (h) return { code: "HYPOTHESIS_ID", detail: `a hypothesis (${row[h]}) is never held in an event's ${h} (K1467)` };
+  if (h) return { code: "HYPOTHESIS_ID", detail: localize("events.index.a_hypothesis_v1_is_never", "a hypothesis ({v1}) is never held in an event's {h} (K1467)", { v1: String(row[h]), h: String(h) }) };
   return null;
 }
 const GATED = ["events", "event_attestations", "event_participants", "event_concerns", "event_relations", "event_uses", "event_unmet"];
@@ -294,7 +294,7 @@ export class Events {
     if (!isObj(extent)) return refuse("NO_EXTENT", "a dated fact names the extent of the capture that states it");
     const bad = this.#extentRefusal(held.sha, extent);
     if (bad) return bad;
-    if (!DATED_KINDS.includes(kind)) return refuse("UNKNOWN_DATED_KIND", `a dated fact is one of ${DATED_KINDS.join(", ")}`, { kinds: [...DATED_KINDS] });
+    if (!DATED_KINDS.includes(kind)) return refuse("UNKNOWN_DATED_KIND", localize("events.index.a_dated_fact_is_one", "a dated fact is one of {DATED_KINDS}", { DATED_KINDS: String(DATED_KINDS.join(", ")) }), { kinds: [...DATED_KINDS] });
     const d = readDate(value, this.zone());
     if (d.bad) return refuse("BAD_DATE", d.bad);
     if (!said(method)) return refuse("NO_METHOD", "a dated fact says how its date was read (a member's reading, a reader, OCR, office metadata)");
@@ -404,10 +404,8 @@ export class Events {
         if (v == null || v === "") continue;
         const d = readDate(v, zone);
         if (d.bad) { skipped.push({ field, value: v, why: d.bad }); continue; }
-        const method = `office metadata: the file's ${field} value`
-          + (said(who) ? word("events.transact.file_writes", { by: field === "created" ? "author" : word("events.transact.last_modified"),
-                                                               who: String(who).slice(0, 200) }) : "")
-          + "; what the file states about itself, never a finding";
+        const method = localize("events.index.office_metadata_the_files_field", "office metadata: the file's {field} value{v1}; what the file states about itself, never a finding", { field: String(field), v1: String(said(who) ? word("events.transact.file_writes", { by: field === "created" ? "author" : word("events.transact.last_modified"),
+                                                               who: String(who).slice(0, 200) }) : "") });
         out.push(this.#holdFact({ sha: held.sha, bundleId: held.bundleId,
           extent: { kind: "envelope", item: "core-property", name: field }, kind, date: d, method, by }).dated_fact);
       }
@@ -509,7 +507,7 @@ export class Events {
     const e = this.#ents;
     if (!e || !e.has(entityId)) return noSuchEntity(entityId);
     if (!ROLES.includes(role))
-      return refuse("UNKNOWN_ROLE", `a role is one of ${ROLES.join(", ")}; a payer or payee lives on the money fact, never on an event`,
+      return refuse("UNKNOWN_ROLE", localize("events.index.a_role_is_one_of", "a role is one of {ROLES}; a payer or payee lives on the money fact, never on an event", { ROLES: String(ROLES.join(", ")) }),
                     { roles: [...ROLES] });
     if (!attestationGiven || attestation === undefined || attestation === null)
       return refuse("NO_ATTESTATION", "a participant is what a document states or a member testifies, never filled from who held an office");
@@ -535,7 +533,7 @@ export class Events {
     const hit = entries.find((x) => x.value === v) || (fromSource ? entries.find((x) => x.label === v) : null);
     if (hit) return { ok: true, value: hit.value };
     const values = entries.map((x) => x.value);
-    return refuse("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
+    return refuse("UNKNOWN_VOTE_VALUE", localize("events.index.a_vote_value_is_one", "a vote value is one of the profile's: {values}", { values: String(values.join(", ")) }), { values });
   }
   #voteRefusal(voteValue) { const m = this.#voteMatch(voteValue); return m.ok ? null : m; }
 
@@ -543,15 +541,14 @@ export class Events {
    *  of a use's kind (R43, R44) is held only with its facet, through its own act. */
   createEvent(args = {}) {
     if (USE_KINDS.includes(args && args.kind))
-      return refuse("USE_NEEDS_ITS_ACT", `an event of kind ${args.kind} is held only with its provision, reason and outcome: `
-        + `it is recorded with op=${args.kind === "assessment" ? "assessmentrecord" : "discretionrecord"}`, { kind: args.kind });
+      return refuse("USE_NEEDS_ITS_ACT", localize("events.index.an_event_of_kind_kind", "an event of kind {kind} is held only with its provision, reason and outcome: it is recorded with op={v1}", { kind: String(args.kind), v1: String(args.kind === "assessment" ? "assessmentrecord" : "discretionrecord") }), { kind: args.kind });
     const c = this.#checkCreate(args || {});
     return c.ok ? this.#writeEvent(c) : c;
   }
   /* R6's refusals, in order, writing nothing: the kind, the status, the attestations, the concerns, the participants. */
   #checkCreate({ kind, status = "EventScheduled", where = null, concerns = [], attestations, participants = [], by = null } = {}) {
-    if (!EVENT_KINDS.includes(kind)) return refuse("UNKNOWN_EVENT_KIND", `an event is one of ${EVENT_KINDS.join(", ")}`, { kinds: [...EVENT_KINDS] });
-    if (!STATUSES.includes(status)) return refuse("UNKNOWN_STATUS", `a status is one of ${STATUSES.join(", ")}`, { statuses: [...STATUSES] });
+    if (!EVENT_KINDS.includes(kind)) return refuse("UNKNOWN_EVENT_KIND", localize("events.index.an_event_is_one_of", "an event is one of {EVENT_KINDS}", { EVENT_KINDS: String(EVENT_KINDS.join(", ")) }), { kinds: [...EVENT_KINDS] });
+    if (!STATUSES.includes(status)) return refuse("UNKNOWN_STATUS", localize("events.index.a_status_is_one_of", "a status is one of {STATUSES}", { STATUSES: String(STATUSES.join(", ")) }), { statuses: [...STATUSES] });
     if (!Array.isArray(attestations) || !attestations.length)
       return refuse("NO_ATTESTATION", "an event is held only with at least one attestation");
     const rows = [];
@@ -599,7 +596,7 @@ export class Events {
         catch (e) {
           if (e && e.refusal) return e.refusal;
           if (e instanceof ListenerFailure)
-            return refuse("LISTENER_FAILED", `the write was undone because ${e.module}'s listener failed: ${e.message}`, { module: e.module });
+            return refuse("LISTENER_FAILED", localize("events.index.the_write_was_undone_because", "the write was undone because {module}'s listener failed: {message}", { module: String(e.module), message: String(e.message) }), { module: e.module });
           throw e;
         }
       });
@@ -922,7 +919,7 @@ export class Events {
 
   /** R17–R19: a cited relation between two events. */
   relate({ from, to, kind, attestation, by = null } = {}) {
-    if (!RELATION_KINDS.includes(kind)) return refuse("UNKNOWN_RELATION", `a relation is one of ${RELATION_KINDS.join(", ")}`, { kinds: [...RELATION_KINDS] });
+    if (!RELATION_KINDS.includes(kind)) return refuse("UNKNOWN_RELATION", localize("events.index.a_relation_is_one_of", "a relation is one of {RELATION_KINDS}", { RELATION_KINDS: String(RELATION_KINDS.join(", ")) }), { kinds: [...RELATION_KINDS] });
     if (!said(from) || !said(to)) return refuse("NO_ENDS", "a relation names two events by id: from and to");
     if (isHypothesisId(from) || isHypothesisId(to)) return refuse("HYPOTHESIS_ID", "a hypothesis is never an end of an event's relation (K1467)");
     const f = this.#resolve(from), t = this.#resolve(to);
@@ -946,8 +943,7 @@ export class Events {
     if (kind === "precedes") {
       const d = this.#datedOrder(f, t);
       if (d.answer !== "undetermined")
-        return refuse("ORDER_ALREADY_DATED", `the two events' dates already answer which came first: ${f} ${d.answer} ${t}; `
-          + "a cited order is held only for a pair no date settles", { answer: d.answer });
+        return refuse("ORDER_ALREADY_DATED", localize("events.index.the_two_events_dates_already", "the two events' dates already answer which came first: {f} {answer} {t}; a cited order is held only for a pair no date settles", { f: String(f), answer: String(d.answer), t: String(t) }), { answer: d.answer });
     }
     const prior = this.#one(`SELECT r.relation_id FROM event_relations r JOIN event_attestations a ON a.attestation_id = r.attestation_id
                               WHERE r.from_event=? AND r.to_event=? AND r.kind=? AND r.withdrawn_at IS NULL AND a.form=?
@@ -1173,7 +1169,7 @@ export class Events {
     if (audience !== undefined && audience !== null && audience !== "public")
       return refuse("AUDIENCE_UNKNOWN", `a timeline's audience is "public", or none for the team's own reading`, { audiences: ["public"] });
     if (shas.length > CAPTURES_MAX)
-      return refuse("TOO_MANY_CAPTURES", `a timeline reads the dated facts of at most ${CAPTURES_MAX} captures`, { bound: CAPTURES_MAX });
+      return refuse("TOO_MANY_CAPTURES", localize("events.index.a_timeline_reads_the_dated", "a timeline reads the dated facts of at most {CAPTURES_MAX} captures", { CAPTURES_MAX: String(CAPTURES_MAX) }), { bound: CAPTURES_MAX });
     const told = audience === "public" ? { audience } : {};
     const want = Array.isArray(lanes) && lanes.length ? lanes : ["world", "ours", ...(shas.length ? ["dated"] : [])];
     const answer = { ok: true, set: ids, ...(shas.length ? { captures: shas } : {}) };
@@ -1263,7 +1259,7 @@ export class Events {
                  grade: placed ? g.grade ?? null : null,
                  ...(placed ? {} : { grade_why: item.why === "cache stale"
                    ? "its time could not be read (cache stale), so no governing attestation is answered"
-                   : "placed nowhere: no attestation you can see dates this event, so none governs its time" }) };
+                   : word("events.why.grade_placed_nowhere") }) };
       });
     }
     return out;

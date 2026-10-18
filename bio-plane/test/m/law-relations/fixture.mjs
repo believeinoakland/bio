@@ -16,6 +16,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { recogniseCitations } from "../../../src/idspaces.mjs";
 import { LawRecords, weakestCeiling } from "../../../src/law-relations/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s), "utf8").digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -126,7 +127,7 @@ export function world({ construct = true, lookup = null } = {}) {
     eventDay: (event, edge, viewer) => {
       const e = events.get(event);
       return e && (viewer == null || membership.inSight(e.bundle, viewer)) && e.day ? { day: e.day, why: null }
-        : { day: null, why: `the event ${event} is not held, or may not be read` };
+        : { day: null, why: word("standards.why.event_held_read", { event_id: String(event) }) };
     },
     eventWhen: (event, viewer) => { const d = reads.eventDay(event, "start", viewer); return d.day ? d : null; },
     gradeOf: (ids) => weakestCeiling(ids.length ? content.standings(ids) : {}, ids),

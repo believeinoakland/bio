@@ -6,6 +6,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { FIND_KINDS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
          FIND_TERM_MAX } from "./findin.mjs";
 import { BROWSE_ID_CHUNK } from "./browse.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R1: a find over one scope, by kind, that records nothing. The scope is resolved under the viewer's sight (every capture
  *  the viewer may not see is left out and counted nowhere, R15); the kinds are answered by `findin.mjs`'s matchers over at
@@ -22,7 +23,7 @@ export function findIn(r, { scope = null, kinds = null, term = null, limit = nul
   const forms = ["capture", "selection", "ids", "project"];
   const keys = scope && typeof scope === "object" && !Array.isArray(scope) ? Object.keys(scope) : null;
   if (!keys || keys.length !== 1 || !forms.includes(keys[0]))
-    return no("SCOPE_UNKNOWN", `a scope is exactly one of ${forms.map((f) => `{${f}}`).join(", ")}`, { forms });
+    return no("SCOPE_UNKNOWN", localize("retrieval-browse.find.a_scope_is_exactly_one", "a scope is exactly one of {map}", { map: String(forms.map((f) => `{${f}}`).join(", ")) }), { forms });
   const form = keys[0], value = scope[form];
   /* R14: a host read the module was not handed is a refusal naming it, never a throw. */
   const absent = r.missing(["sight", "localeOf", ...(form === "selection" ? ["selectionRead"] : [])]);
@@ -31,17 +32,16 @@ export function findIn(r, { scope = null, kinds = null, term = null, limit = nul
   if (resolved.ok === false) return resolved;
   const asked = Array.isArray(kinds) ? kinds : typeof kinds === "string" && kinds ? kinds.split(",") : [];
   const wanted = [...new Set(asked.map((k) => String(k).trim()).filter(Boolean))];
-  if (!wanted.length) return no("NO_KINDS", `a find names the kinds it looks for: ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
+  if (!wanted.length) return no("NO_KINDS", localize("retrieval-browse.find.a_find_names_the_kinds", "a find names the kinds it looks for: {FIND_KINDS}", { FIND_KINDS: String(FIND_KINDS.join(", ")) }), { kinds: FIND_KINDS });
   const unknown = wanted.filter((k) => !FIND_KINDS.includes(k));
   if (unknown.length)
-    return no("KIND_UNKNOWN", `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; `
-      + `the kinds are ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
+    return no("KIND_UNKNOWN", localize("retrieval-browse.find.no_kind_called_map_the", "no kind called {map}; the kinds are {FIND_KINDS}", { map: String(unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")), FIND_KINDS: String(FIND_KINDS.join(", ")) }), { kinds: FIND_KINDS });
   const words = typeof term === "string" ? term.trim() : "";
   if (wanted.includes("term") && !words) return no("NO_TERM", "the kind term finds a name or term as written, and none was given");
   const termAbsent = wanted.includes("term") ? r.missing(["planOf", "runQuery"]) : [];
   if (termAbsent.length) return unavailable(termAbsent);
   if (words.length > FIND_TERM_MAX)
-    return no("TERM_TOO_LONG", `a term is at most ${FIND_TERM_MAX} characters`, { limit: FIND_TERM_MAX, got: words.length });
+    return no("TERM_TOO_LONG", localize("retrieval-browse.find.a_term_is_at_most", "a term is at most {FIND_TERM_MAX} characters", { FIND_TERM_MAX: String(FIND_TERM_MAX) }), { limit: FIND_TERM_MAX, got: words.length });
   const n = Number(limit);
   const cap = limit == null || limit === "" || !Number.isFinite(n) ? FIND_ITEMS_DEFAULT
     : Math.max(1, Math.min(FIND_ITEMS_MAX, Math.floor(n)));
@@ -63,7 +63,7 @@ export function findIn(r, { scope = null, kinds = null, term = null, limit = nul
 
 /* R14: the refusal for a host read `retrieval` did not hand this module. */
 const unavailable = (missing) => ({ ok: false, reason: "HOST_READ_MISSING", code: "HOST_READ_MISSING",
-  detail: `this find needs ${missing.join(", ")} from the host, and the module was not handed it`, missing });
+  detail: localize("retrieval-browse.find.this_find_needs_missing_from", "this find needs {missing} from the host, and the module was not handed it", { missing: String(missing.join(", ")) }), missing });
 
 /* R1's scope, resolved under the viewer's sight to the captures it holds (`[{capture_sha, bundle_id}]`, one entry per
    capture under its first visible bundle, in capture-sha order), or the scope's refusal. A capture is held by the bundles
@@ -98,7 +98,7 @@ function scopeOf(r, form, value, viewer, owner) {
   } else if (form === "ids") {
     const list = Array.isArray(value) ? [...new Set(value.filter((v) => typeof v === "string" && v).map((v) => v.trim()))] : [];
     if (list.length > FIND_IDS_MAX)
-      return no("SCOPE_TOO_LARGE", `an enumerated scope holds at most ${FIND_IDS_MAX} ids`, { limit: FIND_IDS_MAX, got: list.length });
+      return no("SCOPE_TOO_LARGE", localize("retrieval-browse.find.an_enumerated_scope_holds_at", "an enumerated scope holds at most {FIND_IDS_MAX} ids", { FIND_IDS_MAX: String(FIND_IDS_MAX) }), { limit: FIND_IDS_MAX, got: list.length });
     for (const id of list.filter((v) => SHA.test(v))) ownersOf(id).forEach(keep);
     holdOf(list.filter((v) => !SHA.test(v)));
   } else {

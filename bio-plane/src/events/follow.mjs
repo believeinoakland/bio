@@ -8,7 +8,7 @@ import { readDate } from "./time.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { noEntity, noSuchEntity } from "../entities/index.mjs";
 import { joinLocal } from "../civil-time/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export const MACHINE = "class:daemon";
 const said = (v) => typeof v === "string" && v.trim() !== "";
@@ -34,7 +34,7 @@ export function datesOfReading(reading, zone) {
     if (!kind || v == null) continue;
     const d = readDate(typeof v === "string" ? v.trim() : v, zone);
     if (d.bad) continue;
-    out.push({ kind, date: d, method: `reader ${type}${reading.reader_version != null ? ` v${reading.reader_version}` : ""}: the field ${field}, as the reader states it` });
+    out.push({ kind, date: d, method: localize("events.follow.reader_type_v1_the_field", "reader {type}{v1}: the field {field}, as the reader states it", { type: String(type), v1: String(reading.reader_version != null ? ` v${reading.reader_version}` : ""), field: String(field) }) });
   }
   return out;
 }
@@ -200,7 +200,7 @@ function meeting(k, held, row, f, scope, out) {
     const d = readDate(first, "UTC");
     if (d.bad) continue;
     const pf = k.holdFact({ sha: held.sha, bundleId: held.bundleId, extent: { kind: "document" }, kind: "published", date: d,
-      method: `legistar-reader: Event${which === "agenda" ? "Agenda" : "Minutes"}LastPublishedUTC, the last publication, an upper bound`,
+      method: localize("events.follow.legistar_reader_event_v1_lastpublishedutc", "legistar-reader: Event{v1}LastPublishedUTC, the last publication, an upper bound", { v1: String(which === "agenda" ? "Agenda" : "Minutes") }),
       by: MACHINE, sourceRow: row.source, upperBound: true }).dated_fact;
     let pub;
     if (!p) {
@@ -301,7 +301,7 @@ export function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {
       let fact = null;
       const d = readDate(dayAsWritten(typeof row.date === "string" ? row.date.trim() : ""), k.zone());
       if (!d.bad && k.zone()) fact = k.holdFact({ sha: held.sha, bundleId: held.bundleId, extent: { kind: "document" }, kind: "entered",
-        date: d, method: `court-doctypes ${reading.content_type}: the entry's date as written`, by: MACHINE, sourceRow: i }).dated_fact;
+        date: d, method: localize("events.follow.court_doctypes_content_type_the", "court-doctypes {content_type}: the entry's date as written", { content_type: String(reading.content_type) }), by: MACHINE, sourceRow: i }).dated_fact;
       rowAttestation(k, eventId, held, { source: i }, fact);
       k.insert("event_concerns", { event_id: eventId, end_id: proceeding, by_actor: MACHINE, at: k.now() });
       k.setWhen(eventId);

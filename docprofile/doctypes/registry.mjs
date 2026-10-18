@@ -20,6 +20,7 @@
  * noisy and honest; with no fallback registered at all, NO_TYPE below says so. */
 import { makeRegistry } from "../../site-profiles/index.mjs";
 import { CONTRACT } from "./index.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* THE SEAM (T33-12; K1513; T34-8). `registerDoctype` (exported further down) is how a
    composer registers types: a type whose key is already held REPLACES it in its own
@@ -52,7 +53,7 @@ export function registerDoctype(type) {
   if (!type || typeof type !== "object" || typeof type.key !== "string" || !type.key)
     return { ok: false, why: "a content type is registered by its key, and this one carries no key" };
   if (typeof type.detect !== "function")
-    return { ok: false, why: `the ${type.key} content type has no detect function, so it could never recognise a document` };
+    return { ok: false, why: localize("docprofile.registry.the_key_content_type_has", "the {key} content type has no detect function, so it could never recognise a document", { key: String(type.key) }) };
   const i = members.findIndex((m) => m.key === type.key);
   if (i >= 0) members[i] = type; else members.push(type);
   rebuild();

@@ -7,6 +7,8 @@
  */
 
 /** Universal core fields (spec 3.1). */
+import { localize } from '../setup-words/index.mjs';
+
 export const CORE_FIELDS = [
   'id', 'object_type', 'schema', 'title', 'current_state', 'prior_state',
   'created', 'last_updated', 'produced_by', 'group', 'references',
@@ -115,7 +117,7 @@ export function parseFrontmatter(text) {
       const rest = m[2];
       topKey = null; topMode = null; curElem = null;
       if (own(data, key)) {
-        findings.push(f('C-2.1', 'error', `duplicate top-level key '${key}' at line ${n + 1}`));
+        findings.push(f('C-2.1', 'error', localize('record-grammar.frontmatter.duplicate_top_level_key_key', 'duplicate top-level key \'{key}\' at line {v1}', { key: String(key), v1: String(n + 1) })));
       }
       if (stripComment(rest).trim() === '') {           // block start
         topKey = key; put(data, key, undefined);        // decided by first child
@@ -126,12 +128,12 @@ export function parseFrontmatter(text) {
       const indent = m[1].length;
       const rest = m[2];
       if (!topKey) {
-        findings.push(f('C-2.1', 'error', `array item outside any block at line ${n + 1}`));
+        findings.push(f('C-2.1', 'error', localize('record-grammar.frontmatter.array_item_outside_any_block', 'array item outside any block at line {v1}', { v1: String(n + 1) })));
         continue;
       }
-      if (indent !== 2) findings.push(f('C-2.1', 'error', `array item indented ${indent} (expected 2) at line ${n + 1}`));
+      if (indent !== 2) findings.push(f('C-2.1', 'error', localize('record-grammar.frontmatter.array_item_indented_indent_expected', 'array item indented {indent} (expected 2) at line {v1}', { indent: String(indent), v1: String(n + 1) })));
       if (topMode === null) { topMode = 'array'; put(data, topKey, []); }
-      if (topMode !== 'array') { findings.push(f('C-2.1', 'error', `array item inside a map block '${topKey}' at line ${n + 1}`)); continue; }
+      if (topMode !== 'array') { findings.push(f('C-2.1', 'error', localize('record-grammar.frontmatter.array_item_inside_a_map', 'array item inside a map block \'{topKey}\' at line {v1}', { topKey: String(topKey), v1: String(n + 1) }))); continue; }
       const km = /^([A-Za-z_][A-Za-z0-9_]*):(.*)$/.exec(rest);
       if (km && stripComment(km[2]).trim() !== '') {    // object element: '- key: value'
         curElem = {}; put(curElem, km[1], parseScalar(km[2]));
@@ -156,15 +158,15 @@ export function parseFrontmatter(text) {
         // A key indented where the grammar has no slot for it: the Alpha buried-key failure mode.
         if (isCore) {
           findings.push(f('C-2.4', 'error',
-            `top-level key '${key}' is buried by stray indentation at line ${n + 1} and will not register`,
-            [`re-indent '${key}' to column 0`]));
+            localize('record-grammar.frontmatter.top_level_key_key_is', 'top-level key \'{key}\' is buried by stray indentation at line {v1} and will not register', { key: String(key), v1: String(n + 1) }),
+            [localize('record-grammar.frontmatter.re_indent_key_to_column', 're-indent \'{key}\' to column 0', { key: String(key) })]));
           put(data, key, parseScalar(rest));            // recover for downstream checks
         } else {
-          findings.push(f('C-2.1', 'error', `key '${key}' indented ${indent} does not fit the restricted grammar at line ${n + 1}`));
+          findings.push(f('C-2.1', 'error', localize('record-grammar.frontmatter.key_key_indented_indent_does', 'key \'{key}\' indented {indent} does not fit the restricted grammar at line {v1}', { key: String(key), indent: String(indent), v1: String(n + 1) })));
         }
       }
     } else {
-      findings.push(f('C-2.1', 'error', `line ${n + 1} does not fit the restricted grammar: ${line.slice(0, 60)}`));
+      findings.push(f('C-2.1', 'error', localize('record-grammar.frontmatter.line_v1_does_not_fit', 'line {v1} does not fit the restricted grammar: {line}', { v1: String(n + 1), line: String(line.slice(0, 60)) })));
     }
   }
 

@@ -78,6 +78,7 @@ import { eventsOf } from "../events/index.mjs";
 import { ESCALATION, escalationId, escalationDoc, appendEntry, logOf, logSection, parseFm } from "./doc.mjs";
 import { ESCALATION_TABLES, migrateEscalation } from "./schema.mjs";
 import { ESCALATION_CHECKS, refusal } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { ESCALATION_SCHEMA, ESCALATION_TABLES } from "./schema.mjs";
 export { ESCALATION_CHECKS, ESCALATION_WORDS } from "./checks.mjs";
@@ -119,8 +120,7 @@ export const DUE_MAX = 500;
 /** R19: keys no input or answer carries. */
 export const JUDGMENT_KEYS = Object.freeze(["significance", "severity", "priority", "urgency", "score", "rank"]);
 
-const PROPOSAL_SAYS = "proposed by the escalation protocol's derivation over the record at the time of reading; it is "
-  + "not an act. A member advances it or declines it, with a reason.";
+const PROPOSAL_SAYS = word("escalation.proposed_escalation_protocol");
 const DAY_MS = 86400000;
 const ACT = Symbol("escalation act");
 const COMPLETED_READINGS = new Set(["denied", "partial", "none"]);
@@ -172,14 +172,14 @@ function overdueSince(text, date, nowMs, place) {
 /** R29 (conformance R25, events R9): an act's event's `when` in words, as the record holds it: a day or instant, a span
  *  with its precision and zone, placed nowhere, or undetermined with why; never a guessed date. */
 function eventWhenWords(w, why) {
-  if (w === null || w === undefined) return "at no date the record holds (placed nowhere; undetermined)";
-  if (!isObj(w)) return `at a date that is undetermined${why ? ` (${why})` : ""}`;
+  if (w === null || w === undefined) return word("escalation.date_record_holds");
+  if (!isObj(w)) return word("escalation.date_undetermined", { why: String(why ? ` (${why})` : "") });
   const start = str(w.start), end = str(w.end);
-  if (!start && !end) return "at a date the record does not state (undetermined)";
+  if (!start && !end) return word("escalation.date_record_state");
   /* a day at day precision is held as its half-open span [start, next day): it reads as that day */
   const oneDay = str(w.precision) === "day" && start && end && Date.parse(end) - Date.parse(start) === DAY_MS;
   const at = oneDay ? `on ${start.slice(0, 10)}` : !end || end === start ? `on ${start || end}`
-    : !start ? `on or before ${end}` : `between ${start} and ${end}`;
+    : !start ? word("screen.timeline.onorbefore", { date: String(end) }) : `between ${start} and ${end}`;
   const how = [str(w.precision) ? `to the ${str(w.precision)}` : "", str(w.zone)].filter(Boolean).join(", ");
   return `${at}${how ? ` (${how})` : ""}`;
 }
@@ -189,19 +189,18 @@ function eventWhenWords(w, why) {
 function consequenceSentence(p) {
   const aff = isObj(p.affected) ? p.affected : {};
   const who = str(aff.description) ? `${quoted(aff.description)}${str(aff.kind) ? ` (${str(aff.kind)})` : ""}`
-    : "what the record does not state (undetermined)";
+    : word("escalation.record_state_undetermined");
   const m = isObj(p.measure) ? p.measure : null;
   const amount = !m || p.state === "undetermined" ? null
     : Number.isFinite(m.value) ? String(m.value)
     : isObj(m.range) && Number.isFinite(m.range.low) && Number.isFinite(m.range.high) ? `${m.range.low} to ${m.range.high}` : null;
   const measure = amount === null
     ? `its measure is undetermined${isObj(p.undetermined) && str(p.undetermined.why) ? ` (${str(p.undetermined.why)})` : ""}`
-    : `its measure is ${amount} ${str(m.unit)}${str(m.currency) ? ` (${str(m.currency)})` : ""}`;
+    : word("escalation.measure", { amount: String(amount), unit: String(str(m.unit)), currency: String(str(m.currency) ? ` (${str(m.currency)})` : "") });
   const per = isObj(p.period) && str(p.period.from) && str(p.period.to) ? `from ${str(p.period.from)} to ${str(p.period.to)}`
-    : "over a period the record does not state (undetermined)";
+    : word("escalation.period_record_state");
   const cause = isObj(p.causation) && str(p.causation.state) ? str(p.causation.state) : "undetermined";
-  return `Consequence ${p.id}${str(p.standard) ? ` (standard ${str(p.standard)})` : ""}: it affects ${who}; ${measure}, `
-    + `${per}; it is ${str(p.state) || "of a state the record does not state (undetermined)"}, and its causation is ${cause}.`;
+  return word("escalation.consequence_affects_causation", { id: String(p.id), standard: String(str(p.standard) ? ` (standard ${str(p.standard)})` : ""), who: String(who), measure: String(measure), per: String(per), state: String(str(p.state) || "of a state the record does not state (undetermined)"), cause: String(cause) });
 }
 
 /* ---- the providers' answers, read in one place each (their Provides) ---- */
@@ -397,7 +396,7 @@ export class Escalation {
     const evalMissing = (ev, scope) => (!ev ? `no evaluation ${scope}`
       : ev.reading === "complied" ? `the evaluation in force reads complied: it proposes no stage. Compliance is restored `
         + `only by a live compliant determination of the same act for every standard pursued (escalationEnd)`
-      : `no evaluation ${scope} reads denied, partial or none`);
+      : word("escalation.evaluation_reads_denied", { scope: String(scope) }));
 
     /* actions R12 (T33-73): a clock entry is past on the office's local day, so its rule reads the place (the view) */
     const place = e.stage === 3 ? this.#place() : null;
@@ -405,11 +404,11 @@ export class Escalation {
       /* R4: the determination is live, and its act's actor is an office. */
       const d = this.conformance.determinationRead({ id: e.determination, viewer });
       let missing = null;
-      if (!d || d.ok === false) missing = "the determination does not answer to this reader";
-      else if (!liveOf(d)) missing = "the determination has been superseded";
+      if (!d || d.ok === false) missing = word("escalation.determination_answer_reader");
+      else if (!liveOf(d)) missing = word("escalation.determination_superseded");
       else {
         const actor = actOf(d).actor || {};
-        if (!str(actor.role) || !str(actor.body)) missing = "the act's actor names no office (role and body), so a notice has no addressee";
+        if (!str(actor.role) || !str(actor.body)) missing = word("escalation.act_actor_names");
       }
       edge(2, missing ? [] : [{ ms: instantMs(recordedAtOf(d)), ids: [e.determination] }], missing);
     } else if (e.stage === 2) {
@@ -420,8 +419,8 @@ export class Escalation {
         const s = firstSent(a.action);
         if (s) alts.push({ ms: instantMs(s.entry.at), ids: [a.action, `${a.action}#${s.entry.ord}`] });
       }
-      edge(3, alts, acts.length ? "no notification action attached at stage 2 has a sent entry in its ledger"
-                                : "no breach action is attached at stage 2");
+      edge(3, alts, acts.length ? word("escalation.notification_action_attached")
+                                : word("escalation.breach_action_attached"));
     } else if (e.stage === 3) {
       /* R6: after the sent entry, a received or no_response entry; or the clock's earliest pending entry is past. */
       const acts = stageActs(2);
@@ -453,12 +452,12 @@ export class Escalation {
                        + "time zone is held for the office's local day, or the entry's day cannot be read), so stage 3 is "
                        + "not triggered by time on it" });
       }
-      edge(4, alts, acts.length ? "no reply or no-response entry follows the sent entry, and no clock entry is past"
-                                : "no notification action is attached at stage 2");
+      edge(4, alts, acts.length ? word("escalation.reply_response_entry")
+                                : word("escalation.notification_action_attached_stage"));
     } else if (e.stage === 4) {
       /* R7: the latest evaluation made since the escalation entered stage 4. */
       const since = evaluations.filter((v) => instantOrder(v.at, e.stageSince) >= 0).at(-1) || null;
-      const missing = evalMissing(since, "since the escalation entered stage 4");
+      const missing = evalMissing(since, word("escalation.escalation_entered_stage"));
       edge(5, byEvaluation(since), missing);
       edge(7, byEvaluation(since), missing);
     } else if (e.stage === 5) {
@@ -469,8 +468,8 @@ export class Escalation {
         const s = firstSent(a.action);
         if (s) alts.push({ ms: instantMs(s.entry.at), ids: [a.action, `${a.action}#${s.entry.ord}`] });
       }
-      edge(6, alts, acts.length ? "no action attached at stage 5 has a sent entry in its ledger"
-                                : "no breach action is attached at stage 5");
+      edge(6, alts, acts.length ? word("escalation.action_attached_stage")
+                                : word("escalation.breach_action_attached_stage"));
       edge(7, byEvaluation(latest), evalMissing(latest, "in force"));
     } else if (e.stage === 6 || e.stage === 7) {
       /* R11, R12: a received entry on an attached action recorded after the latest evaluation. */
@@ -483,8 +482,8 @@ export class Escalation {
           alts.push({ ms: instantMs(x.at), ids: [a.action, `${a.action}#${x.ord}`] });
         }
       }
-      edge(4, alts, latest ? "no received entry on an attached action was recorded after the latest evaluation"
-                           : "no received entry on an attached action");
+      edge(4, alts, latest ? word("escalation.received_entry_attached")
+                           : word("escalation.received_entry_attached_action"));
     }
     for (const t of out) if (!edges.includes(t.to)) throw new Error("escalation: an edge outside the table");
     return { triggers: out, notes };
@@ -505,12 +504,11 @@ export class Escalation {
   /* R3, R14: the two exit conditions, answered apart and never composed. */
   #exit(e, viewer) {
     return { compliance: this.#compliance(e, viewer), consequences: this.#consequencesState(e, viewer),
-             says: "an escalation ends only when both hold: compliance restored for every standard it pursues, and the "
-                 + "consequences addressed. Each is answered on its own." };
+             says: word("escalation.says.escalation_ends_hold") };
   }
 
   #compliance(e, viewer) {
-    if (!e.act) return { state: "undetermined", ids: [], why: "the determination names no act id, so no later determination of the same act can be found" };
+    if (!e.act) return { state: "undetermined", ids: [], why: word("escalation.why.determination_names_act") };
     const per = [];
     /* R14 (T45; conformance R37): the cure links standing on the escalation's determination, per standard */
     const cures = this.#cures(e, viewer);
@@ -519,7 +517,7 @@ export class Escalation {
       let after = null;
       for (let page = 0; page < 50; page++) {
         const r = this.conformance.determinationsFor({ act: e.act, standard, outcome: "compliant", live: true, after, viewer });
-        if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the determinations of the act could not be read" };
+        if (!r || r.ok === false) return { state: "undetermined", ids: [], why: word("escalation.why.determinations_act_read") };
         for (const d of r.items || []) {
           if (this.#restores(d, standard, e, viewer)) found.push(d.id);
         }
@@ -540,8 +538,7 @@ export class Escalation {
     }
     const lacking = per.filter((p) => !p.met).map((p) => p.standard);
     return { state: lacking.length ? "not_met" : "met", ids: per.flatMap((p) => p.ids), standards: per,
-             why: lacking.length ? `no live compliant determination of the same act, or of a curing act of the same office, `
-                                   + `recorded after the escalation opened for: ${lacking.join(", ")}`
+             why: lacking.length ? word("escalation.why.live_compliant_determination", { lacking: String(lacking.join(", ")) })
                                  : "every standard pursued has a live compliant determination, of the same act or of its "
                                    + "linked cure, recorded after the escalation opened" };
   }
@@ -576,13 +573,13 @@ export class Escalation {
 
   #consequencesState(e, viewer) {
     const r = this.consequences.addressed({ determination: e.determination, viewer });
-    if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the consequences could not be read" };
+    if (!r || r.ok === false) return { state: "undetermined", ids: [], why: word("escalation.why.consequences_read") };
     const parts = Array.isArray(r.parts) ? r.parts : [];
     const ids = parts.map((p) => (isObj(p) ? p.id ?? p.part ?? null : p)).filter((x) => typeof x === "string");
     const state = r.state === "addressed" ? "met" : r.state === "not_addressed" ? "not_met" : "undetermined";
-    const why = state === "met" ? "every live consequence part is addressed"
-      : state === "not_met" ? "a consequence part is not addressed, or was never assessed"
-      : parts.length ? "a consequence part is undetermined or its causation unproven" : "no consequence recorded";
+    const why = state === "met" ? word("escalation.live_consequence_part")
+      : state === "not_met" ? word("escalation.consequence_part_addressed")
+      : parts.length ? word("escalation.consequence_part_undetermined") : word("escalation.consequence_recorded");
     return { state, ids, parts, why };
   }
 
@@ -601,7 +598,7 @@ export class Escalation {
         item.standards = a.standards;
         const office = this.#office(visible.counterparty, view);
         if (a.purpose === "official_request" && office.elected === undefined)
-          item.election = { state: "undetermined", says: "the active profiles do not say whether this office is elected" };
+          item.election = { state: "undetermined", says: word("escalation.says.active_profiles_say") };
         if (a.purpose === "oversight_request" || a.purpose === "audit_request") {
           /* R12 (K1442): a line held on the attachment's day governs, named with its grades; with none, the profile's
              flag; with neither, undetermined. A line undetermined on that day is stated, never read as held. */
@@ -644,12 +641,12 @@ export class Escalation {
     const a = isObj(actOf(d).actor) ? actOf(d).actor : {};
     const base = { role: str(a.role) || null, body: str(a.body) || null, entity_id: str(a.entity_id) || null };
     if (!base.entity_id)
-      return { ...base, state: "unresolved", why: "the determination names no office entity for the act's actor" };
+      return { ...base, state: "unresolved", why: word("escalation.why.determination_names_office") };
     const r = this.entities.readEntity({ entityId: base.entity_id, viewer });
     if (!r || r.ok === false || !r.found || !isObj(r.entity))
-      return { ...base, state: "unresolved", why: "the actor's entity is not held in the registry" };
+      return { ...base, state: "unresolved", why: word("escalation.why.actor_entity_held") };
     if (r.entity.kind !== "office")
-      return { ...base, state: "unresolved", why: `the actor's entity is of kind ${r.entity.kind}, not an office` };
+      return { ...base, state: "unresolved", why: word("escalation.why.actor_entity_kind", { kind: String(r.entity.kind) }) };
     return { ...base, state: "resolved", label: r.entity.label ?? null };
   }
 
@@ -689,7 +686,7 @@ export class Escalation {
       if (l.kind === "part_of" && l.from === office) intoOver(l.to, Escalation.#line(l), null);
     for (const u of parts.undetermined || [])
       if (isObj(u.line) && u.line.kind === "part_of" && u.line.from === office)
-        intoOver(u.line.to, Escalation.#line(u.line), `the office's part_of line is undetermined on ${day}: ${u.why}`);
+        intoOver(u.line.to, Escalation.#line(u.line), word("escalation.office_part_line", { day: String(day), why: String(u.why) }));
     return { held, undetermined };
   }
 
@@ -697,7 +694,7 @@ export class Escalation {
   #actorOf(e, viewer) {
     const d = this.conformance.determinationRead({ id: e.determination, viewer });
     return d && d.ok !== false ? this.#actor(d, viewer)
-      : { state: "unresolved", why: "the determination does not answer to this reader" };
+      : { state: "unresolved", why: word("escalation.determination_answer_reader") };
   }
 
   /* R12: what the record holds on whether `target` (the stage-7 action's office entity, actions R9) oversees the actor's
@@ -705,8 +702,8 @@ export class Escalation {
      lines undetermined on the day, if any); `{state: "unread", why}` when either office entity is not held, so no line
      can be read and the profile's flag alone speaks. */
   #oversightLines(target, actor, day, viewer) {
-    if (!target) return { state: "unread", why: "the action's office names no entity, so no line to it can be read" };
-    if (actor.state !== "resolved") return { state: "unread", why: `the act's actor is unresolved: ${actor.why}` };
+    if (!target) return { state: "unread", why: word("escalation.why.action_office_names") };
+    if (actor.state !== "resolved") return { state: "unread", why: word("escalation.why.act_actor_unresolved", { why: String(actor.why) }) };
     const o = this.#overseers(actor.entity_id, day, viewer);
     const held = o.held.filter((h) => h.entity === target);
     if (held.length) return { state: "held", lines: held.map(({ entity: _, ...h }) => h) };
@@ -716,11 +713,9 @@ export class Escalation {
   /* R12: at stage 7 the offices the record supports as targets for an oversight or audit request, at `day`, each with
      its line; offered, never chosen. */
   #targets(actor, day, viewer) {
-    const says = "offices holding an oversees or appoints line to the actor's office, or to an organisation it is part "
-      + "of, valid on this day: the targets the record supports. They are offered; a member chooses, and the profile "
-      + "is read only where no line is held.";
+    const says = localize("escalation.index.offices_holding_an_oversees_or", "offices holding an oversees or appoints line to the actor's office, or to an organisation it is part of, valid on this day: the targets the record supports. They are offered; a member chooses, and the profile is read only where no line is held.");
     if (actor.state !== "resolved")
-      return { state: "undetermined", on: day, offices: [], undetermined: [], why: `the act's actor is unresolved: ${actor.why}`, says };
+      return { state: "undetermined", on: day, offices: [], undetermined: [], why: word("escalation.why.act_actor_unresolved", { why: String(actor.why) }), says };
     const o = this.#overseers(actor.entity_id, day, viewer);
     return { state: o.held.length ? "held" : "none", on: day, offices: o.held, undetermined: o.undetermined, says };
   }
@@ -779,7 +774,7 @@ export class Escalation {
     /* R4: the actor's office entity, which stage 2's notice and stage 7's targets read. */
     const d = this.conformance.determinationRead({ id: e.determination, viewer });
     const actor = d && d.ok !== false ? this.#actor(d, viewer)
-      : { role: null, body: null, entity_id: null, state: "unresolved", why: "the determination does not answer to this reader" };
+      : { role: null, body: null, entity_id: null, state: "unresolved", why: word("escalation.determination_answer_reader") };
     let answer = {
       ok: true, id: e.id, project: e.project, determination: e.determination, act: e.act, state: e.state,
       stage: e.stage, stage_name: STAGES[e.stage], stage_since: e.stageSince, opened_by: e.openedBy, opened_at: e.openedAt,
@@ -796,12 +791,12 @@ export class Escalation {
       answer.stopped = { since: e.stateSince, stage: e.stage, says: "stopped pursuing: the team decided to stop pursuing "
                          + "this escalation. It proposes nothing, it is not ended and it is not a success; a member may reopen "
                          + "it at this stage" };
-    if (e.state === "ended") answer.ended = { at: e.stateSince, says: "ended: compliance was restored and the consequences addressed" };
+    if (e.state === "ended") answer.ended = { at: e.stateSince, says: word("escalation.says.ended_compliance_restored") };
     if (e.stage === 7) answer.targets = this.#targets(actor, dayOf(at), viewer);
     if (e.stage === 5) {
       const av = this.filings.availableActions({ determination: e.determination, viewer });
       answer.available = av && av.ok !== false ? av
-        : { state: "undetermined", says: "the actions available against the determination's offices could not be read" };
+        : { state: "undetermined", says: word("escalation.says.actions_available_against") };
     }
     return answer;
   }
@@ -1094,7 +1089,7 @@ export class Escalation {
     if (purpose === "official_request") {
       if (office.elected === false) return { state: "refused", code: "COUNTERPARTY_NOT_ELECTED" };
       if (office.elected === true) return { state: "admitted", profile: { elected: true } };
-      return { state: "undetermined", says: "the active profiles do not say whether this office is elected; the attachment lands" };
+      return { state: "undetermined", says: word("escalation.says.active_profiles_say_whether") };
     }
     if (purpose === "oversight_request" || purpose === "audit_request") {
       /* R12 (K1442): a line held on the day by which the office oversees the actor's office governs; only with none
@@ -1109,7 +1104,7 @@ export class Escalation {
                + "and the active profiles do not say whether it is an oversight or audit body; the attachment lands", ...doubt,
                ...(l.state === "unread" ? { lines_unread: l.why } : {}) };
     }
-    return { state: "none_asked", says: "this purpose asks no condition of the counterparty" };
+    return { state: "none_asked", says: word("escalation.says.purpose_asks_condition") };
   }
 
   /** R34 (T46; N931; affordances R51): for an action and an escalation at stage 7, R12's counterparty conditions for the
@@ -1125,7 +1120,7 @@ export class Escalation {
     const day = dayOf(at);
     if (e.stage !== 7)
       return { ok: true, id: e.id, action, stage: e.stage, on: day, purposes: null,
-               says: "counterparty conditions are judged at stage 7 (political accountability) only" };
+               says: word("escalation.says.counterparty_conditions_judged") };
     const purposes = Object.fromEntries(ACCOUNTABILITY_PURPOSES.map((p) => {
       const c = this.#counterparty(e, a, p, day, viewer);
       return [p, c.state === "refused" ? { state: "refused", code: c.code, check: ESCALATION_CHECKS[c.code].check,
@@ -1175,12 +1170,11 @@ export class Escalation {
     const bad = refuseReason(reason);
     if (bad) return bad;
     const entry = { kind: "evaluate", reading, response: named, reason: str(reason), author, at: this.now() };
-    const w = this.#append(e, entry, { blurb: "Response evaluated" });
+    const w = this.#append(e, entry, { blurb: word("escalation.blurb.response_evaluated") });
     if (!w.ok) return w;
     return { ok: true, id: e.id, reading, response: named, reason: entry.reason, author, at: entry.at,
-             ...(reading === "complied" ? { says: "a complied reading proposes no stage. Compliance is restored only by a "
-               + "live compliant determination of the same act for every standard pursued (escalationEnd)." } : {}),
-             ...(reading === "partial" ? { says: "partial compliance is recorded; it does not stop the clock or end the escalation." } : {}) };
+             ...(reading === "complied" ? { says: word("escalation.says.complied_reading_proposes") } : {}),
+             ...(reading === "partial" ? { says: word("escalation.says.partial_compliance_recorded") } : {}) };
   }
 
   #edgeArgs(kind, { id, to, reason, author, viewer }, args) {
@@ -1223,7 +1217,7 @@ export class Escalation {
     /* END DEC-49 REGION is-trigger-met */
     const entry = { kind: "advance", from: e.stage, to: target, reason: str(args.reason), author: args.author,
                     at: this.now(), trigger: { ids: t.ids, instant: t.instant } };
-    const w = this.#append(e, entry, { stage: target, blurb: `Advanced to stage ${target}` });
+    const w = this.#append(e, entry, { stage: target, blurb: word("escalation.blurb.advanced_stage", { target: String(target) }) });
     if (!w.ok) return w;
     return { ok: true, id: e.id, from: e.stage, to: target, stage_name: STAGES[target], reason: entry.reason,
              author: entry.author, at: entry.at, trigger: entry.trigger };
@@ -1245,7 +1239,7 @@ export class Escalation {
     const w = this.#append(e, entry, { blurb: `Declined stage ${target}` });
     if (!w.ok) return w;
     return { ok: true, id: e.id, from: e.stage, to: target, reason: entry.reason, author: entry.author, at: entry.at,
-             says: "the proposal stays in the read, with its age and this decline" };
+             says: word("escalation.says.proposal_stays_read") };
   }
 
   /** R14: end an escalation, only when compliance is restored and the consequences are addressed. */
@@ -1278,8 +1272,7 @@ export class Escalation {
     /* END DEC-49 REGION is-consequences-addressed */
     /* DEC-49 REGION is-consequences-determined */
     if (q.state !== "met")
-      return refusal("CONSEQUENCES_UNDETERMINED", `whether the consequences are addressed is undetermined: ${q.why}. A team `
-                     + "that judges the breach had no consequence records an assessed part saying so and addresses it. Nothing was written.",
+      return refusal("CONSEQUENCES_UNDETERMINED", localize("escalation.index.whether_the_consequences_are_addressed", "whether the consequences are addressed is undetermined: {why}. A team that judges the breach had no consequence records an assessed part saying so and addresses it. Nothing was written.", { why: String(q.why) }),
                      { ids: q.ids });
     /* END DEC-49 REGION is-consequences-determined */
     const entry = { kind: "end", from: e.stage, author, at: this.now(), compliance: c.ids, consequences: q.ids };
@@ -1309,10 +1302,10 @@ export class Escalation {
     const bad = refuseReason(reason);
     if (bad) return bad;
     const entry = { kind: "suspend", from: e.stage, reason: str(reason), author, at: this.now() };
-    const w = this.#append(e, entry, { state: "suspended", blurb: "Escalation suspended" });
+    const w = this.#append(e, entry, { state: "suspended", blurb: word("escalation.blurb.escalation_suspended") });
     if (!w.ok) return w;
     return { ok: true, id: e.id, state: "suspended", stage: e.stage, reason: entry.reason, author, at: entry.at,
-             says: "suspended: not ended. Its proposals are not reported as due; its clocks keep running in the actions." };
+             says: word("escalation.says.suspended_ended_proposals") };
   }
 
   /** R15: resume a suspended escalation at the same stage. */
@@ -1333,7 +1326,7 @@ export class Escalation {
                      { state: e.state });
     /* END DEC-49 REGION is-resume-suspended */
     const entry = { kind: "resume", from: e.stage, reason: str(reason) || null, author, at: this.now() };
-    const w = this.#append(e, entry, { state: "open", blurb: "Escalation resumed" });
+    const w = this.#append(e, entry, { state: "open", blurb: word("escalation.blurb.escalation_resumed") });
     if (!w.ok) return w;
     return { ok: true, id: e.id, state: "open", stage: e.stage, author, at: entry.at };
   }
@@ -1354,7 +1347,7 @@ export class Escalation {
     const w = this.#append(e, entry, { state: STOPPED, blurb: "Stopped pursuing" });
     if (!w.ok) return w;
     return { ok: true, id: e.id, state: STOPPED, stage: e.stage, reason: entry.reason, author, at: entry.at,
-             says: "stopped pursuing: not ended and not a success. It proposes nothing until a member reopens it." };
+             says: word("escalation.says.stopped_pursuing_ended") };
   }
 
   /** R31: a stopped escalation returned to `open` at the stage where it stopped, with a member's reason. */
@@ -1515,11 +1508,10 @@ export class Escalation {
     const D = determination;
 
     /* The determination and the standards it pursues, each with its basis. */
-    say(D, `Determination ${D} finds the act noncompliant with ${pursued.length === 1 ? "one standard" : `${pursued.length} standards`}: `
-      + `${pursued.join(", ")}.`);
+    say(D, word("escalation.determination_finds_act", { date: String(D), pursued: String(pursued.length === 1 ? "one standard" : `${pursued.length} standards`), pursued_2: String(pursued.join(", ")) }));
     const act = actOf(d);
     const actor = isObj(act.actor) && str(act.actor.role) && str(act.actor.body)
-      ? `${str(act.actor.role)}, ${str(act.actor.body)}` : "an office the record does not name (undetermined)";
+      ? `${str(act.actor.role)}, ${str(act.actor.body)}` : word("escalation.office_record_name");
     /* conformance R25 (T33-70): an act is an event, worded from its kind and its `when` (events R9: `{start, end,
        precision, zone}`, null when placed nowhere, `undetermined` when its cache is stale); a pre-T33 act keeps its
        description, date and period (conformance R26). */
@@ -1528,30 +1520,26 @@ export class Escalation {
     const when = str(act.at) ? `on ${str(act.at)}`
       : isObj(act.period) && str(act.period.from) && str(act.period.to) ? `from ${str(act.period.from)} to ${str(act.period.to)}`
       : str(act.event) || ev ? eventWhenWords(eventWhen, ev && str(ev.why) ? str(ev.why) : null)
-      : "at a date the record does not state (undetermined)";
+      : word("escalation.date_record_state");
     const kind = str(act.kind) || (ev ? str(ev.kind) : "");
     const what = str(act.description) ? quoted(act.description)
       : str(act.event) ? `the event ${str(act.event)}${kind ? ` (${kind})` : ""}`
-      : "its description could not be read (undetermined)";
-    say(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: `
-      + `${what}, by ${actor}, ${when}.`);
+      : word("escalation.description_read_undetermined");
+    say(actIdOf(d) ?? D, word("escalation.act_determined", { act_id_of: String(actIdOf(d) ? ` (${actIdOf(d)})` : ""), what: String(what), actor: String(actor), when: String(when) }));
     const held = Array.isArray(d.standards) ? d.standards.filter(isObj) : [];
     for (const standard of pursued) {
       const st = held.find((x) => x.standard === standard);
       const rows = st && Array.isArray(st.rows) ? st.rows.filter(isObj) : [];
-      if (!rows.length) { say(standard, `Standard ${standard} is breached: its basis in the determination could not be read (undetermined).`); continue; }
-      const basis = rows.map((r) => `it requires ${str(r.requires) ? quoted(r.requires) : "what the record does not state (undetermined)"}; `
-        + `the act did ${str(r.did) ? quoted(r.did) : "what the record does not state (undetermined)"} (reading: ${str(r.reading) || "undetermined"}`
-        + `${Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : ""})`).join("; and ");
-      const force = st.in_force === "in_force" ? "It was in force at the act's date."
-        : `Whether it was in force at the act's date is undetermined${str(st.in_force_why) ? ` (${str(st.in_force_why)})` : ""}.`;
-      say(standard, `Standard ${standard} is breached: ${basis}. ${force}`
-        + `${str(st.disagreement) ? ` The determination states: ${str(st.disagreement)}.` : ""}`);
+      if (!rows.length) { say(standard, word("escalation.standard_breached_basis", { standard: String(standard) })); continue; }
+      const basis = rows.map((r) => word("escalation.requires_act_reading", { requires: String(str(r.requires) ? quoted(r.requires) : "what the record does not state (undetermined)"), did: String(str(r.did) ? quoted(r.did) : "what the record does not state (undetermined)"), reading: String(str(r.reading) || "undetermined"), content: String(Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : "") })).join("; and ");
+      const force = st.in_force === "in_force" ? word("escalation.force_act_date")
+        : word("escalation.whether_force_act", { in_force_why: String(str(st.in_force_why) ? ` (${str(st.in_force_why)})` : "") });
+      say(standard, word("escalation.standard_breached", { standard: String(standard), basis: String(basis), force: String(force), disagreement: String(str(st.disagreement) ? ` The determination states: ${str(st.disagreement)}.` : "") }));
     }
 
     /* The actions resting on it that the viewer may see, each with its clock and every date passed without a response. */
     const listed = this.#actionsResting(D, viewer);
-    if (!listed) say(D, "The actions resting on the determination could not be read (undetermined).");
+    if (!listed) say(D, word("escalation.actions_resting_determination"));
     else {
       /* actions R12 (T33-73): the office's local day, through actions' own rule and zone */
       const place = this.#place();
@@ -1562,39 +1550,35 @@ export class Escalation {
         if (!a || a.ok === false) continue;
         shown++;
         const cp = isObj(a.counterparty) && str(a.counterparty.role) && str(a.counterparty.body)
-          ? `${str(a.counterparty.role)}, ${str(a.counterparty.body)}` : "an office the record does not name (undetermined)";
-        say(id, `Action ${id}${str(a.kind) ? ` (${str(a.kind)})` : ""} rests on the determination, addressed to ${cp}`
-          + `${str(a.current_state) ? `; its state is ${str(a.current_state)}` : ""}.`);
+          ? `${str(a.counterparty.role)}, ${str(a.counterparty.body)}` : word("escalation.office_record_name");
+        say(id, word("escalation.action_rests_determination", { id: String(id), kind: String(str(a.kind) ? ` (${str(a.kind)})` : ""), cp: String(cp), current_state: String(str(a.current_state) ? `; its state is ${str(a.current_state)}` : "") }));
         const clock = Array.isArray(a.clock) ? a.clock.filter(isObj) : [];
-        if (!clock.length) say(id, `Action ${id} states no clock entry.`);
+        if (!clock.length) say(id, word("escalation.action_states_clock", { id: String(id) }));
         for (const c of clock) {
           const what = str(c.text) || str(c.description);
           const date = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : null;
-          say(id, `Action ${id}'s clock entry ${what ? quoted(what) : "(its text undetermined)"} is due `
-            + `${date ?? "on a date the record does not state (undetermined)"}, on the basis `
-            + `${str(c.basis) ? quoted(c.basis) : "the record does not state (undetermined)"}, ${str(c.status) || "its status undetermined"}.`);
+          say(id, word("escalation.action_clock_entry", { id: String(id), what: String(what ? quoted(what) : "(its text undetermined)"), date: String(date ?? "on a date the record does not state (undetermined)"), basis: String(str(c.basis) ? quoted(c.basis) : "the record does not state (undetermined)"), status: String(str(c.status) || "its status undetermined") }));
           /* actions R12's rule, entry by entry: past once the office's local day after it has begun (or its close of
              business, where the basis says so); undetermined, and said, where no zone is held. */
           if (c.status === "pending" && date) {
             let past = null;
             try { past = actionOverdue({ counterparty: a.counterparty, clock: [c] }, at, place); } catch { past = null; }
             if (past === true)
-              say(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today ?? "the day of reading"}.`);
+              say(id, word("escalation.date_action_passed", { date: String(date), id: String(id), today: String(today ?? "the day of reading") }));
             else if (past === null)
-              say(id, `Whether the date ${date} on action ${id} has passed is undetermined: no time zone is held for the `
-                + "office's local day.");
+              say(id, word("escalation.whether_date_action", { date: String(date), id: String(id) }));
           }
         }
       }
-      if (!shown) say(D, "No action resting on the determination is recorded.");
+      if (!shown) say(D, word("escalation.action_resting_determination"));
     }
 
     /* The consequences recorded on it. */
     const q = this.consequences.consequencesOf({ determination: D, viewer });
-    if (!q || q.ok === false) say(D, "The consequences of the breach could not be read (undetermined).");
+    if (!q || q.ok === false) say(D, word("escalation.consequences_breach_read"));
     else {
       const recorded = Array.isArray(q.parts) ? q.parts.filter(isObj) : [];
-      if (!recorded.length) say(D, "No consequence of the breach is recorded on the determination.");
+      if (!recorded.length) say(D, word("escalation.consequence_breach_recorded"));
       for (const p of recorded) say(p.id, consequenceSentence(p));
     }
 
@@ -1663,7 +1647,7 @@ export class Escalation {
     const ids = new Set();
     for (const t of [...new Set(targets)]) {
       const listed = this.#actionsResting(t, viewer);
-      if (!listed) return { state: "undetermined", items: [], says: "the actions resting on the determination could not be read" };
+      if (!listed) return { state: "undetermined", items: [], says: word("escalation.says.actions_resting_determination") };
       listed.forEach((id) => ids.add(id));
     }
     const items = [];
@@ -1700,16 +1684,15 @@ export class Escalation {
 function timelineLabel(id, x) {
   const st = (n) => `stage ${n} (${STAGES[n] ?? "unknown"})`;
   switch (x.kind) {
-    case "open": return `Escalation ${id} opened at ${st(1)}`;
-    case "advance": return `Escalation ${id} advanced from ${st(x.from)} to ${st(x.to)}`;
-    case "attach": return `Action ${x.action} attached to escalation ${id} at ${st(x.stage)}`
-      + `${x.purpose ? `, its purpose ${x.purpose}` : ""}`;
-    case "evaluate": return `A response evaluated in escalation ${id}: ${x.reading}`;
-    case "decline": return `Escalation ${id}: the move from ${st(x.from)} to ${st(x.to)} declined for now`;
-    case "suspend": return `Escalation ${id} suspended at ${st(x.from)}`;
-    case "resume": return `Escalation ${id} resumed at ${st(x.from)}`;
-    case STOPPED: return `Escalation ${id}: the team stopped pursuing it at ${st(x.from)}`;
-    case "reopened": return `Escalation ${id} reopened at ${st(x.from)}`;
+    case "open": return word("escalation.escalation_opened", { id: String(id), value: String(st(1)) });
+    case "advance": return word("escalation.escalation_advanced", { id: String(id), from: String(st(x.from)), to: String(st(x.to)) });
+    case "attach": return word("escalation.action_attached_escalation", { action: String(x.action), id: String(id), stage: String(st(x.stage)), purpose: String(x.purpose ? `, its purpose ${x.purpose}` : "") });
+    case "evaluate": return word("escalation.response_evaluated_escalation", { id: String(id), reading: String(x.reading) });
+    case "decline": return word("escalation.escalation_move_declined", { id: String(id), from: String(st(x.from)), to: String(st(x.to)) });
+    case "suspend": return word("escalation.escalation_suspended", { id: String(id), from: String(st(x.from)) });
+    case "resume": return word("escalation.escalation_resumed", { id: String(id), from: String(st(x.from)) });
+    case STOPPED: return word("escalation.escalation_group_stopped", { id: String(id), from: String(st(x.from)) });
+    case "reopened": return word("escalation.escalation_reopened", { id: String(id), from: String(st(x.from)) });
     default: return `Escalation ${id} ended`;
   }
 }
@@ -1736,8 +1719,7 @@ export function refuseNotOpen(state, why) {
 /** R14: an ended escalation is never reopened, so nothing is added to it. */
 export function refuseEnded() {
   /* DEC-49 REGION is-escalation-ended */
-  return refusal("ESCALATION_ENDED", "this escalation has ended; nothing is added to it and it is never reopened. "
-    + "Nothing was written.");
+  return refusal("ESCALATION_ENDED", localize("escalation.index.this_escalation_has_ended_nothing", "this escalation has ended; nothing is added to it and it is never reopened. Nothing was written."));
   /* END DEC-49 REGION is-escalation-ended */
 }
 
@@ -1781,7 +1763,7 @@ export function refuseProviderUnavailable(provider) {
 }
 
 class ProviderAbsent extends Error {
-  constructor(provider) { super(`escalation: ${provider} was not given`); this.provider = provider; }
+  constructor(provider) { super(localize("escalation.index.escalation_provider_was_not_given", "escalation: {provider} was not given", { provider: String(provider) })); this.provider = provider; }
 }
 
 /* Every service answers PROVIDER_UNAVAILABLE, rather than throwing or answering in part, when a provider it reads is

@@ -19,6 +19,7 @@
  * STATUS CARRIES NO SECRET, AND THE REFERENCE ACCESSOR IS DERIVED FROM THE STATUS: `cascadeToken` re-runs the same
  * judgement and hands over only what `resolveClaudeCascade` would call available, so the two cannot disagree. */
 import { PUBLISHED_TOKEN_HASHES, sha256hex } from "../../bio-plane/src/tokens.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /** The levels an account arrives at (R32, R71; `credentials` R35, R56), in the order `credentials`' cascade tries them:
  *  a project's account, the member's own, the group's API key. Nothing else may restate them. */
@@ -82,18 +83,15 @@ export async function resolveClaudeCascade(account) {
   return {
     available: false, reason: CASCADE_NO_ACCOUNT, level, levels,
     detail: state === LEVEL_REVOKED
-      ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. `
-        + (level === "group"
+      ? localize("agent-worker.cascade.whose_has_been_published_in", "{whose} has been published in this repository, which revokes it, so no model turn can run under it. {v1}", { whose: String(whose), v1: String(level === "group"
           ? "An administrator sets a new key for the team, or members connect their own."
           : level === "project"
           ? "An owner of the project sets a new one; until then the member's own account, else the team's API key, "
             + "serves them only while your team's Civicsmith holds it and it is on."
           : "The member connects a new one; until then the team's API key serves them only while your team's "
-            + "Civicsmith holds it and it is on.")
-      : `no usable Claude account arrived for this act (${whose} was absent, empty, named no member${level === "project"
-          ? " or no project" : ""}, or of a kind its level does not hold). Which account serves a member's act is your `
-        + "team's Civicsmith's to answer (the project's, else the member's own, else the team's API key while it is "
-        + "held and on); a member whom none serves has no assistant.",
+            + "Civicsmith holds it and it is on.") })
+      : localize("agent-worker.cascade.no_usable_claude_account_arrived", "no usable Claude account arrived for this act ({whose} was absent, empty, named no member{v1}, or of a kind its level does not hold). Which account serves a member's act is your team's Civicsmith's to answer (the project's, else the member's own, else the team's API key while it is held and on); a member whom none serves has no assistant.", { whose: String(whose), v1: String(level === "project"
+          ? " or no project" : "") }),
   };
 }
 

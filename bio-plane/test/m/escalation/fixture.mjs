@@ -16,6 +16,7 @@ import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { linesOf } from "../../../src/lines/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -139,7 +140,7 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
   const consequences = {
     addressed({ determination, viewer }) {
       calls.addressed.push({ determination, viewer });
-      return addressedBy.get(determination) || { state: "undetermined", parts: [], says: "no consequence recorded" };
+      return addressedBy.get(determination) || { state: "undetermined", parts: [], says: word("escalation.consequence_recorded") };
     },
     consequencesOf({ determination, viewer }) {
       calls.consequencesOf.push({ determination, viewer });
@@ -149,7 +150,7 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
       return { ok: true, determination, standard: null, parts: ps, totals: [],
                undetermined: ps.filter((p) => p.state === "undetermined").map((p) => p.id),
                unproven: ps.filter((p) => p.causation.state === "unproven").map((p) => p.id),
-               says: ps.length ? "each part is what it is" : "no consequence recorded" };
+               says: ps.length ? "each part is what it is" : word("escalation.consequence_recorded") };
     },
   };
   /* actions' stand-in: the ledger of each action, and R12's clock rule over the document's clock. */

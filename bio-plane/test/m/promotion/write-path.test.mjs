@@ -13,6 +13,7 @@ import * as P from "../../../src/promotion/index.mjs";
 /* The later rows are read from the tree by promotion's own census reader (R50, `row-census.mjs`: every module's tables read
    from the files, not by import, since this module cannot import a later one, P4; N1073), never hand-listed here. */
 import { censusRows } from "../../system/row-census.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 const CENSUS = (await censusRows(fileURLToPath(new URL("../../../..", import.meta.url)))).rows;
 const checkOf = (code, owner) => {
   const ids = [...new Set(CENSUS.filter((r) => r.code === code && r.where && r.where.includes(`src/${owner}/`)).map((r) => r.check))];
@@ -47,8 +48,8 @@ const common = (id, type, schema, title, state, extra = []) => ["---", ...(id ? 
 const info = (id, extra = []) => [...common(id, "information", "information@1", `Info ${id}`, "collected", ["references: []", ...extra]),
   "---", "", "## Summary", "", "x", "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const inquiry = (id, extra = [], surfaced = "surfaced_by: human") => [...common(id, "inquiry", "inquiry@1", `Question ${id}`, "open",
-  [surfaced, 'disposition_reason: ""', ...extra]), "---", "", "## Question", "", `Question ${id}`, "", "## What It Rests On", "",
-  "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  [surfaced, 'disposition_reason: ""', ...extra]), "---", "", "## Question", "", `Question ${id}`, "", word("conformance.rests"), "",
+  "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const action = (id, extra = []) => [...common(id, "action", "action@1", "Records request", "planned",
   ["references: []", "action_kind: other", ...extra, "counterparty:", "  state: named", "  role: Town Clerk",
    "  body: Town of Port Ellery"]),

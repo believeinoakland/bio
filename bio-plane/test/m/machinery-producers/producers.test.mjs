@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R2: governor-holding-host, its documents gathered at most 16, past which the home set states subject_bound", () => {
   const w = world({ governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 1000, refusals: 2, last_refusal_status: 429 }] } });
@@ -59,7 +60,7 @@ test("R2 (N229, N330): archive-fallback-eligible per address monitoring.archiveE
       { state: "due", bundle: "INF-1", address: "https://late.example/", due_at: iso(NOW - 3 * H), interval_ms: H, frequency: "hourly" },
       { state: "due", bundle: "INF-2", address: "https://soon.example/", due_at: iso(NOW - H / 2), interval_ms: H, frequency: "hourly" },
       { state: "due", bundle: "INF-3", address: "https://never.example/", due_at: null, frequency: null },
-      { state: "unscheduled", bundle: "INF-4", address: null, reason: "no frequency declared" },
+      { state: "unscheduled", bundle: "INF-4", address: null, reason: word("monitoring.frequency_declared") },
       { state: "scheduled", bundle: "INF-5", address: "https://ok.example/", next_at: iso(NOW + H), interval_ms: H }] }) } });
   for (const b of ["INF-1", "INF-2", "INF-3", "INF-4", "INF-5", "INF-G"]) w.bundle(b);
   w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('cg','INF-G','snapshots/x','utf8',?,1)`, iso(NOW));

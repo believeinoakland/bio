@@ -69,7 +69,7 @@ test("R34 isMeasure is true only for a standard held text the viewer may read; i
   for (const id of [cited, absent]) {
     assert.equal(w.s.isMeasure(id, V("carol")), false, id);
     const f = w.s.inForceAt({ standard: id, date: "2025-01-01" });
-    assert.deepEqual([f.state, f.why], ["undetermined", "its text is not held, so it is not a measure"]);
+    assert.deepEqual([f.state, f.why], ["undetermined", tableWord("standards.why.text_held_measure")]);
     assert.equal(w.s.inForce(id, "2025-01-01").state, "undetermined");
     assert.equal(w.s.standardRead({ id, viewer: V("carol") }).ok, true, "read like any standard");
   }
@@ -401,7 +401,7 @@ test("R42 a commitment, policy or standard may carry a target {metric, threshold
   assert.deepEqual(c.target.threshold, { comparator: "at_most", value: "48", unit: "hours", as_read: "48" });
   assert.equal(c.target.met, undefined, "never computed here");
   const none = w.declare({ cite: "MCBC 2024-8", kind: "commitment", text: [t], target: { ...good, definition: "none", period: { recurrence: "each quarter", content_id: t } } });
-  assert.deepEqual([none.target.definition, none.target.definition_says, none.target.period.recurrence], ["none", "no definition stated", "each quarter"]);
+  assert.deepEqual([none.target.definition, none.target.definition_says, none.target.period.recurrence], ["none", tableWord("standards.definition_stated"), "each quarter"]);
   for (const [target, field, kind] of [[good, "kind", "ordinance"], [{ ...good, metric: { words: "x" } }, "metric"],
          [{ ...good, threshold: { ...good.threshold, comparator: "about" } }, "threshold"], [{ ...good, threshold: { ...good.threshold, value: "about 48" } }, "threshold"],
          [{ ...good, threshold: { ...good.threshold, value: "40-50" } }, "threshold"], [{ ...good, threshold: { ...good.threshold, unit: "" } }, "threshold"],
@@ -426,7 +426,7 @@ test("R43 bindsAt: binds when the body issued it, adopted it, an incorporating s
   assert.equal(b(own, "2019-01-01").state, "undetermined", "an ordinance not yet in force: a law is never a benchmark by default");
   const bench = b(pol);
   assert.deepEqual([bench.state, bench.says.binding], ["benchmark", WORD("standard.binding.benchmark", { body: "Port Ellery Selectboard" })]);
-  assert.deepEqual([b(statute).state, b(statute).why], ["undetermined", "whether this law binds the body is not recorded"]);
+  assert.deepEqual([b(statute).state, b(statute).why], ["undetermined", tableWord("standards.whether_law_binds")]);
   /* a member's declaration of a benchmark never makes it bind */
   assert.equal(codeOf(w.s.benchmarkDeclare({ standard: pol, body, reason: "", author: V("bob") })), "STANDARD_NO_REASON");
   assert.equal(codeOf(w.s.benchmarkDeclare({ standard: pol, body, reason: REASON, author: MACHINE })), "MACHINE_CANNOT_DECLARE_STANDARD");

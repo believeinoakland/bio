@@ -10,9 +10,10 @@ import { readDriveAddress, driveHop, classifyDriveBaseline } from "../../../src/
 import { keepRenderBodies, renderBlock } from "../../../src/render.mjs";
 import { mementoHop, readMementoAnswer, mementoRow } from "../../../src/capture-sources/memento.mjs";
 import { selectCapture } from "../../../src/cdx.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OLD = /\b(?:the|this) (?:plane|instance)\b/i;
-const CIVICSMITH = "your team's Civicsmith";
+const CIVICSMITH = word("queue.capture-completed-unattended.who");
 const ID = "1AbCdEfGhIjKlMnOpQrStUvWxYz_-0123456789";
 const DOC = `https://docs.google.com/document/d/${ID}/edit`;
 const EXPORT = `https://docs.google.com/document/d/${ID}/export?format=odt`;
@@ -38,7 +39,7 @@ test("R42 (DEC-149, drive.mjs:254): the export address was COMPOSED BY YOUR GROU
 });
 
 test("R46 (DEC-149, drive.mjs:444, :445, :448, :449, :451, :454, :456, :458): every basis names your group's Civicsmith", () => {
-  const said = { html: "the register's profile says HTML", odt: "the register's profile says odt", none: "the register's profile names no format" };
+  const said = { html: word("drive.register_profile_says"), odt: "the register's profile says odt", none: word("drive.register_profile_names") };
   const cases = [
     [":444", [row(EXPORT, html)], fromExport,
       `${CIVICSMITH} recorded fetching the export address, but ${said.html}; the two disagree and neither is taken over the other`],

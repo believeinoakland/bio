@@ -40,6 +40,7 @@
  */
 
 import { MqDecoder, mqContexts } from "./mq.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 export class JpxRefusal extends Error {
   constructor(code, detail = {}) {
@@ -109,7 +110,7 @@ function boxes(d, p, end) {
         + (((d[p + 12] << 24) | (d[p + 13] << 16) | (d[p + 14] << 8) | d[p + 15]) >>> 0);
       hdr = 16;
     } else if (len === 0) len = end - p;
-    if (len < hdr || p + len > end) throw truncated(`the JP2 box '${type}' runs past the data`);
+    if (len < hdr || p + len > end) throw truncated(localize("image-codecs.jpxdecode.the_jp2_box_type_runs", "the JP2 box '{type}' runs past the data", { type: String(type) }));
     out.push({ type, start: p + hdr, end: p + len });
     p += len;
   }
@@ -146,7 +147,7 @@ function container(d) {
 
 class R {
   constructor(d, p, end) { this.d = d; this.p = p; this.end = end; }
-  need(n, what) { if (this.p + n > this.end) throw truncated(`${what} runs past the codestream`); }
+  need(n, what) { if (this.p + n > this.end) throw truncated(localize("image-codecs.jpxdecode.what_runs_past_the_codestream", "{what} runs past the codestream", { what: String(what) })); }
   u8(w = "a field") { this.need(1, w); return this.d[this.p++]; }
   u16(w = "a field") { this.need(2, w); const v = (this.d[this.p] << 8) | this.d[this.p + 1]; this.p += 2; return v; }
   u32(w = "a field") { this.need(4, w); const d = this.d, p = this.p; this.p += 4; return ((d[p] << 24) | (d[p + 1] << 16) | (d[p + 2] << 8) | d[p + 3]) >>> 0; }
@@ -252,13 +253,13 @@ function parseCodestream(d, start, end) {
   while (r.p + 2 <= end) {
     const m = r.u16("a tile-part marker");
     if (m === 0xffd9) break;
-    if (m !== 0xff90) throw corrupt(`marker 0x${m.toString(16)} where SOT was expected`);
+    if (m !== 0xff90) throw corrupt(localize("image-codecs.jpxdecode.marker_0x_m_where_sot", "marker 0x{m} where SOT was expected", { m: String(m.toString(16)) }));
     const sotAt = r.p - 2;
     r.u16("Lsot");
     const isot = r.u16("Isot"), psot = r.u32("Psot");
     r.u8("TPsot"); r.u8("TNsot");
     const tpEnd = psot ? sotAt + psot : end;
-    if (tpEnd > end) throw truncated(`tile-part of tile ${isot} runs past the codestream`);
+    if (tpEnd > end) throw truncated(localize("image-codecs.jpxdecode.tile_part_of_tile_isot", "tile-part of tile {isot} runs past the codestream", { isot: String(isot) }));
     let t = tiles.get(isot);
     const first = !t;
     if (!t) { t = { index: isot, cod: null, coc: [], qcd: null, qcc: [], rgn: [], poc: null, data: [] }; tiles.set(isot, t); }
@@ -616,7 +617,7 @@ function tileLayout(cs, t, tileNo) {
         const st = qc.style === 1
           ? { expn: Math.max(0, qc.steps[0].expn - (r === 0 ? 0 : Math.floor((bi - 1) / 3))), mant: qc.steps[0].mant }
           : qc.steps[bi];
-        if (!st) throw corrupt(`no quantisation step for band ${bi}`);
+        if (!st) throw corrupt(localize("image-codecs.jpxdecode.no_quantisation_step_for_band", "no quantisation step for band {bi}", { bi: String(bi) }));
         B.numbps = st.expn + qc.guard - 1;
         const rb = cp.prec + (sp.qmfbid === 0 ? 0 : bandno === 0 ? 0 : bandno === 3 ? 2 : 1);
         B.stepsize = f32((1 + st.mant / 2048) * 2 ** (rb - st.expn));
@@ -680,7 +681,7 @@ function decodeTile(cs, t, tileNo) {
     if (sop && bp + 6 <= body.length && body[bp] === 0xff && body[bp + 1] === 0x91) bp += 6;
     const bio = new Bio(body, bp, body.length);
     const contrib = [];
-    if (bio.p >= body.length) throw truncated(`the tile's packets run out at packet ${packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1} of ${packets.length}`);
+    if (bio.p >= body.length) throw truncated(localize("image-codecs.jpxdecode.the_tiles_packets_run_out", "the tile's packets run out at packet {v1} of {length}", { v1: String(packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1), length: String(packets.length) }));
     if (bio.bit()) {
       for (const B of res.bands) {
         const pr = B.prec[pi];
@@ -723,7 +724,7 @@ function decodeTile(cs, t, tileNo) {
     bp = bio.p;
     if (eph && bp + 2 <= body.length && body[bp] === 0xff && body[bp + 1] === 0x92) bp += 2;
     for (const k of contrib) {
-      if (bp + k.len > body.length) throw truncated(`a packet's code-block data runs past the tile (${bp + k.len - body.length} bytes)`);
+      if (bp + k.len > body.length) throw truncated(localize("image-codecs.jpxdecode.a_packets_code_block_data", "a packet's code-block data runs past the tile ({v1} bytes)", { v1: String(bp + k.len - body.length) }));
       k.seg.chunks.push(body.subarray(bp, bp + k.len));
       k.seg.passes += k.n;
       bp += k.len;
@@ -931,11 +932,11 @@ export function decodeJpx(d) {
   const cs = parseCodestream(d, box.cs[0], box.cs[1]);
   const { siz } = cs;
   const nc = siz.comps.length;
-  if (nc !== 1 && nc !== 3) throw samples(`${nc} components; only 1 (grey) or 3 (colour) are decoded here`, { components: nc });
+  if (nc !== 1 && nc !== 3) throw samples(localize("image-codecs.jpxdecode.nc_components_only_1_grey", "{nc} components; only 1 (grey) or 3 (colour) are decoded here", { nc: String(nc) }), { components: nc });
   for (const cp of siz.comps) {
     if (cp.dx !== 1 || cp.dy !== 1) throw samples("a sub-sampled component", { dx: cp.dx, dy: cp.dy });
     if (cp.sgnd) throw samples("signed samples");
-    if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
+    if (cp.prec !== 8) throw samples(localize("image-codecs.jpxdecode.prec_bit_samples_only_8", "{prec}-bit samples; only 8-bit are decoded here", { prec: String(cp.prec) }), { precision: cp.prec });
   }
   const W = siz.X - siz.XO, H = siz.Y - siz.YO;
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
@@ -943,7 +944,7 @@ export function decodeJpx(d) {
   if (need > MEMORY_BOUND) {
     throw unsupported("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W, height: H, components: nc });
   }
-  if (cs.tiles.size < nTiles) throw truncated(`${cs.tiles.size} of ${nTiles} tiles are present`);
+  if (cs.tiles.size < nTiles) throw truncated(localize("image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", { size: String(cs.tiles.size), nTiles: String(nTiles) }));
   let out = null;
   const t1 = { tmp: new Int32Array(4096), flags: new Uint16Array(1026 * 6) };
   const pool = new Pool();

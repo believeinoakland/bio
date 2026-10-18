@@ -22,6 +22,7 @@ import {
   CONTRACT, CONFIDENCE, diffEntities, vocabulary, vocabRegex,
   event, isMeaningful, worstSignificance, bySeverity,
 } from "../docprofile/registry.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export const KEY = "legistar_api";
 export const BASIS = "as recorded by Legistar";
@@ -78,7 +79,7 @@ export function readAddress(locator) {
     name = segs[segs.length - 2].toLowerCase();
   }
   if (!Object.hasOwn(ENDPOINTS, name))
-    return { why: `the address names the Legistar endpoint "${name}", which this reader does not read` };
+    return { why: localize("legistar-reader.index.the_address_names_the_legistar", "the address names the Legistar endpoint \"{name}\", which this reader does not read", { name: String(name) }) };
   return { client: decodeURIComponent(m[1]), endpoint: name, record, query: m[3] ?? null };
 }
 
@@ -113,7 +114,7 @@ function decode(text) {
   if (LAST.text === text) return LAST.value;
   let value;
   try { value = { json: JSON.parse(text) }; }
-  catch (e) { value = { why: `the bytes are not JSON (${String((e && e.message) || e)})` }; }
+  catch (e) { value = { why: localize("legistar-reader.index.the_bytes_are_not_json", "the bytes are not JSON ({String})", { String: String(String((e && e.message) || e)) }) }; }
   LAST = { text, value };
   return value;
 }
@@ -134,16 +135,16 @@ function capture(ctx) {
   else if (addr.record !== null && d.json && typeof d.json === "object") objects = [d.json];
   else return { why: addr.record !== null
     ? "the bytes are JSON but not an object or an array of objects"
-    : `the bytes are JSON but not an array, as a list of ${addr.endpoint} is` };
+    : localize("legistar-reader.index.the_bytes_are_json_but", "the bytes are JSON but not an array, as a list of {endpoint} is", { endpoint: String(addr.endpoint) }) };
   for (let i = 0; i < objects.length; i++) {
     const o = objects[i];
     if (!o || typeof o !== "object" || Array.isArray(o))
-      return { why: `entry ${i} of the array is not an object` };
+      return { why: localize("legistar-reader.index.entry_i_of_the_array", "entry {i} of the array is not an object", { i: String(i) }) };
     if (!Number.isInteger(o[id]))
-      return { why: `entry ${i} carries no ${id}, the id field of every ${addr.endpoint} row` };
+      return { why: localize("legistar-reader.index.entry_i_carries_no_id", "entry {i} carries no {id}, the id field of every {endpoint} row", { i: String(i), id: String(id), endpoint: String(addr.endpoint) }) };
   }
   if (addr.record !== null && objects.length === 1 && objects[0][id] !== addr.record)
-    return { why: `the record carries ${id} ${objects[0][id]}, not the ${addr.record} its address names` };
+    return { why: localize("legistar-reader.index.the_record_carries_id_v1", "the record carries {id} {v1}, not the {record} its address names", { id: String(id), v1: String(objects[0][id]), record: String(addr.record) }) };
   return { ...addr, objects };
 }
 
@@ -371,7 +372,7 @@ export function readPages(parses) {
   for (const p of list) {
     if (p.endpoint !== endpoint || p.client !== client) {
       refused.push({ endpoint: p.endpoint, client: p.client,
-                     why: `a page of ${p.client}/${p.endpoint} is not a page of ${client}/${endpoint}` });
+                     why: localize("legistar-reader.index.a_page_of_client_endpoint", "a page of {client}/{endpoint} is not a page of {client_2}/{endpoint_2}", { client: String(p.client), endpoint: String(p.endpoint), client_2: String(client), endpoint_2: String(endpoint) }) });
       continue;
     }
     pages++;
@@ -438,7 +439,7 @@ export function detect(ctx) {
   const c = capture(ctx);
   if (c.why) return { match: false, confidence: CONFIDENCE.NONE, signals: [], why: c.why };
   return { match: true, confidence: CONFIDENCE.CERTAIN,
-           signals: [`a Legistar Web API address of ${c.client}/${c.endpoint}`,
+           signals: [localize("legistar-reader.index.a_legistar_web_api_address", "a Legistar Web API address of {client}/{endpoint}", { client: String(c.client), endpoint: String(c.endpoint) }),
                      `${c.objects.length} ${c.endpoint} row${c.objects.length === 1 ? "" : "s"}, each carrying ${ENDPOINTS[c.endpoint].id}`] };
 }
 
@@ -455,15 +456,15 @@ export function assess(before, after) {
                 + "and nothing is claimed either way" };
   if (before.endpoint !== after.endpoint || before.client !== after.client)
     return { meaningful: null, significance: null, events: [], confirmed: null,
-             why: `the two readings are of different lists (${before.client}/${before.endpoint}, ${after.client}/${after.endpoint})` };
+             why: localize("legistar-reader.index.the_two_readings_are_of", "the two readings are of different lists ({client}/{endpoint}, {client_2}/{endpoint_2})", { client: String(before.client), endpoint: String(before.endpoint), client_2: String(after.client), endpoint_2: String(after.endpoint) }) };
   const d = diffEntities(a, b);
   const events = [];
   for (const e of d.gone)
-    events.push(event("delisted", { key: e.key, label: e.label ?? null, why: `a ${e.kind} row Legistar listed is no longer listed` }));
+    events.push(event("delisted", { key: e.key, label: e.label ?? null, why: localize("legistar-reader.index.a_kind_row_legistar_listed", "a {kind} row Legistar listed is no longer listed", { kind: String(e.kind) }) }));
   for (const e of d.appeared)
     events.push(e.kind === "event"
       ? event("scheduled", { key: e.key, label: e.label ?? null, why: "a meeting was added to Legistar's list" })
-      : event("item_added", { key: e.key, label: e.label ?? null, why: `a ${e.kind} row was added to Legistar's list` }));
+      : event("item_added", { key: e.key, label: e.label ?? null, why: localize("legistar-reader.index.a_kind_row_was_added", "a {kind} row was added to Legistar's list", { kind: String(e.kind) }) }));
   for (const alt of d.altered) {
     const r = alt.entity, f = new Map(alt.moved.map((m) => [m.fact, m])), base = { key: r.key, label: r.label ?? null };
     const take = (k) => { const m = f.get(k); f.delete(k); return m; };
@@ -481,13 +482,13 @@ export function assess(before, after) {
         if (!m) continue;
         if (m.now == null) { f.set(`${kind}_last_published`, m); continue; }
         events.push(event(`${kind}_published`, { ...base, was: m.was, now: m.now, label_of_time: PUBLISHED_LABEL,
-                      why: `Legistar's ${kind} for this meeting carries a new last-publication time` }));
+                      why: localize("legistar-reader.index.legistars_kind_for_this_meeting", "Legistar's {kind} for this meeting carries a new last-publication time", { kind: String(kind) }) }));
       }
     }
     for (const k of OUTCOME[r.kind] || []) {
       const m = take(k);
       if (m) events.push(event("outcome_changed", { ...base, fact: k, was: m.was, now: m.now,
-                          why: `a recorded ${r.kind === "vote" ? "vote" : "outcome"} changed` }));
+                          why: localize("legistar-reader.index.a_recorded_v1_changed", "a recorded {v1} changed", { v1: String(r.kind === "vote" ? "vote" : "outcome") }) }));
     }
     for (const k of NAMES[r.kind] || []) {
       const m = take(k);
@@ -503,13 +504,13 @@ export function assess(before, after) {
   return {
     meaningful: isMeaningful(events), significance: worstSignificance(events), events,
     confirmed: intact ? { entries: b.length, intact } : null,
-    why: events.length ? `${intact} of ${a.length} rows unchanged; ${events.length} change${events.length === 1 ? "" : "s"}`
-                       : `all ${b.length} rows unchanged`,
+    why: events.length ? localize("legistar-reader.index.intact_of_length_rows_unchanged", "{intact} of {length} rows unchanged; {length_2} change{v1}", { intact: String(intact), length: String(a.length), length_2: String(events.length), v1: String(events.length === 1 ? "" : "s") })
+                       : localize("legistar-reader.index.all_length_rows_unchanged", "all {length} rows unchanged", { length: String(b.length) }),
   };
 }
 
 export const legistar = Object.freeze({
-  key: KEY, label: "Legistar Web API capture", version: 1, contract: CONTRACT.MEMBERSHIP,
+  key: KEY, label: localize("legistar-reader.index.legistar_web_api_capture", "Legistar Web API capture"), version: 1, contract: CONTRACT.MEMBERSHIP,
   detect, parse, assess,
 });
 

@@ -10,6 +10,7 @@ import { hasZipMagic, discriminate } from "../ooxml.mjs";
 import { CleanRefusal, latin1 } from "./images.mjs";
 import { cleanPdf } from "./pdf.mjs";
 import { cleanPackage, CLEAN_MAX_PART_BYTES } from "./package.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { CLEAN_MAX_PART_BYTES };
 
@@ -38,7 +39,7 @@ export async function cleanDocument(bytes) {
     const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
     if (!d) throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", "the document's bytes are not a byte array");
     if (d.length > CLEAN_MAX_BYTES)
-      throw new CleanRefusal("DOCUMENT_TOO_LARGE", `the document is ${d.length} bytes, over the ${CLEAN_MAX_BYTES} this module reads`);
+      throw new CleanRefusal("DOCUMENT_TOO_LARGE", localize("doc-clean.index.the_document_is_length_bytes", "the document is {length} bytes, over the {CLEAN_MAX_BYTES} this module reads", { length: String(d.length), CLEAN_MAX_BYTES: String(CLEAN_MAX_BYTES) }));
     let format, done;
     if (latin1(d, 0, Math.min(d.length, 1024)).includes("%PDF-")) {
       format = "pdf";
@@ -53,7 +54,7 @@ export async function cleanDocument(bytes) {
     return done.clean ? { ok: true, clean: true, format } : { ok: true, clean: false, bytes: done.bytes, format, images: done.images };
   } catch (e) {
     if (e instanceof CleanRefusal) return { ok: false, code: e.code, detail: e.detail };
-    return { ok: false, code: "DOCUMENT_UNREADABLE", detail: `the document could not be read whole (${String(e?.message ?? e).slice(0, 120)})` };
+    return { ok: false, code: "DOCUMENT_UNREADABLE", detail: localize("doc-clean.index.the_document_could_not_be", "the document could not be read whole ({String})", { String: String(String(e?.message ?? e).slice(0, 120)) }) };
   }
 }
 
@@ -61,11 +62,11 @@ export async function cleanDocument(bytes) {
  *  a refusal. */
 async function packageFormat(d) {
   const r = await discriminate(d);
-  if (!r.ok) throw new CleanRefusal("DOCUMENT_UNREADABLE", `the ZIP directory cannot be read (${r.why})`);
+  if (!r.ok) throw new CleanRefusal("DOCUMENT_UNREADABLE", localize("doc-clean.index.the_zip_directory_cannot_be", "the ZIP directory cannot be read ({why})", { why: String(r.why) }));
   if (r.format === "zip") throw new CleanRefusal("ARCHIVE", "a ZIP archive that is neither an OOXML nor an ODF package");
   if (FAMILY[r.format]) return r.format;
-  if (/unreadable|unparseable/.test(r.why ?? "")) throw new CleanRefusal("DOCUMENT_UNREADABLE", `the package cannot be read (${r.why})`);
-  throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", `a ZIP package of no office format this module cleans (${r.why})`);
+  if (/unreadable|unparseable/.test(r.why ?? "")) throw new CleanRefusal("DOCUMENT_UNREADABLE", localize("doc-clean.index.the_package_cannot_be_read", "the package cannot be read ({why})", { why: String(r.why) }));
+  throw new CleanRefusal("NOT_A_CLEANABLE_FORMAT", localize("doc-clean.index.a_zip_package_of_no", "a ZIP package of no office format this module cleans ({why})", { why: String(r.why) }));
 }
 
 /** `html` or `text` for bytes that decode as text (UTF-8, UTF-16 by its byte-order mark, or single-byte text with
@@ -88,7 +89,7 @@ function textFormat(d) {
   const html = /<(?:!doctype\s+html|html|head|body|img|picture|iframe|object|embed|style|link|meta|div|p|a|table)(?=[\s/>])/i.test(s);
   if (!html) return "text";
   const m = /data\s*(?::|&colon;|&#0*58;?|&#x0*3a;?)\s*image/i.exec(s);
-  if (m) throw new CleanRefusal("HTML_EMBEDS_IMAGE", `a data:image URI at character ${m.index}`);
+  if (m) throw new CleanRefusal("HTML_EMBEDS_IMAGE", localize("doc-clean.index.a_data_image_uri_at", "a data:image URI at character {index}", { index: String(m.index) }));
   return "html";
 }
 

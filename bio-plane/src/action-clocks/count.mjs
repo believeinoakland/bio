@@ -17,6 +17,7 @@ import { evaluateRule, localDay, isCalendarDate } from "../civil-time/index.mjs"
 import { stampInstant } from "../record-core/index.mjs";
 import { factPath, LOCAL_FACT_STATUSES } from "../local-facts/index.mjs";
 import { actionZone } from "../actions/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const textOf = (v) => { try { return v === undefined || v === null ? null : String(v); } catch { return null; } };
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -117,10 +118,10 @@ export function closureListsRead(d) {
 function factAnswer(path, r) {
   if (!r || typeof r !== "object" || r.ok === false) {
     const why = r && typeof r === "object" ? textOf(r.reason || r.code) : null;
-    return { path, status: "absent", why: why ? `local facts refused the read: ${why}` : "local facts did not answer" };
+    return { path, status: "absent", why: why ? word("action-clocks.why.local_facts_refused", { why: String(why) }) : word("action-clocks.why.local_facts_answer") };
   }
   if (typeof r.status !== "string" || !LOCAL_FACT_STATUSES.includes(r.status))
-    return { path, status: "absent", why: `local facts answered no status it gives (${textOf(r.status)?.slice(0, 40) ?? "none"})` };
+    return { path, status: "absent", why: word("action-clocks.why.local_facts_answered", { status: String(textOf(r.status)?.slice(0, 40) ?? "none") }) };
   const g = r.governs && typeof r.governs === "object" ? r.governs : {};
   const last = r.latest && typeof r.latest === "object" ? r.latest : {};
   const lapsed = r.lapsed && typeof r.lapsed === "object" ? r.lapsed : {};
@@ -145,7 +146,7 @@ export function factReader(localFacts, viewer) {
   return (h) => {
     let path = null;
     try { path = factPath(holidayFact(h)); } catch { path = null; }
-    if (typeof path !== "string") return { path: null, status: "absent", why: "the holiday entry names no local fact" };
+    if (typeof path !== "string") return { path: null, status: "absent", why: word("action-clocks.why.holiday_entry_names") };
     let r;
     try { r = read.call(localFacts, { path, viewer }); }
     catch (e) {
@@ -154,7 +155,7 @@ export function factReader(localFacts, viewer) {
       return { path, status: "absent", why: `local facts' read failed${m ? `: ${m}` : ""}` };
     }
     try { return factAnswer(path, r); }
-    catch { return { path, status: "absent", why: "local facts answered in a shape the count cannot read" }; }
+    catch { return { path, status: "absent", why: word("action-clocks.why.local_facts_answered_shape") }; }
   };
 }
 
@@ -169,13 +170,13 @@ function calendarStated(calls, readable) {
   const years = calls.map(({ h, f }) => ({ year: Number(h.year), list: isListEntry(h) ? h.list : null,
     offices: Array.isArray(h.offices) ? h.offices : null, path: f.path ?? null, status: f.status, basis: h.basis ?? null,
     ...(f.status === "corrected" ? { corrected_by: f.by ?? null, corrected_at: f.at ?? null } : {}) }));
-  if (!readable) return { status: "not_read", years, says: ["whether your team has confirmed the calendar was not read"] };
+  if (!readable) return { status: "not_read", years, says: [word("action-clocks.says.whether_group_confirmed")] };
   const says = [];
   for (const { h, f } of calls) {
-    const which = isListEntry(h) ? `: the closure list '${h.list}', ${h.year}` : "";
+    const which = isListEntry(h) ? localize("action-clocks.count.the_closure_list_list_year", ": the closure list '{list}', {year}", { list: String(h.list), year: String(h.year) }) : "";
     if (f.status === "unconfirmed")
-      says.push(`counted on an unconfirmed calendar (${f.basis ?? "no source stated"}, ${f.last_at ?? "never confirmed here"})${which}`);
-    else if (f.status === "corrected") says.push(`counted on a calendar ${f.says ?? `corrected locally by ${f.by}, ${f.at}`}${which}`);
+      says.push(word("action-clocks.counted_unconfirmed_calendar", { basis: String(f.basis ?? "no source stated"), last_at: String(f.last_at ?? "never confirmed here"), which: String(which) }));
+    else if (f.status === "corrected") says.push(word("action-clocks.counted_calendar", { says: String(f.says ?? `corrected locally by ${f.by}, ${f.at}`), which: String(which) }));
   }
   const st = calls.map((c) => c.f.status);
   const status = st.some((s) => s === "unconfirmed") ? "unconfirmed" : st.some((s) => s === "corrected") ? "corrected" : "confirmed";
@@ -205,7 +206,7 @@ function recorder(factOf, cache) {
 function askOnce(factOf, h) {
   let f;
   try { f = factOf(h); } catch (e) { f = { status: "absent", why: `the reader failed${e && e.message ? `: ${String(e.message).slice(0, 200)}` : ""}` }; }
-  return f && typeof f === "object" ? f : { status: "absent", why: "the reader gave no answer" };
+  return f && typeof f === "object" ? f : { status: "absent", why: word("action-clocks.why.reader_gave_answer") };
 }
 
 /* R2 (T45; N882; actions R80): the day a rule's count starts from, and which event it is. `received` is the
@@ -223,15 +224,15 @@ function startOf(starts, ledger, receipts) {
   if (starts === "served") {
     const s = latest(recs.filter((x) => x.kind === "service"));
     return s ? { day: s.at.slice(0, 10), from: "service" }
-      : { why: "no service of the team's papers on that party is recorded on this action, the event this rule starts from" };
+      : { why: word("action-clocks.why.service_group_papers") };
   }
   if (firstSent === -1) return { why: starts === "received"
-    ? "the action's ledger holds no sent entry: the counterparty's receipt of the team's request is counted from it"
-    : "the action's ledger holds no sent entry, the event this rule starts from" };
+    ? word("action-clocks.why.action_ledger_holds")
+    : word("action-clocks.why.action_ledger_holds_sent") };
   if (starts === "received") {
     const r = latest(recs.filter((x) => x.kind === "receipt" && Number(x.ord) === firstSent));
     if (r) return { day: r.at.slice(0, 10), from: "receipt" };
-    return { day: ledger[firstSent].at.slice(0, 10), from: "sent", note: "receipt not recorded: counted from sending" };
+    return { day: ledger[firstSent].at.slice(0, 10), from: "sent", note: word("action-clocks.note.receipt_recorded_counted") };
   }
   return { day: ledger[firstSent].at.slice(0, 10), from: "sent" };
 }
@@ -241,7 +242,7 @@ const earliestDay = (due) => (due && Array.isArray(due.candidates) ? dayOf(due.c
 
 /* R2: the words civil-time's undetermined answer gives, the office calendar's named as the profile's holiday calendar. */
 function whyOf(r) {
-  const w = textOf(r && (r.why || r.refused)) || "the count is undetermined";
+  const w = textOf(r && (r.why || r.refused)) || word("action-clocks.count_undetermined");
   return w.replace(/the office calendar/g, "the profile's holiday calendar");
 }
 
@@ -263,11 +264,11 @@ export function computeDeadline(d, fm, view, { factOf = null, receipts = null } 
     const rule = d && typeof d === "object" ? d : {};
     const ledger = fm && Array.isArray(fm.correspondence) ? fm.correspondence : [];
     if (rule.starts !== "received" && rule.starts !== "filed" && rule.starts !== "served")
-      return { date: null, why: `the rule starts from '${textOf(rule.starts)}', an event the action's ledger does not record` };
+      return { date: null, why: word("action-clocks.why.rule_starts_event", { starts: String(textOf(rule.starts)) }) };
     const from = startOf(rule.starts, ledger, receipts);
     if (from.why) return { date: null, why: from.why };
     const start = from.day;
-    if (!isCalendarDate(start)) return { date: null, start, why: `the ${from.from === "sent" ? "sent entry" : `recorded ${from.from}`}'s date '${start}' is not a calendar day` };
+    if (!isCalendarDate(start)) return { date: null, start, why: word("action-clocks.why.date_calendar_day", { from: String(from.from === "sent" ? "sent entry" : `recorded ${from.from}`), start: String(start) }) };
     /* R2 (T45): which event the count started from, said in the answer and its trace. */
     const said = { start_from: from.from, ...(from.note ? { start_note: from.note } : {}) };
     if (rule.basis === "UNMEASURED")
@@ -282,7 +283,7 @@ export function computeDeadline(d, fm, view, { factOf = null, receipts = null } 
     const rec = recorder(factOf, cache);
     let r;
     try { r = evaluateRule({ rule: base, anchor, view: v, office, factOf: rec.read }); }
-    catch (x) { r = { undetermined: true, code: "RULE_INVALID", why: `the rule cannot be counted: ${textOf(x && x.message) || "a malformed rule"}` }; }
+    catch (x) { r = { undetermined: true, code: "RULE_INVALID", why: word("action-clocks.why.rule_cannot_counted", { item: String(textOf(x && x.message) || "a malformed rule") }) }; }
     const calendar = reads || rec.calls.length ? { calendar: calendarStated(rec.calls, rec.readable) } : {};
     if (!r || r.refused || r.undetermined) {
       /* R10: a disputed year names who disputed it and when, as local-facts answered them. */
@@ -294,21 +295,21 @@ export function computeDeadline(d, fm, view, { factOf = null, receipts = null } 
                   ...(Array.isArray(r.due && r.due.candidates) ? { candidates: r.due.candidates.map(dayOf) } : {}),
                   ...(r.extension ? { extension: r.extension } : {}),
                   trace: isObj(r.trace) ? { ...r.trace, ...said } : r.trace, ...calendar };
-    if (!out.date) return { date: null, start, why: "the count answered no day", ...calendar };
+    if (!out.date) return { date: null, start, why: word("action-clocks.why.count_answered_day"), ...calendar };
     /* R2 (K1504 (1); civil-time R10): a body's observed practice, counted on its own list and labelled as practice,
        answered beside the rule's date and never as it. */
     if (isObj(rule.observed) && typeof rule.observed.closures === "string") {
       let o;
       try { o = evaluateRule({ rule: { ...base, closures: rule.observed.closures }, anchor, view: v, office,
                                factOf: recorder(factOf, cache).read }); }
-      catch { o = { undetermined: true, why: "the practice calendar cannot be counted" }; }
+      catch { o = { undetermined: true, why: word("action-clocks.why.practice_calendar_cannot") }; }
       out.observed = [{ label: "observed practice", closures: rule.observed.closures, basis: rule.observed.basis ?? null,
         status: rule.observed.status ?? null, ...(o.refused || o.undetermined ? { date: null, why: whyOf(o) }
           : { date: earliestDay(o.due), due: o.due }) }];
     }
     return out;
   } catch (x) {
-    return { date: null, why: `the count failed: ${textOf(x && x.message) || "unknown"}` };
+    return { date: null, why: word("action-clocks.why.count_failed", { item: String(textOf(x && x.message) || "unknown") }) };
   }
 }
 
@@ -320,11 +321,11 @@ export function traceLine(c) {
   const parts = [];
   const unit = t.units === "days" ? `${t.count || ""} day${t.amount === 1 ? "" : "s"}`.trim() : String(t.units || "").replace(/_/g, " ");
   if (t.amount !== undefined) parts.push(`${t.amount} ${unit} ${t.direction === "backward" ? "before" : "after"} ${t.anchor_day ?? c.start ?? "the start"}`);
-  if (t.closures) parts.push(`counted on the closure list ${t.closures}`);
+  if (t.closures) parts.push(word("action-clocks.counted_closure_list", { closures: String(t.closures) }));
   if (Array.isArray(t.skipped) && t.skipped.length) parts.push(`${t.skipped.length} closed day${t.skipped.length === 1 ? "" : "s"} skipped`);
-  if (Array.isArray(t.roll) && t.roll.length) parts.push(`rolled from ${t.roll[0].from} to ${t.roll[t.roll.length - 1].to}`);
+  if (Array.isArray(t.roll) && t.roll.length) parts.push(word("action-clocks.rolled", { roll: String(t.roll[0].from), roll_2: String(t.roll[t.roll.length - 1].to) }));
   if (t.receipt) parts.push(`received ${t.receipt.to} (${t.receipt.rule})`);
-  if (Array.isArray(c.candidates)) parts.push(`uncertain between ${c.candidates.join(" and ")}, the earliest taken`);
+  if (Array.isArray(c.candidates)) parts.push(word("action-clocks.uncertain_between_earliest", { candidates: String(c.candidates.join(" and ")) }));
   if (c.calendar && c.calendar.status) parts.push(`calendar ${c.calendar.status}`);
   return parts.join("; ").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").slice(0, 400);
 }

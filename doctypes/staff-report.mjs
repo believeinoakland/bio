@@ -66,6 +66,7 @@ import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSat
          vocabulary, vocabRegex, vocabPatterns, allMatches, enactmentPatterns, enactmentNumber, codePatterns,
          IN_PROSE } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
    see `memoHeader`. */
@@ -197,9 +198,9 @@ export default {
     const signals = [];
 
     const memo = memoHeader(flat);
-    if (memo) signals.push(`a memorandum header of ${memo.labels} labels in ${memo.span} characters at the top`);
+    if (memo) signals.push(localize("doctypes.staff-report.a_memorandum_header_of_labels", "a memorandum header of {labels} labels in {span} characters at the top", { labels: String(memo.labels), span: String(memo.span) }));
     const secs = reportSections(t, reportSectionPatterns(ctx));
-    if (secs.length) signals.push(`${secs.length} report template section heading(s)`);
+    if (secs.length) signals.push(localize("doctypes.staff-report.length_report_template_section_heading", "{length} report template section heading(s)", { length: String(secs.length) }));
     const signoff = SIGNOFF.test(flat) || PREPARED.test(flat);
     if (signoff) signals.push("a staff sign-off");
     const titles = reportTitlePatterns(ctx);
@@ -338,7 +339,7 @@ export default {
     for (const k of ["to", "from", "subject", "date"])
       if (String(a[k] || "") !== String(b[k] || ""))
         events.push(event("item_changed", { key: k, label: k, moved: [{ fact: k, was: a[k], now: b[k] }],
-          why: `this report's ${k} changed` }));
+          why: localize("doctypes.staff-report.this_reports_k_changed", "this report's {k} changed", { k: String(k) }) }));
 
     const d = diffEntities(a.entities || [], b.entities || []);
     for (const e of d.gone)
@@ -353,8 +354,7 @@ export default {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
       confirmed: reportConfirmed(a, b),
       why: events.length
-        ? `${events.length} change(s): ${d.gone.length} citation(s) gone, ${d.appeared.length} added`
-          + (String(a.recommendation || "") !== String(b.recommendation || "") ? ", and the recommendation moved" : "")
+        ? localize("doctypes.staff-report.length_change_s_length_2", "{length} change(s): {length_2} citation(s) gone, {length_3} added{v1}", { length: String(events.length), length_2: String(d.gone.length), length_3: String(d.appeared.length), v1: String(String(a.recommendation || "") !== String(b.recommendation || "") ? ", and the recommendation moved" : "") })
         : "this report says what it said, and points at the same instruments",
     };
   },

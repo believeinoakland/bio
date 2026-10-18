@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { infoMd, KEY, SIG, NOW } from "../publication/fixture.mjs";
 import { CRITERIA_NOT_A_CASE_SENTENCE } from "../../../src/public-read/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const A = "STD-2026-0001-policy", B = "STD-2026-0002-standard";
@@ -85,9 +86,9 @@ test("R31 publishedCase answers criteria exactly as publication's R53 state froz
   assert.equal("criteria_detail" in got, false, "nothing stated over a recorded list");
   assert.deepEqual(w.read("publishedcase", { id: CASE }).criteria, frozen, "the op serves the same");
   assert.deepEqual(got.criteria.map((r) => [r.standard, r.body, r.label, r.access_words]), [
-    [A, CLERK, "Standard · binds City Clerk", "Free to read"],
-    [B, CLERK, "Benchmark · not binding on City Clerk", "Behind a paywall"],
-    [A, BOARD, "Benchmark · not binding on Water Board", "Free to read"],
+    [A, CLERK, "Standard · binds City Clerk", word("label.standardaccess.free")],
+    [B, CLERK, "Benchmark · not binding on City Clerk", word("label.standardaccess.paywalled")],
+    [A, BOARD, "Benchmark · not binding on Water Board", word("label.standardaccess.free")],
   ], "member then leg order, each row labeled");
   /* a standard not freely readable: nothing of its text but the passages R72 holds */
   const paywalled = got.criteria.find((r) => r.standard === B);
@@ -110,7 +111,7 @@ test("R31 nothing is recomputed or re-read from standards at serving time: a lat
   w.read("publishedcase", { id: CASE });
   assert.deepEqual(again.criteria, first);
   assert.deepEqual([again.criteria[0].label, again.criteria[0].edition, again.criteria[0].access_words],
-                   ["Benchmark · not binding on Water Board", "2024", "Free to read"]);
+                   ["Benchmark · not binding on Water Board", "2024", word("label.standardaccess.free")]);
   assert.equal(standards.calls.length, n, "no standards read at serving");
   /* negative control: the stand-in does answer the changed standard when asked */
   assert.equal(standards.standardRead({ id: A, viewer: "admin" }).edition, "2026");

@@ -15,6 +15,7 @@ import vm from "node:vm";
 import { SIGN_HTML } from "../../../src/signpage.mjs";
 import { verifySshsig, NS_RELEASE, NS_RATIFY } from "../../../src/sshsig.mjs";
 import { seedFromEnvelope, signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const HAVE_SSH_KEYGEN = !spawnSync("ssh-keygen", ["-Q"]).error;
 const NO_SSH_KEYGEN = HAVE_SSH_KEYGEN ? false : "ssh-keygen is not on PATH";
@@ -275,7 +276,7 @@ test("R44 the page makes a recovery key named the recovery key in its private an
     const page = loadPage();
     const out = await makeRecovery(page, pass);
     const b = boxes(out);
-    assert.deepEqual(Object.keys(b), ["Recovery key: public, paste this into the session", "Recovery key: private, keep this offline"]);
+    assert.deepEqual(Object.keys(b), [word("sign-release.recovery.public"), word("sign-release.recovery.private")]);
     const pub = b["Recovery key: public, paste this into the session"];
     const priv = b["Recovery key: private, keep this offline"];
     assert.match(pub, PUB_LINE(RECOVERY));

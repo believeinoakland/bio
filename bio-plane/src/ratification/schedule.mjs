@@ -7,6 +7,7 @@
 import { canonicalJson, createSha256, b64ToBytes } from "../record-grammar/index.mjs";
 import { caseDocumentBlocks, acceptedWorkOf, peopleOf, memberTiesOf } from "../case-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R41: the parts of `checked`, in the order they are recorded and compared. */
 export const CHECKED_PARTS = Object.freeze(["sources", "ties", "holds", "signer_key", "approvals"]);
@@ -57,15 +58,15 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
   /* sources: each `sources:` row with whether it still holds, and each `accepted_work:` row's standing */
   {
     const rows = (caseDocumentBlocks(text).sources || []);
-    const lapsed = ask("sources", "what may be published of the sources", () => reads.sourcesLapsed(text, at));
+    const lapsed = ask("sources", word("ratification.ask.published_sources"), () => reads.sourcesLapsed(text, at));
     const accepted = acceptedWorkOf(fm).rows;
     const standing = accepted.length
-      ? ask("sources", "the acceptances of other teams' work", () => reads.acceptedWorkLapsed(fm, signer)) : null;
+      ? ask("sources", word("ratification.ask.acceptances_groups_work"), () => reads.acceptedWorkLapsed(fm, signer)) : null;
     if (lapsed !== undefined && !Array.isArray(lapsed))
-      unreadable.push({ part: "sources", what: "what may be published of the sources" });
+      unreadable.push({ part: "sources", what: word("ratification.ask.published_sources") });
     else if (standing !== undefined && standing !== null
              && (!Array.isArray(standing.withdrawn) || !Array.isArray(standing.undisclosed)))
-      unreadable.push({ part: "sources", what: "the acceptances of other teams' work" });
+      unreadable.push({ part: "sources", what: word("ratification.ask.acceptances_groups_work") });
     else if (lapsed !== undefined && standing !== undefined) {
       const key = (r) => canonicalJson([r.capture ?? null, r.stated ?? null, r.basis ?? null]);
       const gone = new Set(lapsed.map(key));
@@ -89,7 +90,7 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
     const entities = new Set([...people.map((p) => p.person),
                               ...memberTiesOf(fm).filter((t) => t.row === "tie").map((t) => t.entity)].filter(str));
     let ok = true;
-    if (!str(signer)) { unreadable.push({ part: "ties", what: "the signing member" }); ok = false; }
+    if (!str(signer)) { unreadable.push({ part: "ties", what: word("ratification.what.signing_member") }); ok = false; }
     for (const factId of ok ? moneyFactsNamed(people) : []) {
       const f = ask("ties", `money fact ${factId}`, () => reads.readFact({ factId, viewer: `member:${signer}` }));
       if (f === undefined) { ok = false; continue; }
@@ -98,11 +99,11 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
     }
     if (ok) {
       const t = entities.size
-        ? ask("ties", `the ties ${signer} has declared`, () => reads.tiesConcerning({ entities: [...entities].sort(),
+        ? ask("ties", word("ratification.ask.ties_declared", { signer: String(signer) }), () => reads.tiesConcerning({ entities: [...entities].sort(),
             member: signer, viewer: `member:${signer}` }))
         : { ok: true, ties: [] };
       const ties = t === undefined ? undefined : listOf(t, "ties");
-      if (ties === null) unreadable.push({ part: "ties", what: `the ties ${signer} has declared` });
+      if (ties === null) unreadable.push({ part: "ties", what: word("ratification.ask.ties_declared", { signer: String(signer) }) });
       else if (ties !== undefined)
         parts.ties = [{ member: signer, ties: ties.map((x) => ({ tie_id: x.tie_id ?? null, entity: x.entity ?? null,
                                                                   withdrawn: !!x.withdrawn })).sort(byJson) }];
@@ -116,18 +117,18 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
     else if (!reads.holdsOn) unreadable.push({ part: "holds", what: "the litigation holds: no hold reader is registered (R45)" });
     else {
       /* actions R69: `{held: true, since, recorded_by}` or `{held: false}`, null when the read could not complete */
-      const h = ask("holds", "the litigation holds", () => reads.holdsOn({ project }));
+      const h = ask("holds", word("ratification.ask.litigation_holds"), () => reads.holdsOn({ project }));
       if (h !== undefined && (!h || typeof h !== "object" || typeof h.held !== "boolean"))
-        unreadable.push({ part: "holds", what: "the litigation holds" });
+        unreadable.push({ part: "holds", what: word("ratification.ask.litigation_holds") });
       else if (h !== undefined)
         holds = h.held ? { held: true, since: h.since ?? null, recorded_by: h.recorded_by ?? null } : { held: false };
     }
-    const editions = ask("holds", "the case's ratified editions", () => reads.ratifiedEditions(caseId));
+    const editions = ask("holds", word("ratification.ask.case_ratified_editions"), () => reads.ratifiedEditions(caseId));
     const stamps = [];
     for (const edition of Array.isArray(editions) ? editions : []) {
-      const s = ask("holds", `the stamps on edition ${edition}`, () => reads.stampsOf({ case: caseId, edition }));
+      const s = ask("holds", word("ratification.ask.stamps_edition", { edition: String(edition) }), () => reads.stampsOf({ case: caseId, edition }));
       const list = s === undefined ? undefined : listOf(s, "stamps");
-      if (list === null) unreadable.push({ part: "holds", what: `the stamps on edition ${edition}` });
+      if (list === null) unreadable.push({ part: "holds", what: word("ratification.ask.stamps_edition", { edition: String(edition) }) });
       else if (list !== undefined) stamps.push({ edition, stamps: list });
     }
     if (!unreadable.some((u) => u.part === "holds") && holds !== undefined)
@@ -136,7 +137,7 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
 
   /* approvals (R50): the group's rule in force and the approvals given at the signed bytes */
   {
-    const a = ask("approvals", "the team's approvals", () => reads.approvals ? reads.approvals() : null);
+    const a = ask("approvals", word("ratification.ask.group_approvals"), () => reads.approvals ? reads.approvals() : null);
     if (a && a.unreadable) unreadable.push({ part: "approvals", what: a.unreadable });
     else if (a !== undefined)
       parts.approvals = a ? { rule: { approvers: a.approvers }, approvals: a.approvals } : { rule: null, approvals: [] };
@@ -185,9 +186,7 @@ export function scheduleUncheckableRefusal(caseId, edition, unreadable) {
   /* DEC-49 REGION is-schedule-uncheckable */
   return { ok: false, reason: "SCHEDULE_UNCHECKABLE", ...rowOf("SCHEDULE_UNCHECKABLE"), caseId, edition,
     unreadable: unreadable.slice(0, 50),
-    detail: `publishing case ${caseId} edition ${edition} at a set time means checking again at that time what is `
-          + `checked now, and ${unreadable.map((u) => u.what).join("; ")} cannot be read now. Nothing was signed for `
-          + `later: publish it now (op=caseratify), or try again later.` };
+    detail: localize("ratification.schedule.publishing_case_caseid_edition_edition", "publishing case {caseId} edition {edition} at a set time means checking again at that time what is checked now, and {map} cannot be read now. Nothing was signed for later: publish it now (op=caseratify), or try again later.", { caseId: String(caseId), edition: String(edition), map: String(unreadable.map((u) => u.what).join("; ")) }) };
   /* END DEC-49 REGION is-schedule-uncheckable */
 }
 

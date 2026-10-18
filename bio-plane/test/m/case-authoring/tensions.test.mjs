@@ -8,6 +8,7 @@ import { CASE_DOCUMENT_FORMAT, caseTensionsOf } from "../../../src/publication/i
 import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE,
          CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED } from "../../../src/case-authoring/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", F = "INQ-2026-0001-q", G = "INQ-2026-0002-g";
 const RUN = "RUN-2026-0001", ADMIN = "class:admin";
@@ -66,9 +67,9 @@ test("R29 (N529): C-120.1–C-120.3, a case's disclosures, are case-disclosures'
   assert.deepEqual(Object.entries(CASE_DISCLOSURE_CHECKS).slice(0, 3).map(([k, v]) => [k, v.check]),
     [["TENSION_NOT_DISCLOSED", "C-120.1"], ["DISCLOSURE_NOT_STANDING", "C-120.2"], ["TENSIONS_UNDETERMINED", "C-120.3"]]);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).slice(0, 3).map((v) => v.translation), [
-    "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published.",
-    "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published.",
-    "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."]);
+    word("refusal.TENSION_NOT_DISCLOSED"),
+    word("refusal.DISCLOSURE_NOT_STANDING"),
+    word("refusal.TENSIONS_UNDETERMINED")]);
   for (const row of Object.values(CASE_DISCLOSURE_CHECKS))
     assert.match(row.where, /^src\/case-disclosures\/index\.mjs \S+ > [a-z-]+$/);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).slice(0, 3).map((v) => v.where), [
@@ -180,7 +181,7 @@ test("R55 (case-disclosures R1) (C-120.2): a listed candidate the read does not 
 });
 
 test("R55 (case-disclosures R1) (C-120.3): a read that fails or is truncated is TENSIONS_UNDETERMINED — what cannot be read cannot be disclosed — and nothing is written; a whole read publishes", () => {
-  for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: "the read failed" }, /the read failed/],
+  for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: word("case-disclosures.why.read_failed") }, /the read failed/],
                                [{ ok: true, candidates: [], truncated: true, bound: 200 }, /more than 200/],
                                [null, /no answer/], ["throws", /boom/]]) {
     const calls = [];

@@ -5,6 +5,7 @@
    `isMachineMinted` had no reader and went with the catalogue (K750). */
 
 import { isMachineIdentity } from './actors.mjs';
+import { word } from '../setup-words/index.mjs';
 
 /* A value stringified and trimmed; one that cannot be stringified (a throwing `toString`, an object with no prototype)
    is blank, never a throw (R37, R38). */
@@ -49,7 +50,7 @@ export const LAW_PROPOSAL_STATES = {
     + 'here is this action\'s list of governing laws, and nothing becomes one until a member states it themselves',
   member_proposed: 'a member proposed these citations to whoever states this action\'s governing laws. It is a '
     + 'proposal and not the list: only the governing-laws act sets that, and the record holds who made it',
-  unstated: 'the record does not say who proposed these citations',
+  unstated: word('record-grammar.proposal.governing_laws.unstated'),
 };
 
 /** Read a proposal's `proposed_by` as ONE of the three states above. Blank is
@@ -84,7 +85,7 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'is a standard this record holds, and nothing becomes one until a member records it themselves',
     member_proposed: 'a member proposed this standard to whoever records the team\'s standards. It is a proposal '
       + 'and not a standard: only recording a standard enters one, and the record holds who made the proposal',
-    unstated: 'the record does not say who proposed this standard',
+    unstated: word('record-grammar.proposal.standard.unstated'),
   }),
   comparison: Object.freeze({
     machine_proposed: 'a machine credential prepared this comparison of a government act against standards. That is '
@@ -94,7 +95,7 @@ export const PROPOSAL_STATES = Object.freeze({
     member_proposed: 'a member suggested this comparison of a government act against standards. It is a comparison '
       + 'and not a determination: only a determination records whether the act complied, and the record holds who '
       + 'made the comparison',
-    unstated: 'the record does not say who prepared this comparison',
+    unstated: word('record-grammar.proposal.comparison.unstated'),
   }),
   filing_draft: Object.freeze({
     machine_proposed: 'a machine credential prepared this draft. That is machine work, labelled as machine work: it '
@@ -102,7 +103,7 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'draft, and nothing is filed until members decide to file it and send it themselves',
     member_proposed: 'a member prepared this draft. It is a draft and not a filing: nobody has approved or sent it, '
       + 'and the record holds who prepared it',
-    unstated: 'the record does not say who prepared this draft, and nobody has approved or sent it',
+    unstated: word('record-grammar.proposal.filing_draft.unstated'),
   }),
   theory: Object.freeze({
     machine_proposed: 'a machine credential proposed this candidate theory and remedy. That is machine work, '
@@ -110,7 +111,7 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'can never state the team\'s position. Nothing here is the team\'s position',
     member_proposed: 'a member proposed this candidate theory and remedy. It is a candidate for members and counsel '
       + 'to weigh and not the team\'s position, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed this candidate theory and remedy',
+    unstated: word('record-grammar.proposal.theory.unstated'),
   }),
   /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
      adopts it, and a prepared communication (filings R23) is a draft nobody has approved or sent, worded as
@@ -121,7 +122,7 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'until a member adopts it',
     member_proposed: 'a member proposed this option. It is a proposal and not an option: it is not an option until '
       + 'a member adopts it, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed this option, and it is not an option until a member adopts it',
+    unstated: word('record-grammar.proposal.plan_option.unstated'),
   }),
   communication: Object.freeze({
     machine_proposed: 'a machine credential prepared this communication. That is machine work, labelled as machine '
@@ -129,7 +130,7 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'sent it, and nothing is sent until members decide to send it themselves',
     member_proposed: 'a member prepared this communication. It is a draft and not a message sent: nobody has '
       + 'approved or sent it, and the record holds who prepared it',
-    unstated: 'the record does not say who prepared this communication, and nobody has approved or sent it',
+    unstated: word('record-grammar.proposal.communication.unstated'),
   }),
   /* K921 (T21, R42): wording proposed for a filing template (filing-templates R6, R13) is not a template's text until a
      member adopts it into a draft, and a machine can propose it and never draft, review or approve a template. */
@@ -222,8 +223,7 @@ export const PROPOSAL_STATES = Object.freeze({
     machine_proposed: 'a machine credential flagged these sentences of a member\'s account as not supported by the evidence '
       + 'they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can '
       + 'never find against one. It is never a finding of the team',
-    member_proposed: 'a member flagged these sentences of a member\'s account as not supported by the evidence they cite. '
-      + 'It is a draft and never a finding of the team, and the record holds who proposed it',
+    member_proposed: word('record-grammar.proposal.account_check.member_proposed'),
     unstated: 'the record does not say who flagged these sentences of a member\'s account as not supported by the evidence '
       + 'they cite. It is a draft and never a finding of the team',
   }),
@@ -333,13 +333,13 @@ export const CONTENT_MINTED_BY_PLANE = 'plane';
  *  published vocabulary's keys should have been anyway, and `machine_marked`
  *  reads beside `machine_stamped` one vocabulary over. */
 export const CONTENT_MINT_STATES = {
-  member_marked: 'a member marked this passage as citable, and the record holds their name and the date',
+  member_marked: word('record-grammar.mint.member_marked'),
   plane_minted: 'this record minted this reference when a member first cited the passage in their own words — '
     + 'it is the address of what that member pointed at, and not a separate claim about the document',
   machine_marked: 'a machine credential marked this passage as citable. That is machine work, labelled as machine '
     + 'work: it can lay the passage beside the question and it can never attest that the text matches the '
     + 'page, and nothing here is part of a finding until a member cites it themselves',
-  unstated: 'the record does not say who marked this passage as citable',
+  unstated: word('record-grammar.mint.unstated'),
 };
 
 /** Read a content row's `minted_by` as ONE of the four states above.

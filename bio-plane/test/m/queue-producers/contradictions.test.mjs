@@ -5,9 +5,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const claim = (inquiry, text) => ({ kind: "claim", inquiry, version: "v1", claim: text, text, source: { inquiry, title: inquiry } });
-const cand = (id, weight, state, a, b, extra = {}) => ({ candidate: id, key: "K2", why: "one subject, two held claims", a, b,
+const cand = (id, weight, state, a, b, extra = {}) => ({ candidate: id, key: "K2", why: word("contradiction.name.subject_two_held"), a, b,
   machine: { label: "record", reason: "they differ", at: iso(NOW - 5000), origin: "machine", machine_work: true },
   weight, state, resolution: null, inquiry: null, recommendations: [], reach: { projects: [], truncated: false }, ...extra });
 
@@ -144,7 +145,7 @@ test("R7, R11: two projects hidden from each other on two sides of one duty: eac
   /* The notices contradiction R50 answers each project's members: the side they may see, and nothing of the other. */
   const state = { optedA: false, optedB: false, responses: [] };
   const notice = (project, side, own, other) => ({
-    candidate: "cand-1", project, weight: "duty", state: "open", side, says: "Something this project rests on is in conflict with a record you cannot see. Neither that record nor who holds it is shown. Your project can ask to resolve it. If every project holding a side asks, the projects are named to each other's members, and you can respond.",
+    candidate: "cand-1", project, weight: "duty", state: "open", side, says: word("contradiction.notice_sentence"),
     opted_in: own ? { member: "m", at: iso(NOW), words: null } : null, asked_by_another: other,
     revealed: own && other, ...(own && other ? { parties: [{ id: project === "PRJ-A" ? "PRJ-B" : "PRJ-A", name: "the other" }] } : {}),
     responses: own && other ? state.responses.filter((x) => x.project.id !== project) : [], responses_truncated: false });

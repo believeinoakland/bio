@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, seeded, xlsx, V, sha } from "./fixture.mjs";
 import { ENGINE_MEASURE, RECOMPUTE_MEANING } from "../../../src/workbooks/index.mjs";
 import { fixture, makeMember, realEngine, bucket, post, call, ON } from "../../../../sheet-worker/test/helpers.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* `ctx.recompute` over the real member: it reads the capture from its own R2 stand-in, as the deployed member does. */
 function realRecompute(holder, { member = makeMember(realEngine()), env = ON } = {}) {
@@ -85,7 +86,7 @@ test("R7 an engine error is listed not_recomputed with its cause, never a disagr
   for (const [what, opts, code, bytes] of cases) {
     const w = await realSeeded(bytes || agreeing(), opts);
     const r = (await w.wb.recompute({ ...w.at, by: V("bob") })).recompute;
-    assert.equal(r.status, "not recomputed here", what);
+    assert.equal(r.status, word("workbooks.recomputed"), what);
     assert.equal(r.reason, code, what);
     assert.ok(r.why && r.why.length > 3, `${what}: the reason's words as given`);
     assert.deepEqual(r.counts, { compared: 0, agreed: 0, differed: 0, not_recomputed: 0, volatile: 0, cache_stale: 0 });
@@ -95,11 +96,11 @@ test("R7 an engine error is listed not_recomputed with its cause, never a disagr
   assert.deepEqual([g.reason, g.why], ["ENGINE_FAILED", "the engine said: no"], "as given, word for word");
   /* no binding to the engine, and no answer */
   const none = await seeded();
-  assert.deepEqual(pick((await none.wb.recompute({ ...none.at, by: V("bob") })).recompute), ["not recomputed here", "NO_ENGINE", "no engine bound"]);
+  assert.deepEqual(pick((await none.wb.recompute({ ...none.at, by: V("bob") })).recompute), [word("workbooks.recomputed"), "NO_ENGINE", word("workbooks.why.engine_bound")]);
   for (const engine of [async () => { throw new Error("the binding hung up"); }, async () => undefined, async () => "text", async () => ({ ok: true })]) {
     const w = await seeded({ recompute: engine });
     const r = (await w.wb.recompute({ ...w.at, by: V("bob") })).recompute;
-    assert.equal(r.status, "not recomputed here");
+    assert.equal(r.status, word("workbooks.recomputed"));
     assert.equal(r.reason, "NO_ANSWER");
   }
 });
@@ -111,10 +112,10 @@ test("R8 every answer stating a recompute calls it agreement between the two eng
   assert.equal(before.recompute, null, "nothing is recomputed on a read");
   const r = (await w.wb.recompute({ ...w.at, by: V("bob") })).recompute;
   /* DEC-149's wording (T35-39): the engine is named as the one your group's Civicsmith runs, never "the instance's" */
-  const text = `recomputed by the engine your team's Civicsmith runs (${ENGINE_MEASURE.engine} ${ENGINE_MEASURE.engine_version}); open it in any spreadsheet program`;
+  const text = word("workbooks.recomputed_engine_group", { engine: String(ENGINE_MEASURE.engine), engine_version: String(ENGINE_MEASURE.engine_version) });
   for (const x of [r, (await w.wb.readWorkbook({ ...w.at, viewer: V("carol") })).recompute]) {
     assert.equal(x.meaning, RECOMPUTE_MEANING);
-    assert.equal(x.meaning, "agreement between the file's engine and the engine your team's Civicsmith runs, never accuracy");
+    assert.equal(x.meaning, word("workbooks.agreement_between_file"));
     assert.ok(!/\b(the|this) (instance|plane)\b/i.test(`${x.meaning} ${x.disclosure.text}`), "no 'the instance' or 'the plane' in what a member reads");
     assert.equal(x.disclosure.text, text);
     assert.deepEqual(x.disclosure.measure, ENGINE_MEASURE);

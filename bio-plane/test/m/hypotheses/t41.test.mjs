@@ -9,6 +9,7 @@ import { hypothesesOps, HYPOTHESES_CHECKS, SYSTEM_LABEL, PROPOSALS_HEADING, PROP
 import { ACCEPTANCE_FORMS, isHypothesisId } from "../../../src/record-grammar/index.mjs";
 import { isRecordId } from "../../../src/connection-grammar/index.mjs";
 import * as inquiryModule from "../../../src/inquiry/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const PROJ = "PROJ-2026-0001";
 const HIDDEN = "INQ-2026-0009-hidden";
@@ -375,9 +376,9 @@ test("R22 this module's codes name its own conditions: a proposal with no run is
   const OLD = ["PROPOSAL_NO_RUN", "NO_SUCH_PROPOSAL"];
   /* the rows, re-coded in place: numbers and translations as T41 minted them */
   assert.deepEqual([row("HYPOTHESIS_PROPOSAL_NO_RUN").check, row("HYPOTHESIS_PROPOSAL_NO_RUN").translation],
-    ["C-134.22", "A proposal of the system's names the run that made it. Nothing was written."]);
+    ["C-134.22", word("refusal.HYPOTHESIS_PROPOSAL_NO_RUN")]);
   assert.deepEqual([row("NO_SUCH_HYPOTHESIS_PROPOSAL").check, row("NO_SUCH_HYPOTHESIS_PROPOSAL").translation],
-    ["C-134.23", "There is no proposal here by that id that you can see. Nothing was written."]);
+    ["C-134.23", word("refusal.NO_SUCH_HYPOTHESIS_PROPOSAL")]);
   /* no row of this module holds the other modules' codes, and every C-134 number is held once */
   for (const code of OLD) assert.equal(code in HYPOTHESES_CHECKS, false, code);
   const checks = Object.values(HYPOTHESES_CHECKS).map((r) => r.check);

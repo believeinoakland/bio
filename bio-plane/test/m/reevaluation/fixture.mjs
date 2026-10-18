@@ -23,6 +23,7 @@ import { eventsOf } from "../../../src/events/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -357,8 +358,8 @@ export function inquiryMd(id, { question = `Is ${id} answered?`, legs = [], refs
     ...(grounds ? ["grounds:", ...grounds.flatMap((g) => [`  - ground: ${g.ground}`, `    asserted_by: ${g.asserted_by}`,
       `    at: "${g.at}"`])] : []),
     ...extra,
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 
 export function infoMd(id, extra = [], body = "A document.") {

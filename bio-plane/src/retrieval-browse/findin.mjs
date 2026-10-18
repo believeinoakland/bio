@@ -23,6 +23,7 @@ import { parseFigure } from "../calc-grammar/index.mjs";
 import { extentRelation, canonicalExtent } from "../content/index.mjs";
 import { normAlias } from "../extraction/index.mjs";
 import { say } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* R2: the kinds, closed (DEC-164 (2)). */
 export const FIND_KINDS = Object.freeze(["people", "money", "dates", "requirements", "events", "term"]);
@@ -242,7 +243,7 @@ export class Finder {
         const lang = d.language || language;
         const set = lang && Object.hasOwn(FIND_MATCHERS, lang) ? FIND_MATCHERS[lang] : null;
         if (!set) {
-          skip(c, lang ? `no matcher for ${lang} yet`
+          skip(c, lang ? localize("retrieval-browse.findin.no_matcher_for_lang_yet", "no matcher for {lang} yet", { lang: String(lang) })
             : "no matcher for this capture's language yet: neither its reading nor the active profiles state a language");
           continue;
         }

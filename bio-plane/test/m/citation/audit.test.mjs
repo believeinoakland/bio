@@ -7,6 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, T0, sha } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 const DOC = "INFO-2026-0101-ledger", DOC2 = "INFO-2026-0102-minutes";
@@ -24,8 +25,8 @@ const infoMd = (id) => [...core(id, "information", "collected"), `title: "Ledger
 const inquiryMd = (id) => [...core(id, "inquiry", "open"), 'title: "Did the transfer follow the adopted process?"',
   "surfaced_by: human", "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.", "---", "",
-  "## Question", "", "Did the transfer follow the adopted process?", "", "## What It Rests On", "", "## Conclusion", "",
-  "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  "## Question", "", "Did the transfer follow the adopted process?", "", word("conformance.rests"), "", "## Conclusion", "",
+  word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const projectMd = (title) => [...core(null, "project", "forming"), `title: "${title}"`, 'objective: "Find out."', "---", "",
   "## Thesis Summary", "", "Working frame.", "", "## Open Questions", "", "1. The question.", "", "## Ruled Out", "",
   "Nothing yet.", "", "## Session Log", "", "## Review Notes", ""].join("\n");

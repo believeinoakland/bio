@@ -5,6 +5,7 @@
    rows, never a judgment on a person (R29): its words are "Noticed", never "conflict". */
 import { isHypothesisId } from "../record-grammar/index.mjs";
 import { compare, span } from "../civil-time/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /* R22: a hop goes only through these two line kinds, at most two hops. */
 export const HOP_KINDS = Object.freeze(["related_to", "associate_of"]);
@@ -26,7 +27,7 @@ export const SHIPPED_CHECKS = Object.freeze([
       order: { after: true, within_days: 730 },
       hops: 0,
     }),
-    denominator: "persons the record holds with a holds line to a government office or body",
+    denominator: word("people.persons_record_holds"),
   }),
 ]);
 

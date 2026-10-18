@@ -9,9 +9,10 @@ import { LOWEST_GRADE, orderPaths, exhausted } from '../connection-grammar/index
 import { checkWalkArgs, traverse, depthStop } from './walk.mjs';
 import { readEntities, labelIn, idKindOf } from './labels.mjs';
 import { refuse, isObj, DECLARED_MARK, HUNCH_MARK, NOT_ASSERTED } from './answer.mjs';
+import { word } from '../setup-words/index.mjs';
 
 /** The sentence every stop carries (R21, K1469). */
-export const STOPPED_SENTENCE = 'Where the walk stopped short, what lies beyond is undetermined, not absent.';
+export const STOPPED_SENTENCE = word('explore.stopped_sentence');
 /** The rings a graph may be asked for (R21). */
 export const RINGS = Object.freeze([1, 2]);
 

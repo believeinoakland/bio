@@ -45,6 +45,7 @@ import { stepsOf } from "../steps/index.mjs";
 import { migrateCaptureRequests } from "./schema.mjs";
 import { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, CAPTURE_UA_MODE_ALIASES,
          uaModeOf, userAgentIsLegible } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, CAPTURE_UA_MODE_ALIASES,
          uaModeOf, userAgentIsLegible };
@@ -83,8 +84,7 @@ const RENDER_FAILED_CHECK = "C-83.7";
  *  member's own act in their own browser. */
 export const SITE_KINDS = Object.freeze(["personal", "platform"]);
 /** R46: the one sentence every MEMBER_CAPTURE_ONLY refusal carries, routing the page to the members. */
-export const MEMBER_ROUTE = "Such a page is captured only by a member's own act in their own browser (capture's member "
-  + "capture), never by the daemon: nothing was fetched, and your team's Civicsmith uses no login for it.";
+export const MEMBER_ROUTE = word("capture-requests.page_captured_member");
 /** R46: the kind of mark a member puts on a host (R41's scope record for a platform), and its one scope. */
 export const PLATFORM_KIND = "platform";
 /** R49 (T35; K1881): the longest address a capture request may carry, in characters; a longer one is refused whole. */
@@ -143,7 +143,7 @@ export function captureRequestAttribution(row) {
       ok: true, actor, machine_attributed: true,
       at_the_request_of: { member: plane.slice("member:".length), inquiry: row.target || null },
       principals: { plane },
-      statement: `the daemon captured this, at the request of ${plane}`,
+      statement: word("capture-requests.daemon_captured_request", { plane: String(plane) }),
     };
   if (!row || !plane || !claude)
     return { ok: false, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", plane: plane || null, claude: claude || null };
@@ -152,8 +152,7 @@ export function captureRequestAttribution(row) {
     at_the_request_of: { run: row.run, inquiry: row.target },
     principals: { plane, claude },
     /* The sentence a surface renders, composed from the fields above so it cannot say something they do not. */
-    statement: `the daemon captured this, at the investigative session's request `
-             + `(run ${row.run}), under ${plane}, paid by ${claude}`,
+    statement: word("capture-requests.daemon_captured_investigative", { run: String(row.run), plane: String(plane), claude: String(claude) }),
   };
 }
 
@@ -172,10 +171,8 @@ export function isMemberRequest(row) {
 }
 
 /** R56: the sentence a member's request carries while unattended capture is not configured (R11). */
-export const MEMBER_REQUEST_WAITS = "your request is kept, and it waits until your team's Civicsmith captures "
-  + "unattended: nothing is fetched for it until then.";
-export const MEMBER_REQUEST_DRAINS = "requested. Your team's Civicsmith captures it on its next unattended round, "
-  + "under the conduct every capture it makes follows.";
+export const MEMBER_REQUEST_WAITS = word("capture-requests.request_kept_waits");
+export const MEMBER_REQUEST_DRAINS = word("capture-requests.requested_group_civicsmith");
 
 /** R11, R37: whether the instance's unattended capture is configured: a daemon or administrator credential is bound
  *  (runtime-limits R26's `bound`: presence only). With the arm in process (K58) the drain no longer needs `env.SELF`
@@ -261,9 +258,7 @@ export class CaptureRequests {
     const runRow = run ? this.#deps.runs.runFor(run, viewer) : null;
     if (!runRow && !mine)
       return refusal("CAPTURE_REQUEST_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
-              + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
-              + `live session is a fetch nothing authorised.`
+        run ? localize("capture-requests.index.no_run_named_run_is", "no run named '{run}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.", { run: String(run.slice(0, 60)) })
             : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation "
               + "(DEC-47), and a request naming no session names no authorisation.",
         { run: run || null });
@@ -274,12 +269,10 @@ export class CaptureRequests {
     if (notPrincipal)
       return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
                translation: notPrincipal.translation, detail: notPrincipal.detail, run,
-               note: "a capture request names a run its caller holds. Nothing was requested or written" };
+               note: word("capture-requests.note.capture_request_names") };
     if (!mine && runRow.status !== "running")
       return refusal("CAPTURE_REQUEST_NO_RUN",
-        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
-        + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
-        + `live session is a fetch nothing authorised.`,
+        localize("capture-requests.index.no_run_named_run_is_2", "no run named '{run}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.", { run: String(run.slice(0, 60)) }),
         { run });
 
     /* R2: a public locator with a host this module can read; the host is derived here, lower-cased, and stored, so
@@ -287,9 +280,7 @@ export class CaptureRequests {
     const address = text(args.address).trim();
     if (!isPublicHttpsLocator(address))
       return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
-        `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a `
-        + `session may reach to "areas that anybody can go through", and this address is not one on `
-        + `its face.`, { address: address || null });
+        localize("capture-requests.index.v1_is_not_a_public", "'{v1}' is not a public https locator. DEC-47 scopes what a session may reach to \"areas that anybody can go through\", and this address is not one on its face.", { v1: String(address.slice(0, 80) || "(none)") }), { address: address || null });
     let host = null;
     try { host = new URL(address).host.toLowerCase(); } catch { host = null; }
     if (!host)
@@ -350,9 +341,7 @@ export class CaptureRequests {
     const brought = CAPTURE_FIELDS.filter((k) => args[k] !== undefined && args[k] !== null && args[k] !== "");
     if (brought.length)
       return refusal("CAPTURE_REQUEST_CARRIES_A_CAPTURE",
-        `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does `
-        + `not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's `
-        + `structural gate, DEC-60).`, { fields: brought });
+        localize("capture-requests.index.this_request_carries_brought_and", "this request carries {brought}, and a request carries none of them. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60).", { brought: String(brought.join(", ")) }), { fields: brought });
 
     /* R5, D-491 / IC-276 — THE RENDER FLAG, READ STRICTLY BECAUSE READING IT LOOSELY IS THE DEFECT. Absent, null and
        `false` are the document as the site serves it; `true` the page as a visitor saw it; ANY OTHER VALUE IS
@@ -379,9 +368,8 @@ export class CaptureRequests {
           + `person's own site, "platform" for a page on a platform that asks for a login, or nothing for an `
           + `ordinary public page.`, { site_kind: null });
       return memberCaptureOnly({ site_kind: siteKind, address,
-        detail: `${address.slice(0, 80)} was judged ${siteKind === "personal" ? "a private person's own site"
-                                                                         : "a page on a login-gated platform"}. `
-              + MEMBER_ROUTE });
+        detail: localize("capture-requests.index.address_was_judged_v1_member", "{address} was judged {v1}. {MEMBER_ROUTE}", { address: String(address.slice(0, 80)), v1: String(siteKind === "personal" ? "a private person's own site"
+                                                                         : "a page on a login-gated platform"), MEMBER_ROUTE: String(MEMBER_ROUTE) }) });
     }
 
     /* R50 (T35; K1888 (4)): THE MEMBER'S CO-ARCHIVE CHOICE for this capture. Absent or null leaves it to the group's
@@ -389,11 +377,9 @@ export class CaptureRequests {
        a credential that member minted); anything else is refused by name. Before anything is written. */
     const coRaw = args.co_archive ?? null;
     if (coRaw !== null && coRaw !== true && coRaw !== false)
-      return coArchiveRefusal("malformed", `co_archive=${shown(coRaw)} is not a choice this door reads. Send `
-        + `co_archive: true or false, or nothing to let the team's setting decide.`);
+      return coArchiveRefusal("malformed", localize("capture-requests.index.co_archive_shown_is_not", "co_archive={shown} is not a choice this door reads. Send co_archive: true or false, or nothing to let the team's setting decide.", { shown: String(shown(coRaw)) }));
     if (coRaw !== null && !runPrincipalOf(caller).startsWith("member:"))
-      return coArchiveRefusal("not-a-members", `the choice about a public archive copy is a member's, and this request `
-        + `was not made under a member's own credential. Send no co_archive to let the team's setting decide.`);
+      return coArchiveRefusal("not-a-members", localize("capture-requests.index.the_choice_about_a_public", "the choice about a public archive copy is a member's, and this request was not made under a member's own credential. Send no co_archive to let the team's setting decide."));
     const coArchive = coRaw === null ? null : coRaw ? 1 : 0;
 
     /* END DEC-49 REGION is-capture-request */
@@ -474,8 +460,7 @@ export class CaptureRequests {
              state: written.state, requested: true, already: false,
              requested_at: written.requested_at, expires: written.expires,
              principals: { plane: written.principal_plane, claude: written.principal_claude ?? null },
-             detail: "requested. Your team's Civicsmith does not fetch on a caller's timing: the daemon drains "
-                   + "this queue, and DEC-47's conduct rules are applied there.", ...told };
+             detail: localize("capture-requests.index.requested_your_teams_civicsmith_does", "requested. Your team's Civicsmith does not fetch on a caller's timing: the daemon drains this queue, and DEC-47's conduct rules are applied there."), ...told };
   }
 
   /** Is `id` an inquiry this viewer can see (membership's predicate over record-core's `bundles` read contract)? A
@@ -685,13 +670,10 @@ export class CaptureRequests {
         const renderRow = q.render === 1;
         const reason = renderHoldReason(q.code);
         const why = String(q.detail || "").slice(0, 400);
-        const said = `held under ${reason.check || "no catalogued check"} ${q.code || "(no code: never attempted)"} `
-                   + `until this request expired at ${q.expires}. `
-                   + (renderRow ? "The render was never performed and nothing was filed for it, so what the page showed "
+        const said = word("capture-requests.held_request_expired", { check: String(reason.check || "no catalogued check"), code: String(q.code || "(no code: never attempted)"), expires: String(q.expires), why: String(renderRow ? "The render was never performed and nothing was filed for it, so what the page showed "
                                   + "is UNDETERMINED"
                                 : "Nothing was fetched or filed for it after that, so what the address holds is "
-                                  + "UNDETERMINED")
-                   + (why ? ` — the reason last given: ${why}` : " — no further detail was carried");
+                                  + "UNDETERMINED"), check_2: String(why ? ` — the reason last given: ${why}` : " — no further detail was carried") });
         this.#sql.exec(`UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
                        said.slice(0, 600), at, q.request);
         /* A held render is GOVERNED (D-491: every C-83 admission refusal is a fact about US), condition
@@ -890,13 +872,7 @@ export class CaptureRequests {
     const attribution = captureRequestAttribution(q);
     if (!attribution.ok)
       return { ok: false, terminal: true, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
-               detail: `this request names `
-                     + `${attribution.plane && !attribution.claude ? "only the plane principal" : ""}`
-                     + `${!attribution.plane && attribution.claude ? "only the Claude-account principal" : ""}`
-                     + `${!attribution.plane && !attribution.claude ? "neither principal" : ""}`
-                     + `, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes `
-                     + `ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made `
-                     + `for an act the record could not attribute.` };
+               detail: localize("capture-requests.index.this_request_names_v1_v2", "this request names {v1}{v2}{v3}, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made for an act the record could not attribute.", { v1: String(attribution.plane && !attribution.claude ? "only the plane principal" : ""), v2: String(!attribution.plane && attribution.claude ? "only the Claude-account principal" : ""), v3: String(!attribution.plane && !attribution.claude ? "neither principal" : "") }) };
     /* R49 (T35; K1880), DIRECTLY AFTER ATTRIBUTION: the address judged again, so a row filed before R49 held, or returned
        by R42, is never fetched for an address the record does not hold. Terminal. Sight is the asking member's (the
        row's plane principal), as the door judged it with that member's viewer. */
@@ -906,10 +882,7 @@ export class CaptureRequests {
     /* CONDUCT 2 — THE PURPOSE TOKEN, before the agent because it is a COMPONENT of the agent. */
     if (!CAPTURE_PURPOSES.includes(q.purpose))
       return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_NO_PURPOSE",
-               detail: `'${String(q.purpose || "").slice(0, 40) || "(none)"}' is not one of the purposes `
-                     + `your team's Civicsmith can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires `
-                     + `an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and `
-                     + `borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.` };
+               detail: localize("capture-requests.index.v1_is_not_one_of", "'{v1}' is not one of the purposes your team's Civicsmith can truthfully name: {CAPTURE_PURPOSES}. DEC-47 requires an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.", { v1: String(String(q.purpose || "").slice(0, 40) || "(none)"), CAPTURE_PURPOSES: String(CAPTURE_PURPOSES.join(", ")) }) };
     /* CONDUCT 1 — THE AGENT, and there are exactly TWO legible forms, legible for different reasons: the member's own
        browser agent because a member actually used it (BOB-3: delegated, never invented), the Civicsmith form because
        of the contact component D-94 measured. So the rule is applied per form. A row stored under the name written
@@ -954,10 +927,7 @@ export class CaptureRequests {
     if (this.#hostHeld(q.host, nowMs))
       return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
                code: "CAPTURE_CONDUCT_HOST_HELD",
-               detail: `${q.host} is in cool-off: it refused us or asked us to slow down, and the `
-                     + `per-host governor is holding the interval it named. DEC-47 bounds discovery `
-                     + `more tightly than re-fetch because a stranger's server has no relationship `
-                     + `with your team's Civicsmith.` };
+               detail: localize("capture-requests.index.host_is_in_cool_off", "{host} is in cool-off: it refused us or asked us to slow down, and the per-host governor is holding the interval it named. DEC-47 bounds discovery more tightly than re-fetch because a stranger's server has no relationship with your team's Civicsmith.", { host: String(q.host) }) };
     if ((hostsThisTick.get(q.host) || 0) >= CAPTURE_REQUEST_PER_HOST_PER_TICK)
       return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
                code: "CAPTURE_CONDUCT_TICK_SPENT",
@@ -979,8 +949,7 @@ export class CaptureRequests {
                              + `request`);
     const check = this.#sweepScope;
     if (!check)
-      return sweepOutOfScope(`no scope check is registered in your team's Civicsmith, so nothing can say that ${name} is `
-                             + `ratified, not held and reaches ${q.address}`);
+      return sweepOutOfScope(localize("capture-requests.index.no_scope_check_is_registered", "no scope check is registered in your team's Civicsmith, so nothing can say that {name} is ratified, not held and reaches {address}", { name: String(name), address: String(q.address) }));
     let a = null;
     try { a = await check.fn({ sweep: name, locators: [q.address], run: q.run, target: q.target }); } catch { a = null; }
     const scope = a && a.ok === true && Array.isArray(a.scope) ? a.scope.filter((p) => typeof p === "string" && p !== "") : [];
@@ -1067,7 +1036,7 @@ export class CaptureRequests {
                  ? out.render.state : null,
                detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
     } catch {
-      return { ok: false, reason: "the fetch did not complete and your team's Civicsmith did not record why", status: null };
+      return { ok: false, reason: word("capture-requests.fetch_complete_group"), status: null };
     }
   }
 
@@ -1093,7 +1062,7 @@ export class CaptureRequests {
       };
       return this.#deps.record.transact(() => {
         const id = `${this.#deps.record.allocId("INFO", at.slice(0, 4)).id}-${CAPTURE_REQUEST_BUNDLE_SLUG}`;
-        const title = `Requested capture of ${q.address}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const title = word("capture-requests.requested_capture", { address: String(q.address) }).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
         const md = ["---",
           `id: ${id}`, "object_type: information", "schema: information@2",
           `title: ${JSON.stringify(title)}`, "current_state: collected", "prior_state: null",
@@ -1112,12 +1081,11 @@ export class CaptureRequests {
                  + `${q.target ? ` under ${q.target}` : ""}.`)
           + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
           "## Provenance Notes", "",
-          `${attribution.statement}. Requested ${q.requested_at} as ${q.request}; collected ${at}. Filed at collected `
-          + `and never higher: releasing it is a named member's decision.`, "",
+          word("capture-requests.requested_collected_filed", { statement: String(attribution.statement), requested_at: String(q.requested_at), request: String(q.request), at: String(at) }), "",
           "## Session Log", "",
           `### Session ${at} | Collected | ${attribution.actor}`,
-          `Trigger: capture request ${q.request} (${q.run ? `run ${q.run}` : `asked by ${q.principal_plane}`})`,
-          "Changes: created from the daemon's capture of the requested address.", "",
+          word("capture-requests.trigger_capture_request", { request: String(q.request), run: String(q.run ? `run ${q.run}` : `asked by ${q.principal_plane}`) }),
+          word("capture-requests.changes_created_daemon"), "",
           "## Review Notes", ""].join("\n");
         const blob = (f) => (f && typeof f.file === "string" && /^[0-9a-f]{64}$/.test(String(f.sha256 || ""))
           && Number.isSafeInteger(f.bytes) ? { path: f.file, blobSha: f.sha256, sha256: f.sha256, bytes: f.bytes } : null);
@@ -1549,8 +1517,7 @@ export class CaptureRequests {
           + `replaced. Nothing was written.`, { request });
       const answer = typeof args.answer === "string" ? args.answer.trim() : args.answer;
       if (!RECORDS_ANSWERS.includes(answer))
-        return recordsRefusal("unknown-answer", `answer=${shown(args.answer)} is not one of ${RECORDS_ANSWERS.join(", ")}. `
-          + `Nothing was written.`, { request });
+        return recordsRefusal("unknown-answer", localize("capture-requests.index.answer_shown_is_not_one", "answer={shown} is not one of {RECORDS_ANSWERS}. Nothing was written.", { shown: String(shown(args.answer)), RECORDS_ANSWERS: String(RECORDS_ANSWERS.join(", ")) }), { request });
       const capture = answer === "produced" ? text(args.capture).trim() : "";
       if (answer === "produced" && !(/^[0-9a-f]{64}$/.test(capture) && this.#captureHeld(capture, viewer)))
         return recordsRefusal("no-capture", `an answer of 'produced' names the capture of what the issuer produced, one `
@@ -1567,8 +1534,7 @@ export class CaptureRequests {
                      answer, capture || null, note || null, by, at, request);
       return { ok: true, ...CaptureRequests.#recordsEntry(this.#one(`SELECT * FROM records_requests WHERE request=?`, request)) };
     } catch {
-      return recordsRefusal("unknown-request", "the answer could not be recorded, and the reason was not recorded. "
-        + "Nothing was written.", { request: null });
+      return recordsRefusal("unknown-request", localize("capture-requests.index.the_answer_could_not_be", "the answer could not be recorded, and the reason was not recorded. Nothing was written."), { request: null });
     }
   }
 
@@ -1825,7 +1791,7 @@ function platformHost(v) {
 function deemingActor(attribution) {
   const a = attribution && attribution.ok ? attribution : null;
   if (a && a.at_the_request_of.member !== undefined) return a.principals.plane;   /* R56: hers, never a run's */
-  return a ? `run ${a.at_the_request_of.run} under ${a.principals.plane}, paid by ${a.principals.claude}` : null;
+  return a ? word("capture-requests.run_paid", { run: String(a.at_the_request_of.run), plane: String(a.principals.plane), claude: String(a.principals.claude) }) : null;
 }
 
 /** The look's authority for a request: the run that asked (the door requires one, so the `sweep` arm is reached only

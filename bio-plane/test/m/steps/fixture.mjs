@@ -15,6 +15,7 @@ import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { stepsOf, STEPS_TABLES, FOLLOWS_TABLE } from "../../../src/steps/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -148,6 +149,6 @@ export function inquiryMd(id, legs = []) {
       const { target, ...rest } = l;
       return [`  - target: ${target}`, ...Object.entries({ role: "supports", ...rest }).map(([k, v]) => `    ${k}: ${scalar(v)}`)];
     })] : []),
-    "---", "", "## Question", "", `Is ${id} answered?`, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", `Is ${id} answered?`, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }

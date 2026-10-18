@@ -14,6 +14,7 @@ import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { CASE_DOCUMENT_FORMAT, extractedTextOf, materialBlockLines, methodBlockLines, materialsOf, methodOf, GRADING_FACT_FIELDS,
          gradingFactsLines, passagesLines, gradingFactsOf, passagesOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -74,7 +75,7 @@ test("R6, R7: materialsJudged lists every document a member's chain reaches with
   const fm = fmOf(w, materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }));
   assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
   const body = carriesBodyLines(w.cd.methodOf(), out.materials, out.group).join("\n");
-  assert.ok(body.includes("## What This Case Carries"));
+  assert.ok(body.includes(word("case-disclosures.case_carries")));
   assert.ok(body.includes(`- ${DOC2}, a document, fingerprint ${b}: NOT INCLUDED`));
   assert.ok(body.includes(`- ${DOC}, a document, fingerprint ${a}: travels whole with this case; relied on by a load-bearing finding`));
 });
@@ -189,7 +190,7 @@ test("R7, R8: an observation a chain reaches (a member's authored words, provena
   const none = blocks(w, [Q]).out.materials.attestations[0];
   assert.deepEqual([none.by, none.level], [null, null], "no attribution: nobody named");
   assert.ok(carriesBodyLines(null, blocks(w, [Q]).out.materials, "g").join("\n")
-    .includes("a member who has not yet chosen how they are credited, so not named"));
+    .includes(word("case-disclosures.member_chosen_credited")));
 });
 
 test("R9, R10: off-the-record material (a knocker's capture stated Withheld) is presentable like any other — included, never refused — its origin not stated, and its attesting member's row and account carry the account's text only, never their handle or signature, until they choose cover or name", () => {

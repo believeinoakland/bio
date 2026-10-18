@@ -59,6 +59,7 @@ import { pptxEntry } from "./pptx.mjs";
 import { odtEntry, odsEntry, odpEntry } from "./odf.mjs";
 import { csvEntry } from "./csv.mjs";
 import * as ooxml from "./ooxml.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 /* Registration order is dispatch order within a pass: the first entry whose
    detect() answers wins that pass. Kept insertion-ordered by Map. */
@@ -131,7 +132,7 @@ export function detectFormat(bytes, contentType) {
     confidence: "none",
     signals: [
       b ? "no registered magic-byte signature matched" : "no bytes were available to sniff",
-      ct ? `content type "${ct}" matched no registered format` : "no content type was declared",
+      ct ? localize("format-registry.formats.content_type_ct_matched_no", "content type \"{ct}\" matched no registered format", { ct: String(ct) }) : "no content type was declared",
     ],
   };
 }
@@ -278,7 +279,7 @@ function pictureEntry(format, signature, contentType, refusal) {
     detect(bytes, ct) {
       if (bytes) {
         return signed(bytes)
-          ? { format, confidence: "certain", signals: [`magic: ${hex} at offset 0`] }
+          ? { format, confidence: "certain", signals: [localize("format-registry.formats.magic_hex_at_offset_0", "magic: {hex} at offset 0", { hex: String(hex) })] }
           : null;
       }
       if (ct === contentType)

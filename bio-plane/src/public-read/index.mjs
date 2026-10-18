@@ -46,7 +46,7 @@ import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -74,8 +74,7 @@ const signedParts = (doc) => {
 export const LABEL_KEY_MARKED = "photo.obscured.label";
 export const LABEL_KEY_UNMARKED = "photo.published.label";
 export const LABEL_KEY_CLEANED = "document.cleaned.label";
-export const CLEANED_LABEL_AT_MARKER = "Details of who made this file, and of its pictures, removed for publication; the "
-  + "team holds the original";
+export const CLEANED_LABEL_AT_MARKER = word("document.cleaned.label");
 const photoKeyOf = (obscured) => (obscured.marked === true ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
 const labelKeyOf = (obscured) => (obscured.kind === "document" ? LABEL_KEY_CLEANED
   : obscured.kind === "photo" ? photoKeyOf(obscured)
@@ -408,8 +407,7 @@ export class PublicRead {
       /* DEC-49 REGION is-public-read-not-registered
        * C-98.10 (K1149): the code a STRING LITERAL at its site, its row from this module's table (R17). */
       return { ok: false, reason: "PUBLIC_READ_NOT_REGISTERED", ...rowOf("PUBLIC_READ_NOT_REGISTERED"), name: n,
-               detail: `no public read named ${JSON.stringify(n)} is registered on this team's Civicsmith, so there `
-                     + "is nothing to serve under that name" };
+               detail: localize("public-read.index.no_public_read_named_stringify", "no public read named {stringify} is registered on this team's Civicsmith, so there is nothing to serve under that name", { stringify: String(JSON.stringify(n)) }) };
       /* END DEC-49 REGION is-public-read-not-registered */
     }
     const args = {};
@@ -1129,9 +1127,7 @@ export class PublicRead {
                division: {
                  parent: names.find((n) => n.kind === "division_parent")?.to ?? null,
                  siblings: names.filter((n) => n.kind === "division_sibling").map((n) => n.to).sort(),
-                 detail: "a division's parent and siblings are NAMED and never served: the parent is terminal and "
-                       + "can never be published, a sibling may not be, and a reader who can see one half of a "
-                       + "divided question is entitled to know the other half exists (R4).",
+                 detail: localize("public-read.index.a_divisions_parent_and_siblings", "a division's parent and siblings are NAMED and never served: the parent is terminal and can never be published, a sibling may not be, and a reader who can see one half of a divided question is entitled to know the other half exists (R4)."),
                } };
     });
 
@@ -1217,10 +1213,7 @@ export class PublicRead {
              project_reference: signed ? workingOnOf(signed.fm) : null,
              bar: state.bar ?? null,
              bar_detail: state.bar
-               ? "the standard of evidence this case was held to, read from its publishing project at the "
-               + "moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches "
-               + "to any finding, and nothing composed it across projects. Each member's own derived pair is "
-               + "printed beside it inside findings[], and a member may exceed it."
+               ? localize("public-read.index.the_standard_of_evidence_this", "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it.")
                : word("public-read.bar_recorded_case"),
              bias_acknowledgement: whole ? null : (state.bias_acknowledgement ?? null),
              /* R3 (DEC-103): the lens this edition was produced under, read from its signed document, never live. */
@@ -1325,13 +1318,7 @@ export class PublicRead {
              /* R34: the group's identity and declared stake as they stand now, labeled current; never read from or
                 written into the signed document or the case file (R23). */
              group_fields: { ...this.groupFields({ project: state.project ?? null }), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
-             case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
-                        + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
-                        + "the case carries the scope that brought them together, the completeness "
-                        + "assertion, and the team's acknowledgement of the bias the case was produced "
-                        + "under — the last of these is a DISCLOSURE the reader weighs, never a verdict this "
-                        + "team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: "
-                        + "composing two findings' strengths into one letter is the substitution R2 forbids.",
+             case_detail: localize("public-read.index.a_published_case_is_a", "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; the case carries the scope that brought them together, the completeness assertion, and the team's acknowledgement of the bias the case was produced under — the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: composing two findings' strengths into one letter is the substitution R2 forbids."),
              graph_detail: "each finding's serves[] is what this surface may hand over — every entry names a "
                          + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
                          + "classified servable at publication with no published edition behind it now, stated "
@@ -1830,10 +1817,7 @@ export class PublicRead {
     /* DEC-49 REGION is-finding-in-several-cases */
     return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", ...rowOf("FINDING_IN_SEVERAL_CASES"), target: bundleId, cases,
              memberships: rows.map((x) => ({ case_id: x.case_id, edition: x.edition })),
-             detail: `${bundleId} is a published finding of ${cases.length} cases (${cases.join(", ")}). `
-                   + `A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact `
-                   + `with its own scope and completeness assertion — so this read cannot choose one for `
-                   + `you. Ask again naming the case you mean.` };
+             detail: localize("public-read.index.bundleid_is_a_published_finding", "{bundleId} is a published finding of {length} cases ({cases}). A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact with its own scope and completeness assertion — so this read cannot choose one for you. Ask again naming the case you mean.", { bundleId: String(bundleId), length: String(cases.length), cases: String(cases.join(", ")) }) };
     /* END DEC-49 REGION is-finding-in-several-cases */
   }
 

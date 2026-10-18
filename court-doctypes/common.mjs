@@ -14,6 +14,7 @@
 import { CONFIDENCE, CONTRACT, entity, diffEntities, readerView } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../docprofile/registry.mjs";
 import { recognise, systemOf } from "../bio-plane/src/idspaces.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export { CONFIDENCE, CONTRACT };
 
@@ -136,12 +137,12 @@ export function sourceAt(ctx, offset) {
  *  (a `systems` entry whose `origin` is the key, matched on host and path by `id-spaces.systemOf`). */
 export function addressOf(ctx, key, label) {
   const locator = ctx && ctx.locator != null ? String(ctx.locator) : "";
-  if (!locator) return { ok: false, why: "the capture names no address, so whether it is " + label + " is not established by its address" };
+  if (!locator) return { ok: false, why: localize("court-doctypes.common.the_capture_names_no_address", "the capture names no address, so whether it is {label} is not established by its address", { label: String(label) }) };
   let r;
   try { r = systemOf(readerView(ctx), [locator]); } catch { r = { origin: null, why: "its address could not be read" }; }
   if (r && r.origin === key) return { ok: true, name: r.name || key };
-  if (r && r.origin) return { ok: false, why: `its address is one of ${r.name || r.origin}, not an address the active profiles name for ${label}` };
-  return { ok: false, why: `no active profile names its address as ${label}'s (${(r && r.why) || "no system matches"})` };
+  if (r && r.origin) return { ok: false, why: localize("court-doctypes.common.its_address_is_one_of", "its address is one of {v1}, not an address the active profiles name for {label}", { v1: String(r.name || r.origin), label: String(label) }) };
+  return { ok: false, why: localize("court-doctypes.common.no_active_profile_names_its", "no active profile names its address as {label}'s ({v1})", { label: String(label), v1: String((r && r.why) || "no system matches") }) };
 }
 
 /* ------------------------------------------------------------------ what a page is when it is not a register */
@@ -152,14 +153,14 @@ export function notRegisterWhy(html, what) {
   const t = String(html || "");
   const title = written((/<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(t) || [])[1] || "") || "";
   if (/<input\b[^>]*type\s*=\s*["']?password/i.test(t) || /\b(?:sign|log)[\s-]?in\b/i.test(title))
-    return `this page is a sign-in page, not ${what}`;
+    return localize("court-doctypes.common.this_page_is_a_sign", "this page is a sign-in page, not {what}", { what: String(what) });
   if (/\b(?:404|403|500|not found|error|forbidden|unavailable)\b/i.test(title))
-    return `this page is an error page ("${title}"), not ${what}`;
+    return localize("court-doctypes.common.this_page_is_an_error", "this page is an error page (\"{title}\"), not {what}", { title: String(title), what: String(what) });
   const headings = [...t.matchAll(/<h[1-3]\b[^>]*>([\s\S]*?)<\/h[1-3]\s*>/gi)].map((m) => textOf(m[1])).join(" ");
   const searchButton = /<(?:input|button)\b[^>]*\bvalue\s*=\s*["']\s*search\s*["']/i.test(t) || /<button\b[^>]*>\s*search\s*<\/button>/i.test(t);
   if (/\bsearch\b/i.test(title + " " + headings) || (/<form\b/i.test(t) && searchButton))
-    return `this page is a search page, not ${what}`;
-  return `this page lacks ${what}'s own structure`;
+    return localize("court-doctypes.common.this_page_is_a_search", "this page is a search page, not {what}", { what: String(what) });
+  return localize("court-doctypes.common.this_page_lacks_what_s", "this page lacks {what}'s own structure", { what: String(what) });
 }
 
 /* ------------------------------------------------------------------ the proceeding number (R3) */
@@ -171,7 +172,7 @@ export function proceedingNumber(ctx, asWritten) {
   let r = null;
   try { r = recognise(readerView(ctx), "proceeding", asWritten); } catch { r = null; }
   if (r) return { number: r, why: null };
-  return { number: null, why: `"${asWritten}" has the shape of no form of the active profiles' proceeding space, so it is held as written and not recognised` };
+  return { number: null, why: localize("court-doctypes.common.aswritten_has_the_shape_of", "\"{asWritten}\" has the shape of no form of the active profiles' proceeding space, so it is held as written and not recognised", { asWritten: String(asWritten) }) };
 }
 
 /* ------------------------------------------------------------------ sealing, as the row states it (R9) */
@@ -230,7 +231,7 @@ export function pageOf(n, of) {
     complete_why: "the page states no pagination, so whether it holds every row of the register is not established" };
   const complete = n === 1 && of === 1;
   return { page: { n, of, may_continue: n < of }, complete,
-    complete_why: complete ? null : `this is page ${n} of the register's ${of}, so it holds only some of its rows` };
+    complete_why: complete ? null : localize("court-doctypes.common.this_is_page_n_of", "this is page {n} of the register's {of}, so it holds only some of its rows", { n: String(n), of: String(of) }) };
 }
 
 /** A reading, assembled: `{proceeding, parties, rows, key_basis, complete, page, provisional}`, with the
@@ -255,7 +256,7 @@ const JSON_FACTS = new Set(["links", "documents"]);
 const PROCEEDING_FIELDS = ["number_as_written", "forum_as_written", "kind_as_written", "filed"];
 
 const failedRead = (why) => ({ meaningful: null, significance: null, events: [], confirmed: null,
-  why: `${why}, so nothing is claimed about the register either way (a failed read is never a register emptied)` });
+  why: localize("court-doctypes.common.why_so_nothing_is_claimed", "{why}, so nothing is claimed about the register either way (a failed read is never a register emptied)", { why: String(why) }) });
 
 /* Under a composite key, the row gone and the row added that are most likely one row with a key field
    edited: they share the most key fields, at least all but one of them, or the same document link. */
@@ -288,38 +289,38 @@ const show = (v) => (v == null ? "nothing" : `"${String(v).slice(0, 120)}"`);
 export function assessRegister(before, after) {
   const a = before || {}, b = after || {};
   if (a.failed || b.failed)
-    return failedRead(`a reading failed (${a.failed ? "before: " + a.failed : "after: " + b.failed})`);
+    return failedRead(localize("court-doctypes.common.a_reading_failed_v1", "a reading failed ({v1})", { v1: String(a.failed ? "before: " + a.failed : "after: " + b.failed) }));
   if (a.type && b.type && a.type !== b.type)
     return failedRead("the two readings are of different kinds of register");
   const na = a.proceeding && a.proceeding.number_as_written, nb = b.proceeding && b.proceeding.number_as_written;
   if (na && nb && na !== nb)
-    return failedRead(`the two readings are of different proceedings (${na} and ${nb})`);
+    return failedRead(localize("court-doctypes.common.the_two_readings_are_of", "the two readings are of different proceedings ({na} and {nb})", { na: String(na), nb: String(nb) }));
   const rowsA = Array.isArray(a.rows) ? a.rows : [], rowsB = Array.isArray(b.rows) ? b.rows : [];
   const registers = a.register !== false || b.register !== false;
   if (registers && (!rowsA.length || !rowsB.length))
-    return failedRead(!rowsA.length && !rowsB.length ? "no register row was read in either reading" : `no register row was read in the ${!rowsA.length ? "earlier" : "later"} reading`);
+    return failedRead(!rowsA.length && !rowsB.length ? "no register row was read in either reading" : localize("court-doctypes.common.no_register_row_was_read", "no register row was read in the {v1} reading", { v1: String(!rowsA.length ? "earlier" : "later") }));
 
   const events = [];
   /* The proceeding: its status, its caption and its parties, as written. */
   const pa = a.proceeding || {}, pb = b.proceeding || {};
   if ((pa.status_as_written ?? null) !== (pb.status_as_written ?? null))
     events.push(event("status_changed", { field: "status_as_written", was: pa.status_as_written ?? null, now: pb.status_as_written ?? null,
-      why: `the proceeding's status as written changed from ${show(pa.status_as_written)} to ${show(pb.status_as_written)}` }));
+      why: localize("court-doctypes.common.the_proceedings_status_as_written", "the proceeding's status as written changed from {show} to {show_2}", { show: String(show(pa.status_as_written)), show_2: String(show(pb.status_as_written)) }) }));
   if ((pa.caption ?? null) !== (pb.caption ?? null))
     events.push(event("item_changed", { field: "caption", was: pa.caption ?? null, now: pb.caption ?? null,
       why: "the proceeding's caption as written changed" }));
   for (const f of PROCEEDING_FIELDS)
     if ((pa[f] ?? null) !== (pb[f] ?? null))
       events.push(event("item_changed", { field: f, was: pa[f] ?? null, now: pb[f] ?? null,
-        why: `the proceeding's ${f.replace(/_as_written$/, "").replace(/_/g, " ")} as written changed from ${show(pa[f])} to ${show(pb[f])}` }));
+        why: localize("court-doctypes.common.the_proceedings_replace_as_written", "the proceeding's {replace} as written changed from {show} to {show_2}", { replace: String(f.replace(/_as_written$/, "").replace(/_/g, " ")), show: String(show(pa[f])), show_2: String(show(pb[f])) }) }));
   const parties = (r) => new Map((Array.isArray(r.parties) ? r.parties : []).map((p) => [partyKey(p), p]));
   const ptA = parties(a), ptB = parties(b);
   for (const [k, p] of ptA) if (!ptB.has(k))
     events.push(event("item_changed", { field: "parties", party: p.name, role_as_written: p.role_as_written, was: p.name, now: null,
-      why: `${p.role_as_written ? p.role_as_written + " " : ""}${show(p.name)} is no longer named on the page` }));
+      why: localize("court-doctypes.common.v1_show_is_no_longer", "{v1}{show} is no longer named on the page", { v1: String(p.role_as_written ? p.role_as_written + " " : ""), show: String(show(p.name)) }) }));
   for (const [k, p] of ptB) if (!ptA.has(k))
     events.push(event("item_changed", { field: "parties", party: p.name, role_as_written: p.role_as_written, was: null, now: p.name,
-      why: `${p.role_as_written ? p.role_as_written + " " : ""}${show(p.name)} is newly named on the page` }));
+      why: localize("court-doctypes.common.v1_show_is_newly_named", "{v1}{show} is newly named on the page", { v1: String(p.role_as_written ? p.role_as_written + " " : ""), show: String(show(p.name)) }) }));
 
   /* The rows, by their key (R6): page order, white space and markup were already read away. */
   const d = diffEntities(a.entities || [], b.entities || []);
@@ -332,7 +333,7 @@ export function assessRegister(before, after) {
     const detail = { key: e.key, entry_id: r.entry_id, date: r.date, text: r.text,
       why: bothComplete
         ? "a row the register listed is no longer listed, and both readings hold the whole register"
-        : `a row is not in the later reading, and ${a.complete === true ? "the later" : b.complete === true ? "the earlier" : "neither"} reading holds the whole register, so whether it was removed or is on a page not read is not established` };
+        : localize("court-doctypes.common.a_row_is_not_in", "a row is not in the later reading, and {v1} reading holds the whole register, so whether it was removed or is on a page not read is not established", { v1: String(a.complete === true ? "the later" : b.complete === true ? "the earlier" : "neither") }) };
     if (pairs.has(e.key)) {
       detail.counterpart = pairs.get(e.key);
       detail.why += `; the row added under key ${pairs.get(e.key)} is likely this row with a key field edited, and the two are reported together, never paired silently`;
@@ -354,22 +355,22 @@ export function assessRegister(before, after) {
       const r = byKeyB.get(alt.entity.key);
       events.push(event("outcome_changed", { key: alt.entity.key, entry_id: r ? r.entry_id : null, field,
         was: JSON_FACTS.has(m.fact) ? JSON.parse(m.was) : m.was, now: JSON_FACTS.has(m.fact) ? JSON.parse(m.now) : m.now,
-        why: `the row ${alt.entity.key} changed its ${field.replace(/_as_written$/, "").replace(/_/g, " ")}` }));
+        why: localize("court-doctypes.common.the_row_key_changed_its", "the row {key} changed its {replace}", { key: String(alt.entity.key), replace: String(field.replace(/_as_written$/, "").replace(/_/g, " ")) }) }));
     }
   }
   bySeverity(events);
   const intact = rowsB.length - d.appeared.length - d.altered.length;
   const parts = [];
   if (d.appeared.length) parts.push(`${d.appeared.length} row(s) added`);
-  if (d.gone.length) parts.push(`${d.gone.length} row(s) no longer listed`);
+  if (d.gone.length) parts.push(localize("court-doctypes.common.length_row_s_no_longer", "{length} row(s) no longer listed", { length: String(d.gone.length) }));
   if (d.altered.length) parts.push(`${d.altered.length} row(s) changed`);
   const other = events.filter((e) => e.field && !e.key).length;
-  if (other) parts.push(`${other} change(s) to the proceeding`);
+  if (other) parts.push(localize("court-doctypes.common.other_change_s_to_the", "{other} change(s) to the proceeding", { other: String(other) }));
   return {
     meaningful: isMeaningful(events), significance: worstSignificance(events), events,
     confirmed: intact > 0 ? { rows: rowsB.length, intact } : null,
     why: parts.length ? `${intact} of ${rowsB.length} rows unchanged; ${parts.join(", ")}`
-      : registers ? `all ${rowsB.length} rows of this register are unchanged` : "the proceeding is unchanged",
+      : registers ? localize("court-doctypes.common.all_length_rows_of_this", "all {length} rows of this register are unchanged", { length: String(rowsB.length) }) : "the proceeding is unchanged",
   };
 }
 
@@ -378,6 +379,6 @@ export function assessRegister(before, after) {
 export function detectAnswer({ ctx, key, label, structure, structureSignals, what }) {
   if (!structure) return { match: false, confidence: CONFIDENCE.NONE, signals: [], why: notRegisterWhy(ctx && ctx.text, what) };
   const addr = addressOf(ctx, key, label);
-  if (addr.ok) return { match: true, confidence: CONFIDENCE.CERTAIN, signals: [`an address of ${addr.name}`, ...structureSignals] };
-  return { match: true, confidence: CONFIDENCE.LIKELY, signals: structureSignals, why: `${what}'s structure is present, but ${addr.why}` };
+  if (addr.ok) return { match: true, confidence: CONFIDENCE.CERTAIN, signals: [localize("court-doctypes.common.an_address_of_name", "an address of {name}", { name: String(addr.name) }), ...structureSignals] };
+  return { match: true, confidence: CONFIDENCE.LIKELY, signals: structureSignals, why: localize("court-doctypes.common.what_s_structure_is_present", "{what}'s structure is present, but {why}", { what: String(what), why: String(addr.why) }) };
 }

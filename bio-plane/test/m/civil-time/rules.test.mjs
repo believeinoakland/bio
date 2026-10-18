@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { evaluateRule, due, overdueOn, span } from "../../../src/civil-time/index.mjs";
 import { firstView, testView, ruleOf, day, minute } from "./helpers.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LA = "America/Los_Angeles", HFX = "America/Halifax";
 const ev = (view, name, anchor, extra = {}) => evaluateRule({ rule: ruleOf(view, name), anchor, view, ...extra });
@@ -218,7 +219,7 @@ test("R16 R25 DEC-149: a disputed or unreadable entry, and a correction counted 
   const dis = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("disputed") });
   assert.equal(dis.code, "FACT_DISPUTED");
   assert.equal(dis.why, "the closure list 'judicial' for 2026 is disputed in your team's Civicsmith");
-  const abs = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent", { why: "the read failed" }) });
+  const abs = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent", { why: word("case-disclosures.why.read_failed") }) });
   assert.equal(abs.code, "FACT_ABSENT");
   assert.equal(abs.why, "the closure list 'judicial' for 2026 cannot be read in your team's Civicsmith: the read failed");
   const bare = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent") });

@@ -5,9 +5,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, contract, shareDetector, ALICE, ADMIN_BOB } from "./fixture.mjs";
 import { HINT_MARK, NOTICED, moneyChecksOps } from "../../../src/money-checks/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* DEC-131's words, character for character: "Hint", a space, the middle dot U+00B7, a space, "machine work". */
-const DEC_131 = "Hint · machine work";
+const DEC_131 = word("mark.hint.label");
 const P = "PROJ-2026-0001-alpha";
 const ops = (w, query = {}, body = null) => {
   const url = new URL("https://x/");

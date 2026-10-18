@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as ol from "../../../src/observation-log/index.mjs";
 import { world } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const sentence = (s) => typeof s === "string" && s.trim().length > 10;
 
@@ -225,14 +226,14 @@ test("R28 no place is named in the module's outward text: every exported sentenc
 });
 
 test("R36 four served sentences name your group's Civicsmith (DEC-149): the actor class `plane`, the authority kind `objective`, the content detail for pages no engine could read, and `render-deferred`'s opening; every key and stored value unchanged; no served sentence says the plane, this or the instance, copy or server for it; rows already written keep their detail", () => {
-  const CIVICSMITH = "your team's Civicsmith";
+  const CIVICSMITH = word("queue.capture-completed-unattended.who");
   // the actor class `plane` and the authority kind `objective`: the keys stay the stored values (R29), the sentences move
-  assert.equal(ol.OBSERVATION_ACTOR_CLASSES.plane, "the scheduler of your team's Civicsmith looked, with no member and no machine behind it");
-  assert.equal(ol.OBSERVATION_AUTHORITY_KINDS.objective, "a standing objective your team's Civicsmith is monitoring for");
+  assert.equal(ol.OBSERVATION_ACTOR_CLASSES.plane, word("observation-log.plane"));
+  assert.equal(ol.OBSERVATION_AUTHORITY_KINDS.objective, word("observation-log.objective"));
   assert.deepEqual(Object.keys(ol.OBSERVATION_ACTOR_CLASSES), ["plane", "machine", "member"]);
   assert.ok("objective" in ol.OBSERVATION_AUTHORITY_KINDS);
   // R6's content-level detail for a reading with pages left unread, at every arm that composes it
-  const PAGES = "this document has pages no engine in your team's Civicsmith could read";
+  const PAGES = word("observation-log.parts.push.document_pages_engine");
   const tiers = () => ({ tiers: [{ tier: 1, covers: "all", steps: ["layer"] }], unclassified: [] });
   const base = { read_from_text: true, text_source: [{ step: "layer", tier: 1 }], page_count: 2, tier3_candidate: true };
   for (const r of [base, { ...base, read_from_text: false }, { ...base, text_chars: 0 }]) {

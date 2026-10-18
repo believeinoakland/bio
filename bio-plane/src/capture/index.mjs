@@ -58,6 +58,7 @@ import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index
 import { credentialsOf } from "../credentials/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 export { CAPTURE_SCHEMA } from "./schema.mjs";
 export { MONITOR_FREQ, INFORMATION_GRAMMAR, checkInformationExtension } from "./grammar.mjs";
 
@@ -579,17 +580,15 @@ export class Capture {
      plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
   static #badArgument(op, argument, shape, given) {
     return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, status: 400,
-             error: `${argument} must be one of ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
-             detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation `
-                   + "could use. Nothing was read." };
+             error: localize("capture.index.argument_must_be_one_of", "{argument} must be one of {shape}; {stringify} is not", { argument: String(argument), shape: String(shape), stringify: String(JSON.stringify(String(given)).slice(0, 80)) }),
+             detail: localize("capture.index.op_op_needs_argument_in", "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was read.", { op: String(op), argument: String(argument), shape: String(shape) }) };
   }
 
   /* R86: the required-argument refusal for an argument given in a shape the act cannot use. */
   static #missingArgument(op, argument, shape, given) {
     return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, status: 400,
-             error: `${argument} must be ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
-             detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation `
-                   + "could use. Nothing was written." };
+             error: localize("capture.index.argument_must_be_shape_stringify", "{argument} must be {shape}; {stringify} is not", { argument: String(argument), shape: String(shape), stringify: String(JSON.stringify(String(given)).slice(0, 80)) }),
+             detail: localize("capture.index.op_op_needs_argument_in_2", "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was written.", { op: String(op), argument: String(argument), shape: String(shape) }) };
   }
 
   /* N380 (R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
@@ -647,7 +646,7 @@ export class Capture {
       const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
       return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
                translation: row.translation, status: 503,
-               detail: `${say("capture.response.group_civicsmith_evidence")}, so the file cannot be held under its own digest; nothing was written` };
+               detail: localize("capture.index.say_so_the_file_cannot", "{say}, so the file cannot be held under its own digest; nothing was written", { say: String(say("capture.response.group_civicsmith_evidence")) }) };
     }
     const reader = uploadReader(bytes);
     if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: "the upload carried no bytes; nothing was written" };
@@ -776,8 +775,7 @@ export class Capture {
       authority_basis: say("capture.authority_basis", { at }),
       provenance_chain: [{
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were uploaded to your team's Civicsmith by ${by} and hashed as they arrived, at ${at}; `
-               + "they were received from the member, not fetched from any address",
+        asserts: word("capture.upload.asserts", { by: String(by), at: String(at) }),
         evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false, via: UPLOAD_VIA,
       }],
@@ -1038,7 +1036,7 @@ export class Capture {
   /* R96: the required-argument refusal of this read, for an argument given in a shape the read cannot use. */
   static #readArgument(argument, shape, given) {
     return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op: "heldat", argument, shape, status: 400,
-             error: `${argument} must be ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
+             error: localize("capture.index.argument_must_be_shape_stringify_2", "{argument} must be {shape}; {stringify} is not", { argument: String(argument), shape: String(shape), stringify: String(JSON.stringify(String(given)).slice(0, 80)) }),
              detail: `op=heldat needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was read.` };
   }
 
@@ -1096,8 +1094,7 @@ export class Capture {
     const base = { held: true, copy, versions, truncated };
     if (!looking)
       return { ok: true, ...base, changed: undetermined(
-        `the record holds this copy as retrieved at ${asOf} and has no later look at the source; a copy's age is not a look, `
-        + "so whether the site has changed since is not known from the record alone", asOf, differs) };
+        localize("capture.index.the_record_holds_this_copy", "the record holds this copy as retrieved at {asOf} and has no later look at the source; a copy's age is not a look, so whether the site has changed since is not known from the record alone", { asOf: String(asOf) }), asOf, differs) };
     const no = (basis) => ({ ok: true, ...base, changed: undetermined(basis, asOf, differs) });
     if (!receipt.address) return no("this copy has no address to look at");
     if (receipt.via !== "direct" || kind === null || kind === "rendered" || !receipt.plain_address)
@@ -1130,7 +1127,7 @@ export class Capture {
     if (res.status === 304 && conditional) { await drop(); await outcome("success", 304); return looks("unchanged"); }
     if (!res.ok || !res.body) {
       await drop(); await outcome("source_refused", res.status);
-      return no(`the site answered ${res.status}, so it did not give the document to compare`);
+      return no(localize("capture.index.the_site_answered_status_so", "the site answered {status}, so it did not give the document to compare", { status: String(res.status) }));
     }
     const h = createSha256(), reader = res.body.getReader();
     let total = 0;
@@ -1647,7 +1644,7 @@ export class Capture {
       return { ok: false, reason: "NO_IDS", status: 400, detail: "name at least one document; nothing was written" };
     if (ids.length > PER_ITEM_MAX)
       return { ok: false, reason: "TOO_MANY_IDS", status: 400, max: PER_ITEM_MAX, count: ids.length,
-               detail: `at most ${PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written` };
+               detail: localize("capture.index.at_most_per_item_max", "at most {PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written", { PER_ITEM_MAX: String(PER_ITEM_MAX) }) };
     return null;
   }
 
@@ -2153,9 +2150,8 @@ export class Capture {
       const n = pages.size;
       this.#sql.exec(`INSERT INTO link_chrome (host, address_norm, state, pages, basis, at) VALUES (?, ?, ?, ?, ?, ?)`,
         host, a, n >= 2 ? "chrome" : "undetermined", n,
-        n >= 2 ? `contained in a chrome region and recurred on ${n} distinct pages of ${host}`
-               : `contained in a chrome region on one page of ${host} only: whether it is the site's navigation or `
-                 + "that page's own is undetermined until another page of the host carries it", at || stampSecond());
+        n >= 2 ? localize("capture.index.contained_in_a_chrome_region", "contained in a chrome region and recurred on {n} distinct pages of {host}", { n: String(n), host: String(host) })
+               : localize("capture.index.contained_in_a_chrome_region_2", "contained in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it", { host: String(host) }), at || stampSecond());
     }
   }
 
@@ -2565,7 +2561,7 @@ export class Capture {
   /** R15. Bounds what it accepts, records no decision, idempotent on (kind, capture_sha); every enqueue (a dedupe
    *  included, since the consumer still owes it a drain) calls the `task` listeners (R44), which arm the drain. */
   async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
-    if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
+    if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: localize("capture.index.kind_must_be_one_of", "kind must be one of: {TASK_KINDS}", { TASK_KINDS: String(TASK_KINDS.join(", ")) }) };
     if (typeof captureSha !== "string" || !HEX64.test(captureSha))
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a record does not exist yet at capture time" };
     const text = boundedSubject(subject) || say("capture.text.capture_whose_authority");
@@ -2694,7 +2690,7 @@ export class Capture {
   async recordSourceOutcome({ addressNorm = null, outcome = null, status = null, at = null } = {}) {
     if (typeof addressNorm !== "string" || addressNorm === "") return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
-      return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
+      return { ok: false, reason: "BAD_OUTCOME", detail: localize("capture.index.outcome_must_be_one_of", "outcome must be one of: {SOURCE_OUTCOMES}", { SOURCE_OUTCOMES: String(SOURCE_OUTCOMES.join(", ")) }) };
     const now = at && ISO_INSTANT.test(at) ? at : stampSecond();
     const st = Number.isInteger(status) ? status : null;
     this.#tx(() => {

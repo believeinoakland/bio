@@ -5,6 +5,8 @@
  * reply recorded by 25 Oct"), R23's "unchanged" (asked of BOB, J1); and the sentences R23 keeps in this module's present
  * text (`KEPT`), each returned to BOB, live in `index.mjs` beside the item that answers them. `{placeholders}` are filled
  * by `index.mjs` from the item's own facts. */
+import { word } from "../setup-words/index.mjs";
+
 export const ACTION_WORDS = Object.freeze({
   "queue.action-clock-overdue.noreply": "Noticed: no reply recorded by {date}",
   "queue.action-clock-overdue.ours.summary": "Our deadline passed: {what}",
@@ -20,19 +22,19 @@ export const ACTION_WORDS = Object.freeze({
   "queue.litigation-hold.docket.summary": "A legal threat with no hold: {entry}",
   /* R11, R21, R23: the doors' labels, `door.<op>` */
   "door.actioncorrespond": "Record a reply",
-  "door.clockentrystate": "Mark it met or waived",
+  "door.clockentrystate": word("door.clockentrystate"),
   "door.itemtakeup": "Take this up",
-  "door.checkpointrecord": "Record the checkpoint",
-  "door.escalationadvance": "Advance the escalation",
-  "door.escalationdecline": "Decline to escalate",
-  "door.reminderanswer": "Answer the reminder",
+  "door.checkpointrecord": word("door.checkpointrecord"),
+  "door.escalationadvance": word("door.escalationadvance"),
+  "door.escalationdecline": word("door.escalationdecline"),
+  "door.reminderanswer": word("door.reminderanswer"),
   "door.actionhold": "Place a hold",
-  "door.watchanswer": "Keep or stop",
-  "door.planreviewrecord": "Record the review",
-  "door.planresume": "Resume the plan",
+  "door.watchanswer": word("door.watchanswer"),
+  "door.planreviewrecord": word("door.planreviewrecord"),
+  "door.planresume": word("door.planresume"),
   /* R25: the unsent request's two registered acts, labelled as the queue labels them */
-  "act.queuesnooze.label.queue": "Snooze to a date",
-  "act.actionmove.label.queue": "Drop an unsent request, with a reason",
+  "act.queuesnooze.label.queue": word("act.queuesnooze.label.queue"),
+  "act.actionmove.label.queue": word("act.actionmove.label.queue"),
   /* R24 (DEC-191, DEC-192): a local day in a sentence, its month by name */
   "date.daymonth": "{day} {month}",
   "date.daymonthyear": "{day} {month} {year}",
@@ -60,8 +62,7 @@ export const OWN_WORDS = Object.freeze({
   "request-unsent.summary": "A request was left unsent: {what}",
   "request-unsent.detail": "Approved on {date}, not yet sent: nothing has gone to the office. Pick up where you left off, "
     + "keep it for later, or drop it with a reason.",
-  "request-unsent.detail.undated": "Approved, not yet sent: nothing has gone to the office. Pick up where you left off, "
-    + "keep it for later, or drop it with a reason.",
+  "request-unsent.detail.undated": word("request-unsent.detail.undated"),
   "request-unsent.open": "Pick up where you left off",
 });
 

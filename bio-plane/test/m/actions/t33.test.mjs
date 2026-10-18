@@ -11,6 +11,7 @@ import * as actions from "../../../src/actions/index.mjs";
 import { noSuchStandard } from "../../../src/standards/index.mjs";
 import { notAProceeding } from "../../../src/entities/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice");
@@ -101,7 +102,7 @@ test("R9 R25 the read shows who held the office on the action's date, labelled s
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2027-02-01", account: "asked", viewer: M, author: M });
   r = w.a.actionRead({ id: A, viewer: M });
   assert.deepEqual([r.as_of_date.date, r.addressee.holder_on_date.holder, r.addressee.holder_on_date.undetermined],
-    ["2027-02-01", null, "no line covers the date"]);
+    ["2027-02-01", null, word("lines.undetermined.line_covers_date")]);
   /* another addressee has none; an earlier name-only one reads as written */
   w.promote(B, actionMd(B, ["counterparty:", "  state: audience", '  description: "readers"', "action_kind: other"]));
   assert.equal(w.a.actionRead({ id: B, viewer: M }).addressee, null);
@@ -262,7 +263,7 @@ test("R62 addresseeSuggest answers the offices held as custodian_of or responsib
     [{ state: "named", kind: "office", role: "Town Clerk", body: "Town of Port Ellery", entity_id: office }]);
   assert.deepEqual([s.offices[0].line.line_id, s.offices[0].line.kind, "assertion" in s.offices[0].line.grades, "ends" in s.offices[0].line.grades],
     [lid, "custodian_of", true, true]);
-  assert.deepEqual(s.undetermined.map((u) => [u.office, u.why]), [[loose, "no line on that date places the office in a body"]]);
+  assert.deepEqual(s.undetermined.map((u) => [u.office, u.why]), [[loose, word("actions.why.line_date_places")]]);
   assert.match(s.says, /nothing was set/);
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM manifest`)[0].n, before, "writes nothing");
   /* on an action's date: a line ending before it is not held */

@@ -39,6 +39,7 @@
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The legislative record's file number, alone on its line. Its SHAPE is the
    jurisdiction's (Legistar's two-digit-year–dash–serial in the measured instance)
@@ -135,13 +136,13 @@ export default {
        them item after item. */
     const filePats = agendaFileLines(ctx);
     const files = t.split(/\r?\n/).filter((l) => agendaFileKey(filePats, l) != null);
-    if (files.length) signals.push(`${files.length} legislation file number line(s)`);
+    if (files.length) signals.push(localize("doctypes.meeting-agenda.length_legislation_file_number_line", "{length} legislation file number line(s)", { length: String(files.length) }));
     if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
       signals.push("Subject:/Recommendation: item blocks");
     const named = selfNaming(t, AGENDA_MASTHEAD);
     const furniture = named >= FURNITURE_RECURS;
-    if (furniture) signals.push(`names itself as an agenda on ${named} lines, which is page furniture`);
-    else if (named) signals.push(`names itself as an agenda once (${named}), which a reference also does`);
+    if (furniture) signals.push(localize("doctypes.meeting-agenda.names_itself_as_an_agenda", "names itself as an agenda on {named} lines, which is page furniture", { named: String(named) }));
+    else if (named) signals.push(localize("doctypes.meeting-agenda.names_itself_as_an_agenda_2", "names itself as an agenda once ({named}), which a reference also does", { named: String(named) }));
     /* Front matter: a roll call, or a line the jurisdiction's own furniture names
        (its clerk's office, in the measured instance). */
     const isFurn = agendaFurniture(ctx);
@@ -313,8 +314,8 @@ export default {
       /* What was verified unchanged, or null when nothing was (R16). */
       confirmed: intact ? { entries: b.entities.length, intact } : null,
       why: events.length
-        ? `${intact} of ${a.entities.length} items unchanged; ${d.gone.length} pulled, ${d.appeared.length} added, ${d.altered.length} altered`
-        : `all ${b.entities.length} items on this agenda are unchanged`,
+        ? localize("doctypes.meeting-agenda.intact_of_length_items_unchanged", "{intact} of {length} items unchanged; {length_2} pulled, {length_3} added, {length_4} altered", { intact: String(intact), length: String(a.entities.length), length_2: String(d.gone.length), length_3: String(d.appeared.length), length_4: String(d.altered.length) })
+        : localize("doctypes.meeting-agenda.all_length_items_on_this", "all {length} items on this agenda are unchanged", { length: String(b.entities.length) }),
     };
   },
 };

@@ -56,7 +56,7 @@ import { actionClocksOf } from "../action-clocks/index.mjs";
 import { isMachineIdentity, isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { isCalendarDate, validAt, localDay, dayRange } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { parse as parseLegistar, KEY as LEGISTAR_KEY } from "../../../legistar-reader/index.mjs";
 import { FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
@@ -319,7 +319,7 @@ export class Following {
     if (!said(from) || !isCalendarDate(from.trim()) || (until != null && (!said(until) || !isCalendarDate(until.trim()) || until.trim() < from.trim())))
       return refuse("BAD_PERIOD", "a follow names the days it covers: from (a day), and until (a day not before it) or none");
     const c = this.#cadence(cadence);
-    if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse("BAD_FOLLOW_CADENCE", localize("following.index.a_follow_is_read_daily", "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}", { FOLLOW_CADENCES: String(FOLLOW_CADENCES.join(", ")) }));
     const e = this.#endsGiven(ends);
     if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
     return this.#insert("body", { kind: "body", id: body.trim(), legistar: id }, { home, author, from: from.trim(),
@@ -384,7 +384,7 @@ export class Following {
     const g = this.#gated(gated);
     if (g.bad) return refuse("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
-    if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse("BAD_FOLLOW_CADENCE", localize("following.index.a_follow_is_read_daily_2", "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}", { FOLLOW_CADENCES: String(FOLLOW_CADENCES.join(", ")) }));
     /* R29: the proceeding followed, after R7's refusals and before R22's */
     const pr = proceeding == null ? null : this.#proceedingNamed(proceeding, viewer ?? author, "following a register names the proceeding it is followed for");
     if (pr && pr.refusal) return pr.refusal;
@@ -435,7 +435,7 @@ export class Following {
     const g = this.#gated(gated);
     if (g.bad) return refuse("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
-    if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse("BAD_FOLLOW_CADENCE", localize("following.index.a_follow_is_read_daily_3", "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}", { FOLLOW_CADENCES: String(FOLLOW_CADENCES.join(", ")) }));
     const e = this.#endsGiven(ends);
     if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
     return this.#insert("person-query", { kind: "person-query", register, scheme, value: String(value).trim(), address: address.trim(),
@@ -466,7 +466,7 @@ export class Following {
     if (!q) return refuse("NO_LOCATOR", "a portal is followed at a public https locator");
     if (!said(key)) return refuse("NO_KEY", "a portal follow declares the field that keys its rows");
     const c = this.#cadence(cadence);
-    if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse("BAD_FOLLOW_CADENCE", localize("following.index.a_follow_is_read_daily_4", "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}", { FOLLOW_CADENCES: String(FOLLOW_CADENCES.join(", ")) }));
     const e = this.#endsGiven(ends);
     if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
     const held = this.#rows(`SELECT follow_id, subject FROM follows WHERE kind='portal' AND ended_at IS NULL`)
@@ -799,7 +799,7 @@ export class Following {
     if (!said(author) || isMachineIdentity(author) || author !== f.author)
       return refuse("NOT_THE_FOLLOWER", "only the member who follows this register refreshes it, with their own credential");
     if (gated.kind === "fee" && price !== gated.price)
-      return refuse("PRICE_FIRST", `this register charges ${gated.price}; the refresh runs only once that price is accepted as shown`, { price: gated.price });
+      return refuse("PRICE_FIRST", localize("following.index.this_register_charges_price_the", "this register charges {price}; the refresh runs only once that price is accepted as shown", { price: String(gated.price) }), { price: gated.price });
     if (gated.kind === "account" && (!credential || typeof credential !== "object"))
       return refuse("NO_CREDENTIAL", "an account-gated register is read with the member's own credential");
     const s = json(f.subject) || {};
@@ -1394,7 +1394,7 @@ export class Following {
     if (m.ok === false) return m;
     if (m.refusal) return m.refusal;
     if (typeof note !== "string" || !note.trim() || note.length > SECOND_LOOK_NOTE_MAX || /[\r\n\u2028\u2029]/.test(note))
-      return refuse("SECOND_LOOK_NO_NOTE", `a second look carries a note: one line of at most ${SECOND_LOOK_NOTE_MAX} characters, saying what to check`);
+      return refuse("SECOND_LOOK_NO_NOTE", localize("following.index.a_second_look_carries_a", "a second look carries a note: one line of at most {SECOND_LOOK_NOTE_MAX} characters, saying what to check", { SECOND_LOOK_NOTE_MAX: String(SECOND_LOOK_NOTE_MAX) }));
     const open = this.#openFlag(m.item.id);
     if (open) return { ok: true, existed: true, ...this.#flagView(open) };
     this.#sql.exec(`INSERT INTO second_looks (item, bundle_id, raised_by, note, at) VALUES (?,?,?,?,?)`,

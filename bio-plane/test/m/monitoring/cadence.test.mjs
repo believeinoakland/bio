@@ -6,6 +6,7 @@ import { world, serve, DAEMON, NOW_MS, V, registerCalendarStub } from "./fixture
 import { cadenceFor, monitorIntervalMs, CONTRACT_FREQUENCY, MONITOR_CADENCE_MS, monitoringOps, FREQUENCY_CHECKS,
          ADDRESS_FREQUENCY_REASONS, FREQUENCY_REASON_MAX, VOLATILITY_RUN, lengthenedFrequency } from "../../../src/monitoring/index.mjs";
 import { MONITOR_FREQ } from "../../../src/capture/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const HOUR = 3600000, DAY = 24 * HOUR;
 /* A receipt at an address, through provenance's one writer (the version chain R15 groups by). */
@@ -113,8 +114,8 @@ test("R16 the plan: never checked is due; nothing authored and nothing read is d
   assert.deepEqual(due.slice(0, 2), [never, unread].sort());
   assert.deepEqual(due.slice(2), [overdue2, overdue1], "then longest-overdue first");
   const un = Object.fromEntries(p.unscheduled.map((x) => [x.bundle, x.reason]));
-  assert.equal(un[meeting], "cadence is a meeting schedule your team's Civicsmith does not hold");
-  assert.equal(un[none], "no frequency declared");
+  assert.equal(un[meeting], word("monitoring.cadence_meeting_schedule"));
+  assert.equal(un[none], word("monitoring.frequency_declared"));
   assert.match(un[unknown], /which is not one the catalog knows/);
   assert.match(un[checkedUnread], /no check has read a document at this address/);
   assert.equal(p.next, NOW_MS - DAY + 7 * DAY);
@@ -197,10 +198,10 @@ test("R52 a canned and a custom setting are each recorded with the reason (key a
   assert.equal(asToday.frequency_source, "authored");
   /* the four canned reasons, BOB's sentences word for word */
   assert.deepEqual(ADDRESS_FREQUENCY_REASONS, {
-    source_changes_rarely: "The source changes rarely.",
-    source_changes_often: "The source changes often.",
-    legal_deadline_approaching: "A legal deadline that depends on this source is approaching.",
-    source_unreliable: "The source is unreliable, so it is checked more often.",
+    source_changes_rarely: word("monitoring.source_changes_rarely"),
+    source_changes_often: word("monitoring.source_changes_often"),
+    legal_deadline_approaching: word("monitoring.legal_deadline_depends"),
+    source_unreliable: word("monitoring.source_unreliable_checked"),
   });
   const at = new Date(NOW_MS).toISOString().replace(/\.\d+Z$/, "Z");
   const recorded = [];
@@ -280,15 +281,15 @@ test("R17 an address's own frequency, when set, governs over its versions' and R
   assert.ok(due, "due by the address's own frequency");
   assert.deepEqual([due.frequency, due.frequency_source, due.interval_ms, due.due_at], ["daily", "address", DAY, NOW_MS - DAY]);
   assert.deepEqual(due.address_frequency, { address: ADDR, seq: 1, frequency: "daily", reason: "legal_deadline_approaching",
-    sentence: "A legal deadline that depends on this source is approaching.", author: "carol", at: iso(NOW_MS) });
+    sentence: word("monitoring.legal_deadline_depends"), author: "carol", at: iso(NOW_MS) });
   /* the cadence tick checks it, and its entry carries the address's account */
   w.net.routes[ADDR] = serve("agenda v2");
   const tick = await w.m.cadenceTick(NOW_MS);
   const e = tick.ticked.find((x) => x.address === ADDR);
   assert.deepEqual([e.frequency, e.frequency_source, e.address_frequency.reason], ["daily", "address", "legal_deadline_approaching"]);
   /* an address set to per_meeting or none is unscheduled, with its reason */
-  for (const [frequency, reason] of [["per_meeting", "cadence is a meeting schedule your team's Civicsmith does not hold"],
-                                     ["none", "the address's own frequency, set by a member, is none: it is not checked on a clock"]]) {
+  for (const [frequency, reason] of [["per_meeting", word("monitoring.cadence_meeting_schedule")],
+                                     ["none", word("monitoring.why.address_frequency_set")]]) {
     assert.equal(set(w, { frequency, reason: "source_changes_rarely" }).ok, true);
     const u = w.m.schedule(NOW_MS + 3 * DAY).unscheduled.find((r) => r.address === ADDR);
     assert.deepEqual([u.frequency, u.frequency_source, u.reason], [frequency, "address", reason]);

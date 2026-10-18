@@ -4,6 +4,7 @@
 
 import { add } from "../calc-grammar/index.mjs";
 import { cellAt, cellName, numbersIn, aggregatesIn, referencesIn, plainDecimal, figureOf, sameDecimal, isFigureText } from "./cells.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const LINT_KINDS = Object.freeze(["short_range", "constant_in_formula", "hidden_input", "number_as_text",
   "error_value", "cross_foot"]);
@@ -60,9 +61,9 @@ const numberOf = (c) => figureOf(plainDecimal(c.formula ? c.cached : c.value));
 /* One cell's hidden place, or null: its sheet, row or column hidden. */
 function hiddenPlace(ix, c) {
   const sheet = (ix.facts.sheets || []).find((s) => s.name === c.sheet);
-  if (sheet && sheet.hidden) return `its sheet "${c.sheet}" is hidden`;
-  if ((ix.facts.hidden_rows?.[c.sheet] || []).includes(c.r)) return `row ${c.r} is hidden`;
-  if ((ix.facts.hidden_cols?.[c.sheet] || []).some((x) => c.c >= x.min && c.c <= x.max)) return `column ${cellName(1, c.c).replace(/1$/, "")} is hidden`;
+  if (sheet && sheet.hidden) return word("workbooks.sheet_hidden", { sheet: String(c.sheet) });
+  if ((ix.facts.hidden_rows?.[c.sheet] || []).includes(c.r)) return word("workbooks.row_hidden", { row: String(c.r) });
+  if ((ix.facts.hidden_cols?.[c.sheet] || []).some((x) => c.c >= x.min && c.c <= x.max)) return word("workbooks.column_hidden", { count: String(cellName(1, c.c).replace(/1$/, "")) });
   return null;
 }
 

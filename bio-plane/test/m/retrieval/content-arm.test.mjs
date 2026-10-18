@@ -46,16 +46,16 @@ function corpus() {
   w.doc(INQ, { object_type: "inquiry", title: "What does it rest on?" });
   const proj = w.project("Oversight", "ann", { captures: [w.cap("proj", "project bytes")] });
   const ids = {
-    ocrDoc: mint(w, { bundle: DOC_OCR, capture: c.ocr.sha, extent: { kind: "document" }, ref: "the whole document",
+    ocrDoc: mint(w, { bundle: DOC_OCR, capture: c.ocr.sha, extent: { kind: "document" }, ref: WORD("content.why.whole_document"),
                       chain: ocr("C"), cap: "C", stale: 1, kind: "ocr" }),
     ocrPage: mint(w, { bundle: DOC_OCR, capture: c.ocr.sha, extent: { kind: "pdf-page", page: 1 }, ref: "page 2, the transfer table",
                        chain: ocr("C"), cap: "C", stale: 1, kind: "ocr" }),
-    layerDoc: mint(w, { bundle: DOC_LAYER, capture: c.layer.sha, extent: { kind: "document" }, ref: "the whole document",
+    layerDoc: mint(w, { bundle: DOC_LAYER, capture: c.layer.sha, extent: { kind: "document" }, ref: WORD("content.why.whole_document"),
                         chain: layer, kind: "layer" }),
     machine: mint(w, { bundle: DOC_LAYER, capture: c.layer.sha, extent: { kind: "pdf-page", page: 2 }, ref: "page 3",
                        chain: layer, kind: "layer", by: "class:extractor" }),
-    member: mint(w, { bundle: DOC_BARE, capture: c.bare.sha, extent: { kind: "document" }, ref: "the whole document", by: "ann" }),
-    ver: mint(w, { bundle: DOC_VER, capture: c.ver.sha, extent: { kind: "document" }, ref: "the whole document",
+    member: mint(w, { bundle: DOC_BARE, capture: c.bare.sha, extent: { kind: "document" }, ref: WORD("content.why.whole_document"), by: "ann" }),
+    ver: mint(w, { bundle: DOC_VER, capture: c.ver.sha, extent: { kind: "document" }, ref: WORD("content.why.whole_document"),
                    chain: layer, kind: "layer" }),
   };
   const leg = (ord, target, content) => w.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, target_id, target_type, role, at,

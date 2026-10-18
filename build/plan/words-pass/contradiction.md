@@ -1,0 +1,179 @@
+# contradiction: the words check after the conversion (K3949)
+
+Layer 6. 175 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- handlist `bio-plane/test/m/contradiction/measures.test.mjs:169` [?] ops: contradictioncandidates, contradictionclarify, contradictiondismiss, ... (14 of 14 not the module's own) — handlist
+- inline `bio-plane/src/contradiction.mjs:31` "You are judging CANDIDATE CONTRADICTIONS for a civic research recor..." — signed or pinned text
+- inline `bio-plane/src/contradiction.mjs:84` [stitched] "PAIR {} · key {} A: {} B: {}" — signed or pinned text
+- inline `bio-plane/src/contradiction.mjs:85` "context (the source passage both claims rest on): {}" — signed or pinned text
+- inline `bio-plane/src/contradiction.mjs:99` "You are recommending, for CONTRADICTIONS a civic research record ho..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:102` [copy] "This act is about one contradiction candidate, named by its id, and..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:107` [copy] "No contradiction you can see answers to that id. One whose side you..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:112` [copy] "Saying what a contradiction turned out to be is a member's act, and..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:117` [copy] "That contradiction has already been dismissed or resolved, by the m..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:122` [copy] "That contradiction has been taken up as a question, which is named,..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:127` [copy] "This conflict is between two things the record itself holds, so it ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:132` [copy] "Dismissing a lead gives one of three reasons: the same fact at diff..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:137` [copy] "This is a lead the record noticed about the world, not a conflict i..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:142` [copy] "That is not one of the answers to 'how do these differ?' for this c..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:147` [copy] "Saying the two differ names at least one respect in which they diff..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:152` [copy] "Saying how the two differ is explained in your own words, unless yo..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:157` [copy] "Something named as evidence is not one you can see, or is a fact th..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:162` [copy] "Saying one of them is wrong names which one. Nothing was written." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:167` [copy] "Saying one side is wrong is a kept decision, and a kept decision sa..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:172` [copy] "These are two projects' own conclusions, and neither is made to ado..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:177` [copy] "Taking a contradiction up starts a question, and the question is yo..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:182` [copy] "The question is asked around one of the two sides. Choose which one..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:187` [copy] "The recommendation you accepted is no longer standing for this cont..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:192` [copy] "You accepted a recommendation for something this act does not recor..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:197` [copy] "No question you can see answers to that id as one taken up from a c..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:202` [copy] "A recommendation names at least one respect in which the two sides ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:207` [copy] "A recommendation may name only the respects listed for this conflic..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:212` [copy] "Each recommendation says in one sentence why, so the member can see..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:217` [copy] "That contradiction is not open to recommendation: it has been resol..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:222` [copy] "This question names a contradiction the record does not hold, or on..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:227` [copy] "A piece of text in this act is longer than it may be. The field and..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:232` [copy] "The project named does not rest on the side of this conflict that y..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:237` [copy] "This is a lead the record noticed about the world, not a conflict t..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:242` [copy] "A project responds to a conflict after it has asked to resolve it. ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:247` [copy] "A response says something in your own words. Write it, and choose s..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:25` "The record pairs assertions by named keys, and that is not one of t..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:252` "What a response shares about you is your cover, an email address, o..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:257` [copy] "A response may share only your own cover or your own email address...." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:27` "names the keys it holds. Ask again with one of them, or with none a..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:33` [copy] "Candidates are read for one thing at a time: a question, a document..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:38` [copy] "At most 200 items can be asked about in one request. Ask about fewe..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:57` "does not say. Rather than write a proposal nobody can be held to, n..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:63` "opened. No open run by that name is visible here, so nothing was wr..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:68` "That run has ended. Its work is read against the conditions it was ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:69` "stopped being current when it stopped, so nothing was written. Open..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:74` "The request carried no proposals. An empty answer is not a judgemen..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:75` "belongs in the run log, which says which level was empty. Nothing w..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:81` "undetermined. One proposal in this batch carried something else, so..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:86` "Each proposal says in one sentence why it carries its label, so the..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:87` "what the machine saw. One proposal in this batch had no reason, so ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/checks.mjs:94` "was written. Read the pairs again and propose over those." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1031` "the record pairs by {} and holds no key" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1050` "this key was not run: the request named {}. Nothing here is a" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1051` "statement about what {} would have found" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1096` [stitched] "{} candidate pair(s) over {}, each carrying the KEY that brought it..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1098` "; {} further pair(s) were NOT formed because a value the record doe..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:112` "Something this project rests on is in conflict with a record you ca..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:114` "the projects are named to each other's members, and you can respond." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:117` [copy] "Your project's conclusion conflicts with that project's." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1193` "proposal {} carries '{}', which is not one of {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1201` "proposal {} carries no reason" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1224` [stitched] "proposal {} names a {} pair the pairing does not form for this view..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1225` "(the read was cut at its bound on {}, and a pair past the bound is ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1245` "{} candidate(s) written as PROPOSED machine work; {} named two refe..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1247` "proposal about two things as they were, never a finding: no member ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:131` [copy] "one inquiry, opposite roles" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:135` [copy] "one subject, two held claims" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:137` [copy] "two things the team HOLDS about one subject — the case that carries..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:138` [copy] "one referent, two held claims" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:141` [copy] "we read the same text two ways" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:142` [copy] "one entity, two sources of different kind or date" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1432` [copy] "a machine's recommendation of a respect in which the two may differ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1439` "Can both of these hold, and if not, which is so: \"{}\" and \"{}\"?" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1446` [copy] "proposed machine work, no finding: a member decides" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:145` [copy] "a rule against the act it governs, or one body's statement at one d..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:148` [copy] "one question, two projects' conclusions" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:150` [copy] "two projects answered one question differently" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1511` [copy] "stated, not verified" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:153` [copy] "two amounts for one transfer" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:156` [copy] "two sources state different amounts for what reads as one transfer" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1705` "no candidate this viewer may see names it: no run's judgement is he..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1706` "Whether the pairing forms pairs here is the pairing read's answer" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1708` [copy] "candidates are held here, and each is one the record does not show ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1710` [copy] "candidates are shown here, and none matches the filters or follows ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1717` "the read failed and nothing is claimed about it ({})" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1770` [copy] "this side was named wrong by a member's resolution; it still resolv..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1781` [copy] "concluded through basis-versions' own door; no concluding act of th..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1802` "{} referents were asked about; at most {} are read at once" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1807` [copy] "not a referent at a version" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1858` [copy] "its reader states no date" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1858` [copy] "the passage is not held" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1859` [copy] "a held claim states no document date" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1860` [copy] "its reader states no kind" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1860` [copy] "the passage is not held" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1861` [copy] "a held claim is not a document" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1868` [copy] "no established resolution or subject is held" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1869` [copy] "no established resolution or subject is held" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1877` [copy] "a held claim rests on no one capture" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1877` [copy] "the passage is not held" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1878` [copy] "a held claim rests on no one capture" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1878` [copy] "the passage is not held" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1914` "money's reconciliation refused: {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1914` [copy] "money's reconciliation is not reachable" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:1972` [copy] "no text of that finding answers to those bytes" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2035` [copy] "a read names the member reading; an absent viewer is neither an adm..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2057` "more than {} candidates you can see are in tension with this node; ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2070` "contradiction {}: candidate {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2081` "two things paired by the record and labelled by a machine as worth ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2147` "{} is {} characters; at most {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2159` "this contradiction was {}{}, and it stays as they left it" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2164` "this contradiction was taken up as {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2200` "recommendation '{}' is not standing for this contradiction" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2204` "the recommendation accepted names {}, which this act does not record" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:223` "facts read as one transfer, and none of them states an amount that ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:224` "That is agreement in the figures as written, not a finding that the..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2243` "a lead is dismissed for one of {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2248` [copy] "the lead was dismissed by the member named, with the reason given; ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2271` "evidence item {} is not one you can see, or is a fact the record do..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2295` "the answers here are {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2305` "name at least one of {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2332` [copy] "no words of the member's own were given: each respect recorded was ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2335` [copy] "the member found the two differ in the respects named, on the evide..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2336` [copy] "the member explained how the two differ without evidence: the mark ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2355` [copy] "the member named one side wrong, with the reason: it is marked stal..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2364` [copy] "the member found no named difference between the two projects' conc..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2372` "a member found these two sides differ in subject (contradiction {})..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2400` "side {} of contradiction {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2415` "- {} · {} · taken up from contradiction {}, framed around side {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2429` [copy] "this contradiction is already taken up as the question named; nothi..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2457` [copy] "the contradiction was taken up as a new question, framed around the..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2522` "- {} · {} · resolution recorded as {} (contradiction {})" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2536` [copy] "the question was concluded with its resolution: the question's own ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2557` "recommendation {} names '{}'" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2564` "recommendation {} carries no reason" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2589` [copy] "each is a machine's recommendation of a respect in which the two ma..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2606` "no run named '{}' is open in this store" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2613` [copy] "machine work names a run its caller holds. Nothing was written" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2617` "the run '{}' has ended; its work is read against the conditions it ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2733` [copy] "a real conflict not pursued now is never counted as a false conflict" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2810` [copy] "the projects holding a side could not all be read, so whether every..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2869` [copy] "this project had already asked to resolve it; nothing was written" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2892` [copy] "this project asked to resolve it, and every project holding a side ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2893` [copy] "this project asked to resolve it; the other projects are told only ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2903` "the part of the disclosure that is not one of cover or email: {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2919` [copy] "the disclosure itself" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2972` [copy] "stated, not verified" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:2973` [copy] "the response is held; it reaches the other projects' members, with ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:300` [copy] "in tension with" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:3001` [copy] "stated, not verified" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:316` [copy] "no contradiction instance is made over that host" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:317` "{} contradiction instances are made in this isolate and the read na..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:408` "the run gate is already registered by {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:541` "one question already rests on both of these, one supporting it and ..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:542` "What they SAY about each other is not read here" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:654` "two questions whose accepted readings rest on the SAME passage, eac..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:655` "What that passage supports is the thing they may disagree about" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:752` "{} candidate pair(s) were NOT formed because a doctype, a document'..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:754` "({} where a document has not been read at all," — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:755` "{} where a reader stated no kind, {} where the record holds no" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:756` "own date of the document, {} where the two dates cannot be put in o..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:808` "two projects concluded the same question, each adopting a claim, an..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:809` "Two projects' answers are plurality, not a defect, until a member f..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:816` "K5 examined the first {} questions this viewer may see and" — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:874` "{} candidate pair(s) were NOT formed because a fact's period states..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:876` "{} candidate pair(s) were NOT formed because money's reconciliation..." — signed or pinned text
+- inline `bio-plane/src/contradiction/index.mjs:894` "row {} of the table {}" — signed or pinned text
+- inline `bio-plane/src/contradiction/text.mjs:43` [stitched] "{} ## Session Log {}" — signed or pinned text
+- testcopy `bio-plane/test/m/contradiction/k5.test.mjs:32` "one question, two projects' conclusions" — signed or pinned text
+- testcopy `bio-plane/test/m/contradiction/k6.test.mjs:30` "two amounts for one transfer" — signed or pinned text
+- testcopy `bio-plane/test/m/contradiction/owner.test.mjs:19` "in tension with" — signed or pinned text
+- testcopy `bio-plane/test/m/contradiction/projects.test.mjs:257` "the disclosure itself" — signed or pinned text
+- testcopy `bio-plane/test/m/contradiction/projects.test.mjs:267` "stated, not verified" — signed or pinned text
+- testcopy `bio-plane/test/m/contradiction/projects.test.mjs:297` "stated, not verified" — signed or pinned text
+- testcopy `bio-plane/test/m/contradiction/projects.test.mjs:79` "Something this project rests on is in conflict with a record you ca..." — signed or pinned text
+- testcopy `bio-plane/test/m/contradiction/projects.test.mjs:92` "Your project's conclusion conflicts with that project's." — signed or pinned text

@@ -38,6 +38,7 @@
  */
 
 import { crc32 } from "./ooxml.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 /* The bound is on the SERIALISED container, and it is a refusal rather than a
    truncation: a container that came back short would be a container whose
@@ -101,8 +102,7 @@ export function serialiseContainer(entries, { maxBytes = CONTAINER_MAX_BYTES } =
        * D-561 (C-98.6): the code a STRING LITERAL; its translation is attached by the control plane's
        * `json()` (`dec49Attach`, by code), since this module is pure and reads no catalogue. */
       return { ok: false, reason: "DUPLICATE_PATH", path: e.name,
-               detail: "two parts in this container claim one path, so an archive of it would say two "
-                     + "things about one name. Each part is still answerable individually by hash." };
+               detail: localize("public-read.container.two_parts_in_this_container", "two parts in this container claim one path, so an archive of it would say two things about one name. Each part is still answerable individually by hash.") };
       /* END DEC-49 REGION is-duplicate-path */
     }
     seen.add(e.name);
@@ -113,9 +113,7 @@ export function serialiseContainer(entries, { maxBytes = CONTAINER_MAX_BYTES } =
      * D-561 (C-98.7): `CONTAINER_TOO_LARGE`, renamed from `TOO_LARGE` — that code is minted elsewhere
      * in the plane for other conditions, so a row under it would put this sentence on theirs. */
     return { ok: false, reason: "CONTAINER_TOO_LARGE", bytes: total, maxBytes,
-             detail: "this container is larger than the plane will serialise in one response. Its parts "
-                   + "remain individually answerable by hash at op=publishedbytes, which is the same "
-                   + "material by the same mechanism." };
+             detail: localize("public-read.container.this_container_is_larger_than", "this container is larger than the plane will serialise in one response. Its parts remain individually answerable by hash at op=publishedbytes, which is the same material by the same mechanism.") };
     /* END DEC-49 REGION is-container-too-large */
   }
 

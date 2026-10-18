@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 86400000;
 const page = (items, extra = {}) => ({ ok: true, items, limit: 500, truncated: false, cursor: null, ...extra });
@@ -50,7 +51,7 @@ test("R6: one OBLIGATION per (version, member) reviewsRequested answers the view
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 2 * DAY), ms: 2 * DAY }, "aged from the instant asked");
   assert.equal(byId(alice)["OBLIGATION::template-review-requested::TPL-b@1::alice"].age.state, "undetermined");
   assert.deepEqual(it.recipients, ["alice"]);
-  assert.deepEqual(it.options, [{ id: "templatereview", label: "Review this template version", weight: "single" }]);
+  assert.deepEqual(it.options, [{ id: "templatereview", label: word("action-producers.label.review_template_version"), weight: "single" }]);
   assert.equal(it.basis.source, "filing-templates.reviewsRequested"); assert.equal(it.basis.bound.truncated, false);
   assert.ok(it.summary.includes("Olga") && it.summary.includes("Records request"));
   // raised once: the same read twice is the same items
@@ -113,7 +114,7 @@ test("R7: one OBLIGATION per fact factsDue answers over the paths calendarFactsR
     "a lapsed confirmation ages from the day it lapsed");
   assert.equal(ada[`OBLIGATION::local-fact-due::${TZ}::unconfirmed`].age.state, "undetermined");
   assert.equal(ada[`OBLIGATION::local-fact-due::${HRS}::unconfirmed`].basis.recipients_rule, "administrators");
-  assert.deepEqual(it.options, [{ id: "factconfirm", label: "Confirm, correct or dispute this local fact", weight: "single" },
+  assert.deepEqual(it.options, [{ id: "factconfirm", label: word("action-producers.label.confirm_correct_dispute"), weight: "single" },
     { id: "opt", on: ["ACT-1"] }], "its door, the confirmation, beside the acts on the action");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the action's project");
   assert.equal(it.basis.source, "local-facts.factsDue + action-clocks.calendarFactsRead");

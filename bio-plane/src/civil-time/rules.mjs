@@ -6,6 +6,7 @@ import { parseDay, dayText, addMonths, weekdayOf, civil } from "./days.mjs";
 import { instantText, wallOf, localDayNumber, startOfDay, wallToInstants, runtimeVersions, parseInstant } from "./zone.mjs";
 import { spanOf, isNo, refuse, zoneRefusal } from "./values.mjs";
 import { calendar, calendarStated, missing } from "./calendar.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const UNITS = ["days", "hours", "business_hours", "months", "years"];
 const no = (code, why, extra) => ({ undetermined: true, code, why, ...(extra || {}) });
@@ -202,7 +203,7 @@ function dueDay(r, a, cal, tolled, trace) {
     return end;
   };
   if (m.candidates) {
-    trace.notes.push(`${dayText(a)} has no such day ${r.units === "years" ? "in the target year's month" : "in the target month"}: both readings are kept (K1504 (4))`);
+    trace.notes.push(localize("civil-time.rules.daytext_has_no_such_day", "{dayText} has no such day {v1}: both readings are kept (K1504 (4))", { dayText: String(dayText(a)), v1: String(r.units === "years" ? "in the target year's month" : "in the target month") }));
     const out = [];
     for (const c0 of m.candidates) {
       const c = tollAfter(c0);
@@ -244,7 +245,7 @@ function preconditions(rule, view) {
   if (rule.computation !== undefined) {
     const list = Array.isArray(view.computation) ? view.computation : [];
     const c = list.find((x) => x && x.key === rule.computation);
-    if (!c) return missing(view, "computation", `the computation '${rule.computation}' the rule names`);
+    if (!c) return missing(view, "computation", word("civil-time.computation_rule_names", { computation: String(rule.computation) }));
     if (c.rule !== "exclude_first_include_last") return ruleInvalid("computation", `names '${c.rule}', a computation this module does not count`);
   }
   return null;
@@ -257,7 +258,7 @@ function evaluateOn(r, rule, anchor, view, office, tolled, factOf, list, zone) {
   const needsCal = r.units === "business_hours" || r.count === "business" || r.roll;
   if (needsCal && !(view.weekend && Array.isArray(view.weekend.days))) {
     const m = missing(view, "weekend", "the weekend");
-    return { ...m, why: `${m.why}; a business count or a roll needs it (the weekend is never assumed)` };
+    return { ...m, why: word("civil-time.why.business_count_roll", { why: String(m.why) }) };
   }
   if (r.units === "hours" || r.units === "business_hours") {
     const s = spanOf(anchor);
@@ -343,7 +344,7 @@ export function evaluateRule(args) {
   const head = { rule: rule.rule ?? null, applies_to: rule.applies_to ?? null, citation: rule.citation ?? null, status: rule.status ?? null,
                  basis: rule.basis ?? null, starts: rule.starts ?? null, units: r.units, amount: r.amount, count: r.count ?? null,
                  direction: r.direction, computation: rule.computation ?? null, anchor, zone,
-                 zone_from: viewZone(view) ? "the view's time_zone" : "the anchor's zone", office,
+                 zone_from: viewZone(view) ? "the view's time_zone" : word("civil-time.anchor_zone"), office,
                  tolled: Array.isArray(tolled) ? tolled : [], runtime: runtimeVersions() };
   const base = evaluateOn(r, rule, anchor, view, office, tolledSet, factOf, r.closures, zone);
   if (base.refused) return base;
@@ -394,7 +395,7 @@ export function due(args) {
     if (date === undefined || date === null) throw new TypeError(`a ${basis} due needs its date`);
     const s = spanOf(date);
     if (isNo(s)) return { ...s, basis_kind: basis, law_set: false };
-    const trace = { basis_kind: basis, date, ...(basis === "commitment" ? { citation: args.citation ?? null, says: "the body's own stated date" } : { says: "the team's own date" }),
+    const trace = { basis_kind: basis, date, ...(basis === "commitment" ? { citation: args.citation ?? null, says: word("civil-time.says.body_stated_date") } : { says: word("civil-time.says.group_date") }),
                     runtime: runtimeVersions() };
     return { due: date, basis_kind: basis, law_set: false, trace };
   }
@@ -445,7 +446,7 @@ export function overdueOn(args) {
     if (side === "group") return pe.over ? "overdue" : "not_overdue";
     if (pl.over) return "overdue";
     if (!pe.over) return "not_overdue";
-    return no("POSSIBLY_OVERDUE", `possibly overdue: undetermined, because the due date is uncertain between ${e.value} and ${l.value} and ${pe.words} lies after the first and not after the second (K1444 (i))`);
+    return no("POSSIBLY_OVERDUE", localize("civil-time.rules.possibly_overdue_undetermined_because_the", "possibly overdue: undetermined, because the due date is uncertain between {value} and {value_2} and {words} lies after the first and not after the second (K1444 (i))", { value: String(e.value), value_2: String(l.value), words: String(pe.words) }));
   }
   const p = past(d);
   if (p.refused || p.undetermined) return p;

@@ -9,6 +9,7 @@ import { recordOf, RecordCore, RECORD_SCHEMA, stampInstant, instantOrder, PER_IT
          inlineBytesOf, mintExhausted, RECORD_CORE_CHECKS, PER_ITEM_CHECKS,
          recordCoreOps } from "../../../src/record-core/index.mjs";
 import { storage, bucket } from "./storage.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const fresh = (opts) => { const s = storage(); const rc = recordOf({ storage: s }, opts); rc.migrate(); return { s, rc }; };
 const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
@@ -1559,7 +1560,7 @@ test("R63: a refusal's own fields are never replaced by what it names, and neith
 /* ---- T18: the rows held here (C-75 moved; C-59.5, C-102.1–.3 copied), R66 `afterCommit` (N406), R67 the grammar
    seam (§1b), R64/R65 `op=stats`' disclosure (K621), and R28's caller half (the `mint-ledger` convert) ---- */
 
-const BUILD_FAULT = "This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.";
+const BUILD_FAULT = word("record-core.build_fault");
 
 test("R55 R50 R52: C-75's five rows are this module's own table, PER_ITEM_CHECKS, each where naming perItem's region, and the catalogue holds them no more", () => {
   assert.deepEqual(Object.keys(PER_ITEM_CHECKS), ["SET_NO_ITEMS", "SET_TOO_LARGE", "SET_ITEM_MALFORMED", "SET_ITEM_FAILED", "SET_ITEMS_RETAINED"]);

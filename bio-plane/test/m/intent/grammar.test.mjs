@@ -13,6 +13,7 @@ import { INTENT_CHECKS, PROJECT_GRAMMAR, CLOSED_REASONS, checkProjectExtension, 
   from "../../../src/intent/index.mjs";
 import { PROGRESSION_CHECKS } from "../../../src/progressions/index.mjs";
 import { world, seeded, storage, V, COND } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const TS = "2026-09-01T00:00:00Z";
 const ev = (kind, strictness, result, extra = {}) => ({ kind, strictness, result, timestamp: TS, ...extra });
@@ -217,8 +218,7 @@ test("R30 R2 R8 R10 R22 intent's own codes: a progression the record has not dec
   const rows = {
     INTENT_NO_SUCH_PROGRESSION: ["C-111.4", "The measure names a declared flow the record does not hold. Declare the flow first, "
       + "or name one that exists. Nothing was written."],
-    INTENT_BAD_STAGE: ["C-111.6", "The measure requires a step the declared flow does not have. Name steps the flow declares. "
-      + "Nothing was written."],
+    INTENT_BAD_STAGE: ["C-111.6", word("refusal.INTENT_BAD_STAGE")],
     INTENT_NO_REASON: ["C-111.13", "This act is recorded with a reason in your own words, and none was given. The record keeps "
       + "why, so the next reader is not left guessing. Nothing was written."],
   };

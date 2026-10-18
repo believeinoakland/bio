@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, WORDS } from "./fixture.mjs";
 import { ESTIMATE_SAMPLE, aiUseOps } from "../../../src/ai-use/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = "2026-10-09T12:00:00Z";
 const explore = (w, owner, on, by) => w.a.accountUsesSet({ owner, switch: "explore", on, by });
@@ -126,7 +127,7 @@ test("R9 exploreAsksPending answers today's unapproved asks to the account's own
   const before = w.snapshot();
   const [item] = w.u.exploreAsksPending({ viewer: "ann", at: AT }).asks;
   assert.deepEqual([item.key, item.owner, item.what, item.word, item.estimate],
-    ["explore-ask:project:P:2026-10-09", "project:P", ["What did the council vote?"], "ai.queue.exploreask", "not known yet"]);
+    ["explore-ask:project:P:2026-10-09", "project:P", ["What did the council vote?"], "ai.queue.exploreask", word("question-explorer.known")]);
   assert.equal(item.text, WORDS["ai.queue.exploreask"].replace("{what}", "What did the council vote?"));
   assert.deepEqual(w.u.exploreAsksPending({ viewer: "bob", at: AT }).asks, [], "a participant who is not an owner");
   assert.deepEqual(w.u.exploreAsksPending({ viewer: "admin", at: AT }).asks, []);
@@ -159,7 +160,7 @@ test("R10 estimate answers \"not known yet\" until 5 acts of that use and mode a
   const w = await standard();
   const est = (extra = {}) => w.u.estimate({ owner: "project:P", use: "run", mode: "investigate", viewer: "ann", ...extra });
   for (let i = 1; i < ESTIMATE_SAMPLE.min; i++) w.count("project:P", "bob", "run", { mode: "investigate", act: `R${i}`, cost: i / 10, at: `2026-10-0${i}T12:00:00Z` });
-  assert.equal(est().estimate, "not known yet");
+  assert.equal(est().estimate, word("question-explorer.known"));
   w.count("project:P", "bob", "run", { mode: "investigate", act: "R5", cost: 0.5, at: "2026-10-05T12:00:00Z" });
   assert.deepEqual(est().estimate, { low: 0.1, high: 0.5, unit: "usd", measured: 5 });
   assert.deepEqual(est({ count: 3 }).estimate, { low: 0.3, high: 1.5, unit: "usd", measured: 5 });
@@ -167,8 +168,8 @@ test("R10 estimate answers \"not known yet\" until 5 acts of that use and mode a
   for (let i = 0; i < 20; i++) w.count("project:P", "bob", "run", { mode: "investigate", act: `L${i}`, cost: 1, at: `2026-10-08T${String(i).padStart(2, "0")}:00:00Z` });
   assert.deepEqual(est().estimate, { low: 1, high: 1, unit: "usd", measured: 20 });
   /* negative control: another mode, or another account, has its own sample */
-  assert.equal(est({ mode: "other" }).estimate, "not known yet");
-  assert.equal(w.u.estimate({ owner: "member:ann", use: "run", mode: "investigate", viewer: "ann" }).estimate, "not known yet");
+  assert.equal(est({ mode: "other" }).estimate, word("question-explorer.known"));
+  assert.equal(w.u.estimate({ owner: "member:ann", use: "run", mode: "investigate", viewer: "ann" }).estimate, word("question-explorer.known"));
 });
 
 test("R10 on a subscription (no cost stated) the range is in tokens and calls; it is answered only to the account's owners", async () => {

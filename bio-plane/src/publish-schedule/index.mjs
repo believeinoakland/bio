@@ -36,6 +36,7 @@ import { publicationOf } from "../publication/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { PUBLISH_SCHEDULE_DECLARATIONS, migratePublishSchedule } from "./schema.mjs";
 import * as schedule from "./schedule.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { SCHEDULED_EDITIONS_MAX, SCHEDULE_STATES, SCHEDULED_CHECK_UNAVAILABLE } from "./schedule.mjs";
 export { PUBLISH_SCHEDULE_SCHEMA, PUBLISH_SCHEDULE_TABLES, PUBLISH_SCHEDULE_DECLARATIONS } from "./schema.mjs";
@@ -81,7 +82,7 @@ export class PublishSchedule {
       return { ok: false, reason: "PROVIDER_MALFORMED", detail: "the scheduled publisher gives the door publishScheduled" };
     if (this.#publisher)
       return { ok: false, reason: "PROVIDER_DECLARED", module: this.#publisher.module,
-               detail: `the scheduled publisher is already registered by ${this.#publisher.module}` };
+               detail: localize("publish-schedule.index.the_scheduled_publisher_is_already", "the scheduled publisher is already registered by {module}", { module: String(this.#publisher.module) }) };
     this.#publisher = { module, publishScheduled: pub.publishScheduled };
     return { ok: true, module };
   }

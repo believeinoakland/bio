@@ -36,6 +36,7 @@ import { Frontier, FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET
 import { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERMS_SCHEMA, TERM_FIELDS, fieldRelation, termRows } from "./fields.mjs";
 import { retrievalBrowseOf, BROWSE_SCOPES } from "../retrieval-browse/index.mjs";
 import { say } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 export { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
@@ -768,7 +769,7 @@ export class Retrieval {
     const key = String(asked);
     if (!SCOPE_KEYS.includes(key))
       return { refusal: { ok: false, reason: "SCOPE_UNKNOWN", code: "SCOPE_UNKNOWN", scopes: [...SCOPE_KEYS],
-                          detail: `no scope called ${JSON.stringify(key.slice(0, 40))}; the scopes are ${SCOPE_KEYS.join(", ")}` } };
+                          detail: localize("retrieval.index.no_scope_called_stringify_the", "no scope called {stringify}; the scopes are {SCOPE_KEYS}", { stringify: String(JSON.stringify(key.slice(0, 40))), SCOPE_KEYS: String(SCOPE_KEYS.join(", ")) }) } };
     const held = this.browseModule.scopeMembers({ scope: key, viewer: input.viewer ?? null });
     let ids = held && held.ok === true && Array.isArray(held.ids) ? held.ids : [];
     if (Array.isArray(input.ids) && input.ids.length) { const given = new Set(input.ids); ids = ids.filter((id) => given.has(id)); }
@@ -881,13 +882,10 @@ export class Retrieval {
     const asked = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
     if (!asked)
       return refuse("MEANING_ROWS_NO_ARM",
-        `op=meaningrows answers at MEANING grain and must be told which: rows=${known.join("|")}. `
-        + "Each reads a different table and answers a different question, so there is no default that "
-        + "would not be answering something you did not ask.");
+        localize("retrieval.index.op_meaningrows_answers_at_meaning", "op=meaningrows answers at MEANING grain and must be told which: rows={known}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.", { known: String(known.join("|")) }));
     if (!known.includes(asked))
       return refuse("MEANING_ROWS_UNKNOWN_ARM",
-        `no meaning of the kind ${JSON.stringify(asked)} is held. The kinds that are: `
-        + known.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; "));
+        localize("retrieval.index.no_meaning_of_the_kind", "no meaning of the kind {stringify} is held. The kinds that are: {map}", { stringify: String(JSON.stringify(asked)), map: String(known.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")) }));
     const plan = this.#compile({
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
@@ -1264,8 +1262,7 @@ export class Retrieval {
       if (!list.length) return { ok: false, reason: "EMPTY", detail: "an enumerated selection needs at least one id" };
       if (list.length > SELECTION_MAX_ITEMS)
         return { ok: false, reason: "TOO_LARGE", limit: SELECTION_MAX_ITEMS, got: list.length,
-                 detail: "an enumeration this large is refused rather than quietly turned into a query selection, "
-                       + "because that would change what the operator's click meant. Select by query instead." };
+                 detail: localize("retrieval.index.an_enumeration_this_large_is", "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead.") };
       /* Chunked, because SQLite bounds how many variables one statement binds. Every chunk still goes through compile()
          and therefore through the viewer gate: an id the viewer may not see never enters the selection. */
       for (let i = 0; i < list.length; i += SELECTION_ID_CHUNK) {
@@ -1373,8 +1370,7 @@ export class Retrieval {
       ...(stopped ? { reason: "SET_MOVED", code: "SET_MOVED",
                       check: SELECTION_CHECKS.SET_MOVED.check,
                       translation: SELECTION_CHECKS.SET_MOVED.translation,
-                      detail: "this action changes state, so it will not run against a set that moved "
-                            + "since it was selected. Look at the selection again and re-select." } : {}),
+                      detail: localize("retrieval.index.this_action_changes_state_so", "this action changes state, so it will not run against a set that moved since it was selected. Look at the selection again and re-select.") } : {}),
       drift, members: stopped ? [] : members.map((m) => m.bundle_id),
       expires,
       gate: { applied: tally.applied },

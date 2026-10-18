@@ -40,6 +40,7 @@ import { isPortionPath, PORTION_PATH_MAX } from "../standards/instrument.mjs";
 import { derivedId } from "../connection-grammar/shape.mjs";
 import { OCCURRENCE_KEY_RE } from "../duties/vocab.mjs";
 import { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
+import { localize } from '../setup-words/index.mjs';
 
 /** A finding, record-grammar's shape (its R11), with the optional `code` (REC-56 / D-206): a discriminator within a
  *  rule, minted at the same call site as the finding it describes. */
@@ -80,11 +81,11 @@ export function supersedesEdgeFindings(fm, findings) {
   refs.forEach((r, i) => {
     if (!r || typeof r !== 'object' || r.rel !== 'supersedes') return;
     if (typeof r.reason !== 'string' || r.reason.trim() === '') {
-      findings.push(f('C-6.1', 'error', `references[${i}] is a supersedes edge with no reason: supersession says this question replaced that one, and a replacement with no account of why cannot be checked by anyone`,
+      findings.push(f('C-6.1', 'error', localize('inquiry-grammar.grammar.references_i_is_a_supersedes', 'references[{i}] is a supersedes edge with no reason: supersession says this question replaced that one, and a replacement with no account of why cannot be checked by anyone', { i: String(i) }),
         ['author the reason this supersedes its target', 'or use relates_to, which claims nothing about replacement']));
     }
     if (typeof r.target !== 'string' || !BUNDLE_ID_RE.test(r.target)) {
-      findings.push(f('C-6.1', 'error', `references[${i}] is a supersedes edge whose target '${String(r.target).slice(0, 40)}' is not a canonical record id: an edge that asserts a lineage must name the thing it came from`));
+      findings.push(f('C-6.1', 'error', localize('inquiry-grammar.grammar.references_i_is_a_supersedes_2', 'references[{i}] is a supersedes edge whose target \'{String}\' is not a canonical record id: an edge that asserts a lineage must name the thing it came from', { i: String(i), String: String(String(r.target).slice(0, 40)) })));
     }
   });
 }
@@ -138,22 +139,22 @@ export function divisionDisclosureFindings(fm, findings) {
   if (!parent && supers.length === 0) return;   // nothing to disclose, nothing claimed
 
   if (supers.length && !parent) {
-    findings.push(f('C-6.1', 'error', `this document carries a supersedes edge to ${supers[0].target} and declares no division_parent: a question that superseded another discloses which division it came out of, so a reader who can see one half can see that the other half exists (R4)`,
+    findings.push(f('C-6.1', 'error', localize('inquiry-grammar.grammar.this_document_carries_a_supersedes', 'this document carries a supersedes edge to {target} and declares no division_parent: a question that superseded another discloses which division it came out of, so a reader who can see one half can see that the other half exists (R4)', { target: String(supers[0].target) }),
       ['set division_parent to the inquiry this was divided out of', 'or sever the supersedes edge']));
   }
   if (parent && !supers.some((r) => r.target === parent)) {
-    findings.push(f('C-6.1', 'error', `division_parent names ${parent} with no supersedes edge to it: the disclosure and the edge are two views of one fact and cannot disagree`,
+    findings.push(f('C-6.1', 'error', localize('inquiry-grammar.grammar.division_parent_names_parent_with', 'division_parent names {parent} with no supersedes edge to it: the disclosure and the edge are two views of one fact and cannot disagree', { parent: String(parent) }),
       [`add a references[] entry {rel: supersedes, target: ${parent}} with its reason`]));
   }
   if (!parent) return;
   if (sibs === null || sibs.length === 0) {
-    findings.push(f('C-6.1', 'error', `division_parent names ${parent} and division_siblings is ${sibs === null ? 'absent' : 'empty'}: a division produces at least two questions, so a child of one always has at least one sibling to name — NO_SIBLING_DISCLOSURE`,
+    findings.push(f('C-6.1', 'error', localize('inquiry-grammar.grammar.division_parent_names_parent_and', 'division_parent names {parent} and division_siblings is {v1}: a division produces at least two questions, so a child of one always has at least one sibling to name — NO_SIBLING_DISCLOSURE', { parent: String(parent), v1: String(sibs === null ? 'absent' : 'empty') }),
       ['name every OTHER child of this division in division_siblings']));
     return;
   }
   for (const s of sibs) {
-    if (!BUNDLE_ID_RE.test(s)) findings.push(f('C-6.1', 'error', `division_siblings names '${String(s).slice(0, 40)}', which is not a canonical record id`));
-    if (s === parent) findings.push(f('C-6.1', 'error', `division_siblings names ${s}, which is this document's division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing`));
+    if (!BUNDLE_ID_RE.test(s)) findings.push(f('C-6.1', 'error', localize('inquiry-grammar.grammar.division_siblings_names_string_which', 'division_siblings names \'{String}\', which is not a canonical record id', { String: String(String(s).slice(0, 40)) })));
+    if (s === parent) findings.push(f('C-6.1', 'error', localize('inquiry-grammar.grammar.division_siblings_names_s_which', 'division_siblings names {s}, which is this document\'s division_parent: the parent is disclosed as the parent, and listing it as a sibling would hide that one of the halves is missing', { s: String(s) })));
     if (typeof fm.id === 'string' && s === fm.id) findings.push(f('C-6.1', 'error', `division_siblings names this document itself: a sibling set that counts the child is a set that can look complete while a real sibling is absent`));
   }
 }
@@ -174,11 +175,11 @@ export function checkRecheckCoverage(ctx, findings) {
     if (typeof t !== 'object' || !t?.text || !t?.description) {
       findings.push(f('C-15.1', 'error', `recheck_triggers[${i}] lacks the dual-audience {text, description} shape`));
     } else if (t.date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(t.date))) {
-      findings.push(f('C-15.1', 'error', `recheck_triggers[${i}].date '${t.date}' is not YYYY-MM-DD`));
+      findings.push(f('C-15.1', 'error', localize('inquiry-grammar.grammar.recheck_triggers_i_date_date', 'recheck_triggers[{i}].date \'{date}\' is not YYYY-MM-DD', { i: String(i), date: String(t.date) })));
     } else if (t.date !== undefined && !isCalendarDate(String(t.date))) {
       /* R3 (T33-43, §7 item 6): shaped as a date and naming no day of the calendar (`2026-02-31`, `2026-13-01`), as
          civil-time judges it. Its own sentence, so the shape's sentence above stays the catalogue's. */
-      findings.push(f('C-15.1', 'error', `recheck_triggers[${i}].date '${t.date}' is not a calendar date (YYYY-MM-DD)`));
+      findings.push(f('C-15.1', 'error', localize('inquiry-grammar.grammar.recheck_triggers_i_date_date_2', 'recheck_triggers[{i}].date \'{date}\' is not a calendar date (YYYY-MM-DD)', { i: String(i), date: String(t.date) })));
     }
   }
 }
@@ -200,11 +201,11 @@ export function checkInquiryExtension(ctx, findings, where) {
   if (normalizeType(ctx.fm?.object_type) !== 'inquiry') return;
   const fm = ctx.fm;
   if (!['agent', 'human'].includes(fm.surfaced_by)) {
-    findings.push(f('C-2.8', 'error', `surfaced_by '${fm.surfaced_by}' is not one of: agent, human`));
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.surfaced_by_surfaced_by_is', 'surfaced_by \'{surfaced_by}\' is not one of: agent, human', { surfaced_by: String(fm.surfaced_by) })));
   }
   if (['deferred', 'dismissed'].includes(fm.current_state)) {
     if (typeof fm.disposition_reason !== 'string' || fm.disposition_reason.trim() === '') {
-      findings.push(f('C-2.8', 'error', `${fm.current_state} state requires a non-empty disposition_reason`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.current_state_state_requires_a', '{current_state} state requires a non-empty disposition_reason', { current_state: String(fm.current_state) })));
     }
   }
   /* REC-13: the `concluded` ENTRY REQUIREMENTS, modelled on C-2.7's `verified`
@@ -275,7 +276,7 @@ export function checkInquiryExtension(ctx, findings, where) {
         ['state what evidence would falsify this conclusion',
          'or, if none can honestly be stated, record the absence: conclude with no_falsifier=1 so the record carries who accepted it and when']));
     } else if (!falsStated && !(ovBy && ovAt)) {
-      findings.push(f('C-2.8', 'error', 'concluded state has no falsifier and only a HALF-RECORDED override: an override missing its ' + (ovBy ? 'date' : 'member') + ' is a silent one, and a record that has stopped requiring a falsifier without saying who accepted that claims more than it can support',
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.concluded_state_has_no_falsifier', 'concluded state has no falsifier and only a HALF-RECORDED override: an override missing its {v1} is a silent one, and a record that has stopped requiring a falsifier without saying who accepted that claims more than it can support', { v1: String(ovBy ? 'date' : 'member') }),
         ['record both falsifier_override_by and falsifier_override_at, or state a falsifier']));
     } else if (falsStated && (ovBy || ovAt)) {
       findings.push(f('C-2.8', 'error', 'concluded state carries BOTH an authored falsifier and a record that none was stated: those are two contradictory claims about this finding and nothing may choose between them',
@@ -320,7 +321,7 @@ export function checkInquiryExtension(ctx, findings, where) {
     const v = fm?.[k];
     if (v === undefined || v === null || v === '' || v === 'null') continue;
     findings.push(f('C-2.8', 'error', `a finding's bytes name a case (${k}): since CASE-5b the case's own assertions — its identity, its edition, its producing project, its scope, its roster, its load-bearing partition, its bias acknowledgement and its bar — are signed ONCE, in the CASE DOCUMENT a member reviews and ratifies (op=caseratify), and not N times in N members' frontmatter. A finding is a member of a case because the case pinned its version hash, and that pin is inside the bytes the case's signer signed`,
-      [`remove ${k} from this document's frontmatter`,
+      [localize('inquiry-grammar.grammar.remove_k_from_this_documents', 'remove {k} from this document\'s frontmatter', { k: String(k) }),
        'the case states these facts once, in its own signed document']));
   }
   /* REC-16: the `divided` ENTRY REQUIREMENTS, on the same principle again — a
@@ -348,7 +349,7 @@ export function checkInquiryExtension(ctx, findings, where) {
        nothing about the world and carries no grade; it is addressing. */
   if (fm.subject_entity !== undefined && fm.subject_entity !== null && fm.subject_entity !== '') {
     if (typeof fm.subject_entity !== 'string' || !ENTITY_ID_RE.test(fm.subject_entity)) {
-      findings.push(f('C-2.8', 'error', `subject_entity '${String(fm.subject_entity).slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.subject_entity_string_is_not', 'subject_entity \'{String}\' is not a subject registry key (ENT-YYYY-NNNN)', { String: String(String(fm.subject_entity).slice(0, 40)) }),
         ['point subject_entity at an entry in the subject registry (op=entitycreate / op=entitybyalias), or omit it — an inquiry may name no subject, and then no leg of it earns an A/B/C connection grade (DEC-15)']));
     }
   }
@@ -405,11 +406,11 @@ function checkDividedExtension(fm, findings) {
   }
   const into = Array.isArray(d.into) ? d.into.filter((x) => typeof x === 'string') : [];
   if (into.length < 2) {
-    findings.push(f('C-2.8', 'error', `division.into names ${into.length} child inquir${into.length === 1 ? 'y' : 'ies'}: a division produces at least TWO questions, because one is a rename and zero is a deletion`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_into_names_length_child', 'division.into names {length} child inquir{v1}: a division produces at least TWO questions, because one is a rename and zero is a deletion', { length: String(into.length), v1: String(into.length === 1 ? 'y' : 'ies') }),
       ['name every child the question was divided into']));
   }
   for (const id of into) {
-    if (!BUNDLE_ID_RE.test(id)) findings.push(f('C-2.8', 'error', `division.into names '${String(id).slice(0, 40)}', which is not a canonical record id`));
+    if (!BUNDLE_ID_RE.test(id)) findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_into_names_string_which', 'division.into names \'{String}\', which is not a canonical record id', { String: String(String(id).slice(0, 40)) })));
   }
   if (new Set(into).size !== into.length) {
     findings.push(f('C-2.8', 'error', 'division.into names the same child twice: a leg apportioned to a child named twice has one home, not two'));
@@ -423,10 +424,10 @@ function checkDividedExtension(fm, findings) {
      did". `isMachineIdentity` answers false for blank precisely so this reads
      as it always has. */
   if (typeof d.apportioned_by !== 'string' || d.apportioned_by.trim() === '' || isMachineIdentity(d.apportioned_by)) {
-    findings.push(f('C-2.8', 'error', `division.apportioned_by '${d.apportioned_by}' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went`));
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_apportioned_by_apportioned_by', 'division.apportioned_by \'{apportioned_by}\' is not a named member: apportionment is AUTHORED and never automatic, so the record carries the name of whoever decided where each leg went', { apportioned_by: String(d.apportioned_by) })));
   }
   if (!ISO_TS_RE.test(String(d.at || ''))) {
-    findings.push(f('C-2.8', 'error', `division requires 'at' as an ISO timestamp (got '${d.at}')`));
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_requires_at_as_an', 'division requires \'at\' as an ISO timestamp (got \'{at}\')', { at: String(d.at) })));
   }
   /* THE ACCOUNT. Every leg the parent rested on, including — and this is the
      abuse R4 blocks — every leg whose role is `cuts_against`. */
@@ -439,18 +440,18 @@ function checkDividedExtension(fm, findings) {
   }
   const homes = new Map();            // ord -> Set(child)
   rows.forEach((r, i) => {
-    if (!r || typeof r !== 'object') { findings.push(f('C-2.8', 'error', `division_apportionment[${i}] is not an object`)); return; }
+    if (!r || typeof r !== 'object') { findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_apportionment_i_is_not', 'division_apportionment[{i}] is not an object', { i: String(i) }))); return; }
     if (!Number.isInteger(r.ord) || r.ord < 0 || r.ord >= legs.length) {
-      findings.push(f('C-2.8', 'error', `division_apportionment[${i}].ord '${r.ord}' does not name a leg of this inquiry's basis (0..${legs.length - 1}): a leg is addressed by its ORDINAL, because one document legitimately carries two legs (D4)`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_apportionment_i_ord_ord', 'division_apportionment[{i}].ord \'{ord}\' does not name a leg of this inquiry\'s basis (0..{v1}): a leg is addressed by its ORDINAL, because one document legitimately carries two legs (D4)', { i: String(i), ord: String(r.ord), v1: String(legs.length - 1) })));
       return;
     }
     if (typeof r.to !== 'string' || !into.includes(r.to)) {
-      findings.push(f('C-2.8', 'error', `division_apportionment[${i}].to '${r.to}' is not one of the children named in division.into: a leg's home is a child of THIS division`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_apportionment_i_to_to', 'division_apportionment[{i}].to \'{to}\' is not one of the children named in division.into: a leg\'s home is a child of THIS division', { i: String(i), to: String(r.to) })));
       return;
     }
     const leg = legs[r.ord];
     if (leg && typeof leg === 'object' && typeof r.target === 'string' && r.target !== leg.target) {
-      findings.push(f('C-2.8', 'error', `division_apportionment[${i}] names target '${r.target}' at ord ${r.ord}, where the basis carries '${leg.target}': the account and the basis are two views of one document and cannot disagree`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_apportionment_i_names_target', 'division_apportionment[{i}] names target \'{target}\' at ord {ord}, where the basis carries \'{target_2}\': the account and the basis are two views of one document and cannot disagree', { i: String(i), target: String(r.target), ord: String(r.ord), target_2: String(leg.target) })));
     }
     if (!homes.has(r.ord)) homes.set(r.ord, new Set());
     homes.get(r.ord).add(r.to);
@@ -459,12 +460,12 @@ function checkDividedExtension(fm, findings) {
   for (let i = 0; i < legs.length; i++) if (!homes.has(i)) orphans.push(i);
   if (orphans.length) {
     const cutting = orphans.filter((i) => legs[i] && legs[i].role === 'cuts_against');
-    findings.push(f('C-2.8', 'error', `basis leg${orphans.length === 1 ? '' : 's'} ${orphans.join(', ')} ${orphans.length === 1 ? 'has' : 'have'} no home in the apportionment${cutting.length ? ` (including ${cutting.length} that cut${cutting.length === 1 ? 's' : ''} AGAINST this inquiry)` : ''}: every leg gets a home on a child, because division RE-HOMES material and only severance REMOVES it (R4)`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_leg_v1_orphans_v2', 'basis leg{v1} {orphans} {v2} no home in the apportionment{v3}: every leg gets a home on a child, because division RE-HOMES material and only severance REMOVES it (R4)', { v1: String(orphans.length === 1 ? '' : 's'), orphans: String(orphans.join(', ')), v2: String(orphans.length === 1 ? 'has' : 'have'), v3: String(cutting.length ? ` (including ${cutting.length} that cut${cutting.length === 1 ? 's' : ''} AGAINST this inquiry)` : '') }),
       ['apportion the remaining leg(s) to a child', 'or sever them with a reason, which is the act that removes material']));
   }
   const empty = into.filter((c) => ![...homes.values()].some((s) => s.has(c)));
   if (empty.length) {
-    findings.push(f('C-2.8', 'error', `division.into names ${empty.join(', ')}, which received no leg of the parent's basis: a child that inherits nothing is a new question, not a half of this one`));
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.division_into_names_empty_which', 'division.into names {empty}, which received no leg of the parent\'s basis: a child that inherits nothing is a new question, not a half of this one', { empty: String(empty.join(', ')) })));
   }
 }
 
@@ -550,7 +551,7 @@ export function checkLegExtentGrammar(leg, label, checkId, findings) {
        the code is MINTED in `checkContentExtent`'s own governed region and this
        is a RELAY of it — a relay given its own marker is the defect PL-18 was
        failed by name for. */
-    findings.push(f(checkId, 'error', `${label} names an extent this record cannot evaluate: ${bad.detail}`,
+    findings.push(f(checkId, 'error', localize('inquiry-grammar.grammar.label_names_an_extent_this', '{label} names an extent this record cannot evaluate: {detail}', { label: String(label), detail: String(bad.detail) }),
       /* CORRECTED 2026-09-14 BY REC-85: this named two landed kinds because two
          were landed when REC-84 wrote it, and the other three landed the same
          day. GUIDANCE THAT NAMES A CLOSED LIST GOES STALE THE MOMENT THE LIST
@@ -562,18 +563,18 @@ export function checkLegExtentGrammar(leg, label, checkId, findings) {
          behind: the same rule `describeChain` and the DEC-49 fence composer
          already follow — a sentence built from the value it describes cannot
          come to describe a different one. */
-      [`name one of the landed extent kinds — ${Object.entries(CONTENT_EXTENT_KINDS)
-        .filter(([, v]) => v.landed).map(([k]) => k).sort().join(', ')} — with the fields that arm takes`,
+      [localize('inquiry-grammar.grammar.name_one_of_the_landed', 'name one of the landed extent kinds — {sort} — with the fields that arm takes', { sort: String(Object.entries(CONTENT_EXTENT_KINDS)
+        .filter(([, v]) => v.landed).map(([k]) => k).sort().join(', ')) }),
        'or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite'],
       bad.code));
   const cid = leg && typeof leg === 'object' ? leg.content_id : undefined;
   if (cid !== undefined && cid !== null && cid !== '') {
     if (typeof cid !== 'string' || !CONTENT_ID_RE.test(cid.trim()))
-      findings.push(f(checkId, 'error', `${label}.content_id '${String(cid).slice(0, 40)}' is not a content id: a part of a document is named by the 64-character lowercase hexadecimal address this record mints for it, and nothing shorter or longer can be one`,
+      findings.push(f(checkId, 'error', localize('inquiry-grammar.grammar.label_content_id_string_is', '{label}.content_id \'{String}\' is not a content id: a part of a document is named by the 64-character lowercase hexadecimal address this record mints for it, and nothing shorter or longer can be one', { label: String(label), String: String(String(cid).slice(0, 40)) }),
         ['copy the content id from the part as this record answers for it',
          'or describe the part instead — extent_kind and its fields — and the record will find or mint the entry']));
     else if (legHasAuthoredExtent(leg))
-      findings.push(f(checkId, 'error', `${label} names BOTH a content_id and an extent: these are one fact written twice and they can disagree, which would leave the record holding two answers to what this leg rests on`,
+      findings.push(f(checkId, 'error', localize('inquiry-grammar.grammar.label_names_both_a_content', '{label} names BOTH a content_id and an extent: these are one fact written twice and they can disagree, which would leave the record holding two answers to what this leg rests on', { label: String(label) }),
         ['keep the content_id — it names the part exactly',
          'or keep the extent fields and drop content_id — the record finds or mints the part they describe']));
   }
@@ -607,7 +608,7 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
   for (let i = 0; i < legs.length; i++) {
     const leg = legs[i];
     if (typeof leg !== 'object' || leg === null) {
-      findings.push(f('C-2.8', 'error', `basis[${i}] is not an object`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_is_not_an', 'basis[{i}] is not an object', { i: String(i) })));
       continue;
     }
     /* MK-4 / C-54.1: a LEAD is refused BY NAME before the generic target grammar
@@ -628,10 +629,10 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
       || occurrenceLegFindings(label, leg, findings) || derivedConnectionLegFindings(label, leg, findings);
     if (derivedKind) {
       if (!BASIS_ROLES.includes(leg.role)) {
-        findings.push(f('C-2.8', 'error', `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(', ')}`));
+        findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_role_role_is', 'basis[{i}].role \'{role}\' is not one of: {BASIS_ROLES}', { i: String(i), role: String(leg.role), BASIS_ROLES: String(BASIS_ROLES.join(', ')) })));
       }
       if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
-        findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
+        findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_note_is_not', 'basis[{i}].note is not a string', { i: String(i) })));
       }
       /* R18 (D59): a bias application is judged on a derived leg as on any leg. */
       biasAppliedFindings(label, leg, findings);
@@ -645,32 +646,32 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        silent rather than adding a second complaint about one broken leg. */
     let targetType = null;
     if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical record id`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_target_string_is', 'basis[{i}].target \'{String}\' is not a canonical record id', { i: String(i), String: String(String(t).slice(0, 40)) })));
     } else {
       const tt = targetType = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
       /* R13 (K1447 (iii), T33-43): a held standard is a leg target, referenced like an information target and read
          as one by every other arm; its axis is judged below. */
       if (tt !== 'information' && tt !== 'inquiry' && tt !== 'standard') {
-        findings.push(f('C-2.8', 'error', `basis[${i}].target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else`));
+        findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_target_t_is', 'basis[{i}].target \'{t}\' is a {tt}: a leg rests on information or on another inquiry, nothing else', { i: String(i), t: String(t), tt: String(tt) })));
       } else if (!refTargets.has(t)) {
         /* C-6.3 (the arm that replaced elevated_into): refs and inquiry_basis
            are projections of this one document and must not disagree. */
-        findings.push(f('C-6.3', 'error', `basis[${i}].target '${t}' is not in references[]: an inquiry carrying a basis leg carries the same target as a reference, so the two projections cannot disagree`,
-          [`add a references[] entry for '${t}'`, 'remove the basis leg']));
+        findings.push(f('C-6.3', 'error', localize('inquiry-grammar.grammar.basis_i_target_t_is_2', 'basis[{i}].target \'{t}\' is not in references[]: an inquiry carrying a basis leg carries the same target as a reference, so the two projections cannot disagree', { i: String(i), t: String(t) }),
+          [localize('inquiry-grammar.grammar.add_a_references_entry_for', 'add a references[] entry for \'{t}\'', { t: String(t) }), 'remove the basis leg']));
       }
     }
     if (!BASIS_ROLES.includes(leg.role)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(', ')}`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_role_role_is_2', 'basis[{i}].role \'{role}\' is not one of: {BASIS_ROLES}', { i: String(i), role: String(leg.role), BASIS_ROLES: String(BASIS_ROLES.join(', ')) })));
     }
     const graded = leg.grade !== undefined && leg.grade !== null;
     if (graded && !BASIS_GRADES.includes(leg.grade)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}].grade '${leg.grade}' is not one of: ${BASIS_GRADES.join(', ')} (absent or null means undetermined, and is stated as such)`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_grade_grade_is', 'basis[{i}].grade \'{grade}\' is not one of: {BASIS_GRADES} (absent or null means undetermined, and is stated as such)', { i: String(i), grade: String(leg.grade), BASIS_GRADES: String(BASIS_GRADES.join(', ')) })));
     }
     if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}].grade_axis '${leg.grade_axis}' is not one of: ${GRADE_AXES.join(', ')}`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_grade_axis_grade', 'basis[{i}].grade_axis \'{grade_axis}\' is not one of: {GRADE_AXES}', { i: String(i), grade_axis: String(leg.grade_axis), GRADE_AXES: String(GRADE_AXES.join(', ')) })));
     }
     if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}].grade_source '${leg.grade_source}' is not one of: ${GRADE_SOURCES.join(', ')}`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_grade_source_grade', 'basis[{i}].grade_source \'{grade_source}\' is not one of: {GRADE_SOURCES}', { i: String(i), grade_source: String(leg.grade_source), GRADE_SOURCES: String(GRADE_SOURCES.join(', ')) })));
     }
     /* R13: a standard's grade is the capture grade its captured text earns, and nothing else. A connection or
        testimony axis, or a hunch, is one departure, refused by name; the hunch, testimony, earned and inherited arms
@@ -680,10 +681,10 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
       if (!GRADE_AXES.includes(leg.grade_axis)) {
         /* MK-2: the axes are LISTED from the vocabulary rather than typed as a
            pair, so a third one cannot leave this sentence naming two. */
-        findings.push(f('C-2.8', 'error', `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states which axis its grade is on (${GRADE_AXES.join(', ')})`));
+        findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_carries_a_grade', 'basis[{i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states which axis its grade is on ({GRADE_AXES})', { i: String(i), GRADE_AXES: String(GRADE_AXES.join(', ')) })));
       }
       if (!GRADE_SOURCES.includes(leg.grade_source)) {
-        findings.push(f('C-2.8', 'error', `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(', ')})`));
+        findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_carries_a_grade_2', 'basis[{i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one ({GRADE_SOURCES})', { i: String(i), GRADE_SOURCES: String(GRADE_SOURCES.join(', ')) })));
       }
     }
     /* REC-31, from REC-12's landing. CAPTURE RANGES OVER DOCUMENTS (DEC-21):
@@ -719,7 +720,7 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        one case where the axis HAS a referent is admitted, and every authored
        one is refused as before. */
     if (leg.grade_axis === 'capture' && targetType === 'inquiry' && leg.grade_source !== 'inherited') {
-      findings.push(f('C-2.8', 'error', `basis[${i}] states a capture-axis grade on an inquiry leg: capture is a property of an information object (DEC-21) and an inquiry is not one, so this grade has no referent`,
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_capture', 'basis[{i}] states a capture-axis grade on an inquiry leg: capture is a property of an information object (DEC-21) and an inquiry is not one, so this grade has no referent', { i: String(i) }),
         ['grade this leg on the connection axis — a leg to another inquiry is a connection',
          'move the capture grade onto the INFO- leg it is actually about']));
     }
@@ -730,7 +731,7 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        admitted as it is on capture: an INHERITED testimony axis, which is the
        axis a published case froze over its own documents (checkInheritedLeg). */
     if (leg.grade_axis === 'testimony' && targetType === 'inquiry' && leg.grade_source !== 'inherited') {
-      findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony-axis grade on an inquiry leg: testimony is a property of a member's authored observation, which is a document, and an inquiry is not one, so this grade has no referent`,
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_testimony', 'basis[{i}] states a testimony-axis grade on an inquiry leg: testimony is a property of a member\'s authored observation, which is a document, and an inquiry is not one, so this grade has no referent', { i: String(i) }),
         ['rest this leg on the observation itself (its INFO- id)',
          'or grade this leg on the connection axis — a leg to another inquiry is a connection'],
         'testimony-axis-no-referent'));
@@ -752,16 +753,16 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        all here (CAPTURE-FIDELITY.md; index.mjs's own capture note). */
     if (leg.grade_axis === 'capture' && graded && !standardAxis
         && (leg.grade_source === 'testimony' || leg.grade_source === 'hunch')) {
-      findings.push(f('C-2.8', 'error', `basis[${i}] states a capture-axis grade with grade_source '${leg.grade_source}': a capture grade says how the BYTES REACHED US, which is a fact this record holds about its own machinery and not one a member can assert. ${leg.grade_source === 'testimony' ? 'Testimony is a member\'s account of a connection' : 'A hunch is a member\'s provisional connection'}, and neither is an account of a fetch`,
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_capture_2', 'basis[{i}] states a capture-axis grade with grade_source \'{grade_source}\': a capture grade says how the BYTES REACHED US, which is a fact this record holds about its own machinery and not one a member can assert. {v1}, and neither is an account of a fetch', { i: String(i), grade_source: String(leg.grade_source), v1: String(leg.grade_source === 'testimony' ? 'Testimony is a member\'s account of a connection' : 'A hunch is a member\'s provisional connection') }),
         ['use grade_source: capture — the capture axis is EARNED from the capture record, and op=earnedbasis says what it earns',
          'or move this grade onto the connection axis, where testimony and hunches belong']));
     }
     if (leg.grade_source === 'hunch' && !standardAxis) {
       if (typeof leg.author !== 'string' || leg.author.trim() === '') {
-        findings.push(f('C-2.8', 'error', `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
+        findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_is_a_hunch', 'basis[{i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)', { i: String(i) })));
       }
       if (!isDate(String(leg.date ?? ''))) {
-        findings.push(f('C-2.8', 'error', `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
+        findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_is_a_hunch_2', 'basis[{i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)', { i: String(i) })));
       }
     }
     /* MK-2: SILENT ON THE TESTIMONY AXIS, where checkTestimonyLeg refuses the
@@ -770,7 +771,7 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        letter is TESTIMONY_GRADE on every axis a testimony can sit on. */
     if (leg.grade_source === 'testimony' && graded && leg.grade !== TESTIMONY_GRADE
         && leg.grade_axis !== 'testimony' && !standardAxis) {
-      findings.push(f('C-2.8', 'error', `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade ${TESTIMONY_GRADE} at no other value — a hunch is the only authored grade permitted above ${TESTIMONY_GRADE} (DEC-15)`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_testimony_at', 'basis[{i}] states testimony at grade {grade}: a member\'s testimony is grade {TESTIMONY_GRADE} at no other value — a hunch is the only authored grade permitted above {TESTIMONY_GRADE_2} (DEC-15)', { i: String(i), grade: String(leg.grade), TESTIMONY_GRADE: String(TESTIMONY_GRADE), TESTIMONY_GRADE_2: String(TESTIMONY_GRADE) })));
     }
     /* REC-18, the OTHER half of the same rule and it is what makes "always D"
        mean something. The arm above refuses a testimony leg that states A/B/C;
@@ -783,11 +784,11 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        this extends the same refusal to the two sources that can stand alone.
        An honestly undetermined leg states NO grade AND NO grade_source. */
     if ((leg.grade_source === 'testimony' || EARNED_GRADE_SOURCES.includes(leg.grade_source)) && !graded) {
-      findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source '${leg.grade_source}' with no grade: a source is an account of where a grade came from, and there is no grade here to account for`,
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_grade_source', 'basis[{i}] states grade_source \'{grade_source}\' with no grade: a source is an account of where a grade came from, and there is no grade here to account for', { i: String(i), grade_source: String(leg.grade_source) }),
         ['state the grade this source produced', `or drop grade_source — an undetermined leg states neither, and is read as present and not yet load-bearing (DEC-18)`]));
     }
     if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
-      findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_note_is_not_2', 'basis[{i}].note is not a string', { i: String(i) })));
     }
     /* R18 (D59): the bias statements applied at this leg, their form only; it moves no grade, so the grade arms around
        it judge the leg's stated grade exactly as without it. */
@@ -869,14 +870,14 @@ function checkGrounds(fm, legs, findings) {
     const g = leg.ground;
     if (g === undefined || g === null || g === '') { unlabelled++; return; }
     if (typeof g !== 'string' || !GROUND_LABEL_RE.test(g)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}].ground '${String(g).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_', naming the branch of the argument this leg belongs to`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_ground_string_is', 'basis[{i}].ground \'{String}\' is not a ground label: up to 48 characters of letters, digits, spaces, \'-\' and \'_\', naming the branch of the argument this leg belongs to', { i: String(i), String: String(String(g).slice(0, 60)) })));
       return;
     }
     labelled.push([i, g]);
   });
   if (rows === undefined || rows === null) {
     if (labelled.length) {
-      findings.push(f('C-2.8', 'error', `basis leg${labelled.length === 1 ? '' : 's'} ${labelled.map(([i]) => i).join(', ')} name${labelled.length === 1 ? 's' : ''} a ground with no grounds[] block: grounds compose DISJUNCTIVELY, so a finding takes its STRONGEST ground rather than its weakest leg — and that is only ever reached by an affirmative, attributed act. Nothing may become stronger because a field was written and nobody signed for it`,
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_leg_v1_map_name', 'basis leg{v1} {map} name{v2} a ground with no grounds[] block: grounds compose DISJUNCTIVELY, so a finding takes its STRONGEST ground rather than its weakest leg — and that is only ever reached by an affirmative, attributed act. Nothing may become stronger because a field was written and nobody signed for it', { v1: String(labelled.length === 1 ? '' : 's'), map: String(labelled.map(([i]) => i).join(', ')), v2: String(labelled.length === 1 ? 's' : '') }),
         ['author a grounds[] row per label, naming the member who asserts that ground is independently sufficient and the date',
          'or drop the ground labels — an unstructured basis is no stronger than its weakest leg, which is the conservative reading']));
     }
@@ -889,16 +890,16 @@ function checkGrounds(fm, legs, findings) {
   const declared = new Map();          // label -> row index
   rows.forEach((r, i) => {
     if (!r || typeof r !== 'object' || Array.isArray(r)) {
-      findings.push(f('C-2.8', 'error', `grounds[${i}] is not an object`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.grounds_i_is_not_an', 'grounds[{i}] is not an object', { i: String(i) })));
       return;
     }
     const label = r.ground;
     if (typeof label !== 'string' || !GROUND_LABEL_RE.test(label)) {
-      findings.push(f('C-2.8', 'error', `grounds[${i}].ground '${String(label).slice(0, 60)}' is not a ground label: up to 48 characters of letters, digits, spaces, '-' and '_'`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.grounds_i_ground_string_is', 'grounds[{i}].ground \'{String}\' is not a ground label: up to 48 characters of letters, digits, spaces, \'-\' and \'_\'', { i: String(i), String: String(String(label).slice(0, 60)) })));
       return;
     }
     if (declared.has(label)) {
-      findings.push(f('C-2.8', 'error', `grounds[${i}] declares '${label}' a second time: one ground, one assertion, one member answering for it`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.grounds_i_declares_label_a', 'grounds[{i}] declares \'{label}\' a second time: one ground, one assertion, one member answering for it', { i: String(i), label: String(label) })));
       return;
     }
     declared.set(label, i);
@@ -925,14 +926,14 @@ function checkGrounds(fm, legs, findings) {
        THAT is when this arm earns the same treatment. */
     if (typeof r.asserted_by !== 'string' || r.asserted_by.trim() === ''
         || isMachineIdentity(r.asserted_by)) {
-      findings.push(f('C-2.8', 'error', `grounds[${i}].asserted_by '${r.asserted_by}' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine's`,
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.grounds_i_asserted_by_asserted', 'grounds[{i}].asserted_by \'{asserted_by}\' is not a named member: "these legs are enough on their own" is an authored judgment that makes the finding STRONGER, so it carries the name of the member making it — never a machine\'s', { i: String(i), asserted_by: String(r.asserted_by) }),
         ['name the member asserting that this ground is independently sufficient']));
     }
     if (!ISO_TS_RE.test(String(r.at || ''))) {
-      findings.push(f('C-2.8', 'error', `grounds[${i}] requires 'at' as an ISO timestamp (got '${r.at}'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.grounds_i_requires_at_as', 'grounds[{i}] requires \'at\' as an ISO timestamp (got \'{at}\'): the assertion is dated because a structure authored after a strength was seen is a different act from one authored before it (DEC-32), and only a date lets a reader tell', { i: String(i), at: String(r.at) })));
     }
     if (r.statement !== undefined && r.statement !== null && typeof r.statement !== 'string') {
-      findings.push(f('C-2.8', 'error', `grounds[${i}].statement is not a string`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.grounds_i_statement_is_not', 'grounds[{i}].statement is not a string', { i: String(i) })));
     }
   });
   /* THE PARTITION IS TOTAL OR ABSENT. */
@@ -944,15 +945,15 @@ function checkGrounds(fm, legs, findings) {
   /* A LABEL WITH NO ASSERTION, and its mirror. */
   for (const [i, label] of labelled) {
     if (!declared.has(label)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}].ground '${label}' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for`,
-        [`add a grounds[] row for '${label}' with asserted_by and at`]));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_ground_label_is', 'basis[{i}].ground \'{label}\' is not declared in grounds[]: a ground that nobody asserted is independently sufficient cannot be one, and the finding must not take a maximum over a branch no member signed for', { i: String(i), label: String(label) }),
+        [localize('inquiry-grammar.grammar.add_a_grounds_row_for', 'add a grounds[] row for \'{label}\' with asserted_by and at', { label: String(label) })]));
     }
   }
   const carried = new Set(labelled.map(([, l]) => l));
   for (const [label, i] of declared) {
     if (!carried.has(label)) {
-      findings.push(f('C-2.8', 'error', `grounds[${i}] declares '${label}', which no basis leg belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own`,
-        [`give at least one basis leg 'ground: ${label}'`, 'or remove the row']));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.grounds_i_declares_label_which', 'grounds[{i}] declares \'{label}\', which no basis leg belongs to: a ground is a partition OF THE LEGS, and an empty one asserts that nothing is sufficient on its own', { i: String(i), label: String(label) }),
+        [localize('inquiry-grammar.grammar.give_at_least_one_basis', 'give at least one basis leg \'ground: {label}\'', { label: String(label) }), 'or remove the row']));
     }
   }
 }
@@ -1053,16 +1054,16 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   const observation = registry && registry.earned && registry.earned.testimony && target
     ? registry.earned.testimony[target] || null : null;
   if (leg.grade_axis === 'capture' && targetType === 'information' && observation) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states a capture grade of ${leg.grade} for ${target}, which is a member's authored observation: the capture axis measures the act of reading a document in, and nobody read these words in from anywhere — they are the member's own. Its grade is testimony, ${observation.grade}, on the testimony axis, and its capture axis is not applicable`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_capture_3', 'basis[{i}] states a capture grade of {grade} for {target}, which is a member\'s authored observation: the capture axis measures the act of reading a document in, and nobody read these words in from anywhere — they are the member\'s own. Its grade is testimony, {grade_2}, on the testimony axis, and its capture axis is not applicable', { i: String(i), grade: String(leg.grade), target: String(target), grade_2: String(observation.grade) }),
       [`grade basis[${i}] on the testimony axis — grade_axis: testimony, grade: ${observation.grade}, grade_source: testimony`,
-       `or state no grade on basis[${i}] — the leg stays in the basis, present and not yet load-bearing`],
+       localize('inquiry-grammar.grammar.or_state_no_grade_on', 'or state no grade on basis[{i}] — the leg stays in the basis, present and not yet load-bearing', { i: String(i) })],
       'testimony-leg-capture-graded'));
     return;
   }
   if (leg.grade_axis !== 'testimony') return;
   if (leg.grade !== TESTIMONY_GRADE) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony grade of ${leg.grade}: a member's firsthand observation is graded ${TESTIMONY_GRADE} on the testimony axis and at no other value. It stands on the observing member's trust, and nothing raises it — a second member agreeing with it is a co-signature, not a second observation (a second member who saw the same thing records their own, and the case then rests on two testimonies, each ${TESTIMONY_GRADE})`,
-      [`state grade: ${TESTIMONY_GRADE} on basis[${i}]`],
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_testimony_2', 'basis[{i}] states a testimony grade of {grade}: a member\'s firsthand observation is graded {TESTIMONY_GRADE} on the testimony axis and at no other value. It stands on the observing member\'s trust, and nothing raises it — a second member agreeing with it is a co-signature, not a second observation (a second member who saw the same thing records their own, and the case then rests on two testimonies, each {TESTIMONY_GRADE_2})', { i: String(i), grade: String(leg.grade), TESTIMONY_GRADE: String(TESTIMONY_GRADE), TESTIMONY_GRADE_2: String(TESTIMONY_GRADE) }),
+      [localize('inquiry-grammar.grammar.state_grade_testimony_grade_on', 'state grade: {TESTIMONY_GRADE} on basis[{i}]', { TESTIMONY_GRADE: String(TESTIMONY_GRADE), i: String(i) })],
       'testimony-grade-not-d'));
     return;
   }
@@ -1071,20 +1072,20 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
      non-inherited testimony grade on an inquiry leg. */
   if (leg.grade_source === 'inherited' || targetType === 'inquiry') return;
   if (leg.grade_source !== 'testimony') {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony-axis grade with grade_source '${leg.grade_source}': a testimony grade comes from a member's own authored observation and from nothing else — a resolution, a capture or a hunch is an account of something other than whose word this is`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_testimony_3', 'basis[{i}] states a testimony-axis grade with grade_source \'{grade_source}\': a testimony grade comes from a member\'s own authored observation and from nothing else — a resolution, a capture or a hunch is an account of something other than whose word this is', { i: String(i), grade_source: String(leg.grade_source) }),
       [`set grade_source: testimony on basis[${i}]`],
       'testimony-axis-source'));
     return;
   }
   if (!registry) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony grade for ${target}, but whether that document IS a member's authored observation is held by the register, which cannot be read here: a document is an observation because the act that records one wrote it, never because a leg says so`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_testimony_4', 'basis[{i}] states a testimony grade for {target}, but whether that document IS a member\'s authored observation is held by the register, which cannot be read here: a document is an observation because the act that records one wrote it, never because a leg says so', { i: String(i), target: String(target) }),
       ['run this through the ratification gate or op=promote, which read the record'],
       'testimony-axis-unconfirmable'));
     return;
   }
   if (!observation) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony grade for ${target}, which is not a member's authored observation: the testimony axis grades whose word a document is, and this one's bytes were captured, not authored here. Grading it as testimony would let a captured source pass for a member's own word`,
-      [`grade basis[${i}] on the capture axis, which is what a captured document's grade measures`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_testimony_5', 'basis[{i}] states a testimony grade for {target}, which is not a member\'s authored observation: the testimony axis grades whose word a document is, and this one\'s bytes were captured, not authored here. Grading it as testimony would let a captured source pass for a member\'s own word', { i: String(i), target: String(target) }),
+      [localize('inquiry-grammar.grammar.grade_basis_i_on_the', 'grade basis[{i}] on the capture axis, which is what a captured document\'s grade measures', { i: String(i) }),
        'or, if this is your own firsthand knowledge, record it as an observation (op=testify) and cite that'],
       'testimony-axis-not-authored'));
     return;
@@ -1095,8 +1096,8 @@ function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
      authority for what a target earns on this axis and the arm that lets an
      attestation move it is caught at the write. */
   if (leg.grade !== observation.grade) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony grade of ${leg.grade} for ${target}, but the record holds ${observation.grade} for it. ${observation.why ?? ''}`.trimEnd(),
-      [`state grade: ${observation.grade} on basis[${i}]`],
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_testimony_6', 'basis[{i}] states a testimony grade of {grade} for {target}, but the record holds {grade_2} for it. {v1}', { i: String(i), grade: String(leg.grade), target: String(target), grade_2: String(observation.grade), v1: String(observation.why ?? '') }).trimEnd(),
+      [localize('inquiry-grammar.grammar.state_grade_grade_on_basis', 'state grade: {grade} on basis[{i}]', { grade: String(observation.grade), i: String(i) })],
       'testimony-grade-unearned'));
   }
 }
@@ -1108,7 +1109,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
      second complaint about one broken leg helps nobody. */
   if (!graded) return;
   if (!registry) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source '${src}' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_grade_source_2', 'basis[{i}] states grade_source \'{src}\' but the record it would be earned from cannot be read here: an earned grade is computed by the record and is never taken from a caller, so it cannot be confirmed by a checker that can only see this one record', { i: String(i), src: String(src) }),
       ['run this through the ratification gate or op=promote, which read the record',
        'or state the grade as testimony (grade D, with an author and a date) if it is a member\'s account']));
     return;
@@ -1120,9 +1121,9 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
      discipline the loop above takes with an unusable target. */
   if (leg.grade_axis === 'capture' && targetType === 'inquiry' && src !== 'capture') return;
   if (leg.grade_axis !== wantAxis) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source '${src}' on the ${leg.grade_axis} axis: ${src === 'resolution' ? 'a resolution IS the framework\'s §8.1 connection grade and grades nothing else' : 'a capture grade is a property of an information object and measures how the bytes arrived (DEC-21)'}, so it can only be a source for a ${wantAxis} grade`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_grade_source_3', 'basis[{i}] states grade_source \'{src}\' on the {grade_axis} axis: {v1}, so it can only be a source for a {wantAxis} grade', { i: String(i), src: String(src), grade_axis: String(leg.grade_axis), v1: String(src === 'resolution' ? 'a resolution IS the framework\'s §8.1 connection grade and grades nothing else' : 'a capture grade is a property of an information object and measures how the bytes arrived (DEC-21)'), wantAxis: String(wantAxis) }),
       [`set grade_axis: ${wantAxis} on basis[${i}]`,
-       `or state where this ${leg.grade_axis}-axis grade actually came from`]));
+       localize('inquiry-grammar.grammar.or_state_where_this_grade', 'or state where this {grade_axis}-axis grade actually came from', { grade_axis: String(leg.grade_axis) })]));
     return;
   }
   /* A leg to another INQUIRY earns nothing: an inquiry has no captures and no
@@ -1130,13 +1131,13 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
      `resolution` only — the capture-axis-on-an-inquiry case already has its own
      finding above (REC-31's arm), and it says the same thing better. */
   if (src === 'resolution' && targetType === 'inquiry') {
-    findings.push(f('C-2.8', 'error', `basis[${i}] claims an EARNED resolution grade on an inquiry leg: a resolution matches a captured document's reading to a registry entity, and an inquiry is not a captured document — there is nothing here for the recogniser to have graded`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_claims_an_earned', 'basis[{i}] claims an EARNED resolution grade on an inquiry leg: a resolution matches a captured document\'s reading to a registry entity, and an inquiry is not a captured document — there is nothing here for the recogniser to have graded', { i: String(i) }),
       ['rest this leg on the INFO- document that carries the reference',
        'or, if the target is a published case, inherit its frozen connection grade (grade_source: inherited)']));
     return;
   }
   if (src === 'resolution' && !registry.subject_entity) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] claims an EARNED resolution grade, but this inquiry names no subject_entity: an earned connection grade is the strongest resolution of the target's captures TO THE INQUIRY'S SUBJECT, and with no subject named there is nothing to have resolved to (DATA-MODEL D1(b))`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_claims_an_earned_2', 'basis[{i}] claims an EARNED resolution grade, but this inquiry names no subject_entity: an earned connection grade is the strongest resolution of the target\'s captures TO THE INQUIRY\'S SUBJECT, and with no subject named there is nothing to have resolved to (DATA-MODEL D1(b))', { i: String(i) }),
       ['add subject_entity: ENT-YYYY-NNNN naming the registry entry this question is about',
        'or state no grade at all — an inquiry with no subject entity has no A/B/C available to it, and that is honest (DEC-15)']));
     return;
@@ -1176,16 +1177,16 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
      transcription to measure) moved with the refusal. */
   if (earned && earned.undetermined_because === 'CAPTURE_AXIS_AUTHORED') return;
   if (earned && earned.mode === 'ceiling' && earned.grade == null) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ''}`,
-      [`state NO capture grade on basis[${i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_an_earned', 'basis[{i}] states an EARNED capture grade of {grade} for {target}, but what that document\'s capture can support is UNDETERMINED, not {grade_2}. {v1}', { i: String(i), grade: String(leg.grade), target: String(leg.target), grade_2: String(leg.grade), v1: String(earned.why ?? '') }),
+      [localize('inquiry-grammar.grammar.state_no_capture_grade_on', 'state NO capture grade on basis[{i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on', { i: String(i) }),
        'or have the transcription measured (the MEASUREMENTS ledger, per engine, per version) and state the letter the record then earns',
        'or state this leg as testimony (grade D, with an author and a date) if it is a member\'s own account']));
     return;
   }
   if (!earned || !earned.grade) {
     findings.push(f('C-2.8', 'error', src === 'resolution'
-      ? `basis[${i}] states an EARNED resolution grade of ${leg.grade} for ${leg.target}, but the record holds no A/B/C resolution of that document to ${registry.subject_entity}: nothing was earned here. The recogniser never mints a D, so a document known to concern the subject only by a member's testimony earns nothing either — that leg is testimony and says so`
-      : `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but the record holds no registered capture for that document: there are no bytes here whose arrival this grade could be measuring`,
+      ? localize('inquiry-grammar.grammar.basis_i_states_an_earned_2', 'basis[{i}] states an EARNED resolution grade of {grade} for {target}, but the record holds no A/B/C resolution of that document to {subject_entity}: nothing was earned here. The recogniser never mints a D, so a document known to concern the subject only by a member\'s testimony earns nothing either — that leg is testimony and says so', { i: String(i), grade: String(leg.grade), target: String(leg.target), subject_entity: String(registry.subject_entity) })
+      : localize('inquiry-grammar.grammar.basis_i_states_an_earned_3', 'basis[{i}] states an EARNED capture grade of {grade} for {target}, but the record holds no registered capture for that document: there are no bytes here whose arrival this grade could be measuring', { i: String(i), grade: String(leg.grade), target: String(leg.target) }),
       src === 'resolution'
         ? ['resolve the document to the subject with op=resolve, then state the grade it earned',
            'or state this leg as testimony (grade D, with an author and a date)']
@@ -1221,13 +1222,13 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
      * fidelity rather than this file guessing at it. */
   if (earned.mode === 'ceiling') {
     if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(earned.grade)) {
-      findings.push(f('C-2.8', 'error', `basis[${i}] states a capture grade of ${leg.grade} for ${leg.target}, which is STRONGER than the ${earned.grade} the record can earn for it. ${earned.why} ${earned.ceiling ?? ''}`,
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_a_capture_4', 'basis[{i}] states a capture grade of {grade} for {target}, which is STRONGER than the {grade_2} the record can earn for it. {why} {v1}', { i: String(i), grade: String(leg.grade), target: String(leg.target), grade_2: String(earned.grade), why: String(earned.why), v1: String(earned.ceiling ?? '') }),
         [`state grade: ${earned.grade} or weaker on basis[${i}] — op=earnedbasis answers what each target earns before you write it`]));
     }
     return;
   }
   if (earned.grade !== leg.grade) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED ${wantAxis} grade of ${leg.grade} for ${leg.target}, but the record earns ${earned.grade}: an earned grade is computed by the record and a caller does not hand it to us in either direction. ${earned.why}`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_an_earned_4', 'basis[{i}] states an EARNED {wantAxis} grade of {grade} for {target}, but the record earns {grade_2}: an earned grade is computed by the record and a caller does not hand it to us in either direction. {why}', { i: String(i), wantAxis: String(wantAxis), grade: String(leg.grade), target: String(leg.target), grade_2: String(earned.grade), why: String(earned.why) }),
       [`state grade: ${earned.grade} on basis[${i}] — op=earnedbasis answers what each target earns before you write it`]));
   }
 }
@@ -1269,7 +1270,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   const entry = registry && target ? registry[target] : null;
   const pub = entry && (entry.object_type == null || entry.object_type === 'inquiry') ? entry : null;
   if (leg.grade_source === 'inherited' && !pub) {
-    findings.push(f('C-2.8', 'error', `basis[${i}] states grade_source 'inherited' but its target ${registry ? 'is not a published case' : 'cannot be checked against the published record here'}: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else`,
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_states_grade_source_4', 'basis[{i}] states grade_source \'inherited\' but its target {v1}: a grade is inherited from a case the team SIGNED, at a stated edition, and from nothing else', { i: String(i), v1: String(registry ? 'is not a published case' : 'cannot be checked against the published record here') }),
       ['cite a published case and name its edition', 'or state where this grade actually came from']));
     return;
   }
@@ -1279,24 +1280,24 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
        named, not yet load-bearing. What it may not do is CLAIM inheritance,
        because inheriting nothing is not inheritance. */
     if (leg.grade_source === 'inherited') {
-      findings.push(f('C-2.8', 'error', `basis[${i}] claims 'inherited' with no grade: a leg resting on a published case may state no grade at all — undetermined, stated — but it may not claim to have inherited one`));
+      findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_claims_inherited_with', 'basis[{i}] claims \'inherited\' with no grade: a leg resting on a published case may state no grade at all — undetermined, stated — but it may not claim to have inherited one', { i: String(i) })));
     }
     return;
   }
   if (leg.grade_source !== 'inherited') {
-    findings.push(f('C-21.2', 'error', `basis[${i}] carries a grade of its own on a PUBLISHED case (${target}): a leg resting on a published case inherits that case's frozen strength and says so with grade_source 'inherited'. A case built on a case cannot be stronger than the case beneath it`,
+    findings.push(f('C-21.2', 'error', localize('inquiry-grammar.grammar.basis_i_carries_a_grade_3', 'basis[{i}] carries a grade of its own on a PUBLISHED case ({target}): a leg resting on a published case inherits that case\'s frozen strength and says so with grade_source \'inherited\'. A case built on a case cannot be stronger than the case beneath it', { i: String(i), target: String(target) }),
       [`set grade_source: inherited and target_edition on basis[${i}]`]));
     return;
   }
   const ed = leg.target_edition;
   if (!Number.isInteger(ed)) {
-    findings.push(f('C-21.2', 'error', `basis[${i}] inherits from ${target} without naming an edition: every edition is a SEPARATE DOCUMENT with its own frozen strength, so an unnamed edition leaves the inheritance rule nothing fixed to compare against (DEC-12)`,
+    findings.push(f('C-21.2', 'error', localize('inquiry-grammar.grammar.basis_i_inherits_from_target', 'basis[{i}] inherits from {target} without naming an edition: every edition is a SEPARATE DOCUMENT with its own frozen strength, so an unnamed edition leaves the inheritance rule nothing fixed to compare against (DEC-12)', { i: String(i), target: String(target) }),
       [`add target_edition to basis[${i}]`]));
     return;
   }
   const frozen = pub.editions ? pub.editions[String(ed)] : null;
   if (!frozen) {
-    findings.push(f('C-21.2', 'error', `basis[${i}] names edition ${ed} of ${target}, which is not in the published record (published editions: ${pub.editions ? Object.keys(pub.editions).join(', ') || 'none' : 'none'})`));
+    findings.push(f('C-21.2', 'error', localize('inquiry-grammar.grammar.basis_i_names_edition_ed', 'basis[{i}] names edition {ed} of {target}, which is not in the published record (published editions: {v1})', { i: String(i), ed: String(ed), target: String(target), v1: String(pub.editions ? Object.keys(pub.editions).join(', ') || 'none' : 'none') })));
     return;
   }
   const axis = leg.grade_axis;
@@ -1306,13 +1307,13 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
   if (!GRADE_AXES.includes(axis)) return;   // C-2.8 named it already
   const on = frozen[axis];
   if (!on || on.state !== 'graded') {
-    findings.push(f('C-21.2', 'error', `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose ${axis} axis is ${on ? on.state.toUpperCase() : 'ABSENT'}: ${on && on.state === 'unrated' ? 'nothing on that axis was ever established there, so a grade taken from it would be invented outright' : 'what lies beneath is unknown rather than absent, so a grade taken from it would be a claim about material nobody has seen'}`,
-      [`state no grade on basis[${i}] — undetermined, stated, is the honest answer`]));
+    findings.push(f('C-21.2', 'error', localize('inquiry-grammar.grammar.basis_i_inherits_axis_grade', 'basis[{i}] inherits {axis} grade {grade} from {target} edition {ed}, whose {axis_2} axis is {v1}: {v2}', { i: String(i), axis: String(axis), grade: String(leg.grade), target: String(target), ed: String(ed), axis_2: String(axis), v1: String(on ? on.state.toUpperCase() : 'ABSENT'), v2: String(on && on.state === 'unrated' ? 'nothing on that axis was ever established there, so a grade taken from it would be invented outright' : 'what lies beneath is unknown rather than absent, so a grade taken from it would be a claim about material nobody has seen') }),
+      [localize('inquiry-grammar.grammar.state_no_grade_on_basis', 'state no grade on basis[{i}] — undetermined, stated, is the honest answer', { i: String(i) })]));
     return;
   }
   if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(on.grade)) {
-    findings.push(f('C-21.2', 'error', `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose frozen ${axis} strength is ${on.grade}: a case built on a case cannot be stronger than the case beneath it, and the comparison is PER AXIS — this leg's ${axis} grade against that edition's ${axis} grade, never against a composed letter`,
-      [`set basis[${i}].grade to ${on.grade}, the frozen ${axis} strength of that edition`]));
+    findings.push(f('C-21.2', 'error', localize('inquiry-grammar.grammar.basis_i_inherits_axis_grade_2', 'basis[{i}] inherits {axis} grade {grade} from {target} edition {ed}, whose frozen {axis_2} strength is {grade_2}: a case built on a case cannot be stronger than the case beneath it, and the comparison is PER AXIS — this leg\'s {axis_3} grade against that edition\'s {axis_4} grade, never against a composed letter', { i: String(i), axis: String(axis), grade: String(leg.grade), target: String(target), ed: String(ed), axis_2: String(axis), grade_2: String(on.grade), axis_3: String(axis), axis_4: String(axis) }),
+      [localize('inquiry-grammar.grammar.set_basis_i_grade_to', 'set basis[{i}].grade to {grade}, the frozen {axis} strength of that edition', { i: String(i), grade: String(on.grade), axis: String(axis) })]));
   }
 }
 
@@ -1333,8 +1334,7 @@ export function leadLegFindings(label, leg, findings) {
     const v = typeof l[field] === 'string' ? l[field].trim() : '';
     if (v && LEAD_ID_RE.test(v)) {
       findings.push(refusal("LEAD_NOT_EVIDENCE",
-        `${label}.${field} '${v}' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, `
-        + `§7): it says where to look, not what was found, so no leg can rest on it`,
+        localize('inquiry-grammar.grammar.label_field_v_is_a', '{label}.{field} \'{v}\' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, §7): it says where to look, not what was found, so no leg can rest on it', { label: String(label), field: String(field), v: String(v) }),
         ['follow the lead and cite the document the look captured instead',
          'or, if you saw the thing yourself, author it as your own observation and cite that']));
       return true;
@@ -1395,25 +1395,25 @@ export function importedLegFindings(label, leg, findings, checkId = INQUIRY_GRAM
   const refusal = (message, repairs) => importedRefusal(checkId, message, repairs);
   const ed = l.target_edition;
   if (!Number.isInteger(ed) || ed < 1) {
-    findings.push(refusal(`${label}.target_edition '${String(ed).slice(0, 40)}' does not name an edition of ${ref}: a leg on another team's finding names the one edition it rests on, a positive whole number, because each edition is a separate document with its own published grades`,
-      [`set ${label}.target_edition to the edition this team accepted`]));
+    findings.push(refusal(localize('inquiry-grammar.grammar.label_target_edition_string_does', '{label}.target_edition \'{String}\' does not name an edition of {ref}: a leg on another team\'s finding names the one edition it rests on, a positive whole number, because each edition is a separate document with its own published grades', { label: String(label), String: String(String(ed).slice(0, 40)), ref: String(ref) }),
+      [localize('inquiry-grammar.grammar.set_label_target_edition_to', 'set {label}.target_edition to the edition this team accepted', { label: String(label) })]));
   }
   for (const field of ['grade', 'grade_axis', 'grade_source']) {
     if (carries(l[field])) {
-      findings.push(refusal(`${label}.${field} is set on a leg on another team's finding (${ref}): that finding's grades are the ones its edition published, and the leg states none of its own`,
+      findings.push(refusal(localize('inquiry-grammar.grammar.label_field_is_set_on', '{label}.{field} is set on a leg on another team\'s finding ({ref}): that finding\'s grades are the ones its edition published, and the leg states none of its own', { label: String(label), field: String(field), ref: String(ref) }),
         [`remove ${field} from ${label}`]));
     }
   }
   if (carries(l.content_id)) {
-    findings.push(refusal(`${label}.content_id is set on a leg on another team's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that team's own case file`,
+    findings.push(refusal(localize('inquiry-grammar.grammar.label_content_id_is_set', '{label}.content_id is set on a leg on another team\'s finding ({ref}): the leg names the finding, and the parts it rests on are checked in that team\'s own case file', { label: String(label), ref: String(ref) }),
       [`remove content_id from ${label}`]));
   }
   if (legHasAuthoredExtent(l)) {
-    findings.push(refusal(`${label} names an extent on a leg on another team's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that team's own case file`,
-      [`remove the extent fields from ${label}`]));
+    findings.push(refusal(localize('inquiry-grammar.grammar.label_names_an_extent_on', '{label} names an extent on a leg on another team\'s finding ({ref}): the leg names the finding, and the parts it rests on are checked in that team\'s own case file', { label: String(label), ref: String(ref) }),
+      [localize('inquiry-grammar.grammar.remove_the_extent_fields_from', 'remove the extent fields from {label}', { label: String(label) })]));
   }
   if (carries(l.extent_capture)) {
-    findings.push(refusal(`${label}.extent_capture is set on a leg on another team's finding (${ref}): no capture of this record holds that finding`,
+    findings.push(refusal(localize('inquiry-grammar.grammar.label_extent_capture_is_set', '{label}.extent_capture is set on a leg on another team\'s finding ({ref}): no capture of this record holds that finding', { label: String(label), ref: String(ref) }),
       [`remove extent_capture from ${label}`]));
   }
   return true;
@@ -1436,8 +1436,8 @@ function importedReferenceFindings(fm, findings) {
   refs.forEach((r, i) => {
     if (!r || typeof r !== 'object' || !isRef(r.target)) return;
     findings.push(importedRefusal(INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED.check,
-      `references[${i}].target names another team's finding (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
-      [`remove references[${i}]; the basis leg alone names that finding`]));
+      localize('inquiry-grammar.grammar.references_i_target_names_another', 'references[{i}].target names another team\'s finding ({target}): a leg on it is not a reference, so references[] does not list it', { i: String(i), target: String(r.target.trim()) }),
+      [localize('inquiry-grammar.grammar.remove_references_i_the_basis', 'remove references[{i}]; the basis leg alone names that finding', { i: String(i) })]));
   });
 }
 
@@ -1468,16 +1468,16 @@ function importedReferenceFindings(fm, findings) {
 function standardLegFindings(label, leg, findings) {
   const p = leg.target_portion;
   if (carries(p) && !isPortionPath(p)) {
-    findings.push(f('C-2.8', 'error', `${label}.target_portion '${String(p).slice(0, 40)}' is not a portion path: it names a section within the standard's instrument, as text of at most ${PORTION_PATH_MAX} characters`,
-      [`name the portion's path on ${label}`, 'or drop target_portion — the leg then rests on the whole standard']));
+    findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.label_target_portion_string_is', '{label}.target_portion \'{String}\' is not a portion path: it names a section within the standard\'s instrument, as text of at most {PORTION_PATH_MAX} characters', { label: String(label), String: String(String(p).slice(0, 40)), PORTION_PATH_MAX: String(PORTION_PATH_MAX) }),
+      [localize('inquiry-grammar.grammar.name_the_portions_path_on', 'name the portion\'s path on {label}', { label: String(label) }), 'or drop target_portion — the leg then rests on the whole standard']));
   }
   const wrong = [];
   if (leg.grade_axis === 'connection' || leg.grade_axis === 'testimony') wrong.push(`a ${leg.grade_axis} axis`);
   if (leg.grade_source === 'hunch') wrong.push('a hunch');
   if (!wrong.length) return false;
-  findings.push(standardLegRefusal(`${label} rests on the standard ${leg.target} and states ${wrong.join(' and ')}: a standard is law the team holds in captured text, so the only grade a leg on it carries is the capture grade that text earns. Whether the standard bears on this question is the inquiry's own argument, not a grade`,
+  findings.push(standardLegRefusal(localize('inquiry-grammar.grammar.label_rests_on_the_standard', '{label} rests on the standard {target} and states {wrong}: a standard is law the team holds in captured text, so the only grade a leg on it carries is the capture grade that text earns. Whether the standard bears on this question is the inquiry\'s own argument, not a grade', { label: String(label), target: String(leg.target), wrong: String(wrong.join(' and ')) }),
     [`grade ${label} on the capture axis with grade_source: capture — op=earnedbasis answers what the standard's text earns`,
-     `or state no grade on ${label} — the leg stays in the basis, present and not yet load-bearing`]));
+     localize('inquiry-grammar.grammar.or_state_no_grade_on_2', 'or state no grade on {label} — the leg stays in the basis, present and not yet load-bearing', { label: String(label) })]));
   return true;
 }
 
@@ -1497,20 +1497,20 @@ const DERIVED_LEG_GRADE = ['grade', 'grade_axis', 'grade_source'];
 function derivedLegDepartures(label, l, what, why, refusal) {
   for (const field of DERIVED_LEG_GRADE) {
     if (carries(l[field])) {
-      refusal(`${label}.${field} is set on a leg on ${what}: ${why}, so the leg states none of its own`,
+      refusal(localize('inquiry-grammar.grammar.label_field_is_set_on_2', '{label}.{field} is set on a leg on {what}: {why}, so the leg states none of its own', { label: String(label), field: String(field), what: String(what), why: String(why) }),
         [`remove ${field} from ${label}`]);
     }
   }
   if (carries(l.content_id)) {
-    refusal(`${label}.content_id is set on a leg on ${what}: the leg names it whole, and the parts it reads are its own`,
+    refusal(localize('inquiry-grammar.grammar.label_content_id_is_set_2', '{label}.content_id is set on a leg on {what}: the leg names it whole, and the parts it reads are its own', { label: String(label), what: String(what) }),
       [`remove content_id from ${label}`]);
   }
   if (legHasAuthoredExtent(l)) {
-    refusal(`${label} names an extent on a leg on ${what}: the leg names it whole, and the parts it reads are its own`,
-      [`remove the extent fields from ${label}`]);
+    refusal(localize('inquiry-grammar.grammar.label_names_an_extent_on_2', '{label} names an extent on a leg on {what}: the leg names it whole, and the parts it reads are its own', { label: String(label), what: String(what) }),
+      [localize('inquiry-grammar.grammar.remove_the_extent_fields_from_2', 'remove the extent fields from {label}', { label: String(label) })]);
   }
   if (carries(l.extent_capture)) {
-    refusal(`${label}.extent_capture is set on a leg on ${what}: no capture holds it`,
+    refusal(localize('inquiry-grammar.grammar.label_extent_capture_is_set_2', '{label}.extent_capture is set on a leg on {what}: no capture holds it', { label: String(label), what: String(what) }),
       [`remove extent_capture from ${label}`]);
   }
 }
@@ -1593,8 +1593,8 @@ function occurrenceReferenceFindings(fm, findings) {
   const refs = Array.isArray(fm?.references) ? fm.references : [];
   refs.forEach((r, i) => {
     if (!r || typeof r !== 'object' || !isOccurrenceRef(r.target)) return;
-    findings.push(occurrenceLegRefusal(`references[${i}].target names an occurrence of a duty (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
-      [`remove references[${i}]; the basis leg alone names that occurrence`]));
+    findings.push(occurrenceLegRefusal(localize('inquiry-grammar.grammar.references_i_target_names_an', 'references[{i}].target names an occurrence of a duty ({target}): a leg on it is not a reference, so references[] does not list it', { i: String(i), target: String(r.target.trim()) }),
+      [localize('inquiry-grammar.grammar.remove_references_i_the_basis_2', 'remove references[{i}]; the basis leg alone names that occurrence', { i: String(i) })]));
   });
 }
 
@@ -1627,16 +1627,16 @@ export function derivedConnectionLegFindings(label, leg, findings) {
   const refuse = (message, repairs) => findings.push(derivedLegRefusal(message, repairs));
   const missing = DERIVATION_FIELDS.filter((k) => typeof l[k] !== 'string' || l[k].trim() === '');
   for (const k of missing) {
-    refuse(`${label}.${k} is missing or empty on a leg on a derived connection (${l.target}): the leg carries the five fields the connection was derived from (${DERIVATION_FIELDS.join(', ')}), each a non-empty string, so a reader can derive it again`,
-      [`state ${k} on ${label}, as the connection's derivation gives it`]);
+    refuse(localize('inquiry-grammar.grammar.label_k_is_missing_or', '{label}.{k} is missing or empty on a leg on a derived connection ({target}): the leg carries the five fields the connection was derived from ({DERIVATION_FIELDS}), each a non-empty string, so a reader can derive it again', { label: String(label), k: String(k), target: String(l.target), DERIVATION_FIELDS: String(DERIVATION_FIELDS.join(', ')) }),
+      [localize('inquiry-grammar.grammar.state_k_on_label_as', 'state {k} on {label}, as the connection\'s derivation gives it', { k: String(k), label: String(label) })]);
   }
   if (!missing.length) {
     const id = derivedId({ kind: l.derivation_kind, from: l.derivation_from, to: l.derivation_to,
                            as_of: l.derivation_as_of, method: l.derivation_method });
     if (id !== l.target) {
-      refuse(`${label}.target ${l.target} is not the id of the derivation the leg carries (${id}): a derived connection is named by the SHA-256 of its five fields, so a leg whose target and fields disagree names two different connections`,
-        [`set ${label}.target to ${id}, the id its derivation_* fields give`,
-         `or correct the derivation_* fields on ${label} to the connection its target names`]);
+      refuse(localize('inquiry-grammar.grammar.label_target_target_is_not', '{label}.target {target} is not the id of the derivation the leg carries ({id}): a derived connection is named by the SHA-256 of its five fields, so a leg whose target and fields disagree names two different connections', { label: String(label), target: String(l.target), id: String(id) }),
+        [localize('inquiry-grammar.grammar.set_label_target_to_id', 'set {label}.target to {id}, the id its derivation_* fields give', { label: String(label), id: String(id) }),
+         localize('inquiry-grammar.grammar.or_correct_the_derivation_fields', 'or correct the derivation_* fields on {label} to the connection its target names', { label: String(label) })]);
     }
   }
   derivedLegDepartures(label, l, `a derived connection (${l.target})`,
@@ -1749,8 +1749,8 @@ export function biasAppliedFindings(label, value, findings, { effects = BIAS_EFF
   let entries;          // [{a, item, field}] to judge, in order
   if (plainObject(value)) {
     if (carries(value.bias_applied)) {
-      refuse(`${label}.bias_applied is not how a bias application is written: each one is written beside the other fields as numbered keys, ${FORM}`,
-        [`write each application as ${FORM}, and remove bias_applied from ${label}`]);
+      refuse(localize('inquiry-grammar.grammar.label_bias_applied_is_not', '{label}.bias_applied is not how a bias application is written: each one is written beside the other fields as numbered keys, {FORM}', { label: String(label), FORM: String(FORM) }),
+        [localize('inquiry-grammar.grammar.write_each_application_as_form', 'write each application as {FORM}, and remove bias_applied from {label}', { FORM: String(FORM), label: String(label) })]);
     }
     const numbers = new Set();
     for (const k of Object.keys(value)) {
@@ -1758,10 +1758,10 @@ export function biasAppliedFindings(label, value, findings, { effects = BIAS_EFF
       if (!m) continue;
       const shown = k.slice(0, 60);
       if (!isCanonicalN(m[1])) {
-        refuse(`${label}.${shown} is not a key of a bias application: its number is written 1, 2, 3 and so on`,
-          [`renumber ${shown} on ${label}, the applications numbered from 1`]);
+        refuse(localize('inquiry-grammar.grammar.label_shown_is_not_a', '{label}.{shown} is not a key of a bias application: its number is written 1, 2, 3 and so on', { label: String(label), shown: String(shown) }),
+          [localize('inquiry-grammar.grammar.renumber_shown_on_label_the', 'renumber {shown} on {label}, the applications numbered from 1', { shown: String(shown), label: String(label) })]);
       } else if (!BIAS_APPLICATION_KEYS.includes(m[2])) {
-        refuse(`${label}.${shown} is not a key of a bias application, which writes ${BIAS_APPLICATION_KEYS.join(', ')} only`,
+        refuse(localize('inquiry-grammar.grammar.label_shown_is_not_a_2', '{label}.{shown} is not a key of a bias application, which writes {BIAS_APPLICATION_KEYS} only', { label: String(label), shown: String(shown), BIAS_APPLICATION_KEYS: String(BIAS_APPLICATION_KEYS.join(', ')) }),
           [`remove ${shown} from ${label}`]);
       } else numbers.add(Number(m[1]));
     }
@@ -1769,7 +1769,7 @@ export function biasAppliedFindings(label, value, findings, { effects = BIAS_EFF
     if (numbers.size !== top) {
       const gaps = [];
       for (let i = 1; i <= top && gaps.length < 5; i++) if (!numbers.has(i)) gaps.push(i);
-      refuse(`${label}'s bias applications are numbered up to ${top} with ${gaps.join(', ')}${gaps.length === 5 ? ' and more' : ''} missing: they are numbered from 1 with none left out, so a reader can tell none was dropped`,
+      refuse(localize('inquiry-grammar.grammar.label_s_bias_applications_are', '{label}\'s bias applications are numbered up to {top} with {gaps}{v1} missing: they are numbered from 1 with none left out, so a reader can tell none was dropped', { label: String(label), top: String(top), gaps: String(gaps.join(', ')), v1: String(gaps.length === 5 ? ' and more' : '') }),
         [`renumber the bias_<n>_ keys on ${label} 1, 2, 3 and so on`]);
     }
     const ordered = [...numbers].sort((x, y) => x - y);
@@ -1793,7 +1793,7 @@ export function biasAppliedFindings(label, value, findings, { effects = BIAS_EFF
       }
       for (const k of Object.keys(a)) {
         if (!BIAS_APPLICATION_KEYS.includes(k)) {
-          refuse(`${item}.${k.slice(0, 40)} is not part of a bias application, which carries ${BIAS_APPLICATION_KEYS.join(', ')} only`,
+          refuse(localize('inquiry-grammar.grammar.item_k_is_not_part', '{item}.{k} is not part of a bias application, which carries {BIAS_APPLICATION_KEYS} only', { item: String(item), k: String(k.slice(0, 40)), BIAS_APPLICATION_KEYS: String(BIAS_APPLICATION_KEYS.join(', ')) }),
             [`remove ${k.slice(0, 40)} from ${item}`]);
         }
       }
@@ -1802,46 +1802,46 @@ export function biasAppliedFindings(label, value, findings, { effects = BIAS_EFF
   }
   const count = Array.isArray(value) ? value.length : entries.length;
   if (count > BIAS_MAX) {
-    refuse(`${label} carries ${count} bias applications: at most ${BIAS_MAX} are recorded in one place`,
-      [`keep the ${BIAS_MAX} applications that bear on it, or divide the question`]);
+    refuse(localize('inquiry-grammar.grammar.label_carries_count_bias_applications', '{label} carries {count} bias applications: at most {BIAS_MAX} are recorded in one place', { label: String(label), count: String(count), BIAS_MAX: String(BIAS_MAX) }),
+      [localize('inquiry-grammar.grammar.keep_the_bias_max_applications', 'keep the {BIAS_MAX} applications that bear on it, or divide the question', { BIAS_MAX: String(BIAS_MAX) })]);
   }
   const seen = new Map();          // `${statement}\u0000${effect}` -> the item that applied it first
   for (const { a, item, field } of entries) {
     const st = a.statement;
     if (typeof st !== 'string' || st.trim() === '') {
-      refuse(`${field('statement')} is missing or empty: an application names the bias statement applied, by its id as the project's declared bias holds it`,
-        [`state ${field('statement')}, the id of the statement in the project's declared bias`]);
+      refuse(localize('inquiry-grammar.grammar.field_is_missing_or_empty', '{field} is missing or empty: an application names the bias statement applied, by its id as the project\'s declared bias holds it', { field: String(field('statement')) }),
+        [localize('inquiry-grammar.grammar.state_field_the_id_of', 'state {field}, the id of the statement in the project\'s declared bias', { field: String(field('statement')) })]);
     } else if ([...st].length > BIAS_STATEMENT_MAX || /["'\\\r\n#]/.test(st)) {
-      refuse(`${field('statement')} cannot be written in the record: a statement id is at most ${BIAS_STATEMENT_MAX} characters, with no quote, backslash, newline or #`,
-        [`name the statement by an id of at most ${BIAS_STATEMENT_MAX} characters without those marks, as the declared bias holds it`]);
+      refuse(localize('inquiry-grammar.grammar.field_cannot_be_written_in', '{field} cannot be written in the record: a statement id is at most {BIAS_STATEMENT_MAX} characters, with no quote, backslash, newline or #', { field: String(field('statement')), BIAS_STATEMENT_MAX: String(BIAS_STATEMENT_MAX) }),
+        [localize('inquiry-grammar.grammar.name_the_statement_by_an', 'name the statement by an id of at most {BIAS_STATEMENT_MAX} characters without those marks, as the declared bias holds it', { BIAS_STATEMENT_MAX: String(BIAS_STATEMENT_MAX) })]);
     }
     const effect = a.effect;
     if (typeof effect !== 'string' || !effects.includes(effect)) {
-      refuse(`${field('effect')} '${String(effect).slice(0, 40)}' is not one of: ${effects.join(', ')}`,
-        [`state what the statement did: ${effects.join(', ')}`]);
+      refuse(localize('inquiry-grammar.grammar.field_string_is_not_one', '{field} \'{String}\' is not one of: {effects}', { field: String(field('effect')), String: String(String(effect).slice(0, 40)), effects: String(effects.join(', ')) }),
+        [localize('inquiry-grammar.grammar.state_what_the_statement_did', 'state what the statement did: {effects}', { effects: String(effects.join(', ')) })]);
       continue;
     }
     if (effect === 'grade_lowered') {
       const okFrom = BASIS_GRADES.includes(a.from), okTo = BASIS_GRADES.includes(a.to);
-      if (!okFrom) refuse(`${field('from')} '${String(a.from).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')}: a lowered grade names the letter it was lowered from`,
-        [`state ${field('from')}, the grade before the statement was applied`]);
-      if (!okTo) refuse(`${field('to')} '${String(a.to).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')}: a lowered grade names the letter it was lowered to`,
-        [`state ${field('to')}, the grade after the statement was applied`]);
+      if (!okFrom) refuse(localize('inquiry-grammar.grammar.field_string_is_not_one_2', '{field} \'{String}\' is not one of: {BASIS_GRADES}: a lowered grade names the letter it was lowered from', { field: String(field('from')), String: String(String(a.from).slice(0, 40)), BASIS_GRADES: String(BASIS_GRADES.join(', ')) }),
+        [localize('inquiry-grammar.grammar.state_field_the_grade_before', 'state {field}, the grade before the statement was applied', { field: String(field('from')) })]);
+      if (!okTo) refuse(localize('inquiry-grammar.grammar.field_string_is_not_one_3', '{field} \'{String}\' is not one of: {BASIS_GRADES}: a lowered grade names the letter it was lowered to', { field: String(field('to')), String: String(String(a.to).slice(0, 40)), BASIS_GRADES: String(BASIS_GRADES.join(', ')) }),
+        [localize('inquiry-grammar.grammar.state_field_the_grade_after', 'state {field}, the grade after the statement was applied', { field: String(field('to')) })]);
       if (okFrom && okTo && BASIS_GRADES.indexOf(a.to) <= BASIS_GRADES.indexOf(a.from)) {
-        refuse(`${item} lowers the grade from ${a.from} to ${a.to}, which is not lower: a statement applied as grade_lowered names a weaker letter than the one it started from`,
-          [`state the letters the grade moved between, ${field('to')} weaker than ${field('from')}`,
+        refuse(localize('inquiry-grammar.grammar.item_lowers_the_grade_from', '{item} lowers the grade from {from} to {to}, which is not lower: a statement applied as grade_lowered names a weaker letter than the one it started from', { item: String(item), from: String(a.from), to: String(a.to) }),
+          [localize('inquiry-grammar.grammar.state_the_letters_the_grade', 'state the letters the grade moved between, {field} weaker than {field_2}', { field: String(field('to')), field_2: String(field('from')) }),
            'or name another effect — a statement that changed no letter did not lower one']);
       }
     } else {
       for (const k of ['from', 'to']) {
-        if (carries(a[k])) refuse(`${field(k)} is set on a ${effect} application: only grade_lowered names the letters a grade moved between`,
+        if (carries(a[k])) refuse(localize('inquiry-grammar.grammar.field_is_set_on_a', '{field} is set on a {effect} application: only grade_lowered names the letters a grade moved between', { field: String(field(k)), effect: String(effect) }),
           [`remove ${field(k)}`]);
       }
     }
     if (typeof st === 'string' && st.trim() !== '') {
       const key = `${st}\u0000${effect}`;
       if (seen.has(key)) {
-        refuse(`${item} applies the statement ${st.slice(0, 60)} as ${effect} a second time (${seen.get(key)} already does): one statement's one effect here is recorded once`,
+        refuse(localize('inquiry-grammar.grammar.item_applies_the_statement_st', '{item} applies the statement {st} as {effect} a second time ({get} already does): one statement\'s one effect here is recorded once', { item: String(item), st: String(st.slice(0, 60)), effect: String(effect), get: String(seen.get(key)) }),
           [`remove ${item}`]);
       } else seen.set(key, item);
     }

@@ -7,6 +7,7 @@ import { world, sha, V, provDoc, infoMd } from "./fixture.mjs";
 import { ROUTE_MARK_NOTE } from "../../../src/provenance-routes/index.mjs";
 import { registerChecks, PROVENANCE_ACT_CHECKS } from "../../../src/provenance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* An information bundle with two documents: one with a fetched route, and one whose route the record lacks. */
 function twoDocs(w, id, { secondRouted = false, state = "collected" } = {}) {
@@ -117,7 +118,7 @@ test("R2: a witnessed chain survives an applied rebuild byte for byte, and the r
   const w = world();
   const id = "INFO-2026-0002-w";
   const b = { path: "snapshots/b.txt", text: "bytes of b" };
-  const witnessed = [{ who: "Internet Archive Wayback Machine", asserts: "served the replay", evidence: "CDX record",
+  const witnessed = [{ who: word("capture-sources.name.internet_archive_wayback"), asserts: "served the replay", evidence: "CDX record",
                        bound: false, via: "archive.org" }];
   assert.equal(w.promoteInfo(id, { captures: [cap, b], docs: [provDoc(cap, { provenance_chain: witnessed }), provDoc(b)] }).ok, true);
   const before = JSON.parse(w.record.readFile(id, "data/provenance.json").text).documents[0];

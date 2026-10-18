@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, seeded, xlsx, BASIC, V, MACHINE } from "./fixture.mjs";
 import { WORKBOOKS_TABLES } from "../../../src/workbooks/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 
@@ -84,7 +85,7 @@ test("R2 readWorkbook answers bindings, inputs, latest recompute, lint, method n
   await w.wb.lint({ ...w.at, viewer: V("bob") });
   assert.equal(calls, 1, "no read asks the engine");
   const again = await w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
-  assert.equal(again.recompute.status, "not recomputed here", "the latest recompute");
+  assert.equal(again.recompute.status, word("workbooks.recomputed"), "the latest recompute");
   assert.equal(w.count("workbook_recomputes"), 1, "reads write nothing");
   assert.equal(again.inputs.length, 3);
   assert.equal(again.lint.length, 1);

@@ -39,6 +39,7 @@
  */
 import { identify, compare, profileRecord, isMeaningful, worstSignificance } from "../site-profiles/index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* Decode bytes as the reader sees them; anything that is not bytes reads as no text. */
 const pipelineText = (bytes) => {
@@ -90,7 +91,7 @@ export async function assess(before, after, ctx) {
        answer is that nothing could be compared, never a guess in either direction. */
     note(LAYER.BYTES, "the two captures could not be compared");
     return out({ verdict: "undetermined", meaningful: null, events: [], connections: [],
-                 why: `the two captures could not be compared (${String((e && e.message) || e)}), so nothing is claimed` });
+                 why: localize("docprofile.pipeline.the_two_captures_could_not", "the two captures could not be compared ({String}), so nothing is claimed", { String: String(String((e && e.message) || e)) }) });
   }
   const da = cmp.digests.before, db = cmp.digests.after;
 
@@ -140,8 +141,7 @@ export async function assess(before, after, ctx) {
   catch (e) {
     note(LAYER.CONTENT_TYPE, "no content type could be decided");
     return out({ verdict: "changed", meaningful: null, events: [], connections: [],
-                 why: "the substance differs, and which kind of document this is could not be decided "
-                    + `(${String((e && e.message) || e)}), so what changed is not described` });
+                 why: localize("docprofile.pipeline.the_substance_differs_and_which", "the substance differs, and which kind of document this is could not be decided ({String}), so what changed is not described", { String: String(String((e && e.message) || e)) }) });
   }
   note(LAYER.CONTENT_TYPE, dt.type.label,
        { type: dt.type.key, confidence: dt.confidence, signals: dt.signals });
@@ -151,28 +151,28 @@ export async function assess(before, after, ctx) {
      differs (L3 said so) and nothing is claimed about what changed, in either
      direction (R13). `routine` would be a judgment nobody made. */
   const unread = (why) => {
-    note(LAYER.MEANING, "nothing is claimed about the content: " + why);
+    note(LAYER.MEANING, localize("docprofile.pipeline.nothing_is_claimed_about_the", "nothing is claimed about the content: {why}", { why: String(why) }));
     return out({ verdict: "changed", meaningful: null, events: [], connections: [], content_type,
-                 why: "the substance differs and " + why + ", so what changed is not described" });
+                 why: localize("docprofile.pipeline.the_substance_differs_and_why", "the substance differs and {why}, so what changed is not described", { why: String(why) }) });
   };
 
   /* ---- L5: is the change meaningful FOR THAT TYPE ---- */
   if (typeof dt.type.parse !== "function" || typeof dt.type.assess !== "function")
-    return unread(`the ${content_type} content type declares no reader`);
+    return unread(localize("docprofile.pipeline.the_content_type_content_type", "the {content_type} content type declares no reader", { content_type: String(content_type) }));
   const textBefore = pipelineText(before);
   const read = (t, at) => dt.type.parse({ ...ctx, text: t, handler: id.handler, at });
   let a, b, m;
   try {
     a = read(textBefore, ctx.before_at); b = read(text, ctx.after_at);
   } catch (e) {
-    return unread(`its contents could not be read this time (${String((e && e.message) || e)})`);
+    return unread(localize("docprofile.pipeline.its_contents_could_not_be", "its contents could not be read this time ({String})", { String: String(String((e && e.message) || e)) }));
   }
   try { m = dt.type.assess(a, b, { ...ctx, handler: id.handler }); }
   catch (e) {
-    return unread(`the ${content_type} reader could not compare the two readings (${String((e && e.message) || e)})`);
+    return unread(localize("docprofile.pipeline.the_content_type_reader_could", "the {content_type} reader could not compare the two readings ({String})", { content_type: String(content_type), String: String(String((e && e.message) || e)) }));
   }
   if (!m || m.meaningful === null || m.meaningful === undefined || !Array.isArray(m.events))
-    return unread((m && m.why) || `the ${content_type} reader could not say`);
+    return unread((m && m.why) || localize("docprofile.pipeline.the_content_type_reader_could_2", "the {content_type} reader could not say", { content_type: String(content_type) }));
   /* `meaningful` is DERIVED from the graded events here, never taken as a second fact
      a type carries beside them (R14). */
   const events = m.events;
@@ -185,7 +185,7 @@ export async function assess(before, after, ctx) {
     connections = typeof dt.type.connections === "function"
       ? dt.type.connections(a, b, { ...ctx, events }) || [] : [];
   } catch (e) {
-    note(LAYER.CONNECTIONS, `none stated: the ${content_type} reader failed to derive them`);
+    note(LAYER.CONNECTIONS, localize("docprofile.pipeline.none_stated_the_content_type", "none stated: the {content_type} reader failed to derive them", { content_type: String(content_type) }));
     connections = [];
   }
   if (connections.length) note(LAYER.CONNECTIONS, `${connections.length} implied`);

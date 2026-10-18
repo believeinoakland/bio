@@ -8,6 +8,7 @@ import { LawRecords, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD, LAW_RE
   from "../../../src/law-relations/index.mjs";
 import { ownerConformance, createRegistry, derivedId, BOUNDS, LOWEST_GRADE } from "../../../src/connection-grammar/index.mjs";
 import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const rel = (w, type, from, to, citation, effective, by = "bob") => {
   const r = w.law.lawRelate({ type, from, to, citation, ...(effective ? { effective } : {}), reason: REASON, author: V(by), viewer: V(by) });
@@ -144,8 +145,8 @@ test("R7 CONNECTION_KINDS holds this module's law-relation kinds and court links
   assert.equal(CONNECTION_OWNER, "standards");
   assert.deepEqual(CONNECTION_KINDS.map((k) => k.kind), [...LAW_RELATIONS.temporal.map((t) => `law_${t}`), ...LAW_RELATIONS.referential.map((t) => `law_${t}`),
                                                          ...COURT_LINKS.map((t) => `court_${t}`), "in_force_at_event"]);
-  assert.deepEqual(CONNECTION_KINDS.map((k) => k.word), ["amends", "repeals", "renumbers", "recodifies", "refers to", "defines a term of",
-    "makes an exception to", "implements", "incorporates", "interprets", "applies", "holds invalid", "requires", "was in force on the date of"]);
+  assert.deepEqual(CONNECTION_KINDS.map((k) => k.word), ["amends", "repeals", "renumbers", "recodifies", "refers to", word("label.connectionkinds.law_defines"),
+    word("label.connectionkinds.law_excepts"), "implements", "incorporates", "interprets", "applies", "holds invalid", "requires", word("label.connectionkinds.in_force_at_event")]);
   assert.deepEqual(CONNECTION_KINDS.filter((k) => k.class === "derived").map((k) => k.kind), ["in_force_at_event"]);
   assert.ok(CONNECTION_KINDS.every((k) => Object.isFrozen(k)) && Object.isFrozen(CONNECTION_KINDS));
   const reg = createRegistry();

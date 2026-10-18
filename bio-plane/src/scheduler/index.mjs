@@ -73,6 +73,7 @@ import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** An alarm may fire a hair early: a consumer due within this window of the firing instant runs (R1). */
 export const SCHED_GRACE_MS = 250;
@@ -452,7 +453,7 @@ export class Scheduler {
       return { ok: false, reason: "CONSUMER_DECLARED", module, name: c.name };
     if (ANSWER_FIELDS.has(key) || this.registry(null).some((r) => r.key === key))
       return { ok: false, reason: "CONSUMER_MALFORMED", module, name: c.name,
-               detail: `the key '${key}' is one of the answer's own fields or another consumer's` };
+               detail: localize("scheduler.index.the_key_key_is_one", "the key '{key}' is one of the answer's own fields or another consumer's", { key: String(key) }) };
     this.#registered.set(c.name, this.#holding({ name: c.name, key, module, due: c.due, wake: c.wake, tick: c.tick }));
     this.#registeredOrder.push(c.name);
     return { ok: true, module, name: c.name, key, placed: SCHEDULER_ORDER.includes(c.name) ? "R5" : "appended" };

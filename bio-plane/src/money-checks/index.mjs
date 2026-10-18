@@ -37,6 +37,7 @@ import { progressionsOf } from "../progressions/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { moneyChecksTables, migrateMoneyChecks } from "./schema.mjs";
 import { refusal } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { MONEY_CHECKS_SCHEMA } from "./schema.mjs";
 export { MONEY_CHECKS_CHECKS } from "./checks.mjs";
@@ -53,7 +54,7 @@ export const NOTICED_DEFAULT = 100, NOTICED_MAX = 500;
 export const NOTICED = "Noticed";
 /** R17 (DEC-131; K1863, N694): the mark every "Noticed" answer carries beside its label where an op relays it to a
  *  member, DEC-131's words exactly; `notice-producers` exports the same string as its `HINT_MARK`. */
-export const HINT_MARK = "Hint · machine work";
+export const HINT_MARK = word("mark.hint.label");
 /** R4: how a detector groups the facts of its population into subjects. A subject is a fact, a contract, or the
  *  pattern of facts paid to (or by) one party; a party that is a person is never a subject (R4, R10). */
 export const PER = Object.freeze(["fact", "contract", "payee", "payer"]);
@@ -61,11 +62,11 @@ export const PER = Object.freeze(["fact", "contract", "payee", "payer"]);
 export const POPULATION_FILTERS = Object.freeze({ kinds: "kind", phases: "phase", stages: "stage", bases: "basis",
                                                  currencies: "currency" });
 /** R4: the inputs a detector's recipe may name besides its parameters. */
-export const DETECTOR_INPUTS = Object.freeze({ facts: "the subject's facts", population: "every fact of the population" });
+export const DETECTOR_INPUTS = Object.freeze({ facts: word("money-checks.subject_facts"), population: word("money-checks.fact_population") });
 /** R3: the checks that read a parameter, and the parameters each reads. */
 export const CHECK_PARAMETERS = Object.freeze({
-  change_orders_past_share: Object.freeze({ share: "a share of the award, as a proportion (0.1) or a percentage (10%)" }),
-  junction_stages: Object.freeze({ award_stage: "the stage key holding the award", signed_stage: "the stage key holding the signed contract" }),
+  change_orders_past_share: Object.freeze({ share: word("money-checks.share_award_proportion") }),
+  junction_stages: Object.freeze({ award_stage: word("money-checks.stage_key_holding"), signed_stage: word("money-checks.stage_key_holding_signed") }),
 });
 /* The table money facts are bound to a recipe as (calc-grammar's Table Schema types). `period` is one value per
    accounting period, so calc-grammar's summation rule (its R13) refuses a sum across periods by name. */
@@ -116,7 +117,7 @@ function relation(a, b) {
   const d = subtract(a, b);
   if (d && d.refused) return d;
   if (d.precision === "range" || d.precision === "approximate")
-    return { undetermined: true, why: "an amount is approximate or a range, so the two cannot be ordered exactly" };
+    return { undetermined: true, why: word("money-checks.why.amount_approximate_range") };
   return isZero(d.value) ? "equal" : d.sign === "-" ? "lower" : "higher";
 }
 /** R3: a share as stated, to a proportion figure: `0.1`, or `10%` read as 0.1; null when it is neither. */
@@ -253,7 +254,7 @@ export class MoneyChecks {
     if (!facts.length) return { figure: { value: "0", sign: "+", precision: "exact" }, empty: true };
     const ids = facts.map((f) => f.fact_id);
     let s;
-    try { s = this.money.summable({ factIds: ids }); } catch (e) { return { undetermined: true, why: `money could not answer: ${e.message}` }; }
+    try { s = this.money.summable({ factIds: ids }); } catch (e) { return { undetermined: true, why: localize("money-checks.index.money_could_not_answer_message", "money could not answer: {message}", { message: String(e.message) }) }; }
     if (!s || s.ok === false) return { refused: s || { reason: "UNANSWERED" } };
     let acc = null;
     for (const f of facts) {
@@ -269,7 +270,7 @@ export class MoneyChecks {
   static #answer(check, { holds, why, sums = {}, read, parameters = [], refused = null }) {
     const base = { check, label: NOTICED, mark: HINT_MARK, kind: "question",
                    derivation: { method: "calc-grammar exact decimals over money's facts", sums, parameters }, read };
-    if (refused) return { ...base, refused, holds: "undetermined", why: "a sum the summation rule refuses is answered as that refusal" };
+    if (refused) return { ...base, refused, holds: "undetermined", why: word("money-checks.why.sum_summation_rule") };
     return { ...base, holds, why };
   }
   static #fromRelation(rel, ifHigher, ifNot, isQuestion = (r) => r === "higher") {
@@ -282,24 +283,24 @@ export class MoneyChecks {
   #changeOrderCheck(check, award, orders, contract) {
     const p = this.#param("change_orders_past_share", "share", contract);
     const read = { facts: [...award, ...orders].map((f) => f.fact_id) };
-    if (!p) return MoneyChecks.#answer(check, { holds: "undetermined", why: "no threshold stated", read });
+    if (!p) return MoneyChecks.#answer(check, { holds: "undetermined", why: word("money-checks.why.threshold_stated"), read });
     const parameters = [MoneyChecks.#paramView(p)];
     const a = this.#sum(award), c = this.#sum(orders);
     const sums = { award: MoneyChecks.#sumView(a), change_orders: MoneyChecks.#sumView(c) };
     if (a.refused || c.refused) return MoneyChecks.#answer(check, { refused: a.refused || c.refused, sums, read, parameters });
     if (a.undetermined || c.undetermined) return MoneyChecks.#answer(check, { holds: "undetermined", why: (a.why || c.why), sums, read, parameters });
-    if (a.empty) return MoneyChecks.#answer(check, { holds: "undetermined", why: "no award amount is held", sums, read, parameters });
+    if (a.empty) return MoneyChecks.#answer(check, { holds: "undetermined", why: word("money-checks.why.award_amount_held"), sums, read, parameters });
     const limit = multiply(a.figure, shareFigure(p.value));
     sums.share_of_award = limit;
-    const r = MoneyChecks.#fromRelation(relation(c.figure, limit), "the change orders sum above the stated share of the award",
-                                        "the change orders do not sum above the stated share of the award");
+    const r = MoneyChecks.#fromRelation(relation(c.figure, limit), word("money-checks.change_orders_sum"),
+                                        word("money-checks.change_orders_sum_above"));
     return MoneyChecks.#answer(check, { ...r, sums, read, parameters });
   }
 
   /* A signed amount differing from its award's (R1 (a), R2). */
   static #differs(check, award, signed, read, extra = {}) {
-    if (!award.length) return MoneyChecks.#answer(check, { holds: "undetermined", why: "no award amount is held", read, ...extra });
-    if (!signed.length) return MoneyChecks.#answer(check, { holds: "undetermined", why: "no signed amount is held", read, ...extra });
+    if (!award.length) return MoneyChecks.#answer(check, { holds: "undetermined", why: word("money-checks.why.award_amount_held"), read, ...extra });
+    if (!signed.length) return MoneyChecks.#answer(check, { holds: "undetermined", why: word("money-checks.why.signed_amount_held"), read, ...extra });
     return { award, signed };
   }
   #differsCheck(check, award, signed, read, extra = {}) {
@@ -309,8 +310,8 @@ export class MoneyChecks {
     const sums = { award: MoneyChecks.#sumView(a), signed: MoneyChecks.#sumView(s) };
     if (a.refused || s.refused) return MoneyChecks.#answer(check, { refused: a.refused || s.refused, sums, read, ...extra });
     if (a.undetermined || s.undetermined) return MoneyChecks.#answer(check, { holds: "undetermined", why: a.why || s.why, sums, read, ...extra });
-    const r = MoneyChecks.#fromRelation(relation(s.figure, a.figure), "the signed amount differs from the award's",
-                                        "the signed amount equals the award's", (x) => x === "higher" || x === "lower");
+    const r = MoneyChecks.#fromRelation(relation(s.figure, a.figure), word("money-checks.signed_amount_differs"),
+                                        word("money-checks.signed_amount_equals"), (x) => x === "higher" || x === "lower");
     return MoneyChecks.#answer(check, { ...r, sums, read, ...extra });
   }
 
@@ -321,7 +322,7 @@ export class MoneyChecks {
     if (!r || r.ok === false) return { refused: r || { reason: "UNANSWERED" } };
     const c = r.committed || {};
     const paid = Array.isArray(r.paid?.facts) ? r.paid.facts : [];
-    if (c.undetermined) return { award: [], orders: [], paid, undetermined: c.why || "the committed side is undetermined" };
+    if (c.undetermined) return { award: [], orders: [], paid, undetermined: c.why || word("money-checks.committed_side_undetermined") };
     const awards = new Set(Array.isArray(c.awards) ? c.awards : []);
     const facts = Array.isArray(c.facts) ? c.facts : [];
     const atAward = (f) => (f.concerns || []).some((x) => awards.has(x));
@@ -348,9 +349,9 @@ export class MoneyChecks {
       if (cap.undetermined) checks.push(MoneyChecks.#answer("paid_above_committed", { holds: "undetermined", why: cap.undetermined, sums, read }));
       else if (c.refused || p.refused) checks.push(MoneyChecks.#answer("paid_above_committed", { refused: c.refused || p.refused, sums, read }));
       else if (c.undetermined || p.undetermined) checks.push(MoneyChecks.#answer("paid_above_committed", { holds: "undetermined", why: c.why || p.why, sums, read }));
-      else if (c.empty) checks.push(MoneyChecks.#answer("paid_above_committed", { holds: "undetermined", why: "no committed amount is held", sums, read }));
+      else if (c.empty) checks.push(MoneyChecks.#answer("paid_above_committed", { holds: "undetermined", why: word("money-checks.why.committed_amount_held"), sums, read }));
       else checks.push(MoneyChecks.#answer("paid_above_committed", { ...MoneyChecks.#fromRelation(relation(p.figure, c.figure),
-        "the paid amounts sum above the committed amounts", "the paid amounts do not sum above the committed amounts"), sums, read }));
+        word("money-checks.paid_amounts_sum"), word("money-checks.paid_amounts_sum_above")), sums, read }));
     }
     /* a signed amount differing from its award's: the award as the body adopted it against the commitment signed */
     {
@@ -380,7 +381,7 @@ export class MoneyChecks {
     {
       const as = this.#param("junction_stages", "award_stage", eid), ss = this.#param("junction_stages", "signed_stage", eid);
       if (!as || !ss) checks.push(MoneyChecks.#answer("junction_signed_differs_from_award",
-        { holds: "undetermined", why: "no award or signed stage stated", read: { facts: [], stages: [] } }));
+        { holds: "undetermined", why: word("money-checks.why.award_signed_stage"), read: { facts: [], stages: [] } }));
       else {
         const shas = (stage) => new Set(placements.filter((p) => p.stage_key === stage).map((p) => p.capture_sha));
         const awardShas = shas(as.value), signedShas = shas(ss.value);
@@ -431,14 +432,14 @@ export class MoneyChecks {
     const checked = checkRecipe(recipe);
     if (!checked.ok) return { errors: checked.errors, why: checked.errors[0].why };
     for (const inp of recipe.inputs) {
-      if (DETECTOR_INPUTS[inp.name]) { if (inp.kind !== "table") return { why: `"${inp.name}" is a table input` }; continue; }
-      if (!paramNames.has(inp.name)) return { why: `"${inp.name}" is neither facts, population nor a stated parameter` };
-      if (inp.kind !== "figure") return { why: `the parameter "${inp.name}" is a figure input` };
+      if (DETECTOR_INPUTS[inp.name]) { if (inp.kind !== "table") return { why: word("money-checks.why.table_input", { name: String(inp.name) }) }; continue; }
+      if (!paramNames.has(inp.name)) return { why: word("money-checks.why.facts_population_stated", { name: String(inp.name) }) };
+      if (inp.kind !== "figure") return { why: word("money-checks.why.parameter_figure_input", { name: String(inp.name) }) };
     }
     const out = recipe.steps.find((s) => s.as === recipe.output);
-    if (out.op !== "compare") return { why: "the output is a compare step" };
+    if (out.op !== "compare") return { why: word("money-checks.why.output_compare_step") };
     const a = recipe.steps.find((s) => s.as === out.a);
-    if (!a || (a.op !== "ratio" && a.op !== "share")) return { why: "the compare's a is a ratio or share step, whose numerator and denominator the result carries" };
+    if (!a || (a.op !== "ratio" && a.op !== "share")) return { why: word("money-checks.why.compare_ratio_share") };
     return null;
   }
   /* R3: parameters `[{name, value, citation}]`; `value` and `citation` both null for one not yet stated (a shipped
@@ -453,7 +454,7 @@ export class MoneyChecks {
       names.add(p.name);
       if (p.value === null && shipped) { list.push({ name: p.name, value: null, citation: null }); continue; }
       const f = parseFigure(typeof p.value === "number" ? String(p.value) : str(p.value));
-      if (!f || f.refused) return { code: "BAD_VALUE", why: `the parameter "${p.name}" is a figure` };
+      if (!f || f.refused) return { code: "BAD_VALUE", why: word("money-checks.why.parameter_figure", { name: String(p.name) }) };
       if (!str(p.citation)) return { code: "MONEY_CHECK_NO_CITATION", why: p.name };
       list.push({ name: p.name, value: str(String(p.value)), citation: str(p.citation).slice(0, TEXT_MAX) });
     }
@@ -662,7 +663,7 @@ export class MoneyChecks {
      no denominator). Pure over its arguments: the same detector version and facts give the same row (R13). */
   static #evaluateSubject(v, s, populationFacts) {
     const params = parse(v.parameters) || [];
-    if (params.some((p) => p.value === null)) return { none: "no threshold stated" };
+    if (params.some((p) => p.value === null)) return { none: word("money-checks.why.threshold_stated") };
     const recipe = parse(v.condition);
     const names = new Set(recipe.inputs.map((i) => i.name));
     const table = (fs) => ({ fields: FACT_FIELDS.map((f) => ({ ...f })), rows: fs.map(MoneyChecks.#row) });
@@ -671,7 +672,7 @@ export class MoneyChecks {
     if (names.has("population")) bound.population = table(populationFacts);
     for (const p of params) bound[p.name] = parseFigure(p.value);
     const r = evaluate(recipe, bound);
-    if (r.refused) return { none: `the condition was refused: ${r.refused}` };
+    if (r.refused) return { none: word("money-checks.condition_refused", { refused: String(r.refused) }) };
     if (!r.result || r.result.relation !== "higher") return { none: r.result ? r.result.relation : "undetermined" };
     const out = recipe.steps.find((st) => st.as === recipe.output);
     const ratio = r.trace.find((t) => t.step === out.a)?.output;
@@ -818,7 +819,7 @@ export class MoneyChecks {
  *  The list and its gold sets are owed by M-C8 (job record). */
 export const SHIPPED = Object.freeze([Object.freeze({
   detectorId: "md-shipped-payee-share",
-  label: "One payee's share of the paid amounts in a population",
+  label: word("money-checks.label.payee_share_paid"),
   population: { per: "payee", kinds: ["payment", "expenditure"], phases: ["actual"], stages: ["paid"] },
   condition: { method: "bio-calc/1", inputs: [{ name: "facts", kind: "table" }, { name: "population", kind: "table" }, { name: "share", kind: "figure" }],
                steps: [{ op: "sum", as: "part", from: "facts", field: "amount" },
@@ -827,8 +828,8 @@ export const SHIPPED = Object.freeze([Object.freeze({
                        { op: "compare", as: "past", a: "portion", b: "share" }],
                output: "past" },
   parameters: [{ name: "share", value: null, citation: null }],
-  denominator: "the paid amounts of every payee in the population, in one currency, period and stage",
-  derivation: "the payee's paid amounts summed, divided by the population's paid amounts summed, compared with the stated share",
+  denominator: word("money-checks.paid_amounts_payee"),
+  derivation: word("money-checks.payee_paid_amounts"),
 })]);
 
 /** R11: the ops map, one route arm per act and read; every write reaches the one append site with the control

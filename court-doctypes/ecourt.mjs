@@ -15,6 +15,7 @@
  * Nothing is followed; a paid document link is marked `fee`. */
 import { CONFIDENCE, CONTRACT, TAG, feeBearing, written, element, elements, linksIn, sourceAt,
   proceedingNumber, row, reading, pageOf, assessRegister, detectAnswer } from "./common.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 const KEY = "ecourt_roa";
 const LABEL = "an eCourt register of actions";
@@ -49,7 +50,7 @@ function detect(ctx) {
   const t = registerTable(html);
   if (t && !memberCapture(ctx))
     return { match: false, confidence: CONFIDENCE.NONE, signals: ["a register of actions"],
-      why: `${MEMBER_ONLY}; this capture is not one (its origin is ${JSON.stringify((ctx && ctx.origin) ?? null)})` };
+      why: localize("court-doctypes.ecourt.member_only_this_capture_is", "{MEMBER_ONLY}; this capture is not one (its origin is {stringify})", { MEMBER_ONLY: String(MEMBER_ONLY), stringify: String(JSON.stringify((ctx && ctx.origin) ?? null)) }) };
   return detectAnswer({ ctx, key: KEY, label: LABEL, what: "an eCourt register of actions",
     structure: !!t, structureSignals: ["a Register of Actions table (date, description)", "a member's own capture"] });
 }
@@ -134,7 +135,7 @@ function parse(ctx) {
     type: KEY, proceeding, parties: member ? partiesOf(ctx, html) : [], rows, provisional: true,
     at: (ctx && ctx.at) || null,
     pagination: pm ? pageOf(Number(pm[1]), Number(pm[2])) : pageOf(null, null),
-    failed: !member ? `${MEMBER_ONLY}, and this capture is not one`
+    failed: !member ? localize("court-doctypes.ecourt.member_only_and_this_capture", "{MEMBER_ONLY}, and this capture is not one", { MEMBER_ONLY: String(MEMBER_ONLY) })
       : !t ? "the page holds no Register of Actions table with a date and a description" : null,
     key_basis: "ecourt_roa (PROVISIONAL): a row is keyed by its date as written and its order among the rows of "
       + "that date; the row shape and this key are assumed from the portal's own description of a case page and "

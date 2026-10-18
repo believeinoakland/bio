@@ -9,6 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, projMd, V, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c", D = "INFO-2026-0004-d";
 const E1 = "ENT-2026-0001", E2 = "ENT-2026-0002";
@@ -60,7 +61,7 @@ test("R7, R10, R13, R52 (converts content-reads): a document-extent row is reach
     [[E1, "B", b], [E1, "C", c], [E2, "D", d]].sort());
   assert.deepEqual(g.reaching.map((r) => r.other_bundle_id).sort(), [B, C, D]);
   for (const r of g.reaching) {
-    assert.equal(r.why, "this citation is of the whole document, so every connection the document has is inside it");
+    assert.equal(r.why, word("connections.why.citation_whole_document"));
     assert.equal("code" in r, false, "a whole-document reach carries no C-49 verdict");
   }
   assert.equal(g.connection_grade, "B", "the strongest reaching grade");
@@ -98,7 +99,7 @@ test("R10, R11, R13, R52 (converts content-reads): a document that is an end of 
   assert.deepEqual(Object.keys(axes).sort(), [...ids].sort());
   for (const id of ids) {
     const one = w.k.portionGrade({ contentId: id, viewer: V("x") });
-    const why = `this document is an end of no connection, so there is nothing for ${one.ref} to earn from`;
+    const why = word("connections.document_end_connection", { ref: String(one.ref) });
     /* The whole axis, key for key: no grade, no document grade, the level that is empty named. */
     assert.deepEqual(axes[id], { determined: false, grain: "portion", grade: null, undetermined_because: "NO_CONNECTION",
       empty_level: "connection — this document is an end of no connection through this subject", why });

@@ -33,6 +33,7 @@
 import { stampInstant } from "../record-core/index.mjs";
 import { RETIRE_CITED_DETAIL } from "../promotion/index.mjs";
 import { moveMember } from "./release.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* R28: a retirement's reason is one line of a Session Log entry and a `state_history` blurb, bounded as an edge's
    reason is. */
@@ -48,12 +49,10 @@ export function retire({ sql, promotion, retrieval, connections },
   const why = String(reason ?? "").trim();
   if (!why)
     return { ok: false, reason: "NO_REASON",
-             detail: "retirement is terminal in the state machine, so it records WHY. There is no move "
-                   + "back out of retired, and an unexplained one-way change is not a record." };
+             detail: localize("ratification.retire.retirement_is_terminal_in_the", "retirement is terminal in the state machine, so it records WHY. There is no move back out of retired, and an unexplained one-way change is not a record.") };
   if (why.length > EDGE_REASON_MAX || /["\\\r\n]/.test(why))
     return { ok: false, reason: "BAD_REASON",
-             detail: `a reason is at most ${EDGE_REASON_MAX} characters and cannot contain a quote, `
-                   + `a backslash, or a newline` };
+             detail: localize("ratification.retire.a_reason_is_at_most", "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline", { EDGE_REASON_MAX: String(EDGE_REASON_MAX) }) };
 
   /* R29: retrieval's refuse-weight resolve, whose refusal is answered as it stands. */
   const sel = retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
@@ -76,14 +75,11 @@ export function retire({ sql, promotion, retrieval, connections },
   }
   if (notInfo.length)
     return { ok: false, reason: "NOT_INFORMATION", offenders: notInfo.sort(),
-             detail: "retirement moves an Information state, and this selection carries something else. "
-                   + "The set is refused whole rather than narrowed." };
+             detail: localize("ratification.retire.retirement_moves_an_information_state", "retirement moves an Information state, and this selection carries something else. The set is refused whole rather than narrowed.") };
   if (illegal.length)
     return { ok: false, reason: "ILLEGAL_TRANSITION", to: "retired",
              offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
-             detail: "only verified Information may be retired. Something still collected has not been "
-                   + "verified by anyone, and retiring it would skip that step; something already "
-                   + "retired has nowhere further to go, because retired is terminal." };
+             detail: localize("ratification.retire.only_verified_information_may_be", "only verified Information may be retired. Something still collected has not been verified by anyone, and retiring it would skip that step; something already retired has nowhere further to go, because retired is terminal.") };
   if (cited.length)
     return { ok: false, reason: "CITED", offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
              detail: RETIRE_CITED_DETAIL };

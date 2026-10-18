@@ -73,6 +73,7 @@ import { ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES, migrateActionClocks 
 import { actionOffices, localDayOf, yearEntries, holidayFact, officeHours, readsOfficeCalendar, closureListsRead,
          factReader, computeDeadline, traceLine } from "./count.mjs";
 import { icsCalendar } from "./ics.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 export { ACTION_CLOCKS_SCHEMA, ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES } from "./schema.mjs";
@@ -162,11 +163,11 @@ export function venueOf(fm, view) {
       const name = k && k.venue && typeof k.venue.name === "string" ? k.venue.name : null;
       return { venue: { kind: "venue", action_kind: o.venue, name } };
     }
-    return none("the action is addressed to no office, and the view gives its kind no venue");
-  } catch { return none("the action's office or venue cannot be read"); }
+    return none(word("action-clocks.action_addressed_office"));
+  } catch { return none(word("action-clocks.action_office_venue")); }
 }
 /** R3 (T45; v0.2 rule 6): an overdue item is a question about a date, never a finding. */
-export const OVERDUE_SAYS = "a date on this action's clock has passed: a question about a date, not a finding about anyone";
+export const OVERDUE_SAYS = word("action-clocks.date_action_clock");
 
 /** R3, R5: the lifecycle states in which an action's deadlines no longer call for anything. */
 export const CLOSED_ACTION_STATES = Object.freeze(["resolved", "abandoned"]);
@@ -309,16 +310,16 @@ export class ActionClocks {
     if (kind === "commitment" && e.committed_by) out.committed_by = String(e.committed_by);
     /* T45 (v0.2 rule 6): the other side's stated date, with who stated it and where it is held; its words name no law. */
     if (kind === "stated") Object.assign(out, { stated_by: e.stated_by ?? null, held_in: e.held_in ?? null,
-      says: "a date the other side has stated, held as what they said" });
+      says: word("action-clocks.says.date_side_stated") });
     if (kind === "dependency") Object.assign(out, { precedes: e.precedes ?? null, lead: e.lead ?? null, why: e.why ?? null,
-      says: "a date derived from the event it must precede; missing it is a dated fact about sequence, never a violation" });
+      says: word("action-clocks.says.date_derived_event") });
     if (kind === "rule" && typeof e.standard === "string" && e.standard) {
       const st = this.standards;
       let f = null;
       try { f = st && typeof st.inForceAt === "function" ? st.inForceAt({ standard: e.standard, date: e.date, viewer }) : null; }
       catch { f = null; }
       out.standard = { id: e.standard, state: f && typeof f.state === "string" ? f.state : "undetermined",
-                       why: f && f.why ? String(f.why) : f ? null : "the standards module cannot be read here" };
+                       why: f && f.why ? String(f.why) : f ? null : word("action-clocks.why.standards_module_cannot") };
     }
     return out;
   }
@@ -717,7 +718,7 @@ export class ActionClocks {
       target, who, rule, computed.date, basis, JSON.stringify(entry), computed.why ?? null, at, JSON.stringify(kept));
     return { ok: true, target, weight: "single", evidence: false,
              proposal: { ...proposalLabelFor(who), key: `${rule}@${who}`, rule, entry, at,
-                         ...(computed.start ? { start: computed.start, counted_from: `the day after ${computed.start}` } : {}),
+                         ...(computed.start ? { start: computed.start, counted_from: word("action-clocks.day", { start: String(computed.start) }) } : {}),
                          ...(computed.start_from ? { start_from: computed.start_from } : {}),
                          ...(computed.start_note ? { start_note: computed.start_note } : {}),
                          ...(computed.candidates ? { candidates: computed.candidates } : {}),
@@ -727,8 +728,7 @@ export class ActionClocks {
                          ...(computed.trace ? { trace: computed.trace } : {}),
                          ...(computed.calendar ? { calendar: computed.calendar } : {}),
                          ...(computed.date ? {} : { undetermined: computed.why }) },
-             says: "this clock entry is proposed and is not on the action's clock: a member adopts it (op=clockadopt) "
-                 + "or states a clock entry by a revision of the action." };
+             says: localize("action-clocks.index.this_clock_entry_is_proposed", "this clock entry is proposed and is not on the action's clock: a member adopts it (op=clockadopt) or states a clock entry by a revision of the action.") };
   }
 
   /** R20 (T46; N925; for `affordances` R51; `op=clockproposals`, a read): the standing proposals of R2 on an action the
@@ -748,7 +748,7 @@ export class ActionClocks {
       const kept = parse(r.trace_json) || {};
       const dated = typeof r.date === "string" && r.date !== "";
       return { key: `${r.rule}@${r.proposed_by}`, rule: r.rule, date: dated ? r.date : null,
-               undetermined: dated ? null : (r.why || "the count is undetermined"), basis: r.basis, entry: parse(r.entry_json),
+               undetermined: dated ? null : (r.why || word("action-clocks.count_undetermined")), basis: r.basis, entry: parse(r.entry_json),
                trace: kept.trace ?? null, trace_line: kept.trace_line ?? null,
                ...(Array.isArray(kept.candidates) ? { candidates: kept.candidates } : {}), ...(kept.due ? { due: kept.due } : {}),
                label: proposalLabelFor(r.proposed_by), proposed_by: r.proposed_by, proposed_at: r.proposed_at };
@@ -1041,9 +1041,7 @@ export class ActionClocks {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-adopt */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_ADOPT_CLOCK", "a deadline is put on an action's clock by a member, in their own act; "
-        + "a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. "
-        + "Nothing was written.", { target: target ?? null });
+      return refuse("MACHINE_CANNOT_ADOPT_CLOCK", localize("action-clocks.index.a_deadline_is_put_on", "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written."), { target: target ?? null });
     /* END DEC-49 REGION is-machine-adopt */
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
@@ -1104,7 +1102,7 @@ export class ActionClocks {
       this.sql.exec(`UPDATE action_clock_proposals SET adopted_by=?, adopted_at=?, adopted_ord=? WHERE bundle_id=? AND
                       proposed_by=? AND rule=?`, who, when, ord, a.id, p.proposed_by, p.rule);
       return { ok: true, target: a.id, proposal: key, ord, entry: written, adopted_by: who, adopted_at: when,
-               says: "the deadline is now on the action's clock, stated by you; it is tracked and told once like any other." };
+               says: word("action-clocks.says.deadline_action_clock") };
     });
   }
 
@@ -1125,9 +1123,7 @@ export class ActionClocks {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-state-clock */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_STATE_CLOCK", "a deadline is put on an action's clock by a member, in their own act; "
-        + "a machine credential may propose one and never states it, and a call that carries nobody is not a member. "
-        + "Nothing was written.", { target: target ?? null });
+      return refuse("MACHINE_CANNOT_STATE_CLOCK", localize("action-clocks.index.a_deadline_is_put_on_2", "a deadline is put on an action's clock by a member, in their own act; a machine credential may propose one and never states it, and a call that carries nobody is not a member. Nothing was written."), { target: target ?? null });
     /* END DEC-49 REGION is-machine-state-clock */
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
@@ -1145,8 +1141,7 @@ export class ActionClocks {
     if (!BASIS_KINDS.includes(k)) return clockEntryRefused("basis_kind", `basis_kind is one of ${BASIS_KINDS.join(", ")}: every `
       + "deadline names its basis. Nothing was written.", ext);
     const owed = owedBy === null || owedBy === undefined || owedBy === "" ? "undetermined" : String(owedBy);
-    if (!CLOCK_OWED_BY.includes(owed)) return clockEntryRefused("owed_by", `owed_by is one of ${CLOCK_OWED_BY.join(", ")}. `
-      + "Nothing was written.", ext);
+    if (!CLOCK_OWED_BY.includes(owed)) return clockEntryRefused("owed_by", localize("action-clocks.index.owed_by_is_one_of", "owed_by is one of {CLOCK_OWED_BY}. Nothing was written.", { CLOCK_OWED_BY: String(CLOCK_OWED_BY.join(", ")) }), ext);
     const own = {};
     const field = (name, v, need) => {
       const r = words(name, v, need);
@@ -1186,7 +1181,7 @@ export class ActionClocks {
       ...Object.fromEntries(Object.entries(own).filter(([n]) => !["due_at", "due_zone"].includes(n))),
       entered_by: who, entered_at: when };
     return this.#reviseClock(a.id, written, who, viewer, when, (ord) =>
-      ({ ok: true, target: a.id, ord, entry: written, says: "the deadline is on the action's clock, stated by you." }));
+      ({ ok: true, target: a.id, ord, entry: written, says: word("action-clocks.says.deadline_action_clock_stated") }));
   }
 
   /* R13: one revision of the action appending `e` to `clock[]`, under a 30-second lease the member holds (released on
@@ -1268,7 +1263,7 @@ export class ActionClocks {
     }
     const ics = icsCalendar({ events, stampMs: this.#nowMs(null) });
     return { ok: true, filename: "deadlines.ics", content_type: "text/calendar; charset=utf-8", ics, events: events.length,
-             left_out: { undated }, says: "a file for you to save; nothing is published or sent." };
+             left_out: { undated }, says: word("action-clocks.says.file_save_nothing") };
   }
 
   /* ================================================================ the group's own lateness (R15) */
@@ -1296,7 +1291,7 @@ export class ActionClocks {
         const lu = typeof fm.last_updated === "string" ? fm.last_updated : null;
         const ms = lu ? Date.parse(lu) : NaN;
         const day = Number.isFinite(ms) && /T/.test(lu) ? localDayOf(ms, zone) : lu && isDay(lu.slice(0, 10)) ? lu.slice(0, 10) : null;
-        return day ? { day, from: "the version that first shows it met" } : null;
+        return day ? { day, from: word("action-clocks.version_first_shows") } : null;
       }
     }
     return null;
@@ -1331,20 +1326,20 @@ export class ActionClocks {
         const ref = { action: r.bundle_id, ord: i, date: e.date };
         if (!isGroupOwn(e)) {
           if (!kind && owedOf(e) === "undetermined")
-            notCounted.push({ ...ref, why: "the entry names no basis kind and no owed_by, so whether it is the team's own is not stated" });
+            notCounted.push({ ...ref, why: word("action-clocks.why.entry_names_basis") });
           return;
         }
         if (e.status === "met") {
           const m = this.#metDay(r.bundle_id, i, e, zone);
-          if (!m) { notCounted.push({ ...ref, kind, why: "met, and the day it was met is not held" }); return; }
+          if (!m) { notCounted.push({ ...ref, kind, why: word("action-clocks.why.met_day_met") }); return; }
           const sp = span({ value: e.date, precision: "day", zone: zone || "UTC" }, { value: m.day, precision: "day", zone: zone || "UTC" }, { unit: "days" });
           const late = sp && Number.isInteger(sp.min) && sp.min === sp.max ? sp.min : null;
-          if (late === null) { notCounted.push({ ...ref, kind, why: "the span from its date to the day it was met is undetermined" }); return; }
+          if (late === null) { notCounted.push({ ...ref, kind, why: word("action-clocks.why.span_date_day") }); return; }
           table.push({ action: r.bundle_id, ord: i, date: e.date, kind, state: late > 0 ? "late" : "on_time", days_late: late > 0 ? late : 0, met_on: m.day, met_from: m.from });
           return;
         }
         if (e.status === "pending" || e.status === "overdue") {
-          if (today === null) { notCounted.push({ ...ref, kind, why: "the action's zone is not held, so whether its date has passed is undetermined" }); return; }
+          if (today === null) { notCounted.push({ ...ref, kind, why: word("action-clocks.why.action_zone_held") }); return; }
           table.push({ action: r.bundle_id, ord: i, kind, state: e.date < today ? "pending_past" : "not_yet_due", days_late: null });
           return;
         }
@@ -1375,8 +1370,7 @@ export class ActionClocks {
              entries: table.map((x) => ({ action: x.action, ord: x.ord, kind: x.kind, state: x.state, ...(x.days_late ? { days_late: x.days_late } : {}) })),
              not_counted: notCounted, actions_limit: LATENESS_ACTIONS_MAX, truncated: rows.length > LATENESS_ACTIONS_MAX,
              method: ev ? { recipe, trace: ev.trace } : { recipe, trace: [] },
-             says: "an index over the team's own deadlines (what the team owes, its dependencies and its own windows): "
-                 + "never a finding about anyone else's conduct." };
+             says: word("action-clocks.says.index_group_deadlines") };
   }
 }
 
@@ -1388,7 +1382,7 @@ const PROPOSAL_SAYS = {
     + "revises the action to state it",
   member_proposed: "a member asked for this clock entry to be computed from the jurisdiction profile. It is a proposal "
     + "and not a clock entry: a member states one by revising the action",
-  unstated: "the record does not say who asked for this clock entry",
+  unstated: word("action-clocks.record_say_asked"),
 };
 function proposalLabelFor(who) {
   const base = lawProposalLabel(who);
@@ -1444,11 +1438,11 @@ function setScalar(text, key, value) {
 /* R7, R14: the basis of an entry in words, for the calendar file. */
 function basisWords(b) {
   const cite = b.citation ? `: ${b.citation}` : "";
-  if (b.kind === "rule") return `Basis: a law or order${cite}${b.standard ? ` (standard ${b.standard.id}, ${b.standard.state.replace(/_/g, " ")})` : ""}`;
+  if (b.kind === "rule") return word("action-clocks.basis_law_order", { cite: String(cite), standard: String(b.standard ? ` (standard ${b.standard.id}, ${b.standard.state.replace(/_/g, " ")})` : "") });
   if (b.kind === "commitment") return `Basis: a commitment${b.committed_by ? ` by ${b.committed_by}` : ""}${cite}`;
-  if (b.kind === "dependency") return `Basis: it must precede ${b.precedes ?? "a later event"}${b.lead ? ` (lead ${b.lead})` : ""}${b.why ? `, because ${b.why}` : ""}${cite}`;
-  if (b.kind === "window") return `Basis: the team's own window${cite}`;
-  if (b.kind === "stated") return `Basis: a date stated by ${b.stated_by ?? "the other side"}${b.held_in ? `, held in ${b.held_in}` : ""}${cite}`;
+  if (b.kind === "dependency") return word("action-clocks.basis_precede", { precedes: String(b.precedes ?? "a later event"), lead: String(b.lead ? ` (lead ${b.lead})` : ""), why: String(b.why ? `, because ${b.why}` : ""), cite: String(cite) });
+  if (b.kind === "window") return word("action-clocks.basis_group_window", { cite: String(cite) });
+  if (b.kind === "stated") return word("action-clocks.basis_date_stated", { stated_by: String(b.stated_by ?? "the other side"), held_in: String(b.held_in ? `, held in ${b.held_in}` : ""), cite: String(cite) });
   return `Basis${cite || ": not stated"}`;
 }
 

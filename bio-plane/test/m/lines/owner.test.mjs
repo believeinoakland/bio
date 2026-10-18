@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { world, ANN } from "./fixture.mjs";
 import { ownerConformance, createRegistry, BOUNDS, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
 import { Lines, linesOps, ownerNeighbours, kinds, capacities, roles, CONNECTION_KINDS, LINE_KINDS, CAPACITIES, ROLES } from "../../../src/lines/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = "2022-06-15T12:00:00Z";
 
@@ -70,7 +71,7 @@ test("R15 kinds(), capacities() and roles(kind) answer the closed lists, frozen"
   assert.deepEqual(kinds(), ["part_of", "post_in", "holds", "reports_to", "oversees", "appoints", "seat_on", "funds", "contracts_with",
     "acts_for", "responsible_for", "custodian_of", "successor_of", "belongs_to", "educated_at", "credentialed_by", "owns_interest_in",
     "related_to", "associate_of", "party_to", "appeal_of", "consolidated_with", "remanded_to", "arises_from"]);
-  assert.deepEqual(capacities(), ["employee", "elected", "appointed", "acting", "interim", "ex officio", "board member", "officer or director",
+  assert.deepEqual(capacities(), ["employee", "elected", "appointed", "acting", "interim", "ex officio", "board member", word("label.linecapacities.officer_or_director"),
     "partner", "military service", "volunteer", "contractor", "other"]);
   assert.deepEqual(roles("reports_to"), ["administrative", "functional", "budgetary"]);
   assert.deepEqual(roles("contracts_with"), ["buyer", "procuringEntity", "supplier", "tenderer", "funder", "enquirer", "payer", "payee",

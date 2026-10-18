@@ -40,6 +40,8 @@
  * PL-15's, C-32/C-33 REC-64's. Four parallel items collided on an id in one day,
  * so a renumber at integration is expected rather than an error.
  * ========================================================================= */
+import { word, localize } from '../setup-words/index.mjs';
+
 export const ROUTE_MARK_CHECKS = {
   /* Marking is a NAMED ACT: a standing statement in the record with nobody's
      name on it is not a statement. It refuses an act with NO principal, and,
@@ -50,13 +52,12 @@ export const ROUTE_MARK_CHECKS = {
   ROUTE_MARK_NO_AUTHOR: {
     check: 'C-34.1',
     where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
-    translation: 'Recording that a document\'s route cannot be shown is an act the record has to be '
-      + 'able to attribute, and nothing here said who is making it. Sign in and try again.',
+    translation: word('refusal.ROUTE_MARK_NO_AUTHOR'),
   },
   ROUTE_MARK_NO_BUNDLE: {
     check: 'C-34.2',
     where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
-    translation: 'This did not say which document to look at, so nothing was assessed.',
+    translation: word('refusal.ROUTE_MARK_NO_BUNDLE'),
   },
   /* Absent and invisible answer IDENTICALLY, which is REC-25's posture rather
      than this item's invention: a document the caller may not see must refuse
@@ -64,7 +65,7 @@ export const ROUTE_MARK_CHECKS = {
   ROUTE_MARK_NO_SUCH_BUNDLE: {
     check: 'C-34.3',
     where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
-    translation: 'The record holds no document by that name, so there was nothing to assess.',
+    translation: word('refusal.ROUTE_MARK_NO_SUCH_BUNDLE'),
   },
   /* A ROUTE IS A FACT ABOUT A CAPTURED DOCUMENT. A question, a project or an
      action was never fetched from anywhere, so asking whether its route can be
@@ -74,9 +75,7 @@ export const ROUTE_MARK_CHECKS = {
   ROUTE_MARK_NOT_A_DOCUMENT: {
     check: 'C-34.4',
     where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
-    translation: 'Only a captured document travelled a route to get here, and this is not one. '
-      + 'Questions, projects and actions were written in the record rather than fetched from anywhere, '
-      + 'so there is no route to show or to doubt.',
+    translation: localize('provenance-routes.checks.only_a_captured_document_travelled', 'Only a captured document travelled a route to get here, and this is not one. Questions, projects and actions were written in the record rather than fetched from anywhere, so there is no route to show or to doubt.'),
   },
 };
 

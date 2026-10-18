@@ -51,7 +51,7 @@ import { biasOf } from "../bias/index.mjs";
 import { schedulerOf, viewZone } from "../scheduler/index.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
@@ -654,77 +654,33 @@ export class Queue {
   }
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
-    "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by "
-      + "a task, so it is settled through op=biasdebtresolve with a stated reason — or "
-      + "by a re-run under the lens now in force, or by the lens moving back "
-      + "(BOB #32, 2026-09-23).",
-    "signer-self-registered": " This one is a signing key a member registered for themselves, which is keyed by the "
-      + "KEY rather than by a task, so it leaves when an administrator revokes the key "
-      + "(op=signerset), or when it is otherwise no longer active.",
-    "plan-checkpoint-due": " This one is a checkpoint your team set in an action plan, keyed by the plan, scenario "
-      + "and phase rather than by a task: it leaves when a member records whether its condition was met "
-      + "(op=checkpointrecord), or when the plan is closed.",
-    "escalation-stage-proposed": " This one is an escalation's next stage, proposed because its trigger was met and "
-      + "keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or "
-      + "declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended.",
-    "action-reminder": " This one is a reminder you asked for on one of the team's action deadlines, keyed by the "
-      + "action, the entry and the day rather than by a task: you answer it with another reminder or with none "
-      + "(op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
-    "litigation-hold": " This one is a reply your team marked as legal pressure, keyed by the action and the entry "
-      + "rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place "
-      + "by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act. A legal mark on a "
-      + "docket entry, or a legal pressure record, is keyed by the mark instead, and leaves the same way.",
-    "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by "
-      + "the version and by you rather than by a task: it leaves when you review the version's present text "
-      + "(op=templatereview), or when the version is no longer in review.",
-    "local-fact-due": " This one is a holiday calendar or office hours one of the team's deadlines reads, keyed by the "
-      + "fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no "
-      + "live action reads it.",
-    "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed "
-      + "by the edition and the observation rather than by a task: it leaves when you choose a credit level for it "
-      + "(op=attribute), or when the edition no longer reaches it, or is signed or replaced.",
-    "docket-core-due": " This one is an item the docket of a case you manage must list, keyed by the case, the item's "
-      + "kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on "
-      + "the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason "
-      + "(op=docketdecline), or when it is otherwise placed, receipted or disclosed.",
-    "wizard-approval-requested": " This one is a wizard script's version submitted for your approval, keyed by the "
-      + "version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version "
-      + "is withdrawn or its script retired.",
-    "inquiry-recheck-due": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and "
-      + "the date rather than by a task, and it is yours alone: it leaves when you record that you looked "
-      + "(op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes.",
-    "step-date-due": " This one is a date you set on a step, keyed by the step and the date rather than by a task, and "
-      + "it is yours alone: it leaves when the step is ended (op=stepend), or when you set the step a new date.",
-    "step-reminder": " This one is a reminder you asked for on a step's date, keyed by the reminder rather than by a task, "
-      + "and it is yours alone: you answer it with another reminder or with none (op=stepreminder), and it is told on "
-      + "its day only.",
-    "milestone-reminder": " This one is a reminder you asked for on a milestone, keyed by the reminder rather than by a "
-      + "task, and it is yours alone: you answer it with another reminder or with none (op=milestonereminder), and it "
-      + "is told on its day only.",
+    "bias-debt": localize("queue.index.this_one_is_a_bias", " This one is a bias debt, which is keyed by the RUN it is about rather than by a task, so it is settled through op=biasdebtresolve with a stated reason — or by a re-run under the lens now in force, or by the lens moving back (BOB #32, 2026-09-23)."),
+    "signer-self-registered": localize("queue.index.this_one_is_a_signing", " This one is a signing key a member registered for themselves, which is keyed by the KEY rather than by a task, so it leaves when an administrator revokes the key (op=signerset), or when it is otherwise no longer active."),
+    "plan-checkpoint-due": localize("queue.index.this_one_is_a_checkpoint", " This one is a checkpoint your team set in an action plan, keyed by the plan, scenario and phase rather than by a task: it leaves when a member records whether its condition was met (op=checkpointrecord), or when the plan is closed."),
+    "escalation-stage-proposed": localize("queue.index.this_one_is_an_escalations", " This one is an escalation's next stage, proposed because its trigger was met and keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended."),
+    "action-reminder": localize("queue.index.this_one_is_a_reminder", " This one is a reminder you asked for on one of the team's action deadlines, keyed by the action, the entry and the day rather than by a task: you answer it with another reminder or with none (op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed."),
+    "litigation-hold": localize("queue.index.this_one_is_a_reply", " This one is a reply your team marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act. A legal mark on a docket entry, or a legal pressure record, is keyed by the mark instead, and leaves the same way."),
+    "template-review-requested": localize("queue.index.this_one_is_a_review", " This one is a review a member asked of you on a filing template's version, keyed by the version and by you rather than by a task: it leaves when you review the version's present text (op=templatereview), or when the version is no longer in review."),
+    "local-fact-due": localize("queue.index.this_one_is_a_holiday", " This one is a holiday calendar or office hours one of the team's deadlines reads, keyed by the fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no live action reads it."),
+    "attribution-unchosen": localize("queue.index.this_one_is_a_case", " This one is a case edition being prepared that reaches an observation you authored, keyed by the edition and the observation rather than by a task: it leaves when you choose a credit level for it (op=attribute), or when the edition no longer reaches it, or is signed or replaced."),
+    "docket-core-due": localize("queue.index.this_one_is_an_item", " This one is an item the docket of a case you manage must list, keyed by the case, the item's kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason (op=docketdecline), or when it is otherwise placed, receipted or disclosed."),
+    "wizard-approval-requested": localize("queue.index.this_one_is_a_wizard", " This one is a wizard script's version submitted for your approval, keyed by the version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version is withdrawn or its script retired."),
+    "inquiry-recheck-due": localize("queue.index.this_one_is_a_date", " This one is a date you set to look again at a question, keyed by the inquiry, the wait and the date rather than by a task, and it is yours alone: it leaves when you record that you looked (op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes."),
+    "step-date-due": localize("queue.index.this_one_is_a_date_2", " This one is a date you set on a step, keyed by the step and the date rather than by a task, and it is yours alone: it leaves when the step is ended (op=stepend), or when you set the step a new date."),
+    "step-reminder": localize("queue.index.this_one_is_a_reminder_2", " This one is a reminder you asked for on a step's date, keyed by the reminder rather than by a task, and it is yours alone: you answer it with another reminder or with none (op=stepreminder), and it is told on its day only."),
+    "milestone-reminder": localize("queue.index.this_one_is_a_reminder_3", " This one is a reminder you asked for on a milestone, keyed by the reminder rather than by a task, and it is yours alone: you answer it with another reminder or with none (op=milestonereminder), and it is told on its day only."),
     /* T45 (action-producers R10, R12; following R25, plan-work R4, action-plans R40). */
-    "watch-keep-or-stop": " This one is a watch a plan set running, asked about once because the plan closed or every "
-      + "promise it watched is met, keyed by the watch rather than by a task: it leaves when you answer it, keeping the "
-      + "watch until a date or stopping it (op=watchanswer), or when the watch ends. A watch relied on elsewhere is shown "
-      + "with no door.",
-    "plan-review-due": " This one is a review day your team set for a plan, keyed by the plan and the day rather than by "
-      + "a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed.",
-    "plan-look-again": " This one is the date your team set to look again at a paused plan, keyed by the plan and the "
-      + "day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it.",
+    "watch-keep-or-stop": localize("queue.index.this_one_is_a_watch", " This one is a watch a plan set running, asked about once because the plan closed or every promise it watched is met, keyed by the watch rather than by a task: it leaves when you answer it, keeping the watch until a date or stopping it (op=watchanswer), or when the watch ends. A watch relied on elsewhere is shown with no door."),
+    "plan-review-due": localize("queue.index.this_one_is_a_review_2", " This one is a review day your team set for a plan, keyed by the plan and the day rather than by a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed."),
+    "plan-look-again": localize("queue.index.this_one_is_the_date", " This one is the date your team set to look again at a paused plan, keyed by the plan and the day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it."),
     /* R54 (machinery-producers R11, instance-setup R89; DEC-226 (1)). */
-    "update-ready": " This one is a release of your team's Civicsmith that is ready to install, one to-do for every "
-      + "administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them "
-      + "updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that "
-      + "release or newer. A newer release replaces it.",
+    "update-ready": localize("queue.index.this_one_is_a_release", " This one is a release of your team's Civicsmith that is ready to install, one to-do for every administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that release or newer. A newer release replaces it."),
     /* R57 (queue-producers R41, R42; membership's project acts). */
-    "project-invitation": " This one is an invitation to a project, keyed by the invitation and by you rather than by a task: "
-      + "it leaves when you join the project (op=projectjoin) or leave it, or when the invitation is withdrawn.",
-    "project-request": " This one is a member's request to join a project you own, keyed by the request rather than by a task: "
-      + "it leaves when an owner grants or declines it (op=projectrequestanswer), or when it is withdrawn.",
+    "project-invitation": localize("queue.index.this_one_is_an_invitation", " This one is an invitation to a project, keyed by the invitation and by you rather than by a task: it leaves when you join the project (op=projectjoin) or leave it, or when the invitation is withdrawn."),
+    "project-request": localize("queue.index.this_one_is_a_members", " This one is a member's request to join a project you own, keyed by the request rather than by a task: it leaves when an owner grants or declines it (op=projectrequestanswer), or when it is withdrawn."),
     /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
        member's own; taking it and recording the check are its other ways out. */
-    "check-requested": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a "
-      + "reasoned concern (op=checkrecord), which closes it; leaving it (op=taskresolve) closes only yours, and it stays "
-      + "open to the others asked. Once someone takes it, everyone else's closes, naming who took it.",
+    "check-requested": localize("queue.index.this_one_is_a_check", " This one is a check a project owner asked for: take it (op=checktake) and record your check or a reasoned concern (op=checkrecord), which closes it; leaving it (op=taskresolve) closes only yours, and it stays open to the others asked. Once someone takes it, everyone else's closes, naming who took it."),
   });
 
   /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
@@ -817,18 +773,13 @@ export class Queue {
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
                instead: Queue.doorOf(item.kind),
-               detail: "a to-do is something a named person must do for the record to proceed "
-                     + "and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside "
-                     + "is not a narrower version of that act, it is a different one."
-                     + (Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOOR_DETAIL, item.kind)
-                        ? Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "") };
+               detail: localize("queue.index.a_to_do_is_something", "a to-do is something a named person must do for the record to proceed and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside is not a narrower version of that act, it is a different one.{v1}", { v1: String(Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOOR_DETAIL, item.kind)
+                        ? Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "") }) };
     if (item.class === "CONDITION")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_condition_is_acknowledged_or_muted",
                instead: "queuemute",
-               detail: "a status item is a fact about our own machinery, and the only thing a member "
-                     + "does to it is acknowledge or QUIET it — personally, with the status item "
-                     + "persisting and every other member still seeing it." };
+               detail: localize("queue.index.a_status_item_is_a", "a status item is a fact about our own machinery, and the only thing a member does to it is acknowledge or QUIET it — personally, with the status item persisting and every other member still seeing it.") };
     /* R12 (N172): a newer capture affecting a member's reference is decided by that member through reevaluation's
        door (its R15): adopt the newer version, or keep the earlier one. Keyed on the notice, never on a project.
        K1035 (reevaluation R15, C-110.29 VERSION_ADOPT_NO_REASON): adopting takes a why and keeping's stays optional;
@@ -839,18 +790,13 @@ export class Queue {
     if (item.kind === "standing-answer")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_answer_told_to_you_alone_is_quieted", instead: "queuemute",
-               detail: "your standing question's answer is told to you once and to nobody else, so no team's list "
-                     + "holds it and there is no team for a disposition to speak for. Quiet it for yourself "
-                     + "(op=queuemute, naming this item) once you have read it; your question keeps running and a "
-                     + "later run's new finds are told to you as a new item." };
+               detail: localize("queue.index.your_standing_questions_answer_is", "your standing question's answer is told to you once and to nobody else, so no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it; your question keeps running and a later run's new finds are told to you as a new item.") };
     /* R57 (T50; N1204; DEC-304; notice-producers R24): a watched item's change is told to its watcher alone, as a standing
        question's answer is: no team's list holds it, so its watcher quiets it for themselves (R30). */
     if (item.kind === "watched-changed")
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_watched_change_is_told_to_you_alone_and_quieted", instead: "queuemute",
-               detail: "something you watch changed, and you alone are told: no team's list holds it and there is no team "
-                     + "for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you "
-                     + "have read it; the watch goes on and a later change is told as a new item." };
+               detail: localize("queue.index.something_you_watch_changed_and", "something you watch changed, and you alone are told: no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it; the watch goes on and a later change is told as a new item.") };
     /* R12 (T40; N812): an explore ask, a limit reached and a suspended project account are facts about an account,
        told to its owners or the member it served; no team decides them. */
     if (Object.prototype.hasOwnProperty.call(Queue.ACCOUNT_DOORS, item.kind)) {
@@ -861,9 +807,7 @@ export class Queue {
                detail: door === "exploreapprove"
                  ? "one of your accounts may explore today, and the ask is yours as its owner: approve it "
                    + "(op=exploreapprove), or let the day pass and it lapses. No team's list holds it."
-                 : "this is about an account and is told to whom it concerns; no team's list holds it and there is no "
-                   + "team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once "
-                   + "you have read it." };
+                 : localize("queue.index.this_is_about_an_account", "this is about an account and is told to whom it concerns; no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it.") };
     }
     /* R12 (T45; action-producers R9): a member who left had items routed to them; the take-ups lead its options, so
        there is no finding for a team to decide, and its recipient quiets it once read. */
@@ -877,11 +821,7 @@ export class Queue {
       const notice = item.subject && typeof item.subject.id === "string" ? item.subject.id : null;
       return { available: notice !== null, op: null, scope: "notice", keyed_on: ["notice"], key: notice,
                notice, acts: ["versionadopt", "versionkeep"], requires: ["notice"],
-               detail: "a newer capture of what your reference is pinned to was graded as affecting it or as "
-                     + "undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which "
-                     + "writes a new version of your reference and keeps the old one readable, and takes a why of "
-                     + "up to 2,000 characters) or keep the earlier one (op=versionkeep, where a why is optional). "
-                     + "Either closes this notice." };
+               detail: localize("queue.index.a_newer_capture_of_what", "a newer capture of what your reference is pinned to was graded as affecting it or as undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which writes a new version of your reference and keeps the old one readable, and takes a why of up to 2,000 characters) or keep the earlier one (op=versionkeep, where a why is optional). Either closes this notice.") };
     }
     if (pk && sk)
       return { available: true, op: "proposedispose", scope: "instance", keyed_on: KEYED_ON,
@@ -894,11 +834,7 @@ export class Queue {
                   a surface holding this block has every argument for. */
                definition_version: dv,
                requires: ["definitionVersion"],
-               detail: "this finding carries a progression stage, the identity the disposition act is keyed on, so "
-                     + "Adopt, Defer and Dismiss can be completed. Send `definitionVersion`, the version published here: a "
-                     + "decision on a definition since revised is refused DEFINITION_MOVED (REC-211), and the act still "
-                     + "checks the pair (NO_SUCH_PROGRESSION, BAD_STAGE). The scope is `instance`: a progression stage is a "
-                     + "fact about the shared record, so one act clears it under every case (D-266, DEC-16)." };
+               detail: localize("queue.index.this_finding_carries_a_progression", "this finding carries a progression stage, the identity the disposition act is keyed on, so Adopt, Defer and Dismiss can be completed. Send `definitionVersion`, the version published here: a decision on a definition since revised is refused DEFINITION_MOVED (REC-211), and the act still checks the pair (NO_SUCH_PROGRESSION, BAD_STAGE). The scope is `instance`: a progression stage is a fact about the shared record, so one act clears it under every case (D-266, DEC-16).") };
     /* ==================================================================== D-266
      * THE PROJECT-SCOPED HALF, AND IT IS A PROPERTY RATHER THAN A LIST OF SLUGS.
      *
@@ -939,18 +875,10 @@ export class Queue {
                finding: fid, projects: [], ...acts,
                reason: "no_project_scope",
                instead: muted ? "queuemute" : null,
-               detail: "this finding carries no progression stage, so its disposition is one project's judgment, "
-                     + "scoped to that team's feed (D-266, §7/D-216), and it is filed under no project you can see: "
-                     + "there is no team to record a decision for. A decision, where one can be made, ages the finding "
-                     + "out of the team's open list until it is re-triaged, and deletes nothing (D-79)."
-                     + (muted ? " Quiet it for yourself instead (op=queuemute, naming this item)." : "") };
+               detail: localize("queue.index.this_finding_carries_no_progression", "this finding carries no progression stage, so its disposition is one project's judgment, scoped to that team's feed (D-266, §7/D-216), and it is filed under no project you can see: there is no team to record a decision for. A decision, where one can be made, ages the finding out of the team's open list until it is re-triaged, and deletes nothing (D-79).{v1}", { v1: String(muted ? " Quiet it for yourself instead (op=queuemute, naming this item)." : "") }) };
     return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON,
              key: null, finding: fid, projects: homes, requires: ["project", "finding"], ...acts,
-             detail: "this finding carries no progression stage, so its disposition is a judgment-layer act, and a "
-                   + "stance is one project's own property (§7, D-216): one team's decision governs that team's feed "
-                   + "and no other (D-266). Send `project` (one of `projects`; `key` is null because the acting "
-                   + "project is yours to name) and `finding` with your disposition and reason. The decision ages the "
-                   + "finding out of that team's open list until it is re-triaged, and deletes nothing (D-79)." };
+             detail: localize("queue.index.this_finding_carries_no_progression_2", "this finding carries no progression stage, so its disposition is a judgment-layer act, and a stance is one project's own property (§7, D-216): one team's decision governs that team's feed and no other (D-266). Send `project` (one of `projects`; `key` is null because the acting project is yours to name) and `finding` with your disposition and reason. The decision ages the finding out of that team's open list until it is re-triaged, and deletes nothing (D-79).") };
   }
 
   /** R46 (N345; DEC-76 item 3, DEC-84 items 2, 3, 7, 13; DEC-85): the doors of the contradiction kinds, or null for any
@@ -975,28 +903,21 @@ export class Queue {
         const own = inquiry ? "contradictionresolve" : ["contradictionclarify", "contradictiontakeup"];
         return closed("an_obligation_is_resolved_not_disposed",
           { instead: relay.length ? [...[own].flat(), ...relay] : own, ...(inquiry ? { inquiry } : {}) },
-          "a conflict the record holds is a duty: it is never muted, dismissed or set aside, and it leaves every "
-          + "list only when a member of a project it reaches resolves it, by saying what it turned out to be or by "
-          + "taking it up as a question and concluding it (DEC-84 item 2).");
+          localize("queue.index.a_conflict_the_record_holds", "a conflict the record holds is a duty: it is never muted, dismissed or set aside, and it leaves every list only when a member of a project it reaches resolves it, by saying what it turned out to be or by taking it up as a question and concluding it (DEC-84 item 2)."));
       }
       case "contradiction-duty-unseen":
         return closed("an_obligation_is_resolved_not_disposed", { instead: relay.length ? relay : ["contradictionoptin"] },
-          "something this project rests on is in conflict with a record you cannot see. It is never muted: your "
-          + "project can ask to resolve it, and once every project holding a side has asked, the projects are named to "
-          + "each other and you can respond (DEC-85).");
+          localize("queue.index.something_this_project_rests_on", "something this project rests on is in conflict with a record you cannot see. It is never muted: your project can ask to resolve it, and once every project holding a side has asked, the projects are named to each other and you can respond (DEC-85)."));
       case "contradiction-lead":
         return { available: true, op: null, scope: "candidate", keyed_on: ["candidate"], key: candidate, candidate,
                  acts: ["contradictiondismiss", "contradictiontakeup"], requires: ["candidate"],
-                 detail: "a lead is the record's uncertainty, not a to-do: a member dismisses it with a reason or "
-                       + "takes it up as a question (DEC-84 item 1)." };
+                 detail: localize("queue.index.a_lead_is_the_records", "a lead is the record's uncertainty, not a to-do: a member dismisses it with a reason or takes it up as a question (DEC-84 item 1).") };
       case "contradiction-plurality":
         return notSetAside(["contradictionclarify", "contradictiontakeup", ...relay],
-          "two projects' conclusions may not both hold. Setting it aside would not clear it: naming the difference "
-          + "does, or taking it up as a question (DEC-84 item 3).");
+          localize("queue.index.two_projects_conclusions_may_not", "two projects' conclusions may not both hold. Setting it aside would not clear it: naming the difference does, or taking it up as a question (DEC-84 item 3)."));
       case "contradiction-plurality-unseen":
         return notSetAside(relay.length ? relay : ["contradictionoptin"],
-          "this project's conclusion may not hold together with a conclusion you cannot see. It is not set aside: "
-          + "your project can ask to resolve it (DEC-85).");
+          localize("queue.index.this_projects_conclusion_may_not", "this project's conclusion may not hold together with a conclusion you cannot see. It is not set aside: your project can ask to resolve it (DEC-85)."));
       case "tension-after-publication":
         return closed("a_published_tension_is_disclosed", { instead: "publish" },
           "a finding this case published rests on a conflict found since. It leaves when a later edition discloses it "
@@ -1055,8 +976,7 @@ export class Queue {
     if (order === null || (order !== "" && !QUEUE_SORTS.includes(order)))
       return queueRefusal("QUEUE_SORT_UNKNOWN", QUEUE_ACT_CHECKS.QUEUE_SORT_UNKNOWN, {
         sort: typeof sort === "string" ? sort.slice(0, 40) : null, sorts: [...QUEUE_SORTS],
-        detail: `the feed keeps four orders besides its default (grouped by case): ${QUEUE_SORTS.join(", ")}. `
-              + "Send one of them as `sort`, or none for the default. Nothing was read." });
+        detail: localize("queue.index.the_feed_keeps_four_orders", "the feed keeps four orders besides its default (grouped by case): {QUEUE_SORTS}. Send one of them as `sort`, or none for the default. Nothing was read.", { QUEUE_SORTS: String(QUEUE_SORTS.join(", ")) }) });
     /* END DEC-49 REGION is-queue-sort */
     const cap = clampLimit(limit, 200, 500);
     const now = this.#nowMs(nowMs);
@@ -1121,8 +1041,7 @@ export class Queue {
         detail: row.subject && row.subject.description !== undefined ? row.subject.description : null,
         basis: { source: "tasks", refers_to: subject, routed_role: row.assignee_role,
                  status: row.status,
-                 detail: "a to-do is a routed task: a named person must act for the record "
-                       + "to proceed (D-98). refers_to points at the SUBJECT; case is derived." },
+                 detail: localize("queue.index.a_to_do_is_a", "a to-do is a routed task: a named person must act for the record to proceed (D-98). refers_to points at the SUBJECT; case is derived.") },
         age: Number.isFinite(createdMs)
           ? { state: "determined", since: row.created, ms: Math.max(0, now - createdMs) }
           : { state: "undetermined", reason: "unparseable_created",
@@ -1212,11 +1131,7 @@ export class Queue {
        * measurement); the R11 tests compare code, check and translation now. */
       if (!Queue.QUEUE_CLASSES.includes(it.class))
         return refusal("NO_CLASS",
-          `every queue item says which of ${Queue.QUEUE_CLASSES.map((c) => `"${QUEUE_CLASS_LABELS[c]}"`).join(", ")} `
-          + `it is, and this one `
-          + `carries ${it.class === undefined ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. `
-          + `The feed is DERIVED rather than stored, so the constraint a column would have carried is `
-          + `enforced at the one place an item is minted.`,
+          localize("queue.index.every_queue_item_says_which", "every queue item says which of {map} it is, and this one carries {v1}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.", { map: String(Queue.QUEUE_CLASSES.map((c) => `"${QUEUE_CLASS_LABELS[c]}"`).join(", ")), v1: String(it.class === undefined ? "none" : JSON.stringify(String(it.class).slice(0, 40))) }),
           { id: it.id ?? null });
       if (classOfKind(it.kind) === null)
         return refusal("NO_SUCH_KIND",
@@ -1231,12 +1146,7 @@ export class Queue {
           { id: it.id ?? null, kind: it.kind ?? null });
       if (classOfKind(it.kind) !== it.class)
         return refusal("KIND_MISCLASSED",
-          `'${String(it.kind).slice(0, 60)}' is catalogued as "${QUEUE_CLASS_LABELS[classOfKind(it.kind)]}" and this `
-          + `item mints it as "${QUEUE_CLASS_LABELS[it.class]}". That is not a spelling mistake, it is a change of `
-          + `doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an `
-          + `AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a status item would `
-          + `let one member silence a task the record believes reached a person, and minting a `
-          + `status item's kind as something noticed would make a fact about our own machinery undismissable.`,
+          localize("queue.index.string_is_catalogued_as_v1", "'{String}' is catalogued as \"{v1}\" and this item mints it as \"{v2}\". That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a status item would let one member silence a task the record believes reached a person, and minting a status item's kind as something noticed would make a fact about our own machinery undismissable.", { String: String(String(it.kind).slice(0, 60)), v1: String(QUEUE_CLASS_LABELS[classOfKind(it.kind)]), v2: String(QUEUE_CLASS_LABELS[it.class]) }),
           { id: it.id ?? null, kind: it.kind ?? null,
             catalogued_as: classOfKind(it.kind), minted_as: it.class });
       /* END DEC-49 REGION is-queue-mint */
@@ -1332,8 +1242,7 @@ export class Queue {
           ...it.case, ancestors: kept,
           ungrouped: it.case.state === "determined" && kept.length === 0,
           disposed_by: decided.map((p) => ({ id: p, reason: "disposed_by_that_project",
-            detail: "this team decided this finding at the judgment layer, so it has left their open list; it "
-                  + "is still live for the teams named above, whose feed that act did not touch (D-266)." })),
+            detail: localize("queue.index.this_team_decided_this_finding", "this team decided this finding at the judgment layer, so it has left their open list; it is still live for the teams named above, whose feed that act did not touch (D-266).") })),
         };
         it.disposition = { ...dsp, projects: homes.filter((p) => !decided.includes(p)),
                            disposed_by: decided };
@@ -1525,12 +1434,7 @@ export class Queue {
         snoozed_until: Object.fromEntries([...snoozes.entries()].sort()),
         suppressed,
         suppressed_count: suppressed.length,
-        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed "
-              + "from the record and nothing here left another member's queue. A status item or a noticed item "
-              + "can be here, quieted by case over the kinds you named or by its own id (`scope`); a "
-              + "to-do never can, because it leaves every list only when it is DONE. A quieted "
-              + "noticed item is still open for the team and in op=proposals: it leaves the team's list only "
-              + "when it is adopted, deferred or dismissed, an act the record keeps.",
+        detail: localize("queue.index.muting_is_personal_and_dismissing", "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A status item or a noticed item can be here, quieted by case over the kinds you named or by its own id (`scope`); a to-do never can, because it leaves every list only when it is DONE. A quieted noticed item is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps."),
       },
       /* D-266. The other half of the sentence `mute` has just finished — a
          FINDING leaves this list when it is dismissed, and here is every one
@@ -1544,21 +1448,7 @@ export class Queue {
         recorded: dispAll.length,
         bound: dispCap,
         truncated: dispAll.length > disposedOut.length,
-        detail: "every finding here left the OPEN list by an AUTHORED RECORD ACT (op=proposedispose) "
-              + "carrying its author and their reason — never by a preference, which is the block "
-              + "above. It has NOT left the record: the decision is keyed on the finding's own "
-              + "identity, the same id the open feed mints for it, and it stands until it is "
-              + "RE-TRIAGED. Whether the underlying gap still fires is NOT asserted here and does not "
-              + "matter to the decision (D-79) — op=proposals is the op that answers that. **WHOSE "
-              + "FEED EACH DECISION GOVERNS IS ON THE ROW AND IS NOT ONE ANSWER (D-266, IC-60): "
-              + "`scope: instance` cleared this finding for EVERYBODY, because a progression-stage "
-              + "finding is a fact about the shared record and one act clearing it under every case is "
-              + "dedup (DEC-16); `scope: project` cleared it for THAT PROJECT AND NO OTHER, because a "
-              + "stance is one project's own property (§7, D-216) and R5 makes forks at the judgment "
-              + "layer legitimate.** So `personal: false` means no member's preference did this, and "
-              + "it never means every team's feed moved. AN EMPTY LIST MEANS THE RECORD LOOKED AND "
-              + "HOLDS NONE, never that this plane cannot say; and which act any given finding is "
-              + "open to is published on the item's own `disposition`, never inferred from its kind.",
+        detail: localize("queue.index.every_finding_here_left_the", "every finding here left the OPEN list by an AUTHORED RECORD ACT (op=proposedispose) carrying its author and their reason — never by a preference, which is the block above. It has NOT left the record: the decision is keyed on the finding's own identity, the same id the open feed mints for it, and it stands until it is RE-TRIAGED. Whether the underlying gap still fires is NOT asserted here and does not matter to the decision (D-79) — op=proposals is the op that answers that. **WHOSE FEED EACH DECISION GOVERNS IS ON THE ROW AND IS NOT ONE ANSWER (D-266, IC-60): `scope: instance` cleared this finding for EVERYBODY, because a progression-stage finding is a fact about the shared record and one act clearing it under every case is dedup (DEC-16); `scope: project` cleared it for THAT PROJECT AND NO OTHER, because a stance is one project's own property (§7, D-216) and R5 makes forks at the judgment layer legitimate.** So `personal: false` means no member's preference did this, and it never means every team's feed moved. AN EMPTY LIST MEANS THE RECORD LOOKED AND HOLDS NONE, never that this plane cannot say; and which act any given finding is open to is published on the item's own `disposition`, never inferred from its kind."),
       },
       /* R39 (DEC-16): the obligations resolved lately on subjects this viewer sees, each with who resolved it and
          when, so a member who did not resolve one reads "resolved by X on this date" rather than a gap. */
@@ -1573,9 +1463,7 @@ export class Queue {
       /* R51 (T33-83): what `notice-producers` said of its read: each producer's bound and `truncated` as it states
          them, and `failed`, the producers that contributed no item because they could not be read. */
       notice_producers: { ...noticed.facts, failed: [...noticed.failed],
-        detail: "the machine's and the assistant's noticed items, duties come due and dated waits come round are read "
-              + "here beside the rest of the feed. A producer named in `failed` could not be read, so it contributed "
-              + "nothing this time: its absence from the feed is not a statement that it has nothing to say." },
+        detail: localize("queue.index.the_machines_and_the_assistants", "the machine's and the assistant's noticed items, duties come due and dated waits come round are read here beside the rest of the feed. A producer named in `failed` could not be read, so it contributed nothing this time: its absence from the feed is not a statement that it has nothing to say.") },
       /* D-266's SECOND, SMALLER HALF — the folded gap, counted rather than
          closed, because closing it needs an identity this record does not
          hold and inventing one would be the overclaim the silence exists to
@@ -1584,18 +1472,7 @@ export class Queue {
         count: Number(facts.unattributed && facts.unattributed.count) || 0,
         inquiries: facts.unattributed && Array.isArray(facts.unattributed.inquiries)
           ? facts.unattributed.inquiries : [],
-        detail: "readings of a SHARED question that this read met and could not attribute to a team, "
-              + "so no `new-version-arrived-from-another-team` item was minted for them. The source "
-              + "team is a run's own stored context or it is nothing: a member does not name a team in "
-              + "this record, and guessing one from who authored a reading would manufacture the very "
-              + "connection the notification claims attention for. SO THE COUNT IS PUBLISHED AND THE "
-              + "ATTRIBUTION IS NOT — an empty item list and an unattributable set are different facts "
-              + "and until now they read the same. The questions are named so a member can go and look "
-              + "(op=basisversions); the readings are not named and no author is implied. Why each one "
-              + "could not be attributed is deliberately NOT distinguished: telling a hand-composed "
-              + "reading from one whose run sat under something other than a project would mean "
-              + "projecting a stored column of `ai_runs`, which this reader's declared role forbids "
-              + "(REC-74). Zero means this read attributed everything it met, not that it did not look.",
+        detail: localize("queue.index.readings_of_a_shared_question", "readings of a SHARED question that this read met and could not attribute to a team, so no `new-version-arrived-from-another-team` item was minted for them. The source team is a run's own stored context or it is nothing: a member does not name a team in this record, and guessing one from who authored a reading would manufacture the very connection the notification claims attention for. SO THE COUNT IS PUBLISHED AND THE ATTRIBUTION IS NOT — an empty item list and an unattributable set are different facts and until now they read the same. The questions are named so a member can go and look (op=basisversions); the readings are not named and no author is implied. Why each one could not be attributed is deliberately NOT distinguished: telling a hand-composed reading from one whose run sat under something other than a project would mean projecting a stored column of `ai_runs`, which this reader's declared role forbids (REC-74). Zero means this read attributed everything it met, not that it did not look."),
       },
       counts: {
         obligation: out.filter((i) => i.class === "OBLIGATION").length,
@@ -1707,10 +1584,7 @@ export class Queue {
              bias_debts: { read: settled.undetermined !== true, debts, count: debts.length,
                            bound: settled.limit ?? cap, truncated: settled.truncated === true,
                            ...(settled.undetermined === true || settled.stated ? { stated: settled.stated ?? null } : {}),
-                           detail: "bias debts settled in the window on runs this viewer may read (bias R44), each with "
-                                 + "the member who settled it. `resolved_by` is null when no member settled it (the lens "
-                                 + "moved back, or a re-run under the lens now in force discharged it), and "
-                                 + "`settled_kind` says which; null never means nobody acted." },
+                           detail: localize("queue.index.bias_debts_settled_in_the", "bias debts settled in the window on runs this viewer may read (bias R44), each with the member who settled it. `resolved_by` is null when no member settled it (the lens moved back, or a re-run under the lens now in force discharged it), and `settled_kind` says which; null never means nobody acted.") },
              detail: "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one "
                    + "member's resolution clears the item for everyone, and this is where everyone else reads that "
                    + "it happened." };
@@ -1740,14 +1614,11 @@ export class Queue {
       `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
         WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
     if (!row) return { ok: false, reason: "NO_SUCH_CASE", case: id,
-      detail: "no case by that id is visible to you. A case you may not see and a case that does not "
-            + "exist answer identically here (D-15), so this refusal reveals nothing either way." };
+      detail: localize("queue.index.no_case_by_that_id", "no case by that id is visible to you. A case you may not see and a case that does not exist answer identically here (D-15), so this refusal reveals nothing either way.") };
     const ty = normalizeType(row.object_type);
     if (!Queue.QUEUE_CASE_TYPES.includes(ty))
       return { ok: false, reason: "NOT_A_CASE", case: id, object_type: ty,
-        detail: "a queue entry is filed under a CASE — an inquiry or a project — and personal state is "
-              + "keyed to that. A document is a SUBJECT, not a home: muting one would be muting every "
-              + "question that rests on it, for reasons none of those questions' owners could see." };
+        detail: localize("queue.index.a_queue_entry_is_filed", "a queue entry is filed under a CASE — an inquiry or a project — and personal state is keyed to that. A document is a SUBJECT, not a home: muting one would be muting every question that rests on it, for reasons none of those questions' owners could see.") };
     const spec = vocabFor(STATES, row.object_type);
     return { ok: true, id: row.bundle_id, type: ty, title: row.title ?? null,
              state: row.current_state ?? null,
@@ -1820,8 +1691,7 @@ export class Queue {
               viewer = null, at = null } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
     if (!me) return { ok: false, reason: "NO_MEMBER",
-      detail: "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine "
-            + "credential has no member behind it. There is no instance-wide mute and there must not be." };
+      detail: localize("queue.index.a_mute_is_personal_it", "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it. There is no instance-wide mute and there must not be.") };
     const mutableKinds = [...Object.keys(QUEUE_CONDITION_KINDS), ...Object.keys(QUEUE_FINDING_KINDS)];
     const itemId = typeof item === "string" ? item.trim() : "";
     const named = Array.isArray(kinds) ? kinds.map((k) => (typeof k === "string" ? k.trim() : "")).filter(Boolean) : [];
@@ -1851,9 +1721,7 @@ export class Queue {
       if (c.ok !== true) return c;
       if (named.length === 0)
         return { ok: false, reason: "NO_KINDS", case: c.id,
-          detail: "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it "
-                + "was made — that is what lets a NEW kind on this case still reach you — so there is no "
-                + "whole-case mute to ask for.",
+          detail: localize("queue.index.name_the_kinds_to_mute", "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it was made — that is what lets a NEW kind on this case still reach you — so there is no whole-case mute to ask for."),
           available: mutableKinds };
       for (const k of named) subjects.push({ kind: k, cls: classOfKind(k) });
     }
@@ -1865,11 +1733,8 @@ export class Queue {
         return { ok: false, reason: "UNKNOWN_KIND", ...(sb.item ? { item: sb.item } : { kind: sb.kind }),
           case: c ? c.id : null,
           detail: sb.item
-            ? "no queue item by that id is one this plane can classify: a noticed item's or a status item's id "
-              + "begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is "
-              + "not the same as forbidden, and this refusal is the first rather than the second."
-            : "the notification catalogue does not name that kind. Unknown is not the same as "
-              + "forbidden, and this refusal is the first rather than the second.",
+            ? localize("queue.index.no_queue_item_by_that", "no queue item by that id is one this plane can classify: a noticed item's or a status item's id begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is not the same as forbidden, and this refusal is the first rather than the second.")
+            : localize("queue.index.the_notification_catalogue_does_not", "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second."),
           available: mutableKinds };
       /* DEC-49 REGION is-mute-class — REC-64/C-33.27. */
       if (!PERSONALLY_MUTABLE_CLASSES.includes(sb.cls))
@@ -1897,11 +1762,7 @@ export class Queue {
         muted_items: [...this.#queueItemMutes(me)].sort(),
         added: !unmute && !had ? [itemId] : [], removed: unmute && had ? [itemId] : [], at: stamp,
         wrote: { queue_item_mutes: 1, queue_state: 0, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-        detail: "a mute is PERSONAL: this one item leaves YOUR feed, which says so in its `mute` block. "
-              + "Nothing left the record, no other member's feed moved, no disposition was written, and "
-              + "op=proposals still carries the finding. A finding leaves the team's list only when it is "
-              + "adopted, deferred or dismissed (op=proposedispose). The key is the item's own id, so the "
-              + "same item arising again stays muted for you until you unmute it.",
+        detail: localize("queue.index.a_mute_is_personal_this", "a mute is PERSONAL: this one item leaves YOUR feed, which says so in its `mute` block. Nothing left the record, no other member's feed moved, no disposition was written, and op=proposals still carries the finding. A finding leaves the team's list only when it is adopted, deferred or dismissed (op=proposedispose). The key is the item's own id, so the same item arising again stays muted for you until you unmute it."),
       };
     }
     const row = this.#one(
@@ -1933,10 +1794,7 @@ export class Queue {
          so the suite can assert the boundary from the op's own answer as well as
          from the tables. */
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: "a mute is PERSONAL and reaches the kinds of status items and noticed items, never a to-do. Nothing "
-            + "left the record, nothing left another member's queue, no disposition was written, and a "
-            + "to-do on this case still reaches you: a to-do leaves every list only when it is "
-            + "DONE, which is record state.",
+      detail: localize("queue.index.a_mute_is_personal_and", "a mute is PERSONAL and reaches the kinds of status items and noticed items, never a to-do. Nothing left the record, nothing left another member's queue, no disposition was written, and a to-do on this case still reaches you: a to-do leaves every list only when it is DONE, which is record state."),
     };
   }
 
@@ -1960,8 +1818,7 @@ export class Queue {
                 viewer = null, at = null } = {}) {
     const me = typeof member === "string" ? member.trim() : "";
     if (!me) return { ok: false, reason: "NO_MEMBER",
-      detail: "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a "
-            + "machine credential has no member behind it." };
+      detail: localize("queue.index.a_snooze_is_personal_it", "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it.") };
     const c = this.#queueCaseFor(caseId, viewer);
     if (c.ok !== true) return c;
     const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
@@ -1969,9 +1826,7 @@ export class Queue {
     if (!clear) {
       if (typeof until !== "string" || !until)
         return { ok: false, reason: "NO_UNTIL", case: c.id,
-          detail: "name the instant to snooze until. There is no default and there must not be one: "
-                + "P-87 requires re-notification at the stage's OWN declared interval, never at a "
-                + "global one, so this plane holds no instance-wide snooze constant to fall back on." };
+          detail: localize("queue.index.name_the_instant_to_snooze", "name the instant to snooze until. There is no default and there must not be one: P-87 requires re-notification at the stage's OWN declared interval, never at a global one, so this plane holds no instance-wide snooze constant to fall back on.") };
       /* R21 (K1444 (iii)): `until` is an instant, or a calendar date read as the start of that local day in the
          instance profile's zone (`civil-time.dayRange`), never as a UTC midnight. A date is in the past when it is
          before TODAY'S local day there (`civil-time.localDay`), never the UTC day. */
@@ -1986,9 +1841,7 @@ export class Queue {
         const zone = this.#zone();
         if (zone === null)
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "a calendar date is snoozed until the start of that day where this team is, and no time zone "
-                  + "is held for this copy (its jurisdiction profile gives none), so the day cannot be read without "
-                  + "guessing one. Send an instant instead (ISO-8601, with its time)." };
+            detail: localize("queue.index.a_calendar_date_is_snoozed", "a calendar date is snoozed until the start of that day where this team is, and no time zone is held for this copy (its jurisdiction profile gives none), so the day cannot be read without guessing one. Send an instant instead (ISO-8601, with its time).") };
         const today = localDay(new Date(nowMs).toISOString().replace(/\.\d{3}Z$/, "Z"), zone);
         const range = dayRange(text, text, zone);
         if (typeof today !== "string" || !range || typeof range.start !== "string")
@@ -1996,8 +1849,7 @@ export class Queue {
             detail: "the day could not be read in this copy's time zone; send an instant instead" };
         if (text < today)
           return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id, today,
-            detail: `that day is before today (${today}) where this team is; a snooze that has already expired is `
-                  + "not a snooze, it would report as deferred while deferring nothing" };
+            detail: localize("queue.index.that_day_is_before_today", "that day is before today ({today}) where this team is; a snooze that has already expired is not a snooze, it would report as deferred while deferring nothing", { today: String(today) }) };
         day = text;
         ms = Date.parse(range.start);
       } else {
@@ -2026,12 +1878,10 @@ export class Queue {
       ...(dated ? { until_day: dated.day } : {}),
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
       detail: dated && dated.lapsed
-        ? "that day has already begun where this team is, so the snooze, which holds until its start, has already "
-        + "lapsed and defers nothing. The items are unchanged and no other member's feed moved."
+        ? localize("queue.index.that_day_has_already_begun", "that day has already begun where this team is, so the snooze, which holds until its start, has already lapsed and defers nothing. The items are unchanged and no other member's feed moved.")
         : iso
-        ? "re-notification about this case is deferred for YOU until that instant. The items themselves "
-        + "are unchanged, they still appear in your feed, and no other member's feed moved."
-        : "the snooze is cleared; re-notification resumes at the declared interval of whatever raises it.",
+        ? localize("queue.index.re_notification_about_this_case", "re-notification about this case is deferred for YOU until that instant. The items themselves are unchanged, they still appear in your feed, and no other member's feed moved.")
+        : localize("queue.index.the_snooze_is_cleared_re", "the snooze is cleared; re-notification resumes at the declared interval of whatever raises it."),
     };
   }
 
@@ -2129,17 +1979,9 @@ export class Queue {
       if (!sk) sk = key.slice(i + 2).trim();
     }
     if (scoped && !find) return { ok: false, reason: "NO_FINDING", project: proj,
-      detail: "a project-scoped disposition names the FINDING it ages, by the queue item's own id "
-            + "(op=queue publishes it as disposition.finding). A project with no finding names a "
-            + "team and no decision." };
+      detail: localize("queue.index.a_project_scoped_disposition_names", "a project-scoped disposition names the FINDING it ages, by the queue item's own id (op=queue publishes it as disposition.finding). A project with no finding names a team and no decision.") };
     if (scoped && !proj) return this.#noProjectScope({ finding: find,
-      detail: "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, "
-            + "and that act is scoped to ONE project's feed (D-266: a stance is expressly one "
-            + "project's own property, §7/D-216, and R5 makes forks at the judgment layer "
-            + "legitimate). Name the project you are acting for — op=queue publishes the candidates "
-            + "as disposition.projects. It is not defaulted even when there is only one, because a "
-            + "plane choosing whose judgment the record carries is the single shared stance §7 "
-            + "rejected, arriving through a defaulted parameter." });
+      detail: localize("queue.index.a_finding_that_carries_no", "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, and that act is scoped to ONE project's feed (D-266: a stance is expressly one project's own property, §7/D-216, and R5 makes forks at the judgment layer legitimate). Name the project you are acting for — op=queue publishes the candidates as disposition.projects. It is not defaulted even when there is only one, because a plane choosing whose judgment the record carries is the single shared stance §7 rejected, arriving through a defaulted parameter.") });
     /* THE BRIDGE FOR A SURFACE BUILT BEFORE IC-60, AND IT NAMES THE FIX RATHER THAN THE SYMPTOM.
        A page that learned this act before the second shape existed composes `key` from the queue
        item's own id, so a stance-scoped finding arrives here as key='<kind>::<rest>'. Read as the
@@ -2188,12 +2030,7 @@ export class Queue {
                class: keyClass, kind: keyKind,
                /* R28 (K607): the same per-kind door R12 publishes on the item. */
                instead: keyClass === "CONDITION" ? "queuemute" : Queue.doorOf(keyKind),
-               detail: `this names ${keyClass === "CONDITION" ? "a status item" : "a to-do"}, and `
-                     + `${keyClass === "CONDITION" ? "a status item" : "a to-do"} is not DISPOSED: a disposition is `
-                     + "an authored record act on something the record noticed, and op=queue publishes the act that does "
-                     + "reach this item as its `disposition.instead`. Nothing was written. The rest of "
-                     + "a selection is unaffected — under the per-item weight this item alone is kept, "
-                     + "carrying this reason." };
+               detail: localize("queue.index.this_names_v1_and_v2", "this names {v1}, and {v2} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its `disposition.instead`. Nothing was written. The rest of a selection is unaffected — under the per-item weight this item alone is kept, carrying this reason.", { v1: String(keyClass === "CONDITION" ? "a status item" : "a to-do"), v2: String(keyClass === "CONDITION" ? "a status item" : "a to-do") }) };
     }
     /* END DEC-49 REGION is-dispose-class */
     if (keyClass === "FINDING")
@@ -2201,11 +2038,7 @@ export class Queue {
                finding: byId ? keyed : `FINDING::${pk}::${sk}`,
                kind: keyKind,
                requires: ["project", "finding"],
-               detail: "this names a FINDING that carries no progression stage, so this is the "
-                     + "project-scoped disposition and it needs the project you are acting for. "
-                     + "Send `project` (one of op=queue's disposition.projects for this item) and "
-                     + "`finding` (its disposition.finding) instead of `key`. Nothing was written "
-                     + "and no team's feed moved." });
+               detail: localize("queue.index.this_names_a_finding_that", "this names a FINDING that carries no progression stage, so this is the project-scoped disposition and it needs the project you are acting for. Send `project` (one of op=queue's disposition.projects for this item) and `finding` (its disposition.finding) instead of `key`. Nothing was written and no team's feed moved.") });
     if (!scoped) return this.#progressions.disposeProposal({ progressionKey: pk, stageKey: sk, to, state, reason,
                                                                   definitionVersion, decidedBy });
     /* N285 (K275): a word that is no disposition is answered by progressions' `notADisposition` (its R35), the one
@@ -2220,13 +2053,11 @@ export class Queue {
                      + "member's own words — a disposition with no reason ages a finding with no account of why" };
     if (why.length > Queue.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
-               detail: `a reason is at most ${Queue.EDGE_REASON_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+               detail: localize("queue.index.a_reason_is_at_most", "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { EDGE_REASON_MAX: String(Queue.EDGE_REASON_MAX) }) };
     const by = decidedBy == null ? "" : String(decidedBy).trim();
     if (!by)
       return { ok: false, reason: "NO_DECIDER",
-               detail: "a disposition is recorded under the deciding member, stamped from the session. An "
-                     + "unnamed decider cannot age the record's question." };
+               detail: localize("queue.index.a_disposition_is_recorded_under", "a disposition is recorded under the deciding member, stamped from the session. An unnamed decider cannot age the record's question.") };
     /* ================================================ D-266 · THE JUDGMENT-LAYER ARM
        Everything above is SHARED and is reached by both shapes on purpose: the vocabulary, the
        required reason, its grammar bound and the server-stamped decider are properties of the ACT
@@ -2270,11 +2101,7 @@ export class Queue {
       return { ok: true, scope: "project", project: proj, finding: find.slice(0, 400),
                key: `${proj}::${find.slice(0, 400)}`, kind: kd,
                to: st, state: st, reason: why, decided_by: by, at: atS, bundle: null,
-               detail: "recorded for THIS project and for no other. One team's dismissal of a "
-                     + "judgment-layer finding governs that team's feed and nothing else (D-266, "
-                     + "§7/D-216, R5) — no other project's queue moved by an item, and the finding "
-                     + "itself is aged rather than deleted (D-79): it stands until it is "
-                     + "re-triaged, whether or not the underlying fact still fires." };
+               detail: localize("queue.index.recorded_for_this_project_and", "recorded for THIS project and for no other. One team's dismissal of a judgment-layer finding governs that team's feed and nothing else (D-266, §7/D-216, R5) — no other project's queue moved by an item, and the finding itself is aged rather than deleted (D-79): it stands until it is re-triaged, whether or not the underlying fact still fires.") };
     }
   }
 

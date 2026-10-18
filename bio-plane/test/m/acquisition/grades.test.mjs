@@ -10,6 +10,7 @@ import { world, run, sha, eligible, wayback } from "./fixture.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { ODT_CONTENT_TYPE, ODS_CONTENT_TYPE, ODP_CONTENT_TYPE } from "../../../src/odf.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* A minimal STORED zip, written here so the bytes are this file's: the `mimetype` member first and stored, each member
    with its CRC-32, and a central directory the detector reads. */
@@ -79,7 +80,7 @@ test("R18 R4: a Drive capture of a document, spreadsheet or presentation grades 
     const g = chain[1];
     assert.equal(g.who, "Google Drive (Google Drive export)");
     assert.deepEqual([g.export_address, g.export_format, g.producer, g.drive_kind, g.drive_file_id, g.document_address],
-                     [d.exp, d.fmt, "Google Drive export", d.kind, ID[d.kind === "document" ? "doc" : d.kind === "spreadsheet" ? "sheet" : "slides"], d.link]);
+                     [d.exp, d.fmt, word("drive.google_drive_export"), d.kind, ID[d.kind === "document" ? "doc" : d.kind === "spreadsheet" ? "sheet" : "slides"], d.link]);
     assert.equal(g.export_format_confirmed, true, `${d.fmt}: the flavour is confirmed from the bytes, not from Google's content type`);
     assert.ok(bytes.length < 1024, "within the first KiB R17 reads back");
     assert.deepEqual([doc.profile.format.format, doc.profile.format.confidence], [d.fmt, "certain"], "the format the hop confirms is the one detected from the bytes");

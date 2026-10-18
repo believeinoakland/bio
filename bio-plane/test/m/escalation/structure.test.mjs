@@ -7,6 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, OFFICE, DAY, ms } from "./fixture.mjs";
 import { ESCALATION_CHECKS, TIMELINE_KINDS } from "../../../src/escalation/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const read = (w, nowMs) => w.esc.escalationRead({ id: w.E, viewer: V("bob"), ...(nowMs ? { nowMs } : {}) });
 const attach = (w, action, extra = {}) => w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action,
@@ -285,7 +286,7 @@ test("R29 a T33 act (conformance R25) is worded from its event: its kind and its
     [{ start: "2026-03-01T00:00:00Z", end: "2026-04-01T00:00:00Z", precision: "month", zone: "America/Halifax" }, null,
      "between 2026-03-01T00:00:00Z and 2026-04-01T00:00:00Z (to the month, America/Halifax)"],
     [{ start: null, end: "2026-03-05T12:00:00Z", precision: "minute" }, null, "on or before 2026-03-05T12:00:00Z (to the minute)"],
-    [null, null, "at no date the record holds (placed nowhere; undetermined)"],
+    [null, null, word("escalation.date_record_holds")],
     ["undetermined", "cache stale", "at a date that is undetermined (cache stale)"],
   ];
   for (const [when, why, words] of cases) {

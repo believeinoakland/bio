@@ -11,6 +11,7 @@ import { renderFeed } from "../../../src/docket/feed.mjs";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice");
 
@@ -235,7 +236,7 @@ test("R15 docketFeed: an Atom 1.0 feed of the same entries, newest first, update
   for (const e of pub.entries) assert.ok(feed.includes(e.json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&apos;")), "each entry carries its signed JSON");
   assert.equal(ATOM_MEDIA_TYPE, "application/atom+xml");
-  assert.equal(DOCKET_UNREADABLE, "Could not read the publisher's docket");
+  assert.equal(DOCKET_UNREADABLE, word("docket.read_publisher_docket"));
   /* pure: the same entries render the same bytes */
   assert.equal(renderFeed({ case: CASE, group: "test-group", entries: pub.entries }, null), feed);
 });

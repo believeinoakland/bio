@@ -128,6 +128,7 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
    The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -183,7 +184,7 @@ const PAIR_0001 = {
               grade:"C", grade_source:"resolution", via:"leg" },
     load_bearing:2, population:3, depth_bound:6,
     not_load_bearing:[{ bundle_id:"INQ-2026-0001", ord:3, target_id:"INFO-2026-0300", role:"supports",
-                        grade:null, via:"leg", why:"the leg carries no grade" }],
+                        grade:null, via:"leg", why:word("strength.why.leg_carries_grade") }],
     detail:"capture C — no stronger than the weakest capture it rests on, which is INFO-2026-0200. Present and not yet load-bearing: INFO-2026-0300." },
   connection: { axis:"connection", state:"graded", grade:"B", determined:true,
     weakest:{ bundle_id:"INQ-2026-0001", ord:2, target_id:"INQ-2026-0009", role:"cuts_against",
@@ -195,7 +196,7 @@ const PAIR_0001 = {
       { bundle_id:"INQ-2026-0001", ord:1, target_id:"INFO-2026-0200", role:"supports", grade:null, via:"leg",
         why:"the leg's grade is on the capture axis" },
       { bundle_id:"INQ-2026-0001", ord:3, target_id:"INFO-2026-0300", role:"supports", grade:null, via:"leg",
-        why:"the leg carries no grade" }],
+        why:word("strength.why.leg_carries_grade") }],
     detail:"connection B — no stronger than the weakest connection it rests on, which is INQ-2026-0009. Present and not yet load-bearing: INFO-2026-0100, INFO-2026-0200, INFO-2026-0300." },
 };
 /* A question resting on nothing: both axes UNRATED, and the plane says so in

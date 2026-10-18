@@ -9,6 +9,7 @@ import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -274,7 +275,7 @@ test("R3 (K383): a knock id no knock answers to, read or resolved, is NO_SUCH_KN
   const { c, rows } = setup();
   const k = await c.knock({ content: "hello", sourceAddress: "6.6.6.6" });
   const row = DOORBELL_CHECKS.NO_SUCH_KNOCK;
-  assert.deepEqual([row.check, row.translation], ["C-118.2", "No knock in the inbox answers to this id. Nothing was changed."]);
+  assert.deepEqual([row.check, row.translation], ["C-118.2", word("refusal.NO_SUCH_KNOCK")]);
   assert.notEqual(row.check, CAPTURE_CHECKS.EVIDENCE_NOT_HELD.check, "not capture R63's row");
   const snapshot = () => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
     .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);

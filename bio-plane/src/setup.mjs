@@ -34,7 +34,7 @@ import { parse as legistarParse, readPages as legistarPages, readBodyName as leg
    wizard-scripts' (its R25, its rows), read there and never copied. */
 import { checkDraft, WIZARD_SCRIPTS_CHECKS } from "./wizard-scripts/index.mjs";
 /* R63 (T50; N1116, K3366): each row's sentence is read by its key from setup-words, never held here. */
-import { word } from "./setup-words/index.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
@@ -98,7 +98,7 @@ async function askMemberVersion(env, member, binding) {
     ]);
     const j = await r.json().catch(() => null);
     if (!r.ok || !j || typeof j.version !== "string" || !j.version)
-      return { report: { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` }, body: null };
+      return { report: { binding, state: "SILENT", why: localize("instance-setup.setup.answered_http_status_without_a", "answered HTTP {status} without a version", { status: String(r.status) }) }, body: null };
     if (j.name !== member)
       return { report: { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version }, body: null };
     return { report: { binding, state: "SERVING", version: j.version }, body: j };
@@ -120,7 +120,7 @@ function runnerReport(host) {
   const runner = host.body ? host.body.runner : undefined;
   if (runner === true) return { ...via, state: "SERVING", version: host.report.version };
   if (runner === false) return { ...via, state: "UNBOUND" };
-  return { ...via, state: "SILENT", why: `${RUNNER_HOST} answered its version without saying whether the runner is bound` };
+  return { ...via, state: "SILENT", why: localize("instance-setup.setup.runner_host_answered_its_version", "{RUNNER_HOST} answered its version without saying whether the runner is bound", { RUNNER_HOST: String(RUNNER_HOST) }) };
 }
 
 export async function memberVersions(env) {
@@ -325,8 +325,8 @@ const scriptRefusal = (code, detail) => {
 };
 const draftUnavailable = (detail) => scriptRefusal("ASSISTANT_DRAFT_UNAVAILABLE", detail);
 const draftRefused = (checked) => (checked && typeof checked.code === "string"
-  ? scriptRefusal(checked.code, "the draft did not pass the check that it adds no fact, so nothing is offered.")
-  : draftUnavailable("the draft could not be checked, so nothing is offered."));
+  ? scriptRefusal(checked.code, localize("instance-setup.setup.the_draft_did_not_pass", "the draft did not pass the check that it adds no fact, so nothing is offered."))
+  : draftUnavailable(localize("instance-setup.setup.the_draft_could_not_be", "the draft could not be checked, so nothing is offered.")));
 /* R65, R67 (T40: N812, K2373): a draft carries no project. The door resolves the account for a draft with no project
    (`credentials` R56, `store-door` R10), so an account it hands in that is a project's (`level: "project"`, or naming a
    `project`) serves no draft here: `{project: true}`, and nothing is drafted. Otherwise the account handed on is the
@@ -338,8 +338,7 @@ const draftAccount = (assistant) => {
   const { project: _none, ...account } = a;
   return { account };
 };
-const projectAccount = (what) => draftUnavailable(`a draft carries no project, and the account resolved for this one is `
-  + `a project's, so nothing was drafted and ${what}.`);
+const projectAccount = (what) => draftUnavailable(localize("instance-setup.setup.a_draft_carries_no_project", "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.", { what: String(what) }));
 
 /* R60: the longest name a place is given, in characters. R65: the answers' bounds, and membership R109's limits on
    the focus and the purpose a draft must fit. */
@@ -739,16 +738,16 @@ async function bytesOfLogo(raw) {
   return null;
 }
 async function readLogo(raw, rawType) {
-  if (raw === undefined) return { why: "the logo is sent as the file's bytes, and none was sent" };
+  if (raw === undefined) return { why: word("setup.why.logo_sent_file") };
   const bytes = await bytesOfLogo(raw);
-  if (!bytes) return { why: "the logo sent is not a file's bytes" };
-  if (!bytes.length) return { why: "the logo sent is empty" };
-  if (bytes.length > GROUP_LOGO_MAX_BYTES) return { why: `the logo is over ${GROUP_LOGO_MAX_BYTES} bytes` };
+  if (!bytes) return { why: word("setup.why.logo_sent_file_bytes") };
+  if (!bytes.length) return { why: word("setup.why.logo_sent_empty") };
+  if (bytes.length > GROUP_LOGO_MAX_BYTES) return { why: word("setup.why.logo_over_bytes", { group_logo_max_bytes: String(GROUP_LOGO_MAX_BYTES) }) };
   const kind = GROUP_LOGO_TYPES.find((t) => bytes.length > t.magic.length && t.magic.every((b, i) => bytes[i] === b));
-  if (!kind) return { why: "the logo is neither a PNG nor a JPEG picture" };
+  if (!kind) return { why: word("setup.why.logo_neither_png") };
   const said = typeof rawType === "string" ? rawType.split(";")[0].trim().toLowerCase() : rawType == null ? "" : null;
   if (said === null || (said && said !== kind.type))
-    return { why: `the logo is a ${kind.type === "image/png" ? "PNG" : "JPEG"} picture sent as ${String(rawType).slice(0, 40)}` };
+    return { why: word("setup.why.logo_picture_sent", { jpeg: String(kind.type === "image/png" ? "PNG" : "JPEG"), raw_type: String(String(rawType).slice(0, 40)) }) };
   return { raw: bytes, type: kind.type, bytes: bytes.length };
 }
 const base64Of = (bytes) => { let t = ""; for (let i = 0; i < bytes.length; i += 0x8000) t += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(t); };
@@ -807,11 +806,7 @@ const unitOfMetric = (metric) => (/_bytes$/.test(String(metric)) ? "bytes" : "ms
  * ===================================================================== */
 
 /* What a store recording no group SAYS, in ONE copy: the credentialed read and the public reads both answer with it. */
-export const NO_GROUP_RECORDED = "no producing team is recorded for this store. A store records it once: at its first "
-  + "boot, from the slug its installer bound, or — on a store that already held documents when the value "
-  + "arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must "
-  + "name its producing team is given no default: a caller's own statement of its team is kept "
-  + "as the caller's, and a write stating none is refused.";
+export const NO_GROUP_RECORDED = localize("instance-setup.setup.no_producing_team_is_recorded", "no producing team is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or — on a store that already held documents when the value arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing team is given no default: a caller's own statement of its team is kept as the caller's, and a write stating none is refused.");
 
 /* REC-164 — THE DISPLAY NAME AND THE DOMAIN (R5–R11): the bounds and the file. */
 export const GROUP_DISPLAY_NAME_MAX = 120;
@@ -979,9 +974,9 @@ export class InstanceSetup {
     out.updateCheck = this.#scheduler().register("instance-setup", { name: "update-check", key: "updatecheck",
       due: () => this.updateCheckWake(), wake: () => this.updateCheckWake(), tick: (now) => this.updateCheckTick(now) });
     try { out.slot = { minute: this.#checkMinute() }; }   /* the group's minute of the day is drawn at its first start and kept */
-    catch (e) { out.slot = { drawn: false, detail: `the minute of the day could not be drawn: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { out.slot = { drawn: false, detail: localize("instance-setup.setup.the_minute_of_the_day", "the minute of the day could not be drawn: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
     try { out.running = this.#recordRunning(); }
-    catch (e) { out.running = { recorded: false, detail: `the running release could not be recorded: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { out.running = { recorded: false, detail: localize("instance-setup.setup.the_running_release_could_not", "the running release could not be recorded: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
     out.compute = this.#capture().on("compute", "instance-setup",
       (m) => this.recordRuntimeObservation({ metric: m && m.metric, ms: m && m.value, detail: m && m.detail,
                                             unit: unitOfMetric(m && m.metric) }));
@@ -992,13 +987,13 @@ export class InstanceSetup {
       /* R50: at setup, the offices the profiles just recorded name are seeded (the machine's act, DEC-52). */
       if (out.profiles && out.profiles.recorded === true) {
         try { out.offices = this.officesSeed({ boot: true }); }
-        catch (e) { out.offices = { ok: false, detail: `the offices could not be seeded at setup: ${String(e && e.message || e).slice(0, 200)}` }; }
+        catch (e) { out.offices = { ok: false, detail: localize("instance-setup.setup.the_offices_could_not_be", "the offices could not be seeded at setup: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
       }
     }
     /* R62: at each start, with a place named, the profiles that arrived for it; and once, the read `queue-producers`
        raises the administrators' one Status item from (its R38), read as the plane. */
     try { out.places = this.#comparePlaces(); }
-    catch (e) { out.places = { compared: false, detail: `the place could not be compared: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { out.places = { compared: false, detail: localize("instance-setup.setup.the_place_could_not_be", "the place could not be compared: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
     out.arrivals = this.#registerArrivals();
     out.identity = this.#registerIdentity();
     out.language = this.#registerLanguage(this.#translations());
@@ -1022,7 +1017,7 @@ export class InstanceSetup {
      answering R10's `groupIdentityPublic`. A refusal or a throw is answered in the start's report, never thrown. */
   #registerIdentity() {
     let pr = null;
-    try { pr = this.#publicRead(); } catch (e) { return { ok: false, detail: `public-read could not be reached: ${String(e && e.message || e).slice(0, 200)}` }; }
+    try { pr = this.#publicRead(); } catch (e) { return { ok: false, detail: localize("instance-setup.setup.public_read_could_not_be", "public-read could not be reached: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
     if (!pr || typeof pr.registerGroupIdentity !== "function") return { ok: false, detail: "no public-read to register with" };
     try { return pr.registerGroupIdentity({ identity: () => this.groupIdentityPublic() }); }
     catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
@@ -1063,22 +1058,18 @@ export class InstanceSetup {
     /* DEC-49 REGION is-instance-group-seed */
     if (!GROUP_SLUG_RE.test(s))
       return refusal("GROUP_SLUG_MALFORMED",
-        `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a team is recorded as"} a slug in the `
-        + `installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). `
-        + `Nothing was recorded.`);
+        localize("instance-setup.setup.v1_a_slug_in_the", "{v1} a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded.", { v1: String(s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a team is recorded as") }));
     const held = this.#one(`SELECT slug, recorded_at, source FROM instance_group WHERE id=1`);
     if (held)
       return refusal("GROUP_ALREADY_RECORDED",
-        `this store has recorded its producing team since ${held.recorded_at} (${held.source}), and it is `
-        + `recorded once. Nothing was changed.`, { group: held.slug, recorded_at: held.recorded_at, source: held.source });
+        localize("instance-setup.setup.this_store_has_recorded_its", "this store has recorded its producing team since {recorded_at} ({source}), and it is recorded once. Nothing was changed.", { recorded_at: String(held.recorded_at), source: String(held.source) }), { group: held.slug, recorded_at: held.recorded_at, source: held.source });
     /* END DEC-49 REGION is-instance-group-seed */
     const at = this.#iso();
     const who = typeof author === "string" && author.trim() ? author.trim() : null;
     this.#sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
                     VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at, who);
     return { ok: true, group: s, recorded_at: at, source: "seed", recorded_by: who,
-             note: "every document this store writes from now on names this team. Documents already written are "
-                 + "NOT rewritten: whatever team their bytes name is what they were signed under." };
+             note: word("setup.note.document_store_writes") };
   }
 
   /* =====================================================================
@@ -1108,9 +1099,7 @@ export class InstanceSetup {
     /* DEC-49 REGION is-group-identity-admin */
     if (!by || !this.#membership().isAdministrator(by))
       return refusal("GROUP_IDENTITY_NOT_ADMIN",
-        "setting the team's display name or claiming its domain is an administrator's act (Publication §7), and "
-        + "your team's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This "
-        + "caller is not one of the active administrators.", { by: by ?? null });
+        localize("instance-setup.setup.setting_the_teams_display_name", "setting the team's display name or claiming its domain is an administrator's act (Publication §7), and your team's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators."), { by: by ?? null });
     /* END DEC-49 REGION is-group-identity-admin */
     return null;
   }
@@ -1138,14 +1127,13 @@ export class InstanceSetup {
     /* DEC-49 REGION is-group-display-name */
     if (!s || chars > GROUP_DISPLAY_NAME_MAX || /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(s))
       return refusal("GROUP_DISPLAY_NAME_MALFORMED",
-        `${s ? `a name of ${chars} characters` : "the request names no display name, and it is set as"} `
-        + `one line of 1 to ${GROUP_DISPLAY_NAME_MAX} characters with no control characters. Nothing was set.`);
+        localize("instance-setup.setup.v1_one_line_of_1", "{v1} one line of 1 to {GROUP_DISPLAY_NAME_MAX} characters with no control characters. Nothing was set.", { v1: String(s ? `a name of ${chars} characters` : "the request names no display name, and it is set as"), GROUP_DISPLAY_NAME_MAX: String(GROUP_DISPLAY_NAME_MAX) }));
     /* END DEC-49 REGION is-group-display-name */
     const at = this.#iso();
     this.#sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by) VALUES ('display_name', ?, ?, ?)`,
                    s, at, by);
     return { ok: true, display_name: s, set_at: at, set_by: by, history: this.#identityHistory("display_name"),
-             note: "presentation only: no signed bytes carry it, and every public surface shows it beside the slug." };
+             note: word("setup.note.presentation_signed_bytes") };
   }
 
   /** R7, op=groupdomainset — §7 point 3. `by` and `origin` are the control plane's stamps: `origin` is the address the
@@ -1158,8 +1146,7 @@ export class InstanceSetup {
     /* DEC-49 REGION is-group-domain */
     if (!GROUP_DOMAIN_RE.test(d))
       return refusal("GROUP_DOMAIN_MALFORMED",
-        `${d ? `'${d.slice(0, 80)}' is not` : "the request names no domain, and one is claimed as"} a bare host `
-        + `name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.`);
+        localize("instance-setup.setup.v1_a_bare_host_name", "{v1} a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.", { v1: String(d ? `'${d.slice(0, 80)}' is not` : "the request names no domain, and one is claimed as") }));
     /* END DEC-49 REGION is-group-domain */
     const address = instanceAddress(origin);
     const at = this.#iso();
@@ -1188,7 +1175,7 @@ export class InstanceSetup {
       let answer = first;
       if (first.verdict === "absent") {
         const before = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH_BEFORE_T31, address, slug);
-        answer = { ...before, detail: `${first.detail}; read instead: ${before.detail}` };
+        answer = { ...before, detail: localize("instance-setup.setup.detail_read_instead_detail_2", "{detail}; read instead: {detail_2}", { detail: String(first.detail), detail_2: String(before.detail) }) };
       }
       ({ verdict, status, detail } = answer);
     }
@@ -1203,10 +1190,10 @@ export class InstanceSetup {
   async #readWellKnown(domain, path, address, slug) {
     let g;
     try { g = this.#governor().governorAdmit({ host: domain }); }
-    catch (e) { g = { admitted: false, reason: `the governor did not answer (${String(e && e.message || e).slice(0, 120)})` }; }
+    catch (e) { g = { admitted: false, reason: localize("instance-setup.setup.the_governor_did_not_answer", "the governor did not answer ({String})", { String: String(String(e && e.message || e).slice(0, 120)) }) }; }
     if (!g || !g.admitted)
       return { verdict: "undetermined", status: null,
-               detail: `the per-host governor held ${domain} (${g && g.reason}); this says nothing about the domain` };
+               detail: localize("instance-setup.setup.the_per_host_governor_held", "the per-host governor held {domain} ({v1}); this says nothing about the domain", { domain: String(domain), v1: String(g && g.reason) }) };
     if (g.wait_ms) await this.#sleep(g.wait_ms);
     let res = null;
     try {
@@ -1215,16 +1202,16 @@ export class InstanceSetup {
     } catch { res = null; }
     if (!res)
       return { verdict: "undetermined", status: null,
-               detail: `the fetch of ${path} did not complete, and why was not recorded` };
+               detail: localize("instance-setup.setup.the_fetch_of_path_did", "the fetch of {path} did not complete, and why was not recorded", { path: String(path) }) };
     const status = res.status;
     try { this.#governor().governorReport({ host: domain, status }); } catch { /* an unrecorded outcome is not a verdict */ }
     if (status === 404 || status === 410 || (status >= 300 && status < 400))
       return { verdict: "absent", status,
-               detail: status < 400 ? `the domain redirected ${path} (HTTP ${status}); the file is read on the claimed domain itself`
-                                    : `the domain serves no ${path} (HTTP ${status})` };
+               detail: status < 400 ? localize("instance-setup.setup.the_domain_redirected_path_http", "the domain redirected {path} (HTTP {status}); the file is read on the claimed domain itself", { path: String(path), status: String(status) })
+                                    : localize("instance-setup.setup.the_domain_serves_no_path", "the domain serves no {path} (HTTP {status})", { path: String(path), status: String(status) }) };
     if (!(status >= 200 && status < 300))
       return { verdict: "undetermined", status,
-               detail: `the domain answered ${path} with HTTP ${status}, which is neither the file nor its absence` };
+               detail: localize("instance-setup.setup.the_domain_answered_path_with", "the domain answered {path} with HTTP {status}, which is neither the file nor its absence", { path: String(path), status: String(status) }) };
     const text = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
     let f = null;
     try { f = JSON.parse(text); } catch { f = null; }
@@ -1232,12 +1219,11 @@ export class InstanceSetup {
     const inst = isObject && typeof f.instance === "string" ? instanceAddress(f.instance) : null;
     const grp = isObject && typeof f.group === "string" ? f.group.trim() : null;
     if (inst === address && grp === slug)
-      return { verdict: "verified", status, detail: `${path} names your team's Civicsmith (${address}) and its slug (${slug})` };
+      return { verdict: "verified", status, detail: localize("instance-setup.setup.path_names_your_teams_civicsmith", "{path} names your team's Civicsmith ({address}) and its slug ({slug})", { path: String(path), address: String(address), slug: String(slug) }) };
     return { verdict: "mismatched", status,
              detail: !isObject
                ? `${path} is not the JSON object your team's Civicsmith reads ({ instance, group })`
-               : `${path} gives the address ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and the team `
-                 + `${JSON.stringify(grp).slice(0, 60)}; your team's Civicsmith is ${address} and its slug is ${slug}` };
+               : localize("instance-setup.setup.path_gives_the_address_stringify", "{path} gives the address {stringify} and the team {stringify_2}; your team's Civicsmith is {address} and its slug is {slug}", { path: String(path), stringify: String(JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)), stringify_2: String(JSON.stringify(grp).slice(0, 60)), address: String(address), slug: String(slug) }) };
   }
 
   /** R9, the alarm consumer's two halves: the next re-check is due one interval after the current claim's latest
@@ -1324,9 +1310,8 @@ export class InstanceSetup {
       const chars = [...s].length;
       /* DEC-49 REGION is-declared-stake */
       if (!s || chars > DECLARED_STAKE_MAX || !oneLine(s))
-        return refusal("STAKE_MALFORMED", `${typeof stake !== "string" ? "the request names no stake, and one is declared as"
-          : !s ? "an empty stake is not one, and one is declared as" : `a stake of ${chars} characters${oneLine(s) ? "" : " over more than one line"} is not`} `
-          + `one line of 1 to ${DECLARED_STAKE_MAX} characters with no control characters; null clears it. Nothing was changed.`);
+        return refusal("STAKE_MALFORMED", localize("instance-setup.setup.v1_one_line_of_1_2", "{v1} one line of 1 to {DECLARED_STAKE_MAX} characters with no control characters; null clears it. Nothing was changed.", { v1: String(typeof stake !== "string" ? "the request names no stake, and one is declared as"
+          : !s ? "an empty stake is not one, and one is declared as" : `a stake of ${chars} characters${oneLine(s) ? "" : " over more than one line"} is not`), DECLARED_STAKE_MAX: String(DECLARED_STAKE_MAX) }));
       /* END DEC-49 REGION is-declared-stake */
       value = s;
     }
@@ -1336,10 +1321,8 @@ export class InstanceSetup {
     this.#sql.exec(`INSERT INTO declared_stake_history (stake, set_by, set_at) VALUES (?, ?, ?)`, value, who, at);
     return { ok: true, stake: value, set_by: who, set_at: at, history: this.#declaredStake().declared_stake_history,
              note: value === null
-               ? "no stake is declared from now on: what your team sends or publishes says it has declared none. "
-                 + "Nothing already sent or published changes."
-               : "carried beside your team's public identity on everything it sends or publishes from now on. Nothing "
-                 + "already signed, sent or published changes." };
+               ? word("setup.note.stake_declared_now")
+               : word("setup.note.carried_beside_group") };
   }
 
   /* =====================================================================
@@ -1367,7 +1350,7 @@ export class InstanceSetup {
     if (raw !== null) {
       const read = await readLogo(raw, rawType);
       /* DEC-49 REGION is-group-logo */
-      if (read.why) return refusal("LOGO_REFUSED", `${read.why}. Nothing was changed.`);
+      if (read.why) return refusal("LOGO_REFUSED", localize("instance-setup.setup.why_nothing_was_changed", "{why}. Nothing was changed.", { why: String(read.why) }));
       /* END DEC-49 REGION is-group-logo */
       logo = { ...read, data: base64Of(read.raw), sha256: await sha256OfBytes(read.raw) };
     }
@@ -1376,8 +1359,8 @@ export class InstanceSetup {
                    logo ? logo.data : null, logo ? logo.type : null, logo ? logo.bytes : null, logo ? logo.sha256 : null, who, at);
     return { ok: true, logo: !!logo, ...(logo ? { type: logo.type, bytes: logo.bytes, sha256: logo.sha256 } : {}),
              set_by: who, set_at: at,
-             note: logo ? "shown beside your team's name on its page, its masthead and its published cases from now on."
-                        : "no logo from now on: your team's name stands alone." };
+             note: logo ? word("setup.note.shown_beside_group")
+                        : word("setup.note.logo_now_group") };
   }
 
   /** R84, in-process: `{ok: true, logo: {type, bytes, sha256, data, set_at}}` with the picture in base64, or `logo: null`
@@ -1413,16 +1396,14 @@ export class InstanceSetup {
     const tags = Array.isArray(languages) ? languages.map((t) => (typeof t === "string" ? t.trim() : t)) : null;
     const bad = tags ? tags.find((t) => typeof t !== "string" || !isLocale(t)) : undefined;
     if (!tags || tags.length < 1 || tags.length > GROUP_LANGUAGES_MAX || bad !== undefined)
-      return languageMalformed(`${!tags ? "the languages are sent as a list of" : tags.length < 1
+      return languageMalformed(localize("instance-setup.setup.v1_1_to_group_languages", "{v1} 1 to {GROUP_LANGUAGES_MAX} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.", { v1: String(!tags ? "the languages are sent as a list of" : tags.length < 1
         ? "an empty list names no language, and the languages are" : tags.length > GROUP_LANGUAGES_MAX
-        ? `a list of ${tags.length} names too many, and the languages are` : `'${String(bad).slice(0, 40)}' is not one of`} `
-        + `1 to ${GROUP_LANGUAGES_MAX} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.`);
+        ? `a list of ${tags.length} names too many, and the languages are` : `'${String(bad).slice(0, 40)}' is not one of`), GROUP_LANGUAGES_MAX: String(GROUP_LANGUAGES_MAX) }));
     const list = [...new Set(tags.map(canonicalTag))];
     const set = this.#record().setSetting(GROUP_LANGUAGES_SETTING, list, who);
     if (!set || set.ok !== true) return set;
     return { ...this.groupLanguages(), set_by: who,
-             note: "Civicsmith's own words are shown in each of these languages, and members choose among them when they "
-               + "join. The places whose rules apply are not changed." };
+             note: word("setup.note.civicsmith_words_shown") };
   }
 
   /** R85, R86, op=grouplanguages (public): `{ok: true, languages: [tags]}`, the list an administrator set, or, while none
@@ -1445,7 +1426,7 @@ export class InstanceSetup {
       return { ok: true, languages: out };
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the languages could not be read (${String(e && e.message || e).slice(0, 160)}).` };
+               detail: localize("instance-setup.setup.the_languages_could_not_be", "the languages could not be read ({String}).", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
@@ -1476,8 +1457,8 @@ export class InstanceSetup {
     const { ids, unknown, tests } = this.#checkProfileList(raw.split(",").map((s) => s.trim()).filter(Boolean));
     const unique = [...new Set(ids)];
     let why = null;
-    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which your team's Civicsmith does not hold`;
-    else if (tests.length) why = `the installer bound ${tests.join(", ")}, a profile made up for testing`;
+    if (unknown.length) why = word("setup.why.installer_bound_group", { x: String(unknown.map((x) => JSON.stringify(x)).join(", ")) });
+    else if (tests.length) why = word("setup.why.installer_bound_profile", { tests: String(tests.join(", ")) });
     const core = this.#record();
     if (why) {
       core.setSetting(InstanceSetup.PROFILES_BOOT_NOTE, { bound: raw, recorded: false, why, at: this.#iso() }, "bootstrap");
@@ -1535,8 +1516,7 @@ export class InstanceSetup {
         }
       }
     } catch (e) {
-      return { stage_findings: null, stage_findings_detail: `whether the records laws' stages are known could not be checked `
-        + `(${String(e && e.message || e).slice(0, 160)}), so it is not known; the profiles stay active as chosen` };
+      return { stage_findings: null, stage_findings_detail: localize("instance-setup.setup.whether_the_records_laws_stages", "whether the records laws' stages are known could not be checked ({String}), so it is not known; the profiles stay active as chosen", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
     return { stage_findings: out };
   }
@@ -1546,30 +1526,26 @@ export class InstanceSetup {
     /* DEC-49 REGION is-profiles-admin */
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
       return refusal("PROFILES_NOT_ADMIN",
-        "choosing the jurisdiction profiles is an administrator's act, and your team's Civicsmith stamps who is asking from the "
-        + "signed-in session. This caller is not one of the active administrators.", { by: by ?? null });
+        localize("instance-setup.setup.choosing_the_jurisdiction_profiles_is", "choosing the jurisdiction profiles is an administrator's act, and your team's Civicsmith stamps who is asking from the signed-in session. This caller is not one of the active administrators."), { by: by ?? null });
     /* END DEC-49 REGION is-profiles-admin */
     /* DEC-49 REGION is-profiles-list */
     if (!Array.isArray(profiles))
-      return refusal("NOT_A_LIST", "the profiles are sent as a list of profile ids, in the order they are read; an "
-        + "empty list chooses none. Nothing was changed.");
+      return refusal("NOT_A_LIST", localize("instance-setup.setup.the_profiles_are_sent_as", "the profiles are sent as a list of profile ids, in the order they are read; an empty list chooses none. Nothing was changed."));
     const { ids, unknown, tests } = this.#checkProfileList(profiles);
     if (unknown.length)
-      return refusal("UNKNOWN_PROFILE", `your team's Civicsmith holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. `
-        + "Nothing was changed.", { profiles: unknown });
+      return refusal("UNKNOWN_PROFILE", localize("instance-setup.setup.your_teams_civicsmith_holds_no", "your team's Civicsmith holds no profile {map}. Nothing was changed.", { map: String(unknown.map((x) => JSON.stringify(x)).join(", ")) }), { profiles: unknown });
     if (tests.length)
-      return refusal("PROFILE_IS_TEST", `${tests.join(", ")} ${tests.length > 1 ? "are profiles" : "is a profile"} made up `
-        + "for testing. Nothing was changed.", { profiles: tests });
+      return refusal("PROFILE_IS_TEST", localize("instance-setup.setup.tests_v1_made_up_for", "{tests} {v1} made up for testing. Nothing was changed.", { tests: String(tests.join(", ")), v1: String(tests.length > 1 ? "are profiles" : "is a profile") }), { profiles: tests });
     /* END DEC-49 REGION is-profiles-list */
     const unique = [...new Set(ids)];
     const set = this.#record().setSetting("jurisdiction_profiles", unique, by);
     if (!set || set.ok !== true) return set;
     /* R62: an arrival leaves when an administrator makes that profile active. */
-    this.#leaveArrivals("the profile was made active", this.#iso(), unique);
+    this.#leaveArrivals(word("setup.leave_arrivals.profile_made_active"), this.#iso(), unique);
     return { ...this.profiles(), set_by: by, ...(unique.length < ids.length ? { collapsed: true } : {}),
              note: unique.length
-               ? "local facts are read from these profiles, in this order, from now on; what was recorded before is unchanged"
-               : "no profile is active from now on: every local fact is answered as undetermined" };
+               ? word("setup.note.local_facts_read")
+               : word("setup.note.profile_active_now") };
   }
 
   /* =====================================================================
@@ -1612,11 +1588,11 @@ export class InstanceSetup {
      system a machine's identifier rests on (entities R43, K1443). */
   static #identWhy(p, ident, kind) {
     const sch = InstanceSetup.#scheme(p, ident.scheme);
-    if (!sch) return `the profile declares no identifier scheme ${ident.scheme}`;
+    if (!sch) return word("setup.text.profile_declares_identifier", { scheme: String(ident.scheme) });
     if (!(Array.isArray(sch.entity_kinds) && sch.entity_kinds.includes(kind)))
-      return `the scheme ${ident.scheme} identifies ${(sch.entity_kinds || []).join(", ") || "no kind"}, not a ${kind}`;
+      return word("setup.text.scheme_identifies", { scheme: String(ident.scheme), kind: String((sch.entity_kinds || []).join(", ") || "no kind"), kind3: String(kind) });
     if (!(Array.isArray(sch.systems) && sch.systems.length))
-      return `the scheme ${ident.scheme} names no system that issues it, which a machine's identifier rests on`;
+      return word("setup.text.scheme_names_system", { scheme: String(ident.scheme) });
     return null;
   }
 
@@ -1631,7 +1607,7 @@ export class InstanceSetup {
     let held = null;
     try { held = E.entityByIdentifier({ scheme: ident.scheme, id: ident.id }); } catch { held = null; }
     if (held && held.undetermined)
-      return { state: "unseeded", why: `more than one entity holds ${ident.scheme} ${ident.id}; which one is meant is a member's to settle`,
+      return { state: "unseeded", why: word("setup.why.entity_holds_meant", { scheme: String(ident.scheme), id: String(ident.id) }),
                candidates: held.candidates ?? [] };
     if (held && typeof held.entity_id === "string") {
       if (!mine) this.#ledgerEntity(ident, held.entity_id, kind, label, source);
@@ -1641,7 +1617,7 @@ export class InstanceSetup {
     if (!entityId) {
       const made = E.createEntity({ kind, label, note, declaredBy: SEED_MACHINE, ...(sector ? { sector } : {}),
                                     ...(forumKind ? { forum_kind: forumKind } : {}) });
-      if (!made || made.ok !== true) return { state: "unseeded", why: `the registry refused the entity: ${made && (made.reason || made.detail)}` };
+      if (!made || made.ok !== true) return { state: "unseeded", why: word("setup.why.registry_refused_entity", { made: String(made && (made.reason || made.detail)) }) };
       entityId = made.entity_id;
       this.#ledgerEntity(ident, entityId, kind, label, source);
     }
@@ -1650,7 +1626,7 @@ export class InstanceSetup {
                                  basis: { system: sch.systems[0], row } });
     if (!id || id.ok !== true)
       return { state: "unseeded", entity_id: entityId,
-               why: `the registry refused the identifier ${ident.scheme} ${ident.id}: ${id && (id.reason || id.detail)}; the entity is kept and a later seeding holds it again` };
+               why: word("setup.why.registry_refused_identifier", { scheme: String(ident.scheme), id: String(ident.id), id3: String(id && (id.reason || id.detail)) }) };
     return { state: id.already ? "already" : "seeded", entity_id: entityId };
   }
   #ledgerEntity(ident, entityId, kind, label, source) {
@@ -1665,7 +1641,7 @@ export class InstanceSetup {
     if (held) return { state: "already", line_id: held.line_id };
     const r = this.#lines().recordLine({ kind, from, to, ...(capacity ? { capacity } : {}), ...(valid ? { valid } : {}),
                                          basis, by: SEED_MACHINE });
-    if (!r || r.ok !== true) return { state: "unseeded", why: `the lines refused it: ${r && (r.reason || r.detail)}` };
+    if (!r || r.ok !== true) return { state: "unseeded", why: word("setup.why.lines_refused", { r: String(r && (r.reason || r.detail)) }) };
     this.#sql.exec(`INSERT INTO seed_lines (key, kind, from_entity, to_entity, line_id, seeded_at) VALUES (?, ?, ?, ?, ?, ?)`,
                    key, kind, from, to, r.line_id, this.#iso());
     return { state: "seeded", line_id: r.line_id };
@@ -1697,10 +1673,9 @@ export class InstanceSetup {
         const cite = `jurisdiction profile ${profile}, ${entry}${cp.basis ? ` (basis: ${cp.basis})` : ""}`;
         /* Each entity is seeded when, and only when, the profile gives its own identifier for it: the body under
            `ids.body` whether or not the office has one, the office under `ids.office` (K1682's reading 1; N613). */
-        const noIdent = (what, field) => ({ state: "unseeded", why: `the profile names no identifier for this ${what} `
-          + `(${field}), so it is not seeded: an entity is seeded only under the profile's own identifier, never by its name` });
+        const noIdent = (what, field) => ({ state: "unseeded", why: word("setup.why.profile_names_identifier", { what: String(what), field: String(field) }) });
         const b = bodyId ? this.#seedEntity({ p, ident: bodyId, kind: "body", label: body, sector: "government", source,
-          row: `${profile}/${entry}/body`, note: `The body the office "${role}" belongs to, as the active ${cite} names it; seeded at setup.` })
+          row: `${profile}/${entry}/body`, note: word("setup.note.body_office_belongs", { role: String(role), cite: String(cite) }) })
           : noIdent("body", "ids.body");
         put(b, { what: "body", ...where, ...(bodyId ? { ident: bodyId } : {}) });
         const bodyHeld = !!b.entity_id && b.state !== "unseeded";
@@ -1709,7 +1684,7 @@ export class InstanceSetup {
                           VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
                          profile, role, body, entry, b.entity_id, this.#iso());
         const o = officeId ? this.#seedEntity({ p, ident: officeId, kind: "office", label: `${role}, ${body}`, source,
-          row: `${profile}/${entry}/office`, note: `An office an action may be addressed to, as the active ${cite} names it; seeded at setup.` })
+          row: `${profile}/${entry}/office`, note: word("setup.note.office_action_addressed", { cite: String(cite) }) })
           : noIdent("office", "ids.office");
         put(o, { what: "office", ...where, ...(officeId ? { ident: officeId } : {}) });
         const officeHeld = !!o.entity_id && o.state !== "unseeded";
@@ -1727,8 +1702,7 @@ export class InstanceSetup {
                                from: o.entity_id, to: b.entity_id, valid: zone, basis: rule({ from: officeId, to: bodyId }) }),
               { what: "post_in", ...where });
         else if (officeHeld || bodyHeld)
-          put({ state: "unseeded", why: `its ${officeHeld ? "body" : "office"} is not held under an identifier, so the line has `
-            + "only one identified end" }, { what: "post_in", ...where });
+          put({ state: "unseeded", why: word("setup.why.held_under_identifier", { office: String(officeHeld ? "body" : "office") }) }, { what: "post_in", ...where });
         if (!bodyHeld) return;
         const within = cp.within && typeof cp.within === "object" ? cp.within : null;
         const withinId = within ? InstanceSetup.#ident(within.ids) : null;
@@ -1740,12 +1714,11 @@ export class InstanceSetup {
         const wLabel = typeof within.label === "string" && within.label.trim() ? within.label.trim() : null;
         const wKind = ["institution", "body", "movement"].includes(within.kind) ? within.kind : "institution";
         if (!withinId || !wLabel) {
-          put({ state: "unseeded", why: `the profile names the organisation this body is within with no ${!wLabel ? "label" : "identifier (within.ids)"}, `
-            + "so it is not seeded and no part_of line is" }, { what: "part_of", ...where });
+          put({ state: "unseeded", why: localize("instance-setup.setup.the_profile_names_the_organisation", "the profile names the organisation this body is within with no {v1}, so it is not seeded and no part_of line is", { v1: String(!wLabel ? "label" : "identifier (within.ids)") }) }, { what: "part_of", ...where });
           return;
         }
         const w = this.#seedEntity({ p, ident: withinId, kind: wKind, label: wLabel, sector: "government", source,
-          row: `${profile}/${entry}/within`, note: `The organisation the body "${body}" is part of, as the active ${cite} names it; seeded at setup.` });
+          row: `${profile}/${entry}/within`, note: localize("instance-setup.setup.the_organisation_the_body_body", "The organisation the body \"{body}\" is part of, as the active {cite} names it; seeded at setup.", { body: String(body), cite: String(cite) }) });
         put(w, { what: "organisation", ...where, label: wLabel, ident: withinId });
         if (!w.entity_id || w.state === "unseeded") {
           put({ state: "unseeded", why: "the organisation is not held under its identifier, so the line has no identified ends" },
@@ -1788,9 +1761,9 @@ export class InstanceSetup {
       const first = owner(idents[0]);
       const source = { profile: first.id, forum: label };
       const row = `${first.id}/forums/${f.forum_kind}/${label}`;
-      const cite = `jurisdiction profile ${first.id}, forum ${label}${f.basis ? ` (basis: ${f.basis})` : ""}`;
+      const cite = localize("instance-setup.setup.jurisdiction_profile_id_forum_label", "jurisdiction profile {id}, forum {label}{v1}", { id: String(first.id), label: String(label), v1: String(f.basis ? ` (basis: ${f.basis})` : "") });
       let r = this.#seedEntity({ p: first.p, ident: idents[0], kind: "body", label, sector: "government", source, row, forumKind: f.forum_kind,
-        note: `The ${f.forum_kind} ${label}, a forum as the active ${cite} names it; seeded at setup.` });
+        note: localize("instance-setup.setup.the_forum_kind_label_a", "The {forum_kind} {label}, a forum as the active {cite} names it; seeded at setup.", { forum_kind: String(f.forum_kind), label: String(label), cite: String(cite) }) });
       for (const more of idents.slice(1)) {
         if (!r.entity_id || r.state === "unseeded") break;
         const o = owner(more);
@@ -1799,7 +1772,7 @@ export class InstanceSetup {
         const sch = InstanceSetup.#scheme(o.p, more.scheme);
         const got = this.#entities().addIdentifier({ entityId: r.entity_id, scheme: more.scheme, id: more.id, by: SEED_MACHINE,
                                                      basis: { system: sch.systems[0], row } });
-        if (!got || got.ok !== true) r = { state: "unseeded", entity_id: r.entity_id, why: `the registry refused the identifier ${more.scheme} ${more.id}: ${got && (got.reason || got.detail)}` };
+        if (!got || got.ok !== true) r = { state: "unseeded", entity_id: r.entity_id, why: localize("instance-setup.setup.the_registry_refused_the_identifier", "the registry refused the identifier {scheme} {id}: {v1}", { scheme: String(more.scheme), id: String(more.id), v1: String(got && (got.reason || got.detail)) }) };
         else if (!got.already && r.state === "already") r = { state: "seeded", entity_id: r.entity_id };
       }
       put(r, { ...where, ident: idents[0] });
@@ -1900,13 +1873,13 @@ export class InstanceSetup {
       const list = shas.filter((x) => x !== null && x !== undefined);
       /* DEC-49 REGION is-seed-capture */
       if (!list.length || list.some((x) => typeof x !== "string" || !x.trim()))
-        return refusal("SEED_CAPTURE_UNREADABLE", `the request names no capture of Legistar's ${endpoint}. Nothing was seeded.`, { endpoint });
+        return refusal("SEED_CAPTURE_UNREADABLE", localize("instance-setup.setup.the_request_names_no_capture", "the request names no capture of Legistar's {endpoint}. Nothing was seeded.", { endpoint: String(endpoint) }), { endpoint });
       const pages = [];
       for (const sha of list) {
         let cap = null;
         try { cap = await this.#readCapture(sha.trim().toLowerCase()); } catch { cap = null; }
         if (!cap || typeof cap.text !== "string")
-          return refusal("SEED_CAPTURE_UNREADABLE", `the record holds no readable capture ${sha.slice(0, 64)}. Nothing was seeded.`,
+          return refusal("SEED_CAPTURE_UNREADABLE", localize("instance-setup.setup.the_record_holds_no_readable", "the record holds no readable capture {sha}. Nothing was seeded.", { sha: String(sha.slice(0, 64)) }),
                          { endpoint, capture: sha });
         let one = null;
         try {
@@ -1914,8 +1887,7 @@ export class InstanceSetup {
                                 view: { vocabulary: Object.assign({}, ...active.map(({ p }) => p.vocabulary || {})) } });
         } catch (e) { one = { why: String(e && e.message || e) }; }
         if (!one || one.why || one.endpoint !== endpoint)
-          return refusal("SEED_CAPTURE_NOT_LEGISTAR", `capture ${sha.slice(0, 64)} is not a Legistar ${endpoint} list`
-            + `${one && one.why ? ` (${one.why.slice(0, 200)})` : one && one.endpoint ? ` (it is ${one.endpoint})` : ""}. Nothing was seeded.`,
+          return refusal("SEED_CAPTURE_NOT_LEGISTAR", localize("instance-setup.setup.capture_sha_is_not_a", "capture {sha} is not a Legistar {endpoint} list{v1}. Nothing was seeded.", { sha: String(sha.slice(0, 64)), endpoint: String(endpoint), v1: String(one && one.why ? ` (${one.why.slice(0, 200)})` : one && one.endpoint ? ` (it is ${one.endpoint})` : "") }),
             { endpoint, capture: sha });
         /* END DEC-49 REGION is-seed-capture */
         pages.push({ ...one, sha: sha.trim().toLowerCase(), at: cap.at ?? null });
@@ -1941,7 +1913,7 @@ export class InstanceSetup {
                       bodies: m.bodies.map((b) => ({ BodyId: b.BodyId, name: b.name })) };
       out.matches.push(match);
       if (!office) { match.why = "the profile's body is not seeded (R50: the profile names no identifier for it, ids.body), so its BodyIds are held on no entity"; continue; }
-      if (!sch) { match.why = `the profile declares no identifier scheme ${LEGISTAR_SCHEMES.body}, so its BodyIds are held on no entity`; continue; }
+      if (!sch) { match.why = word("setup.why.profile_declares_identifier", { body: String(LEGISTAR_SCHEMES.body) }); continue; }
       for (const b of m.bodies) {
         const ident = { scheme: LEGISTAR_SCHEMES.body, id: String(b.BodyId) };
         const why = InstanceSetup.#identWhy(p, ident, "body");
@@ -1951,7 +1923,7 @@ export class InstanceSetup {
           const got = this.#entities().addIdentifier({ entityId: office.body_entity, scheme: ident.scheme, id: ident.id, by: SEED_MACHINE,
                                                        basis: { system: sch.systems[0], row: `legistar:body:${b.BodyId}` } });
           r = got && got.ok === true ? { state: got.already ? "already" : "seeded", entity_id: office.body_entity }
-            : { state: "unseeded", why: `the registry refused the identifier: ${got && (got.reason || got.detail)}` };
+            : { state: "unseeded", why: word("setup.why.registry_refused_identifier_2", { got: String(got && (got.reason || got.detail)) }) };
           if (r.state !== "unseeded") {
             this.#ledgerEntity(ident, office.body_entity, "body", m.body, { capture: bodiesCap.sha, row: b.source });
             seatBodies.set(b.BodyId, { entity: office.body_entity, p, profile: m.profile, label: m.body, ident,
@@ -1981,7 +1953,7 @@ export class InstanceSetup {
       const memberType = typeof f.role === "string" ? f.role.trim() : "";
       const seat = this.#seedEntity({ p: sb.p, ident: seatIdent, kind: "office", label: `${memberType || "Seat"}, ${sb.label}`,
         source: { capture: page.sha, row: row.source }, row: row.key,
-        note: `A seat on ${sb.label}, Legistar office record ${f.OfficeRecordId}, ${LEGISTAR_BASIS} (its MemberType: ${memberType || "not given"}).` });
+        note: word("setup.note.seat_legistar_office", { label: String(sb.label), office_record_id: String(f.OfficeRecordId), legistar_basis: String(LEGISTAR_BASIS), given: String(memberType || "not given") }) });
       const where = { OfficeRecordId: f.OfficeRecordId, BodyId: f.BodyId, PersonId: f.PersonId ?? null };
       put(seat, { what: "seat", ...where });
       if (!seat.entity_id || seat.state === "unseeded") continue;
@@ -1992,7 +1964,7 @@ export class InstanceSetup {
       const pr = people.get(f.PersonId);
       if (!Number.isInteger(f.PersonId) || !pr) {
         out.holders_undetermined.push({ ...where, why: Number.isInteger(f.PersonId)
-          ? `the persons capture holds no PersonId ${f.PersonId}, so the holder is not seeded` : "the office record names no PersonId" });
+          ? word("setup.why.persons_capture_holds", { person_id: String(f.PersonId) }) : word("setup.why.office_record_names") });
         continue;
       }
       const name = pr.facts.name_normal || pr.facts.name || `Legistar person ${f.PersonId}`;
@@ -2000,9 +1972,9 @@ export class InstanceSetup {
       const personIdent = { scheme: LEGISTAR_SCHEMES.person, id: String(f.PersonId) };
       const person = this.#seedEntity({ p: sb.p, ident: personIdent, kind: "person", label: name,
         source: { capture: parsed.persons[0].sha, row: pr.source }, row: pr.key,
-        note: `Legistar person ${f.PersonId}, ${LEGISTAR_BASIS}.` + (others.length
+        note: localize("instance-setup.setup.legistar_person_personid_legistar_basis", "Legistar person {PersonId}, {LEGISTAR_BASIS}.{v1}", { PersonId: String(f.PersonId), LEGISTAR_BASIS: String(LEGISTAR_BASIS), v1: String(others.length
           ? ` Legistar also lists ${others.map((x) => `PersonId ${x}`).join(", ")} under the same name; they are held as `
-            + "separate persons and never merged here: whether they are one person is a member's claim." : "") });
+            + "separate persons and never merged here: whether they are one person is a member's claim." : "") }) });
       if (others.length && !out.same_names.some((s2) => s2.PersonId === f.PersonId))
         out.same_names.push({ PersonId: f.PersonId, name, same_name_as: others });
       put(person, { what: "person", ...where });
@@ -2015,8 +1987,7 @@ export class InstanceSetup {
       const capacity = map && LINE_CAPACITIES.includes(map.capacity) ? map.capacity : null;
       if (!capacity) {
         out.holders_undetermined.push({ ...where, person: person.entity_id, seat: seat.entity_id,
-          why: `the profile maps no capacity for the MemberType ${JSON.stringify(memberType)}${sb.organisation ? ` on ${sb.organisation}` : " on this body"} `
-            + "or on all bodies, so the holder's capacity is undetermined and no holds line is recorded" });
+          why: word("setup.why.profile_maps_capacity", { member_type: String(JSON.stringify(memberType)), body: String(sb.organisation ? ` on ${sb.organisation}` : " on this body") }) });
         continue;
       }
       const zone = zoneOf(sb.p) ?? undefined;
@@ -2028,7 +1999,7 @@ export class InstanceSetup {
     }
     for (const [bodyId, sb] of seatBodies)
       if (!seen.has(bodyId)) out.bodies_without_records.push({ BodyId: bodyId, body: sb.label,
-        why: "Legistar holds no office record for this body (as for the boards and commissions), so no seat is seeded" });
+        why: word("setup.why.legistar_holds_office") });
     out.counts = { matched: out.matches.length, unmatched: out.unmatched.length, seeded: out.seeded.length,
                    already: out.already.length, unseeded: out.unseeded.length, holders_undetermined: out.holders_undetermined.length };
     return out;
@@ -2069,8 +2040,8 @@ export class InstanceSetup {
     try { return this.#aiAccounts().aiKeptAway(); }
     catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `whether your team keeps its material away from every assistant did not answer (${String(e && e.message || e)
-                 .slice(0, 160)}), so no ask is put to an assistant and no run starts.` };
+               detail: localize("instance-setup.setup.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({String}), so no ask is put to an assistant and no run starts.", { String: String(String(e && e.message || e)
+                 .slice(0, 160)) }) };
     }
   }
 
@@ -2082,11 +2053,10 @@ export class InstanceSetup {
     const v = typeof version === "string" ? version.trim() : "";
     /* DEC-49 REGION is-disclosure-shown */
     if (!m || !v)
-      return refusal("DISCLOSURE_MALFORMED", `${!m ? "the request names no member" : "the request names no version of "
-        + "the disclosure's words"}. Nothing was recorded.`);
+      return refusal("DISCLOSURE_MALFORMED", localize("instance-setup.setup.v1_nothing_was_recorded", "{v1}. Nothing was recorded.", { v1: String(!m ? "the request names no member" : "the request names no version of "
+        + "the disclosure's words") }));
     if (typeof by !== "string" || by !== m || /^class:/.test(by))
-      return refusal("DISCLOSURE_NOT_THE_MEMBERS", "the disclosure is recorded by the member it was shown to, from "
-        + "their own signed-in session. Nothing was recorded.", { member: m, by: by ?? null });
+      return refusal("DISCLOSURE_NOT_THE_MEMBERS", localize("instance-setup.setup.the_disclosure_is_recorded_by", "the disclosure is recorded by the member it was shown to, from their own signed-in session. Nothing was recorded."), { member: m, by: by ?? null });
     /* END DEC-49 REGION is-disclosure-shown */
     const at = this.#iso();
     this.#sql.exec(`INSERT INTO assistant_disclosures (member, version, shown_by, shown_at) VALUES (?, ?, ?, ?)`,
@@ -2160,9 +2130,8 @@ export class InstanceSetup {
       const chars = [...s].length;
       /* DEC-49 REGION is-place-name */
       if (!s || chars > PLACE_NAME_MAX || /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(s))
-        return refusal("PLACE_NAME_MALFORMED", `${s ? `a name of ${chars} characters` : "the request names no place, and "
-          + "one is named as"} one line of 1 to ${PLACE_NAME_MAX} characters with no control characters; null clears it. `
-          + "Nothing was changed.");
+        return refusal("PLACE_NAME_MALFORMED", localize("instance-setup.setup.v1_one_line_of_1_3", "{v1} one line of 1 to {PLACE_NAME_MAX} characters with no control characters; null clears it. Nothing was changed.", { v1: String(s ? `a name of ${chars} characters` : "the request names no place, and "
+          + "one is named as"), PLACE_NAME_MAX: String(PLACE_NAME_MAX) }));
       /* END DEC-49 REGION is-place-name */
       value = s;
     }
@@ -2172,14 +2141,13 @@ export class InstanceSetup {
     /* R62: the open arrivals leave when the name is cleared or changed; the profiles held now are what a later start
        compares against, so a profile already held when the name is set is not an arrival. */
     if (before && before.name !== null && before.name !== value)
-      this.#leaveArrivals(value === null ? "the name was cleared" : "the name was changed", at);
+      this.#leaveArrivals(value === null ? word("setup.leave_arrivals.name_cleared") : word("setup.leave_arrivals.name_changed"), at);
     this.#seePlaces(at);
     return { ok: true, name: value, set_by: by, set_at: at,
              history: this.#rows(`SELECT name, set_by, set_at FROM place_wanted ORDER BY seq`).map((r) => ({ ...r })),
              note: value === null
-               ? "no place is named. Nothing about it was ever sent anywhere."
-               : "the name is kept only in your team's Civicsmith and sent nowhere. When an installed update brings a "
-                 + "profile for it, the administrators are told once and may choose it under Places." };
+               ? word("setup.note.place_named_ever")
+               : word("setup.note.name_kept_group") };
   }
 
   /** R60, op=placewantedstate: the named place, to an administrator only, with R62's open arrivals as `matches`. */
@@ -2243,22 +2211,21 @@ export class InstanceSetup {
     const who = typeof by === "string" ? by.trim() : "";
     /* DEC-49 REGION is-member-language */
     if (!who || /^class:/.test(who))
-      return refusal("MACHINE_CANNOT_SET_LANGUAGE", "the language of the screens is set by the member, from their own "
-        + "signed-in session. Nothing was changed.", { by: by ?? null });
+      return refusal("MACHINE_CANNOT_SET_LANGUAGE", localize("instance-setup.setup.the_language_of_the_screens", "the language of the screens is set by the member, from their own signed-in session. Nothing was changed."), { by: by ?? null });
     let tag = null;
     if (language !== null) {
       tag = typeof language === "string" ? language.trim() : "";
       if (!isLocale(tag))
-        return languageMalformed(`${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no language, and "
-          + "one is chosen as"} one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.`);
+        return languageMalformed(localize("instance-setup.setup.v1_one_well_formed_bcp", "{v1} one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.", { v1: String(tag ? `'${tag.slice(0, 40)}' is not` : "the request names no language, and "
+          + "one is chosen as") }));
     }
     /* END DEC-49 REGION is-member-language */
     const at = this.#iso();
     this.#sql.exec(`INSERT INTO member_languages (member, language, set_at) VALUES (?, ?, ?)`, who, tag, at);
     return { ok: true, member: who, language: tag, set_at: at,
              note: tag === null
-               ? "no language is chosen: the screens follow your device's setting again."
-               : "the screens show each word in this language where a translation is held, and in English where none is." };
+               ? word("setup.note.language_chosen_screens")
+               : word("setup.note.screens_show_word") };
   }
 
   /** R64, op=memberlanguage: the viewer's own choice, `{language, set_at}`, and nobody else's. Writes nothing. */
@@ -2288,23 +2255,21 @@ export class InstanceSetup {
     const who = typeof by === "string" ? by.trim() : "";
     /* DEC-49 REGION is-info-level */
     if (!who || isMachineIdentity(who))
-      return refusal("MACHINE_CANNOT_SET_INFO_LEVEL", "how quickly explanations open is set by the member, from their own "
-        + "signed-in session. Nothing was changed.", { by: by ?? null });
+      return refusal("MACHINE_CANNOT_SET_INFO_LEVEL", localize("instance-setup.setup.how_quickly_explanations_open_is", "how quickly explanations open is set by the member, from their own signed-in session. Nothing was changed."), { by: by ?? null });
     if (!INFO_LEVELS.includes(level))
-      return refusal("INFO_LEVEL_UNKNOWN", `${typeof level === "string" && level ? `'${level.slice(0, 40)}' is not`
-        : "the request names no level, and one is chosen as"} one of ${INFO_LEVELS.join(" or ")}. Nothing was changed.`);
+      return refusal("INFO_LEVEL_UNKNOWN", localize("instance-setup.setup.v1_one_of_info_levels", "{v1} one of {INFO_LEVELS}. Nothing was changed.", { v1: String(typeof level === "string" && level ? `'${level.slice(0, 40)}' is not`
+        : "the request names no level, and one is chosen as"), INFO_LEVELS: String(INFO_LEVELS.join(" or ")) }));
     /* K2996: `asked` is absent, `true` or `false`; anything else is no answer to the first-month question. */
     if (asked !== undefined && asked !== null && asked !== true && asked !== false)
-      return refusal("INFO_LEVEL_UNKNOWN", "whether this set answers the first-month question is said as true or false, "
-        + "or not at all. Nothing was changed.");
+      return refusal("INFO_LEVEL_UNKNOWN", localize("instance-setup.setup.whether_this_set_answers_the", "whether this set answers the first-month question is said as true or false, or not at all. Nothing was changed."));
     /* END DEC-49 REGION is-info-level */
     const before = this.#infoLevelRow(who);
     const at = this.#iso();
     const askedAt = before && before.asked_at ? before.asked_at : asked === true ? at : null;
     this.#sql.exec(`INSERT INTO member_info_levels (member, level, asked_at, set_at) VALUES (?, ?, ?, ?)`, who, level, askedAt, at);
     return { ok: true, member: who, level, set_at: at, asked_at: askedAt,
-             note: level === "prompt" ? "explanations open promptly on your screens."
-               : "explanations open on a longer pause, so less opens while you move; nothing is hidden." };
+             note: level === "prompt" ? word("setup.note.explanations_open_promptly")
+               : word("setup.note.explanations_open_longer") };
   }
 
   #infoLevelRow(who) {
@@ -2332,7 +2297,7 @@ export class InstanceSetup {
    *  not answer is the store's silence (R43), never `met: false`. Writes nothing and never throws. */
   adminRecoveryStep({ viewer = null } = {}) {
     const silent = (what, e) => ({ ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-      detail: `${what} did not answer (${String(e && e.message || e).slice(0, 160)}), so whether the step is met is not known` });
+      detail: localize("instance-setup.setup.what_did_not_answer_string", "{what} did not answer ({String}), so whether the step is met is not known", { what: String(what), String: String(String(e && e.message || e).slice(0, 160)) }) });
     const who = typeof viewer === "string" ? viewer.trim() : "";
     let admin;
     try { admin = !!who && !/^class:/.test(who) && this.#membership().isAdministrator(who) === true; }
@@ -2377,8 +2342,7 @@ export class InstanceSetup {
     /* The door resolved no assistant for this request (store-door R10's `{on}`), though the gate now answers open: the
        keep-away changed between the two reads, so no draft is asked for and nothing is minted here (K231). */
     if (assistant && typeof assistant === "object" && assistant.on === false)
-      return draftUnavailable("the assistant was not on when this request was resolved, so nothing was drafted and the "
-        + "fields are as they were.");
+      return draftUnavailable(localize("instance-setup.setup.the_assistant_was_not_on", "the assistant was not on when this request was resolved, so nothing was drafted and the fields are as they were."));
     const served = draftAccount(assistant);
     if (served.project) return projectAccount("the fields are as they were");
     /* DEC-49 REGION is-group-draft-answers */
@@ -2388,10 +2352,9 @@ export class InstanceSetup {
       return refusal("GROUP_DRAFT_ANSWERS_MALFORMED", `the answers are a list of at most ${GROUP_DRAFT_ANSWERS_MAX} `
         + `{question, text}, each text at most ${GROUP_DRAFT_ANSWER_MAX} characters. Nothing was saved.`);
     if (given.every((a) => !a.text.trim()))
-      return refusal("GROUP_DRAFT_NO_ANSWERS", "every answer is empty, so there is nothing to draft from. Nothing was saved.");
+      return refusal("GROUP_DRAFT_NO_ANSWERS", localize("instance-setup.setup.every_answer_is_empty_so", "every answer is empty, so there is nothing to draft from. Nothing was saved."));
     /* END DEC-49 REGION is-group-draft-answers */
-    const unavailable = () => draftUnavailable("the assistant could not serve a draft of the team's description, so "
-      + "nothing was drafted and the fields are as they were.");
+    const unavailable = () => draftUnavailable(localize("instance-setup.setup.the_assistant_could_not_serve", "the assistant could not serve a draft of the team's description, so nothing was drafted and the fields are as they were."));
     const draftTurn = typeof turn === "function" ? turn : this.#deps.groupDraftTurn;
     if (typeof draftTurn !== "function") return unavailable();
     const account = served.account;
@@ -2413,7 +2376,7 @@ export class InstanceSetup {
       out[field] = { text: checked.text, label: { kind: "machine", asked_by: askedBy } };
       out.withheld.push(...(checked.withheld || []).map((w) => ({ field, ...w })));
     }
-    out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your team's.";
+    out.note = word("setup.note.draft_saved_until");
     return out;
   }
 
@@ -2517,7 +2480,7 @@ export class InstanceSetup {
     const at = Number.isFinite(now) ? new Date(now).toISOString() : this.#iso();
     let got;
     try { got = await this.#askNotice(); }
-    catch (e) { got = { outcome: "unreachable", detail: `the check did not complete (${String(e && e.message || e).slice(0, 160)})` }; }
+    catch (e) { got = { outcome: "unreachable", detail: localize("instance-setup.setup.the_check_did_not_complete", "the check did not complete ({String})", { String: String(String(e && e.message || e).slice(0, 160)) }) }; }
     this.#sql.exec(`INSERT INTO update_checks (at, outcome, version, detail) VALUES (?, ?, ?, ?)`,
                    at, got.outcome, got.version ?? null, got.detail ? String(got.detail).slice(0, 300) : null);
     return { at, outcome: got.outcome, ...(got.version ? { version: got.version } : {}), ...(got.detail ? { detail: got.detail } : {}) };
@@ -2531,9 +2494,9 @@ export class InstanceSetup {
     const host = new URL(RELEASE_NOTICE_ADDRESS).host;
     let g;
     try { g = this.#governor().governorAdmit({ host }); }
-    catch (e) { g = { admitted: false, reason: `the governor did not answer (${String(e && e.message || e).slice(0, 120)})` }; }
+    catch (e) { g = { admitted: false, reason: localize("instance-setup.setup.the_governor_did_not_answer_2", "the governor did not answer ({String})", { String: String(String(e && e.message || e).slice(0, 120)) }) }; }
     if (!g || !g.admitted)
-      return { outcome: "unreachable", detail: `the per-host governor held ${host} (${g && g.reason}); nothing was asked` };
+      return { outcome: "unreachable", detail: localize("instance-setup.setup.the_per_host_governor_held_2", "the per-host governor held {host} ({v1}); nothing was asked", { host: String(host), v1: String(g && g.reason) }) };
     if (g.wait_ms) await this.#sleep(g.wait_ms);
     let res = null;
     try {
@@ -2545,9 +2508,9 @@ export class InstanceSetup {
     try { this.#governor().governorReport({ host, status }); } catch { /* an unrecorded outcome is not a verdict */ }
     if (!(status >= 200 && status < 300))
       return { outcome: "unreachable", detail: status >= 300 && status < 400
-        ? `the address redirected (HTTP ${status}); no redirect is followed` : `the address answered HTTP ${status}` };
+        ? localize("instance-setup.setup.the_address_redirected_http_status", "the address redirected (HTTP {status}); no redirect is followed", { status: String(status) }) : localize("instance-setup.setup.the_address_answered_http_status", "the address answered HTTP {status}", { status: String(status) }) };
     const read = await boundedBytes(res, RELEASE_NOTICE_MAX_BYTES);
-    if (read.over) return { outcome: "MALFORMED", detail: `the notice is over ${RELEASE_NOTICE_MAX_BYTES} bytes` };
+    if (read.over) return { outcome: "MALFORMED", detail: localize("instance-setup.setup.the_notice_is_over_release", "the notice is over {RELEASE_NOTICE_MAX_BYTES} bytes", { RELEASE_NOTICE_MAX_BYTES: String(RELEASE_NOTICE_MAX_BYTES) }) };
     let f = null;
     try { f = JSON.parse(new TextDecoder().decode(read.bytes)); } catch { f = null; }
     if (!f || typeof f !== "object" || Array.isArray(f)) return { outcome: "MALFORMED", detail: "the notice is not a JSON object" };
@@ -2559,15 +2522,15 @@ export class InstanceSetup {
       if (v.reason === "NOT_NEWER" && v.version === v.running)
         return { outcome: "none", version: v.version, detail: "the newest release published is the one running" };
       return { outcome: String(v.reason), ...(typeof v.version === "string" ? { version: v.version } : {}),
-               detail: v.reason === "MALFORMED" ? `not a well-formed notice (${String(v.field ?? "notice").slice(0, 40)})`
-                 : v.reason === "NOT_NEWER" ? `an older release than the ${v.running} that runs` : String(v.detail ?? v.reason).slice(0, 160) };
+               detail: v.reason === "MALFORMED" ? localize("instance-setup.setup.not_a_well_formed_notice", "not a well-formed notice ({String})", { String: String(String(v.field ?? "notice").slice(0, 40)) })
+                 : v.reason === "NOT_NEWER" ? localize("instance-setup.setup.an_older_release_than_the", "an older release than the {running} that runs", { running: String(v.running) }) : String(v.detail ?? v.reason).slice(0, 160) };
     }
     const n = v.notice;
     const held = this.#noticeRows()[0] ?? null;
     if (held) {
       const c = cmpVersion(n.version, held.version);
       if (c === 0) return { outcome: "none", version: n.version, detail: "this release is held already" };
-      if (c < 0) return { outcome: "NOT_NEWER", version: n.version, detail: `an older release than the ${held.version} held` };
+      if (c < 0) return { outcome: "NOT_NEWER", version: n.version, detail: localize("instance-setup.setup.an_older_release_than_the_2", "an older release than the {version} held", { version: String(held.version) }) };
     }
     this.#sql.exec(`INSERT INTO release_notices (version, date, manifest, security, notes, sig, found_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
                    n.version, n.date, n.manifest, n.security ? 1 : 0, JSON.stringify(n.notes), f.sig, this.#iso());
@@ -2620,7 +2583,7 @@ export class InstanceSetup {
   }
   #updateSilence(what, e) {
     return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-             detail: `${what} could not be read (${String(e && e.message || e).slice(0, 160)}), so it is not known.` };
+             detail: localize("instance-setup.setup.what_could_not_be_read", "{what} could not be read ({String}), so it is not known.", { what: String(what), String: String(String(e && e.message || e).slice(0, 160)) }) };
   }
 
   /** R89, op=updatenotice: to an administrator only (`NOT_AN_ADMIN`, a machine included), what Settings › Updates draws:
@@ -2697,8 +2660,7 @@ export class InstanceSetup {
     const ready = this.#readyNotice();
     /* DEC-49 REGION is-update-ready */
     if (!ready || !v || ready.version !== v)
-      return { refused: refusal("UPDATE_NOT_READY", `${v ? `'${v.slice(0, 40)}'` : "the request names no version, and a release is decided by its version;"} `
-        + `${ready ? `the release ready to install is ${ready.version}` : "no release is ready to install"}. Nothing was recorded.`,
+      return { refused: refusal("UPDATE_NOT_READY", localize("instance-setup.setup.v1_v2_nothing_was_recorded", "{v1} {v2}. Nothing was recorded.", { v1: String(v ? `'${v.slice(0, 40)}'` : "the request names no version, and a release is decided by its version;"), v2: String(ready ? `the release ready to install is ${ready.version}` : "no release is ready to install") }),
         { version: v || null }) };
     /* END DEC-49 REGION is-update-ready */
     return { ready };
@@ -2720,7 +2682,7 @@ export class InstanceSetup {
     const at = this.#decide(r.ready.version, "start", a.who);
     return { ok: true, version: r.ready.version, kind: "start", by: a.who, at,
              address: `${INSTALLER_UPDATE_ADDRESS}?version=${encodeURIComponent(r.ready.version)}`,
-             note: "nothing is installed by this: whoever holds your team's hosting account installs it, through Cloudflare's own consent." };
+             note: word("setup.note.installed_whoever_holds") };
   }
 
   /** R90, op=updatelater: an administrator sets the release ready aside: for 14 days, or, for a security release, until
@@ -2761,8 +2723,7 @@ export class InstanceSetup {
     const why = typeof reason === "string" ? reason.trim() : "";
     /* DEC-49 REGION is-update-skip */
     if (!why || [...why].length > UPDATE_SKIP_REASON_MAX || !oneLine(why))
-      return refusal("UPDATE_SKIP_NO_REASON", `${typeof reason !== "string" || !why ? "no reason was given" : `a reason of ${[...why].length} characters${oneLine(why) ? "" : " over more than one line"} is not`} `
-        + `one line of 1 to ${UPDATE_SKIP_REASON_MAX} characters, and a release is skipped with one. Nothing was recorded.`, { version: r.ready.version });
+      return refusal("UPDATE_SKIP_NO_REASON", localize("instance-setup.setup.v1_one_line_of_1_4", "{v1} one line of 1 to {UPDATE_SKIP_REASON_MAX} characters, and a release is skipped with one. Nothing was recorded.", { v1: String(typeof reason !== "string" || !why ? "no reason was given" : `a reason of ${[...why].length} characters${oneLine(why) ? "" : " over more than one line"} is not`), UPDATE_SKIP_REASON_MAX: String(UPDATE_SKIP_REASON_MAX) }), { version: r.ready.version });
     /* END DEC-49 REGION is-update-skip */
     const at = this.#decide(r.ready.version, "skip", a.who, { reason: why });
     return { ok: true, version: r.ready.version, kind: "skip", by: a.who, at, reason: why };
@@ -2807,9 +2768,7 @@ export class InstanceSetup {
                ...(unit === "ms" ? { peak_ms: r.peak_ms, last_ms: r.last_ms, total_ms: r.total_ms, mean_ms: mean } : {}) };
     });
     return { metrics,
-      note: "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute "
-          + "segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak "
-          + "is the run that would die first if a ceiling were near; a mean would hide it." };
+      note: localize("instance-setup.setup.each_metric_is_stated_in", "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak is the run that would die first if a ceiling were near; a mean would hide it.") };
   }
 
   /** R40: a probe run begins. Its steps are numbered and timed from this run's own start. */
@@ -2871,11 +2830,9 @@ export class InstanceSetup {
       rows, runs: runOut,
       note: !rows.length
         ? "the probe has never run, so nothing is known about the ceiling by measurement"
-        : `a run completed a step ${top.elapsed_ms} ms into its own isolate, so the ceiling lies above `
-          + `elapsed_at_highest_ms. `
-          + (cut.length ? "A run with no recorded end was cut off: the ceiling lies within its bracket, above its last "
+        : localize("instance-setup.setup.a_run_completed_a_step", "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. {v1}", { elapsed_ms: String(top.elapsed_ms), v1: String(cut.length ? "A run with no recorded end was cut off: the ceiling lies within its bracket, above its last "
                         + "completed step's elapsed time and below what its next step would have cost."
-                        : "No run has been cut off yet, so the ceiling is above everything tried.") };
+                        : "No run has been cut off yet, so the ceiling is above everything tried.") }) };
   }
 }
 
@@ -3184,10 +3141,8 @@ export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, ru
   return json({ ok: true, run: { ...r, id }, state: afterOut.result, trail_complete: complete,
     ...(complete ? {} : { last_confirmed_step: confirmed }),
     note: complete
-      ? "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last "
-        + "recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms."
-      : `the store did not confirm step ${confirmed + 1}, so the probe stopped there and burned nothing more: the `
-        + `trail is incomplete, and the last step the store confirmed is ${confirmed}.` });
+      ? localize("instance-setup.setup.this_run_returned_so_the", "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.")
+      : localize("instance-setup.setup.the_store_did_not_confirm", "the store did not confirm step {v1}, so the probe stopped there and burned nothing more: the trail is incomplete, and the last step the store confirmed is {confirmed}.", { v1: String(confirmed + 1), confirmed: String(confirmed) }) });
 }
 
 /* ============================================================================================================

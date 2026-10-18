@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, evidence, granted, net, resp } from "./fixture.mjs";
 import { attest, attestOp, ATTEST_CHECKS } from "../../../src/attestation/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OLD = /\b(this|the|its) (instance|plane|copy|server)\b/i;
 const s = sha("capture");
@@ -77,7 +78,7 @@ test("DEC-149: ops.mjs:28 \"your group's Civicsmith has no evidence storage conf
   await attestOp({ method: "POST", json: async () => ({ sha256: s }) }, {}, null,
                  { json: (b) => b, storageAbsent: (op, error) => { seen.push(error); return { absent: op }; } });
   assert.equal(seen.length, 1);
-  says(seen[0], "your team's Civicsmith has no evidence storage configured");
+  says(seen[0], word("capture.response.group_civicsmith_evidence"));
 });
 
 test("DEC-149: no other string the module answers names the instance, the plane, a copy or a server for the group's Civicsmith", async () => {

@@ -8,6 +8,8 @@
  * minted by four modules, so its one row is record-core's C-59.6, beside `mintOpaqueId`, and this module answers
  * through record-core's `mintExhausted` (its R62). The number C-87.12 is not reused. */
 
+import { word } from '../setup-words/index.mjs';
+
 const at = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
 
 /* D-448 / C-87 (its number minted 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS (a twelfth, C-87.12, joined them in T12 and retired into record-core's C-59.6 in T13),
@@ -58,117 +60,90 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
   MACHINE_CANNOT_REVIEW: {
     check: 'C-32.16',
     where: at('act', 'is-machine-review'),
-    translation: 'Handing a draft of the team\'s case to a named person, or withdrawing it, is an act '
-      + 'somebody in the team answers for, and the record names who did it. The credential that asked '
-      + 'here is an automated one: it can help prepare the draft, and it cannot address it to anyone. '
-      + 'Sign in to do this yourself.',
+    translation: word('refusal.MACHINE_CANNOT_REVIEW'),
   },
   NO_REVIEW_COPY: {
     check: 'C-87.1',
     where: at('noReviewCopy', 'is-no-review-copy'),
-    translation: 'No review copy answers to this request. A review copy is read through the grant issued for '
-      + 'it, or by a member with standing in the project that produced it. A grant that was withdrawn, one '
-      + 'whose draft has moved on to another edition, and one that never existed all answer the same way, so '
-      + 'this answer tells you nothing about which of those is the case.',
+    translation: word('refusal.NO_REVIEW_COPY'),
   },
   REVIEW_UNKNOWN_ACT: {
     check: 'C-87.2',
     where: at('act', 'is-review-unknown-act'),
-    translation: 'That is not one of the things you can do to a review copy. There are three: draft the case '
-      + 'that will be shown, grant someone a copy to read, and withdraw a grant you issued.',
+    translation: word('refusal.REVIEW_UNKNOWN_ACT'),
   },
   REVIEW_NOT_PROJECT_OWNER: {
     check: 'C-87.3',
     where: at('notReviewOwner', 'is-review-authority'),
-    translation: 'You do not hold this act\'s authority over this project. Drafting the case needs permission '
-      + 'to edit the project\'s work; handing the draft to someone outside the team, and withdrawing a copy '
-      + 'you handed over, are the project owner\'s own acts. A project, draft or grant you hold no such '
-      + 'authority over is answered exactly as one that does not exist, so this answer does not tell you '
-      + 'whether it is there.',
+    translation: word('refusal.REVIEW_NOT_PROJECT_OWNER'),
   },
   REVIEW_NO_PROJECT: {
     check: 'C-87.4',
     where: at('#draft', 'is-review-no-project'),
-    translation: 'Say which project this draft belongs to. A draft case is a piece of a project\'s work, the '
-      + 'same as a published case is, and it is not held by anybody until it names one.',
+    translation: word('refusal.REVIEW_NO_PROJECT'),
   },
   REVIEW_DRAFT_CHANGES_PROJECT: {
     check: 'C-87.5',
     where: at('#draft', 'is-review-draft-changes-project'),
-    translation: 'This draft belongs to a different project, and a case does not change hands. If the other '
-      + 'project should be making this case, draft it there as a case of its own.',
+    translation: word('refusal.REVIEW_DRAFT_CHANGES_PROJECT'),
   },
   REVIEW_NO_SUCH_CASE: {
     check: 'C-87.6',
     where: at('#draft', 'is-review-no-such-case'),
-    translation: 'This project has published no case by that name. A draft may name an existing case, which '
-      + 'makes the draft that case\'s next edition; a case another project published is answered exactly as '
-      + 'one that does not exist. Leave the name off and the draft is a new case.',
+    translation: word('refusal.REVIEW_NO_SUCH_CASE'),
   },
   REVIEW_DRAFT_TOO_LARGE: {
     check: 'C-87.7',
     where: at('#draft', 'is-review-draft-too-large'),
-    translation: 'This draft\'s arguments are larger than your team\'s Civicsmith will store: the limit is 64 KiB, the same '
-      + 'size publishing the case would accept. Nothing was saved. Material this large belongs in the '
-      + 'documents and content the case rests on rather than in the draft itself.',
+    translation: word('refusal.REVIEW_DRAFT_TOO_LARGE'),
   },
   REVIEW_NO_RECIPIENT: {
     check: 'C-87.8',
     where: at('#grant', 'is-review-recipient'),
-    translation: 'Say who this copy is for, in one line. Handing a draft to someone is an addressed act: the '
-      + 'record says who it went to, and a grant addressed to nobody would leave no such record.',
+    translation: word('refusal.REVIEW_NO_RECIPIENT'),
   },
   REVIEW_NO_SECRET: {
     check: 'C-87.9',
     where: at('#grant', 'is-review-secret'),
-    translation: 'The reading secret that would let this recipient open the copy was not set. That secret is '
-      + 'made for you when the grant is issued, so this is a fault in the request rather than something you '
-      + 'supply; nothing was issued. Try issuing the grant again.',
+    translation: word('refusal.REVIEW_NO_SECRET'),
   },
   REVIEW_NO_GRANT: {
     check: 'C-87.10',
     where: at('#revoke', 'is-review-grant-named'),
-    translation: 'Say which grant to withdraw, by the id you were given when it was issued. Nothing was '
-      + 'withdrawn. This answer says only that no grant was named; it says nothing about which grants exist.',
+    translation: word('refusal.REVIEW_NO_GRANT'),
   },
   REVIEW_NO_COMMENT_TEXT: {
     check: 'C-87.11',
     where: at('comment', 'is-review-comment-text'),
-    translation: 'A comment has to say something, and at most 4000 characters of it. Nothing was recorded. '
-      + 'What you have written is still yours to send once it is within that length.',
+    translation: word('refusal.REVIEW_NO_COMMENT_TEXT'),
   },
   /* T41 (D60; R30, R31): the approvals a group may require before any of its cases is signed. C-87.12 stays retired
      and is not reused; the family continues at C-87.13. Their member words are BOB's draft, the UX stream's to revise. */
   APPROVAL_RULE_BAD_APPROVERS: {
     check: 'C-87.13',
     where: at('approvalRuleSet', 'is-approval-rule-approvers'),
-    translation: 'Name the people whose approval every case needs before it is signed: one or more active members '
-      + 'of the team, at most 50. To stop requiring approvals, turn the rule off instead. Nothing was changed.',
+    translation: word('refusal.APPROVAL_RULE_BAD_APPROVERS'),
   },
   CASE_NOT_AN_APPROVER: {
     check: 'C-87.14',
     where: at('caseApprove', 'is-not-an-approver'),
-    translation: 'You are not one of the people the team named to approve its cases before they are signed, or '
-      + 'this case is not one you can see. A case you cannot see is answered exactly as one that does not exist, '
-      + 'so this answer does not tell you whether it is there. Nothing was recorded.',
+    translation: word('refusal.CASE_NOT_AN_APPROVER'),
   },
   APPROVAL_NO_SUCH_DOCUMENT: {
     check: 'C-87.15',
     where: at('caseApprove', 'is-approval-document'),
-    translation: 'An approval is given to one version of a case document, and that version was not found for '
-      + 'this case and edition. Open the document as it now stands and approve that. Nothing was recorded.',
+    translation: word('refusal.APPROVAL_NO_SUCH_DOCUMENT'),
   },
   APPROVAL_REASON_TOO_LONG: {
     check: 'C-87.16',
     where: at('caseApprove', 'is-approval-reason'),
-    translation: 'The reason you gave is longer than 4000 characters. Nothing was recorded. What you have '
-      + 'written is still yours to send once it is within that length.',
+    translation: word('refusal.APPROVAL_REASON_TOO_LONG'),
   },
   /* T48 (R34; N1038; DEC-100): a reader's end date that is no instant, or no later than the act. BOB's draft words,
      re-wordable by the design stream. The family continues at C-87.17 (C-87.12 stays retired). */
   REVIEW_BAD_UNTIL: {
     check: 'C-87.17',
     where: at('#grant', 'is-review-until'),
-    translation: 'Choose an end date after today for this reader\'s link. Nothing was shared.',
+    translation: word('refusal.REVIEW_BAD_UNTIL'),
   },
 });

@@ -22,6 +22,7 @@
  * `record-core.tombstones` lists for a carried table travels in its place as `{table, key, ground, at}`, none of the
  * removed content and nothing more. */
 import { createSha256 } from "../record-grammar/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R8: the page bound, set from the measured paging cost (job record, T33-61). */
 export const PAGE_ROWS = 1000;
@@ -128,14 +129,13 @@ export function tableEntry(sql, decl, record) {
   const head = { owner: decl.module, table: decl.name, classes };
   if (decl.export === "never")
     return { ...head, carried: "named", rows: null, pages: [],
-             why: "declared export never: named with its owner and class, and no row travels" };
+             why: word("corpus-export.why.declared_export_named") };
   if (decl.derive === "derived-rebuildable") {
     /* R7 (N593): `from` exactly as declared; a declaration that stated none travels as null, said so. */
     const from = Array.isArray(decl.from) ? [...decl.from] : null;
     return { ...head, carried: "rule", rows: null, pages: [],
              rule: { owner: decl.module, key: Array.isArray(decl.key) ? [...decl.key] : null, from,
-                     rebuild: `rebuilt by ${decl.module} from ${from ? from.join(", ") : "stored tables its declaration did not state"}`
-                              + " (record-core R77); its rows never travel" } };
+                     rebuild: localize("corpus-export.tables.rebuilt_by_module_from_v1", "rebuilt by {module} from {v1} (record-core R77); its rows never travel", { module: String(decl.module), v1: String(from ? from.join(", ") : "stored tables its declaration did not state") }) } };
   }
   const pager = new TablePager(sql, decl);
   const { rows, pages } = pager.survey();

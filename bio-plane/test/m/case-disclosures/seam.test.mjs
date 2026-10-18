@@ -8,6 +8,7 @@ import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { world, storage, V, T0 } from "./fixture.mjs";
 import * as CD from "../../../src/case-disclosures/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const { CASE_DISCLOSURE_CHECKS, caseDisclosuresOf } = CD;
 const Q = "INQ-2026-0001-q", DOC = "INFO-2026-0001-a";
@@ -18,41 +19,41 @@ const hash = (lines) => createHash("sha256").update(lines.join("\n")).digest("he
 /* The requirements' table, word for word (`build/requirements/case-disclosures.md`, R22), C-120.8 as DEC-149 re-words it
    (T34-87). */
 const ROWS = [
-  ["TENSION_NOT_DISCLOSED", "C-120.1", "tensionsJudged", "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published."],
-  ["DISCLOSURE_NOT_STANDING", "C-120.2", "tensionsJudged", "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published."],
-  ["TENSIONS_UNDETERMINED", "C-120.3", "tensionsUndetermined", "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."],
-  ["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4", "selfAttestedJudged", "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written."],
-  ["SELF_ATTESTED_NO_REASON", "C-120.5", "selfAttestedJudged", "Publishing a document as self-attested only says why. Give the reason. Nothing was written."],
+  ["TENSION_NOT_DISCLOSED", "C-120.1", "tensionsJudged", word("refusal.TENSION_NOT_DISCLOSED")],
+  ["DISCLOSURE_NOT_STANDING", "C-120.2", "tensionsJudged", word("refusal.DISCLOSURE_NOT_STANDING")],
+  ["TENSIONS_UNDETERMINED", "C-120.3", "tensionsUndetermined", word("refusal.TENSIONS_UNDETERMINED")],
+  ["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4", "selfAttestedJudged", word("refusal.CO_ATTESTATION_UNACKNOWLEDGED")],
+  ["SELF_ATTESTED_NO_REASON", "C-120.5", "selfAttestedJudged", word("refusal.SELF_ATTESTED_NO_REASON")],
   ["SELF_ATTESTATION_NOT_STANDING", "C-120.6", "selfAttestedJudged", "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written."],
-  ["UNCLEARED_HUNCH", "C-120.7", "hunchDebt", "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."],
-  ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", "A finding this case relies on rests on material your team's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written."],
-  ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "acceptedWorkJudged", "A finding in this case rests on another team's finding, and this team's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written."],
-  ["FLAG_NOT_DISCLOSED", "C-120.11", "flagsJudged", "Another team's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published."],
-  ["FLAGS_UNDETERMINED", "C-120.12", "flagsJudged", "The flags on another team's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published."],
-  ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "flagsJudged", "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."],
+  ["UNCLEARED_HUNCH", "C-120.7", "hunchDebt", word("refusal.UNCLEARED_HUNCH")],
+  ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", word("refusal.RELIED_ON_NOT_PRESENTABLE")],
+  ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "acceptedWorkJudged", word("refusal.ACCEPTED_WORK_NOT_IN_FORCE")],
+  ["FLAG_NOT_DISCLOSED", "C-120.11", "flagsJudged", word("refusal.FLAG_NOT_DISCLOSED")],
+  ["FLAGS_UNDETERMINED", "C-120.12", "flagsJudged", word("refusal.FLAGS_UNDETERMINED")],
+  ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "flagsJudged", word("refusal.FLAG_DISCLOSURE_NOT_STANDING")],
   /* R22's new rows (T33-68), numbered provisionally until their stamp; the translations are drafts */
-  ["PERSON_BASIS_UNRECORDED", "C-120.14", "peopleJudged", "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written."],
-  ["PERSON_BASIS_NOT_STANDING", "C-120.15", "peopleJudged", "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written."],
-  ["TIE_ATTESTATION_MISSING", "C-120.16", "tieAttestationJudged", "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written."],
+  ["PERSON_BASIS_UNRECORDED", "C-120.14", "peopleJudged", word("refusal.PERSON_BASIS_UNRECORDED")],
+  ["PERSON_BASIS_NOT_STANDING", "C-120.15", "peopleJudged", word("refusal.PERSON_BASIS_NOT_STANDING")],
+  ["TIE_ATTESTATION_MISSING", "C-120.16", "tieAttestationJudged", word("refusal.TIE_ATTESTATION_MISSING")],
   /* R22's new rows (T37; N757, K2206), R6's, numbered provisionally until their stamp; the translations are BOB's drafts */
   /* T38 (DEC-183; K2220, K2303): C-120.17 re-worded to `words.json`'s `photo.refused.format`, verbatim */
   ["PHOTO_NOT_COVERABLE", "C-120.17", "materialsJudged", "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it."],
-  ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "materialsJudged", "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written."],
+  ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "materialsJudged", word("refusal.PHOTO_MARKS_UNDETERMINED")],
   /* T38 (DEC-183 (1); K2220, K2303): R6's PHOTO_UNCHECKED, `photo.refused.unchecked` verbatim, re-worded by DEC-187 (1) (T40) */
   ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}."],
   /* T39 (N806; K2333): R6's member-document rows, numbered provisionally until their stamp; .21 and .22 `words.json`'s
      `document.refused.pending` and `document.refused.clean` verbatim (T41; DEC-188 (7)) */
-  ["DOCUMENT_COPY_UNDETERMINED", "C-120.20", "materialsJudged", "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written."],
+  ["DOCUMENT_COPY_UNDETERMINED", "C-120.20", "materialsJudged", word("refusal.DOCUMENT_COPY_UNDETERMINED")],
   ["DOCUMENT_COPY_PENDING", "C-120.21", "materialsJudged", "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes."],
   ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "materialsJudged", "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it."],
   /* T41 (N820; D56–D58, D63; K2471): R30's rows, in its order, numbered provisionally until T42's stamp; drafts */
-  ["ACCOUNT_SENTENCE_UNSUPPORTED", "C-120.23", "accountJudged", "A sentence of the account rests on nothing it cites. Cite what it rests on, mark it as following a printed bias statement, or take it out. Nothing was written."],
-  ["ACCOUNT_FACT_NOT_IN_CITED", "C-120.24", "accountJudged", "A sentence of the account states a figure, date, name or quotation that what it cites does not hold. Say only what it cites holds, or cite what holds it. Nothing was written."],
-  ["ACCOUNT_CONTRADICTED_BY_RECORD", "C-120.25", "accountJudged", "A sentence of the account says something other than the record holds: a finding's conclusion or a determination, or a leg that cuts against it read as support. It cannot be tied to evidence. Say what the record holds, or take it out. Nothing was written."],
-  ["ACCOUNT_BIAS_NOT_PRINTED", "C-120.26", "accountJudged", "A sentence of the account is framed by a bias statement this case's lens does not print. Frame it by a statement the lens prints, or write it without the framing. Nothing was written."],
-  ["ACCOUNT_CLAIM_NOT_BIAS", "C-120.27", "accountJudged", "A sentence marked as following a bias statement states a fact: a figure, date, name, quotation or a finding's outcome. Lying is not bias. Cite what the fact rests on, or take it out. Nothing was written."],
-  ["ACCOUNT_FLAG_UNANSWERED", "C-120.28", "accountJudged", "The machine flagged a sentence of the account as not supported by what it cites, and the flag is not answered. Tie the sentence to evidence, or take it out. Nothing was written."],
-  ["ACCOUNT_CHECK_UNDETERMINED", "C-120.29", "accountJudged", "The account could not be checked against what it cites, so whether every sentence stands is not known. Try again. Nothing was written."],
+  ["ACCOUNT_SENTENCE_UNSUPPORTED", "C-120.23", "accountJudged", word("refusal.ACCOUNT_SENTENCE_UNSUPPORTED")],
+  ["ACCOUNT_FACT_NOT_IN_CITED", "C-120.24", "accountJudged", word("refusal.ACCOUNT_FACT_NOT_IN_CITED")],
+  ["ACCOUNT_CONTRADICTED_BY_RECORD", "C-120.25", "accountJudged", word("refusal.ACCOUNT_CONTRADICTED_BY_RECORD")],
+  ["ACCOUNT_BIAS_NOT_PRINTED", "C-120.26", "accountJudged", word("refusal.ACCOUNT_BIAS_NOT_PRINTED")],
+  ["ACCOUNT_CLAIM_NOT_BIAS", "C-120.27", "accountJudged", word("refusal.ACCOUNT_CLAIM_NOT_BIAS")],
+  ["ACCOUNT_FLAG_UNANSWERED", "C-120.28", "accountJudged", word("refusal.ACCOUNT_FLAG_UNANSWERED")],
+  ["ACCOUNT_CHECK_UNDETERMINED", "C-120.29", "accountJudged", word("refusal.ACCOUNT_CHECK_UNDETERMINED")],
 ];
 
 test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) C-120.17–C-120.18 (R6's PHOTO_NOT_COVERABLE and PHOTO_MARKS_UNDETERMINED), C-120.19 (R6's PHOTO_UNCHECKED, T38), C-120.20–C-120.22 (R6's DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE, T39) and C-120.23–C-120.29 (R30's ACCOUNT_SENTENCE_UNSUPPORTED, ACCOUNT_FACT_NOT_IN_CITED, ACCOUNT_CONTRADICTED_BY_RECORD, ACCOUNT_BIAS_NOT_PRINTED, ACCOUNT_CLAIM_NOT_BIAS, ACCOUNT_FLAG_UNANSWERED and ACCOUNT_CHECK_UNDETERMINED, T41) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {

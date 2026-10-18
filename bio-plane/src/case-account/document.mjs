@@ -2,7 +2,7 @@
  * reviewers' comments the publisher chose, moved from `case-authoring/document.mjs` unchanged (K624; N839).
  * `case-authoring`'s document imports it and keeps no copy (K1333's renderer rule), so the signed bytes are unchanged. */
 
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R7 (D61): the review comments the publisher chose to carry, in words a reader reads: each with its reviewer and when,
  *  and how many were left out, or that the count is undetermined. No section when the reader was never asked and no
@@ -14,11 +14,11 @@ export function reviewCommentBodyLines(given) {
   return ["## What Reviewers Said", "",
     ...(comments.length
       ? [word("case-account.document.publisher_chose_carry"), "",
-         ...comments.map((c) => `- ${c.reviewer ?? "(a reviewer)"}, on ${c.at ?? "(an unrecorded date)"}: ${String(c.text ?? "")
-           .replace(/[\r\n]+/g, " ")}`), ""]
+         ...comments.map((c) => localize("case-account.document.v1_on_v2_replace", "- {v1}, on {v2}: {replace}", { v1: String(c.reviewer ?? "(a reviewer)"), v2: String(c.at ?? "(an unrecorded date)"), replace: String(String(c.text ?? "")
+           .replace(/[\r\n]+/g, " ")) })), ""]
       : [word("case-account.document.publisher_carried_comment"), ""]),
     Number.isInteger(left)
-      ? `${left} comment${left === 1 ? " was" : "s were"} left out. A reviewer left out may file a response in the case's docket.`
+      ? word("case-account.document.comment_left_out", { left: String(left), were: String(left === 1 ? " was" : "s were") })
       : word("case-account.document.how_many_comments"),
     ""];
 }

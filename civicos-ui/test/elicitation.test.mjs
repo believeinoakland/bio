@@ -72,6 +72,7 @@ import { analystHits, reachLine } from "./analyst-vocabulary.mjs";
    surface renders A prompt rather than THE prompt. This is check-semantics'
    discipline applied to one string. */
 import { GROUND_PROMPT } from "../../bio-plane/src/affordances.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -295,7 +296,7 @@ console.log("\n--- elicitation (UI-27 / DEC-32) ---");
      asked what FOLLOWS if the reason went the other way, never what the reason
      IS to the argument. */
   ok("and the question asked is the consequence question, in the ruling's own words",
-     asked.every(q => q === "If this turned out to be wrong, would your answer still hold?"));
+     asked.every(q => q === word("question.ask")));
   ok("the two answers offered are consequences and not relationships",
      /No &mdash; my answer falls with it\./.test(d) && /Yes &mdash; my answer still holds\./.test(d));
   /* NOTHING IS PREFILLED and nothing is defaulted: a member who has answered

@@ -23,34 +23,29 @@
    here by key; a row never holds a copy of its sentence. Not taken in T46 (R25), each returned to BOB until its words and
    this module's behaviour agree: `refusal.SUCCESS_NO_STATEMENT`, `refusal.SUCCESS_CAUSE_UNSTATED`,
    `refusal.SUCCESS_CAUSE_UNCHECKABLE`. */
+import { word, localize } from "../setup-words/index.mjs";
+
 export const CONSEQUENCES_WORDS = Object.freeze({
-  "refusal.ADDRESSED_WORD_REFUSED": "A harm addressed is described with the words Remedied, Mitigated, Compensated, "
-    + "Acknowledged or Can't be undone, and a harm not addressed takes none of them. Nothing was written.",
-  "refusal.ADDRESSED_NO_PERCENTAGE": "How far a harm was addressed is said in words, never as a percentage, share or score. "
-    + "Nothing was written.",
-  "refusal.ADDRESSED_NO_REASON": "Say why, in your own words. Your reason is kept with the statement. Nothing was written.",
+  "refusal.ADDRESSED_WORD_REFUSED": word("refusal.ADDRESSED_WORD_REFUSED"),
+  "refusal.ADDRESSED_NO_PERCENTAGE": word("refusal.ADDRESSED_NO_PERCENTAGE"),
+  "refusal.ADDRESSED_NO_REASON": word("refusal.ADDRESSED_NO_REASON"),
   "refusal.ADDRESSED_BAD_REASON": "Your reason is longer than 2,000 characters. Shorten it. Nothing was written.",
-  "refusal.MACHINE_CANNOT_RECORD_SUCCESS": "Only a member records a success. Nothing was written.",
-  "refusal.SUCCESS_NOT_A_PARTICIPANT": "Only someone who has joined this project can record its success. Nothing was written.",
-  "refusal.SUCCESS_BAD_DATE": "The date it changed must be a real day, or a range such as a month or a year. Nothing was "
-    + "written.",
+  "refusal.MACHINE_CANNOT_RECORD_SUCCESS": word("refusal.MACHINE_CANNOT_RECORD_SUCCESS"),
+  "refusal.SUCCESS_NOT_A_PARTICIPANT": word("refusal.SUCCESS_NOT_A_PARTICIPANT"),
+  "refusal.SUCCESS_BAD_DATE": word("refusal.SUCCESS_BAD_DATE"),
   "refusal.SUCCESS_NO_EVIDENCE": "A success cites what shows it: at least one document or finding you can see. Nothing was "
     + "written.",
-  "refusal.SUCCESS_TOO_LARGE": "A success cites at most 50 items and 20 figures, and its order of events is at most 1,000 "
-    + "characters. Nothing was written.",
-  "refusal.SUCCESS_FIGURE_NOT_COMPUTED": "A figure in a success is computed from amounts in the record, never typed in. "
-    + "Choose the amounts it comes from. Nothing was written.",
-  "refusal.SUCCESS_CAUSE_NOT_EVIDENCED": "A stated cause cites what shows it: at least one document or finding you can see. "
-    + "Nothing was written.",
-  "refusal.SUCCESS_CAUSE_OWN_ACT_ONLY": "Everything cited for the cause is your team's own act, and your own act never "
-    + "shows that it caused the change. Cite what the body did or said, or leave the cause out. Nothing was written.",
-  "refusal.NO_SUCH_SUCCESS_RECORD": "There is no success by that name, or none you can see. Nothing was written.",
-  "refusal.SUCCESS_NO_REASON": "Say why you are revising it. Your reason is kept with the change. Nothing was written.",
+  "refusal.SUCCESS_TOO_LARGE": word("refusal.SUCCESS_TOO_LARGE"),
+  "refusal.SUCCESS_FIGURE_NOT_COMPUTED": word("refusal.SUCCESS_FIGURE_NOT_COMPUTED"),
+  "refusal.SUCCESS_CAUSE_NOT_EVIDENCED": word("refusal.SUCCESS_CAUSE_NOT_EVIDENCED"),
+  "refusal.SUCCESS_CAUSE_OWN_ACT_ONLY": word("refusal.SUCCESS_CAUSE_OWN_ACT_ONLY"),
+  "refusal.NO_SUCH_SUCCESS_RECORD": word("refusal.NO_SUCH_SUCCESS_RECORD"),
+  "refusal.SUCCESS_NO_REASON": word("refusal.SUCCESS_NO_REASON"),
   "refusal.SUCCESS_BAD_REASON": "Your reason is longer than 2,000 characters. Shorten it. Nothing was written.",
-  "refusal.SUCCESS_SUPERSEDED": "This success was already revised. Revise or carry its latest version. Nothing was written.",
-  "refusal.MACHINE_CANNOT_CARRY": "Only a member carries an outcome into a case. Nothing was written.",
-  "consequences.success.sequence_not_cause": "This is the order things happened in. It doesn't say one caused the other.",
-  "consequences.success.cause_not_stated": "No cause is stated.",
+  "refusal.SUCCESS_SUPERSEDED": word("refusal.SUCCESS_SUPERSEDED"),
+  "refusal.MACHINE_CANNOT_CARRY": word("refusal.MACHINE_CANNOT_CARRY"),
+  "consequences.success.sequence_not_cause": word("consequences.success.sequence_not_cause"),
+  "consequences.success.cause_not_stated": word("consequences.success.cause_not_stated"),
 });
 
 /** R25: a word read by key; a throw for a key the list lacks, because a missing sentence is silent and reaches a person
@@ -66,44 +61,28 @@ const at = (fn) => `src/consequences/index.mjs ${fn}`;
 const row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at(fn), translation });
 
 export const CONSEQUENCES_CHECKS = Object.freeze({
-  CONSEQUENCE_NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a "
-    + "standard the determination found noncompliant."),
-  CONSEQUENCE_NOT_A_PARTICIPANT: row(3, "#participantRefusal", "Recording a consequence, or whether it has been "
-    + "addressed, is work inside the determination's project, done by a member who has joined it. A machine may prepare "
-    + "a computed part and answers no project's authority."),
-  AFFECTED_UNKNOWN_KIND: row(4, "checkAffected", "Who or what is affected is a class, a fund, a program, a service, a "
-    + "body, a person a document names, or other, with a description; an office is named by its role and its body."),
-  MEASURE_UNKNOWN_UNIT: row(6, "checkMeasure", "A measure counts money, benefits, services, time or a count."),
-  MEASURE_INVALID: row(7, "checkMeasure", "A measure's value, or its range's bounds, are exact decimals such as "
-    + "1200.50, the range in order, and a currency belongs only to money."),
-  PERIOD_INVALID: row(8, "checkPeriod", "A consequence runs over a period: two dates, the start not after the end."),
-  MACHINE_CANNOT_ASSESS: row(9, "#basis", "An assessment is a member's judgment. A machine may compute a part from the "
-    + "record's own figures and propose an assessment as text; it never records one."),
-  NO_RATIONALE: row(10, "#basis", "An assessed value is a member's judgment and says why: give the rationale for the "
-    + "value or range you assessed. Nothing was written."),
-  BAD_RATIONALE: row(11, "#basis", "A rationale is at most 2,000 characters."),
-  BASIS_UNREADABLE: row(12, "basisUnreadable", "A basis is read as it is written: a computation "
-    + "names its operation and its operands, each the content whose passage holds the figure and the figure as read, "
-    + "and an assessment lists what it rests on. Nothing was written."),
-  NO_SUCH_EVIDENCE: row(13, "#evidenceRefusal", "Evidence, and what an assessment rests on, are content or findings "
-    + "this record holds and you may see."),
-  NO_SUCH_PART: row(14, "noSuchPart", "No consequence part answers to that id. One you may not see is answered exactly as one "
-    + "that does not exist."),
-  ALREADY_SUPERSEDED: row(15, "alreadySuperseded", "A part that has been revised is read, not revised or addressed "
-    + "again: its successor carries the record forward."),
-  NO_REASON: row(16, "reasonRefusal", "A revision says why."),
+  CONSEQUENCE_NOT_NONCOMPLIANT: row(2, "#record", word("refusal.CONSEQUENCE_NOT_NONCOMPLIANT")),
+  CONSEQUENCE_NOT_A_PARTICIPANT: row(3, "#participantRefusal", word("refusal.CONSEQUENCE_NOT_A_PARTICIPANT")),
+  AFFECTED_UNKNOWN_KIND: row(4, "checkAffected", word("refusal.AFFECTED_UNKNOWN_KIND")),
+  MEASURE_UNKNOWN_UNIT: row(6, "checkMeasure", word("refusal.MEASURE_UNKNOWN_UNIT")),
+  MEASURE_INVALID: row(7, "checkMeasure", word("refusal.MEASURE_INVALID")),
+  PERIOD_INVALID: row(8, "checkPeriod", word("refusal.PERIOD_INVALID")),
+  MACHINE_CANNOT_ASSESS: row(9, "#basis", word("refusal.MACHINE_CANNOT_ASSESS")),
+  NO_RATIONALE: row(10, "#basis", word("refusal.NO_RATIONALE")),
+  BAD_RATIONALE: row(11, "#basis", word("refusal.BAD_RATIONALE")),
+  BASIS_UNREADABLE: row(12, "basisUnreadable", word("refusal.BASIS_UNREADABLE")),
+  NO_SUCH_EVIDENCE: row(13, "#evidenceRefusal", word("refusal.NO_SUCH_EVIDENCE")),
+  NO_SUCH_PART: row(14, "noSuchPart", word("refusal.NO_SUCH_PART")),
+  ALREADY_SUPERSEDED: row(15, "alreadySuperseded", word("refusal.ALREADY_SUPERSEDED")),
+  NO_REASON: row(16, "reasonRefusal", localize("consequences.checks.a_revision_says_why", "A revision says why.")),
   BAD_REASON: row(17, "reasonRefusal", "A reason is at most 500 characters: say why in a sentence or two. Nothing "
     + "was written."),
-  MACHINE_CANNOT_ADDRESS: row(18, "addressedRecord", "Whether a consequence has been addressed is a member's judgment, "
-    + "with evidence. A machine never records it."),
-  ADDRESSED_UNKNOWN_STATE: row(19, "addressedRecord", "A part is recorded addressed or not_addressed."),
-  ADDRESSED_NO_EVIDENCE: row(20, "addressedRecord", "A consequence is recorded addressed with the evidence that it was. "
-    + "Partial redress does not end an escalation."),
+  MACHINE_CANNOT_ADDRESS: row(18, "addressedRecord", word("refusal.MACHINE_CANNOT_ADDRESS")),
+  ADDRESSED_UNKNOWN_STATE: row(19, "addressedRecord", localize("consequences.checks.a_part_is_recorded_addressed", "A part is recorded addressed or not_addressed.")),
+  ADDRESSED_NO_EVIDENCE: row(20, "addressedRecord", word("refusal.ADDRESSED_NO_EVIDENCE")),
   /* R10 (K1484 C2 row 7; T33-71): AFFECTED_INDIVIDUAL's C-114.5 is retired with the code, and its number not reused. */
-  AFFECTED_PERSON_NOT_NAMED: row(21, "#checkPerson", "A person is recorded as affected only as a document in the record "
-    + "names them: give the content whose passage names the person. Nothing was written."),
-  AFFECTED_NOT_A_PERSON: row(22, "#checkPerson", "Only a registered person is recorded as an affected person: the entity "
-    + "named is not one this record holds as a person. Nothing was written."),
+  AFFECTED_PERSON_NOT_NAMED: row(21, "#checkPerson", word("refusal.AFFECTED_PERSON_NOT_NAMED")),
+  AFFECTED_NOT_A_PERSON: row(22, "#checkPerson", word("refusal.AFFECTED_NOT_A_PERSON")),
   /* T45 (R9 amended; R17–R22): the next numbers of C-114, in the requirements' Rows order. T46 (R25): seventeen read
      `words.json`'s `refusal.<CODE>` by key; C-114.29, .34 and .37 keep T45's words until theirs and R17, R19 agree. */
   ADDRESSED_WORD_REFUSED: row(23, "addressedRecord", words("ADDRESSED_WORD_REFUSED")),
@@ -112,26 +91,21 @@ export const CONSEQUENCES_CHECKS = Object.freeze({
   ADDRESSED_BAD_REASON: row(26, "addressedRecord", words("ADDRESSED_BAD_REASON")),
   MACHINE_CANNOT_RECORD_SUCCESS: row(27, "#successRefusal", words("MACHINE_CANNOT_RECORD_SUCCESS")),
   SUCCESS_NOT_A_PARTICIPANT: row(28, "#successRefusal", words("SUCCESS_NOT_A_PARTICIPANT")),
-  SUCCESS_NO_STATEMENT: row(29, "#successRefusal", "Say in your own words what changed: at most 2,000 characters. Nothing "
-    + "was written."),
+  SUCCESS_NO_STATEMENT: row(29, "#successRefusal", localize("consequences.checks.say_in_your_own_words", "Say in your own words what changed: at most 2,000 characters. Nothing was written.")),
   SUCCESS_BAD_DATE: row(30, "#successRefusal", words("SUCCESS_BAD_DATE")),
   SUCCESS_NO_EVIDENCE: row(31, "#successRefusal", words("SUCCESS_NO_EVIDENCE")),
   SUCCESS_TOO_LARGE: row(32, "#successRefusal", words("SUCCESS_TOO_LARGE")),
   SUCCESS_FIGURE_NOT_COMPUTED: row(33, "#successFigures", words("SUCCESS_FIGURE_NOT_COMPUTED")),
-  SUCCESS_CAUSE_UNSTATED: row(34, "#causeRefusal", "Saying the team's action caused the change is a statement in your own "
-    + "words, at most 2,000 characters. Nothing was written."),
+  SUCCESS_CAUSE_UNSTATED: row(34, "#causeRefusal", localize("consequences.checks.saying_the_teams_action_caused", "Saying the team's action caused the change is a statement in your own words, at most 2,000 characters. Nothing was written.")),
   SUCCESS_CAUSE_NOT_EVIDENCED: row(35, "#causeRefusal", words("SUCCESS_CAUSE_NOT_EVIDENCED")),
   SUCCESS_CAUSE_OWN_ACT_ONLY: row(36, "#causeRefusal", words("SUCCESS_CAUSE_OWN_ACT_ONLY")),
-  SUCCESS_CAUSE_UNCHECKABLE: row(37, "#causeRefusal", "Whether the cause rests only on the team's own acts could not be "
-    + "checked, so it is not recorded. You may state the sequence of events instead. Nothing was written."),
+  SUCCESS_CAUSE_UNCHECKABLE: row(37, "#causeRefusal", localize("consequences.checks.whether_the_cause_rests_only", "Whether the cause rests only on the team's own acts could not be checked, so it is not recorded. You may state the sequence of events instead. Nothing was written.")),
   NO_SUCH_SUCCESS_RECORD: row(38, "noSuchSuccessRecord", words("NO_SUCH_SUCCESS_RECORD")),
   SUCCESS_NO_REASON: row(39, "successRevise", words("SUCCESS_NO_REASON")),
   SUCCESS_BAD_REASON: row(40, "successRevise", words("SUCCESS_BAD_REASON")),
   SUCCESS_SUPERSEDED: row(41, "successSuperseded", words("SUCCESS_SUPERSEDED")),
   MACHINE_CANNOT_CARRY: row(42, "outcomeCarry", words("MACHINE_CANNOT_CARRY")),
   /* T45 (R22): BOB's answer to J1 point 2 pending (the job's best reading). */
-  CARRY_NOT_ADDRESSED: row(43, "outcomeCarry", "Only a part a member has recorded addressed, with evidence, is carried "
-    + "as harm addressed. Nothing was written."),
-  CARRY_NO_CURE: row(44, "noCure", "No standing cure is linked to that determination and standard, so there is no "
-    + "cure to carry. Nothing was written."),
+  CARRY_NOT_ADDRESSED: row(43, "outcomeCarry", word("refusal.CARRY_NOT_ADDRESSED")),
+  CARRY_NO_CURE: row(44, "noCure", word("refusal.CARRY_NO_CURE")),
 });

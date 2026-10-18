@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, CLK, officeCalendarProfile } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { get as profile, combine } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c";
@@ -140,7 +141,7 @@ test("R2 clockPropose computes from the profile's deadline through civil-time, s
   assert.match(p.proposal.entry.basis, /profile basis: TEST/);
   assert.deepEqual(Object.keys(p.proposal.entry).sort(), ["basis", "basis_kind", "date", "description", "owed_by", "status", "text"]);
   assert.equal(p.proposal.entry.owed_by, "undetermined", "R18: the profile's deadline does not say whose it is");
-  assert.deepEqual([p.proposal.start_from, p.proposal.start_note], ["sent", "receipt not recorded: counted from sending"]);
+  assert.deepEqual([p.proposal.start_from, p.proposal.start_note], ["sent", word("action-clocks.note.receipt_recorded_counted")]);
   assert.equal(p.proposal.entry.basis_kind, "rule", "R7: a profile deadline's basis is a rule");
   assert.equal(p.proposal.key, `${dl.rule}@${MACHINE}`);
   /* civil-time's trace is answered with it: the rule, its citation, the list counted on, the Sunday skipped (C-2). */

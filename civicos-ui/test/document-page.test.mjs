@@ -9,6 +9,7 @@ import { appScript } from "./extract.mjs"; import vm from "vm"; import { webcryp
    PRODUCER'S ARRAY rather than a copy of it — a copy agrees at zero cost, which
    REC-38's own negative control measured on this exact label. */
 import { CAPTURE_ACTS, ATTEST_FENCE } from "../../bio-plane/src/affordances.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 const els=new Map();
 function el(sel){ const e={sel,classList:{add(){},remove(){},toggle(){},contains(){return false}},style:{},dataset:{},value:"",_html:"",textContent:"",scrollTop:0,disabled:false,offsetHeight:120,
   addEventListener(){},querySelectorAll:()=>[],querySelector:()=>el(),insertAdjacentHTML(p,h){e._html+=h},focus(){},click(){},remove(){}};
@@ -105,7 +106,7 @@ const must = [
   ["dochead frozen header","class=\"dochead\""],
   ["title","FY2026-27 adopted budget"],
   ["open control as link-tab","class=\"openlink\""],
-  ["open control text","Open the document"],
+  ["open control text",word("screen.published.evidence.open")],
   ["verified seal fact","Released by georgia"],
   ["crucial seal fact","Load-bearing for: Sewer franchise diversion"],
   ["monitor last","Last re-checked"],

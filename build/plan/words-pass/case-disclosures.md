@@ -1,0 +1,43 @@
+# case-disclosures: the words check after the conversion (K3949)
+
+Layer 8. 39 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- handlist `bio-plane/test/m/case-disclosures/documents.test.mjs:24` [?] codes: ENCRYPTED, EMBEDDED_FILE, IMAGE_NOT_CLEANABLE, ... (7 of 7 not the module's own)
+- handlist `bio-plane/test/m/case-disclosures/photos.test.mjs:25` [?] codes: NOT_A_COVERABLE_FORMAT, UNSUPPORTED_JPEG_PROCESS, PNG_INTERLACED, ... (6 of 6 not the module's own)
+- inline `bio-plane/src/case-disclosures/checks.mjs:32` "This photo's format can't be obscured: {photo}. Capture it again as..." — text holds a literal {name}, filled by its caller
+- inline `bio-plane/src/case-disclosures/checks.mjs:34` "Signing waits until every photo in the case is checked, including o..."
+- inline `bio-plane/src/case-disclosures/checks.mjs:43` "{document}. Capture it from where it was published, supply a plaine..."
+- inline `bio-plane/src/case-disclosures/checks.mjs:44` "The publication copy of a document a member supplied is still being..."
+- inline `bio-plane/src/case-disclosures/document.mjs:103` [copy] "travels whole with this case" — string concatenation (operand is a conditional or logical expression)
+- inline `bio-plane/src/case-disclosures/document.mjs:105` [copy] "NOT INCLUDED: only its fingerprint, origin and archived copy travel"
+- inline `bio-plane/src/case-disclosures/document.mjs:126` ", with the gaps stated: {}"
+- inline `bio-plane/src/case-disclosures/document.mjs:129` "In the owner's words: {}"
+- inline `bio-plane/src/case-disclosures/document.mjs:129` [copy] "at a time not stated"
+- inline `bio-plane/src/case-disclosures/document.mjs:176` [copy] "(no text stated)"
+- inline `bio-plane/src/case-disclosures/document.mjs:230` [copy] "(no text stated)"
+- inline `bio-plane/src/case-disclosures/document.mjs:41` "no capture letter ({})"
+- inline `bio-plane/src/case-disclosures/document.mjs:42` [stitched] "; co-attested: a timestamp{} and a co-archive at {}"
+- inline `bio-plane/src/case-disclosures/document.mjs:45` "(a timestamp at {}, no co-archive)" — string concatenation (operand is a conditional or logical expression)
+- inline `bio-plane/src/case-disclosures/document.mjs:46` "(a co-archive at {}, no timestamp)"
+- inline `bio-plane/src/case-disclosures/document.mjs:78` [copy] "at a time not stated"
+- inline `bio-plane/src/case-disclosures/document.mjs:80` [copy] "a time not stated"
+- inline `bio-plane/src/case-disclosures/document.mjs:92` ", shown with the label \"{}\""
+- inline `bio-plane/src/case-disclosures/index.mjs:1088` [copy] "its bound of"
+- inline `bio-plane/src/case-disclosures/index.mjs:223` [stitched] "{} basis leg(s) of this case's findings rest on a HUNCH ({})."
+- inline `bio-plane/src/case-disclosures/index.mjs:885` [stitched] "{} person(s) this case names have no recorded basis ({}). Every per..."
+- testcopy `bio-plane/test/m/case-disclosures/captures.test.mjs:196` [part] "Without co-attestation an outsider can verify the copy has not chan..." — part test copy
+- testcopy `bio-plane/test/m/case-disclosures/captures.test.mjs:197` [part] "and can follow the reasoning, but cannot independently verify that ..."
+- testcopy `bio-plane/test/m/case-disclosures/captures.test.mjs:202` "document is enough to publish on; one that is not is published only..."
+- testcopy `bio-plane/test/m/case-disclosures/captures.test.mjs:204` [part] "This case's findings rest on no document the record holds a capture of"
+- testcopy `bio-plane/test/m/case-disclosures/captures.test.mjs:245` [part] "No document this case rests on was given to the team by a source"
+- testcopy `bio-plane/test/m/case-disclosures/carries.test.mjs:53` ", and the case was checked under the publication checks"
+- testcopy `bio-plane/test/m/case-disclosures/photos.test.mjs:414` "travels with this case as its copy, fingerprint"
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:40` "This photo's format can't be obscured: {photo}. Capture it again as..."
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:414` [part] "Every document and observation this case's findings reach. One a lo..." — part test copy
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:415` [part] "whole with the case. One that only a supporting finding reaches, an..." — part test copy
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:416` [part] "origin and archived copy."
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:43` "Signing waits until every photo in the case is checked, including o..."
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:431` [part] "and that is not held whole, is listed"
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:47` "The publication copy of a document a member supplied is still being..." — text holds a literal {name}, filled by its caller
+- testcopy `bio-plane/test/m/case-disclosures/seam.test.mjs:48` "A document a member supplied can't be cleaned of the details that c..."
+- testcopy `bio-plane/test/m/case-disclosures/tensions.test.mjs:204` [part] "The record held no unresolved conflict"

@@ -513,7 +513,7 @@ test("R47 (T48; K3240) the founder's block no longer carries the deployer's inst
   assert.equal(hostingControlBlock("notice").includes("ADMIN_TOKEN"), false);
   assert.equal(hostingControlBlock("notice", { deployer: true }).split("ADMIN_TOKEN").length - 1, 1, "once, after the sentences and before the guide");
   const withDeployer = hostingControlBlock("notice", { deployer: true });
-  assert.ok(withDeployer.indexOf("ADMIN_TOKEN") < withDeployer.indexOf("Replace the one-time password"));
+  assert.ok(withDeployer.indexOf("ADMIN_TOKEN") < withDeployer.indexOf(word("setup-fleet.name.replace_time_password")));
   assert.equal(hostingControlBlock("notice", { deployer: false }), hostingControlBlock("notice"));
   assert.equal(HOSTING_CONTROL.sentences.length, 5);
 });

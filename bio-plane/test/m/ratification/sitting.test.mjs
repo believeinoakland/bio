@@ -11,6 +11,7 @@ import { world, plane, newKey, signBundle, signCase, cleanInfoMd, cleanCase, fmT
   from "./fixture.mjs";
 import { caseRatifyOp, publishAtOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines } from "../../../src/ratification/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0052";
 const OWN = { version: "first", claim: "the transfer was authorised", falsifier: "an adopted resolution forbidding it",
@@ -29,8 +30,8 @@ function cleanInqMd(id) {
     "state_history: []", "annotations_open: 0", "reeval_pending: false", "visuals: []", "surfaced_by: human",
     "recheck_triggers:", "  - text: Revisit after the next budget cycle",
     "    description: The adopted budget may restate the transfer basis.",
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 
 /* iris owns the project and holds the registered key; gus joined it and holds a registered key of his own. A case

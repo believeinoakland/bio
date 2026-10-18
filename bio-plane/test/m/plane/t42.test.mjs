@@ -29,6 +29,7 @@ import { transcriberOf, renderPages, TRANSCRIBE_PAGES_MAX, TRANSCRIBE_IMAGE_MAX_
 import { publicOp, gatedOp } from "../../../src/plane/door.mjs";
 import * as AGENT_WORKER_OPS from "../../../../agent-worker/src/ops.mjs";
 import { renderPageToPixels } from "../../../../pdf-worker/src/pagepixels.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const SENTINEL = "sk-ant-SENTINEL-T42-0000";
 const ONE_MATTER = Object.freeze({ id: "t42-set", version: 3, matters: Object.freeze([{ id: "m1" }]) });
@@ -432,7 +433,7 @@ test("R36, R6 (K2635, K2656; control-plane R74): the gated hook answers op=paget
   const n = seen.length;
   const bad = await arm("sha256=nope");
   assert.equal(bad.status, 400);
-  assert.equal((await arm(`sha256=${d}`, env(null))).ok, false, "no evidence storage");
+  assert.equal((await arm(`sha256=${d}`, env(null))).ok, false, word("acquisition.why.evidence_storage"));
   assert.equal(seen.length, n, "refused before the store");
   /* negative control: pdfstructure's arm asks its own route */
   await arm(`sha256=${d}`, env(), "pdfstructure");

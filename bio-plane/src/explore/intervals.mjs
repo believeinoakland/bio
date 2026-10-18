@@ -4,6 +4,7 @@
    event bound not resolved, is unknown, never "always". Which instant comes first is civil-time's `compare`, the one
    sequence read (civil-time R5); nothing here orders instants itself. */
 import { bounds, compare } from '../civil-time/index.mjs';
+import { word } from '../setup-words/index.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
@@ -58,5 +59,5 @@ export function intersect(spans) {
   const from = latest(ks), to = earliest(ke);
   if (from !== null && to !== null && !before(from, to)) return { holds: 'out', from, to };
   if (ks.length === spans.length && ke.length === spans.length) return { holds: 'in', from, to };
-  return { holds: 'undetermined', from, to, why: 'a start or an end is not stated, so whether the spans meet is not settled' };
+  return { holds: 'undetermined', from, to, why: word('explore.why.start_end_stated') };
 }

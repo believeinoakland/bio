@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { standard, WORDS } from "../ai-use/fixture.mjs";
 import { fresh, reader, ofKind, sentences, texts, byId } from "./fixture.mjs";
 import { NOTICE_KINDS, NOTICED_LABEL, ASK_LABEL, EXPLORE_APPROVE, ACCOUNT_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = "2026-10-09T12:00:00Z";
 const UTC = () => ({ time_zone: { value: "UTC" } });
@@ -160,7 +161,7 @@ test("R16 one Ask item per entry of ai-use.exploreAsksPending, keyed by its own 
   assert.notEqual(it.detail, say("ai.queue.exploreask", { scope: say("ai.scope.group"), what: "What did the council vote?", account: say("ai.account.group.inline") }),
     "negative control: not the group's words");
   assert.deepEqual(it.subject.questions, ["What did the council vote?"]);
-  assert.equal(it.basis.estimate, "not known yet", "R10's rough cost, as ai-use states it");
+  assert.equal(it.basis.estimate, word("question-explorer.known"), "R10's rough cost, as ai-use states it");
   assert.deepEqual(it.options[0], EXPLORE_APPROVE);
   assert.equal(EXPLORE_APPROVE.label, WORDS["act.exploreapprove.label.queue"]);
   assert.deepEqual(it.recipients, ["ann"]);

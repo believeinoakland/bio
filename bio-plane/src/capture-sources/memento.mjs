@@ -16,11 +16,12 @@
  */
 
 import { EMPTY_BODY_DIGEST, cdxTimestampToIso } from "../cdx.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** The Wayback Machine as one Memento archive. `raw` answers the memento's raw bytes
  *  form, without overlay or link rewriting: the `id_` flag R32 uses for the CDX path. */
 export const WAYBACK_MEMENTO = Object.freeze({
-  name: "Internet Archive Wayback Machine",
+  name: word("capture-sources.name.internet_archive_wayback"),
   via: "archive.org",
   timegate: "https://web.archive.org/web/",
   timemap: "https://web.archive.org/web/timemap/link/",
@@ -145,7 +146,7 @@ export function parseTimeMap(text) {
   const mementos = [], refused = [];
   for (const l of r.mementos) {
     const t = readHttpDate(l.datetime);
-    if (!t) { refused.push({ uri: l.uri, refused: l.datetime === undefined ? "no datetime" : `datetime ${JSON.stringify(l.datetime)} is not an RFC 1123 date` }); continue; }
+    if (!t) { refused.push({ uri: l.uri, refused: l.datetime === undefined ? "no datetime" : localize("capture-sources.memento.datetime_stringify_is_not_an", "datetime {stringify} is not an RFC 1123 date", { stringify: String(JSON.stringify(l.datetime)) }) }); continue; }
     mementos.push({ uri: l.uri, datetime: l.datetime, timestamp: t.timestamp, archived_at: t.archived_at });
   }
   mementos.sort((a, b) => (a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0));
@@ -161,7 +162,7 @@ export function timeMapCandidates(timemap, { notAfter = null } = {}) {
   const candidates = [];
   for (const m of (timemap && Array.isArray(timemap.mementos)) ? timemap.mementos : []) {
     if (notAfter && String(m.timestamp) > String(notAfter)) {
-      considered.push({ timestamp: m.timestamp, uri: m.uri, refused: `later than the requested bound ${notAfter}` });
+      considered.push({ timestamp: m.timestamp, uri: m.uri, refused: word("capture-sources.refused.later_requested_bound", { not_after: String(notAfter) }) });
       continue;
     }
     candidates.push(m);
@@ -191,12 +192,12 @@ export function readMementoAnswer({ url, status, headers } = {}) {
   const md = header(headers, "memento-datetime");
   const linkText = header(headers, "link");
   const parsed = linkText == null ? { ok: true, links: [] } : parseLinkFormat(linkText);
-  if (!parsed.ok) return { ...parsed, detail: `the Link header: ${parsed.detail}` };
+  if (!parsed.ok) return { ...parsed, detail: localize("capture-sources.memento.the_link_header_detail", "the Link header: {detail}", { detail: String(parsed.detail) }) };
   const r = relations(parsed.links);
   if (md == null) {
     if (st >= 300 && st < 400) {
       const location = header(headers, "location");
-      if (!location) return { ok: false, reason: "MEMENTO_NOT_NEGOTIATED", detail: `the TimeGate answered ${st} with no Location` };
+      if (!location) return { ok: false, reason: "MEMENTO_NOT_NEGOTIATED", detail: localize("capture-sources.memento.the_timegate_answered_st_with", "the TimeGate answered {st} with no Location", { st: String(st) }) };
       let resolved;
       try { resolved = new URL(location, url).toString(); } catch { return { ok: false, reason: "MEMENTO_NOT_NEGOTIATED", detail: "the TimeGate's Location is not an address" }; }
       const vary = header(headers, "vary");
@@ -204,10 +205,10 @@ export function readMementoAnswer({ url, status, headers } = {}) {
                vary_accept_datetime: vary != null && /(^|,)\s*accept-datetime\s*(,|$)/i.test(vary),
                original: r.original, timegate: r.timegate, timemap: r.timemap };
     }
-    return { ok: false, reason: "MEMENTO_NO_DATETIME", detail: `the answer (HTTP ${Number.isFinite(st) ? st : "status unstated"}) carries no Memento-Datetime, so it is not a memento` };
+    return { ok: false, reason: "MEMENTO_NO_DATETIME", detail: localize("capture-sources.memento.the_answer_http_v1_carries", "the answer (HTTP {v1}) carries no Memento-Datetime, so it is not a memento", { v1: String(Number.isFinite(st) ? st : "status unstated") }) };
   }
   const t = readHttpDate(md);
-  if (!t) return { ok: false, reason: "MEMENTO_BAD_DATETIME", detail: `Memento-Datetime ${JSON.stringify(md)} is not an RFC 1123 date` };
+  if (!t) return { ok: false, reason: "MEMENTO_BAD_DATETIME", detail: localize("capture-sources.memento.memento_datetime_stringify_is_not", "Memento-Datetime {stringify} is not an RFC 1123 date", { stringify: String(JSON.stringify(md)) }) };
   if (!r.original) return { ok: false, reason: "MEMENTO_NO_ORIGINAL", detail: "the memento's Link header names no rel=\"original\", so it does not say which resource it is a memento of" };
   const ct = header(headers, "content-type");
   return { ok: true, kind: "memento", status: Number.isFinite(st) ? st : null, memento_uri: typeof url === "string" ? url : null,
@@ -240,12 +241,12 @@ export function mementoRow(answer, { sha256, bytes } = {}) {
 /** The archive's hop for a chosen memento: R34's shape for any archive, every fact from
  *  the memento's answer and the bytes received (R35). */
 export function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answer = null } = {}) {
-  const name = archive && typeof archive.name === "string" && archive.name ? archive.name : "an unnamed Memento archive";
+  const name = archive && typeof archive.name === "string" && archive.name ? archive.name : word("capture-sources.text.unnamed_memento_archive");
   const via = archive && typeof archive.via === "string" && archive.via ? archive.via : null;
   const a = answer && answer.ok === true && answer.kind === "memento" ? answer : null;
   return {
     who: name,
-    asserts: `these bytes were served for ${chosen.original} at ${chosen.archived_at}, with HTTP status ${chosen.statuscode}`,
+    asserts: localize("capture-sources.memento.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: String(chosen.original), archived_at: String(chosen.archived_at), statuscode: String(chosen.statuscode) }),
     evidence: [
       a ? `Memento-Datetime: ${a.memento_datetime}` : "no Memento-Datetime was recorded with this hop",
       `memento ${mementoUri}`,
@@ -253,10 +254,10 @@ export function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answ
       a && a.timegate ? `rel="timegate" ${a.timegate}` : null,
       a && a.timemap ? `rel="timemap" ${a.timemap}` : null,
       chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
-      chosen.digest === EMPTY_BODY_DIGEST ? null : `SHA-256 ${chosen.digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated`,
+      chosen.digest === EMPTY_BODY_DIGEST ? null : localize("capture-sources.memento.sha_256_digest_computed_by", "SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated", { digest: String(chosen.digest) }),
     ].filter(Boolean).join("; "),
     bound: false,
-    unsigned_reason: `no cryptographic attestation exists over a ${name} memento; this is a dated third-party claim we are trusting, not verifying`,
+    unsigned_reason: word("capture-sources.unsigned_reason", { name: String(name) }),
     via,
     document_address: chosen.original,
   };

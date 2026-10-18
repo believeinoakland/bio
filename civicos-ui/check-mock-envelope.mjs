@@ -143,6 +143,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { execFileSync } from "child_process";
 import os from "os";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TESTDIR = path.join(HERE, "test");
@@ -265,16 +266,13 @@ function armA(){
       const family = name === "api" ? API_SEAMS : SEAMS;
       if(family.has(cur)) continue;                          // a seam may call its own transport
       const use = name === "api" ? "apiR" : "recR/recPostR";
-      FAIL(`app.html calls ${name}() from ${cur}() (line ${i+1} of the script block) — `
-         + `D-173's class: only the seams (${[...family].join(", ")}) may call this transport. `
-         + `Use ${use}, which open the envelope for every op and are correct for the flat ones too.`);
+      FAIL(localize("legacy-ui.check-mock-envelope.app_html_calls_name_from", "app.html calls {name}() from {cur}() (line {v1} of the script block) — D-173's class: only the seams ({v2}) may call this transport. Use {use}, which open the envelope for every op and are correct for the flat ones too.", { name: String(name), cur: String(cur), v1: String(i+1), v2: String([...family].join(", ")), use: String(use) }));
     }
   }
   for(const s of [...SEAMS, ...API_SEAMS])
     if(!seenSeams.has(s))
-      FAIL(`app.html no longer declares the seam ${s}() — arm A was checking a rule that no longer has a subject`);
-  notes.push(`arm A: ${lines.length} lines of app.html's script read; the transports rec/recPost/api `
-           + `are reached from these declarations and nowhere else — ${[...seenSeams].sort().join(", ")}`);
+      FAIL(localize("legacy-ui.check-mock-envelope.app_html_no_longer_declares", "app.html no longer declares the seam {s}() — arm A was checking a rule that no longer has a subject", { s: String(s) }));
+  notes.push(localize("legacy-ui.check-mock-envelope.arm_a_length_lines_of", "arm A: {length} lines of app.html's script read; the transports rec/recPost/api are reached from these declarations and nowhere else — {sort}", { length: String(lines.length), sort: String([...seenSeams].sort().join(", ")) }));
 }
 
 /* ============================================================
@@ -336,12 +334,9 @@ function armB(){
     if(rows.length) withTraffic.add(suite);
 
     if(!rows.length){
-      if(!ran) notes.push(`arm B: ${suite} did not complete — no envelope evidence from it`);
+      if(!ran) notes.push(localize("legacy-ui.check-mock-envelope.arm_b_suite_did_not", "arm B: {suite} did not complete — no envelope evidence from it", { suite: String(suite) }));
       else if(SUITES_WITH_OP_TRAFFIC.includes(suite))
-        FAIL(`${suite} is a pinned op-driving suite and the probe observed NO op answer from it `
-           + `(${data.calls} fetch call${data.calls===1?"":"s"} seen) — either the suite stopped driving `
-           + `the plane or the probe stopped reaching the mock. A guard that passes on nothing observed `
-           + `is not a guard; establish which before removing it from the pin.`);
+        FAIL(localize("legacy-ui.check-mock-envelope.suite_is_a_pinned_op", "{suite} is a pinned op-driving suite and the probe observed NO op answer from it ({calls} fetch call{v1} seen) — either the suite stopped driving the plane or the probe stopped reaching the mock. A guard that passes on nothing observed is not a guard; establish which before removing it from the pin.", { suite: String(suite), calls: String(data.calls), v1: String(data.calls===1?"":"s") }));
       continue;
     }
     for(const r of rows){
@@ -356,16 +351,13 @@ function armB(){
            + `index.mjs's passthrough as {ok:true, result:{…}, store, tokenClass}. A mock that answers the `
            + `one shape the plane never sends proves nothing about the read (D-173).`);
       if(want === "flat" && r.wrapped)
-        FAIL(`${suite} answers op=${r.op} WRAPPED (${r.wrapped} of ${r.flat + r.wrapped} answers) — `
-           + `but ${FLAT_OPS.get(r.op)}, so the real answer carries no 'result'. `
-           + `Same defect mirrored: the surface would open an envelope that is not there.`);
+        FAIL(localize("legacy-ui.check-mock-envelope.suite_answers_op_op_wrapped", "{suite} answers op={op} WRAPPED ({wrapped} of {v1} answers) — but {get}, so the real answer carries no 'result'. Same defect mirrored: the surface would open an envelope that is not there.", { suite: String(suite), op: String(r.op), wrapped: String(r.wrapped), v1: String(r.flat + r.wrapped), get: String(FLAT_OPS.get(r.op)) }));
     }
   }
   try{ fs.rmSync(tmp, { recursive:true, force:true }); }catch(_){}
   if(!observed) FAIL("arm B observed no op answers in any suite — the probe is not reaching the mocks");
-  notes.push(`arm B: ${suites.length} suites re-run under the probe, ${withTraffic.size} of them driving ops; `
-           + `${observed} op answers observed across ${opsSeen.size} distinct ops; ${checked} op/suite pairs judged`);
-  notes.push(`arm B coverage — ops exercised by the harness: ${[...opsSeen].sort().join(" ")}`);
+  notes.push(localize("legacy-ui.check-mock-envelope.arm_b_length_suites_re", "arm B: {length} suites re-run under the probe, {size} of them driving ops; {observed} op answers observed across {size_2} distinct ops; {checked} op/suite pairs judged", { length: String(suites.length), size: String(withTraffic.size), observed: String(observed), size_2: String(opsSeen.size), checked: String(checked) }));
+  notes.push(localize("legacy-ui.check-mock-envelope.arm_b_coverage_ops_exercised", "arm B coverage — ops exercised by the harness: {sort}", { sort: String([...opsSeen].sort().join(" ")) }));
 }
 
 /* ============================================================
@@ -458,13 +450,13 @@ function selectFields(body){
     const rest = body.slice(m.index + m[0].length - 1);
     const cleaned = rest.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/.*$/gm, "");
     const tick = cleaned.indexOf("`");
-    if(tick < 0){ unreadable.push(field + " (no template literal)"); continue; }
+    if(tick < 0){ unreadable.push(localize("legacy-ui.check-mock-envelope.field_no_template_literal", "{field} (no template literal)", { field: String(field) })); continue; }
     const end = cleaned.indexOf("`", tick + 1);
     if(end < 0){ unreadable.push(field + " (unterminated literal)"); continue; }
     const sql = cleaned.slice(tick + 1, end);
     const sel = /SELECT\s+([\s\S]*?)\s+FROM\s/i.exec(sql);
-    if(!sel){ unreadable.push(field + " (no SELECT … FROM)"); continue; }
-    if(/\*/.test(sel[1])){ unreadable.push(field + " (SELECT * — the columns are the table's, not this text's)"); continue; }
+    if(!sel){ unreadable.push(localize("legacy-ui.check-mock-envelope.field_no_select_from", "{field} (no SELECT … FROM)", { field: String(field) })); continue; }
+    if(/\*/.test(sel[1])){ unreadable.push(localize("legacy-ui.check-mock-envelope.field_select_the_columns_are", "{field} (SELECT * — the columns are the table's, not this text's)", { field: String(field) })); continue; }
     const cols = sel[1].split(",").map(c => {
       const t = c.trim().replace(/\s+/g, " ");
       const as = / AS ([A-Za-z0-9_]+)$/i.exec(t);
@@ -472,7 +464,7 @@ function selectFields(body){
       const bare = t.split(".").pop();
       return /^[A-Za-z0-9_]+$/.test(bare) ? bare : null;
     }).filter(Boolean);
-    if(!cols.length){ unreadable.push(field + " (no column names recoverable)"); continue; }
+    if(!cols.length){ unreadable.push(localize("legacy-ui.check-mock-envelope.field_no_column_names_recoverable", "{field} (no column names recoverable)", { field: String(field) })); continue; }
     out.set(field, cols);
   }
   return { fields: out, unreadable };
@@ -496,7 +488,7 @@ function armC(){
     const method = dispatch.get(op);
     if(!method){ noMethod.push(op); continue; }
     const body = methodBody(src, method);
-    if(!body){ noMethod.push(op + " (" + method + " not found as a method)"); continue; }
+    if(!body){ noMethod.push(localize("legacy-ui.check-mock-envelope.op_method_not_found_as", "{op} ({method} not found as a method)", { op: String(op), method: String(method) })); continue; }
     resolved++;
     const { fields, unreadable } = selectFields(body);
     for(const u of unreadable) unclassified.push(op + "." + u);
@@ -505,9 +497,7 @@ function armC(){
   }
 
   if(!wire.size){
-    FAIL("arm C classified ZERO ops — no op the harness drives resolves to a store method with a "
-       + "readable SELECT, so the census would report a clean corpus over nothing. Establish whether "
-       + "the dispatch table, the method shape or the harness's reach moved before trusting this.");
+    FAIL(localize("legacy-ui.check-mock-envelope.arm_c_classified_zero_ops", "arm C classified ZERO ops — no op the harness drives resolves to a store method with a readable SELECT, so the census would report a clean corpus over nothing. Establish whether the dispatch table, the method shape or the harness's reach moved before trusting this."));
     return;
   }
 
@@ -524,14 +514,14 @@ function armC(){
          whole wire array is a fixture that cannot assert about that array's
          existence either. Named, not judged: a suite may legitimately never
          answer a field its surface does not read. */
-      if(!got){ absentFields.push(`${o.suite} · ${o.op} answers NO ${field}[] at all (the plane always sends it, with ${cols.length} column(s))`); continue; }
+      if(!got){ absentFields.push(localize("legacy-ui.check-mock-envelope.suite_op_answers_no_field", "{suite} · {op} answers NO {field}[] at all (the plane always sends it, with {length} column(s))", { suite: String(o.suite), op: String(o.op), field: String(field), length: String(cols.length) })); continue; }
       judged++;
       rowsSeen += got.rows;
       /* AN EMPTY ARRAY IS NOT A NARROW FIXTURE AND IS NOT A WIDE ONE — it is
          zero evidence, and it is SAID rather than dropped, because a census whose
          judged count is inflated by empty answers is exactly the headline that
          passes over an empty corpus. */
-      if(!got.rows){ censusRows.push(`${o.suite} · ${o.op}.${field}[]: EMPTY (0 rows) — counted as judged, proves nothing either way`); continue; }
+      if(!got.rows){ censusRows.push(localize("legacy-ui.check-mock-envelope.suite_op_field_empty_0", "{suite} · {op}.{field}[]: EMPTY (0 rows) — counted as judged, proves nothing either way", { suite: String(o.suite), op: String(o.op), field: String(field) })); continue; }
       const have = new Set(got.keys);
       const missing = cols.filter(c => !have.has(c));
       const extra = got.keys.filter(k => !cols.includes(k));
@@ -542,55 +532,36 @@ function armC(){
          What the census is about is the INTERSECTION. */
       const carried = cols.length - missing.length;
       censusRows.push(`${o.suite} · ${o.op}.${field}[]: ${carried}/${cols.length} wire column(s) over ${got.rows} row(s)`);
-      if(missing.length){ narrow++; narrowRows.push(`${o.suite} · ${o.op}.${field}[] carries ${carried} of the ${cols.length} column(s) the plane selects, over ${got.rows} row(s) — MISSING ${missing.join(", ")}`); }
-      if(extra.length) wideRows.push(`${o.suite} · ${o.op}.${field}[] answers ${extra.length} key(s) the plane's SELECT does not: ${extra.join(", ")}`);
+      if(missing.length){ narrow++; narrowRows.push(localize("legacy-ui.check-mock-envelope.suite_op_field_carries_carried", "{suite} · {op}.{field}[] carries {carried} of the {length} column(s) the plane selects, over {rows} row(s) — MISSING {missing}", { suite: String(o.suite), op: String(o.op), field: String(field), carried: String(carried), length: String(cols.length), rows: String(got.rows), missing: String(missing.join(", ")) })); }
+      if(extra.length) wideRows.push(localize("legacy-ui.check-mock-envelope.suite_op_field_answers_length", "{suite} · {op}.{field}[] answers {length} key(s) the plane's SELECT does not: {extra}", { suite: String(o.suite), op: String(o.op), field: String(field), length: String(extra.length), extra: String(extra.join(", ")) }));
     }
   }
 
   if(!judged){
-    FAIL("arm C judged NO field at all — every op it could read columns for was answered by a suite "
-       + "without the array in question. The census is measuring nothing and reporting clean.");
+    FAIL(localize("legacy-ui.check-mock-envelope.arm_c_judged_no_field", "arm C judged NO field at all — every op it could read columns for was answered by a suite without the array in question. The census is measuring nothing and reporting clean."));
     return;
   }
 
-  notes.push(`arm C: THE FIXTURE-SHAPE CENSUS — ${OBSERVED.length} suite/op answer(s) observed across `
-           + `${opsObserved.length} op(s); ${resolved} resolved through the DO's OWN dispatch table to a store `
-           + `method (${noMethod.length} not resolved, named below), and ${wire.size} of those build at least one `
-           + `row array from a readable SELECT (${noRows} build their answer some other way and are outside this `
-           + `census by construction); ${judged} array field(s) judged over ${rowsSeen} fixture row(s); `
-           + `${narrow} NARROWER THAN THE WIRE · floors ${judged} judged / ${wire.size} classified`);
+  notes.push(localize("legacy-ui.check-mock-envelope.arm_c_the_fixture_shape", "arm C: THE FIXTURE-SHAPE CENSUS — {length} suite/op answer(s) observed across {length_2} op(s); {resolved} resolved through the DO's OWN dispatch table to a store method ({length_3} not resolved, named below), and {size} of those build at least one row array from a readable SELECT ({noRows} build their answer some other way and are outside this census by construction); {judged} array field(s) judged over {rowsSeen} fixture row(s); {narrow} NARROWER THAN THE WIRE · floors {judged_2} judged / {size_2} classified", { length: String(OBSERVED.length), length_2: String(opsObserved.length), resolved: String(resolved), length_3: String(noMethod.length), size: String(wire.size), noRows: String(noRows), judged: String(judged), rowsSeen: String(rowsSeen), narrow: String(narrow), judged_2: String(judged), size_2: String(wire.size) }));
   /* THE CORPUS, PRINTED. A census that does not say what it compared against
      cannot be told apart from one that compared against nothing. */
   for(const [op, fields] of wire)
     for(const [field, cols] of fields)
-      notes.push(`arm C: THE WIRE — ${op}.${field}[] is ${cols.length} column(s) read out of the plane's own `
-               + `SELECT: ${cols.join(", ")}`);
-  for(const r of censusRows) notes.push(`arm C: JUDGED — ${r}`);
+      notes.push(localize("legacy-ui.check-mock-envelope.arm_c_the_wire_op", "arm C: THE WIRE — {op}.{field}[] is {length} column(s) read out of the plane's own SELECT: {cols}", { op: String(op), field: String(field), length: String(cols.length), cols: String(cols.join(", ")) }));
+  for(const r of censusRows) notes.push(localize("legacy-ui.check-mock-envelope.arm_c_judged_r", "arm C: JUDGED — {r}", { r: String(r) }));
   for(const r of narrowRows)
-    notes.push(`arm C: NARROWER THAN THE WIRE (reported, NOT failed — a suite exercising a surface that never `
-             + `reads the dropped column is legitimately narrow, and only a reader can say which this is): ${r}`);
+    notes.push(localize("legacy-ui.check-mock-envelope.arm_c_narrower_than_the", "arm C: NARROWER THAN THE WIRE (reported, NOT failed — a suite exercising a surface that never reads the dropped column is legitimately narrow, and only a reader can say which this is): {r}", { r: String(r) }));
   if(!narrowRows.length)
-    notes.push(`arm C: no fixture in reach is narrower than the plane's own SELECT — and the figure that makes `
-             + `that mean something is the ${judged} field(s) judged above, not this sentence`);
+    notes.push(localize("legacy-ui.check-mock-envelope.arm_c_no_fixture_in", "arm C: no fixture in reach is narrower than the plane's own SELECT — and the figure that makes that mean something is the {judged} field(s) judged above, not this sentence", { judged: String(judged) }));
   for(const r of absentFields)
-    notes.push(`arm C: FIELD ABSENT FROM THE FIXTURE ENTIRELY (narrower than dropping a column, and named `
-             + `for the same reason — it is not judged, because a suite may never answer a field its surface `
-             + `does not read): ${r}`);
+    notes.push(localize("legacy-ui.check-mock-envelope.arm_c_field_absent_from", "arm C: FIELD ABSENT FROM THE FIXTURE ENTIRELY (narrower than dropping a column, and named for the same reason — it is not judged, because a suite may never answer a field its surface does not read): {r}", { r: String(r) }));
   for(const r of wideRows.slice(0, 12))
-    notes.push(`arm C: WIDER THAN THE WIRE (a key the plane's SELECT does not carry — often a field the method `
-             + `adds in JS after the query, which this arm cannot see, so it is NAMED and not failed): ${r}`);
+    notes.push(localize("legacy-ui.check-mock-envelope.arm_c_wider_than_the", "arm C: WIDER THAN THE WIRE (a key the plane's SELECT does not carry — often a field the method adds in JS after the query, which this arm cannot see, so it is NAMED and not failed): {r}", { r: String(r) }));
   if(unclassified.length)
-    notes.push(`arm C: UNCLASSIFIED — ${unclassified.length} field(s) the plane builds in a way no SELECT text `
-             + `can be read out of, NAMED rather than scored zero: ${unclassified.slice(0, 10).join(" · ")}`);
+    notes.push(localize("legacy-ui.check-mock-envelope.arm_c_unclassified_length_field", "arm C: UNCLASSIFIED — {length} field(s) the plane builds in a way no SELECT text can be read out of, NAMED rather than scored zero: {unclassified}", { length: String(unclassified.length), unclassified: String(unclassified.slice(0, 10).join(" · ")) }));
   if(noMethod.length)
-    notes.push(`arm C: NOT RESOLVED — ${noMethod.length} observed op(s) have no `
-             + `\`op: () => this.method()\` binding this reader can see (a parameterised entry, an op the `
-             + `control plane answers itself, or a mock's own invention): ${noMethod.slice(0, 12).join(" ")}`);
-  notes.push(`arm C: WHAT THIS CENSUS CANNOT SEE (stated every run, not only in the header): an op NO suite `
-           + `drives is outside it entirely — its reach is the harness's; a field the plane assembles in JS, `
-           + `parses out of a manifest or selects with \`*\` is unclassified, named above; an EMPTY array `
-           + `carries no column evidence and is counted as judged but proves nothing; and it says a fixture `
-           + `CANNOT REPRESENT a column, never that any surface reads it.`);
+    notes.push(localize("legacy-ui.check-mock-envelope.arm_c_not_resolved_length", "arm C: NOT RESOLVED — {length} observed op(s) have no `op: () => this.method()` binding this reader can see (a parameterised entry, an op the control plane answers itself, or a mock's own invention): {noMethod}", { length: String(noMethod.length), noMethod: String(noMethod.slice(0, 12).join(" ")) }));
+  notes.push(localize("legacy-ui.check-mock-envelope.arm_c_what_this_census", "arm C: WHAT THIS CENSUS CANNOT SEE (stated every run, not only in the header): an op NO suite drives is outside it entirely — its reach is the harness's; a field the plane assembles in JS, parses out of a manifest or selects with `*` is unclassified, named above; an EMPTY array carries no column evidence and is counted as judged but proves nothing; and it says a fixture CANNOT REPRESENT a column, never that any surface reads it."));
 }
 
 /* ============================================================ */

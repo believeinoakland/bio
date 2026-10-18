@@ -5,6 +5,7 @@
 import { parseDay, dayText, DAY_RE } from "./days.mjs";
 import { isZone, startOfDay, wallToInstants, instantText, parseInstant, localDayNumber } from "./zone.mjs";
 import { readEdtf } from "./edtf.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const refuse = (code, why) => ({ refused: code, why });
 export const undetermined = (why, candidates) => (candidates ? { undetermined: true, why, candidates } : { undetermined: true, why });
@@ -76,10 +77,10 @@ export function compareSpans(a, b) {
   if (a.hi !== null && b.lo !== null && a.hi <= b.lo) return "before";
   if (b.hi !== null && a.lo !== null && b.hi <= a.lo) return "after";
   const open = [a, b].filter((s) => s.lo === null || s.hi === null);
-  if (open.length) return undetermined(`${open.map((s) => `${s.dt.value} has an ${s.lo === null ? s.start : s.end} end`).join(", and ")}, so which comes first is not settled`);
+  if (open.length) return undetermined(word("civil-time.comes_first_settled", { open: String(open.map((s) => `${s.dt.value} has an ${s.lo === null ? s.start : s.end} end`).join(", and ")) }));
   if (a.dt.value === b.dt.value && a.dt.precision === b.dt.precision)
-    return undetermined(`both are ${a.dt.value} at ${a.dt.precision} precision, so the precision held does not say which came first`);
-  return undetermined(`${describe(a)} and ${describe(b)} overlap, so the precision held does not say which came first`);
+    return undetermined(word("civil-time.precision_precision_held", { value: String(a.dt.value), precision: String(a.dt.precision) }));
+  return undetermined(word("civil-time.overlap_precision_held", { first: String(describe(a)), second: String(describe(b)) }));
 }
 
 /** R5. */
@@ -132,8 +133,8 @@ export function joinLocal(date, time, zone) {
   const p = (n) => String(n).padStart(2, "0");
   const value = `${dm[1]}T${p(h)}:${tm[2]}`;
   const c = wallToInstants(parseDay(dm[1]) * 86400 + h * 3600 + +tm[2] * 60, zone);
-  if (!c.length) return undetermined(`${value} does not occur in ${zone}: the clocks move forward past it that day`);
-  if (c.length > 1) return undetermined(`${value} occurs twice in ${zone}: the clocks move back that day`, c.map(instantText));
+  if (!c.length) return undetermined(word("civil-time.occur_clocks_move", { value: String(value), zone: String(zone) }));
+  if (c.length > 1) return undetermined(word("civil-time.occurs_twice_clocks", { value: String(value), zone: String(zone) }), c.map(instantText));
   return { value, precision: "minute", zone };
 }
 
@@ -148,7 +149,7 @@ function boundSpan(b, precision, zone, side) {
   if (hasValue && hasEvent) return refuse("BOUND_BOTH", `the validity's ${side} gives both a value and an event`);
   if (hasValue) return boundSpan(b.value, b.precision || precision, b.zone || zone, side);
   if (hasEvent) {
-    if (b.at === undefined || b.at === null) return undetermined(`the bounding event is not resolved (${side}: ${b.event}${b.edge ? `, ${b.edge}` : ""})`);
+    if (b.at === undefined || b.at === null) return undetermined(word("civil-time.bounding_event_resolved", { side: String(side), event: String(b.event), edge: String(b.edge ? `, ${b.edge}` : "") }));
     return spanOf(b.at);
   }
   return { none: true };
@@ -162,7 +163,7 @@ export function validAt(validity, date, { view } = {}) {
   const zone = v.zone || (view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null);
   const precision = v.precision || "day";
   const needZone = [v.from, v.to].some((b) => typeof b === "string" || (b && typeof b === "object" && b.value != null && !b.zone));
-  if (needZone && !zone) return undetermined("the validity states no zone and the view gives no time_zone");
+  if (needZone && !zone) return undetermined(word("civil-time.validity_states_zone"));
   if (needZone) { const z = zoneRefusal(zone); if (z) return z; }
   const d = spanOf(date);
   if (isNo(d)) return d;
@@ -173,10 +174,10 @@ export function validAt(validity, date, { view } = {}) {
   if (!to.none && !to.undetermined && to.hi !== null && d.lo !== null && d.lo >= to.hi) return "out";
   const whys = [];
   const within = (b, side) => {
-    if (b.none) { whys.push(side === "from" ? "no start is stated" : "no end is stated"); return false; }
+    if (b.none) { whys.push(side === "from" ? word("civil-time.start_stated") : word("civil-time.end_stated")); return false; }
     if (b.undetermined) { whys.push(b.why); return false; }
     const ok = side === "from" ? b.lo !== null && d.lo !== null && d.lo >= b.lo : b.hi !== null && d.hi !== null && d.hi <= b.hi;
-    if (!ok) whys.push(`${d.dt.value} overlaps the ${side === "from" ? "start" : "end"} ${b.dt.value} at the precision held`);
+    if (!ok) whys.push(word("civil-time.overlaps_precision_held", { value: String(d.dt.value), side: String(side === "from" ? "start" : "end"), value_2: String(b.dt.value) }));
     return ok;
   };
   const a = within(from, "from"), b = within(to, "to");

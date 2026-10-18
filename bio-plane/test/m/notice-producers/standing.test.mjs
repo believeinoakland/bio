@@ -36,7 +36,7 @@ test("R4: one FINDING standing-answer per run that found something new, keyed by
     assert.deepEqual(it.recipients, ["bob"]);
     assert.equal(it.subject.kind, "standing_question");
     assert.equal(it.subject.id, q.id);
-    assert.equal(it.label, "machine work, from your standing question", "labelled as the assistant's machine work");
+    assert.equal(it.label, word("answers.machine_work_standing"), "labelled as the assistant's machine work");
     assert.equal(it.by, "the assistant's");
     assert.equal(it.basis.finds.ids.length, 1);
     assert.match(it.detail, /1 new find/);
@@ -62,15 +62,15 @@ test("R4: the detail names the new finds and the answer as answers holds it, or 
   for (const s of sentences(it)) assert.doesNotMatch(s, /\{|condition|switch_off/, s);
   /* an answer held is stated with it */
   const { NoticeProducers } = await import("../../../src/notice-producers/index.mjs");
-  assert.equal(NoticeProducers.heldBackWords({ condition: "no_account" }), "you have no account of your own set for the assistant");
-  assert.equal(NoticeProducers.heldBackWords({ condition: "switch_off", switch: "member" }), "your own switch for standing questions is off");
+  assert.equal(NoticeProducers.heldBackWords({ condition: "no_account" }), word("notice-producers.account_set_assistant"));
+  assert.equal(NoticeProducers.heldBackWords({ condition: "switch_off", switch: "member" }), word("notice-producers.switch_standing_questions"));
   /* the paying account's limit (ai-use R3, R13: AI_LIMIT_REACHED, its words carried as answers holds them) */
   const limitWords = "The assistant stopped here: your own daily limit for standing questions is reached. It works again tomorrow. Everything else works as usual.";
   assert.equal(NoticeProducers.heldBackWords({ condition: "limit", code: "AI_LIMIT_REACHED", translation: limitWords }), limitWords.replace(/\.$/, ""));
-  assert.equal(NoticeProducers.heldBackWords({ condition: "limit", code: null, translation: null }), "the limits of the account that would pay could not be checked");
+  assert.equal(NoticeProducers.heldBackWords({ condition: "limit", code: null, translation: null }), word("notice-producers.limits_account_pay"));
   const n = (await import("./fixture.mjs")).fresh(w.host, { membership: w.membership, answers: { standingAnswersFor: () => ({ ok: true, cursor: null,
     entries: [{ question: { id: "STQ-1", question: "q?" }, run: 7, at: "2026-10-07T15:00:00Z", finds: { ids: ["a", "b"] },
-                answer: { sentences: [{ text: "A new budget document is held." }, null] }, held_back: null, withheld: [], label: "machine work, from your standing question" }] }) } });
+                answer: { sentences: [{ text: "A new budget document is held." }, null] }, held_back: null, withheld: [], label: word("answers.machine_work_standing") }] }) } });
   const a = ofKind(reader(n).read("bob", { now: w.clock.now }), KIND)[0];
   assert.match(a.detail, /2 new finds; the assistant's answer: A new budget document is held\./);
 });

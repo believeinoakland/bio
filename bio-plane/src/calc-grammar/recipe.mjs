@@ -11,6 +11,7 @@ import { MODES, MAX_PLACES, add, subtract, divide, round, relate, figureFault, s
   refusal, undetermined, isRefusal, isUndetermined } from "./decimal.mjs";
 import { Refused, stop, objectTable, heldTable, streamFault, streamTable, filterView, orderView, extendView, joinView,
   answerOf } from "./tables.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export const METHOD = "bio-calc/1";
 export const OPS = Object.freeze(["select", "count", "sum", "difference", "ratio", "share", "group", "span", "compare",
@@ -101,7 +102,7 @@ function checkShape(kind, v, bad, field) {
 export function checkRecipe(recipe) {
   const errors = [];
   const err = (code, step, field, why) => errors.push({ code, step, field, why });
-  if (!plain(recipe)) return { ok: false, errors: [{ code: "RECIPE_INVALID", step: null, field: null, why: "a recipe is an object" }] };
+  if (!plain(recipe)) return { ok: false, errors: [{ code: "RECIPE_INVALID", step: null, field: null, why: word("calc-grammar.why.recipe_object") }] };
   for (const k of Object.keys(recipe))
     if (!["method", "inputs", "steps", "output"].includes(k)) err("RECIPE_INVALID", null, k, "not a field of a recipe");
   if (recipe.method !== METHOD) err("METHOD_UNKNOWN", null, "method", `the method must be ${METHOD}`);
@@ -181,32 +182,32 @@ const empty = (v) => v === undefined || v === null || (typeof v === "string" && 
 function readCell(field, raw) {
   if (empty(raw)) return undetermined(`"${field.name}" is empty`);
   switch (field.type) {
-    case "string": return typeof raw === "string" ? { v: raw } : undetermined(`"${field.name}" is not a string`);
+    case "string": return typeof raw === "string" ? { v: raw } : undetermined(word("calc-grammar.string", { name: String(field.name) }));
     case "boolean":
       if (raw === true || raw === "true") return { v: true };
       if (raw === false || raw === "false") return { v: false };
-      return undetermined(`"${field.name}" is not true or false`);
+      return undetermined(word("calc-grammar.true_false", { name: String(field.name) }));
     case "number": case "integer": {
       let f;
       if (plain(raw)) f = raw;
       else if (typeof raw === "string") f = parseFigure(raw);
       else if (Number.isSafeInteger(raw)) f = parseFigure(String(raw));
-      else return undetermined(`"${field.name}" is not a figure (a floating-point number is never read as one)`);
-      if (isRefusal(f) || figureFault(f)) return undetermined(`"${field.name}" does not read as a figure: ${f.why || figureFault(f)}`);
+      else return undetermined(word("calc-grammar.figure_floating_point", { name: String(field.name) }));
+      if (isRefusal(f) || figureFault(f)) return undetermined(word("calc-grammar.read_figure", { name: String(field.name), why: String(f.why || figureFault(f)) }));
       if (field.type === "integer" && (f.precision === "range" || /\.\d*[1-9]/.test(f.value)))
-        return undetermined(`"${field.name}" is not a whole number`);
+        return undetermined(word("calc-grammar.whole_number", { name: String(field.name) }));
       const g = { ...f };
       delete g.as_read;
       for (const k of ["unit", "currency"]) {
         if (field[k] === undefined) continue;
         if (g[k] === undefined) g[k] = field[k];
-        else if (g[k] !== field[k]) return { ...undetermined(`"${field.name}" names ${k} ${g[k]}, and the field ${field[k]}`), mismatch: true };
+        else if (g[k] !== field[k]) return { ...undetermined(word("calc-grammar.names_field", { name: String(field.name), key: String(k), grade: String(g[k]), field: String(field[k]) })), mismatch: true };
       }
       return { v: g };
     }
     default: { // date, datetime
       if (plain(raw) && typeof raw.value === "string" && typeof raw.precision === "string") return { v: raw };
-      if (typeof raw !== "string") return undetermined(`"${field.name}" is not a date`);
+      if (typeof raw !== "string") return undetermined(word("calc-grammar.date", { name: String(field.name) }));
       return { v: dateTime(raw, field.zone) };
     }
   }
@@ -224,9 +225,9 @@ function dateTime(s, zone) {
 /* A condition's literal read as the field's type, so a comparison is between like values. */
 function readLiteral(field, lit) {
   if (field.type === "number" || field.type === "integer") return readCell({ ...field, type: "number" }, typeof lit === "number" ? String(lit) : lit);
-  if (field.type === "date" || field.type === "datetime") return typeof lit === "string" ? { v: dateTime(lit, field.zone) } : undetermined("a date condition takes a date");
+  if (field.type === "date" || field.type === "datetime") return typeof lit === "string" ? { v: dateTime(lit, field.zone) } : undetermined(word("calc-grammar.date_condition_takes"));
   if (field.type === "boolean") return readCell(field, lit);
-  return typeof lit === "string" ? { v: lit } : undetermined("a string field compares with a string");
+  return typeof lit === "string" ? { v: lit } : undetermined(word("calc-grammar.string_field_compares"));
 }
 
 const sameDateTime = (a, b) => a.value === b.value && a.precision === b.precision && a.zone === b.zone;
@@ -241,10 +242,10 @@ function order(type, a, b) {
   if (type === "date" || type === "datetime") {
     if (sameDateTime(a, b)) return 0;
     let r;
-    try { r = compareTimes(a, b); } catch (e) { return undetermined(`civil-time could not compare: ${e.message}`); }
+    try { r = compareTimes(a, b); } catch (e) { return undetermined(word("calc-grammar.civil_time_compare", { message: String(e.message) })); }
     if (r === "before") return -1;
     if (r === "after") return 1;
-    return undetermined(r && r.why ? r.why : "civil-time answered undetermined");
+    return undetermined(r && r.why ? r.why : word("calc-grammar.civil_time_answered"));
   }
   return a === b ? 0 : NaN; // a string or a boolean is equal or not, never ordered (R7 refuses an order test on one)
 }
@@ -282,7 +283,7 @@ function test(type, cond, cell, literal) {
 
 function fieldOf(table, name, step, role) {
   const f = table.fields.find((x) => x.name === name);
-  if (!f) stop("RECIPE_INVALID", `${role} "${name}" is not a field of the table`, step);
+  if (!f) stop("RECIPE_INVALID", word("calc-grammar.field_table", { role: String(role), name: String(name) }), step);
   return f;
 }
 
@@ -294,7 +295,7 @@ const valueOf = (x) => (x && x.kind === "ratio" ? x.value.value : x.value);
    is refused stops the step, naming the values found. */
 function totals(t, fieldName, step, gid, groups) {
   const f = fieldOf(t, fieldName, step, "sum's field");
-  if (f.type !== "number" && f.type !== "integer") stop("RECIPE_INVALID", `"${fieldName}" is not a numeric field`, step);
+  if (f.type !== "number" && f.type !== "integer") stop("RECIPE_INVALID", word("calc-grammar.numeric_field", { field_name: String(fieldName) }), step);
   const groupOf = gid ? (i) => gid[i] : () => 0;
   const rules = SUM_RULE.filter(([name]) => t.fields.some((x) => x.name === name))
     .map(([name, code]) => ({ name, code, read: t.reader(name), seen: [], blank: [] }));
@@ -317,9 +318,9 @@ function totals(t, fieldName, step, gid, groups) {
   for (let g = 0; g < groups; g++) {
     for (const r of rules) {
       const seen = r.seen[g] || []; const blank = r.blank[g] || [];
-      if (seen.length > 1) { out[g] = { stop: [r.code, `the rows differ in ${r.name}: ${seen.join(", ")}`] }; break; }
+      if (seen.length > 1) { out[g] = { stop: [r.code, word("calc-grammar.rows_differ", { name: String(r.name), seen: String(seen.join(", ")) })] }; break; }
       if (blank.length) {
-        out[g] = { u: undetermined(`${r.name} is not stated on row${blank.length > 1 ? "s" : ""} ${blank.join(", ")}`),
+        out[g] = { u: undetermined(word("calc-grammar.stated_row", { name: String(r.name), plural: String(blank.length > 1 ? "s" : ""), blank: String(blank.join(", ")) })),
           rows: blank.map((row) => ({ row, why: `${r.name} is empty` })) };
         break;
       }
@@ -349,7 +350,7 @@ function totals(t, fieldName, step, gid, groups) {
     if (out[g]) { if (out[g].stop) stop(...out[g].stop, step); continue; }
     if (refused[g]) stop(...refused[g], step);
     const s = set[g] || [];
-    out[g] = s.length ? { u: undetermined(`${s.length} amount${s.length > 1 ? "s are" : " is"} undetermined, so the total is undetermined (never read as zero)`), rows: s }
+    out[g] = s.length ? { u: undetermined(word("calc-grammar.amount_undetermined_total", { text: String(s.length), text_2: String(s.length > 1 ? "s are" : " is") })), rows: s }
       : { v: acc[g] || zero, rows: [] };
   }
   return out;
@@ -378,12 +379,12 @@ const RUN = {
   select(st, env) {
     const t = env.table(st.from);
     const conds = st.where.map((c) => {
-      const field = fieldOf(t, c.field, st.as, "the condition's field");
+      const field = fieldOf(t, c.field, st.as, word("calc-grammar.condition_field"));
       if (["lt", "le", "gt", "ge", "between"].includes(c.test) && !QUANTITY_TYPES.includes(field.type))
-        stop("RECIPE_INVALID", `"${c.field}" is a ${field.type}, which has no order`, st.as);
+        stop("RECIPE_INVALID", word("calc-grammar.order", { field: String(c.field), type: String(field.type) }), st.as);
       const lits = (c.test === "in" || c.test === "between" ? c.value : [c.value]).map((l) => readLiteral(field, l));
       const badLit = lits.find((l) => isUndetermined(l) || isRefusal(l));
-      if (badLit) stop(badLit.mismatch ? "UNIT_MISMATCH" : "RECIPE_INVALID", `a condition on "${c.field}": ${badLit.why}`, st.as);
+      if (badLit) stop(badLit.mismatch ? "UNIT_MISMATCH" : "RECIPE_INVALID", word("calc-grammar.condition", { field: String(c.field), why: String(badLit.why) }), st.as);
       const vs = lits.map((l) => l.v);
       return { c, field, read: t.reader(c.field), literal: c.test === "in" || c.test === "between" ? vs : vs[0] };
     });
@@ -435,14 +436,14 @@ const RUN = {
       num = a.u || a.v; den = b.u || b.v;
     }
     if (isUndetermined(num) || isUndetermined(den))
-      return { kind: "ratio", value: { numerator: num, denominator: den, value: undetermined("a total is undetermined") }, inputRows: whole.size, set };
+      return { kind: "ratio", value: { numerator: num, denominator: den, value: undetermined(word("calc-grammar.total_undetermined")) }, inputRows: whole.size, set };
     const r = makeRatio(num, den, st.places ?? RATIO_DEFAULT.places, st.mode ?? RATIO_DEFAULT.mode);
     if (isRefusal(r)) stop(r.refused, r.why, st.as);
     return { kind: "ratio", value: r, inputRows: whole.size, set };
   },
   group(st, env) {
     const t = env.table(st.from);
-    const by = st.by.map((n) => fieldOf(t, n, st.as, "the grouping field"));
+    const by = st.by.map((n) => fieldOf(t, n, st.as, word("calc-grammar.grouping_field")));
     const reads = by.map((f) => t.reader(f.name));
     const keys = new Map(); const firsts = []; const counts = []; const set = [];
     const gid = st.measure.op === "sum" ? [] : null;
@@ -464,14 +465,14 @@ const RUN = {
     let mfield;
     if (!gid) mfield = { name: "count", type: "integer" };
     else {
-      const sf = fieldOf(t, st.measure.field, st.as, "the measure's field");
+      const sf = fieldOf(t, st.measure.field, st.as, word("calc-grammar.measure_field"));
       mfield = { name: "sum", type: "number", ...(sf.unit && { unit: sf.unit }), ...(sf.currency && { currency: sf.currency }) };
     }
     const sums = gid && firsts.length ? totals(t, st.measure.field, st.as, gid, firsts.length) : null;
     const rows = firsts.map((cells, g) => {
       let m;
       if (!gid) m = String(counts[g]);
-      else if (sums[g].u) { m = null; set.push(...sums[g].rows.map((x) => ({ ...x, why: `${x.why}; its group's sum is undetermined` }))); }
+      else if (sums[g].u) { m = null; set.push(...sums[g].rows.map((x) => ({ ...x, why: localize("calc-grammar.recipe.why_its_groups_sum_is", "{why}; its group's sum is undetermined", { why: String(x.why) }) }))); }
       else m = sums[g].v;
       if (t.streamed) return [...cells, m];
       const out = {};
@@ -485,9 +486,9 @@ const RUN = {
   span(st, env, opts) {
     const t = env.table(st.from);
     const fs = fieldOf(t, st.start, st.as, "span's start"); const fe = fieldOf(t, st.end, st.as, "span's end");
-    for (const f of [fs, fe]) if (f.type !== "date" && f.type !== "datetime") stop("RECIPE_INVALID", `"${f.name}" is not a date field`, st.as);
+    for (const f of [fs, fe]) if (f.type !== "date" && f.type !== "datetime") stop("RECIPE_INVALID", word("calc-grammar.date_field", { name: String(f.name) }), st.as);
     const into = st.into ?? st.as;
-    if (t.fields.some((f) => f.name === into)) stop("RECIPE_INVALID", `"${into}" is already a field of the table`, st.as);
+    if (t.fields.some((f) => f.name === into)) stop("RECIPE_INVALID", word("calc-grammar.already_field_table", { into: String(into) }), st.as);
     const ra = t.reader(fs.name); const rb = t.reader(fe.name);
     /* A row's span: `{cell}` or `{why}`; pure, so a view over a streamed table computes it again on each pass. */
     const spanOf = (row) => {
@@ -495,8 +496,8 @@ const RUN = {
       const open = [a, b].find(isUndetermined);
       if (open) return { why: open.why };
       let r;
-      try { r = spanTimes(a.v, b.v, { unit: st.unit, ...(opts.view && { view: opts.view }), ...(opts.office && { office: opts.office }) }); } catch (e) { r = undetermined(`civil-time could not count: ${e.message}`); }
-      if (!r || !Number.isSafeInteger(r.min) || !Number.isSafeInteger(r.max)) return { why: (r && r.why) || "civil-time gave no span" };
+      try { r = spanTimes(a.v, b.v, { unit: st.unit, ...(opts.view && { view: opts.view }), ...(opts.office && { office: opts.office }) }); } catch (e) { r = undetermined(word("calc-grammar.civil_time_count", { message: String(e.message) })); }
+      if (!r || !Number.isSafeInteger(r.min) || !Number.isSafeInteger(r.max)) return { why: (r && r.why) || word("calc-grammar.why.civil_time_gave") };
       return { cell: r.min === r.max ? { value: String(Math.abs(r.min)), sign: r.min < 0 ? "-" : "+", precision: "exact", unit: st.unit }
         : { low: String(r.min), high: String(r.max), sign: r.min < 0 ? "-" : "+", precision: "range", unit: st.unit } };
     };
@@ -526,7 +527,7 @@ const RUN = {
   },
   join(st, env, opts) {
     const L = env.table(st.left); const R = env.table(st.right);
-    const lf = fieldOf(L, st.on.left, st.as, "the join's left field"); const rf = fieldOf(R, st.on.right, st.as, "the join's right field");
+    const lf = fieldOf(L, st.on.left, st.as, word("calc-grammar.join_left_field")); const rf = fieldOf(R, st.on.right, st.as, word("calc-grammar.join_right_field"));
     const set = [];
     let keyOf;
     if (st.space !== undefined) {
@@ -535,12 +536,12 @@ const RUN = {
       }
       keyOf = (v) => {
         let k;
-        try { k = opts.resolveId(st.space, v); } catch (e) { return undetermined(`the resolver failed: ${e.message}`); }
-        return typeof k === "string" && k ? [k] : undetermined(`"${String(v).slice(0, 64)}" does not resolve in the space "${st.space}"`);
+        try { k = opts.resolveId(st.space, v); } catch (e) { return undetermined(word("calc-grammar.resolver_failed", { message: String(e.message) })); }
+        return typeof k === "string" && k ? [k] : undetermined(word("calc-grammar.resolve_space", { value: String(String(v).slice(0, 64)), space: String(st.space) }));
       };
     } else {
       const cw = env.table(st.crosswalk.input);
-      const cl = fieldOf(cw, st.crosswalk.left, st.as, "the crosswalk's left field"); const cr = fieldOf(cw, st.crosswalk.right, st.as, "the crosswalk's right field");
+      const cl = fieldOf(cw, st.crosswalk.left, st.as, word("calc-grammar.crosswalk_left_field")); const cr = fieldOf(cw, st.crosswalk.right, st.as, word("calc-grammar.crosswalk_right_field"));
       const readL = cw.reader(cl.name); const readR = cw.reader(cr.name);
       const pairs = new Map();
       for (const row of cw.scan()) {
@@ -552,7 +553,7 @@ const RUN = {
       }
       keyOf = (v, side) => {
         if (side === "right") return [`\u0000${String(v)}`];
-        return pairs.has(String(v)) ? pairs.get(String(v)) : undetermined(`"${String(v).slice(0, 64)}" is not in the crosswalk`);
+        return pairs.has(String(v)) ? pairs.get(String(v)) : undetermined(word("calc-grammar.crosswalk", { value: String(String(v).slice(0, 64)) }));
       };
     }
     // The right side's keys, as an index from key to its rows in order; a value is compared only through its key.
@@ -594,9 +595,9 @@ const RUN = {
   },
   sort(st, env) {
     const t = env.table(st.from);
-    const f = fieldOf(t, st.by, st.as, "the sort's field");
+    const f = fieldOf(t, st.by, st.as, word("calc-grammar.sort_field"));
     if (!QUANTITY_TYPES.includes(f.type) || f.composed === true)
-      stop("SORT_NOT_QUANTITY", `"${st.by}" is ${f.composed ? "composed from more than one quantity" : `a ${f.type}`}, not one stated quantity`, st.as);
+      stop("SORT_NOT_QUANTITY", word("calc-grammar.stated_quantity", { by: String(st.by), composed: String(f.composed ? "composed from more than one quantity" : `a ${f.type}`) }), st.as);
     const numeric = f.type === "number" || f.type === "integer";
     const read = t.reader(f.name);
     const set = []; const keyed = [];
@@ -604,14 +605,14 @@ const RUN = {
     for (const row of t.scan()) {
       const c = readCell(f, read(row));
       if (isUndetermined(c)) set.push({ row: i, why: c.why });
-      else if (numeric && c.v.precision === "range") set.push({ row: i, why: `"${f.name}" is a range, which has no one place in an order` });
+      else if (numeric && c.v.precision === "range") set.push({ row: i, why: word("calc-grammar.why.range_place_order", { name: String(f.name) }) });
       else keyed.push(numeric ? { i, d: statedValue(c.v), unit: c.v.unit, currency: c.v.currency } : { i, v: c.v });
       i += 1;
     }
     const sign = st.order === "desc" ? -1 : 1;
     const cmp = (a, b) => {
       if (numeric) {
-        if (a.unit !== b.unit || a.currency !== b.currency) stop("UNIT_MISMATCH", `"${f.name}" mixes units or currencies`, st.as);
+        if (a.unit !== b.unit || a.currency !== b.currency) stop("UNIT_MISMATCH", word("calc-grammar.mixes_units_currencies", { name: String(f.name) }), st.as);
         return sign * cmpD(a.d, b.d);
       }
       const o = order(f.type, a.v, b.v);
@@ -654,7 +655,7 @@ export function evaluate(recipe, bound, opts = {}) {
     if (!Object.prototype.hasOwnProperty.call(bound, inp.name)) return refusal("INPUT_UNBOUND", `the input "${inp.name}" is not bound`);
     const v = bound[inp.name];
     const why = inp.kind === "table" ? tableFault(v) : figureFault(v);
-    if (why) return { refused: "INPUT_INVALID", why: `the input "${inp.name}": ${why}` };
+    if (why) return { refused: "INPUT_INVALID", why: localize("calc-grammar.recipe.the_input_name_why", "the input \"{name}\": {why}", { name: String(inp.name), why: String(why) }) };
     if (inp.kind !== "table") { env.set(inp.name, { kind: inp.kind, value: v }); continue; }
     if (Array.isArray(v.rows)) { env.set(inp.name, { kind: "table", value: objectTable(v.fields, v.rows) }); continue; }
     const s = streamFault(v, inp.name);
@@ -672,7 +673,7 @@ export function evaluate(recipe, bound, opts = {}) {
       let r;
       try { r = RUN[st.op](st, access, opts); } catch (e) {
         if (e instanceof Refused) { if (e.r.step === null) e.r.step = st.as; throw e; }
-        if (e && isUndetermined(e.value)) r = { kind: PRODUCES[st.op], value: undetermined(`an input is undetermined: ${e.value.why}`), set: [] };
+        if (e && isUndetermined(e.value)) r = { kind: PRODUCES[st.op], value: undetermined(word("calc-grammar.input_undetermined", { why: String(e.value.why) })), set: [] };
         else throw e;
       }
       env.set(st.as, r);

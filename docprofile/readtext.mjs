@@ -69,6 +69,7 @@
  */
 import { identify } from "../site-profiles/index.mjs";
 import { doctypeFor } from "./doctypes/registry.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* FW-17 / IC-86 — THE SEGMENT MAP: where in the CONTAINER each stretch of the
    flat string came from.
@@ -193,8 +194,7 @@ export function flattenText(supplied) {
      `page` integer) produced text and no map, and the reason is different from
      the reasons above: the producer HAD the structure and did not name it. */
   if (!segments.length && !position_why && source)
-    position_why = `this producer's ${source} carry no part index, so where in the document a reference `
-                 + "was read cannot be said";
+    position_why = localize("docprofile.readtext.this_producers_source_carry_no", "this producer's {source} carry no part index, so where in the document a reference was read cannot be said", { source: String(source) });
   /* The producer's own count when it stated one; otherwise summed from the
      markers (a Marker carries `count` per region; a marker without one is one
      region). Never invented: no markers and no count is zero. */
@@ -259,7 +259,7 @@ export function readText(supplied, ctx = {}) {
       determined: false, partial: false,
       chars: 0, undetermined: flat.undetermined, reasons: flat.reasons,
       why: flat.undetermined > 0
-        ? `the text of this document is undetermined (${flat.undetermined} undecodable region(s)${named}); a reading over text nobody decoded would be an invented one`
+        ? localize("docprofile.readtext.the_text_of_this_document", "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one", { undetermined: String(flat.undetermined), named: String(named) })
         : "no text was supplied, so no reading was attempted",
     };
   }
@@ -272,7 +272,7 @@ export function readText(supplied, ctx = {}) {
     return {
       determined: false, partial: true,
       chars: flat.chars, undetermined: flat.undetermined, reasons: flat.reasons,
-      why: `the tier that produced this text could not decode most of it (${flat.undetermined} undetermined against ${flat.chars} decoded${named}); a reading over the fragment would silently misrepresent the document`,
+      why: localize("docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", { undetermined: String(flat.undetermined), chars: String(flat.chars), named: String(named) }),
     };
   }
   const dctx = { ...ctx, text: flat.text };
@@ -311,7 +311,7 @@ export function readText(supplied, ctx = {}) {
       parse_error = String((e && e.message) || e);
     }
   } else {
-    parse_error = `the ${doctype.type.key} content type declares no reader`;
+    parse_error = localize("docprofile.readtext.the_key_content_type_declares", "the {key} content type declares no reader", { key: String(doctype.type.key) });
   }
   const partial = flat.undetermined > 0;
   return {
@@ -326,7 +326,7 @@ export function readText(supplied, ctx = {}) {
     position_parts: flat.segments.length, position_why: flat.position_why || null,
     stack, doctype, parsed, parse_error,
     why: partial
-      ? `read over a PARTIAL decode, stated: ${flat.undetermined} undetermined region(s)/code point(s)${named} beside ${flat.chars} decoded characters`
-      : `read over a full decode (${flat.chars} characters)`,
+      ? localize("docprofile.readtext.read_over_a_partial_decode", "read over a PARTIAL decode, stated: {undetermined} undetermined region(s)/code point(s){named} beside {chars} decoded characters", { undetermined: String(flat.undetermined), named: String(named), chars: String(flat.chars) })
+      : localize("docprofile.readtext.read_over_a_full_decode", "read over a full decode ({chars} characters)", { chars: String(flat.chars) }),
   };
 }

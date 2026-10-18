@@ -11,6 +11,7 @@ import {
   readMementoAnswer, mementoRow, mementoHop,
 } from "../../../src/capture-sources/memento.mjs";
 import { EMPTY_BODY_DIGEST, selectCapture } from "../../../src/cdx.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const fx = (name) => readFileSync(new URL(`./fixtures/memento/${name}`, import.meta.url), "utf8");
 const fxj = (name) => JSON.parse(fx(name));
@@ -170,7 +171,7 @@ test("R37: the memento's hop is R34's shape for any archive, every fact from wha
   const chosen = selectCapture([mementoRow(answer, { sha256: SHA, bytes: 6255 })]).chosen;
   const h = mementoHop(chosen, answer.memento_uri, { archive: WAYBACK_MEMENTO, answer });
   assert.deepEqual(Object.keys(h).sort(), ["asserts", "bound", "document_address", "evidence", "unsigned_reason", "via", "who"]);
-  assert.equal(h.who, "Internet Archive Wayback Machine");
+  assert.equal(h.who, word("capture-sources.name.internet_archive_wayback"));
   assert.equal(h.via, "archive.org");
   assert.equal(h.asserts, `these bytes were served for ${ORIG} at 2026-03-03T12:00:00Z, with HTTP status 200`);
   for (const part of ["Memento-Datetime: Tue, 03 Mar 2026 12:00:00 GMT", `memento ${WB}/20260303120000id_/${ORIG}`, `rel="original" ${ORIG}`,

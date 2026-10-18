@@ -9,6 +9,7 @@ import { makeZip } from "../../make-zip.mjs";
 import { OBSCURED_LABEL, PUBLISHED_LABEL, MARKS_LAPSED_MAX, PHOTO_ONLY_AS_COPY, ARCHIVE_HOLDS_IMAGE } from "../../../src/case-carriage/index.mjs";
 import { migrateCaseCarriage } from "../../../src/case-carriage/schema.mjs";
 import { materialsOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001", PHOTO = "INFO-2026-0020-photo", DOC = "INFO-2026-0001-minutes";
 const OLIVE = V("olive");
@@ -74,7 +75,7 @@ test("R1 a copy not held at the digest the row names is answered unheld (kind ob
                                      ["no digest", obscuredRow(PHOTO, p, ""), null]]) {
     const r = w.cc.holdMaterials(caseFm({ materials: [row] }), { caseId: CASE, edition: 1, at: NOW });
     assert.deepEqual([r.materials, r.files], [[], []], label);
-    assert.deepEqual(r.unheld, [{ ref: PHOTO, kind: "obscured", sha256: named, why: "the obscured copy is not held" }], label);
+    assert.deepEqual(r.unheld, [{ ref: PHOTO, kind: "obscured", sha256: named, why: word("case-carriage.why.obscured_copy_held") }], label);
   }
   /* negative controls: the copy as written, and its digest read case-insensitively from the front matter */
   assert.deepEqual(w.cc.holdMaterials(caseFm({ materials: [obscuredRow(PHOTO, p, copy)] }), { caseId: CASE, edition: 1, at: NOW }).unheld, []);
@@ -108,9 +109,9 @@ test("R1 (T38; N779) a row listed included: true whose capture is a photo is not
   const r = w.cc.holdMaterials(caseFm({ materials: [docRow(PHOTO, p), docRow("INFO-2026-0024-untyped", untyped)] }),
                                { caseId: CASE, edition: 1, at: NOW });
   assert.deepEqual([r.materials, r.files], [[], []]);
-  assert.deepEqual(r.unheld, [{ ref: PHOTO, kind: "document", sha256: p, why: "a photo travels only as its copy" },
+  assert.deepEqual(r.unheld, [{ ref: PHOTO, kind: "document", sha256: p, why: word("case-carriage.photo_only_as_copy") },
                               { ref: "INFO-2026-0024-untyped", kind: "document", sha256: untyped, why: PHOTO_ONLY_AS_COPY }]);
-  assert.equal(PHOTO_ONLY_AS_COPY, "a photo travels only as its copy");
+  assert.equal(PHOTO_ONLY_AS_COPY, word("case-carriage.photo_only_as_copy"));
   assert.deepEqual(w.snapshot(), before, "nothing written: no byte, text or list of the original");
   assert.equal(w.unitCalls.includes(p), false, "its extracted text not even asked");
   /* negative control: a document that is not a photo is held whole */
@@ -157,8 +158,8 @@ test("R8 (T38; N779, K2291 (2)) a photo, always carried as its copy, carries non
                                                         ["container", "INFO-2026-0011-notes"]]);
   assert.equal(r.files.some((f) => f.sha256 === archiveSha), false, "the archive is carried for no material");
   assert.deepEqual(r.unheld.filter((u) => u.kind === "archive"),
-                   [{ ref: "INFO-2026-0011-notes", kind: "archive", sha256: archiveSha, why: "the archive holds an image, and an image leaves only as its copy" }]);
-  assert.equal(ARCHIVE_HOLDS_IMAGE, "the archive holds an image, and an image leaves only as its copy");
+                   [{ ref: "INFO-2026-0011-notes", kind: "archive", sha256: archiveSha, why: word("case-carriage.archive_holds_image") }]);
+  assert.equal(ARCHIVE_HOLDS_IMAGE, word("case-carriage.archive_holds_image"));
   assert.equal(r.materials.some((m) => m.sha === archiveSha), false);
   /* the case carries no photo at all: the archive still holds one, so it still never leaves */
   const alone = w.cc.holdMaterials(caseFm({ materials: [docRow("INFO-2026-0011-notes", notes)] }), { caseId: CASE, edition: 2, at: NOW });
@@ -203,7 +204,7 @@ test("R13 marksLapsed answers a row whose copy is no longer the photo's current 
   assert.deepEqual(w.snapshot(), before, "writes nothing");
   /* a photo carried whole lapses always: unchecked, "nothing to obscure" or marked */
   const whole = () => w.cc.marksLapsed(caseFm({ materials: [docRow("INFO-2026-0021-plain", plain)] }));
-  const lapsed = [{ ref: "INFO-2026-0021-plain", sha: plain, kind: "photo", why: "a photo travels only as its copy" }];
+  const lapsed = [{ ref: "INFO-2026-0021-plain", sha: plain, kind: "photo", why: word("case-carriage.photo_only_as_copy") }];
   assert.deepEqual(whole(), lapsed, "unchecked");
   await w.cc.obscureMark({ captureSha: plain, areas: [], by: OLIVE });
   assert.deepEqual(whole(), lapsed, "nothing to obscure");
@@ -211,14 +212,14 @@ test("R13 marksLapsed answers a row whose copy is no longer the photo's current 
   assert.deepEqual(whole(), lapsed, "marked");
   /* a mark since: the obscured row lapses */
   await w.cc.obscureMark({ captureSha: p, areas: [area([10, 10, 14, 14], "plate")], by: OLIVE });
-  assert.deepEqual(w.cc.marksLapsed(fm()), [{ ref: PHOTO, sha: p, kind: "photo", why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" }]);
+  assert.deepEqual(w.cc.marksLapsed(fm()), [{ ref: PHOTO, sha: p, kind: "photo", why: word("case-carriage.why.mark_photo_added") }]);
   /* prepared again on the current copy, it stands */
   const current = w.cc.photoMarks({ captureSha: p, viewer: OLIVE }).copy.sha256;
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, current)] })), []);
   /* a withdrawal since (DEC-183 (2)): the copy is re-derived, so the row lapses; withdrawing every mark leaves no copy */
   await w.cc.obscureMarkWithdraw({ captureSha: p, mark: 4, reason: "the plate is the group's own", by: OLIVE });
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, current)] })).map((x) => x.why),
-                   ["a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names"]);
+                   [word("case-carriage.why.mark_photo_added")]);
   const again = w.cc.photoMarks({ captureSha: p, viewer: OLIVE }).copy.sha256;
   assert.equal(again, copy, "the marks standing are those of the first copy, so its pixels again");
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, again)] })), []);
@@ -237,8 +238,8 @@ test("R13 marks that cannot be read answer each row lapsed (fail closed); at mos
   const plain = w.photo("INFO-2026-0021-plain", makePng(8, 8));
   w.st.sql.exec(`DROP TABLE photo_marks`);
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, copy), docRow("INFO-2026-0021-plain", plain)] })), [
-    { ref: PHOTO, sha: p, kind: "photo", why: "the photo's marks could not be read, so its copy cannot be confirmed" },
-    { ref: "INFO-2026-0021-plain", sha: plain, kind: "photo", why: "a photo travels only as its copy" }]);
+    { ref: PHOTO, sha: p, kind: "photo", why: word("case-carriage.marks_unread") },
+    { ref: "INFO-2026-0021-plain", sha: plain, kind: "photo", why: word("case-carriage.photo_only_as_copy") }]);
   assert.equal(MARKS_LAPSED_MAX, 200);
   const many = Array.from({ length: 205 }, (_, i) => obscuredRow(`INFO-2026-${String(1000 + i)}-x`, sha(`p${i}`), copy));
   assert.equal(w.cc.marksLapsed(caseFm({ materials: many })).length, 200);

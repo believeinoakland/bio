@@ -13,6 +13,7 @@ import { REPUTATIONS } from './reputation.mjs';
 import { SINKS } from './sinks.mjs';
 import { eicar, macroDocument, zeroCounts } from './probes.mjs';
 import { createHash } from 'node:crypto';
+import { localize } from '../../../bio-plane/src/setup-words/index.mjs';
 
 const ADAPTERS = { scan: SCANNERS, sandbox: SANDBOXES, cdr: CDRS, url_reputation: REPUTATIONS, log_sink: SINKS };
 const STATUS = { NAMESPACE_UNKNOWN: 400, R2_NOT_CONFIGURED: 503, BAD_TARGET: 400, NOT_FOUND: 404, DIGEST_MISMATCH: 409,
@@ -307,7 +308,7 @@ export async function providerTest(deps, body) {
             : answer(false, 'the EICAR test file did not answer found');
         }
         const wait = Math.min(s.poll_after_ms || 5_000, 5_000);
-        if (ctx.net.left() <= wait) return answer(false, `the sandbox was still running after ${PROVIDER_TIMEOUT_MS} ms`);
+        if (ctx.net.left() <= wait) return answer(false, localize('file-scanner.routes.the_sandbox_was_still_running', 'the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms', { PROVIDER_TIMEOUT_MS: String(PROVIDER_TIMEOUT_MS) }));
         await sleep(wait);
       }
     }

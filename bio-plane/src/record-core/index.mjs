@@ -26,6 +26,7 @@
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { RECORD_SCHEMA };
 export { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -142,7 +143,7 @@ export function mintExhausted(prefix, extra) {
   /* DEC-49 REGION is-mint-exhausted */
   return { ...own, ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: row.check,
            translation: row.translation, prefix: asked,
-           detail: `your team's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.` };
+           detail: localize("record-core.index.your_teams_civicsmith_could_not", "your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.", { what: String(what) }) };
   /* END DEC-49 REGION is-mint-exhausted */
 }
 
@@ -191,13 +192,11 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
   /* DEC-49 REGION is-per-item-set-shape */
   if (!Array.isArray(items) || items.length === 0)
     return refusal("SET_NO_ITEMS",
-      `op=${act} was sent as a set and the set holds no items. Send \`items\` as a non-empty array, or `
-      + `send one item's fields without \`items\` for the single act. Nothing was done.`,
+      localize("record-core.index.op_act_was_sent_as", "op={act} was sent as a set and the set holds no items. Send `items` as a non-empty array, or send one item's fields without `items` for the single act. Nothing was done.", { act: String(act) }),
       { op: act, weight: "per-item", count: 0 });
   if (items.length > PER_ITEM_MAX)
     return refusal("SET_TOO_LARGE",
-      `op=${act} acts on at most ${PER_ITEM_MAX} items at once and this set holds ${items.length}. `
-      + `Refused WHOLE, before any item was tried, so no item moved.`,
+      localize("record-core.index.op_act_acts_on_at", "op={act} acts on at most {PER_ITEM_MAX} items at once and this set holds {length}. Refused WHOLE, before any item was tried, so no item moved.", { act: String(act), PER_ITEM_MAX: String(PER_ITEM_MAX), length: String(items.length) }),
       { op: act, weight: "per-item", count: items.length, max: PER_ITEM_MAX });
   /* END DEC-49 REGION is-per-item-set-shape */
   const echo = (it) => {
@@ -229,8 +228,7 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
     const it = items[i];
     /* DEC-49 REGION is-per-item-malformed */
     if (!it || typeof it !== "object" || Array.isArray(it)) {
-      outcomes.push({ ...refusal("SET_ITEM_MALFORMED", `item ${i} is not an object naming one ${act} subject; it was `
-        + `left as it was and the other items were still tried.`), index: i, outcome: "retained", asked: null });
+      outcomes.push({ ...refusal("SET_ITEM_MALFORMED", localize("record-core.index.item_i_is_not_an", "item {i} is not an object naming one {act} subject; it was left as it was and the other items were still tried.", { i: String(i), act: String(act) })), index: i, outcome: "retained", asked: null });
       continue;
     }
     /* END DEC-49 REGION is-per-item-malformed */
@@ -241,8 +239,7 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
       r = one(b);
     } catch (e) {
       /* DEC-49 REGION is-per-item-failed */
-      r = refusal("SET_ITEM_FAILED", `op=${act} threw on item ${i} rather than refusing it: `
-        + String((e && e.message) || e).slice(0, 200) + `. Nothing about the item is claimed.`);
+      r = refusal("SET_ITEM_FAILED", localize("record-core.index.op_act_threw_on_item", "op={act} threw on item {i} rather than refusing it: {String}. Nothing about the item is claimed.", { act: String(act), i: String(i), String: String(String((e && e.message) || e).slice(0, 200)) }));
       /* END DEC-49 REGION is-per-item-failed */
     }
     const res = r && typeof r === "object" ? r : { ok: false };
@@ -257,8 +254,7 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
   return { ok: false, reason: "SET_ITEMS_RETAINED", code: "SET_ITEMS_RETAINED",
            check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
            translation: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.translation,
-           detail: `${applied} of ${count} item(s) applied and ${retained} RETAINED; each retained item in `
-             + `items[] carries its own act's reason. The applied items stand — this is not a rollback.`,
+           detail: localize("record-core.index.applied_of_count_item_s", "{applied} of {count} item(s) applied and {retained} RETAINED; each retained item in items[] carries its own act's reason. The applied items stand — this is not a rollback.", { applied: String(applied), count: String(count), retained: String(retained) }),
            ...head };
   /* END DEC-49 REGION is-per-item-retained */
 }
@@ -525,8 +521,7 @@ export class RecordCore {
       const row = RECORD_CORE_CHECKS.ALLOCID_PREFIX_GATED;
       return { ok: false, reason: "ALLOCID_PREFIX_GATED", code: "ALLOCID_PREFIX_GATED", check: row.check,
                translation: row.translation,
-               detail: `${gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid `
-                     + `allocates only a prefix whose objects every caller may see. Nothing was allocated.` };
+               detail: localize("record-core.index.gated_ids_are_minted_by", "{gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid allocates only a prefix whose objects every caller may see. Nothing was allocated.", { gated: String(gated) }) };
     }
     /* END DEC-49 REGION is-allocid-prefix-gated */
     return this.allocId(prefix, year);
@@ -566,12 +561,10 @@ export class RecordCore {
   recordOpaqueId(id) {
     /* DEC-49 REGION is-opaque-id-refused */
     if (typeof id !== "string" || id === "")
-      return rowRefusal("OPAQUE_ID_MALFORMED", "an opaque id to record is a non-empty string; nothing was recorded.");
+      return rowRefusal("OPAQUE_ID_MALFORMED", localize("record-core.index.an_opaque_id_to_record", "an opaque id to record is a non-empty string; nothing was recorded."));
     if (!this.#held.length)
-      return rowRefusal("OPAQUE_ID_NO_TRANSACTION", `${id} was not recorded: an opaque id is recorded inside the transaction of `
-        + "the act that uses it, so a rollback takes it back, and no transaction is open. Nothing was recorded.", { id });
-    const spent = () => rowRefusal("OPAQUE_ID_SPENT", `${id} is already in the opaque-id ledger, or the ledger could not `
-      + "confirm it free; an id is recorded once and never handed out again. Nothing was recorded.", { id });
+      return rowRefusal("OPAQUE_ID_NO_TRANSACTION", localize("record-core.index.id_was_not_recorded_an", "{id} was not recorded: an opaque id is recorded inside the transaction of the act that uses it, so a rollback takes it back, and no transaction is open. Nothing was recorded.", { id: String(id) }), { id });
+    const spent = () => rowRefusal("OPAQUE_ID_SPENT", localize("record-core.index.id_is_already_in_the", "{id} is already in the opaque-id ledger, or the ledger could not confirm it free; an id is recorded once and never handed out again. Nothing was recorded.", { id: String(id) }), { id });
     /* One plain INSERT into the ledger's primary key decides it: a spent id is refused by the key itself, so no read
        can be lost between asking and recording. */
     try { this.#sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'chosen')`, id, new Date().toISOString()); }
@@ -620,10 +613,9 @@ export class RecordCore {
     const wellFormed = (x) => Array.isArray(x) && x.length === 3 && x.every((v) => typeof v === "string" && v.trim() !== "");
     /* DEC-49 REGION is-mint-seed-registration */
     if (!named || !Array.isArray(sources) || !sources.every(wellFormed))
-      return rowRefusal("MINT_SEED_MALFORMED", "a mint seed names its module and a list of [prefix, table, column] sources, "
-        + "each three non-empty strings; nothing was registered.", { module: named ? module : null });
+      return rowRefusal("MINT_SEED_MALFORMED", localize("record-core.index.a_mint_seed_names_its", "a mint seed names its module and a list of [prefix, table, column] sources, each three non-empty strings; nothing was registered."), { module: named ? module : null });
     if (this.#mintSeeds.some((r) => r.module === module))
-      return rowRefusal("MINT_SEED_DECLARED", `${module} has already registered its mint seed; the first still stands.`,
+      return rowRefusal("MINT_SEED_DECLARED", localize("record-core.index.module_has_already_registered_its", "{module} has already registered its mint seed; the first still stands.", { module: String(module) }),
                         { module, heldBy: module });
     /* END DEC-49 REGION is-mint-seed-registration */
     const held = Object.freeze(sources.map((x) => Object.freeze([...x])));
@@ -885,8 +877,7 @@ export class RecordCore {
       return out;
     };
     return { ok: true, files: walk("files"), history: walk("history"), rewritten: 0,
-             note: "read-only: a disagreeing row is reported and never rewritten. history holds no bytes column, "
-                 + "so its bytes are not judged." };
+             note: word("record-core.note.read_disagreeing_row") };
   }
 
   /** R57, REC-176: THE CENSUS OF OVERWRITTEN MANIFEST ENTRIES — read-only; a bundle short of entries is REPORTED,
@@ -938,10 +929,7 @@ export class RecordCore {
       }
       for (const [id, rows] of rowsBy) if (!seen.has(id)) { out.orphan_manifest_bundles++; out.manifest_rows += rows.length; }
     } catch { /* R57 never throws */ }
-    out.note = "read-only: a record whose manifest holds fewer rows than it has promotions lost a row to a repeated "
-      + "snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a record with no creation "
-      + "row, which an overwrite and a store predating the creation row both produce. Which key collided is not "
-      + "recorded and is not guessed.";
+    out.note = localize("record-core.index.read_only_a_record_whose", "read-only: a record whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a record with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.");
     return out;
   }
 
@@ -1014,8 +1002,7 @@ export class RecordCore {
     /* DEC-49 REGION is-counts-registration */
     if (typeof module !== "string" || !module.trim() || !Array.isArray(keys) || keys.length === 0
         || !keys.every((k) => typeof k === "string" && k.trim() !== "") || typeof counts !== "function")
-      return refuse("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and "
-        + "a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
+      return refuse("COUNTS_MALFORMED", localize("record-core.index.a_counts_registration_names_its", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered."), { module: typeof module === "string" ? module : null });
     /* The one conflict, found before anything is registered: the module's own earlier registration, else the first
        key already held (by another module, or earlier in this same list). */
     let clash = this.#countsBy.some((r) => r.module === module) ? { heldBy: module } : null;
@@ -1025,8 +1012,8 @@ export class RecordCore {
     }
     if (clash)
       return refuse("COUNTS_DECLARED", clash.key === undefined
-        ? `${module} has already registered its figures; nothing more was registered.`
-        : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+        ? localize("record-core.index.module_has_already_registered_its_2", "{module} has already registered its figures; nothing more was registered.", { module: String(module) })
+        : localize("record-core.index.the_figure_key_is_already", "the figure {key} is already reported by {heldBy}; nothing was registered.", { key: String(clash.key), heldBy: String(clash.heldBy) }), { module, ...clash });
     /* END DEC-49 REGION is-counts-registration */
     this.#countsBy.push({ module, keys: [...keys], counts });
     return { ok: true, module, keys: [...keys] };
@@ -1097,11 +1084,10 @@ export class RecordCore {
   registerStatsSource(module, figures) {
     /* DEC-49 REGION is-stats-source-registration */
     if (typeof module !== "string" || !module.trim() || typeof figures !== "function")
-      return rowRefusal("STATS_SOURCE_MALFORMED", "a statistics source names its module and is a function; nothing was registered.",
+      return rowRefusal("STATS_SOURCE_MALFORMED", localize("record-core.index.a_statistics_source_names_its", "a statistics source names its module and is a function; nothing was registered."),
                        { module: typeof module === "string" ? module : null });
     if (this.#statsSource)
-      return rowRefusal("STATS_SOURCE_DECLARED", `the instance's figures are already supplied by ${this.#statsSource.module}; `
-        + "nothing was registered.", { module, heldBy: this.#statsSource.module });
+      return rowRefusal("STATS_SOURCE_DECLARED", localize("record-core.index.the_instances_figures_are_already", "the instance's figures are already supplied by {module}; nothing was registered.", { module: String(this.#statsSource.module) }), { module, heldBy: this.#statsSource.module });
     /* END DEC-49 REGION is-stats-source-registration */
     this.#statsSource = { module, figures };
     return { ok: true, module };
@@ -1180,12 +1166,11 @@ export class RecordCore {
       : (this.#auditFindings.find((r) => r.key === key) || {}).module ?? null;
     /* DEC-49 REGION is-audit-check-registration */
     if (typeof module !== "string" || !module || typeof check !== "function" || (finding && (typeof key !== "string" || !key)))
-      return rowRefusal("AUDIT_CHECK_MALFORMED", `an ${what} names its module${finding ? ", a non-empty key" : ""} and is a `
-        + "function; nothing was registered.");
+      return rowRefusal("AUDIT_CHECK_MALFORMED", localize("record-core.index.an_what_names_its_module", "an {what} names its module{v1} and is a function; nothing was registered.", { what: String(what), v1: String(finding ? ", a non-empty key" : "") }));
     if (list.some((c) => c.module === module) || keyHeldBy)
       return rowRefusal("AUDIT_CHECK_DECLARED", keyHeldBy
-        ? `the audit's answer key ${key} is already held by ${keyHeldBy}; nothing was registered.`
-        : `${module} has already registered its ${what}; the first still runs.`,
+        ? localize("record-core.index.the_audits_answer_key_key", "the audit's answer key {key} is already held by {keyHeldBy}; nothing was registered.", { key: String(key), keyHeldBy: String(keyHeldBy) })
+        : localize("record-core.index.module_has_already_registered_its_3", "{module} has already registered its {what}; the first still runs.", { module: String(module), what: String(what) }),
         { module, ...(keyHeldBy ? { key, heldBy: keyHeldBy } : {}) });
     /* END DEC-49 REGION is-audit-check-registration */
     if (finding) list.push({ module, key, finding: check });
@@ -1234,13 +1219,13 @@ export class RecordCore {
     /* DEC-49 REGION is-grammar-registration */
     if (!named || !listed || typeof arm !== "function" || partial)
       return rowRefusal("GRAMMAR_MALFORMED", partial
-        ? `the grammar claims part of ${partial.name}, whose ids are ${partial.ids.join(", ")}; a slot is claimed whole. Nothing was registered.`
-        : "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.",
+        ? localize("record-core.index.the_grammar_claims_part_of", "the grammar claims part of {name}, whose ids are {ids}; a slot is claimed whole. Nothing was registered.", { name: String(partial.name), ids: String(partial.ids.join(", ")) })
+        : localize("record-core.index.a_grammar_names_its_module", "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered."),
         { module: named ? module : null });
     if (clash)
       return rowRefusal("GRAMMAR_DECLARED", clash.id === undefined
-        ? `${module} has already registered its grammar; the first still stands.`
-        : `the check ${clash.id} is already claimed by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+        ? localize("record-core.index.module_has_already_registered_its_4", "{module} has already registered its grammar; the first still stands.", { module: String(module) })
+        : localize("record-core.index.the_check_id_is_already", "the check {id} is already claimed by {heldBy}; nothing was registered.", { id: String(clash.id), heldBy: String(clash.heldBy) }), { module, ...clash });
     /* END DEC-49 REGION is-grammar-registration */
     const slots = EXTENSION_ARMS.filter((a) => a.ids.every((id) => ids.includes(id))).map((a) => a.name);
     this.#grammars.push(Object.freeze({ module, ids: Object.freeze([...ids]), arm, slots: Object.freeze(slots) }));
@@ -1436,25 +1421,23 @@ export class RecordCore {
       const table = String(e.name);
       /* DEC-49 REGION is-table-declaration */
       if (!plain(e.name) || !columns(e.keys) || !columns(e.clears) || !columns(e.key) || !sources(e.from))
-        return rowRefusal("TABLE_NAME_INVALID", `${table} was not declared: a table's name, and every column or table its `
-          + "declaration names, is a plain identifier; nothing was declared.", { table, module });
+        return rowRefusal("TABLE_NAME_INVALID", localize("record-core.index.table_was_not_declared_a", "{table} was not declared: a table's name, and every column or table its declaration names, is a plain identifier; nothing was declared.", { table: String(table) }), { table, module });
       for (const [cls, allowed] of Object.entries(RecordCore.#CLASSES)) {
         if (e[cls] === undefined)
-          return rowRefusal("TABLE_CLASS_MISSING", `${table} names no ${cls} class; nothing was declared.`, { table, module, class: cls });
+          return rowRefusal("TABLE_CLASS_MISSING", localize("record-core.index.table_names_no_cls_class", "{table} names no {cls} class; nothing was declared.", { table: String(table), cls: String(cls) }), { table, module, class: cls });
         if (!allowed.includes(e[cls]))
-          return rowRefusal("TABLE_CLASS_UNKNOWN", `${table}'s ${cls} class is one of ${allowed.join(", ")}; nothing was declared.`,
+          return rowRefusal("TABLE_CLASS_UNKNOWN", localize("record-core.index.table_s_cls_class_is", "{table}'s {cls} class is one of {allowed}; nothing was declared.", { table: String(table), cls: String(cls), allowed: String(allowed.join(", ")) }),
                             { table, module, class: cls });
       }
       if (e.derive === "derived-rebuildable" && typeof e.rebuild !== "function")
-        return rowRefusal("TABLE_CLASS_MISSING", `${table} is derived-rebuildable and names no rebuild; nothing was declared.`,
+        return rowRefusal("TABLE_CLASS_MISSING", localize("record-core.index.table_is_derived_rebuildable_and", "{table} is derived-rebuildable and names no rebuild; nothing was declared.", { table: String(table) }),
                           { table, module, class: "rebuild" });
       if (e.derive === "derived-rebuildable" && !(Array.isArray(e.key) && e.key.length))
-        return rowRefusal("TABLE_CLASS_MISSING", `${table} is derived-rebuildable and names no key columns; nothing was declared.`,
+        return rowRefusal("TABLE_CLASS_MISSING", localize("record-core.index.table_is_derived_rebuildable_and_2", "{table} is derived-rebuildable and names no key columns; nothing was declared.", { table: String(table) }),
                           { table, module, class: "key" });
       if (this.#declared.has(table) || names.has(table)) {
         const declaredBy = this.#declared.has(table) ? this.#declared.get(table).module : module;
-        return rowRefusal("TABLE_DECLARED", `${table} is already declared by ${declaredBy}, and a table is declared once; `
-          + "nothing was declared.", { table, module, declaredBy });
+        return rowRefusal("TABLE_DECLARED", localize("record-core.index.table_is_already_declared_by", "{table} is already declared by {declaredBy}, and a table is declared once; nothing was declared.", { table: String(table), declaredBy: String(declaredBy) }), { table, module, declaredBy });
       }
       /* END DEC-49 REGION is-table-declaration */
       names.add(table);
@@ -1692,8 +1675,7 @@ export class RecordCore {
         + `run; nothing was registered${d && named && d.module !== module ? ` (${d.name} is ${d.module}'s)` : ""}.`,
         { module: named ? module : null, table: typeof table === "string" ? table : null, ...(d ? { declaredBy: d.module } : {}) });
     if (this.#gates.has(table))
-      return rowRefusal("STORE_GATE_DECLARED", `${table}'s checks are already registered by ${this.#gates.get(table).module}; `
-        + "the first still runs.", { module, table, heldBy: this.#gates.get(table).module });
+      return rowRefusal("STORE_GATE_DECLARED", localize("record-core.index.table_s_checks_are_already", "{table}'s checks are already registered by {module}; the first still runs.", { table: String(table), module: String(this.#gates.get(table).module) }), { module, table, heldBy: this.#gates.get(table).module });
     /* END DEC-49 REGION is-store-gate-registration */
     this.#gates.set(table, Object.freeze({ module, checks: Object.freeze(checks) }));
     return { ok: true, module, table };
@@ -1709,8 +1691,7 @@ export class RecordCore {
     const d = typeof table === "string" ? this.#declared.get(table) : undefined;
     /* DEC-49 REGION is-store-gate-registration */
     if (d && d.module !== module)
-      return rowRefusal("STORE_GATE_MALFORMED", `${table} is ${d.module}'s table; ${String(module)} does not write it. Nothing `
-        + "was written.", { module: typeof module === "string" ? module : null, table, declaredBy: d.module });
+      return rowRefusal("STORE_GATE_MALFORMED", localize("record-core.index.table_is_module_s_table", "{table} is {module}'s table; {String} does not write it. Nothing was written.", { table: String(table), module: String(d.module), String: String(String(module)) }), { module: typeof module === "string" ? module : null, table, declaredBy: d.module });
     /* END DEC-49 REGION is-store-gate-registration */
     const gate = typeof table === "string" ? this.#gates.get(table) : undefined;
     if (!gate) return null;
@@ -1720,7 +1701,7 @@ export class RecordCore {
         got = check(row, { op });
         if (got !== null && typeof got === "object" && typeof got.then === "function") {
           try { got.then(null, () => {}); } catch { /* a thenable that cannot be followed is still no answer */ }
-          failed = "it answered later, not now";
+          failed = word("record-core.failed");
         }
       } catch (e) { failed = String((e && e.message) || e).slice(0, 200); }
       if (failed === null && (got === null || got === undefined)) continue;
@@ -1733,8 +1714,7 @@ export class RecordCore {
         return { ...own, ok: false, reason: code, code };
       }
       /* DEC-49 REGION is-store-gate-failed */
-      return rowRefusal("STORE_GATE_FAILED", `${gate.module}'s check on ${table} did not answer a pass or a refusal`
-        + `${failed === null ? "" : `: ${failed}`}. Nothing was written.`, { module: gate.module, table });
+      return rowRefusal("STORE_GATE_FAILED", localize("record-core.index.module_s_check_on_table", "{module}'s check on {table} did not answer a pass or a refusal{v1}. Nothing was written.", { module: String(gate.module), table: String(table), v1: String(failed === null ? "" : `: ${failed}`) }), { module: gate.module, table });
       /* END DEC-49 REGION is-store-gate-failed */
     }
     return null;
@@ -1764,17 +1744,15 @@ export class RecordCore {
     /* DEC-49 REGION is-expunge-refused */
     if (!RecordCore.#GROUNDS.includes(ground) || (ground === "court_order" && !said(order))
         || (ground === "lawful_demand" && !said(demandKind)))
-      return rowRefusal("EXPUNGE_GROUND_UNKNOWN", "an expunge names one of the grounds unlawful, confidential, court_order (with "
-        + "the recorded order) or lawful_demand (with the profile's demand kind); nothing was removed.", { table: named });
+      return rowRefusal("EXPUNGE_GROUND_UNKNOWN", localize("record-core.index.an_expunge_names_one_of", "an expunge names one of the grounds unlawful, confidential, court_order (with the recorded order) or lawful_demand (with the profile's demand kind); nothing was removed."), { table: named });
     if (!d || d.module !== module || d.classes.expunge !== "tombstone")
-      return rowRefusal("EXPUNGE_NOT_DECLARED", `${String(table)} is not a table ${String(module)} declared expunge: tombstone; `
-        + "nothing was removed.", { table: named });
+      return rowRefusal("EXPUNGE_NOT_DECLARED", localize("record-core.index.string_is_not_a_table", "{String} is not a table {String_2} declared expunge: tombstone; nothing was removed.", { String: String(String(table)), String_2: String(String(module)) }), { table: named });
     if (!said(by) || by.trim().startsWith("token:"))
       return rowRefusal("EXPUNGE_NOT_A_MEMBER", "an expunge is a member's act, named by that member; a machine or absent actor "
         + "removes nothing.", { table: named });
     const n = keyed ? Number(this.#one(`SELECT COUNT(*) AS n FROM ${d.name} WHERE ${w.sql}`, ...w.args).n) : 0;
     if (!n)
-      return rowRefusal("EXPUNGE_NOTHING", `no row of ${d.name} matches the key; nothing was removed.`, { table: named });
+      return rowRefusal("EXPUNGE_NOTHING", localize("record-core.index.no_row_of_name_matches", "no row of {name} matches the key; nothing was removed.", { name: String(d.name) }), { table: named });
     /* END DEC-49 REGION is-expunge-refused */
     const at = new Date().toISOString();
     const keep = { ...key };
@@ -1844,11 +1822,11 @@ export class RecordCore {
   setSetting(name, value, by) {
     const n = String(name ?? "");
     /* DEC-49 REGION is-setting-refused */
-    if (!n) return rowRefusal("SETTING_NAME_REQUIRED", "a setting is recorded under a name, and none was given; nothing was recorded.");
+    if (!n) return rowRefusal("SETTING_NAME_REQUIRED", localize("record-core.index.a_setting_is_recorded_under", "a setting is recorded under a name, and none was given; nothing was recorded."));
     if (typeof by !== "string" || !by.trim())
-      return rowRefusal("SETTING_BY_REQUIRED", "a setting is recorded with who set it, and no one was named; nothing was recorded.");
+      return rowRefusal("SETTING_BY_REQUIRED", localize("record-core.index.a_setting_is_recorded_with", "a setting is recorded with who set it, and no one was named; nothing was recorded."));
     if (value === undefined)
-      return rowRefusal("SETTING_VALUE_REQUIRED", "a setting is recorded with a value, and none was given; nothing was recorded.");
+      return rowRefusal("SETTING_VALUE_REQUIRED", localize("record-core.index.a_setting_is_recorded_with_2", "a setting is recorded with a value, and none was given; nothing was recorded."));
     const text = roundTripsJson(value) ? jsonText(value) : null;
     if (text === null)
       return rowRefusal("SETTING_NOT_JSON", "a setting's value is stored as JSON, and this value cannot be stored as written; "
@@ -1856,7 +1834,7 @@ export class RecordCore {
     if (n === "jurisdiction_profiles"
         && !(Array.isArray(value) && value.every((v) => typeof v === "string" && v.trim() !== "")
              && new Set(value).size === value.length))
-      return rowRefusal("SETTING_INVALID", "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded.",
+      return rowRefusal("SETTING_INVALID", localize("record-core.index.jurisdiction_profiles_is_an_ordered", "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded."),
                         { name: n });
     /* END DEC-49 REGION is-setting-refused */
     this.#sql.exec(`INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)`,

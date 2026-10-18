@@ -14,6 +14,7 @@
  * the view's (R15). Nothing is followed. */
 import { CONTRACT, TAG, written, element, elements, linksIn, sourceAt,
   proceedingNumber, row, reading, assessRegister, detectAnswer } from "./common.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 const KEY = "cpuc_proceeding";
 const LABEL = "a CPUC proceeding card or documents report";
@@ -128,7 +129,7 @@ function parse(ctx) {
       const complete = first === 1 && rows.length === total;
       pagination = { page: { n: Math.floor((first - 1) / size) + 1, of: Math.ceil(total / size), may_continue: last < total },
         complete, complete_why: complete ? null
-          : `the report says it holds ${total} rows and this reading holds rows ${first} to ${last} (${rows.length} read)` };
+          : localize("court-doctypes.cpuc.the_report_says_it_holds", "the report says it holds {total} rows and this reading holds rows {first} to {last} ({length} read)", { total: String(total), first: String(first), last: String(last), length: String(rows.length) }) };
     } else {
       pagination = { page: { n: null, of: null, may_continue: false }, complete: false,
         complete_why: "the report states no pagination, so whether it holds every row of the register is not established" };

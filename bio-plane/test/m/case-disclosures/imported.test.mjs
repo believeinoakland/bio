@@ -9,6 +9,7 @@ import { world, V } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, FLAG_SENTENCE, FLAGS_SAY, acceptedBodyLines, acceptedWorkRow, flagsListed } from "../../../src/case-disclosures/index.mjs";
 import { CASE_DOCUMENT_FORMAT, acceptedWorkBlockLines, acceptedWorkOf } from "../../../src/case-grammar/index.mjs";
 import { caseFile, SOURCE, CASE } from "../case-import/fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const IMP = "a".repeat(64), THEIRS = "INQ-2026-0042-x";
@@ -44,11 +45,11 @@ test("R13: acceptedWorkJudged reads, for each ref leg, case-import's acceptance 
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`, ...acceptedWorkBlockLines({ rows: a.rows, flags: [] }), "---", ""].join("\n"));
   assert.deepEqual(acceptedWorkOf(fm).rows.map((r) => [r.ref, r.edition, r.reason]), [[ref, 2, "We recreated it whole."]]);
   const body = acceptedBodyLines({ rows: a.rows, flags: [] }).join("\n");
-  assert.ok(body.includes("## Another Team's Work This Case Rests On"));
+  assert.ok(body.includes(word("case-disclosures.group_work_case")));
   assert.ok(body.includes(`- ${Q} rests, through ${Q}, on ${THEIRS} of other-group's case CASE-2026-0900, edition 2: accepted by alice on 2026-09-27T00:00:00Z, because: We recreated it whole. It was recreated from that case file, with the gaps stated: the third page's image was not carried.`));
   /* the reason's own full stop is not doubled (N535) */
   assert.equal(body.includes(".."), false);
-  assert.ok(body.includes("No flag was open on that work when this case was published."));
+  assert.ok(body.includes(word("case-disclosures.flag_open_work")));
   assert.deepEqual(acceptedBodyLines({ rows: [], flags: [] }), [], "no accepted work: no section");
   assert.deepEqual(acceptedWorkRow({ member: "m", leg_of: "l", ref: "r", target_edition: 3 }, { finding: "f" }, {}, null, null),
     { member: "m", leg_of: "l", ref: "r", group: null, case: null, edition: 3, finding: "f", manifest_sha: null, pair: null,

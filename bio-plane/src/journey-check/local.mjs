@@ -22,6 +22,7 @@ import { Miniflare } from "miniflare";
 import { fakeAccount, AUTHORIZE } from "./account.mjs";
 import { CITY_ORIGIN, cityAnswer } from "./city.mjs";
 import { SIGNIN_PAGE, signinPage } from "./signin.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const INSTALLER_ENTRY = join(ROOT, "newgroup", "src", "index.mjs");
@@ -139,12 +140,12 @@ export async function localWorld({ model = true, segments = true } = {}) {
   /* A world that cannot start closes what it started before it says so. */
   try {
     installer = new Miniflare({ ...BASE, scriptPath: join(dirname(INSTALLER_ENTRY), "journey-entry.mjs"),
-      script: `import worker from ${JSON.stringify(INSTALLER_ENTRY)};\nexport default worker;\n`,
+      script: localize("journey-check.local.import_worker_from_stringify_export", "import worker from {stringify};\nexport default worker;\n", { stringify: String(JSON.stringify(INSTALLER_ENTRY)) }),
       outboundService: async (req) => account.handle(req) });
     await installer.ready;
     /* site's module exports its helpers beside its handler, so it too is run through an entry exporting the handler */
     site = new Miniflare({ ...BASE, scriptPath: join(dirname(SITE_ENTRY), "journey-entry.mjs"),
-      script: `import site from ${JSON.stringify(SITE_ENTRY)};\nexport default site;\n`,
+      script: localize("journey-check.local.import_site_from_stringify_export", "import site from {stringify};\nexport default site;\n", { stringify: String(JSON.stringify(SITE_ENTRY)) }),
       bindings: { INSTALLER_ADDRESS: INSTALLER_ORIGIN + "/" } });
     await site.ready;
   } catch (e) { await close(); throw e; }

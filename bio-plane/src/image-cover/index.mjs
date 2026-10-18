@@ -15,6 +15,7 @@ import { CoverRefusal, checkAreas } from "./geometry.mjs";
 import { coverJpeg } from "./jpeg.mjs";
 import { coverPng } from "./png.mjs";
 import { stripImage } from "./strip.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** The largest photo covered, in bytes; a larger one is refused before a byte of it is read (R3, R4). */
 export const COVER_MAX_BYTES = 32 * 1024 * 1024;
@@ -46,7 +47,7 @@ export async function coverAreas(bytes, { areas } = {}) {
     const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
     if (!d) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", "the photo's bytes are not a byte array");
     if (d.length > COVER_MAX_BYTES)
-      throw new CoverRefusal("PHOTO_TOO_LARGE", `the photo is ${d.length} bytes, over the ${COVER_MAX_BYTES} this module covers`);
+      throw new CoverRefusal("PHOTO_TOO_LARGE", localize("image-cover.index.the_photo_is_length_bytes", "the photo is {length} bytes, over the {COVER_MAX_BYTES} this module covers", { length: String(d.length), COVER_MAX_BYTES: String(COVER_MAX_BYTES) }));
     checkAreas(areas);
     let answer;
     if (isJpeg(d)) answer = coverJpeg(d, areas, COVER_MAX_PIXELS);
@@ -75,10 +76,10 @@ export function stripMetadata(bytes) {
     const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
     if (!d) throw new CoverRefusal("NOT_A_STRIPPABLE_FORMAT", "the image's bytes are not a byte array");
     if (d.length > COVER_MAX_BYTES)
-      throw new CoverRefusal("PHOTO_TOO_LARGE", `the image is ${d.length} bytes, over the ${COVER_MAX_BYTES} this module reads`);
+      throw new CoverRefusal("PHOTO_TOO_LARGE", localize("image-cover.index.the_image_is_length_bytes", "the image is {length} bytes, over the {COVER_MAX_BYTES} this module reads", { length: String(d.length), COVER_MAX_BYTES: String(COVER_MAX_BYTES) }));
     return { ok: true, ...stripImage(d) };
   } catch (e) {
     if (e instanceof CoverRefusal) return { ok: false, code: e.code, detail: e.detail };
-    return { ok: false, code: "IMAGE_DATA_CORRUPT", detail: `the image's structure cannot be walked (${e?.message || e})` };
+    return { ok: false, code: "IMAGE_DATA_CORRUPT", detail: localize("image-cover.index.the_images_structure_cannot_be", "the image's structure cannot be walked ({v1})", { v1: String(e?.message || e) }) };
   }
 }

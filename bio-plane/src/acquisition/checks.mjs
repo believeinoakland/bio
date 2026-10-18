@@ -10,7 +10,7 @@
  * 1.54.0. These are the only copies: T19's layer 1 deleted the catalogue's (legacy-checks, K717, K769). C-48.8 and
  * C-48.9 are `monitoring`'s; the rest of C-28 is `capture-requests`'. The comments carried from the catalogue keep each row's reasoning beside it. */
 
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
 
@@ -140,24 +140,20 @@ export const DRIVE_CAPTURE_CHECKS = Object.freeze({
   /* A FOLDER. There is nothing to export and no single set of bytes a capture could honestly hold. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: Object.freeze({
     check: 'C-48.2',
-    where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
-         + '(op=monitor, ungoverned span, D-472): a folder is not a document to capture and not '
-         + 'a document to watch, and one sentence is true of both',
+    where: localize('acquisition.checks.at_and_the_same_condition', '{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both', { at: String(at('is-drive-capture')) }),
     translation: word("refusal.DRIVE_FOLDER_NOT_A_DOCUMENT"),
   }),
   /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an export address here would mean
      guessing which conversion to ask for, and filing bytes whose format the record had invented. */
   DRIVE_KIND_UNDETERMINED: Object.freeze({
     check: 'C-48.3',
-    where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
-         + '(op=monitor, ungoverned span, D-472)',
+    where: localize('acquisition.checks.at_and_the_same_condition_2', '{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)', { at: String(at('is-drive-capture')) }),
     translation: word("refusal.DRIVE_KIND_UNDETERMINED"),
   }),
   /* A DRIVE HOST WITH AN UNREAD PATH: not a document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: Object.freeze({
     check: 'C-48.4',
-    where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
-         + '(op=monitor, ungoverned span, D-472)',
+    where: localize('acquisition.checks.at_and_the_same_condition_3', '{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)', { at: String(at('is-drive-capture')) }),
     translation: word("refusal.DRIVE_SHAPE_UNRECOGNISED"),
   }),
   /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the export address with `text/html` when

@@ -25,6 +25,7 @@ import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, s
 import { inbandQuartet } from "../inband.mjs";
 import { caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { rowOf } from "../public-read/checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 let PLANE = null;
 const PLANE_KEYS = ["json", "doAnswer", "storeSilent", "requiredArgument", "STORE_SILENT_REASON", "STORE_SILENT_DETAIL",
@@ -60,7 +61,7 @@ function relayUnanswered(out, op) {
 /* R9: a relay inside the per-finding renderer, thrown so the whole read answers it (a case rendered from a registry
    never consulted asserts what nobody checked). Carries the unanswered reply, refusal or silence. */
 class Unanswered extends Error {
-  constructor(op, out) { super(`the store did not answer ${op}`); this.op = op; this.out = out; }
+  constructor(op, out) { super(word("publication.super.store_did_answer", { op: String(op) })); this.op = op; this.out = out; }
 }
 
 /* THE PUBLISHED-STORE COMPLAINT (C-68.5, D-549). A copy installed with no store
@@ -94,8 +95,7 @@ export function publishedStoreAbsent(env) {
 export function noPublishedPart(sha256) {
   /* DEC-49 REGION is-no-published-part */
   return { ok: false, reason: "NO_PUBLISHED_PART", ...rowOf("NO_PUBLISHED_PART"), sha256,
-           detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
-                 + "never existed are the same answer here, deliberately." };
+           detail: localize("public-read.worker.no_published_part_answers_to", "no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately.") };
   /* END DEC-49 REGION is-no-published-part */
 }
 
@@ -109,8 +109,7 @@ export function publishedObjectMissing() {
   /* DEC-49 REGION is-published-object-missing
    * THE SPAN C-98.2 names: its one mint, the code a STRING LITERAL at its site, the row's fields beside it. */
   return { ok: false, reason: "OBJECT_MISSING", ...rowOf("OBJECT_MISSING"),
-           detail: "that hash is published, and this team's Civicsmith holds no bytes for it in its published store, so "
-                 + "they cannot be handed over. The hash is genuine." };
+           detail: localize("public-read.worker.that_hash_is_published_and", "that hash is published, and this team's Civicsmith holds no bytes for it in its published store, so they cannot be handed over. The hash is genuine.") };
   /* END DEC-49 REGION is-published-object-missing */
 }
 
@@ -123,9 +122,7 @@ export function withheldByCourtOrder(sha256, withheld) {
   /* DEC-49 REGION is-withheld-by-court-order */
   return { ok: false, reason: "WITHHELD_BY_COURT_ORDER", ...rowOf("WITHHELD_BY_COURT_ORDER"), sha256,
            withheld,
-           detail: "a court order this team complied with keeps these contents from being served here. The order and the "
-                 + "record entry that names it are public, at the docket address each order gives, and nothing was "
-                 + "deleted: the fingerprint still verifies." };
+           detail: localize("public-read.worker.a_court_order_this_team", "a court order this team complied with keeps these contents from being served here. The order and the record entry that names it are public, at the docket address each order gives, and nothing was deleted: the fingerprint still verifies.") };
   /* END DEC-49 REGION is-withheld-by-court-order */
 }
 
@@ -475,8 +472,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
   if (op === "publishedbytes") {
     if (!/^[0-9a-f]{64}$/.test(shaParam))
       return P.json({ ok: false, ...P.requiredArgument("publishedbytes", "sha256", "<64 lowercase hex>",
-        "publishedbytes requires sha256=<64 lowercase hex>. This surface "
-                  + "answers BY HASH and never by path, so there is nothing to walk.") }, 400);
+        localize("public-read.worker.publishedbytes_requires_sha256_64_lowercase", "publishedbytes requires sha256=<64 lowercase hex>. This surface answers BY HASH and never by path, so there is nothing to walk.")) }, 400);
     /* THE GUARD, and it is the whole op. A sha is served if and only if a
        published_shas row names it. Everything else 404s with the SAME body
        — a hash that was never ratified and a hash that never existed are
@@ -541,8 +537,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
     const storeAbsent = publishedStoreAbsent(env);
     if (storeAbsent)
       return P.json({ ok: false, ...storeAbsent,
-        detail: "this team's Civicsmith has no published object store configured, so its published bytes are "
-              + "not servable. The hash is genuine and this team's Civicsmith cannot hand over the bytes." }, 503);
+        detail: localize("public-read.worker.this_teams_civicsmith_has_no", "this team's Civicsmith has no published object store configured, so its published bytes are not servable. The hash is genuine and this team's Civicsmith cannot hand over the bytes.") }, 503);
 
     /* DEC-34, THE CONTAINER. The manifest's own hash IS the container's
        identity — it names and hashes every part — so the zip is addressed
@@ -555,8 +550,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
       /* DEC-49 REGION is-not-a-container
        * D-561 (C-98.3): the code a STRING LITERAL here, its translation from its row. */
       return P.json({ ok: false, reason: "NOT_A_CONTAINER", ...rowOf("NOT_A_CONTAINER"), sha256: shaParam,
-        detail: "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. "
-              + "This hash names a part inside a container, not a container." }, 400);
+        detail: localize("public-read.worker.format_zip_serialises_a_case", "format=zip serialises a case CONTAINER, which is addressed by its MANIFEST's hash. This hash names a part inside a container, not a container.") }, 400);
       /* END DEC-49 REGION is-not-a-container */
     }
     const raw = await pubBytes(shaParam);
@@ -710,7 +704,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
       ? { state: "published", from_sha: fnd.bundle_sha,
           question: sectionText(text, "## Question"),
           conclusion: sectionText(text, "## Conclusion"),
-          falsifies: sectionText(text, "## What Would Falsify This"),
+          falsifies: sectionText(text, word("conformance.falsify")),
           /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): a member published under rule 12
              carries no `## What This Excludes` in its own bytes — the case states it once, in
              its document — so the section is read from THAT signed document for such a member,
@@ -745,14 +739,9 @@ export async function publishedRoutes({ op, url, env, stub }) {
                          && typeof fm?.falsifier_override_at === "string" && fm.falsifier_override_at.trim())
                           ? { by: fm.falsifier_override_by.trim(), at: fm.falsifier_override_at.trim() }
                           : null },
-          detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds "
-                + "the finding to; the section fields are the prose printed beside it in the signed "
-                + "bytes. `falsifier_override`, when it is not null, is the member who recorded that "
-                + "NO falsifier could be stated for this finding, and when they did so." }
+          detail: localize("public-read.worker.authored_is_what_op_conclude", "`authored` is what op=conclude wrote into the frontmatter and what the gate holds the finding to; the section fields are the prose printed beside it in the signed bytes. `falsifier_override`, when it is not null, is the member who recorded that NO falsifier could be stated for this finding, and when they did so.") }
       : { state: "unavailable", from_sha: fnd.bundle_sha, ...whyUnavailable,
-          detail: "this team's Civicsmith cannot hand over the bytes of that edition, so its conclusion is not "
-                + "rendered here. It is NOT read from the working record instead: the frozen strength "
-                + "and the rendered body must come from the same bytes." };
+          detail: localize("public-read.worker.this_teams_civicsmith_cannot_hand", "this team's Civicsmith cannot hand over the bytes of that edition, so its conclusion is not rendered here. It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes.") };
 
     /* THE BASIS LEGS, from the signed bytes, each one classified as a leg
        this surface can SERVE or one it can only NAME. `served` is decided
@@ -799,9 +788,8 @@ export async function publishedRoutes({ op, url, env, stub }) {
               ...(cited.testimony ? { testimony: cited.testimony } : {}) }
           : null,
         detail: cited
-          ? "this leg rests on a published finding, so it can be served from this surface."
-          : "this leg is NAMED and not served: what it rests on is not in the published record, so this "
-          + "surface can say the finding cites it and can hand over nothing of it.",
+          ? localize("public-read.worker.this_leg_rests_on_a", "this leg rests on a published finding, so it can be served from this surface.")
+          : localize("public-read.worker.this_leg_is_named_and", "this leg is NAMED and not served: what it rests on is not in the published record, so this surface can say the finding cites it and can hand over nothing of it."),
       };
     });
     return { ...fnd, object_type: normalizeType(fm?.object_type) ?? null, body, basis,
@@ -826,8 +814,5 @@ export async function publishedRoutes({ op, url, env, stub }) {
       manifest: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
       findings: findings.map((f) => ({ bundle_id: f.bundle_id,
                                        bytes: `op=publishedbytes&sha256=${f.bundle_sha}` })),
-      detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the "
-            + "manifest answers by its own sha256, and EACH FINDING's signature covers that finding's "
-            + "own record sha. Nothing here prevents a modified copy; everything here makes one "
-            + "detectable by anyone holding it, without the cooperation of this team's Civicsmith.",
+      detail: localize("public-read.worker.tamper_evident_not_tamper_proof", "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith."),
     } }, 200);}

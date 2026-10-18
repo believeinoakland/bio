@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import {
   EMPTY_BODY_DIGEST, parseCdx, cdxTimestampToIso, rowRefusal, selectCapture, replayLocator, cdxQuery, archiveHop,
 } from "../../../src/cdx.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ORIG = "https://records.example.gov/minutes/2026-03.pdf";
 const KEY = "gov,example,records)/minutes/2026-03.pdf";
@@ -117,7 +118,7 @@ const REPLAY = `https://web.archive.org/web/20260303120000id_/${ORIG}`;
 test("R34: archiveHop states the archive's dated claim, unsigned and saying why", () => {
   const h = archiveHop(chosen(), REPLAY, { mementoDatetime: "Tue, 03 Mar 2026 12:00:00 GMT", warcSource: "ia-crawl-1.warc.gz" });
   assert.deepEqual(Object.keys(h).sort(), ["asserts", "bound", "document_address", "evidence", "unsigned_reason", "via", "who"]);
-  assert.equal(h.who, "Internet Archive Wayback Machine");
+  assert.equal(h.who, word("capture-sources.name.internet_archive_wayback"));
   assert.equal(h.asserts, `these bytes were served for ${ORIG} at 2026-03-03T12:00:00Z, with HTTP status 200`);
   for (const part of ["timestamp 20260303120000", "digest ABCDEFGHIJKLMNOPQRSTUVWXYZ234567 (base32 SHA-1, over the body as they stored it)",
     "mimetype application/pdf", "WARC record length 6255, which is THEIR compressed record size and not the length of what we received",

@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, sha, V, provDoc } from "./fixture.mjs";
 import { chainFromEvidence, provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
 import { DOORBELL_ORIGIN, UPLOAD_ORIGIN } from "../../../src/provenance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const fetched = { locator: "https://e.org/d", retrieved: "2026-09-01T00:00:00Z",
                   capture: { method: "acquire", actor_class: "session", sha256: sha("d") } };
@@ -65,7 +66,7 @@ test("R1: a co-archive is never a hop, and every derived hop is stamped reconstr
   for (const h of [r.hops[0], custody.hops[0]]) {
     assert.equal(h.reconstructed.by, "op=provenancechain (REC-54)");
     assert.equal(h.reconstructed.basis,
-      "derived from fields the capture record already held; no fact is asserted that the register did not carry");
+      word("provenance-routes.basis.derived_fields_capture"));
     assert.equal(h.reconstructed.at, "2026-09-27T00:00:00Z");
     assert.ok(Array.isArray(h.reconstructed.from) && h.reconstructed.from.length);
   }

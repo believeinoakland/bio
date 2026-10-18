@@ -1,0 +1,77 @@
+# publication: the words check after the conversion (K3949)
+
+Layer 8. 73 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `bio-plane/src/deliverer.mjs:45` "by another member's session or by the founder's." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:101` [copy] "This case rests on a counsel matter, and a counsel matter is never ..." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:33` "This case wasn't published: a mark on {photo} changed after it was ..." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:34` "again, and sign it again." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:36` "case was prepared with. Prepare the case again. Nothing was published." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:48` "case again, and it will leave that detail out. Nothing was published." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:56` "This case was prepared before published cases carried everything th..." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:57` "and sign the new preparation. Nothing was published." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:64` "This team's acceptance of another team's work this case rests on wa..." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:65` "prepared. Prepare the case again. Nothing was published." — signed or pinned text
+- inline `bio-plane/src/publication/checks.mjs:71` "must disclose it. Prepare the case again. Nothing was published." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1011` "case {} edition {} is already signed, and a signed edition answers ..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1017` "case {} is {}'s production and this signed case document names" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1018` "{}. A case does not change hands between editions (DEC-72)." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1028` [stitched] "{}. A counsel matter is never published, so nothing was committed." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1046` "was committed. Prepare the case again, and sign the new preparation." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1059` "{} statement(s) this case document makes about a source are no long..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1061` "published; this edition was not, and a new preparation leaves the d..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1075` [copy] "the photos' marks could not be read" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1085` "{} photo(s) this case document carries cannot be published as prepa..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1087` "team marked, or marks that cannot be read), so nothing was committe..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1094` "{} document(s) a member supplied that this case document carries ca..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1112` "{} acceptance(s) of another team's work this case document rests on" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1113` "are no longer known to be in force, so nothing was committed. Prepa..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1116` "{} open flag(s) on another team's work this case document rests on" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1117` "are not disclosed by it, so nothing was committed. Prepare the case..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1284` "Benchmark · not binding on {}" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1284` [copy] "Benchmark · not binding" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1398` "{}, and the parts as a list of names when it names any" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1404` "edition(s) {} of {} are not ratified editions, so nothing was stamped" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:1405` "{} holds no ratified edition, so nothing was stamped" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:182` [copy] "the criteria were not recorded: this edition was committed before p..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:184` [copy] "Behind a paywall" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:184` [copy] "Free to read" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:184` [copy] "Reading room only" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:212` "no case document has been authored for {} edition {}. A case document" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:214` "carries — this plane does not compose one." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:2182` "this case edition is INCOMPLETE: {} of {} findings are not yet" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:2212` "case {} edition {} already has a manifest at a different hash. An e..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:2214` "same number would leave a reader unable to say which container they..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:2563` "edition the assertion was taken from and the case's current state." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:308` "the review provider gives the doors {}" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:311` "the review provider is already registered by {}" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:335` "the court-order source is already registered by {}" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:355` "the waiting editions' source gives the doors {}" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:358` "the waiting editions' source is already registered by {}" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:497` "a re-author names a case edition, one of the sections {}," — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:502` [copy] "no case document is held for this edition" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:503` [copy] "this case document is signed, and a signed document never changes" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:506` [copy] "this case document is signed and waits to be published at a set time" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:508` [copy] "this case document has moved since it was read, so nothing was spliced" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:511` "this case document carries no {} section to re-author" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:574` "edition {} of {} is already published at a different sha. An editio..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:576` "number would leave a reader who cited edition {} unable to say whic..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:585` "{} is published through edition {} on its OWN version chain; a" — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:587` "{} keeps its own signature, attestor, time and gate version, and a ..." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:589` "of: since CASE-5 the two are separate numbers." — signed or pinned text
+- inline `bio-plane/src/publication/index.mjs:725` "{} edition {} than the CASE DOCUMENT a member signed for it. A case" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/fixture.mjs:370` "## What It Rests On" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/fixture.mjs:371` "## What Would Falsify This" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/sources.test.mjs:160` [part] "no published case edition" — part test copy
+- testcopy `bio-plane/test/m/publication/t28.test.mjs:33` [part] "This case was prepared before published cases" — part test copy
+- testcopy `bio-plane/test/m/publication/t28.test.mjs:34` [part] "carried everything they rest on. Prepare it again, and sign the new..." — part test copy
+- testcopy `bio-plane/test/m/publication/t35.test.mjs:102` "Free to read" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/t35.test.mjs:105` "Behind a paywall" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/t35.test.mjs:108` "Free to read" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/t35.test.mjs:112` "Behind a paywall" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/t35.test.mjs:112` "Benchmark · not binding" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/t37.test.mjs:53` "the whole document" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/t38.test.mjs:60` "the photos' marks could not be read" — signed or pinned text
+- testcopy `bio-plane/test/m/publication/t39.test.mjs:46` [part] "A document a member supplied now needs a different publication copy..." — part test copy
+- testcopy `bio-plane/test/m/publication/t39.test.mjs:47` [part] "prepared with. Prepare the case again. Nothing was published." — part test copy
+- testcopy `bio-plane/test/m/publication/t45.test.mjs:16` "This case rests on a counsel matter, and a counsel matter is never ..." — signed or pinned text

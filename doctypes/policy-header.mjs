@@ -23,6 +23,7 @@
  * "XX XX 21") is kept as written with `date: null` and why, never completed. A field not read is
  * absent and named in `missing`. Whether this copy is in force is not this reader's question. */
 import { readerView, vocabulary, vocabRegex } from "../docprofile/doctypes/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export const HEADER_FIELDS = Object.freeze(["type", "number", "title", "effective", "supersedes", "reference",
                                             "coordinator", "review_due", "revision_cycle"]);
@@ -336,7 +337,7 @@ function readAt(raw, labels, a, locate) {
   if (header.number && a) {
     const m = a.series.numberOnly ? a.series.numberOnly.exec(header.number.text.trim()) : null;
     if (!m) {
-      why.number = `"${header.number.text}" is printed as the number, and ${a.series.labelText} does not read a number in that form`;
+      why.number = localize("doctypes.policy-header.text_is_printed_as_the", "\"{text}\" is printed as the number, and {labelText} does not read a number in that form", { text: String(header.number.text), labelText: String(a.series.labelText) });
       delete header.number;
     } else header.number.normal = normalOf(a.series.normal, m);
   }

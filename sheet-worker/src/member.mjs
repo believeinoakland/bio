@@ -10,6 +10,7 @@
  */
 import { makeMeter } from "../../bio-plane/src/cpu.mjs";
 import { MAX_CELLS, MAX_UNZIPPED_BYTES, NAMESPACES, NOT_RECOMPUTED, REFUSALS, TIME_BUDGET_MS, enabledIn } from "./contract.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json" } });
@@ -43,17 +44,15 @@ export function makeMember(engine, {
       const seen = meter.sync("inspect", () => engine.inspect(bytes, bounds), bytes.length);
       if (!seen.zip || !seen.workbook) return refusal("NOT_A_WORKBOOK", seen.why);
       if (seen.over_unzipped)
-        return refusal("OVER_BOUND", `the workbook unzips to more than ${bounds.maxUnzippedBytes} B, this member's bound; `
-          + `reading stopped at ${seen.unzipped_bytes} B`,
+        return refusal("OVER_BOUND", localize("sheet-worker.member.the_workbook_unzips_to_more", "the workbook unzips to more than {maxUnzippedBytes} B, this member's bound; reading stopped at {unzipped_bytes} B", { maxUnzippedBytes: String(bounds.maxUnzippedBytes), unzipped_bytes: String(seen.unzipped_bytes) }),
           { measure: "unzipped_bytes", measured: seen.unzipped_bytes, measured_is: "at_least", bound: bounds.maxUnzippedBytes });
       if (seen.over_cells)
-        return refusal("OVER_BOUND", `the workbook holds ${seen.cells} cells; this member's bound is ${bounds.maxCells}`,
+        return refusal("OVER_BOUND", localize("sheet-worker.member.the_workbook_holds_cells_cells", "the workbook holds {cells} cells; this member's bound is {maxCells}", { cells: String(seen.cells), maxCells: String(bounds.maxCells) }),
           { measure: "cells", measured: seen.cells, measured_is: "exact", bound: bounds.maxCells });
       const ext = seen.external;
       const links = ext.parts + ext.formulas + ext.defined_names;
       if (links > 0)
-        return refusal("EXTERNAL_LINKS", `the workbook refers to other workbooks: ${ext.parts} external-link part(s), `
-          + `${ext.formulas} formula(s) and ${ext.defined_names} defined name(s)`, { links, external: ext });
+        return refusal("EXTERNAL_LINKS", localize("sheet-worker.member.the_workbook_refers_to_other", "the workbook refers to other workbooks: {parts} external-link part(s), {formulas} formula(s) and {defined_names} defined name(s)", { parts: String(ext.parts), formulas: String(ext.formulas), defined_names: String(ext.defined_names) }), { links, external: ext });
 
       const t0 = now();
       try {
@@ -65,7 +64,7 @@ export function makeMember(engine, {
       await turn();
       const elapsed = now() - t0;
       if (elapsed > bounds.timeBudgetMs)
-        return refusal("TIME_LIMIT", `loading took ${elapsed} ms; the budget is ${bounds.timeBudgetMs} ms`,
+        return refusal("TIME_LIMIT", localize("sheet-worker.member.loading_took_elapsed_ms_the", "loading took {elapsed} ms; the budget is {timeBudgetMs} ms", { elapsed: String(elapsed), timeBudgetMs: String(bounds.timeBudgetMs) }),
           { elapsed_ms: elapsed, budget_ms: bounds.timeBudgetMs });
 
       let out;
@@ -105,14 +104,11 @@ export function makeMember(engine, {
     if (seen.macros)
       notes.push("the workbook carries a VBA project; macros are never run, so it was recomputed by its formulas alone");
     if (out.counts.errors)
-      notes.push(`${out.counts.errors} formula cell(s) gave an error value and are marked "${NOT_RECOMPUTED}" with a `
-        + `cause; an error here is not a disagreement with the file`);
+      notes.push(localize("sheet-worker.member.errors_formula_cell_s_gave", "{errors} formula cell(s) gave an error value and are marked \"{NOT_RECOMPUTED}\" with a cause; an error here is not a disagreement with the file", { errors: String(out.counts.errors), NOT_RECOMPUTED: String(NOT_RECOMPUTED) }));
     if (out.counts.volatile)
-      notes.push(`${out.counts.volatile} formula cell(s) call a volatile function, whose value now is not the value `
-        + `the file cached`);
+      notes.push(localize("sheet-worker.member.volatile_formula_cell_s_call", "{volatile} formula cell(s) call a volatile function, whose value now is not the value the file cached", { volatile: String(out.counts.volatile) }));
     if (out.spill_cells)
-      notes.push(`${out.spill_cells} cell(s) hold an array formula's spilled values and are not listed; the formula `
-        + `is listed at its anchor`);
+      notes.push(localize("sheet-worker.member.spill_cells_cell_s_hold", "{spill_cells} cell(s) hold an array formula's spilled values and are not listed; the formula is listed at its anchor", { spill_cells: String(out.spill_cells) }));
     return {
       ok: true,
       engine: engine.name,

@@ -12,6 +12,8 @@
  *  of the entries named in `changes` (target → {status, note}). An entry whose note line is absent gains one, because
  *  the reason has to land somewhere; an entry with no status is not ours to guess at. Null unless every change
  *  applied. */
+import { localize } from "../setup-words/index.mjs"
+
 export function spliceEdgeStatus(text, changes) {
   const lines = text.split("\n");
   if (lines[0] !== "---") return null;
@@ -73,8 +75,7 @@ export function spliceReferences(text, additions) {
   if (end === -1) return null;
 
   const block = additions.map((a) =>
-    `  - rel: ${a.rel}\n    target: ${a.target}\n    status: ${a.status}\n    note: "${a.note ?? ""}"`
-    + (typeof a.extent_capture === "string" ? `\n    extent_capture: ${a.extent_capture}` : ""));
+    localize("citation.splice.rel_rel_target_target_status", "  - rel: {rel}\n    target: {target}\n    status: {status}\n    note: \"{v1}\"{v2}", { rel: String(a.rel), target: String(a.target), status: String(a.status), v1: String(a.note ?? ""), v2: String(typeof a.extent_capture === "string" ? `\n    extent_capture: ${a.extent_capture}` : "") }));
 
   let ref = -1;
   for (let i = 1; i < end; i++) if (/^references:/.test(lines[i])) { ref = i; break; }
@@ -178,7 +179,7 @@ export function setScalar(text, key, value) {
  *  document has none), as both acts wrote it inline in the retired legacy store (a copy, K57). */
 export function appendSessionLog(text, entry) {
   const at = text.indexOf("## Session Log");
-  if (at < 0) return text + "\n## Session Log\n\n" + entry;
+  if (at < 0) return localize("citation.splice.text_session_log_entry", "{text}\n## Session Log\n\n{entry}", { text: String(text), entry: String(entry) });
   const nxt = text.indexOf("\n## ", at + 1);
   const cut = nxt === -1 ? text.length : nxt + 1;
   return text.slice(0, cut) + entry + "\n" + text.slice(cut);

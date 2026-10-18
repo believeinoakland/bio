@@ -23,6 +23,7 @@ import { evidenceAbsent } from "../capture/ops.mjs";
 import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./door.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { DOORBELL_SCHEMA, DOORBELL_ADDITIVE_COLUMNS, DOORBELL_EXEMPT_TABLES } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 export { DOORBELL_SCHEMA, DOORBELL_EXEMPT_TABLES } from "./schema.mjs";
 
 /* The helpers below are copied from `capture`, which keeps its own for its other code (the map's §2). */
@@ -189,13 +190,13 @@ export class Doorbell {
    *  that fails or answers anything else, nothing discarded is cleared. Writes nothing and never throws. */
   mayClearDiscarded() {
     const reader = this.#readers.get("litigation-hold");
-    if (!reader) return { may: false, basis: "no reader of litigation holds is registered, so a hold cannot be ruled out" };
+    if (!reader) return { may: false, basis: word("doorbell.basis.reader_litigation_holds") };
     let held;
     try { held = reader.fn(); } catch { held = undefined; }
-    if (held === false) return { may: true, basis: `${reader.module} reports no litigation hold in place` };
-    if (held === true) return { may: false, basis: `${reader.module} reports a litigation hold in place` };
+    if (held === false) return { may: true, basis: word("doorbell.basis.reports_litigation_hold", { module: String(reader.module) }) };
+    if (held === true) return { may: false, basis: word("doorbell.basis.reports_litigation_hold_place", { module: String(reader.module) }) };
     if (held && typeof held.then === "function") Promise.resolve(held).catch(() => {});
-    return { may: false, basis: `${reader.module} did not answer whether a litigation hold is in place` };
+    return { may: false, basis: word("doorbell.basis.did_answer_litigation", { module: String(reader.module) }) };
   }
 
   /* ==================================================================== *
@@ -255,13 +256,13 @@ export class Doorbell {
   async knockerDigestOf(secret) {
     try {
       if (typeof secret !== "string" || secret === "")
-        return { knocker_digest: null, pseudonym: null, basis: "no secret was presented" };
+        return { knocker_digest: null, pseudonym: null, basis: word("doorbell.basis.secret_presented") };
       const key = this.#knockerKey({ create: false });
       if (!key) return { knocker_digest: null, pseudonym: null,
                          basis: "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised" };
       const knocker_digest = await Doorbell.#knockerDigest(key, secret);
       return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
-    } catch { return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" }; }
+    } catch { return { knocker_digest: null, pseudonym: null, basis: word("doorbell.basis.digest_computed") }; }
   }
 
   /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from this module's
@@ -297,7 +298,7 @@ export class Doorbell {
   }
 
   /* R19: the mark a rate refusal carries, unseen in its answer, saying whether the whole doorbell was full. */
-  static #LIMIT_REACHED = Symbol("the whole-doorbell limit was reached");
+  static #LIMIT_REACHED = Symbol(word("doorbell.symbol.whole_doorbell_limit"));
 
   /** R19: count one knock the doorbell turned away in the day's tally, and whether it found the whole-doorbell limit
    *  reached (R5), dropping any day older than the last `TALLY_DAYS`. Two counters and a date: no address, fingerprint,
@@ -505,9 +506,8 @@ export class Doorbell {
      (the control plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
   static #badArgument(op, argument, shape, given) {
     return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, status: 400,
-             error: `${argument} must be one of ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
-             detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation `
-                   + "could use. Nothing was read." };
+             error: localize("doorbell.index.argument_must_be_one_of", "{argument} must be one of {shape}; {stringify} is not", { argument: String(argument), shape: String(shape), stringify: String(JSON.stringify(String(given)).slice(0, 80)) }),
+             detail: localize("doorbell.index.op_op_needs_argument_in", "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was read.", { op: String(op), argument: String(argument), shape: String(shape) }) };
   }
 
   /* R3 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
@@ -712,13 +712,12 @@ export class Doorbell {
       file: `snapshots/${name}`, locator, retrieved: at,
       profile,
       authority_state: "undetermined",
-      authority_basis: `material handed to the team through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
+      authority_basis: word("doorbell.authority_basis", { at: String(at) }),
       provenance_chain: [{
         /* R13 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
            before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were received at the doorbell of your team's Civicsmith as knock ${row.knock_id} at ${row.received}, `
-               + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
+        asserts: localize("doorbell.index.these_bytes_were_received_at", "these bytes were received at the doorbell of your team's Civicsmith as knock {knock_id} at {received}, and brought into the record by {by} at {at}; they were received, not fetched from any address", { knock_id: String(row.knock_id), received: String(row.received), by: String(by), at: String(at) }),
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false, via: DOORBELL_VIA,
       }],
@@ -748,7 +747,7 @@ export class Doorbell {
       `SELECT knock_id, sha256, bytes, note, received, status, capture_sha FROM inbox
         WHERE pseudonym = ? AND (received, knock_id) > (?, ?) ORDER BY received, knock_id LIMIT ?`, pseudonym, ...from, cap + 1);
     const knocks = found.slice(0, cap), truncated = found.length > cap, last = knocks[knocks.length - 1];
-    return { ok: true, pseudonym, continuity: "the same knocker secret was presented", knocks, count: knocks.length,
+    return { ok: true, pseudonym, continuity: word("doorbell.continuity"), knocks, count: knocks.length,
              limit: cap, truncated, next: truncated ? cursorOf([last.received, last.knock_id]) : null };
   }
 

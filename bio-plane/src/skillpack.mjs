@@ -166,6 +166,7 @@ export { SKILL_CHECKS, SKILL_CHECK_KEYS };
    build (R1); nothing here holds a copy of either. */
 import { RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "./contradiction.mjs";
 import { sha256HexSync } from "./record-grammar/index.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 /* WHAT THE PACK IS AND WHICH EDITION OF ITS DOCTRINE THIS IS.
    The edition is the AUTHORED half of the version and moves with a release; the
@@ -186,11 +187,11 @@ export const DOCTRINE_EDITION = "1";
  *  way is failing its own objective, visibly, without anyone knowing what the
  *  member wanted. */
 export const OBJECTIVE =
-  "Formulate claims and legs SUPPORTED BY EVIDENCE. The goal is not to support or disprove a position.";
+  localize("skills.skillpack.formulate_claims_and_legs_supported", "Formulate claims and legs SUPPORTED BY EVIDENCE. The goal is not to support or disprove a position.");
 
 /** §4, the corrected form, which survives the scope growing. */
 export const BOUNDARY =
-  "The AI holds no op that ACCEPTS anything. Nothing it can call concludes, accepts, publishes, or makes a version current.";
+  localize("skills.skillpack.the_ai_holds_no_op", "The AI holds no op that ACCEPTS anything. Nothing it can call concludes, accepts, publishes, or makes a version current.");
 
 /** The Content Framework's own statement of Bob's correction of 2026-08-04
  *  (Part II §14.3), quoted, and it binds this pack hardest of anything: the
@@ -514,9 +515,7 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
       sourcing: SOURCING.contradiction_unmeasured,
       body: {},
       /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
-      absent_because: "contradiction's recommender prompt has passed no measurement: its digest is null "
-        + "until the blind fixture of dissolved pairs is run under it and recorded, and a prompt no "
-        + "measurement vouches for is not given to a run as the words it recommends under.",
+      absent_because: localize("skills.skillpack.contradictions_recommender_prompt_has_passed", "contradiction's recommender prompt has passed no measurement: its digest is null until the blind fixture of dissolved pairs is run under it and recorded, and a prompt no measurement vouches for is not given to a run as the words it recommends under."),
     },
     /* R28, R29 (K608, K660). The Action layer's rules a run proposing plan options works under, and the acts
        it may use and must leave to a member, read from the published catalogue; a stated absence while the
@@ -572,10 +571,7 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
       /* THE ABSENCE, STATED IN THE PACK ITSELF. A run reading this layer learns
          that the pack holds no wizard scripts, which is a different fact from a
          pack that forgot to carry them. */
-      absent_because: "a wizard script is DATA whose every step names a screen and an op of that screen, and it "
-        + "is worth carrying only if a step naming a screen or an op that does not exist FAILS THE BUILD. The "
-        + "plane has not published its screen registry and its wizard scripts to this render, so no script "
-        + "could be validated here, and none is carried: the layer waits on the plane publishing both.",
+      absent_because: localize("skills.skillpack.a_wizard_script_is_data", "a wizard script is DATA whose every step names a screen and an op of that screen, and it is worth carrying only if a step naming a screen or an op that does not exist FAILS THE BUILD. The plane has not published its screen registry and its wizard scripts to this render, so no script could be validated here, and none is carried: the layer waits on the plane publishing both."),
     },
     /* T41 (T41-27; N820). R40: the guide in force for each kind of document the run reads, passed by the run's caller
        (`reading-guides.guideFor`, its R5), its items only and checked for conduct, or a stated absence with none. R41,

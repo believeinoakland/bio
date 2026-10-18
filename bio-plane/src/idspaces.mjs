@@ -32,6 +32,7 @@
  * resolution, and an edition not written is never supplied. */
 
 import * as CourtCitations from "../../court-citations/index.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 
 /* The twelve spaces, in R1's order, their generic labels (used only when the view gives none) and what their
    referent is. `account`, `object` and `vendor` are the money record's identifiers; `proceeding` a proceeding's
@@ -40,18 +41,18 @@ import * as CourtCitations from "../../court-citations/index.mjs";
    `office` an office record's number, one seat's holding (N569, N613); `institution` one form per institution
    scheme, as `person` (N574, K1729). */
 const SPACES = Object.freeze({
-  enactment: { label: "enactment number (an ordinance or resolution number)", referent: "reading" },
+  enactment: { label: word("idspaces.label.enactment_number_ordinance"), referent: "reading" },
   project: { label: "project number", referent: "reading" },
   fund: { label: "fund code", referent: "name" },
   parcel: { label: "parcel number", referent: "reading" },
   account: { label: "account code", referent: "reading" },
   object: { label: "object code", referent: "reading" },
   vendor: { label: "vendor number", referent: "reading" },
-  proceeding: { label: "proceeding or case number", referent: "reading" },
-  person: { label: "person identifier (one form per scheme)", referent: "reading" },
-  body: { label: "body number (a body in a legislative system)", referent: "reading" },
-  office: { label: "office record number (one seat's holding)", referent: "reading" },
-  institution: { label: "institution identifier (one form per scheme)", referent: "reading" },
+  proceeding: { label: word("idspaces.label.proceeding_case_number"), referent: "reading" },
+  person: { label: word("idspaces.label.person_identifier_form"), referent: "reading" },
+  body: { label: word("idspaces.label.body_number_body"), referent: "reading" },
+  office: { label: word("idspaces.label.office_record_number"), referent: "reading" },
+  institution: { label: word("idspaces.label.institution_identifier_form"), referent: "reading" },
 });
 const SPACE_NAMES = Object.keys(SPACES);
 const has = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
@@ -216,14 +217,12 @@ function floorOf(view, conflicts, kind) {
   }
   const cs = floorConflicts(conflicts, kind);
   if (distinct.length > 1 || cs.length)
-    return { conflict: true, why: `the active profiles give conflicting coverage floors for ${kind} (${
-      cs.length ? conflictSays(cs) : distinct.join(", ")}), and a conflict is never decided here` };
-  if (!entries.length) return { why: `the active profiles name no enactment kind "${kind}", so no coverage floor is measured for it` };
-  return { why: `no coverage floor is measured for ${kind} in the active profiles` };
+    return { conflict: true, why: word("idspaces.why.active_profiles_give", { kind: String(kind), distinct: String(cs.length ? conflictSays(cs) : distinct.join(", ")) }) };
+  if (!entries.length) return { why: word("idspaces.why.active_profiles_name", { kind: String(kind) }) };
+  return { why: word("idspaces.why.coverage_floor_measured", { kind: String(kind) }) };
 }
 
-const outsideSays = (view, kind, f) => `a ${kind} below ${systemName(view, f.system)}'s first (${f.floor}): OUTSIDE THE `
-  + `RECORD'S REACH, never "not found" — the record's source holds no ${kind} that old`;
+const outsideSays = (view, kind, f) => word("idspaces.text.first_outside_record", { kind: String(kind), system: String(systemName(view, f.system)), floor: String(f.floor) });
 
 /** Whether an enactment number is inside the record's reach (R6–R9). Never throws. */
 export function reach(v, number, kind = null) {
@@ -231,29 +230,28 @@ export function reach(v, number, kind = null) {
   const n = typeof number === "number" ? number
     : typeof number === "string" && /^\s*\d+\s*$/.test(number) ? Number(number) : NaN;
   if (!Number.isFinite(n))
-    return { reach: "UNDETERMINED", says: `${JSON.stringify(String(number))} is not a number, so it cannot be compared with a coverage floor` };
+    return { reach: "UNDETERMINED", says: word("idspaces.says.number_compared_coverage", { number: String(JSON.stringify(String(number))) }) };
   if (typeof kind === "string" && kind) {
     const f = floorOf(view, conflicts, kind);
-    if (f.floor == null) return { reach: "UNDETERMINED", says: `${f.why}: whether ${n} is inside the record's reach is undetermined` };
+    if (f.floor == null) return { reach: "UNDETERMINED", says: word("idspaces.says.inside_record_reach", { why: String(f.why), n: String(n) }) };
     return n >= f.floor
-      ? { reach: "INSIDE", floor: f.floor, says: `a ${kind} at or above ${systemName(view, f.system)}'s first (${f.floor}): the record can look it up` }
+      ? { reach: "INSIDE", floor: f.floor, says: word("idspaces.says.first_record_look", { kind: String(kind), system: String(systemName(view, f.system)), floor: String(f.floor) }) }
       : { reach: "OUTSIDE_REACH", floor: f.floor, says: outsideSays(view, kind, f) };
   }
   const kinds = [...new Set(kindsOf(view).map((k) => k.kind).filter((k) => typeof k === "string" && k))];
   if (!kinds.length)
-    return { reach: "UNDETERMINED", says: "the active profiles name no enactment kind, so no coverage floor is measured" };
+    return { reach: "UNDETERMINED", says: word("idspaces.says.active_profiles_name") };
   const each = kinds.map((k) => ({ kind: k, ...floorOf(view, conflicts, k) }));
   const known = each.filter((e) => e.floor != null);
   const named = known.map((e) => `${e.kind} ${e.floor}`).join(", ");
   if (known.length && known.every((e) => n < e.floor) && known.length === each.length)
-    return { reach: "OUTSIDE_REACH", says: `below every kind's coverage floor (${named}): OUTSIDE THE RECORD'S REACH, `
-      + `never "not found" — the record's source holds nothing that old` };
+    return { reach: "OUTSIDE_REACH", says: word("idspaces.says.kind_coverage_floor", { named: String(named) }) };
   if (known.length === each.length && known.every((e) => n >= e.floor))
-    return { reach: "INSIDE", says: `at or above every kind's coverage floor (${named}): the record can look it up` };
+    return { reach: "INSIDE", says: word("idspaces.says.kind_coverage_floor_record", { named: String(named) }) };
   const unknown = each.filter((e) => e.floor == null).map((e) => e.why);
-  return { reach: "UNDETERMINED", says: `no kind stated, and ${[
+  return { reach: "UNDETERMINED", says: word("idspaces.says.kind_stated_inside", { boolean: String([
     known.length ? `${n} is inside the reach for some kinds and outside it for others (floors: ${named})` : null,
-    ...unknown].filter(Boolean).join("; ")}: whether it is inside the record's reach is undetermined` };
+    ...unknown].filter(Boolean).join("; ")) }) };
 }
 
 /* ---------------------------------------------------------------- parcelStanding (R10–R12) */
@@ -276,22 +274,20 @@ export function parcelStanding(key, evidence) {
   const ev = isObj(evidence) ? evidence : {};
   const vintages = arr(ev.vintages).map(String);
   if (inCurrent(ev.current, key))
-    return { standing: "CURRENT", vintages_searched: vintages, says: "in the assessor's current parcel layer" };
+    return { standing: "CURRENT", vintages_searched: vintages, says: word("idspaces.says.assessor_current_parcel") };
   const rec = lineageOf(ev.lineage, key);
   if (rec.length) {
     const roll_year = Math.min(...rec.map((r) => r.roll_year));
     const children = [...new Set(rec.flatMap((r) => arr(r.children).map(String)))].sort();
     return { standing: "RETIRED", roll_year, children, vintages_searched: vintages,
-             says: `retired in roll year ${roll_year}, as the assessor's own lineage records` };
+             says: word("idspaces.says.retired_roll_year", { roll_year: String(roll_year) }) };
   }
   return {
-    standing: "UNDETERMINED", between: ["retired before the earliest published lineage", "never a parcel"],
+    standing: "UNDETERMINED", between: [word("idspaces.between.retired_earliest_published"), word("idspaces.between.parcel")],
     vintages_searched: vintages,
-    says: (vintages.length
+    says: localize("id-spaces.idspaces.v1_undetermined_between_retired_before", "{v1}; undetermined between retired before the earliest published lineage and never a parcel — absence from what was searched decides neither", { v1: String(vintages.length
       ? `in none of the ${vintages.length} published vintage(s) searched`
-      : "no published vintage of the assessor's roll or lineage is held, so none was searched")
-      + "; undetermined between retired before the earliest published lineage and never a parcel — absence from "
-      + "what was searched decides neither",
+      : "no published vintage of the assessor's roll or lineage is held, so none was searched") }),
   };
 }
 
@@ -299,7 +295,7 @@ export function parcelStanding(key, evidence) {
 
 function systemOfOne(view, address) {
   let u;
-  try { u = new URL(String(address)); } catch { return { origin: null, unknown: true, why: "not a parseable address" }; }
+  try { u = new URL(String(address)); } catch { return { origin: null, unknown: true, why: word("idspaces.why.parseable_address") }; }
   const host = u.hostname.toLowerCase();
   const path = u.pathname + u.search;
   for (const s of arr(view.systems)) {
@@ -313,9 +309,8 @@ function systemOfOne(view, address) {
              provenance_stated: s.provenance_stated !== false, basis: s.basis ?? null };
   }
   const mixed = arr(view.mixed_hosts).find((m) => isObj(m) && typeof m.host === "string" && m.host.toLowerCase() === host);
-  if (mixed) return { origin: null, unknown: true, why: `${host} serves many offices' publications${
-    typeof mixed.why === "string" && mixed.why ? ` (${mixed.why})` : ""}; which system a document there came from is not derivable from its address` };
-  return { origin: null, unknown: true, why: `no system in the active profiles matches ${host}` };
+  if (mixed) return { origin: null, unknown: true, why: word("idspaces.why.serves_many_offices", { host: String(host), why: String(typeof mixed.why === "string" && mixed.why ? ` (${mixed.why})` : "") }) };
+  return { origin: null, unknown: true, why: word("idspaces.why.system_active_profiles", { host: String(host) }) };
 }
 
 /** The system a capture belongs to, from every address the record located it at (R13–R15). Never throws. */
@@ -323,7 +318,7 @@ export function systemOf(v, addresses) {
   const { view } = viewOf(v);
   const given = typeof addresses === "string" ? [addresses] : arr(addresses);
   const list = [...new Set(given.filter((a) => a != null).map(String))];
-  if (!list.length) return { origin: null, addresses: [], why: "no addresses: the record holds no address this capture was retrieved from" };
+  if (!list.length) return { origin: null, addresses: [], why: word("idspaces.why.addresses_record_holds") };
   const each = list.map((address) => ({ address, ...systemOfOne(view, address) }));
   const origins = [...new Set(each.map((e) => e.origin))];
   if (origins.length === 1 && origins[0]) {
@@ -331,9 +326,9 @@ export function systemOf(v, addresses) {
     return { origin, name, republication, provenance_stated, basis, addresses: list };
   }
   const why = list.length === 1 ? each[0].why
-    : each.every((e) => !e.origin) ? `unknown systems: none of these ${list.length} addresses names a system (${[...new Set(each.map((e) => e.why))].join("; ")})`
-    : each.some((e) => !e.origin) ? "unknown systems: some of these addresses name no system, so which one published the bytes is undetermined"
-    : `different systems (${origins.join(", ")}): the record located these bytes at addresses of more than one system, so which one published them is undetermined`;
+    : each.every((e) => !e.origin) ? word("idspaces.text.unknown_systems_addresses", { list: String(list.length), why: String([...new Set(each.map((e) => e.why))].join("; ")) })
+    : each.some((e) => !e.origin) ? word("idspaces.text.unknown_systems_some")
+    : word("idspaces.text.different_systems_record", { origins: String(origins.join(", ")) });
   return { origin: null, addresses: list, why, each: each.map(({ unknown, ...e }) => e) };
 }
 
@@ -383,59 +378,49 @@ export function judgePair(v, space, a, b, reading = null) {
   if (ra.form !== rb.form) {
     const cw = throughCrosswalk(view, space, ra, rb);
     if (!cw)
-      return verdict("FORMS_UNJOINED", `the values are in different forms of the ${label} (${ra.form}, ${rb.form}); two forms `
-        + "join only through a captured crosswalk, and none is captured between them in the active profiles, so the two "
-        + "stay unjoined: an unmade join, not a mismatch");
+      return verdict("FORMS_UNJOINED", localize("id-spaces.idspaces.the_values_are_in_different", "the values are in different forms of the {label} ({form}, {form_2}); two forms join only through a captured crosswalk, and none is captured between them in the active profiles, so the two stay unjoined: an unmade join, not a mismatch", { label: String(label), form: String(ra.form), form_2: String(rb.form) }));
     if (!cw.partners.length)
-      return verdict("FORMS_UNJOINED", `the values are in different forms of the ${label} (${ra.form}, ${rb.form}), and the `
-        + `crosswalk between them (${cw.sources.join(", ")}) lists no partner for ${ra.normal}: an unmade join, not a mismatch`);
+      return verdict("FORMS_UNJOINED", localize("id-spaces.idspaces.the_values_are_in_different_2", "the values are in different forms of the {label} ({form}, {form_2}), and the crosswalk between them ({sources}) lists no partner for {normal}: an unmade join, not a mismatch", { label: String(label), form: String(ra.form), form_2: String(rb.form), sources: String(cw.sources.join(", ")), normal: String(ra.normal) }));
     if (!cw.partners.includes(rb.normal))
-      return verdict("VALUES_DIFFER", `through the crosswalk (${cw.sources.join(", ")}), ${ra.normal} is ${cw.partners.join(" or ")} `
-        + `in the form ${rb.form}, not ${rb.normal}`, { near_miss: false });
-    via = ` (the forms joined through the crosswalk ${cw.sources.join(", ")})`;
+      return verdict("VALUES_DIFFER", localize("id-spaces.idspaces.through_the_crosswalk_sources_normal", "through the crosswalk ({sources}), {normal} is {partners} in the form {form}, not {normal_2}", { sources: String(cw.sources.join(", ")), normal: String(ra.normal), partners: String(cw.partners.join(" or ")), form: String(rb.form), normal_2: String(rb.normal) }), { near_miss: false });
+    via = localize("id-spaces.idspaces.the_forms_joined_through_the", " (the forms joined through the crosswalk {sources})", { sources: String(cw.sources.join(", ")) });
   } else if (ra.normal !== rb.normal) {
     /* 2. the value (R18) */
     const near = unpadAll(ra.normal) === unpadAll(rb.normal);
     return verdict("VALUES_DIFFER", near
-      ? `the values differ only by leading zeros (${ra.normal}, ${rb.normal}): a near miss, never counted — a digit is never folded`
-      : `different values (${ra.normal}, ${rb.normal})`, { near_miss: near });
+      ? localize("id-spaces.idspaces.the_values_differ_only_by", "the values differ only by leading zeros ({normal}, {normal_2}): a near miss, never counted — a digit is never folded", { normal: String(ra.normal), normal_2: String(rb.normal) })
+      : localize("id-spaces.idspaces.different_values_normal_normal_2", "different values ({normal}, {normal_2})", { normal: String(ra.normal), normal_2: String(rb.normal) }), { near_miss: near });
   }
 
   /* 3. the systems' independence (R19) */
   const sa = isObj(a.system) ? a.system : {}, sb = isObj(b.system) ? b.system : {};
   if (!sa.origin || !sb.origin) {
     const which = !sa.origin ? "first" : "second", s = !sa.origin ? sa : sb;
-    return verdict("SYSTEM_UNDETERMINED", `which system published the ${which} end is undetermined${
-      typeof s.why === "string" ? ` (${s.why})` : ""}; a match counts only between two systems known to be independent`);
+    return verdict("SYSTEM_UNDETERMINED", localize("id-spaces.idspaces.which_system_published_the_which", "which system published the {which} end is undetermined{v1}; a match counts only between two systems known to be independent", { which: String(which), v1: String(typeof s.why === "string" ? ` (${s.why})` : "") }));
   }
   if (sa.origin === sb.origin)
-    return verdict("SAME_SYSTEM", `both ends are publications of one system (${sa.origin}); two publications of one source `
-      + "are one system, however many documents carry the value");
+    return verdict("SAME_SYSTEM", localize("id-spaces.idspaces.both_ends_are_publications_of", "both ends are publications of one system ({origin}); two publications of one source are one system, however many documents carry the value", { origin: String(sa.origin) }));
 
   /* 4. the fund name (R20) */
   if (space === "fund") {
     const na = normName(a.name), nb = normName(b.name);
     if (!na || !nb)
-      return verdict("FUND_NAME_ABSENT", `a fund code counts only when the fund name agrees too, and the ${
-        !na ? "first" : "second"} end names no fund — a bare code is not counted`);
+      return verdict("FUND_NAME_ABSENT", localize("id-spaces.idspaces.a_fund_code_counts_only", "a fund code counts only when the fund name agrees too, and the {v1} end names no fund — a bare code is not counted", { v1: String(!na ? "first" : "second") }));
     if (na === nb)
-      return verdict("SHARED", `one value${via}, two independent systems (${sa.origin}, ${sb.origin}), and the fund names agree`,
+      return verdict("SHARED", localize("id-spaces.idspaces.one_value_via_two_independent", "one value{via}, two independent systems ({origin}, {origin_2}), and the fund names agree", { via: String(via), origin: String(sa.origin), origin_2: String(sb.origin) }),
         { referent: { by: "the names, compared normalised", agrees: true } });
   }
 
   /* 5. the referent (R21) */
   if (reading !== "agrees" && reading !== "disagrees")
     return verdict("REFERENT_UNREAD", space === "fund"
-      ? `the fund names differ as written (${a.name} / ${b.name}); whether they name one fund is a reading nobody has supplied, `
-        + "so the match is not counted"
-      : `one value${via} in two independent systems, but the referent has not been read: a match counts only when what the `
-        + "value names agrees in both, and that is read, never inferred from the string");
+      ? localize("id-spaces.idspaces.the_fund_names_differ_as", "the fund names differ as written ({name} / {name_2}); whether they name one fund is a reading nobody has supplied, so the match is not counted", { name: String(a.name), name_2: String(b.name) })
+      : localize("id-spaces.idspaces.one_value_via_in_two", "one value{via} in two independent systems, but the referent has not been read: a match counts only when what the value names agrees in both, and that is read, never inferred from the string", { via: String(via) }));
   if (reading === "disagrees")
     return verdict("REFERENT_DISAGREES", "the same value names different things, on the caller's reading: not a match",
-      { referent: { by: "the caller's reading", agrees: false } });
-  return verdict("SHARED", `one value${via}, two independent systems (${sa.origin}, ${sb.origin}), and the referent agrees on `
-    + "the caller's reading — a reading this module did not make and cannot check",
-    { referent: { by: "the caller's reading", agrees: true } });
+      { referent: { by: word("idspaces.by.caller_reading"), agrees: false } });
+  return verdict("SHARED", localize("id-spaces.idspaces.one_value_via_two_independent_2", "one value{via}, two independent systems ({origin}, {origin_2}), and the referent agrees on the caller's reading — a reading this module did not make and cannot check", { via: String(via), origin: String(sa.origin), origin_2: String(sb.origin) }),
+    { referent: { by: word("idspaces.by.caller_reading"), agrees: true } });
 }
 
 /* ---------------------------------------------------------------- recogniseCitations (R27–R29) */
@@ -543,14 +528,13 @@ export function recogniseCitations(text, reporters = undefined) {
     const passed = reporters !== undefined && reporters !== null;
     const data = passed ? compileReporters(reporters) : compileReporters(HELD_REPORTERS);
     if (typeof text !== "string")
-      return { citations: [], undetermined: { why: "no text was given (not a string), so nothing was read: whether it cites anything is undetermined" } };
+      return { citations: [], undetermined: { why: word("idspaces.why.text_given_string") } };
     if (!data) {
       const why = passed
         ? "no reporter data is held for this reading: the data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS)"
         : "no reporter data is held (court-citations' data is not readable here, and none was passed)";
       const unrecognised = shapes(t);
-      return { citations: [], undetermined: { why: `${why}: no citation can be recognised, and finding none says nothing about `
-        + "what the text cites", ...(unrecognised.length ? { unrecognised } : {}) } };
+      return { citations: [], undetermined: { why: localize("id-spaces.idspaces.why_no_citation_can_be", "{why}: no citation can be recognised, and finding none says nothing about what the text cites", { why: String(why) }), ...(unrecognised.length ? { unrecognised } : {}) } };
     }
     const citations = [], ambiguous = [], taken = [];
     for (const f of findCitations(t, data)) {
@@ -575,17 +559,15 @@ export function recogniseCitations(text, reporters = undefined) {
     const undetermined = {};
     if (unrecognised.length) {
       undetermined.unrecognised = unrecognised;
-      undetermined.why = `${unrecognised.length} run(s) of text have a volume-reporter-page shape, but no variant in the reporter `
-        + "data names the reporter: listed, never dropped and never guessed";
+      undetermined.why = word("idspaces.why.run_text_volume", { unrecognized: String(unrecognised.length) });
     }
     if (ambiguous.length) {
       undetermined.ambiguous = ambiguous;
-      undetermined.why = [undetermined.why, `${ambiguous.length} citation(s) are written in a spelling the reporter data gives to more `
-        + "than one reporter: listed with each, never one chosen"].filter(Boolean).join("; ");
+      undetermined.why = [undetermined.why, word("idspaces.why.citation_written_spelling", { ambiguous: String(ambiguous.length) })].filter(Boolean).join("; ");
     }
     return { citations, undetermined };
   } catch {
-    return { citations: [], undetermined: { why: "the text could not be read for citations, so whether it cites anything is undetermined" } };
+    return { citations: [], undetermined: { why: word("idspaces.why.text_read_citations") } };
   }
 }
 
@@ -618,7 +600,7 @@ function seriesOf(view, conflicts) {
   for (const s of arr(view.standard_sources)) {
     if (!isObj(s) || !isObj(s.series)) continue;
     if (typeof s.key !== "string" || !s.key || typeof s.series.key !== "string" || !s.series.key) {
-      unreadable.push({ source: typeof s.source === "string" ? s.source : null, why: "a series with no issuer key or no family key names no family" });
+      unreadable.push({ source: typeof s.source === "string" ? s.source : null, why: word("idspaces.why.series_issuer_key") });
       continue;
     }
     const k = famKey(s.key, s.series.key);
@@ -633,11 +615,11 @@ function seriesOf(view, conflicts) {
       withheld.get(k).says.push(why);
     };
     if (withheld.has(k)) continue;
-    if (new Set(list.map(sig)).size > 1) { withheldHere("the view's entries for this family give different labels, patterns or normal forms"); continue; }
+    if (new Set(list.map(sig)).size > 1) { withheldHere(word("idspaces.withheld_here.view_entries_family")); continue; }
     const s = list[0];
-    if (!isObj(s.cite)) { withheldHere("the view holds this family with no citation pattern (withheld)"); continue; }
+    if (!isObj(s.cite)) { withheldHere(word("idspaces.withheld_here.view_holds_family")); continue; }
     const re = compileFind(s.cite);
-    if (!re) { unreadable.push({ key, series, why: "its citation pattern does not compile" }); continue; }
+    if (!re) { unreadable.push({ key, series, why: word("idspaces.why.citation_pattern_compile") }); continue; }
     readable.push({ entry: s, re });
   }
   return { readable, withheld: [...withheld.values()], unreadable, held: byFam.size + withheld.size };
@@ -681,10 +663,10 @@ export function recogniseSeries(v, text) {
   try {
     const { view, conflicts } = viewOf(v);
     if (typeof text !== "string")
-      return noSeries("no text was given (not a string), so nothing was read: whether it cites a policy or a standard is undetermined");
+      return noSeries(word("idspaces.no_series.text_given_string"));
     const { readable, withheld, unreadable, held } = seriesOf(view, conflicts);
     const named = withheld.map(({ key, series, at, says }) => ({ key, series, ...(at.length ? { at } : {}),
-      says: says.length ? says.join("; ") : "the active profiles disagree on this family, so it is withheld" }));
+      says: says.length ? says.join("; ") : word("idspaces.says.active_profiles_disagree") }));
     const extra = { ...(named.length ? { conflicts: named } : {}), ...(unreadable.length ? { unreadable } : {}) };
     if (!held)
       return noSeries("the active profiles supply no policy series or standard designation, so no citation of one can be "
@@ -721,14 +703,13 @@ export function recogniseSeries(v, text) {
       ambiguous.push({ text: text.slice(g.start, g.end), start: g.start, end: g.end, readings: [...readings.values()] });
     }
     const why = [];
-    if (ambiguous.length) why.push(`${ambiguous.length} run(s) of text are read by more than one family or number: listed with every reading, never one chosen`);
-    if (named.length) why.push(`${named.length} famil(ies) are withheld because the active profiles disagree on them, so a citation of `
-      + "one is not read: whether the text cites them is undetermined");
-    if (unreadable.length) why.push(`${unreadable.length} series cannot be read from the view, so a citation of one is not recognised`);
-    if (!readable.length && !why.length) why.push("no series in the view can be read");
+    if (ambiguous.length) why.push(word("idspaces.push.run_text_read", { ambiguous: String(ambiguous.length) }));
+    if (named.length) why.push(word("idspaces.push.famil_ies_withheld", { named: String(named.length) }));
+    if (unreadable.length) why.push(localize("id-spaces.idspaces.length_series_cannot_be_read", "{length} series cannot be read from the view, so a citation of one is not recognised", { length: String(unreadable.length) }));
+    if (!readable.length && !why.length) why.push(word("idspaces.push.series_view_read"));
     if (!why.length) return { citations };
     return { citations, undetermined: { why: why.join("; "), ...(ambiguous.length ? { ambiguous } : {}), ...extra } };
   } catch {
-    return noSeries("the text could not be read for policy or standard citations, so whether it cites one is undetermined");
+    return noSeries(word("idspaces.no_series.text_read_policy"));
   }
 }

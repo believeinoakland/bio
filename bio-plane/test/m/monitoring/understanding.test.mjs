@@ -9,6 +9,7 @@ import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER, DEADLINE_RECHECK_MAX, GATH
          MONITOR_CADENCE_BATCH, DEADLINE_NO_ZONE } from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* R28: a bundle carrying named requests, in project P. */
 const GB = "INFO-2026-0600-gathering", GP = "PROJ-2026-0600-g";
@@ -99,7 +100,7 @@ test("R28 a request not open, one whose cadence is none, and a request not due c
                                        req(RETIRED, { status: "retired" }), req(NEVER, { cadence: "none" })]);
   const g = w.m.gathering(NOW_MS);
   assert.deepEqual([g.due.map((x) => x.id), g.unscheduled.map((x) => [x.id, x.reason])],
-                   [[OPEN], [[NEVER, "its cadence is none: the daemon does not run it"]]]);
+                   [[OPEN], [[NEVER, word("monitoring.cadence_none_daemon")]]]);
   /* paused: nothing gathered, what is due stated */
   assert.equal(w.m.pause({ paused: true, by: "class:admin" }).ok, true);
   const p = await online(w, () => w.m.cadenceTick(NOW_MS));
@@ -156,7 +157,7 @@ test("R28 (K1102) the bundle's daemon block governs its requests: enabled false 
   /* disabled: never fetched, stated */
   assert.equal(asked.some((u) => u.includes("off1")), false);
   assert.deepEqual(t.gathered.skipped.filter((x) => x.bundle === "INFO-2026-0651-off"),
-    [{ bundle: "INFO-2026-0651-off", request: "GATH-2026-0651-off", reason: "its bundle's daemon block says enabled: false, so the daemon runs none of its requests" }]);
+    [{ bundle: "INFO-2026-0651-off", request: "GATH-2026-0651-off", reason: word("monitoring.bundle_daemon_block") }]);
   /* tick_budget 1: one locator for the bundle in this tick; its second request waits, stated */
   assert.deepEqual(asked.filter((u) => u.includes("-bud")), [loc("bud", 2, "p")]);
   assert.deepEqual(t.gathered.failed.find((x) => x.bundle === "INFO-2026-0652-budget").tried.map((x) => x.locator), [loc("bud", 2, "p")]);
@@ -239,7 +240,7 @@ test("R31 the reads answer what queue-producers publishes: flagged (R48) names e
   assert.equal(overdue(items["INFO-2026-0805-just"]), false, "half a day past: due, not overdue");
   assert.deepEqual([items["INFO-2026-0806-never"].state, items["INFO-2026-0806-never"].due_at], ["due", null], "never checked: due now, not overdue");
   assert.deepEqual([items["INFO-2026-0807-meet"].state, items["INFO-2026-0807-meet"].reason],
-                   ["unscheduled", "cadence is a meeting schedule your team's Civicsmith does not hold"]);
+                   ["unscheduled", word("monitoring.cadence_meeting_schedule")]);
   /* this module publishes no item: none of its reads answers an item of the item contract */
   for (const read of [f, e, w.m.monitoring({ viewer: DAEMON, now: NOW_MS })])
     assert.equal(/"class":"(FINDING|CONDITION)"|"kind":"(source-modified|source-removed|archive-fallback-eligible|monitoring-recheck-due)"/

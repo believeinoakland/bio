@@ -26,9 +26,10 @@ import staffRoster from "./staff-roster.mjs";
 import orgChart from "./org-chart.mjs";
 import { rosterColumns } from "./columns.mjs";
 import { withoutContacts } from "./lines.mjs";
+import { word, localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export const LEVEL_READ = "held as a table, read by roster-reader";
-export const LEVEL_NOT_READ = "held as a table, not read";
+export const LEVEL_NOT_READ = word("people.held_as_a_table_not");
 /* The roles a row carries into the answer, in R12's order. `as_of` is a table's stated date, `contact` never read. */
 const ROW_ROLES = ["name", "title", "unit", "start", "end", "employee_id"];
 
@@ -43,13 +44,13 @@ export function rosterSource(reads) {
       return notRead(base, "no read of the store was handed to roster-reader, so no held roster is read");
     let got;
     try { got = reads({ organisation, viewer }); }
-    catch (e) { return notRead(base, `the store's read of held rosters failed (${msg(e)}), so no held roster is read`); }
+    catch (e) { return notRead(base, localize("roster-reader.source.the_stores_read_of_held", "the store's read of held rosters failed ({msg}), so no held roster is read", { msg: String(msg(e)) })); }
     if (got && typeof got.then === "function") {
       got.then(null, () => {});
       return notRead(base, "the store's read answered later (a promise), and a roster source answers at once, so no held roster is read");
     }
     if (got && typeof got === "object" && !Array.isArray(got) && got.ok === false)
-      return notRead(base, `the store's read refused${got.why || got.reason ? ` (${got.why || got.reason})` : ""}, so no held roster is read`);
+      return notRead(base, localize("roster-reader.source.the_stores_read_refused_v1", "the store's read refused{v1}, so no held roster is read", { v1: String(got.why || got.reason ? ` (${got.why || got.reason})` : "") }));
     const items = Array.isArray(got) ? got : got && typeof got === "object" ? (got.items || got.rosters) : null;
     if (!Array.isArray(items))
       return notRead(base, "the store's read answered no list of held rosters, so no held roster is read");
@@ -58,14 +59,14 @@ export function rosterSource(reads) {
     for (const item of items) {
       let r;
       try { r = readItem(item, fallbackView); }
-      catch (e) { r = { unread: { source: sourceOf(item), why: `reading it failed (${msg(e)})` } }; }
+      catch (e) { r = { unread: { source: sourceOf(item), why: localize("roster-reader.source.reading_it_failed_msg", "reading it failed ({msg})", { msg: String(msg(e)) }) } }; }
       if (r.unread) unread.push(r.unread); else rosters.push(r.roster);
     }
     const out = { level: LEVEL_READ, rosters, ...base };
     if (unread.length) out.unread = unread;
     if (!rosters.length)
       out.why = items.length
-        ? `${items.length} held roster(s) of this organisation the viewer may see, none of which could be read as a roster`
+        ? localize("roster-reader.source.length_held_roster_s_of", "{length} held roster(s) of this organisation the viewer may see, none of which could be read as a roster", { length: String(items.length) })
         : "no roster document or roster table of this organisation is held that the viewer may see";
     return out;
   };
@@ -141,7 +142,7 @@ function readTable(item, view) {
   const unnamed = cols.roles.filter((c) => c.role === null).length, contact = cols.roles.filter((c) => c.role === "contact").length;
   roster.columns = cols.roles.map((c) => ({ index: c.index, header: c.header, role: c.role }));
   if (contact || unnamed)
-    roster.columns_why = [contact ? `${contact} contact column(s) not read` : null, unnamed ? `${unnamed} column(s) with no role not read` : null].filter(Boolean).join("; ");
+    roster.columns_why = [contact ? localize("roster-reader.source.contact_contact_column_s_not", "{contact} contact column(s) not read", { contact: String(contact) }) : null, unnamed ? localize("roster-reader.source.unnamed_column_s_with_no", "{unnamed} column(s) with no role not read", { unnamed: String(unnamed) }) : null].filter(Boolean).join("; ");
   if (!rows.length) roster.why = "no row of the table carries a value in a roster column";
   return { roster };
 }

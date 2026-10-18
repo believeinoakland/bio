@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { scene, V, MACHINE } from "./fixture.mjs";
 import { CONFORMANCE_CHECKS, NONCONFORMING_WORDS, BELOW_BENCHMARK, BINDS_NOT_READ, MEASURE_SAYS, ACTOR_KINDS }
   from "../../../src/conformance/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -100,7 +101,7 @@ test("R27: a row or question of a benchmark that calls the act violated, a viola
         refused(nothing(w, () => w.c.comparisonPropose(cmp(over))), "BENCHMARK_CALLED_NONCONFORMING");
       }
   /* whole words only, and only against a benchmark */
-  for (const fine of ["below the benchmark", "slower than the guideline", "no violations log was kept", "nonconformingly"])
+  for (const fine of [localize("conformance.below_benchmark", "below the benchmark"), "slower than the guideline", "no violations log was kept", "nonconformingly"])
     assert.equal(w.c.determine(det({ rows: [row({ did: fine })] })).ok, true, fine);
   const binding = input({ rows: [{ ...input().rows[0], did: "the department violated the notice rule" }] });
   assert.equal(w.c.determine(binding).ok, true);
@@ -188,7 +189,7 @@ const measured = (over = {}) => ({
   result_key: "rk1", method_version: "bio-calc/1", computed_at: "2026-09-27T00:00:00Z",
   results: { output: { numerator: "41", denominator: "58", value: "0.7069" },
              application: { recipe: "policy_against_practice", derivation: "the recipe stored with this calculation, evaluated by calc-grammar (bio-calc/1)",
-                            denominator: { rows: "58", says: "the rows counted" },
+                            denominator: { rows: "58", says: localize("calculations.says.rows_counted", "the rows counted") },
                             population: [{ input: "uses", table: "ab".repeat(32), filter: { decider: "ENT-1", from: "2025-01-01" },
                                            frozen_by: V("olive"), frozen_at: "2026-09-27T00:00:00Z" }] } },
   ...over });
@@ -205,7 +206,7 @@ test("R29: a row may state what was done as a measure {calc, result_key}; it is 
   const [r] = d.standards[0].rows;
   assert.deepEqual(r.did, { calc: "CALC-2026-0001", result_key: "rk1" });
   assert.deepEqual(r.measure, { calc: "CALC-2026-0001", result_key: "rk1", result_key_now: "rk1", result_key_differs: false,
-    result: { numerator: "41", denominator: "58", value: "0.7069" }, denominator: { rows: "58", says: "the rows counted" },
+    result: { numerator: "41", denominator: "58", value: "0.7069" }, denominator: { rows: "58", says: localize("calculations.says.rows_counted", "the rows counted") },
     population: measured().results.application.population,
     derivation: { recipe: { output: "share" }, method_version: "bio-calc/1",
                   says: "the recipe stored with this calculation, evaluated by calc-grammar (bio-calc/1)" },
@@ -227,7 +228,7 @@ test("R29: a row may state what was done as a measure {calc, result_key}; it is 
   /* a comparison takes a measure the same way */
   const p = await w.c.comparisonPropose({ project: proj, act: input().act, standards: [std], rows: [row], proposer: V("pat"), viewer: V("pat") });
   assert.deepEqual([p.ok, p.proposal.rows[0].did, p.proposal.rows[0].measure.denominator],
-    [true, { calc: "CALC-2026-0001", result_key: "rk1" }, { rows: "58", says: "the rows counted" }]);
+    [true, { calc: "CALC-2026-0001", result_key: "rk1" }, { rows: "58", says: localize("calculations.says.rows_counted", "the rows counted") }]);
   /* through the op too */
   const viaOp = await w.op("determine", { author: V("olive"), viewer: V("olive") }, { ...input({ rows: [row] }), author: undefined });
   assert.equal(viaOp.ok, true);

@@ -20,6 +20,7 @@ import { CONFIDENCE, CONTRACT, alsoSatisfies } from "../docprofile/doctypes/inde
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { readDefinitions, sha256Hex } from "./sections.mjs";
 import { readHeader, policySeries, headerLabels, HEADER_FIELDS } from "./policy-header.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ------------------------------------------------------------------------ lines */
 
@@ -376,9 +377,9 @@ export default {
                why: "no line of this text opens with a policy series the active profiles name, beside the header labels they give" };
     if (!hd.number)
       return { match: false, confidence: CONFIDENCE.NONE,
-               why: `the header names ${hd.type.text} but carries no number that series reads, so it is not read as one of its items` };
+               why: localize("doctypes.policy.the_header_names_text_but", "the header names {text} but carries no number that series reads, so it is not read as one of its items", { text: String(hd.type.text) }) };
     return { match: true, confidence: CONFIDENCE.CERTAIN,
-             signals: [`a header naming ${hd.type.text} ${hd.number.text}`,
+             signals: [localize("doctypes.policy.a_header_naming_text_text", "a header naming {text} {text_2}", { text: String(hd.type.text), text_2: String(hd.number.text) }),
                        `${HEADER_FIELDS.length - hd.missing.length} header field(s) read`] };
   },
 
@@ -400,9 +401,9 @@ export default {
         const was = ha[f] ? (ha[f].date || ha[f].text) : null, now = hb[f] ? (hb[f].date || hb[f].text) : null;
         if (String(was || "") !== String(now || ""))
           events.push(event("instrument_changed", { key: `header.${f}`, was, now,
-            why: `this policy's ${f.replace("_", " ")} as its header states it is not what it was at this address` }));
+            why: localize("doctypes.policy.this_policys_replace_as_its", "this policy's {replace} as its header states it is not what it was at this address", { replace: String(f.replace("_", " ")) }) }));
       }
-    } else headerWhy = (ha || hb ? "only one of the readings" : "neither reading") + " gave a header, so nothing is said about the header";
+    } else headerWhy = localize("doctypes.policy.v1_gave_a_header_so", "{v1} gave a header, so nothing is said about the header", { v1: String(ha || hb ? "only one of the readings" : "neither reading") });
     const sa = Array.isArray(a.sections) ? a.sections : [], sb = Array.isArray(b.sections) ? b.sections : [];
     let sectionsWhy = null;
     if (sa.length && sb.length) {
@@ -415,19 +416,18 @@ export default {
       for (const [k, was] of ma) {
         const now = mb.get(k);
         if (!now) { events.push(event("instrument_changed", { key: "section", section: was.path, was: was.number, now: null,
-          why: `section ${was.number} was read before and is not read now` })); continue; }
+          why: localize("doctypes.policy.section_number_was_read_before", "section {number} was read before and is not read now", { number: String(was.number) }) })); continue; }
         const moved = [];
         if (String(was.heading || "") !== String(now.heading || "")) moved.push("heading");
         if (((a.section_digests || {})[k] || null) !== ((b.section_digests || {})[k] || null)) moved.push("text");
         for (const [list, show] of Object.entries(shows)) if (inSec(a, list, k, show) !== inSec(b, list, k, show)) moved.push(list);
         if (moved.length) events.push(event("instrument_changed", { key: "section", section: now.path, moved,
           was: was.heading || was.number, now: now.heading || now.number,
-          why: `section ${now.number}'s ${moved.join(", ")} is not what it was at this address` }));
+          why: localize("doctypes.policy.section_number_s_moved_is", "section {number}'s {moved} is not what it was at this address", { number: String(now.number), moved: String(moved.join(", ")) }) }));
       }
       for (const [k, now] of mb) if (!ma.has(k)) events.push(event("instrument_changed", { key: "section", section: now.path,
-        was: null, now: now.number, why: `section ${now.number} is read now and was not read before` }));
-    } else sectionsWhy = (sa.length || sb.length ? "only one of the readings" : "neither reading") + " gave sections"
-      + ", so nothing is said about sections: " + (b.sections_why || a.sections_why || "neither reading carries sections");
+        was: null, now: now.number, why: localize("doctypes.policy.section_number_is_read_now", "section {number} is read now and was not read before", { number: String(now.number) }) }));
+    } else sectionsWhy = localize("doctypes.policy.v1_gave_sections_so_nothing", "{v1} gave sections, so nothing is said about sections: {v2}", { v1: String(sa.length || sb.length ? "only one of the readings" : "neither reading"), v2: String(b.sections_why || a.sections_why || "neither reading carries sections") });
     if (headerWhy && sectionsWhy)
       return { meaningful: null, significance: null, events: [], confirmed: null, header_why: headerWhy, sections_why: sectionsWhy,
                why: "nothing could be read from this policy on one side or the other, so nothing is claimed about it either way" };
@@ -435,7 +435,7 @@ export default {
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events, confirmed: null,
       header_compared: !headerWhy, header_why: headerWhy, sections_compared: !sectionsWhy, sections_why: sectionsWhy,
-      why: events.length ? `${events.length} change(s) between two readings of a policy at the same address`
+      why: events.length ? localize("doctypes.policy.length_change_s_between_two", "{length} change(s) between two readings of a policy at the same address", { length: String(events.length) })
         : "this policy reads as it read: the same header and the same sections",
     };
   },

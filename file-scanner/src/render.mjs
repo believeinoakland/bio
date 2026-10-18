@@ -2,6 +2,7 @@
  * `SafeViewRenderer` image (container/renderer.mjs), whose answer, a PDF of page images and its headers, passes through. */
 import { SAFE_VIEW_DPI, SAFE_VIEW_PAGES_MAX } from './limits.mjs';
 import { normaliseTarget, knownStore, sizeTarget, targetStream } from './store.mjs';
+import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 const STATUS = { NOT_FOUND: 404, DIGEST_MISMATCH: 409, TOO_LARGE: 413 };
 const refuse = (status, code, extra = {}) => new Response(JSON.stringify({ ok: false, code, ...extra }),
@@ -42,7 +43,7 @@ export async function render(deps, body) {
   if (r.status !== 200) {
     const e = await r.json().catch(() => ({}));
     const code = KNOWN.has(e.code) ? e.code : 'RENDER_FAILED';
-    const message = code === 'RENDER_FAILED' ? String(e.message || `the renderer answered ${r.status}`).slice(0, 300) : undefined;
+    const message = code === 'RENDER_FAILED' ? String(e.message || localize('file-scanner.render.the_renderer_answered_status', 'the renderer answered {status}', { status: String(r.status) })).slice(0, 300) : undefined;
     return refuse(code === 'TIME_LIMIT' ? 504 : code === 'RENDER_FAILED' ? 500 : 422, code, message ? { message } : {});
   }
   const headers = new Headers();

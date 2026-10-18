@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, PROFILE, attributed, WHY } from "./fixture.mjs";
 import { FILING_BLANKS, OVERRIDE_HEAD, INBAND_RULE, unfilledMarker, overrideDisclosure } from "../../../src/filings/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const REASON = "the clerk refused to produce the minutes the finding needs";
@@ -71,7 +72,7 @@ test("R8 an action stating a premise override and no live determination gets a c
   assert.deepEqual(p.sections.facts.items, []);
   assert.match(p.sections.facts.says, /no determination is held/);
   assert.match(p.sections.standards.says, /no determination is held/);
-  assert.equal(p.sections.chronology.set.some((e) => e.is === "the act's event"), false, "no act is set out (R33)");
+  assert.equal(p.sections.chronology.set.some((e) => e.is === word("filings.the_act_s_event")), false, "no act is set out (R33)");
   assert.equal(p.fileable, false);
   /* nothing drawn from a determination can change: no basis_changed */
   assert.equal(x.f.counselPacketRead({ id: p.id, viewer: V("bo") }).basis_changed, null);

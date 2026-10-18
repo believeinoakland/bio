@@ -33,6 +33,7 @@
  */
 
 import { makeMeter } from "./cpu.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 /** OUR policy ceiling: how many fetches this instance is willing to spend on a
  *  single document. This is a choice about appetite, and it exists because an
@@ -751,18 +752,14 @@ export function partFetchSpread(records) {
     clock: one ? named[0] : null,
     earliest: one ? one.earliest : null,
     latest: one ? one.latest : null,
-    note: "the earliest and latest instants at which this composite's parts were fetched, per clock. "
-        + "`capture` instants were stamped by this capture; `record` instants are when an earlier capture's "
-        + "fetch of a reused part was filed, on the Store's clock. The two are never ordered against each other, "
-        + "so a composite holding both states each and leaves the composite-wide earliest and latest null. "
-        + "undetermined counts held parts whose instant the record does not give.",
+    note: localize("subresources.subresources.the_earliest_and_latest_instants", "the earliest and latest instants at which this composite's parts were fetched, per clock. `capture` instants were stamped by this capture; `record` instants are when an earlier capture's fetch of a reused part was filed, on the Store's clock. The two are never ordered against each other, so a composite holding both states each and leaves the composite-wide earliest and latest null. undetermined counts held parts whose instant the record does not give."),
   };
 }
 
 export function fetchPolicy(ref, origin) {
   if (ref.collapsed)
     return { fetch: false, reason: "COLLAPSED_SRCSET_FAMILY",
-             detail: `one of ${ref.family_size} responsive candidates for one picture; the largest is captured` };
+             detail: localize("subresources.subresources.one_of_family_size_responsive", "one of {family_size} responsive candidates for one picture; the largest is captured", { family_size: String(ref.family_size) }) };
   if (ref.kind === "stylesheet" || ref.kind === "css-asset" || ref.kind === "font" || ref.kind === "icon")
     return { fetch: true, why: "layout" };
   if (origin === "third_party" && (ref.kind === "script" || ref.kind === "image" || ref.kind === "media"))
@@ -771,7 +768,7 @@ export function fetchPolicy(ref, origin) {
   if (ref.kind === "script") return { fetch: true, why: "served_with_the_page" };
   if (ref.region === "furniture")
     return { fetch: false, reason: "OUTSIDE_THE_DOCUMENT",
-             detail: `found in ${ref.region_basis}, which belongs to the site rather than to this document` };
+             detail: localize("subresources.subresources.found_in_region_basis_which", "found in {region_basis}, which belongs to the site rather than to this document", { region_basis: String(ref.region_basis) }) };
   return { fetch: true, why: "in_the_document" };
 }
 
@@ -1001,7 +998,7 @@ export async function captureSubresources({
       settle(item, { ...stem, ok: false, status: null, reason: cls.reason,
         ...(cls.scheme ? { scheme: cls.scheme } : {}),
         detail: cls.reason === "REFUSED_SCHEME"
-          ? `a ${cls.scheme} reference is not something this surface fetches`
+          ? localize("subresources.subresources.a_scheme_reference_is_not", "a {scheme} reference is not something this surface fetches", { scheme: String(cls.scheme) })
           : "the address is not public https, and the fence that guards the primary locator guards this one" });
       continue;
     }
@@ -1078,17 +1075,12 @@ export async function captureSubresources({
           reused_from_fetched_at: known.last_fetched,
           reused_stable_since: known.stable_since,
           reused_seen_in_documents: known.documents,
-          detail: `not fetched during this capture: the source was seen serving these exact bytes at `
-                + `${known.last_fetched}`
-                + (known.last_fetched_by
+          detail: localize("subresources.subresources.not_fetched_during_this_capture", "not fetched during this capture: the source was seen serving these exact bytes at {last_fetched}{v1}, across {documents} documents on this host{v2}, and they are reused from the record rather than requested again", { last_fetched: String(known.last_fetched), v1: String(known.last_fetched_by
                     ? ` by capture ${known.last_fetched_by}`
-                    : ` by a capture the record does not name (undetermined)`)
-                + `, across ${known.documents} documents on this host`
-                + (known.documents_undetermined
+                    : ` by a capture the record does not name (undetermined)`), documents: String(known.documents), v2: String(known.documents_undetermined
                     ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} `
                       + `whose page the record does not name, counted as undetermined)`
-                    : "")
-                + `, and they are reused from the record rather than requested again` };
+                    : "") }) };
         byUrl.set(cls.url, rec);
         if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec);
         siteObservations.push({ address: cls.url, address_norm: normalizeAddress(cls.url),
@@ -1322,10 +1314,7 @@ export async function captureSubresources({
     compute: meter.report(),
     reuse: { reused, fetched: fetched.length - reused, not_reused: noReuse,
              fresh_window_ms: reuseFreshWindowMs, min_documents: reuseMinDocuments,
-             note: "entries with fetched_this_capture:false were NOT fetched during this capture; "
-                 + "their bytes come from an earlier fetch of the same address on this host, made by the "
-                 + "capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. "
-                 + "A capture ratified as evidence must re-fetch them." },
+             note: localize("subresources.subresources.entries_with_fetched_this_capture", "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them.") },
     /* D-191: when the parts this composite holds were fetched, per clock. */
     part_fetch_spread: partFetchSpread(records),
     outstanding: outstanding.length,
@@ -1382,10 +1371,7 @@ export async function captureSubresources({
         + "is a link to THAT VERSION of the target only if the target's capture can be shown to be the version "
         + "the source was pointing at on this page's retrieval date. Until that is established the link is "
         + "unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
-    note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified "
-        + "against that sha before use. Entries with ok:false are recorded because a stylesheet the "
-        + "source failed to serve is part of what the source served that day. Script entries hold "
-        + "bytes and are never referenced by the render companion.",
+    note: localize("subresources.subresources.every_entry_the_viewer_renders", "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."),
   };
   const manifestBytes = meter.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
   const manifestSha = await meter.cpuAwait("hash_manifest", () => sha256(manifestBytes));

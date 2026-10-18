@@ -17,6 +17,7 @@ import { THEME_CHECKS } from "./checks.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
 import { CAPTURE_TEXT_UNIT_CAP } from "../extraction/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R42, R44: the read's bound (`op=leadread`'s pair). */
 export const THEME_READ_LIMIT_DEFAULT = 200;
@@ -58,7 +59,7 @@ export class Themes {
    *  administer. */
   #name(stamp, administer) {
     const p = this.person("by", stamp, administer);
-    return p.by_handle || p.by || "a member whose handle is not recorded";
+    return p.by_handle || p.by || word("connections.member_handle_recorded");
   }
 
   /* WHICH THEME: one answer for a theme that does not exist and for a viewer the gate does not recognise. */
@@ -138,9 +139,7 @@ export class Themes {
                   themeId, who, idea, criterion, at);
     return { ok: true, theme_id: themeId, name: idea, test: criterion, at,
              ...this.person("declared_by", who, administer), evidence: false,
-             says: `${this.#name(who, administer)}'s theme is declared, with its test. It is a lens for finding and `
-                 + `gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it `
-                 + `or on membership in it` };
+             says: word("connections.says.theme_declared_test", { who: String(this.#name(who, administer)) }) };
   }
 
   /** R40 (`op=themeplace`): a member places a document or a passage, or confirms a hunch standing there. */
@@ -176,10 +175,8 @@ export class Themes {
              confirmed_hunch: !!before && before.state === "hunch",
              already: !!before && before.state === "member", evidence: false,
              says: before && before.state === "member"
-               ? `${tgt.target} was already a member of this theme; nothing changed`
-               : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${this.#name(who, administer)}'s judgement that it `
-                 + `passes the test${before ? ", confirming a proposal" : ""}. Membership connects it to the `
-                 + `theme's other members through this lens only, and is never a basis leg` };
+               ? word("connections.says.already_member_theme", { target: String(tgt.target) })
+               : localize("connections.themes.target_is_a_member_of", "{target} is a member of the theme \"{name}\" on {name_2}'s judgement that it passes the test{v1}. Membership connects it to the theme's other members through this lens only, and is never a basis leg", { target: String(tgt.target), name: String(T.name.slice(0, 80)), name_2: String(this.#name(who, administer)), v1: String(before ? ", confirming a proposal" : "") }) };
   }
 
   /** R41 (`op=themepropose`): any credential proposes a placement, stored as a HUNCH; never demotes a member. */
@@ -206,10 +203,8 @@ export class Themes {
     const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`, T.theme_id, tgt.target);
     return { ok: true, theme_id: T.theme_id, ...this.view(row, administer), already: !!before, evidence: false,
              says: row.state === "member"
-               ? `${tgt.target} is already a member of this theme, placed by ${this.#name(row.placed_by, administer)}; the proposal `
-                 + `changed nothing`
-               : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch — not `
-                 + `membership — until a member checks it against the test and places it` };
+               ? word("connections.says.already_member_theme_placed", { target: String(tgt.target), placed_by: String(this.#name(row.placed_by, administer)) })
+               : word("connections.says.proposed_theme_hunch", { target: String(tgt.target), name: String(T.name.slice(0, 80)) }) };
   }
 
   /** R43 (`op=themewithdraw`, K102): the placer (or an administrator) withdraws a membership; any member rejects a
@@ -259,9 +254,7 @@ export class Themes {
     const ended = this.#one(`SELECT * FROM theme_placement_acts WHERE theme_id = ? AND target = ? ORDER BY act_id DESC LIMIT 1`,
                             row.theme_id, row.target);
     return { ok: true, theme_id: T.theme_id, ...this.endedView(ended, administer), evidence: false,
-             says: `${tgt.target} is ${state === "withdrawn" ? "no longer a member of" : "no longer proposed for"} the theme `
-                 + `"${T.name.slice(0, 80)}": ${this.#name(who, administer)} ${state} it, saying why. What was judged `
-                 + `before is kept beside it` };
+             says: word("connections.says.theme_saying_judged", { target: String(tgt.target), state: String(state === "withdrawn" ? "no longer a member of" : "no longer proposed for"), name: String(T.name.slice(0, 80)), who: String(this.#name(who, administer)), state_2: String(state) }) };
   }
 
   /** R44: one standing placement as this reader is shown it. `membership` is true for `member` alone. */
@@ -322,9 +315,7 @@ export class Themes {
       hunches_truncated: hunches.length > cap,
       withdrawn: ended.slice(0, cap).map((r) => this.endedView(r, administer)),
       withdrawn_truncated: ended.length > cap,
-      says: `a member's declared lens, and never the basis of a claim. `
-          + `${n(members)} member(s) you can see, placed by a member against the test; `
-          + `${n(hunches)} hunch(es) PROPOSED and not yet confirmed, which are not membership`,
+      says: word("connections.says.member_declared_lens", { members: String(n(members)), hunches: String(n(hunches)) }),
     };
   }
 }

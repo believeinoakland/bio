@@ -11,6 +11,7 @@
  * room, else its darkest opaque entry. A colour key (`tRNS` on grey or RGB) equal to black would make the cover
  * transparent, so the cover is then the nearest grey, 1. */
 import { CoverRefusal, checkPixels, storedRects, displayedSize, mergeSpans, orientationOf, orientationTiff } from "./geometry.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 const CHANNELS = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
@@ -30,8 +31,8 @@ export function crc32(...parts) {
   return (c ^ 0xffffffff) >>> 0;
 }
 const u32 = (d, p) => d[p] * 0x1000000 + ((d[p + 1] << 16) | (d[p + 2] << 8) | d[p + 3]);
-const truncated = (why) => new CoverRefusal("TRUNCATED_IMAGE_DATA", `the PNG data ends before the image does: ${why}`);
-const corrupt = (why) => new CoverRefusal("IMAGE_DATA_CORRUPT", `the PNG data cannot be read: ${why}`);
+const truncated = (why) => new CoverRefusal("TRUNCATED_IMAGE_DATA", localize("image-cover.png.the_png_data_ends_before", "the PNG data ends before the image does: {why}", { why: String(why) }));
+const corrupt = (why) => new CoverRefusal("IMAGE_DATA_CORRUPT", localize("image-cover.png.the_png_data_cannot_be", "the PNG data cannot be read: {why}", { why: String(why) }));
 
 function put32(d, p, v) { d[p] = v >>> 24; d[p + 1] = (v >>> 16) & 255; d[p + 2] = (v >>> 8) & 255; d[p + 3] = v & 255; }
 
@@ -147,8 +148,8 @@ export async function coverPng(d, areas, maxPixels) {
   const W = u32(ih, 0), H = u32(ih, 4), depth = ih[8], ct = ih[9];
   if (!W || !H) throw corrupt("a zero dimension");
   checkPixels(W, H, maxPixels);
-  if (!(ct in CHANNELS)) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", `PNG colour type ${ct} is not defined`);
-  if (depth !== 8) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", `PNG bit depth ${depth}; only 8-bit PNGs are covered`);
+  if (!(ct in CHANNELS)) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", localize("image-cover.png.png_colour_type_ct_is", "PNG colour type {ct} is not defined", { ct: String(ct) }));
+  if (depth !== 8) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", localize("image-cover.png.png_bit_depth_depth_only", "PNG bit depth {depth}; only 8-bit PNGs are covered", { depth: String(depth) }));
   if (ih[10] !== 0 || ih[11] !== 0) throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", "PNG compression or filter method is not the standard's");
   if (ih[12] !== 0) throw new CoverRefusal("PNG_INTERLACED", "an interlaced (Adam7) PNG is not covered");
   if (ct === 3 && (!c.plte || c.plte.length % 3 || !c.plte.length)) throw corrupt("an indexed PNG without a palette");

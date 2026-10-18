@@ -23,7 +23,7 @@ import { normAlias, labelTerms, noSha } from "../extraction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { spaces as idSpaces, recognise as recogniseId, parcelStanding, systemOf, judgePair } from "../idspaces.mjs";
 import { combine, SECTORS, FORUM_KINDS } from "../../../jurisdictions/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { SHARED_ACT_CHECKS } from "../record-grammar/acts.mjs";
 import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
@@ -214,15 +214,15 @@ const cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 2
 
 /* R42: the two sector refusals, each writing nothing. */
 const notAnOrganisation = (kind) => ({ ok: false, reason: "NOT_AN_ORGANISATION", kind,
-  detail: `a sector is held only by an organisation (${ORGANISATION_KINDS.join(", ")}); a ${kind} carries none. Nothing was written.` });
+  detail: localize("entities.index.a_sector_is_held_only", "a sector is held only by an organisation ({ORGANISATION_KINDS}); a {kind} carries none. Nothing was written.", { ORGANISATION_KINDS: String(ORGANISATION_KINDS.join(", ")), kind: String(kind) }) });
 const unknownSector = (sector) => ({ ok: false, reason: "UNKNOWN_SECTOR", sector: typeof sector === "string" ? sector.slice(0, 80) : null,
-  sectors: [...SECTORS], detail: `a sector is one of ${SECTORS.join(", ")}. Nothing was written.` });
+  sectors: [...SECTORS], detail: localize("entities.index.a_sector_is_one_of", "a sector is one of {SECTORS}. Nothing was written.", { SECTORS: String(SECTORS.join(", ")) }) });
 
 /* R54: the two forum-kind refusals, each answered before an id is allocated and writing nothing. */
 const forumKindNotForKind = (kind) => ({ ok: false, reason: "FORUM_KIND_NOT_FOR_KIND", kind,
-  detail: `a forum kind is held only by an entity of kind ${FORUM_ENTITY_KINDS.join(" or ")}; a ${kind} carries none. Nothing was written.` });
+  detail: localize("entities.index.a_forum_kind_is_held", "a forum kind is held only by an entity of kind {FORUM_ENTITY_KINDS}; a {kind} carries none. Nothing was written.", { FORUM_ENTITY_KINDS: String(FORUM_ENTITY_KINDS.join(" or ")), kind: String(kind) }) });
 const unknownForumKind = (value) => ({ ok: false, reason: "UNKNOWN_FORUM_KIND", forum_kind: typeof value === "string" ? value.slice(0, 80) : null,
-  forum_kinds: [...FORUM_KINDS], detail: `a forum kind is one of ${FORUM_KINDS.join(", ")}. Nothing was written.` });
+  forum_kinds: [...FORUM_KINDS], detail: localize("entities.index.a_forum_kind_is_one", "a forum kind is one of {FORUM_KINDS}. Nothing was written.", { FORUM_KINDS: String(FORUM_KINDS.join(", ")) }) });
 
 /* R43: civil-time's validity value, judged as that module reads it: an object stating `from` and `to` (null is "not
    stated") and a precision of its four, whose bounds civil-time can read (a probe that refuses or throws is not one). */
@@ -250,13 +250,11 @@ function identifierNotInSpace(view, sch, field) {
   const S = idSpaces(view).find((x) => x.space === sch.space);
   const forms = S ? S.forms.map((f) => f.form).filter((f) => !sch.form || f === sch.form) : [];
   return { ok: false, reason: "IDENTIFIER_NOT_IN_SPACE", field, scheme: sch.scheme, space: sch.space, forms,
-           detail: `the ${field} has the shape of no form of the ${S ? S.label : sch.space} space`
-                 + (sch.form ? ` the scheme names (${sch.form})` : "")
-                 + (forms.length ? "" : "; your team's active jurisdiction profiles give it no form") + ". Nothing was written." };
+           detail: localize("entities.index.the_field_has_the_shape", "the {field} has the shape of no form of the {v1} space{v2}{v3}. Nothing was written.", { field: String(field), v1: String(S ? S.label : sch.space), v2: String(sch.form ? ` the scheme names (${sch.form})` : ""), v3: String(forms.length ? "" : "; your team's active jurisdiction profiles give it no form") }) };
 }
 /* R43, R45: another entity holds the scheme identifier with a validity that overlaps or is unstated. */
 const identifierTaken = (scheme, normal, holder) => ({ ok: false, reason: "IDENTIFIER_TAKEN", scheme, normal, holder,
-  detail: `${holder} already holds ${scheme} ${normal} with a validity that overlaps or is unstated. Nothing was written.` });
+  detail: localize("entities.index.holder_already_holds_scheme_normal", "{holder} already holds {scheme} {normal} with a validity that overlaps or is unstated. Nothing was written.", { holder: String(holder), scheme: String(scheme), normal: String(normal) }) });
 /* R44: one held identifier as it is read. */
 const identifierView = (r) => ({ scheme: r.scheme, ...(r.scope ? { forum: r.scope } : {}), space: r.space, form: r.form, id: r.id,
   normal: r.normal, valid: parseJson(r.valid), basis: parseJson(r.basis), by: r.held_by, at: r.at,
@@ -528,12 +526,10 @@ export class Entities {
      capture, else null. Every refusal is answered before an id is allocated. */
   #create({ kind, label, note, aliases, declaredBy, sector, proceeding, forumKind, basis }) {
     const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
-    if (!k) return { ok: false, reason: "NO_KIND", detail: "an entity needs a kind: one of " + ENTITY_KINDS.join(", ") };
+    if (!k) return { ok: false, reason: "NO_KIND", detail: localize("entities.index.an_entity_needs_a_kind", "an entity needs a kind: one of {ENTITY_KINDS}", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
     if (!ENTITY_KINDS.includes(k))
       return { ok: false, reason: "UNKNOWN_KIND", kind: k,
-        detail: "the subject registry admits a closed kind vocabulary (D-83 reconciles safeguard 4 with the "
-              + "framework's entity axis): one of " + ENTITY_KINDS.join(", ")
-              + ". Introducing a new kind is a doctrine change, not a write." };
+        detail: localize("entities.index.the_subject_registry_admits_a", "the subject registry admits a closed kind vocabulary (D-83 reconciles safeguard 4 with the framework's entity axis): one of {ENTITY_KINDS}. Introducing a new kind is a doctrine change, not a write.", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
     /* R45: a proceeding's label is composed from its facet, never a caller's (so never a caption); a label the caller
        gives is kept as one more alias. */
     const isProceeding = k === "proceeding";
@@ -599,7 +595,7 @@ export class Entities {
                         VALUES (?,?,?,?,?,?,?,?,?,?,?)`, id, PROCEEDING_SCHEME, facet.forum, "proceeding", facet.form,
                        facet.number, facet.normal, null,
                        basis ? JSON.stringify({ capture_sha: basisCapture, extent: JSON.parse(basisExtent) })
-                             : `the number ${facet.number} as ${facet.forum_label} writes it`, by, at);
+                             : localize("entities.index.the_number_number_as_forum", "the number {number} as {forum_label} writes it", { number: String(facet.number), forum_label: String(facet.forum_label) }), by, at);
       }
       const count = this.#one(`SELECT count(*) AS c FROM entity_aliases WHERE entity_id=?`, id).c;
       return { ok: true, entity_id: id, kind: k, label: name, alias_count: Number(count), at,
@@ -617,8 +613,7 @@ export class Entities {
       return noEntity("an alias is attached to an entity by its id");
     const norm = normAlias(alias);
     if (!norm)
-      return noAlias("an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so "
-        + "there is nothing a document could be matched by. Nothing was written.");
+      return noAlias(localize("entities.index.an_alias_needs_a_name", "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written."));
     if (!this.has(entityId)) return noSuchEntity(entityId);
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
     if (dup) return { ok: false, reason: "ALREADY_ALIASED", entity_id: entityId, alias: dup.alias,
@@ -636,9 +631,7 @@ export class Entities {
     const rel = typeof relation === "string" ? relation.trim().toLowerCase() : "";
     if (!RELATION_KINDS.includes(rel))
       return { ok: false, reason: "UNKNOWN_RELATION", relation: rel,
-        detail: "a declared relation is one of " + RELATION_KINDS.join(", ")
-              + " (safeguard 4). A connection grade is NOT a relation kind: a declared relation is "
-              + "constitutive, not evidentiary, and carries no grade (D-83)." };
+        detail: localize("entities.index.a_declared_relation_is_one", "a declared relation is one of {RELATION_KINDS} (safeguard 4). A connection grade is NOT a relation kind: a declared relation is constitutive, not evidentiary, and carries no grade (D-83).", { RELATION_KINDS: String(RELATION_KINDS.join(", ")) }) };
     if (typeof fromEntity !== "string" || !fromEntity || typeof toEntity !== "string" || !toEntity)
       return { ok: false, reason: "NO_ENDS", detail: "a relation names two entities by id: fromEntity and toEntity" };
     if (fromEntity === toEntity) return { ok: false, reason: "SELF_RELATION", detail: "a relation is between two distinct entities" };
@@ -710,10 +703,10 @@ export class Entities {
   entitiesOfKind({ kind, limit = null, after = null, viewer, forum_kind = null } = {}) {
     try {
       const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
-      if (!k) return { ok: false, reason: "NO_KIND", detail: "a kind is named: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+      if (!k) return { ok: false, reason: "NO_KIND", detail: localize("entities.index.a_kind_is_named_one", "a kind is named: one of {ENTITY_KINDS}. Nothing was read.", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
       if (!ENTITY_KINDS.includes(k))
         return { ok: false, reason: "UNKNOWN_KIND", kind: k.slice(0, 80), kinds: [...ENTITY_KINDS],
-                 detail: "the subject registry admits a closed kind vocabulary: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+                 detail: localize("entities.index.the_subject_registry_admits_a_2", "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
       /* R54: an absent filter, or an empty list, is no filter. */
       const wanted = forum_kind === undefined || forum_kind === null ? [] : Array.isArray(forum_kind) ? forum_kind : [forum_kind];
       for (const f of wanted)
@@ -740,7 +733,7 @@ export class Entities {
       return { ...empty, entities, count: entities.length, truncated,
                next: truncated ? entities[entities.length - 1].entity_id : null };
     } catch (err) {
-      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
   }
 
@@ -775,14 +768,14 @@ export class Entities {
       return { ...empty, aliases: page.map((r) => ({ entity_id: r.entity_id, kind: r.kind, label: r.label, alias: r.alias })),
                truncated, next: truncated ? `${last.entity_id}|${last.alias_norm}` : null };
     } catch (err) {
-      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be_2", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
   }
 
   /* R51, R52, R55: the kinds a read names, one or a list, each refused as R1 refuses a kind; the list as asked, distinct. */
   #kindsWanted(kinds) {
     const ks = Array.isArray(kinds) ? kinds : kinds == null ? [] : [kinds];
-    const none = { ok: false, reason: "NO_KIND", detail: "a kind is named: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+    const none = { ok: false, reason: "NO_KIND", detail: localize("entities.index.a_kind_is_named_one_2", "a kind is named: one of {ENTITY_KINDS}. Nothing was read.", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
     if (!ks.length) return none;
     const want = [];
     for (const kind of ks) {
@@ -790,7 +783,7 @@ export class Entities {
       if (!k) return none;
       if (!ENTITY_KINDS.includes(k))
         return { ok: false, reason: "UNKNOWN_KIND", kind: k.slice(0, 80), kinds: [...ENTITY_KINDS],
-                 detail: "the subject registry admits a closed kind vocabulary: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+                 detail: localize("entities.index.the_subject_registry_admits_a_3", "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
       if (!want.includes(k)) want.push(k);
     }
     return want;
@@ -805,7 +798,7 @@ export class Entities {
       if (!Array.isArray(ids)) return noEntity("labels are read for entity ids, a list of them");
       if (ids.length > LABELS_IDS_MAX)
         return { ok: false, reason: "TOO_MANY_IDS", count: ids.length, max: LABELS_IDS_MAX,
-                 detail: `labels are read for at most ${LABELS_IDS_MAX} entity ids at once; ${ids.length} were named. Nothing was read.` };
+                 detail: localize("entities.index.labels_are_read_for_at", "labels are read for at most {LABELS_IDS_MAX} entity ids at once; {length} were named. Nothing was read.", { LABELS_IDS_MAX: String(LABELS_IDS_MAX), length: String(ids.length) }) };
       const asked = ids.filter((id) => typeof id === "string" && id);
       const found = new Map();
       if (asked.length && viewerPredicate(viewer).scope !== "DENY") {
@@ -816,7 +809,7 @@ export class Entities {
       const labels = Object.fromEntries(ids.filter((id) => typeof id === "string").map((id) => [id, found.get(id) ?? null]));
       return { ok: true, labels, count: Object.keys(labels).length };
     } catch (err) {
-      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be_3", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
   }
 
@@ -833,7 +826,7 @@ export class Entities {
       if (!asked.length) return noEntity("the documents naming a subject only by an identifier are counted for entity ids, a list of them");
       if (ids.length > ONLY_BY_IDENTIFIER_IDS_MAX)
         return { ok: false, reason: "TOO_MANY_IDS", count: ids.length, max: ONLY_BY_IDENTIFIER_IDS_MAX,
-                 detail: `documents are counted for at most ${ONLY_BY_IDENTIFIER_IDS_MAX} entity ids at once; ${ids.length} were named. Nothing was read.` };
+                 detail: localize("entities.index.documents_are_counted_for_at", "documents are counted for at most {ONLY_BY_IDENTIFIER_IDS_MAX} entity ids at once; {length} were named. Nothing was read.", { ONLY_BY_IDENTIFIER_IDS_MAX: String(ONLY_BY_IDENTIFIER_IDS_MAX), length: String(ids.length) }) };
       const deny = viewerPredicate(viewer).scope === "DENY";
       const g = this.#gate("r.bundle_id", viewer), x = this.#gate("x.bundle_id", viewer);
       const entities = asked.map((entityId) => ({ entity_id: entityId, documents: deny ? 0 : Number(this.#one(
@@ -844,7 +837,7 @@ export class Entities {
         entityId, ...g.args, ...x.args).n) }));
       return { ok: true, entities, count: entities.length };
     } catch (err) {
-      return { ok: false, reason: "UNREADABLE", detail: `the resolutions could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_resolutions_could_not_be", "the resolutions could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
   }
 
@@ -861,7 +854,7 @@ export class Entities {
     try {
       const terms = typeof q === "string" ? labelTerms(q) : [];
       if (!terms.length) return { ok: false, reason: "NO_QUERY",
-        detail: "a subject is looked for by words of its name, and the query given folds to none. Nothing was read." };
+        detail: localize("entities.index.a_subject_is_looked_for", "a subject is looked for by words of its name, and the query given folds to none. Nothing was read.") };
       const asked = Array.isArray(kinds) ? kinds : kinds == null || kinds === "" ? [] : [kinds];
       const want = asked.length ? this.#kindsWanted(asked) : [...ENTITY_KINDS];
       if (!Array.isArray(want)) return want;
@@ -896,7 +889,7 @@ export class Entities {
       const last = page[page.length - 1];
       return { ...empty, subjects, count: hits.length, truncated, next: truncated ? `${last.fold}|${last.entity_id}` : null };
     } catch (err) {
-      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be_4", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
   }
 
@@ -911,7 +904,7 @@ export class Entities {
   similarSubjects({ name, kind = null, limit = null, viewer } = {}) {
     try {
       const fold = normAlias(name);
-      if (!fold) return noAlias("a near match is looked for by a name, and the one given folds to nothing (it is empty, or only whitespace). Nothing was read.");
+      if (!fold) return noAlias(localize("entities.index.a_near_match_is_looked", "a near match is looked for by a name, and the one given folds to nothing (it is empty, or only whitespace). Nothing was read."));
       const want = kind == null || kind === "" ? [...ENTITY_KINDS] : this.#kindsWanted([kind]);
       if (!Array.isArray(want)) return want;
       const n = Number(limit);
@@ -942,7 +935,7 @@ export class Entities {
       const similar = truncated ? found.slice(0, cap) : found;
       return { ...empty, similar, count: similar.length, truncated };
     } catch (err) {
-      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_registry_could_not_be_5", "the registry could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
   }
 
@@ -1010,7 +1003,7 @@ export class Entities {
     if (!SECTORS.includes(sector)) return unknownSector(sector);
     const why = typeof note === "string" ? note.trim().slice(0, WITHDRAW_REASON_MAX) : "";
     if (!why) return { ok: false, reason: "NO_REASON",
-      detail: "a sector is set with a note saying why; it is kept beside the value for as long as the record lasts. Nothing was written." };
+      detail: localize("entities.index.a_sector_is_set_with", "a sector is set with a note saying why; it is kept beside the value for as long as the record lasts. Nothing was written.") };
     const prior = e.sector || SECTOR_UNDETERMINED;
     if (prior === sector) return { ok: true, already: true, entity_id: entityId, sector };
     const at = this.#now();
@@ -1046,16 +1039,15 @@ export class Entities {
     const sch = typeof scheme === "string" && scheme !== PROCEEDING_SCHEME ? this.#schemeOf(view, scheme) : null;
     if (!sch) return { ok: false, reason: "UNKNOWN_SCHEME", scheme: typeof scheme === "string" ? scheme.slice(0, 80) : null,
       schemes: schemes.map((s) => s.scheme),
-      detail: "an identifier is held in a scheme your team's active jurisdiction profiles name"
-            + (schemes.length ? `: one of ${schemes.map((s) => s.scheme).join(", ")}` : "; they name none") + ". Nothing was written." };
+      detail: localize("entities.index.an_identifier_is_held_in", "an identifier is held in a scheme your team's active jurisdiction profiles name{v1}. Nothing was written.", { v1: String(schemes.length ? `: one of ${schemes.map((s) => s.scheme).join(", ")}` : "; they name none") }) };
     const kinds = Array.isArray(sch.entity_kinds) ? sch.entity_kinds : [];
     if (!kinds.includes(ent.kind)) return { ok: false, reason: "SCHEME_NOT_FOR_KIND", scheme: sch.scheme, kind: ent.kind,
-      entity_kinds: [...kinds], detail: `the scheme ${sch.scheme} identifies ${kinds.join(", ") || "no kind"}, not a ${ent.kind}. Nothing was written.` };
+      entity_kinds: [...kinds], detail: localize("entities.index.the_scheme_scheme_identifies_v1", "the scheme {scheme} identifies {v1}, not a {kind}. Nothing was written.", { scheme: String(sch.scheme), v1: String(kinds.join(", ") || "no kind"), kind: String(ent.kind) }) };
     const rec = Entities.#inScheme(view, sch, id);
     if (!rec) return identifierNotInSpace(view, sch, "id");
     if (valid !== null && valid !== undefined) {
       const bad = validityError(valid, view);
-      if (bad) return { ok: false, reason: "BAD_VALIDITY", detail: `${bad}. Nothing was written.` };
+      if (bad) return { ok: false, reason: "BAD_VALIDITY", detail: localize("entities.index.bad_nothing_was_written", "{bad}. Nothing was written.", { bad: String(bad) }) };
     }
     const who = by == null ? null : String(by);
     const b = this.#identifierBasis(sch, basis, who);
@@ -1132,7 +1124,7 @@ export class Entities {
       const got = this.#bounded(ENTITY_COLLECTION_LIMIT, `SELECT * FROM entity_identifiers WHERE entity_id=? ORDER BY at, scheme, normal`, entityId);
       return { ok: true, entity_id: entityId, identifiers: got.rows.map(identifierView), limit: ENTITY_COLLECTION_LIMIT, truncated: got.truncated };
     } catch (err) {
-      return { ok: false, reason: "UNREADABLE", detail: `the identifiers could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+      return { ok: false, reason: "UNREADABLE", detail: localize("entities.index.the_identifiers_could_not_be", "the identifiers could not be read: {String}", { String: String(String(err && err.message || err).slice(0, 200)) }) };
     }
   }
 
@@ -1181,8 +1173,7 @@ export class Entities {
     const kinds = (Array.isArray(view.proceeding_kinds) ? view.proceeding_kinds : []).filter((k) => k && typeof k.kind === "string");
     const pk = kinds.find((k) => k.kind === f.kind.trim());
     if (!pk) return { ok: false, reason: "PROCEEDING_KIND_UNKNOWN", kind: f.kind.trim().slice(0, 80), kinds: kinds.map((k) => k.kind),
-      detail: "a proceeding's kind is one your team's active jurisdiction profiles name"
-            + (kinds.length ? `: one of ${kinds.map((k) => k.kind).join(", ")}` : "; they name none") + ". Nothing was written." };
+      detail: localize("entities.index.a_proceedings_kind_is_one", "a proceeding's kind is one your team's active jurisdiction profiles name{v1}. Nothing was written.", { v1: String(kinds.length ? `: one of ${kinds.map((k) => k.kind).join(", ")}` : "; they name none") }) };
     const sch = this.#schemeOf(view, PROCEEDING_SCHEME);
     const rec = Entities.#inScheme(view, sch, f.number);
     if (!rec) return identifierNotInSpace(view, sch, "number");
@@ -1222,7 +1213,7 @@ export class Entities {
       ? this.#one(`SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ? AND (${g.sql})`, sha, ...g.args)
       : null;
     if (!held) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha,
-      detail: "no captured document the record holds and you can see has that digest, so nothing can be read from it. Nothing was written." };
+      detail: localize("entities.index.no_captured_document_the_record", "no captured document the record holds and you can see has that digest, so nothing can be read from it. Nothing was written.") };
     /* R45's refusals first; a forum already holding the number is R46's `existed`, never a refusal. */
     const facet = this.#proceedingFacet({ forum, kind, number });
     if (!facet.ok && facet.reason === "IDENTIFIER_TAKEN") {
@@ -1391,9 +1382,7 @@ export class Entities {
         const v = valid && when ? this.#validOn(valid, when, ctx.view) : valid ? { why: word("entities.why.capture_retrieval_instant") } : "in";
         if (v === "out") continue;
         out.set(row.entity_id, { basis: `${row.scheme} ${rec.normal}`,
-          method: `scheme identifier -- the reference ${value === rr.ref ? "" : "key "}'${value}' is ${rec.normal} in the `
-                + `${space} space (${rec.form}), an identifier this entity holds in the scheme ${row.scheme}`
-                + (v === "in" ? (valid ? ", valid when the document was retrieved" : "") : `; its validity then is undetermined (${v.why})`) });
+          method: localize("entities.index.scheme_identifier_the_reference_v1", "scheme identifier -- the reference {v1}'{value}' is {normal} in the {space} space ({form}), an identifier this entity holds in the scheme {scheme}{v2}", { v1: String(value === rr.ref ? "" : "key "), value: String(value), normal: String(rec.normal), space: String(space), form: String(rec.form), scheme: String(row.scheme), v2: String(v === "in" ? (valid ? ", valid when the document was retrieved" : "") : `; its validity then is undetermined (${v.why})`) }) });
       }
     }
     return out;
@@ -1410,16 +1399,13 @@ export class Entities {
     const ids = ic.spaces.length ? this.#identifierHits(rr, ic) : new Map();
     const a = this.#entitiesByNorm(refNorm);
     if (ids.size || a.length) return { grade: "A", hits: [...new Set([...ids.keys(), ...a])].sort(), per: ids, basis: rr.ref,
-      method: `source identifier -- the reference's composite key '${rr.ref}' matched a registered identifier `
-            + `of the entity exactly; the source names this subject by this key, both ends captured` };
+      method: localize("entities.index.source_identifier_the_references_composite", "source identifier -- the reference's composite key '{ref}' matched a registered identifier of the entity exactly; the source names this subject by this key, both ends captured", { ref: String(rr.ref) }) };
     const b = keyNorm && keyNorm !== refNorm ? this.#entitiesByNorm(keyNorm) : [];
     if (b.length) return { grade: "B", hits: b, basis: rr.ref_key,
-      method: `source identifier in content -- the reference's key '${rr.ref_key}' matched a registered `
-            + `identifier of the entity exactly at both ends` };
+      method: localize("entities.index.source_identifier_in_content_the", "source identifier in content -- the reference's key '{ref_key}' matched a registered identifier of the entity exactly at both ends", { ref_key: String(rr.ref_key) }) };
     const c = labelNorm ? this.#entitiesByNorm(labelNorm) : [];
     if (c.length) return { grade: "C", hits: c, basis: rr.label,
-      method: `correspondence -- the reference's name '${rr.label}' matched an entity alias by name; `
-            + `plausible, never established, flagged for a member to confirm` };
+      method: localize("entities.index.correspondence_the_references_name_label", "correspondence -- the reference's name '{label}' matched an entity alias by name; plausible, never established, flagged for a member to confirm", { label: String(rr.label) }) };
     return { grade: null, hits: [], basis: null, method: null };
   }
 
@@ -1522,7 +1508,7 @@ export class Entities {
       detail: "this captured document's reading carries no such reference to testify about" };
     if (!this.has(entityId)) return noSuchEntity(entityId);
     /* D-219: what grade D lacks is a captured DOCUMENT, not a basis. */
-    const method = `testimony -- asserted by ${resolvedBy || "a member"} on the member's stated basis, with no captured document (framework 8.1 grade D)`;
+    const method = localize("entities.index.testimony_asserted_by_v1_on", "testimony -- asserted by {v1} on the member's stated basis, with no captured document (framework 8.1 grade D)", { v1: String(resolvedBy || "a member") });
     const m = this.#record.transact(() => this.#upsert({
       captureSha, bundleId: rr.bundle_id, ref, entityId, grade: "D", method, basis: b, resolvedBy, matchedBy: "testimony" }));
     return { ok: true, grade_declared: "D", ...m };
@@ -1756,8 +1742,7 @@ export class Entities {
   /** R17, R18. */
   namingDocuments({ entityId = null, limit = NAMING_LIMIT_DEFAULT, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return noEntity("the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). "
-        + "It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates.");
+      return noEntity(localize("entities.index.the_name_lookup_is_over", "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates."));
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return noSuchEntity(entityId);
     const aliases = this.#rows(`SELECT alias, alias_norm, canonical FROM entity_aliases WHERE entity_id=? AND withdrawn_at IS NULL
@@ -1788,15 +1773,8 @@ export class Entities {
       ok: true, entity_id: ent.entity_id, entity_label: ent.label, entity_kind: ent.kind,
       names_used: got.names_used, names_unusable: got.unusable, names_uninformative: got.uninformative,
       count: documents.length, documents, limit: cap, truncated,
-      detail: "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name — as the "
-            + "reference the source assigned, as that reference's key, or as the name the reading recorded — offered "
-            + "for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is "
-            + "the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name "
-            + "merely sits inside a longer string and it would mint nothing. A document that carries this subject in "
-            + "words the reading recorded in none of those three, or under a spelling none of its registered names "
-            + "reaches, is still not here, and its absence says nothing about whether it exists."
-            + (truncated ? ` THIS IS THE FIRST ${cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, `
-                         + "so a count taken from this list is a floor and never a total." : ""),
+      detail: localize("entities.index.these_are_candidates_not_resolutions", "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name — as the reference the source assigned, as that reference's key, or as the name the reading recorded — offered for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name merely sits inside a longer string and it would mint nothing. A document that carries this subject in words the reading recorded in none of those three, or under a spelling none of its registered names reaches, is still not here, and its absence says nothing about whether it exists.{v1}", { v1: String(truncated ? ` THIS IS THE FIRST ${cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, `
+                         + "so a count taken from this list is a floor and never a total." : "") }),
     };
   }
 
@@ -1870,13 +1848,13 @@ export class Entities {
   namingIn({ captureShas, kinds, limit = null, viewer = null } = {}) {
     const ks = Array.isArray(kinds) ? kinds : kinds == null ? [] : [kinds];
     const want = [];
-    if (!ks.length) return { ok: false, reason: "NO_KIND", detail: "a kind is named: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+    if (!ks.length) return { ok: false, reason: "NO_KIND", detail: localize("entities.index.a_kind_is_named_one_3", "a kind is named: one of {ENTITY_KINDS}. Nothing was read.", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
     for (const kind of ks) {
       const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
-      if (!k) return { ok: false, reason: "NO_KIND", detail: "a kind is named: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+      if (!k) return { ok: false, reason: "NO_KIND", detail: localize("entities.index.a_kind_is_named_one_4", "a kind is named: one of {ENTITY_KINDS}. Nothing was read.", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
       if (!ENTITY_KINDS.includes(k))
         return { ok: false, reason: "UNKNOWN_KIND", kind: k.slice(0, 80), kinds: [...ENTITY_KINDS],
-                 detail: "the subject registry admits a closed kind vocabulary: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+                 detail: localize("entities.index.the_subject_registry_admits_a_4", "the subject registry admits a closed kind vocabulary: one of {ENTITY_KINDS}. Nothing was read.", { ENTITY_KINDS: String(ENTITY_KINDS.join(", ")) }) };
       if (!want.includes(k)) want.push(k);
     }
     const shas = [...new Set((Array.isArray(captureShas) ? captureShas : [])
@@ -1884,7 +1862,7 @@ export class Entities {
     if (!shas.length) return noSha("the name lookup is over named captured documents, each by its capture sha256");
     if (shas.length > NAMING_IN_CAPTURES_MAX)
       return { ok: false, reason: "TOO_MANY_CAPTURES", count: shas.length, max: NAMING_IN_CAPTURES_MAX,
-               detail: `at most ${NAMING_IN_CAPTURES_MAX} captured documents are looked in at once; ${shas.length} were named. Nothing was read.` };
+               detail: localize("entities.index.at_most_naming_in_captures", "at most {NAMING_IN_CAPTURES_MAX} captured documents are looked in at once; {length} were named. Nothing was read.", { NAMING_IN_CAPTURES_MAX: String(NAMING_IN_CAPTURES_MAX), length: String(shas.length) }) };
     const n = Number(limit);
     const cap = limit == null || limit === "" || !Number.isFinite(n) ? NAMING_IN_LIMIT_DEFAULT
       : Math.max(1, Math.min(Math.trunc(n), NAMING_LIMIT_MAX));
@@ -1935,10 +1913,7 @@ export class Entities {
     const page = truncated ? candidates.slice(0, cap) : candidates;
     return { ok: true, kinds: want, captures: shas.length, entities, candidates: page, count: page.length,
              limit: cap, truncated,
-             detail: "these are CANDIDATES, not resolutions, for every registered subject of these kinds, looked for only in the "
-                   + "named captured documents you can see; each is what the name lookup for that one subject would offer were "
-                   + "these documents all there is, and nothing is established or graded by asking"
-                   + (truncated ? `. THIS IS THE FIRST ${cap} AND NOT ALL OF THEM, so a count taken from it is a floor.` : "") };
+             detail: localize("entities.index.these_are_candidates_not_resolutions_2", "these are CANDIDATES, not resolutions, for every registered subject of these kinds, looked for only in the named captured documents you can see; each is what the name lookup for that one subject would offer were these documents all there is, and nothing is established or graded by asking{v1}", { v1: String(truncated ? `. THIS IS THE FIRST ${cap} AND NOT ALL OF THEM, so a count taken from it is a floor.` : "") }) };
   }
 
   /** R19 (N4): the query plan of R17's lookup, so a test can assert the term index CARRIES it. With no terms it
@@ -1958,7 +1933,7 @@ export class Entities {
     t = t.slice(0, 24);
     const sql = refTermsSql(t.length, "1=1");
     return { ok: true, determined: true, from, terms: t, sql,
-             plan: this.#rows(`EXPLAIN QUERY PLAN ${sql}`, ...t, t.length, NAMING_LIMIT_DEFAULT).map((r) => r.detail) };
+             plan: this.#rows(localize("entities.index.explain_query_plan_sql", "EXPLAIN QUERY PLAN {sql}", { sql: String(sql) }), ...t, t.length, NAMING_LIMIT_DEFAULT).map((r) => r.detail) };
   }
 
   /* ===================================================================== *
@@ -2022,7 +1997,7 @@ export class Entities {
     /* DEC-49 REGION is-idspace-unknown */
     if (!S)
       return idspaceRefusal("IDSPACE_UNKNOWN", { spaces: all.map((s) => s.space),
-        detail: `space must be one of ${all.map((s) => s.space).join(", ")}` });
+        detail: localize("entities.index.space_must_be_one_of", "space must be one of {map}", { map: String(all.map((s) => s.space).join(", ")) }) });
     /* END DEC-49 REGION is-idspace-unknown */
     const pair = b != null && String(b).trim() !== "";
     const ra = recogniseId(view, sp, a);
@@ -2030,8 +2005,7 @@ export class Entities {
     /* DEC-49 REGION is-idspace-value-shape */
     if (!ra || (pair && !rb))
       return idspaceRefusal("IDSPACE_VALUE_NOT_IN_SPACE", { space: sp, forms: S.forms.map((f) => f.form), profiles,
-        detail: `${!ra ? "a" : "b"} has the shape of no form of the ${S.label}`
-              + (S.forms.length ? "" : "; your team's active jurisdiction profiles give this space no form") });
+        detail: localize("entities.index.v1_has_the_shape_of", "{v1} has the shape of no form of the {label}{v2}", { v1: String(!ra ? "a" : "b"), label: String(S.label), v2: String(S.forms.length ? "" : "; your team's active jurisdiction profiles give this space no form") }) });
     /* END DEC-49 REGION is-idspace-value-shape */
     /* R21: no assessor vintage is held in the record, so a parcel's standing is judged over none and reads
        UNDETERMINED saying so — never "no such parcel". */
@@ -2043,7 +2017,7 @@ export class Entities {
     /* DEC-49 REGION is-idspace-capture */
     if (!heldA || !heldB)
       return idspaceRefusal("IDSPACE_CAPTURE_NOT_HELD", {
-        detail: `${!heldA ? "a_capture" : "b_capture"} names no captured document this record holds that you can see` });
+        detail: localize("entities.index.v1_names_no_captured_document", "{v1} names no captured document this record holds that you can see", { v1: String(!heldA ? "a_capture" : "b_capture") }) });
     /* END DEC-49 REGION is-idspace-capture */
     const reading = referent === "agrees" || referent === "disagrees" ? referent : null;
     const endA = { rec: ra, system: this.#systemFor(view, heldA), name: aName };

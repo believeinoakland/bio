@@ -6,6 +6,7 @@
  * contact column (phone, address, personal e-mail) is named `contact` so that reader can leave it unread
  * (R4). */
 import { vocabulary, vocabRegex } from "../docprofile/registry.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export const ROLES = Object.freeze(["name", "title", "unit", "start", "end", "as_of", "employee_id", "contact"]);
 
@@ -25,7 +26,7 @@ export function rosterColumns(header, view) {
     if (!text) return { index, header: cell ?? null, role: null, why: "the column has no header text, so no role is named" };
     const hit = [...new Set(entries.filter((x) => { x.re.lastIndex = 0; return x.re.test(text); }).map((x) => x.role))];
     if (hit.length === 1) return { index, header: text, role: hit[0], why: null };
-    if (hit.length > 1) return { index, header: text, role: null, why: `its header matches the view's words for more than one role (${hit.join(", ")}), so no role is named by guess` };
+    if (hit.length > 1) return { index, header: text, role: null, why: localize("roster-reader.columns.its_header_matches_the_views", "its header matches the view's words for more than one role ({hit}), so no role is named by guess", { hit: String(hit.join(", ")) }) };
     return { index, header: text, role: null,
              why: entries.length ? "no header word in the view names a role for it" : "the view supplies no roster header words, so no column's role can be named" };
   });
@@ -34,7 +35,7 @@ export function rosterColumns(header, view) {
   return {
     roster,
     roles,
-    why: roster ? null : `no column is named \`name\` or \`employee_id\`, so this table is not read as a roster${entries.length ? "" : " (the view supplies no roster header words)"}`,
-    ...(skipped ? { skipped_why: `${skipped} roster header entr${skipped === 1 ? "y" : "ies"} in the view name no known role or do not compile, and were not used` } : {}),
+    why: roster ? null : localize("roster-reader.columns.no_column_is_named_name", "no column is named `name` or `employee_id`, so this table is not read as a roster{v1}", { v1: String(entries.length ? "" : " (the view supplies no roster header words)") }),
+    ...(skipped ? { skipped_why: localize("roster-reader.columns.skipped_roster_header_entr_v1", "{skipped} roster header entr{v1} in the view name no known role or do not compile, and were not used", { skipped: String(skipped), v1: String(skipped === 1 ? "y" : "ies") }) } : {}),
   };
 }

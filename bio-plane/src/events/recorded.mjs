@@ -6,6 +6,7 @@
    not visible answers no items, as an absent one. It writes nothing, never throws, and is no arm of R36. */
 import { noSha } from "../extraction/index.mjs";
 import { canonicalExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export const RECORDED_LIMIT_DEFAULT = 100;
 export const RECORDED_LIMIT_MAX = 500;
@@ -37,7 +38,7 @@ export function recordedBy(k, args) {
     let asked = null;
     if (a.extent !== undefined && a.extent !== null) {
       if (!known(a.extent))
-        return refused("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`);
+        return refused("EXTENT_MALFORMED", localize("events.recorded.an_extent_is_an_object", "an extent is an object of one of the kinds {keys}", { keys: String(Object.keys(CONTENT_EXTENT_KINDS).join(", ")) }));
       asked = JSON.parse(canonicalExtent(a.extent));
     }
     const sha = a.captureSha.trim().toLowerCase();

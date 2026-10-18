@@ -10,6 +10,7 @@
  * `QUEUE_CONDITION_KINDS` (N114). */
 
 import { OBSERVATION_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* THE FOUR LEVELS a run searches, from CLAUDE.md's own standing section: when
    anything goes looking it "may need to search meaning, content, documents, AND
@@ -24,10 +25,10 @@ import { OBSERVATION_CHECKS } from "./checks.mjs";
    only CLAUDE.md left the framework side of that pairing invisible from here.
    CLAUDE.md remains the standing instruction and is not superseded. */
 export const OBSERVATION_LEVELS = {
-  meaning:  "the framework layer: findings, legs, connections",
+  meaning:  word("observation-log.meaning.framework_layer_findings"),
   content:  "extracted content within documents (DEC-23: content is the unit)",
-  document: "documents the store holds",
-  internet: "the open internet, through the capture path",
+  document: word("observation-log.document.documents_store_holds"),
+  internet: word("observation-log.internet"),
 };
 
 /* D-129's vocabulary. The value is what the state MEANS, in the words a refusal
@@ -173,9 +174,9 @@ export function observationCoverage({ state, resultRef } = {}) {
    `surfaced_by` (agent / human) and this is the column it maps onto (design
    section 5) -- one word, not two spellings of one fact. */
 export const OBSERVATION_ACTOR_CLASSES = {
-  plane:   "the scheduler of your team's Civicsmith looked, with no member and no machine behind it",
-  machine: "a machine credential looked: a run, an agent, an unattended writer",
-  member:  "a member's authored act caused the look (a lead, an objective)",
+  plane:   word("observation-log.plane"),
+  machine: word("observation-log.machine"),
+  member:  word("observation-log.member"),
 };
 
 /* WHY THE LOOK WAS MADE, AND IT IS THE COLUMN THAT MAY NEVER BE ABSENT.
@@ -188,17 +189,17 @@ export const OBSERVATION_ACTOR_CLASSES = {
    the value at the schema, and what stops it is this vocabulary. */
 export const OBSERVATION_AUTHORITY_KINDS = {
   run:       "an investigative run (the precedent this generalises; IS-6)",
-  sweep:     "the monitor's sweep, under a named request or a ratified cadence",
-  link:      "a link discovered inside a document we hold (the deferred partition)",
-  ratify:    "ratification's re-fetch of reused parts",
-  acquire:   "an acquisition, of a new address or a monitored one",
+  sweep:     word("observation-log.sweep"),
+  link:      word("observation-log.link"),
+  ratify:    word("observation-log.ratify"),
+  acquire:   word("observation-log.acquire"),
   extract:   "an extraction attempt over a capture (REC-94)",
   derive:    "a derivation over extracted content (REC-95)",
   lead:      "a member's LEAD -- the authored act that puts a name behind a negative answer (D-194, Program B)",
-  objective: "a standing objective your team's Civicsmith is monitoring for",
+  objective: word("observation-log.objective"),
   /* T41-11 (R1, R13): a step's look (`steps` R9). A step id names no bundle; who sees the row is `steps`' answer,
      through the resolver it registers for this kind (its R18). */
-  step:      "a step a member or your team's Civicsmith took in pursuit of a question, and the look it made",
+  step:      word("observation-log.step"),
 };
 
 /* WHAT THE SUBJECT IS. `unstated` is the sixth and it is NOT in design section
@@ -210,10 +211,10 @@ export const OBSERVATION_AUTHORITY_KINDS = {
    `unstated` says the true thing: the kind was never recorded. */
 export const OBSERVATION_SUBJECT_KINDS = {
   address:     "the web address a document was looked for at, in its normalised form",
-  capture:     "a document the record already holds, named by the fingerprint of its bytes",
+  capture:     word("observation-log.capture"),
   extent:      "a particular passage inside a document — a page, a cell, a paragraph (IC-1)",
-  entity:      "a person, body or thing the record keeps a registry entry for",
-  description: "a member's own words for something they could not name any other way",
+  entity:      word("observation-log.entity"),
+  description: word("observation-log.description"),
   unstated:    "the writer did not record what kind of thing this was about, and the record "
              + "says so rather than guessing (the folded run log, and nothing new)",
   /* THE SEVENTH, ADDED BY REC-95 AND STATED HERE RATHER THAN SMUGGLED, exactly
@@ -269,7 +270,7 @@ export const OBSERVATION_SUBJECT_KINDS = {
  * READ OFF the observation log, which makes it one of the log's vocabularies
  * rather than the search surface's. */
 export const CONTENT_AXIS_STATES = {
-  indexed_full:    "every unit of this capture's text is indexed under its current chain",
+  indexed_full:    word("observation-log.indexed_full"),
   indexed_partial: "part of this capture's text is indexed: it ran over the per-capture bound, or "
                  + "only some of its pages could be read",
   indexed_none:    "none of this capture's text is indexed, and the record says WHY — there was no "
@@ -408,11 +409,7 @@ export function contentAxisFor({ observed = null, unitIndex = false,
                          : CONTENT_AXIS_STATES.indexed_none };
   if (!unitIndex)
     return { state: CONTENT_AXIS_UNDETERMINED, determined: false,
-             why: `this capture's text WAS extracted (${observed}), so it is neither `
-                + `not_extracted nor indexed_none — but whether it is indexed_full or `
-                + `indexed_partial is a fact about the per-unit text index, and no unit index `
-                + `exists in this build (CONTENT-SEARCH-DESIGN.md section 4.1, REC-91). `
-                + `Stated as undetermined rather than answered from the extraction alone` };
+             why: localize("observation-log.vocabulary.this_captures_text_was_extracted", "this capture's text WAS extracted ({observed}), so it is neither not_extracted nor indexed_none — but whether it is indexed_full or indexed_partial is a fact about the per-unit text index, and no unit index exists in this build (CONTENT-SEARCH-DESIGN.md section 4.1, REC-91). Stated as undetermined rather than answered from the extraction alone", { observed: String(observed) }) };
   /* REC-91 — THE INDEX'S OWN ABSENCE ANSWER, AND IT IS NOT A DEGREE OF
      INDEXING. `indexObserved` is the state of the capture's `indexed`
      observation (`authority_kind = derive`), and two of its four values are not
@@ -449,11 +446,7 @@ export function contentAxisFor({ observed = null, unitIndex = false,
      anywhere. */
   if (unitsComplete == null)
     return { state: CONTENT_AXIS_UNDETERMINED, determined: false,
-             why: `this capture's text WAS extracted (${observed}) and the per-unit text index `
-                + `exists, but this record holds no index observation for this capture — so `
-                + `whether its passages are indexed is UNDETERMINED rather than partial. A `
-                + `capture promoted before the index writer existed is in exactly that `
-                + `position, and re-promoting it is what settles the question` };
+             why: word("observation-log.why.capture_text_extracted", { observed: String(observed) }) };
   return unitsComplete === true && observed === "PRESENT"
     ? { state: "indexed_full", determined: true, why: CONTENT_AXIS_STATES.indexed_full }
     : { state: "indexed_partial", determined: true, why: CONTENT_AXIS_STATES.indexed_partial };
@@ -492,7 +485,7 @@ export function contentAxisFor({ observed = null, unitIndex = false,
  *  the next level up. */
 export function contentObservationsFor(reading, captureSha, tiersOf) {
   if (!reading || typeof reading !== "object")
-    return { rows: [], unclassified: [], why: "no reading was persisted for this capture" };
+    return { rows: [], unclassified: [], why: word("observation-log.why.reading_persisted_capture") };
   const sha = typeof captureSha === "string" && captureSha ? captureSha : null;
   const chain = Array.isArray(reading.text_source) ? reading.text_source : null;
   const { tiers, unclassified } = tiersOf(chain);
@@ -616,16 +609,16 @@ function unionCovers(a, b) {
 function detailFor(tier, terminal, reading, outcome) {
   const parts = [outcome];
   parts.push(tier && tier.tier != null ? `tier ${tier.tier}`
-             : tier ? "tier not recorded on the chain" : "no tier recorded");
+             : tier ? word("observation-log.parts.push.tier_recorded_chain") : word("observation-log.parts.push.tier_recorded"));
   if (terminal) parts.push(`last step ${terminal}`);
   if (tier && Array.isArray(tier.covers) && tier.covers.length)
-    parts.push(`this tier covered pages ${tier.covers.join(",")}`);
+    parts.push(word("observation-log.parts.push.tier_covered_pages", { covers: String(tier.covers.join(",")) }));
   if (tier && Array.isArray(tier.covers) && tier.covers.length
       && !Number.isInteger(reading.page_count))
     parts.push("and this record does not hold a page count for this document, so whether those "
              + "are ALL of its pages is undetermined rather than assumed (CAP-9 / D-345)");
   if (reading.tier3_candidate === true)
-    parts.push("this document has pages no engine in your team's Civicsmith could read");
+    parts.push(word("observation-log.parts.push.document_pages_engine"));
   if (typeof reading.text_container === "string" && reading.text_container)
     parts.push(reading.text_container);
   return parts.join("; ");
@@ -708,9 +701,7 @@ export const MEANING_MISSING_ROW_CAUSES = {
               + "reference or an entity a pre-log look that found NOTHING is live too, having left "
               + "no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` "
               + "SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
-  never_looked: "the log carried this level over this subject's whole lifetime and was not purged "
-              + "since, AND the record holds no product of such a look -- so nobody has looked. "
-              + "This is the one cause that licenses a positive statement",
+  never_looked: localize("observation-log.vocabulary.the_log_carried_this_level", "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement"),
   /* D-516 — THE SAME FOURTH WORD AT THIS LEVEL, and the sentence differs because
      the row it is measured against differs, which is A3b's rule applied to the
      word this item adds rather than inherited by it. */
@@ -1145,9 +1136,7 @@ export function readerRunObservation(reading, captureSha, { readerRegistered = n
   if (readerRegistered === false)
     return { row: { state: "LOOKED_INDETERMINATE", condition: null,
                     resultKind: null, resultRef: null,
-                    detail: `no reader is registered for this document's type (${type || "unrecorded"}), `
-                          + `so nothing read it for entities. This is NOT a document that mentions `
-                          + `nobody -- it is a document nothing here can read for who it mentions` },
+                    detail: localize("observation-log.vocabulary.no_reader_is_registered_for", "no reader is registered for this document's type ({v1}), so nothing read it for entities. This is NOT a document that mentions nobody -- it is a document nothing here can read for who it mentions", { v1: String(type || "unrecorded") }) },
              why: null };
 
   /* SECTION 4.3's TWO PRODUCIBLE OUTCOMES. `found` is the reader's own word for
@@ -1160,16 +1149,13 @@ export function readerRunObservation(reading, captureSha, { readerRegistered = n
   if (!any)
     return { row: { state: "LOOKED_ABSENT", condition: null,
                     resultKind: "reading", resultRef: sha,
-                    detail: `${who} ran over this document and found no entity references`
-                          + (reading.found === true && n === 0
+                    detail: localize("observation-log.vocabulary.who_ran_over_this_document", "{who} ran over this document and found no entity references{v1}. This is a MEANING-level absence and says nothing about whether the document's TEXT was extracted, which is the content level", { who: String(who), v1: String(reading.found === true && n === 0
                                ? "; the reading says it found something and carries an empty entity "
                                + "list, and the empty list is what this record can actually point at"
                                : n > 0
                                  ? `; the reading carries ${n} reference(s) and does not say it found `
                                  + `anything, so the weaker of the two is what is recorded`
-                                 : "")
-                          + ". This is a MEANING-level absence and says nothing about whether the "
-                          + "document's TEXT was extracted, which is the content level" },
+                                 : "") }) },
              why: null };
 
   /* `PRESENT` CARRIES ITS REFERENT AND C-22.10 REQUIRES IT. What the look
@@ -1182,7 +1168,7 @@ export function readerRunObservation(reading, captureSha, { readerRegistered = n
      the record. */
   return { row: { state: "PRESENT", condition: null,
                   resultKind: "reading", resultRef: sha,
-                  detail: `${who} ran over this document and found ${n} entity reference(s)` },
+                  detail: localize("observation-log.vocabulary.who_ran_over_this_document_2", "{who} ran over this document and found {n} entity reference(s)", { who: String(who), n: String(n) }) },
            why: null };
 }
 
@@ -1204,19 +1190,15 @@ export function readerRunObservation(reading, captureSha, { readerRegistered = n
  *  in a second place. */
 export function resolutionObservation({ ref = null, matches = null, tier = null } = {}) {
   const r = typeof ref === "string" && ref ? ref : null;
-  if (!r) return { row: null, why: "a resolution attempt is over a reference, and none was named" };
+  if (!r) return { row: null, why: word("observation-log.why.resolution_attempt_over") };
   const hits = Array.isArray(matches) ? matches : [];
   const tried = tier && typeof tier === "object" ? tier : null;
 
   if (!hits.length)
     return { row: { state: "LOOKED_ABSENT", condition: null,
                     resultKind: null, resultRef: null,
-                    detail: `the recogniser tried '${r}' against the subject registry and matched no `
-                          + `entity`
-                          + (tried && typeof tried.considered === "string" && tried.considered
-                               ? `; it tried ${tried.considered}` : "")
-                          + `. The reference stands unresolved, and this record now says a look was `
-                          + `made -- which is the fact that used to end with the request` },
+                    detail: localize("observation-log.vocabulary.the_recogniser_tried_r_against", "the recogniser tried '{r}' against the subject registry and matched no entity{v1}. The reference stands unresolved, and this record now says a look was made -- which is the fact that used to end with the request", { r: String(r), v1: String(tried && typeof tried.considered === "string" && tried.considered
+                               ? `; it tried ${tried.considered}` : "") }) },
              why: null };
 
   /* THE REFERENT IS THE ENTITY THE LOOK FOUND, and here it is genuinely a
@@ -1233,13 +1215,11 @@ export function resolutionObservation({ ref = null, matches = null, tier = null 
   const grades = [...new Set(hits.map((m) => m && m.grade).filter((g) => typeof g === "string"))].sort();
   return { row: { state: "PRESENT", condition: null,
                   resultKind: "entity", resultRef: eid,
-                  detail: `the recogniser matched '${r}' to ${hits.length} registered entity(ies)`
-                        + (grades.length ? ` at grade(s) ${grades.join(",")}` : "")
-                        + (hits.length > 1
+                  detail: localize("observation-log.vocabulary.the_recogniser_matched_r_to", "the recogniser matched '{r}' to {length} registered entity(ies){v1}{v2}", { r: String(r), length: String(hits.length), v1: String(grades.length ? ` at grade(s) ${grades.join(",")}` : ""), v2: String(hits.length > 1
                              ? `; the name is ambiguous across entities and every match is in the `
                              + `resolutions table -- this row points at the first and does not `
                              + `choose between them`
-                             : "") },
+                             : "") }) },
            why: null };
 }
 
@@ -1263,10 +1243,10 @@ export function resolutionObservation({ ref = null, matches = null, tier = null 
 export function derivationObservation({ entityId = null, count = null, documents = null,
                                         truncated = false, entityKnown = null } = {}) {
   const id = typeof entityId === "string" && entityId ? entityId : null;
-  if (!id) return { row: null, why: "a derivation is over one entity, and none was named" };
+  if (!id) return { row: null, why: word("observation-log.why.derivation_over_entity") };
   const n = Number.isInteger(count) ? count : 0;
   const docs = Number.isInteger(documents) ? documents : null;
-  const ends = docs == null ? "an unrecorded number of" : String(docs);
+  const ends = docs == null ? word("observation-log.text.unrecorded_number") : String(docs);
   /* AN UNREGISTERED SUBJECT IS STATED, NOT HIDDEN. `deriveConnections` proceeds
      over an entity id the registry does not describe — the resolutions naming it
      are real even when nothing has been declared about it — and a row that did
@@ -1279,17 +1259,13 @@ export function derivationObservation({ entityId = null, count = null, documents
   if (truncated === true)
     return { row: { state: "partial", condition: null,
                     resultKind: "entity", resultRef: id,
-                    detail: `the derivation over ${ends} document(s) concerning this entity was CUT `
-                          + `by its own bound and wrote ${n} connection(s). Every one is true and the `
-                          + `set is the first documents by capture_sha rather than all of them, so `
-                          + `this is part of the answer and not the answer${unregistered}` },
+                    detail: localize("observation-log.vocabulary.the_derivation_over_ends_document", "the derivation over {ends} document(s) concerning this entity was CUT by its own bound and wrote {n} connection(s). Every one is true and the set is the first documents by capture_sha rather than all of them, so this is part of the answer and not the answer{unregistered}", { ends: String(ends), n: String(n), unregistered: String(unregistered) }) },
              why: null };
 
   if (n > 0)
     return { row: { state: "PRESENT", condition: null,
                     resultKind: "entity", resultRef: id,
-                    detail: `the derivation read ${ends} document(s) concerning this entity and wrote `
-                          + `${n} connection(s)${unregistered}` },
+                    detail: localize("observation-log.vocabulary.the_derivation_read_ends_document", "the derivation read {ends} document(s) concerning this entity and wrote {n} connection(s){unregistered}", { ends: String(ends), n: String(n), unregistered: String(unregistered) }) },
              why: null };
 
   /* THE ROW THIS ITEM EXISTS FOR. Nothing derived — and it now SAYS nothing was
@@ -1299,14 +1275,10 @@ export function derivationObservation({ entityId = null, count = null, documents
      nothing to form rather than nothing to find. */
   return { row: { state: "LOOKED_ABSENT", condition: null,
                   resultKind: "entity", resultRef: id,
-                  detail: `the derivation ran over ${ends} document(s) concerning this entity and `
-                        + `found no connection to write`
-                        + (docs != null && docs < 2
+                  detail: localize("observation-log.vocabulary.the_derivation_ran_over_ends", "the derivation ran over {ends} document(s) concerning this entity and found no connection to write{v1}. This is a derivation that RAN and produced nothing, which is a different fact from a subject nobody has derived over{unregistered}", { ends: String(ends), v1: String(docs != null && docs < 2
                              ? `; a connection is a PAIR, and fewer than two documents concern this `
                              + `subject, so there was no pair to form`
-                             : "")
-                        + `. This is a derivation that RAN and produced nothing, which is a different `
-                        + `fact from a subject nobody has derived over${unregistered}` },
+                             : ""), unregistered: String(unregistered) }) },
            why: null };
 }
 
@@ -1345,16 +1317,15 @@ export function derivationStatement(row = null, missingCause = null) {
   if (row && typeof row.state === "string") {
     const documents = derivationDocumentsFrom(row.detail);
     const at = row.at == null ? null : String(row.at);
-    const over = documents == null ? "an unrecorded number of documents" : `${documents} document(s)`;
+    const over = documents == null ? word("observation-log.text.unrecorded_number_documents") : `${documents} document(s)`;
     const cut = row.state === "partial";
     const says = cut
-      ? `the latest derivation (${at}) was CUT by its bound after ${over}: the connections here are `
-      + `true but are part of the set through this subject, not all of it`
+      ? word("observation-log.text.latest_derivation_cut", { at: String(at), over: String(over) })
       : row.state === "PRESENT"
-        ? `the latest derivation (${at}) read ${over} and was not cut`
+        ? word("observation-log.text.latest_derivation_read", { at: String(at), over: String(over) })
         : row.state === "LOOKED_ABSENT"
-          ? `the latest derivation (${at}) ran over ${over}, was not cut, and formed no connection`
-          : `the latest derivation (${at}) recorded state ${row.state}`;
+          ? word("observation-log.text.latest_derivation_ran", { at: String(at), over: String(over) })
+          : word("observation-log.text.latest_derivation_recorded", { at: String(at), state: String(row.state) });
     return { state: row.state, cut, at, documents, derived: "derived", says };
   }
   const cause = typeof missingCause === "string" ? missingCause : "purged";
@@ -1397,10 +1368,10 @@ export const CONDITION_KINDS = Object.freeze({
   "capture-session-ttl-expiring": "a capture session is expiring with work outstanding (CAPTURE-SCALING)",
   "source-unreachable-governed":  "the source was unreachable because OUR pacing governed it, distinguishably from theirs (D-104)",
   "capture-completed-unattended": "a capture the member walked away from has completed (D-61)",
-  "partial-capture-outstanding":  "a capture did not finish and subresources are outstanding",
+  "partial-capture-outstanding":  word("observation-log.partial_capture_outstanding"),
   "text-undetermined":            "no text layer, CID fonts, or over the envelope (CPDF, D-121)",
   "client-rendered-shell":        "a client-rendered shell was captured and is not citable (D-64)",
-  "invitation-spent-or-expired":  "an invitation was spent, or expired unused",
+  "invitation-spent-or-expired":  word("observation-log.invitation_spent_or_expired"),
   "governor-holding-host":        "the per-host governor is holding a host: the capture is PACED, not broken (D-103)",
   "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
   /* D-523, LIVE from its landing: queue-producers' #conditionsRenderDeferred, derived on read from
@@ -1476,10 +1447,10 @@ function refusal(key, detail, extra = null) {
 export const OBSERVATION_REFERENT_FAULTS = {
   not_earlier:     "the referent names a row at or after the one being written, and a rollup can only "
                  + "rest on a look that already happened",
-  unresolved:      "the referent names no row this log holds",
+  unresolved:      word("observation-log.unresolved"),
   other_authority: "the referent is a row of a different authority, and a run's rollup can rest only on "
                  + "its own looks",
-  not_present:     "the referent row does not read PRESENT, so it cannot be what makes this row PRESENT",
+  not_present:     word("observation-log.not_present"),
 };
 
 /** THE ONE JUDGEMENT OF AN `observation` REFERENT. Pure: the STORE resolves
@@ -1530,8 +1501,7 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
      contents are judged at all. */
   if (e.bundle != null && String(e.bundle) !== "")
     return refusal("AI_LOG_NOT_A_BUNDLE",
-      `this entry names record '${String(e.bundle)}'; the observation log is its own object `
-      + `(INVESTIGATIVE-SESSION.md §11) and bundle.md is written only on success`);
+      localize("observation-log.vocabulary.this_entry_names_record_string", "this entry names record '{String}'; the observation log is its own object (INVESTIGATIVE-SESSION.md §11) and bundle.md is written only on success", { String: String(String(e.bundle)) }));
 
   /* C-22.9 — REC-93. THE COLUMN THAT MAY NEVER BE ABSENT, and it is the one
      refusal in this family that is about WHY WE LOOKED rather than about what we
@@ -1548,15 +1518,12 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
   const authorityKind = typeof e.authority_kind === "string" ? e.authority_kind : "";
   if (!Object.prototype.hasOwnProperty.call(OBSERVATION_AUTHORITY_KINDS, authorityKind))
     return refusal("OBS_AUTHORITY_UNNAMED",
-      `'${authorityKind || "(absent)"}' names no authority. A look is recorded when it carries an `
-      + `authority the record can name: ${Object.keys(OBSERVATION_AUTHORITY_KINDS).join(", ")}. `
-      + `A look with none is not a weaker observation, it is an unrecordable one (RFC 2308's rule as `
-      + `STORE-AS-CACHE.md carries it)`);
+      localize("observation-log.vocabulary.v1_names_no_authority_a", "'{v1}' names no authority. A look is recorded when it carries an authority the record can name: {keys}. A look with none is not a weaker observation, it is an unrecordable one (RFC 2308's rule as STORE-AS-CACHE.md carries it)", { v1: String(authorityKind || "(absent)"), keys: String(Object.keys(OBSERVATION_AUTHORITY_KINDS).join(", ")) }));
 
   const state = typeof e.state === "string" ? e.state : "";
   if (!Object.prototype.hasOwnProperty.call(OBSERVATION_STATES, state))
     return refusal("AI_LOG_STATE_UNKNOWN",
-      `'${state || "(absent)"}' is not one of ${Object.keys(OBSERVATION_STATES).join(", ")} (D-129)`);
+      localize("observation-log.vocabulary.v1_is_not_one_of", "'{v1}' is not one of {keys} (D-129)", { v1: String(state || "(absent)"), keys: String(Object.keys(OBSERVATION_STATES).join(", ")) }));
   /* R3 — `NEVER_LOOKED` IS NAMED AND NEVER STORED. It is a key of `OBSERVATION_STATES` because it is the state of a
      subject with NO ROW, and the membership test above therefore admitted it: an append of it wrote a row claiming
      nobody looked, which is a row that is its own contradiction (§3: "NEVER_LOOKED is the absence of a row"). Refused
@@ -1569,15 +1536,13 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
   /* DEC-49 REGION is-never-looked-stored */
   if (state === "NEVER_LOOKED" && !(e.terminal === true && authorityKind === "run"))
     return refusal("AI_LOG_NEVER_LOOKED_STORED",
-      `NEVER_LOOKED is never stored: it is what the record says of a subject with no row at all `
-      + `(OBSERVATION-LOG-DESIGN.md section 3). A look that happened found one of ${LEAD_LOOK_OUTCOMES.join(", ")}`);
+      localize("observation-log.vocabulary.never_looked_is_never_stored", "NEVER_LOOKED is never stored: it is what the record says of a subject with no row at all (OBSERVATION-LOG-DESIGN.md section 3). A look that happened found one of {LEAD_LOOK_OUTCOMES}", { LEAD_LOOK_OUTCOMES: String(LEAD_LOOK_OUTCOMES.join(", ")) }));
   /* END DEC-49 REGION is-never-looked-stored */
 
   /* C-22.2 — D-104's split. `governed` is the fact that OUR pacing held us. */
   if (e.governed === true && DEFINITIVE_STATES.has(state))
     return refusal("AI_LOG_GOVERNED_ABSENCE",
-      `a governed refusal cannot support '${state}': our governor holding a host is a fact about us, `
-      + `not about the source (D-104). LOOKED_INDETERMINATE is the only state a governed observation carries`);
+      localize("observation-log.vocabulary.a_governed_refusal_cannot_support", "a governed refusal cannot support '{state}': our governor holding a host is a fact about us, not about the source (D-104). LOOKED_INDETERMINATE is the only state a governed observation carries", { state: String(state) }));
 
   const condition = typeof e.condition === "string" && e.condition ? e.condition : null;
 
@@ -1636,18 +1601,12 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
   const resultKind = typeof e.result_kind === "string" && e.result_kind ? e.result_kind : null;
   if (state === "PRESENT" && (e.result_ref == null || String(e.result_ref) === ""))
     return refusal("OBS_PRESENT_NO_REFERENT",
-      `a PRESENT observation under authority '${authorityKind}' names nothing it found. `
-      + `PRESENT asserts the subject IS there, so the row must point at what was produced `
-      + `(the capture_sha, the content id, the entity, or for a rollup the observation that makes `
-      + `it PRESENT) -- a revisit that omits its referent loses which subject the bytes came from, `
-      + `which is the WARC lesson this refusal carries`);
+      localize("observation-log.vocabulary.a_present_observation_under_authority", "a PRESENT observation under authority '{authorityKind}' names nothing it found. PRESENT asserts the subject IS there, so the row must point at what was produced (the capture_sha, the content id, the entity, or for a rollup the observation that makes it PRESENT) -- a revisit that omits its referent loses which subject the bytes came from, which is the WARC lesson this refusal carries", { authorityKind: String(authorityKind) }));
   if (resultKind === "observation") {
     const fault = observationReferentFault(e, referent);
     if (fault)
       return refusal("OBS_PRESENT_NO_REFERENT",
-        `this row's referent is observation '${e.result_ref == null ? "(absent)" : String(e.result_ref)}' `
-        + `and it does not back the row: ${OBSERVATION_REFERENT_FAULTS[fault]} `
-        + `(OBSERVATION-LOG-DESIGN.md section 3, the rollup ruling)`,
+        localize("observation-log.vocabulary.this_rows_referent_is_observation", "this row's referent is observation '{v1}' and it does not back the row: {v2} (OBSERVATION-LOG-DESIGN.md section 3, the rollup ruling)", { v1: String(e.result_ref == null ? "(absent)" : String(e.result_ref)), v2: String(OBSERVATION_REFERENT_FAULTS[fault]) }),
         { referent_fault: fault });
   }
   const badCondition = checkCondition(condition, conditionKinds);
@@ -1662,6 +1621,6 @@ export function checkCondition(condition, conditionKinds = CONDITION_KINDS) {
   if (condition == null || condition === "") return null;   // no condition is a supported state
   if (!Object.prototype.hasOwnProperty.call(conditionKinds || {}, String(condition)))
     return refusal("AI_RUN_CONDITION_UNKNOWN",
-      `'${String(condition)}' is not in the record's condition vocabulary (observation-log's CONDITION_KINDS)`);
+      localize("observation-log.vocabulary.string_is_not_in_the", "'{String}' is not in the record's condition vocabulary (observation-log's CONDITION_KINDS)", { String: String(String(condition)) }));
   return null;
 }

@@ -12,6 +12,7 @@
  * later: `match_grade` is a ceiling `entities` applies, not a score this module raises. */
 import { readerView } from "../docprofile/registry.mjs";
 import { nameSpans, withoutContacts, titlePatterns, titleSpans, removeSpans } from "./lines.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export const NAME_GRADE = "C";
 
@@ -30,7 +31,7 @@ export function directoryPersonRefs(entities, view) {
                  why: "one name-shaped span remains on the entry's line once its address, phone numbers and staff titles are removed; a name alone is grade C" });
     else
       out.push({ ...ref, match_grade: null,
-                 why: spans.length ? `${spans.length} name-shaped spans remain on the entry's line, which may hold more than one person's text, so no name is read`
+                 why: spans.length ? localize("roster-reader.directory-refs.length_name_shaped_spans_remain", "{length} name-shaped spans remain on the entry's line, which may hold more than one person's text, so no name is read", { length: String(spans.length) })
                                    : "no name-shaped span remains on the entry's line once its address, phone numbers and staff titles are removed" });
   }
   return out;

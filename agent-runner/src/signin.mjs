@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { QUIET, PATH, passed, scrubSaid } from './env.mjs';
 import { screen } from './screen.mjs';
 import { ADDRESS_WAIT_MS, CODE_WAIT_MS, OUTCOME_WAIT_MS } from './waits.mjs';
+import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 export { ADDRESS_WAIT_MS, CODE_WAIT_MS, OUTCOME_WAIT_MS };
 export const MEMBER_MAX = 200;
@@ -82,21 +83,21 @@ export function anthropicAddress(address) {
 
 // Each refusal's words for the member (R31; DEC-149: "your group's Civicsmith", never the machinery's names).
 export const WORDS = {
-  BAD_REQUEST: 'Your team\'s Civicsmith could not read this request to connect Claude. Reload the page, then try connecting Claude again.',
-  BAD_MEMBER: 'Your team\'s Civicsmith could not tell which member this is for. Sign in to Civicsmith again, then connect Claude.',
-  NOT_THIS_MEMBER: 'Another member of your team is connecting Claude right now. Wait a few minutes, then try again.',
-  NO_SIGNIN_WAITING: 'No Claude sign-in is waiting for this code: it ends 10 minutes after it starts. Start connecting Claude again.',
-  BAD_CODE: 'That does not look like the code Claude\'s page shows. Copy the whole code from the page and paste it again.',
-  ATTEMPT_SUPERSEDED: 'A newer Claude sign-in was started after this one. Paste the code from the newest Claude page, or start again.',
-  NO_BINARY: 'Your team\'s Civicsmith cannot start Claude\'s sign-in: Claude Code is missing from it. Tell your team\'s steward.',
-  NO_ADDRESS: 'Claude\'s sign-in gave no address within 30 seconds. Wait a minute, then try connecting Claude again.',
-  EXITED: 'Claude\'s sign-in stopped before it gave an address. Wait a minute, then try connecting Claude again.',
-  ENDED: 'This Claude sign-in was ended before it gave an address. Start connecting Claude again.',
-  NOT_RUN: 'Your team\'s Civicsmith could not run Claude\'s sign-in just now. Wait a minute, then try again.',
-  SIGNIN_ADDRESS_UNEXPECTED: 'Claude\'s sign-in gave an address that is not Anthropic\'s, so your team\'s Civicsmith did not show it. Tell your team\'s steward.',
-  NO_OUTCOME: 'Claude gave no answer within 60 seconds of the code. Start connecting Claude again and paste the new code.',
-  TOKEN_SHAPE: 'Claude answered the code, but not with a token your team\'s Civicsmith can use. Start connecting Claude again.',
-  REFUSED: (said) => `Claude did not accept the code${said ? ` (${said})` : ''}. Start connecting Claude again and paste the new code.`,
+  BAD_REQUEST: localize('agent-runner.signin.your_teams_civicsmith_could_not', 'Your team\'s Civicsmith could not read this request to connect Claude. Reload the page, then try connecting Claude again.'),
+  BAD_MEMBER: localize('agent-runner.signin.your_teams_civicsmith_could_not_2', 'Your team\'s Civicsmith could not tell which member this is for. Sign in to Civicsmith again, then connect Claude.'),
+  NOT_THIS_MEMBER: localize('agent-runner.signin.another_member_of_your_team', 'Another member of your team is connecting Claude right now. Wait a few minutes, then try again.'),
+  NO_SIGNIN_WAITING: localize('agent-runner.signin.no_claude_sign_in_is', 'No Claude sign-in is waiting for this code: it ends 10 minutes after it starts. Start connecting Claude again.'),
+  BAD_CODE: localize('agent-runner.signin.that_does_not_look_like', 'That does not look like the code Claude\'s page shows. Copy the whole code from the page and paste it again.'),
+  ATTEMPT_SUPERSEDED: localize('agent-runner.signin.a_newer_claude_sign_in', 'A newer Claude sign-in was started after this one. Paste the code from the newest Claude page, or start again.'),
+  NO_BINARY: localize('agent-runner.signin.your_teams_civicsmith_cannot_start', 'Your team\'s Civicsmith cannot start Claude\'s sign-in: Claude Code is missing from it. Tell your team\'s steward.'),
+  NO_ADDRESS: localize('agent-runner.signin.claudes_sign_in_gave_no', 'Claude\'s sign-in gave no address within 30 seconds. Wait a minute, then try connecting Claude again.'),
+  EXITED: localize('agent-runner.signin.claudes_sign_in_stopped_before', 'Claude\'s sign-in stopped before it gave an address. Wait a minute, then try connecting Claude again.'),
+  ENDED: localize('agent-runner.signin.this_claude_sign_in_was', 'This Claude sign-in was ended before it gave an address. Start connecting Claude again.'),
+  NOT_RUN: localize('agent-runner.signin.your_teams_civicsmith_could_not_3', 'Your team\'s Civicsmith could not run Claude\'s sign-in just now. Wait a minute, then try again.'),
+  SIGNIN_ADDRESS_UNEXPECTED: localize('agent-runner.signin.claudes_sign_in_gave_an', 'Claude\'s sign-in gave an address that is not Anthropic\'s, so your team\'s Civicsmith did not show it. Tell your team\'s steward.'),
+  NO_OUTCOME: localize('agent-runner.signin.claude_gave_no_answer_within', 'Claude gave no answer within 60 seconds of the code. Start connecting Claude again and paste the new code.'),
+  TOKEN_SHAPE: localize('agent-runner.signin.claude_answered_the_code_but', 'Claude answered the code, but not with a token your team\'s Civicsmith can use. Start connecting Claude again.'),
+  REFUSED: (said) => localize('agent-runner.signin.claude_did_not_accept_the', 'Claude did not accept the code{v1}. Start connecting Claude again and paste the new code.', { v1: String(said ? ` (${said})` : '') }),
 };
 
 const reply = (status, body, log = {}) => ({ status, body, log });
@@ -140,7 +141,7 @@ export function signinOf({ root = tmpdir(), binary = claudeBinary(), spawn = nod
     const env = { PATH, ...passed(), HOME: home, CLAUDE_CONFIG_DIR: config, TERM: 'dumb', COLUMNS: String(COLUMNS),
       LINES: String(ROWS), ...QUIET };
     // `script` gives the binary the terminal it draws in, sized first; the command is this module's constants alone.
-    const command = `stty cols ${COLUMNS} rows ${ROWS}; exec ${[binary, ...SETUP_ARGS].join(' ')}`;
+    const command = localize('agent-runner.signin.stty_cols_columns_rows_rows', 'stty cols {COLUMNS} rows {ROWS}; exec {v1}', { COLUMNS: String(COLUMNS), ROWS: String(ROWS), v1: String([binary, ...SETUP_ARGS].join(' ')) });
     const proc = spawn(script, ['-q', '-f', '-e', '-c', command, '/dev/null'],
       { env, cwd: home, stdio: ['pipe', 'pipe', 'pipe'], detached: true });
     const w = { attempt: randomUUID(), member, proc, dir, out: '', started: Date.now(), typed: false, ended: false,

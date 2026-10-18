@@ -12,6 +12,7 @@ import { makeZip } from "../../make-zip.mjs";
 import { unpack, archiveList, memberOf, ARCHIVE_CHECKS } from "../../../src/acquisition/index.mjs";
 import { ARCHIVE_DEPTH_MAX, ARCHIVE_LIMITS } from "../../../src/ooxml.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const URL1 = "https://files.example/set.zip";
 const capture = (w, bytes, url = URL1) => run(w, { [url]: () => new Response(bytes, { headers: { "content-type": "application/zip" } }) }, { locator: url });
@@ -222,7 +223,7 @@ test("R41: NOT_AN_ARCHIVE, with its row, for a capture held and visible that R17
   const holdInParts = async (bytes) => {
     const url = `https://files.example/big-${++n}`;
     const c = await run(w, { [url]: () => new Response(bytes, { headers: { "content-type": "application/octet-stream" } }) }, { locator: url });
-    assert.equal(c.body.document.parts.length, 2, "held in parts");
+    assert.equal(c.body.document.parts.length, 2, word("acquisition.basis.multipart"));
     s.bundle(`INFO-BIG-${n}`);
     w.prov.homes[sha(bytes)] = `INFO-BIG-${n}`;
     w.prov.named[sha(bytes)] = c.body.document.parts.map((x) => ({ sha256: x.sha256, bytes: x.bytes }));

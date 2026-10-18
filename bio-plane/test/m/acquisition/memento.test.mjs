@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, lookup, sha, wayback, WB, eligible, http1123 } from "./fixture.mjs";
 import { EMPTY_BODY_DIGEST } from "../../../src/cdx.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ADDR = "https://gone.example/doc";
 const ARCH = { via: "archive.org", address: ADDR };
@@ -29,7 +30,7 @@ test("R32: the TimeGate's memento, its raw bytes fetched, is chosen by selectCap
   const d = r.body.document;
   assert.deepEqual([d.locator, d.capture.sha256, d.capture.bytes], [raw, sha("the memento"), 11]);
   const hop = d.provenance_chain[1];
-  assert.deepEqual([hop.who, hop.via, hop.bound, hop.document_address], ["Internet Archive Wayback Machine", "archive.org", false, ADDR]);
+  assert.deepEqual([hop.who, hop.via, hop.bound, hop.document_address], [word("capture-sources.name.internet_archive_wayback"), "archive.org", false, ADDR]);
   assert.equal(hop.asserts, `these bytes were served for ${ADDR} at 2025-03-01T10:15:00Z, with HTTP status 200`);
   for (const part of [`Memento-Datetime: ${http1123("20250301101500")}`, `memento ${raw}`, `rel="original" ${ADDR}`, `rel="timemap" ${TM}`,
                       "mimetype text/plain", `SHA-256 ${sha("the memento")}, computed by your team's Civicsmith over the bytes it received`])

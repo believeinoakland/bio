@@ -29,7 +29,7 @@ import { Membership, membershipOf, notAnAdmin, noSuchProject, notTheOwner, liste
 import { AI_ACCOUNTS_SCHEMA, AI_ACCOUNTS_ADDITIVE_COLUMNS, AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES,
          AI_ACCOUNTS_HISTORY_TABLE } from "./schema.mjs";
 export { AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "./schema.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { AI_ACCOUNT_CHECKS, AI_WORDS } from "./checks.mjs";
 export { AI_ACCOUNT_CHECKS, AI_WORDS } from "./checks.mjs";
 
@@ -188,8 +188,7 @@ export class AiAccounts {
     const refuse = (code, detail) => AiAccounts.#row(AI_ACCOUNT_CHECKS, code, detail);
     /* DEC-49 REGION is-account-own-act */
     if (by === null || by === undefined || by === "" || isMachineIdentity(by))
-      return refuse("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, "
-        + "from their own signed-in session; this caller has no member behind it. Nothing was written.");
+      return refuse("MACHINE_CANNOT_HOLD_ACCOUNT", localize("ai-accounts.index.a_members_claude_account_is", "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written."));
     const id = AiAccounts.#memberOf(member);
     if (id === null || AiAccounts.#memberOf(by) !== id)
       return AiAccounts.#notYours("a member's Claude account is acted on only by that member; another member, an "
@@ -214,10 +213,10 @@ export class AiAccounts {
   #noAccount(member, scope = "served") {
     /* DEC-49 REGION is-account-held */
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "NO_ACCOUNT", scope === true || scope === "own"
-      ? "this member holds no Claude account reference of their own. Nothing was used or written."
+      ? localize("ai-accounts.index.this_member_holds_no_claude", "this member holds no Claude account reference of their own. Nothing was used or written.")
       : scope === "member" ? "this member holds no Claude account of their own: no key and no connected sign-in. Nothing "
         + "was written."
-      : scope === "project" ? "this project holds no Claude account. Nothing was written."
+      : scope === "project" ? localize("ai-accounts.index.this_project_holds_no_claude", "this project holds no Claude account. Nothing was written.")
       : "no Claude account serves this member: they hold no reference of their own, they are not connected through "
         + "their subscription, and the team's key is not held or not on, so there is no assistant for them. Nothing was "
         + "used.", { member });
@@ -228,7 +227,7 @@ export class AiAccounts {
   static #noSecret(secret) {
     /* DEC-49 REGION is-secret-given */
     if (typeof secret !== "string" || secret.trim() === "")
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "NO_SECRET", "no key or token was given. Nothing was written.");
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "NO_SECRET", localize("ai-accounts.index.no_key_or_token_was", "no key or token was given. Nothing was written."));
     return null;
     /* END DEC-49 REGION is-secret-given */
   }
@@ -237,8 +236,7 @@ export class AiAccounts {
   static #switchName(name, names = USE_SWITCHES) {
     /* DEC-49 REGION is-account-switch */
     if (typeof name !== "string" || !names.includes(name))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_SWITCH", `the switches are ${names.join(", ")}. `
-        + "Nothing was written.", { switch: typeof name === "string" ? name.slice(0, 40) : null });
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_SWITCH", localize("ai-accounts.index.the_switches_are_names_nothing", "the switches are {names}. Nothing was written.", { names: String(names.join(", ")) }), { switch: typeof name === "string" ? name.slice(0, 40) : null });
     return null;
     /* END DEC-49 REGION is-account-switch */
   }
@@ -263,8 +261,7 @@ export class AiAccounts {
   /* R14, R22: SWITCH_VALUE_INVALID, minted here alone: `what` and the values it takes. */
   static #valueInvalid(what, values, extra) {
     /* DEC-49 REGION is-switch-value */
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SWITCH_VALUE_INVALID", `${what} takes ${values.map(String).join(", ")}. `
-      + "Nothing was changed.", { values: [...values], ...(extra || {}) });
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SWITCH_VALUE_INVALID", localize("ai-accounts.index.what_takes_map_nothing_was", "{what} takes {map}. Nothing was changed.", { what: String(what), map: String(values.map(String).join(", ")) }), { values: [...values], ...(extra || {}) });
     /* END DEC-49 REGION is-switch-value */
   }
 
@@ -282,8 +279,7 @@ export class AiAccounts {
   static #switchedOff(whose, use, project = null) {
     /* DEC-49 REGION is-use-switched-on */
     const name = whose === "project" ? "this project's" : whose === "group" ? "your team's" : "your own";
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_USE_SWITCHED_OFF", `the account used for this act is ${name} Claude `
-      + `account, and its switch for ${use} is off; the act does not move to another account. Nothing was used.`,
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_USE_SWITCHED_OFF", localize("ai-accounts.index.the_account_used_for_this", "the account used for this act is {name} Claude account, and its switch for {use} is off; the act does not move to another account. Nothing was used.", { name: String(name), use: String(use) }),
       { whose, use, ...(project !== null ? { project } : {}) });
     /* END DEC-49 REGION is-use-switched-on */
   }
@@ -365,8 +361,7 @@ export class AiAccounts {
   }
 
   #seal() {
-    return this.#sealSecret === null ? AiAccounts.#sealRefusal("your team's Civicsmith has no seal secret set, so a "
-      + "key cannot be kept sealed or read. Nothing was stored or read.") : null;
+    return this.#sealSecret === null ? AiAccounts.#sealRefusal(localize("ai-accounts.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read.")) : null;
   }
 
   async #encrypt(owner, kind, secret) {
@@ -394,9 +389,7 @@ export class AiAccounts {
     if (bar) return bar;
     /* DEC-49 REGION is-account-kind */
     if (!ACCOUNT_KINDS.includes(kind))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", `the kind your team's Civicsmith holds is `
-        + `${ACCOUNT_KINDS.join(" and ")}; a Claude subscription is connected through Claude Code's own sign-in, never `
-        + `held as a token. Nothing was written.`);
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", localize("ai-accounts.index.the_kind_your_teams_civicsmith", "the kind your team's Civicsmith holds is {ACCOUNT_KINDS}; a Claude subscription is connected through Claude Code's own sign-in, never held as a token. Nothing was written.", { ACCOUNT_KINDS: String(ACCOUNT_KINDS.join(" and ")) }));
     /* END DEC-49 REGION is-account-kind */
     const empty = AiAccounts.#noSecret(secret);
     if (empty) return empty;
@@ -452,8 +445,7 @@ export class AiAccounts {
     } catch { shown = false; }
     if (shown) return null;
     /* DEC-49 REGION is-disclosure-shown */
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "DISCLOSURE_DUE", "you have not yet been shown what connecting your own "
-      + "Claude account means, so nothing was connected or sent. Read it, then try again.",
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "DISCLOSURE_DUE", localize("ai-accounts.index.you_have_not_yet_been", "you have not yet been shown what connecting your own Claude account means, so nothing was connected or sent. Read it, then try again."),
       { member: typeof member === "string" ? member : null });
     /* END DEC-49 REGION is-disclosure-shown */
   }
@@ -715,14 +707,12 @@ export class AiAccounts {
     const carried = args && typeof args === "object" ? Object.keys(args).filter((k) => k !== "member" && args[k] !== undefined) : [];
     /* DEC-49 REGION is-subscription-fact */
     if (carried.length)
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SUBSCRIPTION_LOGIN_REFUSED", "only that the member is connected is "
-        + "recorded here; this call carried more than the member, and none of it is kept. Nothing was recorded.");
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SUBSCRIPTION_LOGIN_REFUSED", localize("ai-accounts.index.only_that_the_member_is", "only that the member is connected is recorded here; this call carried more than the member, and none of it is kept. Nothing was recorded."));
     /* END DEC-49 REGION is-subscription-fact */
     const member = args?.member ?? null;
     const id = AiAccounts.#memberOf(member);
     if (id === null || isMachineIdentity(member) || !this.#holderActive(id))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member is connected through "
-        + "their subscription. Nothing was recorded.");
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_is", "only an active member is connected through their subscription. Nothing was recorded."));
     if (!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id))
       this.#tx(() => {
         const since = stampSecond();
@@ -750,12 +740,10 @@ export class AiAccounts {
   async subscriptionTokenHold({ member = null, token = null, validFor = null } = {}) {
     const id = AiAccounts.#memberOf(member);
     if (id === null || isMachineIdentity(member) || isMachineIdentity(id) || !this.#holderActive(id))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member, or the founder, "
-        + "holds a sign-in. Nothing was recorded.");
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_or", "only an active member, or the founder, holds a sign-in. Nothing was recorded."));
     /* DEC-49 REGION is-signin-token-shape */
     if (typeof token !== "string" || token.length < SIGNIN_TOKEN_LENGTH.min || token.length > SIGNIN_TOKEN_LENGTH.max)
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SUBSCRIPTION_TOKEN_MALFORMED", `a sign-in's token is ${SIGNIN_TOKEN_LENGTH.min} `
-        + `to ${SIGNIN_TOKEN_LENGTH.max} characters, and this was not one. Nothing was recorded.`);
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SUBSCRIPTION_TOKEN_MALFORMED", localize("ai-accounts.index.a_sign_ins_token_is", "a sign-in's token is {min} to {max} characters, and this was not one. Nothing was recorded.", { min: String(SIGNIN_TOKEN_LENGTH.min), max: String(SIGNIN_TOKEN_LENGTH.max) }));
     /* END DEC-49 REGION is-signin-token-shape */
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
@@ -815,16 +803,13 @@ export class AiAccounts {
     const unsealable = this.#seal();
     if (unsealable) return { refusal: unsealable };
     const key = await this.#decrypt(`member:${id}`, "signin", r.sealed, r.iv);
-    return key === null ? { refusal: AiAccounts.#sealRefusal("the sign-in does not open under the seal secret of your "
-      + "team's Civicsmith, which has changed; its member signs in again. Nothing was used.") } : { key };
+    return key === null ? { refusal: AiAccounts.#sealRefusal(localize("ai-accounts.index.the_sign_in_does_not", "the sign-in does not open under the seal secret of your team's Civicsmith, which has changed; its member signs in again. Nothing was used.")) } : { key };
   }
 
   /* R19: SIGNIN_NOT_HELD, minted here alone: a sign-in account chosen whose token is not held. */
   static #signinNotHeld(member) {
     /* DEC-49 REGION is-signin-held */
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_HELD", "the Claude sign-in that serves this act is not held: "
-      + "it was never connected since sign-ins are held, or Anthropic no longer accepts it. Its member signs in again. "
-      + "Nothing was used.", { member });
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_HELD", localize("ai-accounts.index.the_claude_sign_in_that", "the Claude sign-in that serves this act is not held: it was never connected since sign-ins are held, or Anthropic no longer accepts it. Its member signs in again. Nothing was used."), { member });
     /* END DEC-49 REGION is-signin-held */
   }
 
@@ -863,8 +848,7 @@ export class AiAccounts {
     if (unsealable) return unsealable;
     const secret = await this.#decrypt(`member:${id}`, r.kind, r.sealed, r.iv);
     if (secret === null)
-      return AiAccounts.#sealRefusal("the reference does not open under the seal secret of your team's Civicsmith, "
-        + "which has changed; the member connects their account again. Nothing was used.");
+      return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_reference_does_not_open", "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used."));
     return { ok: true, kind: r.kind, secret };
   }
 
@@ -1017,8 +1001,7 @@ export class AiAccounts {
   #noticeDue(id) {
     /* DEC-49 REGION is-group-key-notice-seen */
     if (this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id)) return null;
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "GROUP_KEY_NOTICE_DUE", "this member has not yet read the notice that their "
-      + "questions go to Anthropic under the team's API account. Nothing was sent.", { member: id });
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "GROUP_KEY_NOTICE_DUE", localize("ai-accounts.index.this_member_has_not_yet", "this member has not yet read the notice that their questions go to Anthropic under the team's API account. Nothing was sent."), { member: id });
     /* END DEC-49 REGION is-group-key-notice-seen */
   }
 
@@ -1070,14 +1053,12 @@ export class AiAccounts {
     if (r.level === "project") {
       const key = await this.#decrypt(`project:${r.project}`, "apikey", r.row.sealed, r.row.iv);
       if (key === null)
-        return AiAccounts.#sealRefusal("the project's key does not open under the seal secret of your team's "
-          + "Civicsmith, which has changed; one of the project's owners sets it again. Nothing was used.");
+        return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_projects_key_does_not", "the project's key does not open under the seal secret of your team's Civicsmith, which has changed; one of the project's owners sets it again. Nothing was used."));
       return { ok: true, kind: "apikey", level: "project", project: r.project, key };
     }
     const key = await this.#decrypt(AiAccounts.#GROUP_KEY_OWNER, "apikey", r.row.sealed, r.row.iv);
     if (key === null)
-      return AiAccounts.#sealRefusal("the team's key does not open under the seal secret of your team's Civicsmith, "
-        + "which has changed; an administrator sets it again. Nothing was used.");
+      return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_teams_key_does_not", "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
     return { ok: true, kind: "apikey", level: "group", key };
   }
 
@@ -1185,9 +1166,7 @@ export class AiAccounts {
     /* DEC-49 REGION is-keep-away-reason */
     if ((turnOn && !given) || (given && length > KEEP_AWAY_REASON.max) || (reason !== null && reason !== undefined
         && typeof reason !== "string"))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", `keeping material away from the assistant is `
-        + `turned on only with a reason of ${KEEP_AWAY_REASON.min} to ${KEEP_AWAY_REASON.max} characters, which every `
-        + `member reads${given ? `; this one has ${length}` : ""}. Nothing was changed.`);
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", localize("ai-accounts.index.keeping_material_away_from_the", "keeping material away from the assistant is turned on only with a reason of {min} to {max} characters, which every member reads{v1}. Nothing was changed.", { min: String(KEEP_AWAY_REASON.min), max: String(KEEP_AWAY_REASON.max), v1: String(given ? `; this one has ${length}` : "") }));
     /* END DEC-49 REGION is-keep-away-reason */
     return null;
   }
@@ -1240,9 +1219,8 @@ export class AiAccounts {
   static #keptAway(st) {
     /* DEC-49 REGION is-kept-away */
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEPT_AWAY", st.on === true
-      ? "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent."
-      : "whether the team keeps its material away from every assistant could not be read, so no account was read or "
-        + "used. Nothing was sent.", { keep_away: { reason: st.reason, set_by: st.set_by, set_at: st.set_at } });
+      ? localize("ai-accounts.index.the_team_keeps_its_material", "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent.")
+      : localize("ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent."), { keep_away: { reason: st.reason, set_by: st.set_by, set_at: st.set_at } });
     /* END DEC-49 REGION is-kept-away */
   }
 
@@ -1267,8 +1245,7 @@ export class AiAccounts {
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_AI_KEPT_AWAY", lim.on === true
       ? "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing "
         + "was sent."
-      : "whether this project keeps its material away from the assistant could not be read, so no account was read or "
-        + "used. Nothing was sent.",
+      : localize("ai-accounts.index.whether_this_project_keeps_its", "whether this project keeps its material away from the assistant could not be read, so no account was read or used. Nothing was sent."),
       { project: String(project), use: use ?? null, keep_away: { reason: lim.reason, set_by: lim.set_by, set_at: lim.set_at } });
     /* END DEC-49 REGION is-project-kept-away */
   }
@@ -1415,14 +1392,11 @@ export class AiAccounts {
     const parts = this.#participants(project);
     /* DEC-49 REGION is-project-sole-member */
     if (!parts || parts.some((x) => x.member !== id))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_NOT_SOLE_MEMBER", "a member's own sign-in serves a project only "
-        + "while that member is its only participant, and this project has others (owners included); it can hold an "
-        + "Anthropic API key instead. Nothing was written.", { project });
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_NOT_SOLE_MEMBER", localize("ai-accounts.index.a_members_own_sign_in", "a member's own sign-in serves a project only while that member is its only participant, and this project has others (owners included); it can hold an Anthropic API key instead. Nothing was written."), { project });
     /* END DEC-49 REGION is-project-sole-member */
     /* DEC-49 REGION is-signin-connected */
     if (!this.#connected(id))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_CONNECTED", "you are not connected through your Claude "
-        + "subscription, so there is no sign-in of yours to serve the project. Nothing was written.", { project });
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "SIGNIN_NOT_CONNECTED", localize("ai-accounts.index.you_are_not_connected_through", "you are not connected through your Claude subscription, so there is no sign-in of yours to serve the project. Nothing was written."), { project });
     /* END DEC-49 REGION is-signin-connected */
     const setAt = stampSecond();
     this.#tx(() => {
@@ -1509,8 +1483,7 @@ export class AiAccounts {
   #projectNoticeDue(id, project) {
     /* DEC-49 REGION is-project-key-notice-seen */
     if (this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project)) return null;
-    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_KEY_NOTICE_DUE", "this member has not yet read the notice that their "
-      + "questions go to Anthropic under this project's API account. Nothing was sent.",
+    return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_KEY_NOTICE_DUE", localize("ai-accounts.index.this_member_has_not_yet_2", "this member has not yet read the notice that their questions go to Anthropic under this project's API account. Nothing was sent."),
       { member: id, project, project_name: this.#projectName(project), disclosure: this.#disclosure(project) });
     /* END DEC-49 REGION is-project-key-notice-seen */
   }
@@ -1607,7 +1580,7 @@ export class AiAccounts {
       const { sealed, iv } = await this.#encrypt(String(owner), String(kind), String(text));
       return { ok: true, sealed, iv };
     } catch {
-      return AiAccounts.#sealRefusal("the key could not be sealed by your team's Civicsmith. Nothing was stored or read.");
+      return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_key_could_not_be", "the key could not be sealed by your team's Civicsmith. Nothing was stored or read."));
     }
   }
 
@@ -1619,8 +1592,7 @@ export class AiAccounts {
     const text = typeof sealed === "string" && typeof iv === "string"
       ? await this.#decrypt(String(owner), String(kind), sealed, iv) : null;
     if (text === null)
-      return AiAccounts.#sealRefusal("the key does not open under the seal secret of your team's Civicsmith, which "
-        + "has changed; an administrator sets it again. Nothing was used.");
+      return AiAccounts.#sealRefusal(localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
     return { ok: true, text };
   }
 

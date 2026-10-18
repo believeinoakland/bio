@@ -2,6 +2,7 @@
  * loadable layers (R46) and the model half (R47). Pure. */
 /* Requirement ids in the comments below are `agent-worker`'s, as they stood when this code moved (T51, K3850); `build/requirements/agent-steps.md` maps them to this module's. */
 import { MODEL_FOR_MODE } from "../../agent-model/src/model.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 
 /* -------------------------------------------------- D-276: THE ANSWER, NOT THE WIRE
@@ -91,7 +92,7 @@ export function loadLayer(model, input) {
   if (!model.layers.includes(name))
     return { content: name === SUGGESTIONS_LAYER
       ? "the suggestions layer is not loaded: the suggestions switch that governs this act is off"
-      : `no disclosed layer '${name}'`, error: true };
+      : localize("agent-steps.plane.no_disclosed_layer_name", "no disclosed layer '{name}'", { name: String(name) }), error: true };
   return { content: model.pack.disclosed[name] };
 }
 

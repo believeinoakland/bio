@@ -9,6 +9,7 @@ import { world, V, AUTHORED } from "./fixture.mjs";
 import { searchedSection } from "../../../src/case-authoring/index.mjs";
 import { CASE_DOCUMENT_FORMAT } from "../../../src/publication/index.mjs";
 import { LENS_HEAD } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -119,10 +120,10 @@ test("R14, R15 (d84-case-manifest): with no lens adopted the manifest is stated 
   const text = docOf(w, r).text, fm = w.fm(text);
   assert.deepEqual([fm.bias_manifest.in_force, fm.bias_manifest.stated, fm.bias_manifest.statements_sha, fm.bias_manifest.scope,
                     fm.bias_manifest.scope_id, fm.bias_manifest_bundles],
-    [false, "no manifest was in force", null, "project", P, []]);
+    [false, word("bias.manifest_force"), null, "project", P, []]);
   assert.match(text, /^## Bias Manifest$/m);
   assert.ok(text.includes(`NO MANIFEST WAS IN FORCE for ${P}`));
-  assert.deepEqual([r.bias_manifest.in_force, r.bias_manifest.stated], [false, "no manifest was in force"]);
+  assert.deepEqual([r.bias_manifest.in_force, r.bias_manifest.stated], [false, word("bias.manifest_force")]);
   assert.deepEqual([typeof fm.bias_acknowledgement, new RegExp(`^${LENS_HEAD}$`, "m").test(text), fm.completeness.acknowledged,
                     fm.completeness_acknowledgements], ["string", true, 0, []]);
   /* in force: each pair and the hash, as the lens stood at the act */
@@ -137,7 +138,7 @@ test("R14, R15 (d84-case-manifest): with no lens adopted the manifest is stated 
     lens.bundles.map((b) => [b.bundle_id, b.revision, b.scope]));
   for (const s of [`- BIAS-2026-0001-i (instance) at revision ${"a".repeat(64)}`,
                    `- BIAS-2026-0002-p (project) at revision ${"b".repeat(64)}`,
-                   `Hash of the effective statement set: ${"f".repeat(64)}.`])
+                   word("case-authoring.body.hash_effective_statement", { statements_sha: String("f".repeat(64)) })])
     assert.ok(ot.includes(s), s);
 });
 

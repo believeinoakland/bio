@@ -41,6 +41,7 @@ import { localDay, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { INVESTIGATION_SCHEMA, INVESTIGATION_TABLES } from "./schema.mjs";
 import { INVESTIGATION_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { INVESTIGATION_SCHEMA, INVESTIGATION_TABLES, INVESTIGATION_CHECKS };
 
@@ -314,7 +315,7 @@ export class Investigation {
     if (!Array.isArray(waitsOn) || waitsOn.length === 0)
       return { refusal: refuse("MILESTONE_WAITS_ON_NOTHING", "a milestone names at least one question or step it waits on") };
     const qs = this.#questionsSeen(project, viewer);
-    if (qs === null) return { refusal: refuse("MILESTONE_ITEM_UNKNOWN", "the questions this project draws on could not be read") };
+    if (qs === null) return { refusal: refuse("MILESTONE_ITEM_UNKNOWN", word("investigation.questions_project_draws")) };
     const qids = new Set(qs.map((q) => q.inquiry));
     const out = [];
     for (const raw of waitsOn) {
@@ -447,16 +448,16 @@ export class Investigation {
   /* R2: one item's state for a viewer: `done`, `open`, `stuck` (naming why) or `undetermined`. */
   #itemState(project, item, viewer, stances) {
     if (item.kind === "question") {
-      if (!this.#seenBundle(item.ref, viewer)) return { state: "undetermined", why: "not a question you can see" };
+      if (!this.#seenBundle(item.ref, viewer)) return { state: "undetermined", why: word("investigation.why.question_see") };
       const stance = stances.get(item.ref);
-      if (stance === "concluded") return { state: "done", why: "this project concluded on it" };
+      if (stance === "concluded") return { state: "done", why: word("investigation.why.project_concluded") };
       const d = this.#disposed(project, item.ref);
       if (d) return { state: "stuck", why: d };
-      return { state: "open", ...(stance === undefined ? { why: "this project no longer draws on it" } : {}) };
+      return { state: "open", ...(stance === undefined ? { why: word("investigation.why.project_longer_draws") } : {}) };
     }
     let s = null;
     try { s = this.#steps.step({ step: item.ref, viewer }); } catch { s = null; }
-    if (!s || s.ok !== true) return { state: "undetermined", why: "not a step you can see" };
+    if (!s || s.ok !== true) return { state: "undetermined", why: word("investigation.why.step_see") };
     if (s.state === "ended") return { state: "done", why: "ended" };
     if (s.state === "set_aside") return { state: "stuck", why: "set_aside" };
     return { state: "open", step_state: s.state };
@@ -478,7 +479,7 @@ export class Investigation {
       ...(stuck.length ? { stuck_on: stuck.map((i) => ({ kind: i.kind, ref: i.ref, why: i.why })) } : {}),
       nearing: delta === null ? null : state !== "met" && delta >= 0 && delta <= NEARING_DAYS,
       overdue: delta === null ? null : state !== "met" && delta < 0,
-      ...(today ? {} : { why: "no time zone is held for your team's Civicsmith, so the local day is not known" }),
+      ...(today ? {} : { why: word("steps.why.time_zone_held") }),
       items, by: this.#shown(m.by_actor), at: m.at,
       history: this.#rows(`SELECT act, detail_json, by_actor, at FROM inv_milestone_history WHERE milestone_id = ? ORDER BY seq`, m.milestone_id)
         .map((h) => ({ act: h.act, detail: parse(h.detail_json), by: this.#shown(h.by_actor), at: h.at })),
@@ -515,7 +516,7 @@ export class Investigation {
     const member = this.#memberOf(viewer);
     if (!member) return { ok: true, due: [] };
     const today = filled(at) ? this.#today(at) : null;
-    if (!today) return { ok: true, due: [], undetermined: true, why: "no time zone is held for your team's Civicsmith, or no instant was given" };
+    if (!today) return { ok: true, due: [], undetermined: true, why: word("steps.why.time_zone_held_group") };
     const due = [];
     try {
       for (const project of this.#joinedProjects(member)) {
@@ -590,16 +591,16 @@ export class Investigation {
     if (steps === null) return { ok: false, reason: "UNDETERMINED", project, detail: "the steps could not be read, so no draft was made" };
     const lines = [];
     const line = (section, text, source) => lines.push({ section, text, source });
-    const outcomeWords = { helped: "helped", dead_end: "a dead end", undetermined: "not yet judged" };
+    const outcomeWords = { helped: "helped", dead_end: word("investigation.dead_end"), undetermined: word("investigation.judged") };
     const ended = [];
     for (const s of steps) {
       const doer = s.doer === "system" ? "the system" : s.doer;
-      if (after(s.at)) line("taken", `${doer} took a step: ${s.work}`, { kind: "step", id: s.step });
+      if (after(s.at)) line("taken", word("investigation.took_step", { doer: String(doer), work: String(s.work) }), { kind: "step", id: s.step });
       if (STEP_CLOSED.includes(s.state) && !STEP_CLOSED.includes(before[s.step])) {
         ended.push(s);
         const outs = (s.outcomes ?? []).map((o) => `${o.question ? `for ${o.question} ` : ""}${outcomeWords[o.outcome] ?? o.outcome}`).join("; ");
         line("ended", `${s.state === "ended" ? "Ended" : "Set aside"}: ${s.work}${outs ? ` (${outs})` : ""}`, { kind: "step", id: s.step });
-        for (const l of s.learned ?? []) line("ended", `${l.by ?? "a member"} wrote what was learned: ${l.text}`, { kind: "step", id: s.step });
+        for (const l of s.learned ?? []) line("ended", word("investigation.wrote_learned", { by: String(l.by ?? "a member"), text: String(l.text) }), { kind: "step", id: s.step });
       }
     }
     /* what was found: products of the steps taken or ended since, legs added, the project's conclusions and withdrawals */
@@ -607,7 +608,7 @@ export class Investigation {
     for (const s of touched) {
       let p = null;
       try { p = this.#steps.productsOf({ step: s.step, viewer }); } catch { p = null; }
-      for (const x of (p && p.ok ? p.products : [])) line("found", `The step "${s.work}" produced ${x.kind} ${x.id}`, { kind: x.kind, id: x.id, step: s.step });
+      for (const x of (p && p.ok ? p.products : [])) line("found", word("investigation.step_produced", { work: String(s.work), kind: String(x.kind), id: String(x.id) }), { kind: x.kind, id: x.id, step: s.step });
     }
     const scope = question ? qs.filter((q) => q.inquiry === question) : qs;
     for (const q of scope) {
@@ -615,15 +616,15 @@ export class Investigation {
       try { b = this.#legEarning.basisFor(q.inquiry); } catch { b = null; }
       for (const l of (b && b.ok ? b.legs : [])) {
         if (!after(l.at) || !this.#legSeen(l, viewer)) continue;
-        line("found", `A leg ${l.role === "cuts_against" ? "cutting against" : "supporting"} ${q.inquiry} was added, resting on ${l.target_id}${l.grade ? ` at grade ${l.grade}` : ""}`,
+        line("found", word("investigation.leg_added_resting", { role: String(l.role === "cuts_against" ? "cutting against" : "supporting"), inquiry: String(q.inquiry), target_id: String(l.target_id), grade: String(l.grade ? ` at grade ${l.grade}` : "") }),
           { kind: "leg", id: q.inquiry, target: l.target_id });
       }
       let rec = null;
       try { rec = this.#basisVersions.conclusionRecordOf(project, q.inquiry, viewer); } catch { rec = null; }
       for (const h of (rec && Array.isArray(rec.history) ? rec.history : [])) {
         if (!after(h.at)) continue;
-        if (h.act === "concluded") line("found", `This project concluded on ${q.inquiry}: ${h.claim ?? "a claim that cannot be read"}`, { kind: "conclusion", id: q.inquiry });
-        else if (h.act === "withdrawn") line("found", `This project withdrew its conclusion on ${q.inquiry}`, { kind: "conclusion", id: q.inquiry });
+        if (h.act === "concluded") line("found", word("investigation.project_concluded", { inquiry: String(q.inquiry), claim: String(h.claim ?? "a claim that cannot be read") }), { kind: "conclusion", id: q.inquiry });
+        else if (h.act === "withdrawn") line("found", word("investigation.project_withdrew_conclusion", { inquiry: String(q.inquiry) }), { kind: "conclusion", id: q.inquiry });
       }
     }
     /* what is waiting: step waits, the questions' waits (inquiry R55, R58), open milestones */
@@ -631,8 +632,8 @@ export class Investigation {
       if (STEP_CLOSED.includes(s.state)) continue;
       for (const w of s.waits ?? []) {
         if (w.met === true) continue;
-        const on = w.on.step ? `the step ${w.on.step}` : w.on.date ? `the date ${w.on.date}` : w.on.arrival ? `${w.on.arrival.kind} ${w.on.arrival.id}` : "something you cannot see";
-        line("waiting", `"${s.work}" waits on ${on}`, { kind: "step", id: s.step });
+        const on = w.on.step ? `the step ${w.on.step}` : w.on.date ? `the date ${w.on.date}` : w.on.arrival ? `${w.on.arrival.kind} ${w.on.arrival.id}` : word("investigation.something_cannot_see");
+        line("waiting", localize("investigation.index.work_waits_on_on", "\"{work}\" waits on {on}", { work: String(s.work), on: String(on) }), { kind: "step", id: s.step });
       }
     }
     for (const q of scope) {
@@ -644,16 +645,16 @@ export class Investigation {
     let dw = null;
     try { dw = scope.length ? this.#inquiry.documentWaits({ questions: scope.map((q) => q.inquiry), viewer }) : null; } catch { dw = null; }
     for (const e of (dw && Array.isArray(dw.questions) ? dw.questions : []))
-      for (const x of (Array.isArray(e.waits) ? e.waits : [])) line("waiting", `${e.question} waits on a document set aside: ${x.document}`, { kind: "document-wait", id: e.question, document: x.document });
+      for (const x of (Array.isArray(e.waits) ? e.waits : [])) line("waiting", word("investigation.waits_document_set", { question: String(e.question), document: String(x.document) }), { kind: "document-wait", id: e.question, document: x.document });
     if (!question) {
       const today = this.#today(this.#now());
       const stances = new Map(qs.map((q) => [q.inquiry, q.stance]));
       for (const m of this.#rows(`SELECT * FROM inv_milestones WHERE project_id = ? AND removed_at IS NULL ORDER BY date, milestone_id`, project)) {
         const v = this.#milestoneView(m, viewer, today, stances);
-        if (v.state !== "met") line("waiting", `The milestone "${v.name}" (${v.date}) is ${v.state}`, { kind: "milestone", id: v.milestone });
+        if (v.state !== "met") line("waiting", word("investigation.milestone", { name: String(v.name), date: String(v.date), state: String(v.state) }), { kind: "milestone", id: v.milestone });
       }
     }
-    const heads = { taken: "Steps taken", ended: "Steps ended", found: "What was found", waiting: "What is waiting" };
+    const heads = { taken: "Steps taken", ended: "Steps ended", found: word("investigation.found"), waiting: word("investigation.waiting") };
     const text = Object.entries(heads).map(([k, h]) => {
       const ls = lines.filter((l) => l.section === k);
       return ls.length ? `${h}\n${ls.map((l) => `- ${l.text} [${l.source.kind} ${l.source.id}]`).join("\n")}` : null;
@@ -786,7 +787,7 @@ export class Investigation {
     const interviews = this.#rows(`SELECT * FROM inv_interviews WHERE project_id = ? ORDER BY interview_id`, project).map((r) => {
       const handle = this.#handle(r.author);
       return { interview: Number(r.interview_id), step: r.step_id, author: handle,
-               label: `${handle ?? "a member"}'s own account, in her words: narrative, never evidence`,
+               label: word("investigation.label.account_words_narrative", { handle: String(handle ?? "a member") }),
                evidence: false, answers: parse(r.answers_json) ?? [], acceptance: parse(r.acceptance_json),
                ...(r.warning_json ? { warning: parse(r.warning_json) } : {}), at: r.at };
     });
@@ -844,7 +845,7 @@ export class Investigation {
     const place = filled(question) ? { questions: [question] } : { project: c.project_id };
     const work = `${FIND_WORK_PREFIX}${c.text}`.slice(0, 500);
     if (a.machine) {
-      const p = this.#steps.stepPropose({ place, work, why: "A member recalls this; the record has not yet been found.", run, by });
+      const p = this.#steps.stepPropose({ place, work, why: word("investigation.why.member_recalls_record"), run, by });
       if (!p || p.ok !== true) return p;
       this.#sql.exec(`UPDATE inv_claims SET find_proposal = ? WHERE claim_id = ?`, Number(p.proposal), c.claim_id);
       return { ok: true, claim: Number(c.claim_id), proposal: p.proposal, label: p.label };
@@ -898,7 +899,7 @@ export class Investigation {
       const found = !!c.found_record && this.#recordSeen(c.found_record, viewer);
       return { claim: Number(c.claim_id), source: parse(c.source_json), text: c.text, about: c.about ?? null, author: handle,
                stated_as: found ? "found" : "as_recalled",
-               label: found ? `found in the record: ${c.found_record}` : `as ${handle ?? "a member"} recalls it; not what the body said`,
+               label: found ? word("investigation.label.found_record", { found_record: String(c.found_record) }) : word("investigation.label.recalls_body_said", { handle: String(handle ?? "a member") }),
                ...(found ? { found: { record: c.found_record, by: this.#handle(c.found_by), at: c.found_at } } : { look: this.#look(c, viewer) }),
                find_step: c.find_step ?? null, ...(c.find_proposal ? { find_proposal: Number(c.find_proposal) } : {}),
                ...(c.warning_json ? { warning: parse(c.warning_json) } : {}), at: c.at };
@@ -918,7 +919,7 @@ export class Investigation {
     const r = this.#provenance.testify({ words, observedAt, title, author: by });
     if (!r || r.ok !== true) return r;
     const handle = this.#handle(a.member);
-    return { ...r, label: `${handle ?? "a member"}'s own firsthand account: testimony, resting on her word` };
+    return { ...r, label: word("investigation.label.firsthand_account_testimony", { handle: String(handle ?? "a member") }) };
   }
 
   /* ---- planning proposals (R20) ---- */
@@ -1010,10 +1011,10 @@ export class Investigation {
       "current_state: surfaced", "prior_state: null", `created: "${at}"`, `last_updated: "${at}"`,
       "produced_by:", "  mode: human", "  capability_tier: session", "references: []", "state_history: []",
       "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
-      "surfaced_by: human", 'disposition_reason: ""', "---", "", "## Question", "", question, "", "## What It Rests On", "",
-      `Taken up by a member from a planning proposal (${p.by_actor}, run ${p.run}).`, "", "## Conclusion", "",
-      "## What Would Falsify This", "", "## Session Log", "", `### Session ${at} | Surfaced | ${by}`,
-      "Changes: opened by a member from a planning proposal.", "", "## Review Notes", ""].join("\n");
+      "surfaced_by: human", 'disposition_reason: ""', "---", "", "## Question", "", question, "", word("conformance.rests"), "",
+      word("investigation.taken_member_planning", { by_actor: String(p.by_actor), run: String(p.run) }), "", "## Conclusion", "",
+      word("conformance.falsify"), "", "## Session Log", "", `### Session ${at} | Surfaced | ${by}`,
+      word("investigation.changes_opened_member"), "", "## Review Notes", ""].join("\n");
     return this.#promotion.promote({ bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_plan${p.proposal_id}`, author: by,
       files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry", current_state: "surfaced", created: at, last_updated: at },
       actorIdentity: by, actorViewer: viewer, actorMemberId: this.#memberOf(by) });
@@ -1025,25 +1026,25 @@ export class Investigation {
      `{quiet: false, undetermined: why}`. A project with no step has not gone quiet: its work has not begun. */
   #quiet(project) {
     const qs = this.#questionsOf(project);
-    if (qs === null) return { quiet: false, undetermined: "the questions this project draws on could not be read" };
+    if (qs === null) return { quiet: false, undetermined: word("investigation.questions_project_draws") };
     const steps = this.#workSteps(project, PLANE_VIEWER, qs);
-    if (steps === null) return { quiet: false, undetermined: "the steps could not be read" };
-    if (!steps.length) return { quiet: false, why: "no step has been taken" };
+    if (steps === null) return { quiet: false, undetermined: word("investigation.steps_read") };
+    if (!steps.length) return { quiet: false, why: word("investigation.why.step_taken") };
     /* R18 (K2524): something arrived from a watched source, and no step has been taken since: the work is reopened */
     const arrival = this.#one(`SELECT at FROM inv_watch_arrivals WHERE project_id = ? ORDER BY seq DESC LIMIT 1`, project);
-    if (arrival && !steps.some((s) => s.at >= arrival.at)) return { quiet: false, why: "something arrived from a watched source", reopened: true };
-    if (steps.some((s) => !STEP_CLOSED.includes(s.state))) return { quiet: false, why: "a step is still open" };
+    if (arrival && !steps.some((s) => s.at >= arrival.at)) return { quiet: false, why: word("investigation.why.something_arrived_watched"), reopened: true };
+    if (steps.some((s) => !STEP_CLOSED.includes(s.state))) return { quiet: false, why: word("investigation.why.step_open") };
     for (const q of qs) {
       let w = null;
       try { w = this.#inquiry.questionWaits({ question: q.inquiry, viewer: PLANE_VIEWER }); } catch { w = null; }
-      if (!w || !Array.isArray(w.waits)) return { quiet: false, undetermined: "a question's waits could not be read" };
-      if (w.waits.some((x) => x.state !== "ended")) return { quiet: false, why: "a dated wait is still awaited" };
+      if (!w || !Array.isArray(w.waits)) return { quiet: false, undetermined: word("investigation.question_waits_read") };
+      if (w.waits.some((x) => x.state !== "ended")) return { quiet: false, why: word("investigation.why.dated_wait_awaited") };
       for (const state of ["requested", "draining"]) {
         let r = null;
         try { r = this.#captureRequests.captureRequests({ target: q.inquiry, state, limit: 1, viewer: PLANE_VIEWER }); } catch { r = null; }
         const rows = r && (Array.isArray(r.requests) ? r.requests : Array.isArray(r.rows) ? r.rows : null);
-        if (!rows) return { quiet: false, undetermined: "the capture requests could not be read" };
-        if (rows.length) return { quiet: false, why: "a capture request is still open" };
+        if (!rows) return { quiet: false, undetermined: word("investigation.capture_requests_read") };
+        if (rows.length) return { quiet: false, why: word("investigation.why.capture_request_open") };
       }
     }
     return { quiet: true };
@@ -1190,8 +1191,8 @@ export class Investigation {
     const read = (fn) => {
       try {
         const x = fn();
-        return isObj(x) && x.ok === false ? { unread: String(x.detail || x.reason || "the read was refused").slice(0, 160) } : x;
-      } catch (e) { return { unread: String((e && e.message) || e || "the read failed").slice(0, 160) }; }
+        return isObj(x) && x.ok === false ? { unread: String(x.detail || x.reason || word("investigation.read_refused")).slice(0, 160) } : x;
+      } catch (e) { return { unread: String((e && e.message) || e || word("case-disclosures.why.read_failed")).slice(0, 160) }; }
     };
     return { ok: true, project, arrival: { source: src, at }, reopened: true,
              reads: { quiet: read(() => this.quietState({ project, viewer: PLANE_VIEWER })),
@@ -1207,7 +1208,7 @@ export class Investigation {
     if (!CLOSED_REASONS.includes(reason)) return refuse("CLOSE_BAD_REASON", `the reason is one of ${CLOSED_REASONS.join(", ")}`);
     if (note !== null && note !== undefined && (!filled(note) || chars(note) > REASON_MAX)) return refuse("INVESTIGATION_NO_REASON", `1–${REASON_MAX} characters`);
     const gaps = this.#intent.gaps({ project, viewer: g.actor.viewer });
-    const kept = gaps && gaps.ok !== false ? { gaps: gaps.gaps ?? [], ...(gaps.why ? { why: gaps.why } : {}) } : { gaps: null, why: "the gaps could not be read" };
+    const kept = gaps && gaps.ok !== false ? { gaps: gaps.gaps ?? [], ...(gaps.why ? { why: gaps.why } : {}) } : { gaps: null, why: word("investigation.why.gaps_read") };
     const at = this.#at();
     return this.#record.transact(() => {
       const w = this.#closeProject(project, reason, note, by, g.actor.viewer, at);
@@ -1281,8 +1282,8 @@ export class Investigation {
                conclusion: stance ? { state: stance.state, claim: stance.claim ?? null, at: stance.at ?? null } : null, bar };
     });
     return { ok: true, project, objective: progress ? progress.objective ?? null : null, condition: progress ? progress.condition ?? null : null,
-             progress: progress && progress.computable === false ? { computable: false, why: progress.why ?? "cannot be computed" } : progress,
-             questions, ...(qs === null ? { questions_undetermined: "the questions this project draws on could not be read" } : {}),
+             progress: progress && progress.computable === false ? { computable: false, why: progress.why ?? word("investigation.why.cannot_computed") } : progress,
+             questions, ...(qs === null ? { questions_undetermined: word("investigation.questions_project_draws") } : {}),
              gaps: gaps && gaps.ok !== false ? gaps.gaps : null };
   }
 
@@ -1299,7 +1300,7 @@ export class Investigation {
       if (!this.#one(`SELECT 1 AS x FROM inv_interviews WHERE step_id = ? LIMIT 1`, target)) return;
       const row = INVESTIGATION_CHECKS.INTERVIEW_NOT_A_LEG;
       findings.push({ check: row.check, code: "INTERVIEW_NOT_A_LEG", severity: "error", translation: row.translation,
-                      detail: `basis[${ord}] rests on ${target}, an intake interview: a member's narrative is never evidence (D20)`, ord, target });
+                      detail: localize("investigation.index.basis_ord_rests_on_target", "basis[{ord}] rests on {target}, an intake interview: a member's narrative is never evidence (D20)", { ord: String(ord), target: String(target) }), ord, target });
     });
     return findings.length ? { ok: false, reason: "BASIS_REFUSED", findings, detail: "a leg rests on an interview, which is narrative and never evidence. Nothing was written." } : null;
   }

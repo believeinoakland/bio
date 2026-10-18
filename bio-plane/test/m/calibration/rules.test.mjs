@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { BASIS_GRADES } from "../../../src/record-grammar/index.mjs";
 import { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceSentence, DRIFT, PROBE_REQUIRED,
          CALIBRATION_CADENCE_MS, CALIBRATION_CHECKS } from "../../../src/calibration/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 24 * 60 * 60 * 1000;
 const cal = (over = {}) => ({ calibration_id: "CAL-1", engine: "pdfjs", version: "4.0", at: "2026-09-01T00:00:00Z",
@@ -108,7 +109,7 @@ test("R3: nextProbeDue is at once for a never-probed engine, else never later th
 
 test("R3 R6: the cadence's sentence is composed from the constant it states", () => {
   assert.equal(cadenceSentence(),
-    `one probe per calibratable engine every ${CALIBRATION_CADENCE_MS / DAY} day(s), which your team's Civicsmith runs on its own account`);
+    word("calibration.probe_per_calibratable", { days: String(CALIBRATION_CADENCE_MS / DAY) }));
   assert.equal(cadenceSentence(CALIBRATION_CADENCE_MS), cadenceSentence());
   assert.equal(cadenceSentence(7 * DAY), "one probe per calibratable engine every 7 day(s), which your team's Civicsmith runs on its own account");
   assert.equal(cadenceSentence(1.5 * DAY), "one probe per calibratable engine every 1.50 day(s), which your team's Civicsmith runs on its own account");

@@ -6,6 +6,7 @@ import { seeded, post, prepare, keyFor, V, MACHINE, NOW, DAY, WEEK, monday } fro
 import * as nn from "../../../src/network-notices/index.mjs";
 import { Attestation } from "../../../src/attestation/index.mjs";
 import { generateKeyPairSync } from "node:crypto";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice");
 const LAST = monday(NOW) - WEEK;
@@ -209,7 +210,7 @@ test("R23 directorySubmission prefills a directory's fields for a published edit
   const r = w.nn.directorySubmission({ case: "CASE-2026-0001-budget", viewer: A });
   assert.deepEqual(r, { ok: true, group: "test-group", case: "CASE-2026-0001-budget", edition: 1,
     link: "?op=publishedcase&caseId=CASE-2026-0001-budget&edition=1", title: "Where the fund went",
-    summary: "What the case covers.", sends: "nothing: copy these fields, or open them" });
+    summary: "What the case covers.", sends: word("network-notices.nothing_copy_fields") });
   assert.equal(w.nn.directorySubmission({ case: "CASE-2026-0001-budget", viewer: V("dave") }).ok, false, "a project the viewer cannot see");
   assert.equal(w.nn.directorySubmission({ case: "CASE-2026-0009-none", viewer: A }).ok, false);
 });

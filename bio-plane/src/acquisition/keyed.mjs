@@ -13,7 +13,7 @@ import { isPublicHttpsLocator, isMachineIdentity } from "../record-grammar/index
 import { governedFetch as hostGovernedFetch } from "../host-governor/index.mjs";
 import { civicsmithUserAgent, ARCHIVE_CHECKS } from "./checks.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R36: each keyed service this copy can speak to: its one host, and how its key rides a request. The names are
    credentials' `KEYED_SERVICES` (its R29); a service that this table and credentials do not both know is not
@@ -63,7 +63,7 @@ async function readBounded(res, max = KEYED_ANSWER_MAX) {
 export async function keyedFetch(store, { service = null, request = null, purpose = "keyed-service", viewer = undefined, ownHosts = null } = {}) {
   const svc = typeof service === "string" && Object.prototype.hasOwnProperty.call(SERVICES, service) ? SERVICES[service] : null;
   if (!svc)
-    return refuse("UNKNOWN_KEYED_SERVICE", `the keyed services your team's Civicsmith speaks to are ${Object.keys(SERVICES).join(", ")}; nothing was fetched`,
+    return refuse("UNKNOWN_KEYED_SERVICE", localize("acquisition.keyed.the_keyed_services_your_teams", "the keyed services your team's Civicsmith speaks to are {keys}; nothing was fetched", { keys: String(Object.keys(SERVICES).join(", ")) }),
                   { service: typeof service === "string" ? service.slice(0, 40) : null });
   /* K1449: never one a daemon uses. An act with no viewer named is the in-plane caller's own; a machine's is refused. */
   if (viewer !== undefined && viewer !== null && isMachineIdentity(viewer))
@@ -74,14 +74,13 @@ export async function keyedFetch(store, { service = null, request = null, purpos
   /* R28's fence and the key's: a public locator, on the service's own host and no other. */
   if (typeof r.url !== "string" || !isPublicHttpsLocator(r.url) || hostOf(r.url) !== svc.host || (method !== "GET" && method !== "POST")
       || (r.form != null && (typeof r.form !== "object" || Object.values(r.form).some((v) => typeof v !== "string"))))
-    return refuse("BAD_KEYED_REQUEST", `a keyed request is a GET or POST of a public https address on ${svc.host}, `
-      + "its form a flat set of strings; nothing was fetched", { service });
+    return refuse("BAD_KEYED_REQUEST", localize("acquisition.keyed.a_keyed_request_is_a", "a keyed request is a GET or POST of a public https address on {host}, its form a flat set of strings; nothing was fetched", { host: String(svc.host) }), { service });
   /* DEC-49 REGION is-own-host
      R42 (F16): never to one of the group's own hosts (capture-sources R65), the caller's list or the store's. */
   const own = Array.isArray(ownHosts) ? ownHosts : store && Array.isArray(store.ownHosts) ? store.ownHosts : null;
   if (own && isOwnHost(hostOf(r.url), own)) {
     const row = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
-    return refuse("OWN_HOST_REFUSED", `${hostOf(r.url)} is one of your team's own hosts; nothing was fetched`,
+    return refuse("OWN_HOST_REFUSED", localize("acquisition.keyed.hostof_is_one_of_your", "{hostOf} is one of your team's own hosts; nothing was fetched", { hostOf: String(hostOf(r.url)) }),
                   { code: "OWN_HOST_REFUSED", check: row.check, translation: row.translation, service, host: hostOf(r.url) });
   }
   /* END DEC-49 REGION is-own-host */
@@ -112,17 +111,17 @@ export async function keyedFetch(store, { service = null, request = null, purpos
     return refuse("FETCH_FAILED", "the request to the service did not complete; its error is not carried because the team's key rode it", { service });
   }
   if (out.refusedByGovernor)
-    return refuse("HOST_COOLING_OFF", `the per-host governor is holding requests to ${svc.host} (${out.reason})`,
+    return refuse("HOST_COOLING_OFF", localize("acquisition.keyed.the_per_host_governor_is", "the per-host governor is holding requests to {host} ({reason})", { host: String(svc.host), reason: String(out.reason) }),
                   { service, retry_in_ms: out.retry_in_ms || 0 });
   const res = out.res;
   const body = await readBounded(res);
   if (body.failed) return refuse("FETCH_FAILED", "the service's answer broke off while it was read", { service });
-  if (body.oversize) return refuse("TOO_LARGE", `the service's answer is over ${KEYED_ANSWER_MAX} bytes; it was not read`, { service });
+  if (body.oversize) return refuse("TOO_LARGE", localize("acquisition.keyed.the_services_answer_is_over", "the service's answer is over {KEYED_ANSWER_MAX} bytes; it was not read", { KEYED_ANSWER_MAX: String(KEYED_ANSWER_MAX) }), { service });
   const contentType = ((res.headers && res.headers.get("content-type")) || "").split(";")[0].trim().toLowerCase() || null;
   const retryAfter = (res.headers && res.headers.get("retry-after")) || null;
   if (!(res.status >= 200 && res.status < 300))
     return { ok: false, reason: "SOURCE_REFUSED", service, status: res.status, content_type: contentType, retry_after: retryAfter,
-             text: body.text.slice(0, 2000), detail: `the service answered ${res.status}` };
+             text: body.text.slice(0, 2000), detail: localize("acquisition.keyed.the_service_answered_status", "the service answered {status}", { status: String(res.status) }) };
   return { ok: true, service, status: res.status, content_type: contentType, retry_after: retryAfter, text: body.text };
 }
 
@@ -158,8 +157,7 @@ export async function citationLookup(store, { text = null, viewer = null, ownHos
   if (typeof text !== "string" || !text.trim())
     return refuse("BAD_TEXT", "there is no text to look citations up in; nothing was sent");
   if (text.length > CITATION_TEXT_MAX)
-    return refuse("TEXT_TOO_LONG", `the service reads at most ${CITATION_TEXT_MAX} characters a request and this text is `
-      + `${text.length}; nothing was sent`, { max: CITATION_TEXT_MAX, length: text.length });
+    return refuse("TEXT_TOO_LONG", localize("acquisition.keyed.the_service_reads_at_most", "the service reads at most {CITATION_TEXT_MAX} characters a request and this text is {length}; nothing was sent", { CITATION_TEXT_MAX: String(CITATION_TEXT_MAX), length: String(text.length) }), { max: CITATION_TEXT_MAX, length: text.length });
   const k = await keyedFetch(store, { service: "courtlistener", purpose: "citation-lookup", viewer, ownHosts,
                                       request: { url: CITATION_LOOKUP_URL, method: "POST", form: { text } } });
   if (!k.ok) {
@@ -168,7 +166,7 @@ export async function citationLookup(store, { text = null, viewer = null, ownHos
       let until = null;
       try { until = str(JSON.parse(k.text).wait_until); } catch { until = null; }
       return { ok: false, reason: "SERVICE_THROTTLED", service: k.service, status: 429, wait_until: until, retry_after: k.retry_after,
-               detail: "CourtListener is holding citation lookups from this key for now; nothing was looked up" };
+               detail: localize("acquisition.keyed.courtlistener_is_holding_citation_lookups", "CourtListener is holding citation lookups from this key for now; nothing was looked up") };
     }
     const { text: _omit, ...rest } = k;
     return { ...rest, note: word("acquisition.note.citation_recognizer_reading") };

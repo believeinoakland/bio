@@ -9,6 +9,7 @@ import { findingKind } from "../../../src/file-safety/index.mjs";
 import { fresh, reader, ofKind, sentences, texts, notHintFailures, JUDGMENT } from "./fixture.mjs";
 import { HINT_MARK, NOTICE_KINDS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
 import { WORDS } from "../ai-use/fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* `words.json`'s sentence of `key`, its placeholders filled (a key the file lacks fails here) */
 const say = (key, fills = {}) => {
@@ -92,7 +93,7 @@ test("R14 R20: its summary and detail are queue.scan-found.summary and .detail: 
   assert.equal(it.detail, say("queue.scan-found.detail", fills));
   assert.ok(!/\{/.test(it.summary + it.detail), "every placeholder filled");
   assert.doesNotMatch(it.detail, /\.\./, "no meaning's own full stop doubled");
-  assert.ok(it.detail.includes("Civicsmith has no plain description of this name"), "a name no row explains says so");
+  assert.ok(it.detail.includes(word("file-safety.civicsmith_plain_description")), "a name no row explains says so");
   assert.match(it.detail, /its safe view stays open, and the original opens again only when two members each release the hold with a reason, or when a second, different scanner finds it clean\. The machine never can\.$/);
   assert.deepEqual(it.basis.findings.map((k) => [k.name, k.threat_kind]), [[NAMES.bad, "Downloader"], [NAMES.other, "Unheard"]]);
   /* control: one name is its words alone, not named before them */

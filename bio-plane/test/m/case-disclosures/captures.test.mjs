@@ -10,6 +10,7 @@ import { CASE_DISCLOSURE_CHECKS, SELF_ATTESTED_SENTENCE, captureBodyLines } from
 import { unnamedSourceStatement, sourceStatement } from "../../../src/publication/index.mjs";
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q4 = "INQ-2026-0004-d";
@@ -42,7 +43,7 @@ function judge(w, members, selfAttested, supporting = []) {
 }
 const lateRow = (w, capture, seq, o) => w.st.sql.exec(`INSERT INTO late_attestations (capture_sha, seq, kind, service, ok, at,
   by, outcome) VALUES (?, ?, ?, ?, ?, ?, 'alice', ?)`, capture, seq, o.kind, o.service, o.ok ? 1 : 0, o.at,
-  JSON.stringify({ late: true, proves: `proves the bytes existed by ${o.at}, not at capture`, ...o }));
+  JSON.stringify({ late: true, proves: word("capture.text.proves_bytes_existed", { at: String(o.at) }), ...o }));
 const account = (w, capture, text = "I saved it myself.", signature = "SIG-of-alice-7f3") => w.st.sql.exec(`INSERT INTO
   capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, 1, 'alice', ?, ?, 'AAAA', ?)`,
   capture, text, signature, "2026-09-27T12:00:00Z");
@@ -195,7 +196,7 @@ test("R3: in disclosureBlocks' captures an acknowledged capture's rows are self_
   assert.equal(SELF_ATTESTED_SENTENCE, "Without co-attestation an outsider can verify the copy has not changed since capture "
     + "and can follow the reasoning, but cannot independently verify that the source served those bytes, or when.");
   const body = captureBodyLines(blocks.captures, []).join("\n");
-  for (const s of ["## Each Document's Grade And Co-attestation", SELF_ATTESTED_SENTENCE,
+  for (const s of [word("case-disclosures.document_grade_attestation"), SELF_ATTESTED_SENTENCE,
                    `SELF-ATTESTED ONLY, acknowledged by alice on ${AT}: ${REASON}`, text, signature,
                    `- ${b} (under ${Q}, ${Q2}): grade B`, "; NOT CO-ATTESTED.",
                    `A co-attested Grade ${EARNED_CAPTURE_CEILING} document is enough to publish on; one that is not is published only as self-attested`])

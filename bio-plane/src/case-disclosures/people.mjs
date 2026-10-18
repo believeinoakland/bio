@@ -6,6 +6,7 @@
  */
 
 import { PEOPLE_KINDS } from "../lines/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R25: the closed list of bases a named person is named on (K1483). */
 export const PERSON_BASES = Object.freeze(["act_or_position", "tie", "interest", "consent", "prior_publication",
@@ -85,7 +86,7 @@ function refShape(basis, ref) {
 /** R25, R28: a basis' citation, as the people block states it: the kind's own reference, never a judgment of the person. */
 export function basisCitation(basis, ref) {
   switch (basis) {
-    case "act_or_position": return `line ${ref.line} held at event ${ref.event}`;
+    case "act_or_position": return word("case-disclosures.line_held_event", { line: String(ref.line), event: String(ref.event) });
     case "tie": return `line ${ref}`;
     case "interest": return /^MNY-/.test(ref) ? `money fact ${ref}` : `line ${ref}`;
     case "consent": case "prior_publication": return `capture ${ref}`;

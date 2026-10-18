@@ -139,6 +139,7 @@
 
 import { sheetCellRef, usedSheetRange, columnLetters } from "./formats-xlsx.mjs";
 import { MEASURED_OOXML_TEXT_BOUND_BYTES } from "./ooxml.mjs";
+import { word, localize } from "./setup-words/index.mjs";
 
 /* The declared types this entry answers to, folded for case because RFC 2045
    makes a media type case-insensitive. MEASURED: all 166 corpus keys were
@@ -317,7 +318,7 @@ export function delimiterSignature(text) {
   const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
   if (lines.length < 2) {
     return { delimiter: null, name: null, confidence: "none", lines: lines.length,
-      signals: [`${lines.length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything`],
+      signals: [localize("office-readers.csv.length_complete_line_s_in", "{length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything", { length: String(lines.length) })],
       undetermined: "delimiter_undetermined_too_few_lines", tied: [] };
   }
   const consistent = [];
@@ -330,17 +331,16 @@ export function delimiterSignature(text) {
   if (consistent.length === 1) {
     const d = consistent[0];
     return { delimiter: d.ch, name: d.name, confidence: "certain", lines: lines.length,
-      signals: [`${d.name} occurs ${counted[d.name]} time(s) outside quotes on every one of the first ${lines.length} complete lines`],
+      signals: [localize("office-readers.csv.name_occurs_v1_time_s", "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines", { name: String(d.name), v1: String(counted[d.name]), length: String(lines.length) })],
       undetermined: null, tied: [] };
   }
   if (consistent.length > 1) {
     return { delimiter: null, name: null, confidence: "none", lines: lines.length,
-      signals: [`${consistent.length} candidates are equally consistent over ${lines.length} lines: `
-        + consistent.map((d) => `${d.name} (${counted[d.name]}/line)`).join(", ")],
+      signals: [localize("office-readers.csv.length_candidates_are_equally_consistent", "{length} candidates are equally consistent over {length_2} lines: {map}", { length: String(consistent.length), length_2: String(lines.length), map: String(consistent.map((d) => `${d.name} (${counted[d.name]}/line)`).join(", ")) })],
       undetermined: "delimiter_undetermined_tied", tied: consistent.map((d) => d.name) };
   }
   return { delimiter: null, name: null, confidence: "none", lines: lines.length,
-    signals: [`no candidate (${DELIMITERS.map((d) => d.name).join(", ")}) occurs a consistent, non-zero number of times over ${lines.length} lines`],
+    signals: [localize("office-readers.csv.no_candidate_map_occurs_a", "no candidate ({map}) occurs a consistent, non-zero number of times over {length} lines", { map: String(DELIMITERS.map((d) => d.name).join(", ")), length: String(lines.length) })],
     undetermined: "delimiter_undetermined_none_consistent", tied: [] };
 }
 
@@ -507,8 +507,8 @@ function csvStructure(parts) {
      and FRAMEWORK's to read; treating it as a declared link would be this
      entry deciding what a string MEANS. */
   const notes = [
-    "the csv format declares no relationships, so the zero link counts are the format's and not a walk's",
-    "a url in a cell is text, not a declared link: reading it as one would be this entry deciding what a string means",
+    word("csv.notes.csv_format_declares"),
+    word("csv.notes.url_cell_text"),
   ];
   if (parts.guard) notes.push("text_body_over_bound");
   return {

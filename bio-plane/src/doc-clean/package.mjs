@@ -7,6 +7,7 @@
 import { readContainer, readPart, crc32, normalizePartName, ODF_MANIFEST_PART, CORE_PROPERTIES_PART } from "../ooxml.mjs";
 import { CleanRefusal, cleanImage, imageKind, mediaKind, latin1 } from "./images.mjs";
 import { editXml } from "./xml.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** The most uncompressed bytes one part may declare: the largest the plane's isolate holds with its working copies
  *  (R4; measured in workerd, the job's record). */
@@ -178,17 +179,17 @@ const resolvePath = (dir, target) => {
 /** Clean an OOXML (`family` "ooxml") or ODF ("odf") package. Answers `{clean:true}` or `{clean:false, bytes, images}`. */
 export async function cleanPackage(d, family) {
   const c = readContainer(d);
-  if (!c.ok) throw refusal("DOCUMENT_UNREADABLE", `the package's ZIP directory cannot be read (${c.why})`);
+  if (!c.ok) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.package.the_packages_zip_directory_cannot", "the package's ZIP directory cannot be read ({why})", { why: String(c.why) }));
   const names = new Set();
   for (const e of c.entries) {
     const n = normalizePartName(e.name);
-    if (names.has(n)) throw refusal("DOCUMENT_UNREADABLE", `part ${n} appears twice`);
+    if (names.has(n)) throw refusal("DOCUMENT_UNREADABLE", localize("doc-clean.package.part_n_appears_twice", "part {n} appears twice", { n: String(n) }));
     names.add(n);
     if (e.uncompressedSize > CLEAN_MAX_PART_BYTES)
-      throw refusal("DOCUMENT_TOO_LARGE", `part ${n} declares ${e.uncompressedSize} bytes, over the ${CLEAN_MAX_PART_BYTES} this module reads`);
+      throw refusal("DOCUMENT_TOO_LARGE", localize("doc-clean.package.part_n_declares_uncompressedsize_bytes", "part {n} declares {uncompressedSize} bytes, over the {CLEAN_MAX_PART_BYTES} this module reads", { n: String(n), uncompressedSize: String(e.uncompressedSize), CLEAN_MAX_PART_BYTES: String(CLEAN_MAX_PART_BYTES) }));
     if (family === "ooxml" && (/(^|\/)embeddings\//i.test(n) || /(^|\/)vbaProject\.bin$/i.test(n)))
-      throw refusal("EMBEDDED_FILE", `part ${n} is an embedded file`);
-    if (family === "odf" && /^Object [^/]*(\/|$)/.test(n)) throw refusal("EMBEDDED_FILE", `part ${n} is or belongs to an embedded object`);
+      throw refusal("EMBEDDED_FILE", localize("doc-clean.package.part_n_is_an_embedded", "part {n} is an embedded file", { n: String(n) }));
+    if (family === "odf" && /^Object [^/]*(\/|$)/.test(n)) throw refusal("EMBEDDED_FILE", localize("doc-clean.package.part_n_is_or_belongs", "part {n} is or belongs to an embedded object", { n: String(n) }));
   }
   if (family === "odf") {
     const m = await readPart(d, c, ODF_MANIFEST_PART);
@@ -199,7 +200,7 @@ export async function cleanPackage(d, family) {
       const path = /\s(?:[\w.-]+:)?full-path\s*=\s*"([^"]*)"/.exec(t[1])?.[1] ?? "";
       const type = /\s(?:[\w.-]+:)?media-type\s*=\s*"([^"]*)"/.exec(t[1])?.[1] ?? "";
       if (path !== "/" && path.endsWith("/") && /^application\/vnd\.oasis\.opendocument\./.test(type))
-        throw refusal("EMBEDDED_FILE", `part ${path} is an embedded object`);
+        throw refusal("EMBEDDED_FILE", localize("doc-clean.package.part_path_is_an_embedded", "part {path} is an embedded object", { path: String(path) }));
     }
   }
   const removed = new Set(family === "ooxml" ? [...names].filter(REMOVED_PART) : []);
