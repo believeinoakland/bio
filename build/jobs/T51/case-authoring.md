@@ -60,3 +60,7 @@ CHANGE B2 done. Inline English in standardsUseWords replaced by setup-words word
 - `format`: 0 failures. `architecture` (case-authoring): 0 failures. `coverage` (case-authoring): 48 of 48 live ids named.
 
 **Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 5, module lines 3010**, `bio-plane/src/case-authoring/*.mjs` (all lines).
+
+## J3 · COMPLETE
+
+COMPLETE for B2 and B3. B2: standardsUseWords reads setup-words keys (case-authoring.text.*), no inline English. B3: document and lens/attribution spelled in bio-case-document/8; three R14 tests moved to /8 (BOB's note said five; three titles were failing). Module tests 190/190. format, architecture, coverage and ownership pass for case-authoring (ownership: 7 files, the module, its tests and the record). run.mjs: the same 23 coverage failures in other modules, none case-authoring. Record: build/jobs/T51/case-authoring.md, branch job/T51/case-authoring, pushed.
