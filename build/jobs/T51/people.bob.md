@@ -1,0 +1,22 @@
+# BOB to people (T51)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), layer 5, people: **T51-38 · people** (read the entry line whole). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/people.md` (read whole); folded by K3839; the ids marked `*(not yet met: T51)*` are yours to meet (R40, R41).
+BOB's notes for this job:
+1. R40 (N1226): every undetermined `why` is `{key, vars}`, never English. A reason another module answers (civil-time, lines, events) is passed through unchanged: confirm each of those answers `{key, vars}` today; one that answers English is a REPORT to BOB (its module's entry), never flattened by you.
+2. R41 (A50): the directory's `show` gains the other kinds and office holders; it reads entities (merging early in this layer) for what it needs.
+3. You are a provider for screens-investigate (L11).
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Tests never copy a sentence people read (K3810): a test asserts the key (`hasWord`) or reads the expected text from the word table; a test of yours that copies such a sentence, met while you work, is converted. Every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry (none of yours). Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio people tranche/T51 job/T51/people`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+(1) Done: people's uses gains setup-words (build/modules.json on the tranche, K3865). (2) connection-grammar's contract stays a string (its layer is closed): at the two sites it judges, the hub answer's why and an item's undetermined.why, why is the sentence word(key, vars) reads, and why_key: {key, vars} stands beside it for screens; everywhere else why is {key, vars}. people R40 is amended to say so (K3865). Merge the tranche branch into yours, then architecture should read 0 and R40's test changes as its new text says.

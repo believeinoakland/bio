@@ -115,6 +115,11 @@ function dispositionVersionView(d, cur) {
            current_definition_version: current, applies, applies_because: because };
 }
 
+/* R46: a finding's state is the state of the decision that applies to it (R20), else `open`: no decision, or one that
+   judged an earlier version of the declared flow. */
+const stateOf = (disposition) => (disposition && disposition.applies ? disposition.state : "open");
+const withState = (f, disposition) => ({ ...f, disposition, state: stateOf(disposition) });
+
 /* R12 (D-552): the decision rides on the finding it judged, on every read that publishes the finding; it never filters. */
 function dispositionOnFinding(d, cur) {
   const v = dispositionVersionView(d, cur);
@@ -793,8 +798,8 @@ export class Progressions {
   #withDecisions(inst, byStage = null) {
     if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
     const decided = byStage || this.#decisionsByStage(inst.progression_key);
-    const findings = inst.findings.map((f) => ({ ...f, disposition: decided.get(f.stage_key) ?? null }));
-    return { ...inst, findings, open_finding_count: findings.filter((f) => !(f.disposition && f.disposition.applies)).length };
+    const findings = inst.findings.map((f) => withState(f, decided.get(f.stage_key) ?? null));
+    return { ...inst, findings, open_finding_count: findings.filter((f) => f.state === "open").length };
   }
 
   /* R13: the whole derivation stands for every reader; only the back-references to bundles the viewer may not see are
@@ -1362,7 +1367,8 @@ export class Progressions {
       const overdueF = this.#overdue(inst, now).filter(open);
       const others = (inst.findings || []).filter((f) => f.kind !== "missing_predecessor" && open(f));
       const overdueByStage = new Map(overdueF.map((f) => [f.stage_key, f]));
-      const findings = [...missing, ...overdueF, ...others];
+      /* R46: every finding left here is governed by no applying decision, so its state is `open` */
+      const findings = [...missing, ...overdueF, ...others].map((f) => ({ ...f, state: "open" }));
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
       instances.push({ progression_key: inst.progression_key, progression_label: inst.label,
@@ -1447,13 +1453,13 @@ export class Progressions {
       const missing = inst.findings.filter((f) => f.kind === "missing_predecessor");
       const others = inst.findings.filter((f) => f.kind !== "missing_predecessor");
       const findings = [...missing, ...a.overdue, ...others].map(project)
-        .map((f) => ({ ...f, disposition: a.decided.get(f.stage_key) ?? null }));
+        .map((f) => withState(f, a.decided.get(f.stage_key) ?? null));
       instances.push({ progression_key: inst.progression_key, progression_label: inst.label,
                        definition_version: inst.definition_version,
                        entity_id: inst.entity_id, entity_label: inst.entity ? inst.entity.label : null,
                        stage_key: r.stage_key, stage_label: stage ? stage.label : r.stage_key,
                        findings, finding_count: findings.length,
-                       open_finding_count: findings.filter((f) => !(f.disposition && f.disposition.applies)).length });
+                       open_finding_count: findings.filter((f) => f.state === "open").length });
     }
     return { ok: true, capture_sha: captureSha, count: instances.length, instances };
   }
