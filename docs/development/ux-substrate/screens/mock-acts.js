@@ -1,4 +1,4 @@
-/* Every act explains itself (Bob's direction, 7 October; DEC-174, amending DEC-163's exception for button labels): what the
+/* Every act explains itself (Bob's direction, October 7; DEC-174, amending DEC-163's exception for button labels): what the
    act does and how it fits the larger work, at the guidance level (DEC-162). The pips keep their own explanation of the
    act's weight. Keyed by op (an owed act by its `owed_` key). */
 const ACT_HELP = {

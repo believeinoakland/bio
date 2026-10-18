@@ -25,7 +25,7 @@ const J = [
  { n: 7, t: 'Getting a record: find it, or ask for it', who: 'A member, often a newcomer', wiz: 'Get a record',
    noai: 'The request\'s text comes from the team\'s own template instead of the assistant\'s draft. Every other step is the same.' },
  { n: 8, t: 'Checking a deadline\'s basis', who: 'Any member', steps: [
-   { s: 'action', act: null, say: 'Mai opens her request and sees "Response due 14 October".' },
+   { s: 'action', act: null, say: 'Mai opens her request and sees "Response due October 14".' },
    { s: 'due-date', act: 'clockpropose', say: 'She opens "How was this worked out?": the law, the receipt date, the days counted, the holiday skipped.' },
    { s: 'due-date', act: 'clockadopt', say: 'She confirms it in one act. If the law left the day uncertain, both dates would show as "Undetermined, because…".' },
    { s: 'queue', act: null, say: 'Later the queue shows it met, met late or no reply recorded: facts, never legal advice.' } ] },
@@ -176,7 +176,7 @@ function journeySteps(j, ai) {
   return j.steps.filter(x => !x.only || (x.only === 'ai') === ai);
 }
 
-/* Each journey's purpose and front door (the journeys page of step 3, folded in on 13 October 2026; updated for later rulings).
+/* Each journey's purpose and front door (the journeys page of step 3, folded in on October 13, 2026; updated for later rulings).
    Shown under the journey's title in the viewer; the walked steps below it are the journey's steps. */
 const JBRIEF = {
  1: ["A team installs its own Civicsmith, claims it, says who it is, and sets up its administrators.", "civicsmith.org: “Start your team” says what a team needs, and “Create your team” opens the installer, which asks two things; setup follows from its last page."],

@@ -3007,6 +3007,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (the AI panel's use
 owed: (BOB, T43) the keys read by ai-use (C-143.5, C-143.6), credentials and the panel's reads (the three uses), notice-producers and queue (`date.daymonth`), extraction (`transcribe.*`) and capture (`capture.picture.unread`).
 
 ### DEC-192 · answered
+amended: 2026-10-18 by DEC-333 (dates in American order: `date.daymonthyear` "{month} {day}, {year}", `date.daymonth` "{month} {day}", `ai.when.month` "on {month} 1").
 raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B136 and B137, from T44's draft fold of DEC-191 and NOTICE-PRODUCERS #7)
 for: bob-session
 question: Six word points on DEC-189 and DEC-191's keys: a relayed refusal inside `transcribe.refused`; a reading that fails after the pages were sent; a date in another year; the order of day and month in `ai.when.month`; `{when}` after "until"; who says `capture.picture.unread`.
@@ -5161,3 +5162,18 @@ decided: 2026-10-18 · the design session (P17)
 the design: (1) C6 is not retired (network-notices is in force). On `project`: "Telling the network" with the entry; state f, an owner preparing the notice (its wording, the matter, when the team began, "Others welcome"), previewed in the outward-act ceremony (the exact text, "anyone can see this", the acknowledgement, "Sign and publish the notice"), with what the owner wrote and what the team's Civicsmith works out and signs itself (activity level, cases published, lapse), and the refusals in plain words; state g, the published notice with its level and next monthly check, "Change the notice" and "Stop the notice…" with a handoff note: stopping does not unsay what was published and no earlier version is deleted (the module has no withdraw). Acts `noticeprepare`, `noticepost`. (2) A47: "Before you vote", the five checks (you are an owner, an owner is named, standing down is possible at this size, this vote is yours to cast, a reason in your own words), with the reason field. (3) A72, B5: on Members, "If the count is higher than the roster", the founder's reconcile note. (4) A74: a withdrawn key reads "key withdrawn by Rosa, 12 October · it does not sign" with "Reactivate Dev's signing key" (`signerset`, active or revoked; an administrator only, never for a member who has left); "Withdraw" says it is for a lost or stolen device.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-332's block), `mock-screens.js`, `mock-acts.js`, `registry.src.py`.
 owed: (BOB, T51) the screen jobs build these with DEC-330's.
+
+### DEC-333 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01JEe1HZq7KGYZq4FVGEBtQe; the development process also runs on his primary account since K1428) (the consistency read of DEC-330 to DEC-332)
+for: design
+question: The order of day and month in Civicsmith's dates. DEC-192 (2026-10-11) put the day first ("8 October 2026"), before Bob's words were ruled American English (DEC-266 onward); American English writes "October 8, 2026".
+why it is Bob's: it is not (P17): it follows his ruling that Civicsmith's words are American English.
+provisional: as below.
+alternative: keep day-first as a house style; it reads as British to an American member.
+recommendation: as below.
+reversal cost: low (three keys; the drawings' sample dates).
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: `date.daymonthyear` "{month} {day}, {year}" ("October 8, 2026"), `date.daymonth` "{month} {day}" ("October 8"), `ai.when.month` "on {month} 1"; a range is "June 21 to 30". Every date drawn on the screens page, its journeys and its notes follows (about 500).
+reasoning recorded in: this entry; DEC-192's `amended:` line; `screens/build_words.mjs`, `mock-*.js`, `words-drawn.src.py`, `page.src.html`.
+owed: (BOB, T51) interface-shell's `date()` reads the keys as before (R6), so only the words change; any module that writes a day and month in its own English (not through the keys) follows.

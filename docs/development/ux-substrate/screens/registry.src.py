@@ -122,7 +122,7 @@ screen('calculation', 'Calculation', 'working', 'A computed fact with its method
   [('calculationcreate','Work it out'),('tabledeclare','Declare the table'),('calculationdraw','Draw a random sample'),('addworkbook','Bind your spreadsheet'),('bind','Tie an input to the record'),('recordcheck','Record a second member\'s check'),('calculationaccept','Accept the result'),('testify','Record what you saw at a report'),('spotcheckvisit','Count it for the drawn report')], [9])
 screen('help-records', 'Help: How a records request works', 'working', 'What your state\'s public records law requires of the office, your city\'s faster request where it has one, what the city\'s portal shows, and what Civicsmith does with a request; the place\'s own facts come from the team\'s places (Bob\'s D13, K3060; DEC-209; B177).',
   [], [7])
-screen('help', 'Help: How spot-checks work', 'working', 'A help page: one method explained in plain words, linked from where it is used (Bob, 7 October).',
+screen('help', 'Help: How spot-checks work', 'working', 'A help page: one method explained in plain words, linked from where it is used (Bob, October 7).',
   [], [9])
 screen('explore', 'Explore connections', 'working', 'Chains between a start and an end, each step cited and graded (K1469, K1487).',
   [('explore','Explore'),('explorepreset','Use a preset'),('exploreverify','Check a chain'),('stepsource','Attach a source to a declared step'),('promote','Open a question from this chain')], [13])

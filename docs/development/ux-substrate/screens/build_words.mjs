@@ -162,7 +162,7 @@ add('ai.refused.limitinvalid', 'That limit can\'t be set: {field}. A limit is a 
 add('ai.refused.unitunavailable', 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set it in tokens or calls instead.', false, 'DEC-188', 'LIMIT_UNIT_UNAVAILABLE');
 add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account. Its owners can switch it on.', false, 'DEC-189', 'EXPLORE_NOT_ENABLED; an exploring limit is never required (ai-use R3): the overall limit judges exploring when no exploring limit is set');
 add('ai.queue.limitreached', '{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.', true, 'DEC-189', 'the told-once Noticed item, scope a use; names no member; {when} from ai.until.*');
-must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 12 October. It pauses runs until 1 November; its other uses go on.');
+must(scr, 'mock-screens.js', 'reached its monthly limit for runs on October 12. It pauses runs until November 1; its other uses go on.');
 add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the team\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
 add('ai.queue.exploreask', 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn\'t.', false, 'DEC-188', 'the daily Ask, shown as Noticed with Explore today');
 must(scr, 'mock-screens.js', 'If nobody says yes today, it doesn\\\'t.');
@@ -173,9 +173,9 @@ add('ai.owner.group', 'the team', false, 'DEC-188', 'enabled_by for the team');
 // 4c'. The fills of the AI sentences (DEC-189; BOB's B124 and B126): each placeholder above that names a fixed word has a key
 for (const [k, t] of [['day', 'daily'], ['month', 'monthly']]) add(`ai.period.${k}`, t, false, 'DEC-189', '{period}');
 add('ai.when.day', 'tomorrow', false, 'DEC-189', '{when} for a daily limit');
-add('ai.when.month', 'on 1 {month}', false, 'DEC-192', '{when} for a monthly limit, as in "It works again on 1 November"; {month} from date.month.*; day before month, as date.daymonth');
+add('ai.when.month', 'on {month} 1', false, 'DEC-192', '{when} for a monthly limit, as in "It works again on November 1"; {month} from date.month.*; month before day, as date.daymonth (DEC-333)');
 add('ai.until.day', 'tomorrow', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a daily limit');
-add('ai.until.month', '1 {month}', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until 1 November"');
+add('ai.until.month', '1 {month}', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until November 1"');
 ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
   .forEach(m => add(`date.month.${m}`, m[0].toUpperCase() + m.slice(1), false, 'DEC-189', 'a month\'s name in a sentence'));
 add('ai.refused.limit.unjudged', 'The assistant stopped here: your team\'s Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
@@ -201,8 +201,8 @@ add('ai.queue.limitreached.overall', '{account} reached its {period} limit on {d
 add('ai.queue.limitreached.member', '{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members\' go on.', true, 'DEC-189', 'the told-once Noticed item, scope per_member; names no member; {when} from ai.until.*');
 add('ai.refused.exploreoutofscope', 'The assistant can\'t explore this question on {whose} account: it lies outside what the account\'s owners chose to explore.', false, 'DEC-191', 'EXPLORE_OUT_OF_SCOPE (C-143.5)');
 add('ai.refused.exploreaskinvalid', 'Nothing was recorded: an ask to explore names the day and what is worth exploring that day.', false, 'DEC-191', 'EXPLORE_ASK_INVALID (C-143.6); ai-use\'s sentence kept');
-add('date.daymonthyear', '{day} {month} {year}', false, 'DEC-192', 'a local day not in the current year, such as 3 March 2027');
-add('date.daymonth', '{day} {month}', false, 'DEC-191', 'a local day in a sentence, such as 14 October; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item');
+add('date.daymonthyear', '{month} {day}, {year}', false, 'DEC-192', 'a local day not in the current year, such as March 3, 2027');
+add('date.daymonth', '{month} {day}', false, 'DEC-191', 'a local day in a sentence, such as October 14; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item');
 add('ai.scope.group', 'your team\'s work', false, 'DEC-189', '{scope} in ai.queue.exploreask for the team\'s key');
 add('ai.scope.own', 'your own questions', false, 'DEC-189', '{scope} in ai.queue.exploreask for a member\'s own account; a project\'s is its name');
 

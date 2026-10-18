@@ -1066,10 +1066,10 @@
   },
   {
    "key": "ai.when.month",
-   "en": "on 1 {month}",
+   "en": "on {month} 1",
    "protected": false,
    "source": "DEC-192",
-   "note": "{when} for a monthly limit, as in \"It works again on 1 November\"; {month} from date.month.*; day before month, as date.daymonth"
+   "note": "{when} for a monthly limit, as in \"It works again on November 1\"; {month} from date.month.*; month before day, as date.daymonth (DEC-333)"
   },
   {
    "key": "ai.until.day",
@@ -1083,7 +1083,7 @@
    "en": "1 {month}",
    "protected": false,
    "source": "DEC-192",
-   "note": "{when} after \"until\" in ai.queue.limitreached*, for a monthly limit: \"pause until 1 November\""
+   "note": "{when} after \"until\" in ai.queue.limitreached*, for a monthly limit: \"pause until November 1\""
   },
   {
    "key": "date.month.january",
@@ -1374,17 +1374,17 @@
   },
   {
    "key": "date.daymonthyear",
-   "en": "{day} {month} {year}",
+   "en": "{month} {day}, {year}",
    "protected": false,
    "source": "DEC-192",
-   "note": "a local day not in the current year, such as 3 March 2027"
+   "note": "a local day not in the current year, such as March 3, 2027"
   },
   {
    "key": "date.daymonth",
-   "en": "{day} {month}",
+   "en": "{month} {day}",
    "protected": false,
    "source": "DEC-191",
-   "note": "a local day in a sentence, such as 14 October; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item"
+   "note": "a local day in a sentence, such as October 14; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item"
   },
   {
    "key": "ai.scope.group",
@@ -37889,7 +37889,7 @@
    "en": "The notice tells each member plainly that a court order could reach what the team keeps that is not public.",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-290: Bob's ruling of 5 October (DEC-136): members understand a court order can expose non-public records"
+   "note": "DEC-290: Bob's ruling of October 5 (DEC-136): members understand a court order can expose non-public records"
   },
   {
    "key": "screen.security.ordinary.head",
@@ -38533,7 +38533,7 @@
    "en": "{date}, {time}",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-299: a moment, in the team's time zone, such as \"16 October, 14:05\"; never an ISO time"
+   "note": "DEC-299: a moment, in the team's time zone, such as \"October 16, 14:05\"; never an ISO time"
   },
   {
    "key": "document.uploaded.by",
@@ -38701,7 +38701,7 @@
    "en": "{first} to {last}",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-300: a period named by its first and last day, both included, such as \"1 to 15 October\""
+   "note": "DEC-300: a period named by its first and last day, both included, such as \"October 1 to 15\""
   },
   {
    "key": "refusal.ASSISTANT_REMOTE_NOT_READY",
@@ -45999,7 +45999,7 @@
   },
   {
    "key": "queue.aside.dismissed",
-   "en": "Dismissed by you, 8 October",
+   "en": "Dismissed by you, October 8",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A63 decision line"
@@ -46020,7 +46020,7 @@
   },
   {
    "key": "queue.aside.deferred",
-   "en": "Deferred by you until 1 November",
+   "en": "Deferred by you until November 1",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A63"
@@ -46118,7 +46118,7 @@
   },
   {
    "key": "screen.question.say000",
-   "en": "Deferred for Pothole repairs by you, 18 October.",
+   "en": "Deferred for Pothole repairs by you, October 18.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46174,7 +46174,7 @@
   },
   {
    "key": "screen.question.say008",
-   "en": "Dismissed for Pothole repairs by you, 18 October.",
+   "en": "Dismissed for Pothole repairs by you, October 18.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46202,7 +46202,7 @@
   },
   {
    "key": "screen.question.say012",
-   "en": "⁂Composed by the assistant, working for Mai, 8 OctoberStated bias it was composed under: ⁂Stated bias now: ⁂",
+   "en": "⁂Composed by the assistant, working for Mai, October 8Stated bias it was composed under: ⁂Stated bias now: ⁂",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46349,14 +46349,14 @@
   },
   {
    "key": "screen.question.say033",
-   "en": "Was: accepted by Ana, 7 October.",
+   "en": "Was: accepted by Ana, October 7.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
   {
    "key": "screen.question.say034",
-   "en": "Now: accepted by Dev, 6 October, and Pothole repairs stands on it.",
+   "en": "Now: accepted by Dev, October 6, and Pothole repairs stands on it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
@@ -46706,7 +46706,7 @@
   },
   {
    "key": "screen.capture.a64.your_team_holds_a_capture_from_14_septem",
-   "en": "your team holds a capture from 14 September, and the site now gives a different document",
+   "en": "your team holds a capture from September 14, and the site now gives a different document",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A64: capture drawn word"
@@ -46755,7 +46755,7 @@
   },
   {
    "key": "screen.document.a34.a_newer_copy_exists_captured_2_october",
-   "en": "a newer copy exists, captured 2 October",
+   "en": "a newer copy exists, captured October 2",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A34: document drawn word"
@@ -47301,7 +47301,7 @@
   },
   {
    "key": "screen.published.council.minutes.12.january.2024",
-   "en": "Council minutes, 12 January 2024, item 7: the council approved amendment 1 and no later change.",
+   "en": "Council minutes, January 12, 2024, item 7: the council approved amendment 1 and no later change.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47455,7 +47455,7 @@
   },
   {
    "key": "screen.published.rests.on.the.council.minutes",
-   "en": "Rests on: the council minutes of 12 January 2024, item 7; the March 2024 rent schedule.",
+   "en": "Rests on: the council minutes of January 12, 2024, item 7; the March 2024 rent schedule.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47469,7 +47469,7 @@
   },
   {
    "key": "screen.published.signed.for.lakeshore.tenants.by",
-   "en": "Signed for Lakeshore Tenants by Rosa M. on 18 September 2026, with the key whose fingerprint is ab12 34cd.",
+   "en": "Signed for Lakeshore Tenants by Rosa M. on September 18, 2026, with the key whose fingerprint is ab12 34cd.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
@@ -47707,14 +47707,14 @@
   },
   {
    "key": "screen.members.key.registered.by.rosa.3",
-   "en": "key registered by Rosa, 3 October",
+   "en": "key registered by Rosa, October 3",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A72/A74: drawn sentence"
   },
   {
    "key": "screen.members.key.registered.by.teo.2",
-   "en": "key registered by Teo, 2 October",
+   "en": "key registered by Teo, October 2",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A72/A74: drawn sentence"
@@ -47931,7 +47931,7 @@
   },
   {
    "key": "screen.project.by.standing.down.17.october",
-   "en": "by standing down, 17 October",
+   "en": "by standing down, October 17",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A47: drawn sentence"
@@ -48029,7 +48029,7 @@
   },
   {
    "key": "screen.account.registered.for.you.by.rosa",
-   "en": "registered for you by Rosa, an administrator, on 3 October.",
+   "en": "registered for you by Rosa, an administrator, on October 3.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A74: drawn sentence"
@@ -49205,7 +49205,7 @@
   },
   {
    "key": "screen.project.notice.the.date.is.before.the",
-   "en": "The date is before the project began, on 3 October.",
+   "en": "The date is before the project began, on October 3.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 C6: drawn sentence"
@@ -49275,7 +49275,7 @@
   },
   {
    "key": "screen.project.notice.working.on.it.since.3",
-   "en": "Working on it since 3 October 2026",
+   "en": "Working on it since October 3, 2026",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 C6: drawn sentence"
@@ -49352,14 +49352,14 @@
   },
   {
    "key": "screen.project.notice.as.the.teams.civicsmith.worked",
-   "en": "as the team's Civicsmith worked it out on 17 October",
+   "en": "as the team's Civicsmith worked it out on October 17",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 C6: drawn sentence"
   },
   {
    "key": "screen.project.notice.the.next.monthly.check.is",
-   "en": "The next monthly check is on 1 November.",
+   "en": "The next monthly check is on November 1.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 C6: drawn sentence"
@@ -49471,7 +49471,7 @@
   },
   {
    "key": "screen.members.key.react.key.withdrawn.by.rosa.12",
-   "en": "key withdrawn by Rosa, 12 October",
+   "en": "key withdrawn by Rosa, October 12",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-332: B306 A72/A74: drawn sentence"
