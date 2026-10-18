@@ -142,7 +142,7 @@ test("R77 (T47; N979): an archive's row carries capture too: the archive's own d
 
 test("R88 (T47; N969): heldCaptures state=set_aside answers the documents at collected whose latest act is a set-aside, each with R77's row fields and set_aside {reason, author, at}; held (absent or empty alike) answers R77's list; writes nothing", async () => {
   const { c, rows } = heldWorld();
-  assert.deepEqual(HELD_STATES, ["held", "set_aside"]);
+  assert.deepEqual(HELD_STATES, ["held", "set_aside", "held_and_vouched"]);
   const a = c.setAside({ ids: ["INFO-1", "INFO-4"], reason: "not ours to hold", author: "member:m1", viewer: "member:m1" });
   assert.equal(a.ok, true);
   const before = everything(rows);
@@ -156,7 +156,7 @@ test("R88 (T47; N969): heldCaptures state=set_aside answers the documents at col
   /* R77's row, field for field, beside set_aside */
   const { set_aside: _s, ...fields } = one;
   for (const k of ["bundle_id", "title", "project", "source", "collected_since", "age_days", "eligible", "eligibility_basis",
-                   "captured_for", "captured_for_basis", "capture"]) assert.ok(k in fields, `the row carries ${k}`);
+                   "captured_for", "captured_for_basis", "capture", "actor", "retrieved", "bytes"]) assert.ok(k in fields, `the row carries ${k}`);
   assert.deepEqual(one.capture.sha256, H("1"));
   assert.equal(held.held[0].set_aside, undefined, "a held row carries no set_aside");
   assert.deepEqual(everything(rows), before, "writes nothing");
@@ -185,12 +185,12 @@ test("R88 (T47; N969): the set-aside list keeps R77's sight, filters, sorts and 
   assert.deepEqual(row.set_aside, { reason: "second thoughts", author: "member:m2", at: again.at });
 });
 
-test("R88 (T47; N969): any other state is refused as an unknown sort is, REQUIRED_ARGUMENT_MISSING naming state and its two values, nothing read or written", async () => {
+test("R88 (T47; N969): any other state is refused as an unknown sort is, REQUIRED_ARGUMENT_MISSING naming state and its three values, nothing read or written", async () => {
   const { c, rows } = heldWorld();
   const before = everything(rows);
   for (const bad of ["gone", "SET_ASIDE", "released"]) {
     const r = await c.heldCaptures({ viewer: ADMIN, state: bad });
-    assert.deepEqual([r.ok, r.reason, r.op, r.argument, r.shape, r.status], [false, "REQUIRED_ARGUMENT_MISSING", "heldcaptures", "state", "held | set_aside", 400]);
+    assert.deepEqual([r.ok, r.reason, r.op, r.argument, r.shape, r.status], [false, "REQUIRED_ARGUMENT_MISSING", "heldcaptures", "state", "held | set_aside | held_and_vouched", 400]);
     assert.equal(r.held, undefined);
   }
   /* the control: an unknown sort, refused the same way */

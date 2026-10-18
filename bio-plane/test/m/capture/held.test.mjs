@@ -99,7 +99,9 @@ test("R77 (DEC-97 (1)): heldCaptures lists the Information documents at collecte
                                  captured_for: null,
                                  captured_for_basis: word("capture.basis.reader_questions_document"),
                                  /* R77 (T47): the fixture's provenance stand-in has no `captureGrade`, so it does not answer */
-                                 capture: { sha256: H("1"), grade: null } });
+                                 capture: { sha256: H("1"), grade: null },
+                                 /* R77 (T51): the capture's own facts; the fixture's register holds no size */
+                                 actor: "m1", retrieved: "2026-01-01T00:00:00Z", bytes: null });
   const three = r.held.find((x) => x.bundle_id === "INFO-3");
   assert.deepEqual([three.collected_since, three.age_days, three.source], ["2026-03-01T00:00:00Z", 10, null],
                    "back at collected: aged from when its state last moved; no receipt, no source");

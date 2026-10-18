@@ -5,8 +5,8 @@
  * source's retrieval instant. That one capture is both the last at-or-before the
  * retrieval and the first at-or-after it, so the two-sided arm of `resolveLinks`
  * read it as a BRACKET and said "the target changed somewhere between the
- * captures bracketing this document's retrieval", naming ONE hash twice. The UI
- * renders the plane's basis and detail verbatim (`civicos-ui/app.html` linkRow),
+ * captures bracketing this document's retrieval", naming ONE hash twice. The
+ * interface renders the plane's basis and detail verbatim (the links of a document),
  * so that sentence reached a member as a fact about the source.
  *
  * What this suite holds, THROUGH THE OP (`op=acquire` files the page and its

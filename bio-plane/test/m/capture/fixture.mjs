@@ -32,7 +32,7 @@ export function storage() {
   for (const t of bare.split(";")) if (t.trim()) db.exec(t);
   /* provenance R48's contract columns capture reads: `registered` orders a document's captures (R77). */
   db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT,
-             registered TEXT NOT NULL DEFAULT '2026-01-01T00:00:00.000Z')`);
+             registered TEXT NOT NULL DEFAULT '2026-01-01T00:00:00.000Z', bytes INTEGER)`);
   db.exec(`CREATE TABLE captured_locators (address_norm TEXT NOT NULL, address TEXT NOT NULL, capture_sha TEXT NOT NULL,
              via TEXT NOT NULL DEFAULT 'direct', first_retrieved TEXT NOT NULL, last_retrieved TEXT NOT NULL,
              observations INTEGER NOT NULL DEFAULT 1, retrieval_locator TEXT, PRIMARY KEY (address_norm, capture_sha, via))`);
