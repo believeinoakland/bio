@@ -13,3 +13,7 @@ Cause: needs Bob. Done and pushed: worker.test.mjs R12 now asserts the RUNNER bi
 - **Tests.** `agent-runner` `npm test`: 66 tests, 55 pass, 0 fail, 11 skipped (the suspended R35 ones). `bundler.test.mjs`: 38 pass, 0 fail, 0 skip (R24 and R35 real-fleet green). `fleetbundles.test.mjs`: 1 pass, 0 fail, 0 skip (agent-runner arm green).
 - **Checks.** format 0 failures; architecture 0 failures; ownership 0 failures (2 files changed beyond the build output are within paths). coverage: agent-runner R36 R37 R38 R40 are named by no test (marked not yet met: T50, expected).
 - Size (session_01Srpe2rAH6yyk13jeJqT84Y): test runs 8, module lines 2
+
+## J2 · COMPLETE
+
+T51-64 done and pushed. R12 test fixed (red #26); image now docker.io/civicsmith/agent-runner@sha256:954ac088... in fleet-member.json, wrangler.jsonc, container.test.mjs; bundle rebuilt. bundler.test.mjs 38 pass/0 fail (R24, R35 green); fleetbundles 1 pass/0 fail; agent-runner 55 pass/0 fail/11 suspended. format/architecture/ownership 0 failures; coverage names only R36 R37 R38 R40 (not yet met T50). Details in my record.
