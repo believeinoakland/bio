@@ -54,16 +54,16 @@ test("text-chain.textchain.a_page_extent_names_which_page: R51 a page extent wit
   assert.ok(readable(r.detail));
 });
 
-test("text-chain.textchain.a_cell_of_a_spreadsheet, text-chain.textchain.a_shape_on_a_slide: R92 the landed phrases are read", () => {
-  for (const arm of ["sheet-cell", "slide-shape"]) assert.ok(readable(CONTENT_EXTENT_KINDS[arm].human), arm);
-});
-
-test("text-chain.textchain.a_paragraph_of_a_document, text-chain.textchain.a_range_of_cells_in_a_spreadsheet: R92 the landed phrases are read", () => {
-  for (const arm of ["doc-para", "sheet-range"]) assert.ok(readable(CONTENT_EXTENT_KINDS[arm].human), arm);
-});
-
-test("text-chain.textchain.a_table_in_a_document, text-chain.textchain.an_image_in_a_document: R92 the landed phrases are read", () => {
-  for (const arm of ["doc-table", "image"]) assert.ok(readable(CONTENT_EXTENT_KINDS[arm].human), arm);
+test("R92: the landed extent phrases are read through the word list's keys, the design's wording", () => {
+  const keys = {
+    "sheet-cell": "textchain.text.cell_spreadsheet",
+    "slide-shape": "textchain.text.shape_deck",
+    "doc-para": "textchain.text.paragraph_document",
+    "sheet-range": "textchain.text.range_cells_spreadsheet",
+    "doc-table": "textchain.text.table_document",
+    image: "textchain.text.image_document",
+  };
+  for (const [arm, key] of Object.entries(keys)) assert.equal(CONTENT_EXTENT_KINDS[arm].human, word(key), arm);
 });
 
 test("R102: TIER_RULE is the word list's tier rule, read by its key", () => {
