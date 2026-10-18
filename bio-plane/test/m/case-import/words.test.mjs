@@ -16,8 +16,8 @@ const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-s
   .modules["case-import"].reads;
 
 test("R14 R4 R19 R21 (plan rule 6): the module's keys are the owner's declared list for case-import, every one held by the word list", () => {
-  /* the owner's list, and the one key K3727 adds for R25's sentence (DEC-323 holds it; the design lane's list names it in a fold) */
-  assert.deepEqual([...WORD_KEYS].sort(), [...READS, "caseimport.stake.unreadable"].sort());
+  /* the owner's list, which names R25's `caseimport.stake.unreadable` among its reads (K3727, DEC-323) */
+  assert.deepEqual([...WORD_KEYS].sort(), [...READS].sort());
   for (const k of WORD_KEYS) assert.equal(hasWord(k), true, k);
   assert.throws(() => say("not.a.key"), /not one of this module's word keys/, "a key outside the list is refused");
   assert.throws(() => say("case-import.why.evaluated"), /WORD_VAR_MISSING/, "a placeholder with no value is refused, never answered bare");
@@ -66,6 +66,11 @@ test("R1 R3 R21 (plan rule 6): the reasons a case file could not be read, and th
   const r = await w.ci.importCaseFile({ parts: [bytes("not a case file")], by: V("alice"), viewer: V("alice") });
   assert.equal(r.reason, "IMPORT_NOT_A_CASE_FILE");
   assert.ok(r.departures.length >= 1);
+  /* each departure of the file's own bytes draws the list's sentence for it, `notbytes` counting its part from 1 */
+  const none0 = await w.ci.importCaseFile({ parts: [], by: V("alice"), viewer: V("alice") });
+  assert.deepEqual(none0.departures, [word("refusal.IMPORT_NOT_A_CASE_FILE.noparts")]);
+  const notBytes = await w.ci.importCaseFile({ parts: [bytes("ok"), {}], by: V("alice"), viewer: V("alice") });
+  assert.deepEqual(notBytes.departures, [word("refusal.IMPORT_NOT_A_CASE_FILE.notbytes", { n: 2 })]);
   /* the checker down: the edition is imported and every finding unread, the reason the list's sentence with the fault */
   w.checker.throws = true;
   const a = await imp(w);
@@ -80,5 +85,5 @@ test("R1 R3 R21 (plan rule 6): the reasons a case file could not be read, and th
 test("R4 (plan rule 6, N1068, N1160): the module says \"labeled\", never \"labelled\", and none of its words calls the team's Civicsmith the group's", () => {
   const dir = fileURLToPath(new URL("../../../src/case-import/", import.meta.url));
   for (const f of readdirSync(dir)) assert.doesNotMatch(readFileSync(dir + f, "utf8"), /\blabelled\b/i, f);
-  for (const k of WORD_KEYS) assert.doesNotMatch(word(k, { e: "x", why: "", method: "m", calc_method: "c", calc_input_max: 1 }), /\bgroup's Civicsmith\b|\blabelled\b/i, k);
+  for (const k of WORD_KEYS) assert.doesNotMatch(word(k, { e: "x", why: "", method: "m", calc_method: "c", calc_input_max: 1, n: 1 }), /\bgroup's Civicsmith\b|\blabelled\b/i, k);
 });

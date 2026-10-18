@@ -115,13 +115,13 @@ export const REVIEW_COMMENTS = { comments: [{ reviewer: "heron", text: "Check th
 export const APPROVALS = { rule: { approvers: ["heron", "olive"], set_by: "olive", set_at: NOW },
                            approvals: [{ by: "heron", at: NOW }, { by: "olive", at: NOW }] };
 
-/** The case document's text, `/7` (the format written) unless `format` says otherwise; `t33` adds R18's and R20's
+/** The case document's text, `/7` (the format the pinned renders were made under; R33: `/8` is the one written) unless `format` says otherwise; `t33` adds R18's and R20's
     blocks; `photo` adds a third material, a photo carried as its copy (T37); `plainPhoto` an unmarked one (T38);
     `memberDoc` a member document carried as its cleaned copy (T39), its copy a PDF or, with `memberDoc: "ooxml"`, a zip
-    package; `t41` adds R23–R26's blocks (T41). */
+    package; `t41` adds R23–R26's blocks (T41); `grading` is the method version the document records (`method.grading`). */
 export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" }, blocks = true,
-                               format = CG.CASE_DOCUMENT_FORMAT, t33 = false, photo = false, plainPhoto = false,
-                               memberDoc = false, t41 = false } = {}) {
+                               format = CG.CASE_DOCUMENT_FORMAT_V7, t33 = false, photo = false, plainPhoto = false,
+                               memberDoc = false, t41 = false, grading = "bio-grading/1" } = {}) {
   const fm = [
     "---", `format: ${format}`, "case_id: CASE-2026-0001", "case_edition: 2", "case_project: PROJ-2026-0001-parks",
     'case_scope: "Who approved the lease, and on what record."',
@@ -142,7 +142,7 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
     "case_tension_sentences: []",
     ...CG.captureBlockLines([{ capture: MINUTES_SHA, member: A, grade: "B", grade_basis: "fetched" }]),
     ...CG.sourceBlockLines([{ capture: MINUTES_SHA, stated: CG.withheldSourceStatement({ capture: MINUTES_SHA, received: NOW }), basis: null }]),
-    ...CG.methodBlockLines({ grading: "bio-grading/1", checks: "1.61.0" }),
+    ...CG.methodBlockLines({ grading, checks: "1.61.0" }),
     ...CG.materialBlockLines({
       materials: [{ ref: MINUTES, kind: "document", sha: MINUTES_SHA, text_sha: sha("the minutes' text"), origin: "https://records.example/m.pdf",
                     archived_copy: "https://archive.example/m", included: true, rests_under: "load_bearing" },

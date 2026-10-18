@@ -48,7 +48,7 @@ test("R2 attributionBodyLines: the head, the count of firsthand observations, th
     { observation: "INFO-2026-0094-o", level: "group", shown: null, chosen_at_edition: 1 },
     { observation: OBS2, level: null, why: "its author has chosen no level" },
   ];
-  const lines = attributionBodyLines(rows);
+  const lines = attributionBodyLines(rows, "bio-case-document/7");
   assert.equal(lines[0], ATTRIBUTION_PROSE_HEAD);
   assert.equal(lines[1], "");
   assert.match(lines[2], /^This case rests, directly or through another finding, on 6 firsthand observations recorded by a member of this group\./);

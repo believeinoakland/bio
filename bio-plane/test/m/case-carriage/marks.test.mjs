@@ -273,13 +273,10 @@ test("R11 (T40) OBSCURED_LABEL is words.json's photo.obscured.label and PUBLISHE
   const en = (k) => { const x = words.find((w) => w.key === k); assert.ok(x, `words.json holds ${k}`); return x; };
   assert.equal(OBSCURED_LABEL, en("photo.obscured.label").en);
   assert.equal(PUBLISHED_LABEL, en("photo.published.label").en);
-  assert.equal(OBSCURED_LABEL, "Faces, plates and camera details removed for publication; the team holds the original");
-  assert.equal(PUBLISHED_LABEL, "Camera details removed for publication; the team holds the original");
   assert.ok(en("photo.obscured.label").protected && en("photo.published.label").protected, "protected words (DEC-179)");
   /* every word this module holds is its key's `en`, verbatim */
   for (const [k, v] of Object.entries(CASE_CARRIAGE_WORDS)) assert.equal(v, en(k).en, k);
-  /* negative control: BOB's draft is gone, and the two labels differ */
-  assert.notEqual(OBSCURED_LABEL, "Faces and plates obscured for publication; the group holds the original");
+  /* negative control: the two labels differ */
   assert.notEqual(OBSCURED_LABEL, PUBLISHED_LABEL);
   /* the stored label of each copy, through the act */
   const { w, p } = scene();

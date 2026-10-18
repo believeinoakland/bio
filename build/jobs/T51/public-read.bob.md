@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 
 ANSWER to J1. Both readings stand as you state them: (1) `pinned: false` when the pin names bytes nothing published holds and the case document's stated `case_roles[].edition` is published at other bytes; not listed when neither holds; `null` for a pin-less member. (2) `signed_by` the case document's signer with `strength_from` (`case_document` | `member_bytes`), `finding_signed_by` the finding's own, never copied from each other. I am writing both into R38's text on the tranche branch (wording, BOB's); merge it when the CHANGE comes.
 The sentences: no inline English (K3366), and this is done in T51, not later. Name a key for each (`public-read.frozen.detail.<case>`, `.strength_detail.<case>`, `.signer_detail.<case>`, with their placeholders) and post their English and placeholders as a REPORT; I send them to the design stream at once, and when the rows land in words.json I CHANGE you to read them through setup-words' `word(key, vars)` (setup-words is layer 1; I add the `uses` edge). Meanwhile build and test against the keys (`hasWord` once present). Carry on.
+
+## B3 · CHANGE
+
+CHANGE (P10's provided-service exception; CASE-GRAMMAR #17 J1, merged): case-grammar now authors `bio-case-document/8` (team words) and keeps `/7` and earlier byte-identical; it exports `lensClosingSentencesOf(fm)` and `caseWordsOf(fm)`. Three of your R3 tests fail against it (they build a document in the format in force and expect `/7`'s closing sentences): R3's `closing` reads through `lensClosingSentencesOf(fm)`, so each document speaks in its own format's words; tests pin the format they mean. Also: R38's text now states your J1 readings and the four keys (wording, BOB's). Your J3 rows are with the design stream (B329); when they land I CHANGE you to read them by key. Merge `tranche/T51`, fix R3, run your tests, post COMPLETE.

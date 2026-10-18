@@ -641,7 +641,8 @@ export class CaseImport {
     /* DEC-49 REGION is-import-case-file */
     if (!list.length || list.some((p) => !p))
       return refuse("IMPORT_NOT_A_CASE_FILE", "parts are the case file's parts, each as bytes",
-                    { departures: [!list.length ? "no part was given" : `part ${list.findIndex((p) => !p)} is not bytes`] });
+                    { departures: [!list.length ? say("refusal.IMPORT_NOT_A_CASE_FILE.noparts")
+                                   : say("refusal.IMPORT_NOT_A_CASE_FILE.notbytes", { n: list.findIndex((p) => !p) + 1 })] });
     /* The manifest, by the one reader of the format (`case-checker` R19), checked by `case-grammar` R13's check. A file
        whose bytes differ from the manifest is the checker's to report (its R2), never a refusal here. */
     const read = this.#call(() => readCaseFile(list), { manifest: null, files: [], departures: [say("case-import.departures")] });
@@ -659,7 +660,7 @@ export class CaseImport {
     const who = CaseImport.#manifestIdentity(read.manifest);
     if (!who.group || !who.case || !who.edition)
       return refuse("IMPORT_NOT_A_CASE_FILE", "the manifest departs from the case-file format",
-                    { departures: ["the manifest does not name its team, case and edition"] });
+                    { departures: [say("refusal.IMPORT_NOT_A_CASE_FILE.manifest")] });
     /* END DEC-49 REGION is-import-case-file */
     const listed = new Map(CaseImport.#manifestFiles(read.manifest).map((f) => [f.path, f]));
     const files = (Array.isArray(read.files) ? read.files : []).filter((f) => isObj(f) && str(f.path) && f.content instanceof Uint8Array);

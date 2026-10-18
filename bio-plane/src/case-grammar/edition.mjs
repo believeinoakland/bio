@@ -28,6 +28,7 @@
 import { parseFrontmatter, sha256HexSync } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresTensionSection } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
+import { WORDS, caseWordsOf, wordsOfFormat } from "./words.mjs";
 
 const val = (v) => (v === undefined || v === null || v === "null" ? null : v);
 const bool = (v) => (v === true || v === "true" ? true : v === false || v === "false" ? false : null);
@@ -123,19 +124,15 @@ export const LENS_HEAD = "## The Lens This Case Was Produced Under";
 /** R9: the fields of a `lens_statements:` row and of a `lens_citations:` row, in the order they are written. */
 export const LENS_STATEMENT_FIELDS = Object.freeze(["bundle", "id", "kind", "subject", "text", "justification", "withheld"]);
 export const LENS_CITATION_FIELDS = Object.freeze(["statement", "citation"]);
-/** R9: each statement kind in plain words (BOB's, from Declared Bias's own definitions). */
-export const LENS_KIND_WORDS = Object.freeze({
-  scrutiny: "a source this group checks more closely before relying on it",
-  inference: "an inference this group allows or refuses to draw",
-  pattern: "a pattern this group has evidence an institution or source follows",
-});
-/** R9: the two sentences that close the section, verbatim (DEC-103; the first is Bob's, DEC-117, N524). */
-export const LENS_CLOSING_SENTENCES = Object.freeze([
-  "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the "
-    + "most dangerous kind.",
-  "This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it "
-    + "looked at the material.",
-]);
+/** R9: each statement kind in plain words (BOB's, from Declared Bias's own definitions), in the `/7`-and-earlier words;
+ *  R33: a `/8` document's are the "team" set (`./words.mjs`). */
+export const LENS_KIND_WORDS = WORDS.group.lensKinds;
+/** R9: the two sentences that close the section, verbatim (DEC-103; the first is Bob's, DEC-117, N524), in the
+ *  `/7`-and-earlier words; R33: `lensClosingSentencesOf(fm)` answers the pair for a document's version (the first
+ *  sentence is the same in both). */
+export const LENS_CLOSING_SENTENCES = WORDS.group.lensClosing;
+/** R33: the closing sentences of the version a document's front matter `fm` states. Pure; never throws. */
+export const lensClosingSentencesOf = (fm) => WORDS[caseWordsOf(fm)].lensClosing;
 /** R9: with no manifest in force, the section says so. */
 export const LENS_NONE_SENTENCE = "No manifest was in force when this case was published: no bias set stood adopted for "
   + "it. That is stated, not left blank: it is a different fact from a lens with nothing in it.";
@@ -178,8 +175,10 @@ export function lensBlockLines(statements) {
  *  them; `inForce` true, false for no manifest, or null for undetermined with `stated`): the publisher's
  *  acknowledgement first; then each statement, its kind in plain words, its subject and its text, with its
  *  justification, its printed citations and its withheld count (never which) beneath; or, with no manifest in force,
- *  that none was; then the two closing sentences, once. */
-export function lensSectionLines({ acknowledgement = null, statements = [], inForce = true, stated = null } = {}) {
+ *  that none was; then the two closing sentences, once. R33: the kind words and the second closing sentence are those of
+ *  the version `format` names (the format in force when none is given), so a draft prepared as `/7` stays in its words. */
+export function lensSectionLines({ acknowledgement = null, statements = [], inForce = true, stated = null, format } = {}) {
+  const words = wordsOfFormat(format);
   const ack = acknowledgement == null || !String(acknowledgement).trim()
     ? "No acknowledgement is stated." : fmSafe(acknowledgement);
   const made = objects(statements).map(lensRowOf);
@@ -189,7 +188,7 @@ export function lensSectionLines({ acknowledgement = null, statements = [], inFo
          + `force when it was published, each printed here with its reasons.`,
        "",
        ...made.flatMap(({ row, printed }, i) => [
-         `${i + 1}. **${LENS_KIND_WORDS[row.kind] ?? `a statement of kind ${said(row.kind)}`}** (\`${said(row.kind)}\`), `
+         `${i + 1}. **${words.lensKinds[row.kind] ?? `a statement of kind ${said(row.kind)}`}** (\`${said(row.kind)}\`), `
            + `on ${said(row.subject)}: ${said(row.text)}`,
          `   - Justification: ${said(row.justification)}`,
          `   - Evidence: ${printed.length ? printed.join("; ") : "none printed"}`,
@@ -199,7 +198,7 @@ export function lensSectionLines({ acknowledgement = null, statements = [], inFo
       ? [`${LENS_UNDETERMINED_SENTENCE}${stated == null || !String(stated).trim() ? "." : `: ${fmSafe(stated)}.`}`, ""]
       : [LENS_NONE_SENTENCE, ""];
   return [LENS_HEAD, "", `**The publisher's acknowledgement.** ${ack}`, "", ...lens,
-          LENS_CLOSING_SENTENCES[0], "", LENS_CLOSING_SENTENCES[1], ""];
+          words.lensClosing[0], "", words.lensClosing[1], ""];
 }
 
 /** R9: the lens blocks read back from a `/5` document's front matter, in the document's order: `{statements: [{bundle,
