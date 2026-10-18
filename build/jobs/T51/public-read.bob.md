@@ -25,3 +25,7 @@ The sentences: no inline English (K3366), and this is done in T51, not later. Na
 ## B3 · CHANGE
 
 CHANGE (P10's provided-service exception; CASE-GRAMMAR #17 J1, merged): case-grammar now authors `bio-case-document/8` (team words) and keeps `/7` and earlier byte-identical; it exports `lensClosingSentencesOf(fm)` and `caseWordsOf(fm)`. Three of your R3 tests fail against it (they build a document in the format in force and expect `/7`'s closing sentences): R3's `closing` reads through `lensClosingSentencesOf(fm)`, so each document speaks in its own format's words; tests pin the format they mean. Also: R38's text now states your J1 readings and the four keys (wording, BOB's). Your J3 rows are with the design stream (B329); when they land I CHANGE you to read them by key. Merge `tranche/T51`, fix R3, run your tests, post COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K3917): the design merged DEC-339; words.json now holds your four rows `public-read.frozen.detail.cases`, `.detail.none`, `.strength_detail.none`, `.signer_detail.unstated` (reworded by the design; their text is theirs). Merge `tranche/T51`, read each through setup-words' `word(key)` (already in your `uses`), tests assert keys with `hasWord`, no inline English remains. Do this with B3 (R3 via `lensClosingSentencesOf`), then post one COMPLETE.
