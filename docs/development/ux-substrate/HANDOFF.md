@@ -20,7 +20,7 @@
   1. BOB's QUESTIONs and HANDOFFs, first whenever they come (T51's L11 screen jobs and the completion round find more).
   2. Owed: nothing named.
   3. Bob's answers and page comments as they come.
-  4. The standing tail: the words' consistency after each batch (a Sonnet reader); the 390 px walk after large drawings (a Sonnet walker; tables on Find and Members and the person page's graph pan inside their frames, accepted); `build/plan/install-situations.md` when it changes; BOB's channel at each check-in; `settings.set.system` once a setting Civicsmith sets itself is drawn; at T51's close, the review of `words-unreviewed.json` when BOB sends it.
+  4. The standing tail: the words' consistency after each batch (a Sonnet reader); the 390 px walk after large drawings (a Sonnet walker, rendering inside the page's phone frame `.mk-device[data-device="phone"]`, where the 44 px rule lives: a bare `CS_WALK.render` shows 40 px buttons falsely; DEC-341's counsel, grouprules and action state e pass; tables on Find and Members and the person page's graph pan inside their frames, accepted); `build/plan/install-situations.md` when it changes; BOB's channel at each check-in; `settings.set.system` once a setting Civicsmith sets itself is drawn; at T51's close, the review of `words-unreviewed.json` when BOB sends it.
 
 ## 1. Who you are
 
