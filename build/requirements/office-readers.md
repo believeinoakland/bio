@@ -1,6 +1,6 @@
 # office-readers — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078). Last changed T51 (T51-6: R34 new, a document's own title in `metadata`; N1202; K3627); marked not yet met (T51).
 
 ## Public
 
@@ -310,7 +310,9 @@ second copy that could drift.
   `application/vnd.ms-powerpoint.addin.macroEnabled.12`), with `format` the twin's.
  
 
-Errors: none of R1–R33 ever throws. A precondition this module cannot verify (bytes that
+- **R34** (T51; N1202; K3627; amends R31) `docxEntry.text()` and `pptxEntry.text()` also carry in `metadata` the key `title`: the core part's `title` (`dc:title`) exactly as the part writes it, so `reading-pipeline` R34 titles the reading from it and the record's lists name the document. When the core part states no title, or one that is empty or only whitespace, `metadata` has no `title` key at all (never `null`, never an invented title, never the file name or a heading of the body); when there is no readable core part, `metadata` is `null` as R31 says and has no title. R31's other keys are unchanged, and csv's `metadata` stays `null`. Test: a docx and a pptx whose `docProps/core.xml` states a title give it in `metadata.title`; control: a core part with no `title` element, with an empty one and with a whitespace-only one gives `metadata` with no `title` key; a file with no core part gives `metadata: null`. *(not yet met: T51)*
+
+Errors: none of R1–R34 ever throws. A precondition this module cannot verify (bytes that
 are not this format, a value `recognise`-style helpers were not asked to check) is answered
 as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 

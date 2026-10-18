@@ -1,12 +1,12 @@
 # signatures — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); the release signer joined at T19's fold (K648, K653). Last changed T36 (T36-1: R43, R44 new, the passphrase at Generate and the recovery key; K1936); every requirement met (SIGNATURES #11, K2079). Last changed T48 (T48-3: R45–R48 new, the release keys in one place, the release notice's namespace, statement and verify; R1 amended (six namespaces); N1047; K3158, K3189, K3195); marked not yet met (T48).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); the release signer joined at T19's fold (K648, K653). Last changed T36 (T36-1: R43, R44 new, the passphrase at Generate and the recovery key; K1936); every requirement met (SIGNATURES #11, K2079). Last changed T48 (T48-3: R45–R48 new, the release keys in one place, the release notice's namespace, statement and verify; R1 amended (six namespaces); N1047; K3158, K3189, K3195); marked not yet met (T48). Last changed T51 (T51-124: R25, R30, R31, R32, R42, R43, R44 retired, the signing page leaves this module; R1, R34, R37, R39 reworded; K3807, K3814).
 
 ## Public
 
 ### Purpose
 
-Builds and verifies the signed and timestamped statements the plane and the installer exchange: OpenSSH detached signatures (SSHSIG) over a release, a release notice, a fleet manifest, a bundle ratification or a case ratification; an RFC 3161 timestamp request and response, and the public-archive locator an opt-in co-archive returns; and the self-contained page a human signer uses to produce those signatures offline; the in-interface signer (`interface-shell` R40, R41) is, beside the page, a maker of R1's statements, unchanged in format. It holds no record, no stored private key and no clock, and makes no network call itself — every network call is the caller's. Its one signing service (the release signer) runs on an operator's machine with a seed the caller passes, and never ships in the plane or the installer.
+Builds and verifies the signed and timestamped statements the plane and the installer exchange: OpenSSH detached signatures (SSHSIG) over a release, a release notice, a fleet manifest, a bundle ratification or a case ratification; an RFC 3161 timestamp request and response, and the public-archive locator an opt-in co-archive returns; and the release signer's tool. The in-interface signer (`interface-shell` R40, R41) is a maker of R1's statements, unchanged in format. It holds no record, no stored private key and no clock, and makes no network call itself — every network call is the caller's. Its one signing service (the release signer) runs on an operator's machine with a seed the caller passes, and never ships in the plane or the installer.
 
 ### Provides
 
@@ -14,8 +14,8 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 
 `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE`, `NS_DOCKET` → strings (`"bio-release"`, `"bio-ratify"`, `"bio-release-fleet"`, `"bio-working-on"`, `"bio-docket"`).
 - **R1** Five distinct compiled constants: `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE` and `NS_DOCKET`. No two are equal, so a signature that verifies in one namespace never verifies in another. (Amended at T23's opening from "Three": DEC-111, K1019, K1031; from "Four" by N520: DEC-116.) (T48; N1047) Six: `NS_RELEASE_NOTICE` joins them (R46), distinct from every other.
-- **R37** `NS_NOTICE` is `"bio-working-on"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it (DEC-111, K1019, K1031).
-- **R39** `NS_DOCKET` is `"bio-docket"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it. (DEC-116 item 6; N520)
+- **R37** `NS_NOTICE` is `"bio-working-on"`, a compiled constant distinct from every other namespace (R1's rule). The browser signer signs in it (DEC-111, K1019, K1031).
+- **R39** `NS_DOCKET` is `"bio-docket"`, a compiled constant distinct from every other namespace (R1's rule). The browser signer signs in it. (DEC-116 item 6; N520)
 
 `verifySshsig(armored, message, expectNamespace, allowedKeys) → Promise<{ok:true, keyB64, namespace} | {ok:false, reason, ...}>`
 - **R2** `ok:true` only when: `armored` dearmors to a version-1 SSHSIG blob whose key and signature are both `ssh-ed25519` (32-byte key, 64-byte signature); its `namespace` equals `expectNamespace`; its signing key's wire base64 (`keyB64`) is in `allowedKeys`, after normalising each entry (a bare base64 field, a full `"ssh-ed25519 AAAA… comment"` line, or a principal-prefixed allowed_signers line all name the same key); and the signature verifies over `SSHSIG | namespace | reserved | hashAlg | H(message)`, hashed with the blob's own declared `hashAlg` (`sha256` or `sha512`), against the exact bytes of `message`.
@@ -71,16 +71,14 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R23** Returns the archived locator (`https://web.archive.org/web/<timestamp>/…`), read in order from `res`'s `content-location` header, its `location` header, or (last) `res.url` itself; `null` when none of the three names one.
 - **R24** Never throws.
 
-**The offline signer page (`signpage.mjs`)**
-
-`SIGN_HTML → string`
-- **R25** A single, non-empty, self-contained HTML document (opens with `<!doctype html>`): no `src=`/`href=` naming an `http:`/`https:` URL anywhere in it, so the page loads and runs with no network access once opened.
-- **R30** `SIGN_HTML` is the byte-identical render of `bio-plane/src/sign-release.html` by `bio-plane/scripts/embed-signpage.mjs` (K33).
-- **R31** The page's own script signs `bio-release` and `bio-ratify` statements that both `ssh-keygen -Y verify` and `verifySshsig` (R1) accept.
-- **R32** The page's visible text names the product Civicsmith, never BIO (`layers.md` rule 4; DEC-124); its wire formats are unchanged: the `BIOKEY-RAW1.`/`BIOKEY1.` prefixes, the `bio-release`/`bio-ratify` namespaces and the download filename. It calls the ratified thing a record, never a bundle; `bio-plane.bundled.mjs`, a file name, stays (K899 (1), N458; K934).
-- **R42** (S0-13; K1470) The signer page's own test of a notice's or case's id (`sign-release.html`, rendered into `SIGN_HTML` by R30) accepts exactly the ids R38 and R40 accept, the 10,000th included, and refuses exactly those they refuse; the page's copy of the pattern is regenerated from `record-grammar`'s by `embed-signpage`, never edited by hand.
-- **R43** (N712; K1936 Q4 step 1) At Generate the page offers a passphrase. When one is given, every private key the page then gives out (shown, copied or downloaded), but for the one raw showing below, is the passphrase-protected form (`BIOKEY1.`, the page's `wrapKey`), and the page's own load ("Load a key you already have") reads it back with that passphrase and refuses it with any other. When none is given, the keys are the raw form (`BIOKEY-RAW1.`), as before. The public lines are given as before, whichever form the private keys take. For a release key, the page also shows the raw form once, only when asked, for pasting into the secret store that signs releases (Distribution §10); the page never writes the raw form to a file when a passphrase was given.
-- **R44** (N712; K1936 Q4 step 1) The page can make a recovery key: a release key (it signs `bio-release` statements, R31) that the page names the recovery key wherever it shows or gives out that key's private and public text, so it is never mistaken for the release key it backs up.
+**The offline signer page (retired)** — the page (`sign-release.html`, `signpage.mjs`, `embed-signpage.mjs`) leaves this module (T51-124; K3807, K3814); BOB moves its files to `control-plane`'s paths at the merge and control-plane's job deletes them with the `/sign` route. Its ids stay retired, never reused:
+- **R25** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
+- **R30** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
+- **R31** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
+- **R32** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
+- **R42** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
+- **R43** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
+- **R44** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
 
 **The release signer (`bio-plane/scripts/sign-sshsig.mjs`, moved from `tools/` in T19; BOB-5)** — run only on an operator's machine by the release assembler (bundler R23), never imported by the plane or the installer.
 
@@ -88,7 +86,7 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R33** Returns an armored OpenSSH signature (`-----BEGIN SSH SIGNATURE-----`, base64 wrapped at 70 columns, `-----END SSH SIGNATURE-----` and a newline): a version-1 SSHSIG blob with an `ssh-ed25519` key and signature, `namespace`, an empty reserved field and hash algorithm `sha512`, signing the exact bytes of `message` with the key the envelope's seed gives. Same inputs give the same output (Ed25519 is deterministic). Stock `ssh-keygen -Y verify` and `verifySshsig` (R2) both accept it for that namespace and the key of R35.
 
 `seedFromEnvelope(envelope) → {label, seed}`
-- **R34** Accepts exactly `BIOKEY-RAW1.<label>.<base64 of 32 bytes>` (surrounding whitespace ignored), the envelope the signer page (R25) mints, and returns the label and the 32-byte seed. Throws `Error` reading `release seed is not a BIOKEY-RAW1 envelope` for any other shape and `release seed is <n> bytes, expected 32` for a seed of another length; `signSshsig` and `signerPublicLine` throw the same.
+- **R34** Accepts exactly `BIOKEY-RAW1.<label>.<base64 of 32 bytes>` (surrounding whitespace ignored), the envelope a release key is held in, and returns the label and the 32-byte seed. Throws `Error` reading `release seed is not a BIOKEY-RAW1 envelope` for any other shape and `release seed is <n> bytes, expected 32` for a seed of another length; `signSshsig` and `signerPublicLine` throw the same.
 
 `signerPublicLine(envelope, comment = "bio-release") → string`, `keyFromSeed(seed)`, `publicFromKey(key)`
 - **R35** `signerPublicLine` returns `ssh-ed25519 <base64 wire public key> <comment>`, the line an allowed-signers list or `RELEASE.json`'s `signer` carries for the envelope's key; `keyFromSeed` gives the Ed25519 private key of a 32-byte seed and `publicFromKey` its 32 raw public bytes.
@@ -116,7 +114,7 @@ Stated per service above. `verifySshsig`, `verifyReleaseNotice`, `parseTimestamp
 
 ### Uses
 
-- `record-grammar`: the id grammar (`ID_TABLE`, `idPattern`; its R46, R47) for R38, R40 and R42 (T33-7; a new edge, P4 holding: `record-grammar` is first in layer 1); `canonicalJson` (its R12) for R47 (T48).
+- `record-grammar`: the id grammar (`ID_TABLE`, `idPattern`; its R46, R47) for R38 and R40 (T33-7; a new edge, P4 holding: `record-grammar` is first in layer 1); `canonicalJson` (its R12) for R47 (T48).
 
 Otherwise every export is built from Web platform primitives (`crypto.subtle`, `atob`/`btoa`, `TextEncoder`/`TextDecoder`) and literal data. The release signer (R33–R36) alone uses Node's `node:crypto`, which is why it never ships in the plane or the installer.
 
@@ -140,4 +138,5 @@ Otherwise every export is built from Web platform primitives (`crypto.subtle`, `
 - **Checks.** Check C-18.8 (the gate's release-signature check, `bio-checks.mjs` "Release-signature primitives") still holds a second, hand-written SSHSIG/Ed25519 verifier. K10 (entry N8) replaces it with a call to `verifySshsig`: the Apps Script runtime that justified it is decommissioned. This module takes on no check-derived invariant.
 - **For callers.** `verifySshsig`'s `allowedKeys` and SSHSIG's own embedded key together are the only source of truth for who signed; a caller must supply the actual `ARMED_SIGNERS`/registry list, never a caller-asserted one. `fleetStatement`'s per-member `services` and `parts` fields are signed as the caller supplies them (R10); nothing in this module checks them against reality — that a member's declared parts match what was actually uploaded is the caller's obligation.
 - **Release notices (T48).** `instance-setup`'s daily check (T48-62) calls `verifyReleaseNotice` with no `allowedKeys`, so `RELEASE_KEYS` decides; the installer re-points `ARMED_SIGNERS` to `RELEASE_KEYS` in its own job (T48-79), and `bundler` writes the notice through R47 (T48-4). Text-only rendering and the notes' cap on display are the caller's; R47's cap bounds what is signed. A key rotation (Distribution §10) edits R45's list.
+- **The signing page leaves (T51-124; K3814).** The job removes the page's tests' imports of `signpage.mjs` and `sign-release.html` from `signatures.test.mjs`, `release-signer.test.mjs` and `signer-keys.test.mjs` (they mix the page's tests with `sshsig`'s), and keeps every test of `sshsig.mjs`, `tsa.mjs` and `sign-sshsig.mjs`; it edits none of the page's files. R34's envelope format `BIOKEY-RAW1.` is the release signer's input, whoever mints it.
 - **The release signer (BOB-5).** The job moves `tools/sign-sshsig.mjs` beside `sshsig.mjs` (a script directory, not `src/`, so no bundle reaches it), re-points the assembler's import (bundler's file, `uses`), and re-points `sshsig.mjs`:229's note naming `tools/release-assemble.mjs`. R33's test signs with a throwaway seed and verifies with `verifySshsig` and, where present, stock `ssh-keygen`.
