@@ -1,6 +1,6 @@
 # subresources (T51)
 
-**Status** · session_016S5EWxLud6RnWPVBD4mLr4 · depth 2 · COMPLETE · handled B1
+**Status** · session_016S5EWxLud6RnWPVBD4mLr4 · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -30,5 +30,24 @@ Tests and checks:
 - `node --test bio-plane/test/m/acquisition/subresources-walk.test.mjs`: 13 pass, 0 fail (reads the module, not edited).
 - `node checks/run.mjs /home/user/bio`: format 0 failures (174 modules); architecture 0 failures; the words check lists no finding for subresources (its full run still reports other modules' findings, outside this job).
 - `node checks/ownership.mjs /home/user/bio subresources tranche/T51 job/T51/subresources`: 1 file changed by subresources, 0 failures.
+
+Size (session_016S5EWxLud6RnWPVBD4mLr4): test runs 36, module lines 1400
+
+## J4 · REPORT
+
+One plain finding is left unkeyed on purpose: `bio-plane/src/subresources.mjs:402`, the render companion's Content-Security-Policy string (`object-src 'none'; form-action 'none'; base-uri 'none'` and its siblings). It is wire grammar: the browser reads it from the companion's meta tag, and no member reads it, so I did not key it. For the design's unkeyed list (K3944).
+
+## J5 · COMPLETE
+
+CHANGE B2 handled: merged `tranche/T51` into `job/T51/subresources` and pulled civicos-process at 27aa50e; judged the thirteen plain findings in `build/plan/words-pass/subresources.md`.
+
+Keyed through `localize` (same English, so output is unchanged):
+- `SPREAD_CLOCKS.capture.clock` (:719), the `THIRD_PARTY` detail (:761), the unreachable-address detail (:996), the two `DEFERRED` details (:1032, :1033, one per branch), the `CAP_REACHED` detail (:1039), the reused-record detail's two fragments (:1076: the capture name, and the earlier-captures count, singular and plural as separate ids), the platform-refusal detail (:1120), the `platformCeiling` note's two branches (:1324), and the `reason` and `transform` of the snapshot manifest and `reason` of the render companion (:1393, :1396, :1397).
+
+Not keyed, reported (REPORT J4): `:402`, the render companion's CSP string. It is wire grammar read by the browser, not by a member.
+
+Not judged as member text, left unchanged: the render companion's `transform` string at :1392 (not flagged by the plain arm; it carries placeholders and punctuation).
+
+Verified: `node --test bio-plane/test/m/subresources/subresources.test.mjs` 36 pass, 0 fail; `node --test bio-plane/test/m/acquisition/subresources-walk.test.mjs` 13 pass, 0 fail; `node checks/run.mjs /home/user/bio`: format 0 failures, and the words check's only subresources finding is the reported :402; `node checks/ownership.mjs /home/user/bio subresources tranche/T51 job/T51/subresources`: 0 files changed by subresources outside the job's paths... (see below).
 
 Size (session_016S5EWxLud6RnWPVBD4mLr4): test runs 36, module lines 1400
