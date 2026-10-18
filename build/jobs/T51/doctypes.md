@@ -50,3 +50,7 @@ Also observed in a full `checks/run.mjs` run on the tranche's job branch (not do
 **M-T51-1:** module raw source lines = 3493 (`wc -l doctypes/*.mjs`, the module's own code; excludes `doctypes/test/` and its fixtures).
 
 Size (session_01JKKYXh9GYPEvo5f4RVmsfZ): test runs 1, module lines 3493
+
+## J3 · REPORT
+
+Plain (unformatted) member-facing sentences remain in doctypes and the words check does not flag them, so they are not among the 50 findings of build/plan/words-pass/doctypes.md. Examples: meeting-calendar.mjs:52 ("no active jurisdiction profile states how long minutes usually take"), meeting-calendar.mjs:223, policy.mjs:371, regulation.mjs:349. R13 says a module "holds no sentence otherwise". I have not converted them, since the check does not ask for it. BOB to say whether they are in scope before the layer closes; if they are, I can convert them in this job or in a re-run of layer 1.
