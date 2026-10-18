@@ -1148,7 +1148,20 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    record names (membership's `MODULE_ORDER` is now generated from `modules.json`, which moves no gate's order).
    ROW_CENSUS (R50) re-pinned to this tree: 1909 rows. Rows a T50 job in layers 3-11 adds or changes are T51's stamp
    (plan T50, rule 5 item 2). */
-export const CATALOG_VERSION = "1.77.0";
+/* 1.78.0 (PROMOTION #49, T51-15, 2026-10-18; T50's rule 5 (2), T51's rule 5 (2); K3843): MINOR. The stamp of every row
+   awaiting it at T50's close (T50's layers 3-11) and of T51's layer 2 (membership, project-roster, credentials merged
+   into `tranche/T51`), read by diffing R50's census lines of that tree against 1.77.0's own
+   (`test/fixtures/row-census-1.77.0.jsonl`: 1909 rows, 962db2b0...): nine new rows, 327 changed, none retired.
+   ARRIVED (9): C-100.26 NO_SET, C-100.27 SET_TOO_LARGE; C-137.27 MARK_NO_ITEM, C-137.28 MARK_NO_SUCH_ITEM, C-137.29
+   SECOND_LOOK_NO_NOTE, C-137.30 SECOND_LOOK_NOT_OPEN; C-139.21 BAD_FOR; C-22.31 LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE;
+   C-25.36 VERSION_NAME_MALFORMED.
+   CHANGED (327), code and number unmoved, each its `where` or translation (the words read by key, N1116, as the
+   modules that hold them moved them); the list is the diff of the two fixtures. THE FAMILIES THAT ARRIVED: none.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T50 L3-L11 or T51 L2 job record names. This module adds
+   no row (R58 is a read). The `civicos-ui/` script patterns of the census stay until legacy-ui is deleted (K3838).
+   ROW_CENSUS (R50) re-pinned to this tree: 1918 rows. Rows a T51 job in layers 3-11 adds or changes are T52's stamp
+   (plan T51, rule 5 item 2). */
+export const CATALOG_VERSION = "1.78.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1240,8 +1253,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1909,
-  digest: "962db2b0fc620f04b8edfe7ebf5e489543d0721b4b6638764dd2c7e7e024d766" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1918,
+  digest: "31b4a129bc1b2c99b586c27c455d014fe1570c4287e4cc77c501e071f0d5864f" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

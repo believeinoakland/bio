@@ -52,6 +52,24 @@ export function makeRecord() {
       return r ? { kind: r.kind, base: r.base, author: r.author, created: r.created, writer: r.writer,
                    operation: r.operation, files: JSON.parse(r.files_json) } : null;
     },
+    /** record-core R15–R16 as `readImage` states them: live files, each earlier copy under its snap key, a verbatim
+     *  promotion record per manifest entry and the manifest, every entry carrying its write-order `seq`. */
+    readImage(id) {
+      const img = {};
+      for (const r of rows(`SELECT * FROM files WHERE bundle_id=?`, id))
+        img[r.path] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes };
+      const snap = (path, key) => { const dot = path.lastIndexOf("."); return `_history/${dot === -1 ? `${path}_${key}` : `${path.slice(0, dot)}_${key}${path.slice(dot)}`}`; };
+      for (const r of rows(`SELECT * FROM history WHERE bundle_id=?`, id))
+        img[snap(r.path, r.snap_key)] = r.content !== null ? r.content : { blobSha: r.blob_sha, sha256: r.sha256 };
+      const entries = [];
+      for (const r of rows(`SELECT rowid AS rid, * FROM manifest WHERE bundle_id=? ORDER BY rowid`, id)) {
+        entries.push({ key: r.snap_key, seq: entries.length + 1, kind: r.kind, base: r.base, author: r.author, created: r.created });
+        img[`_history/promotion_${r.snap_key}.json`] = JSON.stringify({ target: id, base: r.base, files: JSON.parse(r.files_json),
+          created: r.created, author: r.author });
+      }
+      if (entries.length) img["_history/manifest.json"] = JSON.stringify({ entries });
+      return Object.keys(img).length ? img : null;
+    },
     livePaths: (id) => rows(`SELECT path FROM files WHERE bundle_id=?`, id).map((r) => r.path),
     readFile(id, path) {
       const r = one(`SELECT * FROM files WHERE bundle_id=? AND path=?`, id, path);
@@ -129,6 +147,7 @@ export function makeMembership() {
       if (m.hidden.has(id)) return m.discoverable.has(id) && String(viewer).startsWith("member:") ? "EXISTENCE" : "NONE";
       return "FULL";
     },
+    inSight: (id, viewer) => m.sight(id, viewer) === "FULL",
     isProjectOwner: (p, who) => (m.owners.get(p) || []).includes(who),
     participation(p, who) {
       if (m.isProjectOwner(p, who)) return { state: "joined", owner: 1 };
