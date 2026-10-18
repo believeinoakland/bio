@@ -40,3 +40,9 @@ Size (session_01BcmjtWcShwiAerhfkmJdjL): test runs 4, module lines 1450
 ## J1 · COMPLETE
 
 CR-1 applied: R30 met. localClock(instant, zone) -> {hour, minute} is exported beside localDay; every undetermined answer of values.mjs (compare, joinLocal, validAt) answers why as {key, vars} (reasons.mjs; a second reason rides in 'also'); refusals keep code + detail string (my reading of R30: say if they should be keys). 5 words findings fixed, zero in checks/run.mjs. civil-time tests 68/68; format, architecture, coverage (30/30), ownership 0 failures. REPORT: the new shape breaks 27 baseline-green consumer tests (lines 4, events 3, standards 2, law-relations 2, duties 2, calculations 1, money 1, people 2, connection-grammar 10); names and causes in my record's Completion section. New public export reasonText for BOB to add to Provides. Size line is in the record.
+
+## Completion record 2 (B2 CHANGE, K3961)
+
+Merged `tranche/T51`. `recurrence.mjs` :158, :241, :248 now pass `reason(key, vars)` (`civil-time.window_open_end`, `.date_open_unknown`, `.spans_two_fiscal`), and the fiscal fact of the wrong form (:238, `FACT_INVALID`) is `civil-time.recurrence.fiscal_year_form` `{body}`; all four are in `reasons.mjs`' list, with one R30 test naming each (`recurrence.test.mjs`). `fiscalPeriod`'s "no fiscal_year held" (:235) and the rules' `no(...)` answers still carry `calendar.mjs`'s `missing()` sentence as a string; R30 binds `values.mjs` and BOB named only these sites, so they stay; say if R30 should reach them. The words file has no "Plain findings (K3957)" section for civil-time.
+Checks: civil-time tests 69/69; format, architecture 0 failures; coverage 30/30; words check no civil-time finding. `setup-words/build.mjs --check` fails on `calc-grammar.recipe.field_shape` (a formatted argument; not this module's), and reports nothing for civil-time.
+Size (session_01BcmjtWcShwiAerhfkmJdjL): test runs 8, module lines 1465
