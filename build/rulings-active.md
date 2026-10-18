@@ -89,6 +89,7 @@
 - Measure a module's size (P6, K617's ~4,000-line split) over its own code in its `paths`, the most specific path owning each file, never its tests or a job's `Size` line, nor a generated artifact (K2513). (K1821, K1519, K1024, K1135)
 - Read every scripted edit back (a `modules.json` edit once matched nothing because of indentation), and read a file into memory before reopening it for writing. (K702, K715)
 - Code that runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes and spreads `sql.exec` cursors; test it at the plane's shape. (K313, K316)
+- Before closing a layer, check every `job/T<n>/*` branch is an ancestor of the tranche branch (`git merge-base --is-ancestor`), since `mail check` shows a held COMPLETE job as needing nothing: store-door's T50-50 was missed until the close audit (K3797).
 - Measure the plane bundle at each layer close; a breach of 32 MiB goes to Bob as an architecture question (splitting the plane is his) until N840's guard is built (K2547).
 - The coverage check counts any `R<n>` string in a module's tests: a new id that other tests already name reads green wrongly, so each START requires an explicit test for such ids. (K874, K1369, K1122)
 - Doorbells (K3686): every doorbell is set for the next whole minute after the push, never later; a job `mail check` shows `RING` is rung at once. A session's platform status is never its state; its record is.
