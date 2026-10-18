@@ -22,3 +22,7 @@
 - `node checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; coverage 23 failures, all in modules other than case-authoring.
 
 **Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 7, module lines 3008** (`bio-plane/src/case-authoring/*.mjs`, all lines; this job changed no source).
+
+## J1 · COMPLETE
+
+R61 tests now read case-checker R26's says shape (test-only; the source relays refusals unchanged). 190 of 190 module tests pass. Format, architecture, coverage and ownership pass for case-authoring (ownership: 2 files, the record and the test). Concern for you, in the record: standardsUseWords (bio-plane/src/case-authoring/index.mjs 197-207) is inline English beside says; the words belong to the layer-11 screen, since setup-words is layer 11. Your decision. run.mjs shows 23 coverage failures in other modules, none case-authoring. Full record: build/jobs/T51/case-authoring.md on job/T51/case-authoring, commit 22472313f0.
