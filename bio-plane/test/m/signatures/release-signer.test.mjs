@@ -3,21 +3,19 @@
  * checked three independent ways: by this module's own verifier
  * (`verifySshsig`), by stock `ssh-keygen -Y verify`, and byte for byte against
  * `ssh-keygen -Y sign` with the same key (Ed25519 is deterministic). Its key
- * derivation is checked against RFC 8032's test vector and the signer page's
- * own WebCrypto derivation. Where ssh-keygen is missing, the cases that need it
+ * derivation is checked against RFC 8032's test vector and an independent
+ * node:crypto derivation. Where ssh-keygen is missing, the cases that need it
  * are skipped by name. Throwaway seeds only; no network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync } from "node:fs";
-import { webcrypto, createPublicKey } from "node:crypto";
+import { createPrivateKey, createPublicKey } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import vm from "node:vm";
 
 import * as signer from "../../../scripts/sign-sshsig.mjs";
 import { verifySshsig, NS_RELEASE, NS_RATIFY, NS_FLEET, fleetStatement } from "../../../src/sshsig.mjs";
-import { SIGN_HTML } from "../../../src/signpage.mjs";
 
 const { signSshsig, seedFromEnvelope, signerPublicLine, keyFromSeed, publicFromKey } = signer;
 
@@ -105,18 +103,6 @@ function keygenSign(file, namespace, message) {
   writeFileSync(m, message);
   execFileSync("ssh-keygen", ["-Y", "sign", "-f", file, "-n", namespace, m], { stdio: ["ignore", "ignore", "ignore"] });
   return readFileSync(`${m}.sig`, "utf8");
-}
-
-/* The signer page's own key derivation, run from the page the module serves. */
-function pageKeys() {
-  const script = SIGN_HTML.slice(SIGN_HTML.lastIndexOf("<script>") + 8, SIGN_HTML.lastIndexOf("</script>"));
-  const el = () => ({ value: "", innerHTML: "", disabled: false, files: [], onclick: null, classList: { toggle() {} }, setAttribute() {} });
-  const els = new Map();
-  const sandbox = { crypto: webcrypto, TextEncoder, atob, btoa, console, setTimeout, Blob,
-    document: { getElementById: (id) => (els.has(id) || els.set(id, el()), els.get(id)), addEventListener() {} } };
-  vm.createContext(sandbox);
-  vm.runInContext(`${script}\n;globalThis.__page = { keysFromSeed, pubLine, parseKeyString };`, sandbox);
-  return sandbox.__page;
 }
 
 /* ===================================================================== R33 */
@@ -208,7 +194,7 @@ test("R33 with an ssh-keygen key's seed, it emits byte for byte what ssh-keygen 
 
 /* ===================================================================== R34 */
 
-test("R34 seedFromEnvelope accepts the signer page's BIOKEY-RAW1 envelope, surrounding whitespace ignored, and returns label and seed", async () => {
+test("R34 seedFromEnvelope accepts the BIOKEY-RAW1 envelope a release key is held in, surrounding whitespace ignored, and returns label and seed", () => {
   for (const [label, seed] of [["bio-release", SEED], ["bio-ratify", seedOf(9)], ["", seedOf(1)], ["any label", RFC8032.seed]]) {
     const env = envelope(seed, label);
     for (const text of [env, `  ${env}`, `${env}\n`, `\t\n${env} \r\n`]) {
@@ -219,11 +205,9 @@ test("R34 seedFromEnvelope accepts the signer page's BIOKEY-RAW1 envelope, surro
       assert.deepEqual([...r.seed], [...seed]);
     }
   }
-  /* The envelope the signer page itself mints. */
-  const page = pageKeys();
-  const minted = `BIOKEY-RAW1.bio-release.${btoa(String.fromCharCode(...SEED))}`;
-  assert.deepEqual([...(await page.parseKeyString(minted)).seed], [...SEED]);
-  assert.deepEqual([...seedFromEnvelope(minted).seed], [...SEED]);
+  /* The envelope as a key is written out: the label, a dot, and the base64 of the seed. */
+  const written = `BIOKEY-RAW1.bio-release.${btoa(String.fromCharCode(...SEED))}`;
+  assert.deepEqual([...seedFromEnvelope(written).seed], [...SEED]);
 });
 
 test("R34 any other shape is refused by name, a seed of another length by its length, and signSshsig and signerPublicLine throw the same", () => {
@@ -266,11 +250,14 @@ test("R35 signerPublicLine is the ssh-ed25519 line of the envelope's key, with t
   assert.notEqual(signerPublicLine(envelope(seedOf(3))), signerPublicLine(envelope(seedOf(4))));
 });
 
-test("R35 the public line agrees with the signer page's own derivation of the same seed", async () => {
-  const page = pageKeys();
-  for (const seed of [SEED, seedOf(13), RFC8032.seed, webcrypto.getRandomValues(new Uint8Array(32))]) {
-    const { raw32 } = await page.keysFromSeed(new Uint8Array(seed));
-    assert.equal(signerPublicLine(envelope(seed)), page.pubLine(raw32, "bio-release"));
+test("R35 the public line agrees with an independent node:crypto derivation of the same seed", () => {
+  for (const seed of [SEED, seedOf(13), RFC8032.seed, Buffer.from(new Uint8Array(32).map((_, i) => (i * 19 + 2) % 256))]) {
+    /* RFC 8410's PKCS#8 wrapper of a 32-byte Ed25519 seed. */
+    const pkcs8 = Buffer.concat([Buffer.from("302e020100300506032b657004220420", "hex"), Buffer.from(seed)]);
+    const priv = createPrivateKey({ key: pkcs8, format: "der", type: "pkcs8" });
+    const x = Buffer.from(createPublicKey(priv).export({ format: "jwk" }).x, "base64url");
+    const wire = Buffer.concat([Buffer.from([0, 0, 0, 11]), Buffer.from("ssh-ed25519"), Buffer.from([0, 0, 0, 32]), x]);
+    assert.equal(signerPublicLine(envelope(seed)), `ssh-ed25519 ${b64(wire)} bio-release`);
   }
 });
 
