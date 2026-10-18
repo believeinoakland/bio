@@ -1080,10 +1080,10 @@
   },
   {
    "key": "ai.until.month",
-   "en": "1 {month}",
+   "en": "{month} 1",
    "protected": false,
    "source": "DEC-192",
-   "note": "{when} after \"until\" in ai.queue.limitreached*, for a monthly limit: \"pause until November 1\""
+   "note": "{when} after \"until\" in ai.queue.limitreached*, for a monthly limit: \"pause until November 1\" (DEC-333)"
   },
   {
    "key": "date.month.january",

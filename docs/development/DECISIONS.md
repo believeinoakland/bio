@@ -5174,6 +5174,6 @@ recommendation: as below.
 reversal cost: low (three keys; the drawings' sample dates).
 response: none needed (the design's detail).
 decided: 2026-10-18 · the design session (P17)
-the design: `date.daymonthyear` "{month} {day}, {year}" ("October 8, 2026"), `date.daymonth` "{month} {day}" ("October 8"), `ai.when.month` "on {month} 1"; a range is "June 21 to 30". Every date drawn on the screens page, its journeys and its notes follows (about 500).
+the design: `date.daymonthyear` "{month} {day}, {year}" ("October 8, 2026"), `date.daymonth` "{month} {day}" ("October 8"), `ai.when.month` "on {month} 1", `ai.until.month` "{month} 1" (B311); a range is "June 21 to 30". Every date drawn on the screens page, its journeys and its notes follows (about 500).
 reasoning recorded in: this entry; DEC-192's `amended:` line; `screens/build_words.mjs`, `mock-*.js`, `words-drawn.src.py`, `page.src.html`.
 owed: (BOB, T51) interface-shell's `date()` reads the keys as before (R6), so only the words change; any module that writes a day and month in its own English (not through the keys) follows.
