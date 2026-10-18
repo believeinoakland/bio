@@ -11,7 +11,6 @@ const WRITABLE = /^(clamav|reputation)\/[A-Za-z0-9._/-]+$/;
 /** R2: the areas a target is read from: a capture's (no `area`), or a derived copy's (`area: "derived"`). */
 export const AREAS = Object.freeze({ captures: 'captures', derived: 'derived' });
 export const objectKey = (store, area, sha) => `${store}/${AREAS[area]}/${sha}`;
-export const captureKey = (store, sha) => objectKey(store, 'captures', sha);
 
 /** R1: a target's shape, or null when it is malformed (`BAD_TARGET`): any `area` but `"derived"`, when one is stated. */
 export function normaliseTarget(t) {
@@ -103,15 +102,6 @@ export async function verifyTarget(bucket, store, t) {
   const r = stream.getReader();
   try { for (;;) { const { done } = await r.read(); if (done) break; } } catch { /* the outcome names it */ }
   return outcome;
-}
-
-/** The target's bytes in memory, for a transport that needs them whole (ICAP's chunked body, R30). */
-export async function targetBytes(bucket, store, t) {
-  const { stream, outcome } = targetStream(bucket, store, t);
-  let buf;
-  try { buf = new Uint8Array(await new Response(stream).arrayBuffer()); } catch { buf = null; }
-  const o = await outcome;
-  return o.ok ? { ok: true, bytes: buf } : o;
 }
 
 /** R11: the module's one write. Refuses any key outside `clamav/` and `reputation/`. */
