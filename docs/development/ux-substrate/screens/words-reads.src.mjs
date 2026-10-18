@@ -457,16 +457,23 @@ for (const m of MODULES) {
   /* DEC-278 (B238): keys a module computes, a key's head joined to a code or name the module holds (`refusal.${code}`,
      "screen.front." + k): each head (a dotted name ending in "." before `${` or before +) joined to each string, property
      name or CONSTANT_NAME the module's source holds, read where the joined key is a word (and retired where it is retired) */
-  { const heads = new Set(), tails = new Set(), pats = []; let n = 0;
+  { const heads = new Set(), tails = new Set(), pats = [], tpats = []; let n = 0;
     for (const t0 of srcs) { const t = t0.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:\\"'`])\/\/[^\n]*/g, "$1");   /* comments name keys they do not read */
       for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]+)*\.)\$\{/g)) heads.add(r[1]);
       for (const r of t.matchAll(/["'`]([a-z][\w-]*(?:\.[\w-]+)*\.)["'`]\s*\+/g)) heads.add(r[1]);
+      /* DEC-329 (B303 (1)): a head held in a name (`const S = "screen.setup."`, then `S + "skipped"`) */
+      for (const r of t.matchAll(/=\s*["'`]([a-z][\w-]*(?:\.[\w-]+)*\.)["'`]\s*[,;)]/g)) heads.add(r[1]);
+      /* DEC-329: a key whose last placeholder is a glued suffix (`act.${id}.name${selected ? ".selected" : ""}`): the key with and without a dotted suffix */
+      for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]*|\$\{[^}`]*\})*[\w-])\$\{[^}`]*\}`/g)) pats.push(new RegExp("^" + r[1].split(/\$\{[^}`]*\}/).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\w-]+") + "(?:\\.[\\w-]+)?$"));
+      /* DEC-329 (B303 (1)): a key ending in its placeholder (`act.${op}.label.${screen}`): read where every filled part is a string the module holds */
+      for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]+)*\.(?:\$\{[^}`]*\}(?:\.[\w-]+)*\.)*\$\{[^}`]*\})`/g)) tpats.push(new RegExp("^" + r[1].split(/\$\{[^}`]*\}/).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("([\\w-]+)") + "$"));
       for (const r of t.matchAll(/["'`]([\w-]+(?:\.[\w-]+)*)["'`]/g)) tails.add(r[1]);
       for (const r of t.matchAll(/\b([A-Za-z_][\w]*)\s*:/g)) tails.add(r[1]);
       for (const r of t.matchAll(/\b([A-Z][A-Z0-9_]{2,})\b/g)) tails.add(r[1]);
       /* a key with words after its placeholder (`screen.tour.step${n}.title`): every word the pattern fits */
       for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]+)*\.?[\w-]*(?:\$\{[^}`]*\}[\w-]*)+(?:\.[\w-]+)+)`/g)) pats.push(new RegExp("^" + r[1].split(/\$\{[^}`]*\}/).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\w-]+") + "$"));
     }
+    for (const re of tpats) for (const k of KEYS) { const mm = re.exec(k); if (mm && mm.slice(1).every((x) => tails.has(x))) { if (RETIRED.has(k)) retired.add(k); else if (!reads.has(k)) { reads.add(k); n++; } } }
     for (const re of pats) for (const k of KEYS) if (re.test(k)) { if (RETIRED.has(k)) retired.add(k); else if (!reads.has(k)) { reads.add(k); n++; } }
     for (const h of heads) for (const tl of tails) { const k = h + tl;
       if (RETIRED.has(k)) retired.add(k); else if (KEYS.has(k) && !reads.has(k)) { reads.add(k); n++; } }

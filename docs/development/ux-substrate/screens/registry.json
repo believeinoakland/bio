@@ -1129,7 +1129,7 @@
      "label": "Ask the assistant to draft",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "translations"
      ]
     },
     {
@@ -1137,7 +1137,7 @@
      "label": "Adopt a translation",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "translations"
      ]
     },
     {
@@ -1145,7 +1145,7 @@
      "label": "Give a member the grant for a language",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "translations"
      ]
     },
     {
@@ -1153,7 +1153,7 @@
      "label": "Confirm a protected word",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "translations"
      ]
     },
     {
@@ -1161,7 +1161,7 @@
      "label": "Undo a change",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "translations"
      ]
     }
    ],
@@ -1585,7 +1585,8 @@
      "status": "declared",
      "modules": [
       "agent-worker",
-      "retrieval"
+      "retrieval",
+      "screens-daily"
      ]
     },
     {
@@ -1643,7 +1644,6 @@
      "op": "secondlookclear",
      "label": "Clear",
      "status": "declared",
-     "onTranche": "origin/tranche/T50",
      "modules": [
       "following"
      ]
@@ -1676,6 +1676,7 @@
       "acquisition",
       "capture",
       "capture-requests",
+      "control-plane",
       "docket",
       "extraction"
      ]
@@ -2136,7 +2137,8 @@
      "status": "declared",
      "modules": [
       "agent-worker",
-      "retrieval"
+      "retrieval",
+      "screens-daily"
      ]
     }
    ],
@@ -2483,7 +2485,8 @@
      "status": "declared",
      "modules": [
       "agent-worker",
-      "retrieval"
+      "retrieval",
+      "screens-daily"
      ]
     },
     {
@@ -2595,6 +2598,8 @@
      "label": "Ask",
      "status": "declared",
      "modules": [
+      "control-plane",
+      "plane",
       "screens-daily"
      ]
     },
@@ -2612,7 +2617,8 @@
      "status": "declared",
      "modules": [
       "agent-worker",
-      "retrieval"
+      "retrieval",
+      "screens-daily"
      ]
     },
     {
@@ -2657,6 +2663,8 @@
      "label": "Ask",
      "status": "declared",
      "modules": [
+      "control-plane",
+      "plane",
       "screens-daily"
      ]
     },
@@ -2697,7 +2705,8 @@
      "status": "declared",
      "modules": [
       "agent-worker",
-      "retrieval"
+      "retrieval",
+      "screens-daily"
      ]
     },
     {
@@ -3047,6 +3056,7 @@
       "acquisition",
       "capture",
       "capture-requests",
+      "control-plane",
       "docket",
       "extraction"
      ]

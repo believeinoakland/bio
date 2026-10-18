@@ -8768,15 +8768,15 @@
   },
   {
    "key": "installer.fact.unknown.silent",
-   "en": "this copy didn't answer",
+   "en": "your team's Civicsmith didn't answer when the installer asked",
    "protected": false,
-   "note": "DEC-328: {reason} for a silent copy"
+   "note": "DEC-328: {reason} for a silent copy; DEC-329: B303 (7) reworded"
   },
   {
    "key": "installer.fact.unknown.older",
-   "en": "this copy is older than the release that reports it",
+   "en": "your team's Civicsmith runs a release too old to report it",
    "protected": false,
-   "note": "DEC-328: {reason} for an older copy"
+   "note": "DEC-328: {reason} for an older copy; DEC-329: B303 (7) reworded"
   },
   {
    "key": "installer.holdings.projects.one",
@@ -8834,9 +8834,9 @@
   },
   {
    "key": "installer.update.stopped.foreign",
-   "en": "Stopped: something still running in this account isn't part of this release, so it was left alone. Nothing was changed. Ask whoever added it, or remove it in Cloudflare, then try again.",
+   "en": "Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Your team's Civicsmith keeps running. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then try the update again.",
    "protected": false,
-   "note": "DEC-328: B300 (7): an image still running is not the release's"
+   "note": "DEC-328: B300 (7): an image still running is not the release's; DEC-329: B303 (7) reworded"
   },
   {
    "key": "installer.partial.completed",
@@ -8855,6 +8855,2028 @@
    "en": "Lets this item reach your queue again, from now on.",
    "protected": false,
    "note": "DEC-328: B300 (2)"
+  },
+  {
+   "key": "screen.setup.state.skipped",
+   "en": "Skipped",
+   "protected": false,
+   "note": "DEC-329: B303 (1): the state word on a setup part the administrator skipped, in the place of screen.setup.state.* in the part's summary, screens-entry/setup.mjs:85 (the part carries data-skipped, :83)"
+  },
+  {
+   "key": "screen.setup.state.skipped.help",
+   "en": "You skipped this part for now. Nothing was changed. You can come back to it here, or find the same settings under Settings.",
+   "protected": false,
+   "note": "DEC-329: B303 (1): one-line explanation of \"Skipped\", the tip on the state word, screens-entry/setup.mjs:85"
+  },
+  {
+   "key": "translations.not_drafted.not_answered",
+   "en": "The assistant did not draft this word.",
+   "protected": false,
+   "note": "DEC-329: B303 (2): not_drafted[].why when the assistant left the word out of its answer, translations/index.mjs:511"
+  },
+  {
+   "key": "translations.not_drafted.not_one_line",
+   "en": "The draft is not one line of 1 to {max} characters, so it was not saved.",
+   "protected": false,
+   "note": "DEC-329: B303 (2): not_drafted[].why for an empty, too long or multi-line draft; {max} is TRANSLATION_TEXT_MAX, translations/index.mjs:514"
+  },
+  {
+   "key": "translations.not_drafted.placeholders_differ",
+   "en": "The draft changes the parts in curly braces that the English words have, so it was not saved.",
+   "protected": false,
+   "note": "DEC-329: B303 (2): not_drafted[].why when the draft's placeholders differ from the English, translations/index.mjs:518"
+  },
+  {
+   "key": "instance-setup.domain.detail.no_team_name",
+   "en": "Your team's Civicsmith has no short name recorded yet, so there is no name for the file to carry.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check, setup.mjs:1184"
+  },
+  {
+   "key": "instance-setup.domain.detail.no_address",
+   "en": "The claim carries no address for your team's Civicsmith, so there is none for the file to carry.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check, setup.mjs:1185"
+  },
+  {
+   "key": "instance-setup.domain.detail.both_paths",
+   "en": "{first} Read instead: {second}",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check when the current file is missing and the earlier file name was read, setup.mjs:1191; {first} and {second} are two of the details below"
+  },
+  {
+   "key": "instance-setup.domain.detail.held",
+   "en": "Civicsmith waited its turn before asking {domain} ({reason}). This says nothing about the website.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check, setup.mjs:1209"
+  },
+  {
+   "key": "instance-setup.domain.detail.not_finished",
+   "en": "Civicsmith could not finish reading {path} on that website, and did not record why.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check, setup.mjs:1218"
+  },
+  {
+   "key": "instance-setup.domain.detail.redirected",
+   "en": "The website sent {path} somewhere else (HTTP {status}). The file is read on the claimed website itself.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check, setup.mjs:1223"
+  },
+  {
+   "key": "instance-setup.domain.detail.no_file",
+   "en": "The website has no {path} (HTTP {status}).",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check, setup.mjs:1224"
+  },
+  {
+   "key": "instance-setup.domain.detail.other_answer",
+   "en": "The website answered {path} with HTTP {status}, which is neither the file nor a sign that it is missing.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check, setup.mjs:1227"
+  },
+  {
+   "key": "instance-setup.domain.detail.verified",
+   "en": "{path} names your team's Civicsmith ({address}) and its short name ({slug}).",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check that passed, setup.mjs:1235"
+  },
+  {
+   "key": "instance-setup.domain.detail.not_json",
+   "en": "{path} is not the kind of file your team's Civicsmith reads: a JSON object with two fields, its address and its short name.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check that did not match, setup.mjs:1238"
+  },
+  {
+   "key": "instance-setup.domain.detail.mismatch",
+   "en": "{path} gives the address {found_address} and the team name {found_team}. Your team's Civicsmith is {address} and its short name is {slug}.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of a website check that did not match, setup.mjs:1239"
+  },
+  {
+   "key": "instance-setup.profiles.detail.none_active",
+   "en": "No profile is active. Your team's Civicsmith reads no local facts, which is allowed. Every fact that needs a profile is answered as undetermined until an administrator chooses one.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail when no profile is chosen, setup.mjs:1508"
+  },
+  {
+   "key": "instance-setup.profiles.detail.stages_unchecked",
+   "en": "Whether the public-records laws' stages are known could not be checked ({why}), so it is not known. The profiles stay active as chosen.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): stage_findings_detail, setup.mjs:1538"
+  },
+  {
+   "key": "instance-setup.offices.detail.no_profile",
+   "en": "No profile is active, so no office is named and nothing was added.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of seeding offices, setup.mjs:1686"
+  },
+  {
+   "key": "instance-setup.bodies.detail.no_profile",
+   "en": "No profile is active, so no body is named and nothing was added.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of seeding bodies, setup.mjs:1930"
+  },
+  {
+   "key": "instance-setup.assistant.detail.keep_away_unread",
+   "en": "Civicsmith could not read whether your team keeps its material away from every assistant. It treats the material as kept away, and the assistant is off.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail when the keep-away setting could not be read, setup.mjs:2059"
+  },
+  {
+   "key": "instance-setup.disclosure.detail.not_shown",
+   "en": "No disclosure at this version is recorded as shown to this member.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the disclosure check, setup.mjs:2114"
+  },
+  {
+   "key": "instance-setup.disclosure.detail.no_member",
+   "en": "The request names no member, so no disclosure is recorded as shown.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the disclosure check, setup.mjs:2115"
+  },
+  {
+   "key": "instance-setup.updates.detail.held",
+   "en": "Civicsmith waited its turn before asking {host}: {reason}. Nothing was asked.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2536"
+  },
+  {
+   "key": "instance-setup.updates.detail.not_fetched",
+   "en": "The release notice could not be fetched.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2543"
+  },
+  {
+   "key": "instance-setup.updates.detail.redirected",
+   "en": "The address sent the request somewhere else (HTTP {status}). Civicsmith does not follow it.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2547"
+  },
+  {
+   "key": "instance-setup.updates.detail.answered",
+   "en": "The address answered HTTP {status}.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2548"
+  },
+  {
+   "key": "instance-setup.updates.detail.too_big",
+   "en": "The notice is over {bytes} bytes.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2550"
+  },
+  {
+   "key": "instance-setup.updates.detail.not_object",
+   "en": "The notice is not in the form Civicsmith reads.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2553"
+  },
+  {
+   "key": "instance-setup.updates.detail.no_signature",
+   "en": "The notice carries no signature.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2554"
+  },
+  {
+   "key": "instance-setup.updates.detail.up_to_date",
+   "en": "The newest release published is the one your team's Civicsmith runs.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2560"
+  },
+  {
+   "key": "instance-setup.updates.detail.malformed",
+   "en": "The notice is not well formed ({field}).",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2562"
+  },
+  {
+   "key": "instance-setup.updates.detail.older_than_running",
+   "en": "This is an older release than {running}, which your team's Civicsmith runs.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2563"
+  },
+  {
+   "key": "instance-setup.updates.detail.already_held",
+   "en": "Your team's Civicsmith already holds this release.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2569"
+  },
+  {
+   "key": "instance-setup.updates.detail.older_than_held",
+   "en": "This is an older release than {held}, which your team's Civicsmith already holds.",
+   "protected": false,
+   "note": "DEC-329: B303 (11): detail of the release check, setup.mjs:2570"
+  },
+  {
+   "key": "progression.finding.state.open",
+   "en": "Open",
+   "protected": false,
+   "note": "DEC-329: B303 (3): a finding nobody has dealt with; screens-investigate timeline-parts.mjs:50-55 (findingRow, today a gap mark only)"
+  },
+  {
+   "key": "progression.finding.state.dismissed",
+   "en": "Set aside",
+   "protected": false,
+   "note": "DEC-329: B303 (3): a finding with disposition dismissed (what \"Set this finding aside\" sends, timeline.mjs:233); timeline-parts.mjs:50-55"
+  },
+  {
+   "key": "progression.finding.state.deferred",
+   "en": "Put off for now",
+   "protected": false,
+   "note": "DEC-329: B303 (3): a finding with disposition deferred (progressions: a decision is deferred or dismissed); timeline-parts.mjs:50-55"
+  },
+  {
+   "key": "progression.finding.state.help",
+   "en": "Where a finding stands. Open means no one has dealt with it yet. Set aside means a member decided it needs no action; put off for now means a member chose to come back to it. The reason stays beside it, and the finding is never hidden or deleted.",
+   "protected": false,
+   "note": "DEC-329: B303 (3): explains the three words above; timeline-parts.mjs:50-55"
+  },
+  {
+   "key": "progression.steps.label.key",
+   "en": "Short name",
+   "protected": false,
+   "note": "DEC-329: B303 (3): step field 1 of Define and Revise; timeline-parts.mjs:96,114,119 (stagesOf, parts.mjs)"
+  },
+  {
+   "key": "progression.steps.label.label",
+   "en": "Name",
+   "protected": false,
+   "note": "DEC-329: B303 (3): step field 2"
+  },
+  {
+   "key": "progression.steps.label.after",
+   "en": "Comes after",
+   "protected": false,
+   "note": "DEC-329: B303 (3): step field 3 (a short name of an earlier step, or empty)"
+  },
+  {
+   "key": "progression.steps.label.within",
+   "en": "Due within",
+   "protected": false,
+   "note": "DEC-329: B303 (3): step field 4 (such as 10 days)"
+  },
+  {
+   "key": "progression.steps.label.required",
+   "en": "Required",
+   "protected": false,
+   "note": "DEC-329: B303 (3): step field 5 (always, usually, sometimes, unless_exception, never)"
+  },
+  {
+   "key": "progression.steps.label.cardinality",
+   "en": "Documents held",
+   "protected": false,
+   "note": "DEC-329: B303 (3): step field 6 (1, 0..1 or 0..n)"
+  },
+  {
+   "key": "progression.steps.help",
+   "en": "One line for each step, in order, with its parts separated by a bar ( | ): short name | name | comes after | due within | required | documents held. \"Comes after\" is the short name of an earlier step, or empty. \"Due within\" is a span such as 10 days, or empty. \"Required\" is always, usually, sometimes, unless_exception or never. \"Documents held\" is 1, 0..1 or 0..n. Example: determination | Determination | request | 10 days | unless_exception | 1",
+   "protected": false,
+   "note": "DEC-329: B303 (3): help of the steps field in Define and Revise (replaces screen.timeline.progression.steps.note as the field help); timeline-parts.mjs:96,114,119"
+  },
+  {
+   "key": "progression.revise.help",
+   "en": "Saves the steps as a new version, with its basis and citation. Earlier versions stay listed under Its basis.",
+   "protected": false,
+   "note": "DEC-329: B303 (3): intro of the Revise fold; timeline-parts.mjs:112"
+  },
+  {
+   "key": "screen.explore.hop",
+   "en": "From {from} to {to}",
+   "protected": false,
+   "note": "DEC-329: B303 (3): a hop of an explored chain, named by its two ends ({from}, {to} the ends' names); explore.mjs:61-76"
+  },
+  {
+   "key": "screen.explore.hop.unnamed",
+   "en": "an unnamed item",
+   "protected": false,
+   "note": "DEC-329: B303 (3): {from} or {to} when the answer carries only an id and no name can be read; explore.mjs:76"
+  },
+  {
+   "key": "find.query.help",
+   "en": "Leave it empty to browse everything.",
+   "protected": false,
+   "note": "DEC-329: B303 (4): the help under the Find words field (today find.query.placeholder is passed as help); finder.mjs:70"
+  },
+  {
+   "key": "refusal.ACQUIRE_TIMED_OUT",
+   "en": "Fetching the page took longer than 25 seconds, so your team's Civicsmith stopped and kept nothing. Try again; if the page is very large, save it yourself and add it as a file.",
+   "protected": false,
+   "note": "DEC-329: B303 (5): control-plane R105 bound; voice as refusal.FETCH_FAILED"
+  },
+  {
+   "key": "screen.action.kind.cpra_request",
+   "en": "Records request",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the action page subtitle, screens-action action.mjs:102"
+  },
+  {
+   "key": "screen.start-send.kind.cpra_request",
+   "en": "records request",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the Kind line and stake.ask.says' {kind} (capitalized by the screen), send-steps.mjs:105-111"
+  },
+  {
+   "key": "screen.action.kind.grand_jury",
+   "en": "Grand jury referral",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the action page subtitle, screens-action action.mjs:102"
+  },
+  {
+   "key": "screen.start-send.kind.grand_jury",
+   "en": "grand jury referral",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the Kind line and stake.ask.says' {kind} (capitalized by the screen), send-steps.mjs:105-111"
+  },
+  {
+   "key": "screen.action.kind.controller_referral",
+   "en": "Referral to the controller",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the action page subtitle, screens-action action.mjs:102"
+  },
+  {
+   "key": "screen.start-send.kind.controller_referral",
+   "en": "referral to the controller",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the Kind line and stake.ask.says' {kind} (capitalized by the screen), send-steps.mjs:105-111"
+  },
+  {
+   "key": "screen.action.kind.public_comment",
+   "en": "Public comment",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the action page subtitle, screens-action action.mjs:102"
+  },
+  {
+   "key": "screen.start-send.kind.public_comment",
+   "en": "public comment",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the Kind line and stake.ask.says' {kind} (capitalized by the screen), send-steps.mjs:105-111"
+  },
+  {
+   "key": "screen.action.kind.media",
+   "en": "Media outreach",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the action page subtitle, screens-action action.mjs:102"
+  },
+  {
+   "key": "screen.start-send.kind.media",
+   "en": "media outreach",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the Kind line and stake.ask.says' {kind} (capitalized by the screen), send-steps.mjs:105-111"
+  },
+  {
+   "key": "screen.action.kind.litigation_support",
+   "en": "Litigation support",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the action page subtitle, screens-action action.mjs:102"
+  },
+  {
+   "key": "screen.start-send.kind.litigation_support",
+   "en": "litigation support",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the Kind line and stake.ask.says' {kind} (capitalized by the screen), send-steps.mjs:105-111"
+  },
+  {
+   "key": "screen.action.kind.party_participation",
+   "en": "Taking part as a party",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the action page subtitle, screens-action action.mjs:102"
+  },
+  {
+   "key": "screen.start-send.kind.party_participation",
+   "en": "taking part as a party",
+   "protected": false,
+   "note": "DEC-329: B303 (5): the Kind line and stake.ask.says' {kind} (capitalized by the screen), send-steps.mjs:105-111"
+  },
+  {
+   "key": "action.noreply.question.label",
+   "en": "Your question",
+   "protected": false,
+   "note": "DEC-329: B303 (5): label of the action page's one-line question field, action.mjs:136 (today borrows act.owed_actioninquiry.label.action)"
+  },
+  {
+   "key": "action.noreply.question.field.help",
+   "en": "One line, up to 500 characters, such as why no reply has come. You can add more once the question is open.",
+   "protected": false,
+   "note": "DEC-329: B303 (5): help of that field; the existing action.noreply.question.help explains the act and stays on the button"
+  },
+  {
+   "key": "screen.plan.list.title",
+   "en": "Action plans",
+   "protected": false,
+   "note": "DEC-329: B303 (6): plan opened on a project with several plans, or only closed ones; the heading"
+  },
+  {
+   "key": "screen.plan.list",
+   "en": "This project's action plans",
+   "protected": false,
+   "note": "DEC-329: B303 (6): the list; each row its title, state (screen.plan.state.*) and screen.plan.opened"
+  },
+  {
+   "key": "screen.plan.list.help",
+   "en": "Each plan was opened from one of this project's questions. Open plans come first, newest first; choose one to open it.",
+   "protected": false,
+   "note": "DEC-329: B303 (6)"
+  },
+  {
+   "key": "screen.plan.none",
+   "en": "This project has no action plan yet. To start one, choose “Plan what to do” under the project's questions, or on one question's own page.",
+   "protected": false,
+   "note": "DEC-329: B303 (6): plan opened on a project with no plan"
+  },
+  {
+   "key": "installer.step.auth",
+   "en": "Confirming your permission with Cloudflare",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1779, 2253, 2473, 2506 (install, update, removal)"
+  },
+  {
+   "key": "installer.step.acct",
+   "en": "Finding your Cloudflare account",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1788, 2262, 2476, 2509"
+  },
+  {
+   "key": "installer.step.fresh",
+   "en": "Checking that the short name is free and what the account already holds",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1811"
+  },
+  {
+   "key": "installer.step.plan",
+   "en": "Checking which Workers plan the account is on",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1847"
+  },
+  {
+   "key": "installer.step.room",
+   "en": "Checking that containers are on and that no limit in the account is reached",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1872"
+  },
+  {
+   "key": "installer.step.storage",
+   "en": "Setting up the storage for documents and evidence",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1910"
+  },
+  {
+   "key": "installer.step.credentials",
+   "en": "Making the passwords and keys your team's Civicsmith needs",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1925"
+  },
+  {
+   "key": "installer.step.release.install",
+   "en": "Looking in Civicsmith's public software source for the newest release",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:148"
+  },
+  {
+   "key": "installer.step.release.update",
+   "en": "Checking that release {version} is Civicsmith's own",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:210"
+  },
+  {
+   "key": "installer.step.address.install",
+   "en": "Giving your team's Civicsmith its address",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1995"
+  },
+  {
+   "key": "installer.step.helpers",
+   "en": "Installing the helper programs beside your team's Civicsmith",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1154 (called by install and update)"
+  },
+  {
+   "key": "installer.step.connect",
+   "en": "Connecting your team's Civicsmith to its helper programs",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1282 (when helpers were added)"
+  },
+  {
+   "key": "installer.step.connect.address",
+   "en": "Telling your team's Civicsmith its own address",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1283 (when only the address is written)"
+  },
+  {
+   "key": "installer.step.logs",
+   "en": "Checking that no log in your account records who opens which file",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1502"
+  },
+  {
+   "key": "installer.step.aikey",
+   "en": "Checking the organization's AI key",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1654"
+  },
+  {
+   "key": "installer.step.memberkeys",
+   "en": "Checking members' own accounts, and what earlier installers left behind",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1669"
+  },
+  {
+   "key": "installer.step.assistant",
+   "en": "Explaining how the assistant is set up",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:1700"
+  },
+  {
+   "key": "installer.step.find",
+   "en": "Finding your team's Civicsmith, installed as “{slug}”",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2284"
+  },
+  {
+   "key": "installer.step.read",
+   "en": "Reading the release your team's Civicsmith runs now",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2335"
+  },
+  {
+   "key": "installer.step.same",
+   "en": "Uploading release {version} again, because your team's Civicsmith already runs it",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2355 (the update's step when the release is the one running; otherwise installer.update.progress.placing)"
+  },
+  {
+   "key": "installer.step.address.update",
+   "en": "Finding the address of your team's Civicsmith",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2390"
+  },
+  {
+   "key": "installer.step.remove.read",
+   "en": "Reading what is in your account",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2479 (removal page, before the typed name)"
+  },
+  {
+   "key": "installer.step.remove.list",
+   "en": "Listing everything that Civicsmith holds in your account",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2518"
+  },
+  {
+   "key": "installer.step.remove.app",
+   "en": "Deleting the container {name}",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2534 (emit.step(id, r.name); account.mjs:196 kind app)"
+  },
+  {
+   "key": "installer.step.remove.worker",
+   "en": "Deleting the program {name}",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2534 (account.mjs:197 kind worker)"
+  },
+  {
+   "key": "installer.step.remove.bucket",
+   "en": "Emptying and deleting the storage {name}",
+   "protected": false,
+   "note": "DEC-329: B303 (7b): index.mjs:2534 (account.mjs:198 kind bucket)"
+  },
+  {
+   "key": "installer.update.stopped.nokeys",
+   "en": "Stopped: this installer holds no key to check release {version}'s signature against, so it can't tell the release is genuine. Your team's Civicsmith runs as before; nothing was uploaded. Tell the publisher of Civicsmith releases, then try again once they have fixed the installer.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:217"
+  },
+  {
+   "key": "installer.update.stopped.unreachable",
+   "en": "Stopped: Civicsmith's software source isn't available right now, so release {version} couldn't be fetched. Your team's Civicsmith runs as before; nothing was uploaded. Try again later.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:219 and 228"
+  },
+  {
+   "key": "installer.update.stopped.norelease",
+   "en": "Stopped: Civicsmith's software source has no release {version}. Your team's Civicsmith runs as before; nothing was uploaded. Choose a release again in your team's Settings › Updates, or try again later if it was only just published.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:220"
+  },
+  {
+   "key": "installer.update.stopped.integrity",
+   "en": "Stopped: release {version} didn't pass its integrity check, so it wasn't used. Your team's Civicsmith runs as before; nothing was uploaded. Try again later; if it stops again, tell the publisher of Civicsmith releases.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:225"
+  },
+  {
+   "key": "installer.update.stopped.unsigned",
+   "en": "Stopped: release {version} carries no signature, and the installer installs only signed releases. Your team's Civicsmith runs as before; nothing was uploaded. Choose another release in your team's Settings › Updates.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:226"
+  },
+  {
+   "key": "installer.update.stopped.wrongsigner",
+   "en": "Stopped: release {version} is signed, but not by a key that Civicsmith releases are signed with, so it can't be trusted. Your team's Civicsmith runs as before; nothing was uploaded. Don't use that release: choose another in your team's Settings › Updates, and tell the publisher of Civicsmith releases.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:227"
+  },
+  {
+   "key": "installer.update.stopped.nolimits",
+   "en": "Stopped: release {version} doesn't say what limits your team's Civicsmith should run under, so the installer won't put it in place. Your team's Civicsmith runs as before; nothing was uploaded. Choose another release in your team's Settings › Updates.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:229, 233 with LIMITS_NOT_STATED.none (index.mjs:236-237)"
+  },
+  {
+   "key": "installer.update.stopped.badlimits",
+   "en": "Stopped: release {version} states the limits your team's Civicsmith should run under in a way the installer can't read, so it won't put it in place. Your team's Civicsmith runs as before; nothing was uploaded. Choose another release in your team's Settings › Updates.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:229, 233 with LIMITS_NOT_STATED.unreadable"
+  },
+  {
+   "key": "installer.update.stopped.nochoice",
+   "en": "No release was chosen. Nothing has been changed. Choose the release in your team's Settings › Updates, and come back from there.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): ui.mjs:352 NO_RELEASE_CHOSEN (drawn at ui.mjs:381 with a link back to Settings › Updates)"
+  },
+  {
+   "key": "installer.update.stopped.noteam",
+   "en": "Stopped: this Cloudflare account has no Civicsmith with the short name “{slug}”. Nothing was changed. The short name is the first part of your team's address, before the first dot. Check it, then start again.",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:2288"
+  },
+  {
+   "key": "installer.update.stopped.permission",
+   "en": "Stopped: Cloudflare didn't confirm the permission. Your team's Civicsmith runs as before; nothing changed. Run the update again from the update page; this is usually temporary. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:2257 with tryAgain('update'), index.mjs:1647"
+  },
+  {
+   "key": "installer.update.stopped.account",
+   "en": "Stopped: the installer couldn't read your Cloudflare account. Your team's Civicsmith runs as before; nothing changed. Run the update again from the update page in a minute; this is usually temporary. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:2272"
+  },
+  {
+   "key": "installer.update.stopped.lookup",
+   "en": "Stopped: the installer couldn't check what your account holds, so to be safe it changed nothing. Your team's Civicsmith runs as before. Run the update again from the update page in a minute; this is usually temporary. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:2296"
+  },
+  {
+   "key": "installer.stopped.unexpected",
+   "en": "Something went wrong that the installer didn't expect. The step in progress didn't finish, and nothing secret was stored anywhere. Start again from the installer's first page. If it happens again, tell the publisher of Civicsmith releases what it said: {said}",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:1626-1629 (any run, update included)"
+  },
+  {
+   "key": "installer.tryagain.update",
+   "en": "To continue, run the update again from the update page in a minute; this is usually temporary. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:1647 tryAgain, where a stop has no key of its own"
+  },
+  {
+   "key": "installer.tryagain.install",
+   "en": "To continue, start again from the installer's first page in a minute; this is usually temporary. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7c): index.mjs:1647 tryAgain"
+  },
+  {
+   "key": "installer.fallback.programs.one",
+   "en": "1 program",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:266 ('Workers')"
+  },
+  {
+   "key": "installer.fallback.programs.other",
+   "en": "{n} programs",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:266"
+  },
+  {
+   "key": "installer.fallback.containers.one",
+   "en": "1 container",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:266 ('container applications')"
+  },
+  {
+   "key": "installer.fallback.containers.other",
+   "en": "{n} containers",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:266"
+  },
+  {
+   "key": "installer.fallback.captured.one",
+   "en": "1 stored evidence file",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:266 ('objects in its evidence storage')"
+  },
+  {
+   "key": "installer.fallback.captured.other",
+   "en": "{n} stored evidence files",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:266"
+  },
+  {
+   "key": "installer.fallback.published.one",
+   "en": "1 stored published file",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:267 ('objects in its published storage')"
+  },
+  {
+   "key": "installer.fallback.published.other",
+   "en": "{n} stored published files",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:267"
+  },
+  {
+   "key": "installer.fallback.note",
+   "en": "Its own counts weren't available, so these are what the installer found in your Cloudflare account.",
+   "protected": false,
+   "note": "DEC-329: B303 (7d): account.mjs:268 (today draws unknownText(facts.projects) here; R63 owes this line)"
+  },
+  {
+   "key": "installer.removed.title",
+   "en": "Removed",
+   "protected": false,
+   "note": "DEC-329: B303 (7e): ui.mjs:482 removedPanel (today only a button), index.mjs:2539"
+  },
+  {
+   "key": "installer.removed.what",
+   "en": "{team}'s Civicsmith is gone from this account: its programs, containers and storage are deleted, and nothing was kept.",
+   "protected": false,
+   "note": "DEC-329: B303 (7e): ui.mjs:482 removedPanel; {team} is the team's name, or the short name when not known"
+  },
+  {
+   "key": "installer.removed.next",
+   "en": "The account is clear. You can set up a new Civicsmith in it now; that begins with a new permission on Cloudflare's page.",
+   "protected": false,
+   "note": "DEC-329: B303 (7e): ui.mjs:482 removedPanel, beside the button act.bootstrap.label.install"
+  },
+  {
+   "key": "installer.remove.running.title",
+   "en": "Removing the Civicsmith from your account",
+   "protected": false,
+   "note": "DEC-329: B303 (7e): index.mjs:2655 (removeconfirm run's page title; today screen.install.remove.title, which asks a question)"
+  },
+  {
+   "key": "installer.parts.heading",
+   "en": "What was put in place",
+   "protected": false,
+   "note": "DEC-329: B303 (7e): index.mjs:2152 partRows (no heading today); the list of parts with versions, R61"
+  },
+  {
+   "key": "installer.checks.heading",
+   "en": "What was checked",
+   "protected": false,
+   "note": "DEC-329: B303 (7e): index.mjs:2150 checkRows (no heading today)"
+  },
+  {
+   "key": "installer.remove.refused.typed",
+   "en": "Nothing was deleted: the short name typed doesn't match. Its short name is {slug}. Typing it makes sure the right Civicsmith is removed.",
+   "protected": false,
+   "note": "DEC-329: B303 (7f): index.mjs:2513 (today word('screen.install.remove.type.label') as the stop's heading) and 2591"
+  },
+  {
+   "key": "installer.remove.refused.none",
+   "en": "Nothing was deleted: this Cloudflare account has no Civicsmith with the short name “{slug}”. It may already have been removed.",
+   "protected": false,
+   "note": "DEC-329: B303 (7f): index.mjs:2485 and 2524"
+  },
+  {
+   "key": "installer.remove.refused.lookup",
+   "en": "Nothing was deleted: the installer couldn't check what your account holds, so it stopped to be safe. Start again in a minute; this is usually temporary. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7f): index.mjs:2489 and 2530"
+  },
+  {
+   "key": "installer.remove.refused.permission",
+   "en": "Nothing was deleted: Cloudflare didn't confirm the permission. Start again from the first page in a minute. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7f): index.mjs:2475 and 2508"
+  },
+  {
+   "key": "installer.remove.refused.account",
+   "en": "Nothing was deleted: the installer couldn't read your Cloudflare account. Start again in a minute. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7f): index.mjs:2478 and 2511"
+  },
+  {
+   "key": "installer.remove.refused.running",
+   "en": "Nothing was deleted: another install, update or removal is already running in this account. Wait for it to finish, then start again.",
+   "protected": false,
+   "note": "DEC-329: B303 (7f): index.mjs:2515 (screen.install.stopped.running says 'This one waits', which is not true of a removal: it stops)"
+  },
+  {
+   "key": "installer.remove.done",
+   "en": "Deleted all {n} parts. The account is clear.",
+   "protected": false,
+   "note": "DEC-329: B303 (7f): index.mjs:2539, the last line before removedPanel; {n} counts the deletions made"
+  },
+  {
+   "key": "installer.fact.unknown.short",
+   "en": "not known",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:258-262 val(), the release, installed and last-used slots of screen.install.exists.release (today the whole 'Not known: ...' sentence lands inside the line)"
+  },
+  {
+   "key": "installer.fact.unknown.whose",
+   "en": "A Civicsmith at {address}. Its team's name isn't known.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:257 whose when team_name is not stated (today 'Not known: ... {address}')"
+  },
+  {
+   "key": "installer.fact.unknown.team",
+   "en": "Not known: the team's name, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:257 (one line after the card)"
+  },
+  {
+   "key": "installer.fact.unknown.release",
+   "en": "Not known: the release it runs, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:258"
+  },
+  {
+   "key": "installer.fact.unknown.installed",
+   "en": "Not known: when it was installed, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:259"
+  },
+  {
+   "key": "installer.fact.unknown.used",
+   "en": "Not known: when it was last used, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:259"
+  },
+  {
+   "key": "installer.fact.unknown.projects",
+   "en": "Not known: how many projects it holds, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:264, 268, 269"
+  },
+  {
+   "key": "installer.fact.unknown.documents",
+   "en": "Not known: how many documents it holds, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:264"
+  },
+  {
+   "key": "installer.fact.unknown.published",
+   "en": "Not known: how many published cases it holds, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:264"
+  },
+  {
+   "key": "installer.fact.unknown.members",
+   "en": "Not known: how many members it has, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:264"
+  },
+  {
+   "key": "installer.fact.unknown.counts",
+   "en": "Not known: how many projects, documents, published cases and members it holds, because {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (7g): account.mjs:268-269, when none of the four counts is stated (one line, not four)"
+  },
+  {
+   "key": "installer.image.unpinned",
+   "en": "This release doesn't tie {part}'s software to one exact build, so it can't be checked and {part} is left out.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:16 IMAGE_UNPINNED"
+  },
+  {
+   "key": "installer.image.unpullable",
+   "en": "This release's software for {part} isn't published yet where your Cloudflare account can get it, so {part} is left out.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:17 IMAGE_UNPULLABLE"
+  },
+  {
+   "key": "installer.image.freeplan",
+   "en": "{part} is left out: containers need the Workers Paid plan, and this account is on the free plan.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): index.mjs:1020"
+  },
+  {
+   "key": "installer.image.planunknown",
+   "en": "{part} is left out: the installer couldn't check which Workers plan the account is on. (Cloudflare said: {said})",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): index.mjs:1021"
+  },
+  {
+   "key": "installer.image.noclass",
+   "en": "{part} is left out: after the upload, Cloudflare had no place set up for it to run.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): index.mjs:1035"
+  },
+  {
+   "key": "installer.image.lacks.scanner",
+   "en": "Until it is installed, your team's Civicsmith has no file scanner and no safe view. Files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:28-29 CONTAINER_LACKS['file-scanner']"
+  },
+  {
+   "key": "installer.image.lacks.other",
+   "en": "Until {part} is installed, what it provides is missing from your team's Civicsmith.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:31 lacksOf"
+  },
+  {
+   "key": "installer.image.provides.scanner",
+   "en": "The built-in file scanner and safe view",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:36 PROVIDES"
+  },
+  {
+   "key": "installer.image.provides.other",
+   "en": "A helper program",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:56 (fallback of PROVIDES)"
+  },
+  {
+   "key": "installer.image.lag.older",
+   "en": "The container {name} still runs software from before this update, not the software this release names. The update is not finished.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): index.mjs:1056 (got another image)"
+  },
+  {
+   "key": "installer.image.lag.unread",
+   "en": "The installer couldn't read which software the container {name} runs, so it can't confirm the update reached it. The update is not finished.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): index.mjs:1056 (image could not be read)"
+  },
+  {
+   "key": "installer.image.notice.head",
+   "en": "What release {version} can't install yet",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:58 leftOutNotice; everything else installs, and the install goes ahead without these"
+  },
+  {
+   "key": "installer.image.notice.item",
+   "en": "{provides} ({part}): {why} {lacks}",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:60 leftOutNotice list item; {why} is installer.image.unpinned or .unpullable, {lacks} is installer.image.lacks.*"
+  },
+  {
+   "key": "installer.image.notice.foot",
+   "en": "If Civicsmith's software source holds a newer release when you continue, the installer uses it, and the progress page says again, part by part, what was installed and what was left out.",
+   "protected": false,
+   "note": "DEC-329: B303 (7i): images.mjs:62"
+  },
+  {
+   "key": "installer.partial.what.storage",
+   "en": "the storage for documents and evidence",
+   "protected": false,
+   "note": "DEC-329: B303 (7j): index.mjs:1912 completed.push"
+  },
+  {
+   "key": "installer.partial.what.programs.one",
+   "en": "1 helper program",
+   "protected": false,
+   "note": "DEC-329: B303 (7j): index.mjs:1933"
+  },
+  {
+   "key": "installer.partial.what.programs.other",
+   "en": "{n} helper programs",
+   "protected": false,
+   "note": "DEC-329: B303 (7j): index.mjs:1933"
+  },
+  {
+   "key": "installer.partial.what.software",
+   "en": "the software",
+   "protected": false,
+   "note": "DEC-329: B303 (7j): index.mjs:1943"
+  },
+  {
+   "key": "installer.partial.what.connections",
+   "en": "the software's connections",
+   "protected": false,
+   "note": "DEC-329: B303 (7j): index.mjs:1947"
+  },
+  {
+   "key": "installer.partial.what.helper",
+   "en": "the helper program {name}",
+   "protected": false,
+   "note": "DEC-329: B303 (7j): index.mjs:1201, 1991 (fleet.completed, member names)"
+  },
+  {
+   "key": "installer.partial.resumed.update",
+   "en": "Continuing where an earlier update stopped. Nothing already done is done again.",
+   "protected": false,
+   "note": "DEC-329: B303 (7j): no source line yet: R69 owes an update that resumes; screen.install.resumed (index.mjs:1841) covers the install"
+  },
+  {
+   "key": "queue.told-once",
+   "en": "You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): closing sentence of many items, queue-producers/index.mjs:2543,2551,2559,2430,2202,2255,1935,2379; no placeholder"
+  },
+  {
+   "key": "queue.reevaluation-tail",
+   "en": "Whether this still stands is for the members to decide. A recorded re-evaluation closes this.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): closing sentence of edition-withdrawn, edition-contested, cited-newer-edition, cited-edition-withdrawn, queue-producers/index.mjs:2011,2118"
+  },
+  {
+   "key": "queue.cited-case.both",
+   "en": "case {case} of the team {group}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2048 (#citedCaseWords); {case} {group}"
+  },
+  {
+   "key": "queue.cited-case.case",
+   "en": "case {case} of another team",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2048; {case}"
+  },
+  {
+   "key": "queue.cited-case.group",
+   "en": "a case of the team {group}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2048; {group}"
+  },
+  {
+   "key": "queue.cited-case.none",
+   "en": "a case of another team",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2048"
+  },
+  {
+   "key": "queue.docket-case.named",
+   "en": "case {case}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1987 (cs); {case}"
+  },
+  {
+   "key": "queue.docket-case.unnamed",
+   "en": "a case",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1987 (cs)"
+  },
+  {
+   "key": "queue.docket-entry.said.edition",
+   "en": "What changed, in its publisher's words: \"{said}\".",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2054 (#entryWords); {said}"
+  },
+  {
+   "key": "queue.docket-entry.said.withdrawal",
+   "en": "The reason, in its publisher's words: \"{said}\".",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2054; {said}"
+  },
+  {
+   "key": "queue.docket-entry.key-unlisted",
+   "en": "The entry's signing key is not among the keys the imported case file lists.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2054"
+  },
+  {
+   "key": "queue.docket-entry.taken-back",
+   "en": "The publisher has since taken this entry back (entry {seq}).",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2054; {seq}"
+  },
+  {
+   "key": "queue.docket-entry.taken-back.dated",
+   "en": "The publisher has since taken this entry back (entry {seq}, dated {date}).",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2054; {seq} {date}"
+  },
+  {
+   "key": "queue.docket-entry.taken-back.unnumbered",
+   "en": "The publisher has since taken this entry back (an entry with no number).",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2054"
+  },
+  {
+   "key": "queue.docket-entry.taken-back.unnumbered.dated",
+   "en": "The publisher has since taken this entry back (an entry with no number, dated {date}).",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2054; {date}"
+  },
+  {
+   "key": "queue.out-of-inquiry-lead.summary",
+   "en": "A document bearing on {question} was saved while other work was going on",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:445; {question} (title, else the question's id)"
+  },
+  {
+   "key": "queue.out-of-inquiry-lead.detail",
+   "en": "{address} was saved at a research session's request while it worked on {target}, because it bears on {question}. {statement}. It is stored in your team's Civicsmith but is not part of any claim until someone decides it is.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:447; {address} {target} {question} {statement} (statement is English from capture-requests attribution.statement, see NOTES)"
+  },
+  {
+   "key": "queue.stance-changed-here-not-elsewhere.summary.one",
+   "en": "{project} stands on reading '{version}'; the other project doesn't",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:702; {project} {version} (question name not used; see detail)"
+  },
+  {
+   "key": "queue.stance-changed-here-not-elsewhere.summary.other",
+   "en": "{project} stands on reading '{version}'; the other projects don't",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:702; {project} {version}"
+  },
+  {
+   "key": "queue.stance-changed-here-not-elsewhere.detail",
+   "en": "{question} is used by {n} projects, and each project chooses the reading it stands on. {project} chose '{version}'. Nothing changes for the others; moving another project's reading is that project's own choice.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:704; {question} {n} {project} {version}"
+  },
+  {
+   "key": "queue.stance-changed-here-not-elsewhere.detail.at",
+   "en": "It was chosen on {date}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:707; {date} (appended when p.current.at exists)"
+  },
+  {
+   "key": "queue.stance-changed-here-not-elsewhere.detail.by",
+   "en": "It was chosen by {who}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:708; {who} (appended when p.current.by exists)"
+  },
+  {
+   "key": "queue.new-version-arrived-from-another-team.summary",
+   "en": "Reading '{version}' of {question} was proposed under {project}'s work",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:931; {version} {question} {project}"
+  },
+  {
+   "key": "queue.new-version-arrived-from-another-team.detail",
+   "en": "{question} is used by {n} projects. A research run working under {project} proposed reading '{version}'. Nothing changes for what your project stands on: a reading arriving is not a reading being adopted, and adopting one is a choice your team makes.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:933; {question} {n} {project} {version}"
+  },
+  {
+   "key": "queue.new-version-arrived-from-another-team.detail.state",
+   "en": "The reading is currently {state}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:935; {state} (a word from basis-versions: see NOTES)"
+  },
+  {
+   "key": "queue.new-version-arrived-from-another-team.detail.hidden",
+   "en": "It is hidden from that project's display.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:935"
+  },
+  {
+   "key": "queue.new-version-arrived-from-another-team.detail.by",
+   "en": "It was written by {who}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:934; {who}"
+  },
+  {
+   "key": "queue.new-version-arrived-from-another-team.detail.at",
+   "en": "It was proposed on {date}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:935; {date}"
+  },
+  {
+   "key": "queue.shared-inquiry-concluded-by-another-project.summary",
+   "en": "{project} concluded {question} on reading '{version}'",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1054; {project} {question} {version}"
+  },
+  {
+   "key": "queue.shared-inquiry-concluded-by-another-project.detail",
+   "en": "{question} is used by {n} projects. {project} concluded it on reading '{version}', adopting that reading's claim. Concluding is each project's own choice, so nothing changes for any other project.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1055; {question} {n} {project} {version}"
+  },
+  {
+   "key": "queue.shared-inquiry-concluded-by-another-project.detail.by",
+   "en": "It was recorded by {who}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1056; {who}"
+  },
+  {
+   "key": "queue.shared-inquiry-concluded-by-another-project.detail.at",
+   "en": "It was concluded on {date}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1056; {date}"
+  },
+  {
+   "key": "queue.export-performed.records.one",
+   "en": "1 record",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1149"
+  },
+  {
+   "key": "queue.export-performed.records.other",
+   "en": "{n} records",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1149; {n}"
+  },
+  {
+   "key": "queue.export-performed.files.one",
+   "en": "1 file",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1149"
+  },
+  {
+   "key": "queue.export-performed.files.other",
+   "en": "{n} files",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1149; {n}"
+  },
+  {
+   "key": "queue.export-performed.summary",
+   "en": "A full {scope} export was taken on {date}: {records}, {files}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1149; {scope} {date} {records} {files} (records and files are the two count keys above; scope is the export's kind word, see NOTES)"
+  },
+  {
+   "key": "queue.export-performed.detail",
+   "en": "An export of the {scope} left your team's Civicsmith using the team's root credential. Every administrator is told; nobody else is. The export log is the record of it, and nothing here changes the log.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1150; {scope}"
+  },
+  {
+   "key": "queue.export-performed.detail.note",
+   "en": "The export was noted: \"{note}\".",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1152; {note}"
+  },
+  {
+   "key": "queue.export-performed.detail.nonote",
+   "en": "No note was left with it.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1152"
+  },
+  {
+   "key": "queue.newer-capture-affects-reference.summary",
+   "en": "A newer version of {target} may change a passage {holder} relies on",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1233; {target} {holder}"
+  },
+  {
+   "key": "queue.newer-capture-affects-reference.summary.untitled",
+   "en": "A newer version of a document may change a passage {holder} relies on",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1233; {holder}"
+  },
+  {
+   "key": "queue.newer-capture-affects-reference.detail",
+   "en": "A newer capture of what this reference points to was read as {grade}. Nothing about the reference has changed: it keeps the version it names until the member who holds it adopts the newer one or keeps the earlier one.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1234; {grade} (English from reevaluation; falls back to the word 'undetermined' in code, see NOTES)"
+  },
+  {
+   "key": "queue.newer-capture-affects-reference.detail.affects",
+   "en": "What it would affect: {affects}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1235; {affects}"
+  },
+  {
+   "key": "queue.objective-gap.summary",
+   "en": "{project}'s objective: {says}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1301; {project} {says} (says is English from intent, see NOTES)"
+  },
+  {
+   "key": "queue.objective-gap.summary.gap",
+   "en": "{project}'s objective has a gap",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1301; {project}"
+  },
+  {
+   "key": "queue.objective-gap.detail.stages",
+   "en": "An instance this project's objective counts is short of these stages: {stages}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1303; {stages} (names joined with commas)"
+  },
+  {
+   "key": "queue.objective-gap.detail.grade",
+   "en": "An instance this project's objective counts reaches {reached} where {required} is required.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1305; {reached} {required} (code falls back to 'an undetermined grade' and 'a grade', see NOTES)"
+  },
+  {
+   "key": "queue.source-modified.summary",
+   "en": "{title} has changed at its source",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1348; {title}"
+  },
+  {
+   "key": "queue.source-removed.summary",
+   "en": "{title} is gone from its source",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1348; {title}"
+  },
+  {
+   "key": "queue.bias-debt.summary",
+   "en": "An assistant's run used a lens that has since changed",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1393"
+  },
+  {
+   "key": "queue.bias-debt.detail",
+   "en": "The lens this assistant's run was formed under has changed since the run opened. A re-run under the lens now in force is owed. This is shown openly and blocks nothing.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1393 (source passes detail: null and puts all of this in the summary)"
+  },
+  {
+   "key": "queue.contradiction-duty.summary",
+   "en": "Two things the record holds conflict, and your project must resolve it",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1509"
+  },
+  {
+   "key": "queue.contradiction-duty.detail.open",
+   "en": "The record holds a conflict here. It leaves only when it is resolved; it can't be muted, dismissed or set aside.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1514 (state open)"
+  },
+  {
+   "key": "queue.contradiction-duty.detail.taken_up",
+   "en": "The record holds a conflict here, and it has been taken up as a question. It leaves only when it is resolved; it can't be muted, dismissed or set aside.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1514 (state taken_up)"
+  },
+  {
+   "key": "queue.contradiction-duty.detail.explained_not_shown",
+   "en": "The record holds a conflict here, and it has been explained but not yet shown. It leaves only when it is resolved; it can't be muted, dismissed or set aside.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1514 (state explained_not_shown)"
+  },
+  {
+   "key": "queue.contradiction-plurality.summary",
+   "en": "Two projects' conclusions on one question may not both hold",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1511"
+  },
+  {
+   "key": "queue.contradiction-plurality.detail",
+   "en": "Two projects concluded one question on claims whose text differs. Naming the respect in which they differ clears it; neither project is made to adopt the other's answer.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1517"
+  },
+  {
+   "key": "queue.contradiction-lead.summary",
+   "en": "The record noticed two things that may conflict",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1512"
+  },
+  {
+   "key": "queue.contradiction-lead.detail",
+   "en": "A machine judged that these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1519"
+  },
+  {
+   "key": "queue.side-corrected.summary",
+   "en": "Something {name} rests on was marked wrong",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1566; {name}"
+  },
+  {
+   "key": "queue.side-corrected.detail",
+   "en": "A member's resolution of a conflict marked a side this rests on as wrong. That side still opens and says it was corrected; nothing resting on it has changed. A recorded re-evaluation closes this.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1567"
+  },
+  {
+   "key": "queue.side-corrected.detail.reason",
+   "en": "A member's resolution of a conflict marked a side this rests on as wrong ({reason}). That side still opens and says it was corrected; nothing resting on it has changed. A recorded re-evaluation closes this.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1567; {reason}"
+  },
+  {
+   "key": "queue.tension-after-publication.summary",
+   "en": "Published case {case} rests on a conflict found since its edition {edition}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1656; {case} {edition}"
+  },
+  {
+   "key": "queue.tension-after-publication.summary.unnumbered",
+   "en": "Published case {case} rests on a conflict found since its latest edition",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1656; {case}"
+  },
+  {
+   "key": "queue.tension-after-publication.detail",
+   "en": "A conflict in what this published case's findings rest on was found after its latest edition, and that edition does not disclose it. The signed edition does not change; a later edition can disclose or resolve it.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1657"
+  },
+  {
+   "key": "queue.contradiction-duty-unseen.summary",
+   "en": "Something this project rests on conflicts with a record you can't see",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1726"
+  },
+  {
+   "key": "queue.contradiction-duty-unseen.detail",
+   "en": "Something this project rests on conflicts with a record you can't see. Only the side your project rests on is shown here.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1728 (source passes n.says from contradiction; this key is a drafted replacement, see NOTES)"
+  },
+  {
+   "key": "queue.contradiction-plurality-unseen.summary",
+   "en": "This project's conclusion may not hold together with one you can't see",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1727"
+  },
+  {
+   "key": "queue.contradiction-plurality-unseen.detail",
+   "en": "This project's conclusion on a question may not hold together with another project's conclusion that you can't see. Only your project's side is shown here.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1728 (replacement for n.says, see NOTES)"
+  },
+  {
+   "key": "queue.signer-self-registered.summary",
+   "en": "{member} registered a signing key for themselves",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1778; {member}"
+  },
+  {
+   "key": "queue.signer-self-registered.summary.comment",
+   "en": "{member} registered a signing key for themselves: {comment}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1778; {member} {comment}"
+  },
+  {
+   "key": "queue.signer-self-registered.summary.unnamed",
+   "en": "A member registered a signing key for themselves",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1778"
+  },
+  {
+   "key": "queue.signer-self-registered.summary.unnamed.comment",
+   "en": "A member registered a signing key for themselves: {comment}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1778; {comment}"
+  },
+  {
+   "key": "queue.signer-self-registered.detail",
+   "en": "A member registered their own signing key, held in their browser, from a signed-in session, and it is active. Every administrator is told, and an administrator can revoke it. Nothing here changes the key.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1779"
+  },
+  {
+   "key": "queue.attribution-unchosen.summary",
+   "en": "Case {case} uses your observation {observation}: choose how it credits you",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1854; {case} {observation} (observation is the title, else the id)"
+  },
+  {
+   "key": "queue.attribution-unchosen.detail",
+   "en": "Edition {edition} of this case, which is being prepared, reaches what you observed, and you haven't chosen how it shows who said it: your team, your project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are the author. You are told this once; it leaves when you choose, when the edition stops using it, or when it is signed or replaced.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1855; {edition}"
+  },
+  {
+   "key": "queue.docket-core-due.what.response",
+   "en": "a response",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1890 (DOCKET_CORE_WORDS)"
+  },
+  {
+   "key": "queue.docket-core-due.what.statement",
+   "en": "a statement",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1890"
+  },
+  {
+   "key": "queue.docket-core-due.what.edition",
+   "en": "a newer edition",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1890"
+  },
+  {
+   "key": "queue.docket-core-due.what.tension",
+   "en": "an undisclosed tension",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1890"
+  },
+  {
+   "key": "queue.docket-core-due.summary",
+   "en": "Case {case}'s docket is missing {what}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1934; {case} {what} (one of the four what keys)"
+  },
+  {
+   "key": "queue.docket-core-due.summary.edition",
+   "en": "Case {case}'s docket is missing {what} on edition {edition}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1934; {case} {what} {edition}"
+  },
+  {
+   "key": "queue.docket-core-due.detail.response",
+   "en": "A response filed on this case is not yet listed. List it in full, or decline it for containing redactions, with a reason.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1936"
+  },
+  {
+   "key": "queue.docket-core-due.detail.statement",
+   "en": "A statement filed on this case is not yet listed. List it in full, or decline it for containing redactions, with a reason.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1936"
+  },
+  {
+   "key": "queue.docket-core-due.detail.edition",
+   "en": "Edition {edition} of this case was ratified with no entry on its docket quoting what changed. Place that entry.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1939; {edition}"
+  },
+  {
+   "key": "queue.docket-core-due.detail.tension",
+   "en": "A conflict found on a load-bearing finding of this case's latest edition is not disclosed on its docket. Place the disclosure.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1941"
+  },
+  {
+   "key": "queue.docket-core-due.detail.tail",
+   "en": "This is a to do for the case's managers. You are told this once, and it leaves when the item is placed, declined, receipted or disclosed.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:1943 (appended after the sentence above)"
+  },
+  {
+   "key": "queue.edition-withdrawn.summary",
+   "en": "Something {name} rests on is in a case edition its authors withdrew",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2001; {name}"
+  },
+  {
+   "key": "queue.edition-withdrawn.detail",
+   "en": "On its docket, {case} was withdrawn. The edition still opens as it was signed, and nothing resting on it has changed.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2004; {case} (a queue.docket-case.* key)"
+  },
+  {
+   "key": "queue.edition-withdrawn.detail.one",
+   "en": "On its docket, {case} (edition {editions}) was withdrawn. The edition still opens as it was signed, and nothing resting on it has changed.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2004; {case} {editions}"
+  },
+  {
+   "key": "queue.edition-withdrawn.detail.other",
+   "en": "On its docket, {case} (editions {editions}) was withdrawn. The editions still open as they were signed, and nothing resting on them has changed.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2004; {case} {editions} (list)"
+  },
+  {
+   "key": "queue.edition-contested.summary",
+   "en": "A response on the docket of {case} contests an edition {name} is part of",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2002; {case} {name}"
+  },
+  {
+   "key": "queue.edition-contested.detail",
+   "en": "A response filed on the docket of {case} contests an edition that something here rests on. Nothing has changed, and no docket entry counts as evidence.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2006; {case}"
+  },
+  {
+   "key": "queue.edition-contested.detail.numbered",
+   "en": "A response filed on the docket of {case} contests edition {edition}, which something here rests on. Nothing has changed, and no docket entry counts as evidence.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2006; {case} {edition}"
+  },
+  {
+   "key": "queue.cited-editions.one",
+   "en": "edition {list}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2096 (citedWords); {list}"
+  },
+  {
+   "key": "queue.cited-editions.other",
+   "en": "editions {list}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2096; {list}"
+  },
+  {
+   "key": "queue.cited-editions.none",
+   "en": "an edition",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2096"
+  },
+  {
+   "key": "queue.cited-edition-withdrawn.summary",
+   "en": "{name} cites {cited} of {whose}, which its publisher has withdrawn",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2113; {name} {cited} {whose}"
+  },
+  {
+   "key": "queue.cited-newer-edition.summary",
+   "en": "{name} cites {cited} of {whose}, and its publisher has published edition {edition}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2114; {name} {cited} {whose} {edition}"
+  },
+  {
+   "key": "queue.cited-newer-edition.summary.unnumbered",
+   "en": "{name} cites {cited} of {whose}, and its publisher has published a later edition",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2114; {name} {cited} {whose}"
+  },
+  {
+   "key": "queue.cited-edition-withdrawn.detail.all",
+   "en": "The publisher's docket for {whose} withdrew every edition; what this rests on cites {cited}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2116; {whose} {cited}"
+  },
+  {
+   "key": "queue.cited-edition-withdrawn.detail.numbered",
+   "en": "The publisher's docket for {whose} withdrew edition {edition}; what this rests on cites {cited}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2116; {whose} {edition} {cited}"
+  },
+  {
+   "key": "queue.cited-edition-withdrawn.detail.unnumbered",
+   "en": "The publisher's docket for {whose} withdrew an edition; what this rests on cites {cited}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2116; {whose} {cited}"
+  },
+  {
+   "key": "queue.cited-newer-edition.detail.numbered",
+   "en": "The publisher's docket for {whose} lists edition {edition}; what this rests on cites {cited}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2118; {whose} {edition} {cited}"
+  },
+  {
+   "key": "queue.cited-newer-edition.detail.unnumbered",
+   "en": "The publisher's docket for {whose} lists an unnumbered edition; what this rests on cites {cited}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2118; {whose} {cited}"
+  },
+  {
+   "key": "queue.cited-docket.detail.dated",
+   "en": "The entry is dated {date}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2116,2118; {date}"
+  },
+  {
+   "key": "queue.cited-docket.detail.tail",
+   "en": "The cited edition still opens as it was signed, and nothing here has moved or been regraded.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2121 (then queue.reevaluation-tail)"
+  },
+  {
+   "key": "queue.followed-case-entry.summary.edition",
+   "en": "The publisher's docket for {whose}, which you follow, lists edition {edition}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2201; {whose} {edition}"
+  },
+  {
+   "key": "queue.followed-case-entry.summary.edition.unnumbered",
+   "en": "The publisher's docket for {whose}, which you follow, lists an unnumbered edition",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2201; {whose}"
+  },
+  {
+   "key": "queue.followed-case-entry.summary.withdrawal.all",
+   "en": "The publisher's docket for {whose}, which you follow, lists a withdrawal of every edition",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2201; {whose}"
+  },
+  {
+   "key": "queue.followed-case-entry.summary.withdrawal.numbered",
+   "en": "The publisher's docket for {whose}, which you follow, lists a withdrawal of edition {edition}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2201; {whose} {edition}"
+  },
+  {
+   "key": "queue.followed-case-entry.summary.withdrawal.unnumbered",
+   "en": "The publisher's docket for {whose}, which you follow, lists a withdrawal of an unnumbered edition",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2201; {whose}"
+  },
+  {
+   "key": "queue.followed-case-entry.summary.other",
+   "en": "The publisher's docket for {whose}, which you follow, lists a new entry",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2201; {whose} (source names the entry's kind code; dropped, see NOTES)"
+  },
+  {
+   "key": "queue.followed-case-entry.detail",
+   "en": "Entry {seq} of the docket was read and verified by your team's Civicsmith.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2202; {seq}"
+  },
+  {
+   "key": "queue.followed-case-entry.detail.date",
+   "en": "The entry is dated {date}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2202; {date}"
+  },
+  {
+   "key": "queue.followed-case-entry.detail.keyed",
+   "en": "Its signing key is among the keys the imported case file lists.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2203"
+  },
+  {
+   "key": "queue.followed-case-entry.detail.unkeyed",
+   "en": "Its signing key is not among the keys the imported case file lists.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2203"
+  },
+  {
+   "key": "queue.followed-case-entry.detail.moves",
+   "en": "Anything resting on an edition it moves is told to its own members as well.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2205"
+  },
+  {
+   "key": "queue.followed-case-entry.detail.nomoves",
+   "en": "It is not a new edition or a withdrawal, so nothing resting on the case is re-evaluated for it.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2206"
+  },
+  {
+   "key": "queue.cited-docket-entry-refused.summary",
+   "en": "An entry on the publisher's docket for {whose}, which you follow, failed the checks your team's Civicsmith makes",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2254; {whose}"
+  },
+  {
+   "key": "queue.cited-docket-entry-refused.detail.one",
+   "en": "Entry {seq} of the docket was read and refused: it failed the check {checks}. A refused entry is never taken as a new edition or a withdrawal, and nothing resting on the case has changed. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2321 (#refusedWords, called at 2238,2255); {seq} {checks} (check names, see NOTES)"
+  },
+  {
+   "key": "queue.cited-docket-entry-refused.detail.other",
+   "en": "Entry {seq} of the docket was read and refused: it failed the checks {checks}. A refused entry is never taken as a new edition or a withdrawal, and nothing resting on the case has changed. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2321; {seq} {checks}"
+  },
+  {
+   "key": "queue.cited-docket-entry-refused.detail.unnumbered.one",
+   "en": "An entry with no readable number on the docket was read and refused: it failed the check {checks}. A refused entry is never taken as a new edition or a withdrawal, and nothing resting on the case has changed. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2321; {checks}"
+  },
+  {
+   "key": "queue.cited-docket-entry-refused.detail.unnumbered.other",
+   "en": "An entry with no readable number on the docket was read and refused: it failed the checks {checks}. A refused entry is never taken as a new edition or a withdrawal, and nothing resting on the case has changed. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2321; {checks}"
+  },
+  {
+   "key": "queue.cited-docket-unreadable.summary",
+   "en": "Couldn't read the publisher's docket for {whose}, which you follow",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2285 (DOCKET_UNREADABLE is docket/index.mjs:120); {whose}"
+  },
+  {
+   "key": "queue.cited-docket-unreadable.detail",
+   "en": "Couldn't read the publisher's docket. That means the read failed, not that nothing changed. It leaves when a read works or you stop following the case.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2286"
+  },
+  {
+   "key": "queue.cited-docket-unreadable.detail.reason",
+   "en": "The reason given: {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2286; {reason} (a machine reason; see NOTES)"
+  },
+  {
+   "key": "queue.cited-docket-unreadable.detail.at",
+   "en": "The last try was on {date}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2286; {date}"
+  },
+  {
+   "key": "queue.wizard-withdrawn.summary",
+   "en": "The wizard script {name} is withdrawn until it is fixed",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2379; {name} (quoted name, else script@version)"
+  },
+  {
+   "key": "queue.wizard-withdrawn.detail",
+   "en": "It is no longer offered to members because it no longer matches the screens. A new version that passes its checks, approved as before, brings it back. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2381"
+  },
+  {
+   "key": "queue.wizard-withdrawn.detail.reason",
+   "en": "The first thing it failed: {reason}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2381; {reason} (refusal.translation, already member words)"
+  },
+  {
+   "key": "queue.wizard-restored.summary",
+   "en": "The wizard script {name} is offered again",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2380; {name}"
+  },
+  {
+   "key": "queue.wizard-restored.detail",
+   "en": "It passed its checks again when your team's Civicsmith started, and members are offered it as before. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2383"
+  },
+  {
+   "key": "queue.wizard-approval-requested.summary",
+   "en": "{author} submitted the wizard script {name} for your approval",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2429; {author} {name}"
+  },
+  {
+   "key": "queue.wizard-approval-requested.summary.unnamed",
+   "en": "A member submitted the wizard script {name} for your approval",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2429; {name}"
+  },
+  {
+   "key": "queue.wizard-approval-requested.detail",
+   "en": "A version of this wizard script was submitted, and you can approve it. Read its steps, then approve it. You are told this once, and it leaves when the version is approved or withdrawn, or the script is retired.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2430"
+  },
+  {
+   "key": "queue.edition-scheduled.summary",
+   "en": "Signed - publishes {when} - case {case}, edition {edition}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2542; {when} {case} {edition} (when is the date and time as 'YYYY-MM-DD, HH:MM', else see NOTES)"
+  },
+  {
+   "key": "queue.edition-scheduled.detail",
+   "en": "This edition is signed and waits to publish on {when}, your team's own time. Nothing of it is public until then. At that time every check it passed at signing runs again, and it is published only if nothing has changed. An owner of the case's project can move the time or cancel it.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2543; {when}"
+  },
+  {
+   "key": "queue.edition-scheduled.detail.zone",
+   "en": "The time is in {zone}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2543; {zone}"
+  },
+  {
+   "key": "queue.edition-scheduled.detail.moved.one",
+   "en": "Its time has been moved once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2546"
+  },
+  {
+   "key": "queue.edition-scheduled.detail.moved.other",
+   "en": "Its time has been moved {n} times.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2546; {n}"
+  },
+  {
+   "key": "queue.edition-published-as-scheduled.summary",
+   "en": "Case {case}, edition {edition} was published at its set time, {when}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2550; {case} {edition} {when}"
+  },
+  {
+   "key": "queue.edition-published-as-scheduled.detail",
+   "en": "It was signed to publish on {when} and was published at {published}, after every check it passed at signing ran again and passed. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2551; {when} {published}"
+  },
+  {
+   "key": "queue.edition-published-as-scheduled.detail.nopublished",
+   "en": "It was signed to publish on {when} and was published, after every check it passed at signing ran again and passed. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2551; {when} (used when the publishing time cannot be read)"
+  },
+  {
+   "key": "queue.scheduled-edition-stopped.summary",
+   "en": "Case {case}, edition {edition} was not published at its set time, {when}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2558; {case} {edition} {when}"
+  },
+  {
+   "key": "queue.scheduled-edition-stopped.detail",
+   "en": "When its time came, the check stopped it: {reasons} Nothing was published. Publishing this edition needs a new signing. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2559; {reasons} (the reasons' own words, joined with spaces)"
+  },
+  {
+   "key": "queue.scheduled-edition-stopped.detail.noreason",
+   "en": "When its time came, the check stopped it, but no reason was recorded. Nothing was published. Publishing this edition needs a new signing. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2559"
+  },
+  {
+   "key": "queue.scheduled-edition-stopped.reason.unrecorded",
+   "en": "A reason was recorded without words.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2557 (code now prints the reason's code here, see NOTES)"
+  },
+  {
+   "key": "queue.place-profile-arrived.summary",
+   "en": "A profile for \"{place}\" is now held: {profile}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2639; {place} {profile}"
+  },
+  {
+   "key": "queue.place-profile-arrived.summary.unnamed",
+   "en": "A profile for the place your team named is now held: {profile}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2639; {profile}"
+  },
+  {
+   "key": "queue.place-profile-arrived.detail",
+   "en": "An installed update brought a profile that matches the place your team named, \"{place}\": {profile}. An administrator can choose it under Places; the offices your team added stay. This status is shown once, and it leaves when the profile is chosen or the place's name is cleared or changed.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2640; {place} {profile}"
+  },
+  {
+   "key": "queue.place-profile-arrived.detail.unnamed",
+   "en": "An installed update brought a profile that matches the place your team named: {profile}. An administrator can choose it under Places; the offices your team added stay. This status is shown once, and it leaves when the profile is chosen or the place's name is cleared or changed.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2640; {profile}"
+  },
+  {
+   "key": "queue.place-profile-arrived.detail.covers",
+   "en": "It covers {covers}.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2641; {covers} (names joined with commas)"
+  },
+  {
+   "key": "queue.wizard-base-updated.base.unnamed",
+   "en": "the wizard it was copied from",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2686 (baseName fallback)"
+  },
+  {
+   "key": "queue.wizard-base-updated.summary",
+   "en": "{base} has a newer approved version, {version}, than your team's copy {name} was made from",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2696; {base} {version} {name} (base is the quoted name, else the .base.unnamed key)"
+  },
+  {
+   "key": "queue.wizard-base-updated.detail",
+   "en": "Your team's copy {name} was made from {base}, and version {version} of it has since been approved. See what changed between the two. You can bring the change into your copy with your own revision; nothing in your copy changes unless you do. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2697; {name} {base} {version}"
+  },
+  {
+   "key": "queue.wizard-base-updated.detail.versioned",
+   "en": "Your team's copy {name} was made from version {based_on} of {base}, and version {version} of it has since been approved. See what changed between the two. You can bring the change into your copy with your own revision; nothing in your copy changes unless you do. You are told this once.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/index.mjs:2697; {name} {based_on} {base} {version}"
+  },
+  {
+   "key": "queue.missing_predecessor.summary",
+   "en": "{progression}: the '{stage}' stage is required and absent",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:159; {progression} {stage} (source also inserts {required}, see NOTES)"
+  },
+  {
+   "key": "queue.overdue_successor.summary",
+   "en": "{progression}: the '{stage}' stage is required and absent",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:159 (same text as missing_predecessor; the kind is overdue_successor when p.overdue); {progression} {stage}"
+  },
+  {
+   "key": "queue.missing_predecessor.detail.one",
+   "en": "1 instance of this progression reaches '{stage}' without it.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:160; {stage}"
+  },
+  {
+   "key": "queue.missing_predecessor.detail.other",
+   "en": "{n} instances of this progression reach '{stage}' without it.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:160; {n} {stage}"
+  },
+  {
+   "key": "queue.overdue_successor.detail.one",
+   "en": "1 instance of this progression reaches '{stage}' without it, and {overdue} is past a declared deadline.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:160-161; {stage} {overdue}"
+  },
+  {
+   "key": "queue.overdue_successor.detail.other",
+   "en": "{n} instances of this progression reach '{stage}' without it, and {overdue} of them are past a declared deadline.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:160-161; {n} {stage} {overdue}"
+  },
+  {
+   "key": "queue.cardinality_exceeded.also",
+   "en": "Also: {cardinality}",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:162; {cardinality} (the cardinality_exceeded detail text, passed when a stage is both missing and over-full; used after either detail above)"
+  },
+  {
+   "key": "queue.cardinality_exceeded.summary",
+   "en": "{progression}: the '{stage}' stage holds more documents than it is declared to hold",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:173; {progression} {stage}"
+  },
+  {
+   "key": "queue.cardinality_exceeded.detail.exactly.one",
+   "en": "1 instance of this progression holds more than one document at '{stage}' ({documents} in all), which is declared to hold exactly one. This is a finding; it decides nothing about which of them belongs.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:99-103; {stage} {documents}"
+  },
+  {
+   "key": "queue.cardinality_exceeded.detail.exactly.other",
+   "en": "{n} instances of this progression hold more than one document at '{stage}' ({documents} in all), which is declared to hold exactly one. This is a finding; it decides nothing about which of them belongs.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:99-103; {n} {stage} {documents}"
+  },
+  {
+   "key": "queue.cardinality_exceeded.detail.atmost.one",
+   "en": "1 instance of this progression holds more than one document at '{stage}' ({documents} in all), which is declared to hold at most one. This is a finding; it decides nothing about which of them belongs.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:99-103; {stage} {documents}"
+  },
+  {
+   "key": "queue.cardinality_exceeded.detail.atmost.other",
+   "en": "{n} instances of this progression hold more than one document at '{stage}' ({documents} in all), which is declared to hold at most one. This is a finding; it decides nothing about which of them belongs.",
+   "protected": false,
+   "note": "DEC-329: B303 (10): queue-producers/proposals.mjs:99-103; {n} {stage} {documents}"
   }
  ],
  "rewrite": {
@@ -9009,6 +11031,7 @@
   "screen.held.archivefiles": "Open its files",
   "screen.proceeding.kind.help": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
   "screen.find-in.question": "For which question",
-  "screen.find-in.term.help": "Only passages with this name or term are shown, when you fill it in."
+  "screen.find-in.term.help": "Only passages with this name or term are shown, when you fill it in.",
+  "find.query.placeholder": "Words to find"
  }
 }
