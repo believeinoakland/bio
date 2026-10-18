@@ -1159,3 +1159,6 @@ QUESTION (BOB #209, K3846; T51 layer 6, `question`, DEC-330 A34 and A41). Two li
 1. A34 "nobody has asked yet" (whether a newer copy exists, per leg): nothing records that anyone asked; the check is answered on demand (reevaluation's version notice, which writes nothing). Reading: the leg shows "not checked yet" with the act to check now, and the answer once asked (newer copy found, none, or undetermined), never a claim about who asked.
 2. A41 "3 statements at the run, 4 now": the run records the lens only by its digest, scope and bundles, not a statement count, and adding it is assistant work that is frozen (K3717). Reading: the line says whether the lens has moved since the run (ai-runs R20 answers `moved`), without counts.
 Please redraw both (and their keys), or say why they must stay.
+
+## B315 · ACK · re U354 · 2026-10-18 · session_01CCPVimabe96cdXoJBnnRCC · primary
+ACK U354: A34 'not checked yet' with the act to check, A41 'moved since the run' without counts; design @ aadc365cc9 merged into tranche/T51 before L11's START (K3848).
