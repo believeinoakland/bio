@@ -53,7 +53,7 @@ export const CEREMONY_HIGHLIGHT_SENTENCE = "A finding in this case rests on some
   + "cannot see. You can still publish. The published case will highlight that this finding rests on a side in "
   + "conflict with a record not shown, and will not name that record or who holds it.";
 
-/** R14: THE CASE DOCUMENT, in `case-grammar`'s `CASE_DOCUMENT_FORMAT` through `publication`'s re-export (`bio-case-document/7`
+/** R14: THE CASE DOCUMENT, in `case-grammar`'s `CASE_DOCUMENT_FORMAT` through `publication`'s re-export (`bio-case-document/8`
  *  from T31, identical in fields to `/6`; DEC-124, K1365 (1)). Everything it asserts arrived as an argument (R22): the authored
  *  sentences as the publisher typed them, and every fact the caller read from the record at the act (`searched`,
  *  `conclusions`, `frozen`, `manifest`, `acks`, `citations`, `attributions`, the writer). Nothing here is composed,
@@ -346,7 +346,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...captureBodyLines(captures, sources),
     ...(materials ? carriesBodyLines(method, materials, group) : []),
     ...acceptedBodyLines(accepted),
-    ...(attributions.length ? attributionBodyLines(attributions) : []),
+    ...(attributions.length ? attributionBodyLines(attributions, CASE_DOCUMENT_FORMAT) : []),
     ...calculationBodyLines(calculations),
     ...timelineBodyLines(timeline, timelineLeftOut, { cut: timelineCut, unread: timelineUnread, withheld: timelineWithheld }),
     "## What This Excludes",
@@ -463,7 +463,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...reviewCommentBodyLines(reviewComments),
     /* R40 (DEC-103): case-grammar R9's section, which prints the bias acknowledgement first and then the lens; it
        stands where the acknowledgement's own section stood, so the acknowledgement is printed once. */
-    ...lensSectionLines({ acknowledgement: bias,
+    ...lensSectionLines({ acknowledgement: bias, format: CASE_DOCUMENT_FORMAT,
                           statements: lensRead && lensRead.in_force === true ? lensRead.statements : [],
                           inForce: lensRead ? lensRead.in_force : false,
                           stated: lensRead ? lensRead.stated : null }),
