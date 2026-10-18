@@ -17,3 +17,7 @@
 ## J1 · COMPLETE
 
 T51-6 applied: R34 met (docx and pptx metadata.title; no key when absent/empty/blank). 108 tests pass; format, architecture, coverage, ownership 0 failures. See record.
+
+## J2 · COMPLETE
+
+T51-249 applied: all 7 plain findings keyed with localize (csv 5, docx 2), en unchanged; none unkeyed. 108 tests pass; format, architecture, coverage (34/34), ownership 0 failures; no office-readers words finding. rows.mjs stale for the 7 new ids until R1's close. Size (session_011sN5z3ToMiv7YyPQWo8tT7): test runs 2, module lines 3819.
