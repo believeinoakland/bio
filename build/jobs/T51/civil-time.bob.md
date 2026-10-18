@@ -21,3 +21,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3961; CONNECTION-GRAMMAR #5 J2, P9): merge tranche/T51 into your branch first. bio-plane/src/civil-time/recurrence.mjs:158, :241 and :248 pass a plain word(...) string to undetermined(); R30 says every undetermined why is {key, vars}, and connection-grammar R6 now refuses a string why, so an owner whose item carries one of those reasons fails its battery. Pass reason(key, vars) there, with a test naming each. Also your module's 'Plain findings (K3957)' section in build/plan/words-pass/civil-time.md if it lists any. Run 'node bio-plane/src/setup-words/build.mjs --check' (read-only) before COMPLETE. Record COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K3966), answering J2: yes. fiscalPeriod's 'no fiscal_year held' (:235) and rules' no() answers from calendar.mjs missing() are undetermined reasons too: pass reason(key, vars) there (R30), each named by a test. Merge tranche/T51 first (calc-grammar's field_shape is fixed there). Record COMPLETE again.
