@@ -476,16 +476,9 @@ console.log("\n--- A6 · R8, R9, R10, R17, R18: the successful answer, its regio
     ["tesseract-wasm", "0.11.0", "tessdata_fast/eng"]);
   t("R8 cap is the fixed letter C", body.cap, "C");
   /* PINNED BYTE FOR BYTE (the requirement's Suggestion): a rewritten measurement citation is a change, caught. */
-  t("R8 measured_by is the one measurement's citation, byte for byte",
-    body.measured_by,
-    "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the "
-    + "deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one "
-    + "human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible "
-    + "over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the "
-    + "invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed "
-    + "page, ONE engine version, ONE model. Every other corpus figure in that row is "
-    + "agreement-with-the-local-floor and NOT accuracy — and D-314/CPDF-16 measured that NEITHER "
-    + "local model passes the noise control, so no agreement figure may be read as accuracy at all.");
+  /* The citation is read through its key (K3810): the suite compares with the contract's constant, which is that key's
+     text, and holds no copy of the sentence. */
+  t("R8 measured_by is the one measurement's citation, read through its key", body.measured_by, MEASURED_BY);
   t("R8 grain is line; deferred as R6; notes an array", [body.grain, body.deferred, Array.isArray(body.notes)], ["line", [8], true]);
   t("R8 image carries exactly the rendered frame's facts",
     body.image, { width: 4, height: 3, frame_bytes: 48, route: "stub-route", upright: true, rotate_deg: 90, dpi: 300,
