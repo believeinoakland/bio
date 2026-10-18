@@ -27,3 +27,22 @@ The job cannot reach COMPLETE on the words check until option A (or B/C) is sett
 ## J2 · BLOCKED
 
 Cause: needs Bob. The 8 ooxml words findings (see J1) are unread diagnostic strings. Their settlement is Bob's: option A (add the 8 ids to the design's unkeyed list, K3944) clears them; B or C changes R11 or R23. Until then checks/run.mjs keeps 8 ooxml findings and my COMPLETE would not meet the words rule. No code is changed; format, architecture and ownership read 0 failures. Waiting on your choice.
+
+## J3 · COMPLETE
+
+T51-248 ooxml (words, K3949): complete on BOB's ruling (B2, K3955).
+
+Entries applied: T51-248. No code changed. The 8 `signals` strings of `discriminate` (ooxml.mjs:773, 834, 854, 927, 929, 933, 965, 978) are diagnostics no member reads, every consumer reads `why`. They are handed to the design stream for the `unkeyed` list (words-reads.json, ooxml) and accepted by name in K3955. Until that lands on tranche/T51, checks/run.mjs keeps these 8 as words findings.
+
+Deferred: none. Found in another module: none.
+
+Checks (civicos-process ebcc1a3, against /home/user/bio):
+- format: 0 failures
+- architecture: 0 failures
+- ownership ooxml tranche/T51..job/T51/ooxml: 0 failures
+- words: 8 ooxml findings, the 8 named above, accepted by name in K3955 pending the unkeyed list
+- coverage: 33 failures repo-wide, none attributed to ooxml in the output
+
+Tests: none run (no module code changed).
+
+Size (session_01DQhDYhUjhzaGm67YZSpeDZ): test runs 0, module lines 0
