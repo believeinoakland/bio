@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (14517 words, 922 protected; SHA-256
-   59b215d9ecf354565059ebb6c3225404dc3f93bd88463ccfcd25b394e4145883), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (14518 words, 922 protected; SHA-256
+   e619ab4a941fb6c84f7bddda3b195722c8d19698af86dd486c86d1c519fb4859), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "59b215d9ec";
+export const WORDS_COMMIT = "e619ab4a94";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -6559,7 +6559,7 @@ export const WORD_ROWS = Object.freeze([
   ["installer.lag.logjob.unknownid","unknown","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1497; the {id} when Cloudflare gives none",null,false],
   ["installer.mark.failed","the installer couldn't mark this installation finished (Cloudflare said: {said}), so a later run under this short name will continue it rather than treat it as complete","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2071; {said}",null,false],
   ["installer.logs.clear","No Logpush job on your Cloudflare account keeps a record of each request to your team's Civicsmith.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1505",null,false],
-  ["installer.logs.undetermined","The installer could not look at your account's Logpush jobs (Cloudflare said: {said}), so it can't say whether one keeps a record of each request to your team's Civicsmith, which would be a log of who opened which file. To check it yourself, open Analytics & Logs in the Cloudflare dashboard, then Logpush, and look for a job over Workers Trace Events. None should cover {programs}.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1509; {said} {programs}; B323 6: K3818: says plainly it could not look; never \"undetermined\"",null,false],
+  ["installer.logs.undetermined","The installer could not read your account's Logpush jobs (Cloudflare said: {said}), so it can't say whether one keeps a record of each request to your team's Civicsmith, which would be a log of who opened which file. To check it yourself, open Analytics & Logs in the Cloudflare dashboard, then Logpush, and look for a job over Workers Trace Events. None should cover {programs}.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1509; {said} {programs}; B323 6: K3818: says plainly it could not look; never \"undetermined\"",null,false],
   ["installer.logs.unreadable","the list came back unreadable","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1493; the {said} above when Cloudflare answers with something that is not a list",null,false],
   ["installer.logs.named.one","A Logpush job on your Cloudflare account would keep a log of who opened which file: {list}.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1516; {list}: installer.lag.logjob*",null,false],
   ["installer.logs.named.other","{n} Logpush jobs on your Cloudflare account would keep a log of who opened which file: {list}.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1516; {n} {list}",null,false],
@@ -6605,7 +6605,7 @@ export const WORD_ROWS = Object.freeze([
   ["installer.check.bytes.no","Its software did not read back as the release's own files: the list above says how.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2059",null,false],
   ["installer.check.bytes.ok","Its software reads back as release {version}'s own files.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2060; {version}",null,false],
   ["installer.check.log.no","A log on your Cloudflare account would record who opens which file: the list above names it.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2063",null,false],
-  ["installer.check.log.undetermined","The installer could not look at whether a log on your Cloudflare account records who opens which file. The step above says how to check it yourself.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2064; B323 6: K3818: says plainly it could not look; never \"undetermined\"",null,false],
+  ["installer.check.log.undetermined","The installer could not check whether a log on your Cloudflare account records who opens which file. The step above says how to check it yourself.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2064; B323 6: K3818: says plainly it could not look; never \"undetermined\"",null,false],
   ["installer.update.before.known","Your team's Civicsmith ran release {version}.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2224; {version} in bold",null,false],
   ["installer.update.before.unknown","The release your team's Civicsmith ran before could not be read.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2225",null,false],
   ["installer.update.after","This update: release {version}{signed}.","DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2226; {version} in bold; {signed} = installer.update.after.signed or nothing",null,false],
@@ -6836,7 +6836,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.published.what.would.overturn.it","What would overturn it","DEC-330: B306 A76/A77/A79: drawn sentence",null,false],
   ["screen.published.what.it.rests.on","What it rests on","DEC-330: B306 A76/A77/A79: drawn sentence",null,false],
   ["screen.published.finding.4.of.another.team","Finding {n} of another team's case, on the same lease.","DEC-330: B306 A76/A77/A79: drawn sentence",null,false],
-  ["screen.published.named.only.its.documents.are","Served with its own published case; its documents are not held here.","DEC-330: B306 A76/A77/A79: drawn sentence",null,false],
+  ["screen.published.named.only.its.documents.are","Served with its own published case; its documents are not published here.","DEC-330: B306 A76/A77/A79: drawn sentence",null,false],
   ["screen.published.what.rests.on.what","What rests on what","DEC-330: B306 A76/A77/A79: drawn sentence",null,false],
   ["screen.published.read.each.line.from.the","Read each line from the document up to the finding.","DEC-330: B306 A76/A77/A79: drawn sentence",null,false],
   ["screen.published.the.march.2024.rent.schedule_","The March 2024 rent schedule","DEC-330: B306 A76/A77/A79: drawn sentence",null,false],
@@ -7113,7 +7113,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.project.notice.working.on.it.since.3","Working on it since {date}","DEC-332: B306 C6: drawn sentence; B325 2: {date} replaces the sample",null,false],
   ["screen.project.notice.anyone.can.read.this.including","Anyone can read this, including anyone your team is examining.","DEC-332: B306 C6: drawn sentence",null,false],
   ["screen.project.notice.stopping.the.notice.later.ends","Stopping the notice later ends it, but does not unsay it: it stays published.","DEC-332: B306 C6: drawn sentence",null,false],
-  ["screen.project.notice.your.team.has.two.other","Your team has {open} other notices open and has published {published} yet.","DEC-332: B306 C6: drawn sentence; B325 2: {open} is a count in words (such as two); {published} is the cases published so far, in words (such as no case, one case, three cases)",null,false],
+  ["screen.project.notice.your.team.has.two.other","Other notices your team has open: {open}. Cases it has published: {published}.","DEC-332: B306 C6: drawn sentence; B325 2: {open} is a count in words (such as two); {published} is the cases published so far, in words (such as no case, one case, three cases)",null,false],
   ["screen.project.notice.you.can.still.publish.readers","You can still publish; readers may weigh it.","DEC-332: B306 C6: drawn sentence",null,false],
   ["screen.project.notice.i.understand.that.this.is","I understand that this is public and that stopping it later will not unsay it.","DEC-332: B306 C6: drawn sentence",null,false],
   ["screen.project.notice.your.key.signs.this.exact","Your key signs this exact wording, the notice's number and its fingerprint.","DEC-332: B306 C6: drawn sentence",null,false],
@@ -7341,7 +7341,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue.aside.dismissed.bymember","Dismissed by {member}, {date}","DEC-338: B325 2: another member's decision, beside queue.aside.dismissed (by you)",null,false],
   ["queue.aside.deferred.bymember","Deferred by {member} until {date}","DEC-338: B325 2: another member's decision, beside queue.aside.deferred (by you)",null,false],
   ["queue.answered.forwarded","Forwarded {item} to {member}","DEC-338: B325 2: an answered row: what was forwarded (words people wrote, as the item names it) and to whom",null,false],
-  ["queue.answered.snoozed","Snoozed {item} to {date}","DEC-338: B325 2: an answered row: what was snoozed (as the item names it) and the day it comes back",null,false],
+  ["queue.answered.snoozed","Snoozed {item} until {date}","DEC-338: B325 2: an answered row: what was snoozed (as the item names it) and the day it comes back",null,false],
   ["queue.allclear.failed.feed","“{feed}” did not answer.","DEC-338: B325 2: any feed other than the documents your team watches (queue.allclear.failed): {feed} is the feed's name, queue.feed.<id>",null,false],
   ["queue.multi.result.one","You acted on 1 item. Done and out of your queue: {done}. Not handled, still here: {kept}.","DEC-338: B325 2: the one-item form of queue.multi.result",null,false],
   ["screen.document.fingerprints.head","Fingerprints","DEC-338: B325 2: the document page's label, drawn literal: heading of the section",null,false],
@@ -7396,6 +7396,7 @@ export const WORD_ROWS = Object.freeze([
   ["installer.invite.before","It takes you to {address}. That is the Civicsmith installer, run by the publisher of Civicsmith releases on Cloudflare's worker platform, which is why the address ends the way it does. You will see the name in your address bar the whole time. We send you there with a button rather than a silent redirect, so you always know where you are.","DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the boxed note; {address} the installer's address, shown as code",null,false],
   ["installer.invite.button","Set up my team's Civicsmith","DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): the button",null,false],
   ["installer.invite.update","Already running your team's Civicsmith and want the latest software? That is a separate page: {address}. Updates never touch your passwords or your record.","DEC-338: B323 5: bio-plane/public/newgroup/index.html (the invitation page): small paragraph; {address} the update page's address, shown as code",null,false],
+  ["screen.published.rests.on.the.council.minutes.one","Rests on: 1 document, not published with the case.","DEC-338: the consistency read: the one-form",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
