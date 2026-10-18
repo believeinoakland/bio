@@ -33,3 +33,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 CHANGE (K3960): the design's unkeyed list (DEC-343) is merged into tranche/T51 and your module's 'Plain findings (K3957)' section in build/plan/words-pass/office-readers.md was recomputed (fewer, or none): merge tranche/T51 into your branch and work from the new section. Also run 'node bio-plane/src/setup-words/build.mjs --check' (read-only) before COMPLETE: it must not name your module.
+
+## B4 · RESUME
+
+RESUME (K3968). OFFICE-READERS #10 stalled mid-rebase and was archived; you are #11 (depth 2, sonnet). Do `mail start`, then read B2 (START) and B3 (CHANGE) and act on both: merge `tranche/T51` into your branch (a merge, never a rebase, K1991), work from the recomputed "Plain findings (K3957)" section of `build/plan/words-pass/office-readers.md`, and convert any regex copy of a keyed sentence in your tests to an equality with `localize` (K3965; `localize` answers its `en` while `rows.mjs` is stale). `build.mjs --check` may report stale rows until R1's close: that is expected. Then checks and COMPLETE.
