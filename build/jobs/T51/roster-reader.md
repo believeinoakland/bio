@@ -52,3 +52,7 @@ B2 (K3957) plain findings: 38 judged. 36 are sentences a member reads (why-reaso
 - `node checks/run.mjs /home/user/bio` (civicos-process 27aa50e): `format … 0 failures`; `architecture … 0 failures`; roster-reader appears only in the two REPORTed `words` lines; the repository-wide `coverage` (33) and `words` failures are other modules'.
 
 Size (session_01PVypQMNUHxqcGtP1kD7qN2): test runs 2, module lines 965
+
+## J3 · COMPLETE
+
+B2 done: the 38 plain findings are judged (36 localized with the same wording; lines.mjs:24 and :40, the recognition vocabulary lists, REPORTed for the unkeyed list). Module tests 22/22; format, architecture, coverage (12/12) and ownership pass; the words check shows only the two REPORTed findings in roster-reader. Record: build/jobs/T51/roster-reader.md.
