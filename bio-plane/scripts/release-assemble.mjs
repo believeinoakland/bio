@@ -138,7 +138,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
   REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256, isContainer, containerParts,
-  workerPart, WORKER_PART_PATH,
+  workerPart, WORKER_PART_PATH, containerImageFindings,
 } from "./fleet-bundle.mjs";
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
@@ -223,6 +223,18 @@ for (const m of discovered.filter((x) => isContainer(x) && x.bundle)) {
       + "A member with several classes states them as `containers: [{ class_name, image, max_instances?, bind? }]`, each\n"
       + "class's max_instances and bind read from the class, else from the member's top level.");
   }
+  /* R37 (N1210, K3674): the digest the part will carry must be the one built from the code now in the tree. A class whose
+     files differ from what its recorded digest was built from is refused here, naming it, before anything is built or
+     written; so is a class that records nothing it was built from, which no comparison can clear. */
+  const imageFindings = containerImageFindings(m);
+  if (imageFindings.length)
+    die("CONTAINER_IMAGE_STALE",
+      `${m.name} is a container member and the code of its image changed under an unchanged digest.`,
+      imageFindings.map((f) => `  - ${f.text}`).join("\n") + "\n"
+      + "The release builds the image of a changed container member in the GitHub workflow and records the digest it\n"
+      + "produced with `node bio-plane/scripts/bundles.mjs --record-image <member> <class> <digest>` (R36), which writes\n"
+      + "the marker's digest and the files it was built from, and the container's image in the member's wrangler.jsonc.\n"
+      + "`node bio-plane/scripts/bundles.mjs --containers` lists the classes that need it.");
   /* R27 (F20): each image's packages — npm's from the lockfile its `npm ci --omit=dev` installs from, or a system
      image's from the member's committed package statement pinned with its base digest — so the fleet signature states
      what each image runs without building it. Unread is a refusal, never an empty list. */

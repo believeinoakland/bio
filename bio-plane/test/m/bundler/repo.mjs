@@ -100,16 +100,30 @@ export const CONTAINER_PACKAGES = [
   { name: "real-name", version: "5.0.0" }, { name: "zeta", version: "2.0.0" },
 ];
 
+/** R36, R37: what a container image is built from, by hand and independently of the library: a Dockerfile that COPYs
+ *  `package.json` and the `container/` directory, and the hash of those files as R36 defines it (each member-relative
+ *  path, a NUL, the file's SHA-256 and a newline, in path order). Writes the Dockerfile and one file under `container/`;
+ *  returns the hash. `content` changes the copied file's bytes. */
+export function writeImageSources(root, name, dockerfile, content = "export const app = 1;\n") {
+  put(root, `${name}/${dockerfile}`, `FROM docker.io/library/node@${BASE_A}\nCOPY package.json ./\nCOPY container ./container/\n`);
+  put(root, `${name}/container/app.mjs`, content);
+  return imageSourceHash(root, name, dockerfile);
+}
+export function imageSourceHash(root, name, dockerfile) {
+  const files = [dockerfile, "package.json", "container/app.mjs"].sort();
+  return hex(files.map((f) => `${f}\0${hex(readFileSync(join(root, name, f)))}\n`).join(""));
+}
+
 /** A container member (R24): `kind: "container"` and an `image` block, with R25's descriptor fields, and, unless
  *  `bundle: false`, the Worker that hosts its class (a guarded bundle) and a config declaring its container. Any
  *  `marker` key overrides the marker's (`undefined` removes one). Its `package-lock.json` is `lock` (R27), none when
  *  null. */
-export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true, lock = CONTAINER_LOCK, instanceType } = {}) {
+export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true, lock = CONTAINER_LOCK, instanceType, sealed = true } = {}) {
   const dir = join(root, name);
   if (bundle) {
     addMember(root, name, { services: [] });
     const cfg = parseCfg(join(dir, "wrangler.jsonc"));
-    if (containers) cfg.containers = [{ class_name: "Runner", image: "./Dockerfile", max_instances: 3,
+    if (containers) cfg.containers = [{ class_name: "Runner", image: `docker.io/civicos/runner@${DIGEST}`, max_instances: 3,
       ...(instanceType !== undefined ? { instance_type: instanceType } : {}) }];
     put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
   } else {
@@ -121,6 +135,10 @@ export function addContainerMember(root, name, { bundle = true, marker = {}, con
     image: { repository: "docker.io/civicos/runner", digest: DIGEST, platform: "linux/amd64", port: 8080, schedulingPolicy: "default" },
     class_name: "Runner", max_instances: 3, bind: [{ member: "alpha-worker", binding: "RUNNER" }], ...marker };
   for (const k of Object.keys(m)) if (m[k] === undefined) delete m[k];
+  /* R36: the image's recorded source, unless the test is about a member that records none. */
+  m.build = { dockerfile: "Dockerfile", context: "." };
+  const src = writeImageSources(root, name, "Dockerfile");
+  if (sealed && m.image && typeof m.image === "object") m.image = { ...m.image, source_sha256: src };
   put(root, `${name}/fleet-member.json`, JSON.stringify(m, null, 2));
   if (lock) put(root, `${name}/package-lock.json`, JSON.stringify(lock, null, 2) + "\n");
   return dir;
@@ -154,15 +172,21 @@ export function scannerClasses() {
         base: { repository: "docker.io/library/debian", digest: BASE_B }, packages: "images/render.packages.json" } },
   ];
 }
-export function addScannerMember(root, name, { classes = scannerClasses(), statements = SCANNER_STATEMENTS, marker = {}, instanceTypes = {} } = {}) {
+export function addScannerMember(root, name, { classes = scannerClasses(), statements = SCANNER_STATEMENTS, marker = {}, instanceTypes = {}, sealed = true } = {}) {
   const dir = join(root, name);
   addMember(root, name, { services: [] });
   const cfg = parseCfg(join(dir, "wrangler.jsonc"));
-  cfg.containers = classes.map((c) => ({ class_name: c.class_name, image: "./Dockerfile", max_instances: c.max_instances ?? 1,
+  cfg.containers = classes.map((c) => ({ class_name: c.class_name, image: `${c.image.repository}@${c.image.digest}`, max_instances: c.max_instances ?? 1,
     ...(instanceTypes[c.class_name] !== undefined ? { instance_type: instanceTypes[c.class_name] } : {}) }));
   put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
   const prev = JSON.parse(readFileSync(join(dir, "fleet-member.json"), "utf8"));
-  const m = { ...prev, kind: "container", containers: classes, bind: [{ member: "alpha-worker", binding: "FILE_SCANNER" }], ...marker };
+  /* R36: each class built from its own Dockerfile, its image's source recorded unless the test is about one that records none. */
+  const sealedClasses = classes.map((c) => {
+    const dockerfile = `Dockerfile.${String(c.class_name).toLowerCase()}`;
+    const src = writeImageSources(root, name, dockerfile);
+    return { ...c, build: { dockerfile, context: "." }, ...(sealed && c.image && typeof c.image === "object" ? { image: { ...c.image, source_sha256: src } } : {}) };
+  });
+  const m = { ...prev, kind: "container", containers: sealedClasses, bind: [{ member: "alpha-worker", binding: "FILE_SCANNER" }], ...marker };
   for (const k of Object.keys(m)) if (m[k] === undefined) delete m[k];
   put(root, `${name}/fleet-member.json`, JSON.stringify(m, null, 2));
   for (const [p, o] of Object.entries(statements || {})) if (o) put(root, `${name}/${p}`, JSON.stringify(o, null, 2) + "\n");

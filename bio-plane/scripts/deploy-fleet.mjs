@@ -4,8 +4,8 @@
  *
  * WHY THIS EXISTS AND WHY IT IS NOT `bio-plane/scripts/deploy.mjs`.
  * That script deploys the PLANE. It sends a hardcoded binding list and a
- * `keep_bindings` tuned to the plane's own shape, and it refuses `civicos` and
- * `pdf-worker` BY NAME (D-201) because pointing it at another worker deletes
+ * `keep_bindings` tuned to the plane's own shape, and it refuses `pdf-worker`
+ * BY NAME (D-201) because pointing it at another worker deletes
  * bindings that worker needs. `kickoffs/DIST-NEXT.md` tells the next session "if
  * you deploy a fleet member, do not reach for deploy.mjs" — and until now that
  * sentence named no alternative, which is a rule without a mechanism. This is
@@ -83,14 +83,14 @@ if (!instance) die("NO_INSTANCE",
 
 /* STRUCTURAL: this tool deploys FLEET MEMBERS. Membership is decided by the
    member's own marker file (D-117), not by a name list here, so it cannot be
-   pointed at the plane, at `civicos`, or at `newgroup` even by mistake — the
+   pointed at the plane or at `newgroup` even by mistake — the
    mirror of deploy.mjs's NOT_A_PLANE refusal, from the other side. */
 const memberDir = join(ROOT, member);
 if (!existsSync(join(memberDir, "fleet-member.json"))) {
   die("NOT_A_FLEET_MEMBER",
     `"${member}" carries no fleet-member.json, so it is not a fleet member.`,
-    "The plane is deployed with bio-plane/scripts/deploy.mjs and the UI with\n" +
-    "civicos-ui/deploy-ui.mjs. This tool deploys only members that declare themselves one.");
+    "The plane is deployed with bio-plane/scripts/deploy.mjs. This tool deploys only\n" +
+    "members that declare themselves one.");
 }
 
 let marker;

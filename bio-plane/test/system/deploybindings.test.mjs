@@ -230,7 +230,7 @@ console.log("\n--- D-54: limits.subrequests is a decision, not the platform's de
   /* RETIRED 2026-10-02 (BUNDLER #6, T23; N482, K1020, K1113): two assertions here pinned SOURCE TEXT (P7): the
      comment before `"limits"` in wrangler.jsonc citing "D-54", "Cloudflare", "THEIR claim" and "SUBRESOURCE_CAP (400",
      and `export const SUBRESOURCE_CAP = 400;` read out of subresources.mjs. Their properties are now requirements of
-     their owners, tested at the interface: subresources R35 (the cap is 400 and is `captureSubresources`' default,
+     their owners, tested at the interface: the subresources module's cap requirement (the cap is 400 and is `captureSubresources`' default,
      tested by calling the service) and plane R13 (the parsed config's ceiling is 10000, derived by `deriveLimits`, and
      covers ten times `2 × (1 + SUBRESOURCE_CAP)` from the imported constant; its test lands in plane's L11 job, K1113).
      The comment that explains the figure binds nothing. The arm above, the ceiling derived from the real config,

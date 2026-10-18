@@ -19,7 +19,6 @@ import {
   fleetStatement, NS_FLEET, NS_RELEASE, verifySshsig, NS_RELEASE_NOTICE, releaseNoticeStatement, verifyReleaseNotice,
 } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
-import { renderSignpage } from "../../../scripts/embed-signpage.mjs";
 import {
   makeRepo, addMember, addContainerMember, addScannerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig,
   VERSION, ACCOUNT, PLANE, DIGEST, CONTAINER_PACKAGES, SCANNER_PACKAGES, DIGEST_A, DIGEST_B, scannerClasses, NOTES,
@@ -200,26 +199,27 @@ test("R15: deriveLimits returns subrequests and cpu_ms, refusing a missing or no
 
 /* ------------------------------------------------------------------------ R16 */
 
-test("R16: npm run build renders the signer page, then writes the plane's bundle and manifest by R5 and prints size, SHA-256 and input counts", async () => {
-  const root = await makeRepo({ build: false, realPackageJson: true, members: {} });
+test("R16: npm run build writes the plane's bundle and manifest by R5 from the committed sources alone — it renders and embeds no signing page, even beside a stale one — and prints size, SHA-256 and input counts", async () => {
+  const root = await makeRepo({ build: false, members: {} });
   try {
     writeFileSync(join(root, "bio-plane/src/plane/index.mjs"),
-      'import { tag } from "../tag.mjs";\nimport { SIGN_HTML } from "../signpage.mjs";\n'
-      + "export default { fetch() { return new Response(tag + SIGN_HTML.length); } };\n");
+      'import { tag } from "../tag.mjs";\nexport default { fetch() { return new Response(tag); } };\n');
     /* The old entry path, left beside the plane's own: the bundle must not start from it (T20, K846). */
     writeFileSync(join(root, "bio-plane/src/index.mjs"), 'export { default } from "./plane/index.mjs";\n');
+    /* A committed generated source that its generator would now render differently: a build that ran the generator
+       would rewrite it (R16: it calls no step that generates a source file). */
+    const stale = "export const SIGN_HTML = 'committed, not the render of sign-release.html';\n";
+    writeFileSync(join(root, "bio-plane/src/signpage.mjs"), stale);
     const r = spawnSync("npm", ["run", "build"], { cwd: join(root, "bio-plane"), encoding: "utf8" });
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    const rendered = readFileSync(join(root, "bio-plane/src/signpage.mjs"), "utf8");
-    assert.equal(rendered, renderSignpage(readFileSync(join(root, "bio-plane/src/sign-release.html"), "utf8")), "signatures R30's render");
-
+    assert.equal(readFileSync(join(root, "bio-plane/src/signpage.mjs"), "utf8"), stale, "no source file was generated or rewritten by the build");
     const plane = planeMember(root);
     const art = readFileSync(join(plane.abs, plane.bundle.outfile));
     const built = await buildMember(plane);
-    assert.ok(art.equals(built.bytes), "the written bundle is what the recipe builds from the rendered source");
+    assert.ok(art.equals(built.bytes), "the written bundle is what the recipe builds from the committed sources");
     const manifest = readJson(join(plane.abs, plane.bundle.manifest));
     assert.deepEqual(manifest, manifestFrom(plane, built));
-    assert.ok(manifest.inputs.some((i) => i.path === "src/signpage.mjs" && i.sha256 === hex(rendered)), "rendered before the bundle was cut");
+    assert.ok(!manifest.inputs.some((i) => i.path === "src/signpage.mjs"), "no signing page is an input of the bundle");
     assert.equal(manifest.recipe.entry, "src/plane/index.mjs", "the plane's own entry (plane R6)");
     assert.ok(manifest.inputs.some((i) => i.path === "src/plane/index.mjs"));
     assert.ok(!manifest.inputs.some((i) => i.path === "src/index.mjs"), "the old entry is not an input");
@@ -265,12 +265,16 @@ test("R17: missing arguments or credentials exit 2 with the usage line; a skewed
     refused(arg, "VERSION_ARGUMENT_DISAGREES");
     assert.equal(arg.status, 1);
     assert.deepEqual(arg.calls, []);
-    for (const notPlane of ["civicos", "pdf-worker"]) {
+    for (const notPlane of ["pdf-worker"]) {
       const r = deploy(root, { args: [notPlane, VERSION, ASSET], stub: okStub() });
       assert.equal(r.status, 3, notPlane);
       assert.match(r.stderr, new RegExp(`\`${notPlane}\` is not a plane`));
       assert.deepEqual(r.calls, []);
     }
+    /* K3807: the old `civicos` Worker is deleted and no deploy names it: it is an ordinary slug, not a refused non-plane. */
+    const old = deploy(root, { args: ["civicos", VERSION, ASSET], stub: okStub() });
+    assert.notEqual(old.status, 3);
+    assert.doesNotMatch(old.stderr, /is not a plane|civicos-ui|deploy-ui/);
     const pj = join(root, "beta-worker/package.json");
     writeJson(pj, { ...readJson(pj), version: "1.2.2" });
     const skew = deploy(root, { stub: okStub() });
@@ -542,7 +546,9 @@ test("R19: refuses NO_MEMBER, NO_INSTANCE, NOT_A_FLEET_MEMBER, NO_CONFIG, UNPARS
     refused(fleet(root, []), "NO_MEMBER");
     refused(fleet(root, ["alpha-worker"]), "NO_INSTANCE");
     refused(fleet(root, ["alpha-worker", "--instance", ""]), "NO_INSTANCE");
-    refused(fleet(root, ["bio-plane", "--instance", SLUG]), "NOT_A_FLEET_MEMBER");
+    const notMember = fleet(root, ["bio-plane", "--instance", SLUG]);
+    refused(notMember, "NOT_A_FLEET_MEMBER");
+    assert.doesNotMatch(notMember.stderr, /civicos|deploy-ui/, "K3807: its message names no deploy for the old interface");
     refused(fleet(root, ["no-such", "--instance", SLUG]), "NOT_A_FLEET_MEMBER");
     addMember(root, "gamma-worker");
     rmSync(join(root, "gamma-worker/wrangler.jsonc"));
@@ -1739,5 +1745,112 @@ test("R32 (amends R22, R30): no session command reads the seed or signs the noti
     const refusedSign = assemble(root, ["--sign"], { BIO_RELEASE_SEED: envelope() });
     refused(refusedSign, "NOT_SIGNING_ENVIRONMENT");
     assert.match(refusedSign.stderr, /--notice-sig <file>/, "the refusal names how a notice signed elsewhere completes the release");
+  } finally { rm(root); }
+});
+
+
+/* ----------------------------------------------------------------- R36, R37 */
+
+const containersCmd = (root, args) => run(root, ".", ["bio-plane/scripts/bundles.mjs", ...args]);
+const readText = (root, rel) => readFileSync(join(root, rel), "utf8");
+const NEW = "sha256:" + "7a".repeat(32);
+
+test("R37: the release assembly refuses CONTAINER_IMAGE_STALE, naming the member and the class, for a container member whose code changed under an unchanged digest, and for one that records nothing its digest was built from, before anything is written; control: the same member with its digest rewritten by R36 is assembled", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "control: every image is current");
+
+    /* the code of one class changes; its digest does not */
+    writeFileSync(join(root, "runner/container/app.mjs"), "export const app = 'changed';\n");
+    const before = snapshot(root);
+    const stale = assemble(root, ["--dry-run"]);
+    refused(stale, "CONTAINER_IMAGE_STALE");
+    assert.match(stale.stderr, /runner is a container member/);
+    assert.match(stale.stderr, /runner: .*class Runner/);
+    assert.doesNotMatch(stale.stderr, /scanner/, "only the member that is stale is named");
+    assert.deepEqual(snapshot(root), before, "nothing written");
+    const real = assemble(root, ["--emit-payload", join(root, "p.txt")]);
+    refused(real, "CONTAINER_IMAGE_STALE");
+    assert.equal(existsSync(join(root, "p.txt")), false);
+
+    /* R36's step records the digest the build produced; the same member is assembled */
+    const rec = containersCmd(root, ["--record-image", "runner", "Runner", NEW]);
+    assert.equal(rec.status, 0, rec.stdout + rec.stderr);
+    const ok = assemble(root, ["--dry-run"]);
+    assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+
+    /* a class of a two-class member is named; the other class is not */
+    writeFileSync(join(root, "scanner/Dockerfile.safeviewrenderer"), "FROM docker.io/library/node@sha256:" + "5b".repeat(32) + "\nCOPY package.json ./\n");
+    const two = assemble(root, ["--dry-run"]);
+    refused(two, "CONTAINER_IMAGE_STALE");
+    assert.match(two.stderr, /class SafeViewRenderer/);
+    assert.doesNotMatch(two.stderr, /class FileScanner/);
+  } finally { rm(root); }
+});
+
+test("R37: a container member whose marker records no source its digest was built from is refused CONTAINER_IMAGE_STALE, as a digest nothing can prove current", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner", { sealed: false });
+    await buildAll(root);
+    const r = assemble(root, ["--dry-run"]);
+    refused(r, "CONTAINER_IMAGE_STALE");
+    assert.match(r.stderr, /records no `source_sha256`/);
+  } finally { rm(root); }
+});
+
+test("R36: bundles.mjs --containers lists the classes whose image the code has outrun and exits 1, writing nothing; --record-image writes the digest the build produced into the marker and the wrangler.jsonc container block, both agreeing, after which the list is empty and exit 0", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    const clean = containersCmd(root, ["--containers"]);
+    assert.equal(clean.status, 0, clean.stdout + clean.stderr);
+    assert.match(clean.stdout, /containers: 2 of 2 image\(s\) provably built/);
+
+    writeFileSync(join(root, "scanner/container/app.mjs"), "export const app = 'new';\n");
+    const before = snapshot(root);
+    const listed = containersCmd(root, ["--containers"]);
+    assert.equal(listed.status, 1);
+    assert.match(listed.stdout, /^STALE scanner FileScanner /m);
+    assert.match(listed.stdout, /^STALE scanner SafeViewRenderer /m);
+    assert.deepEqual(snapshot(root), before, "listing writes nothing");
+
+    const rec = containersCmd(root, ["--record-image", "scanner", "FileScanner", DIGEST_A.replace(/c3/g, "e5")]);
+    assert.equal(rec.status, 0, rec.stdout + rec.stderr);
+    const rec2 = containersCmd(root, ["--record-image", "scanner", "SafeViewRenderer", NEW]);
+    assert.equal(rec2.status, 0, rec2.stdout + rec2.stderr);
+    const marker = readJson(join(root, "scanner/fleet-member.json"));
+    assert.equal(marker.containers[0].image.digest, DIGEST_A.replace(/c3/g, "e5"));
+    assert.equal(marker.containers[1].image.digest, NEW);
+    const cfg = parseJsonc(readText(root, "scanner/wrangler.jsonc"));
+    assert.equal(cfg.containers[0].image, `docker.io/civicos/file-scanner@${DIGEST_A.replace(/c3/g, "e5")}`, "its own repository, the digest the build produced");
+    assert.equal(cfg.containers[1].image, `docker.io/civicos/safe-view@${NEW}`);
+    assert.equal(containersCmd(root, ["--containers"]).status, 0);
+  } finally { rm(root); }
+});
+
+test("R36: a change to a non-container member's code writes no digest: bundles.mjs --record-image refuses a worker member, an unknown member, a class it does not state and a digest that is not sha256:<64 hex>, leaving every file as it was; --containers is silent about workers", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    await buildAll(root);
+    writeFileSync(join(root, "alpha-worker/src/word.mjs"), "export const word = 'changed';\n");
+    const before = snapshot(root);
+    for (const [args, code] of [
+      [["alpha-worker", "Runner", NEW], "CONTAINER_UNDESCRIBED"], [["no-such", "Runner", NEW], "CONTAINER_UNDESCRIBED"],
+      [["runner", "Nope", NEW], "CONTAINER_UNDESCRIBED"], [["runner", "Runner", "sha256:short"], "CONTAINER_DIGEST_INVALID"],
+      [["runner", "Runner"], "CONTAINER_DIGEST_INVALID"]]) {
+      const r = containersCmd(root, ["--record-image", ...args]);
+      refused(r, code);
+      assert.equal(r.status, 1);
+    }
+    assert.deepEqual(snapshot(root), before);
+    const listed = containersCmd(root, ["--containers"]);
+    assert.equal(listed.status, 0, "the changed worker is no container image's concern");
+    assert.doesNotMatch(listed.stdout, /alpha-worker/);
   } finally { rm(root); }
 });

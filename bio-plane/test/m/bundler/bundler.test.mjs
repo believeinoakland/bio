@@ -17,6 +17,7 @@ import {
   writeMember, verifyStatic, verifyFresh, freshBuildRunnable, unresolvableSpecifiers, sha256,
   isContainer, isGuarded, containerDescriptor, imageReference, containerClasses, containerParts, classPackages,
   statementPackages, markerIsContainer, workerPart, WORKER_PART_PATH, BUCKET_ROLES,
+  SOURCE_FIELD, containerSourceHash, containerImageStates, containerImageFindings, recordContainerDigest,
 } from "../../../scripts/fleet-bundle.mjs";
 import { parseJsonc } from "../../../scripts/jsonc.mjs";
 import {
@@ -618,11 +619,8 @@ test("R24: the repository's own fleet lists agent-runner as a container member w
   assert.ok(runner, "agent-runner is listed");
   assert.equal(runner.kind, "container");
   assert.equal(isContainer(runner), true);
-  /* RE-POINTED 2026-10-08 (BUNDLER #12, T38): agent-runner's image moved from `ghcr.io` to Docker Hub at T37's close
-     (K2258, K2259), as file-scanner's did (fleetbundles.test.mjs, K2176).
-     RE-PINNED 2026-10-12 (BUNDLER #16, T46-2; K2266, K2912): the 0.82.0 cut names it `ghcr.io/believeinoakland/`, with
-     its digest; red until the cut is merged into the tranche, as fleetbundles.test.mjs's pin is. */
-  assert.equal(runner.image.repository, "ghcr.io/believeinoakland/agent-runner");
+  /* R35 (T51; N1242, K3805): the real fleet's marker names the image on Docker Hub, by digest. */
+  assert.equal(runner.image.repository, "docker.io/civicsmith/agent-runner");
   assert.deepEqual(got.filter((m) => !isGuarded(m)).map((m) => m.name).filter((n) => n !== "agent-runner"), [],
     "every other member is guarded");
   for (const m of got.filter((x) => !isContainer(x))) assert.equal(m.kind, "worker", m.name);
@@ -834,4 +832,198 @@ test("R25: the repository's own members with buckets or crons carry a Worker par
   const scanner = workerPart(got["file-scanner"]).part.descriptor;
   assert.deepEqual(scanner.r2_buckets, [{ binding: "CAPTURES", bucket: "captures" }]);
   assert.ok(scanner.crons.length >= 1, "its schedule is stated");
+});
+
+
+/* ------------------------------------------------------------------------ R35 */
+
+const HUB_IMAGE = /^docker\.io\/civicsmith\/(agent-runner|file-scanner-scanner|file-scanner-renderer)@sha256:[0-9a-f]{64}$/;
+/** R35's real-fleet test (K2266), as a function of the members it is given: every image the container members state
+ *  that is not `docker.io/civicsmith/<repository>@sha256:<64 hex>`, as the part R25 would write it. */
+const imagesOf = (members) => members.filter(isContainer)
+  .flatMap((m) => (m.containers ? m.containers.map((c) => c.image) : [m.image])).map((i) => imageReference(i).reference ?? "(none)");
+const notOnDockerHub = (members) => imagesOf(members).filter((r) => !HUB_IMAGE.test(r));
+
+test("R35: the real fleet's three container images (agent-runner's, file-scanner's two classes) are named docker.io/civicsmith/<repository>@sha256:<64 hex> by their markers, and the part R25 writes carries that address", () => {
+  const members = discoverMembers();
+  const images = imagesOf(members);
+  assert.equal(images.length, 3, "agent-runner's image and file-scanner's two classes, no other");
+  assert.deepEqual(notOnDockerHub(members), []);
+  assert.deepEqual(images.map((r) => r.split("@")[0]).sort(),
+    ["docker.io/civicsmith/agent-runner", "docker.io/civicsmith/file-scanner-renderer", "docker.io/civicsmith/file-scanner-scanner"]);
+  const names = members.map((m) => m.name);
+  for (const m of members.filter(isContainer)) {
+    const d = containerParts(m, names, { packages: false });
+    assert.ok(d.parts, `${m.name}: ${JSON.stringify(d)}`);
+    for (const part of d.parts) assert.match(part.descriptor.image, HUB_IMAGE, `${m.name} ${part.class_name}: no credential is needed to pull it`);
+  }
+});
+
+test("R35: R24's and R25's fixtures name docker.io/<org>/…@sha256 markers and are listed and written as stated; control: a marker naming another registry is written as stated by R25, and the real-fleet test fails on it", () => {
+  const root = tmp("r35");
+  try {
+    containerFixture(root, "hub", { image: { ...IMAGE, repository: "docker.io/civicsmith/agent-runner" },
+      extra: { class_name: "Runner", max_instances: 2, bind: [{ member: "hub", binding: "RUNNER" }], bundle: { entry: "src/entry.mjs", outfile: "dist/a.mjs", manifest: "dist/a.json" } } });
+    containerFixture(root, "ghcr", { image: { ...IMAGE, repository: "ghcr.io/believeinoakland/agent-runner" },
+      extra: { class_name: "Runner", max_instances: 2, bind: [{ member: "hub", binding: "RUNNER" }], bundle: { entry: "src/entry.mjs", outfile: "dist/a.mjs", manifest: "dist/a.json" } } });
+    const [ghcr, hub] = discoverMembers(root);
+    assert.equal(containerDescriptor(hub, ["hub"]).descriptor.image, `docker.io/civicsmith/agent-runner@${DIGEST}`);
+    assert.equal(containerDescriptor(ghcr, ["hub"]).descriptor.image, `ghcr.io/believeinoakland/agent-runner@${DIGEST}`, "emitted as written");
+    assert.deepEqual(notOnDockerHub([hub]).length, 0);
+    assert.deepEqual(notOnDockerHub([ghcr]), [`ghcr.io/believeinoakland/agent-runner@${DIGEST}`], "the real-fleet test fails on it");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+/* --------------------------------------------------------------------- R36, R37 */
+
+const IMG_BASE = "sha256:" + "1c".repeat(32);
+const NEW_DIGEST = "sha256:" + "9e".repeat(32);
+/** A container member whose one class is built from a Dockerfile that COPYs `package.json` and `container/`, with its
+ *  image's digest and source recorded as R36 leaves them (`recorded: false` for a marker that records no source). */
+function imageMember(root, dir = "runner", { recorded = true, classes = null } = {}) {
+  mkdirSync(join(root, dir, "container"), { recursive: true });
+  writeFileSync(join(root, dir, "package.json"), '{"name":"runner"}\n');
+  writeFileSync(join(root, dir, "container/app.mjs"), "export const app = 1;\n");
+  writeFileSync(join(root, dir, "README.md"), "not copied into the image\n");
+  const dockerfiles = classes || [{ class_name: "Runner", dockerfile: "Dockerfile" }];
+  for (const c of dockerfiles)
+    writeFileSync(join(root, dir, c.dockerfile), `FROM docker.io/library/node@${IMG_BASE}\nCOPY package.json ./\nCOPY container ./container/\nCOPY --from=build /out ./out\n`);
+  const image = (c, i) => ({ repository: `docker.io/civicsmith/${dir}${i}`, digest: DIGEST, platform: "linux/amd64", port: 8080 });
+  const marker = classes
+    ? { name: dir, kind: "container", containers: dockerfiles.map((c, i) => ({ class_name: c.class_name, image: image(c, i), build: { dockerfile: c.dockerfile } })) }
+    : { name: dir, kind: "container", class_name: "Runner", image: image(null, ""), build: { dockerfile: "Dockerfile" } };
+  writeFileSync(join(root, dir, "fleet-member.json"), JSON.stringify(marker, null, 2) + "\n");
+  writeFileSync(join(root, dir, "wrangler.jsonc"), `// the container block\n{\n  "containers": [\n`
+    + dockerfiles.map((c, i) => `    // ${c.class_name}'s image\n    { "class_name": "${c.class_name}", "image": "ghcr.io/believeinoakland/${dir}${classes ? i : ""}@${DIGEST}", "max_instances": 1 }`).join(",\n")
+    + `\n  ]\n}\n`);
+  const member = () => discoverMembers(root).find((m) => m.name === dir);
+  if (recorded) for (const c of dockerfiles) {
+    const m = member();
+    const r = recordContainerDigest(m, c.class_name, DIGEST);
+    assert.ok(r.files, JSON.stringify(r));
+  }
+  return member;
+}
+
+test("R37: a class whose image files match what its recorded digest was built from is current; a changed byte in a copied file, an added file in a copied directory, a changed Dockerfile, or a file removed from a copied directory is stale, naming the class; a file the Dockerfile does not copy, and a COPY --from, change nothing", () => {
+  const root = tmp("r37");
+  try {
+    const member = imageMember(root);
+    const states = () => containerImageStates(member()).map((s) => [s.class_name, s.state]);
+    assert.deepEqual(states(), [["Runner", "current"]]);
+    assert.deepEqual(containerImageFindings(member()), []);
+    writeFileSync(join(root, "runner/README.md"), "changed, still not copied\n");
+    assert.deepEqual(states(), [["Runner", "current"]], "control: a file the image is not built from");
+    for (const [change, undo] of [
+      [() => writeFileSync(join(root, "runner/container/app.mjs"), "export const app = 2;\n"), () => writeFileSync(join(root, "runner/container/app.mjs"), "export const app = 1;\n")],
+      [() => writeFileSync(join(root, "runner/container/extra.mjs"), "x\n"), () => rmSync(join(root, "runner/container/extra.mjs"))],
+      [() => writeFileSync(join(root, "runner/Dockerfile"), `FROM docker.io/library/node@sha256:${"2d".repeat(32)}\nCOPY package.json ./\nCOPY container ./container/\n`),
+        () => writeFileSync(join(root, "runner/Dockerfile"), `FROM docker.io/library/node@${IMG_BASE}\nCOPY package.json ./\nCOPY container ./container/\nCOPY --from=build /out ./out\n`)],
+      [() => writeFileSync(join(root, "runner/package.json"), '{"name":"runner","x":1}\n'), () => writeFileSync(join(root, "runner/package.json"), '{"name":"runner"}\n')],
+    ]) {
+      change();
+      assert.deepEqual(states(), [["Runner", "stale"]]);
+      const f = containerImageFindings(member());
+      assert.equal(f.length, 1);
+      assert.equal(f[0].class_name, "Runner");
+      assert.match(f[0].text, /^runner: .*class Runner/);
+      undo();
+      assert.deepEqual(states(), [["Runner", "current"]], "restored, current again");
+    }
+    rmSync(join(root, "runner/container/app.mjs"));
+    assert.deepEqual(states(), [["Runner", "stale"]], "a file removed from a copied directory moves the hash");
+    rmSync(join(root, "runner/container"), { recursive: true });
+    assert.deepEqual(states(), [["Runner", "unread"]], "a copied path that is not in the tree cannot be hashed, and is not skipped");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R37: a marker that records nothing its digest was built from, or a source that is not a 64-hex digest, is unrecorded; a Dockerfile naming no file, copying a wildcard or an address, or a marker naming no Dockerfile, is unread", () => {
+  const root = tmp("r37b");
+  try {
+    const member = imageMember(root, "runner", { recorded: false });
+    assert.deepEqual(containerImageStates(member()).map((s) => s.state), ["unrecorded"]);
+    const marker = join(root, "runner/fleet-member.json");
+    const good = JSON.parse(readFileSync(marker, "utf8"));
+    writeFileSync(marker, JSON.stringify({ ...good, image: { ...good.image, [SOURCE_FIELD]: "not-a-hash" } }));
+    assert.deepEqual(containerImageStates(member()).map((s) => s.state), ["unrecorded"]);
+    for (const line of ["COPY container/* ./container/", "ADD https://x.test/a.tar ./a.tar", "COPY ../outside ./x", "COPY [\"container\",", "ADD /abs ./x"]) {
+      writeFileSync(join(root, "runner/Dockerfile"), `FROM x@${IMG_BASE}\n${line}\n`);
+      assert.deepEqual(containerImageStates(member()).map((s) => s.state), ["unread"], line);
+    }
+    const { build: _b, ...noBuild } = good;
+    writeFileSync(marker, JSON.stringify(noBuild));
+    assert.deepEqual(containerImageStates(member()).map((s) => s.state), ["unread"], "no build.dockerfile is named, never defaulted");
+    assert.ok(containerSourceHash(member(), "Runner").unread);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R36: recording the digest a build produced writes it, and the files it was built from, into the marker's image block and the digest into the image the wrangler.jsonc container block names, both agreeing, keeping the wrangler comments and repository; the class is current afterwards", () => {
+  const root = tmp("r36");
+  try {
+    const member = imageMember(root, "runner", { recorded: false });
+    writeFileSync(join(root, "runner/container/app.mjs"), "export const app = 3; // the changed code\n");
+    const r = recordContainerDigest(member(), "Runner", NEW_DIGEST);
+    assert.deepEqual(r, { files: ["runner/fleet-member.json", "runner/wrangler.jsonc"] });
+    const marker = JSON.parse(readFileSync(join(root, "runner/fleet-member.json"), "utf8"));
+    assert.equal(marker.image.digest, NEW_DIGEST);
+    assert.equal(marker.image[SOURCE_FIELD], containerSourceHash(member(), "Runner").sha256);
+    assert.equal(marker.image.repository, "docker.io/civicsmith/runner", "the other fields are untouched");
+    assert.deepEqual(Object.keys(marker.image), ["repository", "digest", SOURCE_FIELD, "platform", "port"]);
+    const wrangler = readFileSync(join(root, "runner/wrangler.jsonc"), "utf8");
+    const cfg = parseJsonc(wrangler);
+    assert.equal(cfg.containers[0].image, `ghcr.io/believeinoakland/runner@${NEW_DIGEST}`, "its own repository, the new digest");
+    assert.match(wrangler, /^\/\/ the container block\n/);
+    assert.match(wrangler, /\/\/ Runner's image/);
+    assert.equal(imageReference(member().image).reference.split("@")[1], cfg.containers[0].image.split("@")[1], "the two files agree");
+    assert.deepEqual(containerImageStates(member()).map((s) => s.state), ["current"]);
+    /* Changing the code again outruns the new digest until it is recorded again. */
+    writeFileSync(join(root, "runner/container/app.mjs"), "export const app = 4;\n");
+    assert.deepEqual(containerImageStates(member()).map((s) => s.state), ["stale"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R36: a member with two classes records the digest of the class named and leaves the other's digest, source and image as they were", () => {
+  const root = tmp("r36b");
+  try {
+    const classes = [{ class_name: "Scanner", dockerfile: "Dockerfile.scanner" }, { class_name: "Renderer", dockerfile: "Dockerfile.renderer" }];
+    const member = imageMember(root, "multi", { classes });
+    const before = JSON.parse(readFileSync(join(root, "multi/fleet-member.json"), "utf8"));
+    writeFileSync(join(root, "multi/Dockerfile.renderer"), `FROM docker.io/library/node@${IMG_BASE}\nCOPY container ./container/\n`);
+    assert.deepEqual(containerImageStates(member()).map((s) => [s.class_name, s.state]), [["Scanner", "current"], ["Renderer", "stale"]]);
+    assert.ok(recordContainerDigest(member(), "Renderer", NEW_DIGEST).files);
+    const after = JSON.parse(readFileSync(join(root, "multi/fleet-member.json"), "utf8"));
+    assert.deepEqual(after.containers[0], before.containers[0], "the scanner is untouched");
+    assert.equal(after.containers[1].image.digest, NEW_DIGEST);
+    const cfg = parseJsonc(readFileSync(join(root, "multi/wrangler.jsonc"), "utf8"));
+    assert.equal(cfg.containers[0].image, `ghcr.io/believeinoakland/multi0@${DIGEST}`);
+    assert.equal(cfg.containers[1].image, `ghcr.io/believeinoakland/multi1@${NEW_DIGEST}`);
+    assert.deepEqual(containerImageStates(member()).map((s) => s.state), ["current", "current"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R36: a digest that is not sha256:<64 hex> (CONTAINER_DIGEST_INVALID), a class the member does not state, a member that is not a container member, a wrangler.jsonc naming no digest image for the class, and a Dockerfile that cannot be hashed are each refused, with neither file written", () => {
+  const root = tmp("r36c");
+  try {
+    const member = imageMember(root, "runner", { recorded: false });
+    mkdirSync(join(root, "plain/src"), { recursive: true });
+    writeFileSync(join(root, "plain/src/index.mjs"), "export default {};\n");
+    writeFileSync(join(root, "plain/fleet-member.json"), JSON.stringify({ name: "plain", entry: "src/index.mjs" }));
+    const files = () => ["runner/fleet-member.json", "runner/wrangler.jsonc", "plain/fleet-member.json"].map((f) => readFileSync(join(root, f), "utf8"));
+    const before = files();
+    const code = (r) => r.refused;
+    for (const bad of ["sha256:abc", "abc", `sha256:${"A".repeat(64)}`, undefined, null, 5])
+      assert.equal(code(recordContainerDigest(member(), "Runner", bad)), "CONTAINER_DIGEST_INVALID", String(bad));
+    assert.equal(code(recordContainerDigest(member(), "NoSuchClass", NEW_DIGEST)), "CONTAINER_UNDESCRIBED");
+    const plain = discoverMembers(root).find((m) => m.name === "plain");
+    assert.equal(code(recordContainerDigest(plain, "Runner", NEW_DIGEST)), "CONTAINER_UNDESCRIBED", "a non-container member gets no digest");
+    const w = join(root, "runner/wrangler.jsonc");
+    const wrangler = readFileSync(w, "utf8");
+    writeFileSync(w, wrangler.replace(/@sha256:[0-9a-f]{64}/, ":latest"));
+    assert.equal(code(recordContainerDigest(member(), "Runner", NEW_DIGEST)), "CONTAINER_UNDESCRIBED", "a tag is not a digest");
+    writeFileSync(w, wrangler);
+    writeFileSync(join(root, "runner/Dockerfile"), "FROM x\nCOPY nothing-here ./\n");
+    assert.equal(code(recordContainerDigest(member(), "Runner", NEW_DIGEST)), "CONTAINER_UNDESCRIBED");
+    writeFileSync(join(root, "runner/Dockerfile"), `FROM docker.io/library/node@${IMG_BASE}\nCOPY package.json ./\nCOPY container ./container/\nCOPY --from=build /out ./out\n`);
+    assert.deepEqual(files(), before, "nothing was written by any refusal");
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });

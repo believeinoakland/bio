@@ -11,7 +11,7 @@
  * COST, satisfies every assertion, and then goes stale in ONE of its homes while
  * the others hold still. So M0-15's code MOVED HERE. There is one mechanism; the
  * walks are its callers: today the fleet bundle guard (`fleet-bundle.mjs`'s
- * `fleetProvenance`) and the UI's test walks (`civicos-ui/test/`). Its behaviour
+ * `fleetProvenance`) and any other walk over a directory its caller does not control. Its behaviour
  * is bundler R9, proved by `test/m/bundler/bundler.test.mjs`.
  *
  * THE DEFECT, in one sentence (the full mechanism is in D-238): `git stash` is

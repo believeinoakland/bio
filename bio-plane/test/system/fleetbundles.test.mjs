@@ -116,18 +116,16 @@ console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them 
 /* T36-2 (BUNDLER #10; rev. 2 §2 R10): `file-scanner`, the fleet's second container member and its first with two
    classes (T36-5), is listed with each class's image: a two-class member answers its classes' repositories, in its
    marker's order; a one-class member its one image, as before.
-   RE-POINTED 2026-10-08 (BUNDLER #11, T37-3 B2; K2176, N773): file-scanner's images moved from `ghcr.io`, which
-   Containers cannot pull, to Docker Hub (file-scanner R10).
-   RE-PINNED 2026-10-12 (BUNDLER #16, T46-2; K2266, K2912): the 0.82.0 cut (`dist/cut-0.82.0` @ 985fbefc88) names all
-   three images under `ghcr.io/believeinoakland/`, where it published them and wrote their digests; red until the cut is
-   merged into the tranche (T46 rule 5 (5)). */
+   RE-POINTED T51 (N1242, K3805, bundler R35): the real fleet's markers name the three images on Docker Hub,
+   `docker.io/civicsmith/…@sha256`, which an installer pulls with no credential; red until file-scanner's (T51-9) and
+   agent-runner's (T51-64) own jobs merge their markers. */
 t("members discovered by their own marker file, never a list kept here",
   members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
 t("agent-runner and file-scanner are listed as container members, each with its images (R24)",
   members.filter(isContainer).map((m) => [m.name, m.kind,
     ...(m.containers ? m.containers.map((c) => c.image.repository) : [m.image.repository])]),
-  [["agent-runner", "container", "ghcr.io/believeinoakland/agent-runner"],
-   ["file-scanner", "container", "ghcr.io/believeinoakland/file-scanner-scanner", "ghcr.io/believeinoakland/file-scanner-renderer"]]);
+  [["agent-runner", "container", "docker.io/civicsmith/agent-runner"],
+   ["file-scanner", "container", "docker.io/civicsmith/file-scanner-scanner", "docker.io/civicsmith/file-scanner-renderer"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
