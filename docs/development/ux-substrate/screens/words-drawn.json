@@ -12485,6 +12485,924 @@
    "en": "Nothing here is deleted; the record keeps it.",
    "protected": false,
    "note": "DEC-330: B306 A63"
+  },
+  {
+   "key": "screen.question.say000",
+   "en": "Deferred for Pothole repairs by you, 18 October.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say001",
+   "en": "Recorded with your name, for Pothole repairs alone: the question itself has not moved, and no other project is affected.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say002",
+   "en": "It is still readable here, and nothing built on it has changed.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say003",
+   "en": "What do you want to do with it now?",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say004",
+   "en": "Defer it: come back to it later",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say005",
+   "en": "Dismiss it: it is not worth pursuing",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say006",
+   "en": "It replaces your earlier decision for this project, and the earlier one stays on the record.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say007",
+   "en": "Set this question aside for the project",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say008",
+   "en": "Dismissed for Pothole repairs by you, 18 October.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say009",
+   "en": "Before you accept: the bias this reading was composed under",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say010",
+   "en": "A reading the assistant composed follows the team's stated bias as it stood when the run was made.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say011",
+   "en": "If that has changed since, the reading and the team's position may no longer match.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say012",
+   "en": "⁂Composed by the assistant, working for Mai, 8 OctoberStated bias it was composed under: ⁂Stated bias now: ⁂",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say013",
+   "en": "What the team stands under now is not what this reading was composed under, so what it weighed and what you would be adopting it under are two different things.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say014",
+   "en": "This compares the run's own recorded bias with what the team holds now.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say015",
+   "en": "It is not a comparison with a bias of your own: the record holds none for a member.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say016",
+   "en": "The other things it can say",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say017",
+   "en": "It has not moved.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say018",
+   "en": "What this reading was composed under is what the team holds now.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say019",
+   "en": "It is not known whether it moved: one of the two sides has nothing to compare.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say020",
+   "en": "This page says so, and does not report it as unchanged.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say021",
+   "en": "No stated bias was in force when this reading was composed, so there is nothing to compare.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say022",
+   "en": "Compare two readings: what differs, and where each came from",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say023",
+   "en": "Compare the reading shown with",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say024",
+   "en": "Pick another reading and what is different appears below.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say025",
+   "en": "Moving between readings is the comparison: there is nothing else to open.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say026",
+   "en": "Compared with {against}, {shown} differs in {n} of {total} things.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say027",
+   "en": "What this reading says",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say028",
+   "en": "The reasons it rests on",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say029",
+   "en": "How the reasons stand together",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say030",
+   "en": "Was: either one is enough.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say031",
+   "en": "Now: the standard is needed, and the count and the audit are each enough.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say032",
+   "en": "What the team has decided",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say033",
+   "en": "Was: accepted by Ana, 7 October.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say034",
+   "en": "Now: accepted by Dev, 6 October, and Pothole repairs stands on it.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say035",
+   "en": "Both were written by a member.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say036",
+   "en": "Where each reading came from",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say037",
+   "en": "written by Ana, the first reading",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say038",
+   "en": "built from it by Dev",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say039",
+   "en": "the one you are reading",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say040",
+   "en": "taken from it by the assistant",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say041",
+   "en": "taken from it by Mai",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say042",
+   "en": "held back from this display",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say043",
+   "en": "A reading whose source is not among these is drawn first and says where it comes from.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say044",
+   "en": "Hiding a reading holds it back from this list only; anyone can show it again.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say045",
+   "en": "What each published case froze for this question",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say046",
+   "en": "Each case froze its own strength for it when it published.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say047",
+   "en": "They are not combined, this page does not choose between them, and today's strength is shown beside each, never in place of it.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say048",
+   "en": "Frozen when it published:",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say049",
+   "en": "as the case froze it",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say050",
+   "en": "Stated in the signed case, and covered by the case's signature.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say051",
+   "en": "This question's own signature covers the question as its team concluded it.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say052",
+   "en": "Pinned at the version you are reading, so its pair belongs to it.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say053",
+   "en": "Pothole repairs, the first year",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say054",
+   "en": "stronger now, since the audit was cited",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say055",
+   "en": "Frozen into this question's own published record when the case published it, and signed with it.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say056",
+   "en": "This case pinned an earlier version of this question, not the one you are reading.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say057",
+   "en": "Its strength belongs to that version, so it is not shown here.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say058",
+   "en": "Defer or dismiss this question for Pothole repairs",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say059",
+   "en": "This is Pothole repairs' own decision about the question.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say060",
+   "en": "It is kept for the project alone: the question itself does not move, and nobody else's view of it changes.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say061",
+   "en": "Deferring puts it aside to come back to; dismissing says it is not worth pursuing.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say062",
+   "en": "Your reason is recorded with your name, and nothing is deleted.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say063",
+   "en": "What do you want to do with it?",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say064",
+   "en": "It is kept with the decision, so whoever looks at the question later sees why it was set aside.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say065",
+   "en": "Pothole repairs stands on a reading of this question",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say066",
+   "en": "The project's decision is recorded; the reading it stands on is not changed.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say067",
+   "en": "Its plan, Repairs: closed is not repaired",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say068",
+   "en": "Stays open as it is.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say069",
+   "en": "Another question cites this one as a passage",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say070",
+   "en": "Its citation stays as it is.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say071",
+   "en": "Street safety, 2026 cites it, published",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say072",
+   "en": "A published case is never changed by this.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say073",
+   "en": "When it cannot be done yet",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say074",
+   "en": "You are not a participant in Pothole repairs, so you cannot set the question aside for it.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.say075",
+   "en": "A reason is required.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
+  },
+  {
+   "key": "screen.question.tip076",
+   "en": "A published case keeps the strength a question had on the day it published.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: explanation"
+  },
+  {
+   "key": "screen.question.tip077",
+   "en": "It never changes afterwards, so a reader of the case sees what the team knew then.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: explanation"
+  },
+  {
+   "key": "screen.question.tip078",
+   "en": "Read before you confirm.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: explanation"
+  },
+  {
+   "key": "screen.question.tip079",
+   "en": "This lists what you can see that rests on the question; work you cannot see is not listed, and no other project is named.",
+   "protected": false,
+   "note": "DEC-330: B306 A23/A37/A40/A41: question screen: explanation"
+  },
+  {
+   "key": "screen.capture.a64.if_the_address_is_already_held_or_the_si",
+   "en": "If the address is already held, or the site has changed since",
+   "protected": false,
+   "note": "DEC-330: B306 A64: capture drawn word"
+  },
+  {
+   "key": "screen.capture.a64.already_in_the_record_as",
+   "en": "Already in the record as",
+   "protected": false,
+   "note": "DEC-330: B306 A64: capture drawn word"
+  },
+  {
+   "key": "screen.capture.a64.the_site_still_gives_the_same_document",
+   "en": "the site still gives the same document",
+   "protected": false,
+   "note": "DEC-330: B306 A64: capture drawn word"
+  },
+  {
+   "key": "screen.capture.a64.the_site_has_changed_since",
+   "en": "The site has changed since",
+   "protected": false,
+   "note": "DEC-330: B306 A64: capture drawn word"
+  },
+  {
+   "key": "screen.capture.a64.your_team_holds_a_capture_from_14_septem",
+   "en": "your team holds a capture from 14 September, and the site now gives a different document",
+   "protected": false,
+   "note": "DEC-330: B306 A64: capture drawn word"
+  },
+  {
+   "key": "screen.capture.a64.capturing_it_again_keeps_the_new_copy_be",
+   "en": "Capturing it again keeps the new copy beside the old one.",
+   "protected": false,
+   "note": "DEC-330: B306 A64: capture drawn word"
+  },
+  {
+   "key": "screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un",
+   "en": "Whoever cited the old one stays on it until they move.",
+   "protected": false,
+   "note": "DEC-330: B306 A64: capture drawn word"
+  },
+  {
+   "key": "screen.capture.a64.capture_the_new_copy",
+   "en": "Capture the new copy",
+   "protected": false,
+   "note": "DEC-330: B306 A64: capture drawn word"
+  },
+  {
+   "key": "screen.document.a34.your_citations_leg_by_leg",
+   "en": "Your citations, leg by leg",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a34.a_newer_copy_never_moves_a_citation_by_i",
+   "en": "A newer copy never moves a citation by itself.",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a34.each_reasoning_that_rests_on_this_docume",
+   "en": "Each reasoning that rests on this document is asked about on its own.",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a34.a_newer_copy_exists_captured_2_october",
+   "en": "a newer copy exists, captured 2 October",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a34.section_3_reads_the_same_in_both",
+   "en": "section 3 reads the same in both",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a34.nobody_has_asked_yet_whether_a_newer_cop",
+   "en": "nobody has asked yet whether a newer copy exists",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a34.ask_whether_a_newer_copy_exists",
+   "en": "Ask whether a newer copy exists",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a34.the_record_could_not_tell_whether_a_newe",
+   "en": "The record could not tell whether a newer copy exists for section 2 of the lease question.",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a34.it_does_not_guess",
+   "en": "It does not guess.",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.the_record_of_this_copy",
+   "en": "The record of this copy",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.the_release_of_civicsmith_that_wrote_thi",
+   "en": "The release of Civicsmith that wrote this copy into your team's record, so a later reading can tell how it was written.",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.everything_done_to_this_copy_s_standing_",
+   "en": "Everything done to this copy's standing is kept here, oldest first.",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.none_of_it_is_ever_changed_or_removed",
+   "en": "None of it is ever changed or removed.",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.held_until_vouched_for",
+   "en": "held until vouched for",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.vouched_for_by_dev",
+   "en": "Vouched for by Dev",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.now_used_by_the_team",
+   "en": "now used by the team",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.checked_the_words_against_the_original_f",
+   "en": "checked: the words against the original file, and the address against the site",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.grade_changed_from_c_to_b_by_mai",
+   "en": "Grade changed from C to B by Mai",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.checked_the_issuer_is_the_department_s_o",
+   "en": "checked: the issuer is the department's own site",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.earlier_revisions_of_this_record",
+   "en": "Earlier revisions of this record",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.grade_b_used_by_the_team",
+   "en": "grade B, used by the team",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.vouched_for_grade_c",
+   "en": "vouched for, grade C",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.standing_held_until_vouched_for",
+   "en": "Standing: held until vouched for",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.vouched_for_by_nobody",
+   "en": "Vouched for by: nobody",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.standing_used_by_the_team",
+   "en": "Standing: used by the team",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.vouched_for_by_dev.2",
+   "en": "Vouched for by: Dev",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.a_copy_that_came_as_a_set_of_files_such_",
+   "en": "A copy that came as a set of files, such as a page with its stylesheet and images, keeps the history of the whole set here in the same way, with the files that changed.",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a26.this_copy_s_words_and_file",
+   "en": "This copy's words and file",
+   "protected": false,
+   "note": "DEC-330: B306 A26: document drawn word"
+  },
+  {
+   "key": "screen.document.a26.computed_from_the_exact_bytes_of_this_co",
+   "en": "computed from the exact bytes of this copy",
+   "protected": false,
+   "note": "DEC-330: B306 A26: document drawn word"
+  },
+  {
+   "key": "screen.document.a26.this_copy_and_the_files_captured_with_it",
+   "en": "This copy and the files captured with it",
+   "protected": false,
+   "note": "DEC-330: B306 A26: document drawn word"
+  },
+  {
+   "key": "screen.document.a26.computed_from_the_whole_set_so_the_set_c",
+   "en": "computed from the whole set, so the set can be checked as one",
+   "protected": false,
+   "note": "DEC-330: B306 A26: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.6_links_on_this_page_4_lead_outside_the_",
+   "en": "6 links on this page. 4 lead outside the record, where the site is as it is today and may differ from what was captured.",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.a_pointer_into_this_very_copy_settled_wh",
+   "en": "a pointer into this very copy, settled when it was captured",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a64.captured_together_with_this_page_and_che",
+   "en": "captured together with this page, and checked against its fingerprint",
+   "protected": false,
+   "note": "DEC-330: B306 A64: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.held_by_the_team",
+   "en": "Held by the team",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.the_copy_your_team_holds_is_the_one_this",
+   "en": "the copy your team holds is the one this page pointed at",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.the_other_verdicts_a_held_link_can_carry",
+   "en": "The other verdicts a held link can carry: a different version means the team holds another version than the one this page pointed at, and it is shown as that.",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a64.not_established_means_the_record_cannot_",
+   "en": "Not established means the record cannot say either way, which is the usual answer for a site that changes its page on every visit and not a fault.",
+   "protected": false,
+   "note": "DEC-330: B306 A64: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.when_you_open_an_outside_link",
+   "en": "When you open an outside link",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.you_are_about_to_leave_the_record",
+   "en": "You are about to leave the record",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.this_page_carried_this_address_and_the_r",
+   "en": "This page carried this address, and the record holds that.",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.what_is_at_the_address_now_the_record_do",
+   "en": "What is at the address now, the record does not hold: nothing there has been checked against a fingerprint, and it may have changed or gone since this page was captured.",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a27.opening_it_leaves_the_record_and_nothing",
+   "en": "Opening it leaves the record, and nothing you see there is vouched for by your team.",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.stay_in_the_record",
+   "en": "Stay in the record",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.not_an_address_the_record_will_carry",
+   "en": "not an address the record will carry.",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a30.this_is_a_refusal_not_a_gap_in_what_was_",
+   "en": "This is a refusal, not a gap in what was captured.",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document drawn word"
+  },
+  {
+   "key": "screen.document.a31.the_grade_on_each_name_says_how_the_matc",
+   "en": "The grade on each name says how the match was made, from A, a shared identifier, to D, a guess.",
+   "protected": false,
+   "note": "DEC-330: B306 A31: document drawn word"
+  },
+  {
+   "key": "screen.document.a31.it_says_nothing_about_how_far_to_trust_t",
+   "en": "It says nothing about how far to trust this document.",
+   "protected": false,
+   "note": "DEC-330: B306 A31: document drawn word"
+  },
+  {
+   "key": "screen.document.a31.a_connection_to_another_document_takes_t",
+   "en": "A connection to another document takes the weaker grade of its two ends.",
+   "protected": false,
+   "note": "DEC-330: B306 A31: document drawn word"
+  },
+  {
+   "key": "screen.finder.a17.cite_every_document_you_hold_together_in",
+   "en": "Cite every document you hold together in one question, in one step.",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder drawn word"
+  },
+  {
+   "key": "screen.finder.a17.each_document_is_cited_whole_as_its_own_",
+   "en": "Each document is cited whole, as its own source, and the question weighs them one at a time: holding them together adds no weight.",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder drawn word"
+  },
+  {
+   "key": "screen.finder.a17.a_document_the_question_already_cites_is",
+   "en": "A document the question already cites is left exactly as it was.",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder drawn word"
+  },
+  {
+   "key": "screen.finder.a17.if_the_set_changed_after_you_held_it_wha",
+   "en": "If the set changed after you held it, what changed is shown to you, and citing carries on.",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder drawn word"
+  },
+  {
+   "key": "screen.finder.a17.newly_cited_supporting_the_question",
+   "en": "newly cited, supporting the question",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder drawn word"
+  },
+  {
+   "key": "screen.finder.a17.left_as_it_was",
+   "en": "Left as it was",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder drawn word"
+  },
+  {
+   "key": "screen.finder.a17.the_question_already_cited_it",
+   "en": "the question already cited it",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder drawn word"
+  },
+  {
+   "key": "screen.document.a34.one_line_for_each_question_that_rests_on",
+   "en": "One line for each question that rests on this document, so a newer copy is taken up or declined for each one separately.",
+   "protected": false,
+   "note": "DEC-330: B306 A34: document explanation"
+  },
+  {
+   "key": "screen.document.a27.who_added_this_copy_who_vouched_for_it_a",
+   "en": "Who added this copy, who vouched for it and who changed its standing, with when and what they checked; which release of Civicsmith recorded it; and every earlier revision of the record, which you can set side by side.",
+   "protected": false,
+   "note": "DEC-330: B306 A27: document explanation"
+  },
+  {
+   "key": "screen.document.a26.short_codes_computed_from_the_exact_byte",
+   "en": "Short codes computed from the exact bytes.",
+   "protected": false,
+   "note": "DEC-330: B306 A26: document explanation"
+  },
+  {
+   "key": "screen.document.a26.anyone_holding_the_same_bytes_computes_t",
+   "en": "Anyone holding the same bytes computes the same code, so a copy can be checked without trusting whoever passed it on.",
+   "protected": false,
+   "note": "DEC-330: B306 A26: document explanation"
+  },
+  {
+   "key": "screen.document.a30.each_is_grouped_by_where_it_leads_and_ca",
+   "en": "Each is grouped by where it leads and carries a verdict word.",
+   "protected": false,
+   "note": "DEC-330: B306 A30: document explanation"
+  },
+  {
+   "key": "screen.finder.a17.cites_every_document_you_hold_together_i",
+   "en": "Cites every document you hold together in one question.",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder explanation"
+  },
+  {
+   "key": "screen.finder.a17.you_choose_the_question_and_how_they_bea",
+   "en": "You choose the question and how they bear on it first.",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder explanation"
+  },
+  {
+   "key": "screen.finder.a17.cites_every_document_you_hold_together_i.2",
+   "en": "Cites every document you hold together in the question you choose, each whole and as its own source, supporting it or cutting against it.",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder explanation"
+  },
+  {
+   "key": "screen.finder.a17.one_already_cited_is_left_as_it_was_and_",
+   "en": "One already cited is left as it was, and you see what happened to each.",
+   "protected": false,
+   "note": "DEC-330: B306 A17: finder explanation"
   }
  ],
  "rewrite": {

@@ -1615,6 +1615,15 @@
      ]
     },
     {
+     "op": "cite",
+     "label": "Cite these together",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "citation"
+     ]
+    },
+    {
      "op": "selectionrelease",
      "label": "Let the set go",
      "status": "declared",
@@ -2005,6 +2014,30 @@
      "modules": [
       "reevaluation"
      ]
+    },
+    {
+     "op": "versionnotice",
+     "label": "Ask whether a newer copy exists",
+     "status": "declared",
+     "modules": [
+      "content",
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "owed:revisioncompare DEC-330",
+     "label": "Compare two revisions",
+     "status": "owed"
+    },
+    {
+     "op": "owed:hashcopy DEC-330",
+     "label": "Copy a fingerprint",
+     "status": "owed"
+    },
+    {
+     "op": "owed:linkopen DEC-330",
+     "label": "Open an outside link",
+     "status": "owed"
     },
     {
      "op": "connectionchoose",
@@ -2552,6 +2585,16 @@
      "status": "declared",
      "modules": [
       "basis-versions"
+     ]
+    },
+    {
+     "op": "proposedispose",
+     "label": "Set this question aside for the project",
+     "status": "declared",
+     "modules": [
+      "inquiry",
+      "progressions",
+      "queue"
      ]
     },
     {
