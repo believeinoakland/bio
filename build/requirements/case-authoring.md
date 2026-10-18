@@ -58,6 +58,10 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 - **R36** *(retired: moved to `case-disclosures` R3, N529)*
 - **R37** *(retired: moved to `case-disclosures` R4, N529)*
 
+#### The sign step's minutes comparisons (T51; DEC-340)
+
+- **R77** *(not yet met: T51)* (T51; N880 (U4); DEC-340, U366; K3935; amends R34; `case-inputs` R19) **The sign step also answers the minutes comparisons.** R34's `steps` also carries `minutes`, `case-inputs.minutesComparisonsOn` over the same `case` and `members` as R34's open requests, each row with its `minutesLine`; when the source answers `undetermined` the step answers `minutes: {undetermined: true}` and no rows, and never `[]`. It never changes `ready`, `first` or `blockers`, asks no reason and writes nothing. Test: a fixture source's rows reach the step with their lines; an unreadable source answers `undetermined: true`. Control: the step's `ready` is the same with and without rows.
+
 ## Private
 
 ### Uses
