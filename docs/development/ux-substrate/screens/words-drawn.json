@@ -4694,7 +4694,7 @@
   },
   {
    "key": "screen.setup.handle.tip",
-   "en": "Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. It needn't be your legal name, and no one else in your team can ever take it.",
+   "en": "Lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. It needn't be your legal name, and no one else in your team can ever take it.",
    "protected": false,
    "note": "DEC-279: explains 'Choose it with care'"
   },
@@ -5452,7 +5452,7 @@
    "key": "screen.group.court.says",
    "en": "The notice tells each member plainly that a court order could reach what the team keeps that is not public.",
    "protected": false,
-   "note": "DEC-290: Bob's ruling of 5 October (DEC-136): members understand a court order can expose non-public records"
+   "note": "DEC-290: Bob's ruling of October 5 (DEC-136): members understand a court order can expose non-public records"
   },
   {
    "key": "screen.security.ordinary.head",
@@ -6004,7 +6004,7 @@
    "key": "time.at",
    "en": "{date}, {time}",
    "protected": false,
-   "note": "DEC-299: a moment, in the team's time zone, such as \"16 October, 14:05\"; never an ISO time"
+   "note": "DEC-299: a moment, in the team's time zone, such as \"October 16, 14:05\"; never an ISO time"
   },
   {
    "key": "document.uploaded.by",
@@ -6148,7 +6148,7 @@
    "key": "period.days",
    "en": "{first} to {last}",
    "protected": false,
-   "note": "DEC-300: a period named by its first and last day, both included, such as \"1 to 15 October\""
+   "note": "DEC-300: a period named by its first and last day, both included, such as \"October 1 to 15\""
   },
   {
    "key": "refusal.ASSISTANT_REMOTE_NOT_READY",
@@ -9080,13 +9080,13 @@
   },
   {
    "key": "progression.finding.state.deferred",
-   "en": "Put off for now",
+   "en": "Deferred",
    "protected": false,
    "note": "DEC-329: B303 (3): a finding with disposition deferred (progressions: a decision is deferred or dismissed); timeline-parts.mjs:50-55"
   },
   {
    "key": "progression.finding.state.help",
-   "en": "Where a finding stands. Open means no one has dealt with it yet. Set aside means a member decided it needs no action; put off for now means a member chose to come back to it. The reason stays beside it, and the finding is never hidden or deleted.",
+   "en": "Where a finding stands. Open means no one has dealt with it yet. Set aside means a member decided it needs no action; deferred means a member chose to come back to it. The reason stays beside it, and the finding is never hidden or deleted.",
    "protected": false,
    "note": "DEC-329: B303 (3): explains the three words above; timeline-parts.mjs:50-55"
   },
@@ -10904,7 +10904,7 @@
   },
   {
    "key": "installer.shortname.hint",
-   "en": "Lower-case letters, digits and hyphens. It becomes the first part of your team's web address and the name of its program in your Cloudflare account. A team that wants to stay unnamed picks one that reveals nothing.",
+   "en": "Lowercase letters, digits and hyphens. It becomes the first part of your team's web address and the name of its program in your Cloudflare account. A team that wants to stay unnamed picks one that reveals nothing.",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/ui.mjs:290"
   },
@@ -11198,7 +11198,7 @@
   },
   {
    "key": "installer.begin.slug",
-   "en": "The short name needs 3 to 40 characters: lower-case letters, digits and hyphens, starting and ending with a letter or digit.",
+   "en": "The short name needs 3 to 40 characters: lowercase letters, digits and hyphens, starting and ending with a letter or digit.",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2585"
   },
@@ -11953,28 +11953,52 @@
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1688; {what} {said} {name}"
   },
   {
-   "key": "installer.limit.workers",
+   "key": "installer.limit.workers.other",
    "en": "{n} programs",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1709; Workers"
   },
   {
-   "key": "installer.limit.classes",
+   "key": "installer.limit.workers.one",
+   "en": "1 program",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "installer.limit.classes.other",
    "en": "{n} Durable Object classes",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1710; a Cloudflare term, kept so the person can find it in the dashboard"
   },
   {
-   "key": "installer.limit.buckets",
+   "key": "installer.limit.classes.one",
+   "en": "1 Durable Object class",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "installer.limit.buckets.other",
    "en": "{n} storage buckets (R2)",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1711"
   },
   {
-   "key": "installer.limit.containers",
+   "key": "installer.limit.buckets.one",
+   "en": "1 storage bucket (R2)",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "installer.limit.containers.other",
    "en": "{n} containers",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:1712"
+  },
+  {
+   "key": "installer.limit.containers.one",
+   "en": "1 container",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "installer.success.title.ready",
@@ -12254,7 +12278,7 @@
   },
   {
    "key": "screen.group-identity.seed.note",
-   "en": "This Civicsmith held a record before it was told which team produces it. Until you record it, it refuses what must name its team: testimony, setup's saves, and a new document that names none. Nothing already in your record changes.",
+   "en": "This Civicsmith held a record before it was told which team produces it. Until you record it, it refuses what must name its team: testimony, the setup page's saves, and a new document that names none. Nothing already in your record changes.",
    "protected": false,
    "note": "DEC-331"
   },
@@ -12343,12 +12367,6 @@
    "note": "DEC-330: B306 A61: sub-line"
   },
   {
-   "key": "queue.answered.left",
-   "en": "They have left your queue.",
-   "protected": false,
-   "note": "DEC-330: B306 A61"
-  },
-  {
    "key": "queue.answered.photos",
    "en": "Vouched for 2 photos you captured on Seminary Avenue",
    "protected": false,
@@ -12386,7 +12404,7 @@
   },
   {
    "key": "queue.aside.dismissed",
-   "en": "Dismissed by you, 8 October",
+   "en": "Dismissed by you, October 8",
    "protected": false,
    "note": "DEC-330: B306 A63 decision line"
   },
@@ -12404,7 +12422,7 @@
   },
   {
    "key": "queue.aside.deferred",
-   "en": "Put off by you until 1 November",
+   "en": "Deferred by you until November 1",
    "protected": false,
    "note": "DEC-330: B306 A63"
   },
@@ -12488,7 +12506,7 @@
   },
   {
    "key": "screen.question.say000",
-   "en": "Deferred for Pothole repairs by you, 18 October.",
+   "en": "Deferred for Pothole repairs by you, October 18.",
    "protected": false,
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
@@ -12536,7 +12554,7 @@
   },
   {
    "key": "screen.question.say008",
-   "en": "Dismissed for Pothole repairs by you, 18 October.",
+   "en": "Dismissed for Pothole repairs by you, October 18.",
    "protected": false,
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
@@ -12560,7 +12578,7 @@
   },
   {
    "key": "screen.question.say012",
-   "en": "⁂Composed by the assistant, working for Mai, 8 OctoberStated bias it was composed under: ⁂Stated bias now: ⁂",
+   "en": "⁂Composed by the assistant, working for Mai, October 8Stated bias it was composed under: ⁂Stated bias now: ⁂",
    "protected": false,
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
@@ -12686,13 +12704,13 @@
   },
   {
    "key": "screen.question.say033",
-   "en": "Was: accepted by Ana, 7 October.",
+   "en": "Was: accepted by Ana, October 7.",
    "protected": false,
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
   {
    "key": "screen.question.say034",
-   "en": "Now: accepted by Dev, 6 October, and Pothole repairs stands on it.",
+   "en": "Now: accepted by Dev, October 6, and Pothole repairs stands on it.",
    "protected": false,
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
@@ -12740,7 +12758,7 @@
   },
   {
    "key": "screen.question.say042",
-   "en": "held back from this display",
+   "en": "held back from this list",
    "protected": false,
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
@@ -12800,7 +12818,7 @@
   },
   {
    "key": "screen.question.say052",
-   "en": "Pinned at the version you are reading, so its pair belongs to it.",
+   "en": "Pinned at the version you are reading, so the strength shown is the one for this version.",
    "protected": false,
    "note": "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence"
   },
@@ -12992,7 +13010,7 @@
   },
   {
    "key": "screen.capture.a64.your_team_holds_a_capture_from_14_septem",
-   "en": "your team holds a capture from 14 September, and the site now gives a different document",
+   "en": "your team holds a capture from September 14, and the site now gives a different document",
    "protected": false,
    "note": "DEC-330: B306 A64: capture drawn word"
   },
@@ -13034,7 +13052,7 @@
   },
   {
    "key": "screen.document.a34.a_newer_copy_exists_captured_2_october",
-   "en": "a newer copy exists, captured 2 October",
+   "en": "a newer copy exists, captured October 2",
    "protected": false,
    "note": "DEC-330: B306 A34: document drawn word"
   },
@@ -13364,7 +13382,7 @@
   },
   {
    "key": "screen.document.a26.short_codes_computed_from_the_exact_byte",
-   "en": "Short codes computed from the exact bytes.",
+   "en": "Fingerprints computed from the exact bytes.",
    "protected": false,
    "note": "DEC-330: B306 A26: document explanation"
   },
@@ -13382,7 +13400,7 @@
   },
   {
    "key": "screen.finder.a17.cites_every_document_you_hold_together_i",
-   "en": "Cites every document you hold together in one question.",
+   "en": "Opens Cite these together, to cite the documents you hold in one question you choose.",
    "protected": false,
    "note": "DEC-330: B306 A17: finder explanation"
   },
@@ -13442,7 +13460,7 @@
   },
   {
    "key": "screen.published.a.filtered.view.you.constructed",
-   "en": "A filtered view you constructed.",
+   "en": "A filtered view you built.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -13502,7 +13520,7 @@
   },
   {
    "key": "screen.published.council.minutes.12.january.2024",
-   "en": "Council minutes, 12 January 2024, item 7: the council approved amendment 1 and no later change.",
+   "en": "Council minutes, January 12, 2024, item 7: the council approved amendment 1 and no later change.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -13634,7 +13652,7 @@
   },
   {
    "key": "screen.published.rests.on.the.council.minutes",
-   "en": "Rests on: the council minutes of 12 January 2024, item 7; the March 2024 rent schedule.",
+   "en": "Rests on: the council minutes of January 12, 2024, item 7; the March 2024 rent schedule.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -13646,7 +13664,7 @@
   },
   {
    "key": "screen.published.signed.for.lakeshore.tenants.by",
-   "en": "Signed for Lakeshore Tenants by Rosa M. on 18 September 2026, with the key whose fingerprint is ab12 34cd.",
+   "en": "Signed for Lakeshore Tenants by Rosa M. on September 18, 2026, with the key whose fingerprint is ab12 34cd.",
    "protected": false,
    "note": "DEC-330: B306 A76/A77/A79: drawn sentence"
   },
@@ -13754,7 +13772,7 @@
   },
   {
    "key": "screen.review_copy.a.code.that.names.exactly",
-   "en": "a code that names exactly what the file holds, on every page",
+   "en": "a fingerprint that names exactly what the file holds, on every page",
    "protected": false,
    "note": "DEC-330: B306 A81: drawn sentence"
   },
@@ -13850,13 +13868,13 @@
   },
   {
    "key": "screen.members.key.registered.by.rosa.3",
-   "en": "key registered by Rosa, 3 October",
+   "en": "key registered by Rosa, October 3",
    "protected": false,
    "note": "DEC-330: B306 A72/A74: drawn sentence"
   },
   {
    "key": "screen.members.key.registered.by.teo.2",
-   "en": "key registered by Teo, 2 October",
+   "en": "key registered by Teo, October 2",
    "protected": false,
    "note": "DEC-330: B306 A72/A74: drawn sentence"
   },
@@ -14042,7 +14060,7 @@
   },
   {
    "key": "screen.project.by.standing.down.17.october",
-   "en": "by standing down, 17 October",
+   "en": "by standing down, October 17",
    "protected": false,
    "note": "DEC-330: B306 A47: drawn sentence"
   },
@@ -14126,7 +14144,7 @@
   },
   {
    "key": "screen.account.registered.for.you.by.rosa",
-   "en": "registered for you by Rosa, an administrator, on 3 October.",
+   "en": "registered for you by Rosa, an administrator, on October 3.",
    "protected": false,
    "note": "DEC-330: B306 A74: drawn sentence"
   },
@@ -14210,13 +14228,13 @@
   },
   {
    "key": "screen.account.key.lost",
-   "en": "Lose a key later? Withdraw it here and make a new one; cases it already signed can still be checked.",
+   "en": "Lose a key later? Revoke it here and make a new one; cases it already signed can still be checked.",
    "protected": false,
    "note": "DEC-330: B306 C1: Your account, state c"
   },
   {
    "key": "screen.finder.table.view.help",
-   "en": "One table: every item your team holds, a row each, with its kind, its state and when it last changed. Choose a column heading to sort by it.",
+   "en": "One table: every item your team holds, a row each, with its kind, its state and when it last changed.",
    "protected": false,
    "note": "DEC-330: B306 A14: the Show as choice in Find"
   },
@@ -14227,10 +14245,16 @@
    "note": "DEC-330: B306 A14: Find, state g"
   },
   {
-   "key": "screen.finder.table.count",
+   "key": "screen.finder.table.count.other",
    "en": "{n} items · {m} awaiting review",
    "protected": false,
    "note": "DEC-330: B306 A14: Find, state g: the count line"
+  },
+  {
+   "key": "screen.finder.table.count.one",
+   "en": "1 item · {m} awaiting review",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "screen.finder.table.sorting",
@@ -14257,10 +14281,16 @@
    "note": "DEC-330: B306 A15: the first route of three"
   },
   {
-   "key": "screen.finder.route.fields.holds",
+   "key": "screen.finder.route.fields.holds.other",
    "en": "Looks at titles, your team's notes and each document's details. {n} documents match.",
    "protected": false,
    "note": "DEC-330: B306 A15: the first route: documents matched on their fields"
+  },
+  {
+   "key": "screen.finder.route.fields.holds.one",
+   "en": "Looks at titles, your team's notes and each document's details. 1 document matches.",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "screen.finder.route.passages",
@@ -14269,16 +14299,28 @@
    "note": "DEC-330: B306 A15: the second route of three"
   },
   {
-   "key": "screen.finder.route.passages.holds",
+   "key": "screen.finder.route.passages.holds.other",
    "en": "Looks at what the documents say, passage by passage. {n} passages in {m} documents match.",
    "protected": false,
    "note": "DEC-330: B306 A15: the second route: passages"
   },
   {
-   "key": "screen.finder.route.subjects.holds",
+   "key": "screen.finder.route.passages.holds.one",
+   "en": "Looks at what the documents say, passage by passage. 1 passage in 1 document matches.",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "screen.finder.route.subjects.holds.other",
    "en": "Looks at the names of the people, offices, laws, funds and other things your team's record follows. {n} match.",
    "protected": false,
    "note": "DEC-330: B306 A15: the third route: subjects"
+  },
+  {
+   "key": "screen.finder.route.subjects.holds.one",
+   "en": "Looks at the names of the people, offices, laws, funds and other things your team's record follows. 1 matches.",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "screen.finder.route.apart",
@@ -14329,16 +14371,28 @@
    "note": "DEC-330: B306 A15: level 2 of 4"
   },
   {
-   "key": "screen.finder.covered.read.says",
+   "key": "screen.finder.covered.read.says.other",
    "en": "Passages were read from {read} of the {n} documents searched. The other {rest} have not been read passage by passage yet, so their words were not searched.",
    "protected": false,
    "note": "DEC-330: B306 A15: level 2 of 4: how much was read at passage grain"
   },
   {
-   "key": "screen.finder.covered.docs.says",
+   "key": "screen.finder.covered.read.says.one",
+   "en": "Passages were read from {read} of the {n} documents searched. The other one has not been read passage by passage yet, so its words were not searched.",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
+  },
+  {
+   "key": "screen.finder.covered.docs.says.other",
    "en": "Searched {n} of the {all} documents your team holds. {hidden} are in projects where you can see only that they exist, so they were not searched for you.",
    "protected": false,
    "note": "DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see"
+  },
+  {
+   "key": "screen.finder.covered.docs.says.one",
+   "en": "Searched {n} of the {all} documents your team holds. 1 is in a project where you can see only that it exists, so it was not searched for you.",
+   "protected": false,
+   "note": "DEC-330: the count of one (consistency read)"
   },
   {
    "key": "screen.finder.covered.looked",
@@ -15098,7 +15152,7 @@
   },
   {
    "key": "screen.project.notice.the.date.is.before.the",
-   "en": "The date is before the project began, on 3 October.",
+   "en": "The date is before the project began, on October 3.",
    "protected": false,
    "note": "DEC-332: B306 C6: drawn sentence"
   },
@@ -15158,7 +15212,7 @@
   },
   {
    "key": "screen.project.notice.working.on.it.since.3",
-   "en": "Working on it since 3 October 2026",
+   "en": "Working on it since October 3, 2026",
    "protected": false,
    "note": "DEC-332: B306 C6: drawn sentence"
   },
@@ -15224,13 +15278,13 @@
   },
   {
    "key": "screen.project.notice.as.the.teams.civicsmith.worked",
-   "en": "as the team's Civicsmith worked it out on 17 October",
+   "en": "as the team's Civicsmith worked it out on October 17",
    "protected": false,
    "note": "DEC-332: B306 C6: drawn sentence"
   },
   {
    "key": "screen.project.notice.the.next.monthly.check.is",
-   "en": "The next monthly check is on 1 November.",
+   "en": "The next monthly check is on November 1.",
    "protected": false,
    "note": "DEC-332: B306 C6: drawn sentence"
   },
@@ -15326,7 +15380,7 @@
   },
   {
    "key": "screen.members.key.react.key.withdrawn.by.rosa.12",
-   "en": "key withdrawn by Rosa, 12 October",
+   "en": "key withdrawn by Rosa, October 12",
    "protected": false,
    "note": "DEC-332: B306 A72/A74: drawn sentence"
   },
@@ -15433,7 +15487,7 @@
   "screen.help-records.does": "What Civicsmith does with it",
   "screen.join.invited": "You're invited to {group}",
   "screen.join.language.help": "Chosen from your device's setting. You can change it any time.",
-  "screen.join.handle.help": "The record shows your handle on your work. Choose it with care: it can't be changed after you join, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Choosing a handle: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.",
+  "screen.join.handle.help": "The record shows your handle on your work. Choose it with care: it can't be changed after you join, and no one else can ever take it. It needn't be your legal name. Lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Choosing a handle: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.",
   "screen.join.codes.after": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your team's home opens, with a short guided start you can take or leave.",
   "screen.money.didnotmove": "did not move: a {phase} figure",
   "screen.money.gap.to": "Undetermined: not stated in {source}, the only source holding this figure.",

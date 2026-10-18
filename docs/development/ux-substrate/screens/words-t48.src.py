@@ -145,12 +145,12 @@ w('document.names.none', 'This copy names no one the record follows yet. A name 
 
 # DEC-230: the founder's handle (K3265, K3277, N1072, T49; screens-entry R12 to R14): no word tells anyone a handle
 w('screen.setup.handle', 'Choose your handle', False, 'DEC-230: the claim step\'s field label')
-w('screen.setup.handle.help', 'The record shows your handle on your work and on every case you sign, so choose it with care: it can\'t be changed, and no one else can ever take it. It needn\'t be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.', False, 'DEC-230')
+w('screen.setup.handle.help', 'The record shows your handle on your work and on every case you sign, so choose it with care: it can\'t be changed, and no one else can ever take it. It needn\'t be your legal name. Lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.', False, 'DEC-230')
 w('screen.setup.claimed', 'Claimed. {group} is yours, and you\'re signed in as {handle} on this device.', False, 'DEC-230')
 w('signin.handle.help', 'The name the team knows you by: chosen when you joined, or when you set the team up.', False, 'DEC-230: the front door\'s handle field')
 w('forgot.handle.help', 'The handle you sign in with: the name the team knows you by.', False, 'DEC-230: the recovery page\'s handle field')
 w('refusal.NO_HANDLE', 'Choose a handle first: it\'s the name you\'ll sign in with. Nothing was changed.', False, 'DEC-230; membership R16, the claim')
-w('refusal.BAD_HANDLE', 'A handle uses only lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.', False, 'DEC-230; membership R12')
+w('refusal.BAD_HANDLE', 'A handle uses only lowercase letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.', False, 'DEC-230; membership R12')
 w('refusal.HANDLE_TAKEN', 'That handle is already taken here: choose another. Nothing was changed.', False, 'DEC-230; membership R16, R124')
 w('founder.handle.title', 'Choose your handle', False, 'DEC-230: the step a founder who claimed before T49 sees after signing in (screens-entry R14)')
 w('founder.handle.says', 'Until now you\'ve signed in as admin, a name every Civicsmith team\'s founder shared. Choose the handle you\'ll sign in with from now on: the record shows it on your work and on every case you sign. You choose it once; it can\'t be changed.', False, 'DEC-230')

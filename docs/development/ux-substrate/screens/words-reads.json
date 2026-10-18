@@ -5098,6 +5098,8 @@
     "act.noterevise.does",
     "act.noteturn.does",
     "act.notewrite.does",
+    "act.noticepost.does",
+    "act.noticeprepare.does",
     "act.obscuremark.does",
     "act.obscuremarkwithdraw.does",
     "act.officesseed.does",
@@ -5448,14 +5450,14 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 548,
+    "reads": 550,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 43,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 408,
+    "computedKeys": 410,
     "actHelp": 344,
     "vocabulary": 120
    },
@@ -6292,6 +6294,8 @@
     "act.noterevise.does",
     "act.noteturn.does",
     "act.notewrite.does",
+    "act.noticepost.does",
+    "act.noticeprepare.does",
     "act.obscuremark.does",
     "act.obscuremarkwithdraw.does",
     "act.officesseed.does",
@@ -6597,6 +6601,8 @@
     "screen.action.to",
     "screen.action.unsent",
     "screen.action.waiting",
+    "screen.actionnew.name",
+    "screen.actionnew.purpose",
     "screen.answers.name",
     "screen.answers.purpose",
     "screen.archive.name",
@@ -6639,6 +6645,8 @@
     "screen.forgot.purpose",
     "screen.front.name",
     "screen.front.purpose",
+    "screen.glossary.name",
+    "screen.glossary.purpose",
     "screen.group-identity.name",
     "screen.group-identity.purpose",
     "screen.group.name",
@@ -6996,14 +7004,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 894,
+    "reads": 900,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 360,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 534
+    "computedKeys": 540
    },
    "unkeyed": []
   },
@@ -7194,6 +7202,8 @@
     "act.noterevise.does",
     "act.noteturn.does",
     "act.notewrite.does",
+    "act.noticepost.does",
+    "act.noticeprepare.does",
     "act.obscuremark.does",
     "act.obscuremarkwithdraw.does",
     "act.officesseed.does",
@@ -8038,14 +8048,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 1027,
+    "reads": 1029,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 422,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 605
+    "computedKeys": 607
    },
    "unkeyed": [
     {
@@ -8250,6 +8260,8 @@
     "act.noterevise.does",
     "act.noteturn.does",
     "act.notewrite.does",
+    "act.noticepost.does",
+    "act.noticeprepare.does",
     "act.obscuremark.does",
     "act.obscuremarkwithdraw.does",
     "act.officesseed.does",
@@ -8758,14 +8770,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 692,
+    "reads": 694,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 113,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 579
+    "computedKeys": 581
    },
    "unkeyed": [],
    "retired": [
@@ -11329,6 +11341,8 @@
     "act.noteturn.label.notes",
     "act.notewrite.does",
     "act.notewrite.label.notes",
+    "act.noticepost.does",
+    "act.noticeprepare.does",
     "act.obscuremark.does",
     "act.obscuremarkwithdraw.does",
     "act.officesseed.does",
@@ -11702,6 +11716,8 @@
     "screen.account.sounds.on",
     "screen.action.name",
     "screen.action.purpose",
+    "screen.actionnew.name",
+    "screen.actionnew.purpose",
     "screen.answers.name",
     "screen.answers.purpose",
     "screen.archive.name",
@@ -11840,6 +11856,8 @@
     "screen.forgot.purpose",
     "screen.front.name",
     "screen.front.purpose",
+    "screen.glossary.name",
+    "screen.glossary.purpose",
     "screen.group-identity.ask.intro",
     "screen.group-identity.ask.none",
     "screen.group-identity.ask.q.what",
@@ -12422,14 +12440,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1305,
+    "reads": 1311,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 1182,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 123
+    "computedKeys": 129
    },
    "unkeyed": []
   },
@@ -48358,10 +48376,14 @@
     "installer.lag.store.unknown",
     "installer.lag.store.unreported",
     "installer.lag.store.version",
-    "installer.limit.buckets",
-    "installer.limit.classes",
-    "installer.limit.containers",
-    "installer.limit.workers",
+    "installer.limit.buckets.one",
+    "installer.limit.buckets.other",
+    "installer.limit.classes.one",
+    "installer.limit.classes.other",
+    "installer.limit.containers.one",
+    "installer.limit.containers.other",
+    "installer.limit.workers.one",
+    "installer.limit.workers.other",
     "installer.logs.clear",
     "installer.logs.named.one",
     "installer.logs.named.other",
@@ -48663,7 +48685,7 @@
     "setup-fleet.name.replace_time_password"
    ],
    "counts": {
-    "reads": 458,
+    "reads": 462,
     "unkeyed": 0
    },
    "unkeyed": [],

@@ -3272,7 +3272,7 @@
   },
   {
    "key": "refusal.TEMPLATE_KIND_REFUSED",
-   "en": "A template's kind is written as a kind is: lower-case letters, digits and underscores.",
+   "en": "A template's kind is written as a kind is: lowercase letters, digits and underscores.",
    "protected": false,
    "note": "DEC-260: filing-templates, refusal by its code"
   },

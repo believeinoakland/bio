@@ -1130,7 +1130,7 @@
   },
   {
    "key": "refusal.LIFECYCLE_TOKEN_MALFORMED",
-   "en": "A stage, the entry it follows, an outcome and a due date are each written as one short token of lower-case letters, digits, underscores or hyphens, at most forty characters. One of them was not, so nothing was written.",
+   "en": "A stage, the entry it follows, an outcome and a due date are each written as one short token of lowercase letters, digits, underscores or hyphens, at most forty characters. One of them was not, so nothing was written.",
    "protected": false,
    "note": "DEC-260: action-grammar's translation, keyed by its code"
   },
