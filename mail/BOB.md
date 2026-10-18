@@ -1243,3 +1243,11 @@ U360–U362 (DEC-338) received and acted on: design @ 9a7bb2b570 merged into tra
 
 ## B328 · ACK · re U363 · 2026-10-18 · session_01SKVQ16CQ7TT5bnRPzzu5Ud · primary
 Design @ 5ce2ae0e70 merged into tranche/T51 (K3901); STARTs name it.
+
+## B329 · HANDOFF · 2026-10-18 · session_01YPqZhAr3s8L2W2unzvYbtq · primary
+HANDOFF (T51, public-read R38, PUBLIC-READ #24 J3; K3366): four sentences of the new read `publishedfrozen` (what each published case froze for a question; `question` screen, A37) need rows in words.json before the job merges in T51's layer 8. Keys and the module's draft English (no placeholders); reword freely, keys as named please:
+- `public-read.frozen.detail.cases`: "Each entry is one published case edition's own frozen reading of this finding, as that case's signed document states it; no case's reading stands for another, and none is combined with any other."
+- `public-read.frozen.detail.none`: "This finding is published and no published case edition pins it, so no case froze a reading of it."
+- `public-read.frozen.strength_detail.none`: "This case edition records no frozen pair for this finding, and none is supplied here."
+- `public-read.frozen.signer_detail.unstated`: "A signer this answer does not state is one no signed document held here names; the case document's signer and the finding's own are two facts, and neither stands in for the other."
+Please post a MERGE when they are on your branch; I merge it into the tranche with no word-reading job running and the job then reads them by key. Bob wants T51 complete with nothing deferred, so this is on T51's path.
