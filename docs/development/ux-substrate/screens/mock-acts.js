@@ -147,6 +147,8 @@ const ACT_HELP = {
   owed_founderhandleset: 'Sets the handle you sign in with from now on, once: the name the record shows on your work. Until you choose, you sign in as admin.',
   projectvisibilityset: 'Switches the project between hidden (only its members know it exists) and findable (every member of the team sees it in Projects and can ask to join), with a reason kept in its history. Only an owner changes it.',
   projectowneradd: 'Makes a member an owner. With one owner, that owner decides alone; with two or more, every owner agrees, each by making the same change.',
+  noticeprepare: 'Shows exactly what your notice would say and what your key would sign, and writes nothing. Used again to change the notice or to stop it.',
+  noticepost: 'Signs the previewed notice with your key and publishes it at your team\'s address. Stopping it later does not unsay it.',
   projectownerremove: 'Ends someone\'s ownership, with a reason; they stay a member. A project always keeps at least one owner, and with three or more owners the others agree first.',
   projectremove: 'Takes a member off the project, with a reason they see. Their work on it stays, under their name.',
   projectleave: 'Tells the owners you are leaving the project, with a note if you like. An owner can leave once another owner remains.',
