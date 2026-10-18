@@ -947,6 +947,6 @@ export const pptxEntry = {
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under ppt/media/, exhaustive or NULL. */
-    return withContainerImages(withActive(withMetadata(await pptxText(parts), parts), parts), parts, "ppt/media/");
+    return withContainerImages(withActive(withMetadata(await pptxText(parts), parts, true), parts), parts, "ppt/media/");
   },
 };
