@@ -1,4 +1,4 @@
-/* GENERATED: do not edit by hand. membership R146 (N1115, N1171; K657, K3268): the ids of build/modules.json (171
+/* GENERATED: do not edit by hand. membership R146 (N1115, N1171; K657, K3268): the ids of build/modules.json (174
    modules) in the order the file holds them. Written by `node bio-plane/src/membership/order-build.mjs` from the
    repository root (`--check` finds it stale); bio-plane/test/m/membership/module-order.test.mjs holds it equal to the file. */
 export const MODULE_IDS = Object.freeze([
@@ -72,6 +72,7 @@ export const MODULE_IDS = Object.freeze([
   "explore",
   "bias",
   "query-language",
+  "retrieval-browse",
   "retrieval",
   "calculations",
   "workbooks",
@@ -97,6 +98,7 @@ export const MODULE_IDS = Object.freeze([
   "agent-harness",
   "agent-model",
   "agent-runner",
+  "agent-steps",
   "agent-worker",
   "intent",
   "investigation",
@@ -169,6 +171,7 @@ export const MODULE_IDS = Object.freeze([
   "control-plane",
   "plane",
   "legacy-ui",
+  "installer-steps",
   "installer",
   "site",
   "stewards",
