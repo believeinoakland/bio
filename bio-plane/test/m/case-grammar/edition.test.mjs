@@ -15,6 +15,7 @@ import { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
 import { doc, tensionLines, sha, NOW, V } from "./helpers.mjs";
 
 const V5 = "bio-case-document/5";
+const V7 = "bio-case-document/7";
 const OLDER = ["bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1", null];
 const read = (text) => { const p = parseFrontmatter(text); return { fm: p.data, body: p.body }; };
 const STATEMENT = "Two findings were added: the 2019 minutes and the vendor's reply.\n\nWe changed the scope because "
@@ -141,7 +142,7 @@ test("R9 N524 the section: the acknowledgement first, each statement's kind in p
   assert.deepEqual([...LENS_CLOSING_SENTENCES], [
     "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind.",
     "This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material."]);
-  const lines = lensSectionLines({ acknowledgement: "Ours.", statements: LENS });
+  const lines = lensSectionLines({ acknowledgement: "Ours.", statements: LENS, format: V7 });
   assert.equal(lines[0], LENS_HEAD);
   assert.equal(lines[2], "**The publisher's acknowledgement.** Ours.", "the acknowledgement first");
   const body = lines.join("\n");
@@ -156,11 +157,11 @@ test("R9 N524 the section: the acknowledgement first, each statement's kind in p
   for (const s of LENS_CLOSING_SENTENCES) assert.equal(body.split(s).length - 1, 1, "verbatim, once");
   assert.deepEqual(lines.slice(-4), [LENS_CLOSING_SENTENCES[0], "", LENS_CLOSING_SENTENCES[1], ""], "the two sentences close it");
   assert.equal(lines.slice(1).some((l) => l.startsWith("## ")), false, "nothing inside the section ends it");
-  assert.equal(lensSectionLines({ statements: [] })[2], "**The publisher's acknowledgement.** No acknowledgement is stated.");
+  assert.equal(lensSectionLines({ statements: [], format: V7 })[2], "**The publisher's acknowledgement.** No acknowledgement is stated.");
 });
 
 test("R9 R6 with no manifest in force the section states that none was, the blocks are empty and read back empty; undetermined is stated; a document without the blocks, a /4 document and odd input answer null", () => {
-  const none = lensSectionLines({ acknowledgement: "Ours.", statements: [], inForce: false });
+  const none = lensSectionLines({ acknowledgement: "Ours.", statements: [], inForce: false, format: V7 });
   assert.deepEqual(none, [LENS_HEAD, "", "**The publisher's acknowledgement.** Ours.", "", LENS_NONE_SENTENCE, "",
                           LENS_CLOSING_SENTENCES[0], "", LENS_CLOSING_SENTENCES[1], ""]);
   assert.match(LENS_NONE_SENTENCE, /^No manifest was in force when this case was published/);
