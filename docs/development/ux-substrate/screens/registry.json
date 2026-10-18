@@ -2319,6 +2319,22 @@
      ]
     },
     {
+     "op": "noticeprepare",
+     "label": "Preview the notice",
+     "status": "declared",
+     "modules": [
+      "network-notices"
+     ]
+    },
+    {
+     "op": "noticepost",
+     "label": "Sign and publish the notice",
+     "status": "declared",
+     "modules": [
+      "network-notices"
+     ]
+    },
+    {
      "op": "projectjoin",
      "label": "Join",
      "status": "function",

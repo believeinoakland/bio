@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4316,
+  "screen": 4404,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 872,
+  "act": 878,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -224,8 +224,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 14173,
-  "protected": 917
+  "total": 14267,
+  "protected": 921
  },
  "words": [
   {
@@ -48903,6 +48903,594 @@
    "note": "DEC-330: B306 A68: the screen help"
   },
   {
+   "key": "screen.project.notice.an.owner.can.publish.a",
+   "en": "An owner can publish a notice, signed with their key, that this project is being worked on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.it.is.public.and.it",
+   "en": "It is public, and it names the team, never a member.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.tell.the.network.we.are",
+   "en": "Tell the network we are working on this",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.you.are.an.owner.of",
+   "en": "You are an owner of this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.an.owner.is.named.dev",
+   "en": "An owner is named: Dev",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.standing.down.is.possible.at",
+   "en": "Standing down is possible at this size",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.with.2.owners.an.owner",
+   "en": "With 2 owners, an owner can stand down if the other agrees.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.this.is.a.vote.you",
+   "en": "This is a vote you may cast",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.at.2.owners.the.departing",
+   "en": "At 2 owners the departing owner's vote counts.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.a.reason.in.your.words",
+   "en": "A reason, in your words",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.nothing.is.drafted.or.suggested",
+   "en": "Nothing is drafted or suggested for you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.it.is.kept.with.your",
+   "en": "It is kept with your vote and the other owners see it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.a.project.with.no.owner",
+   "en": "A project with no owner is hidden until an administrator takes it over.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.check.that.another.owner.remains",
+   "en": "Check that another owner remains and that the project doesn't depend on you alone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.tell.the.network.you.are",
+   "en": "Tell the network you are working on this",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.a.notice.your.team.signs",
+   "en": "A notice your team signs and publishes at its own address, saying Pothole repairs is being worked on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.only.an.owner.can.do",
+   "en": "Only an owner can do this.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.you.sign.it.in.your",
+   "en": "You sign it in your browser with your signing key, and no one else, no administrator and no assistant, can sign it for you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.it.names.no.member.only",
+   "en": "It names no member, only the team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.what.the.notice.says",
+   "en": "What the notice says",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.what.the.team.is.working",
+   "en": "What the team is working on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.one.line.up.to.280",
+   "en": "One line, up to 280 characters, in your own words.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.nothing.is.filled.in.from",
+   "en": "Nothing is filled in from the project.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.a.few.words.more.optional",
+   "en": "A few words more (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.one.line.up.to.120",
+   "en": "One line, up to 120 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.the.matter.it.belongs.to",
+   "en": "The matter it belongs to (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.one.line.up.to.120.2",
+   "en": "One line, up to 120 characters, if the work has a name others would know it by.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.working.on.it.since",
+   "en": "Working on it since",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.a.date.no.earlier.than",
+   "en": "A date no earlier than the day the project began and no later than today.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.we.welcome.others.who.want",
+   "en": "We welcome others who want to work on this with us.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.the.notice.then.points.to",
+   "en": "The notice then points to the team's doorbell, where they can knock.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.when.a.notice.cant.be",
+   "en": "When a notice can't be prepared",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.this.project.already.has.an",
+   "en": "This project already has an open notice.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.change.that.one.or.stop",
+   "en": "Change that one, or stop it first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.the.date.is.before.the",
+   "en": "The date is before the project began, on 3 October.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.your.teams.public.address.or",
+   "en": "Your team's public address or its signing key isn't set up yet, so no notice can be published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.an.administrator.can.finish.setting",
+   "en": "An administrator can finish setting it up.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.this.project.is.closed",
+   "en": "This project is closed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.a.closed.project.can.only",
+   "en": "A closed project can only have its notice stopped.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.what.the.public.sees",
+   "en": "What the public sees",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.the.wording.the.date.you",
+   "en": "The wording, the date you began, and whether others are welcome, signed by an owner's key.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.the.teams.own.civicsmith.then",
+   "en": "The team's own Civicsmith then adds what you could not honestly say about yourselves, and signs it with its own key: how active the project has been (Very active, Active, Some work, Quiet or Dormant, worked out again each month from weeks in which a member did work), the cases the project has published, and when the notice closes or lapses.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.work.by.the.assistant.is",
+   "en": "Work by the assistant is never counted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.once.you.preview.it",
+   "en": "Once you preview it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.working.on.it.since.3",
+   "en": "Working on it since 3 October 2026",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.anyone.can.read.this.including",
+   "en": "Anyone can read this, including anyone your team is examining.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.stopping.the.notice.later.ends",
+   "en": "Stopping the notice later ends it, but does not unsay it: it stays published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.your.team.has.two.other",
+   "en": "Your team has two other notices open and has published no case yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.you.can.still.publish.readers",
+   "en": "You can still publish; readers may weigh it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.i.understand.that.this.is",
+   "en": "I understand that this is public and that stopping it later will not unsay it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.your.key.signs.this.exact",
+   "en": "Your key signs this exact wording, the notice's number and its fingerprint.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.if.anything.changes.you.preview",
+   "en": "If anything changes, you preview again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.a.preview.is.good.for",
+   "en": "A preview is good for 60 minutes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.sign.and.publish.the.notice",
+   "en": "Sign and publish the notice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.the.notice.is.published.at",
+   "en": "The notice is published at your team's address.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.as.the.teams.civicsmith.worked",
+   "en": "as the team's Civicsmith worked it out on 17 October",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.the.next.monthly.check.is",
+   "en": "The next monthly check is on 1 November.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.a.notice.that.stays.dormant",
+   "en": "A notice that stays Dormant through two checks in a row, with no change between them, lapses.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.1.case.published.from.this",
+   "en": "1 case published from this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.anyone.can.read.this.at",
+   "en": "Anyone can read this at your team's address, with every signature it carries.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.each.owner.of.the.project",
+   "en": "Each owner of the project sees it here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.change.it.or.stop.it",
+   "en": "Change it or stop it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.if.you.stop.where.the",
+   "en": "If you stop: where the work stands, for anyone taking it up (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.one.line.up.to.280.2",
+   "en": "One line, up to 280 characters.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.it.is.published.with.the",
+   "en": "It is published with the stop.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.a.change.is.a.new",
+   "en": "A change is a new version of the same notice, signed again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.a.stop.is.signed.too",
+   "en": "A stop is signed too.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.neither.removes.what.was.published",
+   "en": "Neither removes what was published before: the earlier versions stay readable and are never deleted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.help",
+   "en": "What a vote to end an owner's ownership needs before it can be cast.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.ownerstand.help2",
+   "en": "Each line is a fact about this project or this vote; the last is yours to write.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A47: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.help",
+   "en": "Everything a reader of the notice will see, and which part you wrote and which part the team's Civicsmith worked out.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.project.notice.help2",
+   "en": "The notice as the public reads it, with what your team's Civicsmith has added to it and signed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 C6: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.react.key.withdrawn.by.rosa.12",
+   "en": "key withdrawn by Rosa, 12 October",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.react.it.does.not.sign",
+   "en": "it does not sign",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.react.reactivate.devs.signing.key",
+   "en": "Reactivate Dev's signing key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.react.withdraw.a.key.when.a",
+   "en": "Withdraw a key when a device is lost or stolen.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.react.a.key.a.member.withdrew",
+   "en": "A key a member withdrew themselves can be reactivated only by an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.founder.if.the.count.is.higher",
+   "en": "If the count is higher than the roster",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/B5: drawn sentence"
+  },
+  {
+   "key": "screen.members.founder.the.count.includes.1.administrator",
+   "en": "The count includes 1 administrator the roster has no row for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/B5: drawn sentence"
+  },
+  {
+   "key": "screen.members.founder.the.founder.holds.the.team",
+   "en": "The founder holds the team through the hosting account itself, so they have no member entry and can't be removed from inside Civicsmith.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/B5: drawn sentence"
+  },
+  {
+   "key": "screen.members.founder.they.are.counted.because.the",
+   "en": "They are counted because the vote count has to be honest about who exists, not only about who is listed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/B5: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.react.help",
+   "en": "Lets this key sign for the team again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.react.help2",
+   "en": "Only an administrator can, and not for a member who has left the team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
+   "key": "screen.members.key.react.help3",
+   "en": "Anything signed while it was withdrawn stays as it was.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-332: B306 A72/A74: drawn sentence"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -88321,6 +88909,30 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.glossary.name",
+   "en": "Glossary",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.glossary.purpose",
+   "en": "What the terms and marks in the record mean, in plain words: money terms, how the record is kept honest, and what each state allows.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.actionnew.name",
+   "en": "Start an action",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.actionnew.purpose",
+   "en": "Start an action of any kind: who it goes to, what it asks, how carefully to act, what it rests on, and when it is due and why.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.request.name",
    "en": "Request records",
    "protected": false,
@@ -90661,6 +91273,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.actioncreate.label.actionnew",
+   "en": "Start the action",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.addresseesuggest.label.actionnew",
+   "en": "Choose the office",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.actionnew",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.addresseesuggest.label.request",
    "en": "Choose the office",
    "protected": true,
@@ -90753,6 +91383,12 @@
   {
    "key": "act.owed_actioninquiry.label.action",
    "en": "Open a question from this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.action",
+   "en": "Help me write this",
    "protected": true,
    "source": "registry.json"
   },
@@ -91895,6 +92531,18 @@
   {
    "key": "act.projectowneradd.does",
    "en": "Makes a member an owner. With one owner, that owner decides alone; with two or more, every owner agrees, each by making the same change.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.noticeprepare.does",
+   "en": "Shows exactly what your notice would say and what your key would sign, and writes nothing. Used again to change the notice or to stop it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.noticepost.does",
+   "en": "Signs the previewed notice with your key and publishes it at your team's address. Stopping it later does not unsay it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
