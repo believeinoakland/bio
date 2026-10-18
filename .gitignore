@@ -343,3 +343,4 @@ bio-plane/.nc-d507/
 # REC-186's control pen (`bio-plane/test/rec-186-leave-join.control.mjs`): it copies `src/store.mjs` and
 # `src/affordances.mjs` here per arm; a run killed between arm and restore must not leave a second plane source.
 .rec186-harness/
+bio-plane/src/setup-words/rows.pseudo.mjs

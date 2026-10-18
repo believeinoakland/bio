@@ -299,7 +299,7 @@ fieldset.mk-checks label > span { flex: 1 1 0; min-width: 0; }  /* DEC-316: a ch
 .mk-scrim { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: var(--s-4); background: color-mix(in srgb, var(--c-ground) 82%, transparent); } .mk-scrim > .cs-dialog { max-width: 440px; width: 100%; display: grid; gap: var(--s-3); }
 .mk-image { max-width: 100%; height: auto; display: block; }
 .mk-imgareas { position: relative; display: inline-block; max-width: 100%; touch-action: none; cursor: crosshair; } .mk-imgarea { position: absolute; border: 2px solid var(--c-accent); background: color-mix(in srgb, var(--c-accent) 18%, transparent); padding: 0; min-width: 8px; min-height: 8px; } .mk-imgarea:focus-visible { outline: 3px solid var(--c-ink); outline-offset: 2px; }
-button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; overflow-wrap: anywhere; }   /* B-22: a name is never cut; it wraps */
 .mk-h3 { margin: 14px 0 6px; font: 600 var(--t-sm) var(--f-sans); color: var(--c-ink); } .mk-h3:first-child { margin-top: 0; }
 /* DEC-229: the document page: the reader by page, the comparison, the versions, the links it carries */
 .mk-pagebar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: var(--t-sm); color: var(--c-muted); } .mk-pagebar .mk-pageno { font-weight: 600; color: var(--c-ink); }
@@ -374,6 +374,19 @@ button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; 
 .mk-device[data-device="phone"] .cs-band { font-size: var(--t-xs); padding: 4px 12px; }
 .mk-device[data-device="phone"] .mk-plain.with-dock { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
 .mk-device[data-device="phone"] .mk-plainmain { padding: 20px 16px; }
+
+/* R84 on a phone: every tappable control is 44 px tall at least (WCAG 2.5.8 exempts a link inside a running sentence, left as it is) */
+.mk-device[data-device="phone"] button.cs-btn, .mk-device[data-device="phone"] a.cs-btn { min-height: 44px; min-width: 44px; }
+.mk-device[data-device="phone"] .mk-page summary:not(.mk-avatar) { display: list-item; box-sizing: border-box; min-height: 44px; padding-block: 10px; }
+.mk-device[data-device="phone"] .mk-usermenu > summary.mk-avatar { width: 44px; height: 44px; }
+.mk-device[data-device="phone"] .mk-menu a { display: flex; align-items: center; min-height: 44px; }
+.mk-device[data-device="phone"] .mk-sort { min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; }
+.mk-device[data-device="phone"] .mk-trailbtn { min-height: 44px; min-width: 44px; }
+.mk-device[data-device="phone"] .mk-crumbs { display: flex; flex-wrap: wrap; align-items: center; }
+.mk-device[data-device="phone"] .mk-crumbs a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.mk-device[data-device="phone"] .mk-rows td > a.cs-ref:only-child, .mk-device[data-device="phone"] .mk-acts > a.cs-ref, .mk-device[data-device="phone"] td > a:only-child, .mk-device[data-device="phone"] td > b > a.cs-ref:only-child, .mk-device[data-device="phone"] .mk-steps li > a.cs-ref:only-child, .mk-device[data-device="phone"] .cs-row > span > a.cs-ref.mk-data:only-child, .mk-device[data-device="phone"] .cs-due > a.cs-ref, .mk-device[data-device="phone"] p.mk-small > a.cs-ref:only-child { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.mk-device[data-device="phone"] fieldset.mk-checks label { min-height: 44px; box-sizing: border-box; }
+.mk-device[data-device="phone"] fieldset.mk-checks input { width: 24px; height: 24px; flex: none; }
 .mk-device[data-device="phone"] .mk-plain .cs-dock { border-left: 0; border-top: 3px solid var(--c-ink); max-height: 300px; }
 .mk-device[data-device="phone"] .mk-lanes { grid-template-columns: 1fr; }
 .mk-device[data-device="phone"] .mk-grid2 { grid-template-columns: 1fr; }
@@ -846,8 +859,19 @@ const REG = {{REG}};
     /* DEC-161: Nielsen Norman Group's 0.3–0.5 s, at its upper end */
   function show(el) { clearTimeout(showT); clearTimeout(hideT); var h = tipFor(el); if (!h) return; if (cur && cur !== el) cur.removeAttribute('aria-describedby'); cur = el; tip.innerHTML = h; tip.hidden = false; el.setAttribute('aria-describedby', 'cs-tip');
     var r = el.getBoundingClientRect(), w = tip.offsetWidth, ht = tip.offsetHeight;
-    var x = Math.max(8, Math.min(r.left, innerWidth - w - 8)), y = r.bottom + 6; if (y + ht > innerHeight - 8) y = r.top - ht - 6;
-    tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+    var P = place(el, r, w, ht); tip.style.left = P[0] + 'px'; tip.style.top = P[1] + 'px'; }
+  /* R84 (B-20): an explanation opens below or beside what it explains and never over the next control: the first place, of
+     below, right, left and above, that covers no other control; when none is clear, the one covering the fewest */
+  function place(el, r, w, ht) {
+    var cs = Array.prototype.filter.call(document.querySelectorAll('.mk-page button,.mk-page a[href],.mk-page input,.mk-page select,.mk-page textarea,.mk-page summary'), function (c) { return c !== el && !el.contains(c) && !c.contains(el); })
+      .map(function (c) { return c.getBoundingClientRect(); }).filter(function (b) { return b.width && b.height; });
+    var cl = function (v, lo, hi) { return Math.max(lo, Math.min(v, hi)); };
+    var X = cl(r.left, 8, innerWidth - w - 8), Y = cl(r.top, 8, innerHeight - ht - 8);
+    var cand = [[X, r.bottom + 6], [r.right + 6, Y], [r.left - w - 6, Y], [X, r.top - ht - 6]], best = null, bestN = 1e9;
+    cand.forEach(function (p) { if (p[0] < 8 || p[1] < 8 || p[0] + w > innerWidth - 8 || p[1] + ht > innerHeight - 8) return;
+      var n = cs.filter(function (b) { return p[0] < b.right && p[0] + w > b.left && p[1] < b.bottom && p[1] + ht > b.top; }).length;
+      if (n < bestN) { bestN = n; best = p; } });
+    return best || [X, cl(r.bottom + 6, 8, innerHeight - ht - 8)]; }
   function hide() { clearTimeout(showT); clearTimeout(hideT); if (cur) cur.removeAttribute('aria-describedby'); cur = null; tip.hidden = true; }
   function target(e) { var t = e.target; if (!t || !t.closest) return null; var b = t.closest('.cs-btn'); if (b && b.closest('.mk-page')) return b; return t.closest(SEL); }  /* the whole button is one target */
   function mark(root) { (root || document).querySelectorAll('.mk-page ' + SEL.split(',').join(',.mk-page ')).forEach(function (el) {

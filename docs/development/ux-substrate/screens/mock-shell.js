@@ -83,6 +83,8 @@ const PATH = {
   'case-editor': ['Projects', 'The Coliseum lease', 'Case'], 'review-copy': ['Projects', 'The Coliseum lease', 'Review copy'],
   ceremony: ['Projects', 'The Coliseum lease', 'Publish'], docket: ['Projects', 'The Coliseum lease', 'Docket'],
   imported: ['Projects', 'Imported cases', "Another team's case"],
+  hold: ['Projects', 'Pothole repairs', 'Action', 'Litigation hold'], holdnotice: ['Projects', 'Pothole repairs', 'Action', 'Litigation hold', 'Hold notice'],
+  counsel: ['Projects', 'Pothole repairs', 'Action', 'Brief counsel'], grouprules: ['Settings', 'Places and offices', "Your team's own rules"],
 };
 const pathOf = (id, s) => PATH[id] && !(id === 'answers') ? PATH[id] : id === 'answers' ? ['Find', s.title] : [(RAIL.find(r => r[0] === s.rail) || ['', 'Settings'])[1], s.title];
 const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map((x, i) => i === list.length - 1 ? `<b aria-current="page">${esc(x)}</b>` : `<a href="#" onclick="return false">${esc(x)}</a>`).join(' <i>›</i> ')}</nav>`;
@@ -231,6 +233,7 @@ function renderFrame(screenId, c) {
     s.main = s.main.replace(/<h1([ >])/, th ? `<h1 data-level="1" data-tip="${esc(th + '<span class=more>This screen: ' + SCREEN_HELP[screenId] + '</span>')}"$1` : `<h1 data-level="2" data-tip="${esc(SCREEN_HELP[screenId])}"$1`);
   }
   const frame = s.frame || 'working';
+  if (frame === 'public' || frame === 'published') s.main = s.main.replace(/<span class="w"><span class="cs-pips">(?:<i[^>]*><\/i>)+<\/span>[A-Za-z]+<\/span>/g, '');   // R84: a public page (R30) carries no weight mark
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
   if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published">${testBand(c)}<header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>
     <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
