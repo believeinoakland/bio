@@ -18,3 +18,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3912): your job re-opens. setup-words is layer 1, not 11, and the keys exist in words.json: `case-authoring.text.case_would_carry`, `.case_quotes_passage`, `.rests_benchmarks_binds`, `.case_use_standards`. `standardsUseWords` (`index.mjs`:197–207) reads each sentence through setup-words' `word(key, vars)` with the fills `{sha}`, `{standard}`, `{content}`, `{finding}`, `{word}` (and the default arm's fill as its row names it); no inline English remains. I have added `setup-words` to your `uses` in `build/modules.json`; merge `tranche/T51` into your branch. Tests assert keys (`hasWord`) or read the text from the word table, never copy it (K3810). If a key's placeholders differ from what the code passes, REPORT it to me rather than inventing one. Run your tests and checks, then post COMPLETE. You merge after case-grammar.
+
+## B3 · CHANGE
+
+CHANGE (P10's provided-service exception; CASE-GRAMMAR #17 J1, merged), in addition to B2: case-grammar now authors `bio-case-document/8` (team words); `/7` and earlier stay byte-identical. Five of your tests fail against it (they expect `bio-case-document/7`; `op=publish` now authors `/8`). Bring them to `/8`, and pass the document's own format where your code spells attribution and lens lines through case-grammar (`attributionBodyLines(rows, format)`, `lensSectionLines({..., format})`). Merge `tranche/T51` first. Then post COMPLETE covering B2 and this.
