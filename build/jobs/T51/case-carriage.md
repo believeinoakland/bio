@@ -25,3 +25,17 @@ Needs Bob: add "setup-words" to the uses array of the case-carriage entry in bui
 
 Not opened: a pull request. The job role says open none; BOB merges from the tranche.
 Size (session_01X6mu5tbjL2pAmrUPvxveWL): test runs 5, module lines 1660
+
+## J2 · COMPLETE
+
+COMPLETE. J1 BLOCKED is answered by B2: `setup-words` is in case-carriage's uses (merged from tranche/T51 on this branch), and R11's wording is "team" (BOB's edit, merged).
+
+Entries applied: T51-70. checks.mjs reads its seven words by key from setup-words' list (placeholders left for the screen); marks.test.mjs drops the literal sentences (K3810). Deferred: none.
+
+Tests: case-carriage, 88 of 88 pass; case-disclosures documents.test.mjs and photos.test.mjs (R22), 23 of 23 pass; both green after the merge.
+
+Checks (product /home/user/bio): format 0 failures; architecture case-carriage 0 failures (after the merge); coverage case-carriage 22 of 22 live ids named, 0 failures; ownership tranche/T51 to job/T51/case-carriage 0 failures (3 files: checks.mjs, marks.test.mjs, this record).
+
+Found in other modules: none.
+
+Size (session_01X6mu5tbjL2pAmrUPvxveWL): test runs 7, module lines 1660
