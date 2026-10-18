@@ -52468,7 +52468,7 @@
   },
   {
    "key": "screen.counsel.chal.says",
-   "en": "Name each statement of your team's that the other side challenges, as it was made.",
+   "en": "List each statement the other side challenges.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 1: counsel: what the section asks (filings R9 challenged)"
@@ -52580,14 +52580,14 @@
   },
   {
    "key": "screen.grouprules.trigger.start.received",
-   "en": "The office receives our request",
+   "en": "The office receives your team's request",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 2: grouprules: trigger option, deadline start received"
   },
   {
    "key": "screen.grouprules.trigger.start.filed",
-   "en": "We file a paper",
+   "en": "Your team files a document",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 2: grouprules: trigger option, deadline start filed"
@@ -52601,7 +52601,7 @@
   },
   {
    "key": "screen.grouprules.trigger.start.known",
-   "en": "We learn of it",
+   "en": "Your team learns of it",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 2: grouprules: trigger option, deadline start known"
@@ -52615,7 +52615,7 @@
   },
   {
    "key": "screen.grouprules.trigger.start.served",
-   "en": "We are served",
+   "en": "Your team is served",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 2: grouprules: trigger option, deadline start served"
@@ -52734,7 +52734,7 @@
   },
   {
    "key": "screen.action.minutes.heading",
-   "en": "Record a reply to a request for comment",
+   "en": "Record a reply to your team's public comment",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 3: action: heading of the form (actions R108)"
@@ -52776,7 +52776,7 @@
   },
   {
    "key": "screen.action.minutes.date.help1",
-   "en": "The day the meeting was held.",
+   "en": "The day of the meeting, as the minutes date it.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 3: action: field help"
@@ -52790,7 +52790,7 @@
   },
   {
    "key": "screen.action.minutes.doc.help1",
-   "en": "A capture your team can see.",
+   "en": "A capture your team holds.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 3: action: field help"
@@ -52804,14 +52804,14 @@
   },
   {
    "key": "screen.action.minutes.passage.help1",
-   "en": "The words of the minutes that record your team's comment, as they are written there.",
+   "en": "Copy the words exactly as the minutes write them.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 3: action: field help"
   },
   {
    "key": "screen.action.minutes.notpublic",
-   "en": "This reply is not to a public comment, so the passage of the minutes cannot be kept with it. Nothing was recorded.",
+   "en": "This reply is not to a public comment, so the passage of the minutes cannot be kept with it. Nothing was written.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-341: B335 3: action: refusal MINUTES_NOT_PUBLIC_COMMENT"
