@@ -79,3 +79,7 @@ Test titles and comments that mention a sentence's words are not copies a test a
 - `node checks/ownership.mjs /home/user/bio roster-reader tranche/T51 job/T51/roster-reader`: `0 files changed by roster-reader between tranche/T51 and job/T51/roster-reader; 0 failures` (run before this commit; the ownership count reads committed changes).
 
 Size (session_01PVypQMNUHxqcGtP1kD7qN2): test runs 3, module lines 965
+
+## J4 · COMPLETE
+
+B3 done: test copies of product sentences compare with localize(id, en) or the exact localized value, not sentence text or a regex on it (the two testcopy findings, and the other copies of localized sentences in the module's tests). source.mjs's held-table no-date sentence is now localized so its test uses localize too. Module tests 22/22; words: testcopy 0, only the two REPORTed lists (J2) remain; format, architecture, coverage (12/12) pass; ownership passes. Outside this module: setup-words build.mjs --check exits 1 on jurisdictions.index.amount_is_amount_and_units (R18), not roster-reader's. Record: build/jobs/T51/roster-reader.md.
