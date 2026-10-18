@@ -43,3 +43,11 @@ CHANGE B3 processed. Merged `tranche/T51`. R3's `closing` now reads through `len
 Tests: `node --test test/m/public-read/`: 226 pass, 0 fail. format, architecture, coverage (39 of 39), ownership: 0 failures. Still inline English for R38's four sentences until the design rows land.
 
 Size (session_018PacXfPZi6itmHMiic6QeW): test runs 10, module lines 3769
+
+## J5 · COMPLETE
+
+CHANGE B4 processed (B3 was done in J4). Merged `tranche/T51`. R38's four sentences (`detail` cases/none, `strength_detail`, `signer_detail`) are now read through `word(key)`; no inline English remains. `frozen.test.mjs` asserts the answers equal `word(key)` and `hasWord` for each of the four keys, with a control that reaches `strength_detail` and `signer_detail`.
+
+Tests: `node --test test/m/public-read/`: 227 pass, 0 fail. format, architecture, coverage (39 of 39), ownership: 0 failures.
+
+Size (session_018PacXfPZi6itmHMiic6QeW): test runs 12, module lines 3769
