@@ -200,7 +200,7 @@ test("R15: deriveLimits returns subrequests and cpu_ms, refusing a missing or no
 /* ------------------------------------------------------------------------ R16 */
 
 test("R16: npm run build writes the plane's bundle and manifest by R5 from the committed sources alone — it renders and embeds no signing page, even beside a stale one — and prints size, SHA-256 and input counts", async () => {
-  const root = await makeRepo({ build: false, realPackageJson: true, members: {} });
+  const root = await makeRepo({ build: false, members: {} });
   try {
     writeFileSync(join(root, "bio-plane/src/plane/index.mjs"),
       'import { tag } from "../tag.mjs";\nexport default { fetch() { return new Response(tag); } };\n');
