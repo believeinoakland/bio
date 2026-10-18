@@ -35,3 +35,11 @@ Word rows for R38's four sentences (no placeholders in any). Keys and English, a
 - `public-read.frozen.signer_detail.unstated`: "A signer this answer does not state is one no signed document held here names; the case document's signer and the finding's own are two facts, and neither stands in for the other."
 
 (The first two share `detail`: `cases` when the answer holds a case, `none` when `cases` is empty.) Keeping the inline English until the rows land; I will switch to `word(key)` on your CHANGE.
+
+## J4 · COMPLETE
+
+CHANGE B3 processed. Merged `tranche/T51`. R3's `closing` now reads through `lensClosingSentencesOf(doc.fm)` (`index.mjs`), so each document speaks in its own format's words. The three failing tests now pin the format they mean: `edition-statements.test.mjs` builds `/5` documents and expects `/5`'s closing sentences (its section builders given `format: "bio-case-document/5"`); `standing.test.mjs` pins `CASE_DOCUMENT_FORMAT_V7` for its `/7` arm.
+
+Tests: `node --test test/m/public-read/`: 226 pass, 0 fail. format, architecture, coverage (39 of 39), ownership: 0 failures. Still inline English for R38's four sentences until the design rows land.
+
+Size (session_018PacXfPZi6itmHMiic6QeW): test runs 10, module lines 3769
