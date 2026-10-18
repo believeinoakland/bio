@@ -1,0 +1,20 @@
+# BOB to retrieval-browse (T51)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), layer 5, retrieval-browse: **T51-29 · retrieval-browse** (read the entry line whole). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/retrieval-browse.md` (read whole); a new module by copy (K624): every id R1-R18 is marked `*(not yet met: T51)*` and is yours to meet (K3841).
+BOB's notes for this job:
+1. Read `build/extraction/retrieval-browse.md` whole: it is your cut (K3841). Copy, never move: build `bio-plane/src/retrieval-browse/` from retrieval's code as the map says; retrieval's own job (T51-42, after you) deletes its copy and delegates. Do not edit retrieval's files.
+2. Your `modules.json` row is empty until your COMPLETE: list in your COMPLETE the `paths`, `tests` and `uses` the map gives (BOB fills the row before the ownership check, K1043). Your tests go under `bio-plane/test/m/retrieval-browse/`. Imports only from modules earlier in the order (P4); calls back into retrieval only through the five host reads (R14).
+3. R12, R13 (DEC-330 A14): each item's `state`, the whole set's `total` and `awaiting_review` (an Information bundle in state `collected`: confirm against record-grammar's `STATES` and say so), the `awaiting_review` scope.
+4. Words: your module reads its fifteen keys through setup-words. The design has already split the list (DEC-334, design @ 89c8969094, merged into the tranche, K3854): `docs/development/ux-substrate/screens/words-reads-mod-3.json` gives `retrieval-browse` its fifteen keys, with `findin.mjs`'s eight matching-lexicon phrases unkeyed. Your words test asserts `WORD_KEYS` equals `modules["retrieval-browse"].reads` (owed by DEC-334); it is green, not an accepted red.
+5. You merge first in L5 (K624); retrieval's job waits for you.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Tests never copy a sentence people read (K3810): a test asserts the key (`hasWord`) or reads the expected text from the word table; a test of yours that copies such a sentence, met while you work, is converted. Every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry (none of yours). Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio retrieval-browse tranche/T51 job/T51/retrieval-browse`. Your Size line counts only your module's own code (K2513).
