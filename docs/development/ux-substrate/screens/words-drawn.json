@@ -16901,6 +16901,30 @@
    "en": "Rests on: 1 document, not published with the case.",
    "protected": false,
    "note": "DEC-338: the consistency read: the one-form"
+  },
+  {
+   "key": "public-read.frozen.detail.cases",
+   "en": "Each line is one published edition of a case and the reading of this finding it froze, as that case's signed document states it. One case's reading never stands for another's, and readings are never combined.",
+   "protected": false,
+   "note": "DEC-339: B329, public-read R38 publishedfrozen (question, A37)"
+  },
+  {
+   "key": "public-read.frozen.detail.none",
+   "en": "This finding is published, but no published case edition rests on it, so no case froze a reading of it.",
+   "protected": false,
+   "note": "DEC-339: B329, public-read R38 publishedfrozen (question, A37)"
+  },
+  {
+   "key": "public-read.frozen.strength_detail.none",
+   "en": "This case edition froze no strengths for this finding, and none are filled in here.",
+   "protected": false,
+   "note": "DEC-339: B329, public-read R38 publishedfrozen (question, A37)"
+  },
+  {
+   "key": "public-read.frozen.signer_detail.unstated",
+   "en": "No signed document held here names this signer, so none is shown. Who signed the case and who signed the finding are two separate facts; one never stands in for the other.",
+   "protected": false,
+   "note": "DEC-339: B329, public-read R38 publishedfrozen (question, A37)"
   }
  ],
  "rewrite": {
