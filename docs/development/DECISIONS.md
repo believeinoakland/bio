@@ -5224,3 +5224,18 @@ decided: 2026-10-18 · the design session (P17)
 the design: (1) `instancegroupseed` is drawn nowhere (the installer records the name, K3868); group-identity says once "Your team's short name was recorded when Civicsmith was installed." (`screen.group-identity.seed.recorded`); `installer.team.unrecorded.how` reads "To record it, run the installer again: it asks for your team's short name once and records it." (2) As BOB read it: "Agree" on the viewer's own row only; from 3 owners the one standing down does not vote. (3) As BOB read it: an ordinance's or office's page draws no facts and no "Add a fact from a document"; the add form has no "A proceeding". (4) A document leg reads "Named only" (`screen.published.leg.namedonly`, explained by `.namedonly.explain`); a leg resting on another team's published finding reads "Served with its own published case; its documents are not held here." (5) One fingerprint for a single file; the drawn copy is a set (`screen.document.fingerprint.setonly` says so). (6) Nothing preselected on set-aside or its change forms (screens-daily's rule). (7) As BOB read it: no Withdraw on one's own key on members; account draws `act.signerregisterown.label.account`. (8) As built: the card on rest, `glossary` on choosing (`screen.glossary.intro` says both). (9) The missing words minted, each named in U358.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/registry.src.py`.
 owed: (BOB, T51 L11) the screens read these keys; `act.instancegroupseed.*` stays the installer's.
+
+### DEC-337 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (BOB's HANDOFF B321, K3888)
+for: design
+question: Words for basis-versions R55's three `compareVersions` refusals.
+why it is Bob's: it is not (P17): refusal words in DEC-83's form.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: `refusal.VERSION_COMPARE_NO_INQUIRY` "The question named for this comparison is not one you can read here, so nothing was compared. Open the question and choose two of its readings." (a question the viewer may not see answers as one that is not there); `refusal.VERSION_COMPARE_NO_VERSION` "One of the two readings to compare was not named, so nothing was compared. Choose both readings."; `refusal.VERSION_COMPARE_NO_SUCH_VERSION` "This question holds no reading by that name, so nothing was compared. Choose two of this question's own readings." Shown where `question` compares two readings (A40), as every refusal is: in the place of the answer.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: (BOB, T52, N1253) basis-versions reads the three keys.

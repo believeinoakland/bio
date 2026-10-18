@@ -3310,6 +3310,9 @@ W.append(dict(key='screen.members.key.registered.unrecorded', en='key registered
 W.append(dict(key='screen.members.key.withdrawn.unrecorded', en='key withdrawn; who and when not recorded', protected=False, note='DEC-336: B318 9: the same for a withdrawn key'))
 W.append(dict(key='screen.members.signer.held.nodate', en='Signing key ending {key}, registered; when not recorded', protected=False, note='DEC-336: B318 9: beside screen.members.signer.held when the date is not recorded'))
 # --- end DEC-336
+W.append(dict(key='refusal.VERSION_COMPARE_NO_INQUIRY', en="The question named for this comparison is not one you can read here, so nothing was compared. Open the question and choose two of its readings.", protected=False, note='DEC-337: B321, basis-versions R55 compareVersions; shown where question compares two readings (A40)'))
+W.append(dict(key='refusal.VERSION_COMPARE_NO_VERSION', en="One of the two readings to compare was not named, so nothing was compared. Choose both readings.", protected=False, note='DEC-337: B321, basis-versions R55 compareVersions; shown where question compares two readings (A40)'))
+W.append(dict(key='refusal.VERSION_COMPARE_NO_SUCH_VERSION', en="This question holds no reading by that name, so nothing was compared. Choose two of this question's own readings.", protected=False, note='DEC-337: B321, basis-versions R55 compareVersions; shown where question compares two readings (A40)'))
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

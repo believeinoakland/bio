@@ -16469,6 +16469,24 @@
    "en": "Signing key ending {key}, registered; when not recorded",
    "protected": false,
    "note": "DEC-336: B318 9: beside screen.members.signer.held when the date is not recorded"
+  },
+  {
+   "key": "refusal.VERSION_COMPARE_NO_INQUIRY",
+   "en": "The question named for this comparison is not one you can read here, so nothing was compared. Open the question and choose two of its readings.",
+   "protected": false,
+   "note": "DEC-337: B321, basis-versions R55 compareVersions; shown where question compares two readings (A40)"
+  },
+  {
+   "key": "refusal.VERSION_COMPARE_NO_VERSION",
+   "en": "One of the two readings to compare was not named, so nothing was compared. Choose both readings.",
+   "protected": false,
+   "note": "DEC-337: B321, basis-versions R55 compareVersions; shown where question compares two readings (A40)"
+  },
+  {
+   "key": "refusal.VERSION_COMPARE_NO_SUCH_VERSION",
+   "en": "This question holds no reading by that name, so nothing was compared. Choose two of this question's own readings.",
+   "protected": false,
+   "note": "DEC-337: B321, basis-versions R55 compareVersions; shown where question compares two readings (A40)"
   }
  ],
  "rewrite": {
