@@ -1865,7 +1865,7 @@ __export(checks_exports, {
 });
 
 // src/setup-words/rows.mjs
-var WORDS_COMMIT = "51611b6a41";
+var WORDS_COMMIT = "d5804e6c37";
 var WORD_ROWS = Object.freeze([
   ["weight.reversible.name", "Reversible", null, "Reversible: you can undo this.", true],
   ["weight.reasoned.name", "Reasoned", null, "Reasoned: asks for your reason, which becomes part of the record.", true],
@@ -8536,7 +8536,7 @@ var WORD_ROWS = Object.freeze([
   ["screen.question.say009", "Before you accept: the bias this reading was composed under", "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence", null, false],
   ["screen.question.say010", "A reading the assistant composed follows the team's stated bias as it stood when the run was made.", "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence", null, false],
   ["screen.question.say011", "If that has changed since, the reading and the team's position may no longer match.", "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence", null, false],
-  ["screen.question.say012", "\u2042Composed by the assistant, working for Mai, October 8Stated bias it was composed under: \u2042Stated bias now: \u2042", "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence", null, false],
+  ["screen.question.say012", "\u2042Composed by the assistant, working for Mai, October 8", "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence", null, false],
   ["screen.question.say013", "What the team stands under now is not what this reading was composed under, so what it weighed and what you would be adopting it under are two different things.", "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence", null, false],
   ["screen.question.say014", "This compares the run's own recorded bias with what the team holds now.", "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence", null, false],
   ["screen.question.say015", "It is not a comparison with a bias of your own: the record holds none for a member.", "DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence", null, false],
@@ -8617,7 +8617,7 @@ var WORD_ROWS = Object.freeze([
   ["screen.document.a34.each_reasoning_that_rests_on_this_docume", "Each reasoning that rests on this document is asked about on its own.", "DEC-330: B306 A34: document drawn word", null, false],
   ["screen.document.a34.a_newer_copy_exists_captured_2_october", "a newer copy exists, captured October 2", "DEC-330: B306 A34: document drawn word", null, false],
   ["screen.document.a34.section_3_reads_the_same_in_both", "section 3 reads the same in both", "DEC-330: B306 A34: document drawn word", null, false],
-  ["screen.document.a34.nobody_has_asked_yet_whether_a_newer_cop", "nobody has asked yet whether a newer copy exists", "DEC-330: B306 A34: document drawn word", null, false],
+  ["screen.document.a34.not_checked_yet", "not yet checked for a newer copy", "DEC-330: B306 A34: document drawn word", null, false],
   ["screen.document.a34.ask_whether_a_newer_copy_exists", "Ask whether a newer copy exists", "DEC-330: B306 A34: document drawn word", null, false],
   ["screen.document.a34.the_record_could_not_tell_whether_a_newe", "The record could not tell whether a newer copy exists for section 2 of the lease question.", "DEC-330: B306 A34: document drawn word", null, false],
   ["screen.document.a34.it_does_not_guess", "It does not guess.", "DEC-330: B306 A34: document drawn word", null, false],
@@ -8837,8 +8837,8 @@ var WORD_ROWS = Object.freeze([
   ["screen.finder.covered.read", "What has been read out of the documents", "DEC-330: B306 A15: level 2 of 4", null, false],
   ["screen.finder.covered.read.says.other", "Passages were read from {read} of the {n} documents searched. The other {rest} have not been read passage by passage yet, so their words were not searched.", "DEC-330: B306 A15: level 2 of 4: how much was read at passage grain", null, false],
   ["screen.finder.covered.read.says.one", "Passages were read from {read} of the {n} documents searched. The other one has not been read passage by passage yet, so its words were not searched.", "DEC-330: the count of one (consistency read)", null, false],
-  ["screen.finder.covered.docs.says.other", "Searched {n} of the {all} documents your team holds. {hidden} are in projects where you can see only that they exist, so they were not searched for you.", "DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see", null, false],
-  ["screen.finder.covered.docs.says.one", "Searched {n} of the {all} documents your team holds. 1 is in a project where you can see only that it exists, so it was not searched for you.", "DEC-330: the count of one (consistency read)", null, false],
+  ["screen.finder.covered.docs.says.other", "Searched the {n} documents you may read. {p} projects you can see only by name were not searched for you, and what they hold is not shown.", "DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see; B312 (retrieval R29, R89): counts the projects, never their documents", null, false],
+  ["screen.finder.covered.docs.says.one", "Searched the {n} documents you may read. 1 project you can see only by name was not searched for you, and what it holds is not shown.", "DEC-330: the count of one (consistency read)", null, false],
   ["screen.finder.covered.looked", "Whether anybody looked", "DEC-330: B306 A15: level 4 of 4", null, false],
   ["screen.finder.covered.docs", "The documents themselves", "DEC-330: B306 A15: level 3 of 4", null, false],
   ["state.item.review.means", "Captured into your team's record and waiting for a member to review it.", "DEC-330: B306 A11: the state chip's explanation and the Glossary", null, false],
@@ -75290,10 +75290,13 @@ var REASON_MAX = 2e3;
 var reasonGiven = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
 var SORT_DIRS = Object.freeze(["asc", "desc"]);
 var HELD_SORTS = Object.freeze(["age", "source", "project"]);
-var HELD_STATES = Object.freeze(["held", "set_aside"]);
+var HELD_STATES = Object.freeze(["held", "set_aside", "held_and_vouched"]);
 var HELD_FILES_IN_ROW = 50;
+var HELD_AT_VERSIONS_MAX = 200;
 var HELD_PAGE_WAIT_MS = 5e3;
 var HELD_PAGE_LANES = 8;
+var VOUCHED_BASIS = "this document is already vouched for, so whether it could be vouched for in a batch is not asked";
+var VOUCHED_STATE = "verified";
 var TOO_LATE = Symbol(say2("capture.symbol.page_wait_ran"));
 var RAN_OUT = /* @__PURE__ */ new WeakSet();
 var REGISTER_FIRST = `SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY julianday(registered), registered, capture_sha LIMIT 1`;
@@ -76274,6 +76277,264 @@ var Capture = class _Capture {
     }
   }
   /* ==================================================================== *
+   * Already in the record, and whether the source has since changed (R96; A64, K3807, DEC-330)
+   * ==================================================================== */
+  /* R96: the required-argument refusal of this read, for an argument given in a shape the read cannot use. */
+  static #readArgument(argument, shape, given6) {
+    return {
+      ok: false,
+      reason: "REQUIRED_ARGUMENT_MISSING",
+      op: "heldat",
+      argument,
+      shape,
+      status: 400,
+      error: `${argument} must be ${shape}; ${JSON.stringify(String(given6)).slice(0, 80)} is not`,
+      detail: `op=heldat needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was read.`
+    };
+  }
+  /* R96: how a document was captured, from the register document of its home bundle (`data/provenance.json`, the one the
+     capture's digest names): `rendered`, `plain`, or null when the record cannot say. */
+  #captureKindOf(bundleId, sha2) {
+    try {
+      const f17 = this.#one(`SELECT content FROM files WHERE bundle_id = ? AND path = 'data/provenance.json'`, bundleId);
+      const docs = f17 && typeof f17.content === "string" ? JSON.parse(f17.content).documents : null;
+      const d = Array.isArray(docs) ? docs.find((x) => x && typeof x === "object" && x.capture?.sha256 === sha2) : null;
+      if (!d) return null;
+      return d.capture?.method === RENDERED_METHOD || d.pair?.primary === "rendered" ? "rendered" : "plain";
+    } catch {
+      return null;
+    }
+  }
+  /** R96 (T51; A64, K3807; DEC-330; `provenance` R17, R18; `acquisition` R11, R22): whether the record already holds an
+   *  address or a digest, and whether the source has since changed. Exactly one of `address` (a public locator) and
+   *  `sha256`, else the required-argument refusal, nothing read. `{ok: true, held, copy, versions, truncated, changed}`:
+   *  `held` as the viewer may see a capture (its receipts and a register row whose home the viewer may see), an unseen
+   *  capture reading as an unknown one; `copy` the compared copy (the newest visible capture at the address by last
+   *  retrieval; for a digest, that capture); `versions` the distinct captures the viewer sees at that address (at most
+   *  200 counted); `changed` `{state, basis, as_of, looked_at?, served_sha256?, earlier_differs}` relative to `copy` alone.
+   *  Without `check` it is `undetermined`, decided from the record and never by a fetch. With `check: true`, from a member
+   *  session only, one governed request for the copy's address, conditional on the validators of the copy's own fetch,
+   *  decides `unchanged` (a 304, or bytes hashing to the copy's digest) or `changed`; nothing is filed, and the one write is
+   *  R8's outcome. A refusal, a failure, a governed refusal, or a copy that is no plain fetch reads `undetermined`. Never
+   *  throws: a store that cannot be read answers `held: null`. */
+  async heldAt({ address = null, sha256: sha2562 = null, check: check2 = false, viewer = void 0, member: member2 = null } = {}) {
+    const given6 = (x) => x != null && x !== "";
+    if (given6(address) === given6(sha2562))
+      return _Capture.#readArgument(
+        given6(address) ? "sha256" : "address",
+        "exactly one of `address` (a public https address) and `sha256` (64 lowercase hex characters)",
+        given6(address) ? sha2562 : address
+      );
+    if (given6(address) && (typeof address !== "string" || !isPublicHttpsLocator(address)))
+      return _Capture.#readArgument("address", "a public https address", address);
+    if (given6(sha2562) && (typeof sha2562 !== "string" || !HEX645.test(sha2562)))
+      return _Capture.#readArgument("sha256", "64 lowercase hex characters", sha2562);
+    const looking = check2 === true;
+    if (looking && (typeof member2 !== "string" || !memberIdOf(member2).trim() || isMachineIdentity(member2)))
+      return {
+        ok: false,
+        reason: "MEMBER_SESSION_REQUIRED",
+        status: 403,
+        detail: "looking at the source is a signed-in member's act, whose stamp names them; nothing was fetched"
+      };
+    const undetermined3 = (basis, asOf2 = null, differs2 = false) => ({ state: "undetermined", basis, as_of: asOf2, earlier_differs: differs2 });
+    let found3;
+    try {
+      found3 = this.#heldAtRead({ address, sha256: sha2562, viewer });
+    } catch {
+      return {
+        ok: true,
+        held: null,
+        copy: null,
+        versions: null,
+        truncated: false,
+        changed: undetermined3("the record could not be read, so whether it holds this, and whether the source has changed, is not known")
+      };
+    }
+    if (!found3)
+      return {
+        ok: true,
+        held: false,
+        copy: null,
+        versions: 0,
+        truncated: false,
+        changed: undetermined3("the record holds no copy of this that you may see, so there is nothing to compare")
+      };
+    const { copy: copy2, receipt, kind: kind2, versions, truncated: truncated6, differs } = found3;
+    const asOf = copy2.as_of;
+    delete copy2.as_of;
+    const base2 = { held: true, copy: copy2, versions, truncated: truncated6 };
+    if (!looking)
+      return { ok: true, ...base2, changed: undetermined3(
+        `the record holds this copy as retrieved at ${asOf} and has no later look at the source; a copy's age is not a look, so whether the site has changed since is not known from the record alone`,
+        asOf,
+        differs
+      ) };
+    const no9 = (basis) => ({ ok: true, ...base2, changed: undetermined3(basis, asOf, differs) });
+    if (!receipt.address) return no9("this copy has no address to look at");
+    if (receipt.via !== "direct" || kind2 === null || kind2 === "rendered" || !receipt.plain_address)
+      return no9(receipt.via !== "direct" ? "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it" : kind2 === "rendered" ? "this copy is a rendered capture, which a plain look at the site cannot be compared with" : kind2 === null ? "the record cannot say how this copy was captured, so a plain look at the site is not compared with it" : "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it");
+    if (!isPublicHttpsLocator(receipt.address))
+      return no9("this copy has no public address to look at");
+    const validators = this.validatorsOf({ addressNorm: receipt.address_norm, captureSha: copy2.sha256 });
+    const conditional = validators ? {
+      ...validators.etag ? { "if-none-match": validators.etag } : {},
+      ...validators.lastModified ? { "if-modified-since": validators.lastModified } : {}
+    } : null;
+    const looked = stampSecond5(this.#instant());
+    const outcome = async (kindOf4, status = null) => {
+      try {
+        await this.recordSourceOutcome({ addressNorm: receipt.address_norm, outcome: kindOf4, status, at: looked });
+      } catch {
+      }
+    };
+    let g;
+    try {
+      g = await governedFetch2(this, receipt.address, "heldat", null, { headers: conditional });
+    } catch {
+      await outcome("fetch_failed");
+      return no9("the request for the address did not complete, so the source was not looked at");
+    }
+    if (g.refusedByGovernor) {
+      await outcome("governed");
+      return no9("the host is being given time between requests, so the source was not looked at");
+    }
+    const res = g.res;
+    const drop2 = async () => {
+      try {
+        await res.body?.cancel?.();
+      } catch {
+      }
+    };
+    const looks = (state, extra = {}) => ({ ok: true, ...base2, changed: {
+      state,
+      basis: state === "unchanged" ? "the site still gives the same document as this copy" : "the site now gives a different document from this copy",
+      as_of: asOf,
+      looked_at: looked,
+      ...extra,
+      earlier_differs: differs
+    } });
+    if (res.status === 304 && conditional) {
+      await drop2();
+      await outcome("success", 304);
+      return looks("unchanged");
+    }
+    if (!res.ok || !res.body) {
+      await drop2();
+      await outcome("source_refused", res.status);
+      return no9(`the site answered ${res.status}, so it did not give the document to compare`);
+    }
+    const h = createSha256(), reader = res.body.getReader();
+    let total2 = 0;
+    try {
+      for (; ; ) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total2 += value.length;
+        if (total2 > CAPTURE_MAX) {
+          try {
+            await reader.cancel();
+          } catch {
+          }
+          await outcome("success", res.status);
+          return no9("the document at the address is larger than this surface compares, so it was not looked at whole");
+        }
+        h.update(value);
+      }
+    } catch {
+      await outcome("fetch_failed");
+      return no9("the document did not arrive whole, so the source was not looked at");
+    }
+    await outcome("success", res.status);
+    const served = h.hex();
+    return served === copy2.sha256 ? looks("unchanged") : looks("changed", { served_sha256: served });
+  }
+  /* R96: what the record holds for an address or a digest, as the viewer may see it: the compared copy with its newest
+     receipt, how it was captured, the distinct visible captures at its address and whether another of them differs.
+     Null when nothing the viewer may see is held. A read that cannot be made throws, and `heldAt` answers it `held: null`. */
+  #heldAtRead({ address, sha256: sha2562, viewer }) {
+    const sight = this.#sightOf(viewer);
+    const seenAt = (norm3) => this.#rows(
+      `SELECT cl.capture_sha AS sha, MAX(julianday(cl.last_retrieved)) AS last FROM captured_locators cl
+         JOIN register r ON r.capture_sha = cl.capture_sha JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE cl.address_norm = ? AND (${sight.sql}) GROUP BY cl.capture_sha
+        ORDER BY last DESC, cl.capture_sha DESC LIMIT ?`,
+      norm3,
+      ...sight.args,
+      HELD_AT_VERSIONS_MAX + 1
+    );
+    const addressNorm = address ? normalizeAddress(address) : null;
+    let sha2, atNorm = addressNorm;
+    if (address) {
+      const seen = seenAt(addressNorm);
+      if (!seen.length) return null;
+      sha2 = seen[0].sha;
+    } else {
+      const home3 = this.#one(
+        `SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ? AND (${sight.sql})`,
+        sha2562,
+        ...sight.args
+      );
+      if (!home3) return null;
+      sha2 = sha2562;
+    }
+    const receipt = this.#one(
+      `SELECT address_norm, address, via, retrieval_locator, last_retrieved FROM captured_locators
+        WHERE capture_sha = ? ${address ? "AND address_norm = ?" : ""}
+        ORDER BY julianday(last_retrieved) DESC, via, address_norm LIMIT 1`,
+      sha2,
+      ...address ? [addressNorm] : []
+    );
+    const home2 = this.#one(`SELECT r.bundle_id, b.project FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, sha2);
+    const first = this.#one(`SELECT first_retrieved AS at FROM captured_locators WHERE capture_sha = ?
+                              ORDER BY julianday(first_retrieved), first_retrieved LIMIT 1`, sha2)?.at;
+    const actor = this.#one(`SELECT actor FROM capture_actors WHERE capture_sha = ? ORDER BY at, actor LIMIT 1`, sha2)?.actor;
+    let grade2 = null;
+    try {
+      const g = typeof this.provenance?.captureGrade === "function" ? this.provenance.captureGrade(sha2) : null;
+      grade2 = g && typeof g === "object" && typeof g.then !== "function" ? g : null;
+    } catch {
+      grade2 = null;
+    }
+    if (!address && receipt) atNorm = receipt.address_norm;
+    let versions, truncated6 = false, differs = false;
+    if (atNorm && (address || isPublicHttpsLocator(receipt.address))) {
+      const seen = seenAt(atNorm);
+      truncated6 = seen.length > HELD_AT_VERSIONS_MAX;
+      versions = Math.min(seen.length, HELD_AT_VERSIONS_MAX);
+      differs = seen.some((x) => x.sha !== sha2);
+    } else versions = 1;
+    const at50 = (x) => {
+      const t2 = typeof x === "string" ? Date.parse(x) : NaN;
+      return Number.isFinite(t2) ? stampSecond5(t2) : null;
+    };
+    let plain20 = false;
+    if (receipt) {
+      try {
+        plain20 = !receipt.retrieval_locator || normalizeAddress(receipt.retrieval_locator) === receipt.address_norm;
+      } catch {
+        plain20 = false;
+      }
+    }
+    return {
+      copy: {
+        sha256: sha2,
+        document: home2.bundle_id,
+        project: home2.project || null,
+        retrieved: at50(first),
+        actor: typeof actor === "string" && actor ? actor : null,
+        grade: grade2,
+        address: receipt ? receipt.address : null,
+        as_of: receipt ? at50(receipt.last_retrieved) : null
+      },
+      receipt: receipt ? { ...receipt, plain_address: plain20 } : { via: null, plain_address: false },
+      kind: this.#captureKindOf(home2.bundle_id, sha2),
+      versions,
+      truncated: truncated6,
+      differs
+    };
+  }
+  /* ==================================================================== *
    * Held captures (R77–R79, R81–R84; DEC-97, DEC-141)
    * ==================================================================== */
   /* R77: the SQL of a document's standing: an Information document at `collected` whose latest held act is not a
@@ -76297,12 +76558,12 @@ var Capture = class _Capture {
   /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside (R88: set aside, for
      the `set_aside` list), seen by the viewer, and passing the `member` and `project` filters; with their arguments. One
      builder for the list and for asking whether one document (an archive's, R77's grouping) is a row of it. */
-  #heldWhere({ viewer, who: who4, project, aside = false }) {
+  #heldWhere({ viewer, who: who4, project, aside = false, vouched = false }) {
     const sight = this.#sightOf(viewer);
     const hasProject = project != null && project !== "";
+    const standing = vouched ? `((b.current_state = 'collected' AND ${_Capture.#NOT_SET_ASIDE}) OR b.current_state = '${VOUCHED_STATE}')` : `b.current_state = 'collected' AND ${aside ? _Capture.#IS_SET_ASIDE : _Capture.#NOT_SET_ASIDE}`;
     return {
-      sql: `b.object_type = 'information' AND b.current_state = 'collected'
-            AND ${aside ? _Capture.#IS_SET_ASIDE : _Capture.#NOT_SET_ASIDE} AND (${sight.sql})
+      sql: `b.object_type = 'information' AND ${standing} AND (${sight.sql})
             AND ${who4 ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
                                   WHERE r.bundle_id = b.bundle_id
                                     AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
@@ -76344,7 +76605,7 @@ var Capture = class _Capture {
     if (!SORT_DIRS.includes(way)) return _Capture.#badArgument("heldcaptures", "dir", SORT_DIRS.join(" | "), way);
     const list6 = state == null || state === "" ? "held" : state;
     if (!HELD_STATES.includes(list6)) return _Capture.#badArgument("heldcaptures", "state", HELD_STATES.join(" | "), list6);
-    const aside = list6 === "set_aside";
+    const aside = list6 === "set_aside", vouched = list6 === "held_and_vouched";
     const cap = limitOf(limit);
     const from = after2 ? keyOf(after2, 3) : null;
     if (after2 && !from) return badCursor();
@@ -76352,10 +76613,10 @@ var Capture = class _Capture {
     const k0 = by === "age" ? "'0'" : by === "source" ? "CASE WHEN src_address IS NULL THEN '1' ELSE '0' END" : "CASE WHEN project IS NULL OR project = '' THEN '1' ELSE '0' END";
     const asc = by === "age" ? way === "desc" : way === "asc";
     const who4 = typeof member2 === "string" && member2 ? memberIdOf(member2) : null;
-    const where = this.#heldWhere({ viewer, who: who4, project, aside });
+    const where = this.#heldWhere({ viewer, who: who4, project, aside, vouched });
     const window = (key3, n2) => this.#rows(
-      `SELECT * FROM (SELECT bundle_id, title, project, since, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
-         SELECT b.bundle_id, b.title, b.project, ${_Capture.#SINCE} AS since, ${_Capture.#SOURCE("address")} AS src_address,
+      `SELECT * FROM (SELECT bundle_id, title, project, since, standing, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
+         SELECT b.bundle_id, b.title, b.project, b.current_state AS standing, ${_Capture.#SINCE} AS since, ${_Capture.#SOURCE("address")} AS src_address,
                 ${_Capture.#SOURCE("via")} AS src_via, ${_Capture.#SOURCE("first_retrieved")} AS src_retrieved
            FROM bundles b WHERE ${where.sql})) q
         WHERE ${key3 ? `(k0 > ? OR (k0 = ? AND (k1 ${asc ? ">" : "<"} ? OR (k1 = ? AND bundle_id > ?))))` : "1=1"}
@@ -76389,7 +76650,7 @@ var Capture = class _Capture {
     }
     const page2 = kept.slice(0, cap), truncated6 = kept.length > cap, last = page2[page2.length - 1];
     const at50 = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
-    const answers2 = await this.#pageAnswers(page2, { viewer, rowOf: rowOf19 });
+    const answers2 = await this.#pageAnswers(page2, { viewer, rowOf: rowOf19, vouched });
     const rows4 = [];
     for (const r of page2) {
       const since = Date.parse(r.since);
@@ -76406,7 +76667,9 @@ var Capture = class _Capture {
         ...asked6.questions ? { captured_for: _Capture.#shown(asked6.questions) } : { captured_for: null, captured_for_basis: asked6.basis },
         ...grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {}),
         capture: this.#captureOfDocument(r.bundle_id),
-        ...aside ? { set_aside: this.#latestSetAside(r.bundle_id) } : {}
+        ...this.#captureFacts(r.bundle_id),
+        ...aside ? { set_aside: this.#latestSetAside(r.bundle_id) } : {},
+        ...vouched ? this.#standingOf(r.bundle_id, r.standing) : {}
       });
     }
     return {
@@ -76424,6 +76687,53 @@ var Capture = class _Capture {
   #latestSetAside(bundleId) {
     const r = this.#one(`SELECT reason, author, at FROM held_acts WHERE bundle_id = ? AND act = 'set_aside' ORDER BY seq DESC LIMIT 1`, bundleId);
     return r ? { reason: r.reason, author: r.author, at: r.at } : null;
+  }
+  /* R88 (T51): a row's `standing`, `collected` or `verified`, and for a vouched one `vouched: {by, at}`, the author and
+     instant of the release's entry in the document's own `state_history` (promotion R32): its latest move to `verified`.
+     A field the entry does not give, or a history that cannot be read, is null. */
+  #standingOf(bundleId, state) {
+    if (state !== VOUCHED_STATE) return { standing: "collected" };
+    let entry4 = null;
+    try {
+      const f17 = this.#one(`SELECT content FROM files WHERE bundle_id = ? AND path = 'bundle.md'`, bundleId);
+      const hist = f17 && typeof f17.content === "string" ? parseFrontmatter(f17.content).data?.state_history : null;
+      if (Array.isArray(hist)) entry4 = [...hist].reverse().find((e2) => e2 && typeof e2 === "object" && e2.to_state === VOUCHED_STATE) ?? null;
+    } catch {
+      entry4 = null;
+    }
+    const given6 = (x) => typeof x === "string" && x ? x : null;
+    return { standing: VOUCHED_STATE, vouched: { by: given6(entry4?.author), at: given6(entry4?.timestamp) } };
+  }
+  /* R77 (T51; N1235): the capture's own facts a held row answers, `actor` (`acquisition` R16; for an upload R86's `by`),
+     `retrieved` (the whole-second UTC instant of the capture's first receipt) and `bytes` (the register's size of the
+     whole capture, an archive row's the archive's): each null when the record cannot say. */
+  #captureFacts(bundleId) {
+    const none = { actor: null, retrieved: null, bytes: null };
+    let reg = null;
+    try {
+      reg = this.#one(REGISTER_FIRST, bundleId);
+    } catch {
+      reg = null;
+    }
+    if (!reg || typeof reg.capture_sha !== "string") return none;
+    const sha2 = reg.capture_sha;
+    const read3 = (q10, ...a) => {
+      try {
+        return this.#one(q10, ...a);
+      } catch {
+        return null;
+      }
+    };
+    const actor = read3(`SELECT actor FROM capture_actors WHERE capture_sha = ? ORDER BY at, actor LIMIT 1`, sha2)?.actor;
+    const first = read3(`SELECT first_retrieved AS at FROM captured_locators WHERE capture_sha = ? ORDER BY julianday(first_retrieved), first_retrieved LIMIT 1`, sha2)?.at;
+    const size = read3(`SELECT bytes FROM register WHERE capture_sha = ?`, sha2)?.bytes;
+    const bytes2 = typeof size === "number" || typeof size === "bigint" ? Number(size) : NaN;
+    const at50 = typeof first === "string" ? Date.parse(first) : NaN;
+    return {
+      actor: typeof actor === "string" && actor ? actor : null,
+      retrieved: Number.isFinite(at50) ? stampSecond5(at50) : null,
+      bytes: Number.isSafeInteger(bytes2) && bytes2 >= 0 ? bytes2 : null
+    };
   }
   /* R77 (T47; N979): the capture a held row stands for, `{sha256, grade}`: the digest the register files under the
      document (provenance R48; of several, the one first registered, ties by digest) and `provenance.captureGrade`'s
@@ -76511,13 +76821,15 @@ var Capture = class _Capture {
      without being named nor counted as listed. A thread-blocking examination cannot be interrupted: the wait then ends
      after the one in progress. Answers a map of the page's rows to `{eligibility, grouped}` (`grouped` null for a document
      that holds no archive). */
-  async #pageAnswers(page2, { viewer, rowOf: rowOf19 }) {
+  async #pageAnswers(page2, { viewer, rowOf: rowOf19, vouched = false }) {
     const answers2 = /* @__PURE__ */ new Map();
     if (!page2.length) return answers2;
     const wait = _Capture.#pageWait(HELD_PAGE_WAIT_MS);
     const examined = /* @__PURE__ */ new Map();
+    const isVouched = (bundleId) => vouched && this.#one(`SELECT current_state AS s FROM bundles WHERE bundle_id = ?`, bundleId)?.s === VOUCHED_STATE;
     const examine = (bundleId) => {
-      if (!examined.has(bundleId)) examined.set(bundleId, this.#eligibility(bundleId, wait));
+      if (!examined.has(bundleId))
+        examined.set(bundleId, isVouched(bundleId) ? { eligible: null, eligibility_basis: VOUCHED_BASIS } : this.#eligibility(bundleId, wait));
       return examined.get(bundleId);
     };
     const answer2 = async (r) => {
@@ -76541,7 +76853,13 @@ var Capture = class _Capture {
       if (!group2) return { eligibility, grouped: null };
       const shown3 = await Promise.all(group2.files.slice(0, HELD_FILES_IN_ROW).map(async (f17) => {
         const e2 = await examine(f17.document);
-        return { ...f17, grade: group2.grade, eligible: e2.eligible, ...RAN_OUT.has(e2) ? { eligibility_basis: e2.eligibility_basis } : {} };
+        return {
+          ...f17,
+          grade: group2.grade,
+          eligible: e2.eligible,
+          ...RAN_OUT.has(e2) || e2.eligibility_basis === VOUCHED_BASIS ? { eligibility_basis: e2.eligibility_basis } : {},
+          ...vouched ? this.#standingOf(f17.document, isVouched(f17.document) ? VOUCHED_STATE : "collected") : {}
+        };
       }));
       return { eligibility, grouped: {
         archive: group2.archive,
@@ -78299,6 +78617,14 @@ function captureOps(c, url, body, env) {
     gradenote: () => c.gradeNoteOf({ captureSha: q10("capture") ?? (body && body.captureSha), viewer: q10("viewer") ?? "" }),
     /* R95 (T50): one capture's grade, by the caller's stamped viewer as `gradenote` is. */
     capturegrade: () => c.captureGradeOf({ captureSha: q10("capture") ?? (body && body.captureSha), viewer: q10("viewer") ?? "" }),
+    /* R96 (T51): `check` is the only act that reaches outside, and only from a member session (the stamp `by`). */
+    heldat: () => c.heldAt({
+      address: q10("address"),
+      sha256: q10("sha256"),
+      check: q10("check") === "1" || q10("check") === "true",
+      viewer: q10("viewer") ?? "",
+      member: q10("by")
+    }),
     heldcaptures: () => c.heldCaptures({
       member: q10("member"),
       project: q10("project"),

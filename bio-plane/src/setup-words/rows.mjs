@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
    docs/development/ux-substrate/screens/words.json (14278 words, 923 protected; SHA-256
-   51611b6a411650ae0e7590d4cb3d2cf5fcb6412f89ca8fddfaa3169dc8e7865a), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   d5804e6c373db7000f4e0c24febc3cb5cd8af40c17a64dd557c1543222284983), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "51611b6a41";
+export const WORDS_COMMIT = "d5804e6c37";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -6676,7 +6676,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.question.say009","Before you accept: the bias this reading was composed under","DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence",null,false],
   ["screen.question.say010","A reading the assistant composed follows the team's stated bias as it stood when the run was made.","DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence",null,false],
   ["screen.question.say011","If that has changed since, the reading and the team's position may no longer match.","DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence",null,false],
-  ["screen.question.say012","⁂Composed by the assistant, working for Mai, October 8Stated bias it was composed under: ⁂Stated bias now: ⁂","DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence",null,false],
+  ["screen.question.say012","⁂Composed by the assistant, working for Mai, October 8","DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence",null,false],
   ["screen.question.say013","What the team stands under now is not what this reading was composed under, so what it weighed and what you would be adopting it under are two different things.","DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence",null,false],
   ["screen.question.say014","This compares the run's own recorded bias with what the team holds now.","DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence",null,false],
   ["screen.question.say015","It is not a comparison with a bias of your own: the record holds none for a member.","DEC-330: B306 A23/A37/A40/A41: question screen: drawn sentence",null,false],
@@ -6757,7 +6757,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.document.a34.each_reasoning_that_rests_on_this_docume","Each reasoning that rests on this document is asked about on its own.","DEC-330: B306 A34: document drawn word",null,false],
   ["screen.document.a34.a_newer_copy_exists_captured_2_october","a newer copy exists, captured October 2","DEC-330: B306 A34: document drawn word",null,false],
   ["screen.document.a34.section_3_reads_the_same_in_both","section 3 reads the same in both","DEC-330: B306 A34: document drawn word",null,false],
-  ["screen.document.a34.nobody_has_asked_yet_whether_a_newer_cop","nobody has asked yet whether a newer copy exists","DEC-330: B306 A34: document drawn word",null,false],
+  ["screen.document.a34.not_checked_yet","not yet checked for a newer copy","DEC-330: B306 A34: document drawn word",null,false],
   ["screen.document.a34.ask_whether_a_newer_copy_exists","Ask whether a newer copy exists","DEC-330: B306 A34: document drawn word",null,false],
   ["screen.document.a34.the_record_could_not_tell_whether_a_newe","The record could not tell whether a newer copy exists for section 2 of the lease question.","DEC-330: B306 A34: document drawn word",null,false],
   ["screen.document.a34.it_does_not_guess","It does not guess.","DEC-330: B306 A34: document drawn word",null,false],
@@ -6977,8 +6977,8 @@ export const WORD_ROWS = Object.freeze([
   ["screen.finder.covered.read","What has been read out of the documents","DEC-330: B306 A15: level 2 of 4",null,false],
   ["screen.finder.covered.read.says.other","Passages were read from {read} of the {n} documents searched. The other {rest} have not been read passage by passage yet, so their words were not searched.","DEC-330: B306 A15: level 2 of 4: how much was read at passage grain",null,false],
   ["screen.finder.covered.read.says.one","Passages were read from {read} of the {n} documents searched. The other one has not been read passage by passage yet, so its words were not searched.","DEC-330: the count of one (consistency read)",null,false],
-  ["screen.finder.covered.docs.says.other","Searched {n} of the {all} documents your team holds. {hidden} are in projects where you can see only that they exist, so they were not searched for you.","DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see",null,false],
-  ["screen.finder.covered.docs.says.one","Searched {n} of the {all} documents your team holds. 1 is in a project where you can see only that it exists, so it was not searched for you.","DEC-330: the count of one (consistency read)",null,false],
+  ["screen.finder.covered.docs.says.other","Searched the {n} documents you may read. {p} projects you can see only by name were not searched for you, and what they hold is not shown.","DEC-330: B306 A15: level 3 of 4: the bound, and what the member may not see; B312 (retrieval R29, R89): counts the projects, never their documents",null,false],
+  ["screen.finder.covered.docs.says.one","Searched the {n} documents you may read. 1 project you can see only by name was not searched for you, and what it holds is not shown.","DEC-330: the count of one (consistency read)",null,false],
   ["screen.finder.covered.looked","Whether anybody looked","DEC-330: B306 A15: level 4 of 4",null,false],
   ["screen.finder.covered.docs","The documents themselves","DEC-330: B306 A15: level 3 of 4",null,false],
   ["state.item.review.means","Captured into your team's record and waiting for a member to review it.","DEC-330: B306 A11: the state chip's explanation and the Glossary",null,false],
