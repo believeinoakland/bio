@@ -44,3 +44,19 @@ R61 tests now read case-checker R26's says shape (test-only; the source relays r
 ## J2 · COMPLETE
 
 CHANGE B2 done. Inline English in standardsUseWords replaced by setup-words word(key, vars) over the four case-authoring.text.* keys; their placeholders match what the code passes. The standards test also checks each says key is held and reads non-empty. Module tests 190/190; format, architecture, coverage and ownership pass (ownership: 3 files). run.mjs shows the same 23 coverage failures in other modules. Record: build/jobs/T51/case-authoring.md, branch job/T51/case-authoring, pushed.
+
+## Completion record for B3 (CHANGE, after case-grammar's bio-case-document/8)
+
+**Entries applied.** B2 (above) and B3. case-grammar now authors `bio-case-document/8`. `document.mjs` passes the document's own format where it spells attribution and lens lines: `attributionBodyLines(attributions, CASE_DOCUMENT_FORMAT)` and `lensSectionLines({ ..., format: CASE_DOCUMENT_FORMAT })`. Its R14 comment now names `/8`.
+
+**Tests.** BOB's note said five tests; the run found three test titles failing (carries.test.mjs R14/R55, document.test.mjs R14, tensions.test.mjs R14), each with its `/7` expectation. Each now expects `bio-case-document/8`, and `op=publish writes /8, never /6`. No test copies a sentence.
+
+**Deferred.** None.
+
+**Found in other modules.** None new. `checks/run.mjs` still shows the 23 coverage failures in other modules.
+
+**Tests and checks.**
+- All 30 files of `bio-plane/test/m/case-authoring/`: 190 of 190 pass.
+- `format`: 0 failures. `architecture` (case-authoring): 0 failures. `coverage` (case-authoring): 48 of 48 live ids named.
+
+**Size (session_01G31x27GuFV84fTJFmbxZNa): test runs 5, module lines 3010**, `bio-plane/src/case-authoring/*.mjs` (all lines).
