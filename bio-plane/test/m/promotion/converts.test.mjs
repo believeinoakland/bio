@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { makePromotion, doc, infoDoc, create, revise, sha, T0, T1 } from "./fixtures.mjs";
 import { GATE_VERSION, CATALOG_VERSION, recordChecks, PROMOTED_TYPE_CHECKS, PROJECT_MINT_CHECKS } from "../../../src/promotion/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { MECHANICAL_APPEND_FILES } from "../../../src/promotion/history.mjs";
 
 const ID = "INFO-2026-0001";
 const pd = (title, extra = {}) => doc({ object_type: "project", title, current_state: "forming", created: T0, last_updated: T0, ...extra });
@@ -167,7 +168,7 @@ test("R30 (subresources; N631): C-20.1's mechanical envelope admits data/snapsho
   };
   const c201 = async (name, pre) => (await recordChecks({ folderName: "INFO-2026-0001-a", files: image(name, pre), sha256: async (v) => hex(v) }))
     .filter((f) => f.check === "C-20.1" && f.severity === "error").map((f) => f.message);
-  for (const inside of ["data/snapshot-manifest.json", "data/changes.json", "data/provenance.json", "snapshots/page.html"])
+  for (const inside of [...MECHANICAL_APPEND_FILES, "snapshots/page.html"])
     assert.deepEqual(await c201(inside), [], inside);
   const outside = await c201("data/notes.json");
   assert.equal(outside.length, 1);
