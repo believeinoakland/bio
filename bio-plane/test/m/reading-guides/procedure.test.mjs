@@ -279,6 +279,17 @@ test("R15 a procedure guide says who approved it and where it came from: a group
     { ok: true, kind: "staff_report", guides: [], withheld: [], label: { ...PROCEDURE_GUIDE_LABEL } });
 });
 
+test("R15 an adopted procedure guide, approved by this group's review, keeps origin adopted and answers its approver and day; unapproved, it is not answered", () => {
+  const a = world({ slug: "group-a" }), b = world({ slug: "group-b" });
+  const id = a.g.guideDraft({ kind: KIND, purpose: "procedure", items: STEPS, by: ANN }).guide;
+  a.g.guideReview({ guide: id, verdict: "approve", by: BOB });
+  const adopted = b.g.guideAdopt({ bytes: a.g.guideOffer({ guide: id, by: ANN }).bytes, by: ANN }).guide;
+  assert.deepEqual(b.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides.map((g) => g.origin), ["profile"], "control: unapproved");
+  b.g.guideReview({ guide: adopted, verdict: "approve", by: CY });
+  const got = b.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides[1];
+  assert.deepEqual(got, { guide: adopted, origin: "adopted", items: STEPS, approved_by: "cy", approved_at: "2026-10-09" });
+});
+
 test("R13 R9 a store made before R13 gains `purpose`, every guide and proposal held there a reading guide", () => {
   const db = new DatabaseSync(":memory:");
   const sql = { exec: (q, ...a) => { const st = db.prepare(q); return st.columns().length ? st.all(...a) : (st.run(...a), []); } };

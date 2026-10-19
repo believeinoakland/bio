@@ -26,3 +26,9 @@ Size (session_017dxijPVwvN3Wk5fPMK9V4W): test runs 6, module lines 1155
 ## J1 · COMPLETE
 
 T51-159 done on job/T51/reading-guides: R15 (approver and day on group procedure guides; status and basis on the profile's), the 5 word findings, and every refusal detail now localized. Module tests 59/59; format, architecture, coverage, ownership, words: 0 failures in reading-guides. One ambiguity (adopted guides keep origin 'adopted' under R15's 'group'), the unconverted diagnostics and the stale rows are in my record.
+
+## Completion after B2 (CHANGE, K4009)
+
+Merged tranche/T51 (R15 now words the adopted arm). The code already answered an adopted guide with `origin: "adopted"`, `approved_by` and `approved_at`; added the test naming R15 for it (approved by this group's review: answered; unapproved: not answered). Module tests 60 of 60; format, architecture, coverage, ownership 0 failures; words check shows no finding in reading-guides. Diagnostics go to the design's unkeyed list with R6's batch, as ruled.
+
+Size (session_017dxijPVwvN3Wk5fPMK9V4W): test runs 8, module lines 1155
