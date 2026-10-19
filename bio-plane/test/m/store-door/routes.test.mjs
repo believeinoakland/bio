@@ -128,7 +128,7 @@ async function drafts() {
   const code = (a) => a.json.result.code ?? a.json.result.reason;
   /* a draft's use, counted to the account that paid through the door's own `askusage` (R11) */
   const spend = (member, calls) => r.go(`askusage?viewer=member:${member}`, "POST", { mode: "draft", usage: USE, calls });
-  return { r, C, U, seen, handed, code, firstAsked, reads, asked, spend };
+  return { r, C, U, seen, handed, code, firstAsked, reads, asked, spend, tr };
 }
 
 /* The group's keep-away, credentials' (its R51, R57; DEC-172), which R10 reads through
@@ -213,8 +213,7 @@ test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-
 });
 
 test("R10 (N669, N765, N812; K2200, K2201, K2238, K2500; instance-setup R67; answers R30): `translationdraft`, in both directions, answers instance-setup's own first refusal (`translationDraftRefusal`, asked with the body's `language`, `direction`, `keys`, `key` and the stamped `by`) before anything of the door's — TRANSLATION_DIRECTION_UNKNOWN, TRANSLATION_NOT_GRANTED, and NOT_AN_ADMIN for `to_english` — kept away or not; then AI_KEPT_AWAY as `credentials.aiKeptAway({use: \"draft\"})` answers it, no account read and no draft routed; then `answers.askAccount`'s refusals for kind draft, NO_ACCOUNT and AI_LIMIT_REACHED; admitted, instance-setup's `translationDraft` receives those arguments and `assistant: {on, account: {kind, level}}`, a caller's `assistant` never read and no key handed, and answers its words (negative control: a granted speaker clears the first refusal)", async () => {
-  const { r, C, U, seen, code, firstAsked, reads, asked, spend } = await drafts();
-  const setup = instanceSetupOf(r.ctx);
+  const { r, C, U, seen, code, firstAsked, reads, asked, spend, tr } = await drafts();
   /* `by` as control-plane stamps it, the folded member id; `viewer` the member */
   const draft = (by, body) => r.go(`translationdraft?by=${by}&viewer=member:${by}`, "POST", body);
   const word = (await import("../../../src/setup-words/index.mjs")).WORD_ROWS
@@ -232,9 +231,9 @@ test("R10 (N669, N765, N812; K2200, K2201, K2238, K2500; instance-setup R67; ans
   }
   assert.deepEqual([reads, asked, seen], [{ account: 0, use: 0 }, [], []]);
   /* negative control: a granted speaker clears it, and meets keep-away; an awaiting kept word clears to_english's */
-  const g = setup.translationGrant({ member: "bea", language: "es", by: "ann" });
+  const g = tr.translationGrant({ member: "bea", language: "es", by: "ann" });
   assert.equal(g.ok, true, JSON.stringify(g));
-  const kept = setup.translationAdopt({ language: "es", key: word.key, text: "palabra de prueba", by: "bea" });
+  const kept = tr.translationAdopt({ language: "es", key: word.key, text: "palabra de prueba", by: "bea" });
   assert.deepEqual([kept.ok, kept.state], [true, "awaiting"], JSON.stringify(kept));
   const TO_LANG2 = { language: "es", direction: "to_language" };
   for (const [body, by] of [[TO_LANG2, "bea"], [TO_EN, "ann"]])
