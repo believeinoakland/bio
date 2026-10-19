@@ -11,10 +11,11 @@ import { sourceItems } from "./source-items.mjs";
 import { itemWords } from "./item-words.mjs";
 import { startProject } from "./start-project.mjs";
 import { participation } from "./participation.mjs";
+import { homeReadings } from "./home-readings.mjs";
 
 export const home = Object.freeze({
   id: "home",
-  parts: { projectRows, sourceItems, itemWords, startProject, participation },
+  parts: { projectRows, sourceItems, itemWords, startProject, participation, homeReadings },
 
   // R17's reads, each through the op its provider serves: the queue (the strip, "Needs you", "Needs the group", each area's
   // to-dos), the projects (`projectlist`, each count by the rows, R8), the doors (`startfrom`, R9, R14), when the member
@@ -30,6 +31,11 @@ export const home = Object.freeze({
       projects: { op: "projectlist", empty: list("projects") },
       doors: { op: "startfrom", empty: list("doors") },
       looked: { op: "lookedsince" },
+      // R64: the figures the areas add: documents, cases, people followed and the clocks running.
+      docs: { op: "browse", query: { kinds: "document", limit: "1" }, empty: function () { return false; } },
+      published: { op: "publishedlist" },
+      followed: { op: "peopledirectory", query: { show: "people", limit: "1" }, empty: function () { return false; } },
+      clocks: { op: "clocksrunning" },
     };
     if (view.me && view.me.member && !(view.me.administer === true || (Array.isArray(view.me.capabilities) && view.me.capabilities.indexOf("create_projects") >= 0))) {
       out.members = { op: "memberlist", empty: list("members") };
@@ -40,6 +46,9 @@ export const home = Object.freeze({
       out.places = { op: "profiles" };
       out.languages = { op: "grouplanguages" };
       out.aiuse = { op: "aiuseovertime", query: { owner: "group" } };
+      // R64: the security level over the last 24 hours, to an administrator only.
+      const to = Math.floor(Date.now() / 3600000) * 3600000;
+      out.security = { op: "securitymap", query: { from: new Date(to - 86400000).toISOString(), to: new Date(to).toISOString() } };
     }
     // R42: a member who may not start projects reads the ways into one: the findable projects and her own requests.
     const caps = view.me && Array.isArray(view.me.capabilities) ? view.me.capabilities : [];
@@ -299,18 +308,19 @@ export const home = Object.freeze({
     const ACTION = /^(action|request|milestone|step|plan|filing|escalation|litigation)/;
     const actionMine = forMe.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
     const actionGroup = forGroup.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
+    const more = view.parts.homeReadings(cs, view, { ok: ok, failed: failed, rd: rd, projects: plist, admin: admin });
     const investigation = area("investigation", "/app/dash-project",
       forMe.filter(function (it) { return !ACTION.test(String(it.kind || "")) && it.kind !== "update-ready"; }).length + invited.length,
-      [rd(plist.length, "screen.home.rd.project", "screen.home.rd.projects"), rd(counted, "screen.home.rd.question", "screen.home.rd.questions")],
-      latest ? [cs.w("screen.home.line.lastchange", { project: { html: cs.ref("project", String(latest.id), String(latest.name || latest.id), []) }, date: { html: cs.date(String(latest.lastChange)) } })] : [],
-      failed(data.projects) ? [data.projects] : []);
+      [rd(plist.length, "screen.home.rd.project", "screen.home.rd.projects"), rd(counted, "screen.home.rd.question", "screen.home.rd.questions")].concat(more.investigation.rds),
+      (latest ? [cs.w("screen.home.line.lastchange", { project: { html: cs.ref("project", String(latest.id), String(latest.name || latest.id), []) }, date: { html: cs.date(String(latest.lastChange)) } })] : []).concat(more.investigation.lines),
+      (failed(data.projects) ? [data.projects] : []).concat(more.investigation.fails));
     const action = area("action", "/app/dash-action", actionMine,
-      [rd(actionMine, "screen.home.rd.ours", "screen.home.rd.ours"), rd(actionGroup, "screen.home.rd.group", "screen.home.rd.group")], [], []);
+      [rd(actionMine, "screen.home.rd.ours", "screen.home.rd.ours"), rd(actionGroup, "screen.home.rd.group", "screen.home.rd.group")].concat(more.action.rds), [], more.action.fails);
     const people = admin ? area("members", "/app/members", 0,
       [rd(active, "screen.home.rd.member", "screen.home.rd.members"),
         rd(rosterAll.filter(function (x) { return x && x.status === "active" && x.role === "admin"; }).length, "screen.home.rd.admin", "screen.home.rd.admins"),
         rd(rosterAll.filter(function (x) { return x && x.status === "invited"; }).length, "screen.home.rd.invited", "screen.home.rd.invited")],
-      [], failed(data.members) ? [data.members] : []) : "";
+      more.members.lines, failed(data.members) ? [data.members] : []) : "";
     let adminArea = "";
     if (admin) {
       const boot = ok(data.boot);
@@ -334,8 +344,8 @@ export const home = Object.freeze({
       }
       const version = boot && typeof boot.version === "string" && boot.version !== "0.0.0" ? boot.version : null;
       adminArea = area("administration", "/app/settings", items.filter(function (it) { return it.kind === "update-ready"; }).length,
-        [rd(version, "screen.home.rd.release", "screen.home.rd.release")], lines,
-        [data.boot, data.places, data.languages].filter(failed).concat(use && use.unreadable ? [{ state: "failed", refusal: null }] : failed(data.aiuse) ? [data.aiuse] : []));
+        [rd(version, "screen.home.rd.release", "screen.home.rd.release")].concat(more.administration.rds), lines,
+        more.administration.fails.concat([data.boot, data.places, data.languages].filter(failed).concat(use && use.unreadable ? [{ state: "failed", refusal: null }] : failed(data.aiuse) ? [data.aiuse] : [])));
     }
     const areasHtml = investigation + action + people + adminArea;
     const areas = areasHtml ? cs.sec("screen.home.areas", '<div class="mk-ablocks">' + areasHtml + "</div>") : "";

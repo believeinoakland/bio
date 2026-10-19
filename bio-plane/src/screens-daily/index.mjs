@@ -69,6 +69,9 @@ const WORDS_OF = {
     "screen.home.areas", "screen.home.areas.holds", ...["investigation", "action", "members", "administration"].map((a) => `screen.home.area.${a}`),
     "screen.home.area.need.one", "screen.home.area.need.many",
     ...["project", "projects", "question", "questions", "ours", "group", "member", "members", "admin", "admins", "invited", "release"].map((r) => `screen.home.rd.${r}`),
+    // R64: Home's remaining readings: documents, cases, people followed, clocks running, the edition line, expertise, the security level.
+    ...["document", "documents", "case", "cases", "followed.one", "followed.other", "clock", "clocks", "security", "level.ordinary", "level.raised", "level.high"].map((r) => `screen.home.rd.${r}`),
+    "home.move.ours", "home.move.theirs", "screen.home.area.edition", "screen.home.area.expertise", "screen.members.expertise.confirmed", "screen.members.expertise.declared",
     "screen.home.line.lastchange", "screen.home.line.places", "screen.home.line.languages", "screen.home.line.aiused", "screen.home.line.ailimit",
     "screen.home.projects", "screen.home.since", "screen.home.since.holds", "screen.home.since.changed", ...PROJECT_ROWS("screen.home")],
   elsewhere: [...SHARED, "screen.elsewhere.name", "screen.elsewhere.purpose", "elsewhere.title", "elsewhere.says", "elsewhere.records_nothing",

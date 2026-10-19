@@ -512,3 +512,77 @@ test("R8: projectRows keeps each count under its own key: two answers that land 
   assert.ok(!/loading/.test(out), "neither count is left loading: " + out);
   assert.equal((out.match(/screen\.home\.questions\.one/g) || []).length, 2, "both counts drawn");
 });
+
+// R64: Home's remaining readings, as the plane answers the reads each makes.
+const R64 = {
+  browse: (req) => ok({ ok: true, items: [], total: req.query.kinds === "document" ? 142 : 0, truncated: false }),
+  publishedlist: ok({ bundles: [], cases: [
+    { case_id: "CASE-1", edition: 1, published_at: "2026-09-01T10:00:00Z" }, { case_id: "CASE-1", edition: 2, published_at: "2026-09-18T10:00:00Z" },
+    { case_id: "CASE-2", edition: 1, published_at: "2026-10-02T10:00:00Z" }] }),
+  publishedcase: (req) => ok({ ok: true, caseId: req.query.caseId, edition: Number(req.query.edition), scope: req.query.caseId === "CASE-1" ? "The Coliseum lease" : "Pothole repairs" }),
+  peopledirectory: ok({ ok: true, following: 10, in_your_projects: 2, rows: [], limit: 1 }),
+  clocksrunning: ok({ ok: true, total: 3, by_owed: { group: { count: 1, next: "2026-10-23" }, body: { count: 2, next: "2026-10-14" }, undetermined: { count: 0, next: null } }, truncated: false }),
+  casedrafts: (req) => ok({ ok: true, project: req.query.project, count: 1, drafts: req.query.project === "PROJ-1"
+    ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3, identity: "x" } }, { draft_id: "DRAFT-2", case: { case_id: "CASE-2", edition: 2, identity: "x" } }, { draft_id: "DRAFT-3", case: { case_id: null, edition: null, identity: "x" } }] : [] }),
+  reviewcopy: (req) => ok({ ok: true, comments: req.query.draft === "DRAFT-2" ? [{ author_kind: "recipient", text: "x" }] : [],
+    grants: [{ grant_id: "G-1", live: true, until: "2026-10-20T00:00:00Z" }, { grant_id: "G-0", live: false, until: "2026-10-30T00:00:00Z" }] }),
+  securitymap: ok({ ok: true, level: "Raised", levelAt: null, buckets: [], totals: {} }),
+};
+const R64_ADMIN = { ...ADMIN_PLANE, ...R64, memberlist: ok({ members: [
+  { member_id: "rosa", handle: "rosa", role: "admin", status: "active", expertise: [{ label: "CPA", confirmed: true }] },
+  { member_id: "mai", handle: "mai", role: "member", status: "active", expertise: [{ label: "reporter", confirmed: false }] },
+  { member_id: "dev", handle: "dev", role: "member", status: "active", expertise: [] },
+  { member_id: "k", handle: "k", role: "member", status: "invited", expertise: [{ label: "nurse", confirmed: true }] }] }) };
+
+test("R64: a home whose fixtures answer each read draws each reading with the read's figure, in its area", async () => {
+  const p = await open("/app", R64_ADMIN);
+  await settle();
+  const area = (k) => text(p, main(p).querySelector(`[data-area="${k}"]`));
+  const inv = area("investigation");
+  assert.ok(inv.includes(`142 ${word("screen.home.rd.documents")}`), "documents: browse's total");
+  assert.ok(inv.includes(`10 ${word("screen.home.rd.followed.other")}`), "people followed: peopledirectory's following");
+  assert.ok(inv.includes(`2 ${word("screen.home.rd.cases")}`), "cases: the distinct case ids");
+  assert.deepEqual(p.byOp("browse").map((r) => [r.query.kinds, r.query.limit]), [["document", "1"]], "documents: browse over documents, one row");
+  assert.deepEqual([p.byOp("peopledirectory")[0].query.show, p.byOp("peopledirectory")[0].query.limit], ["people", "1"]);
+  const act = area("action");
+  assert.ok(act.includes(`3 ${word("screen.home.rd.clocks")}`) && act.includes(`1 ${word("home.move.ours")}`) && act.includes(`2 ${word("home.move.theirs")}`), "clocks: total, ours by the group, theirs by a body");
+  const members = area("members");
+  assert.ok(members.includes(word("screen.home.area.expertise", { people: "" }).trim().replace(/\s+$/, "")), "expertise line");
+  assert.ok(members.includes(word("screen.members.expertise.confirmed", { label: "CPA" })) && members.includes(word("screen.members.expertise.declared", { label: "reporter" })));
+  assert.ok(!members.includes("nurse"), "control: an invited member's expertise is not on hand");
+  const adm = area("administration");
+  assert.ok(adm.includes(`${word("screen.home.rd.level.raised")} ${word("screen.home.rd.security")}`), "security level, over the last 24 hours");
+  const q = p.byOp("securitymap")[0].query;
+  assert.equal(Date.parse(q.to) - Date.parse(q.from), 86400000);
+});
+
+test("R64: edition drafts: each draft's live grant end, the case's latest published edition and name; a draft a recipient commented on, one of no case and a lapsed grant are not drawn", async () => {
+  const p = await open("/app", R64_ADMIN);
+  await settle();
+  const inv = text(p, main(p).querySelector('[data-area="investigation"]'));
+  const line = word("screen.home.area.edition", { n: "2", case: "The Coliseum lease", date: dmy("2026-09-18"), until: dmy("2026-10-20") });
+  assert.ok(inv.includes(line.replace(/<[^>]+>/g, "")), "edition 2 of the case published, the draft shared until the grant's end");
+  assert.equal(inv.split(word("screen.home.area.edition", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02"), until: dmy("2026-10-20") })).length, 1, "control: DRAFT-2's recipient commented, so it says nothing");
+  assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.project).sort(), ["PROJ-1", "PROJ-2", "PROJ-3"], "each of the member's projects");
+  assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), ["DRAFT-1", "DRAFT-2"], "a draft of no case reads no grant");
+  assert.equal(p.byOp("publishedcase").filter((r) => r.query.caseId === "CASE-1")[0].query.edition, "2", "the latest edition");
+});
+
+test("R64: controls: a member who is not an administrator sends no securitymap and draws no security level; a read that fails draws its reading failed", async () => {
+  const m = await open("/app", { ...PLANE, ...R64 });
+  await settle();
+  assert.equal(m.byOp("securitymap").length, 0);
+  assert.ok(!text(m).includes(word("screen.home.rd.security")));
+  for (const [op, area] of [["browse", "investigation"], ["peopledirectory", "investigation"], ["publishedlist", "investigation"], ["clocksrunning", "action"], ["securitymap", "administration"]]) {
+    const f = await open("/app", { ...R64_ADMIN, [op]: refused("STORE_DID_NOT_ANSWER", null, 502) });
+    await settle();
+    assert.ok(main(f).querySelector(`[data-area="${area}"] [data-state="failed"]`), `${op} failed is drawn failed in ${area}`);
+  }
+  const quiet = await open("/app", { ...R64_ADMIN, browse: ok({ ok: true, items: [], total: 0 }), peopledirectory: ok({ ok: true, following: 0, rows: [] }), publishedlist: ok({ bundles: [], cases: [] }),
+    clocksrunning: ok({ ok: true, total: 0, by_owed: {} }) });
+  await settle();
+  const t = text(quiet, main(quiet).querySelector('[data-area="investigation"]'));
+  assert.ok(!t.includes(word("screen.home.rd.documents")) && !t.includes(word("screen.home.rd.cases")) && !t.includes(word("screen.home.rd.followed.other")), "no reading at zero");
+  const a = text(quiet, main(quiet).querySelector('[data-area="action"]'));
+  assert.ok(!a.includes(word("screen.home.rd.clocks")) && !a.includes(word("home.move.theirs")), "no clock reading at zero");
+});
