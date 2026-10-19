@@ -6,9 +6,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { READING_GUIDES_CHECKS, READING_GUIDES_WORDS, PROCEDURE_GUIDE_LABEL, GUIDE_PROPOSAL_STATES, checkGuide,
+import { READING_GUIDES_CHECKS, READING_GUIDES_WORDS, PROCEDURE_GUIDE_LABEL, GUIDE_PROPOSAL_STATES, GUIDE_KINDS, checkGuide,
          readingGuidesOps } from "../../../src/reading-guides/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { combine } from "../../../../jurisdictions/index.mjs";
 import { world, row, item, ITEMS, ANN, BOB, MACHINE } from "./fixture.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
@@ -21,17 +23,6 @@ const word = (key) => {
 const en = (key) => word(key).en;
 
 const LABEL_KEY = "guide.procedure.legalinfo";
-/* T45's words, which none is answered any longer: the label and the two rows R14 first re-took. */
-const T45 = {
-  GUIDE_KIND_UNKNOWN: "A reading guide is for one kind of document your team's Civicsmith recognises (a meeting "
-    + "calendar, minutes, an agenda, a staff report, an ordinance or code section, a policy, a staff directory, "
-    + "or any other document); a procedure guide is for one kind of action your group's jurisdiction profiles list. "
-    + "The kind or purpose given is not one of them. Nothing was written.",
-  GUIDE_ITEM_UNSOURCED: "Each route in a procedure guide carries the citation it rests on: the law, rule or published "
-    + "procedure that provides it, so members can read the source. The item named has none. Add its citation. "
-    + "Nothing was written.",
-  label: "legal information, not legal advice",
-};
 /* Every row's number, check and `where`, unmoved since T50 (canonical JSON's sha256 over {check, where} of the 19 rows,
    in order). T50-42 (N1132) moves only translations: each row now reads its `refusal.<CODE>` key. */
 const NUMBERS_AND_WHERES = { count: 19, sha256: "96c05f885f8c780365f5a51c1372a6d7d4376341d69a5f45640bb5906d7aa55d" };
@@ -51,8 +42,6 @@ test("R14 every refusal row reads words.json's refusal.<CODE> by key from READIN
     assert.equal(r.translation, en(`refusal.${code}`), code);
     assert.match(r.translation, /Nothing was written\.$|Nothing was sent\.$/, `${code} still says nothing was written or sent`);
   }
-  for (const code of ["GUIDE_KIND_UNKNOWN", "GUIDE_ITEM_UNSOURCED"])
-    assert.notEqual(READING_GUIDES_CHECKS[code].translation, T45[code], `${code}: T45's words no longer`);
 });
 
 test("R14 the family's order and count unmoved; every row's words are the design's, none a copy kept beside them", () => {
@@ -67,7 +56,6 @@ test("R14 R13's label carries guide.procedure.legalinfo's words, read by that ke
   assert.ok(Object.isFrozen(PROCEDURE_GUIDE_LABEL));
   assert.deepEqual({ ...PROCEDURE_GUIDE_LABEL }, { key: LABEL_KEY, says: w.en });
   assert.equal(PROCEDURE_GUIDE_LABEL.says, READING_GUIDES_WORDS[LABEL_KEY]);
-  assert.notEqual(PROCEDURE_GUIDE_LABEL.says, T45.label, "T45's words no longer");
   /* every answer of procedureGuidesFor and op=procedureguides carries it, whatever it is asked */
   const v = world();
   for (const a of [{ kind: "bylaw_complaint", viewer: ANN }, { kind: "staff_report", viewer: ANN }, undefined, { get kind() { throw new Error("x"); } }])
@@ -80,7 +68,6 @@ const STEPS = [{ route: "Write to the Town Clerk", citation: "P.E.B.L. § 9(1)" 
 const answers = (r, code) => {
   row(r, code);
   assert.equal(r.translation, en(`refusal.${code}`), code);
-  assert.ok(!JSON.stringify(r).includes(T45[code]), `${code}: T45's words no longer`);
 };
 
 test("R14 GUIDE_KIND_UNKNOWN is answered by the acts with words.json's sentence, behaviour unmoved: refused, nothing written, beside its control", () => {
@@ -93,10 +80,10 @@ test("R14 GUIDE_KIND_UNKNOWN is answered by the acts with words.json's sentence,
   const reading = w.g.guideDraft({ kind: "court_order", items: ITEMS, by: ANN });
   answers(reading, "GUIDE_KIND_UNKNOWN");
   assert.equal(reading.kind, "court_order");
-  assert.match(reading.detail, /a reading guide is for one of these kinds of document: .*staff_report/);
+  assert.equal(reading.detail, localize("reading-guides.index.a_reading_guide_is_for", "a reading guide is for one of these kinds of document: {kinds}. Nothing was written.", { kinds: GUIDE_KINDS.join(", ") }));
   const proc = w.g.guideDraft({ kind: "staff_report", purpose: "procedure", items: STEPS, by: ANN });
   answers(proc, "GUIDE_KIND_UNKNOWN");
-  assert.match(proc.detail, /a procedure guide is for one of the action kinds/);
+  assert.ok(proc.detail.includes(combine(["test-port-ellery"]).view.action_kinds.map((x) => x.kind).join(", ")), "it names the view's action kinds");
   const purpose = w.g.guideDraft({ kind: "bylaw_complaint", purpose: "rules", items: STEPS, by: ANN });
   answers(purpose, "GUIDE_KIND_UNKNOWN");
   assert.deepEqual([purpose.kind, purpose.purpose], ["bylaw_complaint", "rules"]);
@@ -116,7 +103,7 @@ test("R14 GUIDE_ITEM_UNSOURCED is answered by the check and the acts with words.
   const c = checkGuide(unsourced, "procedure");
   answers(c, "GUIDE_ITEM_UNSOURCED");
   assert.equal(c.item, 1);
-  assert.match(c.detail, /item 2 of a procedure guide names no citation/);
+  assert.equal(c.detail, localize("reading-guides.check.item_v1_of_a_procedure", "item {v1} of a procedure guide names no citation for its route. Nothing was written.", { v1: "2" }));
   const w = world();
   answers(w.g.guideDraft({ kind: "bylaw_complaint", purpose: "procedure", items: unsourced, by: ANN }), "GUIDE_ITEM_UNSOURCED");
   answers(w.g.guidePropose({ kind: "bylaw_complaint", purpose: "procedure", items: unsourced, run: "R", by: MACHINE }),
@@ -148,7 +135,7 @@ test("R14 R11 R12 DEC-221: every row, word, label and refusal this module answer
   const n = world({ slug: null });
   const slug = n.g.guideOffer({ guide: n.groupGuide(), by: ANN });
   row(slug, "GUIDE_NO_GROUP_SLUG");
-  assert.equal(slug.detail, "no team slug is recorded, so an offer cannot be labeled. Nothing was sent.");
+  assert.equal(slug.detail, localize("reading-guides.index.no_team_slug_is_recorded", "no team slug is recorded, so an offer cannot be labeled. Nothing was sent."));
   const w = world();
   const kind = w.g.guideDraft({ kind: "court_order", items: ITEMS, by: ANN });
   row(kind, "GUIDE_KIND_UNKNOWN");

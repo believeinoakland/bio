@@ -111,9 +111,9 @@ export function checkGuide(items, purpose = "reading") {
   try {
     if (purpose === undefined || purpose === null || purpose === "reading") return judge(items);
     if (purpose === "procedure") return judgeProcedure(items);
-    return shapeRefusal("a guide's purpose is reading or procedure. Nothing was written.", null);
+    return shapeRefusal(localize("reading-guides.check.a_guides_purpose_is_reading", "a guide's purpose is reading or procedure. Nothing was written."), null);
   } catch {
-    return shapeRefusal("the items could not be read as plain text. Nothing was written.", null);
+    return shapeRefusal(localize("reading-guides.check.the_items_could_not_be", "the items could not be read as plain text. Nothing was written."), null);
   }
 }
 
@@ -128,11 +128,12 @@ function judge(items) {
   const list = Array.isArray(items) ? items : null;
   const shaped = list && list.length >= 1 && list.length <= ITEMS_MAX ? list.map(shapeOf) : null;
   const bad = shaped ? shaped.findIndex((s) => s === null) : -1;
-  if (!shaped || bad >= 0)
-    return shapeRefusal(!shaped
-      ? `a guide holds from 1 to ${ITEMS_MAX} items; ${list ? `${list.length} were given` : "no list was given"}. Nothing was written.`
-      : `item ${bad + 1} is not a label, a look-for and an optional where, as short plain text. Nothing was written.`,
-      shaped ? bad : null);
+  if (!shaped)
+    return shapeRefusal(list
+      ? localize("reading-guides.check.a_guide_holds_from_1_2", "a guide holds from 1 to {ITEMS_MAX} items; {count} were given. Nothing was written.", { ITEMS_MAX: String(ITEMS_MAX), count: String(list.length) })
+      : localize("reading-guides.check.a_guide_holds_from_1_3", "a guide holds from 1 to {ITEMS_MAX} items; no list was given. Nothing was written.", { ITEMS_MAX: String(ITEMS_MAX) }), null);
+  if (bad >= 0)
+    return shapeRefusal(localize("reading-guides.check.item_n_is_not_a", "item {n} is not a label, a look-for and an optional where, as short plain text. Nothing was written.", { n: String(bad + 1) }), bad);
   for (let i = 0; i < shaped.length; i++) {
     const it = shaped[i];
     let found = null, field = null;
@@ -201,10 +202,11 @@ function conductRefusal(i, label, field, found) {
 }
 
 function sayFound(f) {
-  if (f.list === "not_look_for") return "does not open as a look-for statement";
-  if (f.list === "registered") return f.unreadable ? "could not be checked for an instruction" : `carries an instruction (${f.patterns.join(", ")})`;
-  if (f.list === "op_form") return "names an op";
-  if (f.list === "party") return `names a party to conduct ("${f.word}")`;
-  if (f.list === "rule_or_permission") return `states a rule or a permission ("${f.word}")`;
-  return `names a tool or an act ("${f.word}")`;
+  if (f.list === "not_look_for") return localize("reading-guides.check.does_not_open_as_a", "does not open as a look-for statement");
+  if (f.list === "registered") return f.unreadable ? localize("reading-guides.check.could_not_be_checked_for", "could not be checked for an instruction")
+    : localize("reading-guides.check.carries_an_instruction_patterns", "carries an instruction ({patterns})", { patterns: String(f.patterns.join(", ")) });
+  if (f.list === "op_form") return localize("reading-guides.check.names_an_op", "names an op");
+  if (f.list === "party") return localize("reading-guides.check.names_a_party_to_conduct", "names a party to conduct (\"{word}\")", { word: String(f.word) });
+  if (f.list === "rule_or_permission") return localize("reading-guides.check.states_a_rule_or_a", "states a rule or a permission (\"{word}\")", { word: String(f.word) });
+  return localize("reading-guides.check.names_a_tool_or_an", "names a tool or an act (\"{word}\")", { word: String(f.word) });
 }
