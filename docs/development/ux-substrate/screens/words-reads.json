@@ -6136,6 +6136,12 @@
      "line": 289,
      "text": "a row of `cs.rows`, read by the screen modules' tests",
      "why": "a builder's note on an element, read by tests"
+    },
+    {
+     "file": "bio-plane/src/interface-shell/browser.mjs",
+     "line": 1683,
+     "text": "-----BEGIN SSH SIGNATURE-----\n{}\n-----END SSH SIGNATURE-----\n",
+     "why": "the SSH signature armour: wire grammar (B371 2, INTERFACE-SHELL T51-113)"
     }
    ]
   },
@@ -10757,6 +10763,12 @@
      "line": 233,
      "text": "## What Would Falsify This",
      "why": "record-grammar's required heading (HEADINGS.inquiry), matched exactly by the grammar: keyed with the grammar, not here"
+    },
+    {
+     "file": "bio-plane/src/screens-investigate/explore.mjs",
+     "line": 81,
+     "text": "declared, not evidenced",
+     "why": "a wire value (a hop's label, marks[].mark) compared by code, never read; screen.explore.declared is the word (B369 2, SCREENS-INVESTIGATE T51-120)"
     }
    ]
   },
@@ -46358,6 +46370,18 @@
     "instance-setup.offices.detail.no_profile",
     "instance-setup.profiles.detail.none_active",
     "instance-setup.profiles.detail.stages_unchecked",
+    "instance-setup.setup.public_read_could_not_be",
+    "instance-setup.setup.the_governor_did_not_answer",
+    "instance-setup.setup.the_governor_did_not_answer_2",
+    "instance-setup.setup.the_languages_could_not_be",
+    "instance-setup.setup.the_minute_of_the_day",
+    "instance-setup.setup.the_offices_could_not_be",
+    "instance-setup.setup.the_place_could_not_be",
+    "instance-setup.setup.the_running_release_could_not",
+    "instance-setup.setup.the_store_did_not_confirm",
+    "instance-setup.setup.what_could_not_be_read",
+    "instance-setup.setup.what_did_not_answer_string",
+    "instance-setup.setup.whether_your_team_keeps_its",
     "instance-setup.updates.detail.already_held",
     "instance-setup.updates.detail.answered",
     "instance-setup.updates.detail.held",
@@ -46488,7 +46512,7 @@
     "setup.why.registry_refused_identifier_2"
    ],
    "counts": {
-    "reads": 99,
+    "reads": 134,
     "unkeyed": 0
    },
    "unkeyed": [
@@ -46743,6 +46767,114 @@
      "line": 247,
      "text": "Confined to the scratch namespace. Live state is unreachable from this token class.",
      "why": "a diagnostic for builders and operators (a transport, probe, migration or store failure, or an internal state), not drawn on a member's screen"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 68,
+     "text": "creation with base null succeeds",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 74,
+     "text": "update with correct base succeeds",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 79,
+     "text": "the lost-update floor, on real storage",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 89,
+     "text": "live state is the winning revision",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 92,
+     "text": "history holds the superseded revision",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 93,
+     "text": "the verbatim promotion record is projected",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 96,
+     "text": "classifyDivergence and C-20.1 both read these records; without them the checks are unreachable, not passing",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 101,
+     "text": "oversize inline refused at the write",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 104,
+     "text": "canary nonce survived the round trip",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 105,
+     "text": "proves the battery actually wrote and read real storage",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 114,
+     "text": "lease returns live sha as edit base",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 116,
+     "text": "second actor denied while lease holds",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 141,
+     "text": "no configured token is a published repository value",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 142,
+     "text": "no configured token is shorter than 16 characters",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 155,
+     "text": "one bucket bound without the other breaks the fence",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/setup.mjs",
+     "line": 966,
+     "text": "this module had already started on this storage",
+     "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+    },
+    {
+     "file": "bio-plane/src/setup.mjs",
+     "line": 1012,
+     "text": "no producers to register with",
+     "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+    },
+    {
+     "file": "bio-plane/src/setup.mjs",
+     "line": 1022,
+     "text": "no public-read to register with",
+     "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
     }
    ],
    "note": "DEC-329 (B303 (8)): read from bio-plane/src/setup.mjs, bio-plane/src/setup-fleet.mjs, bio-plane/src/livefire.mjs; its own instance-setup\\. keys listed whether or not its source names them yet",
