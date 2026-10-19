@@ -6,6 +6,7 @@ import { world, V, sha, projMd } from "./fixture.mjs";
 import { Citation, CITE_CHECKS, CITE_EXTENT_CHECKS, RECORDED_LIMIT_DEFAULT, RECORDED_LIMIT_MAX } from "../../../src/citation/index.mjs";
 import { RECORDED_NONE_REGISTERED } from "../../../src/retrieval/findin.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 const VERA = { viewer: V("vera"), owner: "v", author: "member:vera", identity: V("vera") };
@@ -172,7 +173,7 @@ test("R13: refusals in events R49's form, writing nothing and adding no catalogu
   const snap = w.snapshot();
   for (const viewer of [undefined, null, "", "  "])
     assert.deepEqual(read({ captureSha: cap, viewer }), { ok: false, refused: "VIEWER_MISSING", code: "VIEWER_MISSING", reason: "VIEWER_MISSING",
-      why: "a read names the member reading; with none, nothing is answered" });
+      why: localize("citation.recorded.a_read_names_the_member", "a read names the member reading; with none, nothing is answered") });
   for (const captureSha of [undefined, null, "", "  ", 7]) {
     const r = read({ captureSha, viewer: V("ann") });
     assert.deepEqual([r.ok, r.refused, r.code, r.reason], [false, "NO_SHA", "NO_SHA", "NO_SHA"]);
