@@ -28,3 +28,7 @@ The design merged into tranche/T51 is now at `20c8001300` (K4063); interface-ass
 ## B3 · CHANGE
 
 Your COMPLETE crossed B2: with interface-assets merged (ASSETS_COMMIT `20c8001300`), your R16 test (`SITE_COMMIT` is interface-assets' ASSETS_COMMIT) is red. Merge tranche/T51, move `SITE_COMMIT` to `20c8001300` as B2 says, confirm the suite green, and post COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K4081): the design merged into tranche/T51 is now at `2a64c5ae77` (DEC-359, K4080): it adds `.tw{overflow-x:auto}` to `shell.css` and the registry act `actionholdrelease` on `hold`. Merge tranche/T51 and re-take the design at `2a64c5ae77`: `SITE_COMMIT` to `2a64c5ae77`, equal to interface-assets' `ASSETS_COMMIT` once it re-takes (R16). `pages.mjs` stays BOB's at the close. Post COMPLETE.

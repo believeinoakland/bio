@@ -8779,12 +8779,6 @@
    "note": "DEC-328: B300 (7): the refusal naming what remains"
   },
   {
-   "key": "installer.fact.unknown",
-   "en": "Not known: {reason}.",
-   "protected": false,
-   "note": "DEC-328: B300 (7): a fact a silent or older copy does not answer"
-  },
-  {
    "key": "installer.fact.unknown.silent",
    "en": "your team's Civicsmith didn't answer when the installer asked",
    "protected": false,
@@ -9541,12 +9535,6 @@
    "note": "DEC-329: B303 (7c): index.mjs:1626-1629 (any run, update included)"
   },
   {
-   "key": "installer.tryagain.install",
-   "en": "To continue, start again from the installer's first page in a minute; this is usually temporary. (Cloudflare said: {said})",
-   "protected": false,
-   "note": "DEC-329: B303 (7c): index.mjs:1647 tryAgain"
-  },
-  {
    "key": "installer.fallback.programs.one",
    "en": "1 program",
    "protected": false,
@@ -9676,7 +9664,7 @@
    "key": "installer.remove.done",
    "en": "Deleted all {n} parts. The account is clear.",
    "protected": false,
-   "note": "DEC-329: B303 (7f): index.mjs:2539, the last line before removedPanel; {n} counts the deletions made"
+   "note": "DEC-359 (B368 4): said as the progress line before the removed panel, not inside it; DEC-329: B303 (7f): index.mjs:2539, the last line before removedPanel; {n} counts the deletions made"
   },
   {
    "key": "installer.fact.unknown.short",
@@ -10076,13 +10064,13 @@
   },
   {
    "key": "queue.export-performed.summary",
-   "en": "A full {scope} export was taken on {date}: {records}, {files}",
+   "en": "A full export of your team's record was taken on {date}: {records}, {files}",
    "protected": false,
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1149; {scope} {date} {records} {files} (records and files are the two count keys above; scope is the export's kind word, see NOTES)"
   },
   {
    "key": "queue.export-performed.detail",
-   "en": "An export of the {scope} left your team's Civicsmith using the team's master key. Every administrator is told; nobody else is. The export log is the record of it, and nothing here changes the log.",
+   "en": "A full export of your team's record left your team's Civicsmith using the team's master key. Every administrator is told; nobody else is. The export log is the record of it, and nothing here changes the log.",
    "protected": false,
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1150; {scope}"
   },
@@ -12265,12 +12253,6 @@
    "note": "DEC-331: replaces the technical request the source states (newgroup/src/index.mjs:2205); the installer records it (K3868; DEC-336)"
   },
   {
-   "key": "installer.team.unrecorded.address",
-   "en": "the address of your team's Civicsmith",
-   "protected": false,
-   "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2193; the {address} above when the address is not known"
-  },
-  {
    "key": "installer.team.unrecorded.suggest",
    "en": "Your team's Civicsmith was installed under the name {slug}. Unless you give another, the installer records that name as your team's short name. Which team produces your record is yours to say.",
    "protected": false,
@@ -12371,30 +12353,6 @@
    "en": "Answered by {member}, {when}",
    "protected": false,
    "note": "DEC-330: B306 A61 receipt: when another member did it for everyone; {when} as in queue.answered.byyou"
-  },
-  {
-   "key": "queue.answered.photos.one",
-   "en": "Vouched for a photo you captured on {place}",
-   "protected": false,
-   "note": "DEC-330: B306 A61 receipt: the one-photo form of queue.answered.photos, which holds two or more"
-  },
-  {
-   "key": "queue.answered.photos",
-   "en": "Vouched for {n} photos you captured on {place}",
-   "protected": false,
-   "note": "DEC-330: B306 A61 receipt"
-  },
-  {
-   "key": "queue.answered.granted",
-   "en": "Granted {member}'s request to join {project}",
-   "protected": false,
-   "note": "DEC-330: B306 A61 receipt"
-  },
-  {
-   "key": "queue.answered.granted.meta",
-   "en": "{member} saw your answer",
-   "protected": false,
-   "note": "DEC-330: B306 A61 receipt"
   },
   {
    "key": "queue.answered.snoozed.meta",
@@ -13946,15 +13904,15 @@
   },
   {
    "key": "screen.members.removing.teo.as.an.administrator",
-   "en": "Removing Teo as an administrator",
+   "en": "Removing {member} as an administrator",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal (adminremovalsopen target)"
   },
   {
    "key": "screen.members.four.administrators.rosa.dev.ana",
-   "en": "Four administrators: Rosa, Dev, Ana and Teo.",
+   "en": "{n} administrators: {members}.",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {n} every administrator counted, the one facing removal included; {members} their names as one list in the language's own list form (Intl.ListFormat, conjunction); who voted and who is awaited are the rows below it, one per member (screen.members.removal.*)"
   },
   {
    "key": "screen.members.this.takes.3.of.4",
@@ -13976,15 +13934,15 @@
   },
   {
    "key": "screen.members.agree.remove.teo.as.administrator",
-   "en": "Agree: remove Teo as administrator",
+   "en": "Agree: remove {member} as administrator",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal"
   },
   {
    "key": "screen.members.counted.in.the.4.doesn",
-   "en": "counted in the 4, doesn't vote",
+   "en": "counted in the {n}, doesn't vote",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {n} the administrators counted; the member's name heads the row, so the row needs no {member}"
   },
   {
    "key": "screen.members.2.of.3.have.agreed",
@@ -23237,6 +23195,564 @@
    "en": "whether the site still gives the same document isn't known yet",
    "protected": false,
    "note": "DEC-358: B365; screens-intake A64: the record alone cannot tell; a member's check asks the site once"
+  },
+  {
+   "key": "screen.finder.cite.legend",
+   "en": "How they bear on the question",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); the legend of the two choices"
+  },
+  {
+   "key": "screen.finder.cite.support",
+   "en": "Support it",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily)"
+  },
+  {
+   "key": "screen.finder.cite.against",
+   "en": "Cut against it",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily)"
+  },
+  {
+   "key": "screen.finder.cite.cited",
+   "en": "Cited",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); a document's outcome, beside screen.finder.a17.left_as_it_was"
+  },
+  {
+   "key": "screen.finder.cite.newly_against",
+   "en": "newly cited, cutting against the question",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); beside screen.finder.a17.newly_cited_supporting_the_question"
+  },
+  {
+   "key": "screen.finder.cite.set_changed",
+   "en": "The set changed after you held it, so these are the documents held now.",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); heads what changed; citing goes on with the set as it is"
+  },
+  {
+   "key": "screen.finder.cite.added_since",
+   "en": "added to the set after you held it",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); a document's line under set_changed"
+  },
+  {
+   "key": "screen.finder.cite.gone_since",
+   "en": "no longer in the set, so not cited",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); a document's line under set_changed"
+  },
+  {
+   "key": "screen.finder.cite.back",
+   "en": "Back to Find",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); the way out of the cite state that keeps the set held"
+  },
+  {
+   "key": "screen.finder.cite.back.help",
+   "en": "Goes back to Find without citing anything. The set stays held until you let it go or its time runs out.",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); explains screen.finder.cite.back"
+  },
+  {
+   "key": "queue.answered.forwarded.unnamed",
+   "en": "Forwarded {item}",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): queue (screens-daily); an earlier forward whose recipient the record does not name ({item} the title, as queue.answered.forwarded)"
+  },
+  {
+   "key": "queue.feed.tasks",
+   "en": "To-dos",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the tasks feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.bias-debts",
+   "en": "Assistant runs owed a re-check for bias",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the bias-debts feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.sources",
+   "en": "Changes to documents your team watches",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the sources feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.proposals",
+   "en": "Proposed next stages",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the proposals feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.shared-inquiries",
+   "en": "Questions shared with other teams",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the shared-inquiries feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.leads",
+   "en": "Leads found outside a question",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the leads feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.exports",
+   "en": "Full exports of the record",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the exports feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.references",
+   "en": "Newer versions of documents a reference points to",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the references feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.objectives",
+   "en": "Gaps in what a project set out to show",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the objectives feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.machinery",
+   "en": "Civicsmith's own working order",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the machinery feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.contradictions",
+   "en": "Contradictions to clear up",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the contradictions feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.signing-keys",
+   "en": "Signing keys members registered",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the signing-keys feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.action",
+   "en": "Actions and their clocks",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the action feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.attribution",
+   "en": "Credit for what a case uses",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the attribution feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.docket",
+   "en": "Case dockets",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the docket feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.cited-cases",
+   "en": "Other teams' cases your findings rest on",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the cited-cases feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.wizards",
+   "en": "Wizards waiting on approval or newer",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the wizards feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.schedule",
+   "en": "Scheduled publications",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the schedule feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.places",
+   "en": "Place profiles that arrived",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the places feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.projects",
+   "en": "Project invitations and requests to join",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the projects feed (queue R60)"
+  },
+  {
+   "key": "queue.export-performed.rendering.summary",
+   "en": "A copy of your team's record in {format} was taken on {date}",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; a rendering export (scope rendering), {format} from queue.fill.format.<code>; .summary and .detail are the full export (scope working-corpus), so neither takes {scope}"
+  },
+  {
+   "key": "queue.export-performed.rendering.detail",
+   "en": "A copy of your team's record, laid out in {format} for other tools to read, left your team's Civicsmith. It adds nothing to the record. Every administrator is told; nobody else is. The export log is the record of it.",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; a rendering export"
+  },
+  {
+   "key": "queue.fill.format.ftm",
+   "en": "FollowTheMoney",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ftm (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.ftm-event",
+   "en": "FollowTheMoney (events)",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ftm-event (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.ftm-people",
+   "en": "FollowTheMoney (people)",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ftm-people (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.ocel2",
+   "en": "OCEL 2.0",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ocel2 (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.popolo",
+   "en": "Popolo",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format popolo (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.ocds",
+   "en": "the Open Contracting Data Standard",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ocds (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.fdp",
+   "en": "a Fiscal Data Package",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format fdp (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.newer-capture-affects-reference.detail.unseen",
+   "en": "A newer capture of what this reference points to was read. You can't see that capture, so how it compares isn't shown. Nothing about the reference has changed: it keeps the version it names until the member who holds it adopts the newer one or keeps the earlier one.",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; for a viewer who cannot see the newer capture (grade and affects absent); otherwise .detail with {grade} from queue.fill.grade.<code lower-cased> and .detail.affects with {affects} from queue.fill.affects.<code>"
+  },
+  {
+   "key": "queue.fill.reason.not_json",
+   "en": "what came back was not readable data",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code not_json"
+  },
+  {
+   "key": "queue.fill.reason.not_a_docket",
+   "en": "what came back was not a docket",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code not_a_docket"
+  },
+  {
+   "key": "queue.fill.reason.too_large",
+   "en": "what came back was too large to read",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code too_large"
+  },
+  {
+   "key": "queue.fill.reason.fetch_failed",
+   "en": "the docket's address could not be reached",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code fetch_failed"
+  },
+  {
+   "key": "queue.fill.reason.http_unknown",
+   "en": "the publisher's site answered with an error",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code http_unknown"
+  },
+  {
+   "key": "queue.fill.reason.http",
+   "en": "the publisher's site answered with error {status}",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} for a code http_<status>, {status} the number (404)"
+  },
+  {
+   "key": "screen.actionnew.rests.advances",
+   "en": "Advances",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the link choice beside screen.start-send.rests (Rests on)"
+  },
+  {
+   "key": "screen.actionnew.due.what",
+   "en": "What is due",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; field label in When things are due"
+  },
+  {
+   "key": "screen.actionnew.due.when",
+   "en": "When",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; field label in When things are due"
+  },
+  {
+   "key": "shell.readonly.noun.action",
+   "en": "action",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on action, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.actionnew",
+   "en": "action",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on actionnew, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.counsel",
+   "en": "brief",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on counsel, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.dash-action",
+   "en": "dashboard",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on dash-action, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.hold",
+   "en": "hold",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on hold, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.holdnotice",
+   "en": "hold notice",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on holdnotice, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.matter",
+   "en": "matter",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on matter, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.plan",
+   "en": "plan",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on plan, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.request",
+   "en": "request",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on request, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.start-send",
+   "en": "request",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on start-send, lower case, read mid-sentence"
+  },
+  {
+   "key": "screen.action.openquestion",
+   "en": "Open the question",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the link to the question an action is the reference of"
+  },
+  {
+   "key": "screen.action.guide.expect",
+   "en": "Expect: {expectation}",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a guide route's line, {expectation} the profile's own words"
+  },
+  {
+   "key": "screen.action.guide.source",
+   "en": "Source: {citation}",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a guide route's line, {citation} as the profile cites it (Gov. Code § 7922.535)"
+  },
+  {
+   "key": "screen.counsel.who.name",
+   "en": "Counsel's name",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action"
+  },
+  {
+   "key": "screen.counsel.who.org",
+   "en": "Counsel's organization",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action"
+  },
+  {
+   "key": "screen.dash-action.col.action",
+   "en": "Action",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the table's first column head"
+  },
+  {
+   "key": "screen.dash-action.tile.dueweek",
+   "en": "{n} due this week",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; Clocks running's note"
+  },
+  {
+   "key": "screen.dash-action.tile.dueday",
+   "en": "due {day}",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; Our move's note, {day} the weekday within this week (Friday), else the date"
+  },
+  {
+   "key": "screen.dash-action.tile.came",
+   "en": "came in {date}",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; Replies to read's note, the newest reply's date"
+  },
+  {
+   "key": "screen.plan.list.more",
+   "en": "Not every plan is shown here. Find lists them all: choose Plans under Show.",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; under a plan list the answer cut off (R25)"
+  },
+  {
+   "key": "screen.holdnotice.how.email",
+   "en": "An email",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a choice of How you sent it (screen.start-send.how) on holdnotice"
+  },
+  {
+   "key": "screen.holdnotice.how.message",
+   "en": "A message",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a choice of How you sent it (screen.start-send.how) on holdnotice"
+  },
+  {
+   "key": "screen.holdnotice.how.person",
+   "en": "In person",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a choice of How you sent it (screen.start-send.how) on holdnotice"
+  },
+  {
+   "key": "screen.holdnotice.how.other",
+   "en": "Another way",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a choice of How you sent it (screen.start-send.how) on holdnotice"
+  },
+  {
+   "key": "screen.hold.release.reason",
+   "en": "Why the team no longer needs to keep this",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the release's reason field, drawn by DEC-359 (act actionholdrelease)"
+  },
+  {
+   "key": "screen.hold.release.reason.help",
+   "en": "In your own words. It stays on the record with the hold, beside who released it and when.",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; explains the release's reason field"
+  },
+  {
+   "key": "screen.published.leg",
+   "en": "Leg {n}",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a leg's head in What it rests on"
+  },
+  {
+   "key": "screen.published.leg.supports",
+   "en": "supports it",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; after Leg {n}"
+  },
+  {
+   "key": "screen.published.leg.cuts",
+   "en": "cuts against it",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; after Leg {n}"
+  },
+  {
+   "key": "screen.published.restson.lead",
+   "en": "Rests on: {items}",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the generic lead, {items} what it rests on as a list"
+  },
+  {
+   "key": "screen.published.cutagainstby.lead",
+   "en": "Cut against by: {items}",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the generic lead, {items} what cuts against it as a list"
+  },
+  {
+   "key": "screen.published.min.none",
+   "en": "No minimum",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a choice of the two minimum strengths"
+  },
+  {
+   "key": "screen.published.min.c",
+   "en": "C or better",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a choice of the two minimum strengths"
+  },
+  {
+   "key": "screen.published.min.b",
+   "en": "B or better",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a choice of the two minimum strengths"
+  },
+  {
+   "key": "screen.published.min.a",
+   "en": "A only",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a choice of the two minimum strengths"
+  },
+  {
+   "key": "screen.review_copy.save.file",
+   "en": "Save the file",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the review copy's primary button after the acknowledgment"
+  },
+  {
+   "key": "screen.review_copy.carries.fingerprint",
+   "en": "Its fingerprint",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a line of What the file carries"
+  },
+  {
+   "key": "screen.review_copy.carries.author",
+   "en": "Its author",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a line of What the file carries"
+  },
+  {
+   "key": "screen.published.finding.unreadable",
+   "en": "This document's text could not be read, so it isn't shown here. The finding still names it.",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the finding page, a document whose text is unreadable"
+  },
+  {
+   "key": "screen.published.finding.withheld",
+   "en": "A court order this team complied with keeps this document's contents from being shown. The order and the record entry that names it are public, and nothing was deleted.",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the finding page, a document withheld by a court order (as refusal.WITHHELD_BY_COURT_ORDER)"
+  },
+  {
+   "key": "shell.card.hold",
+   "en": "Where any member who can see an action places a litigation hold, with a reason.",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the card for hold, as shell.card.action"
+  },
+  {
+   "key": "screen.install.cf.logs",
+   "en": "Reading your account's log settings, to check that no log records who opens which file.",
+   "protected": false,
+   "note": "DEC-359 (B368 4): installer; the sixth scope's allowed line (account-logs.read)"
+  },
+  {
+   "key": "installer.update.retired",
+   "en": "Left as it was: {parts}, from an earlier release that this one no longer uses. Your team's Civicsmith doesn't use it now.",
+   "protected": false,
+   "note": "DEC-359 (B368 4): installer; foreignContainers answers retired; {parts} the parts' names as a list"
   }
  ],
  "rewrite": {

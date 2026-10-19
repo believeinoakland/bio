@@ -4917,6 +4917,7 @@
     "act.actioncreate.does",
     "act.actionhold.does",
     "act.actionhold.name",
+    "act.actionholdrelease.does",
     "act.actionholdrelease.name",
     "act.actionlaws.does",
     "act.actionlaws.name",
@@ -5481,14 +5482,14 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 575,
+    "reads": 576,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 43,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 435,
+    "computedKeys": 436,
     "actHelp": 344,
     "vocabulary": 144
    },
@@ -5507,7 +5508,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 21862
+    "generatedRows": 21979
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -6153,6 +6154,7 @@
     "act.actioncreate.label.request",
     "act.actionhold.does",
     "act.actionhold.label.hold",
+    "act.actionholdrelease.does",
     "act.actionlaws.does",
     "act.actionlaws.label.action",
     "act.actionlaws.label.request",
@@ -7051,14 +7053,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 909,
+    "reads": 910,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 360,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 549
+    "computedKeys": 550
    },
    "unkeyed": []
   },
@@ -7074,6 +7076,7 @@
     "act.actioncorrespond.does",
     "act.actioncreate.does",
     "act.actionhold.does",
+    "act.actionholdrelease.does",
     "act.actionlaws.does",
     "act.actionlawspropose.does",
     "act.actionmove.does",
@@ -8103,14 +8106,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 1037,
+    "reads": 1038,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 422,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 615
+    "computedKeys": 616
    },
    "unkeyed": [
     {
@@ -8139,6 +8142,7 @@
     "act.actioncorrespond.does",
     "act.actioncreate.does",
     "act.actionhold.does",
+    "act.actionholdrelease.does",
     "act.actionlaws.does",
     "act.actionlawspropose.does",
     "act.actionmove.does",
@@ -8826,14 +8830,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 695,
+    "reads": 696,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 113,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 582
+    "computedKeys": 583
    },
    "unkeyed": [],
    "retired": [
@@ -9377,6 +9381,7 @@
     "shell.card.ceremony",
     "shell.card.docket",
     "shell.card.document",
+    "shell.card.hold",
     "shell.card.matter",
     "shell.card.member",
     "shell.card.money",
@@ -9431,14 +9436,14 @@
     "translate.read"
    ],
    "counts": {
-    "reads": 586,
+    "reads": 587,
     "minted": 2,
     "keyedRows": 0,
     "literalKeys": 519,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 67
+    "computedKeys": 68
    },
    "unkeyed": [
     {
@@ -10686,6 +10691,7 @@
     "shell.card.capture",
     "shell.card.cited",
     "shell.card.document",
+    "shell.card.hold",
     "shell.card.matter",
     "shell.card.member",
     "shell.card.money",
@@ -10730,14 +10736,14 @@
     "timeline.dated.title"
    ],
    "counts": {
-    "reads": 974,
+    "reads": 975,
     "minted": 6,
     "keyedRows": 0,
     "literalKeys": 940,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 34
+    "computedKeys": 35
    },
    "unkeyed": [
     {
@@ -11197,6 +11203,7 @@
     "act.actioncorrespond.does",
     "act.actioncreate.does",
     "act.actionhold.does",
+    "act.actionholdrelease.does",
     "act.actionlaws.does",
     "act.actionlawspropose.does",
     "act.actionmove.does",
@@ -12509,14 +12516,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1324,
+    "reads": 1325,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 1182,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 142
+    "computedKeys": 143
    },
    "unkeyed": []
   },
@@ -45828,7 +45835,6 @@
     "installer.connect.done",
     "installer.connect.refused",
     "installer.copy.done",
-    "installer.fact.unknown",
     "installer.fact.unknown.counts",
     "installer.fact.unknown.documents",
     "installer.fact.unknown.installed",
@@ -46100,14 +46106,12 @@
     "installer.success.save",
     "installer.success.title.installed",
     "installer.success.title.ready",
-    "installer.team.unrecorded.address",
     "installer.team.unrecorded.certain",
     "installer.team.unrecorded.effect",
     "installer.team.unrecorded.head",
     "installer.team.unrecorded.how",
     "installer.team.unrecorded.suggest",
     "installer.team.unrecorded.unknown",
-    "installer.tryagain.install",
     "installer.update.address.found",
     "installer.update.address.none",
     "installer.update.after",
@@ -46160,6 +46164,7 @@
     "installer.update.progress.title",
     "installer.update.progress.verified",
     "installer.update.read.failed",
+    "installer.update.retired",
     "installer.update.row.now",
     "installer.update.running",
     "installer.update.stopped",
@@ -46326,7 +46331,7 @@
     "weight.irreversible.name"
    ],
    "counts": {
-    "reads": 544,
+    "reads": 542,
     "unkeyed": 0
    },
    "unkeyed": [],
