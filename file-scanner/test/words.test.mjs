@@ -10,6 +10,7 @@ import { LOG_COUNT_KINDS } from '../src/limits.mjs';
 import { memoryBucket, putCapture, depsWith, post, enc, EICAR, NOW } from './helpers.mjs';
 import { vendorNet, vendorSockets, specs } from './vendors.mjs';
 import { localize } from '../../bio-plane/src/setup-words/index.mjs';
+import { NO_SAFE_VIEW } from '../src/providers/routes.mjs';
 
 // The three refused terms, in any case, spaced or hyphenated, singular or plural. An underscore joins an interface
 // key (`safe_copies`), which is not a word a member reads.
@@ -89,7 +90,7 @@ test('R32 what a rebuilding tool gives is a "safe view" in the test probe\'s wor
   const detail = async () => (await (await handle(post('/provider/test', { tool: specs()['glasswall-halo'] }), deps)).json()).detail;
   assert.equal(await detail(), localize('file-scanner.routes.the_safe_view_reported_nothing', 'the safe view reported nothing removed'));
   body = '';
-  assert.equal(await detail(), 'no safe view');
+  assert.equal(await detail(), NO_SAFE_VIEW);
 });
 
 test('R32 the interface is unchanged: the kind token cdr, LOG_COUNT_KINDS\' safe_copies, the codes and field names', async () => {
