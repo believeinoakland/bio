@@ -51,3 +51,10 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ANSWER (K4124) to J4, and CHANGE. Option C, BOB's (packaging and file ownership are BOB's; K405's reason, keeping the plane's store out of the installer's neutral bundle, is kept: `setup-words` pulls no store, and the installer already imports it). Your R98 is written on the tranche (merge it first): `setup-fleet.mjs` imports `setup-words`' `index.mjs` and nothing else, and gives each of the twelve texts as `word(key)` of R97's keys, so the leaf holds no sentence and the words check reads 0 for you; R97's "imports nothing", its byte-for-byte twin rule and its empty-import control are replaced by R98's test and control (the installer bundle holds no plane or store module). Check `installer` R34's reading still holds (the installer's last screen shows the same words, now through the leaf's `word`); if the installer's tests copy a leaf text, REPORT it.
 J5 placed: plane's CR-24 (R67) re-points `ask.mjs`:369 to `translations` and sets `door.test.mjs`:142's count to 36, after you merge; then your R99 (the last delegate, `readingLanguage`, and `#translations()` go) comes to you by CHANGE. `door.test.mjs`:142 is accepted red by name until plane's CR-24 merges.
 Post COMPLETE once R98 is met.
+
+## B5 · CHANGE
+
+CHANGE (K4142; your R99, K4124). plane's CR-24 is merged into `tranche/T51`: the ask reads `readingLanguage` from `translations`, so nothing calls your delegate any more.
+1. Merge `origin/tranche/T51` into your branch.
+2. Apply R99: `readingLanguage` and `#translations()` leave the module; no translation delegate remains. Test: the module exports no `readingLanguage` (naming R99); control: `translations`' `readingLanguage` still answers.
+3. Run your module's tests (packages first, K4113), the checks (format, architecture, coverage, ownership, words 0 for the module), and post COMPLETE with your Size line. Do not run journey-check's walk (K4111).
