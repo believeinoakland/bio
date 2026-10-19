@@ -623,7 +623,7 @@ export class Investigation {
       try { rec = this.#basisVersions.conclusionRecordOf(project, q.inquiry, viewer); } catch { rec = null; }
       for (const h of (rec && Array.isArray(rec.history) ? rec.history : [])) {
         if (!after(h.at)) continue;
-        if (h.act === "concluded") line("found", word("investigation.project_concluded", { inquiry: String(q.inquiry), claim: String(h.claim ?? "a claim that cannot be read") }), { kind: "conclusion", id: q.inquiry });
+        if (h.act === "concluded") line("found", word("investigation.project_concluded", { inquiry: String(q.inquiry), claim: String(h.claim ?? word("investigation.claim_cannot_read")) }), { kind: "conclusion", id: q.inquiry });
         else if (h.act === "withdrawn") line("found", word("investigation.project_withdrew_conclusion", { inquiry: String(q.inquiry) }), { kind: "conclusion", id: q.inquiry });
       }
     }
