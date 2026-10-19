@@ -2,6 +2,32 @@
 
 **Status** · session_013u4GnD6sY4tCk8yKGT2zGx · depth 2 · WORKING · handled B1
 
+## Completion (MEMBER-ROSTER #2) · words round RW (B2, K4015)
+
+**Entries applied.** The four sentences the words check counted inline in `index.mjs`, each now read through `localize` with a new id and the English unchanged: `member-roster.index.this_member_has_not_declared` (`expertiseConfirm`'s NOT_DECLARED detail), `member-roster.index.a_handle_is_chosen_when_a` (`handleChange`'s HANDLE_FIXED detail), `member-roster.index.an_administrator_is_removed_by` (`memberSet`'s ADMIN_REQUIRES_VOTE detail) and `member-roster.index.choose_the_name_the_team_will` (`joinLinkInvite`'s NO_COVER detail). `node checks/words.mjs /home/user/bio member-roster`: inline 0, unkeyed 0, 0 failures.
+
+**Tests changed (both in this module; no assertion weakened, no sentence copied).**
+- `t50-words.test.mjs` (R70). Its reads-list test read `membership`'s `reads` in `words-reads.json`. DEC-345 has since given `member-roster` its own entry, which holds exactly this module's keys (`WORD_KEYS`); R70 says the list is "the reads list for it". The test now reads that entry. The governing-words note (CONSENSUS_REQUIRED, NO_COVER) stays on `membership`'s entry, where the split left it, and the test still reads it there.
+- `split.test.mjs` (R75 fixture `fourAdmins`). Flaky, 1 failure in 4 full runs: `activeAdmins()` orders by creation time, then member id (R29). `third` and `fourth` created in the same millisecond sorted `fourth` first. The fixture now waits 2 ms between the two adds, so the order it asserts is the order created.
+
+**Deferred.** None.
+
+**Found outside this module (described, not changed; for BOB).**
+1. R13 scope, for BOB to settle. Member-facing strings the checker does not count, left as `words-reads.json` marks them (`unkeyed`): the refusal detail `capabilities is an array` (`memberCaps`, `#doorCapabilities`); the details of `TARGET_NOT_AN_ADMIN` and `EXPERTISE_IS_NOT_ASSIGNED`, which name ops (`op=memberset`, `op=expertisedeclare`), so I judged them wire grammar; and the short act phrases passed to `notAnAdmin` ("setting a member's capabilities", "withdrawing an invitation", and about fifteen more). R13 says every sentence a member reads is bound. If BOB rules that these are converted, that is a follow-up in this module.
+2. `bio-plane/src/setup-words/rows.mjs` and `words-unreviewed.json` are stale by the four new ids. `build.mjs --check` reports it, as B2's notes expect. BOB regenerates them at the layer close; this job did not touch them.
+3. Still open from MEMBER-ROSTER #1, unchanged here: the `GENERATED_FILES` line for `member-roster/order.mjs` in `setup-words/build.mjs`; CR-4's three `*_CHECKS` exports; the op `adminremovalsopen` for `op-declarations` and `plane`.
+
+**Merge.** `tranche/T51` (fa2770b9f6) merged into `job/T51/member-roster` (a merge, not a rebase). It changed no file of this module.
+
+**Tests.** `node --test test/m/member-roster/*.test.mjs` in `bio-plane`: 164 tests, 164 pass. Four consecutive full runs after the fixture change, and one run on the merged tree.
+
+**Checks.** Run from the process repository (main `e8ac153`, which carries `d424c32`):
+- `checks/run.mjs /home/user/bio` (before the merge): format 0 failures; architecture 0 failures; channels 0 failures; coverage 22 failures, none in `member-roster`; words 1,626 failures, none in `member-roster`.
+- After the merge: `checks/format.mjs /home/user/bio` 0 failures; `checks/words.mjs /home/user/bio member-roster` 0 failures; `checks/ownership.mjs /home/user/bio member-roster tranche/T51 job/T51/member-roster` 4 files, 0 failures.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only, naming the four new ids (expected), no refusal naming this module.
+
+Size (session_013u4GnD6sY4tCk8yKGT2zGx): test runs 30, module lines 2580
+
 ## Completion (MEMBER-ROSTER #1)
 
 **Entries applied.** T51-145: `bio-plane/src/member-roster/` built by copy from `membership` as the split map (`build/extraction/membership-split-T51.md`) and `build/requirements/member-roster.md` say, with no edit to any `membership` file. `index.mjs` (class `Members`, `membersOf(ctx)`, `membersOps(m, url, body, env)`, the module-level `notAnAdmin`, `noSuchMember`, `listenerRefusal`, `MODULE_ORDER`, `moduleOrderFrom`, `ROOT_ADMIN`, `CAPABILITIES`, `adminMath`, and the pure viewer functions `viewerMember`, `carriedProject`, `baseViewer`), `schema.mjs` (the 11 tables, the additive columns, `MEMBER_EXEMPT_TABLES`, `MEMBER_DECLARED_TABLES`), `checks.mjs` (27 + 1 + 8 rows), `words.mjs`, `order-build.mjs` and the generated `order.mjs` (regenerated here from `modules.json`; `--check` passes). Seams as the map cuts them: (1) `reservedIdFinding()` public, no `this.core`; (2) tables, exempt list and declared rows exported from `schema.mjs`, declared by nobody here; (3) `viewerMember`/`carriedProject`/`baseViewer` pure (R73), `#insider` and `memberPairings` read them; (4) `memberList({administer, viewer, projectsOf})` (R71: called only on an administrator's roster, once per row, the founder's too; anything but a list, or a throw, reads `[]`); (5) `expertiseHolders(label)` (R72). All 75 ids R1–R75 are met; R75 `adminRemovalsOpen({by})` and its op `adminremovalsopen` (`by` the stamp) are built here, over `admin_votes`.
