@@ -42,3 +42,7 @@ Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 38, module lines 2,855
 ## J3 · COMPLETE
 
 COMPLETE (re B3, K4084): merged tranche/T51; People's Show choice and the add form's kinds now read the design's keys (screen.people.show.offices..sources, screen.people.add.kind.office..source) in place of the find.row.kind stand-ins. 155 pass, 0 fail; format, architecture, coverage (48/48), ownership 0 failures; words names this module only on the eight "declared, not evidenced" lines (now unkeyed by the design). Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 41, module lines 2,855
+
+## J4 · COMPLETE
+
+COMPLETE (re B4, K4093): merged tranche/T51; no local stand-in of a provider was held. The one stand-in was the near-match poll: it now uses the shell typing hook (the name field carries `typing`), poll removed. Suite against the real providers: 155 pass, 0 fail; format, architecture, coverage 48/48, ownership 0 failures; words names this module only on the three "declared, not evidenced" fixture lines (unkeyed by the design). Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 44, module lines 2,845
