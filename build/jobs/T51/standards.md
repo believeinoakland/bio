@@ -45,3 +45,36 @@ Tests: `node --test test/m/standards/*.test.mjs`: tests 105, pass 105, fail 0.
 Checks (`node checks/run.mjs /home/user/bio`): format 0 failures; architecture 0 failures; channels 0 failures; coverage 30 failures, none in standards; words: no finding in `src/standards/` or `test/m/standards/` (repo-wide 3791 failures are other modules'). Ownership (`standards tranche/T51 job/T51/standards`): 3 files changed by standards, 0 failures. `setup-words --check`: the expected stale-rows note for `standards.index.cited_by_names_where_cited` only.
 
 Size (session_01GMf4vYSoxxQorhQmm2FhQa): test runs 4, module lines 3570
+
+## J3 · COMPLETE
+
+K4015 (B3 START, the words round RW): the five findings `checks/words.mjs` lists for standards are fixed. The check now reads 0 findings in `src/standards/` and `test/m/standards/`.
+
+**Entries applied**
+- `checks.mjs` `STANDARD_SEARCH_MISSING` and `COPY_UNKNOWN` translations: `word('refusal.STANDARD_SEARCH_MISSING')` and `word('refusal.COPY_UNKNOWN')`. Both rows already hold the sentences in `rows.mjs` under those keys, so the table wins, as the other refusal translations in the file do.
+- `index.mjs` `proposed force … moves no answer` (the `says` of a stored proposal): `localize('standards.index.proposed_force_moves_no_answer', …)`.
+- `index.mjs` `force is read from the provision's own words` (the `note` of a standard's reads): `localize('standards.index.force_read_from_provision_words', …)`.
+- `index.mjs` `VIEWER_MISSING` detail: `localize('standards.index.read_names_the_member_reading', …)`.
+- Wording, codes, shapes and behaviour unchanged. Each sentence is one string literal on one line.
+
+**Deferred:** nothing.
+
+**Found in another module (not changed here):**
+- `law-relations` `src/law-relations/checks.mjs:52` (`[copy]` "A relation joins two different standards or portions, and both ends…"): an inline sentence in law-relations' own code, for its job.
+- `affordances` `test/m/affordances/catalogue.test.mjs:411` and `t33.test.mjs:89`, and `op-grades` `test/m/op-grades/pins.test.mjs:176`: hand-lists of `standards`' ops (`standard`, `standards`, `inforceat`, `standardsfor` and others) in other modules' tests. K3268 says such a list is assembled from its own module's declaration. Reporting to BOB.
+
+**Tree merged:** `tranche/T51` (21f27ab166) merged into the branch at `7d6b69a738`; no rebase, no reset.
+
+**Tests and checks** (after the merge):
+- `node --test test/m/standards/*.test.mjs` (bio-plane): `tests 105, pass 105, fail 0`.
+- `node checks/words.mjs /home/user/bio standards`: `words: 1 modules, 5312 string literals read, 15438 words; inline 0, plain 0, testcopy 0, missingkey 0 … 0 failures`. Before the fix it was 5 failures, all inline `[copy]`.
+- `node checks/run.mjs /home/user/bio` (civicos-process): `format: 176 modules, 175 requirements files; 0 failures`; `architecture: 3644 product files, 12278 relative imports (36 naming no tracked file, not judged); 0 failures`; `channels: 2 participants, 1074 outbox commits read; 0 failures`; `coverage: 175 modules, 5941 of 6062 live requirement ids named by a test; 22 failures`, none in `standards`; `words` repo-wide 1625 failures, none in `standards` (the other modules' findings are the ones named above and their own jobs' work). Exit 1 is from those repo-wide failures.
+- `node checks/architecture.mjs /home/user/bio standards`: `23 product files … 0 failures`. `node checks/format.mjs`: `0 failures`.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only, expected: `rows.mjs is stale: word 21291 (standards.index.force_read_from_provision_words)`. No refusal names `standards`.
+- `node checks/ownership.mjs /home/user/bio standards tranche/T51 job/T51/standards`: `3 files changed by standards between tranche/T51 and job/T51/standards; 0 failures`.
+
+**Notes for BOB**
+- The three new `localize` ids (`standards.index.proposed_force_moves_no_answer`, `standards.index.force_read_from_provision_words`, `standards.index.read_names_the_member_reading`) have no `words.json` row yet. They read their English from code until the design gives them rows (K3944), as J1's ids do.
+- Commit message: I kept the Claude-Session line and left out the Co-Authored-By model line, because the process rules say no model identifier goes in a commit.
+
+Size (session_0156GUxDJmfWv8jdceqhcys5): test runs 3, module lines 3563
