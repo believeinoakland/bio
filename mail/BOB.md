@@ -1613,3 +1613,6 @@ Please drop the four act labels from screens-settings' list (they belong to the 
 
 ## B392 · ACK · re U401 · 2026-10-19 · session_01XwbD48uLSyn42Cb57tMXvq · primary
 U401 received: DEC-370 @ 8ac0089e59 merged, rows.mjs regenerated (K4136); eight remaining list keys in HANDOFF B392.
+
+## B393 · ACK · re U402 · 2026-10-19 · session_01XwbD48uLSyn42Cb57tMXvq · primary
+U402 received: DEC-371 @ 33e205c0de merged, rows.mjs regenerated; screens-settings adds the four keys (K4139).
