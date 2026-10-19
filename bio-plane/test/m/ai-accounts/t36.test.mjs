@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { AI_ACCOUNT_CHECKS, KEEP_AWAY_REASON, aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
 const row = (table, code) => ({ ok: false, reason: code, code, check: table[code].check, translation: table[code].translation });
@@ -23,7 +24,7 @@ test("R20 (was credentials R51): aiKeepAwaySet: an active administrator only (NO
   for (const by of ["ann", "dee", "nobody", "class:admin", "class:ai", "token:ai", null, ""])
     for (const on of [true, false])
       assert.deepEqual(w.c.aiKeepAwaySet({ on, reason: "r", by }),
-        notAnAdmin(by ?? null, "keeping the team's material away from every assistant"), `${String(by)} ${on}`);
+        notAnAdmin(by ?? null, localize("ai-accounts.index.keeping_the_teams_material_away", "keeping the team's material away from every assistant")), `${String(by)} ${on}`);
   /* the second administrator is refused once no longer active */
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
   assert.equal(w.c.aiKeepAwaySet({ on: true, reason: "r", by: "second" }).reason, "NOT_AN_ADMIN");

@@ -8,7 +8,7 @@ import { webcrypto } from "node:crypto";
 import { world, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
 import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, AI_WORDS, KEPT_AWAY_UNREADABLE, AI_ACCOUNTS_TABLES,
          AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const SECRET = "sk-ant-api03-SENTINEL-reference-9f8e7d6c5b4a";
 const ask = (member, extra = {}) => ({ kind: "ask", member: `member:${member}`, ...extra });
@@ -521,8 +521,8 @@ test("R34: KEPT_AWAY_UNREADABLE is exported frozen, the refusal R7 states with i
   assert.ok(Object.isFrozen(KEPT_AWAY_UNREADABLE.keep_away));
   assert.deepEqual(KEPT_AWAY_UNREADABLE, { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: "C-29.31",
     translation: AI_ACCOUNT_CHECKS.AI_KEPT_AWAY.translation,
-    detail: "whether the team keeps its material away from every assistant could not be read, so no account was read or "
-      + "used. Nothing was sent.", keep_away: { reason: null, set_by: null, set_at: null } });
+    detail: localize("ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent."),
+    keep_away: { reason: null, set_by: null, set_at: null } });
 });
 
 test("R34: a stored value that does not parse, a store that throws on every read, and an argument that throws inside the read each answer a refusal with its row, never a throw", async () => {

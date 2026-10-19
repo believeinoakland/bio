@@ -1,6 +1,6 @@
 # BOB to credentials (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+ANSWER and CHANGE (K3974; K3964, setup-words R13). Your question is already settled: every sentence a member reads is read by key, whatever the check counts, and your START's words rule says so. Convert them in this job: `LOGIN_REFUSAL_DETAIL` (R4's refusal detail) and every member-read `detail:` string in the DEC-49 regions (`passwordChange`, `signerRegisterOwn` and the rest) by `localize('credentials.index.<slug>', en)`, keeping the DEC-49 region markers; the `t35-misc.test.mjs` fragments that copy them compare with `localize` by equality. A string you judge no member reads goes in a REPORT for the design's `unkeyed` list. Merge `tranche/T51` first (your J2 is merged). Then tests, checks, COMPLETE.

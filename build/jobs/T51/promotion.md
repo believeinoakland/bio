@@ -1,6 +1,6 @@
 # promotion (T51)
 
-**Status** · session_01QXX7F37mcmzDGf3WCEqdPU · depth 2 · COMPLETE · handled B3
+**Status** · session_01R5Q8GiUFkdmFTFrNbWpmSr · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -25,3 +25,17 @@ Two things the stamp 1.78.0 makes stale in files that are not mine. (a) build/mo
 ## J3 · COMPLETE
 
 T51-15 done: R58 bundleHistory/op=bundlehistory (R54 four arms) with tests; stamp 1.78.0, 1918 rows, digest 31b4a129...; system/row-census green; promotion tests 148 pass; coverage 58/58; ownership 0 failures. K3807 item 2 deferred to T52 (B2). Reports: modules.json fixture name, case-checker program.mjs stale. Record has the detail.
+
+## J4 · COMPLETE
+
+T51-262 done (words pass, B4). Commit df52436b63 on job/T51/promotion.
+
+**Entries applied.** The four `plain` findings in `build/plan/words-pass/promotion.md`, each judged a member-readable sentence and read through `localize`, en unchanged: `gate.mjs` `promotion.gate.capture_absent_from_bucket` and `promotion.gate.capture_bytes_differ` (the two `PLANE_*` details); `promotion/index.mjs` `promotion.index.project_needs_name` (the `NO_TITLE` detail); `promotion/names.mjs` `promotion.names.give_project_title_unique` (the C-77.2 repair). The one `testcopy`, `converts.test.mjs:170`: the list now comes from the module's own `MECHANICAL_APPEND_FILES` (history.mjs) plus `snapshots/page.html`, so the test no longer copies a path that also sits in subresources' localized sentence. Two tests that would copy the converted sentences, `wording.test.mjs` (R19 and R38), now compare with `localize(id, en)` by equality; the unused `OURS` constant is removed. Nothing judged unread by any member, so no REPORT for those.
+
+**Deferred.** None.
+
+**Found in other modules (REPORT).** `system/row-census` (R50 pin, my suite) reports 1921 rows against the pin's 1918: arrived with no record C-25.37, C-25.38, C-25.39 (VERSION_COMPARE_*), changed with no record C-33.25 (NO_ALIAS). None of these rows is in promotion's files and this job touches no table row, so they belong to the rows other modules have added and that await CR-5's stamp. Not changed here (B4: no stamp in this job).
+
+**Tests and checks.** `test/m/promotion/` + `d526-refusal-order`: 148 pass, 0 fail. `wording` + `converts`: 23 pass, 0 fail. `system/row-census`: 8 pass, 2 fail (the R50 pin above, other modules' rows). `checks/format promotion` path: 0 failures (175 modules). `checks/architecture` over the tree: 0 failures (3592 files). `checks/coverage promotion`: 58 of 58 ids named. `checks/run.mjs /home/user/bio`: format and architecture 0 failures; coverage 33 failures, none in promotion (other modules). `setup-words/build.mjs --check`: the stale-rows note for `rows.mjs` only (expected; BOB regenerates at layer close), no refusal naming promotion. `checks/words.mjs`: no finding in promotion's files (the remaining failures are other modules'). `checks/ownership promotion tranche/T51 job/T51/promotion`: 0 failures.
+
+Size (session_01R5Q8GiUFkdmFTFrNbWpmSr): test runs 7, module lines 3935

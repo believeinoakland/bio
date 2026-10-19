@@ -696,7 +696,7 @@ class Promotion {
       if (promotedType === "project") {
         const key = projectNameKey(promotedTitle);
         if (!key)
-          return { ok: false, reason: "NO_TITLE", detail: "a project needs a name, and it must be unique across your team's Civicsmith" };
+          return { ok: false, reason: "NO_TITLE", detail: localize("promotion.index.project_needs_name", "a project needs a name, and it must be unique across your team's Civicsmith") };
         if (this.#nameTaken(key, bundleId)) return NAME_TAKEN();
       }
 
