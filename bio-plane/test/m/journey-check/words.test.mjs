@@ -15,7 +15,7 @@ const on = async (html, fn) => { const ctx = await B.newContext(); try { const p
 const ASSERTED = ["screen.connect.own.subscription", "question.empty.heading", "question.adddoc", "screen.capture.address.done",
   "screen.capture.file.done", "screen.held.released", "ref.here.cited.support", "question.run.heading", "question.proposal.heading",
   "screen.assistant.notevidence", "question.concluded.by", "screen.plan.ask.running", "screen.plan.ask.ended", "founder.handle.done",
-  "founder.handle.says", "founder.handle.later.help", "screen.document.passages.head", "state.empty", "dock.run.yours", "screen.answers.machine",
+  "founder.handle.says", "founder.handle.later.help", "document.read.title", "state.empty", "dock.run.yours", "screen.answers.machine",
   "screen.site.start", "screen.site.create", "screen.assistant.run.ended", "question.conclude.own.choice", "question.conclude.own.field",
   "question.conclude.own.help", "question.reading.by.member", "question.empty.conclude.own", "shell.menu.signout", "screen.security.level.ordinary"];
 

@@ -175,7 +175,7 @@ async function readAndCite(walk, page, { document, question, phrase = FIND_PHRAS
   await walk.step(page, localize("journey-check.investigation.v1_open_the_document_see", "{v1}open the document, see its words, and Find-in a passage", { v1: String(prefix ? prefix : "7 · ") }), async (p) => {
     await p.goto(document); await settle(p);
     await requireDrawn(walk, p, "document");
-    await requireWord(p, "screen.document.passages.head", { within: "#cs-main" });
+    await requireWord(p, "document.read.title", { within: "#cs-main" });
     /* its words (extraction R76's `text_units`, K3399): the notice's passage drawn on its page */
     if (!(await p.locator("#cs-main").textContent()).replace(/\s+/g, " ").includes(passage))
       throw new Error("the document's words are not drawn on its page");
