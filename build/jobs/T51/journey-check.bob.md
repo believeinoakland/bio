@@ -37,3 +37,7 @@ CHANGE (K4105): you are merged (J2; 90 of 98 on the tranche). L11's close regene
 (c) yours: `investigation.mjs`:422's inline sentence ("The city's notice 2026-118 orders the roof repaired within 28 days.") is a fixture document's text: the words check counts it; make it data of the fixture the check does not read as a sentence (as your other seeded documents are), or by key.
 (d) not yours: `document` drawing no `screen.document.passages.head` (step 7 of R9, and R16) and `dash-project` drawing "Nothing is here" (R22) are screens-inquiry's, sent to it (B12); accepted red by name until it merges again.
 Merge tranche/T51, run your suite (the local arm with the two screens still red is expected), post COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K4107; SCREENS-INQUIRY #12 J7 (1)), adding to B4. The design no longer draws a "Passages" heading on `document` (DEC-229 replaced it by "Read it" with its tabs; since screens-inquiry's B5 the section is `document.read.title`). Your step at `investigation.mjs`:178, `requireWord(p, "screen.document.passages.head", ...)`, is stale: require `document.read.title` within `#cs-main` instead; the notice's passage on page 1 of the reading still holds. The other half of R1 (a)'s two screen failures, `dash-project` from Home's door drawing "Nothing is here", is screens-daily's (its R51, by CHANGE now); your step stays as it is. Post COMPLETE once B4 and this are both done.
