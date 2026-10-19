@@ -593,7 +593,9 @@ test("R101 PATHS gains glossary, teamai and actionnew; ADMIN_ACTS gains signerad
   assert.deepEqual(PATHS.glossary, ["settings", "screen.glossary.name"]);
   assert.deepEqual(PATHS.teamai, ["settings", "screen.teamai.name"]);
   assert.deepEqual(PATHS.actionnew, ["projects", "@project", "screen.actionnew.name"]);
-  for (const id of ["theme", "dash-action", "dash-project", "help-records"]) assert.ok(!Object.hasOwn(PATHS, id), id + " is not this entry's");
+  assert.deepEqual(PATHS["dash-action"], ["screen.dash-action.name"]);
+  assert.deepEqual(PATHS["dash-project"], ["projects", "@project"]);
+  for (const id of ["theme", "help-records"]) assert.ok(!Object.hasOwn(PATHS, id), id + " is not this entry's");
   assert.ok(ADMIN_ACTS.has("signeradd") && ADMIN_ACTS.has("instancegroupseed"));
   assert.match(HOOK_CLASSES["mk-updband"], /\S/);
   for (const id of ["glossary", "teamai", "actionnew"]) {

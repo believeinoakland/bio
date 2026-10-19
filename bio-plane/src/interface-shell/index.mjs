@@ -63,6 +63,8 @@ export const PATHS = Object.freeze({
   /* R101 (T51): `glossary` and `actionnew` from the rail place and the screen's title (the drawings' `crumbs`), `teamai` from `PATH` */
   glossary: ["settings", "screen.glossary.name"], teamai: ["settings", "screen.teamai.name"],
   actionnew: ["projects", "@project", "screen.actionnew.name"],
+  /* K4078: the two dashboards Home opens, as `PATH` draws them: the action dashboard by its name, the project's by the project's title */
+  "dash-action": ["screen.dash-action.name"], "dash-project": ["projects", "@project"],
   group: ["settings", "screen.group.name"], places: ["settings", "screen.places.name"], recovery: ["settings", "screen.recovery.name"],
   unavailable: ["screen.unavailable.name"],
 });
