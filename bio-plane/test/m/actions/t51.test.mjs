@@ -60,6 +60,8 @@ test("R108 a sent entry, or a received one of any other kind, is refused MINUTES
   const before = w.text(PC);
   const sent = reply(w, given(s), { direction: "sent" });
   assert.deepEqual([sent.ok, sent.reason, sent.detail], [false, "MINUTES_NOT_PUBLIC_COMMENT", word("screen.action.minutes.notpublic")]);
+  assert.deepEqual([sent.code, sent.check], ["MINUTES_NOT_PUBLIC_COMMENT", "C-117.59"]);
+  assert.equal(typeof sent.translation, "string");
   const none = reply(w, given(s), { direction: "no_response" });
   assert.equal(none.reason, "MINUTES_NOT_PUBLIC_COMMENT");
   w.action(RR);
@@ -84,7 +86,8 @@ test("R108 the minutes' shape, date and passage are judged: BAD_MINUTES, BAD_DAT
                      { ...given(s), meeting: "two\nlines" }, { ...given(s), date: undefined }, "not json", [], { ...given(s), passage: null },
                      given("zz"), given(s, null)]) {
     const r = reply(w, bad);
-    assert.deepEqual([r.ok, r.reason], [false, "BAD_MINUTES"], JSON.stringify(bad));
+    assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "BAD_MINUTES", "BAD_MINUTES", "C-117.60"], JSON.stringify(bad));
+    assert.equal(typeof r.translation, "string");
   }
   assert.equal(reply(w, { ...given(s), date: "2026-02-31" }).reason, "BAD_DATE");
   assert.equal(reply(w, { ...given(s), date: "16 Sept" }).reason, "BAD_DATE");

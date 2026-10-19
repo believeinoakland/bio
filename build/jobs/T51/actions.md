@@ -50,3 +50,9 @@ B2 applied on job/T51/actions: R108's passage is minted as content by the author
 ## J3 · REPORT
 
 B3: region is-minutes is drawn in actionCorrespond (pushed); both refusals are minted through refuse/withRow, so the catalogue rows apply once action-grammar's C-117.59/.60 are merged into my branch. Waiting for your word to merge tranche/T51, assert the rows in t51 and COMPLETE again.
+
+## Completion of B3 and B4
+
+`tranche/T51` merged (action-grammar's C-117.59, C-117.60). `DEC-49 REGION is-minutes` is drawn in `actionCorrespond`; both refusals are raised through the rows: `t51` asserts code, check (`C-117.59`, `C-117.60`) and translation on each. Tests: `bio-plane/test/m/actions/` 142 pass, 0 fail; `bio-plane/test/m/action-grammar/` (its census arm, R28, run on this branch) 80 pass, 0 fail. words (actions) 0, architecture 0, coverage 75/75, format 0, ownership 0.
+
+Size (session_01TXuP7EMXudAZjVe2WhZZQT): test runs 17, module lines 3520
