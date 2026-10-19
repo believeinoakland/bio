@@ -36216,105 +36216,126 @@
       "en": "registered capture is absent from the working bucket",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1416
+      "line": 1427
     },
     {
       "id": "promotion.gate.capture_bytes_differ",
       "en": "capture bytes differ from the register",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1419
+      "line": 1430
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in",
       "en": "registered capture is held in parts, and {why}, so no part could be verified",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1390
+      "line": 1401
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_2",
       "en": "registered capture is held in parts, and {length} of the {length_2} parts the record names are not in the working bucket: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1394
+      "line": 1405
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_3",
       "en": "registered capture is held in parts, and the stored size or digest of {length} disagrees with the record: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1399
+      "line": 1410
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_4",
       "en": "registered capture is held in parts, all present, but the digest of {length} could not be verified: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1401
+      "line": 1412
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_5",
       "en": "registered capture is held in parts, and the parts the record names sum to {sum} bytes where the register says {bytes}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1402
+      "line": 1413
     },
     {
       "id": "promotion.gate.registered_capture_is_held_only",
       "en": "registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the record's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1413
+      "line": 1424
     },
     {
       "id": "promotion.gate.the_case_document_catalogue_could",
       "en": "the case-document catalogue could not judge this document, so it is not passed: {String}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1292
+      "line": 1303
     },
     {
       "id": "promotion.index.cut_was_produced_by_cut",
       "en": "{cut} was produced by '{cut_2}' and this revision says '{cut_3}'. A revision changes what a document says, never whose it is. Send it again with the team the record holds, or with none. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 752
+      "line": 761
     },
     {
       "id": "promotion.index.empty_neither_text_a_string",
       "en": "{empty}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 516
+      "line": 525
+    },
+    {
+      "id": "promotion.index.machine_cannot_reopen",
+      "en": "reopening is a named member's judgement that a question the team set down has to be worked again. A machine credential may surface a question and pursue one, and may not overturn the team's own disposition. Sign in as a member.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 1160
+    },
+    {
+      "id": "promotion.index.not_set_down",
+      "en": "reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is a member of a published or prepared case. A concluded inquiry in no case moves forward by publishing a new edition rather than quietly reverting to open still wearing its conclusion.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 1191
+    },
+    {
+      "id": "promotion.index.project_name_taken",
+      "en": "a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 194
     },
     {
       "id": "promotion.index.project_needs_name",
       "en": "a project needs a name, and it must be unique across your team's Civicsmith",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 699
+      "line": 708
     },
     {
       "id": "promotion.index.the_base_this_revision_names",
       "en": "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 726
+      "line": 735
     },
     {
       "id": "promotion.index.the_sha256_sent_for_map",
       "en": "the sha256 sent for {map} is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 567
+      "line": 576
     },
     {
       "id": "promotion.index.this_store_records_no_producing",
       "en": "this store records no producing team, and this creation names none — neither a group: line in its bundle.md nor a team in its meta. The record does not supply one. Nothing was created.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 589
+      "line": 598
     },
     {
       "id": "promotion.names.give_project_title_unique",

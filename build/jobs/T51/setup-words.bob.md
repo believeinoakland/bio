@@ -53,3 +53,7 @@ Before any test run: every directory with a tracked `package-lock.json` has its 
 ## B5 · ANSWER · re J4
 
 ANSWER (K4115). Not Bob's: the three rows are the design stream's wording, and braces a member would see are a wording defect, sent to UX-DESIGN as a HANDOFF now. Do not weaken the check. `word-list.test.mjs` R13 (line 247) is accepted red by name until that design merge, which BOB makes and then regenerates `rows.mjs`. Post COMPLETE with R13 named as that accepted red.
+
+## B6 · CHANGE
+
+CHANGE (K4119): the design's DEC-369 (U400) is merged on the tranche: the three `lines.index.*` rows hold no brace now, and `rows.mjs` is regenerated. Merge tranche/T51 into your branch, re-run `word-list.test.mjs` (R13 should be green, so it is no longer an accepted red), and post COMPLETE.

@@ -5706,3 +5706,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: (1) fourteen rows `document.kind.<format>`, one per format the format registry (`bio-plane/src/formats.mjs`) registers, plus a plain-text capture the registry leaves undetermined and a fallback; each reads mid-sentence after "the": pdf "PDF", docx "Word document", xlsx "Excel spreadsheet", pptx "PowerPoint slide deck", odt "OpenDocument text document", ods "OpenDocument spreadsheet", odp "OpenDocument slide deck", csv "CSV table", jpeg "JPEG image", png "PNG image", html "web page", zip "ZIP archive", text "plain-text file", and `document.kind.undetermined` "file" for any format the registry does not name (so a format registered later reads "the file exactly as captured" until it is given its own row). {size} reads `size.kb|mb|gb` (and `size.small`) as B386 says. (2) Yes: "Beside the version your question cites" sets this copy beside the capture the question's cited leg rests on, both captures of one document, so the revision compare (`revisioncompare`, matched through `bundlehistory`) is what the drawing means (screens-inquiry R81, K4103); `versioncompare` is not it.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`.
 owed: nothing.
+
+### DEC-369 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01EkYGWQGqSXhiemwre3NyZq; the development process also runs on his primary account since K1428) (BOB's HANDOFF B388, from SETUP-WORDS #8 J4; K4115, K4072)
+for: design
+question: Three `lines.index.*` rows hold brace groups the word filler does not fill, so the braces would show literally; how they read instead.
+why it is Bob's: it is not (P17): the design's words.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: reworded in place, meaning unchanged, each brace group said in words: `lines.index.a_line_rests_on_a` "a line rests on a passage (a capture and its extent), a system rule (a rule and its source) or a member's testimony (a statement)"; `lines.index.a_system_rules_source_is` "a system rule's source is a held capture or a profile entry (a profile and an entry in it)"; `lines.index.at_is_a_day_an` "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time (a value, its precision and its time zone)". A scan of every row in `words.json` finds no other brace that is not a single `{name}` placeholder.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: nothing.

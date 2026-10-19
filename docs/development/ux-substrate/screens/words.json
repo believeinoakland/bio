@@ -57029,7 +57029,7 @@
   },
   {
    "key": "lines.index.a_line_rests_on_a",
-   "en": "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony (a statement)",
+   "en": "a line rests on a passage (a capture and its extent), a system rule (a rule and its source) or a member's testimony (a statement)",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
@@ -57148,7 +57148,7 @@
   },
   {
    "key": "lines.index.a_system_rules_source_is",
-   "en": "a system rule's source is a held capture or a profile entry {profile, entry}",
+   "en": "a system rule's source is a held capture or a profile entry (a profile and an entry in it)",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
@@ -57218,7 +57218,7 @@
   },
   {
    "key": "lines.index.at_is_a_day_an",
-   "en": "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time {value, precision, zone}",
+   "en": "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time (a value, its precision and its time zone)",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
