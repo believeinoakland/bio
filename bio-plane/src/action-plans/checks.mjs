@@ -164,7 +164,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   PHASE_MALFORMED: {
     check: 'C-124.32', where: at("#scenarioPhases", "is-phase-shaped"),
-    translation: localize('action-plans.checks.a_phase_has_an_id', 'A phase has an id, a name, the chosen options it holds, when it starts (at the plan\'s start, after another phase, on one outcome of another phase\'s checkpoint, when another matter\'s track reaches a point, or when an obligation\'s occurrence reaches a state: met, met late, overdue or undetermined), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written.'),
+    translation: word('refusal.PHASE_MALFORMED'),
   },
   PHASE_OPTION_NOT_CHOSEN: {
     check: 'C-124.33', where: at("#scenarioPhases", "is-phase-option-chosen"),

@@ -8,7 +8,7 @@ import { seeded, opened, option, choose, V, MACHINE, by, ms } from "./fixture.mj
 import { world as dutiesWorld, BOB, CAROL } from "../duties/fixture.mjs";
 import { noSuchDuty, DUTIES_CHECKS } from "../../../src/duties/index.mjs";
 import { ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const at = (w, iso) => { w.clock.now = iso; };
@@ -72,7 +72,7 @@ test("R14 R38: a phase may start on a duty occurrence's state; the form is check
 
 test("R14 R38: PHASE_MALFORMED's row, C-124.32, names every form of starts, an obligation's occurrence state among them, in exactly the words worded (K1750)", () => {
   const w = setup();
-  const WORDS = localize("action-plans.checks.a_phase_has_an_id", 'A phase has an id, a name, the chosen options it holds, when it starts (at the plan\'s start, after another phase, on one outcome of another phase\'s checkpoint, when another matter\'s track reaches a point, or when an obligation\'s occurrence reaches a state: met, met late, overdue or undetermined), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written.');
+  const WORDS = word("refusal.PHASE_MALFORMED");
   assert.equal(ACTION_PLAN_CHECKS.PHASE_MALFORMED.check, "C-124.32");
   assert.equal(ACTION_PLAN_CHECKS.PHASE_MALFORMED.translation, WORDS);
   /* answered so at the interface, for a malformed start of each form, R38's included */

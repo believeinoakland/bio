@@ -38,3 +38,11 @@ Size (session_014XCjtGo1PwP3JkN5NxAqDd): test runs 6, module lines 3330
 ## J1 · COMPLETE
 
 action-plans (T51-239, words K3949, R47 control K4036) is complete on job/T51/action-plans at e867f14aef; 88 tests pass; words, format, architecture, coverage and ownership checks show 0 failures for action-plans. Two judgement calls need your decision, in the record's Completion section (build/jobs/T51/action-plans.md): (1) SUBJECT_MALFORMED now shows the words.json row's text; (2) refusal.PHASE_MALFORMED and action-plans.checks.a_phase_has_an_id differ in one spelling (judgment/judgement). R47's "unheld row keeps its own text" clause has no instance now (all 64 codes hold rows); you may retire it.
+
+## Change B2 (K4042, K3984)
+
+BOB's CHANGE applied. `refusal.PHASE_MALFORMED` is now read by `word` in `checks.mjs` (the row wins over the duplicate sentence), so the `localize` id `action-plans.checks.a_phase_has_an_id` is retired from this module. `duty-starts.test.mjs` compares with `word("refusal.PHASE_MALFORMED")`. The R47 test title drops its "row words.json does not hold keeps its own (control)" clause. SUBJECT_MALFORMED keeps the row's text, as BOB ruled.
+
+Checks rerun: 88 of 88 action-plans tests pass; `checks/words.mjs` 0 failures for action-plans; `checks/architecture.mjs` and `checks/format.mjs` 0 failures; `checks/coverage.mjs` 51 of 51.
+
+Test runs: 7 (6 before, 1 after the change). Size (session_014XCjtGo1PwP3JkN5NxAqDd): test runs 7, module lines 3330
