@@ -89,3 +89,13 @@ Checks: format 0; architecture 0; ownership 0 (4 files); words 0 in member-roste
 Merged tranche/T51 (fa2770b9f6) into the job branch. It changed nothing in this module.
 
 For BOB: (1) R13 scope: unkeyed member-facing strings the checker does not count (capabilities is an array; op-naming details of TARGET_NOT_AN_ADMIN and EXPERTISE_IS_NOT_ASSIGNED; ~15 short act phrases to notAnAdmin). I left them as words-reads marks them; please rule. (2) rows.mjs and words-unreviewed.json to regenerate at the layer close. (3) MEMBER-ROSTER #1's open items stand (GENERATED_FILES line for order.mjs; CR-4 exports; op adminremovalsopen).
+
+## J3 · REPORT
+
+B3 (b): two details left in source, not keyed; each names an op for an API caller, and I judge that no member reads it. Please settle them with the design stream (K3944) and send them to the unkeyed list if so.
+
+1. TARGET_NOT_AN_ADMIN (memberRemove's refusal; index.mjs, adminRemove): "this member is not an administrator, so there is no administrator to remove; an ordinary member is deactivated with op=memberset". Why: it answers an administrator's own vote to remove a target who is not an administrator, a case the removal screen never sends; the sentence tells the caller which op to call, so it reads as wire grammar.
+
+2. EXPERTISE_IS_NOT_ASSIGNED (memberAdd, when expertise is passed): "expertise is declared by the member and then confirmed by an administrator (section 1.3). It is not set when the invitation is created, ... Use op=expertisedeclare and op=expertiseconfirm." Why: the invitation screens never pass expertise (section 1.3 forbids it), so only a direct API caller reaches this refusal; its last sentence names two ops, which is wire grammar.
+
+Both refusals keep their codes and rows. Their detail is one fixed string, so keying would change nothing a member sees.
