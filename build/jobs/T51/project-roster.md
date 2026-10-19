@@ -1,6 +1,6 @@
 # project-roster (T51)
 
-**Status** · session_014aLWC4WN3XfDCb6R5QrKZf · depth 2 · COMPLETE · handled B2
+**Status** · session_016HFawRGBKLpkHSqkgZXjmz · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -18,3 +18,15 @@ Best reading: BOB amends membership R120 to add `invited_by` to `project_partici
 ## J2 · COMPLETE
 
 COMPLETE: R35, R36, R37 (R14, R26 amended) met; 87 module tests pass; format, architecture, coverage (37/37) and ownership checks show 0 failures. Report: op-declarations needs a spec for op projectinvitations (and projectlist's new 'after'); its test 'each T45 owner's map is served whole by the tables' fails until then; plane/op-grades likewise. Details in the record.
+
+## Completion record (T51-157, re-run of layer 2; PROJECT-ROSTER #11, session_016HFawRGBKLpkHSqkgZXjmz)
+
+- **Entries applied:** R38 (`projectList` rows answer `mine` `{in, owner}` and `scope`; `in` is state `joined` exactly (a `leaving` member reads `in: false`, my reading of "a joined member"), `owner` the owner flag; scope read for the page in one statement; the viewer's own stamp only). K3958: `checks.mjs` `said(code)` reads `refusal.${code}` as a template at its call and the one project stake sentence by a literal key, so the module has no variable-key word site. Words (K3949, K3957, K3962): the inline finding (`approval_rule_is_not_valid`, `{kind}`/`{tier}` passed as their own braces so the sentence is unchanged), the 8 plain findings (all member-readable details of refusals, converted by `localize('project-roster.index.<slug>', …)`), the sentences the check does not count (scope-set and approval-set details with their character cap, "an unnamed caller") converted too; the hand-list in `ops.test.mjs` replaced by the map's own keys, each asked by an `op()` call (and projectstakeset, projectstake, projectownersgone now asked); the test copy in `ownership.test.mjs` replaced by reading membership's wording round a marked phrase.
+- **Deferred:** none. **Judged not member-read:** none (no REPORT needed for words).
+- **Found in another module:** op-declarations does not yet declare `projectinvitations` (its R77 entry exists in the plan, T51-107), so my ops test cannot assert every op is declared; nothing else.
+- **Tests and checks:** `node --test bio-plane/test/m/project-roster/`: 88 pass, 0 fail (R38 new test `project-list.test.mjs`); users run green: plane roster and t47, queue-producers projects, screens-daily projects, store-door dispatch. `checks/run.mjs`: format 0 failures, architecture 0 failures, words 0 findings in project-roster; `checks/words.mjs … project-roster` 0 failures; `checks/coverage.mjs … project-roster` 38 of 38; `checks/ownership.mjs` 0 failures; `setup-words/build.mjs --check` stale-rows note only (not mine).
+- Size (session_016HFawRGBKLpkHSqkgZXjmz): test runs 9, module lines 1538
+
+## J3 · COMPLETE
+
+COMPLETE (T51-157, re-run): R38 met (mine {in, owner} and scope on projectList rows); K3958 said() read by template/literal key; words findings fixed (inline 1, plain 8, handlist 1, testcopy 1), none judged unread. 88 module tests pass; format, architecture, words, coverage 38/38, ownership 0 failures. Reading: in = state joined exactly (leaving reads false). Note: op-declarations lacks projectinvitations (T51-107). Details in the record.

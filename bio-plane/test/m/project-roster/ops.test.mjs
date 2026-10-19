@@ -13,12 +13,11 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 R26 R30 each op answers its serv
   w.owned("PROJ-P", "ann", ["bob"]);
   w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
   const op = (name, params, body = null) =>
-    projectRosterOps(w.r, new URL(`http://x/?${q(params)}`), body, {})[name]();
-  assert.deepEqual(Object.keys(projectRosterOps(w.r, new URL("http://x/"), null, {})).sort(),
-    ["projectdirectory", "projectowneradd", "projectownerremove", "projectownerrescue", "projectparticipants",
-     "projectrequest", "projectrequestanswer", "projectrequests", "projectrequestwithdraw", "projectvisibility",
-     "projectapprovalset", "projectscopeset", "projectlist", "projectownervotes", "projectstakeset", "projectstake",
-     "projectownersgone", "projectinvitations"].sort());
+    (used.add(name), projectRosterOps(w.r, new URL(`http://x/?${q(params)}`), body, {})[name]());
+  /* the module's ops are the ones its map holds, and each is asked below (K3268; op-declarations declares R35's, T51-107) */
+  const names = Object.keys(projectRosterOps(w.r, new URL("http://x/"), null, {})).sort();
+  assert.equal(names.length, 18);
+  const used = new Set();
   /* reads */
   assert.deepEqual(op("projectparticipants", { projectId: "PROJ-P", by: "bob" }),
     w.r.projectParticipants({ projectId: "PROJ-P", by: "bob" }));
@@ -72,6 +71,11 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 R26 R30 each op answers its serv
   assert.equal(op("projectowneradd", { projectId: "PROJ-P", handle: "bob", by: "cal", viewer: V("cal") }, forged).reason,
     "NOT_THE_OWNER");
   assert.equal(op("projectrequests", {}, forged).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
+  /* R31–R33: the stake and whether the owners are gone, through the ops */
+  assert.deepEqual(op("projectstakeset", { projectId: "PROJ-P", stake: "a stake", by: "ann", viewer: V("ann") }).stake, "a stake");
+  assert.deepEqual(op("projectstake", { projectId: "PROJ-P", viewer: V("ann") }), w.r.projectStakeHistory({ projectId: "PROJ-P", viewer: V("ann") }));
+  assert.deepEqual(op("projectownersgone", { projectId: "PROJ-P", viewer: V("second") }), w.r.projectOwnersGone({ projectId: "PROJ-P", viewer: V("second") }));
+  assert.deepEqual([...used].sort(), names, "every op of the map was asked");
 });
 
 test("R20 rows: each code this module mints carries its row, frozen, numbered, its `where` naming this module's region; the translations name the group's Civicsmith only so", () => {
