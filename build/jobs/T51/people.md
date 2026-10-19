@@ -71,3 +71,19 @@ Checks (civicos-process ebcc1a3 + tranche/T51 merged, run from the process repos
 Rulings for BOB to record in build/rulings.md (P17): (a) hop reasons are {key, vars} per connection-grammar R6; (b) the composed stated-current reason carries the owner's sentence in its {why} fill; (c) the kind words read the label.identityclaimkinds rows.
 
 Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 5, module lines 2241
+
+## J6 · COMPLETE
+
+COMPLETE again after CHANGE B4 (K3992). Merged tranche/T51 into job/T51/people (4c756b88c4) and pushed. No change to the module was needed: R40 as worded in K3992 matches the code (a hop's undetermined.why is {key, vars} with no why_key; the hub answer keeps its string why and why_key; lines.why.stated_current_through takes the owner's sentence as its {why} fill).
+
+Checks after the merge (process repository, merged tree)
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; no words finding in people (the repository-wide run lists other modules' findings only).
+- checks/ownership.mjs people tranche/T51 job/T51/people: 0 failures.
+- checks/coverage.mjs people: 41 of 41 live requirement ids named by a test; 0 failures.
+- checks/architecture.mjs people: 0 failures.
+- setup-words build.mjs --check: rows.mjs stale (expected; BOB regenerates at the layer close; the stale-rows note names no people word).
+- node --test test/m/people/*.test.mjs: 66 pass, 0 fail.
+
+Deferred: none. Requirements and tests unchanged since the first COMPLETE.
+
+Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 7, module lines 2241
