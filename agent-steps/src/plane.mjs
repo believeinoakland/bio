@@ -73,7 +73,8 @@ export function publishedPack(answer) {
       && p.resident && typeof p.resident === "object" && p.disclosed && typeof p.disclosed === "object")
     return { ok: true, pack: p };
   if (typeof a.pack_absent === "string" && a.pack_absent) return { ok: false, why: a.pack_absent.slice(0, 300) };
-  return { ok: false, why: p == null ? "the answer carries no pack" : "the answer's pack has no version, resident layer or disclosed layers" };
+  return { ok: false, why: p == null ? localize("agent-steps.plane.the_answer_carries_no_pack", "the answer carries no pack")
+    : localize("agent-steps.plane.the_answer_s_pack_has_no", "the answer's pack has no version, resident layer or disclosed layers") };
 }
 
 /* R56 (K1479, K1502, K1755) — THE SUGGESTIONS SWITCH THAT GOVERNS THE ACT, as the plane sends it beside the account
@@ -91,7 +92,7 @@ export function loadLayer(model, input) {
   const name = String(input?.name ?? "");
   if (!model.layers.includes(name))
     return { content: name === SUGGESTIONS_LAYER
-      ? "the suggestions layer is not loaded: the suggestions switch that governs this act is off"
+      ? localize("agent-steps.plane.the_suggestions_layer_is_not", "the suggestions layer is not loaded: the suggestions switch that governs this act is off")
       : localize("agent-steps.plane.no_disclosed_layer_name", "no disclosed layer '{name}'", { name: String(name) }), error: true };
   return { content: model.pack.disclosed[name] };
 }
