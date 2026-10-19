@@ -93,14 +93,16 @@ test("R38: a stage dated before the stage it is after is out_of_order, naming bo
   const ok = await dated("2026-03-01", "2026-03-10");
   assert.deepEqual([ok.findings.filter((x) => x.kind === "out_of_order").length, ok.undetermined_checks.length], [0, 0]);
   // not settled: equal values at their precision, a coarser precision (a band), a date missing
-  for (const [need, award, re] of [["2026-03-01", "2026-03-01", /both are 2026-03-01/],
-                                   [{ value: "2026-03", precision: "edtf" }, "2026-03-05", /overlap/],
-                                   [null, "2026-03-05", /has no own date/]]) {
+  // a keyed reason passes on as civil-time answers it; a reason this module words itself is a plain word
+  for (const [need, award, key] of [["2026-03-01", "2026-03-01", "civil-time.precision_precision_held"],
+                                    [{ value: "2026-03", precision: "edtf" }, "2026-03-05", "civil-time.values.overlap"],
+                                    [null, "2026-03-05", null]]) {
     const u = await dated(need, award);
     assert.equal(u.findings.filter((x) => x.kind === "out_of_order").length, 0, JSON.stringify(need));
     const o = u.undetermined_checks.filter((x) => x.kind === "order_undetermined");
     assert.equal(o.length, 1);
-    assert.match(o[0].why, re);
+    if (key) assert.equal(o[0].why.key, key, JSON.stringify(need));
+    else assert.equal(typeof o[0].why, "string", JSON.stringify(need));
     assert.deepEqual(o[0].placements.map((p) => p.capture_sha), ["sa", "sb"]);
   }
   // R12: a decision about (progression, stage) governs it like every finding, and it stays published
