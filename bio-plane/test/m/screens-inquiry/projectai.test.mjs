@@ -8,6 +8,8 @@ import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section,
 
 const at = "/app/projectai/" + P;
 const OWNER = "project:" + P;
+/* the notice as the plane answers it: the words row it is made from, read by `word` */
+const NOTICE = word("ai.disclosure.projectkey", { project: "Pothole repairs" });
 const KEY = "sk-ant-api03-" + "7".repeat(40);
 /* mai is the project's owner here; `sole` leaves her its only participant */
 const parts = (sole) => ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true },
@@ -16,7 +18,7 @@ function ai(o = {}) {
   return {
     projectparticipants: parts(o.sole),
     projectaccountstate: ok({ ok: true, held: true, kind: "apikey", on: true, set_at: "2026-10-05T09:00:00Z", by: "mai", uses: {}, serving: "project", ...(o.state || {}) }),
-    projectkeynotice: ok({ ok: true, due: o.due !== false, text: "Your questions in Pothole repairs, and the material read to answer them, go to Anthropic under the project's API account." }),
+    projectkeynotice: ok({ ok: true, due: o.due !== false, text: NOTICE }),
     projectaikeepawaystate: ok({ ok: true, on: false, uses: null, reason: null, set_by: null, set_at: null, ...(o.keep || {}) }),
     subscriptionsignin: ok({ ok: true, connected: o.connected !== false }),
     accountuses: ok({ owner: OWNER, held: true, uses: { ask: true, draft: true, run: false, standing: true, enquire: true, read: true, transcribe: true, account: true, suggestions: true }, keptAway: [] }),
@@ -95,7 +97,7 @@ test("R14 switch, remove, the notice, the panel's two acts and keep-away send wh
   await press(p, "projectaccountremove");
   assert.deepEqual(p.byOp("projectaccountremove")[0].body, { project: P });
   /* the notice drawn before the first use, as it leaves the group */
-  assert.ok(main(p).querySelector('[data-notice="projectkey"]').textContent.includes("go to Anthropic under the project's API account"), "the notice as the plane answers it");
+  assert.ok(main(p).querySelector('[data-notice="projectkey"]').textContent.includes(NOTICE), "the notice as the plane answers it");
   await press(p, "projectkeynoticeseen");
   assert.deepEqual(p.byOp("projectkeynoticeseen")[0].body, { project: P });
   await press(p, "accountusesset");

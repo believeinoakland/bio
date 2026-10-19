@@ -110,7 +110,7 @@ test("R33 controls: started: false is a refusal by its words and no dispatch fol
   assert.ok(says(panel(no).querySelector('[data-refusal="airunopen"]'), "refusal.AI_RUN_BOUND_NO_ALLOWANCE"));
   assert.ok(!says(panel(no), "dock.run.yours"), "never working");
   for (const code of ["MEMBER_PRINCIPAL_RUN", "AGENT_WORKER_UNBOUND", "NAMESPACE_UNDETERMINED", "CREDENTIAL_RECORD_SILENT"]) {
-    const p = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, status: "running", withheld: code, note: "Nothing was sent" }) }));
+    const p = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, status: "running", withheld: code }) }));
     await workOn(p);
     const said = panel(p).querySelector('[data-refusal="airundispatch"]');
     assert.ok(says(said, "dock.withheld." + code), code);
@@ -197,6 +197,24 @@ test("R6 R13 the door's refusals drawn by their words, beside the act", async ()
   const ended = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, status: "completed" }) }));
   await workOn(ended);
   assert.ok(says(panel(ended).querySelector('[data-refusal="airundispatch"]'), "refusal.AI_RUN_NOT_RUNNING"));
+});
+
+test("R13 a refusal of the door with no word and no translation is drawn as refusal.uncatalogued with its code, never the answer's detail; one with a word, its word alone", async () => {
+  const DETAIL = "zz-detail-9";
+  const un = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: "NO_SUCH_DOOR_CODE", code: "NO_SUCH_DOOR_CODE", detail: DETAIL } } } }));
+  await workOn(un);
+  const said = panel(un).querySelector('[data-refusal="airundispatch"]');
+  assert.ok(says(said, "refusal.uncatalogued") && said.textContent.includes("NO_SUCH_DOOR_CODE"));
+  assert.ok(!panel(un).textContent.includes(DETAIL), "the builder's detail is not drawn");
+  /* controls: a held word is drawn alone, without the code or the detail; a translation is drawn as it came */
+  const held = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code: "AI_RUN_NOT_PRINCIPAL", detail: DETAIL } } } }));
+  await workOn(held);
+  const h = panel(held).querySelector('[data-refusal="airundispatch"]');
+  assert.ok(says(h, "refusal.AI_RUN_NOT_PRINCIPAL") && !says(h, "refusal.uncatalogued") && !panel(held).textContent.includes(DETAIL));
+  const tr = await dock(Q, stub({ dispatch: { status: 200, json: { ok: true, result: { ok: false, reason: "NO_SUCH_DOOR_CODE", code: "NO_SUCH_DOOR_CODE", translation: "zz-translated-9", detail: DETAIL } } } }));
+  await workOn(tr);
+  assert.ok(panel(tr).querySelector('[data-refusal="airundispatch"]').textContent.includes("zz-translated-9"));
+  assert.ok(!panel(tr).textContent.includes(DETAIL));
 });
 
 test("R4 refusals of the open by their words: mode not deployed, kept away, no account, use switched off, limit reached", async () => {
