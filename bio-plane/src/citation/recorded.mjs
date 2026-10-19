@@ -133,12 +133,12 @@ export function recordedBy(c, memo, args) {
   try {
     const a = isObj(args) ? args : {};
     if (a.viewer === undefined || a.viewer === null || (typeof a.viewer === "string" && a.viewer.trim() === ""))
-      return refused("VIEWER_MISSING", "a read names the member reading; with none, nothing is answered");
-    if (!said(a.captureSha)) return refused("NO_SHA", "who cited a passage is read for one captured document, named by its capture sha256");
+      return refused("VIEWER_MISSING", localize("citation.recorded.a_read_names_the_member", "a read names the member reading; with none, nothing is answered"));
+    if (!said(a.captureSha)) return refused("NO_SHA", localize("citation.recorded.who_cited_a_passage", "who cited a passage is read for one captured document, named by its capture sha256"));
     let asked = null;
     if (a.extent !== undefined && a.extent !== null) {
       if (!known(a.extent))
-        return refused("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`);
+        return refused("EXTENT_MALFORMED", localize("citation.recorded.an_extent_is_an_object", "an extent is an object of one of the kinds {kinds}", { kinds: Object.keys(CONTENT_EXTENT_KINDS).join(", ") }));
       asked = JSON.parse(canonicalExtent(a.extent));
     }
     const sha = a.captureSha.trim().toLowerCase();

@@ -150,8 +150,10 @@ test("R3: the write moves last_updated and appends one Session Log entry naming 
   assert.equal(w.fm(p).last_updated, STAMP);
   assert.equal(w.record.head(p).rowVersion, 2);
   const log = w.md(p).split("## Session Log\n\n")[1];
-  assert.equal(log, `### Session ${STAMP} | Cited 23 records | member:ann\nTrigger: selection ${h}\n`
-    + `Changes: cites edges added to ${ids.slice(0, CITE_LOG_SAMPLE).join(", ")}, and 3 more. Note: all of them.\n`);
+  assert.equal(log, localize("citation.index.session_cited_many_records", "### Session {when} | Cited {count} records | {who}\n", { when: STAMP, count: "23", who: "member:ann" })
+    + localize("citation.index.trigger_selection_handle", "Trigger: selection {handle}\n", { handle: h })
+    + localize("citation.index.changes_cites_edges_added", "Changes: cites edges added to {listed}.{note}\n",
+      { listed: `${ids.slice(0, CITE_LOG_SAMPLE).join(", ")}, and 3 more`, note: localize("citation.index.log_note", " Note: {note}.", { note: "all of them" }) }));
   assert.equal(CITE_LOG_SAMPLE, 20);
   /* One record, no note; the author defaults to "member". */
   const p2 = w.project("Second");
