@@ -1,3 +1,14 @@
 # consequences (T51)
 
 **Status** · session_013XaWAMAcRE4wEJB1HAAKYv · depth 2 · WORKING · handled B1
+
+## J1 · REPORT
+
+Words conversion for consequences (T51-86), decisions for BOB to rule on:
+
+1. Refusal rows and details. Seventeen rows' copies of words.json sentences now read `word(key)` (checks.mjs). New localize ids are `consequences.checks.*` and `consequences.index.*`; the text of each is unchanged except where noted below.
+2. Wording changed (not signed text, no row existed): (a) `a carry names one of {success}, {addressed} or {cure}` now fills its three names, so a member sees "a carry names one of success, addressed or cure" instead of the literal braces; (b) the `basisUnreadable` sentence for computation operands replaces `{money}` with "a money fact (its id)", because a `{money}` placeholder cannot be filled by localize.
+3. Test copies: t46's KEPT_ROWS (C-114.29, .34, .37, kept in T46 per R25) now hold each kept sentence's sha256, not the text, compared with the translation the module returns. Their words still come from the module, so R25's "kept, not words.json's" control stands. addressed.test.mjs changed one member-typed rationale input (no assertion on it). reads.test.mjs compares with word('consequences.says.inquiry_strength_read').
+4. Not converted, as not member-read or composed of other modules' words: calc-grammar's `why` passed through unchanged (index.mjs `basisUnreadable(result.why)`, and `foreignRefusal` text); the undetermined reason `${UNDETERMINED_WHY}: ${lacking.why}` (keyed parts joined by punctuation); record titles `${kind}: ${description}` and `success: ${statement}` (data, not sentences).
+5. setup-words rows.mjs is stale for `consequences.checks.a_reason_is_at_most_500` (new id): expected, regenerated at the layer close.
+6. Other modules (observed, not reviewed): the full checks/run.mjs run shows 1384 words failures and 26 coverage failures in other modules. None names consequences.
