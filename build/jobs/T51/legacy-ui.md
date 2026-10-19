@@ -21,3 +21,4 @@ Cause: needs Bob. B2's standing-list part is refused too: git rm -q -- bio-plane
 ## J3 · COMPLETE
 
 T51-126 done: civicos-ui/, bio-plane/test/budget.mjs and caseceremony.mjs deleted; see the record's Completion section. Format fails only on the modules.json legacy-ui row (yours to remove after merge); ownership 0 failures; words shows nothing for legacy-ui. REPORT: answer-envelope page-policy.test.mjs imports control-plane's signpage.mjs, which is not earlier in the order (architecture 1 failure).
+- Ringing BOB failed (its session session_01CcPD7nccPnQTm1zvhNBCFF is archived); the pushed COMPLETE entry J3 is the message for BOB's backstop (mechanics §13).
