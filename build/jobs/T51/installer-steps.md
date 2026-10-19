@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_01Qx72VGHw5GbtYV5ejL6hfD · depth 2 · COMPLETE · handled B6
+**Status** · session_01Qx72VGHw5GbtYV5ejL6hfD · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -114,3 +114,11 @@ B6 applied (items 1 to 4); pushed on job/T51/installer-steps, tranche/T51 at B6 
 **Tests and checks.** Steps suite: 88 pass, 0 fail (was 82; new: R20 pull failure, R20 waits, R20 S9 confirm and restart, R20 S9 lag, R14 read-back back-off, R4 facts back-off). Installer's `newgroup/test/`: 186 of 192 reported, 1 fail (R53, inherited). Process checks with the committed row: format "176 modules, 175 requirements files; 0 failures"; architecture "24 product files, 91 relative imports; 0 failures"; ownership "9 files changed by installer-steps between tranche/T51 and HEAD; 0 failures"; coverage "34 of 36 live requirement ids named by a test" (R26, R31 by design); words "0 failures".
 
 Size (session_01Qx72VGHw5GbtYV5ejL6hfD): test runs 4, module lines 1952
+
+## J8 · COMPLETE
+
+B7 applied; pushed on job/T51/installer-steps, tranche/T51 merged in (DEC-365's row present). F5's pull failure now says `installer.fleet.why.pullfailed` (placed in the account but could not be started), in place of `why.unpullable`, which stays for an image the account cannot pull; `STEP_KEYS` gains it; the R20 test asserts the new row and that it is not the old one.
+
+Checks: steps suite 88 pass, 0 fail; format 0 failures; architecture "24 product files, 91 relative imports; 0 failures"; words 0 failures (inline 0, missingkey 0); coverage 34 of 36 (R26, R31 unbuilt by design); ownership as above. The `words-reads.json` entry for `installer-steps` needs `installer.fleet.why.pullfailed` added (the design's file, yours to carry).
+
+Size (session_01Qx72VGHw5GbtYV5ejL6hfD): test runs 6, module lines 1953

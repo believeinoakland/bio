@@ -485,12 +485,13 @@ async function runnerFleet(acct, onWait = null) {
 const OLD_APP = { id: "app1", name: "agent-runner-grp", durable_objects: { namespace_id: "ns-agent-runner-grp-AgentRunner" }, configuration: { image: "docker.io/civicos/agent-runner@sha256:" + "b".repeat(64) } };
 const HELD_RUNNER = { preClasses: { "agent-runner-grp": ["AgentRunner"] }, pre: { grp: [], "agent-runner-grp": [] }, preApps: [OLD_APP] };
 
-test("R20 (F5): an instance that failed to start, or a rollout that failed, leaves the member out as unpullable, named with what it lacks, after its upload was attempted", async () => {
+test("R20 (F5): an instance that failed to start, or a rollout that failed, leaves the member out as pullfailed, named with what it lacks, after its upload was attempted", async () => {
   for (const [how, acct] of [["health", { pullFails: "health" }], ["rollout", { ...HELD_RUNNER, pullFails: "rollout" }]]) {
     const f = await runnerFleet(acct);
     const left = f.result.left.find((l) => l.member === RUNNER);
     assert.ok(left, how);
-    assert.equal(left.why, word("installer.fleet.why.unpullable"), how);
+    assert.equal(left.why, word("installer.fleet.why.pullfailed"), how);
+    assert.notEqual(left.why, word("installer.fleet.why.unpullable"), "placed but not started is not 'not published'");
     assert.equal(left.out, undefined, "the upload was attempted: a failure of the verdict, not a part left out");
     assert.ok(!f.result.done.includes(RUNNER), how);
     assert.ok(f.w.puts.some((p) => p.name === "agent-runner-grp"), "its Worker was uploaded");
