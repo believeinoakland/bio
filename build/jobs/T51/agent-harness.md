@@ -83,3 +83,29 @@ Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 2, module lines 1876
 - `node checks/ownership.mjs /home/user/bio agent-harness tranche/T51 job/T51/agent-harness`: 0 failures.
 
 Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 3, module lines 1876
+
+## J5 · COMPLETE
+
+**Entries applied**
+- B4 (K4015, change): pulled civicos-process `main` @ d424c32 (the words check now folds pure-literal `+` chains before judging). Re-ran `node checks/words.mjs /home/user/bio agent-harness`: 14 findings, down from 15. The `identity` string (`subsession.mjs`, documentHoldings) no longer trips the check. No new finding appeared, so the only code change this round was none; the test change is the one already in 97e170d44a.
+- Merged `tranche/T51` into `job/T51/agent-harness` (commit 398296f64f, no rebase), pushed.
+
+**Unkeyed for the design's list (judged no person reads them; the B3/K4010 settlement, now listed as the record requires)**
+- `harness.mjs` CONTROL_FLOW `does`/`judged` for compose, dedup, adjust, next-pass, close (lines 320, 321, 329, 344, 349, 355). Model-facing: agent-model composes them into the step prompt.
+- `harness.mjs` PLAN_FLOW `does`/`judged` for gate-mode, compose, adjust, close (lines 1042, 1061, 1080, 1085). Same route.
+- `subsession.mjs` REPORT_STATES values (lines 116, 117, 118, 119). Only the keys leave the module.
+
+**Deferred:** none.
+
+**Found in other modules:** none new.
+
+**Tests and checks**
+- `node --test agent-harness/test/`: 55 pass, 0 fail, 0 skipped.
+- `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio agent-harness`: 0 failures.
+- `node checks/words.mjs /home/user/bio agent-harness`: 14 findings, all in the unkeyed list above; testcopy 0, handlist 0, marker 0, missingkey 0.
+- `node checks/coverage.mjs /home/user/bio agent-harness`: only R17 unnamed (pre-existing, not met T50, expected per START).
+- `node bio-plane/src/setup-words/build.mjs --check`: no refusal naming this module.
+- `node checks/ownership.mjs /home/user/bio agent-harness tranche/T51 job/T51/agent-harness`: 0 failures.
+
+Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 3, module lines 1876
