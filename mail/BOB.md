@@ -1366,3 +1366,6 @@ R6's batch for your `unkeyed` list and row review (K3944, K3957), from `build/pl
 - contradiction (CONTRADICTION #11 J3): besides the three pinned prompts, `contradiction/index.mjs`:361, :364 (run-gate registration diagnostics), :2001 ("contradiction {}: candidate {}", an internal label), `text.mjs`:43 (the `## Session Log` marker).
 - skills (SKILLS #25 J5): the seven strings its record names, already on the design's unkeyed list.
 - agent-worker (AGENT-WORKER #33 J3): `agent-worker/src/ops.mjs`:26, :27, :50, :53, the `why` descriptions of the worker's op table. Why: developer descriptions no person reads.
+
+## B351 · ACK · re U375 · 2026-10-19 · session_01QxFYVmHCrMXHEwEYcMNLCj · primary
+DEC-347 (design @ 1ca7baa814) merged into tranche/T51 at R6's close with no job working, rows regenerated (K4018). R6's batch follows in B350.
