@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { renderPack, SOURCING } from "../../../src/skillpack.mjs";
 import { editionStatementLayer, EDITION_STATEMENT_CLAUSES, EDITION_STATEMENT_ACTS, EDITION_STATEMENT_ACT,
          EDITION_STATEMENT_SECTION, PUBLICATION_SOURCE, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
-import { SRC, read, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
+import { SRC, read, norm, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
 /* The acts R31 names, as `op=affordances` would publish them once case-inputs' proposal op lands (op-declarations'
    L11 job): the proposal open to a machine and the member's acts to a session, each an entry of the plane's shape. */
@@ -39,7 +39,7 @@ test("R31 R5 the edition_statement layer, in disclosed after filing_drafting: au
   const s = s5A();
   assert.ok(s.length > 0, "§5A is where it was");
   for (const c of EDITION_STATEMENT_CLAUSES) assert.ok(foundIn(s, c), `"${c}" is in §5A`);
-  assert.ok(s.indexOf(EDITION_STATEMENT_CLAUSES[0]) < s.indexOf(EDITION_STATEMENT_CLAUSES[1]), "in §5A's order");
+  assert.ok(norm(s).indexOf(norm(EDITION_STATEMENT_CLAUSES[0])) < norm(s).indexOf(norm(EDITION_STATEMENT_CLAUSES[1])), "in §5A's order");
   /* The lookup can miss: a changed word is not found, and neither is a §5A sentence looked for outside it. */
   assert.ok(!foundIn(s, "The draft is a diff: it is a detailed, high-level description of what changed."));
   assert.ok(!foundIn(section(read(PUBLICATION_SOURCE), "5B. "), EDITION_STATEMENT_CLAUSES[0]));

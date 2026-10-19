@@ -103,3 +103,12 @@ B4 settled and COMPLETE again (pushed to job/T51/skills, HEAD 2dcf7d3797).
 - 7 unkeyed inline strings reported as the design's unkeyed list, not failures; no change judged.
 - Tests 130/130; exports unchanged (earlier three added); format, architecture, coverage 51/51, ownership all 0 failures.
 Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 5, module lines (see record).
+
+## Completion round (B5, CR-26, K4149)
+
+- **Cause:** the rows say "team" where the canon says "group" (DEC-355) and use American spelling (DEC-221); 13 R21 comparisons read the canon unconverted. The canon is not reworded; R21's provided behaviour is unchanged (code untouched).
+- **Fix (tests only):** `fixture.mjs` gains `wordFold`, applied by `norm` to both sides of every comparison: team→group, labeled→labelled, defense→defence, catalog→catalogue, and the canon's example label `asked by <handle>` read without the placeholder. The regex checks of `action`, `planning`, `translation` and `writing` read the text through `wordFold`; `edition`'s order check reads through `norm`. New `wordfold.test.mjs` (R21): the conversion finds the converted forms; controls that a changed word (crew, rejecting, marked, offence, list) still fails and only the whole word `team` is folded.
+- **Found in another module (REPORT):** setup-words' row `skills.skilldoctrine.wherever_a_member_writes_in` reads `asked by ", saved only…`: the `<handle>` of the code's sentence (the canon's label `Draft · the assistant's, asked by <handle>`) was dropped when the row was made. A rows matter, so not mine to edit.
+- **Checks:** skills tests 133 pass, 0 fail (`node --test bio-plane/test/m/skills/`); `checks/run.mjs`: format 0, architecture 0, words 0 failures; coverage fails only for agent-harness R17, agent-runner R36 R37 R38 R40, installer-steps R26 R31, journey-check R19 (none mine; skills 51 of 51); ownership 0 failures.
+
+Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 12, module lines 2913

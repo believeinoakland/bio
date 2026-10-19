@@ -9,7 +9,7 @@ import { actionDraftingLayer, procedureGuideLayer, ACTION_DRAFTING_RULES, ACTION
          ACTION_RULES, FILING_RULES, ACTION_SOURCE, ACTION_SECTION, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { DRAFT_MODE, DRAFT_REACH } from "../../../src/run-rules/index.mjs";
 import { PROCEDURE_GUIDE_LABEL } from "../../../src/reading-guides/index.mjs";
-import { SRC, read, norm, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
+import { SRC, read, norm, wordFold, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
 /* The acts R45 names, as `op=affordances` would publish them once agent-worker's draft tasks are declared (its R76):
    each an entry of the plane's shape, asked for by a member. */
@@ -59,7 +59,7 @@ test("R45 R5 the action_drafting layer, in disclosed after interface_translation
                     /describe and document it/, /A version may be written for a particular audience/,
                     /the plan never withdraws it/, /nothing is prepared that asks anything for the benefit of the group/,
                     /staff below that level are named only where the evidence turns on their own act/])
-    assert.match(all, re);
+    assert.match(wordFold(all), re);
   /* The mode is run-rules' draft mode (its R21, R27), read from it and never typed (R23). */
   assert.equal(layer.body.mode, DRAFT_MODE.mode);
   assert.ok(!SRC.flatMap((f) => stringLiterals(read(f))).includes(DRAFT_MODE.mode), "the mode is not typed");

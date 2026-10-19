@@ -6,7 +6,7 @@ import { interfaceTranslationLayer, writingHelpLayer, INTERFACE_TRANSLATION_CLAU
          controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { DRAFT_MODE } from "../../../src/run-rules/index.mjs";
 import { PROPOSAL_STATES, proposalLabel } from "../../../src/record-grammar/index.mjs";
-import { SRC, read, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
+import { SRC, read, wordFold, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
 /* The acts R39 names, as `op=affordances` would publish them once their ops are declared (L11, T37-31): the draft act
    open to a member's request and served by the assistant, and the member's acts on a word, each an entry of the
@@ -29,7 +29,7 @@ const decRuling = (dec) => section(read(DECISIONS_SOURCE), `${dec} `).split("\n"
 const where = (c) => (c.source === INTERACTION_SOURCE && c.section === LANGUAGE_SECTION
   ? section(read(INTERACTION_SOURCE), "L · ") : c.source === DECISIONS_SOURCE ? decRuling(c.section) : "");
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
-const text = (re) => INTERFACE_TRANSLATION_CLAUSES.filter((c) => re.test(c.text));
+const text = (re) => INTERFACE_TRANSLATION_CLAUSES.filter((c) => re.test(wordFold(c.text)));
 
 test("R39 R5 the interface_translation layer, in disclosed after writing_help and before action_drafting (R45): authored, its load_when R39's sentence, its body the clauses of §L and the rulings of DEC-127, DEC-157 and DEC-179, each found by R21's normaliser in canon", () => {
   const { disclosed, resident } = renderPack(published({ catalog: translationCatalog() }));
@@ -83,12 +83,12 @@ test("R39 (a) the assistant drafts only the words missing from the group's langu
                     /a granted speaker reads each against the English and keeps or corrects it/,
                     /a member who knows the language checks and adopts each/, /without the assistant, the granted member types them/,
                     /ordinary words show once kept/])
-    assert.match(all, re);
+    assert.match(wordFold(all), re);
   /* The label the draft carries is record-grammar's, shown as "Draft", not the group's wording until a granted member
      adopts it (its R50). */
   for (const s of Object.values(INTERFACE_TRANSLATION_LABELS)) {
-    assert.match(s, /shown to members as "Draft"/);
-    assert.match(s, /not the team's wording until a member granted that language adopts it/);
+    assert.match(wordFold(s), /shown to members as "Draft"/);
+    assert.match(wordFold(s), /not the group's wording until a member granted that language adopts it/);
   }
 });
 
@@ -98,7 +98,7 @@ test("R39 (b) a draft translates the word list's English under its stable key, t
                     /a word keeps its key when its English changes/, /`\{name\}` marks a placeholder/,
                     /each carry a note on what they mean, so every language says the same thing/,
                     /renaming words within a language stays out/])
-    assert.match(all, re);
+    assert.match(wordFold(all), re);
   assert.equal(text(/marks a placeholder/)[0].section, "DEC-179");
   assert.equal(text(/renaming words within a language stays out/)[0].section, "DEC-127");
 });
@@ -107,7 +107,7 @@ test("R39 (c) official local names are never translated as ordinary words: they 
   const [names] = text(/official names of offices, laws, programs and places stay as they are/);
   assert.ok(names, "DEC-157 (6)'s clause is carried");
   assert.equal(names.section, "DEC-157");
-  assert.match(names.text, /where the place publishes an official translation of a name, it is used with its source/);
+  assert.match(wordFold(names.text), /where the place publishes an official translation of a name, it is used with its source/);
   const [own] = text(/the group's own local words are its to translate as ordinary words/);
   assert.ok(own && own.section === "DEC-157", "only the group's own local words are ordinary words");
   for (const c of INTERFACE_TRANSLATION_CLAUSES) for (const place of PLACES) assert.ok(!c.text.includes(place), "R26");
@@ -132,8 +132,8 @@ test("R39 (d) as Bob ruled DEC-157 (4): a protected word kept as the assistant d
 
 test("R39 (e) the reading back into English is the assistant's translation an administrator reads before confirming; what no canon sentence states (the word alone, its label, adopting nothing) is not authored as a clause, and the layer names the code that holds it (K921's pattern)", () => {
   const all = INTERFACE_TRANSLATION_CLAUSES.map((c) => c.text).join(" ");
-  assert.match(all, /an administrator confirms them after reading the assistant's translation of them back into English/);
-  assert.match(all, /an administrator reading the assistant's back-translation/);
+  assert.match(wordFold(all), /an administrator confirms them after reading the assistant's translation of them back into English/);
+  assert.match(wordFold(all), /an administrator reading the assistant's back-translation/);
   /* Not authored: no clause states what canon does not. */
   for (const unstated of ["placeholder as it stands", "kept word alone", "adopts nothing", "keeps or confirms nothing itself"])
     assert.ok(!INTERFACE_TRANSLATION_CLAUSES.some((c) => c.text.includes(unstated)), unstated);
