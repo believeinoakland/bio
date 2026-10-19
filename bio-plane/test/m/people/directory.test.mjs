@@ -88,7 +88,7 @@ test("R37 each filter: q (a name, a name they are also known by, an office held)
   const { w, chen, works, bayline, ferris, project } = record();
   const ids = (args) => all(w, { viewer: ANN, ...args }).rows.map((x) => x.entity).sort();
   assert.deepEqual(ids({ q: "lee chen" }), [chen]);
-  assert.deepEqual(ids({ q: "L. Chen" }), [chen], "a name they are also known by");
+  assert.deepEqual(ids({ q: "L. Chen" }), [chen], "the alias match (R37 q)");
   assert.deepEqual(ids({ q: "director of public" }), [chen], "an office held");
   assert.deepEqual(ids({ q: "Public Works" }), [chen, works].sort(), "the body's name and the office it holds");
   assert.deepEqual(ids({ q: "Alvarez" }), []);

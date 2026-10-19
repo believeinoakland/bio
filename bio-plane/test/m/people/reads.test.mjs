@@ -248,7 +248,7 @@ test("R14 peopleOf given no services reaches the real modules on the same host (
   const after = plane.personAt({ entityId: p, at: "2024-06-01", viewer: ANN });
   assert.deepEqual(after.posts, []);
   assert.deepEqual(after.undetermined.map((x) => x.line_id), [open]);
-  assert.deepEqual(after.undetermined[0].undetermined.why, { key: "lines.why.stated_current_through", vars: { why: openEnd("2018-01-01", "2024-06-01"), day: "2022-12-31" } }, "R40");
+  assert.deepEqual(after.undetermined[0].undetermined.why, { key: "lines.why.stated_current_through", vars: { why: word(openEnd("2018-01-01", "2024-06-01").key, openEnd("2018-01-01", "2024-06-01").vars), day: "2022-12-31" } }, "R40: civil-time's reason, read as its sentence in lines' composed key");
   assert.ok(hasWord("lines.why.stated_current_through"));
   /* a stale bound cache (lines R7) */
   const shut = w.line("holds", p, w.entity("office", "Dock Warden"), span("2010-01-01", "2030-01-01"));
