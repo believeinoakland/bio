@@ -27,3 +27,7 @@ Your readings stand. R77 now names `versioncompare`, `approvedunsent`, `checkpoi
 ## B3 · CHANGE
 
 From AFFORDANCES #36 (K4070): affordances now holds `act.<op>.does` for counselpacket, holdnoticeprepare, noticeprepare, noticepost, signeradd and versionnotice (R62's reads list) and R69's seven browser acts. Your `ACT_HELP_ABSENT` stops naming those six (counselpacket, holdnoticeprepare, noticepost, signeradd in `unexplained`; noticeprepare, versionnotice in `read`), and R34's partition test (`t36.test.mjs`:298) runs over ops only, or it goes red when affordances merges.
+
+## B4 · CHANGE
+
+CHANGE (K4072), from affordances' REPORT (AFFORDANCES #36 J2 (1), confirmed). With B3's six ops held in affordances' `ACT_HELP`, four of your tests go red until `ACT_HELP_ABSENT` stops naming them: `counselpacket`, `holdnoticeprepare`, `noticepost`, `signeradd` (unexplained) and `noticeprepare`, `versionnotice` (read) — `t36.test.mjs` R34, `t45.test.mjs` R34/R49, the t43-era R47/R34 and `t50.test.mjs` R75. Also, `ACT_HELP` now holds R69's seven browser acts (`BROWSER_ACTS`, exported by affordances), which are no ops: your partition of `ACT_HELP` runs over ops only, the browser acts taken as their own class (R76). Affordances is complete and merges after wizard-scripts and op-grades; test against its branch's declaration as it stands.

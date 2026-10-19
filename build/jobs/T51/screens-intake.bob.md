@@ -25,3 +25,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 Your red (`open-file.test.mjs` R39, the kit's `cs.download` verify) is interface-shell's R98: accepted by name until interface-shell merges; BOB sends a CHANGE then. Your REPORTs: the three missing words go to the design (HANDOFF); the 'Leave it' link stands as drawn; `mk-data` drawn with `rec` stands; `heldat` arrives with op-declarations. Set WAITING ON BOB and end your turn.
+
+## B3 · CHANGE
+
+CHANGE (K4072). The design @ `c02f3f4add` (DEC-358, U387) is merged into tranche/T51 and `rows.mjs` regenerated: merge it. Your three A64 sentences have rows: `screen.capture.a64.captured_by` "captured by {name}, {date}", `screen.capture.a64.nothing_added` "nothing was added", `screen.capture.a64.undetermined` "whether the site still gives the same document isn't known yet". Draw them by `word(key[, vars])` (R38), then finish as your START says.
