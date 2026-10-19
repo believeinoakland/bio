@@ -806,7 +806,8 @@ test("R38 an address already held and unchanged: heldat is asked with check and 
   const open_ = main(p).querySelector(`a.cs-ref[href="/app/document/${COPY_DOC}"]`);
   assert.ok(open_ && open_.textContent === word("screen.capture.openit"), "Open it: a reference to document at copy.document");
   assert.ok(open_.getAttribute("data-tip").includes(word("screen.capture.openit.help")), "its help");
-  assert.ok(text(p).includes("mai-h"), "who captured it, by the handle memberlist gives");
+  assert.ok(says(p, "screen.capture.a64.captured_by", { name: "mai-h", date: dayOf("2026-09-14T10:30:00Z") }), "who captured it, by the handle memberlist gives, and the day");
+  assert.ok(says(p, "screen.capture.a64.nothing_added"));
   assert.ok(!text(p).includes("member:mai") && !/\bmai\b(?!-)/.test(text(p).replace(/mai-h/g, "")), "never the id");
   assert.ok(text(p).includes(dayOf("2026-09-14T10:30:00Z")), "the day, by cs.date");
   assert.ok(says(p, "screen.capture.a64.the_site_still_gives_the_same_document"));
@@ -854,7 +855,11 @@ test("R38 an address held whose change could not be looked at: the copy is named
   assert.ok(nothingCaptured(p));
   assert.ok(says(p, "screen.capture.a64.already_in_the_record_as"));
   assert.ok(main(p).querySelector(`a.cs-ref[href="/app/document/${COPY_DOC}"]`));
-  for (const k of ["screen.capture.a64.the_site_still_gives_the_same_document", "screen.capture.a64.the_site_has_changed_since"]) assert.ok(!says(p, k), k);
+  /* the undetermined sentence itself contains the unchanged one's words, so the unchanged line is told apart by its separator */
+  assert.ok(!says(p, "screen.capture.a64.the_site_has_changed_since"));
+  assert.ok(!text(p).includes(` · ${word("screen.capture.a64.the_site_still_gives_the_same_document")}`), "no claim that it is unchanged");
+  assert.ok(says(p, "screen.capture.a64.undetermined"));
+  assert.ok(!says(p, "screen.capture.a64.nothing_added"));
   assert.ok(newCopy(p) && leaveIt(p), "the same two acts");
 });
 

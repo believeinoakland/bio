@@ -221,9 +221,11 @@ function renderCapture(cs, view) {
       const who = String(copy.actor || "").replace(/^member:/, "");
       const handle = who ? ((roster.find((m) => m && m.member_id === who) || {}).handle || "") : "";
       const open = cs.ref("document", copy.document, plain(cs.w("screen.capture.openit")), [plain(cs.w("screen.capture.openit.help"))]);
+      const by = handle && copy.retrieved ? cs.w("screen.capture.a64.captured_by", { name: { html: cs.ref("member", who, handle, []) }, date: { html: cs.date(copy.retrieved) } }) : "";
+      const said_ = A.state === "unchanged" ? [cs.w("screen.capture.a64.the_site_still_gives_the_same_document"), cs.w("screen.capture.a64.nothing_added")]
+        : A.state === "undetermined" ? [cs.w("screen.capture.a64.undetermined")] : [];
       const held = cs.row(cs.icon("accepted"), `${cs.w("screen.capture.a64.already_in_the_record_as")} <span class="rec">${cs.esc(title)}</span>`
-        + (A.state === "unchanged" ? `<span class="meta">${[handle ? cs.ref("member", who, handle, []) : "", copy.retrieved ? cs.date(copy.retrieved) : "",
-          cs.w("screen.capture.a64.the_site_still_gives_the_same_document")].filter(Boolean).join(" · ")}</span>` : ""), open);
+        + ([by, ...said_].filter(Boolean).length ? `<span class="meta">${[by, ...said_].filter(Boolean).join(" · ")}</span>` : ""), open);
       const leave = `<a class="cs-btn" data-tone="quiet" href="/app/capture/address${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav data-level="1" data-tip="${cs.w("screen.capture.leaveit.help")}">${cs.w("screen.capture.leaveit")}</a>`;
       a64 = A.state === "unchanged" ? cs.sheet(held)
         : cs.sheet(held + (A.state === "changed" ? cs.row(cs.icon("changed"), `<b>${cs.w("screen.capture.a64.the_site_has_changed_since")}</b><span class="meta">${cs.w("screen.capture.a64.your_team_holds_a_capture_from_14_septem", { date: { html: copy.retrieved ? cs.date(copy.retrieved) : "" } })}</span>`)
