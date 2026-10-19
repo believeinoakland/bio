@@ -34,3 +34,15 @@ All of T51-121 is built and tested on `job/T51/screens-publish` (134 tests, 0 fa
 13. R40 names `hash.sha256`, `date`, `author` and `floors` of the answer; the control plane puts them in `inband` (the quartet), which is where the file's stamp is read, with the top level as a fallback.
 
 **Recorded, no change:** `imported.mjs`:57's `data-group-fields` is an attribute, not a sentence (N1229 entry).
+
+## J3 · COMPLETE
+
+T51-121 applied whole, merged with tranche/T51 at the B6 tip, run against the real providers (no stand-in left).
+
+**Entries applied:** R37 a finding's own page (`<case>/<edition>/<finding>`, read asynchronously; legs served and named-only, falsifier and override, what rests on what, division, unavailable and withheld, FINDING_IN_SEVERAL_CASES); R38 the minimum strength (`pubfloorset`, `pubfloorclear`, the filtered view); R39 printing (`pubprint`, `printed`, the footer from what `publishedcase` states); R40 the review copy saved as a stamped file (`reviewexport`, from the in-band quartet); R41 the first share reads the zone from the copy, the preflight fallback gone; R42 the sign step's open requests and minutes (state k, state l); R43 the docket's pressure marks; the photo's day from `photosOf.dated`; DEC-342 (`refusal.<CODE>`, else the translation, else `refusal.uncatalogued`, never `detail`); dates and times in the design's forms (DEC-333, DEC-299); DEC-359's rows; sections explained by a key list (R90). All 12 inherited reds cleared.
+
+**Deferred:** none. **Found elsewhere:** J2's items, answered in B3 and B5.
+
+**Tests and checks:** module `node --test test/m/screens-publish/`: 134 pass, 0 fail (twice in a row). format 0 failures; architecture (screens-publish) 0; coverage 43 of 43 ids; words over every L11 module together: no line names screens-publish; ownership 0 failures; `setup-words build.mjs --check`: the expected stale-rows note on another module's row. `checks/run.mjs` over the whole product shows other modules' words and one answer-envelope architecture failure, none mine.
+
+Size (session_01PQvprfcu1QzmpPKVtTTPqR): test runs 14, module lines 2440
