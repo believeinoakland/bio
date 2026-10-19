@@ -48,7 +48,8 @@ const EXTRA = {
     "screen.start-send.draft.machine"],
   holdnotice: ["screen.start-send.sentat", "screen.start-send.how", "screen.start-send.outward", "screen.start-send.draft.template", "screen.start-send.draft.machine", "shell.unavailable.nothing"],
   counsel: ["screen.person.kind.name", "screen.people.kind.organization"],
-  "dash-action": ["home.needsyou.title", "screen.action.kind.other", "screen.plan.matter.n", "screen.actionnew.name"],
+  "dash-action": ["home.needsyou.title", "screen.action.kind.other", "screen.plan.matter.n", "screen.actionnew.name", "screen.queue.reminder.on", "act.reminderanswer.label.dash-action",
+    "act.taskresolve.label.dash-action", "act.filingapprove.label.dash-action", "act.actioncreate.label.dash-action", "act.reminderanswer.does", "act.taskresolve.does"],
 };
 // Keys a screen draws under another screen's prefix (one sentence, one key, wherever it is drawn).
 const BORROWS = {

@@ -70,7 +70,7 @@ export const hold = Object.freeze({
       // place the hold: the place chosen, the reason in the member's own words, other projects it may reach
       const subject = String(view.subject || "");
       const options = rows.filter(function (m) { return P.placeOf(m); }).map(function (m) {
-        return { value: JSON.stringify(P.placeOf(m)), text: m.at ? String(m.at).slice(0, 10) : "" , m: m };
+        return { value: JSON.stringify(P.placeOf(m)), text: m.at ? cs.date(m.at) : "", m: m };
       }).concat(counsel.map(function (p) { return { value: JSON.stringify({ project: p.id }), text: p.name || p.id }; }));
       const pre = options.find(function (o) { const ar = o.m && o.m.arrived ? o.m.arrived : {}; return subject && (ar.action === subject || ar.docket_entry === subject); });
       const others = projects.map(function (b) { return { value: b.bundle_id, text: b.title || b.bundle_id, on: false }; });
@@ -159,6 +159,8 @@ export const holdNotice = Object.freeze({
     const place = P.placeOf(view);
     const head = P.readOnly(cs, "screen.holdnotice.name") + cs.title(null) + '<p class="mk-sub">' + cs.w("screen.holdnotice.sub1") + " " + cs.w("screen.holdnotice.sub2") + "</p>";
     if (!place) return head + '<p class="cs-state" data-state="empty">' + cs.w("shell.unavailable.nothing") + "</p>";
+    // a project list that failed to read is drawn as failed (the path's project step names it)
+    const listed = view.data.projects && view.data.projects.state === "failed" ? cs.state("projects") : "";
     const twoHelp = function (k) { return '<p class="mk-small">' + cs.w(k) + "</p>"; };
     const prepared = view.ui.notice || null;
     const helpSent = view.reachable ? cs.act("writinghelp", { data: { field: "account", id: "hold-account", forop: "holdnoticesent" } }) : "";
@@ -174,7 +176,7 @@ export const holdNotice = Object.freeze({
       + cs.field("hold-account", "screen.holdnotice.account.label", { area: true, rec: true, help: "screen.holdnotice.account.help" })
       + '<div class="mk-acts">' + cs.act("holdnoticesent", { tone: "primary" }) + helpSent + "</div></div>");
     const not = cs.sec("screen.holdnotice.not.heading", '<p class="mk-note">' + cs.w("screen.holdnotice.not.records") + " " + cs.w("screen.holdnotice.not.nomember") + "</p>");
-    return head + notice + sentSec + not;
+    return head + listed + notice + sentSec + not;
   },
 
   acts: [

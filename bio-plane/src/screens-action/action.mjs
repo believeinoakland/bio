@@ -246,7 +246,8 @@ export const action = Object.freeze({
         }).join("");
       }).join("");
       const teamGuides = guides.filter(function (g) { return g.origin === "group"; }).length;
-      const guideAct = cs.act("procedureguides", {});
+      // R27: a read-only member sees no act of the screen, the routes themselves still read; the act is a member's who may act
+      const guideAct = cs.can("actioncorrespond") ? cs.act("procedureguides", {}) : "";
       const guideSec = gd.state === "failed" ? tips("screen.action.guide.heading", cs.state({ state: "failed", refusal: gd.refusal }), "screen.action.guide.tip1", "screen.action.guide.tip2")
         : guideRows || guideAct ? tips("screen.action.guide.heading", '<p class="mk-small">' + cs.w("screen.action.profilefact.from") + " · " + cs.w("screen.action.guide.order") + " · " + cs.w("guide.procedure.legalinfo") + "</p>"
           + (guideRows ? cs.sheet(guideRows) : "") + '<p class="mk-note">' + cs.w("screen.action.guide.sourced") + " " + cs.w("screen.action.guide.team") + " " + (teamGuides ? "" : cs.w("screen.action.guide.teamnone")) + "</p>"

@@ -80,8 +80,15 @@ export const dashAction = Object.freeze({
         const d = P.draftsOf(x.f.value).open;
         return cs.row("", cs.esc(x.v.title || x.row.id) + '<span class="meta">' + cs.act("filingapprove", { label: "act.filingapprove.label.dash-action", data: { filing: d ? d.filing : "" } }) + "</span>", "", "");
       });
-      const queueRows = mine.map(function (it) {
-        return cs.row("", '<a class="cs-ref" href="/app/queue" data-nav>' + cs.esc(it.summary || it.title || it.kind) + "</a>", it.due ? cs.date(it.due) : "", "");
+      const queueRows = mine.map(function (it, i) {
+        const has = function (op) { return (Array.isArray(it.options) ? it.options : []).some(function (o) { return o && (o.id || o.op) === op; }) || (it.disposition && it.disposition.op === op); };
+        const subject = it.subject && it.subject.id ? String(it.subject.id) : "";
+        const entry = it.subject && it.subject.entry !== undefined ? String(it.subject.entry) : "0";
+        const remind = has("reminderanswer") ? cs.field("dash-on-" + i, "screen.queue.reminder.on", { type: "date" })
+          + cs.act("reminderanswer", { label: "act.reminderanswer.label.dash-action", data: { subject: subject, entry: entry, f: "dash-on-" + i } }) : "";
+        const next = has("taskresolve") ? cs.act("taskresolve", { label: "act.taskresolve.label.dash-action", data: { item: String(it.id || "") } }) : "";
+        return cs.row("", '<a class="cs-ref" href="/app/queue" data-nav>' + cs.esc(it.summary || it.title || it.kind) + "</a>" + (remind || next ? '<span class="meta">' + remind + next + "</span>" : ""),
+          it.due ? cs.date(it.due) : "", "");
       });
       const needs = approve.length || queueRows.length ? cs.sec("home.needsyou.title", cs.sheet(approve.concat(queueRows).join("")), { help: "screen.dash-action.tip.yours" }) : "";
 
@@ -128,6 +135,23 @@ export const dashAction = Object.freeze({
       // R30: "Start an action": opens the composer on the project chosen; nothing is written here.
       op: "actioncreate",
       send: function (view, el, cs) { const p = cs.value("dash-project"); if (p) cs.go("actionnew", p); return null; },
+    },
+    {
+      // R30: "Start the next step" on a queue item whose disposition is `taskresolve`
+      op: "taskresolve",
+      send: function (view, el) { return { body: { id: el.dataset.item } }; },
+      rereads: ["queue"],
+    },
+    {
+      // R30: "Remind me again on…": the day the member chooses, on the action the reminder was set for
+      op: "reminderanswer",
+      send: function (view, el, cs) {
+        const on = String(cs.value(el.dataset.f) || "").trim();
+        const body = { target: el.dataset.subject, entry: Number(el.dataset.entry || 0) };
+        if (on) body.on = on;
+        return { body: body };
+      },
+      rereads: ["queue"],
     },
     {
       // R30: "Approve the text" on a prepared text awaiting the member's approval (terminal: approving fixes the text).

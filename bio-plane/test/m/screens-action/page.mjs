@@ -21,6 +21,8 @@ export const D = (iso) => {
   return word("date.daymonthyear", { day: String(d), month: word("date.month." + month), year: String(y) }).replace(/\s+/g, " ").trim();
 };
 export const W = (key, vars) => String(word(key, vars)).replace(/\s+/g, " ").trim();
+/** What `escalation` says of the compliance exit when no compliant determination is live: its word, never a copy of it. */
+export const COMPLIANCE_SAYS = W("escalation.live_compliant_determination");
 /* R14: the classes a served stylesheet defines: the visual language's `civicsmith.css`, the design page's product rules (what
    interface-assets R7 serves as `shell.css`) and the shell's own `<style>` in the page. */
 const DOCS = join(dirname(fileURLToPath(import.meta.url)), "../../../../docs/development/ux-substrate");
@@ -155,7 +157,7 @@ export const PRESSURE = { ok: true, items: [{ arrived: { action: ACTION_ID, ord:
 /** `filingread` as filings R59 answers a prepared communication, as it was stored. */
 export const READ = (o = {}) => ({ ok: true, id: FILING, filing: FILING, action: ACTION_ID, form: "communication", purpose: "request",
   text: "We request the logs for 2025.", blanks: [{ name: "period", value: "2025", source: "fills:member:mai", label: { kind: "member_fill", by: "member:mai", machine_work: false, says: "x" } },
-    { name: "office", value: "City Clerk", source: ACTION_ID }], unfilled: [{ name: "cost_limit", why: "the record holds no value for this blank: the member fills it in" }],
+    { name: "office", value: "City Clerk", source: ACTION_ID }], unfilled: [{ name: "cost_limit", why: W("filings.why.record_holds_value") }],
   fills: [], template: null, disclosure: { machine: false }, notices: [], label: "x", at: "2026-10-09T10:00:00Z", approval: null, second_approval: null, sending: null, ...o });
 export const draft = (o = {}) => ({ filing: FILING, form: "communication", purpose: "request", label: "x", at: "2026-10-09T10:00:00Z",
   approval: null, second_approval: null, second_needed: false, signatories: [], voice: "group", sending: null, ...o });
@@ -193,17 +195,47 @@ export const STATUS_NONE = { determination: DET, status: "neither", escalations:
 export const STATUS_OPEN = { determination: DET, status: "escalated", escalations: [{ id: ESC, state: "open", stage: 2, stage_name: "notification" }], declines: [] };
 export const ESCALATION = { id: ESC, project: PROJECT, determination: DET, state: "open", stage: 2, stage_name: "notification",
   actions: [{ action: ACTION_ID, stage: 2, reason: "the demand" }], proposed: [{ from: 2, to: 3, stage: "clock", says: "its trigger was met 5 days ago" }],
-  exit: { compliance: { state: "not_yet", says: "no live compliant determination" }, consequences: { state: "not_yet", says: "not every part addressed" } } };
+  exit: { compliance: { state: "not_yet", says: W("escalation.live_compliant_determination") }, consequences: { state: "not_yet", says: "not every part addressed" } } };
 
-/** A plane answering every read of the six screens with data. */
+/** `affordances` as the composer reads it: the kinds (the product's and a profile's own), the leg kinds and the tiers. */
+export const KINDS = ["cpra_request", "records_request", "request_for_comment", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "party_participation", "other"];
+export const AFFORDANCES = { vocabularies: { action_kind: [...KINDS, "profile_kind_x", "profile_kind_unlabelled"], action_kind_labels: { profile_kind_x: "Hearing statement" },
+  action_basis_kinds: ["rests_on", "advances"], risk_tiers: { 1: "x", 2: "x", 3: "x", undetermined: "x" } } };
+export const OFFICES = { ok: true, subject: QUESTION, offices: [{ addressee: { state: "named", kind: "office", role: "City Clerk", body: "Office of the City Clerk", entity_id: "ENT-2026-1111111111111111" } }] };
+/** `holdsdue` (action-holds R19): what still wants a hold, wherever it arrived. */
+export const HOLDS_DUE = { ok: true, items: [
+  { arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, kind: "legal", note: "a letter from the city's counsel", by: "member:mai", at: "2026-10-09T09:00:00Z" },
+  { arrived: { docket_entry: "DKT-2026-1", case: "CASE-2026-1" }, project: PROJECT, kind: "legal", note: "a notice of claim", by: "member:dev", at: "2026-10-01T09:00:00Z" },
+  { arrived: { pressure: "PRS-2026-1" }, project: PROJECT, kind: "legal", note: "a letter from the owner's lawyer", by: "member:ana", at: "2026-10-03T09:00:00Z" }], truncated: false, cursor: null };
+export const COUNSEL_PROJECT = "PROJ-2026-cccccccccccccccc";
+export const ROSTER = { ok: true, count: 2, limit: 200, truncated: false, projects: [{ id: PROJECT, name: "Pothole repairs", stage: null, scope: "none" },
+  { id: COUNSEL_PROJECT, name: "The rent dispute", stage: null, scope: "counsel_matter" }] };
+export const ACTIONS = { ok: true, items: [{ id: ACTION_ID, state: "awaiting_response", kind: "records_request", counterparty: { role: "City Clerk" }, counterparty_state: "named" },
+  { id: "ACTN-2026-9999999999999999", state: "resolved", kind: "request_for_comment", counterparty: null, counterparty_state: "undetermined" }], limit: 200, truncated: false, cursor: null };
+export const TEMPLATES = { ok: true, action: ACTION_ID, kind: "records_request", governing: { tier: 2 },
+  versions: [{ template: "TPL-1", name: "Records request, with our follow-up questions", origin: "group", state: "approved", approved_at: "2026-09-30T10:00:00Z", approved_by: "member:ana" }],
+  not_offered: [{ handle: "@records-request", name: "Records request", lacks: ["writer", "sources", "professional_review"] }], court_petition: false };
+export const GUIDES = { ok: true, kind: "records_request", guides: [{ origin: "profile", status: "researched", basis: "TEST", items: [
+  { route: "Ask in writing, naming the records", expect: "the office says within 10 days whether it will release them", citation: "Gov. Code § 7922.535" }] },
+  { origin: "group", guide: "GUIDE-1", approved_by: "member:ana", approved_at: "2026-10-01", items: [{ route: "Call the clerk's desk first", expect: "a name for the file", citation: "Mun. Code § 2.20.230" }] }], withheld: [], label: {} };
+export const FACTS = [{ key: "anti_slapp", statement: "A special motion to strike generally must be filed within 60 days of being served with the complaint.", citation: "Code Civ. Proc. § 425.16", status: "researched", basis: "TEST", profile: "p" }];
+export const PACKET = { ok: true, id: "CP-1", version: 1, action: ACTION_ID, purpose: "claim", marking: "Prepared for review by Priya Shah, Tenant Law Center.", fileable: false,
+  sections: { facts: { title: "Facts", items: [{ finding: "FND-1", kind: "published", claim: { conclusion: "Closed means repaired" }, determined: true }, { finding: "INQ-2026-ffffffffffffffff", matter: "INQ-2026-ffffffffffffffff", determined: false }] } } };
+export const NOTICE = { ok: true, place: { target: ACTION_ID, ord: 2 }, text: "Please keep, outside Civicsmith, messages and files about this matter." };
+
+/** A plane answering every read of the screens with data. */
 export const DATA_PLANE = {
   plan: ok(PLAN), planproposals: ok(PROPOSALS), list: ok(PROJECTS), optionstartpreview: ok(PREVIEW),
   projectquestions: ok(PROJECT_QUESTIONS), determinations: ok(DETERMINATIONS),
   action: ok(ACTION), filingsfor: ok(FILINGS([])), actionholdpreview: ok({ target: ACTION_ID, ord: null, hold: null, restarts: [] }),
   pressurefor: ok(PRESSURE), stakeatpreparation: ok(STAKE()),
   profiles: ok(PROFILES), determination: ok(DETERMINATION), consequencesof: ok(CONSEQUENCES), escalationstatus: ok(STATUS_OPEN), escalation: ok(ESCALATION),
+  affordances: ok(AFFORDANCES), holdsdue: ok(HOLDS_DUE), projectlist: ok(ROSTER), templatesforaction: ok(TEMPLATES), procedureguides: ok(GUIDES),
+  actions: ok(ACTIONS), queue: ok({ items: [] }),
 };
 export const ROUTES = {
   plan: `/app/plan/${PLAN_ID}`, "start-send": `/app/start-send/${PLAN_ID}~opt-1`, request: `/app/request/${ACTION_ID}`,
   action: `/app/action/${ACTION_ID}`, matter: `/app/matter/${DET}~${ESC}`, "help-records": "/app/help-records",
+  actionnew: `/app/actionnew/${PROJECT}`, hold: `/app/hold/${ACTION_ID}`, holdnotice: `/app/holdnotice/${encodeURIComponent(JSON.stringify({ target: ACTION_ID, ord: 2 }))}`,
+  counsel: `/app/counsel/${ACTION_ID}`, "dash-action": "/app/dash-action",
 };
