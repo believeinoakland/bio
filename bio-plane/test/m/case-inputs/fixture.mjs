@@ -85,7 +85,7 @@ function reviewProvider(w) {
     draftForMember, draftFor: draftForMember,
     draftIdentity: identity,
     caseIdentitySentence: (caseId, edition, newCase) => (caseId ? `the next edition (${edition}) of ${caseId}`
-      : newCase ? "a new case" : "a derived case"),
+      : newCase ? "NEWCASE-IDENTITY" : "DERIVEDCASE-IDENTITY"),
     statedEdition: (ident, newCase) => (ident.caseId || newCase ? ident.edition : null),
     liveGrant,
     grantAdmitsCaseEdition: (s, c, e) => { const l = liveGrant(s); return !!(l && l.grant.case_id === c && Number(l.grant.edition) === Number(e)); },
@@ -112,7 +112,7 @@ export function caseDocText({ caseId, edition, project, statement, author, write
     ...ackFrontmatterLines(acks),
     "completeness_excluded:",
     "---", "", "## What This Excludes", "", statement, "",
-    ...(writer ? [`**Who wrote this statement.** ${writer.stated}`, ""] : []),
+    ...(writer ? [`WRITER-LINE ${writer.stated}`, ""] : []),
     ...(withAckRuns ? ackBodyLines(acks, project) : []), "",
     "## What Was Searched", "", "Nothing was searched in this fixture.", ""].join("\n");
 }
