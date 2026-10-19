@@ -7,6 +7,7 @@
    content's). Office bytes are built here with a local ZIP writer; nothing reads them but the module under test.
    Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import { world, run, sha } from "./fixture.mjs";
@@ -25,7 +26,7 @@ registerDoctype({
     return signals.length === 2 ? { match: true, confidence: CONFIDENCE.CERTAIN, signals } : { match: false, confidence: CONFIDENCE.NONE };
   },
 });
-registerDoctype({ key: "test_fallback", label: "a document of no recognised type", version: 1, fallback: true,
+registerDoctype({ key: "test_fallback", label: localize("doctypes.generic.label", "a document of no recognised type"), version: 1, fallback: true,
   contract: CONTRACT.SUBSTANCE, detect: () => ({ match: false, confidence: CONFIDENCE.NONE }) });
 
 const HEX64 = /^[0-9a-f]{64}$/;

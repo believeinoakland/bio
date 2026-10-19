@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, lookup, sha, wayback, WB, eligible, http1123 } from "./fixture.mjs";
 import { EMPTY_BODY_DIGEST } from "../../../src/cdx.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const ADDR = "https://gone.example/doc";
 const ARCH = { via: "archive.org", address: ADDR };
@@ -31,9 +31,9 @@ test("R32: the TimeGate's memento, its raw bytes fetched, is chosen by selectCap
   assert.deepEqual([d.locator, d.capture.sha256, d.capture.bytes], [raw, sha("the memento"), 11]);
   const hop = d.provenance_chain[1];
   assert.deepEqual([hop.who, hop.via, hop.bound, hop.document_address], [word("capture-sources.name.internet_archive_wayback"), "archive.org", false, ADDR]);
-  assert.equal(hop.asserts, `these bytes were served for ${ADDR} at 2025-03-01T10:15:00Z, with HTTP status 200`);
+  assert.equal(hop.asserts, localize("capture-sources.memento.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: ADDR, archived_at: "2025-03-01T10:15:00Z", statuscode: "200" }));
   for (const part of [`Memento-Datetime: ${http1123("20250301101500")}`, `memento ${raw}`, `rel="original" ${ADDR}`, `rel="timemap" ${TM}`,
-                      "mimetype text/plain", `SHA-256 ${sha("the memento")}, computed by your team's Civicsmith over the bytes it received`])
+                      "mimetype text/plain", localize("capture-sources.memento.sha_256_digest_computed_by", "SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated", { digest: sha("the memento") })])
     assert.ok(hop.evidence.includes(part), part);
   assert.deepEqual([w.prov.receipts.length, w.prov.receipts[0].address, w.prov.receipts[0].retrievalLocator], [1, ADDR, raw]);
   /* the document address is the memento's rel=original, not the address asked about */
@@ -141,7 +141,7 @@ test("R32 (N510): an empty 200 memento is passed over for the next candidate, on
                    "the TimeGate's empty memento, then the TimeMap, the empty one not fetched twice, then the older one");
   const d = r.body.document;
   assert.deepEqual([d.locator, d.capture.sha256, d.capture.bytes], [RAW("20240101000000"), sha("the older memento"), 17]);
-  assert.equal(d.provenance_chain[1].asserts, `these bytes were served for ${ADDR} at 2024-01-01T00:00:00Z, with HTTP status 200`);
+  assert.equal(d.provenance_chain[1].asserts, localize("capture-sources.memento.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: ADDR, archived_at: "2024-01-01T00:00:00Z", statuscode: "200" }));
   assert.deepEqual(w.prov.receipts.map((x) => [x.captureSha, x.retrievalLocator]), [[sha("the older memento"), RAW("20240101000000")]]);
   const puts = w.b.calls.filter((c) => c[0] === "put").map((c) => c[1]);
   assert.deepEqual(puts, [`bio/captures/${sha("the older memento")}`], "only the chosen memento's bytes are stored; the empty one left nothing");
