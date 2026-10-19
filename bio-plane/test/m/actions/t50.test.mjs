@@ -8,6 +8,7 @@ import { world, V, actionMd, CP, NONCOMPLIANT } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import * as records from "../../../src/action-records/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", INFO = "INFO-2026-0001-d";
 const M = V("alice");
@@ -100,8 +101,7 @@ test("R107 noSuchAction is action-records' function re-exported: one function, t
   /* the bytes every caller (filings, escalation, action-records' seven sites) got before the move */
   assert.deepEqual(r, { ok: false, reason: "NO_SUCH_ACTION", code: "NO_SUCH_ACTION", check: row.check, translation: row.translation,
     action: "ACTN-2026-0001-a",
-    detail: "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so "
-      + "this is not a hint either way." });
+    detail: localize("action-records.index.no_action_answers_to_that", "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.") });
   assert.equal(r.check, "C-117.2");
   assert.deepEqual(Object.keys(r), ["ok", "reason", "code", "check", "translation", "action", "detail"]);
   assert.deepEqual(actions.noSuchAction("A1", { note: "n", detail: "mine", action: "B" }),

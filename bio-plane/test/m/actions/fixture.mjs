@@ -16,6 +16,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { Retrieval } from "../../../src/retrieval/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 import { DatabaseSync } from "node:sqlite";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -78,7 +79,7 @@ export const CP = ["counterparty:", "  state: named", "  role: Town Clerk", "  b
 
 /* `recordAs(record)`, when given, is the record-core instance `actions` is handed (a test's spy over the real one). */
 /* `deps`, when given, are further dependencies handed to `actionsOf` (a stand-in a test controls). */
-export function world({ profiles = ["test-port-ellery"], retrieval = true, conformance = null, recordAs = null, deps = {} } = {}) {
+export function world({ profiles = ["test-port-ellery"], retrieval = true, conformance = null, context = null, recordAs = null, deps = {} } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -102,13 +103,20 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
   prov.migrate();
   const captures = new Map();
+  /* content as a stand-in for the capture a document presents (R11), and, for R108's passage, the real content's context of
+     a capture (`contentContextFor`) once the real content is made below; an empty context before then, or with a conformance
+     stand-in (which brings none). */
+  let realContent = null;
   const reg = { facts: [], decorations: [] };
   const retrievalStub = retrieval ? {
     registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },
     registerProjectionDecoration: (m, fn) => { reg.decorations.push({ m, fn }); return { ok: true }; },
   } : null;
   const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalStub, conformance,
-                              content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms, ...deps });
+                              content: { captureFor: (id) => captures.get(id) ?? null,
+                                         contentContextFor: (s) => context ?? (realContent ? realContent.contentContextFor(s) : {}),
+                                         mint: (args) => realContent.mint({ ...args, ...(context ? { context } : {}) }) },
+                              now: () => clock.ms, ...deps });
   /* the real conformance (the default dep) brings inquiry onto this host through reevaluation: its tables, as the
      store's boot migrates them. */
   if (!conformance) {
@@ -126,6 +134,7 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
                          onReading: () => ({ ok: true }) };
     const content = contentOf(host, { record, membership, provenance: prov, extraction });
     content.migrate();
+    realContent = content;
     const connections = connectionsOf(host, { record, membership, promotion, content, extraction, capture: {} });
     connections.entities.migrate();
     connections.migrate();
@@ -193,4 +202,16 @@ export function realDetermination(w, D, project, { outcome = "noncompliant", aut
   const r = w.promote(D, ["---", `id: ${D}`, "object_type: determination", `title: ${D}`, "current_state: recorded",
     'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } });
   if (!r.ok) throw new Error(`fixture determination refused: ${JSON.stringify(r).slice(0, 300)}`);
+}
+
+/** The codes another module mints, read from the rows `action-grammar` holds for them (its R9): each row's `where` names the
+ *  module and function that mint the code, so a test names those codes through the declaration, not a list of its own. */
+export function mintedIn(dir) {
+  const out = {};
+  for (const v of Object.values(grammar)) {
+    if (!v || typeof v !== "object" || Array.isArray(v)) continue;
+    for (const [code, row] of Object.entries(v))
+      if (row && typeof row === "object" && typeof row.where === "string" && row.where.startsWith(`src/${dir}/`)) out[code] = code;
+  }
+  return Object.freeze(out);
 }

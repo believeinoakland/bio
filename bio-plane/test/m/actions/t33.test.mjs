@@ -101,8 +101,9 @@ test("R9 R25 the read shows who held the office on the action's date, labelled s
   /* a sent entry outside the holder's line: the date moves, and no line covers it */
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2027-02-01", account: "asked", viewer: M, author: M });
   r = w.a.actionRead({ id: A, viewer: M });
-  assert.deepEqual([r.as_of_date.date, r.addressee.holder_on_date.holder, r.addressee.holder_on_date.undetermined],
-    ["2027-02-01", null, word("lines.undetermined.line_covers_date")]);
+  assert.deepEqual([r.as_of_date.date, r.addressee.holder_on_date.holder, r.addressee.holder_on_date.undetermined,
+    r.addressee.holder_on_date.why], ["2027-02-01", null, true, { key: "lines.why.no_line_covers", vars: {} }],
+    "lines' reason is passed on by key (lines R11, R24), never as text");
   /* another addressee has none; an earlier name-only one reads as written */
   w.promote(B, actionMd(B, ["counterparty:", "  state: audience", '  description: "readers"', "action_kind: other"]));
   assert.equal(w.a.actionRead({ id: B, viewer: M }).addressee, null);
@@ -132,7 +133,7 @@ test("R63 (C-8's plane half) a new bare-name counterparty is refused COUNTERPART
     "counterparty:\n  state: named\n  name: City Clerk")).reason, "COUNTERPARTY_REFUSED");
   const old = "ACTN-2026-0005-o";
   assert.equal(w.promote(old, actionMd(old, bare), { extra: { replay: true } }).ok, true);
-  assert.equal(w.promote(old, w.text(old).replace("An action.", "Revised.")).ok, true, "carried forward unchanged");
+  assert.equal(w.promote(old, w.text(old).replace("An action.", "Revised.")).ok, true, "a revision of a held bare-name action lands");
   /* negative control: role and body land */
   assert.equal(w.a.actionCreate({ document: doc([...CP, "action_kind: other"]), viewer: M, author: M }).ok, true);
 });

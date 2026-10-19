@@ -46,7 +46,7 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { contentOf } from "../content/index.mjs";
+import { contentOf, citationExtent, canonicalExtent, checkContentExtent } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded, determinationVoided } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
@@ -109,6 +109,14 @@ export const NONE_EXISTS_MAX = 50;
 export const QUICK_ROUTE = Object.freeze({ kind: "one_finding_case" });
 /** R92 (T45): the most open items one read answers. */
 export const OPEN_ITEMS_MAX = 200;
+/** R108 (T51): the longest meeting name of the minutes a reply on a public comment carries. */
+export const MINUTES_MEETING_MAX = 200;
+/** R108: the kind a reply carries minutes on (the vocabulary's id for a public comment, action-grammar's `ACTION_KINDS`). */
+const PUBLIC_COMMENT = "public_comment";
+/* R108: the scalar fields of a passage's extent the entry holds flat (K2849), read back by content's `citationExtent`. */
+const MINUTES_EXTENT_FIELDS = Object.freeze(["ref", "page", "sheet", "cell", "slide", "shape", "para", "run", "range", "table",
+  "part", "space", "cited_as"]);
+const isMinutesKey = (k) => typeof k === "string" && k.startsWith("minutes_");
 /* R74: the flat keys a premise override's ground is held under (K2849). */
 /* R81, R83, R94: the flat keys an entry's T45 fields are held under (K2849). */
 const ENTRY_FIELD_KEYS = Object.freeze(["speaker", "office_words", "office_status", "found_elsewhere", "found_elsewhere_note"]);
@@ -119,7 +127,7 @@ const OVERRIDE_KEYS = Object.freeze(["ground_kind", "ground_citation", "ground_d
    `{reason}` is left for the screen, with the member's reason as recorded answered beside it (R82). */
 export const ACTIONS_WORDS = Object.freeze({
   "actions.override.ground_not_stated": word("actions.override.ground_not_stated"),
-  "actions.reply.not_owed": "No reply is owed: {reason}",
+  "actions.reply.not_owed": word("actions.reply.not_owed", { reason: "{reason}" }),
   "actions.openitems.not_office": word("actions.openitems.not_office"),
   "actions.recognition.promise_only": word("actions.recognition.promise_only"),
 });
@@ -808,9 +816,7 @@ export class Actions {
     if (held !== next) {
       /* DEC-49 REGION is-machine-override */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the team acts on "
-          + "a breach it has not determined, on a stated ground and with the reason why. A machine credential may not "
-          + "state or change one. Nothing was written.");
+        return refuse("MACHINE_CANNOT_OVERRIDE", localize("actions.index.a_premise_override_is_a", "a premise override is a member's open statement that the team acts on a breach it has not determined, on a stated ground and with the reason why. A machine credential may not state or change one. Nothing was written."));
       /* END DEC-49 REGION is-machine-override */
       const o = nextFm.premise_override;
       /* DEC-49 REGION is-premise-override */
@@ -856,8 +862,7 @@ export class Actions {
     if (!same("contact")) {
       /* DEC-49 REGION is-machine-contact */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_SET_CONTACT", "the team's contact for an action is a member's choice; a machine "
-          + "credential may not set or change it. Nothing was written.");
+        return refuse("MACHINE_CANNOT_SET_CONTACT", localize("actions.index.the_teams_contact_for_an", "the team's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written."));
       /* END DEC-49 REGION is-machine-contact */
       const id = contactId(nextFm.contact);
       let facts = null;
@@ -1018,8 +1023,7 @@ export class Actions {
     /* R82: whether the body owes the group a reply, with the member's reason (`reply_owed_reason`). */
     if (moved("reply_owed") || moved("reply_owed_reason")) {
       /* DEC-49 REGION is-machine-set-reply-owed */
-      if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the team a reply is a member's "
-        + "statement; a machine credential may not set or change it. Nothing was written.");
+      if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", localize("actions.index.whether_a_body_owes_the", "whether a body owes the team a reply is a member's statement; a machine credential may not set or change it. Nothing was written."));
       /* END DEC-49 REGION is-machine-set-reply-owed */
       /* the value and its reason are judged together by action-grammar R23 (K2861): one site for REPLY_OWED_REFUSED */
       const r = Actions.#fromFindings(Actions.#pushed(actionFieldFindings,
@@ -1048,7 +1052,7 @@ export class Actions {
     for (let i = 0; i < ledger.length; i++) {
       const e = ledger[i];
       if (!e || typeof e !== "object" || JSON.stringify(e) === JSON.stringify(heldLedger[i] ?? null)) continue;
-      if (!ENTRY_FIELD_KEYS.some((k) => e[k] !== undefined)) continue;
+      if (!ENTRY_FIELD_KEYS.some((k) => e[k] !== undefined) && !Object.keys(e).some(isMinutesKey)) continue;
       const r = this.#entryFieldRefusal(ledger, i, nextFm.action_kind, who,
         JSON.stringify(e.speaker ?? null) !== JSON.stringify(heldLedger[i] ? heldLedger[i].speaker ?? null : null));
       if (r) return r;
@@ -1064,9 +1068,17 @@ export class Actions {
     if (speakerMoved && e.speaker !== undefined && e.speaker !== null) {
       /* DEC-49 REGION is-machine-contact-speaker */
       if (!who || isMachineIdentity(who))
-        return refuse("MACHINE_CANNOT_SET_CONTACT", "who spoke for the team in a sending is a member's statement; a "
-          + "machine credential may not set it. Nothing was written.");
+        return refuse("MACHINE_CANNOT_SET_CONTACT", localize("actions.index.who_spoke_for_the_team", "who spoke for the team in a sending is a member's statement; a machine credential may not set it. Nothing was written."));
       /* END DEC-49 REGION is-machine-contact-speaker */
+    }
+    /* R108: minutes only on a received entry of a public comment, the date a real day (the write's half; the act judges
+       the passage). */
+    if (Object.keys(e).some(isMinutesKey)) {
+      if (e.direction !== "received" || kind !== PUBLIC_COMMENT || !this.kinds().includes(PUBLIC_COMMENT))
+        return refuse("MINUTES_NOT_PUBLIC_COMMENT", word("screen.action.minutes.notpublic"), { field: `correspondence[${i}]` });
+      if (!isCalendarDate(String(e.minutes_date ?? "")))
+        return this.records.correspondEntryRefusal({ at: String(e.minutes_date ?? ""), artifactSha: "", account: "x" },
+          { target: null, detail: CORRESPOND_DETAIL });
     }
     const r = Actions.#fromFindings(Actions.#errors(entryFieldFindings(ledger, i,
       { responseStatuses: this.#responseStatuses(kind) || [] })), "CORRESPONDENCE_REFUSED");
@@ -1080,13 +1092,90 @@ export class Actions {
     return null;
   }
 
+  /** R108 (T51): the minutes an entry holds, `{meeting, date, passage: {captureSha, extent}}`, from the flat keys the bytes
+   *  carry (`minutes_meeting`, `minutes_date`, `minutes_capture`, `minutes_extent_*`; K2849), the extent read by content's
+   *  one reader of a flat extent (`citationExtent`); null for an entry holding none. Pure; never throws. */
+  static minutesOf(e) {
+    try {
+      if (!e || typeof e !== "object" || !Object.keys(e).some(isMinutesKey)) return null;
+      const leg = { extent_kind: e.minutes_extent_kind };
+      for (const f of [...MINUTES_EXTENT_FIELDS, "rect"])
+        if (e[`minutes_extent_${f}`] !== undefined) leg[`extent_${f}`] = e[`minutes_extent_${f}`];
+      return { meeting: e.minutes_meeting ?? null, date: e.minutes_date ?? null,
+               passage: { captureSha: e.minutes_capture ?? null, extent: citationExtent(leg),
+                          content_id: e.minutes_content_id ?? null } };
+    } catch { return null; }
+  }
+
+  /* R108: the minutes as the act is given them, an object or its JSON: `{meeting, date, passage: {captureSha, extent}}`.
+     Only the shape is judged here (`{ok: false}`, which `actionCorrespond` answers as `BAD_MINUTES`). */
+  static #minutesGiven(v) {
+    if (v === null || v === undefined || v === "") return { ok: true, minutes: null };
+    let m = v;
+    if (typeof m === "string") { try { m = JSON.parse(m); } catch { m = null; } }
+    const line = (x) => typeof x === "string" && x.trim() !== "" && x.trim().length <= MINUTES_MEETING_MAX && !/["\\\r\n]/.test(x);
+    const sha = m && typeof m === "object" && m.passage && typeof m.passage.captureSha === "string"
+      ? m.passage.captureSha.trim().replace(/^sha256:/, "").toLowerCase() : "";
+    const ext = m && typeof m === "object" && m.passage ? m.passage.extent : null;
+    if (!m || typeof m !== "object" || Array.isArray(m) || !line(m.meeting) || typeof m.date !== "string"
+        || !/^[0-9a-f]{64}$/.test(sha) || !ext || typeof ext !== "object" || Array.isArray(ext))
+      return { ok: false };
+    return { ok: true, minutes: { meeting: m.meeting.trim(), date: m.date.trim(), passage: { captureSha: sha, extent: ext } } };
+  }
+
+  /* R108: null when `minutes` may be kept on this entry; else the refusal. Only a received entry of a public comment carries
+     them (`MINUTES_NOT_PUBLIC_COMMENT`); the passage cites a capture the author sees, an unseen one answered as an absent one
+     (`NO_SUCH_BUNDLE`), at an extent content's grammar admits (its refusals, as content answers them), and one the entry can
+     hold flat. */
+  #minutesRefusal(minutes, viewer) {
+    const { captureSha, extent } = minutes.passage;
+    const gate = viewerPredicate(viewer);
+    const home = this.#one(`SELECT r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.capture_sha=? AND (${gate.sql}) LIMIT 1`, captureSha, ...gate.args);
+    if (!home) return { foreign: { ok: false, reason: "NO_SUCH_BUNDLE", target: captureSha } };
+    const context = this.content.contentContextFor(captureSha);
+    const bad = checkContentExtent(extent, context);
+    if (bad) return { foreign: bad };
+    const kept = Actions.#minutesKept(minutes);
+    const back = Actions.minutesOf(kept);
+    let same = false;
+    try { same = !!back && canonicalExtent(back.passage.extent) === canonicalExtent(extent); } catch { same = false; }
+    if (!same) return { bad: "passage" };
+    /* R108 (K4041): the passage is recorded as content by the author's act (mint or find, content R12, R13), and the row's
+       id is kept beside the capture and the extent, so a reader of the minutes (filings R64) reads its text by that id. */
+    const m = this.content.mint({ bundleId: home.bundle_id, captureSha, extent, mintedBy: viewer, context });
+    if (!m || m.ok === false) return m ? { foreign: m } : { bad: "passage" };
+    minutes.passage.content_id = m.content_id;
+    return null;
+  }
+
+  /* R108: the flat keys an entry holds `minutes` under; an extent field that is not a plain token, a number or four numbers
+     is left out, so `#minutesRefusal`'s read-back finds the extent changed and refuses. */
+  static #minutesKept(minutes) {
+    const x = minutes.passage.extent;
+    const out = { minutes_meeting: minutes.meeting, minutes_date: minutes.date, minutes_capture: minutes.passage.captureSha,
+                  minutes_extent_kind: String(x.kind),
+                  ...(minutes.passage.content_id ? { minutes_content_id: minutes.passage.content_id } : {}) };
+    for (const f of [...MINUTES_EXTENT_FIELDS, "rect"]) {
+      const v = x[f];
+      if (v === undefined || v === null || v === "") continue;
+      const text = typeof v === "string" && v.length <= MINUTES_MEETING_MAX && !/["\\\r\n]/.test(v);
+      if (typeof v === "number" || text || (f === "rect" && Array.isArray(v) && v.length === 4 && v.every((n) => typeof n === "number")))
+        out[`minutes_extent_${f}`] = v;
+    }
+    return out;
+  }
+
   /** R81, R83, R94 (T45): an entry with its T45 fields as R22 names them: `office_status: {words, status?}` and
    *  `found_elsewhere: {kind, note?}` from the flat keys the bytes hold (`office_words`, `office_status`,
    *  `found_elsewhere`, `found_elsewhere_note`; J2's reading), `speaker` as written. Other keys as they are. */
   static entryFields(e) {
     if (!e || typeof e !== "object") return e;
-    const { office_words, office_status, found_elsewhere, found_elsewhere_note, pressure_kind, pressure_note, ...rest } = e;
+    const { office_words, office_status, found_elsewhere, found_elsewhere_note, pressure_kind, pressure_note, ...held } = e;
+    const rest = Object.fromEntries(Object.entries(held).filter(([k]) => !isMinutesKey(k)));
     const out = { ...rest };
+    const minutes = Actions.minutesOf(e);
+    if (minutes) out.minutes = minutes;
     if (pressure_kind !== undefined || pressure_note !== undefined)
       out.pressure = { ...(pressure_kind !== undefined ? { kind: pressure_kind } : {}),
                        ...(pressure_note !== undefined ? { note: pressure_note } : {}) };
@@ -1582,7 +1671,7 @@ export class Actions {
                      artifactSha = "", account = "", quoteAmount = "", quoteCurrency = "",
                      quoteBasis = "", quoteAnswers = "", quoteRevises = "",
                      stage = "", follows = "", outcome = "", exemptions = "", dueBy = "", dueCite = "",
-                     speaker = "", officeStatus = null, foundElsewhere = null,
+                     speaker = "", officeStatus = null, foundElsewhere = null, minutes = null,
                      pressure = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* R101 (T48; N1024, K231): C-32.4 is `action-records.correspondFence`'s, the one site, its `detail` this act's own. */
@@ -1612,6 +1701,10 @@ export class Actions {
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
                  detail: `${name} is at most ${NOTE_MAX} characters and cannot contain a quote, `
                        + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+    /* R108 (T51; N880 (U4); DEC-340): the minutes' account of a public comment, kept on a received entry. Its shape and its
+       date are judged here with the entry's other values; what needs the action (its kind) and the record (the capture
+       the passage cites) is judged once the action is found. */
+    const minutesGiven = Actions.#minutesGiven(minutes);
     /* D-148: the quote, as the entry will carry it. Only keys a caller SENT are
        written, so an entry with no quote parameter is byte-identical to before. */
     const quote = {};
@@ -1677,6 +1770,27 @@ export class Actions {
       return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
                detail: "a correspondence ledger belongs to an action: it records what that ask sent and what "
                      + "came back." };
+    /* R108: a reply carries minutes only on a received entry of a public comment, and the passage is of a capture the
+       author sees, an extent the content grammar admits. */
+    let minutesFields = {};
+    /* DEC-49 REGION is-minutes */
+    if (minutes !== null && minutes !== undefined && minutes !== "") {
+      const badMinutes = (detail) => refuse("BAD_MINUTES", detail, { target, max: MINUTES_MEETING_MAX });
+      if (!minutesGiven.ok)
+        return badMinutes(localize("actions.index.minutes_are_the_meeting_one", "minutes are a meeting, a date and a passage: the meeting named on one line of 1 to 200 characters with no quote or backslash, the day it was held, and the passage of the minutes as a capture and the part of it. Nothing was written."));
+      const held = this.#heldFm(target);
+      if (direction !== "received" || !held || held.action_kind !== PUBLIC_COMMENT || !this.kinds().includes(PUBLIC_COMMENT))
+        return refuse("MINUTES_NOT_PUBLIC_COMMENT", word("screen.action.minutes.notpublic"), { target, direction });
+      const dateRefusal = this.records.correspondEntryRefusal({ at: minutesGiven.minutes.date, artifactSha: "", account: "x" },
+        { target, detail: CORRESPOND_DETAIL });
+      if (dateRefusal) return dateRefusal;
+      const r = this.#minutesRefusal(minutesGiven.minutes, viewer ?? who);
+      if (r && r.foreign) return { target, ...r.foreign };
+      if (r)
+        return badMinutes(localize("actions.index.the_passage_has_a_part", "the passage has a part that cannot be kept on the reply's entry: name it by its kind and the fields that kind has. Nothing was written."));
+      minutesFields = Actions.#minutesKept(minutesGiven.minutes);
+    }
+    /* END DEC-49 REGION is-minutes */
     /* Resolved here as well as at promote, so the member is told which half of
        the capture-or-testify choice failed rather than being handed a write
        refusal after the lease was taken. */
@@ -1703,8 +1817,7 @@ export class Actions {
     /* DEC-49 REGION is-no-reply-owed */
     if (direction === "no_response" && fm.reply_owed === false) {
       this.#releaseLease(target, who);
-      return refuse("NO_REPLY_OWED", "this action states that the body owes the team no reply, so silence is never "
-        + "recorded as a non-response. Nothing was written.", { target, reply_owed: false, ...T45_SENTENCES.reply_not_owed,
+      return refuse("NO_REPLY_OWED", localize("actions.index.this_action_states_that_the", "this action states that the body owes the team no reply, so silence is never recorded as a non-response. Nothing was written."), { target, reply_owed: false, ...T45_SENTENCES.reply_not_owed,
           reply_owed_reason: replyOwedReason(fm) });
     }
     /* END DEC-49 REGION is-no-reply-owed */
@@ -1720,6 +1833,7 @@ export class Actions {
       ...quote,
       ...life,
       ...t45.fields,
+      ...minutesFields,
       /* R48 (moved to `action-holds` R1, T45; K2781 (1)): a pressure mark stated with the entry stays on the entry, flat
          (K2849), and `action-holds` reads it through `actionRead`; its act and table are that module's. */
       ...(mark ? { pressure_kind: mark.kind, pressure_note: mark.note } : {}),
@@ -1861,6 +1975,7 @@ export class Actions {
              ...(marked ? { pressure: marked } : {}),
              ...(t45.fields.speaker !== undefined ? { speaker: t45.fields.speaker } : {}),
              ...Actions.#presentedT45(t45.fields),
+             ...(minutesGiven.minutes ? { minutes: Actions.minutesOf(minutesFields) } : {}),
              weight: "single" };
     if (direction === "received") this.#tellResponse({ action: target, ord, recorder: who, at: day });
     return answer;
@@ -1919,8 +2034,7 @@ export class Actions {
   #pressureRefusal({ who, mark, direction }) {
     /* DEC-49 REGION is-pressure */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the team is a member's judgement; a "
-        + "machine credential may not mark it. Nothing was written.");
+      return refuse("MACHINE_CANNOT_MARK_PRESSURE", localize("actions.index.marking_pressure_directed_at_the", "marking pressure directed at the team is a member's judgement; a machine credential may not mark it. Nothing was written."));
     if (!mark || !PRESSURE_KINDS.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX || /["\\\r\n]/.test(mark.raw))
       return refuse("PRESSURE_REFUSED", `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS.join(", ")}, the note `
         + `1 to ${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`,
@@ -1956,8 +2070,7 @@ export class Actions {
         const filled = Actions.#fillEntityId(withId, addressee.entity_id);
         if (filled) withId = filled;
         else addressee = { entity_id: null, filled: "unspliceable",
-                           says: "the office entity was found, and this document's counterparty block cannot be extended in "
-                               + "place, so it was written without one" };
+                           says: word("actions.says.office_entity_found") };
       }
     }
     const bytes = new TextEncoder().encode(withId);
@@ -2373,9 +2486,7 @@ export class Actions {
         cp, ...gate.args, max + 1);
       if (!rows.length)
         absence = { level: "no_quote_by_name",
-                    says: "no action you may read names this counterparty and carries a quote. The name is "
-                        + "matched exactly as written, and an action whose counterparty is stated undetermined "
-                        + "is reachable only by its request" };
+                    says: word("actions.says.action_read_names") };
     }
     const truncated = rows.length > max;
     const quotes = rows.slice(0, max).map((q) => {
@@ -2451,6 +2562,16 @@ export class Actions {
       ...(e.office_status !== undefined ? [`    office_status: ${e.office_status}`] : []),
       ...(e.found_elsewhere !== undefined ? [`    found_elsewhere: ${e.found_elsewhere}`] : []),
       ...(e.found_elsewhere_note !== undefined ? [`    found_elsewhere_note: "${e.found_elsewhere_note}"`] : []),
+      /* R108 (T51): the minutes' account flat (K2849): text quoted, the date, capture and numbers bare, a rectangle inline. */
+      ...(e.minutes_meeting !== undefined ? [`    minutes_meeting: "${e.minutes_meeting}"`] : []),
+      ...(e.minutes_date !== undefined ? [`    minutes_date: ${e.minutes_date}`] : []),
+      ...(e.minutes_capture !== undefined ? [`    minutes_capture: ${e.minutes_capture}`] : []),
+      ...(e.minutes_content_id !== undefined ? [`    minutes_content_id: ${e.minutes_content_id}`] : []),
+      ...(e.minutes_extent_kind !== undefined ? [`    minutes_extent_kind: ${e.minutes_extent_kind}`] : []),
+      ...[...MINUTES_EXTENT_FIELDS, "rect"].filter((f) => e[`minutes_extent_${f}`] !== undefined).map((f) => {
+        const v = e[`minutes_extent_${f}`];
+        return `    minutes_extent_${f}: ${Array.isArray(v) ? `[${v.join(", ")}]` : typeof v === "number" ? String(v) : `"${v}"`}`;
+      }),
       ...(e.pressure_kind !== undefined ? [`    pressure_kind: ${e.pressure_kind}`] : []),
       ...(e.pressure_note !== undefined ? [`    pressure_note: "${e.pressure_note}"`] : []),
       `    author: ${e.author}`,
@@ -2572,6 +2693,7 @@ export class Actions {
                  ...(p.office_status ? { office_status: p.office_status } : {}),
                  ...(p.found_elsewhere ? { found_elsewhere: p.found_elsewhere } : {}),
                  ...(p.pressure ? { pressure: p.pressure } : {}),
+                 ...(p.minutes ? { minutes: p.minutes } : {}),
                  ...(fm.action_kind === "records_request" && typeof p.stage === "string"
                    ? { stage_in_law: stageInLaw(p.stage, stages) } : {}) };
       }).filter((x) => Object.keys(x).length > 1),
@@ -2665,16 +2787,14 @@ export class Actions {
       const stated = office.entity_id ? { entity_id: office.entity_id, filled: "stated" }
         : office.legacy ? { entity_id: null, filled: "none", says: word("actions.says.earlier_addressee_named") }
         : this.#bridge(office.role, office.body, viewer);
-      let holder;
-      if (!stated.entity_id) holder = { holder: null, undetermined: word("actions.office_entity_held_addressee") };
-      else if (!date) holder = { holder: null, undetermined: asOf.basis };
+      let holder;      if (!stated.entity_id) holder = { holder: null, undetermined: true, why: { key: "actions.office_entity_held_addressee", vars: {} } };
+      else if (!date) holder = { holder: null, undetermined: true, why: { key: "actions.why.action_states_date", vars: {} } };
       else {
         let h = null;
-        try { h = this.lines ? this.lines.holderAt({ office: stated.entity_id, at: date, viewer }) : null; } catch { h = null; }
-        holder = !h ? { holder: null, undetermined: word("actions.dated_lines_read") }
-          : h.ok === false ? { holder: null, undetermined: h.detail || h.reason }
+        try { h = this.lines ? this.lines.holderAt({ office: stated.entity_id, at: date, viewer }) : null; } catch { h = null; }        holder = !h ? { holder: null, undetermined: true, why: { key: "actions.dated_lines_read", vars: {} } }
+          : h.ok === false ? { holder: null, undetermined: true, why: { key: "actions.dated_lines_read", vars: {} }, refused: h.reason }
           : h.holder ? { holder: h.holder, line: h.line ? h.line.line_id : null, capacity: h.capacity ?? null }
-          : { holder: null, undetermined: h.undetermined, ...(h.lines ? { lines: h.lines } : {}) };
+          : { holder: null, undetermined: true, why: h.why, ...(h.lines ? { lines: h.lines } : {}) };
       }
       addressee = { role: office.role, body: office.body, ...stated,
                     holder_on_date: { ...holder, on: date,
@@ -3189,7 +3309,7 @@ export function actionsOps(a, url, body) {
       stage: q("stage"), follows: q("follows"), outcome: q("outcome"), exemptions: q("exemptions"),
       dueBy: q("due_by"), dueCite: q("due_cite"),
       speaker: q("speaker") ?? b.speaker ?? "", officeStatus: b.office_status ?? q("office_status"),
-      foundElsewhere: b.found_elsewhere ?? q("found_elsewhere"),
+      foundElsewhere: b.found_elsewhere ?? q("found_elsewhere"), minutes: b.minutes ?? q("minutes"),
       pressure: b.pressure ?? (q("pressure_kind") !== null || q("pressure_note") !== null
         ? { kind: q("pressure_kind") ?? "", note: q("pressure_note") ?? "" } : null),
       viewer: q("viewer"), author: q("author") }),
